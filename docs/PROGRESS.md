@@ -84,6 +84,23 @@
 ### Step 1.2a — URL and base64 tightening (2026-09-26)
 See Amendments. 5 invalid fixtures added (2 URL, 3 base64) to `invalid/manifest.json`; new tests for URL control/bidi characters and `Base64Schema` (including a linear-time check at the 28 MB cap). The mutation generator skips cap padding for base64 (padding would break the alphabet; the cap is tested directly). `npm run check` green (see report).
 
+### Step 1.3 — `core/text`: normaliser and mini-markup parser (2026-09-26)
+
+**Delivered** (`src/core/text/`, contracts unchanged)
+- `normalizer.ts`: `fold` (NFKC → lowercase → Latin diacritics removed → Greek names → apostrophes removed → dash unification → whitespace collapse) and `tokens` (folded words, adjacent pairs joined, whole phrase joined; edge punctuation stripped; deduplicated, deterministic, ≤ 3n tokens). `fold` is total, linear and idempotent.
+- `richtext.ts`: `parseRichText` (paragraphs, bullets, `*em*`, `**strong**`, `_{sub}`, `^{sup}`, `[[id]]`/`[[id|label]]` links) and `richTextLinks` (distinct links, first-appearance order, for REF-008). Total: malformed markup is kept as literal text; no character is dropped.
+- `index.ts` barrel. Tests: `normalizer.test.ts` (28), `richtext.test.ts` (37) incl. malformed-literal table, HTML/Markdown inertness (ADV-033), bounded-work cases and a seeded 300-run totality check.
+- Invariants/ADV touched: INV-24 (fold never stored, parsing never alters data), ADV-022 (duplicate-name folding basis), ADV-033 (markup inert), REF-008 (link extraction).
+
+**Decisions**
+- Dash rule (refines SEARCH.md §2 item 4, which is otherwise self-contradictory for `Br⁻ → br-`): a dash directly after a letter/digit and not before one is a charge sign and is kept as `-`; every other dash variant becomes a space. Side effect: `10⁻³` folds to `10 3`. Docs updated in the same commit.
+- Only U+0300–U+036F are stripped as diacritics so Devanagari and other scripts survive.
+- Emphasis delimiters must touch non-space text (`2 * 3 * 4` stays literal). Sub/sup/link bodies are single-line; sub/sup non-empty; link IDs must be valid record IDs, an empty label after `|` is malformed, and a missing label defaults to the target ID.
+- Bounds: inline nesting depth ≤ 4 (deeper content literal); closer searches share a work budget of 1,000 + 50 × length, after which openers are literal. Adversarial inputs (16k unclosed openers) parse in well under a second.
+
+**Open items**
+- Renderers (step 5.x) resolve a link label that equals its target ID to the record's display name; the parser stays chemistry-free.
+
 ## Amendments
 - **2026-09-26, step 1.2a — `SafeUrlSchema` and embedded-asset base64 tightened.** Problem: `SafeUrlSchema` accepted control/bidi characters (the URL parser normalises them, but the raw string was stored), and `embeddedAssets[].base64` had only a length cap. Change: `SafeUrlSchema` gains the single-line forbidden-character refinement; new `Base64Schema` (alphabet, padding, length % 4 = 0, non-empty, cap `LIMITS.embeddedAssetBase64` = 28,000,000, unchanged) replaces the bare string. Only tightens validation: every previously valid, non-hostile value is still valid, so no `CURRENT_SCHEMA_VERSION` bump or migration (MIGRATION.md §1). Existing schema fixtures and the legacy fixtures (which contain no URLs or base64) are unaffected. Invalid fixtures and tests added. No ADR affected.
 - **2026-09-26, step 1.1 — `src/core/schema/primitives.ts` lint exceptions.** Problem: ESLint `no-control-regex` flags `FORBIDDEN_MULTILINE` / `FORBIDDEN_SINGLE_LINE`, which intentionally match control characters. Change: two line-scoped `eslint-disable-next-line no-control-regex` comments with a justification. Validated shape is byte-identical, so no `CURRENT_SCHEMA_VERSION` bump, migration or fixture freeze. No ADR affected.

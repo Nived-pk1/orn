@@ -14,7 +14,7 @@ Indexed kinds: species, class, reagent, reaction, named reaction, concept, mecha
 1. Unicode NFKC; case folding; diacritics removed (Reimer–Tiemann = reimer tiemann).
 2. Sub/superscript digits and signs → ASCII (C₂H₅OH → c2h5oh, Br⁻ → br-).
 3. Greek letters → names (α → alpha, β → beta, ν → nu, Δ → delta).
-4. All dash variants (‐ ‑ ‒ – — −) and whitespace runs → single space; apostrophes and primes removed (Baeyer's → baeyers).
+4. All dash variants (‐ ‑ ‒ – — −) and whitespace runs → single space; apostrophes and primes removed (Baeyer's → baeyers). Exception: a dash directly after a letter or digit and not before one is a charge sign and is kept as `-` (Br⁻ → br-); this also keeps `fold` idempotent.
 5. `tokens()` also emits joined variants so "wolff-kishner", "wolff kishner" and "wolffkishner" all match.
 
 ## 3. Fields and ranking
