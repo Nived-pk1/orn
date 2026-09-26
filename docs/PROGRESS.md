@@ -52,7 +52,8 @@
 
 **Notes**
 - `npm audit`: 2 moderate advisories (GHSA-82fw-gwwq-j7x9, `@vitest/mocker` via vitest 3.x). Dev-only; fix requires a major vitest upgrade, deferred to a phase boundary per ADR-020.
-- npm 11 did not run esbuild's postinstall (not in allowScripts). esbuild works through its platform package (vite build and vitest run fine).
+- esbuild install script approved via `allowScripts` in package.json (pinned to esbuild@0.28.2; re-approve when esbuild is upgraded).
+- `.gitattributes` (`* text=auto eol=lf`) enforces LF; repo renormalized (all tracked text files were already LF).
 
 ## Amendments
 - **2026-09-26, step 1.1 — `src/core/schema/primitives.ts` lint exceptions.** Problem: ESLint `no-control-regex` flags `FORBIDDEN_MULTILINE` / `FORBIDDEN_SINGLE_LINE`, which intentionally match control characters. Change: two line-scoped `eslint-disable-next-line no-control-regex` comments with a justification. Validated shape is byte-identical, so no `CURRENT_SCHEMA_VERSION` bump, migration or fixture freeze. No ADR affected.
