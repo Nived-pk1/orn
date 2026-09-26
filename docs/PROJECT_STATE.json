@@ -13,11 +13,13 @@
     "1.2",
     "1.3",
     "1.4",
-    "1.5"
+    "1.5",
+    "1.6",
+    "1.7"
   ],
   "nextPhase": 1,
-  "nextStep": "1.7",
-  "nextStepTitle": "core/validation: L1 wrapper, L2 rules, finding IDs, finding store",
+  "nextStep": "1.8",
+  "nextStepTitle": "L3 rule catalogue (VALIDATION_RULES.md §3), incremental validateTouched, validateAll",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -57,11 +59,12 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (step 1.6: 18 files, 455 tests)",
+    "npmRunCheck": "passed (step 1.7: 24 files, 558 tests)",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
     "indexSuite": "step 1.6: reverse references vs independent oracle, folded names, hierarchy ancestry (all four hierarchies, cycles, deep chain), apply ≡ build scenarios and seeded random walks (38 tests)",
+    "validationSuite": "step 1.7: finding IDs (10), L1 parseRecord over all 28 record-level L1 fixtures and valid fixtures (44), REF-001…008 against every L2 fixture plus valid fixtures and edits (27), runner (5), finding store (12), rich-text registry (2), definers index (3 + incremental)",
     "textSuite": "step 1.3: normaliser (28 tests) and mini-markup parser (37 tests) incl. bounded-work and seeded totality checks"
   },
   "openItems": [

@@ -5,7 +5,7 @@
  * modify data (INV-24). ERROR at L1–L3 blocks a commit; L4 never blocks.
  */
 import type { AnyRecord, CanonicalState, JsonValue, RecordByKind, RecordKind, RecordRef } from '../schema';
-import type { ReadonlyIndexes } from '../indexes/contracts';
+import type { CoreIndexes } from '../indexes/contracts';
 
 export type Severity = 'error' | 'warning' | 'info' | 'review_required';
 export type ValidationLevel = 1 | 2 | 3 | 4;
@@ -37,7 +37,11 @@ export interface FindingDraft {
 
 export interface RuleContext {
   readonly state: CanonicalState;
-  readonly indexes: ReadonlyIndexes;
+  /**
+   * Rules read only the record-local indexes (`ReadonlyIndexes` extends them, so callers holding the
+   * full set pass it unchanged). Amended in step 1.7: the cross-record indexes arrive in Phase 2.
+   */
+  readonly indexes: CoreIndexes;
 }
 
 export interface ValidationRule<K extends RecordKind = RecordKind> {
@@ -58,9 +62,9 @@ export interface Validator {
   /** L1 parse of one unknown value as a record of `kind`; used by commands, import and boot integrity. */
   parseRecord(kind: RecordKind, value: unknown): { ok: true; record: AnyRecord } | { ok: false; findings: readonly Finding[] };
   /** L1–L3 for touched records plus dependents (via reverse index). Must stay within the commit budget. */
-  validateTouched(state: CanonicalState, indexes: ReadonlyIndexes, touched: readonly RecordRef[]): readonly Finding[];
+  validateTouched(state: CanonicalState, indexes: CoreIndexes, touched: readonly RecordRef[]): readonly Finding[];
   /** Full L1–L3 pass, run in the compute worker. */
-  validateAll(state: CanonicalState, indexes: ReadonlyIndexes, signal?: AbortSignal): readonly Finding[];
+  validateAll(state: CanonicalState, indexes: CoreIndexes, signal?: AbortSignal): readonly Finding[];
 }
 
 export interface FindingStore {

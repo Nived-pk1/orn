@@ -15,3 +15,4 @@ export * from './records';
 export * from './dataset';
 export * from './references';
 export * from './reference-kinds';
+export * from './rich-text';

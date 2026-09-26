@@ -1,5 +1,5 @@
 /**
- * Part-1 index engine (step 1.6): reverse references, folded names and hierarchy ancestry.
+ * Part-1 index engine (steps 1.6, 1.7): reverse references, nested-ID definers, folded names and hierarchy ancestry.
  * Each record contributes only from its own content, so a ChangeSet is applied by retracting the
  * old contribution of every touched record and adding the new one: O(changed × references).
  * Results equal a rebuild (INV-18) and are deterministic (buckets are sorted).
@@ -23,6 +23,10 @@ interface IndexData {
   readonly names: Map<string, readonly RecordRef[]>;
   /** Owner ID → the name keys it contributes. */
   readonly namesOf: Map<string, readonly string[]>;
+  /** Nested ID → records defining it, sorted by ID. */
+  readonly definers: Map<string, readonly RecordRef[]>;
+  /** Owner ID → the distinct nested IDs it defines. */
+  readonly definedBy: Map<string, readonly string[]>;
   /** Incremented by every in-place apply; older handles then refuse to answer. */
   generation: number;
 }
@@ -31,6 +35,7 @@ interface IndexData {
 interface Dirty {
   readonly referrers: Set<string>;
   readonly names: Set<string>;
+  readonly definers: Set<string>;
 }
 
 const EMPTY: readonly never[] = [];
@@ -71,6 +76,11 @@ function addRecord(data: IndexData, record: AnyRecord, dirty: Dirty): void {
   for (const key of keys) {
     append(data.names, dirty.names, key, owner);
   }
+  const defined = [...new Set(referenceEngine.nestedIds(record).map((nested) => nested.id))];
+  if (defined.length > 0) data.definedBy.set(record.id, defined);
+  for (const nestedId of defined) {
+    append(data.definers, dirty.definers, nestedId, owner);
+  }
 }
 
 function removeRecord(data: IndexData, id: string): void {
@@ -80,6 +90,8 @@ function removeRecord(data: IndexData, id: string): void {
   data.outgoing.delete(id);
   for (const key of data.namesOf.get(id) ?? EMPTY) retract(data.names, key, (ref) => ref.id !== id);
   data.namesOf.delete(id);
+  for (const nestedId of data.definedBy.get(id) ?? EMPTY) retract(data.definers, nestedId, (ref) => ref.id !== id);
+  data.definedBy.delete(id);
 }
 
 function sortDirty(data: IndexData, dirty: Dirty): void {
@@ -88,6 +100,9 @@ function sortDirty(data: IndexData, dirty: Dirty): void {
   }
   for (const key of dirty.names) {
     (data.names.get(key) as RecordRef[] | undefined)?.sort(byId);
+  }
+  for (const key of dirty.definers) {
+    (data.definers.get(key) as RecordRef[] | undefined)?.sort(byId);
   }
 }
 
@@ -128,6 +143,10 @@ class IndexHandle implements CoreIndexes {
     return this.live().referrers.get(id) ?? EMPTY;
   }
 
+  definersOf(id: string): readonly RecordRef[] {
+    return this.live().definers.get(id) ?? EMPTY;
+  }
+
   byFoldedName(kind: RecordKind, folded: string): readonly RecordRef[] {
     return this.live().names.get(nameKey(kind, folded)) ?? EMPTY;
   }
@@ -162,9 +181,11 @@ function build(state: CanonicalState, revision = 0): CoreIndexes {
     outgoing: new Map(),
     names: new Map(),
     namesOf: new Map(),
+    definers: new Map(),
+    definedBy: new Map(),
     generation: 0,
   };
-  const dirty: Dirty = { referrers: new Set(), names: new Set() };
+  const dirty: Dirty = { referrers: new Set(), names: new Set(), definers: new Set() };
   for (const kind of RECORD_KINDS) {
     for (const record of Object.values(state.records[kind] as Readonly<Record<string, AnyRecord>>)) {
       addRecord(data, record, dirty);
@@ -181,7 +202,7 @@ function apply(previous: CoreIndexes, changes: ChangeSet, next: CanonicalState):
     return build(next, changes.revision);
   }
   const data = previous.takeData();
-  const dirty: Dirty = { referrers: new Set(), names: new Set() };
+  const dirty: Dirty = { referrers: new Set(), names: new Set(), definers: new Set() };
   for (const ref of changes.deleted) removeRecord(data, ref.id);
   for (const ref of [...changes.created, ...changes.updated]) {
     const record = recordIn(next, ref.kind, ref.id);

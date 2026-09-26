@@ -174,3 +174,39 @@ describe('foldedNamesOf', () => {
     expect(foldedNamesOf({ title: 'Not a name field' })).toEqual([]);
   });
 });
+
+describe('build: nested-ID definers', () => {
+  const ix = coreIndexEngine.build(base);
+
+  it('matches an independent walk: every nested ID maps to the records defining it, once each', () => {
+    const expected = new Map<string, string[]>();
+    for (const record of all(base)) {
+      for (const id of new Set(referenceEngine.nestedIds(record).map((nested) => nested.id))) {
+        expected.set(id, [...(expected.get(id) ?? []), record.id]);
+      }
+    }
+    expect(expected.size).toBeGreaterThan(20);
+    for (const [id, owners] of expected) expect(ix.definersOf(id).map((ref) => ref.id), id).toEqual(owners.sort());
+  });
+
+  it('reports the defining record with its kind, and nothing for record IDs or unknown IDs', () => {
+    const reaction = must(Object.values(base.records.reaction)[0]);
+    const participant = must(reaction.participants[0]);
+    expect(ix.definersOf(participant.id)).toEqual([{ kind: 'reaction', id: reaction.id }]);
+    expect(ix.definersOf(reaction.id)).toEqual([]);
+    expect(ix.definersOf('prt_not-there')).toEqual([]);
+    expect(ix.definersOf('nonsense')).toEqual([]);
+  });
+
+  it('lists both records when two define one nested ID, sorted by ID, and lists a record once if it repeats an ID', () => {
+    const [first, second] = Object.values(base.records.reaction);
+    const donor = must(first);
+    const shared = must(donor.participants[0]).id;
+    const { after } = commit(base, 1, (tables) => {
+      const target = tables.reaction[must(second).id] as { participants: { id: string }[] };
+      target.participants = [...target.participants, { ...must(donor.participants[0]), id: shared }, { ...must(donor.participants[0]), id: shared }];
+    });
+    const dup = coreIndexEngine.build(after);
+    expect(dup.definersOf(shared).map((ref) => ref.id)).toEqual([donor.id, must(second).id].sort());
+  });
+});
