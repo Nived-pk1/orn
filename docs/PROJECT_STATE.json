@@ -2,34 +2,63 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-09-26",
-  "currentPhase": 0,
-  "currentPhaseStatus": "complete",
-  "completedPhases": [0],
-  "completedSteps": ["0"],
+  "currentPhase": 1,
+  "currentPhaseStatus": "in_progress",
+  "completedPhases": [
+    0
+  ],
+  "completedSteps": [
+    "0",
+    "1.1"
+  ],
   "nextPhase": 1,
-  "nextStep": "1.1",
-  "nextStepTitle": "npm install; lock versions (ADR-020); make `npm run check` pass on the scaffold; add tsx; record versions in PROGRESS.md",
+  "nextStep": "1.2",
+  "nextStepTitle": "Maximal fixture + invalid fixtures; full schema test suite (every kind, every cap, ID patterns)",
   "canonicalSchemaVersion": 1,
   "gates": {
-    "A": { "phase": 1, "title": "Domain core", "status": "pending" },
-    "B": { "phase": 2, "title": "Graph engine", "status": "pending" },
-    "C": { "phase": 3, "title": "Persistence and import", "status": "pending" },
-    "E": { "phase": 5, "title": "UI and rendering", "status": "pending" },
-    "D": { "phase": 6, "title": "Authoring", "status": "pending" },
-    "F": { "phase": 10, "title": "Release", "status": "pending" }
+    "A": {
+      "phase": 1,
+      "title": "Domain core",
+      "status": "pending"
+    },
+    "B": {
+      "phase": 2,
+      "title": "Graph engine",
+      "status": "pending"
+    },
+    "C": {
+      "phase": 3,
+      "title": "Persistence and import",
+      "status": "pending"
+    },
+    "E": {
+      "phase": 5,
+      "title": "UI and rendering",
+      "status": "pending"
+    },
+    "D": {
+      "phase": 6,
+      "title": "Authoring",
+      "status": "pending"
+    },
+    "F": {
+      "phase": 10,
+      "title": "Release",
+      "status": "pending"
+    }
   },
   "verification": {
-    "schemasAndContractsTypecheck": "passed with tsc 6.0.3 against zod 3.23.8 and immer 10 (zod 3/4 common API subset); re-verify against zod 4 in step 1.1",
+    "schemasAndContractsTypecheck": "passed with tsc 6.0.3 against zod 4.6.5 and immer 10.2.0 (step 1.1)",
     "schemaRuntimeSmoke": "minimal fixture parses unchanged; 15 negative cases rejected as expected (tsx)",
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed",
-    "npmInstall": "not yet run (Phase 0 environment was offline)"
+    "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
+    "npmRunCheck": "passed (step 1.1)"
   },
   "openItems": [
-    "Run npm install and commit package-lock.json (step 1.1).",
-    "Confirm typescript-eslint supports TypeScript 6.0; otherwise pin TypeScript ~5.9 (ADR-020).",
     "Cross-check the ADV-001…045 matrix wording against the §46 list in the original requirements prompt.",
     "All exam coverage and the baseline topic tree are REVIEW REQUIRED until checked against official syllabi.",
-    "Demo dataset chemistry must be verified by a human before any record is marked verified."
+    "Demo dataset chemistry must be verified by a human before any record is marked verified.",
+    "npm audit: 2 moderate dev-only advisories in vitest 3.x (@vitest/mocker, GHSA-82fw-gwwq-j7x9); resolve with a vitest major upgrade at a phase boundary (ADR-020)."
   ]
 }

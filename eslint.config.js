@@ -57,4 +57,9 @@ export default tseslint.config(
     files: ['scripts/**/*.mjs', '*.config.{js,ts}'],
     languageOptions: { globals: { ...globals.node } },
   },
+  {
+    // CommonJS tool configs (e.g. .dependency-cruiser.cjs).
+    files: ['**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node } },
+  },
 );

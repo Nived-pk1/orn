@@ -22,5 +22,37 @@
 
 **Open items** — see `openItems` in PROJECT_STATE.json.
 
+## Phase 1 — Domain core (in progress)
+
+### Step 1.1 — Toolchain install and version lock (2026-09-26)
+
+**Delivered**
+- `npm install` run on Node 24.21.0 / npm 11.19.0; `package-lock.json` committed (ADR-020: exact versions are now locked).
+- `tsx` added as a dev dependency.
+- ESLint: added a `**/*.cjs` block (CommonJS + Node globals) so `.dependency-cruiser.cjs` lints correctly.
+- `src/core/schema/primitives.ts`: targeted `no-control-regex` exceptions on the two forbidden-character patterns, whose purpose is to match control characters. Regex behaviour unchanged (see Amendments).
+
+**Locked versions (resolved)**
+| Package | Version | Package | Version |
+|---|---|---|---|
+| typescript | 6.0.3 | typescript-eslint | 8.70.1 |
+| zod | 4.6.5 | immer | 10.2.0 |
+| react / react-dom | 19.3.0 | @types/react / -dom | 19.3.0 |
+| vite | 7.3.6 | @vitejs/plugin-react | 5.2.0 |
+| vitest | 3.2.7 | fast-check | 3.23.2 |
+| eslint / @eslint/js | 9.39.5 | eslint-plugin-react-hooks | 5.2.0 |
+| dependency-cruiser | 17.4.3 | globals | 16.5.0 |
+| @types/node | 22.20.4 | tsx | 4.23.15 |
+
+**ADR-020 TypeScript check** — typescript-eslint 8.70.1 declares peer `typescript >=4.8.4 <6.1.0`, so TypeScript 6.0.3 is supported; no `~5.9` fallback needed.
+
+**Verification**
+- `npm run check` green: typecheck (schemas and contracts now checked against Zod 4.6.5), lint, lint:deps (41 modules), check:size, check:hardcode, tests (schema smoke, 4 tests).
+- `npm run build` succeeds.
+
+**Notes**
+- `npm audit`: 2 moderate advisories (GHSA-82fw-gwwq-j7x9, `@vitest/mocker` via vitest 3.x). Dev-only; fix requires a major vitest upgrade, deferred to a phase boundary per ADR-020.
+- npm 11 did not run esbuild's postinstall (not in allowScripts). esbuild works through its platform package (vite build and vitest run fine).
+
 ## Amendments
-(none yet)
+- **2026-09-26, step 1.1 — `src/core/schema/primitives.ts` lint exceptions.** Problem: ESLint `no-control-regex` flags `FORBIDDEN_MULTILINE` / `FORBIDDEN_SINGLE_LINE`, which intentionally match control characters. Change: two line-scoped `eslint-disable-next-line no-control-regex` comments with a justification. Validated shape is byte-identical, so no `CURRENT_SCHEMA_VERSION` bump, migration or fixture freeze. No ADR affected.
