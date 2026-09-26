@@ -17,3 +17,21 @@ export interface ChangeSet {
   readonly patches: readonly Patch[];
   readonly inversePatches: readonly Patch[];
 }
+
+/** Injected time source: milliseconds since the Unix epoch. The core never reads the system clock. */
+export interface Clock {
+  nowMs(): number;
+}
+
+/** Injected randomness: uniform floats in [0, 1). The core never calls Math.random. */
+export interface RandomSource {
+  next(): number;
+}
+
+/** ID and timestamp capability handed to commands (structurally a CommandContext). */
+export interface IdFactory {
+  /** UTC ISO timestamp with milliseconds. */
+  now(): string;
+  /** New `<prefix>_<lowercase ULID>`; IDs from one factory are strictly increasing. */
+  newId(prefix: string): string;
+}

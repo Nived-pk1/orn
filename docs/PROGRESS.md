@@ -118,6 +118,27 @@ See Amendments. 5 invalid fixtures added (2 URL, 3 base64) to `invalid/manifest.
 - `remap` does not rewrite `[[id]]` links inside rich text (not registry references; REF-008 warns on dangling ones). Import-as-copy (step 3.x) must decide whether to rewrite them via `richTextLinks`.
 - `embeddedAssets[].assetId` is a document-level reference outside the record registry; handled by the import/export code, not here.
 
+### Step 1.5 — `core/dataset`: document ↔ state, serialisation, ID factory, ChangeSets (2026-09-26)
+
+**Delivered** (`src/core/dataset/`)
+- `ids.ts`: `createIdFactory(clock, rng)` → `{ now(), newId(prefix) }` (structurally a `CommandContext`). `<prefix>_<lowercase ULID>`: 10 time + 16 random Crockford-base32 characters. Monotonic per factory (same millisecond increments the random part; a clock stepping backwards keeps the last time), so IDs sort in creation order. Overflow, a malformed prefix, an out-of-range clock or an RNG value outside [0, 1) throw `RangeError` (programmer errors).
+- `document.ts`: `documentToState` (deep-frozen state; duplicate IDs across all kinds returned as a value, never merged; embedded asset bytes returned beside the state) and `stateToDocument` (records sorted by ID in code-unit order, every kind present, `embeddedAssets` only when supplied and non-empty).
+- `serialize.ts`: `serializeDocument` / `deserializeDocument`. Key order is schema order because the document is re-parsed through the strict schema; 2-space indent, LF, trailing newline. Invalid input yields `{ ok: false, issues }` with paths; nothing is repaired.
+- `changeset.ts`: `assembleChangeSet` classifies created/updated/deleted from Immer patches in O(patches) (create-then-delete collapses to nothing, delete-then-recreate is `updated`, lists sorted by kind order then ID). Patches too coarse to name a record (whole table or whole state) and `cause: 'replace'` fall back to `diffStates`, which skips unchanged tables and records by identity.
+- Contracts: `Clock`, `RandomSource`, `IdFactory` added to `dataset/contracts.ts` (additive types only; `ChangeSet` unchanged, no schema change, no version bump).
+- Tests (51): `ids.test.ts` (12), `document.test.ts` (23, both fixtures), `changeset.test.ts` (16).
+- Invariants touched: INV-01 (duplicate reporting), INV-03 (ULID IDs, injected RNG/clock), INV-19 / P-02 in memory (both fixtures serialise byte-identically to the committed files, through state, from shuffled keys and reversed insertion order), INV-23 (embedded assets not dropped), INV-10 (unknown keys refused), INV-27 (patch/inverse round trip, undo swaps created/deleted), ADV-020 (ID uniqueness input for regenerated nested IDs).
+
+**Decisions**
+- Embedded asset bytes are not canonical state, so `documentToState` returns them next to the state and `stateToDocument` takes them in its options. Callers (io, step 3.x) own them.
+- Free-form JSON (`provenance.legacy.unmapped`) keeps its own key order; it is user data and the schema cannot mark it. Round trips stay byte-identical because JSON preserves order.
+- `serializeDocument` validates with the full strict schema, so exporting an invalid state is refused with issues rather than written.
+- `ChangeSet` `created/updated/deleted` are net effects; intermediate states inside one command are not visible.
+
+**Open items**
+- Immer patches require `enablePatches()`. Nothing in `src/core` calls it yet; the store (step 1.9) must, once at module load. `changeset.test.ts` calls it itself.
+- `deserializeDocument` is strict and single-shot. The tolerant envelope, quarantine and prototype-key renaming (PERSISTENCE.md §7) belong to the importer (step 3.x).
+
 ## Amendments
 - **2026-09-26, step 1.2a — `SafeUrlSchema` and embedded-asset base64 tightened.** Problem: `SafeUrlSchema` accepted control/bidi characters (the URL parser normalises them, but the raw string was stored), and `embeddedAssets[].base64` had only a length cap. Change: `SafeUrlSchema` gains the single-line forbidden-character refinement; new `Base64Schema` (alphabet, padding, length % 4 = 0, non-empty, cap `LIMITS.embeddedAssetBase64` = 28,000,000, unchanged) replaces the bare string. Only tightens validation: every previously valid, non-hostile value is still valid, so no `CURRENT_SCHEMA_VERSION` bump or migration (MIGRATION.md §1). Existing schema fixtures and the legacy fixtures (which contain no URLs or base64) are unaffected. Invalid fixtures and tests added. No ADR affected.
 - **2026-09-26, step 1.1 — `src/core/schema/primitives.ts` lint exceptions.** Problem: ESLint `no-control-regex` flags `FORBIDDEN_MULTILINE` / `FORBIDDEN_SINGLE_LINE`, which intentionally match control characters. Change: two line-scoped `eslint-disable-next-line no-control-regex` comments with a justification. Validated shape is byte-identical, so no `CURRENT_SCHEMA_VERSION` bump, migration or fixture freeze. No ADR affected.
