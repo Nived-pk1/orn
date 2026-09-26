@@ -209,6 +209,31 @@ See Amendments. 5 invalid fixtures added (2 URL, 3 base64) to `invalid/manifest.
 - The random-walk equivalence tests take about 20 s of the suite; trim seeds if `npm test` time becomes a problem.
 - The commit pipeline (step 1.9) must call `scopeOf` and `validateTouched` with the previous state, then `commitFindings`.
 
+### Step 1.9 — `core/commands`: store, dispatch pipeline, delete impact, undo/redo, replaceState, builders (2026-09-26)
+
+**Delivered** (`src/core/commands/`, `src/test-support/command-kit.ts`)
+- `store.ts`: `createCanonicalStore(options)` implementing `CanonicalStore`, returning a `StoreHandle` (adds `findings`, `getIndexes()`, `peekHistory()` for selection hints; the contract file is unchanged). One commit step shared by dispatch, undo, redo: ChangeSet → `indexes.apply` → `scopeOf` + `validateTouched` → any ERROR rejects with state, indexes and findings unchanged (INV-12) → commit (revision + 1, `commitFindings`, history, subscribers). Read-only is an injected predicate. Subscribers are notified in commit order even under re-entrant dispatch; a throwing subscriber does not stop the others (`onListenerError`, default: rethrow from a microtask).
+- `plan.ts` / `batch.ts`: each command is planned against the state left by the previous ones (so re-point-then-delete works), then produced with Immer; patches concatenated, inverse patches reversed, so a batch is one exact history entry. Errors are values; a command that changes nothing is `EMPTY_COMMAND`, never a silent no-op.
+- `impact.ts`: generic delete-impact closure over the reverse index (nested IDs of deleted records count; cascade is transitive and bounded by record count).
+- `history.ts`: linear history, 500 entries / 50 MB (JSON length estimate), newest entry always kept.
+- `replace.ts` + `replaceState`: shape check, `validateAll`, index rebuild, findings replaced for old and new subjects, history cleared; the ChangeSet carries table-replace patches (and inverse) so patch followers can reproduce it.
+- `builders/`: `duplicateRecord` (all record and nested IDs regenerated via the injected context; provenance restarts; verified review not carried over), `mergeRecords` (optional caller-merged target, `replaceReferences` + restrict delete), `reorderItems` (permutation of IDs, optionally `within` an item).
+- Tests (52 new; 724 in 36 files): impact (10), store (17), undo/history (10), builders (12), ADV-044 random walk ×3 seeds (200 commands, undo all / redo all exact at each step, INV-18 and findings ≡ `validateAll` checked along the way).
+- Invariants/ADV touched: INV-01, 03, 11, 12, 18, 24, 27; ADV-017, 018, 019, 020, 021, 044, 045 (replaceState part; snapshot restore is phase 3).
+
+**Decisions**
+- `record.delete` mode `restrict` refuses whenever the impact is not empty (blockers, cascades or detaches), as `DELETE_RESTRICTED` with the impact; `apply_cascade` refuses only when blocked. Without this a restrict delete with detach-only referrers would fail later with a less clear REF-001.
+- The store does not stamp `provenance.updatedAt` or `meta.updatedAt`: records are stored exactly as commanded (INV-24 spirit). Editor-session commit (6.1) sets timestamps via `CommandContext.now()`.
+- `IMMUTABLE_FIELD` is returned when an update's `kind` disagrees with its ID prefix (INV-02/03).
+- `historyLabels()` lists the next action first.
+- Undo/redo are validated like commits (ARCHITECTURE §23); a failure would be `VALIDATION_FAILED`/`INTERNAL` with the store unchanged.
+
+**Open items**
+- A rejected commit rebuilds the indexes (O(records)) because `apply` consumes the old handle. Phase 2/9 may add a cheap revert; measure in step 2.7.
+- `scopeOf` is computed twice per commit (once directly, once inside `validateTouched`); fold together if the 16 ms budget is at risk.
+- Records handed to commands are frozen by Immer.
+- Editor sessions (`EditorSession`, `DraftCommitOutcome`) are step 6.1; domain builders such as AttachOutcome are phase 6.
+
 ## Amendments
 - **2026-09-26, step 1.8 — validation contract, `linkersOf`, L2 nested-container rule.** Problem: incremental validation must equal a full pass, but records can be affected by changes elsewhere that the reverse-reference index does not show (name twins, duplicate IDs, cycle members, rich-text linkers, routes depending on species and classes), and a fixed problem on an untouched record must lose its finding. Change: `ValidationRule` gains optional `watches` and `peers` (records beyond referrers/referents affected by a touched record); `Validator.validateTouched` gains an optional `previous` state and the interface gains `scopeOf(state, indexes, touched, previous?)`; `CoreIndexes.linkersOf(id)` (rich-text link index, apply ≡ build tested). Separately, step 1.7's REF-005 no longer reports a nested reference whose container field names no record of the required kind (participant `profileId` on a non-reagent): that case is RXN-011 as VALIDATION_RULES.md §3 lists it. No record shape changed: no `CURRENT_SCHEMA_VERSION` bump, migration or fixture change. Docs updated: VALIDATION_RULES.md §4–§5, GRAPH_SEMANTICS.md §8.
 - **2026-09-26, step 1.7 — indexes `definersOf`, validation contracts on `CoreIndexes`, rich-text registry (additive).** Problem: REF-006 (nested ID defined twice, INV-01) needs to know which other records define a nested ID, and the docs forbid scanning all records; `RuleContext.indexes` and `Validator` required `ReadonlyIndexes`, which nobody can build before step 2.1, so no rule could run; REF-008 needs to know where rich text lives, and no registry said. Change: `CoreIndexes.definersOf(id)` (nested ID → defining records, maintained by `apply` like the other buckets, covered by the apply ≡ build test); `RuleContext.indexes` and `Validator.validateTouched/validateAll` take `CoreIndexes` (`ReadonlyIndexes` extends it, so callers with the full set are unaffected); new `RICH_TEXT_PATHS` in `src/core/schema/rich-text.ts` with a test that derives the expected list from the schemas via the maximal fixture. No record shape changed: no `CURRENT_SCHEMA_VERSION` bump, migration or fixture change. Docs updated: VALIDATION_RULES.md §4, GRAPH_SEMANTICS.md §8.
