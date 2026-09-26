@@ -1,0 +1,259 @@
+{
+  "format": "orn.dataset",
+  "schemaVersion": 1,
+  "exportedAt": "2026-09-26T00:00:00.000Z",
+  "exportScope": "full",
+  "generator": {
+    "app": "orn-fixture-builder",
+    "version": "0.1.0"
+  },
+  "meta": {
+    "datasetId": "schema-fixture-invalid",
+    "title": "Invalid: ref-005-nested-unresolved",
+    "createdAt": "2026-09-26T00:00:00.000Z",
+    "updatedAt": "2026-09-26T00:00:00.000Z"
+  },
+  "records": {
+    "reference": [],
+    "concept": [],
+    "species": [
+      {
+        "id": "spc_inv-ethanal",
+        "kind": "species",
+        "names": {
+          "canonical": "Ethanal",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "classIds": [],
+        "properties": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "spc_inv-ethanol",
+        "kind": "species",
+        "names": {
+          "canonical": "Ethanol",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CCO"
+        },
+        "charge": 0,
+        "classIds": [
+          "cls_inv-alcohols"
+        ],
+        "properties": [],
+        "notes": "Plain note.",
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "class": [
+      {
+        "id": "cls_inv-alcohols",
+        "kind": "class",
+        "names": {
+          "canonical": "Alcohols",
+          "common": [],
+          "aliases": []
+        },
+        "classKind": "compound_class",
+        "parentIds": [],
+        "exampleSpeciesIds": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "reagent": [
+      {
+        "id": "rgt_inv-pcc",
+        "kind": "reagent",
+        "names": {
+          "canonical": "PCC",
+          "common": [],
+          "aliases": []
+        },
+        "components": [],
+        "families": [
+          "oxidant"
+        ],
+        "classIds": [],
+        "profiles": [
+          {
+            "id": "rpf_inv-pcc-dry",
+            "label": "anhydrous CH2Cl2",
+            "aliases": [],
+            "parameters": {
+              "solventCharacter": [
+                "non_polar"
+              ],
+              "activation": [],
+              "other": [],
+              "parsedFields": []
+            }
+          }
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "transformation": [],
+    "named_reaction": [],
+    "mechanism": [],
+    "reaction": [
+      {
+        "id": "rxn_inv-ethanol-pcc",
+        "kind": "reaction",
+        "name": "Oxidation of ethanol with PCC",
+        "aliases": [],
+        "scope": "specific",
+        "purposes": [
+          "synthesis"
+        ],
+        "namedReactionIds": [],
+        "transformationIds": [],
+        "reactionTypes": [],
+        "mechanismClasses": [],
+        "participants": [
+          {
+            "id": "prt_inv-ethanol",
+            "ref": {
+              "kind": "species",
+              "id": "spc_inv-ethanol"
+            },
+            "role": "reactant",
+            "coefficient": 1
+          },
+          {
+            "id": "prt_inv-pcc",
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_inv-pcc"
+            },
+            "role": "reagent",
+            "profileId": "rpf_inv-missing"
+          }
+        ],
+        "stages": [
+          {
+            "id": "stg_inv-oxidation",
+            "kind": "reaction",
+            "participantIds": [
+              "prt_inv-ethanol",
+              "prt_inv-pcc"
+            ],
+            "parameters": {
+              "temperature": {
+                "kind": "value",
+                "value": 298,
+                "unit": "K"
+              },
+              "solventCharacter": [],
+              "activation": [],
+              "other": [],
+              "parsedFields": []
+            }
+          }
+        ],
+        "conditionVariants": [],
+        "outcomes": [
+          {
+            "id": "out_inv-aldehyde",
+            "conditionVariantIds": [],
+            "selectivity": "exclusive",
+            "products": [
+              {
+                "id": "pdt_inv-ethanal",
+                "ref": {
+                  "kind": "species",
+                  "id": "spc_inv-ethanal"
+                },
+                "role": "main"
+              }
+            ],
+            "conceptIds": []
+          }
+        ],
+        "intermediates": [],
+        "mechanismIds": [],
+        "reversibility": {
+          "kind": "irreversible"
+        },
+        "conceptIds": [],
+        "prerequisiteConceptIds": [],
+        "difficulty": 2,
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "caveat": [],
+    "route": [],
+    "relationship": [],
+    "exam": [],
+    "exam_version": [],
+    "topic": [],
+    "topic_mapping": [],
+    "exam_relevance": [],
+    "asset": [],
+    "navigator_anchor": [],
+    "reaction_scheme": [],
+    "view_preset": [],
+    "entity_display": []
+  }
+}

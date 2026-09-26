@@ -1,0 +1,623 @@
+{
+  "description": "One dataset per L1/L2 failure class (docs/TEST_STRATEGY.md §2). L1 files fail DatasetDocumentSchema only at issuePath; L2 files pass L1 and must raise `rule` on record/field in step 1.7.",
+  "cases": [
+    {
+      "file": "l1-unknown-key-record.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "INV-10",
+        "ADV-029"
+      ],
+      "description": "UI state key injected into a record",
+      "issuePath": [
+        "records",
+        "species",
+        0
+      ]
+    },
+    {
+      "file": "l1-unknown-key-nested.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "INV-10",
+        "ADV-029"
+      ],
+      "description": "Unknown key inside a nested participant",
+      "issuePath": [
+        "records",
+        "reaction",
+        0,
+        "participants",
+        0
+      ]
+    },
+    {
+      "file": "l1-missing-required-field.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Required field (names) absent",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "names"
+      ]
+    },
+    {
+      "file": "l1-wrong-type.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Number field holds a string",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "charge"
+      ]
+    },
+    {
+      "file": "l1-malformed-id.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "INV-02"
+      ],
+      "description": "ID body with uppercase letters",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "id"
+      ]
+    },
+    {
+      "file": "l1-wrong-id-prefix.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "INV-02"
+      ],
+      "description": "Species record with a reaction ID prefix",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "id"
+      ]
+    },
+    {
+      "file": "l1-ref-prefix-kind-mismatch.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "INV-02",
+        "ADV-031"
+      ],
+      "description": "{kind, id} whose ID prefix contradicts the kind",
+      "issuePath": [
+        "records",
+        "reaction",
+        0,
+        "participants",
+        0,
+        "ref"
+      ]
+    },
+    {
+      "file": "l1-product-is-reagent.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Outcome product referencing a reagent record",
+      "issuePath": [
+        "records",
+        "reaction",
+        0,
+        "outcomes",
+        0,
+        "products",
+        0,
+        "ref"
+      ]
+    },
+    {
+      "file": "l1-operational-id-as-reference.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Citation pointing at a finding ID",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "citations",
+        0,
+        "referenceId"
+      ]
+    },
+    {
+      "file": "l1-wrong-kind-literal.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Record kind literal does not match its collection",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "kind"
+      ]
+    },
+    {
+      "file": "l1-unknown-enum-value.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Enum field outside its value set",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "speciesKind"
+      ]
+    },
+    {
+      "file": "l1-blank-name.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Whitespace-only canonical name",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "names",
+        "canonical"
+      ]
+    },
+    {
+      "file": "l1-bidi-override.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-034"
+      ],
+      "description": "Right-to-left override character in a name",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "names",
+        "canonical"
+      ]
+    },
+    {
+      "file": "l1-control-character.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-034"
+      ],
+      "description": "BEL control character in a note",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "notes"
+      ]
+    },
+    {
+      "file": "l1-newline-in-name.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Line break in single-line text",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "names",
+        "canonical"
+      ]
+    },
+    {
+      "file": "l1-text-cap-exceeded.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Name longer than 300 characters",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "names",
+        "canonical"
+      ]
+    },
+    {
+      "file": "l1-array-cap-exceeded.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "65 tags (cap 64)",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "tags"
+      ]
+    },
+    {
+      "file": "l1-structure-cap-exceeded.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "SMILES longer than 20,000 characters",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "structure",
+        "value"
+      ]
+    },
+    {
+      "file": "l1-unsafe-url.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-033"
+      ],
+      "description": "javascript: URL on a reference",
+      "issuePath": [
+        "records",
+        "reference",
+        0,
+        "url"
+      ]
+    },
+    {
+      "file": "l1-url-with-credentials.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-033"
+      ],
+      "description": "URL carrying user credentials",
+      "issuePath": [
+        "records",
+        "reference",
+        0,
+        "url"
+      ]
+    },
+    {
+      "file": "l1-non-finite-number.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-037"
+      ],
+      "description": "Temperature of 1e999 (Infinity after JSON.parse)",
+      "issuePath": [
+        "records",
+        "reaction",
+        0,
+        "stages",
+        0,
+        "parameters",
+        "temperature",
+        "value"
+      ]
+    },
+    {
+      "file": "l1-non-integer.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Fractional difficulty",
+      "issuePath": [
+        "records",
+        "reaction",
+        0,
+        "difficulty"
+      ]
+    },
+    {
+      "file": "l1-number-out-of-range.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Charge beyond ±20",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "charge"
+      ]
+    },
+    {
+      "file": "l1-non-positive-coefficient.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Stoichiometric coefficient of 0",
+      "issuePath": [
+        "records",
+        "reaction",
+        0,
+        "participants",
+        0,
+        "coefficient"
+      ]
+    },
+    {
+      "file": "l1-invalid-timestamp.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Timestamp with a zone offset instead of Z",
+      "issuePath": [
+        "records",
+        "species",
+        0,
+        "provenance",
+        "createdAt"
+      ]
+    },
+    {
+      "file": "l1-derived-relationship-type.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "INV-11"
+      ],
+      "description": "Stored derived relation feeds_into",
+      "issuePath": [
+        "records",
+        "relationship",
+        0,
+        "type"
+      ]
+    },
+    {
+      "file": "l1-invalid-asset-hash.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Asset sha256 not 64 lowercase hex digits",
+      "issuePath": [
+        "records",
+        "asset",
+        0,
+        "sha256"
+      ]
+    },
+    {
+      "file": "l1-wrong-format.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Document format is not orn.dataset",
+      "issuePath": [
+        "format"
+      ]
+    },
+    {
+      "file": "l1-newer-schema-version.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-041"
+      ],
+      "description": "schemaVersion newer than this app",
+      "issuePath": [
+        "schemaVersion"
+      ]
+    },
+    {
+      "file": "l1-missing-collection.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "records.route absent",
+      "issuePath": [
+        "records",
+        "route"
+      ]
+    },
+    {
+      "file": "l1-unknown-collection.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "Unknown collection under records",
+      "issuePath": [
+        "records"
+      ]
+    },
+    {
+      "file": "l1-invalid-dataset-id.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [],
+      "description": "meta.datasetId with spaces and capitals",
+      "issuePath": [
+        "meta",
+        "datasetId"
+      ]
+    },
+    {
+      "file": "l2-ref-001-dangling.json",
+      "level": "L2",
+      "rule": "REF-001",
+      "severity": "ERROR",
+      "covers": [
+        "INV-04"
+      ],
+      "description": "classIds entry names a class that does not exist",
+      "record": {
+        "kind": "species",
+        "id": "spc_inv-ethanol"
+      },
+      "field": "classIds[]"
+    },
+    {
+      "file": "l2-ref-002-kind-not-allowed.json",
+      "level": "L2",
+      "rule": "REF-002",
+      "severity": "ERROR",
+      "covers": [
+        "INV-05"
+      ],
+      "description": "Entity display targets a concept (only species, class, reagent allowed)",
+      "record": {
+        "kind": "entity_display",
+        "id": "edp_inv-oxidation"
+      },
+      "field": "target"
+    },
+    {
+      "file": "l2-ref-003-higher-layer.json",
+      "level": "L2",
+      "rule": "REF-003",
+      "severity": "ERROR",
+      "covers": [
+        "INV-05"
+      ],
+      "description": "Asset (layer 4) attached to a navigator anchor (layer 5)",
+      "record": {
+        "kind": "asset",
+        "id": "ast_inv-image"
+      },
+      "field": "attachedTo[].ref",
+      "note": "The kind is also outside the field's allowed kinds; the validator must report the more specific REF-003 (open question, step 1.7)."
+    },
+    {
+      "file": "l2-ref-004-local-unresolved.json",
+      "level": "L2",
+      "rule": "REF-004",
+      "severity": "ERROR",
+      "covers": [
+        "INV-07"
+      ],
+      "description": "Stage lists a participant ID the reaction does not define",
+      "record": {
+        "kind": "reaction",
+        "id": "rxn_inv-ethanol-pcc"
+      },
+      "field": "stages[].participantIds[]"
+    },
+    {
+      "file": "l2-ref-005-nested-unresolved.json",
+      "level": "L2",
+      "rule": "REF-005",
+      "severity": "ERROR",
+      "covers": [
+        "INV-07"
+      ],
+      "description": "Participant profileId is not a profile of the referenced reagent",
+      "record": {
+        "kind": "reaction",
+        "id": "rxn_inv-ethanol-pcc"
+      },
+      "field": "participants[].profileId"
+    },
+    {
+      "file": "l2-ref-006-duplicate-record-id.json",
+      "level": "L2",
+      "rule": "REF-006",
+      "severity": "ERROR",
+      "covers": [
+        "INV-01"
+      ],
+      "description": "Two species records share one ID",
+      "record": {
+        "kind": "species",
+        "id": "spc_inv-ethanol"
+      },
+      "field": "id"
+    },
+    {
+      "file": "l2-ref-006-duplicate-nested-id.json",
+      "level": "L2",
+      "rule": "REF-006",
+      "severity": "ERROR",
+      "covers": [
+        "INV-01"
+      ],
+      "description": "Two reactions share one outcome ID",
+      "record": {
+        "kind": "reaction",
+        "id": "rxn_inv-ethanol-pcc-copy"
+      },
+      "field": "outcomes[].id"
+    },
+    {
+      "file": "l2-ref-007-self-reference.json",
+      "level": "L2",
+      "rule": "REF-007",
+      "severity": "ERROR",
+      "covers": [
+        "INV-09"
+      ],
+      "description": "Class listed as its own parent",
+      "record": {
+        "kind": "class",
+        "id": "cls_inv-alcohols"
+      },
+      "field": "parentIds[]",
+      "note": "HIER-001 (L3) describes the same cycle; L3 does not run on records with L2 ERRORs."
+    },
+    {
+      "file": "l2-ref-008-rich-text-link.json",
+      "level": "L2",
+      "rule": "REF-008",
+      "severity": "WARNING",
+      "covers": [],
+      "description": "Rich-text [[link]] to a record that does not exist",
+      "record": {
+        "kind": "species",
+        "id": "spc_inv-ethanol"
+      },
+      "field": "notes",
+      "note": "Requires the mini-markup parser (step 1.3)."
+    }
+  ]
+}

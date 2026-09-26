@@ -1,0 +1,3783 @@
+{
+  "format": "orn.dataset",
+  "schemaVersion": 1,
+  "exportedAt": "2026-09-26T00:00:00.000Z",
+  "exportScope": "full",
+  "generator": {
+    "app": "orn-fixture-builder",
+    "version": "0.1.0"
+  },
+  "meta": {
+    "datasetId": "schema-fixture-maximal",
+    "title": "Maximal valid dataset (schema fixture)",
+    "description": "Every field of every record kind is populated at least once. Values exercise the schema.",
+    "createdAt": "2026-09-26T00:00:00.000Z",
+    "updatedAt": "2026-09-26T00:00:00.000Z"
+  },
+  "records": {
+    "reference": [
+      {
+        "id": "ref_max-ncert-chem-12-2",
+        "kind": "reference",
+        "refKind": "ncert",
+        "title": "Chemistry Part II, Class XII",
+        "authors": [
+          "NCERT"
+        ],
+        "year": 2023,
+        "edition": "Reprint 2023–24",
+        "publisher": "NCERT",
+        "url": "https://ncert.nic.in/textbook.php",
+        "identifier": "lech2",
+        "notes": "Unit 7 (alcohols) and Unit 8 (carbonyl compounds).",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-organic-text",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "ref-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "ref_max-organic-text",
+        "kind": "reference",
+        "refKind": "textbook",
+        "title": "Organic chemistry reference text",
+        "authors": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "ref-2",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "concept": [
+      {
+        "id": "cpt_max-carbocation-stability",
+        "kind": "concept",
+        "name": "Carbocation stability",
+        "aliases": [],
+        "conceptKind": "stability",
+        "parentIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "c-4",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "cpt_max-carbonyl-addition",
+        "kind": "concept",
+        "name": "Nucleophilic addition to C=O",
+        "aliases": [
+          "carbonyl addition"
+        ],
+        "conceptKind": "mechanism_class",
+        "parentIds": [
+          "cpt_max-nucleophilic-addition"
+        ],
+        "summary": "A nucleophile adds to the *electrophilic* carbonyl carbon.",
+        "difficulty": 3,
+        "studyNotes": "- sp² → sp³ at the carbonyl carbon",
+        "notes": "Fixture concept.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "c-2",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "cpt_max-elimination",
+        "kind": "concept",
+        "name": "Elimination reactions",
+        "aliases": [],
+        "conceptKind": "reaction_type",
+        "parentIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "c-3",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "cpt_max-nucleophilic-addition",
+        "kind": "concept",
+        "name": "Nucleophilic addition",
+        "aliases": [
+          "AdN"
+        ],
+        "conceptKind": "reaction_type",
+        "parentIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "c-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "species": [
+      {
+        "id": "spc_max-2-methylpropan-2-ol",
+        "kind": "species",
+        "names": {
+          "canonical": "2-Methylpropan-2-ol",
+          "display": "tert-Butyl alcohol",
+          "iupac": "2-methylpropan-2-ol",
+          "common": [
+            "tert-butyl alcohol"
+          ],
+          "aliases": [
+            "t-BuOH",
+            "(CH₃)₃COH"
+          ],
+          "qualifier": "(reagent grade)"
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CC(C)(C)O"
+        },
+        "formula": "C4H10O",
+        "charge": 0,
+        "isotopeNote": "Natural isotopic abundance.",
+        "classIds": [
+          "cls_max-tertiary-alcohols"
+        ],
+        "stereo": {
+          "kind": "achiral",
+          "descriptors": []
+        },
+        "aromaticity": "non_aromatic",
+        "properties": [
+          {
+            "key": "boiling_point",
+            "value": "355 K",
+            "note": "At 1 atm.",
+            "citations": [
+              {
+                "referenceId": "ref_max-ncert-chem-12-2",
+                "locator": "Table 7.1",
+                "note": "Checked against the printed edition."
+              }
+            ]
+          },
+          {
+            "key": "other",
+            "label": "Lucas test",
+            "value": "Turbidity appears immediately.",
+            "citations": []
+          }
+        ],
+        "acidBaseNotes": "Weaker acid than water in solution.",
+        "studyNotes": "3° alcohols resist oxidation.",
+        "notes": "Fixture species with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc-full",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "spc_max-2-methylpropene",
+        "kind": "species",
+        "names": {
+          "canonical": "2-Methylpropene",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CC(C)=C"
+        },
+        "classIds": [
+          "cls_max-alkenes"
+        ],
+        "properties": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc_max-2-methylpropene",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "spc_max-butan-2-ol",
+        "kind": "species",
+        "names": {
+          "canonical": "Butan-2-ol",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CCC(C)O"
+        },
+        "classIds": [
+          "cls_max-alcohols"
+        ],
+        "stereo": {
+          "kind": "racemic",
+          "descriptors": [
+            "2R",
+            "2S"
+          ],
+          "note": "Formed as a 1:1 mixture of enantiomers."
+        },
+        "properties": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc_max-butan-2-ol",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "spc_max-diethyl-ether",
+        "kind": "species",
+        "names": {
+          "canonical": "Ethoxyethane",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CCOCC"
+        },
+        "classIds": [],
+        "properties": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc_max-diethyl-ether",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "spc_max-magnesium-alkoxide",
+        "kind": "species",
+        "names": {
+          "canonical": "Magnesium 2-methylpropan-2-olate bromide",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "reactive_intermediate",
+        "structure": {
+          "format": "smiles",
+          "value": "CC(C)(C)[O-].[Mg+2].[Br-]"
+        },
+        "classIds": [],
+        "properties": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc_max-magnesium-alkoxide",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "spc_max-magnesium-hydroxybromide",
+        "kind": "species",
+        "names": {
+          "canonical": "Magnesium hydroxybromide",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "salt",
+        "structure": {
+          "format": "smiles",
+          "value": "[Mg+2].[OH-].[Br-]"
+        },
+        "classIds": [],
+        "properties": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc_max-magnesium-hydroxybromide",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "spc_max-methylmagnesium-bromide",
+        "kind": "species",
+        "names": {
+          "canonical": "Methylmagnesium bromide",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "C[Mg]Br"
+        },
+        "classIds": [
+          "cls_max-grignard-reagents"
+        ],
+        "properties": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc_max-methylmagnesium-bromide",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "spc_max-propanone",
+        "kind": "species",
+        "names": {
+          "canonical": "Propanone",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CC(C)=O"
+        },
+        "classIds": [
+          "cls_max-ketones"
+        ],
+        "properties": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc_max-propanone",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "spc_max-water",
+        "kind": "species",
+        "names": {
+          "canonical": "Water",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "O"
+        },
+        "classIds": [],
+        "properties": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "spc_max-water",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "class": [
+      {
+        "id": "cls_max-alcohols",
+        "kind": "class",
+        "names": {
+          "canonical": "Alcohols (fixture)",
+          "common": [],
+          "aliases": []
+        },
+        "classKind": "compound_class",
+        "parentIds": [],
+        "exampleSpeciesIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "cls_max-alcohols",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "cls_max-alkenes",
+        "kind": "class",
+        "names": {
+          "canonical": "Alkenes (fixture)",
+          "common": [],
+          "aliases": []
+        },
+        "classKind": "compound_class",
+        "parentIds": [],
+        "exampleSpeciesIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "cls_max-alkenes",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "cls_max-grignard-reagents",
+        "kind": "class",
+        "names": {
+          "canonical": "Grignard reagents",
+          "common": [],
+          "aliases": []
+        },
+        "classKind": "reagent_family",
+        "parentIds": [],
+        "generic": {
+          "formulaText": "R–MgX"
+        },
+        "exampleSpeciesIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "cls_max-grignard-reagents",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "cls_max-ketones",
+        "kind": "class",
+        "names": {
+          "canonical": "Ketones (fixture)",
+          "common": [],
+          "aliases": []
+        },
+        "classKind": "compound_class",
+        "parentIds": [],
+        "exampleSpeciesIds": [
+          "spc_max-propanone"
+        ],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "cls_max-ketones",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "cls_max-tertiary-alcohols",
+        "kind": "class",
+        "names": {
+          "canonical": "Tertiary alcohols",
+          "display": "3° alcohols",
+          "iupac": "tertiary alkanols",
+          "common": [
+            "3° alcohols"
+          ],
+          "aliases": [
+            "tert-alcohols"
+          ],
+          "qualifier": "(generic)"
+        },
+        "classKind": "compound_class",
+        "parentIds": [
+          "cls_max-alcohols"
+        ],
+        "generic": {
+          "formulaText": "R₃C–OH",
+          "generalFormula": "CnH2n+1OH",
+          "structure": {
+            "format": "cxsmiles",
+            "value": "*C(*)(*)O |$R1;;R2;R3;$|"
+          },
+          "smarts": "[CX4;H0]([#6])([#6])([#6])[OX2H]",
+          "rGroupNote": "R1–R3 are alkyl or aryl groups."
+        },
+        "exampleSpeciesIds": [
+          "spc_max-2-methylpropan-2-ol"
+        ],
+        "description": "The carbinol carbon carries three carbon substituents.",
+        "studyNotes": "React fastest in the Lucas test.",
+        "notes": "Fixture class with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "cls-full",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "reagent": [
+      {
+        "id": "rgt_max-dilute-acid",
+        "kind": "reagent",
+        "names": {
+          "canonical": "Dilute aqueous acid",
+          "common": [],
+          "aliases": []
+        },
+        "components": [],
+        "formulaText": "H₃O⁺",
+        "families": [
+          "acid"
+        ],
+        "classIds": [],
+        "profiles": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rgt-2",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "rgt_max-methylmagnesium-bromide",
+        "kind": "reagent",
+        "names": {
+          "canonical": "Methylmagnesium bromide in dry ether",
+          "display": "CH₃MgBr",
+          "iupac": "bromo(methyl)magnesium",
+          "common": [
+            "methyl Grignard"
+          ],
+          "aliases": [
+            "MeMgBr"
+          ],
+          "qualifier": "(ethereal solution)"
+        },
+        "speciesId": "spc_max-methylmagnesium-bromide",
+        "components": [
+          {
+            "ref": {
+              "kind": "species",
+              "id": "spc_max-methylmagnesium-bromide"
+            },
+            "role": "active",
+            "amountText": "1 equiv"
+          },
+          {
+            "ref": {
+              "kind": "species",
+              "id": "spc_max-diethyl-ether"
+            },
+            "role": "solvent"
+          }
+        ],
+        "formulaText": "CH₃MgBr / dry ether",
+        "families": [
+          "organometallic",
+          "nucleophile"
+        ],
+        "classIds": [
+          "cls_max-grignard-reagents"
+        ],
+        "profiles": [
+          {
+            "id": "rpf_max-grignard-standard",
+            "label": "dry ether, inert atmosphere",
+            "aliases": [
+              "Grignard conditions"
+            ],
+            "parameters": {
+              "temperature": {
+                "kind": "range",
+                "min": 0,
+                "max": 35,
+                "unit": "C"
+              },
+              "pressure": {
+                "kind": "qualitative",
+                "value": "atmospheric"
+              },
+              "time": {
+                "kind": "qualitative",
+                "value": "brief"
+              },
+              "medium": "neutral",
+              "solventCharacter": [
+                "ethereal"
+              ],
+              "anhydrous": true,
+              "atmosphere": "nitrogen",
+              "activation": [],
+              "other": [
+                "exclude moisture"
+              ],
+              "text": "Dry ether under N₂, 0–35 °C",
+              "parsedFields": [
+                "temperature"
+              ]
+            },
+            "behaviour": "Adds R⁻ equivalents to carbonyl carbon."
+          }
+        ],
+        "description": "Organomagnesium halide used as a carbon nucleophile.",
+        "studyNotes": "Destroyed by water and alcohols.",
+        "notes": "Fixture reagent with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rgt-full",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "rgt_max-phosphoric-acid",
+        "kind": "reagent",
+        "names": {
+          "canonical": "Phosphoric acid",
+          "common": [],
+          "aliases": []
+        },
+        "components": [],
+        "families": [
+          "acid",
+          "dehydrating_agent"
+        ],
+        "classIds": [],
+        "profiles": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rgt-3",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "rgt_max-sulfuric-acid",
+        "kind": "reagent",
+        "names": {
+          "canonical": "Concentrated sulfuric acid",
+          "common": [],
+          "aliases": []
+        },
+        "components": [],
+        "families": [
+          "acid",
+          "dehydrating_agent"
+        ],
+        "classIds": [],
+        "profiles": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rgt-4",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "transformation": [
+      {
+        "id": "trf_max-ketone-to-tertiary-alcohol",
+        "kind": "transformation",
+        "name": "Ketone → 3° alcohol",
+        "aliases": [
+          "ketone to tertiary alcohol"
+        ],
+        "fromClassIds": [
+          "cls_max-ketones"
+        ],
+        "toClassIds": [
+          "cls_max-tertiary-alcohols"
+        ],
+        "equationText": "R₂C=O + R′MgX → R₂R′C–OH",
+        "reactionSmarts": "[C:1]=[O:2]>>[C:1][O:2]",
+        "bondChangeSummary": "C=O π bond broken; new C–C σ bond formed.",
+        "carbonChainChange": "ascent",
+        "conceptIds": [
+          "cpt_max-carbonyl-addition"
+        ],
+        "description": "Carbon–carbon bond formation at a ketone carbonyl.",
+        "studyNotes": "Adds one carbon per methyl Grignard.",
+        "notes": "Fixture transformation with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "trf-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "named_reaction": [
+      {
+        "id": "nrx_max-grignard-carbonyl-addition",
+        "kind": "named_reaction",
+        "name": "Grignard addition to carbonyls",
+        "aliases": [
+          "Grignard carbonyl addition"
+        ],
+        "parentIds": [
+          "nrx_max-grignard-reactions"
+        ],
+        "summary": "R–MgX adds to C=O; acidic work-up gives the alcohol.",
+        "typicalConditions": "1. RMgX, dry ether 2. H₃O⁺",
+        "conceptIds": [
+          "cpt_max-carbonyl-addition"
+        ],
+        "prerequisiteConceptIds": [
+          "cpt_max-nucleophilic-addition"
+        ],
+        "difficulty": 3,
+        "studyNotes": "Formaldehyde → 1°, other aldehydes → 2°, ketones → 3° alcohols.",
+        "notes": "Fixture named reaction with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "nrx-2",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "nrx_max-grignard-reactions",
+        "kind": "named_reaction",
+        "name": "Grignard reactions",
+        "aliases": [],
+        "parentIds": [],
+        "conceptIds": [],
+        "prerequisiteConceptIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "nrx-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "mechanism": [
+      {
+        "id": "mec_max-grignard-addition",
+        "kind": "mechanism",
+        "name": "Grignard addition to a ketone",
+        "aliases": [
+          "organomagnesium addition"
+        ],
+        "mechanismClasses": [
+          {
+            "conceptId": "cpt_max-carbonyl-addition",
+            "certainty": "definite"
+          }
+        ],
+        "summary": "Polar addition through a cyclic transition state; SET for hindered ketones.",
+        "variants": [
+          {
+            "id": "mvr_max-grignard-polar",
+            "label": "Polar (two-electron) addition",
+            "applicability": "Unhindered ketones.",
+            "steps": [
+              {
+                "id": "mst_max-grignard-attack",
+                "title": "Nucleophilic attack",
+                "stepKinds": [
+                  "nucleophilic_attack",
+                  "addition",
+                  "coordination"
+                ],
+                "description": "The C–Mg bond electrons attack the carbonyl carbon.",
+                "species": [
+                  {
+                    "role": "reactant",
+                    "ref": {
+                      "kind": "species",
+                      "id": "spc_max-propanone"
+                    },
+                    "label": "Propanone",
+                    "structure": {
+                      "format": "smiles",
+                      "value": "[CH3:1][C:2](=[O:3])[CH3:4]"
+                    }
+                  },
+                  {
+                    "role": "reagent",
+                    "ref": {
+                      "kind": "reagent",
+                      "id": "rgt_max-methylmagnesium-bromide"
+                    },
+                    "structure": {
+                      "format": "smiles",
+                      "value": "[CH3:5][Mg:6][Br:7]"
+                    }
+                  },
+                  {
+                    "role": "transition_state",
+                    "label": "Four-centre transition state"
+                  },
+                  {
+                    "role": "intermediate",
+                    "ref": {
+                      "kind": "species",
+                      "id": "spc_max-magnesium-alkoxide"
+                    }
+                  }
+                ],
+                "bondsFormed": [
+                  {
+                    "atoms": [
+                      2,
+                      5
+                    ],
+                    "order": 1,
+                    "aromatic": false,
+                    "note": "new C–C σ bond"
+                  },
+                  {
+                    "atoms": [
+                      3,
+                      6
+                    ],
+                    "order": 1
+                  }
+                ],
+                "bondsBroken": [
+                  {
+                    "atoms": [
+                      5,
+                      6
+                    ],
+                    "order": 1
+                  }
+                ],
+                "electronMovements": [
+                  {
+                    "from": {
+                      "kind": "bond",
+                      "atoms": [
+                        5,
+                        6
+                      ]
+                    },
+                    "to": {
+                      "kind": "atom",
+                      "atom": 2
+                    },
+                    "electrons": 2
+                  },
+                  {
+                    "from": {
+                      "kind": "lone_pair",
+                      "atom": 3
+                    },
+                    "to": {
+                      "kind": "atom",
+                      "atom": 6
+                    },
+                    "electrons": 2
+                  }
+                ],
+                "isRateDetermining": true,
+                "reversible": false,
+                "stereochemicalEvent": "Attack on either face of the planar carbonyl",
+                "note": "Fixture step with every field populated."
+              }
+            ],
+            "rateLaw": "rate = k[RMgX][ketone]",
+            "note": "Fixture variant."
+          },
+          {
+            "id": "mvr_max-grignard-set",
+            "label": "Single-electron transfer",
+            "steps": [
+              {
+                "id": "mst_max-grignard-radical-coupling",
+                "stepKinds": [
+                  "radical_termination"
+                ],
+                "species": [
+                  {
+                    "role": "intermediate",
+                    "label": "Ketyl radical anion and methyl radical"
+                  }
+                ],
+                "bondsFormed": [],
+                "bondsBroken": [],
+                "electronMovements": [
+                  {
+                    "from": {
+                      "kind": "radical",
+                      "atom": 5
+                    },
+                    "to": {
+                      "kind": "radical",
+                      "atom": 2
+                    },
+                    "electrons": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "conceptIds": [
+          "cpt_max-carbonyl-addition"
+        ],
+        "studyNotes": "Work-up protonates the alkoxide.",
+        "notes": "Fixture mechanism with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "mec-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "reaction": [
+      {
+        "id": "rxn_max-grignard-ketone-generic",
+        "kind": "reaction",
+        "name": "Ketone + Grignard reagent → 3° alcohol",
+        "aliases": [],
+        "scope": "generic",
+        "purposes": [
+          "synthesis"
+        ],
+        "namedReactionIds": [
+          "nrx_max-grignard-carbonyl-addition"
+        ],
+        "transformationIds": [
+          "trf_max-ketone-to-tertiary-alcohol"
+        ],
+        "reactionTypes": [],
+        "mechanismClasses": [],
+        "participants": [
+          {
+            "id": "prt_max-generic-ketone",
+            "ref": {
+              "kind": "class",
+              "id": "cls_max-ketones"
+            },
+            "role": "reactant"
+          },
+          {
+            "id": "prt_max-generic-grignard",
+            "ref": {
+              "kind": "class",
+              "id": "cls_max-grignard-reagents"
+            },
+            "role": "reagent"
+          }
+        ],
+        "stages": [],
+        "conditionVariants": [],
+        "outcomes": [
+          {
+            "id": "out_max-generic-alcohol",
+            "conditionVariantIds": [],
+            "selectivity": "exclusive",
+            "products": [
+              {
+                "id": "pdt_max-generic-alcohol",
+                "ref": {
+                  "kind": "class",
+                  "id": "cls_max-tertiary-alcohols"
+                },
+                "role": "main"
+              }
+            ],
+            "conceptIds": []
+          }
+        ],
+        "intermediates": [],
+        "mechanismIds": [],
+        "reversibility": {
+          "kind": "irreversible"
+        },
+        "conceptIds": [],
+        "prerequisiteConceptIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rxn_max-grignard-ketone-generic",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "rxn_max-grignard-propanone",
+        "kind": "reaction",
+        "name": "Methylmagnesium bromide + propanone",
+        "aliases": [
+          "Grignard synthesis of tert-butyl alcohol"
+        ],
+        "scope": "specific",
+        "instanceOfId": "rxn_max-grignard-ketone-generic",
+        "purposes": [
+          "synthesis"
+        ],
+        "namedReactionIds": [
+          "nrx_max-grignard-carbonyl-addition"
+        ],
+        "transformationIds": [
+          "trf_max-ketone-to-tertiary-alcohol"
+        ],
+        "reactionTypes": [
+          {
+            "conceptId": "cpt_max-nucleophilic-addition",
+            "certainty": "definite"
+          }
+        ],
+        "mechanismClasses": [
+          {
+            "conceptId": "cpt_max-carbonyl-addition",
+            "certainty": "probable"
+          }
+        ],
+        "participants": [
+          {
+            "id": "prt_max-grignard-propanone",
+            "ref": {
+              "kind": "species",
+              "id": "spc_max-propanone"
+            },
+            "role": "reactant",
+            "coefficient": 1,
+            "phase": "l",
+            "strength": "concentrated",
+            "dry": true,
+            "quantity": {
+              "equivalents": 1,
+              "qualifier": "limiting",
+              "text": "1 equiv"
+            },
+            "flags": {
+              "contributesAtoms": true,
+              "consumed": true,
+              "catalytic": false
+            },
+            "isPrimarySubstrate": true,
+            "originalText": "acetone",
+            "note": "Must be dry."
+          },
+          {
+            "id": "prt_max-grignard-reagent",
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_max-methylmagnesium-bromide"
+            },
+            "role": "reagent",
+            "quantity": {
+              "qualifier": "excess"
+            },
+            "profileId": "rpf_max-grignard-standard"
+          },
+          {
+            "id": "prt_max-grignard-ether",
+            "ref": {
+              "kind": "species",
+              "id": "spc_max-diethyl-ether"
+            },
+            "role": "solvent"
+          },
+          {
+            "id": "prt_max-grignard-workup",
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_max-dilute-acid"
+            },
+            "role": "workup_reagent",
+            "phase": "aq",
+            "strength": "dilute"
+          }
+        ],
+        "stages": [
+          {
+            "id": "stg_max-grignard-addition",
+            "kind": "reaction",
+            "label": "1. CH₃MgBr, dry ether",
+            "participantIds": [
+              "prt_max-grignard-propanone",
+              "prt_max-grignard-reagent",
+              "prt_max-grignard-ether"
+            ],
+            "parameters": {
+              "temperature": {
+                "kind": "qualitative",
+                "value": "room_temperature"
+              },
+              "solventCharacter": [
+                "ethereal"
+              ],
+              "anhydrous": true,
+              "activation": [],
+              "other": [],
+              "parsedFields": []
+            },
+            "originalText": "(i) CH3MgBr, dry ether"
+          },
+          {
+            "id": "stg_max-grignard-workup",
+            "kind": "workup",
+            "label": "2. H₃O⁺",
+            "participantIds": [
+              "prt_max-grignard-workup"
+            ],
+            "parameters": {
+              "temperature": {
+                "kind": "value",
+                "value": 273,
+                "unit": "K"
+              },
+              "medium": "acidic",
+              "solventCharacter": [
+                "aqueous"
+              ],
+              "activation": [],
+              "other": [],
+              "text": "ice-cold dilute acid",
+              "parsedFields": [
+                "medium"
+              ]
+            },
+            "originalText": "(ii) H3O+"
+          }
+        ],
+        "conditionVariants": [
+          {
+            "id": "cvr_max-grignard-standard",
+            "label": "Standard",
+            "stageId": "stg_max-grignard-addition",
+            "parameters": {
+              "pressure": {
+                "kind": "value",
+                "value": 1,
+                "unit": "atm"
+              },
+              "time": {
+                "kind": "value",
+                "value": 1,
+                "unit": "h"
+              },
+              "solventCharacter": [],
+              "activation": [
+                "ultrasound"
+              ],
+              "other": [],
+              "parsedFields": []
+            },
+            "participantIds": [],
+            "note": "Sonication helps initiation."
+          }
+        ],
+        "outcomes": [
+          {
+            "id": "out_max-grignard-alcohol",
+            "label": "Tertiary alcohol",
+            "conditionVariantIds": [
+              "cvr_max-grignard-standard"
+            ],
+            "selectivity": "exclusive",
+            "products": [
+              {
+                "id": "pdt_max-grignard-alcohol",
+                "ref": {
+                  "kind": "species",
+                  "id": "spc_max-2-methylpropan-2-ol"
+                },
+                "role": "main",
+                "coefficient": 1,
+                "phase": "l",
+                "originalText": "tert-butyl alcohol",
+                "note": "After work-up."
+              },
+              {
+                "id": "pdt_max-grignard-mg-salt",
+                "ref": {
+                  "kind": "species",
+                  "id": "spc_max-magnesium-hydroxybromide"
+                },
+                "role": "byproduct",
+                "phase": "s"
+              }
+            ],
+            "isomerGroup": "Addition product",
+            "regiochemistry": "1,2-addition to C=O",
+            "stereochemistry": {
+              "outcome": "no_new_stereocentre",
+              "descriptors": [
+                "achiral product"
+              ],
+              "note": "Two identical methyl groups."
+            },
+            "yieldText": "good",
+            "mechanism": {
+              "mechanismId": "mec_max-grignard-addition",
+              "variantId": "mvr_max-grignard-polar"
+            },
+            "rationale": "Carbanion-like methyl attacks the carbonyl carbon.",
+            "conceptIds": [
+              "cpt_max-carbonyl-addition"
+            ],
+            "note": "Fixture outcome with every field populated."
+          }
+        ],
+        "intermediates": [
+          {
+            "id": "int_max-grignard-alkoxide",
+            "intermediateKind": "complex",
+            "ref": {
+              "kind": "species",
+              "id": "spc_max-magnesium-alkoxide"
+            },
+            "label": "Magnesium alkoxide",
+            "structure": {
+              "format": "smiles",
+              "value": "CC(C)(C)[O-].[Mg+2].[Br-]"
+            },
+            "stageId": "stg_max-grignard-addition",
+            "note": "Hydrolysed in stage 2."
+          }
+        ],
+        "mechanismIds": [
+          "mec_max-grignard-addition"
+        ],
+        "reversibility": {
+          "kind": "irreversible",
+          "note": "C–C bond formation is not reversed under work-up."
+        },
+        "selectivityNotes": {
+          "regio": "Only 1,2-addition.",
+          "stereo": "No stereocentre formed.",
+          "chemo": "Protic groups must be absent."
+        },
+        "generalizedEquation": "(CH₃)₂C=O + CH₃MgBr → (CH₃)₃C–OH",
+        "mappedReaction": {
+          "format": "reaction_smiles",
+          "value": "[CH3:1][Mg]Br.[CH3:2][C:3](=[O:4])[CH3:5]>>[CH3:1][C:3]([CH3:2])([CH3:5])[OH:4]"
+        },
+        "conceptIds": [
+          "cpt_max-carbonyl-addition"
+        ],
+        "prerequisiteConceptIds": [
+          "cpt_max-nucleophilic-addition"
+        ],
+        "limitations": "Fails with substrates bearing O–H or N–H groups.",
+        "difficulty": 3,
+        "studyNotes": "Two stages: addition, then work-up.",
+        "notes": "Fixture reaction with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rxn-full",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "rxn_max-isobutene-hydration",
+        "kind": "reaction",
+        "name": "Acid-catalysed hydration of 2-methylpropene",
+        "aliases": [],
+        "scope": "specific",
+        "purposes": [
+          "synthesis"
+        ],
+        "namedReactionIds": [],
+        "transformationIds": [],
+        "reactionTypes": [],
+        "mechanismClasses": [],
+        "participants": [
+          {
+            "id": "prt_max-hydration-alkene",
+            "ref": {
+              "kind": "species",
+              "id": "spc_max-2-methylpropene"
+            },
+            "role": "reactant"
+          },
+          {
+            "id": "prt_max-hydration-water",
+            "ref": {
+              "kind": "species",
+              "id": "spc_max-water"
+            },
+            "role": "reactant"
+          },
+          {
+            "id": "prt_max-hydration-acid",
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_max-dilute-acid"
+            },
+            "role": "catalyst"
+          }
+        ],
+        "stages": [
+          {
+            "id": "stg_max-hydration",
+            "kind": "reaction",
+            "participantIds": [
+              "prt_max-hydration-alkene",
+              "prt_max-hydration-water",
+              "prt_max-hydration-acid"
+            ],
+            "parameters": {
+              "temperature": {
+                "kind": "value",
+                "value": 298,
+                "unit": "K"
+              },
+              "pressure": {
+                "kind": "range",
+                "min": 1,
+                "max": 2,
+                "unit": "atm"
+              },
+              "medium": "acidic",
+              "solventCharacter": [
+                "aqueous"
+              ],
+              "activation": [],
+              "other": [],
+              "parsedFields": []
+            }
+          }
+        ],
+        "conditionVariants": [],
+        "outcomes": [
+          {
+            "id": "out_max-hydration-alcohol",
+            "conditionVariantIds": [],
+            "selectivity": "exclusive",
+            "products": [
+              {
+                "id": "pdt_max-hydration-alcohol",
+                "ref": {
+                  "kind": "species",
+                  "id": "spc_max-2-methylpropan-2-ol"
+                },
+                "role": "main"
+              }
+            ],
+            "regiochemistry": "Markovnikov",
+            "conceptIds": []
+          }
+        ],
+        "intermediates": [],
+        "mechanismIds": [],
+        "reversibility": {
+          "kind": "reversible_under_other_conditions"
+        },
+        "conceptIds": [],
+        "prerequisiteConceptIds": [],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rxn_max-isobutene-hydration",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "rxn_max-tbuoh-dehydration",
+        "kind": "reaction",
+        "name": "Dehydration of 2-methylpropan-2-ol",
+        "aliases": [],
+        "scope": "specific",
+        "purposes": [
+          "synthesis"
+        ],
+        "namedReactionIds": [],
+        "transformationIds": [],
+        "reactionTypes": [
+          {
+            "conceptId": "cpt_max-elimination",
+            "certainty": "possible"
+          }
+        ],
+        "mechanismClasses": [],
+        "participants": [
+          {
+            "id": "prt_max-dehydration-alcohol",
+            "ref": {
+              "kind": "species",
+              "id": "spc_max-2-methylpropan-2-ol"
+            },
+            "role": "reactant"
+          },
+          {
+            "id": "prt_max-dehydration-h3po4",
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_max-phosphoric-acid"
+            },
+            "role": "catalyst"
+          },
+          {
+            "id": "prt_max-dehydration-h2so4",
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_max-sulfuric-acid"
+            },
+            "role": "reagent",
+            "strength": "concentrated"
+          }
+        ],
+        "stages": [],
+        "conditionVariants": [
+          {
+            "id": "cvr_max-dehydration-h3po4",
+            "label": "20% H₃PO₄, 358 K",
+            "parameters": {
+              "temperature": {
+                "kind": "value",
+                "value": 358,
+                "unit": "K"
+              },
+              "solventCharacter": [],
+              "activation": [],
+              "other": [],
+              "parsedFields": []
+            },
+            "participantIds": [
+              "prt_max-dehydration-h3po4"
+            ]
+          },
+          {
+            "id": "cvr_max-dehydration-h2so4",
+            "label": "conc. H₂SO₄, heat",
+            "parameters": {
+              "temperature": {
+                "kind": "qualitative",
+                "value": "heat"
+              },
+              "solventCharacter": [],
+              "activation": [],
+              "other": [],
+              "parsedFields": []
+            },
+            "participantIds": [
+              "prt_max-dehydration-h2so4"
+            ]
+          }
+        ],
+        "outcomes": [
+          {
+            "id": "out_max-dehydration-alkene",
+            "conditionVariantIds": [],
+            "selectivity": "exclusive",
+            "products": [
+              {
+                "id": "pdt_max-dehydration-alkene",
+                "ref": {
+                  "kind": "species",
+                  "id": "spc_max-2-methylpropene"
+                },
+                "role": "main"
+              },
+              {
+                "id": "pdt_max-dehydration-water",
+                "ref": {
+                  "kind": "species",
+                  "id": "spc_max-water"
+                },
+                "role": "coproduct"
+              }
+            ],
+            "conceptIds": []
+          }
+        ],
+        "intermediates": [],
+        "mechanismIds": [],
+        "reversibility": {
+          "kind": "reversible_under_other_conditions"
+        },
+        "conceptIds": [],
+        "prerequisiteConceptIds": [
+          "cpt_max-carbocation-stability"
+        ],
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rxn_max-tbuoh-dehydration",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "caveat": [
+      {
+        "id": "cav_max-grignard-protic",
+        "kind": "caveat",
+        "caveatKind": "trap",
+        "title": "Grignard reagents are destroyed by protic groups",
+        "rule": "Grignard reagents add to carbonyl compounds.",
+        "statement": "Any O–H or N–H present protonates R–MgX to the alkane first.",
+        "trigger": "Moist solvent or a protic functional group in the substrate.",
+        "triggerConditions": {
+          "solventCharacter": [
+            "polar_protic"
+          ],
+          "anhydrous": false,
+          "light": "diffuse",
+          "atmosphere": "air",
+          "activation": [],
+          "other": [
+            "traces of water"
+          ],
+          "parsedFields": []
+        },
+        "explanation": "Acid–base reaction is faster than addition.",
+        "targets": [
+          {
+            "ref": {
+              "kind": "reaction",
+              "id": "rxn_max-grignard-propanone"
+            },
+            "as": "affected_reaction"
+          },
+          {
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_max-methylmagnesium-bromide"
+            },
+            "as": "affected_reagent"
+          }
+        ],
+        "conceptIds": [
+          "cpt_max-carbonyl-addition"
+        ],
+        "importance": "high",
+        "notes": "Fixture caveat with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "cav-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "route": [
+      {
+        "id": "rte_max-propanone-to-isobutene",
+        "kind": "route",
+        "name": "Propanone → 2-methylpropene",
+        "target": {
+          "kind": "species",
+          "id": "spc_max-2-methylpropene"
+        },
+        "purpose": "worked_example",
+        "steps": [
+          {
+            "id": "rst_max-route-grignard",
+            "reactionId": "rxn_max-grignard-propanone",
+            "outcomeId": "out_max-grignard-alcohol",
+            "conditionVariantId": "cvr_max-grignard-standard",
+            "inputFromStepIds": [],
+            "note": "Build the carbon skeleton."
+          },
+          {
+            "id": "rst_max-route-dehydration",
+            "reactionId": "rxn_max-tbuoh-dehydration",
+            "outcomeId": "out_max-dehydration-alkene",
+            "conditionVariantId": "cvr_max-dehydration-h3po4",
+            "inputFromStepIds": [
+              "rst_max-route-grignard"
+            ]
+          }
+        ],
+        "description": "Two-step ascent then elimination.",
+        "conceptIds": [
+          "cpt_max-elimination"
+        ],
+        "notes": "Fixture route with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rte-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "relationship": [
+      {
+        "id": "rel_max-dehydration-hydration",
+        "kind": "relationship",
+        "type": "reverse_of",
+        "from": {
+          "kind": "reaction",
+          "id": "rxn_max-tbuoh-dehydration"
+        },
+        "to": {
+          "kind": "reaction",
+          "id": "rxn_max-isobutene-hydration"
+        },
+        "reverseKind": "synthetic",
+        "note": "Different conditions achieve the reverse change.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "rel-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "exam": [
+      {
+        "id": "exm_max-jee-advanced",
+        "kind": "exam",
+        "name": "JEE Advanced (fixture)",
+        "shortName": "Advanced",
+        "authority": "Joint Admission Board",
+        "notes": "Fixture exam.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "exm-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "exam_version": [
+      {
+        "id": "exv_max-jee-advanced-provisional",
+        "kind": "exam_version",
+        "examId": "exm_max-jee-advanced",
+        "label": "Provisional",
+        "year": 2026,
+        "status": "provisional",
+        "effectiveFrom": "2026-01-01",
+        "effectiveTo": "2026-12-31",
+        "units": [
+          {
+            "id": "unt_max-oxygen-compounds",
+            "code": "ORG-7",
+            "title": "Alcohols, phenols and ethers",
+            "officialText": "Official wording not yet recorded.",
+            "topicCoverage": [
+              {
+                "topicId": "top_max-alcohols",
+                "coverage": "included",
+                "note": "Whole chapter."
+              },
+              {
+                "topicId": "top_max-grignard",
+                "coverage": "partial"
+              }
+            ]
+          }
+        ],
+        "notes": "Fixture exam version with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "exv-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "topic": [
+      {
+        "id": "top_max-alcohols",
+        "kind": "topic",
+        "name": "Alcohols (fixture topic)",
+        "aliases": [
+          "Alcohols, phenols & ethers"
+        ],
+        "parentId": "top_max-organic",
+        "topicKind": "chapter",
+        "order": 7,
+        "summary": "Preparation and reactions of alcohols.",
+        "notes": "Fixture topic with every field populated.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "top_max-alcohols",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "top_max-grignard",
+        "kind": "topic",
+        "name": "Grignard preparations of alcohols",
+        "aliases": [],
+        "parentId": "top_max-alcohols",
+        "topicKind": "section",
+        "order": 7.5,
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "top_max-grignard",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      },
+      {
+        "id": "top_max-organic",
+        "kind": "topic",
+        "name": "Organic chemistry (fixture)",
+        "aliases": [],
+        "topicKind": "subject",
+        "order": 1,
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "top_max-organic",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "topic_mapping": [
+      {
+        "id": "tmp_max-grignard",
+        "kind": "topic_mapping",
+        "topicId": "top_max-grignard",
+        "target": {
+          "kind": "reaction",
+          "id": "rxn_max-grignard-propanone"
+        },
+        "role": "core",
+        "note": "Fixture mapping.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "tmp-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "exam_relevance": [
+      {
+        "id": "erl_max-grignard-advanced",
+        "kind": "exam_relevance",
+        "target": {
+          "kind": "reaction",
+          "id": "rxn_max-grignard-propanone"
+        },
+        "examId": "exm_max-jee-advanced",
+        "examVersionIds": [
+          "exv_max-jee-advanced-provisional"
+        ],
+        "scope": "official",
+        "importance": 4,
+        "note": "Fixture override.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "erl-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "asset": [
+      {
+        "id": "ast_max-grignard-scheme",
+        "kind": "asset",
+        "mediaType": "image/png",
+        "byteSize": 70,
+        "sha256": "497790947d4666760ce38f3c00e852c71fdb66cae849bae8e9ede352719e1581",
+        "width": 1,
+        "height": 1,
+        "filename": "grignard-scheme.png",
+        "altText": "Reaction scheme image (1×1 placeholder).",
+        "assetRole": "reaction_image",
+        "attachedTo": [
+          {
+            "ref": {
+              "kind": "reaction",
+              "id": "rxn_max-grignard-propanone"
+            },
+            "note": "Scanned scheme."
+          }
+        ],
+        "caption": "Placeholder image for the schema fixture.",
+        "tags": [
+          "schema-fixture"
+        ],
+        "citations": [
+          {
+            "referenceId": "ref_max-ncert-chem-12-2",
+            "locator": "Unit 10",
+            "note": "Fixture citation."
+          }
+        ],
+        "provenance": {
+          "origin": "legacy_import",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "ast-1",
+            "unmapped": {
+              "legacyNode": {
+                "x": 120.5,
+                "y": -40,
+                "node": true,
+                "tags": [
+                  "a",
+                  null
+                ],
+                "nested": [
+                  [
+                    1,
+                    2
+                  ],
+                  {
+                    "k": "v"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "review_required",
+          "confidence": "medium",
+          "reasons": [
+            "Schema fixture: values exercise every schema field and are not curated teaching content."
+          ],
+          "reviewedAt": "2026-09-26T12:00:00.000Z"
+        }
+      }
+    ],
+    "navigator_anchor": [
+      {
+        "id": "anc_max-ketones",
+        "kind": "navigator_anchor",
+        "target": {
+          "kind": "class",
+          "id": "cls_max-ketones"
+        },
+        "order": 2,
+        "provenance": {
+          "origin": "user",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "view-1",
+            "unmapped": null
+          }
+        }
+      },
+      {
+        "id": "anc_max-tertiary-alcohols",
+        "kind": "navigator_anchor",
+        "target": {
+          "kind": "class",
+          "id": "cls_max-tertiary-alcohols"
+        },
+        "label": "3° alcohols",
+        "order": 1,
+        "provenance": {
+          "origin": "user",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "view-1",
+            "unmapped": null
+          }
+        }
+      }
+    ],
+    "reaction_scheme": [
+      {
+        "id": "rsc_max-grignard",
+        "kind": "reaction_scheme",
+        "reactionId": "rxn_max-grignard-propanone",
+        "conditionVariantId": "cvr_max-grignard-standard",
+        "placements": [
+          {
+            "participantId": "prt_max-grignard-propanone",
+            "position": "reactant_side"
+          },
+          {
+            "participantId": "prt_max-grignard-reagent",
+            "position": "above_arrow"
+          },
+          {
+            "participantId": "prt_max-grignard-workup",
+            "position": "below_arrow"
+          },
+          {
+            "participantId": "prt_max-grignard-ether",
+            "position": "hidden"
+          }
+        ],
+        "productPlacements": [
+          {
+            "productId": "pdt_max-grignard-alcohol",
+            "position": "product_side"
+          },
+          {
+            "productId": "pdt_max-grignard-mg-salt",
+            "position": "hidden"
+          }
+        ],
+        "showStageNumbers": true,
+        "preferAssetId": "ast_max-grignard-scheme",
+        "provenance": {
+          "origin": "user",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "view-1",
+            "unmapped": null
+          }
+        }
+      }
+    ],
+    "view_preset": [
+      {
+        "id": "vpr_max-carbonyl",
+        "kind": "view_preset",
+        "name": "Carbonyl additions (fixture)",
+        "view": "navigator",
+        "filters": {
+          "examId": "exm_max-jee-advanced",
+          "examVersionId": "exv_max-jee-advanced-provisional",
+          "scopes": [
+            "official",
+            "prerequisite"
+          ],
+          "topicIds": [
+            "top_max-grignard"
+          ],
+          "reagentFamilies": [
+            "organometallic"
+          ],
+          "text": "Grignard"
+        },
+        "anchorIds": [
+          "anc_max-tertiary-alcohols",
+          "anc_max-ketones"
+        ],
+        "provenance": {
+          "origin": "user",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "view-1",
+            "unmapped": null
+          }
+        }
+      }
+    ],
+    "entity_display": [
+      {
+        "id": "edp_max-diethyl-ether",
+        "kind": "entity_display",
+        "target": {
+          "kind": "species",
+          "id": "spc_max-diethyl-ether"
+        },
+        "showAsNode": "never",
+        "labelMode": "abbreviation",
+        "abbreviation": "Et₂O",
+        "provenance": {
+          "origin": "user",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T12:00:00.000Z",
+          "importBatchId": "imp_max-legacy-batch",
+          "legacy": {
+            "system": "orn-v6",
+            "legacyId": "view-1",
+            "unmapped": null
+          }
+        }
+      }
+    ]
+  },
+  "embeddedAssets": [
+    {
+      "assetId": "ast_max-grignard-scheme",
+      "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    }
+  ]
+}

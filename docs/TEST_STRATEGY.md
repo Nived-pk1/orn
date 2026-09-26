@@ -26,8 +26,8 @@ Rules:
 | Fixture | Purpose |
 |---|---|
 | `data/fixtures/schema/v1/minimal-valid.orn.json` | smallest valid dataset touching most kinds (exists) |
-| `data/fixtures/schema/v1/maximal-valid.orn.json` | every field of every kind populated (Phase 1); drives the reference-registry coverage test |
-| `data/fixtures/schema/v1/invalid/*.json` | one file per L1/L2 failure class (Phase 1) |
+| `data/fixtures/schema/v1/maximal-valid.orn.json` | every field of every kind populated (exists; completeness is checked against the schema by `maximal-fixture.test.ts`); drives the reference-registry coverage test |
+| `data/fixtures/schema/v1/invalid/*.json` | one file per L1/L2 failure class (exists); `invalid/manifest.json` records each file's level, rule, and the issue path (L1) or record + registry field (L2) |
 | `data/seed/demo.orn.json` | demo dataset (§3) |
 | `data/fixtures/demo-invalid.orn.json` | demo variant with deliberate L3 problems for diagnostics UI tests |
 | `data/fixtures/legacy/*` | v6/v4 legacy fixtures and oracle (exists; see its README) |

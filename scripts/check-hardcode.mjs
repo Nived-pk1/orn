@@ -28,7 +28,9 @@ function collect(value, key) {
     return;
   }
   if (typeof value !== 'string') return;
-  if (/^[a-z]{3}_[0-9a-z][0-9a-z-]{1,62}$/.test(value)) ids.add(value);
+  // IDs are collected where they are defined (`id` keys). Matching every ID-shaped string would also
+  // collect enum values such as "non_polar", which are schema vocabulary, not dataset content.
+  if (key === 'id' && /^[a-z]{3}_[0-9a-z][0-9a-z-]{1,62}$/.test(value)) ids.add(value);
   if ((key === 'canonical' || key === 'name') && value.trim().length >= MIN_NAME_LENGTH) names.add(value.trim().toLowerCase());
 }
 for (const root of DATA_ROOTS) {

@@ -1,0 +1,98 @@
+{
+  "format": "orn.dataset",
+  "schemaVersion": 1,
+  "exportedAt": "2026-09-26T00:00:00.000Z",
+  "exportScope": "full",
+  "generator": {
+    "app": "orn-fixture-builder",
+    "version": "0.1.0"
+  },
+  "meta": {
+    "datasetId": "schema-fixture-invalid",
+    "title": "Invalid: number-out-of-range",
+    "createdAt": "2026-09-26T00:00:00.000Z",
+    "updatedAt": "2026-09-26T00:00:00.000Z"
+  },
+  "records": {
+    "reference": [],
+    "concept": [],
+    "species": [
+      {
+        "id": "spc_inv-ethanol",
+        "kind": "species",
+        "names": {
+          "canonical": "Ethanol",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CCO"
+        },
+        "charge": 21,
+        "classIds": [
+          "cls_inv-alcohols"
+        ],
+        "properties": [],
+        "notes": "Plain note.",
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "class": [
+      {
+        "id": "cls_inv-alcohols",
+        "kind": "class",
+        "names": {
+          "canonical": "Alcohols",
+          "common": [],
+          "aliases": []
+        },
+        "classKind": "compound_class",
+        "parentIds": [],
+        "exampleSpeciesIds": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "reagent": [],
+    "transformation": [],
+    "named_reaction": [],
+    "mechanism": [],
+    "reaction": [],
+    "caveat": [],
+    "route": [],
+    "relationship": [],
+    "exam": [],
+    "exam_version": [],
+    "topic": [],
+    "topic_mapping": [],
+    "exam_relevance": [],
+    "asset": [],
+    "navigator_anchor": [],
+    "reaction_scheme": [],
+    "view_preset": [],
+    "entity_display": []
+  }
+}

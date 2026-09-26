@@ -55,5 +55,31 @@
 - esbuild install script approved via `allowScripts` in package.json (pinned to esbuild@0.28.2; re-approve when esbuild is upgraded).
 - `.gitattributes` (`* text=auto eol=lf`) enforces LF; repo renormalized (all tracked text files were already LF).
 
+### Step 1.2 — Maximal and invalid fixtures; full schema suite (2026-09-26)
+
+**Delivered**
+- `data/fixtures/schema/v1/maximal-valid.orn.json`: every record kind, every optional field, every array non-empty, every discriminated-union branch (Temperature/Pressure/Duration kinds, SubstanceRef/SpeciesOrClassRef kinds, all four ElectronSite kinds). Referentially consistent: nested IDs are globally unique, and local/nested references resolve. Records sorted by id; keys in schema order. Built around a Grignard synthesis (ketone → 3° alcohol → alkene route, reverse_of dehydration/hydration, SET and polar mechanism variants). Every record is `review_required` with the reason "Schema fixture … not curated teaching content".
+- `data/fixtures/schema/v1/invalid/`: 32 L1 files (unknown keys at record and nested level, missing field, wrong type, malformed ID, wrong prefix, `{kind,id}` mismatch, product→reagent, operational ID as a reference, kind literal, enum, blank/bidi/control/newline text, text/array/structure caps, `javascript:` and credential URLs, `1e999` → Infinity, non-integer, out of range, zero coefficient, zone-offset timestamp, stored `feeds_into`, bad sha256, wrong format, newer schemaVersion, missing/unknown collection, bad datasetId). 9 L2 files (REF-001…REF-008, with REF-006 split into record and nested ID). `manifest.json` records the expectations.
+- Test helpers (`src/test-support/`): `schema-walk.ts` (Zod 4 introspection: static node walk, value walk, coverage expectations/observations), `schema-shapes.ts` (shared value schemas, text vs machine-string classification), `schema-mutations.ts` (schema-derived mutations with expected accept/reject).
+- Tests (`src/core/schema/`):
+  - `maximal-fixture.test.ts`: parses unchanged; 335 schema-derived coverage expectations met; unique IDs; sorted collections.
+  - `schema-mutations.test.ts`: every record kind in the maximal fixture is mutated at every node, plus the document envelope. Covers caps at the limit and one past it (strings, arrays, numbers), ID patterns and prefixes, enums (every value), literals, discriminators, required keys, type errors, NaN/±Infinity, control/bidi/newline rules per text type, injected UI keys, and cross-kind rejection. Adding a plain string field without classifying it fails this suite.
+  - `ids.test.ts`, `primitives.test.ts`: prefix registry, ID body grammar, text caps and character classes, timestamps, numbers, SafeUrl, StructureRep, JsonValue, Names.
+  - `schema-layering.test.ts`: typed ID fields respect layers (INV-05/29), no curriculum fields in layer 1–2 (INV-13/30), selectivity only on outcomes (INV-08), derived relations not storable (INV-11), relationship specs, RecordRef/SubstanceRef/SpeciesOrClassRef kinds (INV-02, ADV-023), presentation records carry provenance only (INV-14).
+  - `invalid-fixtures.test.ts`: manifest ↔ files; each L1 file fails only at its declared path; each L2 file passes L1 unchanged and names an existing record and a registry path.
+- Invariants/ADV rows tested at L1: INV-01 (fixture), 02, 05, 08, 10, 11, 13, 14 (schema shape), 24, 29, 30; ADV-023, 029, 033 (schema part), 034, 036 (schema keeps unparsable SMILES), 037 (NaN/Infinity; the below-absolute-zero part is RXN-014, step 1.8).
+
+**Decisions**
+- Fixture completeness is derived from the schema, not from a hand-kept list. Reusable value schemas (ConditionParameters, refs, StructureRep, …) are covered once across all locations. Record-level fields are covered per kind.
+- The fixture generator was a throwaway script. Fixtures are maintained as data from now on, and the coverage test lists exactly what a schema change needs added.
+- `scripts/check-hardcode.mjs` now collects IDs only from `id` keys, where they are defined. Before, it collected every ID-shaped string, which flagged enum values such as `non_polar` and `non_aromatic` in `src/core/schema` as dataset IDs. Verified that a real fixture ID in production code still fails the check.
+
+**Verification** — `npm run check` green: 7 test files, 236 tests; check:hardcode 140 ids / 99 names.
+
+**Open items**
+- REVIEW REQUIRED — `SafeUrlSchema` does not reject control or bidi characters: the URL parser percent-encodes or strips them, but the raw string is stored. `embeddedAssets[].base64` has no character-set check (its hash is verified on import). Proposed smallest amendment: add the single-line forbidden-character refinement to `SafeUrlSchema`. It only tightens validation, so under MIGRATION.md §1 it needs no version bump; confirm before changing.
+- Open question for step 1.7 — REF-002 vs REF-003 precedence when a reference points to a higher layer. Such a kind is always outside the field's allowed kinds too (fixture `l2-ref-003-higher-layer.json`). Proposal: report REF-003 only.
+- `check:hardcode` name matching will flag schema enum literals when demo names coincide (e.g. a concept named "Elimination" vs the `elimination` step kind). Decide in step 1.12: either `// hardcode-ok:` on enum lines or skip names equal to schema vocabulary.
+
 ## Amendments
 - **2026-09-26, step 1.1 — `src/core/schema/primitives.ts` lint exceptions.** Problem: ESLint `no-control-regex` flags `FORBIDDEN_MULTILINE` / `FORBIDDEN_SINGLE_LINE`, which intentionally match control characters. Change: two line-scoped `eslint-disable-next-line no-control-regex` comments with a justification. Validated shape is byte-identical, so no `CURRENT_SCHEMA_VERSION` bump, migration or fixture freeze. No ADR affected.

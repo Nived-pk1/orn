@@ -9,11 +9,12 @@
   ],
   "completedSteps": [
     "0",
-    "1.1"
+    "1.1",
+    "1.2"
   ],
   "nextPhase": 1,
-  "nextStep": "1.2",
-  "nextStepTitle": "Maximal fixture + invalid fixtures; full schema test suite (every kind, every cap, ID patterns)",
+  "nextStep": "1.3",
+  "nextStepTitle": "core/text: normaliser (fold, tokens) and mini-markup parser",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -53,12 +54,16 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (step 1.1)"
+    "npmRunCheck": "passed (step 1.2)",
+    "schemaSuite": "step 1.2: maximal fixture (335 coverage expectations), 41 invalid fixtures with manifest, schema-derived mutation suite over every kind; 236 tests"
   },
   "openItems": [
     "Cross-check the ADV-001…045 matrix wording against the §46 list in the original requirements prompt.",
     "All exam coverage and the baseline topic tree are REVIEW REQUIRED until checked against official syllabi.",
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
-    "npm audit: 2 moderate dev-only advisories in vitest 3.x (@vitest/mocker, GHSA-82fw-gwwq-j7x9); resolve with a vitest major upgrade at a phase boundary (ADR-020)."
+    "npm audit: 2 moderate dev-only advisories in vitest 3.x (@vitest/mocker, GHSA-82fw-gwwq-j7x9); resolve with a vitest major upgrade at a phase boundary (ADR-020).",
+    "REVIEW REQUIRED: SafeUrlSchema accepts control/bidi characters (parser-normalised, stored raw); proposed amendment: add single-line forbidden-character refinement (tightening, no version bump per MIGRATION.md §1).",
+    "Step 1.7: decide REF-002 vs REF-003 precedence for references to higher layers (proposal: REF-003 only).",
+    "Step 1.12: check:hardcode name matching collides with schema enum literals when demo names coincide (e.g. \"Elimination\")."
   ]
 }
