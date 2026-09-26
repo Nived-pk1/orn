@@ -101,6 +101,23 @@ See Amendments. 5 invalid fixtures added (2 URL, 3 base64) to `invalid/manifest.
 **Open items**
 - Renderers (step 5.x) resolve a link label that equals its target ID to the record's display name; the parser stays chemistry-free.
 
+### Step 1.4 — `core/references`: path walker and reference engine (2026-09-26)
+
+**Delivered** (`src/core/references/`, contracts and registry unchanged)
+- `paths.ts`: registry path parser (`a[].b`), bounded walker (`matchPath`, own properties only, wrongly typed parts yield no match) and immutable `applyEdits` (sets first, removals last-to-first so recorded indices stay valid, duplicates applied once, unchanged input returns the same object).
+- `engine.ts`: `createReferenceEngine(specs, nestedSpecs)` implementing `ReferenceEngine`: `extract` (concrete path, target ID/kind, `containerRecordId` for nested targets via sibling/root `via`), `nestedIds`, `remap` (own ID + nested IDs + every reference, including `{kind,id}` objects), `detach` (only `detach` specs; removes the spec's `container` or the value itself). No field or kind is named in code. A `container` that is not a leading part of its path, or a malformed path, throws at construction (programmer error).
+- Tests (42): `paths.test.ts`, `engine.test.ts` (custom registry covering every target type, container removal, index shifting, malformed data, immutability), `registry-coverage.test.ts` over the maximal fixture: every ID-shaped value is covered (with a non-vacuity check), every spec matches something in the fixture, every extracted reference resolves with the right kind/local/nested container, nested IDs unique with record IDs (INV-01), full remap equals a plain string replacement and stays schema-valid, detaching any single target keeps the record schema-valid, restrict/cascade references are never detached.
+- Invariants touched: INV-01 (nested ID uniqueness input), INV-24 (engine returns new values, never mutates), INV-05 layering data is left to L2 (step 1.7).
+
+**Decisions**
+- `detach` removes exactly the registry-declared location. Where that leaves a record needing a rule (a mechanism step species with only its `ref`, MEC-002) the L3 rule reports it; the engine does not invent a replacement.
+- `provenance.legacy.legacyId` and `provenance.legacy.unmapped` hold foreign identifiers, so the coverage test excludes them explicitly (named list in the test). They are never resolved or remapped.
+- `targetKind` is set for `id` and `ref` targets only (as the contract says); for nested targets the expected kind is `spec.target.kind`.
+
+**Open items**
+- `remap` does not rewrite `[[id]]` links inside rich text (not registry references; REF-008 warns on dangling ones). Import-as-copy (step 3.x) must decide whether to rewrite them via `richTextLinks`.
+- `embeddedAssets[].assetId` is a document-level reference outside the record registry; handled by the import/export code, not here.
+
 ## Amendments
 - **2026-09-26, step 1.2a — `SafeUrlSchema` and embedded-asset base64 tightened.** Problem: `SafeUrlSchema` accepted control/bidi characters (the URL parser normalises them, but the raw string was stored), and `embeddedAssets[].base64` had only a length cap. Change: `SafeUrlSchema` gains the single-line forbidden-character refinement; new `Base64Schema` (alphabet, padding, length % 4 = 0, non-empty, cap `LIMITS.embeddedAssetBase64` = 28,000,000, unchanged) replaces the bare string. Only tightens validation: every previously valid, non-hostile value is still valid, so no `CURRENT_SCHEMA_VERSION` bump or migration (MIGRATION.md §1). Existing schema fixtures and the legacy fixtures (which contain no URLs or base64) are unaffected. Invalid fixtures and tests added. No ADR affected.
 - **2026-09-26, step 1.1 — `src/core/schema/primitives.ts` lint exceptions.** Problem: ESLint `no-control-regex` flags `FORBIDDEN_MULTILINE` / `FORBIDDEN_SINGLE_LINE`, which intentionally match control characters. Change: two line-scoped `eslint-disable-next-line no-control-regex` comments with a justification. Validated shape is byte-identical, so no `CURRENT_SCHEMA_VERSION` bump, migration or fixture freeze. No ADR affected.
