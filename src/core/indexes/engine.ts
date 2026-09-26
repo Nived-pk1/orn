@@ -1,5 +1,5 @@
 /**
- * Part-1 index engine (steps 1.6, 1.7): reverse references, nested-ID definers, folded names and hierarchy ancestry.
+ * Part-1 index engine (steps 1.6–1.8): reverse references, nested-ID definers, rich-text linkers, folded names and hierarchy ancestry.
  * Each record contributes only from its own content, so a ChangeSet is applied by retracting the
  * old contribution of every touched record and adding the new one: O(changed × references).
  * Results equal a rebuild (INV-18) and are deterministic (buckets are sorted).
@@ -11,6 +11,7 @@ import { referenceEngine } from '../references';
 import type { Referrer } from '../references/contracts';
 import type { CoreIndexEngine, CoreIndexes, HierarchyKind } from './contracts';
 import { closure, isParentPath, parentIdsOf } from './hierarchy';
+import { linkedIdsOf } from './links';
 import { foldedNamesOf } from './names';
 
 /** Buckets are replaced, never mutated, so an array handed out earlier stays a valid snapshot. */
@@ -27,6 +28,10 @@ interface IndexData {
   readonly definers: Map<string, readonly RecordRef[]>;
   /** Owner ID → the distinct nested IDs it defines. */
   readonly definedBy: Map<string, readonly string[]>;
+  /** Linked ID → records whose rich text links to it, sorted by ID. */
+  readonly linkers: Map<string, readonly RecordRef[]>;
+  /** Owner ID → the IDs its rich text links to. */
+  readonly linksOf: Map<string, readonly string[]>;
   /** Incremented by every in-place apply; older handles then refuse to answer. */
   generation: number;
 }
@@ -36,6 +41,7 @@ interface Dirty {
   readonly referrers: Set<string>;
   readonly names: Set<string>;
   readonly definers: Set<string>;
+  readonly linkers: Set<string>;
 }
 
 const EMPTY: readonly never[] = [];
@@ -81,6 +87,11 @@ function addRecord(data: IndexData, record: AnyRecord, dirty: Dirty): void {
   for (const nestedId of defined) {
     append(data.definers, dirty.definers, nestedId, owner);
   }
+  const linked = linkedIdsOf(record);
+  if (linked.length > 0) data.linksOf.set(record.id, linked);
+  for (const target of linked) {
+    append(data.linkers, dirty.linkers, target, owner);
+  }
 }
 
 function removeRecord(data: IndexData, id: string): void {
@@ -92,6 +103,8 @@ function removeRecord(data: IndexData, id: string): void {
   data.namesOf.delete(id);
   for (const nestedId of data.definedBy.get(id) ?? EMPTY) retract(data.definers, nestedId, (ref) => ref.id !== id);
   data.definedBy.delete(id);
+  for (const target of data.linksOf.get(id) ?? EMPTY) retract(data.linkers, target, (ref) => ref.id !== id);
+  data.linksOf.delete(id);
 }
 
 function sortDirty(data: IndexData, dirty: Dirty): void {
@@ -103,6 +116,9 @@ function sortDirty(data: IndexData, dirty: Dirty): void {
   }
   for (const key of dirty.definers) {
     (data.definers.get(key) as RecordRef[] | undefined)?.sort(byId);
+  }
+  for (const key of dirty.linkers) {
+    (data.linkers.get(key) as RecordRef[] | undefined)?.sort(byId);
   }
 }
 
@@ -147,6 +163,10 @@ class IndexHandle implements CoreIndexes {
     return this.live().definers.get(id) ?? EMPTY;
   }
 
+  linkersOf(id: string): readonly RecordRef[] {
+    return this.live().linkers.get(id) ?? EMPTY;
+  }
+
   byFoldedName(kind: RecordKind, folded: string): readonly RecordRef[] {
     return this.live().names.get(nameKey(kind, folded)) ?? EMPTY;
   }
@@ -183,9 +203,11 @@ function build(state: CanonicalState, revision = 0): CoreIndexes {
     namesOf: new Map(),
     definers: new Map(),
     definedBy: new Map(),
+    linkers: new Map(),
+    linksOf: new Map(),
     generation: 0,
   };
-  const dirty: Dirty = { referrers: new Set(), names: new Set(), definers: new Set() };
+  const dirty: Dirty = { referrers: new Set(), names: new Set(), definers: new Set(), linkers: new Set() };
   for (const kind of RECORD_KINDS) {
     for (const record of Object.values(state.records[kind] as Readonly<Record<string, AnyRecord>>)) {
       addRecord(data, record, dirty);
@@ -202,7 +224,7 @@ function apply(previous: CoreIndexes, changes: ChangeSet, next: CanonicalState):
     return build(next, changes.revision);
   }
   const data = previous.takeData();
-  const dirty: Dirty = { referrers: new Set(), names: new Set(), definers: new Set() };
+  const dirty: Dirty = { referrers: new Set(), names: new Set(), definers: new Set(), linkers: new Set() };
   for (const ref of changes.deleted) removeRecord(data, ref.id);
   for (const ref of [...changes.created, ...changes.updated]) {
     const record = recordIn(next, ref.kind, ref.id);

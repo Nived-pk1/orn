@@ -56,13 +56,42 @@ export interface ValidationRule<K extends RecordKind = RecordKind> {
   readonly scope: 'record' | 'neighbourhood' | 'global';
   readonly description: string;
   check(record: RecordByKind[K], ctx: RuleContext): Iterable<FindingDraft>;
+  /** Kinds, besides `kinds`, whose change can alter this rule's findings on other records (see `peers`). */
+  readonly watches?: readonly RecordKind[];
+  /**
+   * Records, beyond the referrers and referents of `record`, whose findings for this rule can change
+   * when `record` changes: name twins, duplicate-ID definers, members of a cycle, rich-text linkers.
+   * Called for a touched record of a kind in `kinds` or `watches`, in its new and its previous version.
+   * A superset is always safe; a missing peer leaves a stale finding (the incremental ≡ full test).
+   */
+  peers?(record: AnyRecord, ctx: RuleContext): Iterable<RecordRef>;
 }
 
 export interface Validator {
   /** L1 parse of one unknown value as a record of `kind`; used by commands, import and boot integrity. */
   parseRecord(kind: RecordKind, value: unknown): { ok: true; record: AnyRecord } | { ok: false; findings: readonly Finding[] };
-  /** L1–L3 for touched records plus dependents (via reverse index). Must stay within the commit budget. */
-  validateTouched(state: CanonicalState, indexes: CoreIndexes, touched: readonly RecordRef[]): readonly Finding[];
+  /**
+   * L1–L3 for the records `scopeOf` names. `previous` is the state before the change: it lets the scope
+   * include neighbours of what the touched records used to be (old references, old names, old IDs).
+   * Must stay within the commit budget.
+   */
+  validateTouched(
+    state: CanonicalState,
+    indexes: CoreIndexes,
+    touched: readonly RecordRef[],
+    previous?: CanonicalState,
+  ): readonly Finding[];
+  /**
+   * The subjects `validateTouched` covers: the touched records, their referrers and referents, and the
+   * peers their rules name. Callers pass it to `FindingStore.replaceForSubjects` so records that became
+   * clean lose their findings. Sorted, without duplicates; records that no longer exist are included.
+   */
+  scopeOf(
+    state: CanonicalState,
+    indexes: CoreIndexes,
+    touched: readonly RecordRef[],
+    previous?: CanonicalState,
+  ): readonly RecordRef[];
   /** Full L1–L3 pass, run in the compute worker. */
   validateAll(state: CanonicalState, indexes: CoreIndexes, signal?: AbortSignal): readonly Finding[];
 }

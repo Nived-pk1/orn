@@ -10,6 +10,7 @@ import { referenceEngine } from '../references';
 import { commit, loadFixtureState, must, remove, type Tables } from '../../test-support/state-fixture';
 import type { CoreIndexes, HierarchyKind } from './contracts';
 import { coreIndexEngine } from './engine';
+import { linkedIdsOf } from './links';
 import { foldedNamesOf } from './names';
 
 const base = loadFixtureState('maximal-valid');
@@ -26,13 +27,14 @@ class Universe {
       this.ids.add(record.id);
       for (const ref of referenceEngine.extract(record)) this.ids.add(ref.targetId);
       for (const nested of referenceEngine.nestedIds(record)) this.ids.add(nested.id);
+      for (const linked of linkedIdsOf(record)) this.ids.add(linked);
       for (const name of foldedNamesOf(record)) this.names.add(name);
     }
   }
   snapshot(ix: CoreIndexes): unknown {
     return {
       revision: ix.revision,
-      referrers: [...this.ids].sort().map((id) => [id, ix.referrersOf(id), ix.get(id), ix.definersOf(id)]),
+      referrers: [...this.ids].sort().map((id) => [id, ix.referrersOf(id), ix.get(id), ix.definersOf(id), ix.linkersOf(id)]),
       names: RECORD_KINDS.flatMap((kind) => [...this.names].sort().map((name) => [kind, name, ix.byFoldedName(kind, name)])),
       hierarchy: HIERARCHIES.flatMap((kind) =>
         [...this.ids].sort().map((id) => [kind, id, ix.ancestorsOf(kind, id), ix.descendantsOf(kind, id)]),

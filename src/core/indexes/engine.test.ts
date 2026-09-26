@@ -3,7 +3,7 @@ import { RECORD_KINDS, type AnyRecord, type CanonicalState, type RecordKind } fr
 import { referenceEngine } from '../references';
 import type { Referrer } from '../references/contracts';
 import { fold } from '../text';
-import { commit, loadFixtureState, must, type Tables } from '../../test-support/state-fixture';
+import { commit, loadFixtureState, must, remove, type Tables } from '../../test-support/state-fixture';
 import { coreIndexEngine } from './engine';
 import { foldedNamesOf } from './names';
 
@@ -208,5 +208,36 @@ describe('build: nested-ID definers', () => {
     });
     const dup = coreIndexEngine.build(after);
     expect(dup.definersOf(shared).map((ref) => ref.id)).toEqual([donor.id, must(second).id].sort());
+  });
+});
+
+describe('build: rich-text linkers', () => {
+  const [first, second] = Object.values(base.records.species);
+  const a = must(first);
+  const b = must(second);
+
+  it('lists each linking record once per linked ID, sorted, and nothing for plain text', () => {
+    const { after } = commit(base, 1, (t) => {
+      (t.species[a.id] as { notes: string }).notes = `see [[${b.id}]] and again [[${b.id}]] and [[cls_gone]]`;
+      (t.species[b.id] as { studyNotes: string }).studyNotes = `back to [[${a.id}]]; not a link: ${a.id}`;
+    });
+    const ix = coreIndexEngine.build(after);
+    expect(ix.linkersOf(b.id)).toEqual([{ kind: 'species', id: a.id }]);
+    expect(ix.linkersOf(a.id)).toEqual([{ kind: 'species', id: b.id }]);
+    expect(ix.linkersOf('cls_gone')).toEqual([{ kind: 'species', id: a.id }]);
+    expect(ix.linkersOf('spc_unlinked')).toEqual([]);
+    expect(coreIndexEngine.build(base).linkersOf(b.id)).toEqual([]);
+  });
+
+  it('follows edits and deletes through apply, like a rebuild', () => {
+    const ix0 = coreIndexEngine.build(base);
+    const one = commit(base, 1, (t) => {
+      (t.species[a.id] as { notes: string }).notes = `see [[${b.id}]]`;
+    });
+    const ix1 = coreIndexEngine.apply(ix0, one.changes, one.after);
+    expect(ix1.linkersOf(b.id)).toEqual([{ kind: 'species', id: a.id }]);
+    const two = commit(one.after, 2, (t) => remove(t, 'species', a.id));
+    const ix2 = coreIndexEngine.apply(ix1, two.changes, two.after);
+    expect(ix2.linkersOf(b.id)).toEqual([]);
   });
 });

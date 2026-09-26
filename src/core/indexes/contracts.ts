@@ -61,6 +61,8 @@ export interface CoreIndexes {
    * one entry, or an entry for a record that is not the caller, is a duplicate ID (REF-006, INV-01).
    */
   definersOf(id: string): readonly RecordRef[];
+  /** Records whose rich text links to `id` with `[[…]]` (soft references: REF-008), each once, sorted by ID. */
+  linkersOf(id: string): readonly RecordRef[];
   /** Records of `kind` whose folded name or alias equals `folded` (see core/text), sorted by ID. */
   byFoldedName(kind: RecordKind, folded: string): readonly RecordRef[];
   /** Transitive parents, nearest first (breadth-first, `parentIds` order), never including `id` itself. */

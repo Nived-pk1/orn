@@ -102,13 +102,9 @@ function checkNestedReference(record: AnyRecord, ref: ExtractedReference, ctx: R
   const { target } = ref.spec;
   if (target.type !== 'nested') return undefined;
   const at = `${label(record.kind)} ${record.id}, ${ref.path},`;
-  if (ref.containerRecordId === undefined) {
-    return issue(
-      'REF-005',
-      ref,
-      `${at} refers to ${ref.targetId}, but the field naming its ${label(target.kind)} does not name one.`,
-    );
-  }
+  // No container named: the sibling field is not a record of the right kind. For a participant's
+  // profileId that is RXN-011 (L3), which owns the case; REF-005 is for containers that exist.
+  if (ref.containerRecordId === undefined) return undefined;
   // A missing or wrong-kind container is reported on the field that names it (REF-001 / REF-002).
   const container = ctx.indexes.get(ref.containerRecordId);
   if (container === undefined || container.kind !== target.kind) return undefined;

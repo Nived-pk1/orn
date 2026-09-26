@@ -10,6 +10,7 @@ import {
   type RecordKind,
   type ReferenceSpec,
 } from '../../schema';
+import { referenceEngine } from '../../references';
 import type { FindingDraft, RuleContext, ValidationRule } from '../contracts';
 import { analyseReferences, type ReferenceRuleId } from './reference-analysis';
 
@@ -23,6 +24,8 @@ interface RuleSpec {
   readonly severity: ValidationRule['defaultSeverity'];
   readonly scope: ValidationRule['scope'];
   readonly description: string;
+  readonly watches?: ValidationRule['watches'];
+  readonly peers?: ValidationRule['peers'];
 }
 
 const isRecordTarget = (spec: ReferenceSpec): boolean => spec.target.type === 'id' || spec.target.type === 'ref';
@@ -69,6 +72,8 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'error',
     scope: 'global',
     description: 'Nested ID defined more than once in the dataset',
+    peers: (record, ctx) =>
+      referenceEngine.nestedIds(record).flatMap(({ id }) => ctx.indexes.definersOf(id)),
   },
   {
     id: 'REF-007',
@@ -83,6 +88,8 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'warning',
     scope: 'neighbourhood',
     description: 'Rich-text [[link]] target does not exist',
+    watches: RECORD_KINDS,
+    peers: (record, ctx) => ctx.indexes.linkersOf(record.id),
   },
 ];
 
@@ -94,6 +101,8 @@ function referenceRule(spec: RuleSpec): ValidationRule {
     defaultSeverity: spec.severity,
     scope: spec.scope,
     description: spec.description,
+    ...(spec.watches === undefined ? {} : { watches: spec.watches }),
+    ...(spec.peers === undefined ? {} : { peers: spec.peers }),
     *check(record, ctx: RuleContext): Iterable<FindingDraft> {
       for (const found of analyseReferences(record, ctx)) if (found.ruleId === spec.id) yield found.draft;
     },
