@@ -11,7 +11,7 @@ Package section **#27 Migration from v6**, plus schema-version migrations (#10 u
 
 ## 2. Migration framework
 
-- One pure, deterministic `SchemaMigration` per step (`from → from + 1`) in `src/core/migrations/steps/`. The runner applies steps in order on the **tolerant envelope** (records as unknown), then the result is parsed with the current strict schemas.
+- One pure, deterministic `SchemaMigration` per step (`from → from + 1`) in `src/core/migrations/steps/`. The runner applies steps in order on the **tolerant envelope** (records as unknown), then the result is parsed with the current strict schemas. `run` returns a value, never throws for document problems: `{ ok: true, doc, steps }` or `{ ok: false, code, message, atVersion }` with code `INVALID_VERSION`, `NEWER_VERSION`, `MISSING_STEP`, `STEP_FAILED` or `STEP_CONTRACT`; it verifies each step's output version and report, and returns no partial result.
 - Runs in the compute worker. Stored data: `pre_migration` snapshot → migrate → full L1–L3 → `replaceAll` in one transaction. Any failure restores the snapshot and opens read-only (PERSISTENCE.md §12).
 - Every step returns a `MigrationStepReport` (changed record IDs, notes) that is stored with the import batch or shown after an on-disk migration.
 - Tests per step: the frozen `v<N>` fixtures migrate to documents equal to the committed expected `v<N+1>` outputs; the chain from v1 to current is tested; migrated data round-trips (P-03); undo history is empty after migration (history never spans versions).

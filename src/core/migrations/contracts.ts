@@ -25,7 +25,36 @@ export interface SchemaMigration {
   migrate(doc: MigratableDocument): { readonly doc: MigratableDocument; readonly report: MigrationStepReport };
 }
 
+export type MigrationErrorCode =
+  | 'INVALID_VERSION'
+  | 'NEWER_VERSION'
+  | 'MISSING_STEP'
+  | 'STEP_FAILED'
+  | 'STEP_CONTRACT';
+
+export interface MigrationError {
+  readonly ok: false;
+  readonly code: MigrationErrorCode;
+  readonly message: string;
+  /** Version the document had when the failure happened. */
+  readonly atVersion: number;
+}
+
+export interface MigrationSuccess {
+  readonly ok: true;
+  readonly doc: MigratableDocument;
+  /** One report per applied step, in order; empty when the document was already current. */
+  readonly steps: readonly MigrationStepReport[];
+}
+
+export type MigrationResult = MigrationSuccess | MigrationError;
+
 export interface MigrationRunner {
-  /** Applies registered steps from doc.schemaVersion up to CURRENT_SCHEMA_VERSION. Rejects newer versions. */
-  run(doc: MigratableDocument): { readonly doc: MigratableDocument; readonly steps: readonly MigrationStepReport[] };
+  /** Version this runner migrates to (CURRENT_SCHEMA_VERSION for the app runner). */
+  readonly target: number;
+  /**
+   * Applies registered steps from doc.schemaVersion up to `target`. Never mutates its input.
+   * A newer version, a gap in the chain or a failing step is an error value, never a partial result.
+   */
+  run(doc: MigratableDocument): MigrationResult;
 }
