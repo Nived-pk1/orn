@@ -1,0 +1,154 @@
+# UI Architecture
+
+Package sections: **#11 Reaction Authoring Workbench**, **#12 Compound/Structure Authoring** (UI side), **#17 Graph Layout** (geometry), **#18 UI/UX**, **#19 Interaction Model**. Contracts: `src/render/scene/contracts.ts`, `src/layout/contracts.ts`, `src/core/commands/contracts.ts` (EditorSession).
+
+## 1. Principles
+
+- The UI is a **renderer and editor**. Components read canonical data through selectors and change it only by dispatching commands. No chemistry rule, reference handling or graph logic lives in a component.
+- Every view is a projection (GRAPH_SEMANTICS.md). Switching views never changes data.
+- Progressive disclosure: calm by default, depth on demand.
+- Keyboard-complete, touch-capable, screen-reader-usable (§11).
+
+## 2. Shell
+
+```
+┌ Top bar: search/palette (Ctrl K) · exam-scope selector · undo/redo · import/export menu ─────────┐
+├ Mode rail ┬ Canvas (graph or list for the current view)                   ┬ Inspector          ┤
+│ Navigator │                                                              │ (progressive, §9)  │
+│ Reactions │                                                              │                    │
+│ Precursors│                                                              │                    │
+│ Reagents  │                                                              │                    │
+│ Named     │                                                              │                    │
+│ Mechanisms│                                                              │                    │
+│ Syllabus  │                                                              │                    │
+│ Workbench │                                                              │                    │
+├ Status bar: save state · validation counts (E/W/I/Review) · read-only badge · truncation notice ┤
+```
+
+Breakpoints: ≥ 1280 px three panes (inspector 360–520 px, resizable); 900–1279 px inspector as an overlay drawer; < 900 px single pane, inspector as a bottom sheet, mode rail as a bottom bar. Diagnostics (findings, quarantine, snapshots, storage, performance) is a full-page view opened from the status bar.
+
+## 3. Visual language
+
+A textbook-and-journal aesthetic, not a dashboard. No gradients, glass effects, glow, emoji icons, or decorative illustration; square-ish corners (2–4 px); colour used sparingly and never as the only carrier of meaning.
+
+| Token | Value | Use |
+|---|---|---|
+| paper | `#FCFCFB` | background |
+| ink | `#16191D` | primary text, strokes |
+| ink-2 | `#5A626B` | secondary text, minor edges |
+| rule | `#D9DDE1` | dividers, grid |
+| accent (selection) | `#2B4FD8` | selection, focus ring, active path |
+| warning | `#B45309` | warnings |
+| error | `#B42318` | errors |
+| review | `#7A3FB0` | review-required markers |
+
+Typography: IBM Plex Sans (UI and labels), IBM Plex Mono only for SMILES/formula inputs; bundled with Fontsource. Chemical formulas render with true subscripts from the FormattedText runs. Scale: 12/13/14/16/20/24 px; tabular numerals in counts.
+
+Glyphs: **class hub** — text-forward block with a thick left rule and the generic formula; **species** — depiction (LOD ≥ 3) or name/formula; **reagent** — compact label chip; **reaction** — small junction dot (reaction-centric views) or the arrow itself (navigator); **concept** — italic outline label; **intermediate** — dashed brackets. Edges: major/exclusive heavy solid, minor dashed, trace light dotted, inferred dotted, relationship edges thin with a type label. Badges are small monochrome marks with text on hover/focus (caveat, mechanism, review, warning, outside scope, hidden neighbours).
+
+Dark theme is ARCHITECTURALLY SUPPORTED via tokens; the required theme is light.
+
+## 4. State ownership
+
+| State | Owner | Persisted | Notes |
+|---|---|---|---|
+| Canonical records | `CanonicalStore` (core) | IndexedDB `records` | changed only by commands |
+| Presentation records (anchors, schemes, presets, display) | `CanonicalStore` | `records` | canonical but layer 5 |
+| Indexes, projections, findings, search index | derived services | never (caches only) | recomputable (INV-18) |
+| Selection, focus, viewport, expansion, panel layout, filters, active exam version | Zustand UI stores | `uiState` (tolerant) | never in records (INV-10) |
+| Authoring drafts | editor sessions | `editorSessions` | may be invalid |
+| Hover, menus, transient input | component state | no | |
+
+Zustand stores are small and sliced (selection, viewport, panels, filters, palette). Canonical data reaches React through `useSyncExternalStore` selectors with structural sharing, so unrelated edits do not re-render.
+
+## 5. Views
+
+| Mode | Purpose |
+|---|---|
+| Navigator | Hub map (v6 experience): classes as hubs, reactions as labelled arrows, Unclassified hub, Unanchored list |
+| Reactions | Reaction-centric bipartite explorer around a focus |
+| Precursors | "How can I make X?": backward exploration + route search panel |
+| Reagents | Reagent → profiles → reactions; filter by family |
+| Named | Named-reaction families, each with its reactions, mechanism and traps |
+| Mechanisms | Mechanism variants and steps; which outcomes use them |
+| Syllabus | Topic tree for the active exam version with derived scope, counts and gaps |
+| Workbench | Authoring (§7, §8) and the review queue |
+
+## 6. Rendering architecture
+
+```
+Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► layout worker (ELK | fallback)
+          │                                                              │
+          └──────────────► Scene builder (pure, memoised) ◄──────────────┘
+                                   │
+                    SVG renderer (React, layered)   SVG/PNG export (same Scene)
+```
+
+- **Layers**: edges, nodes, labels, badges, overlay (selection, focus ring, marquee). Each layer is a memoised component keyed by Scene revision.
+- **Viewport**: d3-zoom writes a single `transform` on the root `<g>` imperatively (ref + requestAnimationFrame). Pan and zoom never re-render React (60 fps budget).
+- **LOD**: `LOD_THRESHOLDS` decide what each element shows (0 glyphs, 1 labels, 2 badges + condition text, 3 structures). Above `RENDER_BUDGET` visible elements, LOD is capped at 1 automatically (v6's "simplify mode" without a toggle).
+- **Culling**: a uniform-grid spatial index over Scene bounds returns visible IDs for the viewport; only those mount.
+- **Depictions**: requested lazily from the chem worker for visible species at LOD 3, cached in `derivedCache`, shown via `<image href>` (SECURITY.md §2).
+- **Layout stability**: previous positions are sent as ordering hints; expansion adds nodes without reshuffling the rest; transitions animate 200 ms (none with reduced motion). Layout requests are cancelled when superseded.
+- **Direction**: navigator and reaction explorer lay out left→right; precursor explorer right→left with forward arrowheads (GRAPH_SEMANTICS.md §5).
+
+## 7. Reaction authoring workbench (#11)
+
+- Editing opens an **editor session**: a draft copy that may be temporarily invalid, persisted every 2 s while dirty, with its own local undo/redo. The canonical store changes only on **Commit**, which runs L1–L3; ERRORs keep the dialog open with findings linked to fields. If the record changed in the meantime (`baseRevision` mismatch) the user sees a field-level comparison and chooses.
+- Sections (collapsible, keyboard-navigable): Identity (name, aliases, scope, instance-of, purposes) · Participants (table: substance picker, role, coefficient, phase, strength, dry, quantity, profile, flags, stage) · Stages · Conditions and variants · Outcomes (per outcome: variants, selectivity, products with roles, regio/stereo, mechanism link, rationale) · Mechanism links · Classification (reaction types, mechanism classes, transformations, named reactions, concepts) · Curriculum (topic mappings, exam relevance) · Caveats · Relationships · Notes and citations · Presentation (scheme placements).
+- **Live validation panel** beside the form; L4 results stream in as the chem worker finishes.
+- **Quick entry**: a one-line text such as `ethanol + PCC (CH2Cl2) -> ethanal` is parsed into a draft (participants matched by folded name; unmatched names offered for creation; conditions marked `parsedFields`). It never commits without review.
+- **Pickers** search by name, alias, formula and structure; they show kind, class and scope; "create new" opens a nested species/reagent editor session.
+- **Templates and duplication**: "New specific reaction from this generic one" pre-fills `instanceOfId` and participants; "Duplicate" regenerates all nested IDs through the reference engine.
+- **Review queue**: all REVIEW_REQUIRED findings grouped by reason, with bulk "mark verified" (an undoable command).
+
+## 8. Compound and structure authoring (#12)
+
+- Species editor: names (canonical, IUPAC, common, aliases, qualifier), kind, structure, formula, charge, stereo, aromaticity claim, classes, properties, notes, citations.
+- **Structure panel**: SMILES/CXSMILES text field (Plex Mono) or pasted molfile → debounced parse in the chem worker → depiction + derived formula/charge/stereo shown **beside** the entered values; "Use derived formula" is an explicit button. A drawing editor is ARCHITECTURALLY SUPPORTED behind `StructureEditor` (`src/features/workbench/structure-editor/`, Ketcher adapter, lazy-loaded).
+- On save: duplicate check by folded name and canonical structure with "use existing / merge / keep both".
+- Class assignment shows SMARTS-based suggestions (CHEM-007) as chips the user can accept; nothing is assigned automatically.
+- Class editor: names, kind, parents (cycle-safe picker), generic formula/structure/SMARTS, examples.
+
+## 9. Inspector and progressive disclosure
+
+| Level | Shows |
+|---|---|
+| L1 | Name, kind, scope badge, one-line equation or formula, review/finding badges |
+| L2 | Participants with conditions, outcomes with selectivity, stages |
+| L3 | Mechanism, caveats and traps, relationships, related reactions (derived) |
+| L4 | Curriculum mappings, exam relevance, references and citations |
+| L5 | Provenance, legacy trace, findings detail, raw record (read-only JSON) |
+
+The chosen level persists per user (uiState). Every record reference in the inspector is a link that focuses it in the current view.
+
+## 10. Interaction model (#19)
+
+Pointer state machine on the canvas: `idle → pressed → (moved > 4 px) panning | (500 ms still) context-menu | (released) click`. A click selects immediately (no double-click delay); a second click within 300 ms is a double-click and expands/collapses. Shift-click toggles multi-selection; drag on empty canvas with Shift draws a marquee.
+
+| Key | Action |
+|---|---|
+| Arrow keys | move focus to the spatially nearest node in that direction |
+| Tab / Shift+Tab | cycle focus through nodes in reading order; then out of the canvas |
+| Enter | open in inspector; Enter again expands |
+| Esc | close the topmost layer (menu → palette → inspector detail → selection) |
+| + / − / 0 | zoom in / out / fit |
+| F | focus the selection (centre and zoom) |
+| E / C | expand / collapse the focused node |
+| Ctrl/⌘ K | command palette |
+| Alt+← / Alt+→ | back / forward through focus history |
+| Ctrl/⌘ Z, Ctrl/⌘ Shift Z | undo / redo |
+| Shift+F10 or context-menu key | context menu |
+
+Touch: one-finger pan, pinch zoom, tap select, double-tap expand, long-press (500 ms) context menu. Focus history (Alt+←/→) is UI state and survives view switches.
+
+## 11. Accessibility
+
+- The graph canvas is a composite widget with a roving tabindex over nodes; each node exposes `SceneNode.ariaLabel` ("Ethanol, species, 3 reactions out, 1 hidden neighbour"). Edges are reachable from a focused node's context menu and inspector.
+- A **List** toggle presents the current projection as an accessible, virtualised table (same data, same filters) — the fallback for screen readers and very large views.
+- Status changes (saved, validation counts, truncation) are announced through a polite live region.
+- WCAG 2.2 AA contrast; 2 px focus ring in the accent colour; hit targets ≥ 24 px (44 px on touch); `prefers-reduced-motion` disables animation; no information by colour alone (line style, shape and text always accompany colour).
+
+## 12. Empty, loading and error states
+
+First run offers "Load demo dataset", "Import v6 export" and "Start empty". Loading states are skeletons, never spinners over blank canvases longer than 300 ms. Truncated projections say what was cut and how to see more. Panels have error boundaries with "Reload panel" (PERSISTENCE.md §12).

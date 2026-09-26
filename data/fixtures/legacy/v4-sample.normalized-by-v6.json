@@ -1,0 +1,642 @@
+{
+  "compounds": [
+    {
+      "tags": [
+        "hub"
+      ],
+      "image": "",
+      "smiles": "CCO",
+      "formula": "R-OH",
+      "properties": "",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c1",
+      "name": "Alcohols",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CC=O",
+      "formula": "R-CHO",
+      "properties": "",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c2",
+      "name": "Aldehydes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CC(=O)O",
+      "formula": "R-COOH",
+      "properties": "",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c3",
+      "name": "Carboxylic acids",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "O",
+      "formula": "H2O",
+      "properties": "",
+      "node": false,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c4",
+      "name": "Water",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "C=C",
+      "formula": "CnH2n",
+      "properties": "",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c5",
+      "name": "Alkenes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [
+        "duplicate-name-different-case"
+      ],
+      "image": "",
+      "smiles": "",
+      "formula": "",
+      "properties": "",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c6",
+      "name": "alcohols ",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    }
+  ],
+  "reactions": [
+    {
+      "id": "r1",
+      "name": "Oxidation to aldehyde",
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "c1",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "PCC",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "CH2Cl2",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "room temp",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R-CH2OH",
+        "to": "R-CHO",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": "Chromate ester, then E2-like loss"
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "Oxidation",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": true,
+      "_v4": {
+        "reagent": "PCC, CH2Cl2",
+        "extra": "",
+        "condition": "room temp"
+      }
+    },
+    {
+      "id": "r2",
+      "name": "Oxidation to acid",
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c3",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": ""
+        },
+        {
+          "ref": "c4",
+          "label": "",
+          "role": "product",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "KMnO4",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "H+",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "O2",
+          "role": "reactant",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "heat",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": true,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R-CHO",
+        "to": "R-COOH",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "Oxidation",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": false,
+      "_v4": {
+        "reagent": "KMnO4, H+, heat",
+        "extra": "O2",
+        "condition": ""
+      }
+    },
+    {
+      "id": "r3",
+      "name": "Acid-catalysed dehydration",
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "c1",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": ""
+        },
+        {
+          "ref": "c4",
+          "label": "",
+          "role": "product",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "conc. H2SO4",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "443 K",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "alcohol",
+        "to": "alkene",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": "E1 via carbocation"
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "Elimination",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": true,
+      "_v4": {
+        "reagent": "conc. H2SO4, 443 K",
+        "extra": "",
+        "condition": ""
+      }
+    },
+    {
+      "id": "r4",
+      "name": "Ozonolysis",
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "O3",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "Zn/H2O",
+          "role": "workup",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "",
+        "to": "",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "Oxidative cleavage",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": true,
+      "_v4": {
+        "reagent": "(i) O3 (ii) Zn/H2O",
+        "extra": "",
+        "condition": ""
+      }
+    },
+    {
+      "id": "r5",
+      "name": "Hydroboration-oxidation",
+      "customField": {
+        "keep": "me"
+      },
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c1",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "B2H6",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "H2O2",
+          "role": "workup",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "NaOH",
+          "role": "workup",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "alkene",
+        "to": "alcohol",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "Addition",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": true,
+      "_v4": {
+        "reagent": "B2H6, then H2O2, NaOH",
+        "extra": "",
+        "condition": ""
+      }
+    },
+    {
+      "id": "r6",
+      "name": "Orphan reaction with dangling ids",
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "c404",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": ""
+        },
+        {
+          "ref": "c999",
+          "label": "",
+          "role": "product",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "Unknown thing",
+          "role": "reactant",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "dry ether",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": true
+      },
+      "transformation": {
+        "from": "",
+        "to": "",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": true,
+      "_v4": {
+        "reagent": "",
+        "extra": "Unknown thing",
+        "condition": "dry ether"
+      }
+    }
+  ],
+  "schemaVersion": 5
+}

@@ -1,0 +1,805 @@
+{
+  "format": "orn.dataset",
+  "schemaVersion": 1,
+  "exportedAt": "2026-09-26T00:00:00.000Z",
+  "exportScope": "full",
+  "generator": {
+    "app": "orn-fixture-builder",
+    "version": "0.1.0"
+  },
+  "meta": {
+    "datasetId": "schema-fixture-minimal",
+    "title": "Minimal valid dataset (schema fixture)",
+    "createdAt": "2026-09-26T00:00:00.000Z",
+    "updatedAt": "2026-09-26T00:00:00.000Z"
+  },
+  "records": {
+    "reference": [
+      {
+        "id": "ref_ncert-chem-12-part-2",
+        "kind": "reference",
+        "refKind": "ncert",
+        "title": "Chemistry Part II, Class XII",
+        "authors": [],
+        "publisher": "NCERT",
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "concept": [
+      {
+        "id": "cpt_nucleophilic-substitution",
+        "kind": "concept",
+        "name": "Nucleophilic substitution",
+        "aliases": [],
+        "conceptKind": "reaction_type",
+        "parentIds": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "cpt_oxidation",
+        "kind": "concept",
+        "name": "Oxidation",
+        "aliases": [],
+        "conceptKind": "reaction_type",
+        "parentIds": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "cpt_sn2",
+        "kind": "concept",
+        "name": "SN2",
+        "aliases": [
+          "bimolecular nucleophilic substitution",
+          "Sɴ2"
+        ],
+        "conceptKind": "mechanism_class",
+        "parentIds": [
+          "cpt_nucleophilic-substitution"
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "species": [
+      {
+        "id": "spc_ethanal",
+        "kind": "species",
+        "names": {
+          "canonical": "Ethanal",
+          "common": [
+            "acetaldehyde"
+          ],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CC=O"
+        },
+        "classIds": [
+          "cls_aldehydes"
+        ],
+        "properties": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "spc_ethanol",
+        "kind": "species",
+        "names": {
+          "canonical": "Ethanol",
+          "iupac": "ethanol",
+          "common": [
+            "ethyl alcohol"
+          ],
+          "aliases": [
+            "C₂H₅OH",
+            "EtOH"
+          ]
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "CCO"
+        },
+        "formula": "C2H6O",
+        "classIds": [
+          "cls_primary-alcohols"
+        ],
+        "properties": [
+          {
+            "key": "boiling_point",
+            "value": "351 K",
+            "citations": [
+              {
+                "referenceId": "ref_ncert-chem-12-part-2",
+                "locator": "Unit 7"
+              }
+            ]
+          }
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "spc_pcc",
+        "kind": "species",
+        "names": {
+          "canonical": "Pyridinium chlorochromate",
+          "common": [],
+          "aliases": [
+            "PCC"
+          ]
+        },
+        "speciesKind": "salt",
+        "structure": {
+          "format": "smiles",
+          "value": "c1cc[nH+]cc1.[O-][Cr](=O)(=O)Cl"
+        },
+        "classIds": [],
+        "properties": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "spc_water",
+        "kind": "species",
+        "names": {
+          "canonical": "Water",
+          "common": [],
+          "aliases": []
+        },
+        "speciesKind": "molecule",
+        "structure": {
+          "format": "smiles",
+          "value": "O"
+        },
+        "classIds": [],
+        "properties": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "class": [
+      {
+        "id": "cls_alcohols",
+        "kind": "class",
+        "names": {
+          "canonical": "Alcohols",
+          "common": [],
+          "aliases": []
+        },
+        "classKind": "compound_class",
+        "parentIds": [],
+        "generic": {
+          "formulaText": "R–OH",
+          "generalFormula": "CnH2n+1OH"
+        },
+        "exampleSpeciesIds": [
+          "spc_ethanol"
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "cls_aldehydes",
+        "kind": "class",
+        "names": {
+          "canonical": "Aldehydes",
+          "common": [],
+          "aliases": []
+        },
+        "classKind": "compound_class",
+        "parentIds": [],
+        "generic": {
+          "formulaText": "R–CHO"
+        },
+        "exampleSpeciesIds": [
+          "spc_ethanal"
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "cls_primary-alcohols",
+        "kind": "class",
+        "names": {
+          "canonical": "Primary alcohols",
+          "common": [],
+          "aliases": [
+            "1° alcohols"
+          ]
+        },
+        "classKind": "compound_class",
+        "parentIds": [
+          "cls_alcohols"
+        ],
+        "generic": {
+          "formulaText": "R–CH2OH",
+          "structure": {
+            "format": "cxsmiles",
+            "value": "*CO |$R;;$|"
+          }
+        },
+        "exampleSpeciesIds": [
+          "spc_ethanol"
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "reagent": [
+      {
+        "id": "rgt_kmno4",
+        "kind": "reagent",
+        "names": {
+          "canonical": "Potassium permanganate",
+          "common": [],
+          "aliases": [
+            "KMnO4"
+          ]
+        },
+        "components": [],
+        "formulaText": "KMnO₄",
+        "families": [
+          "oxidant"
+        ],
+        "classIds": [],
+        "profiles": [
+          {
+            "id": "rpf_kmno4-baeyer",
+            "label": "cold, dilute, alkaline",
+            "aliases": [
+              "Baeyer's reagent"
+            ],
+            "parameters": {
+              "temperature": {
+                "kind": "qualitative",
+                "value": "cold"
+              },
+              "medium": "basic",
+              "solventCharacter": [
+                "aqueous"
+              ],
+              "activation": [],
+              "other": [],
+              "parsedFields": []
+            }
+          }
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "rgt_pcc",
+        "kind": "reagent",
+        "names": {
+          "canonical": "PCC",
+          "common": [],
+          "aliases": []
+        },
+        "speciesId": "spc_pcc",
+        "components": [],
+        "formulaText": "PCC",
+        "families": [
+          "oxidant"
+        ],
+        "classIds": [],
+        "profiles": [],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "transformation": [
+      {
+        "id": "trf_primary-alcohol-to-aldehyde",
+        "kind": "transformation",
+        "name": "1° alcohol → aldehyde",
+        "aliases": [],
+        "fromClassIds": [
+          "cls_primary-alcohols"
+        ],
+        "toClassIds": [
+          "cls_aldehydes"
+        ],
+        "equationText": "R–CH2OH → R–CHO",
+        "carbonChainChange": "none",
+        "conceptIds": [
+          "cpt_oxidation"
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "named_reaction": [],
+    "mechanism": [],
+    "reaction": [
+      {
+        "id": "rxn_ethanol-pcc",
+        "kind": "reaction",
+        "name": "Oxidation of ethanol with PCC",
+        "aliases": [],
+        "scope": "specific",
+        "purposes": [
+          "synthesis"
+        ],
+        "namedReactionIds": [],
+        "transformationIds": [
+          "trf_primary-alcohol-to-aldehyde"
+        ],
+        "reactionTypes": [
+          {
+            "conceptId": "cpt_oxidation",
+            "certainty": "definite"
+          }
+        ],
+        "mechanismClasses": [],
+        "participants": [
+          {
+            "id": "prt_ethanol-pcc-1",
+            "ref": {
+              "kind": "species",
+              "id": "spc_ethanol"
+            },
+            "role": "reactant",
+            "isPrimarySubstrate": true
+          },
+          {
+            "id": "prt_ethanol-pcc-2",
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_pcc"
+            },
+            "role": "reagent",
+            "originalText": "PCC, CH2Cl2"
+          }
+        ],
+        "stages": [],
+        "conditionVariants": [],
+        "outcomes": [
+          {
+            "id": "out_ethanol-pcc-1",
+            "conditionVariantIds": [],
+            "selectivity": "exclusive",
+            "products": [
+              {
+                "id": "pdt_ethanol-pcc-1",
+                "ref": {
+                  "kind": "species",
+                  "id": "spc_ethanal"
+                },
+                "role": "main"
+              }
+            ],
+            "conceptIds": []
+          }
+        ],
+        "intermediates": [],
+        "mechanismIds": [],
+        "reversibility": {
+          "kind": "irreversible"
+        },
+        "generalizedEquation": "CH3CH2OH → CH3CHO",
+        "conceptIds": [],
+        "prerequisiteConceptIds": [],
+        "difficulty": 2,
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "caveat": [
+      {
+        "id": "cav_pcc-stops-at-aldehyde",
+        "kind": "caveat",
+        "caveatKind": "special_case",
+        "title": "PCC stops at the aldehyde",
+        "rule": "1° alcohols are oxidised to carboxylic acids by strong aqueous oxidants.",
+        "statement": "PCC in an anhydrous solvent stops at the aldehyde stage.",
+        "targets": [
+          {
+            "ref": {
+              "kind": "reaction",
+              "id": "rxn_ethanol-pcc"
+            },
+            "as": "affected_reaction"
+          },
+          {
+            "ref": {
+              "kind": "reagent",
+              "id": "rgt_pcc"
+            },
+            "as": "affected_reagent"
+          }
+        ],
+        "conceptIds": [
+          "cpt_oxidation"
+        ],
+        "importance": "high",
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "route": [],
+    "relationship": [],
+    "exam": [
+      {
+        "id": "exm_jee-main",
+        "kind": "exam",
+        "name": "JEE Main",
+        "shortName": "Main",
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "exam_version": [
+      {
+        "id": "exv_jee-main-provisional",
+        "kind": "exam_version",
+        "examId": "exm_jee-main",
+        "label": "Provisional",
+        "status": "provisional",
+        "units": [
+          {
+            "id": "unt_jee-main-oxygen",
+            "title": "Organic compounds containing oxygen",
+            "topicCoverage": [
+              {
+                "topicId": "top_alcohols-phenols-ethers",
+                "coverage": "included"
+              }
+            ]
+          }
+        ],
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "draft",
+          "status": "review_required",
+          "reasons": [
+            "Coverage not verified against the official syllabus document."
+          ]
+        }
+      }
+    ],
+    "topic": [
+      {
+        "id": "top_alcohols-phenols-ethers",
+        "kind": "topic",
+        "name": "Alcohols, phenols and ethers",
+        "aliases": [],
+        "parentId": "top_organic-chemistry",
+        "topicKind": "chapter",
+        "order": 7,
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      },
+      {
+        "id": "top_organic-chemistry",
+        "kind": "topic",
+        "name": "Organic chemistry",
+        "aliases": [],
+        "topicKind": "subject",
+        "order": 1,
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "topic_mapping": [
+      {
+        "id": "tmp_ethanol-pcc",
+        "kind": "topic_mapping",
+        "topicId": "top_alcohols-phenols-ethers",
+        "target": {
+          "kind": "reaction",
+          "id": "rxn_ethanol-pcc"
+        },
+        "role": "core",
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "exam_relevance": [
+      {
+        "id": "erl_ethanol-pcc-main",
+        "kind": "exam_relevance",
+        "target": {
+          "kind": "reaction",
+          "id": "rxn_ethanol-pcc"
+        },
+        "examId": "exm_jee-main",
+        "examVersionIds": [],
+        "scope": "official",
+        "importance": 4,
+        "tags": [],
+        "citations": [],
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        },
+        "review": {
+          "lifecycle": "published",
+          "status": "unreviewed",
+          "reasons": []
+        }
+      }
+    ],
+    "asset": [],
+    "navigator_anchor": [
+      {
+        "id": "anc_alcohols",
+        "kind": "navigator_anchor",
+        "target": {
+          "kind": "class",
+          "id": "cls_alcohols"
+        },
+        "order": 1,
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "anc_aldehydes",
+        "kind": "navigator_anchor",
+        "target": {
+          "kind": "class",
+          "id": "cls_aldehydes"
+        },
+        "order": 2,
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        }
+      }
+    ],
+    "reaction_scheme": [
+      {
+        "id": "rsc_ethanol-pcc",
+        "kind": "reaction_scheme",
+        "reactionId": "rxn_ethanol-pcc",
+        "placements": [
+          {
+            "participantId": "prt_ethanol-pcc-2",
+            "position": "above_arrow"
+          }
+        ],
+        "productPlacements": [],
+        "showStageNumbers": false,
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        }
+      }
+    ],
+    "view_preset": [],
+    "entity_display": [
+      {
+        "id": "edp_water",
+        "kind": "entity_display",
+        "target": {
+          "kind": "species",
+          "id": "spc_water"
+        },
+        "showAsNode": "never",
+        "labelMode": "formula",
+        "provenance": {
+          "origin": "seed",
+          "createdAt": "2026-09-26T00:00:00.000Z",
+          "updatedAt": "2026-09-26T00:00:00.000Z"
+        }
+      }
+    ]
+  }
+}

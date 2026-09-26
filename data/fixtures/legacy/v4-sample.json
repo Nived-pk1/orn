@@ -1,0 +1,145 @@
+{
+  "compounds": [
+    {
+      "id": "c1",
+      "name": "Alcohols",
+      "smiles": "CCO",
+      "formula": "R-OH",
+      "tags": [
+        "hub"
+      ],
+      "node": true
+    },
+    {
+      "id": "c2",
+      "name": "Aldehydes",
+      "smiles": "CC=O",
+      "formula": "R-CHO",
+      "tags": [],
+      "node": true
+    },
+    {
+      "id": "c3",
+      "name": "Carboxylic acids",
+      "smiles": "CC(=O)O",
+      "formula": "R-COOH",
+      "tags": []
+    },
+    {
+      "id": "c4",
+      "name": "Water",
+      "smiles": "O",
+      "formula": "H2O",
+      "tags": [],
+      "node": false
+    },
+    {
+      "id": "c5",
+      "name": "Alkenes",
+      "smiles": "C=C",
+      "formula": "CnH2n",
+      "tags": []
+    },
+    {
+      "id": "c6",
+      "name": "alcohols ",
+      "smiles": "",
+      "formula": "",
+      "tags": [
+        "duplicate-name-different-case"
+      ]
+    }
+  ],
+  "reactions": [
+    {
+      "id": "r1",
+      "name": "Oxidation to aldehyde",
+      "start": "c1",
+      "end": "c2",
+      "coProducts": [],
+      "extra": "",
+      "reagent": "PCC, CH2Cl2",
+      "family": "Oxidation",
+      "condition": "room temp",
+      "pattern": "R-CH2OH → R-CHO",
+      "mech": "Chromate ester, then E2-like loss",
+      "collapse": true
+    },
+    {
+      "id": "r2",
+      "name": "Oxidation to acid",
+      "start": "c2",
+      "end": "c3",
+      "coProducts": [
+        "c4"
+      ],
+      "extra": "O2",
+      "reagent": "KMnO4, H+, heat",
+      "family": "Oxidation",
+      "condition": "",
+      "pattern": "R-CHO → R-COOH",
+      "mech": "",
+      "collapse": false
+    },
+    {
+      "id": "r3",
+      "name": "Acid-catalysed dehydration",
+      "start": "c1",
+      "end": "c5",
+      "coProducts": [
+        "c4"
+      ],
+      "extra": "",
+      "reagent": "conc. H2SO4, 443 K",
+      "family": "Elimination",
+      "condition": "",
+      "pattern": "alcohol → alkene",
+      "mech": "E1 via carbocation"
+    },
+    {
+      "id": "r4",
+      "name": "Ozonolysis",
+      "start": "c5",
+      "end": "c2",
+      "coProducts": [],
+      "extra": "",
+      "reagent": "(i) O3 (ii) Zn/H2O",
+      "family": "Oxidative cleavage",
+      "condition": "",
+      "pattern": "",
+      "mech": ""
+    },
+    {
+      "id": "r5",
+      "name": "Hydroboration-oxidation",
+      "start": "c5",
+      "end": "c1",
+      "coProducts": [],
+      "extra": "",
+      "reagent": "B2H6, then H2O2, NaOH",
+      "family": "Addition",
+      "condition": "",
+      "pattern": "alkene → alcohol",
+      "mech": "",
+      "collapse": true,
+      "customField": {
+        "keep": "me"
+      }
+    },
+    {
+      "id": "r6",
+      "name": "Orphan reaction with dangling ids",
+      "start": "c404",
+      "end": "c2",
+      "coProducts": [
+        "c999"
+      ],
+      "extra": "Unknown thing",
+      "reagent": "",
+      "family": "",
+      "condition": "dry ether",
+      "pattern": "",
+      "mech": ""
+    }
+  ]
+}
