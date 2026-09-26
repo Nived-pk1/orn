@@ -16,7 +16,7 @@ import {
 } from './knowledge';
 import { MechanismSchema } from './mechanism';
 import { EntityDisplaySchema, NavigatorAnchorSchema, ReactionSchemeSchema, ViewPresetSchema } from './presentation';
-import { IsoDateTimeSchema, LabelTextSchema, NameTextSchema, RichTextSchema } from './primitives';
+import { Base64Schema, IsoDateTimeSchema, LabelTextSchema, NameTextSchema, RichTextSchema } from './primitives';
 import { ReactionSchema } from './reaction';
 import type { RecordByKind } from './records';
 import { RelationshipSchema } from './relationship';
@@ -74,7 +74,7 @@ export const DatasetDocumentSchema = z.strictObject({
   records: RecordCollectionsSchema,
   /** Only in single-file JSON exports that include assets; packages store bytes as files instead. */
   embeddedAssets: z
-    .array(z.strictObject({ assetId: AssetIdSchema, base64: z.string().max(28_000_000) }))
+    .array(z.strictObject({ assetId: AssetIdSchema, base64: Base64Schema }))
     .optional(),
 });
 export type DatasetDocument = z.infer<typeof DatasetDocumentSchema>;

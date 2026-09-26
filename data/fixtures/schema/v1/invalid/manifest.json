@@ -316,6 +316,85 @@
       ]
     },
     {
+      "file": "l1-url-with-bidi-character.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-033",
+        "ADV-034"
+      ],
+      "description": "URL containing a right-to-left override character",
+      "issuePath": [
+        "records",
+        "reference",
+        0,
+        "url"
+      ]
+    },
+    {
+      "file": "l1-url-with-control-character.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-033",
+        "ADV-034"
+      ],
+      "description": "URL containing a newline",
+      "issuePath": [
+        "records",
+        "reference",
+        0,
+        "url"
+      ]
+    },
+    {
+      "file": "l1-base64-invalid-alphabet.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-032"
+      ],
+      "description": "Embedded asset base64 containing characters outside the alphabet",
+      "issuePath": [
+        "embeddedAssets",
+        0,
+        "base64"
+      ]
+    },
+    {
+      "file": "l1-base64-bad-length.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-032"
+      ],
+      "description": "Embedded asset base64 whose length is not a multiple of 4",
+      "issuePath": [
+        "embeddedAssets",
+        0,
+        "base64"
+      ]
+    },
+    {
+      "file": "l1-base64-misplaced-padding.json",
+      "level": "L1",
+      "rule": "SCHEMA",
+      "severity": "ERROR",
+      "covers": [
+        "ADV-032"
+      ],
+      "description": "Embedded asset base64 with padding before the end",
+      "issuePath": [
+        "embeddedAssets",
+        0,
+        "base64"
+      ]
+    },
+    {
       "file": "l1-non-finite-number.json",
       "level": "L1",
       "rule": "SCHEMA",

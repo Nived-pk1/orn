@@ -41,6 +41,8 @@ Rules are **lifecycle-aware**: some rules are WARNING for `draft` and ERROR for 
 | REF-007 | Forbidden self-reference (class is its own parent, reaction instance of itself) | ERROR |
 | REF-008 | Rich-text `[[link]]` target missing | WARNING |
 
+**Precedence (REF-002 vs REF-003).** A reference to a higher layer is always also outside the field's allowed kinds, so both rules would apply. Report **only REF-003** in that case, never both. The L2 validator (step 1.7) checks the layer first and emits exactly one diagnostic per bad reference: REF-003 when the target kind's layer is above the owner's, otherwise REF-002 when the kind is not allowed for the field. Fixture: `data/fixtures/schema/v1/invalid/l2-ref-003-higher-layer.json`.
+
 ### L3 — reactions
 | ID | Rule | Severity |
 |---|---|---|

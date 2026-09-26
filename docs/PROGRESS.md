@@ -77,9 +77,13 @@
 **Verification** — `npm run check` green: 7 test files, 236 tests; check:hardcode 140 ids / 99 names.
 
 **Open items**
-- REVIEW REQUIRED — `SafeUrlSchema` does not reject control or bidi characters: the URL parser percent-encodes or strips them, but the raw string is stored. `embeddedAssets[].base64` has no character-set check (its hash is verified on import). Proposed smallest amendment: add the single-line forbidden-character refinement to `SafeUrlSchema`. It only tightens validation, so under MIGRATION.md §1 it needs no version bump; confirm before changing.
-- Open question for step 1.7 — REF-002 vs REF-003 precedence when a reference points to a higher layer. Such a kind is always outside the field's allowed kinds too (fixture `l2-ref-003-higher-layer.json`). Proposal: report REF-003 only.
-- `check:hardcode` name matching will flag schema enum literals when demo names coincide (e.g. a concept named "Elimination" vs the `elimination` step kind). Decide in step 1.12: either `// hardcode-ok:` on enum lines or skip names equal to schema vocabulary.
+- RESOLVED in step 1.2a — `SafeUrlSchema` control/bidi gap and `embeddedAssets[].base64` character set (see Amendments).
+- DECIDED (step 1.2a) — REF-002 vs REF-003: a reference to a higher layer reports only REF-003; step 1.7 checks the layer first and emits exactly one diagnostic (VALIDATION_RULES.md §3).
+- `check:hardcode` name matching will flag schema enum literals when demo names coincide (e.g. a concept named "Elimination" vs the `elimination` step kind). Recorded in IMPLEMENTATION_PLAN.md step 1.12 notes: scope the guard to source outside `src/core/schema`, or allowlist display-name fields in data.
+
+### Step 1.2a — URL and base64 tightening (2026-09-26)
+See Amendments. 5 invalid fixtures added (2 URL, 3 base64) to `invalid/manifest.json`; new tests for URL control/bidi characters and `Base64Schema` (including a linear-time check at the 28 MB cap). The mutation generator skips cap padding for base64 (padding would break the alphabet; the cap is tested directly). `npm run check` green (see report).
 
 ## Amendments
+- **2026-09-26, step 1.2a — `SafeUrlSchema` and embedded-asset base64 tightened.** Problem: `SafeUrlSchema` accepted control/bidi characters (the URL parser normalises them, but the raw string was stored), and `embeddedAssets[].base64` had only a length cap. Change: `SafeUrlSchema` gains the single-line forbidden-character refinement; new `Base64Schema` (alphabet, padding, length % 4 = 0, non-empty, cap `LIMITS.embeddedAssetBase64` = 28,000,000, unchanged) replaces the bare string. Only tightens validation: every previously valid, non-hostile value is still valid, so no `CURRENT_SCHEMA_VERSION` bump or migration (MIGRATION.md §1). Existing schema fixtures and the legacy fixtures (which contain no URLs or base64) are unaffected. Invalid fixtures and tests added. No ADR affected.
 - **2026-09-26, step 1.1 — `src/core/schema/primitives.ts` lint exceptions.** Problem: ESLint `no-control-regex` flags `FORBIDDEN_MULTILINE` / `FORBIDDEN_SINGLE_LINE`, which intentionally match control characters. Change: two line-scoped `eslint-disable-next-line no-control-regex` comments with a justification. Validated shape is byte-identical, so no `CURRENT_SCHEMA_VERSION` bump, migration or fixture freeze. No ADR affected.

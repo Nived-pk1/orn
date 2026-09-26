@@ -23,8 +23,11 @@ export interface Mutation {
   readonly value: unknown;
 }
 
-/** Shapes whose cap is enforced by a parent refinement instead of the string itself. */
-const PARENT_CAPPED_SHAPES = new Set(['StructureRep.value']);
+/**
+ * Shapes whose cap is enforced elsewhere, or whose value cannot be padded with filler characters:
+ * StructureRep by a parent refinement, base64 by its alphabet (its cap is tested in primitives.test.ts).
+ */
+const PARENT_CAPPED_SHAPES = new Set(['StructureRep.value', 'document.embeddedAssets[].base64']);
 /** Enum fields a parent refinement ties to a sibling (RecordRef kind ↔ id prefix); tested in refs.test.ts. */
 const PARENT_BOUND_ENUMS = new Set(['RecordRef.kind']);
 

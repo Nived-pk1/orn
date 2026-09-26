@@ -18,7 +18,7 @@ Package section **#21 Security**. ORN is offline-first and single-user, so the t
 - Data is rendered only as **text nodes** (React escaping) or through the mini-markup AST → React elements. `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `dangerouslySetInnerHTML`, `document.write`, `eval` and `new Function` are banned by ESLint.
 - Structure depictions (RDKit SVG) are sanitised in the chem worker (only a whitelist of SVG elements/attributes; no `script`, `foreignObject`, event handlers, external references) and displayed via `<img src>`/SVG `<image href>` with data or blob URLs — never inlined into the DOM.
 - User SVG assets are displayed only via `<img>` with blob URLs (scripts do not run in image context); they are never inlined.
-- URLs: only `http(s)` without credentials (`SafeUrlSchema`), rendered as links with `rel="noopener noreferrer"` and `target="_blank"`, and never used to load resources.
+- URLs: only `http(s)` without credentials (`SafeUrlSchema`), rendered as links with `rel="noopener noreferrer"` and `target="_blank"`, and never used to load resources. `SafeUrlSchema` also rejects control and bidi-override characters (the URL parser would otherwise normalise them away while the raw string is stored). Embedded asset base64 (`Base64Schema`) must be standard-alphabet, padded, with length a multiple of 4.
 - The SVG/PNG export serialises the Scene through a builder that escapes text; no raw data is concatenated into markup.
 
 ## 3. Caps

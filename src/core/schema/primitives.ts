@@ -35,6 +35,7 @@ export const LIMITS = {
   syllabusUnits: 200,
   topicCoverage: 500,
   attachments: 64,
+  embeddedAssetBase64: 28_000_000,
   reviewReasons: 32,
 } as const;
 
@@ -107,7 +108,19 @@ export function isSafeHttpUrl(value: string): boolean {
 }
 
 /** Only http(s) URLs without credentials. Rendered as text links with rel="noopener noreferrer". */
-export const SafeUrlSchema = z.string().max(LIMITS.url).refine(isSafeHttpUrl, { message: 'Only http(s) URLs are allowed' });
+export const SafeUrlSchema = z
+  .string()
+  .max(LIMITS.url)
+  .refine(noForbidden(FORBIDDEN_SINGLE_LINE), { message: 'Contains control or bidi-override characters' })
+  .refine(isSafeHttpUrl, { message: 'Only http(s) URLs are allowed' });
+
+/** Standard base64 with padding (RFC 4648 §4): alphabet `A–Z a–z 0–9 + /`, length a multiple of 4, non-empty. */
+export const Base64Schema = z
+  .string()
+  .min(4)
+  .max(LIMITS.embeddedAssetBase64)
+  .refine((value) => value.length % 4 === 0, { message: 'Base64 length must be a multiple of 4' })
+  .refine((value) => /^[A-Za-z0-9+/]*={0,2}$/.test(value), { message: 'Not valid base64' });
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 

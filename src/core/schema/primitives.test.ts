@@ -6,6 +6,7 @@ import {
   IsoDateSchema,
   IsoDateTimeSchema,
   isSafeHttpUrl,
+  Base64Schema,
   JsonValueSchema,
   LabelTextSchema,
   LIMITS,
@@ -119,6 +120,13 @@ describe('SafeUrl (SECURITY.md §2)', () => {
     expect(ok(SafeUrlSchema, url)).toBe(false);
     expect(isSafeHttpUrl(url)).toBe(false);
   });
+  it('rejects control and bidi-override characters, which the URL parser would silently normalise', () => {
+    for (const code of [0x00, 0x09, 0x0a, 0x0d, 0x1f, 0x7f, 0x202e, 0x2066]) {
+      const url = `https://example.org/a${String.fromCharCode(code)}b`;
+      expect(ok(SafeUrlSchema, url), `U+${code.toString(16)}`).toBe(false);
+    }
+    expect(ok(SafeUrlSchema, 'https://example.org/a%0Ab')).toBe(true); // percent-encoded, visible and inert
+  });
   it('enforces the length cap', () => {
     const base = 'https://example.org/';
     expect(ok(SafeUrlSchema, base + 'a'.repeat(LIMITS.url - base.length))).toBe(true);
@@ -161,5 +169,32 @@ describe('Names', () => {
     const names = (n: number) => ({ canonical: 'X', common: [], aliases: Array.from({ length: n }, (_, i) => `a${i}`) });
     expect(ok(NamesSchema, names(LIMITS.aliases))).toBe(true);
     expect(ok(NamesSchema, names(LIMITS.aliases + 1))).toBe(false);
+  });
+});
+
+describe('Base64 (embedded assets, ADV-032)', () => {
+  it.each(['iVBORw0K', 'AAAA', 'QQ==', 'QUI=', 'a+b/', 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='])(
+    'accepts %s',
+    (v) => expect(ok(Base64Schema, v)).toBe(true),
+  );
+  it.each([
+    ['empty', ''],
+    ['too short', 'QQ='],
+    ['length not a multiple of 4', 'iVBORw0KG'],
+    ['outside the alphabet', 'iVBO<Rw0K'],
+    ['URL-safe alphabet', 'a-b_'],
+    ['whitespace', 'iVBO Rw0K'],
+    ['line break', 'iVBO\nRw0K'],
+    ['padding before the end', 'iV==ORw0'],
+    ['three padding characters', 'Q==='],
+    ['non-ASCII digit', 'iVBO٣w0K'],
+  ])('rejects %s', (_label, v) => expect(ok(Base64Schema, v)).toBe(false));
+  it('enforces the cap and stays linear on a maximum-size payload', () => {
+    const cap = LIMITS.embeddedAssetBase64;
+    const started = Date.now();
+    expect(ok(Base64Schema, 'A'.repeat(cap))).toBe(true);
+    expect(ok(Base64Schema, 'A'.repeat(cap + 4))).toBe(false);
+    expect(ok(Base64Schema, `${'A'.repeat(cap - 4)}!AAA`)).toBe(false);
+    expect(Date.now() - started).toBeLessThan(2_000);
   });
 });

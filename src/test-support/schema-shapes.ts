@@ -69,6 +69,6 @@ export const MACHINE_STRING_SHAPES: ReadonlyMap<string, string> = new Map([
   ['class.generic.smarts', 'SMARTS query; parsed by the chem worker'],
   ['transformation.reactionSmarts', 'reaction SMARTS; parsed by the chem worker'],
   ['reaction.mappedReaction.value', 'reaction SMILES / rxnfile; parsed by the chem worker'],
-  ['reference.url', 'SafeUrlSchema: http(s) only, no credentials'],
-  ['document.embeddedAssets[].base64', 'asset bytes; decoded and hash-checked on import (AST-003)'],
+  ['reference.url', 'SafeUrlSchema: http(s) only, no credentials, no control/bidi characters'],
+  ['document.embeddedAssets[].base64', 'Base64Schema: alphabet and length checked; decoded and hash-checked on import (AST-003)'],
 ]);
