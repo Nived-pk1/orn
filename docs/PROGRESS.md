@@ -139,6 +139,26 @@ See Amendments. 5 invalid fixtures added (2 URL, 3 base64) to `invalid/manifest.
 - Immer patches require `enablePatches()`. Nothing in `src/core` calls it yet; the store (step 1.9) must, once at module load. `changeset.test.ts` calls it itself.
 - `deserializeDocument` is strict and single-shot. The tolerant envelope, quarantine and prototype-key renaming (PERSISTENCE.md §7) belong to the importer (step 3.x).
 
+### Step 1.6 — `core/indexes` part 1: reverse references, folded names, hierarchy ancestry (2026-09-26)
+
+**Delivered** (`src/core/indexes/`)
+- `engine.ts`: `coreIndexEngine` (`build`, `apply`) implementing the new `CoreIndexEngine`/`CoreIndexes` contract: `get`, `referrersOf` (record and nested IDs, sorted by owner ID then path, carrying the registry delete policy), `byFoldedName` (per kind, sorted by ID), `ancestorsOf` / `descendantsOf` / `classAncestors`. Every record contributes only from its own content, so `apply` retracts and re-adds just the created/updated/deleted records (O(changed × references)) and equals a rebuild (INV-18).
+- `hierarchy.ts`: parent-field table (class, concept, named_reaction `parentIds`; topic `parentId`), cycle-safe iterative breadth-first closure. Descendants come from the reverse-reference index, so no separate children map exists to keep in sync.
+- `names.ts`: structural folded-name extraction (`name`, `names.*` except `qualifier`, `aliases`) through `core/text` `fold`.
+- `src/test-support/state-fixture.ts`: fixture states and a `commit` helper yielding (state, ChangeSet) as the store will.
+- Tests (38): `engine.test.ts` (12: reverse references against an independent oracle over the maximal fixture, ordering, `get`, folded names), `hierarchy.test.ts` (14: table checked against the registry, chain/diamond/cycle/self-parent/dangling, all four hierarchies in the maximal fixture, 5,000-deep chain), `incremental.test.ts` (12: scenarios incl. delete/recreate, undo, replace and revision gap, stale handle, snapshot stability, and four seeded 100-edit random walks compared with a rebuild after every step).
+- Invariants touched: INV-11 (nothing stored), INV-18 (apply ≡ build), INV-01 (nested IDs are reverse-index keys), ADV-022 input (duplicate folded names are all returned).
+
+**Decisions**
+- In-place update with stale-handle guard: `apply` mutates the shared index data and returns the handle for the new revision; the previous handle then throws on use (a loud programmer error rather than an O(dataset) copy per commit). Arrays already returned stay valid snapshots (buckets are replaced, never mutated). A `replace` ChangeSet or a revision gap rebuilds from `next` instead, leaving the previous handle usable.
+- `byFoldedName` covers every name of a record (canonical, display, IUPAC, common, aliases); the caller supplies the folded query. Rules that need canonical-only matching (SPC-001, step 1.8) filter on the record.
+- Ancestor walks skip parents that have no record (dangling parents are L2 findings); cycles are walked once and never list the start.
+- Hierarchy walks are computed on demand, not cached: work is bounded by the reachable records. Caching is a Phase 2 concern if profiling asks for it.
+
+**Open items**
+- Part 2 (step 2.1) adds the remaining `ReadonlyIndexes` methods (participations, productions, by reagent/…, topics of a record, relationships, caveats, anchors, display) and a combined engine; the property test P-07 over random commands is step 1.11.
+
 ## Amendments
+- **2026-09-26, step 1.6 — `src/core/indexes/contracts.ts` split (additive).** Problem: step 1.6 delivers only part of `ReadonlyIndexes`; step 2.1 delivers the rest, and a partial object cannot satisfy the full interface. Change: new `CoreIndexes` (revision, `get`, `referrersOf`, `byFoldedName`, `classAncestors` plus new `ancestorsOf`/`descendantsOf` over `HierarchyKind`) that `ReadonlyIndexes` extends; new `CoreIndexEngine`; `IndexEngine.build` gains an optional `revision` (default 0); documented that `apply` invalidates the `previous` handle. All existing members keep their signatures. No schema change, no version bump, no ADR affected.
 - **2026-09-26, step 1.2a — `SafeUrlSchema` and embedded-asset base64 tightened.** Problem: `SafeUrlSchema` accepted control/bidi characters (the URL parser normalises them, but the raw string was stored), and `embeddedAssets[].base64` had only a length cap. Change: `SafeUrlSchema` gains the single-line forbidden-character refinement; new `Base64Schema` (alphabet, padding, length % 4 = 0, non-empty, cap `LIMITS.embeddedAssetBase64` = 28,000,000, unchanged) replaces the bare string. Only tightens validation: every previously valid, non-hostile value is still valid, so no `CURRENT_SCHEMA_VERSION` bump or migration (MIGRATION.md §1). Existing schema fixtures and the legacy fixtures (which contain no URLs or base64) are unaffected. Invalid fixtures and tests added. No ADR affected.
 - **2026-09-26, step 1.1 — `src/core/schema/primitives.ts` lint exceptions.** Problem: ESLint `no-control-regex` flags `FORBIDDEN_MULTILINE` / `FORBIDDEN_SINGLE_LINE`, which intentionally match control characters. Change: two line-scoped `eslint-disable-next-line no-control-regex` comments with a justification. Validated shape is byte-identical, so no `CURRENT_SCHEMA_VERSION` bump, migration or fixture freeze. No ADR affected.

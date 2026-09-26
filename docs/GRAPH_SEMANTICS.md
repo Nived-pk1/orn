@@ -107,7 +107,7 @@ A concept-map view is ARCHITECTURALLY SUPPORTED (new ViewKey + definition); it i
 
 ## 8. Indexes
 
-Maintained incrementally from each ChangeSet (`IndexEngine.apply`), identical to a full rebuild (INV-18, property test P-07): reverse references, participations by substance, productions by product, reactions by reagent / reagent family / named reaction (with descendants) / transformation / concept / mechanism, species by class (transitive), class ancestors, records by topic (transitive), topics of a record, relationships of a record, caveats for a record, records by folded name, anchors, display of a record. Indexes live in memory on the main thread and in the compute worker replica; they are never persisted as canonical data (a warm-start cache is allowed, keyed by revision).
+Maintained incrementally from each ChangeSet (`IndexEngine.apply`), identical to a full rebuild (INV-18, property test P-07): reverse references, participations by substance, productions by product, reactions by reagent / reagent family / named reaction (with descendants) / transformation / concept / mechanism, species by class (transitive), class ancestors, records by topic (transitive), topics of a record, relationships of a record, caveats for a record, records by folded name, anchors, display of a record. Indexes live in memory on the main thread and in the compute worker replica; they are never persisted as canonical data (a warm-start cache is allowed, keyed by revision). `apply` updates in place and returns the handle for the new revision; the previous handle is stale and throws on use (arrays already returned stay valid). A `replace` ChangeSet or a revision gap rebuilds.
 
 ## 9. Traversal, cycles and route search
 
