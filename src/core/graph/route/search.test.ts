@@ -59,6 +59,33 @@ describe('ADV-050: A → B → C → A', () => {
   });
 });
 
+describe('INV-22: time budget uses the injected clock (step 2.10)', () => {
+  // A chain long enough for the clock to be checked repeatedly before it runs out (the same pattern
+  // traverse()'s own clock test uses, traversal.test.ts), but within DEFAULT_TRAVERSAL_LIMITS.maxDepth
+  // (12) so the depth clamp does not also fire and confound which truncation reason is reported.
+  const n = 10;
+  const chainSpecies = Array.from({ length: n + 1 }, (_, i) => species(`sp-${i}`, `S${i}`));
+  const chainReactions = Array.from({ length: n }, (_, i) => oneStep(`r-${i}`, `sp-${i}`, `sp-${i + 1}`));
+  const state = stateOf(...chainSpecies, ...chainReactions);
+  const ctx = contextOf(state);
+
+  it('stops the search and reports time_budget instead of exploring the whole chain', () => {
+    let t = 0;
+    const tight: TraversalLimits = { ...DEFAULT_TRAVERSAL_LIMITS, timeBudgetMs: 5 };
+    const result = searchRoutes(ctx, query({ target: sp(`sp-${n}`), maxSteps: n, limits: tight }), { now: () => (t += 2) });
+    expect(result.truncation?.reason).toBe('time_budget');
+    expect(result.explored).toBeGreaterThan(0);
+    expect(result.explored).toBeLessThan(n);
+  });
+
+  it('without an injected clock, the time budget is not enforced (no now, no crash, no false truncation)', () => {
+    const tight: TraversalLimits = { ...DEFAULT_TRAVERSAL_LIMITS, timeBudgetMs: 5 };
+    const result = searchRoutes(ctx, query({ target: sp(`sp-${n}`), maxSteps: n, limits: tight }));
+    expect(result.truncation).toBeNull();
+    expect(result.explored).toBe(n + 1);
+  });
+});
+
 describe('P-09: route search terminates within limits on random cyclic graphs', () => {
   it('never exceeds the node budget and always returns, for any random directed graph', () => {
     fc.assert(

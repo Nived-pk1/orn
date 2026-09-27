@@ -735,7 +735,25 @@ generator config versus `0` in `oneHubState()` — each of the 1,000 referring r
 REL-xxx check inside `findingsOf`. Not chased further this step (out of scope for a scope-metadata
 investigation); a candidate for whoever picks up the doubled-`scopeOf`/Phase 9 work.
 
-**Commit 3 — route-search clock test; re-measure; Gate B packet.** See below and `docs/reviews/gate-b-packet.md`.
+**Commit 3 — route-search clock test; re-measure; Gate B packet.** `src/core/graph/route/search.test.ts`:
+"INV-22: time budget uses the injected clock" (2 new tests) — a 10-step chain (kept within
+`DEFAULT_TRAVERSAL_LIMITS.maxDepth` so the depth clamp cannot also fire and confound the reported
+truncation reason), an injected `now` that advances 2 ms per call against a 5 ms budget stops the search
+and reports `truncation.reason === 'time_budget'`; a companion test with no injected clock confirms the
+budget is simply not enforced (no crash, no false truncation, the whole chain explored) — the same pattern
+`traverse()`'s own clock test uses (`traversal.test.ts`), now covered for the second bounded primitive with
+the same shape. Closes the one genuinely-untested branch the step 2.8 packet's coverage detail named.
+
+Re-ran all benches (`npm run bench:baseline`) and `npm run bench:compare` against the freshly-regenerated
+file. `bench:compare` flagged 3 entries as regressing p99 > 20% (undo/redo on `dense`, `scopeOf` twice on
+`hub_explosion`, `validateTouched` on the design-tier hub) — re-running it again flagged a *different* set
+of entries against the *same* committed baseline, confirming these are workstation noise (exactly the
+caveat `baseline.json` documents), not a real regression from anything in this step. Rewrote
+`docs/reviews/gate-b-packet.md` in full: every §5 verdict now computed on p99 (not step 2.8's single-run
+means); §0 answered with what 2.9–2.10 did about each of the step 2.8 reviewer's five items; ADV-013
+re-judged specifically on the navigator (fails on `dense`, passes on `hub_explosion` this run); §8's stale
+open items (the rejected-commit rebuild, the missing clock test) removed as closed. Gate B's status stays
+**self-reviewed; human review pending** (`docs/PROJECT_STATE.json`) — not marked passed, not tagged.
 
 ## Amendments
 - **2026-09-27, step 2.10 — PERFORMANCE_ARCHITECTURE.md §2's Commit row covers rejected commits too (doc
