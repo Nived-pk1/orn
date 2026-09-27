@@ -268,6 +268,47 @@ See Amendments. 5 invalid fixtures added (2 URL, 3 base64) to `invalid/manifest.
 - P-01 (fake-indexeddb) is phase 3; P-03 needs the first migration step; P-09/P-10 are phase 2.
 - `ORN_PROPERTY_RUNS` should be raised in the gate reviews (Gate A: 200).
 
+### Step 1.12 — Demo dataset, `demo-invalid`, Gate A ADV rows, Gate A review (2026-09-27)
+
+**Delivered**
+- `scripts/check-hardcode.mjs`: skips `src/core/schema/**` (schema vocabulary is not dataset content), done before the demo landed, as the step note asked. Demo names were not changed. The guard now checks 654 IDs and 283 names.
+- `src/test-support/demo/` (builders, all ≤ 400 lines, deterministic, fixed timestamp): `kit.ts` and `reaction-kit.ts` (typed constructors, nested IDs derived from a reaction slug), `classes.ts`, `species.ts`, `reagents.ts`, `knowledge.ts`, `mechanisms.ts`, `reactions-a/b/c.ts`, `links.ts`, `curriculum.ts`, `presentation.ts`, `index.ts` (`buildDemoDocument`), `invalid.ts`.
+- `data/seed/demo.orn.json`: 27 reactions covering all 17 groups of TEST_STRATEGY §3, 66 species, 20 classes (15 anchored hubs, none with a structure), 16 reagents (Lindlar components, Baeyer's profile, KOH aq./alc. profiles), 36 concepts, 22 transformations, 13 named reactions, 3 mechanisms (SN2, E2 with 2 variants, aldol base/acid with atom-mapped steps), 6 caveats, 13 relationships, 2 curated routes, topic tree (27), JEE Main/Advanced provisional versions, 31 topic mappings (every reaction mapped; diazonium → phenol in two chapters), one `exam_relevance` override, Grignard scheme, "Carbonyl chemistry" preset, water `showAsNode: never`, edge records (unparsable SMILES, no-structure cholesterol with a very long IUPAC name, palmitic acid, Unicode aliases, draft reaction with no product).
+- `data/fixtures/demo-invalid.orn.json`: the demo with 11 deliberate L3 problems (RXN-008/004/007/014/005, HIER-001, SPC-001, REL-004, RTE-001, CUR-001, MEC-002), schema-valid and referentially intact.
+- Both files are generated: `npm run build:demo` (runs the demo test with `ORN_WRITE_DEMO=1`); otherwise the test fails if a committed file differs from the builders.
+- Tests: `src/test-support/demo/demo.test.ts` (22: files equal builders, determinism, P-02 round trip, 0 L1–L3 ERROR, only the planted RXN-002 warning, nothing `verified`, spec coverage, demo-invalid expectations), `tests/adversarial/gate-a.test.ts` (26: every Gate A row of the matrix is named by a test, plus ADV-008/017/018/023/024/028 on the demo), `tests/integration/invariants-gate-a.test.ts` (7: INV-03, 06, 16, 17, 25).
+- `npm run check`: 44 files, 849 tests, green. New scripts `build:demo`, `test:coverage`; new dev dependency `@vitest/coverage-v8@3.2.7` (matches vitest).
+
+**Demo validation result** — 0 ERROR; 1 WARNING (RXN-002 on the deliberate draft); INFO RXN-016 ×16 (no mechanism class on most reactions) and RVW-002 ×1; REVIEW_REQUIRED RVW-001 ×38 (curriculum records, mechanisms, the Beckmann reaction, edge species).
+
+**Gate A review** (TEST_STRATEGY §6, IMPLEMENTATION_PLAN §3)
+| Criterion | Result |
+|---|---|
+| Schemas + maximal fixture; registry coverage test | pass (steps 1.2, 1.4) |
+| Commands, undo/redo | pass (1.9; P-08, ADV-044) |
+| L1–L3 rules with tests; INV tests | pass; every Phase 1 INV is named by a test (INV-03/06/16/17/25 added here) |
+| P-01 in-memory variant, P-02, P-04…P-08 | pass at default and at `ORN_PROPERTY_RUNS=200` (19 tests) |
+| Demo validates with 0 ERROR | pass |
+| Generator valid at all tiers | pass (1.11) |
+| ADV rows marked A pass | pass: all 19 rows named and exercised; the matrix check fails if a row loses its test |
+| `src/core` coverage ≥ 90% lines | 99.46% lines, 95.09% branches, 99.15% functions (`npm run test:coverage`) |
+| `src/core` imports only core/zod/immer | pass (`lint:deps`) |
+Human review is still needed: the chemistry, SMILES and all exam coverage are unverified.
+
+**Decisions**
+- Reaction 8 uses KOH for both aq. and alc. conditions (spec says aq. NaOH) so ADV-024 (one reagent, two reactions, different outcomes) is exercised; KOH has two profiles.
+- The spec's "ethanone" is read as propanone (ethanone is not a compound); the haloform test is modelled for ethanol and propanone, with balanced coefficients.
+- Route ethanol → propan-2-ol goes via ethanal + CH₃MgBr only; the propene-hydration alternative is not modelled (no ethanol → propene reaction in the demo).
+- Ethanol + conc. H₂SO₄ has no participant coefficient (the 2:1 ether stoichiometry differs per variant and coefficients are per participant); the variant notes say so.
+- The reverse_of synthetic pair is ethene hydration ↔ the ethanol + conc. H₂SO₄ record as a whole (relationships attach to reactions, not variants).
+- Nothing is `verified`; curriculum records and the Beckmann reaction are `review_required` with reasons.
+- Coverage runs need `--testTimeout=120000`: v8 instrumentation slows the random-walk tests past the 5 s default (plain `npm test` is unaffected).
+
+**Open items**
+- Human verification of demo chemistry (SMILES, stereodescriptors, conditions, mechanism atom maps) and of exam coverage.
+- RXN-016 INFO on 16 demo reactions: add mechanism-class concepts when the content is reviewed.
+- `npm audit` now lists 3 moderate entries (was 2), all the same dev-only vitest advisory GHSA-82fw-gwwq-j7x9: `@vitest/coverage-v8` is counted because it depends on vitest. Resolve with the vitest major upgrade at a phase boundary (ADR-020).
+
 ## Amendments
 - **2026-09-26, step 1.10 — `MigrationRunner.run` returns a result value (contract change).** Problem: the contract said the runner "rejects newer versions" but returned only `{ doc, steps }`, leaving no value to reject with (CLAUDE.md §6: errors across module boundaries are values). Change: `run` returns `MigrationResult = { ok: true, doc, steps } | { ok: false, code, message, atVersion }`, with new `MigrationErrorCode`, `MigrationError`, `MigrationSuccess` types; `MigrationRunner` gains a readonly `target`. No consumer existed yet, no record shape changed: no `CURRENT_SCHEMA_VERSION` bump, migration or fixture change. Docs updated: MIGRATION.md §2.
 - **2026-09-26, step 1.8 — validation contract, `linkersOf`, L2 nested-container rule.** Problem: incremental validation must equal a full pass, but records can be affected by changes elsewhere that the reverse-reference index does not show (name twins, duplicate IDs, cycle members, rich-text linkers, routes depending on species and classes), and a fixed problem on an untouched record must lose its finding. Change: `ValidationRule` gains optional `watches` and `peers` (records beyond referrers/referents affected by a touched record); `Validator.validateTouched` gains an optional `previous` state and the interface gains `scopeOf(state, indexes, touched, previous?)`; `CoreIndexes.linkersOf(id)` (rich-text link index, apply ≡ build tested). Separately, step 1.7's REF-005 no longer reports a nested reference whose container field names no record of the required kind (participant `profileId` on a non-reagent): that case is RXN-011 as VALIDATION_RULES.md §3 lists it. No record shape changed: no `CURRENT_SCHEMA_VERSION` bump, migration or fixture change. Docs updated: VALIDATION_RULES.md §4–§5, GRAPH_SEMANTICS.md §8.

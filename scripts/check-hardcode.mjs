@@ -2,11 +2,14 @@
 // Guards the "no reaction-specific hacks" rule (docs/ARCHITECTURE.md §2.6, INV-25).
 // Collects record IDs and names from data/seed and data/fixtures and fails if any appears
 // as a string literal in production source. Justified exceptions: append `// hardcode-ok: <reason>`.
+// src/core/schema is exempt: it defines the vocabulary (enum words such as 'elimination'), not dataset
+// content, so a dataset name that shares a word with the schema is not a hardcoded record name.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { extname, join, relative } from 'node:path';
+import { extname, join, relative, sep } from 'node:path';
 
 const DATA_ROOTS = ['data/seed', 'data/fixtures'];
 const MIN_NAME_LENGTH = 5;
+const SCHEMA_VOCABULARY = join('src', 'core', 'schema') + sep;
 
 function* walk(dir, exts) {
   let entries;
@@ -43,6 +46,7 @@ const literal = /(['"`])((?:\\.|(?!\1).)*)\1/g;
 let failures = 0;
 for (const file of walk('src', new Set(['.ts', '.tsx']))) {
   if (/\.(test|bench)\.tsx?$/.test(file) || file.startsWith(join('src', 'test-support'))) continue;
+  if (file.startsWith(SCHEMA_VOCABULARY)) continue;
   const lines = readFileSync(file, 'utf8').split('\n');
   lines.forEach((line, index) => {
     const trimmed = line.trim();

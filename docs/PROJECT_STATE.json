@@ -1,9 +1,9 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-09-26",
+  "lastUpdated": "2026-09-27",
   "currentPhase": 1,
-  "currentPhaseStatus": "in_progress",
+  "currentPhaseStatus": "complete_pending_gate_a_human_review",
   "completedPhases": [
     0
   ],
@@ -19,17 +19,18 @@
     "1.8",
     "1.9",
     "1.10",
-    "1.11"
+    "1.11",
+    "1.12"
   ],
-  "nextPhase": 1,
-  "nextStep": "1.12",
-  "nextStepTitle": "Demo dataset builder + data/seed/demo.orn.json + demo-invalid; Gate A ADV rows; Gate A review",
+  "nextPhase": 2,
+  "nextStep": "2.1",
+  "nextStepTitle": "Remaining indexes (participations, productions, by reagent/family/named/transformation/concept/mechanism, topics, relationships, caveats, anchors, display)",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
       "phase": 1,
       "title": "Domain core",
-      "status": "pending"
+      "status": "passed_self_review_human_review_pending"
     },
     "B": {
       "phase": 2,
@@ -61,9 +62,9 @@
     "schemasAndContractsTypecheck": "passed with tsc 6.0.3 against zod 4.6.5 and immer 10.2.0 (step 1.1)",
     "schemaRuntimeSmoke": "minimal fixture parses unchanged; 15 negative cases rejected as expected (tsx)",
     "fileSizeCheck": "passed",
-    "hardcodeCheck": "passed",
+    "hardcodeCheck": "passed (654 ids, 283 names; src/core/schema exempt)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (step 1.11: 41 files, 794 tests)",
+    "npmRunCheck": "passed (step 1.12: 44 files, 849 tests)",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -73,13 +74,17 @@
     "commandSuite": "step 1.9: impact (ADV-017/018), store pipeline and INV-12 rollback, undo/redo exactness, history limits, builders (ADV-019/020/021), ADV-044 random walks with INV-18 checks",
     "migrationSuite": "step 1.10: runner over an empty registry (v1 fixtures pass through), chain order, gaps, throwing and contract-violating steps, newer/invalid versions, construction errors (23 tests)",
     "propertySuite": "step 1.11: generator (6 shapes, 4 tiers, valid at every tier) and P-02, P-04…P-08 with a fast-check intent model; also green at ORN_PROPERTY_RUNS=200 (47 tests)",
-    "textSuite": "step 1.3: normaliser (28 tests) and mini-markup parser (37 tests) incl. bounded-work and seeded totality checks"
+    "textSuite": "step 1.3: normaliser (28 tests) and mini-markup parser (37 tests) incl. bounded-work and seeded totality checks",
+    "demoSuite": "step 1.12: demo dataset (27 reactions, 66 species) validates with 0 L1–L3 ERROR and one planted RXN-002 warning; committed files equal the builders; P-02 on the demo; demo-invalid fires 11 planted rules (22 tests)",
+    "gateASuite": "step 1.12: all 19 Gate A ADV rows named by tests (matrix check) plus demo-based ADV-008/017/018/023/024/028 (26 tests); INV-03/06/16/17/25 (7 tests); property suite green at ORN_PROPERTY_RUNS=200",
+    "coverage": "src/core: 99.46% lines, 95.09% branches, 99.15% functions (npm run test:coverage)"
   },
   "openItems": [
     "Cross-check the ADV-001…045 matrix wording against the §46 list in the original requirements prompt.",
     "All exam coverage and the baseline topic tree are REVIEW REQUIRED until checked against official syllabi.",
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
-    "npm audit: 2 moderate dev-only advisories in vitest 3.x (@vitest/mocker, GHSA-82fw-gwwq-j7x9); resolve with a vitest major upgrade at a phase boundary (ADR-020).",
-    "Step 1.12: scope check:hardcode to source outside src/core/schema or allowlist display-name fields (IMPLEMENTATION_PLAN.md step 1.12 note)."
+    "npm audit: 3 moderate dev-only entries, all the vitest advisory GHSA-82fw-gwwq-j7x9 (@vitest/coverage-v8 is counted through vitest); resolve with a vitest major upgrade at a phase boundary (ADR-020).",
+    "Human review of Gate A: demo chemistry (SMILES, stereodescriptors, conditions, mechanism atom maps) and exam coverage are unverified; nothing is marked verified.",
+    "Demo deviations to confirm: KOH used for both aq. and alc. conditions of reaction 8; spec \"ethanone\" read as propanone; propene-hydration route alternative not modelled (PROGRESS.md step 1.12)."
   ]
 }
