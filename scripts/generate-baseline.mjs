@@ -8,14 +8,34 @@
 // entry itself, not hidden — see the entry's own `p99SpreadPct`/`p99Runs`. Run this only when deliberately
 // re-establishing the committed baseline (at a gate, or after a reviewed performance change); everyday
 // CI-style checking is `npm run bench:compare` against the committed file, not this.
+//
+// Each of the 3 runs is spawned as a genuinely separate `node` process (`scripts/bench-run-once.mjs`), not
+// a 3x in-process loop: an earlier version called `runBenchmarks()` three times inside this same process,
+// and that was itself a measurement bug, not a neutral baseline — with one shared process's V8 JIT/module
+// cache warming across the 3 calls, the *third* call came out fastest in the large majority of entries (not
+// randomly any of the three, which random workstation noise would produce), inflating every entry's
+// reported spread with a systematic bias rather than real run-to-run variance. Independent processes remove
+// that bias; whatever spread remains after this fix is real.
+import { spawnSync } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { runBenchmarks, verdictOf } from './bench-report.mjs';
+import { verdictOf } from './bench-report.mjs';
 import { acquireBenchLock } from './bench-guard.mjs';
 
 const BASELINE_PATH = fileURLToPath(new URL('../tests/perf/baseline.json', import.meta.url));
+const RUN_ONCE_PATH = fileURLToPath(new URL('./bench-run-once.mjs', import.meta.url));
 const RUNS = 3;
 const SPREAD_THRESHOLD = 0.25;
+
+/** Runs one bench pass in a fresh `node` process and parses its JSON-on-stdout result. */
+function runOnceInFreshProcess() {
+  const result = spawnSync(process.execPath, [RUN_ONCE_PATH], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`bench-run-once.mjs exited ${result.status}:\n${result.stderr}`);
+  }
+  return JSON.parse(result.stdout);
+}
 
 function round(ms) {
   return Math.round(ms * 10_000) / 10_000;
@@ -35,8 +55,8 @@ async function main() {
   try {
     allRuns = [];
     for (let run = 1; run <= RUNS; run += 1) {
-      console.log(`\n=== bench:baseline run ${run}/${RUNS} ===`);
-      allRuns.push(await runBenchmarks({ quiet: run > 1 }));
+      console.log(`\n=== bench:baseline run ${run}/${RUNS} (fresh process) ===`);
+      allRuns.push(runOnceInFreshProcess());
     }
   } finally {
     release();
@@ -93,7 +113,9 @@ async function main() {
     toolchain: `Node ${process.version.replace(/^v/, '')}, Vitest 4.1.11 (vitest bench via the Node API)`,
     runner:
       'developer workstation, ' +
-      `${RUNS} sequential runs of the whole suite (docs/PROGRESS.md step 2.11) — not a dedicated CI runner ` +
+      `${RUNS} runs of the whole suite, each its own fresh node process (docs/PROGRESS.md step 2.11 — an ` +
+      'earlier version of this file ran all 3 in one process and that cross-run warm-up was itself the ' +
+      "dominant source of spread, not real noise) — not a dedicated CI runner " +
       'class; numbers are indicative, not tight. Machine conditions: plugged in (not on battery), no other ' +
       'heavy applications open, file parallelism disabled and a single worker (fileParallelism: false — see ' +
       'scripts/bench-guard.mjs), no other vitest process running concurrently (enforced for other bench runs ' +

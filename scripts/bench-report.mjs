@@ -14,12 +14,17 @@ import { BUDGETS } from '../tests/perf/budgets.mjs';
 import { acquireBenchLock } from './bench-guard.mjs';
 
 /**
- * @param {{ quiet?: boolean }} [options]
+ * @param {{ quiet?: boolean, skipLock?: boolean }} [options]
  * @returns {Promise<Array<Record<string, unknown>>>}
  */
 export async function runBenchmarks(options = {}) {
-  const { quiet = false } = options;
-  const release = acquireBenchLock();
+  const { quiet = false, skipLock = false } = options;
+  // skipLock: for a caller that already holds the lock itself, in a *different* process than the one that
+  // took it (docs/PROGRESS.md step 2.11's `scripts/bench-run-once.mjs`, spawned by generate-baseline.mjs so
+  // each of its 3 runs is a genuinely fresh process — see that file for why a shared process is unsafe here).
+  // acquireBenchLock's reentrancy only recognises its own process's PID, so a child process must be told
+  // explicitly that the lock is already held rather than trying to take it again.
+  const release = skipLock ? () => {} : acquireBenchLock();
   try {
     const results = [];
     const unmatched = [];

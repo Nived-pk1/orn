@@ -110,14 +110,28 @@ one run and 107–129 ms in another, "full-suite contention" named but not fixed
   …). Per-iteration bookkeeping needed to make each call distinct without a reaction-specific hack (e.g.
   `commit.bench.ts` cycling `n` to pick the next species to touch) stays in the callback because it is part
   of what a real caller would also pay — an ID-table lookup, not the dataset construction itself.
-- **3 runs, median p99, spread recorded.** `npm run bench:baseline` runs the whole suite 3 times in one
-  process and writes `tests/perf/baseline.json` with, per entry: `p99Runs` (each run's own p99, in run
-  order), `p99Ms` (their median — what `pass` is computed against), and `p99SpreadPct`
-  (`(max − min) / median` across the 3 runs). An entry whose spread exceeds 25% also gets a `noisy` field
-  naming the threshold, so a wide spread is visible on the entry itself, not just in prose — nothing is
-  hidden (CLAUDE.md §1.5). A flagged entry should be investigated (GC inside the timed region, setup leaking
-  into it, shared state carried between iterations that changes their cost run to run) before trusting its
-  verdict; §5's own table names which entries this step found still noisy after the fix and why.
+- **3 runs, each a fresh process, median p99, spread recorded.** `npm run bench:baseline` runs the whole
+  suite 3 times, each run spawned as its own `node` process (`scripts/bench-run-once.mjs`), and writes
+  `tests/perf/baseline.json` with, per entry: `p99Runs` (each run's own p99, in run order), `p99Ms` (their
+  median — what `pass` is computed against), and `p99SpreadPct` (`(max − min) / median` across the 3 runs).
+  An entry whose spread exceeds 25% also gets a `noisy` field naming the threshold, so a wide spread is
+  visible on the entry itself, not just in prose — nothing is hidden (CLAUDE.md §1.5).
+  **Investigated (docs/PROGRESS.md step 2.11)**: the first version of this method ran all 3 passes inside
+  one shared Node process (3 sequential in-process `startVitest` calls) — that was itself a measurement bug,
+  not neutral: V8's JIT and the module-resolution cache warmed across the 3 calls, so the *third* call came
+  out fastest in the large majority of entries (not randomly any of the three, which real noise would
+  produce) — every entry showed a spread over 25%, and the pattern (a near-monotonic decrease run 1 → run 3)
+  gave it away as bias, not variance. Fixed by spawning each run as an independent OS process. After the fix
+  the monotonic pattern is gone (confirmed: no consistent run-1-vs-run-3 direction across entries any more),
+  but the *remaining* spread on this particular developer workstation was still large — most entries over
+  25%, several over 100% — for both slow (design-tier hub commit/validateTouched, `validateAll`) and
+  sub-millisecond (`scopeOf`) operations alike, which a real GC pause or scheduler contention on a
+  non-dedicated machine can plausibly produce at any timescale. This is the workstation-noise case §9's
+  `runner` field and `bench:compare`'s 20% (not tighter) threshold already assume, not a new bug to chase
+  further — a dedicated CI runner class (still not wired in, see PROJECT_STATE.json's open items) would be
+  the actual fix, not another round of investigation on this machine. A flagged entry should still be spot-
+  checked before trusting its verdict on a *specific* run; §5's own table names which entries this step
+  measured as failing and whether that entry was also noisy.
 - **Machine conditions**, recorded in `baseline.json`'s own `runner` field: plugged in (not on battery), no
   other heavy applications open, isolation and worker settings as above. Still a developer workstation, not
   a dedicated CI runner class — `bench:compare`'s 20% regression threshold (below) is sized for that, not
