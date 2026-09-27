@@ -60,7 +60,7 @@ Projection → LayoutRequest (worker, deterministic, cached, cancellable) → Sc
 Budgets: PERFORMANCE_ARCHITECTURE.md §2 (commit < 16 ms, projection < 16 ms, layout < 300 ms in worker, search < 50 ms, no main-thread task > 50 ms, cold boot < 2.5 s at 2k/5k). Incremental everything; bounded traversals; heavy work in workers; no JSON.stringify equality in hot paths; benchmarks from Phase 2 with CI regression checks.
 
 ## 15. Testing requirements
-Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§2. Property tests P-01…P-10 (§4). Adversarial matrix ADV-001…045 (§5) with phase and gate per row. Demo dataset spec (§3). Gates A–F (§6).
+Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§2. Property tests P-01…P-10 (§4). Adversarial matrix ADV-001…058 (§5) with phase and gate per row. Demo dataset spec (§3). Gates A–F (§6).
 
 ## 16. Current phase
 **Phase 0 complete** (architecture, schemas, contracts, fixtures, scaffold). See `docs/PROJECT_STATE.json`.

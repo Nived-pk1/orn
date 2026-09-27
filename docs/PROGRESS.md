@@ -308,9 +308,13 @@ Human review is still needed: the chemistry, SMILES and all exam coverage are un
 - P-01 in-memory variant added (`tests/property/state-document.test.ts`: fixtures, generated datasets, random command sequences). The IndexedDB variant (save → load with fake-indexeddb) is step 3.5.
 - INV IDs put in test titles (titles only, assertions untouched): INV-09 on HIER-001/HIER-003/REL-005/RTE-001, INV-15 on REL-001…REL-004, "INV-22 (Phase 1 part)" on the hierarchy-walk and rich-text bound tests.
 - Gate completeness check reworked into `tests/adversarial/gate-matrix.ts` (`describeGateCompleteness(gate, minRows, extraIds)`): rows are read from TEST_STRATEGY §5 by gate letter; an ADV/INV/P ID counts only when it appears in a describe/it/test title.
+- §46 cross-check done: 21 cases, 8 covered by existing rows, 13 added as ADV-046…058 (ADV-007 widened to include a major and a minor product in one reaction). The schema's names match the case terms (`spectator` role, `intermediates`, `reversibility.kind = reversible_under_other_conditions`); no renames were needed.
+- Phase 1 halves written in `tests/adversarial/gate-a-phase1-halves.test.ts`: ADV-051 (RXN-017 and one reverse reference per occurrence; twice-as-reactant with distinct participant IDs and no ERROR), ADV-057 (no finding, both chapters through `ancestorsOf('topic', …)`), ADV-058 (fold + `byFoldedName` for every alias of the demo lactic acid, no SPC-001). ADV-055 is named on the INV-16 test. The Gate A completeness check now covers 23 rows (was 19). Graph and search halves stay with Phases 2 and 4.
+- No validation rule added for ADV-051(b) (the same substance twice in one role). Open item below.
 - Seeds: fast-check property tests were unseeded (fast-check prints the seed on failure but a run was not reproducible by default). `PARAMS` now carries a fixed seed (`ORN_PROPERTY_SEED` overrides). The ADV-044 walk, incremental-validation and index walks use fixed seeds.
 
 **Open items**
+- Consider a WARNING for the same substance listed twice in the same role and stage (use coefficient) — decide in Phase 6.
 - Human verification of demo chemistry (SMILES, stereodescriptors, conditions, mechanism atom maps) and of exam coverage.
 - RXN-016 INFO on 16 demo reactions: add mechanism-class concepts when the content is reviewed.
 - `npm audit` now lists 3 moderate entries (was 2), all the same dev-only vitest advisory GHSA-82fw-gwwq-j7x9: `@vitest/coverage-v8` is counted because it depends on vitest. Resolve with the vitest major upgrade at a phase boundary (ADR-020).

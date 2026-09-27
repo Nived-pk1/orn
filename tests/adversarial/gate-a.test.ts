@@ -26,7 +26,7 @@ const errorsOf = (state: CanonicalState) =>
 const ref = (kind: RecordKind, id: string): RecordRef => ({ kind, id });
 
 // P-01…08 and INV-09/15/22 are Gate A criteria (TEST_STRATEGY §6); INV-22 is the Phase 1 part only.
-describeGateCompleteness('A', 19, ['P-01', 'P-02', 'P-04', 'P-05', 'P-06', 'P-07', 'P-08', 'INV-09', 'INV-15', 'INV-22']);
+describeGateCompleteness('A', 23, ['P-01', 'P-02', 'P-04', 'P-05', 'P-06', 'P-07', 'P-08', 'INV-09', 'INV-15', 'INV-22']);
 
 describe('Gate A rows on the demo dataset', () => {
   const doc = buildDemoDocument();

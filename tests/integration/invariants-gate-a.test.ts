@@ -57,7 +57,7 @@ describe('INV-06 a published reaction has a reactant and an outcome with a produ
   });
 });
 
-describe('INV-16 outcome → mechanism variant links resolve', () => {
+describe('INV-16 outcome → mechanism variant links resolve (ADV-055)', () => {
   it('the demo links resolve; a variant that is not in the linked mechanism is a blocking REF-005', () => {
     expect(findings(demo).filter((f) => f.ruleId === 'REF-005')).toEqual([]);
     const broken = edit(demo, 'reaction', 'rxn_r-2-bromobutane-aq-koh', (r) => {
