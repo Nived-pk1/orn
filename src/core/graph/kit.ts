@@ -1,9 +1,10 @@
 /**
- * Helpers shared by projections: the cache key, ordering and the empty-request shape.
+ * Helpers shared by projections: the cache key, ordering, node flags and the drawn-as-node rule.
  * Nothing here knows about a particular view.
  */
 import { hashParts } from '../hash';
-import type { GraphEdge, GraphNode, ProjectionRequest } from './contracts';
+import type { RecordRef } from '../schema';
+import type { GraphEdge, GraphNode, NodeFlag, ProjectionContext, ProjectionRequest } from './contracts';
 
 const byId = <T extends { readonly id: string }>(a: T, b: T): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
@@ -36,6 +37,8 @@ function requestParts(request: ProjectionRequest): string[] {
     String(limits.maxNodes),
     String(limits.maxEdges),
     String(limits.timeBudgetMs),
+    '|variant',
+    request.conditionVariantId ?? '',
   ];
 }
 
@@ -46,4 +49,18 @@ function requestParts(request: ProjectionRequest): string[] {
  */
 export function projectionKey(request: ProjectionRequest, revision: number): string {
   return `prj_${hashParts([...requestParts(request), `rev${revision}`])}`;
+}
+
+/** A record is drawn as a node unless its `entity_display` says otherwise (GRAPH_SEMANTICS.md §3; water). */
+export const drawnAsNode = (ctx: ProjectionContext, ref: RecordRef): boolean => ctx.indexes.displayOf(ref)?.showAsNode !== 'never';
+
+/** Flags common to any node backed by a real record: caveats, review status, out-of-scope, no structure. */
+export function flagsOf(ctx: ProjectionContext, ref: RecordRef): NodeFlag[] {
+  const flags: NodeFlag[] = [];
+  const record = ctx.indexes.get(ref.id);
+  if (ctx.indexes.caveatsFor(ref).length > 0) flags.push('has_caveat');
+  if ((record as { review?: { status?: string } } | undefined)?.review?.status === 'review_required') flags.push('review_required');
+  if (ctx.scopeOf(ref) === 'outside') flags.push('outside_scope');
+  if (record?.kind === 'species' && record.structure === undefined) flags.push('no_structure');
+  return flags;
 }

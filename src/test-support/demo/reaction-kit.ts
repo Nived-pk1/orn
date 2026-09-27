@@ -73,6 +73,16 @@ export interface VariantSpec {
   readonly note?: string;
 }
 
+type Intermediate = Reaction['intermediates'][number];
+
+export interface IntermediateSpec {
+  readonly intKind: Intermediate['intermediateKind'];
+  readonly ref?: SpeciesOrClassRef;
+  readonly label?: string;
+  /** Position in `stages`. */
+  readonly stage?: number;
+}
+
 export interface RxSpec extends CurationOptions {
   readonly slug: string;
   readonly name: string;
@@ -88,6 +98,7 @@ export interface RxSpec extends CurationOptions {
   readonly stages?: readonly StageSpec[];
   readonly variants?: readonly VariantSpec[];
   readonly outcomes: readonly O[];
+  readonly intermediates?: readonly IntermediateSpec[];
   readonly mechanisms?: readonly string[];
   readonly reversibility?: readonly [Reaction['reversibility']['kind'], string?];
   readonly selectivityNotes?: Reaction['selectivityNotes'];
@@ -107,6 +118,7 @@ export const stgId = (slug: string, i: number) => ident<Reaction['stages'][numbe
 export const cvrId = (slug: string, i: number) => ident<Reaction['conditionVariants'][number]['id']>('cvr', `${slug}-${n(i)}`);
 export const outId = (slug: string, i: number) => ident<Outcome['id']>('out', `${slug}-${n(i)}`);
 export const pdtId = (slug: string, i: number, j: number) => ident<Outcome['products'][number]['id']>('pdt', `${slug}-${n(i)}-${n(j)}`);
+export const intId = (slug: string, i: number) => ident<Intermediate['id']>('int', `${slug}-${n(i)}`);
 
 const classification = (body: string) => ({ conceptId: cptId(body), certainty: 'definite' as const });
 
@@ -174,6 +186,13 @@ export function reaction(s: RxSpec): Reaction {
     conceptIds: (o.concepts ?? []).map(cptId),
     ...(o.note === undefined ? {} : { note: o.note }),
   }));
+  const intermediates = (s.intermediates ?? []).map((im, i): Intermediate => ({
+    id: intId(slug, i),
+    intermediateKind: im.intKind,
+    ...(im.ref === undefined ? {} : { ref: im.ref }),
+    ...(im.label === undefined ? {} : { label: im.label }),
+    ...(im.stage === undefined ? {} : { stageId: stgId(slug, im.stage) }),
+  }));
   const [revKind, revNote] = s.reversibility ?? ['irreversible'];
   return {
     id: rxnId(slug),
@@ -191,7 +210,7 @@ export function reaction(s: RxSpec): Reaction {
     stages,
     conditionVariants,
     outcomes,
-    intermediates: [],
+    intermediates,
     mechanismIds: (s.mechanisms ?? []).map((b) => ident<Reaction['mechanismIds'][number]>('mec', b)),
     reversibility: { kind: revKind, ...(revNote === undefined ? {} : { note: revNote }) },
     ...(s.selectivityNotes === undefined ? {} : { selectivityNotes: s.selectivityNotes }),

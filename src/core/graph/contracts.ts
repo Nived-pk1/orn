@@ -139,6 +139,13 @@ export interface ProjectionRequest {
   readonly expansion: ExpansionState;
   readonly filters: ViewFilters;
   readonly limits: TraversalLimits;
+  /**
+   * `reaction_explorer` only (docs/GRAPH_SEMANTICS.md §7): restrict participants and outcomes to those
+   * that hold under this condition variant (common ones, listed under no variant, always show). Undefined
+   * shows every variant. Not persisted in `ViewFilters`: it names a part *within* one reaction, not a
+   * cross-reaction filter (CLAUDE.md §7 amendment, docs/PROGRESS.md "Amendments").
+   */
+  readonly conditionVariantId?: ConditionVariantId;
 }
 
 export interface ProjectionContext {

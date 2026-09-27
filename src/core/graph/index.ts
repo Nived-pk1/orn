@@ -4,9 +4,10 @@ export type { EdgeIdentity } from './ids';
 export { traverse } from './traversal';
 export { createProjectionRegistry } from './registry';
 export type { BuildProjectionResult, ProjectionRegistry } from './registry';
-export { projectionKey, sortEdges, sortNodes } from './kit';
+export { drawnAsNode, flagsOf, projectionKey, sortEdges, sortNodes } from './kit';
 export { createDefaultProjectionRegistry, defaultProjectionDefinitions } from './defaults';
 export { navigatorProjection, UNCLASSIFIED_HUB_ID } from './navigator';
+export { reactionExplorerProjection } from './reaction-explorer';
 export type {
   Step,
   TraversalDirection,

@@ -106,9 +106,27 @@ Views are `ProjectionDefinition`s registered by `ViewKey`. Adding a view adds a 
 
 A concept-map view is ARCHITECTURALLY SUPPORTED (new ViewKey + definition); it is not required now.
 
+**`reaction_explorer` (step 2.4).** The canonical bipartite graph itself, never rolled up to hubs: one
+`consumes` edge per qualifying participant, one `produces` edge per qualifying outcome product (every
+product role — main, coproduct, byproduct — unlike the navigator's main-only arrows). Seeds are a focus
+substance or reaction (unknown seeds are dropped, not phantom nodes); `traverse()` runs `direction: 'both'`
+so the same bounded BFS discovers reactions from a substance and substances from a reaction. Excluded from
+every edge and node, same as the navigator (§3): `spectator` participants, and any participant or product
+whose display is `showAsNode: never` (still indexed — ADV-027, ADV-053). Intermediates are never read here:
+they are not participants or products (ADV-054). Repeated participations of the same substance in one
+reaction stay distinct edges, keyed by `participantId` (ADV-051, INV-26). Stages do not change the bipartite
+shape — every participant of every stage still gets a `consumes` edge; stage grouping is a display concern
+for the record itself, read directly, not a graph structure.
+
+*Condition-variant filter* (ADV-008): `ProjectionRequest.conditionVariantId?: ConditionVariantId` (ADR-027)
+narrows the focused reaction(s) to one variant. A participant holds under the selection when it is common
+(listed under no `conditionVariant.participantIds`) or the selection is one of the variants that lists it;
+an outcome holds when its `conditionVariantIds` is empty or contains the selection (DOMAIN_MODEL.md §6.3–§6.4).
+Every edge still carries its full `conditionVariantIds` regardless of the filter, so a UI can label it.
+
 ## 8. Indexes
 
-Maintained incrementally from each ChangeSet (`IndexEngine.apply`), identical to a full rebuild (INV-18, property test P-07): reverse references, definers of nested IDs (which records define an ID: uniqueness, REF-006), linkers of an ID (records whose rich text links to it: REF-008), participations by substance, productions by product, reactions by reagent / reagent family / named reaction (with descendants) / transformation / concept / mechanism, species by class (transitive), class ancestors, records by topic (transitive), topics of a record, relationships of a record, caveats for a record, records by folded name, anchors, display of a record. Query semantics (step 2.1): each record contributes only from its own content; joins across records happen at query time and are never stored. `reactionsByReagentFamily` joins reagents of the family to `reactionsByReagent`; `reactionsByNamedReaction` / `reactionsByConcept` add descendants on request. `reactionsByConcept` matches a reaction's `conceptIds`, `reactionTypes`, `mechanismClasses` and outcome `conceptIds` (not `prerequisiteConceptIds`); `reactionsByMechanism` matches `mechanismIds` and outcome `mechanism` links. `speciesInClass` lists species only (a reagent's `classIds` are not membership of a substrate class). `recordsInTopic` / `topicsOf` read `topic_mapping` records directly (topic ancestry is joined by the caller via `ancestorsOf('topic', �)`). Participations and productions are one entry per participant / outcome product (INV-26: never merged by endpoints). All lists are sorted and deduplicated; `displayOf` returns the lowest-ID display when PRS-001 is violated.
+Maintained incrementally from each ChangeSet (`IndexEngine.apply`), identical to a full rebuild (INV-18, property test P-07): reverse references, definers of nested IDs (which records define an ID: uniqueness, REF-006), linkers of an ID (records whose rich text links to it: REF-008), participations by substance, productions by product, reactions by reagent / reagent family / named reaction (with descendants) / transformation / concept / mechanism, species by class (transitive), class ancestors, records by topic (transitive), topics of a record, relationships of a record, caveats for a record, records by folded name, anchors, display of a record. Query semantics (step 2.1): each record contributes only from its own content; joins across records happen at query time and are never stored. `reactionsByReagentFamily` joins reagents of the family to `reactionsByReagent`; `reactionsByNamedReaction` / `reactionsByConcept` add descendants on request. `reactionsByConcept` matches a reaction's `conceptIds`, `reactionTypes`, `mechanismClasses` and outcome `conceptIds` (not `prerequisiteConceptIds`); `reactionsByMechanism` matches `mechanismIds` and outcome `mechanism` links. `speciesInClass` lists species only (a reagent's `classIds` are not membership of a substrate class). `recordsInTopic` / `topicsOf` read `topic_mapping` records directly (topic ancestry is joined by the caller via `ancestorsOf('topic', �)`). Participations and productions are one entry per participant / outcome product (INV-26: never merged by endpoints). All lists are sorted and deduplicated; `displayOf` returns the lowest-ID display when PRS-001 is violated.
 
 Indexes live in memory on the main thread and in the compute worker replica; they are never persisted as canonical data (a warm-start cache is allowed, keyed by revision). `apply` updates in place and returns the handle for the new revision; the previous handle is stale and throws on use (arrays already returned stay valid). A `replace` ChangeSet or a revision gap rebuilds.
 

@@ -188,3 +188,8 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 ### ADR-026 — Validation is layered, lifecycle-aware and read-only
 - **Decision**: L1–L3 block commits, L4 advises, findings are stored apart, auto-fixes are explicit commands (VALIDATION_RULES.md).
 - **Why**: authors need drafts; students need trustworthy published data; nothing may change silently.
+
+### ADR-027 — Condition-variant selection is a `ProjectionRequest` field, not a `ViewFilters` field
+- **Decision**: `ProjectionRequest.conditionVariantId?: ConditionVariantId` (`src/core/graph/contracts.ts`) narrows one reaction's participants and outcomes to those holding under a chosen variant (GRAPH_SEMANTICS.md §7, reaction_explorer). It is not on `ViewFilters` (`src/core/schema/presentation.ts`).
+- **Why**: `ViewFilters` is persisted (`view_preset.filters`) and names a cross-reaction restriction (topics, reagent families, scope); a condition variant names a part *within* one focused reaction, so persisting it as a saved-view default would not generalise across reactions. Keeping it on the request avoids a schema change (`CURRENT_SCHEMA_VERSION` unchanged, no migration).
+- **Consequence**: `Projection.key` (the cache key) hashes it (`kit.ts`); every other projection ignores it.

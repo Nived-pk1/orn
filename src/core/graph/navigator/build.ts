@@ -7,10 +7,10 @@
  * Not built yet (later steps): hub expansion/focus, degree caps and overflow, edge bundling (2.5).
  * The main-thread time budget is not enforced here because `ProjectionContext` has no injected clock.
  */
-import type { ReactionId, RecordRef } from '../../schema';
-import type { GraphEdge, GraphNode, NodeFlag, Projection, ProjectionContext, ProjectionDefinition, ProjectionRequest, Truncation } from '../contracts';
+import type { ReactionId } from '../../schema';
+import type { GraphEdge, GraphNode, Projection, ProjectionContext, ProjectionDefinition, ProjectionRequest, Truncation } from '../contracts';
 import { graphEdgeId } from '../ids';
-import { projectionKey, sortEdges, sortNodes, sortedUnique } from '../kit';
+import { flagsOf, projectionKey, sortEdges, sortNodes, sortedUnique } from '../kit';
 import { createHubResolver, hubTargets, UNCLASSIFIED_HUB_ID } from './hubs';
 import { mainProducts, primarySubstrate, reactionFilter } from './select';
 
@@ -23,16 +23,6 @@ const NODE_KIND: Readonly<Record<string, GraphNode['kind']>> = {
   concept: 'concept',
   named_reaction: 'named_reaction',
 };
-
-function flagsOf(ctx: ProjectionContext, ref: RecordRef): NodeFlag[] {
-  const flags: NodeFlag[] = [];
-  const record = ctx.indexes.get(ref.id);
-  if (ctx.indexes.caveatsFor(ref).length > 0) flags.push('has_caveat');
-  if ((record as { review?: { status?: string } } | undefined)?.review?.status === 'review_required') flags.push('review_required');
-  if (ctx.scopeOf(ref) === 'outside') flags.push('outside_scope');
-  if (record?.kind === 'species' && record.structure === undefined) flags.push('no_structure');
-  return flags;
-}
 
 function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
   const { limits } = request;

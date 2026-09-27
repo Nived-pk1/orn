@@ -6,9 +6,7 @@ import { fold } from '../../text';
 import { foldedNamesOf } from '../../indexes/names';
 import type { Outcome, Participant, Product, Reaction, ViewFilters } from '../../schema';
 import type { ProjectionContext } from '../contracts';
-
-const drawnAsNode = (ctx: ProjectionContext, ref: Participant['ref'] | Product['ref']): boolean =>
-  ctx.indexes.displayOf(ref)?.showAsNode !== 'never';
+import { drawnAsNode } from '../kit';
 
 /**
  * The carried-through substrate: the participant flagged `isPrimarySubstrate`, else the first reactant.
