@@ -82,24 +82,51 @@ export function buildIndexes(state: CanonicalState): ReadonlyIndexes {
 }
 
 /**
- * Anchors every `every`th class as a navigator hub (docs/GRAPH_SEMANTICS.md §3). The generator itself
- * creates no `navigator_anchor` records (docs/PERFORMANCE_ARCHITECTURE.md §10 is graph/index scale only,
- * not content), so an un-anchored generated state puts every reaction on the single virtual Unclassified
- * hub — every candidate collapsing onto one bucket, which is not what a curated dataset (the demo has 15
- * anchored hubs) looks like, and not what step 2.9's "cost proportional to hubs and output, not to total
- * reactions" target assumes. `every = 2` gives design tier (200 classes) ~100 hubs, well above a real
- * curriculum's few dozen, so this is not tuned to make the benchmark look good — if anything it is a
- * harder case (more hubs to enumerate) than most real content.
+ * Anchors exactly `anchorCount` classes as navigator hubs (docs/GRAPH_SEMANTICS.md §3), chosen
+ * deterministically: sort every class ID, then for `k` in `[0, min(anchorCount, classCount))` anchor the
+ * class at index `floor(k * classCount / anchorCount)`. That index is strictly increasing in `k` whenever
+ * `classCount >= anchorCount` (true at every tier/shape this file uses), so the `anchorCount` classes it
+ * picks are evenly spread across the sorted range with no repeats — a stated rule, not an accident of
+ * iteration order.
+ *
+ * The generator itself creates no `navigator_anchor` records (docs/PERFORMANCE_ARCHITECTURE.md §10 is
+ * graph/index scale only, not content), so an un-anchored generated state puts every reaction on the single
+ * virtual Unclassified hub — every candidate collapsing onto one bucket, which is not what a curated dataset
+ * (the demo has 15 anchored hubs) looks like, and not what the navigator roll-up's "cost proportional to
+ * hubs and output, not to total reactions" target assumes (ADR-030).
+ *
+ * `anchorCount` defaults to 60 (PERFORMANCE_ARCHITECTURE.md §1/§10 amendment, docs/PROGRESS.md step 2.11):
+ * a fixed number, not a tier-dependent ratio (step 2.9's `every`-based version gave design tier's 200
+ * classes ~100 hubs and would silently give a different count at any other tier) — well above the demo's 15
+ * curated hubs, still a harder case than most real content, but the same "design tier, 60 anchors" state
+ * shape regardless of how the generator's class count changes later. Callers needing a different count
+ * (e.g. the stress-tier 400-anchor scenario, §1's stress allowance) pass it explicitly.
  */
-export function withNavigatorAnchors(state: CanonicalState, every = 2): CanonicalState {
+export function withNavigatorAnchors(state: CanonicalState, anchorCount = 60): CanonicalState {
   const records = { ...emptyRecordTables() } as unknown as Record<string, Record<string, AnyRecord>>;
   for (const kind of RECORD_KINDS) records[kind] = { ...state.records[kind] };
-  Object.keys(state.records.class)
-    .sort()
-    .forEach((id, i) => {
-      if (i % every !== 0) return;
-      const anchor = anchorOn({ kind: 'class', id }, `perf-anchor-${id.replace(/_/g, '-')}`.slice(0, 60));
-      (records['navigator_anchor'] as Record<string, AnyRecord>)[anchor.id] = anchor;
-    });
+  const classIds = Object.keys(state.records.class).sort();
+  const n = Math.min(anchorCount, classIds.length);
+  for (let k = 0; k < n; k += 1) {
+    const index = Math.floor((k * classIds.length) / n);
+    const id = classIds[index] as string;
+    const anchor = anchorOn({ kind: 'class', id }, `perf-anchor-${id.replace(/_/g, '-')}`.slice(0, 60));
+    (records['navigator_anchor'] as Record<string, AnyRecord>)[anchor.id] = anchor;
+  }
   return { meta: state.meta, records: records as unknown as CanonicalState['records'] };
 }
+
+/**
+ * Explicit `bench()` options (docs/PERFORMANCE_ARCHITECTURE.md §9, step 2.11). `vitest bench`'s own
+ * defaults (500 ms time budget, 10-iteration floor) leave the slower entries with only 10-30 samples; since
+ * tinybench's p99 is the `ceil(0.99 * n) - 1`th sorted sample, it is mathematically identical to the
+ * observed max whenever `n < 100` (`ceil(0.99n)` only drops below `n` once `n >= 100`) — not a stable 99th
+ * percentile, no matter how many times it is re-run. `FAST_BENCH_OPTIONS` raises the sample floor to 100
+ * (the minimum where p99 can exclude even a single top outlier) for every commit/projection/route-search
+ * bench here — each comfortably finishes in a few seconds even at ~30-40 ms/sample. `SLOW_BENCH_OPTIONS` is
+ * for `validateAll` (300-400 ms/sample, tests/perf/validate.bench.ts): reaching 100 samples there would
+ * take minutes per entry for a budget it already passes with a wide margin, so it takes the "minimum time"
+ * half of the same instruction instead — a fixed time window, few samples, no multi-minute bench suite.
+ */
+export const FAST_BENCH_OPTIONS = { time: 500, iterations: 100, warmupTime: 200, warmupIterations: 10 } as const;
+export const SLOW_BENCH_OPTIONS = { time: 3000, iterations: 5, warmupTime: 500, warmupIterations: 2 } as const;

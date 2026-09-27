@@ -64,6 +64,8 @@ export const BUDGETS = {
     { operation: 'projection: precursor_explorer, focused on the hub', tier: 'design', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Projection build' },
   'projection build — ADV-012 literal case: one hub, 1,000 reactions > precursor_explorer, focused on the hub':
     { operation: 'projection: precursor_explorer, focused on the hub', tier: 'adv-012', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Projection build', note: 'the ADV-012 hub is a pure reactant here (never a product), so there is nothing to walk backward from it; not a meaningful stress case for this view' },
+  'projection build — stress tier, dense, 400 anchored hubs > navigator, focused on the hub':
+    { operation: 'projection: navigator, focused on the hub, stress tier (400 anchors)', tier: 'stress', shape: 'dense', budgetMs: null, informalBudgetMs: 32, note: 'PERFORMANCE_ARCHITECTURE.md §1: stress tier budgets may degrade <= 2x the design-tier 16 ms row, so 32 ms here is an informal allowance, not a §2 row of its own (docs/PROGRESS.md step 2.11)' },
 
   'route search (design tier, dense) > searchRoutes to the hub, no startFrom (any source)':
     { operation: 'route search: searchRoutes to the hub, no startFrom', tier: 'design', shape: 'dense', budgetMs: 16, budgetRow: 'Projection build (route search has no budget row of its own; bounded the same way)' },
