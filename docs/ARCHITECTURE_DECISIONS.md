@@ -163,6 +163,7 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 
 ### ADR-020 — Versioning policy
 - **Decision**: exact versions are locked by `package-lock.json` at the first `npm install` in Phase 1 and recorded in PROGRESS.md. If `typescript-eslint` does not yet support TypeScript 6.0, pin TypeScript `~5.9` and record the fallback (the schemas use no TS-6-only features). Major upgrades happen only at phase boundaries, as their own commit, with `npm run check` green.
+- **Version record**: 2026-09-27, Vitest `3.2.7` → `4.1.11` (with `@vitest/coverage-v8` 4.1.11) as its own commit at the Phase 1 boundary, closing GHSA-82fw-gwwq-j7x9; `engines.node` unchanged. Coverage counting changed (AST-based mapping); baseline in PROGRESS.md.
 
 ### ADR-021 — Mini-markup instead of HTML or Markdown for rich text
 - **Decision**: tiny grammar (DOMAIN_MODEL.md §3.4) parsed to an AST and rendered as React elements.

@@ -253,5 +253,5 @@ describe('apply ≡ build (INV-18) — seeded random walk', () => {
       state = out.after;
     }
     expect(counter).toBeGreaterThan(0);
-  });
+  }, 30_000); // 100 edits with a full index rebuild compared after each; ~2 s alone, >5 s when suites run in parallel
 });

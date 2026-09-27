@@ -147,5 +147,5 @@ describe.each([1, 2, 3])('ADV-044 random walk (seed %i)', (seed) => {
     expect(bytes(store.getState())).toBe(bytes(final));
     expectDerivedDataConsistent(store);
     expect(store.getRevision()).toBe(3 * commits);
-  });
+  }, 30_000); // 200 commands + full undo/redo with deep-equality at every step; ~2 s alone, >5 s when suites run in parallel
 });
