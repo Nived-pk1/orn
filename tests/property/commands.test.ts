@@ -7,6 +7,9 @@ import fc from 'fast-check';
 import { describe, expect, it, vi } from 'vitest';
 import { referenceEngine } from '@/core/references';
 import { coreIndexEngine } from '@/core/indexes/engine';
+import { indexEngine } from '@/core/indexes/full';
+import type { ReadonlyIndexes } from '@/core/indexes';
+import { derivedSnapshot, idsOf } from '@/test-support/index-snapshot';
 import { duplicateRecord } from '@/core/commands';
 import type { CanonicalState } from '@/core/schema';
 import {
@@ -117,7 +120,19 @@ describe('P-07 incremental indexes equal a full rebuild (INV-18)', () => {
     fc.assert(
       fc.property(smallParamsArb, intentsArb(30), (params, intents) => {
         const { store, ctx } = freshStore(frozenStateOf(params));
+        // The cross-record indexes (step 2.1) follow the store through its ChangeSets, undo included.
+        let full: ReadonlyIndexes = indexEngine.build(store.getState(), store.getRevision());
+        store.subscribe((changes) => {
+          full = indexEngine.apply(full, changes, store.getState());
+        });
         p07Commits += runIntents(store, intents, ctx).filter((s) => s.result?.ok).length;
+        const universe = idsOf(store.getState());
+        expect(derivedSnapshot(full, universe)).toEqual(derivedSnapshot(indexEngine.build(store.getState(), store.getRevision()), universe));
+        for (let i = 0; i < 3 && store.canUndo(); i += 1) {
+          store.undo();
+          for (const id of idsOf(store.getState())) universe.add(id);
+          expect(derivedSnapshot(full, universe)).toEqual(derivedSnapshot(indexEngine.build(store.getState(), store.getRevision()), universe));
+        }
         const state = store.getState();
         const fresh = coreIndexEngine.build(state, store.getRevision());
         const live = store.getIndexes();

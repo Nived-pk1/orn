@@ -8,4 +8,5 @@ export type {
   ReadonlyIndexes,
 } from './contracts';
 export { coreIndexEngine } from './engine';
+export { indexEngine } from './full';
 export { foldedNamesOf } from './names';

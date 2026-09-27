@@ -335,6 +335,22 @@ Gate A reviewed by the human reviewer (Opus), 2026-09-27: PASS after fixes (halo
 
 The review packet is kept at `docs/reviews/gate-a-packet.md`.
 
+### Step 2.1 — Remaining indexes (2026-09-27)
+
+**Delivered**
+- `src/core/indexes/table.ts` (owner-retractable sorted multi-map), `derived.ts` (per-record contributions for participations, productions, by reagent / family / named reaction / transformation / concept / mechanism, species by class, topics, relationships, caveats, anchors, display), `full.ts` (`indexEngine: IndexEngine` = part-1 `coreIndexEngine` + derived tables; in-place `apply`, stale-handle rule, replace / revision gap rebuilds). Exported from `src/core/indexes`. No contract, schema or fixture change (the `ReadonlyIndexes` interface was already declared); no amendment.
+- Tests: `src/core/indexes/full.test.ts` (17): every answer for every ID vs a scan oracle (`src/test-support/index-snapshot.ts`) on the demo and the maximal fixture, non-vacuity probe, descendants on request, ADV-051 participations part, ADV-052 productions part (25 reactions, one product), ADV-057 topics part, apply ≡ build scenarios and 4 seeded random walks (36 edits each, rebuild compared after every step, oracle every third), stale / replace / gap / foreign-handle behaviour. **P-07 extended** in `tests/property/commands.test.ts`: the full indexes follow the store through ChangeSets (commands and undo) and equal a rebuild (INV-18).
+- `npm run check`: 48 files, 893 tests, green.
+
+**Decisions**
+- Cross-record answers are joined at query time (family → reagents → reactions; descendants), so each record's contribution depends on that record only and retraction stays exact.
+- `reactionsByConcept` uses `conceptIds`, `reactionTypes`, `mechanismClasses` and outcome `conceptIds`; `prerequisiteConceptIds` are excluded. `speciesInClass` is species only. Documented in GRAPH_SEMANTICS §8.
+- The store still uses `coreIndexEngine`; switching it to `indexEngine` is left to the first consumer (step 2.3 projections) to avoid a behaviour change without a user.
+
+**Open items**
+- ADV-051/052/057 graph halves: steps 2.3–2.6. Cost of rewriting a hub bucket when one member changes is measured in step 2.8.
+- The two seeded-walk tests are slow (about 4 s alone) and carry explicit timeouts like the other walks.
+
 ## Amendments
 - **2026-09-26, step 1.10 — `MigrationRunner.run` returns a result value (contract change).** Problem: the contract said the runner "rejects newer versions" but returned only `{ doc, steps }`, leaving no value to reject with (CLAUDE.md §6: errors across module boundaries are values). Change: `run` returns `MigrationResult = { ok: true, doc, steps } | { ok: false, code, message, atVersion }`, with new `MigrationErrorCode`, `MigrationError`, `MigrationSuccess` types; `MigrationRunner` gains a readonly `target`. No consumer existed yet, no record shape changed: no `CURRENT_SCHEMA_VERSION` bump, migration or fixture change. Docs updated: MIGRATION.md §2.
 - **2026-09-26, step 1.8 — validation contract, `linkersOf`, L2 nested-container rule.** Problem: incremental validation must equal a full pass, but records can be affected by changes elsewhere that the reverse-reference index does not show (name twins, duplicate IDs, cycle members, rich-text linkers, routes depending on species and classes), and a fixed problem on an untouched record must lose its finding. Change: `ValidationRule` gains optional `watches` and `peers` (records beyond referrers/referents affected by a touched record); `Validator.validateTouched` gains an optional `previous` state and the interface gains `scopeOf(state, indexes, touched, previous?)`; `CoreIndexes.linkersOf(id)` (rich-text link index, apply ≡ build tested). Separately, step 1.7's REF-005 no longer reports a nested reference whose container field names no record of the required kind (participant `profileId` on a non-reagent): that case is RXN-011 as VALIDATION_RULES.md §3 lists it. No record shape changed: no `CURRENT_SCHEMA_VERSION` bump, migration or fixture change. Docs updated: VALIDATION_RULES.md §4–§5, GRAPH_SEMANTICS.md §8.
