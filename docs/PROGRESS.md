@@ -755,6 +755,75 @@ re-judged specifically on the navigator (fails on `dense`, passes on `hub_explos
 open items (the rejected-commit rebuild, the missing clock test) removed as closed. Gate B's status stays
 **self-reviewed; human review pending** (`docs/PROJECT_STATE.json`) — not marked passed, not tagged.
 
+### Step 2.11 — In progress, stopped mid-session (2026-09-27)
+
+**Session halted by the user ("stop for today") before item 4 (per-entry causes), the Gate B packet update,
+or a final step 2.11 report.** No uncommitted work exists — `git status` was clean at the stop point — so
+nothing was lost, but the step is not finished. Anyone picking this up should read the 4 commits below in
+order before doing anything else; their own commit messages carry the full detail (profiles, numbers,
+before/after).
+
+**Done, committed:**
+- `8740c2c` — deterministic navigator anchor count. Closed step 2.9's missing follow-up
+  (`IMPLEMENTATION_PLAN.md` §2's "2.9 ... deterministic navigator benchmarks, anchored-hub tier parameter"
+  was never actually committed). `withNavigatorAnchors(state, anchorCount = 60)` replaces the old
+  ratio-based `every` parameter with a fixed, stated rule (sort class IDs, take `anchorCount` evenly-spaced
+  indices). New stress-tier scenario: 400 anchored hubs, judged against §1's "≤ 2×" allowance (32 ms,
+  informal budget). `PERFORMANCE_ARCHITECTURE.md` §1/§10 amendment recorded in the same commit.
+- `42fabce` — stable benchmark method. `scripts/bench-guard.mjs` (PID lock, shared by `npm run
+  bench`/`bench:baseline`/`bench:compare`); `--no-file-parallelism`/`fileParallelism: false` everywhere;
+  `FAST_BENCH_OPTIONS`/`SLOW_BENCH_OPTIONS` (explicit warmup + a 100-sample floor — below 100 samples
+  tinybench's p99 is mathematically the observed max, not a percentile); `bench:baseline` now runs the suite
+  3× and records median p99 + per-entry spread (`p99Runs`, `p99SpreadPct`, a `noisy` field over 25%).
+  `PERFORMANCE_ARCHITECTURE.md` §9 rewritten to document the method and machine conditions.
+- `4007e5f` — fixed a real bug in the method commit above: the first version of `bench:baseline` ran its 3
+  passes as 3 sequential in-process `startVitest()` calls, and *that itself* was a measurement bug — V8's
+  JIT/module cache warmed across the 3 calls, so the 3rd call came out fastest in almost every entry (a
+  monotonic bias, not random noise: every one of 30 entries showed > 25% spread, and the raw numbers gave
+  the pattern away). Fixed by spawning each of the 3 runs as a genuinely separate `node` process
+  (`scripts/bench-run-once.mjs` + `spawnSync` in `generate-baseline.mjs`). Regenerated `baseline.json` with
+  the fix — the monotonic pattern is gone, but this specific developer workstation still showed large,
+  non-directional spread on most entries this session (many > 100%, several > 300%) — documented as genuine
+  workstation noise (§9), not chased further per this step's own scope.
+- `726c0c8` — navigator build fix. Profiled the build at design tier / `dense` / 60 anchors (one-off
+  instrumented script, mirrored `build.ts`'s control flow outside `src/core` since core may not import
+  timing APIs; not committed, deleted after use). Found `toEdge()`'s `graphEdgeId` hash was ~62% of total
+  build time (~10 ms of ~16 ms) and ran on all 7,492 gathered candidates even though only 800 survive
+  `maxEdges` truncation. Fix (no contract change): candidates stay as `NavigatorCandidate` through sorting
+  and admission; `toEdge()` now runs only on admitted candidates. Reran the differential test, P-07, P-10
+  (73 tests, green, output byte-identical). Re-profiled: 16.11 ms → 6.48 ms total (2.5×). `npm run check`:
+  67 files, 1135 tests, green, at each of these 4 commits.
+
+**Left to do (not started, or started and not completed):**
+1. **`tests/perf/baseline.json` at HEAD is now stale for the navigator entries.** It was regenerated in
+   `4007e5f`, *before* the navigator build fix in `726c0c8`. A fifth `npm run bench:baseline` run was started
+   to re-measure everything with the fix in place, but the session was stopped while it was still running
+   (3× the whole suite, ~10+ minutes) — it was killed cleanly (the spawned `node` processes for
+   `scripts/generate-baseline.mjs`/`bench-run-once.mjs` were stopped, `tests/perf/.bench.lock` removed) and
+   never reached its `writeFile` step, so `baseline.json` on disk is exactly the `4007e5f` version, untouched
+   — nothing corrupt or partial, just outdated for `projection: navigator, focused on the hub` (both design
+   tier shapes) and the new stress-tier navigator row. **Next session: run `npm run bench:baseline` again
+   before trusting any navigator number in that file**, and expect the same high-spread workstation-noise
+   behaviour `4007e5f`'s commit message and §9 describe — that is this machine's baseline character this
+   session, not something to keep re-chasing.
+2. **Item 4 (one-line cause for every other entry that fails on median p99) — not started at all.** The last
+   full measurement (`4007e5f`'s baseline.json, pre-navigator-fix) showed these failing on median p99 besides
+   `navigator`: `commit: undo + redo` (dense), `commit: dispatch` (hub_explosion), `validateTouched` on the
+   design-tier hub (hub_explosion), `commit: dispatch` and `validateTouched` on the "like water" hub. Every
+   one of these was also flagged `noisy` (> 25% spread) in that run, so a one-line cause from a quick profile
+   should wait for a cleaner (or at least a same-fix) baseline re-run first, per item 1 above.
+3. **Gate B packet (`docs/reviews/gate-b-packet.md`) not updated** with any of this step's numbers.
+4. **`docs/PROJECT_STATE.json` not updated** for step 2.11 (still shows 2.10 as the last completed step).
+5. **No final step 2.11 report written** (the 3-run table, navigator profile, what changed, test counts,
+   check status the original task asked for).
+6. **Doc amendments not yet logged under "## Amendments" below** — the `PERFORMANCE_ARCHITECTURE.md`
+   §1/§9/§10 changes from `8740c2c`/`42fabce` are real (see those commits) but this file's "## Amendments"
+   list (CLAUDE.md §7) has not been updated to reference them yet.
+
+**Uncommitted work:** none. `git status` was clean (nothing staged or unstaged) at the point the session was
+stopped — everything described above as "done" is committed at the hashes given, and everything "left to do"
+had not been written to any file yet (the interrupted bench run produced no on-disk artifact, as above).
+
 ## Amendments
 - **2026-09-27, step 2.10 — PERFORMANCE_ARCHITECTURE.md §2's Commit row covers rejected commits too (doc
   wording, no contract change).** Problem: a rejected commit paid for a full `O(dataset)` index rebuild
