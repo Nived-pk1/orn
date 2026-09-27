@@ -15,7 +15,7 @@ Package section **#20 Performance**. Contracts: `src/workers/rpc/contracts.ts`, 
 | Operation | Budget | Where measured |
 |---|---|---|
 | Cold boot to interactive (design target) | < 2.5 s (warm cache < 1.5 s) | Playwright trace, mid-range laptop profile |
-| Commit (command → state + indexes + L1–L3 incremental) | < 16 ms | vitest bench |
+| Commit, accepted or rejected (command → state + indexes + L1–L3 incremental) | < 16 ms | vitest bench |
 | Undo / redo | < 16 ms | bench |
 | Projection build (bounded, ≤ 400 nodes) | < 16 ms | bench |
 | Layout (≤ 400 nodes, worker) | < 300 ms; hard timeout 2 s → fallback | bench (worker code in Node) |

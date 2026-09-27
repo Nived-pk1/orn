@@ -14,17 +14,17 @@
 
 export const BUDGETS = {
   'commit (design tier, dense) > dispatch: update one species (notes)':
-    { operation: 'commit: dispatch (update one species)', tier: 'design', shape: 'dense', budgetMs: 16, budgetRow: 'Commit' },
+    { operation: 'commit: dispatch (update one species)', tier: 'design', shape: 'dense', budgetMs: 16, budgetRow: 'Commit, accepted or rejected' },
   'commit (design tier, hub_explosion) > dispatch: update one species (notes)':
-    { operation: 'commit: dispatch (update one species)', tier: 'design', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit' },
+    { operation: 'commit: dispatch (update one species)', tier: 'design', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit, accepted or rejected' },
   'commit (design tier, dense) > undo, then redo':
     { operation: 'commit: undo + redo (one pair)', tier: 'design', shape: 'dense', budgetMs: 16, budgetRow: 'Undo / redo', note: 'combined; each half well under 16 ms alone' },
   'commit (design tier, hub_explosion) > undo, then redo':
     { operation: 'commit: undo + redo (one pair)', tier: 'design', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Undo / redo', note: 'combined; each half well under 16 ms alone' },
-  'commit (design tier, dense) > rejected commit: strips a published reaction to zero participants (pays for an index rebuild)':
-    { operation: 'commit: rejected (index rebuild)', tier: 'design', shape: 'dense', budgetMs: null, informalBudgetMs: 16, budgetRow: 'no §2 row; compared informally against Commit\'s 16 ms', openItem: 'index rebuild after a rejected commit' },
-  'commit (design tier, hub_explosion) > rejected commit: strips a published reaction to zero participants (pays for an index rebuild)':
-    { operation: 'commit: rejected (index rebuild)', tier: 'design', shape: 'hub_explosion', budgetMs: null, informalBudgetMs: 16, budgetRow: 'no §2 row; compared informally against Commit\'s 16 ms', openItem: 'index rebuild after a rejected commit' },
+  'commit (design tier, dense) > rejected commit: strips a published reaction to zero participants (incremental rollback)':
+    { operation: 'commit: rejected (incremental rollback)', tier: 'design', shape: 'dense', budgetMs: 16, budgetRow: 'Commit, accepted or rejected' },
+  'commit (design tier, hub_explosion) > rejected commit: strips a published reaction to zero participants (incremental rollback)':
+    { operation: 'commit: rejected (incremental rollback)', tier: 'design', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit, accepted or rejected' },
   'scopeOf (design tier, dense) > scopeOf once, touching the hub':
     { operation: 'scopeOf: once, on the design-tier hub', tier: 'design', shape: 'dense', budgetMs: null },
   'scopeOf (design tier, hub_explosion) > scopeOf once, touching the hub':
@@ -44,7 +44,7 @@ export const BUDGETS = {
   'scopeOf / validateTouched — ADV-012 literal case: one hub, 1,000 reactions > validateTouched, touching the hub':
     { operation: 'validateTouched: on the ADV-012 literal hub (1,000 reactions)', tier: 'adv-012', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit (validateTouched is inside it)', openItem: 'validateTouched on hubs' },
   'commit / validateTouched — design tier, one hub of 1,000 reactions (like water) > dispatch: update the hub species (notes)':
-    { operation: 'commit: dispatch (update the design-tier "like water" hub)', tier: 'design-hub-1000', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit' },
+    { operation: 'commit: dispatch (update the design-tier "like water" hub)', tier: 'design-hub-1000', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit, accepted or rejected' },
   'commit / validateTouched — design tier, one hub of 1,000 reactions (like water) > validateTouched, touching the hub':
     { operation: 'validateTouched: on the design-tier "like water" hub (1,000 of 5,000 reactions)', tier: 'design-hub-1000', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit (validateTouched is inside it)', openItem: 'validateTouched on hubs' },
 

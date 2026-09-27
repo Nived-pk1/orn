@@ -117,8 +117,20 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
       const found: readonly Finding[] = validator.validateTouched(input.next, nextIndexes, touched, state);
       const errors = found.filter((finding) => finding.severity === 'error');
       if (errors.length > 0) {
-        // `apply` consumed the old handle; rebuilding is the price of a rejected commit.
-        indexes = coreIndexEngine.build(state, revision);
+        // Roll the indexes back incrementally instead of an O(dataset) rebuild
+        // (docs/PERFORMANCE_ARCHITECTURE.md §4): `apply` consumed the old handle, but the inverse
+        // ChangeSet undoes exactly what it did, through the same apply path (engine.ts's `rollback`
+        // case), landing back on `revision` with a fresh, non-stale handle (INV-18 still holds).
+        const rollback = assembleChangeSet({
+          revision,
+          label: input.label,
+          cause: input.cause,
+          before: input.next,
+          after: state,
+          patches: input.inversePatches,
+          inversePatches: input.patches,
+        });
+        indexes = coreIndexEngine.apply(nextIndexes, rollback, state);
         return {
           result: failure({
             code: 'VALIDATION_FAILED',

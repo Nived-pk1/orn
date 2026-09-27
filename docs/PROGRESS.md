@@ -660,6 +660,20 @@ is an accepted, scoped exception given the scenario's own honesty about noise an
   injected-clock coverage gap, the full packet re-measurement) are step 2.10's, not attempted here.
 
 ## Amendments
+- **2026-09-27, step 2.10 — PERFORMANCE_ARCHITECTURE.md §2's Commit row covers rejected commits too (doc
+  wording, no contract change).** Problem: a rejected commit paid for a full `O(dataset)` index rebuild
+  (`core/commands/store.ts`, `coreIndexEngine.build(state, revision)`), which §4 explicitly forbids and §3
+  puts on the main thread where §2 allows no task over 50 ms — measured at 163–580 ms at the design tier
+  (step 2.8/2.9), 10–35× the 16 ms budget. Change: the rejection path now rolls the indexes back by
+  applying the inverse ChangeSet through the same incremental `apply` path (`coreIndexEngine.apply`'s
+  revision-gap guard now also accepts exactly one step *backward*, not only forward, and runs the same
+  retract-then-add mechanics either way — `src/core/indexes/engine.ts`); §2's "Commit" row is reworded to
+  "Commit, accepted or rejected" rather than adding a second row, since the same 16 ms budget applies to
+  both. No interface changed (`CoreIndexEngine`/`IndexEngine` keep the same `{build, apply}` shape); this is
+  a behavioural fix within `apply`'s existing signature, not even an additive contract change. Measured
+  163–580 ms → 12.7–23.3 ms (mean now under 16 ms on both design-tier shapes; p99 close but not yet
+  reliably under it — see PROGRESS.md step 2.10 for the full before/after). Docs updated in the same
+  commit: PERFORMANCE_ARCHITECTURE.md §2.
 - **2026-09-27, step 2.9 — `ReadonlyIndexes.navigatorRollup()` (contract change, ADR-030).** Problem:
   the navigator projection scanned every reaction in the state on every `build()` call (measured 21.81–27.2
   ms at the design tier against the 16 ms budget, Gate B packet §5; worse on p99 — this step's own commit 2

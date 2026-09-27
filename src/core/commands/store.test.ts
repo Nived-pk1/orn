@@ -8,7 +8,7 @@ import type { CanonicalState, DatasetMeta } from '../schema';
 import { validator } from '../validation';
 import { envelope, makeStore, mustCommit, recordIn, ref, withFields } from '../../test-support/command-kit';
 import { loadFixtureState } from '../../test-support/state-fixture';
-import type { CommandErrorCode, CommitResult } from './contracts';
+import type { CommandErrorCode, CommitResult, DomainCommand } from './contracts';
 
 const SPECIES = ref('species', 'spc_max-propanone');
 const code = (result: CommitResult): CommandErrorCode | 'ok' => (result.ok ? 'ok' : result.error.code);
@@ -23,6 +23,8 @@ function expectConsistent(store: ReturnType<typeof makeStore>): void {
     for (const record of Object.values(table)) {
       expect(live.referrersOf(record.id)).toEqual(fresh.referrersOf(record.id));
       expect(live.definersOf(record.id)).toEqual(fresh.definersOf(record.id));
+      expect(live.linkersOf(record.id)).toEqual(fresh.linkersOf(record.id));
+      if (record.kind === 'class') expect(live.classAncestors(record.id)).toEqual(fresh.classAncestors(record.id));
     }
   }
   const byId = (a: { id: string }, b: { id: string }): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -95,6 +97,61 @@ describe('dispatch', () => {
     expectConsistent(store);
     // and the store still works afterwards
     mustCommit(store.dispatch(envelope('Fine', { type: 'record.update', record: withFields(species, { notes: 'ok' }) })));
+    expectConsistent(store);
+  });
+
+  it('step 2.10: a rejected L3 error on a different record kind (class cycle, HIER-001) rolls the indexes back incrementally', () => {
+    const store = makeStore();
+    const before = store.getState();
+    const alcohols = recordIn(store.getState(), 'class', 'cls_max-alcohols');
+    const alkenes = recordIn(store.getState(), 'class', 'cls_max-alkenes');
+    // A two-node cycle (not a self-reference) so REF-007 (L2) does not fire first and suppress HIER-001 (L3).
+    const result = store.dispatch(
+      envelope(
+        'Cycle',
+        { type: 'record.update', record: withFields(alcohols, { parentIds: [alkenes.id] }) },
+        { type: 'record.update', record: withFields(alkenes, { parentIds: [alcohols.id] }) },
+      ),
+    );
+    expect(code(result)).toBe('VALIDATION_FAILED');
+    if (!result.ok) expect(result.error.findings?.some((f) => f.ruleId === 'HIER-001')).toBe(true);
+    expect(store.getState()).toBe(before);
+    expect(store.getRevision()).toBe(0);
+    expectConsistent(store);
+    mustCommit(store.dispatch(envelope('Fine', { type: 'record.update', record: withFields(alcohols, { notes: 'ok' }) })));
+    expectConsistent(store);
+  });
+
+  it('step 2.10: a rejected L2 error on a third record kind (dangling relationship target, REF-001) rolls the indexes back incrementally', () => {
+    const store = makeStore();
+    const before = store.getState();
+    const rel = recordIn(store.getState(), 'relationship', 'rel_max-dehydration-hydration');
+    const broken = withFields(rel, { to: { kind: 'reaction', id: 'rxn_does-not-exist' } });
+    const result = store.dispatch(envelope('Dangle', { type: 'record.update', record: broken }));
+    expect(code(result)).toBe('VALIDATION_FAILED');
+    if (!result.ok) expect(result.error.findings?.some((f) => f.ruleId === 'REF-001')).toBe(true);
+    expect(store.getState()).toBe(before);
+    expect(store.getRevision()).toBe(0);
+    expectConsistent(store);
+    mustCommit(store.dispatch(envelope('Fine', { type: 'record.update', record: withFields(rel, { note: undefined }) })));
+    expectConsistent(store);
+  });
+
+  it('step 2.10: several rejected commits in a row never rebuild from scratch (indexes stay consistent throughout)', () => {
+    const store = makeStore();
+    const species = recordIn(store.getState(), 'species', SPECIES.id);
+    const cls = recordIn(store.getState(), 'class', 'cls_max-alcohols');
+    const attempts: DomainCommand[] = [
+      { type: 'record.update', record: withFields(species, { classIds: ['cls_does-not-exist'] }) },
+      { type: 'record.update', record: withFields(cls, { parentIds: [cls.id] }) },
+      { type: 'record.update', record: withFields(species, { classIds: ['cls_also-missing'] }) },
+    ];
+    for (const command of attempts) {
+      expect(code(store.dispatch(envelope('Break', command)))).toBe('VALIDATION_FAILED');
+      expectConsistent(store);
+    }
+    expect(store.getRevision()).toBe(0);
+    mustCommit(store.dispatch(envelope('Fine', { type: 'record.update', record: withFields(species, { notes: 'still works' }) })));
     expectConsistent(store);
   });
 

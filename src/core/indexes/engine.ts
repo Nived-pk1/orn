@@ -219,8 +219,12 @@ function build(state: CanonicalState, revision = 0): CoreIndexes {
 
 function apply(previous: CoreIndexes, changes: ChangeSet, next: CanonicalState): CoreIndexes {
   if (!(previous instanceof IndexHandle)) throw new TypeError('apply() needs indexes built by this engine');
-  // A replace, or a gap in the revision chain, cannot be applied incrementally: rebuild instead.
-  if (changes.cause === 'replace' || changes.revision !== previous.revision + 1) {
+  // A forward step (a commit) or a one-step rollback (a rejected commit's own ChangeSet, reversed —
+  // docs/PROGRESS.md step 2.10) both retract-then-add from the same `changes`; only a `replace` or an
+  // actual gap in the revision chain cannot be applied incrementally and needs a rebuild instead.
+  const forward = changes.revision === previous.revision + 1;
+  const rollback = changes.revision === previous.revision - 1;
+  if (changes.cause === 'replace' || !(forward || rollback)) {
     return build(next, changes.revision);
   }
   const data = previous.takeData();

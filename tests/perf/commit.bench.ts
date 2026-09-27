@@ -1,8 +1,8 @@
 /**
- * Commit path (docs/PERFORMANCE_ARCHITECTURE.md §2): commit < 16 ms, undo/redo < 16 ms, design tier.
- * Also measures the three Phase 1 performance open items this step closes out (docs/PROGRESS.md step
- * 1.12 / Gate A review §8.3): validateTouched's cost on a hub record, the index rebuild a rejected
- * commit pays for, and `Validator.scopeOf` computed twice per commit in `core/commands/store.ts`.
+ * Commit path (docs/PERFORMANCE_ARCHITECTURE.md §2): "Commit, accepted or rejected" < 16 ms, undo/redo
+ * < 16 ms, design tier. Also measures `Validator.scopeOf` computed twice per commit
+ * (`core/commands/store.ts`). Step 2.10 replaced the rejected-commit index rebuild with an incremental
+ * rollback (the inverse ChangeSet through the same apply path); this bench is what confirms it.
  */
 import { bench, describe } from 'vitest';
 import { createCanonicalStore } from '@/core/commands';
@@ -30,7 +30,7 @@ for (const shape of ['dense', 'hub_explosion'] as const) {
       store.redo();
     });
 
-    bench('rejected commit: strips a published reaction to zero participants (pays for an index rebuild)', () => {
+    bench('rejected commit: strips a published reaction to zero participants (incremental rollback)', () => {
       n += 1;
       const state = store.getState();
       const reactionIds = Object.keys(state.records.reaction);

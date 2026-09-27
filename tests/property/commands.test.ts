@@ -17,6 +17,7 @@ import {
   intentsArb,
   pickRecord,
   renamed,
+  resolveIntent,
   smallParamsArb,
   type Intent,
 } from '@/test-support/arbitraries';
@@ -113,10 +114,11 @@ describe('P-06 duplicate produces globally unique record and nested IDs', () => 
 });
 
 let p07Commits = 0;
+let p07Rejections = 0;
 let p08Commits = 0;
 
 describe('P-07 incremental indexes equal a full rebuild (INV-18)', () => {
-  it('after random command sequences', () => {
+  it('after random command sequences, rejected commands included (step 2.10: rollback, not a rebuild)', () => {
     fc.assert(
       fc.property(smallParamsArb, intentsArb(30), (params, intents) => {
         const { store, ctx } = freshStore(frozenStateOf(params));
@@ -125,7 +127,25 @@ describe('P-07 incremental indexes equal a full rebuild (INV-18)', () => {
         store.subscribe((changes) => {
           full = indexEngine.apply(full, changes, store.getState());
         });
-        p07Commits += runIntents(store, intents, ctx).filter((s) => s.result?.ok).length;
+        // Per-step, not just at the end: `resolveIntent` sometimes produces a command validateTouched
+        // rejects (INV-12), which is exactly what step 2.10's incremental rollback (store.ts) needs
+        // exercised — a bug there could leave the store's own core indexes wrong only transiently,
+        // invisible to a check made once after the whole sequence.
+        for (const intent of intents) {
+          const envelope = resolveIntent(store.getState(), intent, ctx);
+          const result = envelope === undefined ? undefined : store.dispatch(envelope);
+          if (result === undefined) continue;
+          if (result.ok) p07Commits += 1;
+          else p07Rejections += 1;
+          const state = store.getState();
+          const fresh = coreIndexEngine.build(state, store.getRevision());
+          const live = store.getIndexes();
+          expect(live.revision).toBe(store.getRevision());
+          for (const record of allRecords(state)) {
+            expect(live.referrersOf(record.id)).toEqual(fresh.referrersOf(record.id));
+            expect(live.definersOf(record.id)).toEqual(fresh.definersOf(record.id));
+          }
+        }
         const universe = idsOf(store.getState());
         expect(derivedSnapshot(full, universe)).toEqual(derivedSnapshot(indexEngine.build(store.getState(), store.getRevision()), universe));
         for (let i = 0; i < 3 && store.canUndo(); i += 1) {
@@ -147,6 +167,9 @@ describe('P-07 incremental indexes equal a full rebuild (INV-18)', () => {
       PARAMS,
     );
     expect(p07Commits).toBeGreaterThan(20);
+    // Confirms `intentsArb`'s model does generate invalid commands (docs/IMPLEMENTATION_PLAN.md §2 step
+    // 2.10 asks to "say why" if it cannot) — non-vacuity for the rejection branch checked above.
+    expect(p07Rejections).toBeGreaterThan(0);
   });
 });
 
