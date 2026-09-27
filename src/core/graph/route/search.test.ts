@@ -210,3 +210,33 @@ describe('bookkeeping', () => {
     expect(result).toEqual({ routes: [], explored: 1, truncation: null });
   });
 });
+
+describe('startFrom completion by class membership (either direction)', () => {
+  it('a class in startFrom completes at a member species it is reached at, inferred and warned', () => {
+    const fam = chemClass('fam', 'Family', 'functional_group');
+    const member = species('member', 'Member', { classes: ['fam'] });
+    const target = species('target', 'Target');
+    const r = oneStep('r1', 'member', 'target');
+    const ctx = contextOf(stateOf(fam, member, target, r));
+    const result = searchRoutes(ctx, query({ target: sp('target'), startFrom: [cl('fam')] }));
+    expect(result.routes).toHaveLength(1);
+    expect(result.routes[0]?.steps[0]?.carriedIn.id).toBe('spc_member');
+    expect(result.routes[0]?.steps[0]?.warnings).toEqual([CLASS_LEVEL_MATCH_WARNING]);
+  });
+
+  it('a species in startFrom completes at a class it is reached at (the class itself is the exact reactant), inferred and warned', () => {
+    const fam = chemClass('fam', 'Family', 'functional_group');
+    const member = species('member', 'Member', { classes: ['fam'] });
+    const target = species('target', 'Target');
+    const generic = reaction({ slug: 'generic', name: 'generic', scope: 'generic', participants: [{ ref: cl('fam'), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp('target') }] }] });
+    const ctx = contextOf(stateOf(fam, member, target, generic));
+    const result = searchRoutes(ctx, query({ target: sp('target'), startFrom: [sp('member')] }));
+    // Two routes complete: carriedIn = the class itself (completion is the inferred hop, checked here) and
+    // carriedIn = `member` directly (an exact startFrom match — the *move* into it was the inferred hop
+    // instead, tested by the class-membership-inference case in moves.test.ts). Both end up warned.
+    const viaClass = result.routes.find((r) => r.steps[0]?.carriedIn.kind === 'class');
+    expect(viaClass?.steps[0]?.carriedIn).toEqual({ kind: 'class', id: 'cls_fam' });
+    expect(viaClass?.steps[0]?.warnings).toEqual([CLASS_LEVEL_MATCH_WARNING]);
+    expect(result.routes.map((r) => r.steps[0]?.carriedIn.id).sort()).toEqual(['cls_fam', 'spc_member']);
+  });
+});

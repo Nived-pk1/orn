@@ -2,11 +2,12 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-09-27",
-  "currentPhase": 2,
+  "currentPhase": 3,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
     0,
-    1
+    1,
+    2
   ],
   "completedSteps": [
     "0",
@@ -28,11 +29,12 @@
     "2.4",
     "2.5",
     "2.6",
-    "2.7"
+    "2.7",
+    "2.8"
   ],
-  "nextPhase": 2,
-  "nextStep": "2.8",
-  "nextStepTitle": "Benchmarks at all tiers and shapes; generator tier×shape sweep; Phase 1 perf open items; baseline.json; Gate B packet and self-review",
+  "nextPhase": 3,
+  "nextStep": "3.1",
+  "nextStepTitle": "Dexie schema, adapter, serial write queue, SaveStatus",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -44,7 +46,9 @@
     "B": {
       "phase": 2,
       "title": "Graph engine",
-      "status": "pending"
+      "status": "passed",
+      "date": "2026-09-27",
+      "note": "docs/reviews/gate-b-packet.md: two measured, quantified budget misses at the design tier (navigator projection build; validateTouched on a 1,000-reaction hub) are documented exceptions, not fixed this step; see packet §0 for the reviewer's decision."
     },
     "C": {
       "phase": 3,
@@ -73,7 +77,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (Vitest 4.1.11: 65 files, 1090 tests)",
+    "npmRunCheck": "passed (Vitest 4.1.11: 66 files, 1110 tests)",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -86,7 +90,7 @@
     "textSuite": "step 1.3: normaliser (28 tests) and mini-markup parser (37 tests) incl. bounded-work and seeded totality checks",
     "demoSuite": "step 1.12: demo dataset (27 reactions, 66 species) validates with 0 L1–L3 ERROR and one planted RXN-002 warning; committed files equal the builders; P-02 on the demo; demo-invalid fires 11 planted rules (22 tests)",
     "gateASuite": "step 1.12: all 23 Gate A ADV rows named in test titles (matrix check; §46 cross-check done, ADV-046…058 added) plus demo-based ADV-008/017/018/023/024/028 (26 tests); INV-03/06/16/17/25 (7 tests); property suite green at ORN_PROPERTY_RUNS=200",
-    "coverage": "src/core: 99.21% lines, 92.68% branches, 98.90% functions (Vitest 4.1.11 AST-based counting; npm run test:coverage, thresholds 90/85 enforced)",
+    "coverage": "src/core: 98.8% lines, 91.12% branches, 98.55% functions (Vitest 4.1.11 v8 coverage; npm run test:coverage, thresholds 90/85 enforced; re-measured step 2.8)",
     "traversalSuite": "step 2.2: hashing (3), bounded traversal and edge IDs (15): ADV-011, ADV-050 traversal part, INV-22 graph part, INV-26 edge IDs",
     "indexSuite2": "step 2.1: cross-record indexes vs scan oracle on demo and maximal fixture, apply ≡ build scenarios and seeded walks, P-07 extended over the store (17 tests + 1 property)",
     "projectionSuite": "step 2.3: registry (5), navigator (35: ADV-001/014/015/046/047/048/053, INV-14, INV-22), harness self-tests (6), P-10 + INV-26 over every registered projection on demo, maximal fixture, all generator shapes and random seeds (11)",
@@ -94,13 +98,19 @@
     "precursorSuite": "step 2.5: backward basics + harness (4), ADV-006/048 full-fidelity reaction reveal (1), ADV-003 no transitive reduction (1), ADV-002 + ADV-007 widened bundling (1), ADV-004 mirrored ⇌ tagging incl. two negative cases (3), ADV-056 conditional reversibility no-tag (1), ADV-052 25-producer cap+overflow (1), ADV-012 projection part 1000-producer cap+overflow (1), ranking test (1); kit.test.ts bundleEdges (5); one additive ADV-002 test in navigator.test.ts and one additive bundling assertion in reaction-explorer.test.ts (20 tests total)",
     "scopeSuite": "step 2.6: createScopeOf — unmapped, mapped+included/partial/excluded/absent, topic-ancestor coverage, enrichment-only-mapping, explicit override incl. version-specific vs agnostic vs CUR-004 precedence vs wrong-exam, one-hop prerequisite via field and via relationship (no chaining), unresolvable exam version (19 tests)",
     "remainingProjectionsSuite": "step 2.6: reagent_explorer one-hop + spectator/filter/INV-26 (8), named_reactions family DAG + reaction membership + two-family INV-26 check (9), mechanisms ADV-055 + demo review-required + dead-end (6), syllabus ADV-057 against the real demo dataset + topic-tree closure + two-topic INV-26 check + real scopeOf integration (12); registry completeness test (every ViewKey except search); all four registered and swept by tests/property/projections.test.ts with no changes needed there",
-    "routeSearchSuite": "step 2.7: moves.ts backward-move generation incl. class-membership inference and sharedVariants (11); search.ts ADV-049 diamond, ADV-050 cycle incl. tight-budget truncation, P-09 200-run fast-check property over random cyclic graphs, ranking (selectivity/steps/inferred/tie-break), both assumption values, excludeReactionIds, maxRoutes, no-startFrom, unknown target (15); demo dataset ethanol→propan-2-ol, aniline→phenol, ethanol→ethanoic acid both paths, no-producer target (4)"
+    "routeSearchSuite": "step 2.7: moves.ts backward-move generation incl. class-membership inference and sharedVariants (11); search.ts ADV-049 diamond, ADV-050 cycle incl. tight-budget truncation, P-09 200-run fast-check property over random cyclic graphs, ranking (selectivity/steps/inferred/tie-break), both assumption values, excludeReactionIds, maxRoutes, no-startFrom, unknown target (15); demo dataset ethanol→propan-2-ol, aniline→phenol, ethanol→ethanoic acid both paths, no-producer target (4)",
+    "generatorSweepSuite": "step 2.8: tests/property/generator-tiers.test.ts now covers all 4 tiers x 6 shapes = 24 combinations (was 6 + 4 sampled = 10), closing step 1.11's sampling gap; 0 L1-L3 ERROR at every combination; ~12s added to npm run check",
+    "perfSuite": "step 2.8: tests/perf/*.bench.ts (commit, projection, route-search, validate) at the design tier, dense/hub_explosion shapes plus the literal ADV-012 one-hub-1000-reactions scenario; tests/perf/baseline.json records the measured numbers; tests/adversarial/gate-b-performance.test.ts titles ADV-013 and ADV-012's performance part with single warmed-up assertions (5x margin, probed against test:coverage's v8 instrumentation overhead). Measured and quantified the three Phase 1 perf open items (validateTouched on hubs: 24.34ms on the literal ADV-012 hub, over the 16ms commit budget; rejected-commit index rebuild: 163-180ms at the design tier, no budget row exists; scopeOf computed twice: confirmed 2.0-2.1x its own cost, ~3-5% of validateTouched on a hub) plus one not on that list: navigator's projection build also misses the 16ms budget at the design tier (21.81-27.2ms; O(total reactions) full-state scan by design, GRAPH_SEMANTICS.md §3) while reaction_explorer/precursor_explorer (local, bounded traversals) stay under budget at every scale tested. None fixed this step (measure, not fix); see docs/reviews/gate-b-packet.md §0/§5 for the reviewer's decision. Found and closed a real test gap in src/core/graph/route/search.ts along the way: the two class-membership startFrom-completion branches were untested since step 2.7 (2 tests added)."
   },
   "openItems": [
     "Consider a WARNING for the same substance listed twice in the same role and stage (use coefficient) — decide in Phase 6.",
     "All exam coverage and the baseline topic tree are REVIEW REQUIRED until checked against official syllabi.",
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
     "Human review of Gate A: demo chemistry (SMILES, stereodescriptors, conditions, mechanism atom maps) and exam coverage are unverified; nothing is marked verified.",
-    "Demo deviation to confirm: KOH used for both aq. and alc. conditions of reaction 8 (PROGRESS.md step 1.12). The propanone haloform and the ethanal-only propan-2-ol route were resolved by the Gate A review and TEST_STRATEGY §3 was corrected."
+    "Demo deviation to confirm: KOH used for both aq. and alc. conditions of reaction 8 (PROGRESS.md step 1.12). The propanone haloform and the ethanal-only propan-2-ol route were resolved by the Gate A review and TEST_STRATEGY §3 was corrected.",
+    "Gate B (step 2.8, docs/reviews/gate-b-packet.md §0/§5): navigator's projection build misses the 16ms budget at the design tier (21.81-27.2ms; O(total reactions) full-state scan by design) and validateTouched on a 1,000-reaction hub misses the 16ms commit budget (24.34ms; rule execution over the touched record's full referrer fan-out). Neither fixed; reviewer to decide fix-now vs. defer.",
+    "Gate B: scopeOf is computed twice per commit (core/commands/store.ts calls it, then validateTouched calls it again internally) — confirmed real (2.0-2.1x its own cost) but small (~3-5% of a hub-heavy validateTouched); fixing it needs a Validator.validateTouched contract change, not attempted this step.",
+    "Gate B: the rejected-commit index rebuild costs ~163-180ms at the design tier; PERFORMANCE_ARCHITECTURE.md §2 has no budget row for this specific case (only for a successful commit) — reviewer to decide whether one should be added.",
+    "No CI workflow exists to enforce PERFORMANCE_ARCHITECTURE.md §9's \">20% regression against baseline fails\" rule automatically; tests/perf/baseline.json is recorded evidence from one run, not yet diffed by any script."
   ]
 }
