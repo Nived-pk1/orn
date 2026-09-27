@@ -29,6 +29,21 @@ export function oneHubState(reactions = 1000, seed = 7): CanonicalState {
   return parsed.state;
 }
 
+/**
+ * A design-tier-scale scenario (5,000 reactions, docs/PERFORMANCE_ARCHITECTURE.md §1) where one species is
+ * referenced by exactly 1,000 of them — "like water": a species with real fan-out at design-tier scale,
+ * distinct from `oneHubState()`'s smaller dataset (1,000 total reactions, all through the one hub).
+ * `hub_explosion` splits reactions round-robin over `floor(species / 50)` hubs; 250 species gives exactly
+ * 5 hubs, so 5,000 reactions split into 1,000 per hub.
+ */
+export function designTierHubState(reactions = 5000, seed = 11): CanonicalState {
+  const parsed = documentToState(
+    generateDataset({ species: 250, classes: 20, reagents: 30, reactions, relationshipsPerReaction: 1, topics: 10, shape: 'hub_explosion', seed }),
+  );
+  if (!parsed.ok) throw new Error('generator produced duplicate IDs for the design-tier hub scenario');
+  return parsed.state;
+}
+
 /** The species referenced by the most participations — "the hub" of any shape, found structurally. */
 export function mostReferencedSpecies(state: CanonicalState, indexes: ReadonlyIndexes): RecordRef {
   let best: RecordRef | undefined;

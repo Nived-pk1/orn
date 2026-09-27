@@ -67,7 +67,8 @@ Estimate at the design target: records ≈ 10–15 MB as JS objects, indexes ≈
 
 ## 9. Measurement
 
-- `tests/perf/*.bench.ts` (vitest bench) at each tier and topology shape; baseline numbers committed in `tests/perf/baseline.json`; CI fails when a benchmark regresses > 20% against the baseline on the same runner class.
+- `tests/perf/*.bench.ts` (vitest bench) at each tier and topology shape; baseline numbers committed in `tests/perf/baseline.json`, recording mean, p75, p99 and sample count per entry (regenerate with `npm run bench:baseline`). Budgets above are p95; `vitest bench` (tinybench) does not report p95, so verdicts are computed on p99 as a conservative stand-in (documented in `baseline.json` itself) — a p95 verdict would only be more forgiving, never less.
+- `npm run bench:compare` (`scripts/bench-compare.mjs`) fails when any entry's p99 regresses > 20% against the committed baseline on the same runner class. Run at gates, not in `npm run check` — a single-run benchmark on a developer workstation (not a dedicated CI runner class) is noisy enough that running it on every commit would be flaky rather than informative. Workstation-noise caveat: a repeat run can move any single entry by double digits of percent, and operations near or over budget often collect only 10-30 samples in `vitest bench`'s default 500 ms window, making their p99 close to the observed max rather than a statistically stable percentile — read both the baseline and any comparison against it as indicative, not tight, and re-run before concluding a flagged regression is real.
 - Dev-only performance marks (`performance.mark`) around commit, projection, layout and scene; the Diagnostics › Performance panel shows the last 100 samples.
 - Playwright traces at Gates E and F for FPS, long tasks and boot time.
 

@@ -8,7 +8,7 @@ import { bench, describe } from 'vitest';
 import { createCanonicalStore } from '@/core/commands';
 import { validator } from '@/core/validation';
 import { withFields } from '@/test-support/command-kit';
-import { buildIndexes, mostReferencedSpecies, oneHubState, tierState } from '@/test-support/perf-kit';
+import { buildIndexes, designTierHubState, mostReferencedSpecies, oneHubState, tierState } from '@/test-support/perf-kit';
 import { must } from '@/test-support/state-fixture';
 
 for (const shape of ['dense', 'hub_explosion'] as const) {
@@ -76,5 +76,29 @@ describe('scopeOf / validateTouched — ADV-012 literal case: one hub, 1,000 rea
 
   bench('validateTouched, touching the hub', () => {
     validator.validateTouched(state, indexes, [hub]);
+  });
+});
+
+/**
+ * Design-tier-scale "like water" scenario (docs/IMPLEMENTATION_PLAN.md §2 step 2.9): one species referenced
+ * by 1,000 of the state's 5,000 reactions, at the full design-tier reaction count — distinct from the
+ * ADV-012 literal case above, whose dataset has only 1,000 reactions in total.
+ */
+describe('commit / validateTouched — design tier, one hub of 1,000 reactions (like water)', () => {
+  const initial = designTierHubState();
+  const initialIndexes = buildIndexes(initial);
+  const hub = mostReferencedSpecies(initial, initialIndexes);
+  const store = createCanonicalStore({ initial, validateInitial: false });
+  let n = 0;
+
+  bench('dispatch: update the hub species (notes)', () => {
+    n += 1;
+    const state = store.getState();
+    const record = must(state.records.species[hub.id]);
+    store.dispatch({ label: `bench-water-${n}`, commands: [{ type: 'record.update', record: withFields(record, { notes: `n${n}` }) }] });
+  });
+
+  bench('validateTouched, touching the hub', () => {
+    validator.validateTouched(initial, initialIndexes, [hub]);
   });
 });

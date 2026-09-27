@@ -100,7 +100,9 @@ npm run check:hardcode       # no dataset IDs/names in production code
 npm test                     # all Vitest tests
 npm run test:property        # property tests only
 npm run test:adversarial     # adversarial matrix only
-npm run bench                # benchmarks (tests/perf)
+npm run bench                # benchmarks (tests/perf), console output only
+npm run bench:baseline       # regenerate tests/perf/baseline.json (mean/p75/p99/sample count); gates only
+npm run bench:compare        # fail if any entry's p99 regresses > 20% against baseline.json; gates only
 npm run e2e                  # Playwright (available from Phase 5: npx playwright install first)
 npm run check                # everything required before each commit
 ```
