@@ -169,7 +169,7 @@ Reaction
 | Propene + HBr | one reaction; outcomes: 2-bromopropane `major` (Markovnikov), 1-bromopropane `minor`, same isomerGroup |
 | Propene + HBr, peroxide | a *separate* reaction (different reagent system), outcome anti-Markovnikov `major`; `contrasts_with` relationship + `exception` caveat targeting the first reaction |
 | EtOH + conc. H₂SO₄ | one reaction; variants "413 K" and "443 K"; outcomes diethyl ether (variant 413 K) and ethene (variant 443 K) |
-| (R)-2-bromobutane + aq. NaOH vs alc. KOH | two reactions (different reagents/phase); SN2 outcome with `stereochemistry.outcome: inversion`; E2 outcome with Saytzeff `regiochemistry`; `competing_with` relationship |
+| (R)-2-bromobutane + aq. KOH vs alc. KOH | two reactions (same reagent KOH, different phase); SN2 outcome with `stereochemistry.outcome: inversion`; E2 outcome with Saytzeff `regiochemistry`; `competing_with` relationship |
 | Cannizzaro | reactant coefficient 2; outcome products alcohol + carboxylate, both `main`; `commonly_confused_with` Aldol |
 | Unknown/unstated selectivity | `unspecified` — never guess |
 

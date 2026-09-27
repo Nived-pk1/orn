@@ -47,10 +47,10 @@ The demo is real JEE chemistry chosen to exercise every feature. It is built in 
 5. Ethanol + conc. H₂SO₄: variant 413 K → diethyl ether, variant 443 K → ethene [condition variants, variant-scoped outcomes].
 6. Acid-catalysed hydration of ethene vs dehydration [`reverse_of` synthetic].
 7. Propene + HBr: 2-bromopropane major, 1-bromopropane minor; propene + HBr/peroxide: anti-Markovnikov major [selectivity, isomer group, `contrasts_with`, exception caveat].
-8. (R)-2-bromobutane + aq. NaOH → (S)-butan-2-ol (SN2, inversion) vs + alc. KOH → but-2-ene major / but-1-ene minor (E2, Saytzeff) [same reagent family different outcome, stereo outcome, `competing_with`, mechanism variants].
+8. (R)-2-bromobutane + aq. KOH → (S)-butan-2-ol (SN2, inversion) vs + alc. KOH → but-2-ene major / but-1-ene minor (E2, Saytzeff) [same reagent family different outcome, stereo outcome, `competing_with`, mechanism variants].
 9. Cannizzaro of benzaldehyde (coefficient 2) [`commonly_confused_with` Aldol].
 10. Aldol of ethanal with a mechanism having base- and acid-catalysed variants [mechanism variants, steps with atom maps and electron movements].
-11. Haloform test on ethanol/ethanone [purpose `qualitative_test`].
+11. Haloform test on ethanol/ethanal [purpose `qualitative_test`].
 12. Aniline diazotisation at 0–5 °C [temperature range], Sandmeyer to chlorobenzene [byproduct N₂], diazonium → phenol [cross-chapter topic mapping].
 13. Grignard: CH₃MgBr + propanone, stage 1 dry ether, stage 2 H₃O⁺ work-up → 2-methylpropan-2-ol [stages, reaction scheme placements].
 14. But-2-yne + H₂/Lindlar → cis-but-2-ene [reagent with components: Pd/CaCO₃ support, quinoline poison; syn addition].
