@@ -11,6 +11,13 @@
  * not once per build call; only the request-scoped filter pass and the maxNodes/maxEdges admission below
  * still run every call, exactly as before.
  *
+ * Step 2.11: gathered candidates stay as `NavigatorCandidate` (not the full `GraphEdge`) through sorting and
+ * admission — `toEdge` (which hashes `graphEdgeId`) now runs only on the candidates that are actually
+ * admitted, not on every candidate gathered. On a dense/unfiltered request most gathered candidates are
+ * dropped at the `maxEdges` truncation, so this removed the single largest cost in a profile of this
+ * function (docs/PROGRESS.md step 2.11: ~60% of build time on a design-tier, 60-anchor `dense` state, with
+ * 7,492 candidates gathered against 800 admitted).
+ *
  * Not built yet (later steps): hub expansion/focus, degree caps and overflow, edge bundling (2.5).
  * The main-thread time budget is not enforced here because `ProjectionContext` has no injected clock.
  */
@@ -64,7 +71,14 @@ function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
   const rollup = ctx.indexes.navigatorRollup();
   const passes = reactionFilter(ctx, request.filters);
 
-  const candidates: GraphEdge[] = [];
+  // Kept as `NavigatorCandidate` (not yet `toEdge`-converted) through sorting and admission: converting
+  // means computing `graphEdgeId`'s hash, and on a dense/unfiltered state most gathered candidates never
+  // survive truncation (docs/PROGRESS.md step 2.11 profile: 7,492 candidates gathered, 800 admitted at
+  // maxEdges — hashing all 7,492 up front was ~60% of this function's own time, almost all of it wasted on
+  // candidates about to be dropped). `NavigatorCandidate` already carries every field the sort/admission
+  // logic below needs (reactionId/outcomeId/productId, fromHub/toHub), so nothing here needs the full
+  // `GraphEdge` shape until a candidate is actually admitted.
+  const candidates: NavigatorCandidate[] = [];
   let aborted = false;
   const hubIds = [...rollup.hubs.map((hub) => hub.id), UNCLASSIFIED_HUB_ID];
   for (const hubId of hubIds) {
@@ -75,23 +89,21 @@ function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
     for (const candidate of rollup.candidatesFrom(hubId)) {
       const reaction = ctx.state.records.reaction[candidate.reactionId];
       if (reaction === undefined || !passes(reaction)) continue;
-      candidates.push(toEdge(candidate));
+      candidates.push(candidate);
     }
   }
   // Truncation (below) admits candidates in this order until maxEdges is reached, so the order itself is
   // part of the result whenever it truncates. Sorted by (reaction, outcome, product) — not by which hub a
   // candidate is filed under — so the choice of which edges survive never depends on iterating hubs
   // instead of reactions (docs/PROGRESS.md step 2.9; `navigator-reference.ts` sorts the same way).
-  candidates.sort(
-    (a, b) => compareStrings(a.reactionId ?? '', b.reactionId ?? '') || compareStrings(a.outcomeId ?? '', b.outcomeId ?? '') || compareStrings(a.productId ?? '', b.productId ?? ''),
-  );
+  candidates.sort((a, b) => compareStrings(a.reactionId, b.reactionId) || compareStrings(a.outcomeId, b.outcomeId) || compareStrings(a.productId, b.productId));
   const unanchored = rollup.unanchoredReactionIds.filter((id) => {
     const reaction = ctx.state.records.reaction[id];
     return reaction !== undefined && passes(reaction);
   });
 
   // Nodes: every real hub (hubs are shown even without arrows) plus Unclassified when an arrow needs it.
-  const needsUnclassified = candidates.some((edge) => edge.from === UNCLASSIFIED_HUB_ID || edge.to === UNCLASSIFIED_HUB_ID);
+  const needsUnclassified = candidates.some((candidate) => candidate.fromHub === UNCLASSIFIED_HUB_ID || candidate.toHub === UNCLASSIFIED_HUB_ID);
   const realHubs = [...rollup.hubs].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const slots = Math.max(0, limits.maxNodes - (needsUnclassified ? 1 : 0));
   const admitted = new Set<string>(realHubs.slice(0, slots).map((ref) => ref.id));
@@ -106,14 +118,14 @@ function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
   };
   const edges: GraphEdge[] = [];
   let edgesDropped = 0;
-  for (const edge of candidates) {
-    if (admitted.has(edge.from) && admitted.has(edge.to) && edges.length < limits.maxEdges) {
-      edges.push(edge);
+  for (const candidate of candidates) {
+    if (admitted.has(candidate.fromHub) && admitted.has(candidate.toHub) && edges.length < limits.maxEdges) {
+      edges.push(toEdge(candidate));
       continue;
     }
     edgesDropped += 1;
-    if (admitted.has(edge.from)) count(edge.from, 'outgoing');
-    if (admitted.has(edge.to)) count(edge.to, 'incoming');
+    if (admitted.has(candidate.fromHub)) count(candidate.fromHub, 'outgoing');
+    if (admitted.has(candidate.toHub)) count(candidate.toHub, 'incoming');
   }
 
   const nodes: GraphNode[] = realHubs
