@@ -351,6 +351,21 @@ The review packet is kept at `docs/reviews/gate-a-packet.md`.
 - ADV-051/052/057 graph halves: steps 2.3–2.6. Cost of rewriting a hub bucket when one member changes is measured in step 2.8.
 - The two seeded-walk tests are slow (about 4 s alone) and carry explicit timeouts like the other walks.
 
+### Step 2.2 — Stable hashing; bounded traversal (2026-09-27)
+
+**Delivered**
+- `src/core/hash.ts` (`fnv1a`, `hash64`, `hashParts`): the finding-ID hash moved here unchanged (finding IDs identical; existing tests pass). `hashParts` separates parts with U+0000 and tells `undefined` from `''`.
+- `src/core/graph/ids.ts`: `graphEdgeId` = `edg_` + hash(view, from, to, semantic, reactionId, outcomeId, productId, participantId, relationshipId) (GRAPH_SEMANTICS §10).
+- `src/core/graph/traversal.ts`: `traverse()`, an iterative BFS bounded by `TraversalLimits` (depth, nodes, edges, time via an injected `now`, `AbortSignal`). Neighbours are sorted by (target, edge ID); a node is expanded once per direction; parallel edges and self-loops are kept (INV-26); an edge closing a cycle onto a node already in the result needs only edge budget. Returns nodes with per-direction `hidden` counts, edges, and a `Truncation` (first limit hit; `hiddenNodeEstimate` is a lower bound: distinct neighbours seen but not admitted). Exported from `src/core/graph/index.ts`.
+- Tests (`traversal.test.ts`, `hash.test.ts`): ADV-011 (chain 60 → depth 12, notice), ADV-050 traversal part (A→B→C→A; cycle at the depth limit), INV-22 (50,000-deep chain without stack growth; seeded random cyclic graphs stay within all limits, untruncated results are closed), limits per kind, abort, injected clock, determinism under edge order, INV-26 edge IDs. `npm run check`: 50 files, 911 tests, green.
+
+**Decisions**
+- No contract or schema change, so no amendment. `TraversalLimits` is used as declared. `edg` is a local prefix (not in `OPERATIONAL_ID_PREFIX`; edge IDs are derived, never stored).
+- Without an injected `now`, `timeBudgetMs` is not enforced (core has no clock); callers on the main thread pass `performance.now`.
+
+**Open items**
+- P-09 (route search half) stays with step 2.6; ADV-050 graph/route halves with 2.5/2.6. The time-budget check runs once per expanded node, so one node with a huge neighbour list is not interrupted (bounded by the edge cap in practice; measure in 2.8).
+
 ## Amendments
 - **2026-09-26, step 1.10 — `MigrationRunner.run` returns a result value (contract change).** Problem: the contract said the runner "rejects newer versions" but returned only `{ doc, steps }`, leaving no value to reject with (CLAUDE.md §6: errors across module boundaries are values). Change: `run` returns `MigrationResult = { ok: true, doc, steps } | { ok: false, code, message, atVersion }`, with new `MigrationErrorCode`, `MigrationError`, `MigrationSuccess` types; `MigrationRunner` gains a readonly `target`. No consumer existed yet, no record shape changed: no `CURRENT_SCHEMA_VERSION` bump, migration or fixture change. Docs updated: MIGRATION.md §2.
 - **2026-09-26, step 1.8 — validation contract, `linkersOf`, L2 nested-container rule.** Problem: incremental validation must equal a full pass, but records can be affected by changes elsewhere that the reverse-reference index does not show (name twins, duplicate IDs, cycle members, rich-text linkers, routes depending on species and classes), and a fixed problem on an untouched record must lose its finding. Change: `ValidationRule` gains optional `watches` and `peers` (records beyond referrers/referents affected by a touched record); `Validator.validateTouched` gains an optional `previous` state and the interface gains `scopeOf(state, indexes, touched, previous?)`; `CoreIndexes.linkersOf(id)` (rich-text link index, apply ≡ build tested). Separately, step 1.7's REF-005 no longer reports a nested reference whose container field names no record of the required kind (participant `profileId` on a non-reagent): that case is RXN-011 as VALIDATION_RULES.md §3 lists it. No record shape changed: no `CURRENT_SCHEMA_VERSION` bump, migration or fixture change. Docs updated: VALIDATION_RULES.md §4–§5, GRAPH_SEMANTICS.md §8.

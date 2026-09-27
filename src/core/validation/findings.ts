@@ -3,6 +3,7 @@
  * A finding ID is a hash of (ruleId, subject, path) only, never of the message or the data, so the same
  * problem keeps its ID across edits and a fixed problem simply disappears (no dismissal state needed).
  */
+import { hash64 } from '../hash';
 import { OPERATIONAL_ID_PREFIX, type RecordRef } from '../schema';
 import type { Finding, FindingDraft, ValidationLevel, ValidationRule } from './contracts';
 
@@ -18,22 +19,10 @@ export function plainText(text: string, max: number = MAX_MESSAGE_LENGTH): strin
   return clean.length <= max ? clean : `${clean.slice(0, max - 1)}…`;
 }
 
-/** 32-bit FNV-1a with a caller-chosen offset basis. */
-function fnv1a(text: string, basis: number): number {
-  let hash = basis >>> 0;
-  for (let i = 0; i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash;
-}
-
-const hex8 = (n: number): string => n.toString(16).padStart(8, '0');
-
 /** `fnd_` + 64 bits of two independent FNV-1a passes over `ruleId ␀ kind:id ␀ path`. */
 export function findingId(ruleId: string, subject: RecordRef, path?: string): string {
   const key = `${ruleId}\u0000${subject.kind}:${subject.id}\u0000${path ?? ''}`;
-  return `${OPERATIONAL_ID_PREFIX.finding}_${hex8(fnv1a(key, 0x811c9dc5))}${hex8(fnv1a(key, 0x9747b28c))}`;
+  return `${OPERATIONAL_ID_PREFIX.finding}_${hash64(key)}`;
 }
 
 interface Origin {
