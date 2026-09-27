@@ -85,6 +85,6 @@
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
     "npm audit: 3 moderate dev-only entries, all the vitest advisory GHSA-82fw-gwwq-j7x9 (@vitest/coverage-v8 is counted through vitest); resolve with a vitest major upgrade at a phase boundary (ADR-020).",
     "Human review of Gate A: demo chemistry (SMILES, stereodescriptors, conditions, mechanism atom maps) and exam coverage are unverified; nothing is marked verified.",
-    "Demo deviations to confirm: KOH used for both aq. and alc. conditions of reaction 8; spec \"ethanone\" read as propanone; propene-hydration route alternative not modelled (PROGRESS.md step 1.12)."
+    "Demo deviation to confirm: KOH used for both aq. and alc. conditions of reaction 8 (PROGRESS.md step 1.12). The propanone haloform and the ethanal-only propan-2-ol route were resolved by the Gate A review and TEST_STRATEGY §3 was corrected."
   ]
 }

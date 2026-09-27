@@ -297,8 +297,8 @@ Human review is still needed: the chemistry, SMILES and all exam coverage are un
 
 **Decisions**
 - Reaction 8 uses KOH for both aq. and alc. conditions (spec says aq. NaOH) so ADV-024 (one reagent, two reactions, different outcomes) is exercised; KOH has two profiles.
-- The spec's "ethanone" is read as propanone (ethanone is not a compound); the haloform test is modelled for ethanol and propanone, with balanced coefficients.
-- Route ethanol → propan-2-ol goes via ethanal + CH₃MgBr only; the propene-hydration alternative is not modelled (no ethanol → propene reaction in the demo).
+- The spec's "ethanone" is read as propanone (ethanone is not a compound); the haloform test is modelled for ethanol and propanone, with balanced coefficients. **Closed by the Gate A review:** TEST_STRATEGY §3 item 11 now reads "ethanol/propanone" (commit 45d318e had wrongly changed it to ethanal); the demo is correct.
+- Route ethanol → propan-2-ol goes via ethanal + CH₃MgBr only. **Closed by the Gate A review:** propene is not reachable from ethanol without chain extension, so TEST_STRATEGY §3 now specifies the curated route via ethanal + CH₃MgBr and leaves alternatives to route search; no propene-hydration alternative is expected.
 - Ethanol + conc. H₂SO₄ has no participant coefficient (the 2:1 ether stoichiometry differs per variant and coefficients are per participant); the variant notes say so.
 - The reverse_of synthetic pair is ethene hydration ↔ the ethanol + conc. H₂SO₄ record as a whole (relationships attach to reactions, not variants).
 - Nothing is `verified`; curriculum records and the Beckmann reaction are `review_required` with reasons.

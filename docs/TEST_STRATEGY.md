@@ -50,7 +50,7 @@ The demo is real JEE chemistry chosen to exercise every feature. It is built in 
 8. (R)-2-bromobutane + aq. KOH → (S)-butan-2-ol (SN2, inversion) vs + alc. KOH → but-2-ene major / but-1-ene minor (E2, Saytzeff) [same reagent family different outcome, stereo outcome, `competing_with`, mechanism variants].
 9. Cannizzaro of benzaldehyde (coefficient 2) [`commonly_confused_with` Aldol].
 10. Aldol of ethanal with a mechanism having base- and acid-catalysed variants [mechanism variants, steps with atom maps and electron movements].
-11. Haloform test on ethanol/ethanal [purpose `qualitative_test`].
+11. Haloform test on ethanol/propanone [purpose `qualitative_test`].
 12. Aniline diazotisation at 0–5 °C [temperature range], Sandmeyer to chlorobenzene [byproduct N₂], diazonium → phenol [cross-chapter topic mapping].
 13. Grignard: CH₃MgBr + propanone, stage 1 dry ether, stage 2 H₃O⁺ work-up → 2-methylpropan-2-ol [stages, reaction scheme placements].
 14. But-2-yne + H₂/Lindlar → cis-but-2-ene [reagent with components: Pd/CaCO₃ support, quinoline poison; syn addition].
@@ -60,7 +60,7 @@ The demo is real JEE chemistry chosen to exercise every feature. It is built in 
 
 **Edge records**: a species with an invalid SMILES (CHEM-001, review), a species without structure, palmitic acid (long chain depiction), a very long IUPAC name, Unicode aliases (α, subscripts), a draft reaction with no product (RXN-002 warning).
 
-**Routes**: ethanol → propan-2-ol (via ethanal/Grignard or via propene hydration, curated); aniline → phenol via diazonium.
+**Routes**: ethanol → propan-2-ol via ethanal + CH₃MgBr (curated); alternative paths are found by route search; aniline → phenol via diazonium.
 
 **Curriculum**: baseline topic tree (JEE_ONTOLOGY.md §2), JEE Main and JEE Advanced exams, one `provisional` version each (review required), topic mappings for every reaction, one explicit `exam_relevance` override.
 
