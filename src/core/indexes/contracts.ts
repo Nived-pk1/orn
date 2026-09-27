@@ -26,6 +26,9 @@ import type {
 import type { CanonicalState } from '../schema';
 import type { ChangeSet } from '../dataset/contracts';
 import type { Referrer } from '../references/contracts';
+import type { NavigatorCandidate } from './navigator-rollup';
+
+export type { NavigatorCandidate } from './navigator-rollup';
 
 export interface Participation {
   readonly reactionId: ReactionId;
@@ -72,6 +75,23 @@ export interface CoreIndexes {
   classAncestors(id: ClassId): readonly ClassId[];
 }
 
+/**
+ * Additive contract change, step 2.9 (docs/PROGRESS.md Amendments): the navigator's precomputed hub
+ * roll-up (docs/IMPLEMENTATION_PLAN.md §2), so `navigatorProjection.build` reads it instead of scanning
+ * every reaction in the state. `hubs` is every real, anchored, drawable hub (sorted by ID); a candidate's
+ * `fromHub`/`toHub` is one of `hubs`' IDs or the virtual Unclassified hub ID (`UNCLASSIFIED_HUB_ID`,
+ * `src/core/indexes/navigator-rollup.ts`). Cost of reading it is proportional to hubs and output, not to
+ * total reactions in the state.
+ */
+export interface NavigatorRollupIndex {
+  readonly hubs: readonly RecordRef[];
+  readonly unanchoredReactionIds: readonly ReactionId[];
+  /** Candidates whose carried substrate resolved to this hub, sorted by (reaction, outcome, product). */
+  candidatesFrom(hubId: string): readonly NavigatorCandidate[];
+  /** Candidates whose main product resolved to this hub, sorted by (reaction, outcome, product). */
+  candidatesTo(hubId: string): readonly NavigatorCandidate[];
+}
+
 export interface ReadonlyIndexes extends CoreIndexes {
   participationsOf(substance: RecordRef): readonly Participation[];
   productionsOf(product: RecordRef): readonly Production[];
@@ -88,6 +108,7 @@ export interface ReadonlyIndexes extends CoreIndexes {
   caveatsFor(ref: RecordRef): readonly RecordRef[];
   anchors(): readonly NavigatorAnchor[];
   displayOf(ref: RecordRef): EntityDisplay | undefined;
+  navigatorRollup(): NavigatorRollupIndex;
 }
 
 export interface IndexEngine {

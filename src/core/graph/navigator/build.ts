@@ -4,15 +4,23 @@
  * Arrows are never merged by endpoints (INV-26). Reactions that reach no anchored hub are listed in
  * `unanchoredReactionIds` (and still drawn on the Unclassified hub); nothing is dropped silently.
  *
+ * Step 2.9: reads the precomputed navigator roll-up (`ctx.indexes.navigatorRollup()`,
+ * `core/indexes/navigator-rollup.ts`) instead of scanning every reaction in the state — cost is
+ * proportional to hubs and output, not to total reactions (docs/PROGRESS.md step 2.9). Hub resolution and
+ * "what does this reaction carry" selection are computed once per touched reaction as the state changes,
+ * not once per build call; only the request-scoped filter pass and the maxNodes/maxEdges admission below
+ * still run every call, exactly as before.
+ *
  * Not built yet (later steps): hub expansion/focus, degree caps and overflow, edge bundling (2.5).
  * The main-thread time budget is not enforced here because `ProjectionContext` has no injected clock.
  */
-import type { ReactionId } from '../../schema';
+import type { NavigatorCandidate } from '../../indexes/contracts';
+import { compareStrings } from '../../indexes/table';
 import type { GraphEdge, GraphNode, Projection, ProjectionContext, ProjectionDefinition, ProjectionRequest, Truncation } from '../contracts';
 import { graphEdgeId } from '../ids';
 import { bundleEdges, flagsOf, projectionKey, sortEdges, sortNodes, sortedUnique } from '../kit';
-import { createHubResolver, hubTargets, UNCLASSIFIED_HUB_ID } from './hubs';
-import { mainProducts, primarySubstrate, reactionFilter } from './select';
+import { UNCLASSIFIED_HUB_ID } from './hubs';
+import { reactionFilter } from './select';
 
 const VIEW = 'navigator' as const;
 
@@ -24,61 +32,67 @@ const NODE_KIND: Readonly<Record<string, GraphNode['kind']>> = {
   named_reaction: 'named_reaction',
 };
 
+function toEdge(candidate: NavigatorCandidate): GraphEdge {
+  const identity = {
+    view: VIEW,
+    from: candidate.fromHub,
+    to: candidate.toHub,
+    semantic: 'transforms_to',
+    reactionId: candidate.reactionId,
+    outcomeId: candidate.outcomeId,
+    productId: candidate.productId,
+    participantId: candidate.participantId,
+  } as const;
+  return {
+    id: graphEdgeId(identity),
+    from: identity.from,
+    to: identity.to,
+    semantic: identity.semantic,
+    reactionId: candidate.reactionId,
+    outcomeId: candidate.outcomeId,
+    productId: candidate.productId,
+    participantId: candidate.participantId,
+    selectivity: candidate.selectivity,
+    conditionVariantIds: candidate.conditionVariantIds,
+    inferred: candidate.inferred,
+    layoutDirection: 'forward',
+  };
+}
+
 function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
   const { limits } = request;
-  const targets = hubTargets(ctx.indexes);
-  const hubOf = createHubResolver(ctx.indexes, targets);
+  const rollup = ctx.indexes.navigatorRollup();
   const passes = reactionFilter(ctx, request.filters);
 
   const candidates: GraphEdge[] = [];
-  const unanchored: ReactionId[] = [];
   let aborted = false;
-  for (const id of Object.keys(ctx.state.records.reaction).sort()) {
+  const hubIds = [...rollup.hubs.map((hub) => hub.id), UNCLASSIFIED_HUB_ID];
+  for (const hubId of hubIds) {
     if (limits.signal?.aborted === true) {
       aborted = true;
       break;
     }
-    const reaction = ctx.state.records.reaction[id];
-    if (reaction === undefined || !passes(reaction)) continue;
-    const substrate = primarySubstrate(ctx, reaction);
-    const from = substrate === undefined ? undefined : hubOf(substrate.ref);
-    let reached = false;
-    if (substrate !== undefined && from !== undefined) {
-      for (const { outcome, product } of mainProducts(ctx, reaction)) {
-        const to = hubOf(product.ref);
-        const identity = {
-          view: VIEW,
-          from: from.hubId,
-          to: to.hubId,
-          semantic: 'transforms_to',
-          reactionId: reaction.id,
-          outcomeId: outcome.id,
-          productId: product.id,
-          participantId: substrate.id,
-        } as const;
-        candidates.push({
-          id: graphEdgeId(identity),
-          from: identity.from,
-          to: identity.to,
-          semantic: identity.semantic,
-          reactionId: reaction.id,
-          outcomeId: outcome.id,
-          productId: product.id,
-          participantId: substrate.id,
-          selectivity: outcome.selectivity,
-          conditionVariantIds: outcome.conditionVariantIds,
-          inferred: from.inferred || to.inferred,
-          layoutDirection: 'forward',
-        });
-        reached ||= from.hub !== null || to.hub !== null;
-      }
+    for (const candidate of rollup.candidatesFrom(hubId)) {
+      const reaction = ctx.state.records.reaction[candidate.reactionId];
+      if (reaction === undefined || !passes(reaction)) continue;
+      candidates.push(toEdge(candidate));
     }
-    if (!reached) unanchored.push(reaction.id);
   }
+  // Truncation (below) admits candidates in this order until maxEdges is reached, so the order itself is
+  // part of the result whenever it truncates. Sorted by (reaction, outcome, product) — not by which hub a
+  // candidate is filed under — so the choice of which edges survive never depends on iterating hubs
+  // instead of reactions (docs/PROGRESS.md step 2.9; `navigator-reference.ts` sorts the same way).
+  candidates.sort(
+    (a, b) => compareStrings(a.reactionId ?? '', b.reactionId ?? '') || compareStrings(a.outcomeId ?? '', b.outcomeId ?? '') || compareStrings(a.productId ?? '', b.productId ?? ''),
+  );
+  const unanchored = rollup.unanchoredReactionIds.filter((id) => {
+    const reaction = ctx.state.records.reaction[id];
+    return reaction !== undefined && passes(reaction);
+  });
 
   // Nodes: every real hub (hubs are shown even without arrows) plus Unclassified when an arrow needs it.
   const needsUnclassified = candidates.some((edge) => edge.from === UNCLASSIFIED_HUB_ID || edge.to === UNCLASSIFIED_HUB_ID);
-  const realHubs = [...targets.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const realHubs = [...rollup.hubs].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const slots = Math.max(0, limits.maxNodes - (needsUnclassified ? 1 : 0));
   const admitted = new Set<string>(realHubs.slice(0, slots).map((ref) => ref.id));
   if (needsUnclassified && limits.maxNodes > 0) admitted.add(UNCLASSIFIED_HUB_ID);

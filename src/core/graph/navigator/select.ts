@@ -4,29 +4,25 @@
  */
 import { fold } from '../../text';
 import { foldedNamesOf } from '../../indexes/names';
-import type { Outcome, Participant, Product, Reaction, ViewFilters } from '../../schema';
+import { mainProductsOf, primarySubstrateOf, type MainProductOf } from '../../indexes/navigator-rollup';
+import type { Participant, Reaction, ViewFilters } from '../../schema';
 import type { ProjectionContext } from '../contracts';
-import { drawnAsNode } from '../kit';
 
 /**
  * The carried-through substrate: the participant flagged `isPrimarySubstrate`, else the first reactant.
- * Spectators never qualify, and neither does a participant that is never drawn as a node (water).
+ * Spectators never qualify, and neither does a participant that is never drawn as a node (water). Thin
+ * wrapper: the pure logic (step 2.9) lives in `core/indexes/navigator-rollup.ts`, which the navigator's
+ * roll-up index also needs and `core/graph` can import (not the other way round).
  */
 export function primarySubstrate(ctx: ProjectionContext, reaction: Reaction): Participant | undefined {
-  const usable = reaction.participants.filter((p) => p.role !== 'spectator' && drawnAsNode(ctx, p.ref));
-  return usable.find((p) => p.isPrimarySubstrate === true) ?? usable.find((p) => p.role === 'reactant');
+  return primarySubstrateOf(ctx.indexes, reaction);
 }
 
-export interface MainProduct {
-  readonly outcome: Outcome;
-  readonly product: Product;
-}
+export type MainProduct = MainProductOf;
 
 /** Main products of every outcome in array order, except those never drawn as nodes. */
 export function mainProducts(ctx: ProjectionContext, reaction: Reaction): MainProduct[] {
-  return reaction.outcomes.flatMap((outcome) =>
-    outcome.products.filter((p) => p.role === 'main' && drawnAsNode(ctx, p.ref)).map((product) => ({ outcome, product })),
-  );
+  return mainProductsOf(ctx.indexes, reaction);
 }
 
 /** Reaction IDs allowed by the topic / reagent-family filters; null = no restriction. */

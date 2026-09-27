@@ -4,6 +4,7 @@
  * answers the same questions by scanning the state, independently of the index code.
  */
 import type { ReadonlyIndexes } from '@/core/indexes';
+import { UNCLASSIFIED_HUB_ID } from '@/core/indexes/navigator-rollup';
 import { REAGENT_FAMILIES, recordKindOfId, RECORD_KINDS } from '@/core/schema';
 import type { AnyRecord, CanonicalState, RecordRef } from '@/core/schema';
 
@@ -24,12 +25,24 @@ export function idsOf(state: CanonicalState): Set<string> {
   return ids;
 }
 
+/** Every observable answer of the navigator roll-up index (step 2.9), keyed by every real hub plus Unclassified. */
+export function navigatorRollupSnapshot(ix: ReadonlyIndexes): unknown {
+  const rollup = ix.navigatorRollup();
+  const hubIds = [...rollup.hubs.map((hub) => hub.id), UNCLASSIFIED_HUB_ID].sort();
+  return {
+    hubs: rollup.hubs,
+    unanchoredReactionIds: rollup.unanchoredReactionIds,
+    byHub: hubIds.map((id) => [id, rollup.candidatesFrom(id), rollup.candidatesTo(id)]),
+  };
+}
+
 export function derivedSnapshot(ix: ReadonlyIndexes, ids: Iterable<string>): unknown {
   const both = [{ includeDescendants: false }, { includeDescendants: true }] as const;
   return {
     revision: ix.revision,
     anchors: ix.anchors(),
     families: REAGENT_FAMILIES.map((f) => ix.reactionsByReagentFamily(f)),
+    navigatorRollup: navigatorRollupSnapshot(ix),
     perId: [...ids].sort().map((id) => {
       const ref = refOf(id);
       const any = id as never;

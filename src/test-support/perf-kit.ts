@@ -7,7 +7,8 @@
 import { documentToState } from '@/core/dataset';
 import { indexEngine } from '@/core/indexes';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
-import type { CanonicalState, RecordRef } from '@/core/schema';
+import { emptyRecordTables, RECORD_KINDS, type AnyRecord, type CanonicalState, type RecordRef } from '@/core/schema';
+import { anchorOn } from './graph-state';
 import { generateDataset, generateTier, type GeneratorShape, type GeneratorTier } from './generator';
 
 /** A parsed, indexed design/stress-tier state. Not frozen: callers that commit against it should copy. */
@@ -78,4 +79,27 @@ export function leastReferencedSpecies(state: CanonicalState, indexes: ReadonlyI
 
 export function buildIndexes(state: CanonicalState): ReadonlyIndexes {
   return indexEngine.build(state, 0);
+}
+
+/**
+ * Anchors every `every`th class as a navigator hub (docs/GRAPH_SEMANTICS.md §3). The generator itself
+ * creates no `navigator_anchor` records (docs/PERFORMANCE_ARCHITECTURE.md §10 is graph/index scale only,
+ * not content), so an un-anchored generated state puts every reaction on the single virtual Unclassified
+ * hub — every candidate collapsing onto one bucket, which is not what a curated dataset (the demo has 15
+ * anchored hubs) looks like, and not what step 2.9's "cost proportional to hubs and output, not to total
+ * reactions" target assumes. `every = 2` gives design tier (200 classes) ~100 hubs, well above a real
+ * curriculum's few dozen, so this is not tuned to make the benchmark look good — if anything it is a
+ * harder case (more hubs to enumerate) than most real content.
+ */
+export function withNavigatorAnchors(state: CanonicalState, every = 2): CanonicalState {
+  const records = { ...emptyRecordTables() } as unknown as Record<string, Record<string, AnyRecord>>;
+  for (const kind of RECORD_KINDS) records[kind] = { ...state.records[kind] };
+  Object.keys(state.records.class)
+    .sort()
+    .forEach((id, i) => {
+      if (i % every !== 0) return;
+      const anchor = anchorOn({ kind: 'class', id }, `perf-anchor-${id.replace(/_/g, '-')}`.slice(0, 60));
+      (records['navigator_anchor'] as Record<string, AnyRecord>)[anchor.id] = anchor;
+    });
+  return { meta: state.meta, records: records as unknown as CanonicalState['records'] };
 }

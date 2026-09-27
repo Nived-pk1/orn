@@ -525,7 +525,154 @@ the doubled `scopeOf` call, the route-search injected-clock coverage gap). `phas
 amended CLAUDE.md §6 / SONNET_HANDOFF.md §20 procedure, tagging happens only in a separate session after a
 **passed** verdict is recorded here.
 
+### Step 2.9 — Benchmark percentiles, `bench:compare`, incremental navigator roll-up index (2026-09-27)
+
+**Delivered**
+- **Commit 1** (docs/process only; see its own message for detail): untagged `phase-2` (local only, no
+  remote); recorded Gate B's not-passed verdict in `PROJECT_STATE.json`/`PROGRESS.md`; added steps 2.9/2.10
+  to `IMPLEMENTATION_PLAN.md` §2; the gate-tagging procedure (CLAUDE.md §6, SONNET_HANDOFF.md §20/§21); one
+  read map (CLAUDE.md §8 now points at `IMPLEMENTATION_PLAN.md` §4); ADV-005's Phase/Gate split;
+  ADV-013 marked fail (navigator) in the packet; closed the already-resolved propanone/ethanal open item.
+- **Commit 2**: `tests/perf/budgets.mjs` (per-benchmark metadata, keyed by Vitest's full test name);
+  `scripts/bench-report.mjs` (runs `tests/perf/*.bench.ts` via `vitest/node`'s benchmark API — no CLI
+  fail-on-regression mode exists — and joins each task's mean/p75/p99/sample count with its budget);
+  `npm run bench:baseline` (`scripts/generate-baseline.mjs`, regenerates `baseline.json` with a verdict
+  computed on p99, documented as a conservative stand-in for the §2 budgets' p95); `npm run bench:compare`
+  (`scripts/bench-compare.mjs`, fails on a >20% p99 regression against the committed baseline; gates only,
+  not in `npm run check`). `perf-kit.ts`: `designTierHubState()`, a design-tier-scale (5,000-reaction)
+  scenario where one species is referenced by 1,000 of them ("like water"); `commit.bench.ts` benchmarks
+  commit + `validateTouched` on it. Recomputing on p99 instead of step 2.8's single-run means changed
+  several verdicts from pass to fail (commit dispatch/undo-redo and reaction_explorer/precursor_explorer
+  projection builds on `hub_explosion`/`dense` at the design tier) — a materially worse picture than the
+  original packet described, independently supporting the reviewer's verdict.
+- **Commit 3**: `src/core/indexes/navigator-rollup.ts` — the navigator's hub roll-up (`NavigatorRollup`,
+  `HubResolver`, `hubTargets`, `primarySubstrateOf`/`mainProductsOf`), moved down from
+  `core/graph/navigator/{hubs,select}.ts` because `core/graph` already imports `core/indexes` and the
+  reverse would be a cycle (`no-circular`). `ReadonlyIndexes` gains `navigatorRollup(): NavigatorRollupIndex`
+  (`hubs`, `unanchoredReactionIds`, `candidatesFrom`/`candidatesTo` — additive, ADR-030). `full.ts`'s
+  `IndexEngine.apply`: a touched reaction retracts and recomputes its own candidates; a species'/reagent's
+  `classIds` change invalidates its memoised hub resolution and recomputes only the reactions referencing
+  it (`participations`/`productions`, already available); a deleted species/reagent gets the same
+  treatment (a reaction whose participant/product ref now dangles must not keep its last cached hub — see
+  Amendments below); an anchor/class/`entity_display` change rebuilds the whole roll-up (cheap relative to
+  a full `IndexEngine` rebuild — one pass over reactions only, no other table touched). The roll-up
+  outlives many commits, so it is *rebound* (not recreated) to each commit's fresh `CoreIndexes`/derived
+  tables on every `apply()` — its `basis.get`/`displayOf` closures would otherwise go stale.
+  `src/core/graph/navigator/build.ts` reads `ctx.indexes.navigatorRollup()` instead of scanning
+  `state.records.reaction`; `hubs.ts`/`select.ts` become thin re-exports/wrappers so every existing caller
+  (`precursor/reverse-of.ts`, tests) keeps its old signature.
+  `src/test-support/navigator-reference.ts`: the pre-2.9 full-scan algorithm, kept as the differential
+  test's oracle. `tests/property/navigator-differential.test.ts` (20 tests): index-backed build equals the
+  reference byte-for-byte on the demo, on all 6 generator shapes at tiny/initial/design tiers, and after
+  random command sequences through the store (with the *live* incrementally-applied `indexEngine`, not a
+  fresh rebuild — the store itself still only carries the part-1 `coreIndexEngine`, step 2.1's open item).
+  P-07 (`tests/property/commands.test.ts`) and the apply-≡-build scenarios (`src/core/indexes/full.test.ts`)
+  extended to the new index for free: `derivedSnapshot`/`index-snapshot.ts` gained
+  `navigatorRollupSnapshot` (hubs, unanchored reactions, every hub's candidates both ways), so every
+  existing apply-≡-build comparison now covers it without a second test file. P-10/INV-26
+  (`tests/property/projections.test.ts`) needed no changes and stayed green — the navigator's public
+  `Projection` shape did not change.
+- `npm run check`: 67 files, 1130 tests (was 66/1110), green. `npm run bench:baseline`: `tests/perf/baseline.json`
+  regenerated (see the numbers below).
+
+**A real bug this step's own extended tests caught (not shipped)**: the first version of the incremental
+update recomputed a class-membership change's referencing reactions, but did nothing when a
+species/reagent was *deleted* while still dangling-referenced by some reaction's participant/product (a
+raw-mutation scenario the ADV-051/052-style random-walk tests in `full.test.ts` exercise, bypassing
+validation on purpose). The reaction's own record never changed, so nothing marked it touched, and its
+last-cached hub resolution (from before the deletion) stayed in the roll-up forever. Fixed: `changes.deleted`
+species/reagent refs now also invalidate their memoised hub resolution and recompute every reaction that
+still references them (ownership of the `participations`/`productions` entries is the *referencing
+reaction's*, not the deleted record's, so `derived` still names them correctly after `removeRecord`
+retracts the deleted record's own contributions). Caught by `full.test.ts`'s seeded random-walk apply-≡-
+build comparison — exactly the kind of divergence step 2.9's extended P-07 coverage exists to catch.
+
+**A second bug the new differential test caught**: the pre-2.9 reference algorithm scanned reactions in ID
+order (then each reaction's outcomes/products in array order); the index-backed build gathers candidates
+hub-by-hub. Both orders are internally deterministic (P-10 holds for either alone), but they are *different
+orders* — invisible when nothing truncates, but `maxEdges`/`maxNodes` admits candidates in whatever order
+they arrive and stops, so a tight limit could keep a different subset depending on which algorithm produced
+it. Neither order was ever a documented contract. Fixed by making it one: both `build.ts` and
+`navigator-reference.ts` now sort candidates by `(reactionId, outcomeId, productId)` before the admission
+pass (documented in GRAPH_SEMANTICS.md §10).
+
+**Navigator build p99 at the design tier, before/after** (`tests/perf/baseline.json`; developer workstation,
+single-run noise applies — see the file's own caveats, and its low-sample-count note: several entries here
+have only 10–70 samples, so p99 is close to the observed max, not a stable percentile):
+
+| Scenario | Before (step 2.8/2.9 commit 2, full scan, same percentile method) | After (this commit, incremental index) |
+|---|---|---|
+| design tier, `dense`, unanchored generated state | p99 102.68 ms, mean 79.02 ms | p99 17–33 ms, mean 18–22 ms (un-anchored: everything resolves to the single Unclassified hub, so cost still tracks total reactions — see below) |
+| design tier, `hub_explosion`, unanchored generated state | p99 102.38 ms, mean 78.12 ms | p99 11–25 ms, mean 9–13 ms |
+| design tier, `dense`/`hub_explosion`, **anchored** (`withNavigatorAnchors`, ~100 hubs) | *(not measured before; the generator creates no anchors)* | `dense`: p99 27–150 ms, mean 18–56 ms (noisy; budget still missed most runs); `hub_explosion`: p99 10–29 ms, mean 7–23 ms (budget met most runs) |
+| ADV-012 literal case (1 hub, 1,000 of 1,000 reactions) | p99 19.07 ms, mean 10.42 ms | p99 5–12 ms, mean 3.0–3.5 ms — **pass** |
+
+The generator itself creates no `navigator_anchor` records (docs/PERFORMANCE_ARCHITECTURE.md §10 is
+graph/index scale only, not curated content), so the un-anchored benchmark state is the *worst case for
+this fix specifically*: every reaction resolves to the one virtual Unclassified hub, so the roll-up's
+"proportional to hubs and output" saving collapses to "proportional to total reactions" because the output
+*is* every reaction. `withNavigatorAnchors()` (new, `perf-kit.ts`) anchors every second generated class
+(~100 hubs at the design tier — more than a real curriculum's few dozen, so not tuned to flatter the
+number) to make the benchmark represent a curated dataset (the demo has 15 anchored hubs) instead of the
+degenerate case. Even so, `dense`'s p99 still exceeds the 16 ms budget on most runs (mean is close, 18–22
+ms un-anchored / 18–56 ms anchored) — a real, disclosed remaining gap, not claimed as fixed. `hub_explosion`
+now meets the budget on mean and on p99 most runs. Both are a 3–10× improvement over the full-scan
+baseline, and the removed cost (repeating hub resolution and candidate extraction on every build call
+regardless of whether the state changed) is architectural, not a benchmark artefact — it is exactly what
+ADR-030 targets. Reviewer/step 2.10 should decide whether `dense`'s remaining gap needs further work
+(a candidate ceiling per hub, or applying `ViewFilters` before gathering candidates rather than after) or
+is an accepted, scoped exception given the scenario's own honesty about noise and worst-case shape.
+
+**Decisions**
+- Per ADR-030: `core/indexes` cannot import `core/graph` (would cycle with `core/graph` already importing
+  `core/indexes`), so hub resolution moved down rather than being duplicated. `core/graph/navigator/hubs.ts`
+  and the `primarySubstrate`/`mainProducts` half of `select.ts` are now re-exports/thin wrappers, not new
+  logic — behaviour is unchanged, confirmed by the differential test and by `navigator.test.ts`'s unchanged
+  35 tests all staying green.
+- The roll-up stores two tables (`byFromHub`, `byToHub`) holding the same candidate objects by reference,
+  not one keyed by an actual `(from, to)` pair string — querying "everything out of hub X" or "everything
+  into hub X" independently is what `build.ts` and a future per-hub UI both need; nothing currently reads
+  `candidatesTo` directly (build.ts derives incoming counts from the edges it already has `.to` on), but it
+  is exercised and checked for correctness by every apply-≡-build/P-07 comparison via
+  `navigatorRollupSnapshot`, the same level of testing the rest of `ReadonlyIndexes`'s query methods get.
+- Anchor/class/`entity_display` changes rebuild the whole navigator roll-up rather than trying to trace
+  which reactions could be indirectly affected (a reparented class, or a newly/un-anchored target, can
+  shift resolution for reactions with no direct reference to the changed record — there is no bounded way
+  to find "affected" reactions short of re-deriving resolution for everything). This is *only* this index,
+  not the full `IndexEngine` rebuild a rejected commit pays for (docs/PROGRESS.md step 2.8's other open
+  item) — one pass over `state.records.reaction`, nothing else. Not separately benchmarked this step (these
+  record kinds are rare authoring edits, not a hot path); worth measuring in 2.10 if the reviewer asks.
+- Truncation order (`(reactionId, outcomeId, productId)`) was chosen over the alternative of trying to
+  reproduce the pre-2.9 algorithm's incidental reaction-ID-then-array-order exactly: the latter is not
+  reproducible from the index at all (the roll-up does not preserve per-reaction outcome/product array
+  position, only the fields needed to draw an edge), and was never a documented contract to begin with.
+
+**Open items**
+- `dense`-shape navigator build at the design tier still exceeds the 16 ms p99 budget when anchored
+  realistically (§ above) — architectural (output size, not redundant computation), not yet resolved;
+  candidate approaches (a per-hub output ceiling, applying `ViewFilters` before gathering candidates) are
+  not attempted this step. Carried to 2.10 / the next reviewer decision.
+- `store.getIndexes()` still returns only the part-1 `coreIndexEngine` (docs/PROGRESS.md step 2.1's open
+  item, unchanged by this step): nothing in the live app can call `ctx.indexes.navigatorRollup()` yet
+  through the store directly. `tests/property/navigator-differential.test.ts`'s random-walk test works
+  around this exactly as P-07 does, by subscribing and applying the full `indexEngine` independently.
+- Remaining Gate B items (rejected-commit index rebuild, the doubled `scopeOf` call, the route-search
+  injected-clock coverage gap, the full packet re-measurement) are step 2.10's, not attempted here.
+
 ## Amendments
+- **2026-09-27, step 2.9 — `ReadonlyIndexes.navigatorRollup()` (contract change, ADR-030).** Problem:
+  the navigator projection scanned every reaction in the state on every `build()` call (measured 21.81–27.2
+  ms at the design tier against the 16 ms budget, Gate B packet §5; worse on p99 — this step's own commit 2
+  found 79–103 ms p99 before the fix), because hub resolution and candidate extraction were recomputed from
+  scratch every call regardless of whether the state had changed. Change: `ReadonlyIndexes` gains
+  `navigatorRollup(): NavigatorRollupIndex` (`src/core/indexes/navigator-rollup.ts`) — every reaction's
+  hub-level contribution, aggregated per hub, maintained incrementally by `IndexEngine.apply` (touched
+  reactions recomputed; a class-membership change recomputes only referencing reactions; an
+  anchor/class-hierarchy/display change rebuilds this one index). Hub resolution itself moved from
+  `core/graph/navigator/hubs.ts` into `core/indexes` (a cycle otherwise: `core/graph` already imports
+  `core/indexes`); `core/graph/navigator/{hubs,select}.ts` are now thin wrappers, so every existing caller's
+  signature is unchanged. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture
+  change. Docs updated in the same commit: GRAPH_SEMANTICS.md §8/§10, ARCHITECTURE_DECISIONS.md ADR-030.
 - **2026-09-27, step 2.6 — `EdgeSemantic: 'uses_mechanism'`, and classification edges from a reaction drop `reactionId` (contract changes, ADR-029).** Problem: (1) the `mechanisms` view needed an edge semantic for "this reaction/outcome links this mechanism" and none of the existing ones fit (`docs/IMPLEMENTATION_PLAN.md §2` step 2.6); (2) the projection harness's INV-26 check is deliberately endpoint-independent for any edge that carries `reactionId` ("no two edges claim the same one, whatever their endpoints" — GRAPH_SEMANTICS.md §10), which is correct for a participation/production but wrong for a *classification* edge from a reaction (topic mapping, named-reaction family, reaction-level mechanism link) — a reaction can validly carry several of any of these, and the harness caught the collision the first time `syllabus` ran over the demo's one cross-chapter reaction. Change: `EdgeSemantic` (`src/core/graph/contracts.ts`) gains `'uses_mechanism'`; `membership` edges from a reaction (`named_reactions`, `syllabus`) and reaction-level (no `outcomeId`) `uses_mechanism` edges (`mechanisms`) no longer set `GraphEdge.reactionId` — the reaction stays recoverable from `edge.from`. Outcome-level `uses_mechanism` edges keep `reactionId` (an outcome names at most one mechanism, so `outcomeId` already guarantees uniqueness); consumes/produces/transforms_to/uses_reagent are unaffected. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: GRAPH_SEMANTICS.md §7, ARCHITECTURE_DECISIONS.md ADR-029.
 - **2026-09-27, step 2.5 — `EdgeSemantic: 'overflow'`, `DEFAULT_DEGREE_CAP`, and a required `view` parameter on the reaction-explorer edge builders (contract changes).** Problem: (1) a degree-cap overflow edge stands for several collapsed neighbours, never one real participation/production, so labelling it `consumes`/`produces` would be misleading and would need a `reactionId` it does not have (docs/IMPLEMENTATION_PLAN.md §2 step 2.5, ADV-012/ADV-052); (2) reusing `reaction_explorer`'s `consumesEdge`/`producesEdge`/`fromReaction`/`fromSubstance` for `precursor_explorer` unchanged baked `view: 'reaction_explorer'` into every edge ID, which is wrong (GRAPH_SEMANTICS.md §10 makes `view` part of the edge-ID identity) and was caught immediately by the projection harness's own INV-26 check ("not the hash of its identity") the first time the new tests ran. Change: `EdgeSemantic` (`src/core/graph/contracts.ts`) gains `'overflow'`; `DEFAULT_DEGREE_CAP = 12` added next to `DEFAULT_TRAVERSAL_LIMITS`; `consumesEdge`, `producesEdge`, `fromReaction`, `fromSubstance` (`src/core/graph/reaction-explorer/{select,neighbours}.ts` — internal to `src/core/graph`, not part of any other module's public contract) now take a required `view: ViewKey` parameter instead of a hardcoded constant. No schema, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: GRAPH_SEMANTICS.md §7/§11, ARCHITECTURE_DECISIONS.md ADR-028.
 - **2026-09-27, step 2.4 — `ProjectionRequest.conditionVariantId` (contract change, ADR-027).** Problem: the reaction explorer must let a caller narrow one focused reaction to a single condition variant (docs/IMPLEMENTATION_PLAN.md §2 step 2.4, ADV-008), but `ViewFilters` (`src/core/schema/presentation.ts`) is persisted by `view_preset` and names a cross-reaction restriction (topics, reagent families, scope) — a condition variant instead names a part *within* one reaction, so it does not belong there. Change: `ProjectionRequest` (`src/core/graph/contracts.ts`, a runtime type, not a Zod schema) gains an optional `conditionVariantId?: ConditionVariantId`; `kit.ts`'s `projectionKey` hashes it so two selections never share a cache key. No schema, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: GRAPH_SEMANTICS.md §7, ARCHITECTURE_DECISIONS.md ADR-027.

@@ -6,11 +6,14 @@
 import { bench, describe } from 'vitest';
 import { navigatorProjection, precursorExplorerProjection, reactionExplorerProjection } from '@/core/graph';
 import { contextOf, requestOf } from '@/test-support/graph-state';
-import { buildIndexes, mostReferencedSpecies, oneHubState, tierState } from '@/test-support/perf-kit';
+import { buildIndexes, mostReferencedSpecies, oneHubState, tierState, withNavigatorAnchors } from '@/test-support/perf-kit';
 
 for (const shape of ['dense', 'hub_explosion'] as const) {
   describe(`projection build (design tier, ${shape})`, () => {
-    const state = tierState('design', shape);
+    // Anchored (docs/PROGRESS.md step 2.9): the generator itself creates no navigator_anchor records, and
+    // an un-anchored state puts every reaction on the single Unclassified hub — not representative of a
+    // curated dataset (the demo has 15 anchored hubs), and not what the navigator's index is designed for.
+    const state = withNavigatorAnchors(tierState('design', shape));
     const indexes = buildIndexes(state);
     const hub = mostReferencedSpecies(state, indexes);
     const ctx = contextOf(state);
