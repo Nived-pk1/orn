@@ -37,7 +37,8 @@ Projections are pure functions of `(canonical state, indexes, request)`. They ar
 - A reaction appears as a **labelled arrow** from the hub of its primary substrate to the hub of each main product. The hub of a substance is: the anchored record itself; else the nearest anchored ancestor class of the substance (via `classIds` → class `parentIds`), chosen deterministically (shortest path, then lowest ID); else the virtual **Unclassified** hub.
 - Hub attachment through membership is **inferred** and drawn dotted (§4). Attachment through an anchored record referenced directly is **stated**.
 - Participants that are not the carried substrate (reagents, catalysts, co-reactants, solvents) appear as arrow labels following `reaction_scheme` placements or role defaults (DOMAIN_MODEL.md §6.2). A species with `entity_display.showAsNode = never` (water) is never a node.
-- Reactions that cannot reach any hub are listed in the **Unanchored** panel with a count (`Projection.unanchoredReactionIds`). They are never silently dropped.
+- Arrows go to the hub of each **main** product (coproducts and byproducts are not drawn). The carried substrate is the participant flagged `isPrimarySubstrate`, else the first reactant; spectators and never-a-node species never qualify. A `showAsNode = never` record is not a hub even when anchored (step 2.3).
+- Reactions that cannot reach any hub are listed in the **Unanchored** panel with a count (`Projection.unanchoredReactionIds`). They are never silently dropped. "Cannot reach any hub" means no arrow has an anchored hub at either end; such reactions are still drawn on the Unclassified hub, so they are listed and drawn (step 2.3).
 - Clicking an arrow opens the reaction; expanding a hub reveals its specific species and their reactions (progressive disclosure, §11).
 
 ## 4. Stated versus inferred
