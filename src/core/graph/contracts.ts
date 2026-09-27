@@ -63,7 +63,10 @@ export type EdgeSemantic =
   | 'instance_of'
   | 'membership'
   | 'relationship'
-  | 'prerequisite';
+  | 'prerequisite'
+  /** A degree-cap overflow edge (GRAPH_SEMANTICS.md §11): stands for several collapsed neighbours, never one real
+   *  participation/production, so it carries no `reactionId` (ADR-028). */
+  | 'overflow';
 
 export interface GraphEdge {
   /** Deterministic: hash(view, from, to, semantic, reactionId, outcomeId, productId, participantId, relationshipId). */
@@ -119,6 +122,9 @@ export interface TraversalLimits {
   readonly signal?: AbortSignal;
 }
 
+/** Neighbours shown per node per direction before a "+N more" overflow node appears (GRAPH_SEMANTICS.md §11). */
+export const DEFAULT_DEGREE_CAP = 12;
+
 export const DEFAULT_TRAVERSAL_LIMITS: TraversalLimits = {
   maxDepth: 12,
   maxNodes: 400,
@@ -140,10 +146,10 @@ export interface ProjectionRequest {
   readonly filters: ViewFilters;
   readonly limits: TraversalLimits;
   /**
-   * `reaction_explorer` only (docs/GRAPH_SEMANTICS.md §7): restrict participants and outcomes to those
-   * that hold under this condition variant (common ones, listed under no variant, always show). Undefined
-   * shows every variant. Not persisted in `ViewFilters`: it names a part *within* one reaction, not a
-   * cross-reaction filter (CLAUDE.md §7 amendment, docs/PROGRESS.md "Amendments").
+   * Bipartite reaction views only (`reaction_explorer`, `precursor_explorer`; docs/GRAPH_SEMANTICS.md §7):
+   * restrict participants and outcomes to those that hold under this condition variant (common ones,
+   * listed under no variant, always show). Undefined shows every variant. Not persisted in `ViewFilters`:
+   * it names a part *within* one reaction, not a cross-reaction filter (ADR-027, docs/PROGRESS.md "Amendments").
    */
   readonly conditionVariantId?: ConditionVariantId;
 }

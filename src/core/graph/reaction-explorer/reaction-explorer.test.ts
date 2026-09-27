@@ -83,6 +83,8 @@ describe('ADV-051: same compound twice in one reaction', () => {
     expect(new Set(consumes.map((e) => e.participantId)).size).toBe(2);
     expect(p.nodes.filter((n) => n.id === 'spc_sp-a')).toHaveLength(1);
     expect(contextOf(state).indexes.participationsOf(rec(sp('sp-a')))).toHaveLength(2);
+    expect(p.bundles).toHaveLength(1);
+    expect(p.bundles[0]).toMatchObject({ from: 'spc_sp-a', to: 'rxn_r1', edgeIds: consumes.map((e) => e.id).sort() });
   });
 });
 

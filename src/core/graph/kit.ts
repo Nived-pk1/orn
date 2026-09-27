@@ -4,7 +4,7 @@
  */
 import { hashParts } from '../hash';
 import type { RecordRef } from '../schema';
-import type { GraphEdge, GraphNode, NodeFlag, ProjectionContext, ProjectionRequest } from './contracts';
+import type { EdgeBundle, GraphEdge, GraphNode, NodeFlag, ProjectionContext, ProjectionRequest } from './contracts';
 
 const byId = <T extends { readonly id: string }>(a: T, b: T): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
@@ -63,4 +63,26 @@ export function flagsOf(ctx: ProjectionContext, ref: RecordRef): NodeFlag[] {
   if (ctx.scopeOf(ref) === 'outside') flags.push('outside_scope');
   if (record?.kind === 'species' && record.structure === undefined) flags.push('no_structure');
   return flags;
+}
+
+/**
+ * Groups parallel edges (same `from`, same `to`) into one visual bundle per pair (GRAPH_SEMANTICS.md §11);
+ * edges are never merged (INV-26), only bundled for display. A pair with a single edge gets no bundle.
+ */
+export function bundleEdges(edges: readonly GraphEdge[]): EdgeBundle[] {
+  const groups = new Map<string, GraphEdge[]>();
+  for (const edge of edges) {
+    const key = `${edge.from}\u0000${edge.to}`;
+    const list = groups.get(key);
+    if (list === undefined) groups.set(key, [edge]);
+    else list.push(edge);
+  }
+  const bundles: EdgeBundle[] = [];
+  for (const [key, list] of groups) {
+    if (list.length < 2) continue;
+    const [from, to] = key.split('\u0000') as [string, string];
+    const edgeIds = list.map((edge) => edge.id).sort();
+    bundles.push({ id: `bnd_${hashParts(['bundle', from, to, ...edgeIds])}`, from, to, edgeIds });
+  }
+  return bundles.sort(byId);
 }

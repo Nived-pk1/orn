@@ -8,7 +8,7 @@
  */
 import type { RecordRef } from '../../schema';
 import type { GraphEdge, GraphNode, Projection, ProjectionContext, ProjectionDefinition, ProjectionRequest } from '../contracts';
-import { flagsOf, projectionKey, sortEdges, sortNodes } from '../kit';
+import { bundleEdges, flagsOf, projectionKey, sortEdges, sortNodes } from '../kit';
 import { traverse } from '../traversal';
 import { neighboursOf, seedIdsOf } from './neighbours';
 
@@ -37,7 +37,7 @@ function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
     key: projectionKey(request, ctx.indexes.revision),
     nodes: sortNodes(nodes),
     edges: sortEdges(edges),
-    bundles: [],
+    bundles: bundleEdges(edges),
     unanchoredReactionIds: [],
     truncation: result.truncation,
   };

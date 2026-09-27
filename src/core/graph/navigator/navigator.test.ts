@@ -94,6 +94,12 @@ describe('ADV-046 / ADV-047: divergent and convergent reactions', () => {
     expect(new Set(p.edges.map((e) => e.id)).size).toBe(2);
   });
 
+  it('ADV-002: two reactions between the same hubs bundle into one bundle of 2, edges never merged', () => {
+    const p = nav(stateOf(...direct('sp-a', 'sp-b'), rx({ slug: 'r1', reactants: [sp('sp-a')], products: [sp('sp-b')] }), rx({ slug: 'r2', reactants: [sp('sp-a')], products: [sp('sp-b')] })));
+    expect(p.bundles).toHaveLength(1);
+    expect(p.bundles[0]).toMatchObject({ from: 'spc_sp-a', to: 'spc_sp-b', edgeIds: [...p.edges.map((e) => e.id)].sort() });
+  });
+
   it('A → B and B → A stay two opposite edges; no reversibility is drawn', () => {
     const p = nav(stateOf(...direct('sp-a', 'sp-b'), rx({ slug: 'r1', reactants: [sp('sp-a')], products: [sp('sp-b')] }), rx({ slug: 'r2', reactants: [sp('sp-b')], products: [sp('sp-a')] })));
     expect(p.edges.map((e) => `${e.from}>${e.to}`).sort()).toEqual(['spc_sp-a>spc_sp-b', 'spc_sp-b>spc_sp-a']);

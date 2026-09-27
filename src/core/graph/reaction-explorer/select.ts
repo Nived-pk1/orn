@@ -4,12 +4,10 @@
  * reaction record itself still carries them, so nothing is lost, ADV-027/053). Intermediates are never
  * read here: they are not participants or products (ADV-054).
  */
-import type { ConditionVariantId, Outcome, Participant, Product, Reaction } from '../../schema';
+import type { ConditionVariantId, Outcome, Participant, Product, Reaction, ViewKey } from '../../schema';
 import type { GraphEdge, ProjectionContext } from '../contracts';
 import { graphEdgeId } from '../ids';
 import { drawnAsNode } from '../kit';
-
-const VIEW = 'reaction_explorer' as const;
 
 /** Condition variants (of `reaction`) that list `participantId`; empty = common to every variant. */
 function variantsOfParticipant(reaction: Reaction, participantId: Participant['id']): ConditionVariantId[] {
@@ -42,9 +40,13 @@ export function qualifyingProducts(ctx: ProjectionContext, reaction: Reaction, s
     .flatMap((outcome) => outcome.products.filter((p) => drawnAsNode(ctx, p.ref)).map((product) => ({ outcome, product })));
 }
 
-/** Consumes edge: substance → reaction, one per participant (GRAPH_SEMANTICS.md §1). */
-export function consumesEdge(reaction: Reaction, participant: Participant): GraphEdge {
-  const identity = { view: VIEW, from: participant.ref.id, to: reaction.id, semantic: 'consumes' as const, reactionId: reaction.id, participantId: participant.id };
+/**
+ * Consumes edge: substance → reaction, one per participant (GRAPH_SEMANTICS.md §1). `view` is part of the
+ * edge-ID identity (GRAPH_SEMANTICS.md §10) so the same participation gets a different ID per view; shared
+ * by `reaction_explorer` and `precursor_explorer` (which also overrides `layoutDirection` after building).
+ */
+export function consumesEdge(reaction: Reaction, participant: Participant, view: ViewKey): GraphEdge {
+  const identity = { view, from: participant.ref.id, to: reaction.id, semantic: 'consumes' as const, reactionId: reaction.id, participantId: participant.id };
   return {
     id: graphEdgeId(identity),
     from: identity.from,
@@ -58,9 +60,9 @@ export function consumesEdge(reaction: Reaction, participant: Participant): Grap
   };
 }
 
-/** Produces edge: reaction → substance, one per outcome product (GRAPH_SEMANTICS.md §1). */
-export function producesEdge(reaction: Reaction, outcome: Outcome, product: Product): GraphEdge {
-  const identity = { view: VIEW, from: reaction.id, to: product.ref.id, semantic: 'produces' as const, reactionId: reaction.id, outcomeId: outcome.id, productId: product.id };
+/** Produces edge: reaction → substance, one per outcome product (GRAPH_SEMANTICS.md §1). See `consumesEdge` on `view`. */
+export function producesEdge(reaction: Reaction, outcome: Outcome, product: Product, view: ViewKey): GraphEdge {
+  const identity = { view, from: reaction.id, to: product.ref.id, semantic: 'produces' as const, reactionId: reaction.id, outcomeId: outcome.id, productId: product.id };
   return {
     id: graphEdgeId(identity),
     from: identity.from,

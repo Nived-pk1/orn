@@ -124,6 +124,36 @@ narrows the focused reaction(s) to one variant. A participant holds under the se
 an outcome holds when its `conditionVariantIds` is empty or contains the selection (DOMAIN_MODEL.md §6.3–§6.4).
 Every edge still carries its full `conditionVariantIds` regardless of the filter, so a UI can label it.
 
+**`precursor_explorer` (step 2.5).** "What makes this": bounded backward BFS from a target substance or
+reaction, same bipartite node/edge shape as `reaction_explorer` (reused builders — same edge IDs would
+collide across views if `view` were not part of the identity hash, §10), but asymmetric: a substance node
+never looks forward (what consumes it), only backward for its producers; a reaction node, once reached from
+either side, reveals its full consumes *and* produces edges (ADV-003 no transitive reduction, ADV-006,
+ADV-048 — ordinary reactants/products of a reached reaction are shown for context, then searched backward
+in their own turn like any other substance). Every edge's `layoutDirection` is `'reversed'` (§5); the
+chemical `from`/`to` direction never flips.
+
+*Degree cap and overflow* (§11, ADV-012 projection part, ADV-052): a substance with more than
+`DEFAULT_DEGREE_CAP` (12) qualifying producers keeps the best-ranked ones (exam scope, then selectivity,
+then name, then edge ID) and collapses the rest into one virtual overflow node (`GraphNode.role: 'overflow'`,
+`EdgeSemantic: 'overflow'`, ADR-028) whose `hidden.incoming` carries the collapsed count. The overflow edge
+carries no `reactionId` (it stands for many, never one real participation/production) and is exempt from the
+INV-26 participation/production check for that reason, same as any edge with no `reactionId`. Only a
+substance's producer count is capped; a single reaction's own participant/product count is already
+schema-bounded (`LIMITS`) and never capped.
+
+*⇌ rule* (§5, ADV-004, ADV-056; reviewer decision, no schema change): drawn only between the produces edges
+of a `reverse_of` pair of reactions whose endpoints mirror each other — R1 carries its substrate to R2's
+main product and R2 carries its substrate to R1's main product. Implemented by tagging both edges'
+`relationshipId`/`relationshipType` (already on `GraphEdge`, unused until now) rather than a new edge or
+field. `reversibility.kind: reversible_under_other_conditions` alone never triggers it — only a curated,
+mirrored `reverse_of` relationship does.
+
+*Bundling* (§11, ADV-002, ADV-007 widened): `kit.ts`'s `bundleEdges` groups parallel edges by `(from, to)`
+into one `EdgeBundle` per pair with 2+ edges; edges are never merged (INV-26). Shared by `navigator`,
+`reaction_explorer` and `precursor_explorer` — the navigator's bundles were empty through steps 2.3–2.4
+(open item, now closed).
+
 ## 8. Indexes
 
 Maintained incrementally from each ChangeSet (`IndexEngine.apply`), identical to a full rebuild (INV-18, property test P-07): reverse references, definers of nested IDs (which records define an ID: uniqueness, REF-006), linkers of an ID (records whose rich text links to it: REF-008), participations by substance, productions by product, reactions by reagent / reagent family / named reaction (with descendants) / transformation / concept / mechanism, species by class (transitive), class ancestors, records by topic (transitive), topics of a record, relationships of a record, caveats for a record, records by folded name, anchors, display of a record. Query semantics (step 2.1): each record contributes only from its own content; joins across records happen at query time and are never stored. `reactionsByReagentFamily` joins reagents of the family to `reactionsByReagent`; `reactionsByNamedReaction` / `reactionsByConcept` add descendants on request. `reactionsByConcept` matches a reaction's `conceptIds`, `reactionTypes`, `mechanismClasses` and outcome `conceptIds` (not `prerequisiteConceptIds`); `reactionsByMechanism` matches `mechanismIds` and outcome `mechanism` links. `speciesInClass` lists species only (a reagent's `classIds` are not membership of a substrate class). `recordsInTopic` / `topicsOf` read `topic_mapping` records directly (topic ancestry is joined by the caller via `ancestorsOf('topic', �)`). Participations and productions are one entry per participant / outcome product (INV-26: never merged by endpoints). All lists are sorted and deduplicated; `displayOf` returns the lowest-ID display when PRS-001 is violated.

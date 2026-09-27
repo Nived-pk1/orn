@@ -25,11 +25,12 @@
     "2.1",
     "2.2",
     "2.3",
-    "2.4"
+    "2.4",
+    "2.5"
   ],
   "nextPhase": 2,
-  "nextStep": "2.5",
-  "nextStepTitle": "Precursor projection (layout reversed, arrows forward); bundling; degree caps and overflow; reversibility badge rule",
+  "nextStep": "2.6",
+  "nextStepTitle": "Reagent, named-reaction, mechanism, syllabus projections; derived exam scope (scopeOf); registry completeness test",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -70,7 +71,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (Vitest 4.1.11: 55 files, 986 tests)",
+    "npmRunCheck": "passed (Vitest 4.1.11: 57 files, 1006 tests)",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -87,7 +88,8 @@
     "traversalSuite": "step 2.2: hashing (3), bounded traversal and edge IDs (15): ADV-011, ADV-050 traversal part, INV-22 graph part, INV-26 edge IDs",
     "indexSuite2": "step 2.1: cross-record indexes vs scan oracle on demo and maximal fixture, apply ≡ build scenarios and seeded walks, P-07 extended over the store (17 tests + 1 property)",
     "projectionSuite": "step 2.3: registry (5), navigator (35: ADV-001/014/015/046/047/048/053, INV-14, INV-22), harness self-tests (6), P-10 + INV-26 over every registered projection on demo, maximal fixture, all generator shapes and random seeds (11)",
-    "reactionExplorerSuite": "step 2.4: bipartite consumes/produces basics + harness (5), ADV-051 graph part (2), ADV-024 graph part (1), ADV-027/053 graph part (2), ADV-008 condition-variant filter (5), ADV-054 (1), stages robustness (1), INV-22 depth truncation (1); registered in the default registry so tests/property/projections.test.ts covers it too (18 tests)"
+    "reactionExplorerSuite": "step 2.4: bipartite consumes/produces basics + harness (5), ADV-051 graph part (2, now also asserts bundling), ADV-024 graph part (1), ADV-027/053 graph part (2), ADV-008 condition-variant filter (5), ADV-054 (1), stages robustness (1), INV-22 depth truncation (1); registered in the default registry so tests/property/projections.test.ts covers it too (18 tests)",
+    "precursorSuite": "step 2.5: backward basics + harness (4), ADV-006/048 full-fidelity reaction reveal (1), ADV-003 no transitive reduction (1), ADV-002 + ADV-007 widened bundling (1), ADV-004 mirrored ⇌ tagging incl. two negative cases (3), ADV-056 conditional reversibility no-tag (1), ADV-052 25-producer cap+overflow (1), ADV-012 projection part 1000-producer cap+overflow (1), ranking test (1); kit.test.ts bundleEdges (5); one additive ADV-002 test in navigator.test.ts and one additive bundling assertion in reaction-explorer.test.ts (20 tests total)"
   },
   "openItems": [
     "Consider a WARNING for the same substance listed twice in the same role and stage (use coefficient) — decide in Phase 6.",

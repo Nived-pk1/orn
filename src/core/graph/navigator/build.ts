@@ -10,7 +10,7 @@
 import type { ReactionId } from '../../schema';
 import type { GraphEdge, GraphNode, Projection, ProjectionContext, ProjectionDefinition, ProjectionRequest, Truncation } from '../contracts';
 import { graphEdgeId } from '../ids';
-import { flagsOf, projectionKey, sortEdges, sortNodes, sortedUnique } from '../kit';
+import { bundleEdges, flagsOf, projectionKey, sortEdges, sortNodes, sortedUnique } from '../kit';
 import { createHubResolver, hubTargets, UNCLASSIFIED_HUB_ID } from './hubs';
 import { mainProducts, primarySubstrate, reactionFilter } from './select';
 
@@ -135,7 +135,7 @@ function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
     key: projectionKey(request, ctx.indexes.revision),
     nodes: sortNodes(nodes),
     edges: sortEdges(edges),
-    bundles: [],
+    bundles: bundleEdges(edges),
     unanchoredReactionIds: sortedUnique(unanchored),
     truncation,
   };
