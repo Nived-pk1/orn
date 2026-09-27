@@ -35,15 +35,17 @@ Docs, canonical schemas, reference registry, contracts, legacy fixtures, guard s
 Step 1.12 note — hardcode guard: demo data names match schema enum words (e.g. a concept named "Elimination" collides with the `elimination` step kind in `src/core/schema`). Resolved (Gate A review): `scripts/check-hardcode.mjs` keeps scanning `src/core/schema` but skips only the name comparison there; the record-ID comparison stays on everywhere. Tested in `tests/integration/check-hardcode.test.ts`. Accepted limitations: literals built by concatenation or template interpolation, names shorter than 5 characters, and IDs in JSON loaded at run time are not detected.
 
 ### Phase 2 — Graph engine and projections → Gate B
-| Step | Work |
-|---|---|
-| 2.1 | Remaining indexes (participations, productions, by reagent/family/named/transformation/concept/mechanism, topics, relationships, caveats, anchors, display) |
-| 2.2 | Stable hashing, bounded traversal primitives, truncation reporting |
-| 2.3 | Projection registry; navigator projection (hub roll-up, Unclassified, Unanchored) |
-| 2.4 | Reaction explorer and precursor projections; bundling; degree caps and overflow |
-| 2.5 | Reagent, named-reaction, mechanism, syllabus projections; derived exam scope (`scopeOf`) |
-| 2.6 | Route search (GRAPH_SEMANTICS.md §9); P-09, P-10 |
-| 2.7 | Benchmarks at all tiers and shapes; baseline.json; Gate B review |
+Dependencies: none new (src/core/graph stays pure; benchmarks use Vitest bench).
+| Step | Work | Must cover |
+|---|---|---|
+| 2.1 | Remaining indexes: participations, productions, by reagent/family/named/transformation/concept/mechanism, topics, relationships, caveats, anchors, display; incremental apply | P-07 extended to every new index (INV-18); ADV-051 participations part, ADV-052 productions part, ADV-057 topics part |
+| 2.2 | Stable hashing; bounded traversal primitives (TraversalLimits: depth, nodes, edges); truncation reporting | INV-22 graph part; ADV-011; ADV-050 traversal part |
+| 2.3 | Projection registry; P-10 harness that runs over every registered projection; navigator projection (hub roll-up, Unclassified, Unanchored) | P-10; INV-26 check in the harness (edges = participations, never deduplicated by endpoints); ADV-001, 014, 015, 046, 047, 048, 053 |
+| 2.4 | Reaction explorer projection: participants, stages, condition-variant filter, intermediates, spectators/showAsNode, arrow text | ADV-008 graph part, ADV-024 graph part, ADV-027, 051 graph part, 054 |
+| 2.5 | Precursor projection (layout reversed, arrows forward); bundling; degree caps and overflow; ⇌ rule: draw ⇌ only between edges of a reverse_of pair whose endpoints mirror each other (reviewer decision; no schema change) | ADV-002 (with INV-26), 003, 004, 006, 007 (widened), 012 projection part, 052, 056 |
+| 2.6 | Reagent, named-reaction, mechanism, syllabus projections; derived exam scope (scopeOf); registry completeness test (every ViewKey except search) | ADV-055, 057 graph part; demo mechanisms shown as review-required |
+| 2.7 | Route search (GRAPH_SEMANTICS.md §9) | P-09; ADV-049, 050 route part; demo routes found (ethanol → propan-2-ol, aniline → phenol); ethanol → ethanoic acid returns both paths |
+| 2.8 | Benchmarks at all tiers and shapes; full generator tier × shape validity sweep (closes the 1.11 sampling); measure Phase 1 performance open items (validateTouched on hubs, index rebuild after a rejected commit, scopeOf computed twice); baseline.json; Gate B packet in the Gate A packet format with the title-level ADV/INV/P scan; Gate B self-review | ADV-012 performance part, ADV-013; budgets at the design tier |
 
 ### Phase 3 — Persistence, import/export, legacy → Gate C
 Dependencies: `dexie`, `fflate`, dev `fake-indexeddb`.
@@ -130,7 +132,7 @@ Read `CLAUDE.md` and `docs/PROJECT_STATE.json` every session. Then only:
 | Phase | Read |
 |---|---|
 | 1 | DOMAIN_MODEL.md (all), VALIDATION_RULES.md (all), ARCHITECTURE.md §2, §23, §26, TEST_STRATEGY.md §1–§4, `src/core/**` |
-| 2 | GRAPH_SEMANTICS.md, JEE_ONTOLOGY.md §4, PERFORMANCE_ARCHITECTURE.md §1–§4, §9–§10, `src/core/graph`, `src/core/indexes` |
+| 2 | GRAPH_SEMANTICS.md, JEE_ONTOLOGY.md §4, PERFORMANCE_ARCHITECTURE.md §1–§4, §9–§10, TEST_STRATEGY.md §4–§6, `src/core/graph`, `src/core/indexes` |
 | 3 | PERSISTENCE.md, MIGRATION.md, SECURITY.md §1–§3, `src/persistence`, `src/io`, `data/fixtures/legacy/README.md` |
 | 4 | PERFORMANCE_ARCHITECTURE.md §3–§5, SEARCH.md, SECURITY.md §2, ADR-007…ADR-011, `src/workers`, `src/chem`, `src/layout`, `src/search` |
 | 5 | UI_ARCHITECTURE.md §1–§6, §9–§12, PERFORMANCE_ARCHITECTURE.md §6–§7, SECURITY.md §2 and §4, `src/render`, `src/ui` |
