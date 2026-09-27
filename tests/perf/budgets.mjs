@@ -42,11 +42,11 @@ export const BUDGETS = {
   'scopeOf / validateTouched — ADV-012 literal case: one hub, 1,000 reactions > scopeOf twice, touching the hub':
     { operation: 'scopeOf: twice (today\'s store.commit() pattern), ADV-012 literal hub', tier: 'adv-012', shape: 'hub_explosion', budgetMs: null, openItem: 'scopeOf computed twice per commit' },
   'scopeOf / validateTouched — ADV-012 literal case: one hub, 1,000 reactions > validateTouched, touching the hub':
-    { operation: 'validateTouched: on the ADV-012 literal hub (1,000 reactions)', tier: 'adv-012', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit (validateTouched is inside it)', openItem: 'validateTouched on hubs' },
+    { operation: 'validateTouched: on the ADV-012 literal hub (1,000 reactions)', tier: 'adv-012', shape: 'hub_explosion', budgetMs: 50, budgetRow: 'Commit on a record with ≥ 500 referrers', note: '1,000 referrers ≥ 500; step 2.10 row, added since no field-aware scoping is possible without a ValidationRule contract change' },
   'commit / validateTouched — design tier, one hub of 1,000 reactions (like water) > dispatch: update the hub species (notes)':
     { operation: 'commit: dispatch (update the design-tier "like water" hub)', tier: 'design-hub-1000', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit, accepted or rejected' },
   'commit / validateTouched — design tier, one hub of 1,000 reactions (like water) > validateTouched, touching the hub':
-    { operation: 'validateTouched: on the design-tier "like water" hub (1,000 of 5,000 reactions)', tier: 'design-hub-1000', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit (validateTouched is inside it)', openItem: 'validateTouched on hubs' },
+    { operation: 'validateTouched: on the design-tier "like water" hub (1,000 of 5,000 reactions)', tier: 'design-hub-1000', shape: 'hub_explosion', budgetMs: 50, budgetRow: 'Commit on a record with ≥ 500 referrers', note: '1,000 referrers ≥ 500; markedly slower than the ADV-012 scenario despite a similar referrer count — this state has relationshipsPerReaction: 1 (oneHubState has 0), so each referring reaction also carries a REL-xxx check; not chased further this step' },
 
   'projection build (design tier, dense) > navigator, focused on the hub':
     { operation: 'projection: navigator, focused on the hub', tier: 'design', shape: 'dense', budgetMs: 16, budgetRow: 'Projection build' },

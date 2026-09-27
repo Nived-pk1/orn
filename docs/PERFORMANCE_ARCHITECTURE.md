@@ -16,6 +16,7 @@ Package section **#20 Performance**. Contracts: `src/workers/rpc/contracts.ts`, 
 |---|---|---|
 | Cold boot to interactive (design target) | < 2.5 s (warm cache < 1.5 s) | Playwright trace, mid-range laptop profile |
 | Commit, accepted or rejected (command → state + indexes + L1–L3 incremental) | < 16 ms | vitest bench |
+| Commit on a record with ≥ 500 referrers | < 50 ms p95 | bench |
 | Undo / redo | < 16 ms | bench |
 | Projection build (bounded, ≤ 400 nodes) | < 16 ms | bench |
 | Layout (≤ 400 nodes, worker) | < 300 ms; hard timeout 2 s → fallback | bench (worker code in Node) |
@@ -44,7 +45,7 @@ RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferabl
 
 - Immer structural sharing: a commit touching one reaction allocates only that path.
 - Indexes update from the ChangeSet: cost O(changed records × their reference count), never O(dataset).
-- Validation re-runs only affected rules for touched records and their reverse-index dependents.
+- Validation re-runs only affected rules for touched records and their reverse-index dependents. `scopeOf`'s expansion (referrers, referents, rule `peers`) is at record-kind granularity, not per field: it does not know whether a specific edit could actually change a specific rule's verdict on a specific referrer, only that the referrer exists (docs/PROGRESS.md step 2.10). A record with hundreds of referrers therefore re-validates all of them on every touch — accepted, documented cost (§2's "Commit on a record with ≥ 500 referrers" row), not fixed without a `ValidationRule` contract change no one has proposed yet.
 - Projections are memoised by request + revisions of records they read; unrelated edits reuse them.
 - Search receives upserts/removals only.
 - Hot paths never use `JSON.stringify` for equality or deep clones; equality is by reference (structural sharing) or by revision.

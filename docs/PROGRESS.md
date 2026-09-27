@@ -659,6 +659,84 @@ is an accepted, scoped exception given the scenario's own honesty about noise an
 - Remaining Gate B items (rejected-commit index rebuild, the doubled `scopeOf` call, the route-search
   injected-clock coverage gap, the full packet re-measurement) are step 2.10's, not attempted here.
 
+### Step 2.10 — Incremental rollback, field-aware scope investigation, route-search clock test, re-measure (2026-09-27)
+
+**Commit 1 — roll back indexes incrementally on rejected commits.** `core/indexes/engine.ts`'s
+`coreIndexEngine.apply` now accepts a one-step-backward revision (`previous.revision - 1`) as incrementally
+appliable, alongside the existing one-step-forward case — the retract-then-add mechanics don't care about
+direction, only about a well-formed `ChangeSet`. `core/commands/store.ts`'s rejection branch builds the
+inverse `ChangeSet` (before/after and patches/inversePatches swapped, `revision` set back to the pre-attempt
+value) and applies it to the just-computed `nextIndexes`, instead of `coreIndexEngine.build(state, revision)`
+from scratch. No interface change. `store.test.ts`: `expectConsistent` now also checks `linkersOf` and
+`classAncestors`; three new tests cover a rejected L3 error (HIER-001, a two-class cycle — a self-parent
+trips REF-007 at L2 first and suppresses L3, so this needed two records) and a rejected L2 error (REF-001,
+a dangling relationship target) on different record kinds, plus several rejections in a row.
+`tests/property/commands.test.ts`'s P-07 now checks the store's own core indexes against a fresh rebuild
+after *every* intent, not once at the end — `intentsArb`'s model does generate invalid commands (confirmed
+by a `p07Rejections > 0` non-vacuity assertion), so this exercises the rollback path inside the same random
+walk rather than needing a separate one. PERFORMANCE_ARCHITECTURE.md §2's "Commit" row reworded to "Commit,
+accepted or rejected" (no new row; recorded as an amendment below, though it changes no contract).
+Measured: 163–580 ms (full rebuild, steps 2.8/2.9) → 12.7–23.3 ms (incremental rollback) at the design tier,
+a 10–45× improvement; mean is now under the 16 ms budget on both shapes, p99 is close but noisy (see the
+before/after table below).
+
+**Commit 2 — field-aware `validateTouched` scope: report and decision.**
+
+*How `scopeOf`/`validateTouched` use `watches`/`peers` today* (`src/core/validation/validator.ts`):
+`scopeOf` adds, for every touched record (in both its new and previous version): (a) **every** referrer
+from `indexes.referrersOf`, unconditionally; (b) every referent the record's own references point at; (c)
+for rules that declare `.peers()`, whose `kinds` or `watches` include the record's kind, whatever
+`.peers(record, ctx)` returns. `validateTouched` then runs **every** L2/L3 rule applicable to each scope
+member's kind (`findingsOf`), regardless of *why* that member is in scope. `watches` is a record-*kind*
+list ("besides `kinds`, which other kinds' changes should make me consider `.peers()`"); `.peers()` is
+rule-specific but still returns whole records, not fields. **Neither carries any field-level information at
+all** — there is no way, from what a rule declares today, to ask "did the field this rule actually reads
+change on the touched record?" The closest existing lever is `ValidationRule.scope` (`'record' |
+'neighbourhood' | 'global'`): a `'record'`-scoped rule's verdict on a *referrer* R can never change from R
+merely being a referrer of some other touched record — R's own content didn't change. In principle this
+lets some rule executions be skipped for context-only scope members. In practice it does **not** save
+anything safely: `commitFindings`/`FindingStore.replaceForSubjects` does a wholesale replace of a subject's
+findings at a level — if `validateTouched` simply omits a `'record'`-scoped rule's finding for R (rather
+than recomputing it), the store would wrongly clear a still-valid finding, since nothing carries the old
+value forward without a `FindingStore` reference in `validateTouched`'s signature (which would itself be a
+contract change). And since `'record'`-scoped rules by definition read only the record itself (cheap,
+local checks — kind/prefix match, self-reference, local-ID resolution), *recomputing* them is not the
+expensive part of a hub-record commit; the expense is the sheer count of referrers run through the whole
+rule pipeline (`runRules`, finding-ID hashing, sorting) regardless of which specific rules fire.
+**Conclusion: no safe, correct narrowing of `validateTouched`'s scope is possible with today's metadata
+(kind-level `watches`, record-level `peers`, three-valued `scope`) without adding field-level dependency
+information to `ValidationRule` — a contract change.** Per this step's instructions, the contract is left
+unchanged. Instead: PERFORMANCE_ARCHITECTURE.md §2 gains a new row, "Commit on a record with ≥ 500
+referrers: < 50 ms p95" (not a new "Commit" row, a *different* operation with its own, looser budget — a
+hub-record commit is a qualitatively different case, not a regression of the plain one). A regression
+benchmark already existed for this shape (`commit.bench.ts`'s `validateTouched` benches on both the
+ADV-012 literal hub and the design-tier "like water" hub, step 2.9); `tests/perf/budgets.mjs` now maps both
+to the new row instead of the plain 16 ms Commit budget.
+*Doubled `scopeOf` call*: unaffected by this step (no scoping change was made to remove it) — recorded as
+a **Phase 9 candidate** (PROJECT_STATE.json open items), not attempted here, per this step's own framing.
+
+*Measured* (`tests/perf/baseline.json`; both scenarios' referrer count is ~1,000, ≥ 500):
+
+| Scenario | validateTouched p99 | Verdict vs. the new 50 ms row |
+|---|---|---|
+| ADV-012 literal hub (60 species, 1,000 of 1,000 reactions) | 32–107 ms across runs (20–92 ms mean) | fails most runs; passed when benchmarked in isolation (§ note on contention below) |
+| Design-tier "like water" hub (250 species, 1,000 of 5,000 reactions) | 120–129 ms (91–95 ms mean) | fails consistently |
+
+Both exceed even the new, looser 50 ms budget most of the time — this is a genuinely expensive case, not
+just a mis-set budget; the new row makes that explicit rather than measuring it against the wrong (16 ms,
+plain-commit) budget as before. A real difference worth flagging: benchmarked *alone*
+(`vitest bench --run tests/perf/commit.bench.ts`), the ADV-012 case measured p99 20–32 ms (well under 50 ms);
+benchmarked as part of the *full* `npm run bench:baseline` suite, the same scenario measured p99 92–107 ms.
+This is workstation contention (other benchmarks' GC/CPU pressure carrying over), not a real difference in
+the scenario — consistent with `baseline.json`'s own noise caveat, but large enough here to be worth calling
+out explicitly rather than picking whichever number looks better. The design-tier scenario is consistently
+expensive either way; a plausible (not confirmed) explanation is `relationshipsPerReaction: 1` in that
+generator config versus `0` in `oneHubState()` — each of the 1,000 referring reactions then also carries a
+REL-xxx check inside `findingsOf`. Not chased further this step (out of scope for a scope-metadata
+investigation); a candidate for whoever picks up the doubled-`scopeOf`/Phase 9 work.
+
+**Commit 3 — route-search clock test; re-measure; Gate B packet.** See below and `docs/reviews/gate-b-packet.md`.
+
 ## Amendments
 - **2026-09-27, step 2.10 — PERFORMANCE_ARCHITECTURE.md §2's Commit row covers rejected commits too (doc
   wording, no contract change).** Problem: a rejected commit paid for a full `O(dataset)` index rebuild
