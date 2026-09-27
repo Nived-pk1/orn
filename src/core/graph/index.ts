@@ -15,6 +15,8 @@ export { reagentExplorerProjection } from './reagent-explorer';
 export { namedReactionsProjection } from './named-reactions';
 export { mechanismsProjection } from './mechanisms';
 export { syllabusProjection } from './syllabus';
+export { searchRoutes } from './route';
+export type { SearchRoutesOptions } from './route';
 export type {
   Step,
   TraversalDirection,

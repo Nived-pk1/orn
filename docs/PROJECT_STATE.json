@@ -27,11 +27,12 @@
     "2.3",
     "2.4",
     "2.5",
-    "2.6"
+    "2.6",
+    "2.7"
   ],
   "nextPhase": 2,
-  "nextStep": "2.7",
-  "nextStepTitle": "Route search (GRAPH_SEMANTICS.md §9)",
+  "nextStep": "2.8",
+  "nextStepTitle": "Benchmarks at all tiers and shapes; generator tier×shape sweep; Phase 1 perf open items; baseline.json; Gate B packet and self-review",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -72,7 +73,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (Vitest 4.1.11: 62 files, 1060 tests)",
+    "npmRunCheck": "passed (Vitest 4.1.11: 65 files, 1090 tests)",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -92,7 +93,8 @@
     "reactionExplorerSuite": "step 2.4: bipartite consumes/produces basics + harness (5), ADV-051 graph part (2, now also asserts bundling), ADV-024 graph part (1), ADV-027/053 graph part (2), ADV-008 condition-variant filter (5), ADV-054 (1), stages robustness (1), INV-22 depth truncation (1); registered in the default registry so tests/property/projections.test.ts covers it too (18 tests)",
     "precursorSuite": "step 2.5: backward basics + harness (4), ADV-006/048 full-fidelity reaction reveal (1), ADV-003 no transitive reduction (1), ADV-002 + ADV-007 widened bundling (1), ADV-004 mirrored ⇌ tagging incl. two negative cases (3), ADV-056 conditional reversibility no-tag (1), ADV-052 25-producer cap+overflow (1), ADV-012 projection part 1000-producer cap+overflow (1), ranking test (1); kit.test.ts bundleEdges (5); one additive ADV-002 test in navigator.test.ts and one additive bundling assertion in reaction-explorer.test.ts (20 tests total)",
     "scopeSuite": "step 2.6: createScopeOf — unmapped, mapped+included/partial/excluded/absent, topic-ancestor coverage, enrichment-only-mapping, explicit override incl. version-specific vs agnostic vs CUR-004 precedence vs wrong-exam, one-hop prerequisite via field and via relationship (no chaining), unresolvable exam version (19 tests)",
-    "remainingProjectionsSuite": "step 2.6: reagent_explorer one-hop + spectator/filter/INV-26 (8), named_reactions family DAG + reaction membership + two-family INV-26 check (9), mechanisms ADV-055 + demo review-required + dead-end (6), syllabus ADV-057 against the real demo dataset + topic-tree closure + two-topic INV-26 check + real scopeOf integration (12); registry completeness test (every ViewKey except search); all four registered and swept by tests/property/projections.test.ts with no changes needed there"
+    "remainingProjectionsSuite": "step 2.6: reagent_explorer one-hop + spectator/filter/INV-26 (8), named_reactions family DAG + reaction membership + two-family INV-26 check (9), mechanisms ADV-055 + demo review-required + dead-end (6), syllabus ADV-057 against the real demo dataset + topic-tree closure + two-topic INV-26 check + real scopeOf integration (12); registry completeness test (every ViewKey except search); all four registered and swept by tests/property/projections.test.ts with no changes needed there",
+    "routeSearchSuite": "step 2.7: moves.ts backward-move generation incl. class-membership inference and sharedVariants (11); search.ts ADV-049 diamond, ADV-050 cycle incl. tight-budget truncation, P-09 200-run fast-check property over random cyclic graphs, ranking (selectivity/steps/inferred/tie-break), both assumption values, excludeReactionIds, maxRoutes, no-startFrom, unknown target (15); demo dataset ethanol→propan-2-ol, aniline→phenol, ethanol→ethanoic acid both paths, no-producer target (4)"
   },
   "openItems": [
     "Consider a WARNING for the same substance listed twice in the same role and stage (use coefficient) — decide in Phase 6.",

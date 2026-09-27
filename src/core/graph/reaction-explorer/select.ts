@@ -9,8 +9,12 @@ import type { GraphEdge, ProjectionContext } from '../contracts';
 import { graphEdgeId } from '../ids';
 import { drawnAsNode } from '../kit';
 
-/** Condition variants (of `reaction`) that list `participantId`; empty = common to every variant. */
-function variantsOfParticipant(reaction: Reaction, participantId: Participant['id']): ConditionVariantId[] {
+/**
+ * Condition variants (of `reaction`) that list `participantId`; empty = common to every variant. Exported
+ * for `graph/route`, which weighs a participant's own variant restriction against an outcome's separately
+ * (docs/GRAPH_SEMANTICS.md §9) rather than against one `selected` variant.
+ */
+export function variantsOfParticipant(reaction: Reaction, participantId: Participant['id']): ConditionVariantId[] {
   return reaction.conditionVariants.filter((v) => v.participantIds.includes(participantId)).map((v) => v.id);
 }
 

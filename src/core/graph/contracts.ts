@@ -170,6 +170,10 @@ export interface ProjectionDefinition {
   build(ctx: ProjectionContext, request: ProjectionRequest): Projection;
 }
 
+/** GRAPH_SEMANTICS.md §9 defaults for `RouteQuery.maxSteps` / `maxRoutes`; callers may override either. */
+export const DEFAULT_ROUTE_MAX_STEPS = 5;
+export const DEFAULT_ROUTE_MAX_ROUTES = 10;
+
 export interface RouteQuery {
   readonly target: SpeciesOrClassRef;
   readonly maxSteps: number;
