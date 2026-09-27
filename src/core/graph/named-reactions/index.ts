@@ -1,0 +1,1 @@
+export { namedReactionsProjection } from './build';

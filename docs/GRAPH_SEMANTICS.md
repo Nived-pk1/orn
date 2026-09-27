@@ -154,6 +154,59 @@ into one `EdgeBundle` per pair with 2+ edges; edges are never merged (INV-26). S
 `reaction_explorer` and `precursor_explorer` — the navigator's bundles were empty through steps 2.3–2.4
 (open item, now closed).
 
+**`reagent_explorer`, `named_reactions`, `mechanisms` (step 2.6).** One hop each, never a further BFS —
+matching their registry-table row ("reagent → participations → reactions", "family DAG + reactions via
+index", "mechanism → outcomes → reactions"): a reaction reached from any of them is a dead end, same as
+`reaction_explorer` is for the others. `reagent_explorer` seeds on a reagent and finds reactions via its own
+`participationsOf` (`uses_reagent` edges, spectators excluded, standard filters applied — GRAPH_SEMANTICS.md
+§2). `named_reactions` seeds on a named reaction and walks its family DAG (`parentIds`, child → parent, the
+same "specific → general" `membership` convention as class membership, §1) *and* full DAG in both
+directions — climbing to a parent then re-expanding its other children is intentional here (see a family
+means seeing the whole family, unlike syllabus below) — plus the reactions that name it (`namedReactionIds`).
+`mechanisms` seeds on a mechanism; a `uses_mechanism` edge (ADR-029) connects each reaction that uses it, at
+reaction level (`mechanismIds`, no `outcomeId`) and/or per outcome (`outcome.mechanism`, with `outcomeId` —
+ADV-055: two outcomes linking different variants of the same mechanism get two distinct edges, each
+resolvable back to its own variant via `outcomeId`, since only one variant is possible per outcome). A
+mechanism's own variants/steps ("pathway") are nested data, read directly off the record, never nodes.
+
+*Classification edges never carry `reactionId`.* A `membership`/reaction-level `uses_mechanism` edge from a
+reaction is a **classification** (which family, which topic), not a participation or production — and a
+reaction may validly carry more than one (two named reactions, two topics, two reaction-level mechanisms).
+INV-26 is deliberately endpoint-independent for edges that *do* carry `reactionId` ("no two edges claim the
+same one, whatever their endpoints" — GRAPH_SEMANTICS.md §10, checked by the projection harness), so setting
+it on these would make two *legitimately distinct* classifications of the same reaction collide. They omit
+it; the reaction is still `edge.from`. (Caught by the harness itself the first time `syllabus` ran over the
+demo's cross-mapped reaction — see PROGRESS.md step 2.6.)
+
+**`syllabus` (step 2.6).** The version-independent topic tree plus the records mapped to each topic
+(ADV-057: a cross-chapter record maps directly to more than one topic, so it appears once under each — never
+merged, never picked one). Scope is the closure of ancestors + descendants of the focused topic(s) (or of
+every root topic, with no focus), computed once via `ancestorsOf`/`descendantsOf('topic', …)` — deliberately
+*not* a bidirectional walk like `named_reactions`: climbing to an ancestor must never re-expand that
+ancestor's other children, or every query would silently become "the whole tree" and defeat ADV-057's
+per-topic scoping (this was the bug the harness caught, above). Records mapped to a topic are
+`recordsInTopic(topicId, { transitive: false })` — a record shows under its own topic only; rolling up
+through a descendant is the tree's job, not double-counted. "Derived scope badges" reuse the shared
+`outside_scope` node flag (`flagsOf`, backed by `ctx.scopeOf` — see `createScopeOf` below); the full
+official/prerequisite/enrichment taxonomy is not yet a node flag (open item). Bounded like `navigator`
+(candidates computed, then a sorted prefix admitted, INV-22) rather than `traverse()`, since the tree is
+built from two index calls per topic, not a neighbour-discovery function.
+
+**Derived exam scope** (docs/JEE_ONTOLOGY.md §4, step 2.6): `createScopeOf(indexes, examId, examVersionId): ScopeOf`
+(`src/core/graph/scope.ts`) is the reference implementation of `ProjectionContext.scopeOf`. Pure and
+index-backed only — no full-table scan: `topic_mapping.target` and `exam_relevance.target` are registered
+references, so "which mappings/overrides point at this record" is `referrersOf(ref.id)` filtered by path
+(`kit.ts`'s `referencing`, also used by `named_reactions` and `syllabus` for their own reverse lookups:
+named-reaction children via `parentIds[]`, topic children via `parentId`). Order: (1) explicit
+`exam_relevance` override, version-specific beating version-agnostic, ties broken by precedence official >
+prerequisite > enrichment > outside (CUR-004 already flags the underlying multi-override data issue; this
+is just deterministic resolution); (2) mapped topics plus their ancestors against the exam version's
+coverage, `official` unless every mapping is enrichment-role and covered, `outside` if mapped but none
+covered; (3) for a concept only, one hop of `prerequisiteConceptIds` or a `prerequisite_of` relationship to
+a record whose *direct* (non-prerequisite) scope is official; (4) otherwise `unmapped`. Wiring `ctx.scopeOf`
+to the request's `filters.examId`/`examVersionId` (which exam version is "active") is a composition-root
+concern for a later phase; this step delivers and tests the pure computation.
+
 ## 8. Indexes
 
 Maintained incrementally from each ChangeSet (`IndexEngine.apply`), identical to a full rebuild (INV-18, property test P-07): reverse references, definers of nested IDs (which records define an ID: uniqueness, REF-006), linkers of an ID (records whose rich text links to it: REF-008), participations by substance, productions by product, reactions by reagent / reagent family / named reaction (with descendants) / transformation / concept / mechanism, species by class (transitive), class ancestors, records by topic (transitive), topics of a record, relationships of a record, caveats for a record, records by folded name, anchors, display of a record. Query semantics (step 2.1): each record contributes only from its own content; joins across records happen at query time and are never stored. `reactionsByReagentFamily` joins reagents of the family to `reactionsByReagent`; `reactionsByNamedReaction` / `reactionsByConcept` add descendants on request. `reactionsByConcept` matches a reaction's `conceptIds`, `reactionTypes`, `mechanismClasses` and outcome `conceptIds` (not `prerequisiteConceptIds`); `reactionsByMechanism` matches `mechanismIds` and outcome `mechanism` links. `speciesInClass` lists species only (a reagent's `classIds` are not membership of a substrate class). `recordsInTopic` / `topicsOf` read `topic_mapping` records directly (topic ancestry is joined by the caller via `ancestorsOf('topic', �)`). Participations and productions are one entry per participant / outcome product (INV-26: never merged by endpoints). All lists are sorted and deduplicated; `displayOf` returns the lowest-ID display when PRS-001 is violated.

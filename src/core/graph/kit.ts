@@ -4,6 +4,7 @@
  */
 import { hashParts } from '../hash';
 import type { RecordRef } from '../schema';
+import type { ReadonlyIndexes } from '../indexes/contracts';
 import type { EdgeBundle, GraphEdge, GraphNode, NodeFlag, ProjectionContext, ProjectionRequest } from './contracts';
 
 const byId = <T extends { readonly id: string }>(a: T, b: T): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -53,6 +54,20 @@ export function projectionKey(request: ProjectionRequest, revision: number): str
 
 /** A record is drawn as a node unless its `entity_display` says otherwise (GRAPH_SEMANTICS.md §3; water). */
 export const drawnAsNode = (ctx: ProjectionContext, ref: RecordRef): boolean => ctx.indexes.displayOf(ref)?.showAsNode !== 'never';
+
+/**
+ * Owners that reference `ref` at `path` — a registry spec path (e.g. `target`, or `parentIds[]` for an
+ * array). `Referrer.path` carries the concrete index instead of `[]` (e.g. `parentIds[0]`), so an array
+ * spec matches by prefix. This is the reverse of a registered reference: no full-table scan, just
+ * `referrersOf`, already maintained incrementally.
+ */
+export function referencing(indexes: ReadonlyIndexes, ref: RecordRef, path: string, ownerKind: string): RecordRef[] {
+  const prefix = path.endsWith('[]') ? `${path.slice(0, -2)}[` : undefined;
+  return indexes
+    .referrersOf(ref.id)
+    .filter((r) => r.owner.kind === ownerKind && (prefix === undefined ? r.path === path : r.path.startsWith(prefix)))
+    .map((r) => r.owner);
+}
 
 /** Flags common to any node backed by a real record: caveats, review status, out-of-scope, no structure. */
 export function flagsOf(ctx: ProjectionContext, ref: RecordRef): NodeFlag[] {

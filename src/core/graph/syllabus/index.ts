@@ -1,0 +1,1 @@
+export { syllabusProjection } from './build';

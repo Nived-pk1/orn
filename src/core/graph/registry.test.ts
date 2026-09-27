@@ -44,4 +44,12 @@ describe('projection registry', () => {
     expect(registry.views()).toContain('navigator');
     for (const view of registry.views()) expect(VIEW_KEYS).toContain(view);
   });
+
+  it('registry completeness (step 2.6): every ViewKey except search is registered', () => {
+    const registry = createDefaultProjectionRegistry();
+    for (const view of VIEW_KEYS) {
+      if (view === 'search') expect(registry.has(view)).toBe(false);
+      else expect(registry.has(view), view).toBe(true);
+    }
+  });
 });

@@ -60,6 +60,8 @@ export type EdgeSemantic =
   | 'produces'
   | 'transforms_to'
   | 'uses_reagent'
+  /** A reaction (or one of its outcomes, via `outcomeId`) links to a mechanism/variant (ADR-029, `mechanisms` view). */
+  | 'uses_mechanism'
   | 'instance_of'
   | 'membership'
   | 'relationship'

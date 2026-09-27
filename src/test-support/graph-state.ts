@@ -8,7 +8,7 @@ import { indexEngine } from '@/core/indexes';
 import { ident, presentationMeta } from './demo/kit';
 import { loadFixtureState } from './state-fixture';
 
-export { chemClass, species, reagent, sp, cl, rg } from './demo/kit';
+export { chemClass, concept, species, reagent, sp, cl, rg } from './demo/kit';
 export { reaction } from './demo/reaction-kit';
 
 /** A state holding exactly `records`. */
