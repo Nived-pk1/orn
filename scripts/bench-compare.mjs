@@ -1,9 +1,12 @@
 #!/usr/bin/env node
-// `npm run bench:compare` (docs/PERFORMANCE_ARCHITECTURE.md §9). Runs tests/perf/*.bench.ts and fails
-// (exit 1) if any entry's p99 regresses more than 20% against the committed tests/perf/baseline.json, on
-// the same runner class assumption §9 states. Run at gates only — kept out of `npm run check` because a
-// single-run benchmark on a developer workstation (not a dedicated CI runner class) is noisy enough that
-// running it on every commit would be flaky, not informative; see baseline.json's own "runner" note.
+// `npm run bench:compare` (docs/PERFORMANCE_ARCHITECTURE.md §9). Runs tests/perf/*.bench.ts once (via
+// `runBenchmarks`, which applies the same fileParallelism:false + lock as `bench:baseline` — no file
+// parallelism, one worker, no other bench run concurrently, docs/PROGRESS.md step 2.11) and fails (exit 1)
+// if any entry's p99 regresses more than 20% against the committed tests/perf/baseline.json's *median* p99
+// (baseline.json is itself the median of 3 runs; this is a single comparison run against it, so a flagged
+// regression still deserves a re-run before trusting it — see baseline.json's own "runner" note). Run at
+// gates only — kept out of `npm run check` because a developer-workstation benchmark (not a dedicated CI
+// runner class) is noisy enough that running it on every commit would be flaky, not informative.
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { runBenchmarks } from './bench-report.mjs';

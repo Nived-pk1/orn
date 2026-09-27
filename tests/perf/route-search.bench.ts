@@ -1,13 +1,14 @@
 /**
  * Route search (docs/GRAPH_SEMANTICS.md §9, docs/PERFORMANCE_ARCHITECTURE.md §2 "projection build" budget
  * — route search has no budget row of its own; it is bounded the same way, by `TraversalLimits`).
- * Design-tier `dense` (branching) and `chain` (depth) shapes.
+ * Design-tier `dense` (branching) and `chain` (depth) shapes. Uses FAST_BENCH_OPTIONS (docs/PROGRESS.md
+ * step 2.11) for a stable p99 instead of vitest bench's default ~10-30 samples.
  */
 import { bench, describe } from 'vitest';
 import { DEFAULT_ROUTE_MAX_ROUTES, DEFAULT_ROUTE_MAX_STEPS, DEFAULT_TRAVERSAL_LIMITS, searchRoutes, type RouteQuery } from '@/core/graph';
 import type { SpeciesId } from '@/core/schema';
 import { contextOf } from '@/test-support/graph-state';
-import { buildIndexes, mostReferencedSpecies, tierState } from '@/test-support/perf-kit';
+import { buildIndexes, FAST_BENCH_OPTIONS, mostReferencedSpecies, tierState } from '@/test-support/perf-kit';
 
 for (const shape of ['dense', 'chain'] as const) {
   describe(`route search (design tier, ${shape})`, () => {
@@ -23,8 +24,12 @@ for (const shape of ['dense', 'chain'] as const) {
       limits: DEFAULT_TRAVERSAL_LIMITS,
     };
 
-    bench('searchRoutes to the hub, no startFrom (any source)', () => {
-      searchRoutes(ctx, query);
-    });
+    bench(
+      'searchRoutes to the hub, no startFrom (any source)',
+      () => {
+        searchRoutes(ctx, query);
+      },
+      FAST_BENCH_OPTIONS,
+    );
   });
 }

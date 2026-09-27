@@ -5,8 +5,13 @@
 // budget metadata from tests/perf/budgets.mjs, and returns one entry per benchmark with mean/p75/p99/sample
 // count. Nothing is silently skipped: an unmatched benchmark (renamed, or new and not yet in budgets.mjs)
 // or a stale budgets.mjs entry (no matching benchmark) is a hard error (CLAUDE.md §1.5).
+//
+// Stable measurement (docs/PROGRESS.md step 2.11): `fileParallelism: false` forces every bench file to run
+// one at a time, in a single worker, alongside nothing else vitest/node starts for this call — see
+// `acquireBenchLock` for the cross-process half of "benches never run alongside tests or other benches".
 import { startVitest } from 'vitest/node';
 import { BUDGETS } from '../tests/perf/budgets.mjs';
+import { acquireBenchLock } from './bench-guard.mjs';
 
 /**
  * @param {{ quiet?: boolean }} [options]
@@ -14,57 +19,62 @@ import { BUDGETS } from '../tests/perf/budgets.mjs';
  */
 export async function runBenchmarks(options = {}) {
   const { quiet = false } = options;
-  const results = [];
-  const unmatched = [];
+  const release = acquireBenchLock();
+  try {
+    const results = [];
+    const unmatched = [];
 
-  const collector = {
-    onInit() {},
-    onTestRunEnd(testModules) {
-      for (const mod of testModules) {
-        for (const t of mod.children.allTests()) {
-          const raw = t.task.result?.benchmark;
-          if (!raw) continue; // a failed or skipped benchmark task; vitest already reports the failure
-          const meta = BUDGETS[t.fullName];
-          if (!meta) {
-            unmatched.push(t.fullName);
-            continue;
+    const collector = {
+      onInit() {},
+      onTestRunEnd(testModules) {
+        for (const mod of testModules) {
+          for (const t of mod.children.allTests()) {
+            const raw = t.task.result?.benchmark;
+            if (!raw) continue; // a failed or skipped benchmark task; vitest already reports the failure
+            const meta = BUDGETS[t.fullName];
+            if (!meta) {
+              unmatched.push(t.fullName);
+              continue;
+            }
+            results.push({
+              key: t.fullName,
+              operation: meta.operation,
+              tier: meta.tier,
+              shape: meta.shape,
+              meanMs: raw.mean,
+              p75Ms: raw.p75,
+              p99Ms: raw.p99,
+              sampleCount: raw.sampleCount,
+              budgetMs: meta.budgetMs,
+              budgetRow: meta.budgetRow ?? null,
+              informalBudgetMs: meta.informalBudgetMs ?? null,
+              note: meta.note ?? null,
+              openItem: meta.openItem ?? null,
+            });
           }
-          results.push({
-            key: t.fullName,
-            operation: meta.operation,
-            tier: meta.tier,
-            shape: meta.shape,
-            meanMs: raw.mean,
-            p75Ms: raw.p75,
-            p99Ms: raw.p99,
-            sampleCount: raw.sampleCount,
-            budgetMs: meta.budgetMs,
-            budgetRow: meta.budgetRow ?? null,
-            informalBudgetMs: meta.informalBudgetMs ?? null,
-            note: meta.note ?? null,
-            openItem: meta.openItem ?? null,
-          });
         }
-      }
-    },
-  };
+      },
+    };
 
-  const reporters = quiet ? [collector] : ['default', collector];
-  const vitest = await startVitest('benchmark', [], {}, { test: { benchmark: { reporters } } });
-  await vitest.close();
+    const reporters = quiet ? [collector] : ['default', collector];
+    const vitest = await startVitest('benchmark', [], {}, { test: { benchmark: { reporters }, fileParallelism: false } });
+    await vitest.close();
 
-  if (unmatched.length > 0) {
-    throw new Error(
-      `bench-report: no budget metadata for ${unmatched.length} benchmark(s):\n  ${unmatched.join('\n  ')}\nAdd an entry to tests/perf/budgets.mjs (or remove the stale one it replaced).`,
-    );
+    if (unmatched.length > 0) {
+      throw new Error(
+        `bench-report: no budget metadata for ${unmatched.length} benchmark(s):\n  ${unmatched.join('\n  ')}\nAdd an entry to tests/perf/budgets.mjs (or remove the stale one it replaced).`,
+      );
+    }
+    const seen = new Set(results.map((r) => r.key));
+    const stale = Object.keys(BUDGETS).filter((k) => !seen.has(k));
+    if (stale.length > 0) {
+      throw new Error(`bench-report: tests/perf/budgets.mjs has entries with no matching benchmark:\n  ${stale.join('\n  ')}`);
+    }
+
+    return results;
+  } finally {
+    release();
   }
-  const seen = new Set(results.map((r) => r.key));
-  const stale = Object.keys(BUDGETS).filter((k) => !seen.has(k));
-  if (stale.length > 0) {
-    throw new Error(`bench-report: tests/perf/budgets.mjs has entries with no matching benchmark:\n  ${stale.join('\n  ')}`);
-  }
-
-  return results;
 }
 
 /** Verdict for one entry: pass/fail against its §2 budget (or the informal one), computed on p99. */

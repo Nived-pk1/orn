@@ -18,7 +18,7 @@
     "test:adversarial": "vitest run tests/adversarial",
     "build:demo": "node scripts/build-demo.mjs",
     "test:coverage": "vitest run --testTimeout=120000 --coverage --coverage.include=src/core/**/*.ts --coverage.exclude=**/*.test.ts --coverage.exclude=**/contracts.ts --coverage.exclude=**/index.ts --coverage.reporter=text-summary",
-    "bench": "vitest bench --run",
+    "bench": "node scripts/run-bench-cli.mjs",
     "bench:baseline": "node scripts/generate-baseline.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
     "e2e": "playwright test",

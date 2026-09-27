@@ -10,6 +10,13 @@ Package section **#20 Performance**. Contracts: `src/workers/rpc/contracts.ts`, 
 | Design & test target | 2,000 | 5,000 | 15,000 | all budgets in §2 must hold here |
 | Stress | 5,000 | 10,000+ | 30,000+ | must stay usable and bounded, budgets may degrade ≤ 2× |
 
+**Amendment, 2026-09-27 (step 2.11, benchmark-only — no contract change):** navigator benchmarks anchor a
+fixed hub count per tier rather than a class-count ratio, so "the design-tier anchored benchmark" names the
+same state shape regardless of how the generator's class count changes later (§10 has the deterministic
+rule). Design tier: 60 anchored hubs. Stress tier: 400 anchored hubs, judged against this table's "budgets
+may degrade ≤ 2×" allowance applied to §2's 16 ms projection-build budget — 32 ms, informal (no §2 row of
+its own; `tests/perf/budgets.mjs`'s `informalBudgetMs`).
+
 ## 2. Budgets (measurable, p95 unless stated)
 
 | Operation | Budget | Where measured |
@@ -68,14 +75,77 @@ Estimate at the design target: records ≈ 10–15 MB as JS objects, indexes ≈
 
 ## 9. Measurement
 
-- `tests/perf/*.bench.ts` (vitest bench) at each tier and topology shape; baseline numbers committed in `tests/perf/baseline.json`, recording mean, p75, p99 and sample count per entry (regenerate with `npm run bench:baseline`). Budgets above are p95; `vitest bench` (tinybench) does not report p95, so verdicts are computed on p99 as a conservative stand-in (documented in `baseline.json` itself) — a p95 verdict would only be more forgiving, never less.
-- `npm run bench:compare` (`scripts/bench-compare.mjs`) fails when any entry's p99 regresses > 20% against the committed baseline on the same runner class. Run at gates, not in `npm run check` — a single-run benchmark on a developer workstation (not a dedicated CI runner class) is noisy enough that running it on every commit would be flaky rather than informative. Workstation-noise caveat: a repeat run can move any single entry by double digits of percent, and operations near or over budget often collect only 10-30 samples in `vitest bench`'s default 500 ms window, making their p99 close to the observed max rather than a statistically stable percentile — read both the baseline and any comparison against it as indicative, not tight, and re-run before concluding a flagged regression is real.
+**Method (docs/PROGRESS.md step 2.11 — replaces the step 2.8/2.9 single-run method after the Gate B
+reviewer found its numbers too noisy to judge: the same design-tier hub-commit scenario read 35.6 ms p99 in
+one run and 107–129 ms in another, "full-suite contention" named but not fixed until this step).**
+
+- **Isolation.** Benches never run alongside tests or another bench run. `npm run bench`
+  (`scripts/run-bench-cli.mjs`), `npm run bench:baseline` and `npm run bench:compare`
+  (`scripts/generate-baseline.mjs`/`bench-compare.mjs`, both via `scripts/bench-report.mjs`) all take a PID
+  lock file (`scripts/bench-guard.mjs`, `tests/perf/.bench.lock`, git-ignored) before starting and refuse to
+  start — a hard error naming the other process's PID — if a different, still-live process already holds
+  it; nested calls within the same process (the 3 runs inside `bench:baseline`) reuse it correctly. Every
+  entry point also runs with no file parallelism and a single worker (`--no-file-parallelism` on the CLI,
+  `fileParallelism: false` on the Node-API calls — vitest's own semantics then cap `maxWorkers` at 1).
+  **Not covered**: an unrelated `npm test` / `npm run test:watch` process started in another terminal.
+  Reliable cross-platform detection of "another vitest process is running" from outside was judged
+  impractical to build correctly here — Windows' `tasklist` does not show command lines by default (a
+  `wmic`/CIM query that does is slow and permission-sensitive), and matching by process name alone (`node`)
+  would false-positive on any unrelated Node process. **Manual check**: before running any `npm run bench*`
+  command, confirm no other `npm test`, `npm run test:watch`, or `npm run bench*` process is active in
+  another terminal (or Task Manager / `ps`).
+- **Warmup and sample count.** Every `bench()` call passes explicit options
+  (`src/test-support/perf-kit.ts`'s `FAST_BENCH_OPTIONS`/`SLOW_BENCH_OPTIONS`) rather than relying on
+  `vitest bench`'s defaults (500 ms time budget, 10-iteration floor, 100 ms/5-iteration warmup): those
+  defaults left the slower entries with only 10–30 samples, and since tinybench's p99 is the
+  `ceil(0.99·n) − 1`th sorted sample, it is mathematically identical to the observed max whenever `n < 100`
+  — not a percentile at all below that floor, however many times it is re-run. `FAST_BENCH_OPTIONS`
+  (commit/projection/route-search benches) sets a 100-sample floor with a 10-iteration, 200 ms warmup.
+  `SLOW_BENCH_OPTIONS` (`validateAll`, 300–400 ms/sample) instead takes a fixed 3 s time window — reaching
+  100 samples there would take minutes for a budget (3,000 ms) already passed with a wide margin.
+- **Setup stays outside the timed region.** Dataset construction (`tierState`/`oneHubState`/
+  `designTierHubState`/`withNavigatorAnchors`), index building and hub/context lookup all happen once in
+  each bench file's `describe` body, before any `bench()` call — the callback passed to `bench()` is only
+  the operation under measurement (dispatching one command, building one projection, one `scopeOf` call,
+  …). Per-iteration bookkeeping needed to make each call distinct without a reaction-specific hack (e.g.
+  `commit.bench.ts` cycling `n` to pick the next species to touch) stays in the callback because it is part
+  of what a real caller would also pay — an ID-table lookup, not the dataset construction itself.
+- **3 runs, median p99, spread recorded.** `npm run bench:baseline` runs the whole suite 3 times in one
+  process and writes `tests/perf/baseline.json` with, per entry: `p99Runs` (each run's own p99, in run
+  order), `p99Ms` (their median — what `pass` is computed against), and `p99SpreadPct`
+  (`(max − min) / median` across the 3 runs). An entry whose spread exceeds 25% also gets a `noisy` field
+  naming the threshold, so a wide spread is visible on the entry itself, not just in prose — nothing is
+  hidden (CLAUDE.md §1.5). A flagged entry should be investigated (GC inside the timed region, setup leaking
+  into it, shared state carried between iterations that changes their cost run to run) before trusting its
+  verdict; §5's own table names which entries this step found still noisy after the fix and why.
+- **Machine conditions**, recorded in `baseline.json`'s own `runner` field: plugged in (not on battery), no
+  other heavy applications open, isolation and worker settings as above. Still a developer workstation, not
+  a dedicated CI runner class — `bench:compare`'s 20% regression threshold (below) is sized for that, not
+  for a tighter CI-grade comparison.
+- `npm run bench:compare` (`scripts/bench-compare.mjs`) runs the suite once and fails when any entry's p99
+  regresses > 20% against `baseline.json`'s median p99, on the same runner-class assumption above. Run at
+  gates, not in `npm run check` — a single run against a workstation baseline is still noisy enough that
+  running it on every commit would be flaky rather than informative; re-run before concluding a flagged
+  regression is real.
 - Dev-only performance marks (`performance.mark`) around commit, projection, layout and scene; the Diagnostics › Performance panel shows the last 100 samples.
 - Playwright traces at Gates E and F for FPS, long tasks and boot time.
 
 ## 10. Synthetic data generator
 
 `src/test-support/generator.ts` (Phase 1): seeded PRNG (mulberry32) producing a **valid** DatasetDocument for parameters `{ species, classes, reagents, reactions, relationshipsPerReaction, topics, shape, seed }`. Shapes: `chain` (long linear sequences, depth 50+), `wide` (few substrates, many products), `dense` (random bipartite with high degree), `cyclic` (many 2- and 3-cycles), `duplicate_endpoint` (many reactions between the same pairs), `hub_explosion` (one class with 1,000+ reactions). Every generated dataset passes L1–L3 with zero ERRORs, which itself is a test.
+
+**Navigator-anchor benchmark parameter (docs/PROGRESS.md step 2.11, `src/test-support/perf-kit.ts`'s
+`withNavigatorAnchors`).** The generator creates no `navigator_anchor` records at all (this section is
+graph/index scale only, not curated content), so an un-anchored generated state puts every reaction on the
+single virtual Unclassified hub — the degenerate case, not what a curated dataset (the demo has 15 anchored
+hubs) looks like. `withNavigatorAnchors(state, anchorCount)` anchors exactly `anchorCount` classes,
+**deterministically**: sort every class ID, then for `k` in `[0, min(anchorCount, classCount))` anchor the
+class at index `floor(k · classCount / anchorCount)`. That index strictly increases with `k` whenever
+`classCount ≥ anchorCount` (true at every tier this file's benches use), so the chosen classes are spread
+evenly across the sorted range with no repeats, from a stated rule rather than an accident of iteration
+order (superseding step 2.9's `every`-based ratio, which gave a different hub count per tier without saying
+so). Default 60 (design tier); the stress-tier scenario (`tests/perf/projection.bench.ts`) passes 400 — see
+§1's amendment for the budget each is judged against.
 
 ## 11. Banned patterns
 

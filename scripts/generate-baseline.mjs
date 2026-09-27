@@ -1,50 +1,122 @@
 #!/usr/bin/env node
-// `npm run bench:baseline` — docs/PERFORMANCE_ARCHITECTURE.md §9. Runs tests/perf/*.bench.ts and writes
-// tests/perf/baseline.json: mean, p75, p99 and sample count per entry, with the pass/fail verdict computed
-// on p99 (a conservative stand-in for the §2 budgets' p95 — vitest bench does not report p95). Run this only
-// when deliberately re-establishing the committed baseline (at a gate, or after a reviewed performance
-// change); everyday CI-style checking is `npm run bench:compare` against the committed file, not this.
+// `npm run bench:baseline` — docs/PERFORMANCE_ARCHITECTURE.md §9. Runs tests/perf/*.bench.ts three times
+// (docs/PROGRESS.md step 2.11: a single run's p99 is too noisy to judge anything by — the same scenario has
+// been measured 35.6 ms in one run and 107-129 ms in another) and writes tests/perf/baseline.json: each
+// run's own p99, the median p99 across the three (that is what verdicts use — a conservative stand-in for
+// §2's p95 budgets, since `vitest bench` does not report p95), and mean/p75 medianed the same way. An
+// entry whose three p99s spread by more than 25% (`(max - min) / median`) gets that spread recorded in the
+// entry itself, not hidden — see the entry's own `p99SpreadPct`/`p99Runs`. Run this only when deliberately
+// re-establishing the committed baseline (at a gate, or after a reviewed performance change); everyday
+// CI-style checking is `npm run bench:compare` against the committed file, not this.
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { runBenchmarks, verdictOf } from './bench-report.mjs';
+import { acquireBenchLock } from './bench-guard.mjs';
 
 const BASELINE_PATH = fileURLToPath(new URL('../tests/perf/baseline.json', import.meta.url));
+const RUNS = 3;
+const SPREAD_THRESHOLD = 0.25;
+
+function round(ms) {
+  return Math.round(ms * 10_000) / 10_000;
+}
+
+/** The middle value of an odd-length array of numbers (RUNS is always 3, so no averaging-of-two case). */
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) return sorted[mid];
+  return (sorted[mid - 1] + sorted[mid]) / 2;
+}
 
 async function main() {
-  const measured = await runBenchmarks();
+  const release = acquireBenchLock();
+  let allRuns;
+  try {
+    allRuns = [];
+    for (let run = 1; run <= RUNS; run += 1) {
+      console.log(`\n=== bench:baseline run ${run}/${RUNS} ===`);
+      allRuns.push(await runBenchmarks({ quiet: run > 1 }));
+    }
+  } finally {
+    release();
+  }
 
-  const entries = measured.map((entry) => ({
-    operation: entry.operation,
-    tier: entry.tier,
-    shape: entry.shape,
-    meanMs: round(entry.meanMs),
-    p75Ms: round(entry.p75Ms),
-    p99Ms: round(entry.p99Ms),
-    sampleCount: entry.sampleCount,
-    budgetMs: entry.budgetMs,
-    ...(entry.informalBudgetMs != null ? { informalBudgetMs: entry.informalBudgetMs } : {}),
-    budgetRow: entry.budgetRow,
-    pass: verdictOf(entry),
-    ...(entry.note != null ? { note: entry.note } : {}),
-    ...(entry.openItem != null ? { openItem: entry.openItem } : {}),
-  }));
+  // Every run measures the same benchmark keys (bench-report.mjs throws on an unmatched/stale one, so a
+  // key present in run 1 is present in every run) — group by key across the three runs.
+  const byKey = new Map();
+  for (const run of allRuns) {
+    for (const entry of run) {
+      if (!byKey.has(entry.key)) byKey.set(entry.key, []);
+      byKey.get(entry.key).push(entry);
+    }
+  }
+
+  const entries = [];
+  const noisy = [];
+  for (const runs of byKey.values()) {
+    const first = runs[0];
+    const p99Runs = runs.map((r) => round(r.p99Ms));
+    const p99Median = median(p99Runs);
+    const spreadPct = p99Median > 0 ? ((Math.max(...p99Runs) - Math.min(...p99Runs)) / p99Median) * 100 : 0;
+    const isNoisy = spreadPct > SPREAD_THRESHOLD * 100;
+    if (isNoisy) noisy.push({ operation: first.operation, tier: first.tier, shape: first.shape, spreadPct });
+
+    const medianEntry = { ...first, meanMs: median(runs.map((r) => r.meanMs)), p75Ms: median(runs.map((r) => r.p75Ms)), p99Ms: p99Median };
+
+    entries.push({
+      operation: first.operation,
+      tier: first.tier,
+      shape: first.shape,
+      meanMs: round(medianEntry.meanMs),
+      p75Ms: round(medianEntry.p75Ms),
+      p99Ms: p99Median,
+      p99Runs,
+      p99SpreadPct: round(spreadPct),
+      sampleCount: Math.min(...runs.map((r) => r.sampleCount)),
+      budgetMs: first.budgetMs,
+      ...(first.informalBudgetMs != null ? { informalBudgetMs: first.informalBudgetMs } : {}),
+      budgetRow: first.budgetRow,
+      pass: verdictOf(medianEntry),
+      ...(first.note != null ? { note: first.note } : {}),
+      ...(first.openItem != null ? { openItem: first.openItem } : {}),
+      ...(isNoisy
+        ? {
+            noisy: `p99 spread ${round(spreadPct)}% across ${RUNS} runs (> ${SPREAD_THRESHOLD * 100}%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict`,
+          }
+        : {}),
+    });
+  }
 
   const baseline = {
     measuredAt: new Date().toISOString().slice(0, 10),
     toolchain: `Node ${process.version.replace(/^v/, '')}, Vitest 4.1.11 (vitest bench via the Node API)`,
-    runner: 'developer workstation, single run — not a dedicated CI runner class; numbers are indicative, not tight (workstation noise: a repeat run can move any single entry by double digits of percent, which is why bench:compare uses a 20% threshold, not a tighter one). A further caveat specific to p99: vitest bench\'s default time budget (500 ms) gives the slower operations here (commit/projection-build entries near or over the 16 ms budget) only 10-30 samples, so their p99 is close to their observed max, not a statistically stable 99th percentile — read it as "the worst run we saw," a still-honest but noisier number than a longer run would give.',
-    note: "docs/PERFORMANCE_ARCHITECTURE.md §9: 'CI fails when a benchmark regresses > 20% against the baseline on the same runner class.' `npm run bench:compare` (scripts/bench-compare.mjs) checks that threshold against this file; it is run at gates, not in `npm run check`. Regenerate this file with `npm run bench:baseline` (scripts/generate-baseline.mjs).",
-    budgetSource: 'docs/PERFORMANCE_ARCHITECTURE.md §2, design tier (docs/PERFORMANCE_ARCHITECTURE.md §1: 2,000 entities / 5,000 reactions / 15,000 relationships+mappings)',
-    verdictBasis: "p99, as a conservative stand-in for §2's p95 budgets — `vitest bench` (tinybench) reports p75/p99/p995/p999 but not p95. `pass` below is computed on p99; a p95 verdict would only be more forgiving.",
+    runner:
+      'developer workstation, ' +
+      `${RUNS} sequential runs of the whole suite (docs/PROGRESS.md step 2.11) — not a dedicated CI runner ` +
+      'class; numbers are indicative, not tight. Machine conditions: plugged in (not on battery), no other ' +
+      'heavy applications open, file parallelism disabled and a single worker (fileParallelism: false — see ' +
+      'scripts/bench-guard.mjs), no other vitest process running concurrently (enforced for other bench runs ' +
+      'via a PID lock; an unrelated `npm test`/`vitest watch` process is a manual check, documented in ' +
+      'PERFORMANCE_ARCHITECTURE.md §9 — cross-platform process-list inspection was judged impractical here).',
+    note:
+      "docs/PERFORMANCE_ARCHITECTURE.md §9: 'CI fails when a benchmark regresses > 20% against the baseline on the same runner class.' " +
+      '`npm run bench:compare` (scripts/bench-compare.mjs) checks that threshold against this file (single run, compared to the median ' +
+      "below); it is run at gates, not in `npm run check`. Regenerate this file with `npm run bench:baseline` (scripts/generate-baseline.mjs, " +
+      `${RUNS} runs). Each entry's \`p99Runs\` is that run's own p99, in run order; \`p99Ms\` is their median, which is what \`pass\` is computed ` +
+      `on; \`p99SpreadPct\` is \`(max - min) / median\` across the ${RUNS} runs, and an entry over ${SPREAD_THRESHOLD * 100}% also gets a \`noisy\` field — nothing is hidden (CLAUDE.md §1.5).`,
+    budgetSource: 'docs/PERFORMANCE_ARCHITECTURE.md §2, design tier (docs/PERFORMANCE_ARCHITECTURE.md §1: 2,000 entities / 5,000 reactions / 15,000 relationships+mappings); stress-tier entries use §1\'s "budgets may degrade <= 2x" allowance as an informal budget (no §2 row of its own).',
+    verdictBasis:
+      "median p99 across 3 runs, as a conservative stand-in for §2's p95 budgets — `vitest bench` (tinybench) reports p75/p99/p995/p999 but not p95, and a single run's p99 is too noisy to judge alone (docs/PROGRESS.md step 2.10 measured the same scenario at 35.6 ms and 92-107/120-129 ms across runs). `pass` below is computed on the median of 3 p99s; a p95 verdict would only be more forgiving.",
+    ...(noisy.length > 0 ? { noisyEntries: noisy.map((n) => `${n.operation} (${n.tier}/${n.shape}): ${round(n.spreadPct)}% spread`) } : {}),
     entries,
   };
 
   await writeFile(BASELINE_PATH, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8');
-  console.log(`Wrote ${entries.length} entries to ${BASELINE_PATH}`);
-}
-
-function round(ms) {
-  return Math.round(ms * 10_000) / 10_000;
+  console.log(`\nWrote ${entries.length} entries (median of ${RUNS} runs) to ${BASELINE_PATH}`);
+  if (noisy.length > 0) {
+    console.log(`${noisy.length} entr${noisy.length === 1 ? 'y' : 'ies'} exceeded the ${SPREAD_THRESHOLD * 100}% spread threshold — see each entry's "noisy" field.`);
+  }
 }
 
 main().catch((error) => {
