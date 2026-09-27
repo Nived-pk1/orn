@@ -124,7 +124,7 @@ describe('ancestorsOf / descendantsOf', () => {
     },
   );
 
-  it('walks a 5,000-deep chain without recursion and in bounded time', () => {
+  it('INV-22 (Phase 1 part): walks a 5,000-deep chain without recursion and in bounded time', () => {
     const spec: Record<string, string[]> = { cls_n0: [] };
     for (let i = 1; i < 5000; i++) spec[`cls_n${i}`] = [`cls_n${i - 1}`];
     const started = Date.now();

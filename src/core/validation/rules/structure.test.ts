@@ -75,16 +75,16 @@ describe('caveats', () => {
 describe('relationships', () => {
   const rel = (mutate: Parameters<typeof edit<'relationship'>>[3]) => edit(base, 'relationship', REL, mutate);
 
-  it('REL-001: an endpoint kind not allowed for the type, at the endpoint', () => {
+  it('REL-001 (INV-15): an endpoint kind not allowed for the type, at the endpoint', () => {
     const bad = rel((r) => { r.from = { kind: 'species', id: 'spc_max-water' } as never; });
     expect(on('REL-001', bad, 'relationship', REL)).toMatchObject([{ path: 'from', severity: 'error' }]);
   });
 
-  it('REL-002: from equals to', () => {
+  it('REL-002 (INV-15): from equals to', () => {
     expect(on('REL-002', rel((r) => { r.to = r.from; }), 'relationship', REL)).toMatchObject([{ path: 'to', severity: 'error' }]);
   });
 
-  it('REL-003: symmetric types treat swapped endpoints as duplicates; directed types do not', () => {
+  it('REL-003 (INV-15): symmetric types treat swapped endpoints as duplicates; directed types do not', () => {
     const original = recordOf(base, 'relationship', REL);
     const swapped = { ...cloneAs(original, 'rel_swapped'), from: original.to, to: original.from };
     const dup = add(base, 'relationship', swapped);
@@ -95,12 +95,12 @@ describe('relationships', () => {
     expect(on('REL-003', directed2, 'relationship', REL)).toEqual([]);
   });
 
-  it('REL-004: reverseKind required on reverse_of and forbidden elsewhere', () => {
+  it('REL-004 (INV-15): reverseKind required on reverse_of and forbidden elsewhere', () => {
     expect(on('REL-004', rel((r) => { delete (r as { reverseKind?: string }).reverseKind; }), 'relationship', REL)).toMatchObject([{ path: 'reverseKind', severity: 'error' }]);
     expect(on('REL-004', rel((r) => { r.type = 'related_to'; }), 'relationship', REL)).toHaveLength(1);
   });
 
-  it('REL-005: a cycle of prerequisite_of relationships flags every link; a chain is fine', () => {
+  it('REL-005 (INV-09): a cycle of prerequisite_of relationships flags every link; a chain is fine', () => {
     const link = (id: string, from: string, to: string) => ({ ...cloneAs(recordOf(base, 'relationship', REL), id), type: 'prerequisite_of' as const, from: { kind: 'concept', id: from }, to: { kind: 'concept', id: to }, reverseKind: undefined });
     const ids = ['cpt_max-elimination', 'cpt_max-carbonyl-addition', 'cpt_max-carbocation-stability'];
     const strip = (r: ReturnType<typeof link>) => { const { reverseKind: _unused, ...rest } = r; return rest as never; };
@@ -126,7 +126,7 @@ describe('routes', () => {
   const route = (mutate: Parameters<typeof edit<'route'>>[3], state = base) => edit(state, 'route', ROUTE, mutate);
   const inputs = (r: Parameters<Parameters<typeof edit<'route'>>[3]>[0], step: number, ids: string[]) => { must(r.steps[step]).inputFromStepIds = ids as never; };
 
-  it('RTE-001: a step listing itself, and a cycle through two steps', () => {
+  it('RTE-001 (INV-09): a step listing itself, and a cycle through two steps', () => {
     expect(on('RTE-001', route((r) => inputs(r, 0, [S1])), 'route', ROUTE)).toMatchObject([{ path: 'steps[0].inputFromStepIds', severity: 'error' }, { path: 'steps[1].inputFromStepIds' }].slice(0, 1));
     const cyc = on('RTE-001', route((r) => inputs(r, 0, [S2])), 'route', ROUTE);
     expect(cyc.map((f) => f.path)).toEqual(['steps[0].inputFromStepIds', 'steps[1].inputFromStepIds']);

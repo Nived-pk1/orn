@@ -149,7 +149,7 @@ describe('parseRichText: malformed markup is literal (total parsing)', () => {
   });
 });
 
-describe('parseRichText: bounded work', () => {
+describe('INV-22 (Phase 1 part) parseRichText: bounded work', () => {
   it.each([
     ['unclosed openers with trailing text', '*a '.repeat(16_000)],
     ['unclosed strong openers', '**a '.repeat(12_000)],

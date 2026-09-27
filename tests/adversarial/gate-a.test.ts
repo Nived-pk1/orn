@@ -1,11 +1,9 @@
 /**
  * Gate A adversarial rows (docs/TEST_STRATEGY.md §5, Gate column "A"). Most rows are covered close to
  * the code they exercise (named by ID in those tests); this file checks that none is missing and
- * exercises the rows that need a realistic dataset — the demo — rather than a minimal fixture.
+ * exercises the rows that need a realistic dataset — the demo — rather than a minimal fixture. An ID counts only when it
+ * appears in a test title (see gate-matrix.ts).
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { documentToState } from '@/core/dataset';
 import { computeDeleteImpact } from '@/core/commands';
@@ -14,30 +12,9 @@ import type { CanonicalState, DatasetDocument, RecordKind, RecordRef } from '@/c
 import { validator } from '@/core/validation';
 import { buildDemoDocument } from '@/test-support/demo';
 import { must } from '@/test-support/state-fixture';
+import { describeGateCompleteness } from './gate-matrix';
 
-const ROOT = new URL('../../', import.meta.url);
 const PRESENTATION: readonly RecordKind[] = ['navigator_anchor', 'reaction_scheme', 'view_preset', 'entity_display'];
-
-function testFiles(dir: string): string[] {
-  const found: string[] = [];
-  for (const name of readdirSync(dir)) {
-    if (name === 'node_modules' || name.startsWith('.')) continue;
-    const path = join(dir, name);
-    if (statSync(path).isDirectory()) found.push(...testFiles(path));
-    else if (/\.test\.tsx?$/.test(name)) found.push(path);
-  }
-  return found;
-}
-
-/** ADV IDs whose Gate column is exactly "A" in the matrix of TEST_STRATEGY.md §5. */
-function gateARows(): string[] {
-  const text = readFileSync(new URL('docs/TEST_STRATEGY.md', ROOT), 'utf8');
-  return text
-    .split('\n')
-    .map((line) => line.split('|').map((cell) => cell.trim()))
-    .filter((cells) => /^ADV-\d{3}$/.test(cells[1] ?? '') && cells[cells.length - 2] === 'A')
-    .map((cells) => cells[1] as string);
-}
 
 function stateOf(doc: DatasetDocument): CanonicalState {
   const result = documentToState(doc);
@@ -48,18 +25,8 @@ const errorsOf = (state: CanonicalState) =>
   validator.validateAll(state, coreIndexEngine.build(state, 0)).filter((f) => f.severity === 'error');
 const ref = (kind: RecordKind, id: string): RecordRef => ({ kind, id });
 
-describe('Gate A matrix completeness', () => {
-  const rows = gateARows();
-  const texts = ['src', 'tests'].flatMap((dir) => testFiles(fileURLToPath(new URL(dir, ROOT)))).map((f) => readFileSync(f, 'utf8'));
-
-  it('finds the Gate A rows of the matrix', () => {
-    expect(rows.length).toBeGreaterThanOrEqual(19);
-  });
-
-  it.each(rows)('%s is named by at least one test', (id) => {
-    expect(texts.some((text) => text.includes(id))).toBe(true);
-  });
-});
+// P-01…08 and INV-09/15/22 are Gate A criteria (TEST_STRATEGY §6); INV-22 is the Phase 1 part only.
+describeGateCompleteness('A', 19, ['P-01', 'P-02', 'P-04', 'P-05', 'P-06', 'P-07', 'P-08', 'INV-09', 'INV-15', 'INV-22']);
 
 describe('Gate A rows on the demo dataset', () => {
   const doc = buildDemoDocument();

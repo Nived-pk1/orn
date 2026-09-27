@@ -14,7 +14,9 @@ import { makeStore, testContext } from '@/test-support/command-kit';
 export const RUNS = Number(process.env['ORN_PROPERTY_RUNS'] ?? 25);
 /** Per-test timeout that grows with the run count (vi.setConfig in each property file). */
 export const TIMEOUT_MS = Math.max(30_000, RUNS * 1_000);
-export const PARAMS = { numRuns: RUNS } satisfies fc.Parameters<unknown>;
+/** Fixed seed so a failure reproduces exactly (INV-19 spirit: nothing random in CI); ORN_PROPERTY_SEED explores others. */
+export const SEED = Number(process.env['ORN_PROPERTY_SEED'] ?? 20_260_927);
+export const PARAMS = { numRuns: RUNS, seed: SEED } satisfies fc.Parameters<unknown>;
 
 export function bytesOf(state: CanonicalState): string {
   const out = serializeDocument(

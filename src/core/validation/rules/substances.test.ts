@@ -124,7 +124,7 @@ describe('RGT-001 / RGT-002', () => {
   });
 });
 
-describe('HIER-001 hierarchy cycles (ADV-016)', () => {
+describe('HIER-001 hierarchy cycles (ADV-016, INV-09)', () => {
   const cycle = edit(base, 'class', ALC, (c) => { c.parentIds = [TERT as never]; });
 
   it('flags every member of a class cycle, at the parent link', () => {
@@ -165,7 +165,7 @@ describe('HIER-002 topic level', () => {
   });
 });
 
-describe('HIER-003 reagent composition cycles', () => {
+describe('HIER-003 reagent composition cycles (INV-09)', () => {
   const component = (id: string) => ({ ref: { kind: 'reagent', id }, role: 'active' }) as never;
 
   it('flags a reagent built from itself and a two-reagent cycle, but not a plain nesting', () => {

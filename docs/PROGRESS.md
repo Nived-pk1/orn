@@ -286,11 +286,11 @@ See Amendments. 5 invalid fixtures added (2 URL, 3 base64) to `invalid/manifest.
 |---|---|
 | Schemas + maximal fixture; registry coverage test | pass (steps 1.2, 1.4) |
 | Commands, undo/redo | pass (1.9; P-08, ADV-044) |
-| L1–L3 rules with tests; INV tests | pass; every Phase 1 INV is named by a test (INV-03/06/16/17/25 added here) |
-| P-01 in-memory variant, P-02, P-04…P-08 | pass at default and at `ORN_PROPERTY_RUNS=200` (19 tests) |
+| L1–L3 rules with tests; INV tests | pass; each Phase 1 INV is named by a test title (INV-03/06/16/17/25 added in 1.12; INV-09, INV-15 and the Phase 1 part of INV-22 titled in the Gate A fix-up). INV-20, 21, 26, 28 and the rest of INV-22 belong to Phases 2/3/5 |
+| P-01 in-memory variant, P-02, P-04…P-08 | pass at default and at `ORN_PROPERTY_RUNS=200`; P-01 has its own titled test since the Gate A fix-up (`tests/property/state-document.test.ts`); the IndexedDB variant is step 3.5 |
 | Demo validates with 0 ERROR | pass |
 | Generator valid at all tiers | pass (1.11) |
-| ADV rows marked A pass | pass: all 19 rows named and exercised; the matrix check fails if a row loses its test |
+| ADV rows marked A pass | pass: all 19 rows have a test whose title names them; the completeness check (`tests/adversarial/gate-matrix.ts`) counts an ID only in a describe/it/test title and fails if a row loses its test |
 | `src/core` coverage ≥ 90% lines | 99.46% lines, 95.09% branches, 99.15% functions (`npm run test:coverage`) |
 | `src/core` imports only core/zod/immer | pass (`lint:deps`) |
 Human review is still needed: the chemistry, SMILES and all exam coverage are unverified.
@@ -303,6 +303,12 @@ Human review is still needed: the chemistry, SMILES and all exam coverage are un
 - The reverse_of synthetic pair is ethene hydration ↔ the ethanol + conc. H₂SO₄ record as a whole (relationships attach to reactions, not variants).
 - Nothing is `verified`; curriculum records and the Beckmann reaction are `review_required` with reasons.
 - Coverage runs need `--testTimeout=120000`: v8 instrumentation slows the random-walk tests past the 5 s default (plain `npm test` is unaffected).
+
+**Gate A fix-up (review follow-up, 2026-09-27)**
+- P-01 in-memory variant added (`tests/property/state-document.test.ts`: fixtures, generated datasets, random command sequences). The IndexedDB variant (save → load with fake-indexeddb) is step 3.5.
+- INV IDs put in test titles (titles only, assertions untouched): INV-09 on HIER-001/HIER-003/REL-005/RTE-001, INV-15 on REL-001…REL-004, "INV-22 (Phase 1 part)" on the hierarchy-walk and rich-text bound tests.
+- Gate completeness check reworked into `tests/adversarial/gate-matrix.ts` (`describeGateCompleteness(gate, minRows, extraIds)`): rows are read from TEST_STRATEGY §5 by gate letter; an ADV/INV/P ID counts only when it appears in a describe/it/test title.
+- Seeds: fast-check property tests were unseeded (fast-check prints the seed on failure but a run was not reproducible by default). `PARAMS` now carries a fixed seed (`ORN_PROPERTY_SEED` overrides). The ADV-044 walk, incremental-validation and index walks use fixed seeds.
 
 **Open items**
 - Human verification of demo chemistry (SMILES, stereodescriptors, conditions, mechanism atom maps) and of exam coverage.
