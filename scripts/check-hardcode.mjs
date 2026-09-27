@@ -2,8 +2,11 @@
 // Guards the "no reaction-specific hacks" rule (docs/ARCHITECTURE.md §2.6, INV-25).
 // Collects record IDs and names from data/seed and data/fixtures and fails if any appears
 // as a string literal in production source. Justified exceptions: append `// hardcode-ok: <reason>`.
-// src/core/schema is exempt: it defines the vocabulary (enum words such as 'elimination'), not dataset
-// content, so a dataset name that shares a word with the schema is not a hardcoded record name.
+// In src/core/schema only the NAME comparison is skipped: the schema defines the vocabulary (enum words such
+// as 'elimination'), so a dataset name that shares a word with it is not a hardcoded record name. Record IDs
+// carry a prefix and cannot collide with vocabulary, so the ID comparison stays on everywhere.
+// Accepted blind spots: literals built by concatenation or template interpolation, names shorter than
+// MIN_NAME_LENGTH, and IDs held in JSON/asset files loaded at run time.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative, sep } from 'node:path';
 
@@ -46,7 +49,7 @@ const literal = /(['"`])((?:\\.|(?!\1).)*)\1/g;
 let failures = 0;
 for (const file of walk('src', new Set(['.ts', '.tsx']))) {
   if (/\.(test|bench)\.tsx?$/.test(file) || file.startsWith(join('src', 'test-support'))) continue;
-  if (file.startsWith(SCHEMA_VOCABULARY)) continue;
+  const inSchema = file.startsWith(SCHEMA_VOCABULARY);
   const lines = readFileSync(file, 'utf8').split('\n');
   lines.forEach((line, index) => {
     const trimmed = line.trim();
@@ -54,7 +57,7 @@ for (const file of walk('src', new Set(['.ts', '.tsx']))) {
     if (line.includes('hardcode-ok:') || trimmed.startsWith('*') || trimmed.startsWith('//') || trimmed.startsWith('/*')) return;
     for (const match of line.matchAll(literal)) {
       const text = match[2];
-      const hit = ids.has(text) || names.has(text.trim().toLowerCase()) || [...ids].some((id) => text.includes(id));
+      const hit = ids.has(text) || (!inSchema && names.has(text.trim().toLowerCase())) || [...ids].some((id) => text.includes(id));
       if (hit) {
         failures += 1;
         console.error(`✖ ${relative(process.cwd(), file)}:${index + 1} hardcodes dataset content: ${match[0]}`);

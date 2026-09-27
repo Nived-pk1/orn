@@ -32,7 +32,7 @@ Docs, canonical schemas, reference registry, contracts, legacy fixtures, guard s
 | 1.11 | `test-support`: generator (all shapes/tiers), fast-check arbitraries; property tests P-02, P-04…P-08 | `src/test-support/`, `tests/property/` |
 | 1.12 | Demo dataset builder + `data/seed/demo.orn.json` (TEST_STRATEGY.md §3) + `demo-invalid`; Gate A ADV rows; Gate A review | `data/seed/`, `tests/adversarial/` |
 
-Step 1.12 note — hardcode guard: `scripts/check-hardcode.mjs` currently flags demo data names that match schema enum words (e.g. a concept named "Elimination" collides with the `elimination` step kind in `src/core/schema`). Fix by scoping the guard to source code outside `src/core/schema` (schema vocabulary is not dataset content), or by allowlisting display-name fields in data. Do this before the demo dataset lands, not by renaming demo chemistry.
+Step 1.12 note — hardcode guard: demo data names match schema enum words (e.g. a concept named "Elimination" collides with the `elimination` step kind in `src/core/schema`). Resolved (Gate A review): `scripts/check-hardcode.mjs` keeps scanning `src/core/schema` but skips only the name comparison there; the record-ID comparison stays on everywhere. Tested in `tests/integration/check-hardcode.test.ts`. Accepted limitations: literals built by concatenation or template interpolation, names shorter than 5 characters, and IDs in JSON loaded at run time are not detected.
 
 ### Phase 2 — Graph engine and projections → Gate B
 | Step | Work |

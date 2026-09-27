@@ -62,7 +62,7 @@
     "schemasAndContractsTypecheck": "passed with tsc 6.0.3 against zod 4.6.5 and immer 10.2.0 (step 1.1)",
     "schemaRuntimeSmoke": "minimal fixture parses unchanged; 15 negative cases rejected as expected (tsx)",
     "fileSizeCheck": "passed",
-    "hardcodeCheck": "passed (654 ids, 283 names; src/core/schema exempt)",
+    "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
     "npmRunCheck": "passed (step 1.12: 44 files, 849 tests)",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
