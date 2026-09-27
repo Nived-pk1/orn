@@ -46,6 +46,8 @@ Dependencies: none new (src/core/graph stays pure; benchmarks use Vitest bench).
 | 2.6 | Reagent, named-reaction, mechanism, syllabus projections; derived exam scope (scopeOf); registry completeness test (every ViewKey except search) | ADV-055, 057 graph part; demo mechanisms shown as review-required |
 | 2.7 | Route search (GRAPH_SEMANTICS.md §9) | P-09; ADV-049, 050 route part; demo routes found (ethanol → propan-2-ol, aniline → phenol); ethanol → ethanoic acid returns both paths |
 | 2.8 | Benchmarks at all tiers and shapes; full generator tier × shape validity sweep (closes the 1.11 sampling); measure Phase 1 performance open items (validateTouched on hubs, index rebuild after a rejected commit, scopeOf computed twice); baseline.json; Gate B packet in the Gate A packet format with the title-level ADV/INV/P scan; Gate B self-review | ADV-012 performance part, ADV-013; budgets at the design tier |
+| 2.9 | Benchmark percentiles and `bench:compare`; incremental navigator roll-up index | ADV-013 re-measured; navigator build budget at the design tier |
+| 2.10 | Incremental rollback on rejected commits; field-aware `validateTouched` scope; route-search clock test; re-measure; Gate B packet update | Remaining Gate B open items closed or explicitly deferred by the reviewer |
 
 ### Phase 3 — Persistence, import/export, legacy → Gate C
 Dependencies: `dexie`, `fflate`, dev `fake-indexeddb`.
@@ -132,12 +134,12 @@ Read `CLAUDE.md` and `docs/PROJECT_STATE.json` every session. Then only:
 | Phase | Read |
 |---|---|
 | 1 | DOMAIN_MODEL.md (all), VALIDATION_RULES.md (all), ARCHITECTURE.md §2, §23, §26, TEST_STRATEGY.md §1–§4, `src/core/**` |
-| 2 | GRAPH_SEMANTICS.md, JEE_ONTOLOGY.md §4, PERFORMANCE_ARCHITECTURE.md §1–§4, §9–§10, TEST_STRATEGY.md §4–§6, `src/core/graph`, `src/core/indexes` |
-| 3 | PERSISTENCE.md, MIGRATION.md, SECURITY.md §1–§3, `src/persistence`, `src/io`, `data/fixtures/legacy/README.md` |
+| 2 | GRAPH_SEMANTICS.md, JEE_ONTOLOGY.md §4, PERFORMANCE_ARCHITECTURE.md §1–§4, §9–§10, TEST_STRATEGY.md §4 (property tests), §5–§6 (this phase's gate rows), `src/core/graph`, `src/core/indexes` |
+| 3 | PERSISTENCE.md, MIGRATION.md, SECURITY.md §1–§3, TEST_STRATEGY.md §5–§6 (this phase's gate rows), `src/persistence`, `src/io`, `data/fixtures/legacy/README.md` |
 | 4 | PERFORMANCE_ARCHITECTURE.md §3–§5, SEARCH.md, SECURITY.md §2, ADR-007…ADR-011, `src/workers`, `src/chem`, `src/layout`, `src/search` |
-| 5 | UI_ARCHITECTURE.md §1–§6, §9–§12, PERFORMANCE_ARCHITECTURE.md §6–§7, SECURITY.md §2 and §4, `src/render`, `src/ui` |
-| 6 | UI_ARCHITECTURE.md §7–§8, DOMAIN_MODEL.md §5–§8 and §12, VALIDATION_RULES.md §2 |
+| 5 | UI_ARCHITECTURE.md §1–§6, §9–§12, PERFORMANCE_ARCHITECTURE.md §6–§7, SECURITY.md §2 and §4, TEST_STRATEGY.md §5–§6 (this phase's gate rows), `src/render`, `src/ui` |
+| 6 | UI_ARCHITECTURE.md §7–§8, DOMAIN_MODEL.md §5–§8 and §12, VALIDATION_RULES.md §2, TEST_STRATEGY.md §5–§6 (this phase's gate rows) |
 | 7 | GRAPH_SEMANTICS.md §7 and §9, UI_ARCHITECTURE.md §5, JEE_ONTOLOGY.md §3–§4 |
 | 8 | UI_ARCHITECTURE.md §3 and §6, PERSISTENCE.md §8 |
 | 9 | PERFORMANCE_ARCHITECTURE.md (all), PERSISTENCE.md §11–§12 |
-| 10 | TEST_STRATEGY.md §5–§6, MIGRATION.md §4.8–§4.10, SECURITY.md |
+| 10 | TEST_STRATEGY.md §5–§6 (this phase's gate rows), MIGRATION.md §4.8–§4.10, SECURITY.md |

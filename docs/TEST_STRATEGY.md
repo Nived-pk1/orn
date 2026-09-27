@@ -93,7 +93,7 @@ ADV-001…ADV-058 cover the adversarial cases requested in the requirements (§4
 | ADV-002 | A → B via two reactions | U | graph | two edges, one bundle (count 2); never merged | 2 | B |
 | ADV-003 | A → B → C plus A → C | U | graph | three edges; no transitive reduction | 2 | B |
 | ADV-004 | A → B and B → A | U | graph | two edges; no reversibility inferred; ⇌ only with `reverse_of` | 2 | B |
-| ADV-005 | self-loop A → A | U | graph, validation | loop glyph; RXN-017 warning | 2 | B |
+| ADV-005 | self-loop A → A | U | graph, validation | loop glyph; RXN-017 warning | 2, 5 | B, E |
 | ADV-006 | 2 reactants → 3 products | U | graph | 2 consumes + 3 produces edges | 2 | B |
 | ADV-007 | same product major in R1, minor in R2 | U | graph | distinct edge styles per outcome, including one reaction with both a major and a minor product | 2 | B |
 | ADV-008 | outcomes differ by condition variant (413/443 K) | U | validation, graph | edges carry variant IDs; filters by variant | 1–2 | A |
@@ -147,6 +147,10 @@ ADV-001…ADV-058 cover the adversarial cases requested in the requirements (§4
 | ADV-056 | conditional reversibility | U | graph | reversible_under_other_conditions → one-way arrow plus annotation; ⇌ only with reverse_of | 2 | B |
 | ADV-057 | cross-chapter reaction (two topic mappings) | U | validation, indexes, graph | no finding; resolves under both chapters via topic ancestry; syllabus view lists it in both | 1–2 | A, B |
 | ADV-058 | multiple aliases for one entity (incl. Unicode α, subscripts) | U | text, indexes, search | every alias folds and resolves to the one record; own aliases never trigger SPC-001; search finds it by every alias | 1, 4 | A |
+
+ADV-005 splits across two gates: the validation half (RXN-017 warning) and the graph shape itself
+(consumes+produces between the same node) are Phase 2/Gate B; the "loop glyph" GRAPH_SEMANTICS.md §9
+describes is a render/layout concept and is Phase 5/Gate E.
 
 ## 6. Gates
 

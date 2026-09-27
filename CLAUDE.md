@@ -34,7 +34,9 @@ Inside `src/core` use relative imports; elsewhere import via `@/…`. Enforced b
 - Files ≤ 400 lines (warning > 300); one responsibility per file; named exports; no `any`.
 - Tests colocated (`x.ts` + `x.test.ts`); property/integration/adversarial/perf/e2e under `tests/`.
 - Errors across module boundaries are values (`{ ok: false, … }`); exceptions only for programmer errors.
-- Commits: `phase-<N>.<S>: <summary>`; tag `phase-<N>` when a phase is done.
+- Commits: `phase-<N>.<S>: <summary>`. At a gate, the implementing agent writes the packet and its
+  self-review, then stops. It never marks a gate passed and never tags. The human reviewer's verdict
+  is recorded in PROGRESS.md first; a separate session then tags phase-<N>.
 - Update `docs/PROGRESS.md` and `docs/PROJECT_STATE.json` at the end of every step.
 
 ## 7. Architecture amendment procedure
@@ -46,18 +48,8 @@ Contracts (`**/contracts.ts`), schemas (`src/core/schema`), invariants and ADRs 
 If unsure whether a change needs this, it does.
 
 ## 8. Read map (read only what the phase needs)
-| Phase | Read |
-|---|---|
-| 1 Domain core | DOMAIN_MODEL, VALIDATION_RULES, ARCHITECTURE §2/§23/§26, TEST_STRATEGY §1–§4 |
-| 2 Graph | GRAPH_SEMANTICS, JEE_ONTOLOGY §4, PERFORMANCE_ARCHITECTURE §1–§4, §9–§10 |
-| 3 Persistence/IO | PERSISTENCE, MIGRATION, SECURITY §1–§3, data/fixtures/legacy/README.md |
-| 4 Workers | PERFORMANCE_ARCHITECTURE §3–§5, SEARCH, SECURITY §2, ADR-007…011 |
-| 5 Shell/render | UI_ARCHITECTURE §1–§6, §9–§12, PERFORMANCE_ARCHITECTURE §6–§7, SECURITY §2/§4 |
-| 6 Workbench | UI_ARCHITECTURE §7–§8, DOMAIN_MODEL §5–§8/§12, VALIDATION_RULES §2 |
-| 7 Views | GRAPH_SEMANTICS §7/§9, UI_ARCHITECTURE §5, JEE_ONTOLOGY §3–§4 |
-| 8 Export/polish | UI_ARCHITECTURE §3/§6, PERSISTENCE §8 |
-| 9 Perf/PWA | PERFORMANCE_ARCHITECTURE, PERSISTENCE §11–§12 |
-| 10 Audit | TEST_STRATEGY §5–§6, MIGRATION §4.8–§4.10, SECURITY |
+Single source of truth: `docs/IMPLEMENTATION_PLAN.md §4` (kept in sync with the phase table in §2 of the
+same file). Do not keep a second copy of the per-phase read map here.
 Step list: `docs/IMPLEMENTATION_PLAN.md §2`. Master prompt: `docs/SONNET_HANDOFF.md §21`.
 
 ## 9. Token discipline

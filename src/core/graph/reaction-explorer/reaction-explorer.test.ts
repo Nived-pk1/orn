@@ -57,7 +57,7 @@ describe('bipartite basics', () => {
 });
 
 describe('ADV-051: same compound twice in one reaction', () => {
-  it('(a) reactant and product: two distinct edges, one node (self-loop shape)', () => {
+  it('(a) reactant and product: two distinct edges, one node (self-loop shape) [ADV-005 graph half]', () => {
     const A = species('sp-a', 'A');
     const r1 = reaction({ slug: 'r1', name: 'Self', scope: 'specific', participants: [{ ref: sp('sp-a'), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp('sp-a') }] }] });
     const state = stateOf(A, r1);

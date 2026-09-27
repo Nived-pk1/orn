@@ -107,7 +107,10 @@ npm run check                # everything required before each commit
 Single test file: `npx vitest run src/core/schema/schema.smoke.test.ts`. The app must be served over http(s); `file://` is unsupported.
 
 ## 20. Definition of done per phase
-Global DoD and per-phase DoD: IMPLEMENTATION_PLAN.md §1 and §3; gate criteria: TEST_STRATEGY.md §6. A phase is done only when its gate (if any) is reviewed and recorded in PROGRESS.md, `PROJECT_STATE.json` is updated, and the final commit is tagged `phase-N`.
+Global DoD and per-phase DoD: IMPLEMENTATION_PLAN.md §1 and §3; gate criteria: TEST_STRATEGY.md §6. At a
+gate, the implementing agent writes the packet and its self-review, then stops: it never marks a gate
+passed and never tags `phase-N`. The human reviewer's verdict is recorded in PROGRESS.md first; a
+separate session then tags `phase-N` once the verdict is passed.
 
 ---
 
@@ -136,7 +139,10 @@ Session protocol:
    docs/PROJECT_STATE.json (currentPhase, completedSteps, nextStep, gates), then commit with
    message "phase-<N>.<S>: <summary>".
 8. End the session with a short report: what changed, test counts, check status, next step, any
-   REVIEW REQUIRED items or open questions for the human.
+   REVIEW REQUIRED items or open questions for the human. At a gate step, write the packet and its
+   self-review, record that the reviewer's verdict is pending in PROGRESS.md, then stop: never mark
+   the gate passed and never tag `phase-N`. A separate session tags `phase-N` once a human reviewer's
+   verdict is recorded as passed.
 
 If something in the docs is contradictory or impossible, stop, explain the conflict precisely, and
 propose the smallest amendment instead of improvising a workaround.

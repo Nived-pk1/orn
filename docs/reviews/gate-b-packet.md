@@ -27,7 +27,7 @@ Source: `docs/TEST_STRATEGY.md §6` (Gate B row) and `docs/IMPLEMENTATION_PLAN.m
 | 3 | P-09 | **pass** | `src/core/graph/route/search.test.ts` — 200-run fast-check property over random directed graphs (possibly cyclic, possibly self-looping): the explored-state budget is never exceeded, `maxRoutes` is never exceeded, no route revisits a substance. |
 | 4 | P-10 | **pass** | `src/test-support/projection-harness.ts`'s `checkRegistry`, run over every registered projection by `tests/property/projections.test.ts`: same state + request → byte-identical projection, on a repeat build and on reordered records with fresh indexes. |
 | 5 | ADV rows marked B pass | **pass** | All 25 Gate B rows are named in a test title (§3.1; the `gate-matrix.ts` title-level scan, re-run for this packet, finds zero missing). |
-| 6 | Benchmarks meet budgets at the design tier | **pass, with two documented exceptions** | §5. Commit, undo/redo, route search, full `validateAll`, and both *local, bounded* projections (`reaction_explorer`, `precursor_explorer`) meet their §2 budgets at the design tier (5,000 reactions) with wide margins. `navigator`'s build and `validateTouched` on an extreme hub do not; both are measured, explained, and left for the reviewer (§0). |
+| 6 | Benchmarks meet budgets at the design tier | **fail (reviewer verdict)** | §5. Commit, undo/redo, route search, full `validateAll`, and both *local, bounded* projections (`reaction_explorer`, `precursor_explorer`) meet their §2 budgets at the design tier (5,000 reactions) with wide margins. `navigator`'s build and `validateTouched` on an extreme hub do not; both were offered as documented exceptions (§0), but the human reviewer did not accept the navigator exception. **Gate B verdict: not passed.** Fixes tracked in `docs/IMPLEMENTATION_PLAN.md §2` steps 2.9–2.10. |
 
 Not part of the gate but relevant: chemistry content is still unverified (Gate A's own caveat; nothing here changes it).
 
@@ -63,7 +63,7 @@ Method: identical to Gate A's (`tests/adversarial/gate-matrix.ts` — a script w
 | ADV-007 | same product major in R1, minor in R2 | `precursor.test.ts` — widened bundling |
 | ADV-011 | chain depth 60 | `traversal.test.ts` |
 | ADV-012 | hub with 1,000 reactions | `precursor.test.ts` (cap+overflow, correctness) **and** `gate-b-performance.test.ts` (performance part, new this step) |
-| ADV-013 | dense 5k-reaction graph, projection < 16 ms p95 | `gate-b-performance.test.ts` (new this step — see §5 for the honest scope: local/bounded projections only) |
+| ADV-013 | dense 5k-reaction graph, projection < 16 ms p95 | `gate-b-performance.test.ts` (new this step — see §5 for the honest scope: local/bounded projections only). **Status: fail (navigator)** — the navigator's own projection build misses the 16 ms budget at the design tier (§5); open until step 2.9 re-measures it against the incremental roll-up index. |
 | ADV-014 | disconnected components, unanchored reactions | `navigator.test.ts` |
 | ADV-015 | species in several classes | `navigator.test.ts` |
 | ADV-027 | water never a node but referenced | `reaction-explorer.test.ts` |
@@ -80,7 +80,7 @@ Method: identical to Gate A's (`tests/adversarial/gate-matrix.ts` — a script w
 | ADV-056 | conditional reversibility | `precursor.test.ts` |
 | ADV-057 | cross-chapter reaction | `syllabus.test.ts` |
 
-All 25: **titled**. (Gate A's caveat about "titled" not implying rigour applies equally here; the title-level scan is a completeness floor, not a quality measure — the rows above were also read directly, in earlier steps' PROGRESS.md entries, when each was built.)
+All 25: **titled**. (Gate A's caveat about "titled" not implying rigour applies equally here; the title-level scan is a completeness floor, not a quality measure — the rows above were also read directly, in earlier steps' PROGRESS.md entries, when each was built.) Titled is not the same as passing: ADV-013's own performance budget currently **fails (navigator)** — see the row above and §5 — and stays open until step 2.9's re-measurement.
 
 ### 3.2 P-09, P-10, INV-22, INV-26
 

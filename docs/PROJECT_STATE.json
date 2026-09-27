@@ -2,12 +2,11 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-09-27",
-  "currentPhase": 3,
+  "currentPhase": 2,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
     0,
-    1,
-    2
+    1
   ],
   "completedSteps": [
     "0",
@@ -32,9 +31,9 @@
     "2.7",
     "2.8"
   ],
-  "nextPhase": 3,
-  "nextStep": "3.1",
-  "nextStepTitle": "Dexie schema, adapter, serial write queue, SaveStatus",
+  "nextPhase": 2,
+  "nextStep": "2.9",
+  "nextStepTitle": "Benchmark percentiles and bench:compare; incremental navigator roll-up index",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -46,9 +45,9 @@
     "B": {
       "phase": 2,
       "title": "Graph engine",
-      "status": "passed",
+      "status": "self-reviewed; reviewer verdict: not passed (budgets); fixes in 2.9–2.10",
       "date": "2026-09-27",
-      "note": "docs/reviews/gate-b-packet.md: two measured, quantified budget misses at the design tier (navigator projection build; validateTouched on a 1,000-reaction hub) are documented exceptions, not fixed this step; see packet §0 for the reviewer's decision."
+      "note": "docs/reviews/gate-b-packet.md: two measured, quantified budget misses at the design tier (navigator projection build; validateTouched on a 1,000-reaction hub) were offered as documented exceptions; the human reviewer did not accept the exception for the navigator budget miss. See packet §0 for detail; 2.9 re-measures the navigator after an incremental index, 2.10 addresses the rest."
     },
     "C": {
       "phase": 3,
@@ -107,7 +106,7 @@
     "All exam coverage and the baseline topic tree are REVIEW REQUIRED until checked against official syllabi.",
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
     "Human review of Gate A: demo chemistry (SMILES, stereodescriptors, conditions, mechanism atom maps) and exam coverage are unverified; nothing is marked verified.",
-    "Demo deviation to confirm: KOH used for both aq. and alc. conditions of reaction 8 (PROGRESS.md step 1.12). The propanone haloform and the ethanal-only propan-2-ol route were resolved by the Gate A review and TEST_STRATEGY §3 was corrected.",
+    "Demo deviation to confirm: KOH used for both aq. and alc. conditions of reaction 8 (PROGRESS.md step 1.12).",
     "Gate B (step 2.8, docs/reviews/gate-b-packet.md §0/§5): navigator's projection build misses the 16ms budget at the design tier (21.81-27.2ms; O(total reactions) full-state scan by design) and validateTouched on a 1,000-reaction hub misses the 16ms commit budget (24.34ms; rule execution over the touched record's full referrer fan-out). Neither fixed; reviewer to decide fix-now vs. defer.",
     "Gate B: scopeOf is computed twice per commit (core/commands/store.ts calls it, then validateTouched calls it again internally) — confirmed real (2.0-2.1x its own cost) but small (~3-5% of a hub-heavy validateTouched); fixing it needs a Validator.validateTouched contract change, not attempted this step.",
     "Gate B: the rejected-commit index rebuild costs ~163-180ms at the design tier; PERFORMANCE_ARCHITECTURE.md §2 has no budget row for this specific case (only for a successful commit) — reviewer to decide whether one should be added.",
