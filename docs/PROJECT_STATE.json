@@ -2,10 +2,11 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-09-27",
-  "currentPhase": 1,
-  "currentPhaseStatus": "complete_pending_gate_a_human_review",
+  "currentPhase": 2,
+  "currentPhaseStatus": "in_progress",
   "completedPhases": [
-    0
+    0,
+    1
   ],
   "completedSteps": [
     "0",
@@ -30,7 +31,8 @@
     "A": {
       "phase": 1,
       "title": "Domain core",
-      "status": "passed_self_review_human_review_pending"
+      "status": "passed",
+      "date": "2026-09-27"
     },
     "B": {
       "phase": 2,
