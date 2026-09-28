@@ -1048,6 +1048,47 @@ baseline values the final medians of the four are: undo+redo 6.18 vs 5.36 (+15%)
 **Not done / left for the reviewer:** Gate B is **not** marked passed (self-reviewed; human review pending);
 `phase-2` is not tagged. Phase 9 exceptions are listed in `docs/reviews/gate-b-packet.md` §8.
 
+### Gate B review recorded (2026-09-28)
+
+Gate B reviewed by the human reviewer (Opus): **PASS** after steps 2.9–2.13, under the exit rule in TEST_STRATEGY §6.
+
+**Verified before recording** (tagging session, 2026-09-28, no benchmark re-run): `git status` clean; `npm run check`
+green (70 files, 1,188 tests); `npm run test:coverage` green (97.38% statements, 91.57% branches, 98.42% functions,
+98.91% lines; thresholds 90/85 met); `ORN_PROPERTY_RUNS=200 npm run test:property` green (7 files, 71 tests); the Gate B
+title-level matrix scan (`tests/adversarial/gate-matrix.ts`) finds all 25 Gate B ADV rows and P-09, P-10, P-11, INV-22,
+INV-26 named in test titles, none missing; in `tests/perf/baseline.json` (42 entries, median p99 of 3 runs) only two
+entries are over their budget row, and both are Phase 9 exceptions below.
+
+**Amendments accepted with this verdict** (full text under "Amendments"):
+- ADR-030 — `ReadonlyIndexes.navigatorRollup()`, the incrementally maintained navigator roll-up index (step 2.9).
+- ADR-031 — `ValidationRule.referencedReads`, field-aware referrer scope (step 2.12).
+- ADR-032 — per-rule re-validation: `FindingStore.replaceForRules`, `Validator.validateTouchedByRule`,
+  `ValidationRule.peerReads` (step 2.13).
+- The Commit row of PERFORMANCE_ARCHITECTURE.md §2 covers rejected commits ("Commit, accepted or rejected", step 2.10).
+- The "Commit on a record with ≥ 500 referrers" 50 ms row, kept as a backstop (added step 2.10, annotated step 2.12).
+- The 60 / 400 anchored-hub tier parameter (60 at the design tier, 400 at the stress tier, stress judged against the
+  informal 32 ms; PERFORMANCE_ARCHITECTURE.md §1/§10, step 2.11).
+- The 3-run benchmark method: PID-locked isolation, explicit warmup and 100-sample floor, 3 fresh-process runs judged on
+  the median p99 with per-entry spread (PERFORMANCE_ARCHITECTURE.md §9, step 2.11).
+
+**Phase 9 exceptions** (median p99 of 3 runs; `docs/reviews/gate-b-packet.md` §8):
+1. Class-hub rename: **16.5 ms** vs 16 (runs 31.1 / 16.5 / 16.4). Cause: RTE-002/004 declare no `peerReads`, so
+   `routesAffectedBy` walks up from the class through its ~1,400 species (~10.5 ms). The class-hub rename and notes
+   edits (15.5 ms) are fixed by declaring `peerReads` on RTE-002/004 (and extending the reads audit).
+2. Class-hub parent move: **46.0 ms** (row 50; structural: SPC-006 on ~1,400 species, the same RTE peers walk, merging
+   ~1,400 findings).
+3. Review-status change on the like-water hub: **21.2 ms** per commit (row 50; structural: RVW-002 on ~1,000 referrers
+   plus the finding-store merge).
+4. Route search on `dense`: **17.2 ms** vs 16 this run (runs 18.0 / 11.1 / 17.2; earlier baselines 9.3–12.1 ms; no
+   route-search code has changed). To be re-checked on a quiet machine; no code change is expected.
+5. `validateTouched` / `validateTouchedByRule` without previous state: **38.7–47.1 ms** on a 1,000-referrer hub (row 50).
+   The commit path never takes it.
+
+**Phase 4 note:** the compute worker always passes `previous` to `validateTouched` (the no-previous-state fallback in
+exception 5 must never be its normal path).
+
+**Standing rule:** all demo chemistry and all exam/syllabus coverage remain REVIEW REQUIRED; nothing is verified.
+
 ## Amendments
 - **2026-09-28, step 2.13 — `FindingStore.replaceForRules`, `Validator.validateTouchedByRule` (with `TouchedValidation`, `commitTouched`) and `ValidationRule.peerReads` (contract changes, ADR-032; all additive, reviewer-approved).** Problem: after ADR-031 a hub edit that changes a field its referrers read (a species' `review`, RVW-002) still re-ran every referrer whole (~50 ms of a 67-77 ms commit on the like-water hub), and touching a class re-ran SPC-006 on every species listing it (1,400 at the design tier; ~87 ms per commit), although one rule of about forty was affected. Change: `FindingStore.replaceForRules(subjects, ruleIds, findings)` replaces only the listed rules' findings for each subject (the whole-subject `replaceForSubjects` stays); `Validator.validateTouchedByRule(state, indexes, touched, previous, known)` returns the subjects re-validated whole plus, per rule set, the referrers and peers of which only the rules that read what changed (or that named them) were re-run, and the command store makes that one call per commit (the doubled `scopeOf` call is gone); an affected L2 rule keeps a record whole (an L2 ERROR gates its L3 rules), and a per-rule subject with an L1/L2 ERROR in the store is skipped. `peerReads` (the mirror of `referencedReads`: fields of a touched record a rule reads when validating one of its other records) makes `peers` field-aware; undeclared means called on every touch. `scopeOf`/`validateTouched` keep their meaning. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-032, VALIDATION_RULES.md §5, ARCHITECTURE.md §2.4, PERFORMANCE_ARCHITECTURE.md §3, IMPLEMENTATION_PLAN.md (§1 item 7, Phase 4 note), TEST_STRATEGY.md §6 (general performance rule for gates).
 - **2026-09-28, step 2.12 — PERFORMANCE_ARCHITECTURE.md §2/§4 wording (doc only, no contract change).** The "Commit on a record with >= 500 referrers" row is annotated as a backstop (the hub scenarios it was added for now meet the 16 ms Commit row) and kept for Phase 9; §4's incremental-validation bullet describes field-aware scope. Reason: the step 2.12 re-measure (see step entry).

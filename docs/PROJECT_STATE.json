@@ -2,11 +2,12 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-09-28",
-  "currentPhase": 2,
+  "currentPhase": 3,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
     0,
-    1
+    1,
+    2
   ],
   "completedSteps": [
     "0",
@@ -36,9 +37,9 @@
     "2.12",
     "2.13"
   ],
-  "nextPhase": 2,
-  "nextStep": "2.14",
-  "nextStepTitle": "Step 2.14 (not yet defined in docs/IMPLEMENTATION_PLAN.md §2 - scope to be set by the reviewer). Gate B human review remains pending on docs/reviews/gate-b-packet.md (updated in step 2.13, final per the exit rule in docs/TEST_STRATEGY.md §6); a separate session tags phase-2 only after a passed verdict is recorded in docs/PROGRESS.md (CLAUDE.md §6)",
+  "nextPhase": 3,
+  "nextStep": "3.1",
+  "nextStepTitle": "Dexie schema, adapter, serial write queue, SaveStatus",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -50,9 +51,9 @@
     "B": {
       "phase": 2,
       "title": "Graph engine",
-      "status": "self-reviewed; human review pending",
-      "date": "2026-09-27",
-      "note": "docs/reviews/gate-b-packet.md rewritten in step 2.13 on median-p99 numbers (3 fresh-process runs, 42 entries) under the final exit rule (docs/TEST_STRATEGY.md §6): correctness green; ordinary edits on the like-water and class hubs under 50 ms (like-water notes 2.9 ms, class-hub rename 16.5 ms, class-hub notes 15.5 ms); structural edits and anything over 16 ms recorded as Phase 9 exceptions (class-hub rename 16.5, class-hub parent move 46.0, like-water review-status commit 21.2, route search dense 17.2 this run - noise). Per-rule referrer/peer re-validation (ADR-032, FindingStore.replaceForRules, Validator.validateTouchedByRule, ValidationRule.peerReads). Not marked passed; awaiting the human reviewer's verdict."
+      "status": "passed",
+      "date": "2026-09-28",
+      "note": "Reviewed by the human reviewer (Opus): PASS after steps 2.9-2.13, under the exit rule in docs/TEST_STRATEGY.md §6 (recorded in docs/PROGRESS.md, \"Gate B review recorded (2026-09-28)\"). Five documented Phase 9 exceptions (class-hub rename 16.5 ms, class-hub parent move 46.0 ms, like-water hub review-status change 21.2 ms, route search dense 17.2 ms - re-check on a quiet machine, validateTouched without previous state 38.7-47.1 ms); see docs/reviews/gate-b-packet.md §8. Tag phase-2."
     },
     "C": {
       "phase": 3,
@@ -116,7 +117,6 @@
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
     "Human review of Gate A: demo chemistry (SMILES, stereodescriptors, conditions, mechanism atom maps) and exam coverage are unverified; nothing is marked verified.",
     "Demo deviation to confirm: KOH used for both aq. and alc. conditions of reaction 8 (PROGRESS.md step 1.12).",
-    "Gate B (steps 2.9-2.10): recomputing benchmark verdicts on p99 instead of step 2.8's single-run means surfaced several new failures not present in the original packet (commit dispatch/undo-redo on hub_explosion; reaction_explorer/precursor_explorer/route-search on dense) — these are a more honest measurement of unchanged behaviour, not something 2.9-2.10 touched or regressed. See docs/reviews/gate-b-packet.md §5 for the full table; open, reviewer to weigh against workstation-noise evidence gathered this session (bench:compare flagged different entries on consecutive runs of the identical code).",
     "npm run bench:compare (step 2.9, PERFORMANCE_ARCHITECTURE.md §9) exists and was run for the step 2.10 packet update, but is not wired into any CI workflow — it must be run manually at gates.",
     "The command store (docs/PROGRESS.md step 2.1) still only maintains the part-1 coreIndexEngine, not the full indexEngine with navigatorRollup(); no live UI can read the navigator roll-up through the store yet. Not this step's problem to fix (no consumer forces the switch until a real navigator feature is wired, Phase 5+), but tests that need it (P-07, the differential test) work around it by subscribing and applying the full engine independently.",
     "Phase 9 exceptions from Gate B (step 2.13, docs/reviews/gate-b-packet.md §8; numbers are median p99 of 3 runs): (1) class-hub rename 16.5 ms vs 16 - cause RTE-002/004 `peers` (routesAffectedBy walks referrers upward, ~10.5 ms); fix: declare peerReads on RTE-002/004 (and audit it); (2) class-hub parent move 46.0 ms (structural: SPC-006 re-runs on 1,400 species + merging ~1,400 findings); (3) review-status change on the like-water hub 21.2 ms per commit (structural: RVW-002 on ~1,000 referrers + finding-store merge); (4) route search dense 17.2 ms this run - untouched code, noise (earlier runs 9.3-12.1 ms), re-check on a quiet machine; (5) validateTouched/validateTouchedByRule without previous state: 38.7-47.1 ms on a 1,000-referrer hub - the compute worker must always pass previous (IMPLEMENTATION_PLAN.md Phase 4 note).",
