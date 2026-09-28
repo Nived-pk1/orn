@@ -2,11 +2,11 @@
 
 An offline-first knowledge system for JEE organic chemistry: species, classes, reagents, reactions with conditions and outcomes, mechanisms, exceptions, routes and a versioned syllabus — explored through derived graph views.
 
-**Status:** Phase 0 (architecture + scaffold) complete. Implementation starts at Phase 1.
+**Status:** see `docs/PROJECT_STATE.json` (current phase, gates, next step) and `docs/PROGRESS.md`.
 
 ## Quick start
 ```bash
-nvm use            # Node 22
+nvm use            # .nvmrc says 22 (engines >=22); developed and tested on 24.21.0
 npm install
 npm run check      # typecheck, lint, boundaries, size, hardcode, tests
 npm run dev        # http://localhost:5173

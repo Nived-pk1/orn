@@ -142,7 +142,7 @@ Rules are **lifecycle-aware**: some rules are WARNING for `draft` and ERROR for 
 
 ## 4. Engine design
 
-- A rule is a `ValidationRule` object `{id, level, kinds, defaultSeverity, scope, description, check}` (plus optional `watches`, `peers` and `referencedReads`, §5) registered in a rule list. Adding a rule never edits another rule. Rules are pure functions of `(record, RuleContext)`; they read neighbours through indexes, never by scanning all records.
+- A rule is a `ValidationRule` object `{id, level, kinds, defaultSeverity, scope, description, check}` (plus optional `watches`, `peers`, `referencedReads` and `peerReads`, §5) registered in a rule list. Adding a rule never edits another rule. Rules are pure functions of `(record, RuleContext)`; they read neighbours through indexes, never by scanning all records.
 - `scope: record` rules re-run only for changed records; `neighbourhood` rules also for records whose references point at a changed record (reverse index) *and* something the rule reads of it changed (`referencedReads`, §5); `global` rules (cycles, duplicate names) are maintained through indexes and re-run for the affected component.
 - Finding IDs are stable hashes of `(ruleId, subject id, path)`, so the UI can track "the same problem" across edits and dismissals are unnecessary (a fixed problem disappears; an unfixed one keeps its ID).
 - The full pass (`validateAll`) runs in the compute worker at boot, after import and after migrations, and must finish in < 3 s at 5k reactions (PERFORMANCE_ARCHITECTURE.md §2). The main-thread incremental pass must fit the 16 ms commit budget.

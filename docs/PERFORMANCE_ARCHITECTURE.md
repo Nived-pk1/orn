@@ -19,6 +19,8 @@ its own; `tests/perf/budgets.mjs`'s `informalBudgetMs`).
 
 ## 2. Budgets (measurable, p95 unless stated)
 
+Benchmarked entries are judged on the median p99 of 3 fresh-process runs (§9): `vitest bench` does not report p95, and p99 is the conservative stand-in. Gate judgement follows the general performance rule in TEST_STRATEGY.md §6.
+
 | Operation | Budget | Where measured |
 |---|---|---|
 | Cold boot to interactive (design target) | < 2.5 s (warm cache < 1.5 s) | Playwright trace, mid-range laptop profile |
@@ -55,7 +57,7 @@ documented Phase 9 exceptions if over 16 ms (docs/TEST_STRATEGY.md §6, docs/rev
 | Search worker | MiniSearch index, incremental updates, queries |
 | Compute worker | Replica of canonical state: full validation, route search, import parse/preview, export building, migrations |
 
-RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferables for large buffers, `cancel` messages wired to `AbortSignal`, progress events, per-call timeouts, automatic worker restart on crash with replica reload. The compute replica stays in sync by applying the same ChangeSets (Immer patches) with a revision check; on mismatch it reloads the full state. Any incremental re-validation in the compute worker must pass the **previous state** to `validateTouchedByRule`/`validateTouched` (ADR-031/032): without it every referrer of a touched record is re-validated whole (~31 ms on a 1,000-referrer hub at the design tier, instead of 1–4 ms).
+RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferables for large buffers, `cancel` messages wired to `AbortSignal`, progress events, per-call timeouts, automatic worker restart on crash with replica reload. The compute replica stays in sync by applying the same ChangeSets (Immer patches) with a revision check; on mismatch it reloads the full state. Any incremental re-validation in the compute worker must pass the **previous state** to `validateTouchedByRule`/`validateTouched` (ADR-031/032): without it every referrer of a touched record is re-validated whole (39–47 ms on a 1,000-referrer hub at the design tier, median p99 in step 2.13, instead of 1–4 ms).
 
 ## 4. Incremental computation
 

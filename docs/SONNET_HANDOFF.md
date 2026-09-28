@@ -1,9 +1,9 @@
 # Sonnet Handoff
 
-Package sections **#30 Sonnet Execution Specification** (items 1–20) and **#31 Sonnet Master Implementation Prompt** (§21). This file is written for the implementing agent. It is complete enough to start Phase 1 without reading every other document; the read map (IMPLEMENTATION_PLAN.md §4) says which details to open per phase.
+Package sections **#30 Sonnet Execution Specification** (items 1–20) and **#31 Sonnet Master Implementation Prompt** (§21). This file is written for the implementing agent. It is complete enough to start any phase without reading every other document; the read map (IMPLEMENTATION_PLAN.md §4) says which details to open per phase.
 
 ## 1. Stack
-TypeScript (strict, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`), React 19, Vite 7, Zod 4 (`z.config({ jitless: true })`), Immer 10, Dexie 4 (IndexedDB), elkjs, RDKit.js MinimalLib, MiniSearch, Zustand, Radix UI + cmdk + TanStack Virtual, d3-zoom, CSS Modules + tokens, Fontsource IBM Plex, fflate, Vitest + fast-check + fake-indexeddb + Testing Library/jsdom + Playwright + axe, ESLint 9 + typescript-eslint, dependency-cruiser. Node 22. Dependencies beyond Phase 1 are added in the phase that needs them (IMPLEMENTATION_PLAN.md §2). Version policy: ADR-020.
+TypeScript (strict, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`), React 19, Vite 7, Zod 4 (`z.config({ jitless: true })`), Immer 10, Dexie 4 (IndexedDB), elkjs, RDKit.js MinimalLib, MiniSearch, Zustand, Radix UI + cmdk + TanStack Virtual, d3-zoom, CSS Modules + tokens, Fontsource IBM Plex, fflate, Vitest + fast-check + fake-indexeddb + Testing Library/jsdom + Playwright + axe, ESLint 9 + typescript-eslint, dependency-cruiser. Node: `.nvmrc` says `22` and `package.json` `engines.node` is `>=22`; the maintainer's toolchain, and every run recorded in PROGRESS.md and the gate packets, is Node 24.21.0 (which satisfies `engines`). Dependencies beyond Phase 1 are added in the phase that needs them (IMPLEMENTATION_PLAN.md §2). Version policy: ADR-020.
 
 ## 2. Repository structure
 ```
@@ -45,7 +45,7 @@ Bipartite hypergraph (substances ↔ reactions); every view is a registered, bou
 `src/persistence/contracts.ts`: DB `orn` v1, stores `DB_STORES`, `PersistenceAdapter` (serial write queue, one transaction per ChangeSet, snapshots, assets, editor sessions, uiState, quota), `WriterLock`, `SaveStatus`, `OpenResult` (read-write / read-only / unavailable). Boot sequence, import pipeline, snapshots, multi-tab, failure table: PERSISTENCE.md.
 
 ## 10. Validation contracts
-`src/core/validation/contracts.ts`: `Finding`, `ValidationRule` (id, level, kinds, defaultSeverity, scope, check), `Validator` (parseRecord, validateTouched, validateAll), `FindingStore`. Severities ERROR / WARNING / INFO / REVIEW_REQUIRED; L1–L3 ERROR blocks commits; L4 never blocks; lifecycle-aware rules. Catalogue with IDs: VALIDATION_RULES.md §3.
+`src/core/validation/contracts.ts`: `Finding`, `ValidationRule` (id, level, kinds, defaultSeverity, scope, check; optional `watches`, `peers`, `referencedReads` (ADR-031), `peerReads` (ADR-032)), `Validator` (parseRecord, scopeOf, validateTouched, validateTouchedByRule, commitTouched, validateAll; incremental calls take the previous state), `FindingStore` (replaceForSubjects, replaceForRules). Severities ERROR / WARNING / INFO / REVIEW_REQUIRED; L1–L3 ERROR blocks commits; L4 never blocks; lifecycle-aware rules. Catalogue with IDs: VALIDATION_RULES.md §3.
 
 ## 11. API contracts
 All in `contracts.ts` files: `core/dataset` (ChangeSet), `core/references` (ReferenceEngine, DeleteImpact), `core/indexes` (ReadonlyIndexes, IndexEngine), `core/commands` (DomainCommand, CommandEnvelope, CommitResult, CanonicalStore, CommandContext, EditorSession), `core/graph` (Projection, ProjectionRequest, ProjectionDefinition, TraversalLimits, RouteQuery), `core/migrations`, `core/text`, `io` (IMPORT_LIMITS, ImportPreview, ImportPlan, ExportOptions, LegacyImportReport), `layout`, `chem`, `search`, `render/scene`, `workers/rpc` (RpcMessage, worker APIs). Implement against these; change them only via the amendment procedure (CLAUDE.md §7).
@@ -57,16 +57,16 @@ Shell: top bar (palette, exam scope, undo/redo, import/export), mode rail (Navig
 Projection → LayoutRequest (worker, deterministic, cached, cancellable) → Scene (pure) → layered React SVG; d3-zoom writes one transform imperatively (no React renders on pan/zoom); LOD thresholds and render budget (400 nodes / 800 edges); viewport culling via grid index; depictions as `<image>` from sanitised SVG; export uses the same Scene. UI_ARCHITECTURE.md §6.
 
 ## 14. Performance rules
-Budgets: PERFORMANCE_ARCHITECTURE.md §2 (commit < 16 ms, projection < 16 ms, layout < 300 ms in worker, search < 50 ms, no main-thread task > 50 ms, cold boot < 2.5 s at 2k/5k). Incremental everything; bounded traversals; heavy work in workers; no JSON.stringify equality in hot paths; benchmarks from Phase 2 with CI regression checks.
+Budgets: PERFORMANCE_ARCHITECTURE.md §2 (commit < 16 ms, projection < 16 ms, layout < 300 ms in worker, search < 50 ms, no main-thread task > 50 ms, cold boot < 2.5 s at 2k/5k). Incremental everything; bounded traversals; heavy work in workers; no JSON.stringify equality in hot paths; benchmarks from Phase 2 (`tests/perf`, judged on median p99 of 3 fresh-process runs, PERFORMANCE_ARCHITECTURE.md §9; gate rule in TEST_STRATEGY.md §6). `npm run bench:compare` is run manually at gates; no CI workflow runs it yet.
 
 ## 15. Testing requirements
-Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§2. Property tests P-01…P-10 (§4). Adversarial matrix ADV-001…058 (§5) with phase and gate per row. Demo dataset spec (§3). Gates A–F (§6).
+Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§2. Property tests P-01…P-11 (§4). Adversarial matrix ADV-001…058 (§5) with phase and gate per row. Demo dataset spec (§3). Gates A–F (§6).
 
 ## 16. Current phase
-**Phase 0 complete** (architecture, schemas, contracts, fixtures, scaffold). See `docs/PROJECT_STATE.json`.
+The current phase, completed steps, gate statuses and next step are recorded in `docs/PROJECT_STATE.json` (read it every session; it is the only place they are kept). Do not restate them here. History and decisions: `docs/PROGRESS.md`.
 
 ## 17. Next phase
-**Phase 1 — Domain core → Gate A**, starting at step 1.1 (install, lock versions, make `npm run check` pass). Steps 1.1–1.12 in IMPLEMENTATION_PLAN.md §2.
+Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 3, step 3.1; Gates A and B passed.)
 
 ## 18. Forbidden shortcuts
 1. Storing graphs, edges, layouts, derived relations, computed chemistry, scope or findings in records.
@@ -87,7 +87,7 @@ Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§
 
 ## 19. Exact commands
 ```bash
-nvm use                      # Node 22 (.nvmrc)
+nvm use                      # .nvmrc says 22 (engines >=22); the maintainer runs 24.21.0
 npm install                  # first time: creates package-lock.json (commit it)
 npm run dev                  # Vite dev server (http://localhost:5173)
 npm run build                # typecheck + production build (CSP injected)
