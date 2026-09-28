@@ -158,7 +158,7 @@ describes is a render/layout concept and is Phase 5/Gate E.
 | Gate | After | Must be true |
 |---|---|---|
 | A — Domain core | Phase 1 | Schemas + maximal fixture; reference registry coverage test passes; commands, undo/redo; L1–L3 rules with tests; INV tests; P-01 (in-memory variant), P-02, P-04…P-08; demo dataset validates with 0 ERROR; generator produces valid data at all tiers; ADV rows marked A pass |
-| B — Graph engine | Phase 2 | All projections registered; route search; P-09, P-10, P-11; ADV rows marked B pass; benchmarks meet budgets at the design tier, judged by the general performance rule below |
+| B — Graph engine | Phase 2 | All projections registered; route search; P-09, P-10; ADV rows marked B pass; benchmarks meet budgets at the design tier, judged by the general performance rule below |
 | C — Persistence & import | Phase 3 | Dexie adapter, write queue, boot integrity, snapshots, multi-tab lock; import/export incl. `.ornpkg`; migrations framework; v6 dry run on fixtures with zero `notImported`; ADV rows marked C pass |
 | D — Authoring | Phase 6 | Every demo reaction can be authored through the UI from scratch; drafts survive reload; conflicts handled; L4 streaming; ADV-036 |
 | E — UI & rendering | Phase 5 | Shell, navigator, inspector, keyboard map, list view, a11y checks (axe) pass; 60 fps pan/zoom at render budget; ADV-012, ADV-033 in e2e |

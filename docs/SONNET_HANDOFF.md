@@ -3,7 +3,7 @@
 Package sections **#30 Sonnet Execution Specification** (items 1–20) and **#31 Sonnet Master Implementation Prompt** (§21). This file is written for the implementing agent. It is complete enough to start any phase without reading every other document; the read map (IMPLEMENTATION_PLAN.md §4) says which details to open per phase.
 
 ## 1. Stack
-TypeScript (strict, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`), React 19, Vite 7, Zod 4 (`z.config({ jitless: true })`), Immer 10, Dexie 4 (IndexedDB), elkjs, RDKit.js MinimalLib, MiniSearch, Zustand, Radix UI + cmdk + TanStack Virtual, d3-zoom, CSS Modules + tokens, Fontsource IBM Plex, fflate, Vitest + fast-check + fake-indexeddb + Testing Library/jsdom + Playwright + axe, ESLint 9 + typescript-eslint, dependency-cruiser. Node: `.nvmrc` says `22` and `package.json` `engines.node` is `>=22`; the maintainer's toolchain, and every run recorded in PROGRESS.md and the gate packets, is Node 24.21.0 (which satisfies `engines`). Dependencies beyond Phase 1 are added in the phase that needs them (IMPLEMENTATION_PLAN.md §2). Version policy: ADR-020.
+TypeScript (strict, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`), React 19, Vite 7, Zod 4 (`z.config({ jitless: true })`), Immer 10, Dexie 4 (IndexedDB), elkjs, RDKit.js MinimalLib, MiniSearch, Zustand, Radix UI + cmdk + TanStack Virtual, d3-zoom, CSS Modules + tokens, Fontsource IBM Plex, fflate, Vitest + fast-check + fake-indexeddb + Testing Library/jsdom + Playwright + axe, ESLint 9 + typescript-eslint, dependency-cruiser. Node: `.nvmrc` says `24` (the maintainer's toolchain, and every run recorded in PROGRESS.md and the gate packets, is Node 24.21.0); `package.json` `engines.node` stays `>=22`. Dependencies beyond Phase 1 are added in the phase that needs them (IMPLEMENTATION_PLAN.md §2). Version policy: ADR-020.
 
 ## 2. Repository structure
 ```
@@ -87,7 +87,7 @@ Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its t
 
 ## 19. Exact commands
 ```bash
-nvm use                      # .nvmrc says 22 (engines >=22); the maintainer runs 24.21.0
+nvm use                      # Node 24 (.nvmrc; engines >=22)
 npm install                  # first time: creates package-lock.json (commit it)
 npm run dev                  # Vite dev server (http://localhost:5173)
 npm run build                # typecheck + production build (CSP injected)

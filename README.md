@@ -6,7 +6,7 @@ An offline-first knowledge system for JEE organic chemistry: species, classes, r
 
 ## Quick start
 ```bash
-nvm use            # .nvmrc says 22 (engines >=22); developed and tested on 24.21.0
+nvm use            # Node 24 (.nvmrc; engines >=22)
 npm install
 npm run check      # typecheck, lint, boundaries, size, hardcode, tests
 npm run dev        # http://localhost:5173
