@@ -1,8 +1,9 @@
 /**
- * Field-aware validation scope (ADR-031, docs/PERFORMANCE_ARCHITECTURE.md §4): after random edit sequences
- * aimed at a high-referrer hub species — the ADV-012 shape (one hub, every reaction through it) and the
+ * Field-aware, per-rule validation scope (ADR-031, ADR-032, docs/PERFORMANCE_ARCHITECTURE.md §4): after random
+ * edit sequences aimed at a high-referrer hub species, and at the class hub every species lists (review status
+ * and lifecycle, names, notes, parents, classes, deletion) — the ADV-012 shape (one hub, every reaction through it) and the
  * "like water" shape (several hubs among many reactions, one relationship per reaction) — the findings
- * kept by scopeOf + validateTouched + commitFindings equal a full validateAll after every edit. Edits
+ * kept by validateTouchedByRule + commitTouched equal a full validateAll after every edit. Edits
  * are raw recipes, so hub deletions leave dangling references and other invalid states, on purpose.
  */
 import fc from 'fast-check';
@@ -29,6 +30,10 @@ const stateOf = (params: GeneratorParams): CanonicalState => {
   return parsed.state;
 };
 
+/** The class with the most referrers: the class hub every species lists in `hub_explosion`. */
+const classHubOf = (state: CanonicalState, indexes: CoreIndexes): string =>
+  Object.keys(state.records.class).sort().reduce((best, id) => (indexes.referrersOf(id).length > indexes.referrersOf(best).length ? id : best));
+
 /** The species with the most referrers: the hub, found structurally (never by ID). */
 const hubOf = (state: CanonicalState, indexes: CoreIndexes): string =>
   Object.keys(state.records.species).sort().reduce((best, id) => (indexes.referrersOf(id).length > indexes.referrersOf(best).length ? id : best));
@@ -41,6 +46,7 @@ interface Ctx {
   readonly state: CanonicalState;
   readonly indexes: CoreIndexes;
   readonly hub: string;
+  readonly classHub: string;
   readonly a: number;
   readonly b: number;
   readonly c: number;
@@ -167,6 +173,46 @@ const EDITS: readonly ((x: Ctx) => Recipe | undefined)[] = [
     const id = reaction(x);
     return id === undefined ? undefined : (t) => { const ps = list(rec(t, 'reaction', id)?.['participants']); const first = ps[0]; if (first !== undefined) ps.push({ ...first, id: `prt_dup-${x.c}` }); };
   },
+  // Review status of a referrer: RVW-001 reads the record itself, RVW-002 the lifecycle of what it refers to.
+  (x) => {
+    const id = reaction(x);
+    const status = pick(['unreviewed', 'review_required', 'verified'] as const, x.c);
+    return id === undefined ? undefined : (t) => { const r = rec(t, 'reaction', id); if (r !== undefined) Object.assign(r['review'] as Loose, { status, reasons: status === 'review_required' ? ['why'] : [] }); };
+  },
+  // The class hub: name (sometimes a twin's), notes, parents (may close a cycle), review, deletion.
+  (x) => {
+    const twin = pick(ids(x.state, 'class').filter((id) => id !== x.classHub), x.b);
+    const other = twin === undefined ? undefined : (x.state.records.class[twin] as unknown as { names: { canonical: string } }).names.canonical;
+    return (t) => { const c = rec(t, 'class', x.classHub); if (c !== undefined) (c['names'] as Loose)['canonical'] = x.c % 3 === 0 && other !== undefined ? other : `Class hub ${x.c}`; };
+  },
+  (x) => {
+    const text = x.c % 3 === 0 ? undefined : x.c % 3 === 1 ? 'A plain note.' : `See [[${x.hub}]].`;
+    return (t) => { const c = rec(t, 'class', x.classHub); if (c !== undefined) { if (text === undefined) delete c['notes']; else c['notes'] = text; } };
+  },
+  (x) => {
+    const parents = [...new Set([pick(ids(x.state, 'class'), x.a), pick(ids(x.state, 'class'), x.b)].filter((p): p is string => p !== undefined && p !== x.classHub))];
+    return (t) => { const c = rec(t, 'class', x.classHub); if (c !== undefined) c['parentIds'] = x.c % 4 === 0 ? [] : parents; };
+  },
+  (x) => (t) => {
+    const c = rec(t, 'class', x.classHub);
+    if (c !== undefined) Object.assign(c['review'] as Loose, { lifecycle: x.c % 2 === 0 ? 'draft' : 'published', status: x.c % 3 === 0 ? 'review_required' : 'unreviewed', reasons: x.c % 3 === 0 ? ['why'] : [] });
+  },
+  (x) => {
+    if (!Object.hasOwn(x.state.records.class, x.classHub) || x.c % 4 !== 0) return undefined;
+    x.graveyard.push({ kind: 'class', record: x.state.records.class[x.classHub] as unknown as Loose });
+    return (t) => { Reflect.deleteProperty(t.class, x.classHub); };
+  },
+  // Species and other classes: which classes a species lists (a class and its ancestor: SPC-006), and ancestry.
+  (x) => {
+    const id = pick(ids(x.state, 'species'), x.a);
+    const classes = [x.c % 5 === 0 ? undefined : x.classHub, pick(ids(x.state, 'class'), x.b), pick(ids(x.state, 'class'), x.c)].filter((c): c is string => c !== undefined);
+    return id === undefined ? undefined : (t) => { const sp = rec(t, 'species', id); if (sp !== undefined) sp['classIds'] = [...new Set(classes)]; };
+  },
+  (x) => {
+    const id = pick(ids(x.state, 'class').filter((c) => c !== x.classHub), x.a);
+    const parent = pick(ids(x.state, 'class'), x.b);
+    return id === undefined ? undefined : (t) => { const c = rec(t, 'class', id); if (c !== undefined) c['parentIds'] = parent === undefined || parent === id || x.c % 3 === 0 ? [] : [parent]; };
+  },
 ];
 
 describe('P-11 incremental validation equals full validation on high-referrer hubs (ADR-031)', () => {
@@ -178,10 +224,11 @@ describe('P-11 incremental validation equals full validation on high-referrer hu
       fc.property(fc.array(editArb, { minLength: 1, maxLength: 24 }), (edits) => {
         const run = new IncrementalRun(initial);
         const hub = hubOf(initial, run.indexes);
+        const classHub = classHubOf(initial, run.indexes);
         expect(run.indexes.referrersOf(hub).length).toBeGreaterThan(20);
         const graveyard: Ctx['graveyard'] = [];
         edits.forEach((edit, i) => {
-          const recipe = EDITS[edit.op]?.({ state: run.state, indexes: run.indexes, hub, a: edit.a, b: edit.b, c: edit.c, graveyard });
+          const recipe = EDITS[edit.op]?.({ state: run.state, indexes: run.indexes, hub, classHub, a: edit.a, b: edit.b, c: edit.c, graveyard });
           if (recipe === undefined) return;
           run.apply(recipe);
           run.expectEqualsFull(`edit ${i} (op ${edit.op}, ${edit.a}/${edit.b}/${edit.c})`);
@@ -195,11 +242,12 @@ describe('P-11 incremental validation equals full validation on high-referrer hu
     const initial = stateOf(LIKE_WATER);
     const run = new IncrementalRun(initial);
     const hub = hubOf(initial, run.indexes);
+    const classHub = classHubOf(initial, run.indexes);
     const graveyard: Ctx['graveyard'] = [];
     const applied = new Set<number>();
     for (let round = 0; round < 3; round += 1) {
       EDITS.forEach((edit, op) => {
-        const recipe = edit({ state: run.state, indexes: run.indexes, hub, a: 3 + round, b: 5 + round, c: 12 * (round + 1), graveyard });
+        const recipe = edit({ state: run.state, indexes: run.indexes, hub, classHub, a: 3 + round, b: 5 + round, c: 12 * (round + 1), graveyard });
         if (recipe === undefined) return;
         run.apply(recipe);
         run.expectEqualsFull(`op ${op}, round ${round}`);

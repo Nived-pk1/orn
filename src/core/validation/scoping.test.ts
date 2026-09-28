@@ -74,20 +74,23 @@ describe('readsChange', () => {
     expect(referrerFilter(rulesOf, 'species', new Set(['names']))('reaction')).toBe(false);
     expect(referrerFilter(rulesOf, 'species', new Set(['review']))('reaction')).toBe(true); // RVW-002
     expect(referrerFilter(rulesOf, 'species', 'all')('reaction')).toBe(true); // REF-001
-    expect(referrerFilter(rulesOf, 'species', new Set(['names']))('species')).toBe(true); // SPC-006 is undeclared
+    expect(referrerFilter(rulesOf, 'class', new Set(['names']))('species')).toBe(false); // SPC-006 reads class.parentIds only
+    expect(referrerFilter(rulesOf, 'class', new Set(['parentIds']))('species')).toBe(true);
   });
 });
 
 /** A small hub: one species that 120 reactions use (the ADV-012 shape), findings kept incrementally. */
-function hubRun(rules: readonly ValidationRule[] = RULES): { run: IncrementalRun; hub: string; referrers: string[]; ran: Set<string> } {
+function hubRun(rules: readonly ValidationRule[] = RULES): { run: IncrementalRun; hub: string; referrers: string[]; ran: Set<string>; ruleRuns: Map<string, Set<string>> } {
   const parsed = documentToState(generateDataset({ species: 60, classes: 3, reagents: 5, reactions: 120, relationshipsPerReaction: 1, topics: 2, shape: 'hub_explosion', seed: 7 }));
   if (!parsed.ok) throw new Error('duplicate IDs');
   const ran = new Set<string>();
+  const ruleRuns = new Map<string, Set<string>>();
   const counting = createValidator(
     rules.map((rule): ValidationRule => ({
       ...rule,
       *check(record, ctx) {
         ran.add(`${record.kind}:${record.id}`);
+        ruleRuns.set(`${record.kind}:${record.id}`, (ruleRuns.get(`${record.kind}:${record.id}`) ?? new Set<string>()).add(rule.id));
         yield* rule.check(record as never, ctx);
       },
     })),
@@ -96,7 +99,8 @@ function hubRun(rules: readonly ValidationRule[] = RULES): { run: IncrementalRun
   const hub = Object.keys(parsed.state.records.species).reduce((best, id) => (run.indexes.referrersOf(id).length > run.indexes.referrersOf(best).length ? id : best));
   const referrers = [...new Set(run.indexes.referrersOf(hub).filter((r) => r.owner.kind === 'reaction').map((r) => r.owner.id))];
   ran.clear();
-  return { run, hub, referrers, ran };
+  ruleRuns.clear();
+  return { run, hub, referrers, ran, ruleRuns };
 }
 const reactionsRun = (ran: ReadonlySet<string>): string[] => [...ran].filter((key) => key.startsWith('reaction:'));
 
@@ -237,5 +241,114 @@ describe('rules that declare fields', () => {
     expect(has(gone.scope, 'reaction', reaction.id)).toBe(true);
     expect(run.findings.all().some((f) => f.ruleId === 'REF-005' && f.subject.id === reaction.id)).toBe(true);
     run.expectEqualsFull('reagent lost its profiles');
+  });
+});
+
+describe('per-rule referrer re-validation (ADR-032)', () => {
+  const primary = (t: Tables, id: string): void => {
+    const ps = (rec(t, 'reaction', id)['participants'] as Loose[]).slice(0, 2);
+    for (const p of ps) p['isPrimarySubstrate'] = true;
+  };
+
+  it('a change to a field one rule reads re-runs that rule alone on every referrer', () => {
+    const { run, hub, referrers, ruleRuns } = hubRun();
+    const edit = run.apply((t) => { (rec(t, 'species', hub)['review'] as Loose)['lifecycle'] = 'draft'; });
+    expect(referrers.some((id) => has(edit.whole, 'reaction', id))).toBe(false);
+    expect(edit.byRule.filter((e) => e.subject.kind === 'reaction').length).toBe(referrers.length);
+    expect(edit.byRule.every((e) => e.ruleIds.length === 1 && e.ruleIds[0] === 'RVW-002')).toBe(true);
+    for (const id of referrers) expect([...(ruleRuns.get(`reaction:${id}`) ?? [])]).toEqual(['RVW-002']);
+    expect(run.findings.all().filter((f) => f.ruleId === 'RVW-002').length).toBe(referrers.length);
+    run.expectEqualsFull('hub became a draft');
+  });
+
+  it('a referrer\'s findings from rules that did not run survive the per-rule replace', () => {
+    const { run, hub, referrers } = hubRun();
+    const first = referrers[0] as string;
+    run.apply((t) => primary(t, first));
+    const before = run.findings.bySubject({ kind: 'reaction', id: first }).filter((f) => f.ruleId === 'RXN-006');
+    expect(before.length).toBe(1);
+    run.apply((t) => { (rec(t, 'species', hub)['review'] as Loose)['lifecycle'] = 'draft'; });
+    expect(run.findings.bySubject({ kind: 'reaction', id: first }).map((f) => f.ruleId)).toEqual(expect.arrayContaining(['RXN-006', 'RVW-002']));
+    expect(run.findings.bySubject({ kind: 'reaction', id: first }).filter((f) => f.ruleId === 'RXN-006')).toEqual(before);
+    run.apply((t) => { (rec(t, 'species', hub)['review'] as Loose)['lifecycle'] = 'published'; });
+    expect(run.findings.bySubject({ kind: 'reaction', id: first }).map((f) => f.ruleId)).toContain('RXN-006');
+    expect(run.findings.bySubject({ kind: 'reaction', id: first }).map((f) => f.ruleId)).not.toContain('RVW-002');
+    run.expectEqualsFull('draft, then published again');
+  });
+
+  it('a referrer with an L2 ERROR has no L3 findings, so the per-rule pass leaves it alone', () => {
+    const { run, hub, referrers } = hubRun();
+    const broken = referrers[1] as string;
+    run.apply((t) => { ((rec(t, 'reaction', broken)['participants'] as Loose[])[0] as Loose)['ref'] = { kind: 'species', id: 'spc_ghost' }; });
+    expect(run.findings.bySubject({ kind: 'reaction', id: broken }).some((f) => f.ruleId === 'REF-001')).toBe(true);
+    const edit = run.apply((t) => { (rec(t, 'species', hub)['review'] as Loose)['lifecycle'] = 'draft'; });
+    expect(edit.byRule.some((e) => e.subject.id === broken)).toBe(false);
+    expect(run.findings.bySubject({ kind: 'reaction', id: broken }).some((f) => f.ruleId === 'RVW-002')).toBe(false);
+    run.expectEqualsFull('hub draft with one broken referrer');
+    run.apply((t) => { ((rec(t, 'reaction', broken)['participants'] as Loose[])[0] as Loose)['ref'] = { kind: 'species', id: hub }; });
+    run.expectEqualsFull('the broken referrer is repaired');
+  });
+
+  it('a change that an L2 rule reads (existence, REF-001) still re-validates a referrer whole', () => {
+    const { run, hub, referrers } = hubRun();
+    const edit = run.apply((t) => { Reflect.deleteProperty(t.species, hub); });
+    expect(referrers.every((id) => has(edit.whole, 'reaction', id))).toBe(true);
+    expect(edit.byRule.filter((e) => e.subject.kind === 'reaction')).toEqual([]);
+  });
+
+  it('scopeOf is the whole subjects plus the per-rule subjects, and without previous nothing is partial', () => {
+    const { run, hub } = hubRun();
+    const validator = createValidator();
+    const next = run.apply((t) => { (rec(t, 'species', hub)['review'] as Loose)['lifecycle'] = 'draft'; });
+    const touched = [{ kind: 'species', id: hub }] as const;
+    const legacy = validator.scopeOf(run.state, run.indexes, touched, undefined);
+    const byRule = validator.validateTouchedByRule(run.state, run.indexes, touched, undefined, run.findings);
+    expect(byRule.byRule).toEqual([]);
+    expect(byRule.scope).toEqual(legacy);
+    expect(next.scope.length).toBeGreaterThan(next.whole.length);
+  });
+
+  describe('a class hub (every species lists it)', () => {
+    const classHubRun = () => {
+      const parsed = documentToState(generateDataset({ species: 60, classes: 4, reagents: 3, reactions: 20, relationshipsPerReaction: 0, topics: 2, shape: 'hub_explosion', seed: 5 }));
+      if (!parsed.ok) throw new Error('duplicate IDs');
+      const ran = new Map<string, Set<string>>();
+      const counting = createValidator(RULES.map((rule): ValidationRule => ({
+        ...rule,
+        *check(record, ctx) {
+          ran.set(`${record.kind}:${record.id}`, (ran.get(`${record.kind}:${record.id}`) ?? new Set<string>()).add(rule.id));
+          yield* rule.check(record as never, ctx);
+        },
+      })));
+      const run = new IncrementalRun(parsed.state, counting);
+      const classHub = Object.keys(parsed.state.records.class).reduce((best, id) => (run.indexes.referrersOf(id).length > run.indexes.referrersOf(best).length ? id : best));
+      ran.clear();
+      const speciesRuns = (): [string, Set<string>][] => [...ran].filter(([key]) => key.startsWith('species:'));
+      return { run, classHub, ran, speciesRuns };
+    };
+
+    it.each([
+      ['renaming it', (c: Loose) => { (c['names'] as Loose)['canonical'] = 'Renamed class hub'; }],
+      ['adding an alias', (c: Loose) => { (c['names'] as Loose)['aliases'] = ['a hub']; }],
+      ['editing its notes', (c: Loose) => { c['notes'] = 'A note.'; }],
+    ])('%s re-runs nothing on its species (SPC-006 reads parentIds only: peerReads)', (_name, change) => {
+      const { run, classHub, speciesRuns } = classHubRun();
+      const edit = run.apply((t) => change(rec(t, 'class', classHub)));
+      expect(speciesRuns()).toEqual([]);
+      expect(edit.scope.some((r) => r.kind === 'species')).toBe(false);
+      run.expectEqualsFull(_name);
+    });
+
+    it('moving it under another parent re-runs SPC-006, and only SPC-006, on each species that lists it (a peer named by one L3 rule)', () => {
+      const { run, classHub, ran, speciesRuns } = classHubRun();
+      // Every generated class descends from the hub, so add a spare root to move it under without a cycle.
+      run.apply((t) => { t.class['cls_spare-root'] = { ...JSON.parse(JSON.stringify(t.class[classHub])) as Loose, id: 'cls_spare-root', parentIds: [], exampleSpeciesIds: [], names: { canonical: 'Spare root', aliases: [], common: [] } }; });
+      ran.clear();
+      const edit = run.apply((t) => { rec(t, 'class', classHub)['parentIds'] = ['cls_spare-root']; });
+      expect(speciesRuns().length).toBeGreaterThan(50);
+      expect(speciesRuns().every(([, rules]) => [...rules].every((id) => id === 'SPC-006'))).toBe(true);
+      expect(edit.whole.some((r) => r.kind === 'species')).toBe(false);
+      run.expectEqualsFull('class hub moved');
+    });
   });
 });

@@ -82,6 +82,16 @@ export interface ValidationRule<K extends RecordKind = RecordKind> {
    * A wrong declaration leaves a stale finding, which the incremental ≡ full tests and the read audit catch.
    */
   readonly referencedReads?: ReferencedReads;
+  /**
+   * Optional (step 2.13, ADR-032). The mirror of `referencedReads` for `peers`: which fields of a touched record
+   * (keys: its kind, or `'*'`) this rule reads of it when validating one of its *other* records — a name twin, a
+   * class ancestor, a species listing a class or a descendant — anywhere other than through that record's own
+   * references. `peers` is called for a touched record only if a listed field changed, or the record was created
+   * or deleted (`[]`: only existence matters); a kind with no key is never called. Omitted (the default) means
+   * "may read anything": `peers` is called on every touch, as before. A wrong declaration leaves a stale finding;
+   * `reads-audit.test.ts` traces the reads of every declaring rule and the incremental ≡ full tests catch the rest.
+   */
+  readonly peerReads?: ReferencedReads;
 }
 
 export interface Validator {
@@ -111,10 +121,52 @@ export interface Validator {
   ): readonly RecordRef[];
   /** Full L1–L3 pass, run in the compute worker. */
   validateAll(state: CanonicalState, indexes: CoreIndexes, signal?: AbortSignal): readonly Finding[];
+  /**
+   * `validateTouched` + `scopeOf` in one call, with referrers re-validated per rule (ADR-032, step 2.13). The
+   * touched records, their referents and their peers are re-validated whole (`scope`/`findings`, replaced with
+   * `FindingStore.replaceForSubjects`). A referrer of a touched record only had its rules that read a changed
+   * field (`referencedReads`) re-run, and that referrer's other findings must survive: those results come back
+   * in `byRule`, to be merged with `FindingStore.replaceForRules`. `commitTouched` does both. `previous` should
+   * always be passed: without it nothing can be diffed and every referrer is re-validated whole. `known` is the
+   * store the result will be committed to; it says whether a referrer currently has an L1/L2 ERROR (which
+   * gates its L3 rules off). The union of `scope` and the `byRule` subjects equals `scopeOf`'s answer, and the
+   * committed store equals `validateAll`'s findings (tested).
+   */
+  validateTouchedByRule(
+    state: CanonicalState,
+    indexes: CoreIndexes,
+    touched: readonly RecordRef[],
+    previous: CanonicalState | undefined,
+    known: Pick<FindingStore, 'bySubject'>,
+  ): TouchedValidation;
+}
+
+/** Findings of some rules only, for subjects whose other findings are left alone. */
+export interface RuleScopedFindings {
+  readonly subjects: readonly RecordRef[];
+  readonly ruleIds: readonly string[];
+  readonly findings: readonly Finding[];
+}
+
+export interface TouchedValidation {
+  /** Subjects re-validated whole, sorted. */
+  readonly scope: readonly RecordRef[];
+  /** Every finding of `scope`, all levels, sorted. */
+  readonly findings: readonly Finding[];
+  /** Referrers re-validated for the rules that read what changed, grouped by that rule set. */
+  readonly byRule: readonly RuleScopedFindings[];
+  /** `findings` and every `byRule` finding, sorted: what a commit reports and checks for ERRORs. */
+  readonly all: readonly Finding[];
 }
 
 export interface FindingStore {
   replaceForSubjects(subjects: readonly RecordRef[], findings: readonly Finding[], level: ValidationLevel): void;
+  /**
+   * Additive (ADR-032). Replaces, for each of `subjects`, only its findings of the rules in `ruleIds` (at
+   * whatever level they are) with `findings`; its findings of every other rule are left untouched. Every
+   * finding must be about a listed subject and of a listed rule. No findings clears those rules' findings.
+   */
+  replaceForRules(subjects: readonly RecordRef[], ruleIds: readonly string[], findings: readonly Finding[]): void;
   bySubject(ref: RecordRef): readonly Finding[];
   all(filter?: { readonly severity?: Severity; readonly level?: ValidationLevel }): readonly Finding[];
   counts(): Readonly<Record<Severity, number>>;

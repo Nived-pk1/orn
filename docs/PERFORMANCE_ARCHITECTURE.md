@@ -54,7 +54,7 @@ measures 34-37 ms p99 in `validateTouched` and 67 ms p99 for a whole commit on t
 | Search worker | MiniSearch index, incremental updates, queries |
 | Compute worker | Replica of canonical state: full validation, route search, import parse/preview, export building, migrations |
 
-RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferables for large buffers, `cancel` messages wired to `AbortSignal`, progress events, per-call timeouts, automatic worker restart on crash with replica reload. The compute replica stays in sync by applying the same ChangeSets (Immer patches) with a revision check; on mismatch it reloads the full state.
+RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferables for large buffers, `cancel` messages wired to `AbortSignal`, progress events, per-call timeouts, automatic worker restart on crash with replica reload. The compute replica stays in sync by applying the same ChangeSets (Immer patches) with a revision check; on mismatch it reloads the full state. Any incremental re-validation in the compute worker must pass the **previous state** to `validateTouchedByRule`/`validateTouched` (ADR-031/032): without it every referrer of a touched record is re-validated whole (~31 ms on a 1,000-referrer hub at the design tier, instead of 1–4 ms).
 
 ## 4. Incremental computation
 

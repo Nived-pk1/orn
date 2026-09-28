@@ -10,6 +10,7 @@ Package sections **#28 Phase Plan** and **#29 Definition of Done**. Each phase i
 4. Public contracts changed only through the amendment procedure (CLAUDE.md §7).
 5. Docs updated where behaviour differs from them; no silent divergence.
 6. No data is stored that the schema does not define; no derived data is stored.
+7. A step that adds or changes a hot path (commit, index, projection, validation, layout, search) adds or updates its benchmark in the same step.
 
 ## 2. Phases
 
@@ -75,6 +76,8 @@ Dependencies: `@rdkit/rdkit`, `elkjs`, `minisearch`.
 | 4.3 | Chem worker: RDKit adapter, SVG sanitiser, facts cache, L4 checks CHEM-001…009 |
 | 4.4 | Layout worker: ELK adapter per algorithm, fallback layout, cache keys |
 | 4.5 | Search worker: document builder, MiniSearch config, incremental updates, palette grammar parser |
+
+**Phase 4 note (step 2.13, from the Gate B performance work).** Any worker or service that re-validates after a commit must call `Validator.validateTouchedByRule` (or `validateTouched`/`scopeOf`) **with the previous state** — the compute worker's replica sync has both states (docs/PERFORMANCE_ARCHITECTURE.md §3), so it must pass them. Without `previous` nothing can be diffed (ADR-031/032), every referrer of a touched record is re-validated whole, and a hub record then costs about 31 ms per call (measured at the design tier, step 2.12) instead of 1–4 ms. `validateAll` is unaffected.
 
 ### Phase 5 — Shell, rendering, navigator, inspector → Gate E
 Dependencies: `zustand`, Radix primitives, `cmdk`, `@tanstack/react-virtual`, `d3-zoom`, Fontsource Plex; dev: Testing Library, `jsdom`, `@playwright/test`, `@axe-core/playwright`.

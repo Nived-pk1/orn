@@ -133,6 +133,68 @@ describe('finding store', () => {
   });
 });
 
+describe('finding store: replaceForRules (ADR-032)', () => {
+  const seeded = () => {
+    const store = createFindingStore();
+    store.replaceForSubjects([A, B], [finding(A, 'REF-008', 'warning', 2, 'notes'), finding(B, 'REF-008', 'warning', 2, 'notes')], 2);
+    store.replaceForSubjects([A, B], [finding(A, 'RXN-001', 'error'), finding(A, 'RVW-002', 'info'), finding(B, 'SPC-004', 'info'), finding(B, 'RVW-002', 'info')], 3);
+    return store;
+  };
+
+  it("replaces only the listed rules' findings; every other finding of the subject survives, at every level", () => {
+    const store = seeded();
+    store.replaceForRules([A], ['RVW-002'], []);
+    expect(store.bySubject(A).map((f) => f.ruleId)).toEqual(['REF-008', 'RXN-001']);
+    store.replaceForRules([A], ['RVW-002'], [finding(A, 'RVW-002', 'info', 3, 'review.lifecycle', 'new wording')]);
+    expect(store.bySubject(A).map((f) => f.ruleId)).toEqual(['REF-008', 'RVW-002', 'RXN-001']);
+    expect(must(store.bySubject(A).find((f) => f.ruleId === 'RVW-002')).message).toBe('new wording');
+    expect(store.counts()).toEqual({ error: 1, warning: 2, info: 3, review_required: 0 });
+  });
+
+  it("does not touch subjects that are not listed, and one call can replace rules at more than one level", () => {
+    const store = seeded();
+    store.replaceForRules([A], ['REF-008', 'RVW-002'], [finding(A, 'RVW-002', 'info', 3, 'p')]);
+    expect(store.bySubject(A).map((f) => f.ruleId)).toEqual(['RVW-002', 'RXN-001']);
+    expect(store.bySubject(B).map((f) => f.ruleId)).toEqual(['REF-008', 'RVW-002', 'SPC-004']);
+  });
+
+  it('keeps the same finding ID for an unchanged problem and notifies only when something changed', () => {
+    const store = seeded();
+    const listener = vi.fn();
+    store.subscribe(listener);
+    const before = must(store.bySubject(A).find((f) => f.ruleId === 'RVW-002'));
+    store.replaceForRules([A, B], ['RVW-002'], [finding(A, 'RVW-002', 'info'), finding(B, 'RVW-002', 'info')]);
+    expect(listener).not.toHaveBeenCalled();
+    expect(must(store.bySubject(A).find((f) => f.ruleId === 'RVW-002')).id).toBe(before.id);
+    store.replaceForRules([A, B], ['RVW-002'], [finding(A, 'RVW-002', 'info')]);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(store.bySubject(B).map((f) => f.ruleId)).toEqual(['REF-008', 'SPC-004']);
+  });
+
+  it('is a no-op on a subject with nothing of those rules, and leaves the snapshots stable', () => {
+    const store = createFindingStore();
+    const empty = store.all();
+    store.replaceForRules([A], ['RVW-002'], []);
+    expect(store.all()).toBe(empty);
+    expect(store.bySubject(A)).toEqual([]);
+  });
+
+  it('rejects a finding about an unlisted subject or of an unlisted rule, changing nothing (programmer errors)', () => {
+    const store = seeded();
+    const snapshot = store.all();
+    expect(() => store.replaceForRules([A], ['RVW-002'], [finding(B, 'RVW-002', 'info')])).toThrow(TypeError);
+    expect(() => store.replaceForRules([A], ['RVW-002'], [finding(A, 'RXN-001', 'error')])).toThrow(TypeError);
+    expect(store.all()).toBe(snapshot);
+  });
+
+  it('leaves whole-subject replacement as it was: replaceForSubjects still replaces a level entirely', () => {
+    const store = seeded();
+    store.replaceForRules([A], ['RVW-002'], []);
+    store.replaceForSubjects([A], [], 3);
+    expect(store.bySubject(A).map((f) => f.ruleId)).toEqual(['REF-008']);
+  });
+});
+
 function must<T>(value: T | undefined): T {
   if (value === undefined) throw new Error('missing');
   return value;

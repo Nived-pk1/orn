@@ -10,7 +10,7 @@ import type { CanonicalState, RecordKind, RecordRef } from '../schema';
 import { commit, loadFixtureState, must, remove, type Tables } from '../../test-support/state-fixture';
 import type { Finding } from './contracts';
 import { createFindingStore } from './store';
-import { commitFindings, validator } from './validator';
+import { commitFindings, commitTouched, validator } from './validator';
 
 /** Deep copy that also works on Immer drafts. */
 const dup = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -324,7 +324,8 @@ const MUTATIONS: readonly ((w: Walk) => Recipe | undefined)[] = [
 /** Extra weight for the mutations that rarely produce cycles or overlaps by chance. */
 const PICKS = [...MUTATIONS, setRole, setRole, addRelationship, addPrerequisitePair, addPrerequisitePair, setComponents, setComponents, addOutcome, addOutcome];
 
-function walk(seed: number, steps: number): { readonly rules: Set<string> } {
+/** `byRule`: the command store's path (ADR-032); otherwise whole subjects only (`scopeOf` + `validateTouched`). */
+function walk(seed: number, steps: number, byRule = true): { readonly rules: Set<string> } {
   const w = new Walk(base, mulberry32(seed));
   let indexes = coreIndexEngine.build(w.current);
   const store = createFindingStore();
@@ -340,8 +341,11 @@ function walk(seed: number, steps: number): { readonly rules: Set<string> } {
     const { after, changes } = commit(before, indexes.revision + 1, recipe);
     indexes = coreIndexEngine.apply(indexes, changes, after);
     const touched = [...changes.created, ...changes.updated, ...changes.deleted];
-    const scope = validator.scopeOf(after, indexes, touched, before);
-    commitFindings(store, scope, validator.validateTouched(after, indexes, touched, before));
+    if (byRule) {
+      commitTouched(store, validator.validateTouchedByRule(after, indexes, touched, before, store));
+    } else {
+      commitFindings(store, validator.scopeOf(after, indexes, touched, before), validator.validateTouched(after, indexes, touched, before));
+    }
     w.current = after;
     const full = validator.validateAll(after, coreIndexEngine.build(after, indexes.revision));
     expect(canon(store.all()), `seed ${seed} step ${i}`).toEqual(canon(full));
@@ -350,15 +354,18 @@ function walk(seed: number, steps: number): { readonly rules: Set<string> } {
   return { rules: seenRules };
 }
 
-describe('incremental validation equals full validation', () => {
+describe.each([
+  ['per rule for referrers and peers (ADR-032)', true],
+  ['whole records only', false],
+])('incremental validation equals full validation: %s', (_name, byRule) => {
   it.each([1, 2, 3, 4, 5, 6])('seed %i: 100 random edits, compared after every step', (seed) => {
-    const { rules } = walk(seed, 100);
+    const { rules } = walk(seed, 100, byRule);
     expect(rules.size).toBeGreaterThan(5);
   }, 60_000);
 
   it('the seeds together exercise a broad set of rules', () => {
     const all = new Set<string>();
-    for (const seed of [11, 12, 13, 14]) for (const rule of walk(seed, 100).rules) all.add(rule);
+    for (const seed of [11, 12, 13, 14]) for (const rule of walk(seed, 100, byRule).rules) all.add(rule);
     const needed = ['REF-001', 'REF-006', 'REF-008', 'SPC-001', 'SPC-006', 'CLS-001', 'HIER-001', 'HIER-003', 'RXN-004', 'RXN-008', 'RXN-013', 'REL-005', 'RTE-002', 'PRS-001', 'RVW-001'];
     expect(needed.filter((rule) => !all.has(rule)), `seen: ${[...all].sort().join(' ')}`).toEqual([]);
   }, 120_000);

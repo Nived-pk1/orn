@@ -6,8 +6,10 @@
  *    the top-level fields read; the log must fit inside the declaration (existence counts as a read of the kind).
  *  - Vanish: a rule declared to read nothing must give the same findings when every record its subject refers
  *    to is hidden from it.
- *  - Reads that do NOT go through the subject's references (other records, hierarchy walks) cannot be narrowed
- *    by the declaration; they must be covered by the rule's `peers`, or by the referent expansion (`RXN-018`).
+ *  - Reads that do NOT go through the subject's references (other records, name lookups, hierarchy walks) cannot be
+ *    narrowed by `referencedReads`; they must be covered by the rule's `peers`, or by the referent expansion
+ *    (`RXN-018`). A rule that also declares `peerReads` (ADR-032) is held to it: every field it reads of a record it
+ *    does not refer to, directly or through the name index or a hierarchy walk, must be listed.
  * The REF rules share one analysis pass, so a trace would blame each for the others' reads: they are held to
  * the vanish check, and REF-001/REF-005 also to the targeted tests in scoping.test.ts.
  */
@@ -25,6 +27,8 @@ import { RULES } from './rules/registry';
 
 const EXISTS = '<exists>';
 const HIERARCHY_WALKS = new Set(['ancestorsOf', 'descendantsOf', 'classAncestors']);
+/** The field a hierarchy walk over a record of that kind is derived from (core/indexes/hierarchy.ts). */
+const PARENT_FIELD: Readonly<Record<string, string>> = { class: 'parentIds', concept: 'parentIds', named_reaction: 'parentIds', topic: 'parentId' };
 /** Rules whose reads are of their own referrers, which the referent expansion (not `peers`) brings into scope. */
 const REFERRER_SIDE = new Set(['RXN-018', 'AST-001']);
 
@@ -57,27 +61,36 @@ const referencedIds = (record: AnyRecord): Set<string> => {
 };
 
 interface Trace {
+  /** Fields read of the records the subject refers to, by kind. */
   readonly reads: Map<string, Set<string>>;
+  /** Fields read of records it does not refer to (direct fetches, name lookups, hierarchy walks), by kind. */
+  readonly others: Map<string, Set<string>>;
   readonly elsewhere: Set<string>;
+  /** Index lookups that read other records' reference fields; `peerReads` cannot vouch for them. */
+  readonly unsupported: Set<string>;
 }
+
+/** The fields the folded-name index is built from, per kind (core/indexes/names.ts). */
+const NAME_FIELDS: Readonly<Record<string, readonly string[]>> = { species: ['names'], class: ['names'] };
 
 /** Runs `rule` on `record` with every referenced record traced; other lookups are logged apart. */
 function traced(rule: ValidationRule, record: AnyRecord, state: CanonicalState, indexes: CoreIndexes): Trace {
-  const trace: Trace = { reads: new Map(), elsewhere: new Set() };
+  const trace: Trace = { reads: new Map(), others: new Map(), elsewhere: new Set(), unsupported: new Set() };
   const referenced = referencedIds(record);
-  const note = (kind: string, field: string): void => void trace.reads.set(kind, (trace.reads.get(kind) ?? new Set<string>()).add(field));
-  const wrap = (target: AnyRecord): AnyRecord =>
+  const noteIn = (sink: Map<string, Set<string>>, kind: string, field: string): void => void sink.set(kind, (sink.get(kind) ?? new Set<string>()).add(field));
+  const note = (kind: string, field: string): void => noteIn(trace.reads, kind, field);
+  const wrap = (target: AnyRecord, sink: Map<string, Set<string>> = trace.reads): AnyRecord =>
     new Proxy(target, {
       get(t, key, receiver) {
-        if (typeof key === 'string' && key !== 'kind' && key !== 'id') note(t.kind, key);
+        if (typeof key === 'string' && key !== 'kind' && key !== 'id') noteIn(sink, t.kind, key);
         return Reflect.get(t, key, receiver) as unknown;
       },
       has(t, key) {
-        if (typeof key === 'string') note(t.kind, key);
+        if (typeof key === 'string') noteIn(sink, t.kind, key);
         return Reflect.has(t, key);
       },
       ownKeys(t) {
-        note(t.kind, '<all fields>');
+        noteIn(sink, t.kind, '<all fields>');
         return Reflect.ownKeys(t);
       },
     });
@@ -92,12 +105,28 @@ function traced(rule: ValidationRule, record: AnyRecord, state: CanonicalState, 
           if (id === record.id) return out;
           if (!referenced.has(id)) {
             trace.elsewhere.add(`get ${out === undefined ? '?' : (out as AnyRecord).kind}`);
-            return out;
+            noteIn(trace.others, out === undefined ? (recordKindOfId(id) ?? '?') : (out as AnyRecord).kind, EXISTS);
+            return out === undefined ? out : wrap(out as AnyRecord, trace.others);
           }
           note(out === undefined ? (recordKindOfId(id) ?? '?') : (out as AnyRecord).kind, EXISTS);
           return out === undefined ? out : wrap(out as AnyRecord);
         }
-        if (typeof prop === 'string' && HIERARCHY_WALKS.has(prop)) trace.elsewhere.add(prop);
+        if (typeof prop === 'string' && HIERARCHY_WALKS.has(prop)) {
+          // A walk *up* from a record the subject refers to reads that record's parent field (a walk from any
+          // other record, or down from the subject, is reached through `peers`).
+          const walkedKind = prop === 'classAncestors' ? 'class' : (args[0] as string);
+          const walkedId = (prop === 'classAncestors' ? args[0] : args[1]) as string;
+          if (prop !== 'descendantsOf' && referenced.has(walkedId) && PARENT_FIELD[walkedKind] !== undefined) {
+            note(walkedKind, PARENT_FIELD[walkedKind] as string);
+            // ...and the walk goes on through the ancestors' own parent links, which only `peers` can reach.
+            noteIn(trace.others, walkedKind, PARENT_FIELD[walkedKind] as string);
+          } else {
+            trace.elsewhere.add(prop);
+            if (PARENT_FIELD[walkedKind] !== undefined) noteIn(trace.others, walkedKind, PARENT_FIELD[walkedKind] as string);
+          }
+        }
+        if (prop === 'byFoldedName') for (const field of NAME_FIELDS[args[0] as string] ?? ['name', 'aliases', 'names']) noteIn(trace.others, args[0] as string, field);
+        if (prop === 'referrersOf' || prop === 'linkersOf' || prop === 'definersOf') trace.unsupported.add(prop);
         return out;
       };
     },
@@ -161,7 +190,7 @@ describe('referencedReads audit (ADR-031)', () => {
       }
     }
     // Not vacuous: the rules that declare fields were seen reading them.
-    const unseen = ['RXN-013', 'REL-006', 'CUR-003', 'CUR-005', 'HIER-002', 'CLS-001', 'RVW-002'].filter(
+    const unseen = ['RXN-013', 'REL-006', 'CUR-003', 'CUR-005', 'HIER-002', 'CLS-001', 'RVW-002', 'SPC-006'].filter(
       (id) => [...(seen.get(id)?.values() ?? [])].flatMap((fields) => [...fields]).every((f) => f === EXISTS),
     );
     expect(unseen, 'declared rules never seen reading a field').toEqual([]);
@@ -184,6 +213,36 @@ describe('referencedReads audit (ADR-031)', () => {
       }
     }
     expect(compared).toBeGreaterThan(1000);
+  });
+
+  it('every read a peerReads-declaring rule makes of a record it does not refer to is listed in peerReads (trace)', () => {
+    const withPeerReads = RULES.filter((rule) => rule.peerReads !== undefined && !isReference(rule));
+    expect(withPeerReads.map((rule) => rule.id).sort()).toEqual(expect.arrayContaining(['CLS-001', 'CLS-002', 'HIER-001', 'SPC-001', 'SPC-005', 'SPC-006']));
+    const seen = new Map<string, Set<string>>();
+    for (const [name, state] of STATES) {
+      const indexes = coreIndexEngine.build(state);
+      for (const rule of withPeerReads) {
+        const peerReads = rule.peerReads as NonNullable<ValidationRule['peerReads']>;
+        for (const kind of rule.kinds) {
+          for (const record of Object.values(state.records[kind] as Readonly<Record<string, AnyRecord>>)) {
+            const { reads, others, unsupported } = traced(rule, record, state, indexes);
+            expect([...unsupported], `${rule.id} on ${name}/${record.id} looks up records through their reference fields`).toEqual([]);
+            for (const [readKind, fields] of others) {
+              const listed = [...(peerReads[readKind as RecordKind] ?? []), ...(peerReads['*'] ?? [])];
+              expect(peerReads[readKind as RecordKind] !== undefined || peerReads['*'] !== undefined, `${rule.id} on ${name}/${record.id} reads a ${readKind} that peerReads does not name`).toBe(true);
+              for (const field of fields) {
+                if (field !== EXISTS) expect(listed, `${rule.id} on ${name}/${record.id} reads ${readKind}.${field}`).toContain(field);
+              }
+            }
+            for (const [readKind, fields] of [...others, ...reads]) {
+              seen.set(rule.id, new Set([...(seen.get(rule.id) ?? []), ...[...fields].filter((f) => f !== EXISTS && (peerReads[readKind as RecordKind] ?? []).includes(f))]));
+            }
+          }
+        }
+      }
+    }
+    const unseen = withPeerReads.map((rule) => rule.id).filter((id) => (seen.get(id)?.size ?? 0) === 0);
+    expect(unseen, 'peerReads rules never seen reading a field they declare').toEqual([]);
   });
 
   it('REF-001 does read what it declares (its outcome changes when the referenced records are hidden)', () => {

@@ -15,7 +15,7 @@ import type { CoreIndexes } from '../indexes/contracts';
 import { coreIndexEngine } from '../indexes/engine';
 import type { CanonicalState, RecordRef } from '../schema';
 import { createFindingStore } from '../validation/store';
-import { commitFindings, validator as defaultValidator } from '../validation/validator';
+import { commitFindings, commitTouched, validator as defaultValidator } from '../validation/validator';
 import type { Finding, FindingStore, Validator } from '../validation/contracts';
 import { runBatch } from './batch';
 import type { CanonicalStore, CommandEnvelope, CommandError, CommitResult, HistoryEntry } from './contracts';
@@ -113,8 +113,10 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
     try {
       const nextIndexes = coreIndexEngine.apply(indexes, changes, input.next);
       const touched: RecordRef[] = [...changes.created, ...changes.updated, ...changes.deleted];
-      const scope = validator.scopeOf(input.next, nextIndexes, touched, state);
-      const found: readonly Finding[] = validator.validateTouched(input.next, nextIndexes, touched, state);
+      // One call (ADR-032): whole subjects for what the commit touched, per-rule results for referrers whose
+      // rules read what changed; `state` is always the previous state, so nothing is re-run needlessly.
+      const validation = validator.validateTouchedByRule(input.next, nextIndexes, touched, state, findings);
+      const found: readonly Finding[] = validation.all;
       const errors = found.filter((finding) => finding.severity === 'error');
       if (errors.length > 0) {
         // Roll the indexes back incrementally instead of an O(dataset) rebuild
@@ -142,7 +144,7 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
       state = input.next;
       revision = changes.revision;
       indexes = nextIndexes;
-      commitFindings(findings, scope, found);
+      commitTouched(findings, validation);
       return { result: { ok: true, changes, findings: found }, changes };
     } catch (error) {
       indexes = coreIndexEngine.build(state, revision);

@@ -2,8 +2,10 @@ export type {
   Finding,
   FindingDraft,
   FindingStore,
+  RuleScopedFindings,
   RuleContext,
   Severity,
+  TouchedValidation,
   ValidationLevel,
   ValidationRule,
   Validator,
@@ -16,4 +18,4 @@ export { EXTERNAL_RULES } from './rules/external';
 export { REFERENCE_RULES } from './rules/references';
 export { L2_RULES, L3_RULES, RULES } from './rules/registry';
 export { createFindingStore } from './store';
-export { commitFindings, createValidator, validator } from './validator';
+export { commitFindings, commitTouched, createValidator, validator } from './validator';

@@ -78,6 +78,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     // compares names with name twins found by the name index: `peers`
     referencedReads: NO_REFERENCED_READS,
     description: 'Two species share a folded canonical name without distinguishing qualifiers',
+    // a twin's verdict depends on the touched species' names (canonical, qualifier, aliases)
+    peerReads: { species: ['names'] },
     peers: (record, ctx) => namePeers(record, ctx, ['species']),
     *check(species, ctx) {
       const twins = twinsOf(species, ctx, 'species');
@@ -143,6 +145,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     // compares names with classes found by the name index: `watches` + `peers`
     referencedReads: NO_REFERENCED_READS,
     description: 'Species name equals a class name (possible hub-as-species confusion)',
+    // a species' verdict depends on the names of the classes found by name
+    peerReads: { class: ['names'] },
     peers: (record, ctx) => (record.kind === 'class' ? namePeers(record, ctx, ['species']) : []),
     *check(species, ctx) {
       const folded = fold_(species.names.canonical);
@@ -165,7 +169,11 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     watches: ['class'],
     defaultSeverity: 'info',
     scope: 'neighbourhood',
+    // reads the ancestry of each class the species lists (class.parentIds); the ancestors of those classes come through `peers`
+    referencedReads: { class: ['parentIds'] },
     description: 'classIds lists both a class and its ancestor',
+    // a species' verdict depends on the ancestry of the classes it lists: parent links only
+    peerReads: { class: ['parentIds'] },
     peers: (record, ctx) =>
       record.kind === 'class' ? speciesReferrersOf([record.id, ...ctx.indexes.descendantsOf('class', record.id)], ctx) : [],
     *check(species, ctx) {
@@ -207,6 +215,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     // reads which classes each example species lists; descendants come through `peers`
     referencedReads: { species: ['classIds'] },
     description: 'Example species does not list the class (or a descendant)',
+    // an ancestor class reads which classes lie below it: parent links only
+    peerReads: { class: ['parentIds'] },
     peers: (record, ctx) => ancestorsThroughParents('class', record, ctx).map((id): RecordRef => ({ kind: 'class', id })),
     *check(cls, ctx) {
       const accepted = new Set<string>([cls.id, ...ctx.indexes.descendantsOf('class', cls.id)]);
@@ -228,6 +238,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     // compares names with name twins found by the name index: `peers`
     referencedReads: NO_REFERENCED_READS,
     description: 'Two classes share a folded canonical name',
+    // a twin's verdict depends on the touched class' names
+    peerReads: { class: ['names'] },
     peers: (record, ctx) => namePeers(record, ctx, ['class']),
     *check(cls, ctx) {
       const twins = twinsOf(cls, ctx, 'class');
@@ -284,6 +296,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     defaultSeverity: 'error',
     scope: 'global',
     description: 'Cycle in class, concept or named-reaction parents, or in the topic tree',
+    // a cycle through a record depends on parent links only
+    peerReads: { class: ['parentIds'], concept: ['parentIds'], named_reaction: ['parentIds'], topic: ['parentId'] },
     peers: (record, ctx) => {
       const kind = record.kind as HierarchyKind;
       return [

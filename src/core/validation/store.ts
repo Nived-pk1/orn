@@ -1,7 +1,8 @@
 /**
  * Finding store: the derived, replaceable set of findings (INV-11, INV-24). It holds no records and
- * never touches them. Findings are replaced per (subject, level), so a re-validated record whose
- * problem was fixed simply loses its finding. Snapshots handed out are stable arrays that change
+ * never touches them. Findings are replaced per (subject, level), or, for a referrer only some of whose rules
+ * were re-run, per (subject, rule) (`replaceForRules`), so a re-validated record whose problem was fixed simply
+ * loses its finding. Snapshots handed out are stable arrays that change
  * identity only when content changes, which suits `useSyncExternalStore`.
  */
 import type { RecordRef } from '../schema';
@@ -73,6 +74,39 @@ export function createFindingStore(): FindingStore {
         perSubject.delete(key);
         if (next.length > 0) levels.set(level, next);
         else levels.delete(level);
+        if (levels.size > 0) table.set(key, levels);
+        else table.delete(key);
+      }
+      if (!changed) return;
+      recount();
+      notify();
+    },
+
+    replaceForRules(subjects, ruleIds, findings) {
+      const keys = new Set(subjects.map(keyOf));
+      const rules = new Set(ruleIds);
+      const grouped = new Map<string, Map<ValidationLevel, Finding[]>>();
+      for (const finding of findings) {
+        const key = keyOf(finding.subject);
+        if (!keys.has(key)) throw new TypeError(`Finding ${finding.id} is not about a listed subject`);
+        if (!rules.has(finding.ruleId)) throw new TypeError(`Finding ${finding.id} is of rule ${finding.ruleId}, which is not listed`);
+        const byLevel = grouped.get(key) ?? new Map<ValidationLevel, Finding[]>();
+        byLevel.set(finding.level, [...(byLevel.get(finding.level) ?? []), finding]);
+        grouped.set(key, byLevel);
+      }
+      let changed = false;
+      for (const key of keys) {
+        const levels = table.get(key) ?? new Map<ValidationLevel, readonly Finding[]>();
+        const added = grouped.get(key);
+        for (const level of new Set<ValidationLevel>([...levels.keys(), ...(added?.keys() ?? [])])) {
+          const current = levels.get(level) ?? EMPTY;
+          const next = Object.freeze([...current.filter((finding) => !rules.has(finding.ruleId)), ...(added?.get(level) ?? [])].sort(byPosition));
+          if (sameFindings(current, next)) continue;
+          changed = true;
+          perSubject.delete(key);
+          if (next.length > 0) levels.set(level, next);
+          else levels.delete(level);
+        }
         if (levels.size > 0) table.set(key, levels);
         else table.delete(key);
       }

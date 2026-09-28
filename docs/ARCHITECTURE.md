@@ -97,7 +97,7 @@ user intent → command envelope → CanonicalStore.dispatch
    → fan-out: indexes.apply · finding store · search worker · compute replica · persistence queue · BroadcastChannel
    → subscribers re-select → projections (memoised) → layout worker → Scene → SVG
 ```
-Incremental validation (`validateTouched`) covers the touched records, their referents, the peers their rules name, and those referrers whose rules read a field that changed: each L2/L3 rule may declare `referencedReads` (which fields of the records its subject refers to it reads), and a rule that declares nothing is re-run on any change (ADR-031; VALIDATION_RULES.md §5).
+Incremental validation (`validateTouched`) covers the touched records, their referents, the peers their rules name, and those referrers whose rules read a field that changed: each L2/L3 rule may declare `referencedReads` (which fields of the records its subject refers to it reads), and a rule that declares nothing is re-run on any change (ADR-031; VALIDATION_RULES.md §5). Referrers and peers are re-run only for the rules that read what changed and merged per rule into the finding store (`Validator.validateTouchedByRule`, `FindingStore.replaceForRules`, ADR-032); the command store makes that one call per commit.
 Reads never mutate; the only writers are commands, `replaceState` (import/migration/restore) and undo/redo.
 
 ### 2.5 Code conventions
