@@ -189,12 +189,10 @@ describe('Base64 (embedded assets, ADV-032)', () => {
     ['three padding characters', 'Q==='],
     ['non-ASCII digit', 'iVBO٣w0K'],
   ])('rejects %s', (_label, v) => expect(ok(Base64Schema, v)).toBe(false));
-  it('enforces the cap and stays linear on a maximum-size payload', () => {
+  it('enforces the cap on a maximum-size payload (the wall-clock bound is in tests/timing)', () => {
     const cap = LIMITS.embeddedAssetBase64;
-    const started = Date.now();
     expect(ok(Base64Schema, 'A'.repeat(cap))).toBe(true);
     expect(ok(Base64Schema, 'A'.repeat(cap + 4))).toBe(false);
     expect(ok(Base64Schema, `${'A'.repeat(cap - 4)}!AAA`)).toBe(false);
-    expect(Date.now() - started).toBeLessThan(2_000);
   });
 });

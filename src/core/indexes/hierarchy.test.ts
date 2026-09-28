@@ -124,13 +124,11 @@ describe('ancestorsOf / descendantsOf', () => {
     },
   );
 
-  it('INV-22 (Phase 1 part): walks a 5,000-deep chain without recursion and in bounded time', () => {
+  it('INV-22 (Phase 1 part): walks a 5,000-deep chain without recursion (the wall-clock bound is in tests/timing)', () => {
     const spec: Record<string, string[]> = { cls_n0: [] };
     for (let i = 1; i < 5000; i++) spec[`cls_n${i}`] = [`cls_n${i - 1}`];
-    const started = Date.now();
     const ix = indexesOf(spec);
     expect(ix.ancestorsOf('class', 'cls_n4999')).toHaveLength(4999);
     expect(ix.descendantsOf('class', 'cls_n0')).toHaveLength(4999);
-    expect(Date.now() - started).toBeLessThan(5000);
   });
 });

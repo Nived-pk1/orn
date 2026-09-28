@@ -5,13 +5,14 @@
  */
 import { describe, expect, it } from 'vitest';
 import { coreIndexEngine } from '@/core/indexes/engine';
-import type { AnyRecord } from '@/core/schema';
+import type { AnyRecord, CanonicalState } from '@/core/schema';
 import { validator } from '@/core/validation';
+import { quarantineIdOf, quarantineRow } from '@/persistence/boot-load';
 import { createOrnDb } from '@/persistence/db';
 import type { OpenResult } from '@/persistence/contracts';
 import { IDBKeyRange } from 'fake-indexeddb';
 import { commit, loadFixtureState, must } from '@/test-support/state-fixture';
-import { freshAdapter, freshDb, reopen, savedDatabase, seedChangeSet, stubLock, type TestAdapter } from '@/test-support/persistence-kit';
+import { freshAdapter, freshDb, reopen, rowsToState, savedDatabase, seedChangeSet, stubLock, type TestAdapter } from '@/test-support/persistence-kit';
 
 const base = loadFixtureState('maximal-valid');
 const speciesId = Object.keys(base.records.species).sort()[0] as string;
@@ -49,7 +50,7 @@ describe('boot: a current database', () => {
     expect(result).toMatchObject({ mode: 'read_write', revision: 3, storedSchemaVersion: 1, quarantinedCount: 0 });
     expect(result.state).toEqual(base);
     const report = result.bootReport;
-    expect(report).toMatchObject({ migrationSteps: [], crashSuspected: false, editorSessionIds: [], uiState: {}, uiStateReset: [], newlyQuarantined: 0, quarantineTruncated: 0 });
+    expect(report).toMatchObject({ migrationSteps: [], crashSuspected: false, editorSessionIds: [], uiState: {}, uiStateReset: [], newlyQuarantined: 0 });
     expect(report?.findings).toEqual(validator.validateAll(base, coreIndexEngine.build(base, 3)));
     expect(writes).toEqual([
       { store: 'meta', keys: ['lastCleanShutdownAt'] },
@@ -107,11 +108,12 @@ describe('boot: damaged meta is an integrity failure, read-only, nothing written
   });
 });
 
-describe('INV-23 rows that fail L1 are quarantined with their issues and raw value, never deleted', () => {
+describe('INV-23 rows that fail L1 are MOVED to quarantine whole, with their issues (records always equal the state)', () => {
   const extra: AnyRecord = { ...speciesRow, id: 'spc_bad-extra', unexpectedField: 1 } as unknown as AnyRecord;
   const unknownKind = { id: 'zzz_unknown', kind: 'mystery', x: 1 };
   const noKind = { id: 'spc_no-kind' };
   const huge = { ...speciesRow, id: 'spc_bad-huge', junk: 'x'.repeat(100_000) };
+  const badIds = [extra.id, unknownKind.id, noKind.id, huge.id];
 
   async function withCorruptRows(): Promise<TestAdapter> {
     const t = await savedDatabase(base);
@@ -119,14 +121,17 @@ describe('INV-23 rows that fail L1 are quarantined with their issues and raw val
     return t;
   }
 
-  it('the state has only the valid rows; every bad row has a quarantine row with issues; no row is removed', async () => {
+  it('the state has only the valid rows; every bad row is gone from records and has a quarantine row with issues', async () => {
     const t = await withCorruptRows();
-    const before = await t.db.records.count();
+    const validCount = (await t.db.records.count()) - badIds.length;
     const { result } = await boot(t);
     expect(result.state).toEqual(base);
-    expect(result.bootReport).toMatchObject({ newlyQuarantined: 4, quarantineTruncated: 1 });
+    expect(result.bootReport).toMatchObject({ newlyQuarantined: 4 });
     expect(result.quarantinedCount).toBe(4);
-    expect(await t.db.records.count()).toBe(before);
+    expect(await t.db.records.count()).toBe(validCount);
+    for (const id of badIds) expect(await t.db.records.get(id)).toBeUndefined();
+    // records equal the in-memory state exactly
+    expect(rowsToState((await t.adapter.readCommitted()).rows, base.meta)).toEqual(base);
 
     const rows = await t.adapter.listQuarantine();
     const byKind = new Map(rows.map((r) => [r.claimedKind ?? '(none)', r]));
@@ -136,37 +141,112 @@ describe('INV-23 rows that fail L1 are quarantined with their issues and raw val
     const small = rows.find((r) => JSON.stringify(r.raw).includes('unexpectedField'));
     expect(small?.raw).toEqual(JSON.parse(JSON.stringify(extra)));
     expect(small?.issues.join(' ')).toContain('Unknown field');
-    expect(small?.rawTruncated).toBeUndefined();
   });
 
-  it('a raw value over the cap is kept as its first 64 Ki characters and the truncation is reported', async () => {
+  it('a large raw value is kept WHOLE, never truncated (the row is moved, so this is the only copy)', async () => {
     const t = await withCorruptRows();
     await boot(t);
-    const row = (await t.adapter.listQuarantine()).find((r) => r.rawTruncated !== undefined);
-    expect(typeof row?.raw).toBe('string');
-    expect((row?.raw as string).length).toBe(64 * 1024);
-    expect(row?.rawTruncated?.originalChars).toBe(JSON.stringify(huge).length);
-    expect(JSON.stringify(huge).startsWith(row?.raw as string)).toBe(true);
+    const rows = await t.adapter.listQuarantine();
+    const row = rows.find((r) => (r.raw as { id?: string }).id === huge.id);
+    expect(row?.rawTruncated).toBeUndefined();
+    expect(row?.raw).toEqual(JSON.parse(JSON.stringify(huge)));
+    expect(JSON.stringify(row?.raw).length).toBeGreaterThan(64 * 1024);
+    expect(rows.some((r) => r.rawTruncated !== undefined)).toBe(false);
   });
 
-  it('the same rows at the next boot are not quarantined twice', async () => {
-    const t = await withCorruptRows();
+  it('a value that is not plain JSON (a Date, NaN) is kept exactly as stored and the issues say so', async () => {
+    const t = await savedDatabase(base);
+    const odd = { ...speciesRow, id: 'spc_odd', when: new Date(0), ratio: Number.NaN };
+    await t.db.records.put(odd as never);
     await boot(t);
+    const row = (await t.adapter.listQuarantine())[0];
+    expect((row?.raw as { when?: unknown }).when).toEqual(new Date(0));
+    expect(Number.isNaN((row?.raw as { ratio?: number }).ratio)).toBe(true);
+    expect(row?.issues.join(' ')).toContain('not plain JSON');
+    expect(await t.db.records.get('spc_odd')).toBeUndefined();
+  });
+
+  it('the move is ONE transaction over records and quarantine, run through the queue (runOrdered)', async () => {
+    const t = await withCorruptRows();
+    const mark = t.log.writes().length;
+    await boot(t);
+    const moves = t.log.writes().slice(mark).filter((w) => w.stores.includes('quarantine'));
+    expect(moves).toHaveLength(1);
+    expect([...(moves[0]?.stores ?? [])].sort()).toEqual(['quarantine', 'records']);
+    expect(t.mutations.filter((m) => m.store === 'quarantine')).toHaveLength(1);
+    expect(t.mutations.filter((m) => m.store === 'records' && m.type === 'delete')).toHaveLength(1);
+  });
+
+  it('a failure in the same transaction leaves both stores as they were: a crash between the two is impossible', async () => {
+    const t = await withCorruptRows();
+    const recordsBefore = await t.db.records.count();
+    t.faults.fail('records', () => new Error('disk failure'));
+    await expect(t.adapter.open()).rejects.toThrow(/disk failure/);
+    t.faults.clear();
+    expect(await t.db.records.count()).toBe(recordsBefore);
+    expect(await t.db.quarantine.count()).toBe(0);
+    // and the next boot completes the move
     const again = reopen(t);
     const { result } = await boot(again);
-    expect(result.bootReport).toMatchObject({ newlyQuarantined: 0, quarantineTruncated: 0 });
-    expect(result.quarantinedCount).toBe(4);
-    expect(await again.adapter.listQuarantine()).toHaveLength(4);
+    expect(result.bootReport).toMatchObject({ newlyQuarantined: 4 });
+    expect(await again.db.quarantine.count()).toBe(4);
   });
 
-  it('a read-only tab leaves the bad rows out of its state but writes nothing', async () => {
+  it('a reboot does not quarantine again: the rows are gone from records, the quarantine rows are unchanged', async () => {
     const t = await withCorruptRows();
+    await boot(t);
+    const first = await t.adapter.listQuarantine();
+    const again = reopen(t);
+    const { result } = await boot(again);
+    expect(result.bootReport).toMatchObject({ newlyQuarantined: 0 });
+    expect(result.quarantinedCount).toBe(4);
+    expect(await again.adapter.listQuarantine()).toEqual(first);
+  });
+
+  it('a later replaceAll (or a restore) rewrites records only: quarantine rows survive', async () => {
+    const t = await withCorruptRows();
+    const { result } = await boot(t);
+    const first = await t.adapter.listQuarantine();
+    await t.adapter.replaceAll(result.state as CanonicalState, result.revision + 1);
+    expect(await t.adapter.listQuarantine()).toEqual(first);
+    expect(rowsToState((await t.adapter.readCommitted()).rows, base.meta)).toEqual(base);
+  });
+
+  it('a truncated quarantine row left by a copy-style boot is replaced by the full value before its row is removed', async () => {
+    const t = await withCorruptRows();
+    const old = quarantineRow(huge, ['old copy'], '2026-09-28T09:00:00.000Z');
+    const text = JSON.stringify(huge);
+    await t.db.quarantine.put({ ...old, raw: text.slice(0, 1000), rawTruncated: { originalChars: text.length } } as never);
+    await boot(t);
+    const row = (await t.adapter.listQuarantine()).find((r) => r.id === quarantineIdOf(huge.id));
+    expect(row?.rawTruncated).toBeUndefined();
+    expect(row?.raw).toEqual(JSON.parse(text));
+    expect(await t.db.records.get(huge.id)).toBeUndefined();
+  });
+
+  it('a different value already quarantined under the same derived ID is kept; the new one gets its own ID', async () => {
+    const t = await savedDatabase(base);
+    await t.db.records.put(extra as never);
+    const earlier = quarantineRow({ ...extra, unexpectedField: 'earlier' }, ['earlier'], '2026-09-28T09:00:00.000Z');
+    await t.db.quarantine.put(earlier as never);
+    await boot(t);
+    const rows = await t.adapter.listQuarantine();
+    expect(rows).toHaveLength(2);
+    expect(rows.find((r) => r.id === earlier.id)).toEqual(earlier);
+    expect(rows.find((r) => r.id !== earlier.id)?.raw).toEqual(JSON.parse(JSON.stringify(extra)));
+    expect(await t.db.records.get(extra.id)).toBeUndefined();
+  });
+
+  it('a read-only tab leaves the bad rows out of its state but writes nothing and moves nothing', async () => {
+    const t = await withCorruptRows();
+    const before = await t.db.records.count();
     const held = stubLock('held_elsewhere');
     const follower = reopen(t, { lock: held });
     const { result, writes } = await boot(follower);
     expect(result).toMatchObject({ mode: 'read_only', readOnlyReason: 'other_tab_is_writer', quarantinedCount: 0 });
     expect(result.state).toEqual(base);
     expect(writes).toEqual([]);
+    expect(await follower.db.records.count()).toBe(before);
   });
 });
 

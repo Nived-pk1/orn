@@ -11,6 +11,7 @@ import { createMigrationRunner } from '@/core/migrations';
 import type { MigrationRunner, SchemaMigration } from '@/core/migrations/contracts';
 import type { CanonicalState } from '@/core/schema';
 import type { OpenResult } from '@/persistence/contracts';
+import { writeRawDocument } from '@/persistence/replace';
 import { loadState, reopen, savedDatabase, stubLock, type TestAdapter } from '@/test-support/persistence-kit';
 import { must, loadFixtureState } from '@/test-support/state-fixture';
 import { SYNTHETIC_STEPS, SYNTHETIC_SYSTEM } from '@/test-support/synthetic-migration';
@@ -122,6 +123,41 @@ describe('ADV-045 redo after migration (migration part): the migrated data start
     expect(Object.values(read.doc.records).flat()).toHaveLength(oldRows.length);
   });
 
+  const byId = (rows: readonly unknown[]) => [...(rows as { id: string }[])].sort((a, b) => (a.id < b.id ? -1 : 1));
+
+  it('the pre_migration snapshot holds the ORIGINAL stored rows and meta at the OLD schemaVersion, not the migrated document', async () => {
+    const t = await v0Database();
+    const oldRows = await t.db.records.toArray();
+    const oldMeta = must(await t.db.meta.get('datasetMeta')).value;
+    opened(await t.adapter.open());
+    // the live rows changed (migrated) ...
+    expect(byId(await t.db.records.toArray())).not.toEqual(byId(oldRows));
+    // ... the snapshot did not
+    const read = await t.adapter.readSnapshot((await t.adapter.listSnapshots())[0]?.id ?? '');
+    if (!read.ok) throw new Error(read.message);
+    expect(read.summary).toMatchObject({ reason: 'pre_migration', schemaVersion: 0, revision: 4 });
+    expect(read.doc.schemaVersion).toBe(0);
+    expect(byId(Object.values(read.doc.records).flat())).toEqual(byId(oldRows));
+    expect(read.doc['meta']).toEqual(oldMeta);
+    expect(read.doc['meta']).toHaveProperty('name');
+    expect(read.doc['meta']).not.toHaveProperty('title');
+  });
+
+  it('rolling back from that snapshot puts back exactly the original rows, schemaVersion, meta and revision', async () => {
+    const t = await v0Database();
+    const oldRows = await t.db.records.toArray();
+    const oldMeta = must(await t.db.meta.get('datasetMeta')).value;
+    opened(await t.adapter.open());
+    const read = await t.adapter.readSnapshot((await t.adapter.listSnapshots())[0]?.id ?? '');
+    if (!read.ok) throw new Error(read.message);
+    // the database now holds the migrated data; rolling back must undo all of it
+    await writeRawDocument(t.db, read.doc, read.summary.revision);
+    expect(byId(await t.db.records.toArray())).toEqual(byId(oldRows));
+    expect((await t.db.meta.get('schemaVersion'))?.value).toBe(0);
+    expect((await t.db.meta.get('datasetMeta'))?.value).toEqual(oldMeta);
+    expect((await t.db.meta.get('revision'))?.value).toBe(4);
+  });
+
   it('a store built from the boot result has no undo and no redo, and the queue continues from the new revision', async () => {
     const t = await v0Database();
     const result = opened(await t.adapter.open());
@@ -186,6 +222,13 @@ describe('a migration that fails ends read-only with the stored data exactly as 
     expect(f.result.detail).toMatch(/the step exploded.*put back from snapshot snp_/);
     expect(await f.t.adapter.listSnapshots()).toEqual([expect.objectContaining({ reason: 'pre_migration' })]);
     await expectPutBack(f);
+    // exactly the rows the snapshot holds, which are the original stored rows at the old version
+    const read = await f.t.adapter.readSnapshot((await f.t.adapter.listSnapshots())[0]?.id ?? '');
+    if (!read.ok) throw new Error(read.message);
+    expect(read.doc.schemaVersion).toBe(0);
+    const byKey = (rows: readonly unknown[]) => [...(rows as { id: string }[])].sort((a, b) => (a.id < b.id ? -1 : 1));
+    expect(byKey(Object.values(read.doc.records).flat())).toEqual(byKey(f.rowsBefore));
+    expect(byKey(await f.t.db.records.toArray())).toEqual(byKey(Object.values(read.doc.records).flat()));
   });
 
   it('a migrated document that fails the strict schema', async () => {

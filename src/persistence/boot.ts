@@ -4,7 +4,7 @@
  *  2. take the writer lock (not granted → read-only, nothing is written);
  *  3. read rows and meta in one transaction and look at `schemaVersion`: newer → read-only; older or refused by the
  *     runner → `boot-migrate.ts`; damaged meta → read-only `integrity_failure`;
- *  4. per-record L1: invalid rows are quarantined (with issues and a capped raw value), never deleted;
+ *  4. per-record L1: invalid rows are MOVED to quarantine (issues and the full raw value, one transaction);
  *  5. indexes and L1–L3 findings; asset records without bytes (AST-002); uiState (tolerant); crash check;
  *  6. markers: this session is running, integrity check done.
  * Every branch that cannot make the data writable leaves the queue read-only and writes NOTHING.
@@ -72,7 +72,6 @@ export async function runBoot(ports: BootPorts): Promise<OpenResult> {
   let migrationSteps: BootReport['migrationSteps'] = [];
   let outRevision = revision;
   let newlyQuarantined = 0;
-  let quarantineTruncated = 0;
 
   if (stored !== target) {
     // Older, or not a version at all: the runner decides, in memory, before anything is written.
@@ -88,11 +87,7 @@ export async function runBoot(ports: BootPorts): Promise<OpenResult> {
     }
     const assembled = assembleState(rows, datasetMeta.data, now);
     state = assembled.state;
-    if (writer && assembled.rejected.length > 0) {
-      const added = new Set(await ports.addQuarantine(assembled.rejected));
-      newlyQuarantined = added.size;
-      quarantineTruncated = assembled.rejected.filter((r) => added.has(r.id) && r.rawTruncated !== undefined).length;
-    }
+    if (writer && assembled.rejected.length > 0) newlyQuarantined = await ports.moveToQuarantine(assembled.rejected);
     findings = validator.validateAll(state, coreIndexEngine.build(state, revision));
   }
 
@@ -118,6 +113,6 @@ export async function runBoot(ports: BootPorts): Promise<OpenResult> {
     revision: outRevision,
     storedSchemaVersion: storedVersion,
     quarantinedCount: await quarantined(),
-    bootReport: { migrationSteps, findings, assetIdsWithoutBlob, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined, quarantineTruncated },
+    bootReport: { migrationSteps, findings, assetIdsWithoutBlob, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined },
   };
 }

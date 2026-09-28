@@ -16,7 +16,8 @@ import { IncrementalRun } from '@/test-support/scope-walk';
 import type { Tables } from '@/test-support/state-fixture';
 import { PARAMS, TIMEOUT_MS } from './harness';
 
-vi.setConfig({ testTimeout: TIMEOUT_MS });
+// A resource limit, not an assertion: the hub walks took longer than 30 s once under v8 coverage (step 3.3).
+vi.setConfig({ testTimeout: Math.max(TIMEOUT_MS, 120_000) });
 
 type Loose = Record<string, unknown>;
 type Recipe = (tables: Tables) => void;

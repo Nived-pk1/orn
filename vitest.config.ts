@@ -6,7 +6,8 @@ export default mergeConfig(
   defineConfig({
     test: {
       include: ['src/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx}'],
-      exclude: ['tests/e2e/**', 'node_modules/**'],
+      // tests/timing holds the wall-clock budget assertions: `npm run test:timing` only (docs/TEST_STRATEGY.md §1).
+      exclude: ['tests/e2e/**', 'tests/timing/**', 'node_modules/**'],
       // UI tests opt into a DOM per file with `// @vitest-environment jsdom` (jsdom is added in Phase 5).
       environment: 'node',
       benchmark: { include: ['tests/perf/**/*.bench.ts'] },

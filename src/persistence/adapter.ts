@@ -140,7 +140,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     ...(options.uiStateValidators !== undefined ? { uiStateValidators: options.uiStateValidators } : {}),
     ...(options.onEvent !== undefined ? { onEvent: options.onEvent } : {}),
     readCommitted,
-    addQuarantine: aux.addQuarantine,
+    moveToQuarantine: aux.moveToQuarantine,
     countQuarantine: aux.countQuarantine,
     createRawSnapshot: snapshots.createRawSnapshot,
     async restoreRawSnapshot(id) {

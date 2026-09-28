@@ -72,7 +72,7 @@ export type RestoreSnapshotResult =
       readonly error?: CommandError;
     };
 
-/** Cap on the raw value kept with a quarantined row, in characters of its JSON text (docs/PERSISTENCE.md §7). */
+/** Cap on the raw value shown for a quarantined row and kept for import quarantine, in characters of its JSON text (docs/PERSISTENCE.md §7). Boot rows are never capped. */
 export const QUARANTINE_RAW_MAX_CHARS = 64 * 1024;
 
 export interface QuarantineRow {
@@ -82,12 +82,13 @@ export interface QuarantineRow {
   readonly importBatchId?: string;
   readonly claimedKind?: string;
   /**
-   * The original value when its JSON text fits `QUARANTINE_RAW_MAX_CHARS`; otherwise the first
-   * `QUARANTINE_RAW_MAX_CHARS` characters of that text as a string, and `rawTruncated` says so. At boot the
-   * original row stays in `records` (nothing is deleted), so truncation loses nothing.
+   * Boot rows: the row exactly as it was stored, whole (boot MOVES the row here, so this is the only copy; it may
+   * hold more than JSON, and the issues then say so). Import rows: the original value when its JSON text fits
+   * `QUARANTINE_RAW_MAX_CHARS`, otherwise the first `QUARANTINE_RAW_MAX_CHARS` characters of that text as a string
+   * with `rawTruncated` set (the source file still exists).
    */
   readonly raw: JsonValue;
-  /** Present only when `raw` is a truncated text: the length of the full JSON text. */
+  /** Present only when `raw` is a truncated text (import rows, never boot rows): the length of the full JSON text. */
   readonly rawTruncated?: { readonly originalChars: number };
   readonly issues: readonly string[];
 }
@@ -138,9 +139,8 @@ export interface BootReport {
   /** Valid UI state entries; invalid ones are reset (`uiStateReset`), never a reason not to boot. */
   readonly uiState: Readonly<Record<string, JsonValue>>;
   readonly uiStateReset: readonly string[];
-  /** Rows newly quarantined by this boot, and how many of those had a raw value that had to be truncated. */
+  /** Rows this boot moved from `records` to `quarantine` (whole, never truncated). */
   readonly newlyQuarantined: number;
-  readonly quarantineTruncated: number;
 }
 
 export type OpenResult =

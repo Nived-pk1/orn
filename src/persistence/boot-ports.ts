@@ -5,7 +5,8 @@
 import type { IdFactory } from '@/core/dataset/contracts';
 import type { MigratableDocument, MigrationRunner } from '@/core/migrations/contracts';
 import type { CanonicalState, JsonValue } from '@/core/schema';
-import type { MetaKey, QuarantineRow, SnapshotSummary, WriterLock } from './contracts';
+import type { RejectedRow } from './boot-load';
+import type { MetaKey, SnapshotSummary, WriterLock } from './contracts';
 import type { OrnDb, UiStateRow } from './db';
 import type { PersistenceEventSink } from './events';
 
@@ -26,7 +27,8 @@ export interface BootPorts {
   readonly uiStateValidators?: UiStateValidators;
   readonly onEvent?: PersistenceEventSink;
   readCommitted(): Promise<CommittedData>;
-  addQuarantine(rows: readonly QuarantineRow[]): Promise<readonly string[]>;
+  /** Moves rows that failed L1 out of `records` into `quarantine` (full raw value), in one transaction. */
+  moveToQuarantine(rejected: readonly RejectedRow[]): Promise<number>;
   countQuarantine(): Promise<number>;
   createRawSnapshot(reason: SnapshotSummary['reason'], doc: MigratableDocument, revision: number, note?: string): Promise<SnapshotSummary>;
   /** Puts the rows back exactly as the snapshot holds them (rollback of a failed migration). */

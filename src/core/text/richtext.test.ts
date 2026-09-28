@@ -149,17 +149,15 @@ describe('parseRichText: malformed markup is literal (total parsing)', () => {
   });
 });
 
-describe('INV-22 (Phase 1 part) parseRichText: bounded work', () => {
+describe('parseRichText: pathological input terminates', () => {
   it.each([
     ['unclosed openers with trailing text', '*a '.repeat(16_000)],
     ['unclosed strong openers', '**a '.repeat(12_000)],
     ['unclosed scripts', '_{a'.repeat(16_000)],
     ['unclosed links', '[[rxn_a'.repeat(7_000)],
     ['deep nesting', '*a '.repeat(2_000) + 'b' + '* '.repeat(2_000)],
-  ])('%s parses quickly and losslessly', (_name, source) => {
-    const started = performance.now();
+  ])('%s terminates with a non-empty tree (the wall-clock bound is in tests/timing)', (_name, source) => {
     const nodes = parseRichText(source);
-    expect(performance.now() - started).toBeLessThan(1_000);
     expect(nodes.length).toBeGreaterThan(0);
   });
 });
