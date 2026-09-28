@@ -58,6 +58,13 @@ export const BUDGETS = {
   "commit / validateTouched — design tier, one hub of 1,000 reactions (like water) > dispatch: change the hub's review lifecycle (every referrer re-validated)":
     { operation: 'commit: dispatch (like-water hub, review lifecycle changed)', tier: 'design-hub-1000', shape: 'hub_explosion', budgetMs: 50, budgetRow: 'Commit on a record with ≥ 500 referrers', note: 'a whole commit that changes a field referrer rules read; alternates draft/published' },
 
+  'commit — class hub (design tier, hub_explosion: every species lists it) > dispatch: rename the class hub':
+    { operation: 'commit: dispatch (rename the class hub, ~1,400 species referrers)', tier: 'design-class-hub', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit, accepted or rejected', note: 'step 2.13: the class hub every hub_explosion species lists; an ordinary edit' },
+  'commit — class hub (design tier, hub_explosion: every species lists it) > dispatch: edit the class hub notes':
+    { operation: 'commit: dispatch (edit the class hub notes, ~1,400 species referrers)', tier: 'design-class-hub', shape: 'hub_explosion', budgetMs: 16, budgetRow: 'Commit, accepted or rejected', note: 'step 2.13: an ordinary edit' },
+  'commit — class hub (design tier, hub_explosion: every species lists it) > dispatch: move the class hub under another parent (and back)':
+    { operation: 'commit: dispatch (move the class hub to another parent, ~1,400 species referrers)', tier: 'design-class-hub', shape: 'hub_explosion', budgetMs: 50, budgetRow: 'Commit on a record with ≥ 500 referrers', note: 'step 2.13: parentIds is read by every species referrer (SPC-006 reads the class ancestry), so this is a backstop-row case' },
+
   'projection build (design tier, dense) > navigator, focused on the hub':
     { operation: 'projection: navigator, focused on the hub', tier: 'design', shape: 'dense', budgetMs: 16, budgetRow: 'Projection build' },
   'projection build (design tier, hub_explosion) > navigator, focused on the hub':

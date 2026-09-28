@@ -77,6 +77,42 @@ export function afterHubEdit(state: CanonicalState, hub: RecordRef, edit: 'renam
   return { state: next, indexes: buildIndexes(next) };
 }
 
+/**
+ * The class referenced by the most records — "the class hub" of any shape, found structurally. In
+ * `hub_explosion` every species lists class 0 (docs/PERFORMANCE_ARCHITECTURE.md §10), so at the design tier
+ * (1,400 species) that class has ~1,400 species referrers.
+ */
+export function mostReferencedClass(state: CanonicalState, indexes: ReadonlyIndexes): RecordRef {
+  let best: RecordRef | undefined;
+  let bestCount = -1;
+  for (const id of Object.keys(state.records.class)) {
+    const count = indexes.referrersOf(id).length;
+    if (count > bestCount) {
+      best = { kind: 'class', id };
+      bestCount = count;
+    }
+  }
+  if (best === undefined) throw new Error('state has no classes');
+  return best;
+}
+
+/**
+ * The state plus one fresh, parentless class, `rootId`, so a bench can move the class hub under it and back
+ * (`parentIds` alternating `[]` / `[rootId]`) without closing a cycle: every generated class descends from
+ * the first one, so no existing class is a legal parent for it.
+ */
+export function withSpareClass(state: CanonicalState, template: RecordRef, rootId: string): CanonicalState {
+  return produce(state, (draft) => {
+    const source = draft.records.class[template.id] as unknown as { names: { canonical: string } };
+    const copy = JSON.parse(JSON.stringify(source)) as { id: string; parentIds: string[]; exampleSpeciesIds: string[]; names: { canonical: string } };
+    copy.id = rootId;
+    copy.parentIds = [];
+    copy.exampleSpeciesIds = [];
+    copy.names.canonical = 'Spare root class';
+    (draft.records.class as unknown as Record<string, unknown>)[rootId] = copy;
+  });
+}
+
 /** The species referenced by the fewest participations (possibly zero) — a contrast case for "the hub". */
 export function leastReferencedSpecies(state: CanonicalState, indexes: ReadonlyIndexes): RecordRef {
   let best: RecordRef | undefined;

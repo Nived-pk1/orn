@@ -941,6 +941,29 @@ tests pass; `npm run test:coverage`: 97.32% statements, 91.54% branches, 98.39% 
 class-hub edits are not benchmarked (species still has SPC-006 undeclared, and class `peers` re-run every species
 listing the class); `npm run bench` fails on Windows (`shell: true` needed); `bench:compare` not in CI.
 
+### Step 2.13 — Per-rule referrer re-validation, class-hub benchmarks, bench fixes, Gate B packet (2026-09-28)
+
+**Commit 1 — `phase-2.13: class-hub benchmarks` (measure before fixing).** `tests/perf/class-hub.bench.ts`: whole
+commits on the design-tier `hub_explosion` class hub (every one of its 1,400 species lists class 0, found
+structurally by `perf-kit.ts`'s `mostReferencedClass`): rename, notes edit, and moving it under another parent
+(a spare root class is added so the move alternates `[]` / `[root]` without closing a cycle; every generated
+class descends from class 0). Each edit is checked to be accepted, so the bench never times a rejection.
+Budgets: rename and notes against the 16 ms Commit row; the parent move against the >= 500-referrer backstop row
+(SPC-006 reads class ancestry of every species referrer). `tests/perf/baseline.json` regenerated (3 fresh-process
+runs, median p99) with Edge closed and nothing else heavy running. The run was **noisier than 2.12's** (25 of 38
+entries over 25% spread; several run-1 outliers 5-10x the other two, e.g. the notes edit 449 / 92 / 97 ms), so
+read the medians with that in mind.
+
+Median p99 (ms), before any change in this step:
+
+| Scenario | Budget | Median p99 | Runs | Verdict |
+|---|---|---|---|---|
+| Class hub (1,400 species), rename | 16 | 97.0 | 103.2 / 97.0 / 90.7 | **FAIL** |
+| Class hub, notes edit | 16 | 97.2 | 449.4 / 91.9 / 97.2 | **FAIL** |
+| Class hub, move under another parent | 50 | 125.8 | 287.7 / 125.8 / 96.0 | **FAIL** |
+| Like-water hub commit, notes edit | 16 | 5.76 | 5.76 / 6.72 / 4.86 | pass |
+| Like-water hub commit, `review` changed | 50 | 76.9 | 91.6 / 75.3 / 76.9 | **FAIL** |
+
 ## Amendments
 - **2026-09-28, step 2.12 — PERFORMANCE_ARCHITECTURE.md §2/§4 wording (doc only, no contract change).** The "Commit on a record with >= 500 referrers" row is annotated as a backstop (the hub scenarios it was added for now meet the 16 ms Commit row) and kept for Phase 9; §4's incremental-validation bullet describes field-aware scope. Reason: the step 2.12 re-measure (see step entry).
 - **2026-09-28, step 2.12 — `ValidationRule.referencedReads` (contract change, ADR-031).** Problem: `Validator.scopeOf`/`validateTouched` added every referrer of a touched record, at record-kind granularity, so renaming a species used by 1,000 reactions re-validated 1,000 reactions although no rule of theirs reads a species' name (measured 65-94 ms per commit at the design tier against the 16 ms budget; step 2.10 found that a fix needed a rule-level field declaration and added a 50 ms row instead; the reviewer then approved this amendment). Change: `ValidationRule` gains an optional `referencedReads?: ReferencedReads` (per kind of referenced record, or `'*'`, the top-level fields the rule reads; `[]` = existence only). `scopeOf` keeps a referrer only if a rule of its kind reads a field that changed (diffed by reference against `previous`), or the record was created or deleted; a rule without the declaration re-runs on any change, and without `previous` nothing is diffed. Only the referrer expansion is narrowed; referents and `peers`/`watches` are unchanged. `Validator`'s interface is unchanged (`previous` was already there). No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-031, VALIDATION_RULES.md §4-§5, ARCHITECTURE.md §2.4, PERFORMANCE_ARCHITECTURE.md §4.

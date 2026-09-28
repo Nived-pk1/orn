@@ -6,415 +6,495 @@
   "budgetSource": "docs/PERFORMANCE_ARCHITECTURE.md §2, design tier (docs/PERFORMANCE_ARCHITECTURE.md §1: 2,000 entities / 5,000 reactions / 15,000 relationships+mappings); stress-tier entries use §1's \"budgets may degrade <= 2x\" allowance as an informal budget (no §2 row of its own).",
   "verdictBasis": "median p99 across 3 runs, as a conservative stand-in for §2's p95 budgets — `vitest bench` (tinybench) reports p75/p99/p995/p999 but not p95, and a single run's p99 is too noisy to judge alone (docs/PROGRESS.md step 2.10 measured the same scenario at 35.6 ms and 92-107/120-129 ms across runs). `pass` below is computed on the median of 3 p99s; a p95 verdict would only be more forgiving.",
   "noisyEntries": [
-    "commit: dispatch (update one species) (design/dense): 25.9563% spread",
-    "commit: rejected (incremental rollback) (design/dense): 45.2933% spread",
-    "scopeOf: once, on the design-tier hub (design/dense): 32.3651% spread",
-    "scopeOf: twice (today's store.commit() pattern), design-tier hub (design/dense): 29.4243% spread",
-    "scopeOf: once, on the design-tier hub (design/hub_explosion): 77.8336% spread",
-    "scopeOf: twice (today's store.commit() pattern), design-tier hub (design/hub_explosion): 45.6507% spread",
-    "scopeOf: once, on the ADV-012 literal hub (1,000 reactions) (adv-012/hub_explosion): 38.4704% spread",
-    "validateTouched: ADV-012 literal hub, renamed (previous state given) (adv-012/hub_explosion): 25.875% spread",
-    "commit: dispatch (update the design-tier \"like water\" hub) (design-hub-1000/hub_explosion): 27.7363% spread",
-    "validateTouched: \"like water\" hub, renamed (previous state given) (design-hub-1000/hub_explosion): 41.1038% spread",
-    "projection: navigator, focused on the hub (design/dense): 52.1003% spread",
-    "projection: precursor_explorer, focused on the hub (design/dense): 29.8949% spread",
-    "projection: precursor_explorer, focused on the hub (adv-012/hub_explosion): 25.4902% spread",
-    "route search: searchRoutes to the hub, no startFrom (design/chain): 37.5% spread"
+    "commit: dispatch (edit the class hub notes, ~1,400 species referrers) (design-class-hub/hub_explosion): 367.7515% spread",
+    "commit: dispatch (move the class hub to another parent, ~1,400 species referrers) (design-class-hub/hub_explosion): 152.4503% spread",
+    "commit: dispatch (update one species) (design/dense): 94.3671% spread",
+    "commit: undo + redo (one pair) (design/dense): 163.1249% spread",
+    "commit: rejected (incremental rollback) (design/dense): 103.7143% spread",
+    "scopeOf: once, on the design-tier hub (design/dense): 323.4332% spread",
+    "scopeOf: twice (today's store.commit() pattern), design-tier hub (design/dense): 289.5397% spread",
+    "validateTouched: on the design-tier hub (design/dense): 157.0779% spread",
+    "commit: dispatch (update one species) (design/hub_explosion): 122.9729% spread",
+    "commit: undo + redo (one pair) (design/hub_explosion): 143.3954% spread",
+    "commit: rejected (incremental rollback) (design/hub_explosion): 79.3389% spread",
+    "scopeOf: once, on the design-tier hub (design/hub_explosion): 182.4248% spread",
+    "scopeOf: twice (today's store.commit() pattern), design-tier hub (design/hub_explosion): 166.1914% spread",
+    "validateTouched: on the design-tier hub (design/hub_explosion): 216.085% spread",
+    "scopeOf: once, on the ADV-012 literal hub (1,000 reactions) (adv-012/hub_explosion): 75.4523% spread",
+    "scopeOf: twice (today's store.commit() pattern), ADV-012 literal hub (adv-012/hub_explosion): 149.2356% spread",
+    "validateTouched: ADV-012 literal hub, no previous state given (every referrer re-validated: the safe fallback) (adv-012/hub_explosion): 213.7663% spread",
+    "validateTouched: ADV-012 literal hub, renamed (previous state given) (adv-012/hub_explosion): 81.0369% spread",
+    "validateTouched: ADV-012 literal hub, review lifecycle changed (a field referrer rules read) (adv-012/hub_explosion): 213.0169% spread",
+    "commit: dispatch (update the design-tier \"like water\" hub) (design-hub-1000/hub_explosion): 32.1863% spread",
+    "validateTouched: \"like water\" hub, no previous state given (every referrer re-validated: the safe fallback) (design-hub-1000/hub_explosion): 45.0668% spread",
+    "validateTouched: \"like water\" hub, renamed (previous state given) (design-hub-1000/hub_explosion): 47.0638% spread",
+    "projection: navigator, focused on the hub (design/dense): 45.5835% spread",
+    "projection: reaction_explorer, focused on the hub (design/dense): 27.9551% spread",
+    "route search: searchRoutes to the hub, no startFrom (design/dense): 40.4816% spread"
   ],
   "entries": [
     {
+      "operation": "commit: dispatch (rename the class hub, ~1,400 species referrers)",
+      "tier": "design-class-hub",
+      "shape": "hub_explosion",
+      "meanMs": 82.2401,
+      "p75Ms": 82.9858,
+      "p99Ms": 97.0197,
+      "p99Runs": [
+        103.2262,
+        97.0197,
+        90.7164
+      ],
+      "p99SpreadPct": 12.8941,
+      "sampleCount": 100,
+      "budgetMs": 16,
+      "budgetRow": "Commit, accepted or rejected",
+      "pass": false,
+      "note": "step 2.13: the class hub every hub_explosion species lists; an ordinary edit"
+    },
+    {
+      "operation": "commit: dispatch (edit the class hub notes, ~1,400 species referrers)",
+      "tier": "design-class-hub",
+      "shape": "hub_explosion",
+      "meanMs": 82.1866,
+      "p75Ms": 83.0365,
+      "p99Ms": 97.2244,
+      "p99Runs": [
+        449.4052,
+        91.861,
+        97.2244
+      ],
+      "p99SpreadPct": 367.7515,
+      "sampleCount": 100,
+      "budgetMs": 16,
+      "budgetRow": "Commit, accepted or rejected",
+      "pass": false,
+      "note": "step 2.13: an ordinary edit",
+      "noisy": "p99 spread 367.7515% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+    },
+    {
+      "operation": "commit: dispatch (move the class hub to another parent, ~1,400 species referrers)",
+      "tier": "design-class-hub",
+      "shape": "hub_explosion",
+      "meanMs": 86.3253,
+      "p75Ms": 88.1565,
+      "p99Ms": 125.7583,
+      "p99Runs": [
+        287.727,
+        125.7583,
+        96.0081
+      ],
+      "p99SpreadPct": 152.4503,
+      "sampleCount": 100,
+      "budgetMs": 50,
+      "budgetRow": "Commit on a record with ≥ 500 referrers",
+      "pass": false,
+      "note": "step 2.13: parentIds is read by every species referrer (SPC-006 reads the class ancestry), so this is a backstop-row case",
+      "noisy": "p99 spread 152.4503% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+    },
+    {
       "operation": "commit: dispatch (update one species)",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 1.3461,
-      "p75Ms": 1.3505,
-      "p99Ms": 2.2588,
+      "meanMs": 1.8121,
+      "p75Ms": 1.8567,
+      "p99Ms": 3.9589,
       "p99Runs": [
-        2.4296,
-        1.8433,
-        2.2588
+        6.9029,
+        3.167,
+        3.9589
       ],
-      "p99SpreadPct": 25.9563,
-      "sampleCount": 368,
+      "p99SpreadPct": 94.3671,
+      "sampleCount": 103,
       "budgetMs": 16,
       "budgetRow": "Commit, accepted or rejected",
       "pass": true,
-      "noisy": "p99 spread 25.9563% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 94.3671% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "commit: undo + redo (one pair)",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 3.4825,
-      "p75Ms": 3.6045,
-      "p99Ms": 5.3645,
+      "meanMs": 4.7938,
+      "p75Ms": 5.0729,
+      "p99Ms": 6.9833,
       "p99Runs": [
-        5.5504,
-        5.3645,
-        5.0484
+        17.3973,
+        6.9833,
+        6.0058
       ],
-      "p99SpreadPct": 9.3578,
-      "sampleCount": 120,
+      "p99SpreadPct": 163.1249,
+      "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Undo / redo",
       "pass": true,
-      "note": "combined; each half well under 16 ms alone"
+      "note": "combined; each half well under 16 ms alone",
+      "noisy": "p99 spread 163.1249% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "commit: rejected (incremental rollback)",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 4.1254,
-      "p75Ms": 4.0414,
-      "p99Ms": 8.7269,
+      "meanMs": 5.463,
+      "p75Ms": 5.4973,
+      "p99Ms": 8.3164,
       "p99Runs": [
-        10.3157,
-        8.7269,
-        6.363
+        16.2266,
+        8.3164,
+        7.6013
       ],
-      "p99SpreadPct": 45.2933,
-      "sampleCount": 113,
+      "p99SpreadPct": 103.7143,
+      "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Commit, accepted or rejected",
       "pass": true,
-      "noisy": "p99 spread 45.2933% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 103.7143% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "scopeOf: once, on the design-tier hub",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 0.017,
-      "p75Ms": 0.0163,
-      "p99Ms": 0.0241,
+      "meanMs": 0.0218,
+      "p75Ms": 0.021,
+      "p99Ms": 0.0367,
       "p99Runs": [
-        0.0241,
-        0.0234,
-        0.0312
+        0.1538,
+        0.0367,
+        0.0351
       ],
-      "p99SpreadPct": 32.3651,
-      "sampleCount": 29225,
+      "p99SpreadPct": 323.4332,
+      "sampleCount": 9963,
       "budgetMs": null,
       "budgetRow": null,
       "pass": null,
-      "noisy": "p99 spread 32.3651% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 323.4332% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "scopeOf: twice (today's store.commit() pattern), design-tier hub",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 0.0332,
-      "p75Ms": 0.0323,
-      "p99Ms": 0.0469,
+      "meanMs": 0.0424,
+      "p75Ms": 0.0415,
+      "p99Ms": 0.0717,
       "p99Runs": [
-        0.0574,
-        0.0436,
-        0.0469
+        0.2747,
+        0.0671,
+        0.0717
       ],
-      "p99SpreadPct": 29.4243,
-      "sampleCount": 14387,
+      "p99SpreadPct": 289.5397,
+      "sampleCount": 5234,
       "budgetMs": null,
       "budgetRow": null,
       "pass": null,
       "openItem": "scopeOf computed twice per commit",
-      "noisy": "p99 spread 29.4243% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 289.5397% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "validateTouched: on the design-tier hub",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 0.5371,
-      "p75Ms": 0.5255,
-      "p99Ms": 1.346,
+      "meanMs": 0.8305,
+      "p75Ms": 0.9035,
+      "p99Ms": 2.3298,
       "p99Runs": [
-        1.346,
-        1.2801,
-        1.3592
+        5.4597,
+        2.3298,
+        1.8001
       ],
-      "p99SpreadPct": 5.8767,
-      "sampleCount": 926,
+      "p99SpreadPct": 157.0779,
+      "sampleCount": 158,
       "budgetMs": 16,
       "budgetRow": "Commit (validateTouched is inside it)",
-      "pass": true
+      "pass": true,
+      "noisy": "p99 spread 157.0779% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "commit: dispatch (update one species)",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 1.5483,
-      "p75Ms": 1.5447,
-      "p99Ms": 2.5172,
+      "meanMs": 1.9532,
+      "p75Ms": 1.9513,
+      "p99Ms": 3.2547,
       "p99Runs": [
-        2.7892,
-        2.3905,
-        2.5172
+        7.0064,
+        3.004,
+        3.2547
       ],
-      "p99SpreadPct": 15.839,
-      "sampleCount": 323,
+      "p99SpreadPct": 122.9729,
+      "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Commit, accepted or rejected",
-      "pass": true
+      "pass": true,
+      "noisy": "p99 spread 122.9729% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "commit: undo + redo (one pair)",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 2.9222,
-      "p75Ms": 2.9177,
-      "p99Ms": 4.1426,
+      "meanMs": 4.135,
+      "p75Ms": 4.0966,
+      "p99Ms": 7.1427,
       "p99Runs": [
-        4.7475,
-        3.7909,
-        4.1426
+        15.9867,
+        7.1427,
+        5.7444
       ],
-      "p99SpreadPct": 23.0918,
-      "sampleCount": 165,
+      "p99SpreadPct": 143.3954,
+      "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Undo / redo",
       "pass": true,
-      "note": "combined; each half well under 16 ms alone"
+      "note": "combined; each half well under 16 ms alone",
+      "noisy": "p99 spread 143.3954% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "commit: rejected (incremental rollback)",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 4.0146,
-      "p75Ms": 3.9538,
-      "p99Ms": 8.0024,
+      "meanMs": 5.3546,
+      "p75Ms": 5.224,
+      "p99Ms": 12.0076,
       "p99Runs": [
-        8.0024,
-        8.5642,
-        6.6525
+        20.4288,
+        12.0076,
+        10.9021
       ],
-      "p99SpreadPct": 23.8891,
-      "sampleCount": 117,
+      "p99SpreadPct": 79.3389,
+      "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Commit, accepted or rejected",
-      "pass": true
+      "pass": true,
+      "noisy": "p99 spread 79.3389% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "scopeOf: once, on the design-tier hub",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 0.1242,
-      "p75Ms": 0.1225,
-      "p99Ms": 0.1791,
+      "meanMs": 0.1666,
+      "p75Ms": 0.1675,
+      "p99Ms": 0.3357,
       "p99Runs": [
-        0.1791,
-        0.1705,
-        0.3099
+        0.9226,
+        0.3357,
+        0.3102
       ],
-      "p99SpreadPct": 77.8336,
-      "sampleCount": 3729,
+      "p99SpreadPct": 182.4248,
+      "sampleCount": 1152,
       "budgetMs": null,
       "budgetRow": null,
       "pass": null,
-      "noisy": "p99 spread 77.8336% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 182.4248% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "scopeOf: twice (today's store.commit() pattern), design-tier hub",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 0.2553,
-      "p75Ms": 0.2516,
-      "p99Ms": 0.4541,
+      "meanMs": 0.3317,
+      "p75Ms": 0.3343,
+      "p99Ms": 0.6803,
       "p99Runs": [
-        0.4541,
-        0.3673,
-        0.5746
+        1.6088,
+        0.6803,
+        0.4782
       ],
-      "p99SpreadPct": 45.6507,
-      "sampleCount": 1893,
+      "p99SpreadPct": 166.1914,
+      "sampleCount": 550,
       "budgetMs": null,
       "budgetRow": null,
       "pass": null,
       "openItem": "scopeOf computed twice per commit",
-      "noisy": "p99 spread 45.6507% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 166.1914% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "validateTouched: on the design-tier hub",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 4.6399,
-      "p75Ms": 4.9318,
-      "p99Ms": 6.7028,
+      "meanMs": 6.0648,
+      "p75Ms": 6.3553,
+      "p99Ms": 8.9052,
       "p99Runs": [
-        6.7028,
-        5.5538,
-        6.951
+        27.0789,
+        8.9052,
+        7.8361
       ],
-      "p99SpreadPct": 20.845,
-      "sampleCount": 105,
+      "p99SpreadPct": 216.085,
+      "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Commit (validateTouched is inside it)",
-      "pass": true
+      "pass": true,
+      "noisy": "p99 spread 216.085% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "scopeOf: once, on the ADV-012 literal hub (1,000 reactions)",
       "tier": "adv-012",
       "shape": "hub_explosion",
-      "meanMs": 0.571,
-      "p75Ms": 0.5576,
-      "p99Ms": 0.9584,
+      "meanMs": 0.7779,
+      "p75Ms": 0.7094,
+      "p99Ms": 2.2222,
       "p99Runs": [
-        1.0174,
-        0.6487,
-        0.9584
+        2.6358,
+        2.2222,
+        0.9591
       ],
-      "p99SpreadPct": 38.4704,
-      "sampleCount": 869,
+      "p99SpreadPct": 75.4523,
+      "sampleCount": 308,
       "budgetMs": null,
       "budgetRow": null,
       "pass": null,
-      "noisy": "p99 spread 38.4704% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 75.4523% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "scopeOf: twice (today's store.commit() pattern), ADV-012 literal hub",
       "tier": "adv-012",
       "shape": "hub_explosion",
-      "meanMs": 1.1413,
-      "p75Ms": 1.1169,
-      "p99Ms": 1.7062,
+      "meanMs": 1.4242,
+      "p75Ms": 1.3825,
+      "p99Ms": 2.525,
       "p99Runs": [
-        1.7062,
-        1.473,
-        1.8115
+        5.2791,
+        2.525,
+        1.5109
       ],
-      "p99SpreadPct": 19.8394,
-      "sampleCount": 430,
+      "p99SpreadPct": 149.2356,
+      "sampleCount": 148,
       "budgetMs": null,
       "budgetRow": null,
       "pass": null,
-      "openItem": "scopeOf computed twice per commit"
+      "openItem": "scopeOf computed twice per commit",
+      "noisy": "p99 spread 149.2356% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "validateTouched: ADV-012 literal hub, no previous state given (every referrer re-validated: the safe fallback)",
       "tier": "adv-012",
       "shape": "hub_explosion",
-      "meanMs": 23.9202,
-      "p75Ms": 23.6476,
-      "p99Ms": 31.2248,
+      "meanMs": 29.8708,
+      "p75Ms": 30.59,
+      "p99Ms": 40.0369,
       "p99Runs": [
-        32.5518,
-        31.2248,
-        29.2587
+        124.6091,
+        39.0237,
+        40.0369
       ],
-      "p99SpreadPct": 10.5464,
+      "p99SpreadPct": 213.7663,
       "sampleCount": 100,
       "budgetMs": 50,
       "budgetRow": "Commit on a record with ≥ 500 referrers",
       "pass": true,
-      "note": "1,000 referrers ≥ 500. Without a previous state nothing can be diffed (ADR-031); the store always passes one, so this is the fallback, not the commit path"
+      "note": "1,000 referrers ≥ 500. Without a previous state nothing can be diffed (ADR-031); the store always passes one, so this is the fallback, not the commit path",
+      "noisy": "p99 spread 213.7663% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "validateTouched: ADV-012 literal hub, renamed (previous state given)",
       "tier": "adv-012",
       "shape": "hub_explosion",
-      "meanMs": 0.5094,
-      "p75Ms": 0.4995,
-      "p99Ms": 0.96,
+      "meanMs": 0.5737,
+      "p75Ms": 0.5581,
+      "p99Ms": 1.3078,
       "p99Runs": [
-        0.96,
-        0.794,
-        1.0424
+        1.9648,
+        0.905,
+        1.3078
       ],
-      "p99SpreadPct": 25.875,
-      "sampleCount": 937,
+      "p99SpreadPct": 81.0369,
+      "sampleCount": 483,
       "budgetMs": 16,
       "budgetRow": "Commit, accepted or rejected",
       "pass": true,
       "note": "field-aware scope (ADR-031, step 2.12): a rename is a field no referrer rule reads",
-      "noisy": "p99 spread 25.875% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 81.0369% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "validateTouched: ADV-012 literal hub, review lifecycle changed (a field referrer rules read)",
       "tier": "adv-012",
       "shape": "hub_explosion",
-      "meanMs": 27.1202,
-      "p75Ms": 26.5006,
-      "p99Ms": 33.9722,
+      "meanMs": 34.0311,
+      "p75Ms": 35.5388,
+      "p99Ms": 43.0126,
       "p99Runs": [
-        33.9722,
-        33.1264,
-        38.9152
+        130.6791,
+        43.0126,
+        39.055
       ],
-      "p99SpreadPct": 17.0398,
+      "p99SpreadPct": 213.0169,
       "sampleCount": 100,
       "budgetMs": 50,
       "budgetRow": "Commit on a record with ≥ 500 referrers",
       "pass": true,
-      "note": "1,000 referrers ≥ 500; RVW-002 reads `review` of every referenced record, so all referrers are re-validated (whole records: FindingStore replaces per subject)"
+      "note": "1,000 referrers ≥ 500; RVW-002 reads `review` of every referenced record, so all referrers are re-validated (whole records: FindingStore replaces per subject)",
+      "noisy": "p99 spread 213.0169% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "commit: dispatch (update the design-tier \"like water\" hub)",
       "tier": "design-hub-1000",
       "shape": "hub_explosion",
-      "meanMs": 2.3649,
-      "p75Ms": 2.3477,
-      "p99Ms": 3.269,
+      "meanMs": 3.3182,
+      "p75Ms": 3.3133,
+      "p99Ms": 5.7627,
       "p99Runs": [
-        4.1042,
-        3.1975,
-        3.269
+        5.7627,
+        6.7191,
+        4.8643
       ],
-      "p99SpreadPct": 27.7363,
-      "sampleCount": 198,
+      "p99SpreadPct": 32.1863,
+      "sampleCount": 150,
       "budgetMs": 16,
       "budgetRow": "Commit, accepted or rejected",
       "pass": true,
-      "noisy": "p99 spread 27.7363% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 32.1863% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "validateTouched: \"like water\" hub, no previous state given (every referrer re-validated: the safe fallback)",
       "tier": "design-hub-1000",
       "shape": "hub_explosion",
-      "meanMs": 24.7096,
-      "p75Ms": 25.1504,
-      "p99Ms": 31.0288,
+      "meanMs": 32.2146,
+      "p75Ms": 32.945,
+      "p99Ms": 43.7373,
       "p99Runs": [
-        31.0288,
-        28.3481,
-        35.9803
+        59.7966,
+        43.7373,
+        40.0856
       ],
-      "p99SpreadPct": 24.5971,
+      "p99SpreadPct": 45.0668,
       "sampleCount": 100,
       "budgetMs": 50,
       "budgetRow": "Commit on a record with ≥ 500 referrers",
       "pass": true,
-      "note": "1,000 referrers ≥ 500. Without a previous state nothing can be diffed (ADR-031); the store always passes one, so this is the fallback, not the commit path"
+      "note": "1,000 referrers ≥ 500. Without a previous state nothing can be diffed (ADR-031); the store always passes one, so this is the fallback, not the commit path",
+      "noisy": "p99 spread 45.0668% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "validateTouched: \"like water\" hub, renamed (previous state given)",
       "tier": "design-hub-1000",
       "shape": "hub_explosion",
-      "meanMs": 1.0975,
-      "p75Ms": 1.1069,
-      "p99Ms": 1.8862,
+      "meanMs": 1.3436,
+      "p75Ms": 1.3674,
+      "p99Ms": 2.0111,
       "p99Runs": [
-        1.8862,
-        2.0247,
-        1.2494
+        2.0111,
+        2.6524,
+        1.7059
       ],
-      "p99SpreadPct": 41.1038,
-      "sampleCount": 445,
+      "p99SpreadPct": 47.0638,
+      "sampleCount": 353,
       "budgetMs": 16,
       "budgetRow": "Commit, accepted or rejected",
       "pass": true,
       "note": "field-aware scope (ADR-031, step 2.12): a rename is a field no referrer rule reads",
-      "noisy": "p99 spread 41.1038% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 47.0638% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "validateTouched: \"like water\" hub, review lifecycle changed (a field referrer rules read)",
       "tier": "design-hub-1000",
       "shape": "hub_explosion",
-      "meanMs": 29.2462,
-      "p75Ms": 29.4893,
-      "p99Ms": 37.1015,
+      "meanMs": 36.8296,
+      "p75Ms": 37.3566,
+      "p99Ms": 43.5122,
       "p99Runs": [
-        37.1015,
-        34.7881,
-        39.1839
+        49.2757,
+        41.2116,
+        43.5122
       ],
-      "p99SpreadPct": 11.848,
+      "p99SpreadPct": 18.533,
       "sampleCount": 100,
       "budgetMs": 50,
       "budgetRow": "Commit on a record with ≥ 500 referrers",
@@ -425,15 +505,15 @@
       "operation": "commit: dispatch (like-water hub, review lifecycle changed)",
       "tier": "design-hub-1000",
       "shape": "hub_explosion",
-      "meanMs": 51.2376,
-      "p75Ms": 51.9907,
-      "p99Ms": 67.4679,
+      "meanMs": 65.339,
+      "p75Ms": 66.8836,
+      "p99Ms": 76.8743,
       "p99Runs": [
-        68.1834,
-        61.2451,
-        67.4679
+        91.6485,
+        75.2595,
+        76.8743
       ],
-      "p99SpreadPct": 10.2839,
+      "p99SpreadPct": 21.3192,
       "sampleCount": 100,
       "budgetMs": 50,
       "budgetRow": "Commit on a record with ≥ 500 referrers",
@@ -444,72 +524,72 @@
       "operation": "projection: navigator, focused on the hub",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 5.5325,
-      "p75Ms": 5.6004,
-      "p99Ms": 6.7253,
+      "meanMs": 7.0369,
+      "p75Ms": 6.9169,
+      "p99Ms": 9.9275,
       "p99Runs": [
-        9.8439,
-        6.7253,
-        6.34
+        9.3718,
+        13.8971,
+        9.9275
       ],
-      "p99SpreadPct": 52.1003,
+      "p99SpreadPct": 45.5835,
       "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Projection build",
       "pass": true,
-      "noisy": "p99 spread 52.1003% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "noisy": "p99 spread 45.5835% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "projection: reaction_explorer, focused on the hub",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 5.6407,
-      "p75Ms": 5.5785,
-      "p99Ms": 7.7984,
+      "meanMs": 7.638,
+      "p75Ms": 7.8372,
+      "p99Ms": 11.8168,
       "p99Runs": [
-        8.029,
-        7.7984,
-        6.2926
+        11.8168,
+        9.3894,
+        12.6928
       ],
-      "p99SpreadPct": 22.2661,
+      "p99SpreadPct": 27.9551,
       "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Projection build",
-      "pass": true
+      "pass": true,
+      "noisy": "p99 spread 27.9551% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "projection: precursor_explorer, focused on the hub",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 5.1702,
-      "p75Ms": 5.2725,
-      "p99Ms": 7.4133,
+      "meanMs": 6.5575,
+      "p75Ms": 6.5178,
+      "p99Ms": 9.905,
       "p99Runs": [
-        7.5922,
-        7.4133,
-        5.376
+        10.8349,
+        9.905,
+        8.476
       ],
-      "p99SpreadPct": 29.8949,
+      "p99SpreadPct": 23.8152,
       "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Projection build",
-      "pass": true,
-      "noisy": "p99 spread 29.8949% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "pass": true
     },
     {
       "operation": "projection: navigator, focused on the hub",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 2.6999,
-      "p75Ms": 2.666,
-      "p99Ms": 3.7286,
+      "meanMs": 3.563,
+      "p75Ms": 3.7093,
+      "p99Ms": 4.5528,
       "p99Runs": [
-        3.5157,
-        3.7608,
-        3.7286
+        4.3128,
+        4.5528,
+        4.7309
       ],
-      "p99SpreadPct": 6.5735,
-      "sampleCount": 183,
+      "p99SpreadPct": 9.1834,
+      "sampleCount": 131,
       "budgetMs": 16,
       "budgetRow": "Projection build",
       "pass": true
@@ -518,15 +598,15 @@
       "operation": "projection: reaction_explorer, focused on the hub",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 8.0451,
-      "p75Ms": 7.999,
-      "p99Ms": 9.3249,
+      "meanMs": 10.6328,
+      "p75Ms": 10.9668,
+      "p99Ms": 13.9374,
       "p99Runs": [
-        8.8265,
-        10.1799,
-        9.3249
+        16.1731,
+        13.7501,
+        13.9374
       ],
-      "p99SpreadPct": 14.5138,
+      "p99SpreadPct": 17.3849,
       "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Projection build",
@@ -536,16 +616,16 @@
       "operation": "projection: precursor_explorer, focused on the hub",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 1.2444,
-      "p75Ms": 1.2325,
-      "p99Ms": 1.8018,
+      "meanMs": 1.5749,
+      "p75Ms": 1.5633,
+      "p99Ms": 2.3166,
       "p99Runs": [
-        1.9651,
-        1.8018,
-        1.718
+        2.3166,
+        2.135,
+        2.4821
       ],
-      "p99SpreadPct": 13.7141,
-      "sampleCount": 396,
+      "p99SpreadPct": 14.9832,
+      "sampleCount": 310,
       "budgetMs": 16,
       "budgetRow": "Projection build",
       "pass": true
@@ -554,16 +634,16 @@
       "operation": "projection: navigator, focused on the hub",
       "tier": "adv-012",
       "shape": "hub_explosion",
-      "meanMs": 1.958,
-      "p75Ms": 1.9377,
-      "p99Ms": 2.7273,
+      "meanMs": 2.6082,
+      "p75Ms": 2.6071,
+      "p99Ms": 4.7421,
       "p99Runs": [
-        2.7922,
-        2.7273,
-        2.3921
+        4.7421,
+        4.5371,
+        4.8068
       ],
-      "p99SpreadPct": 14.6702,
-      "sampleCount": 254,
+      "p99SpreadPct": 5.6874,
+      "sampleCount": 189,
       "budgetMs": 16,
       "budgetRow": "Projection build",
       "pass": true,
@@ -573,35 +653,34 @@
       "operation": "projection: precursor_explorer, focused on the hub",
       "tier": "adv-012",
       "shape": "hub_explosion",
-      "meanMs": 0.0037,
-      "p75Ms": 0.0037,
-      "p99Ms": 0.0051,
+      "meanMs": 0.0052,
+      "p75Ms": 0.005,
+      "p99Ms": 0.0103,
       "p99Runs": [
-        0.0055,
-        0.0051,
-        0.0042
+        0.0108,
+        0.0103,
+        0.0103
       ],
-      "p99SpreadPct": 25.4902,
-      "sampleCount": 133644,
+      "p99SpreadPct": 4.8544,
+      "sampleCount": 93480,
       "budgetMs": 16,
       "budgetRow": "Projection build",
       "pass": true,
-      "note": "the ADV-012 hub is a pure reactant here (never a product), so there is nothing to walk backward from it; not a meaningful stress case for this view",
-      "noisy": "p99 spread 25.4902% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "note": "the ADV-012 hub is a pure reactant here (never a product), so there is nothing to walk backward from it; not a meaningful stress case for this view"
     },
     {
       "operation": "projection: navigator, focused on the hub, stress tier (400 anchors)",
       "tier": "stress",
       "shape": "dense",
-      "meanMs": 13.2685,
-      "p75Ms": 13.5073,
-      "p99Ms": 17.5395,
+      "meanMs": 17.2265,
+      "p75Ms": 17.7192,
+      "p99Ms": 19.8386,
       "p99Runs": [
-        16.8108,
-        17.5395,
-        17.7149
+        19.8386,
+        21.1213,
+        19.587
       ],
-      "p99SpreadPct": 5.1547,
+      "p99SpreadPct": 7.7339,
       "sampleCount": 100,
       "budgetMs": null,
       "informalBudgetMs": 32,
@@ -613,53 +692,53 @@
       "operation": "route search: searchRoutes to the hub, no startFrom",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 5.6936,
-      "p75Ms": 5.9272,
-      "p99Ms": 9.2967,
+      "meanMs": 7.5959,
+      "p75Ms": 7.8093,
+      "p99Ms": 15.468,
       "p99Runs": [
-        9.2967,
-        10.3291,
-        8.5747
+        11.5888,
+        17.8505,
+        15.468
       ],
-      "p99SpreadPct": 18.8712,
+      "p99SpreadPct": 40.4816,
       "sampleCount": 100,
       "budgetMs": 16,
       "budgetRow": "Projection build (route search has no budget row of its own; bounded the same way)",
-      "pass": true
+      "pass": true,
+      "noisy": "p99 spread 40.4816% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
     },
     {
       "operation": "route search: searchRoutes to the hub, no startFrom",
       "tier": "design",
       "shape": "chain",
-      "meanMs": 0.0005,
-      "p75Ms": 0.0005,
-      "p99Ms": 0.0008,
+      "meanMs": 0.0006,
+      "p75Ms": 0.0007,
+      "p99Ms": 0.0011,
       "p99Runs": [
-        0.0008,
-        0.0007,
-        0.001
+        0.0011,
+        0.001,
+        0.0012
       ],
-      "p99SpreadPct": 37.5,
-      "sampleCount": 865072,
+      "p99SpreadPct": 18.1818,
+      "sampleCount": 769682,
       "budgetMs": 16,
       "budgetRow": "Projection build (route search has no budget row of its own; bounded the same way)",
-      "pass": true,
-      "noisy": "p99 spread 37.5% across 3 runs (> 25%) — see docs/PERFORMANCE_ARCHITECTURE.md §9 for what to check (GC inside the timed region, setup leaking into it, shared state between iterations) before trusting this entry's verdict"
+      "pass": true
     },
     {
       "operation": "validateAll: whole state",
       "tier": "design",
       "shape": "dense",
-      "meanMs": 224.1671,
-      "p75Ms": 226.7433,
-      "p99Ms": 246.0354,
+      "meanMs": 295.6063,
+      "p75Ms": 303.0668,
+      "p99Ms": 311.9189,
       "p99Runs": [
-        264.8851,
-        246.0354,
-        244.274
+        346.8678,
+        306.4951,
+        311.9189
       ],
-      "p99SpreadPct": 8.3773,
-      "sampleCount": 13,
+      "p99SpreadPct": 12.9433,
+      "sampleCount": 10,
       "budgetMs": 3000,
       "budgetRow": "Full validation L1–L3 (design target)",
       "pass": true
@@ -668,16 +747,16 @@
       "operation": "validateAll: whole state",
       "tier": "design",
       "shape": "hub_explosion",
-      "meanMs": 210.5926,
-      "p75Ms": 213.8286,
-      "p99Ms": 227.638,
+      "meanMs": 289.5003,
+      "p75Ms": 293.6225,
+      "p99Ms": 322.3503,
       "p99Runs": [
-        239.5356,
-        227.638,
-        220.8676
+        325.7314,
+        322.3503,
+        286.1674
       ],
-      "p99SpreadPct": 8.2007,
-      "sampleCount": 14,
+      "p99SpreadPct": 12.2736,
+      "sampleCount": 11,
       "budgetMs": 3000,
       "budgetRow": "Full validation L1–L3 (design target)",
       "pass": true

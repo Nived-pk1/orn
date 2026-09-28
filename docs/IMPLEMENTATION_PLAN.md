@@ -50,6 +50,7 @@ Dependencies: none new (src/core/graph stays pure; benchmarks use Vitest bench).
 | 2.10 | Incremental rollback on rejected commits; field-aware `validateTouched` scope; route-search clock test; re-measure; Gate B packet update | Remaining Gate B open items closed or explicitly deferred by the reviewer |
 | 2.11 | Deterministic navigator anchors and stress tier; stable benchmark method (isolation, warmup, 100-sample floor, 3 fresh-process runs, median p99); navigator build fix; re-measure | Navigator `dense` at the design tier under 16 ms on median p99 |
 | 2.12 | Field-aware `validateTouched` scope (`ValidationRule.referencedReads`, ADR-031); re-measure; Gate B packet update | Hub-referrer commits judged against the 16 ms Commit row; remaining misses listed with causes |
+| 2.13 | Per-rule referrer re-validation; class-hub benchmarks; bench fixes; Gate B packet | Hub and class-hub commits meet their rows (16 ms ordinary edits, 50 ms backstop for edits every referrer reads), or the exception is documented for Phase 9 |
 
 ### Phase 3 — Persistence, import/export, legacy → Gate C
 Dependencies: `dexie`, `fflate`, dev `fake-indexeddb`.
