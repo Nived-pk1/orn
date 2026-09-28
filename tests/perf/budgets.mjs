@@ -101,4 +101,12 @@ export const BUDGETS = {
     { operation: 'validateAll: whole state', tier: 'design', shape: 'dense', budgetMs: 3000, budgetRow: 'Full validation L1–L3 (design target)' },
   'validateAll (design tier, hub_explosion) > validateAll, whole state':
     { operation: 'validateAll: whole state', tier: 'design', shape: 'hub_explosion', budgetMs: 3000, budgetRow: 'Full validation L1–L3 (design target)' },
+  'persist (design tier, hub_explosion) > enqueue + coalesce, ordinary edit (1 record)':
+    { operation: 'persist: enqueue + coalesce, ordinary edit (synchronous part of writeChanges)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.1: no PERFORMANCE_ARCHITECTURE.md §2 row; informal, part of the main-thread commit cost' },
+  'persist (design tier, hub_explosion) > enqueue + coalesce, hub edit (1,000+ records in one ChangeSet)':
+    { operation: 'persist: enqueue + coalesce, hub edit (replaceReferences on the 1,000-reaction hub)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.1: no §2 row; informal' },
+  'persist (design tier, hub_explosion, flush on fake-indexeddb) > flush on fake-indexeddb, ordinary edit (our overhead, not real IndexedDB)':
+    { operation: 'persist: one flush on fake-indexeddb, ordinary edit', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'our overhead, not real IndexedDB; real timing is traced at Gates E/F' },
+  'persist (design tier, hub_explosion, flush on fake-indexeddb) > flush on fake-indexeddb, hub edit (our overhead, not real IndexedDB)':
+    { operation: 'persist: one flush on fake-indexeddb, hub edit (~1,000 rows)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'our overhead, not real IndexedDB; SLOW_BENCH_OPTIONS (few samples), so p99 is the sample max' },
 };

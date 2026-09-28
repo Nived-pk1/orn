@@ -54,6 +54,21 @@ export default tseslint.config(
     },
   },
   {
+    // Persistence gets IndexedDB injected (docs/PERSISTENCE.md, step 3.1): tests use fake-indexeddb, the app passes the browser's.
+    files: ['src/persistence/**/*.ts'],
+    ignores: ['src/persistence/**/*.test.ts'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        ...noWebStorage,
+        ...['indexedDB', 'IDBKeyRange', 'window', 'document'].map((name) => ({
+          name,
+          message: 'src/persistence receives indexedDB and IDBKeyRange through createOrnDb options; never read the global.',
+        })),
+      ],
+    },
+  },
+  {
     files: ['scripts/**/*.mjs', '*.config.{js,ts}'],
     languageOptions: { globals: { ...globals.node } },
   },

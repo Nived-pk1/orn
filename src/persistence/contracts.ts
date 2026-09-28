@@ -54,6 +54,28 @@ export interface QuarantineRow {
 
 export type DerivedCacheKind = 'depiction' | 'layout' | 'search_index' | 'structure_facts';
 
+/** A disposable derived value (docs/PERSISTENCE.md §2, §11). Never canonical; evicted least recently used first. */
+export interface DerivedCacheRow {
+  readonly key: string;
+  readonly cacheKind: DerivedCacheKind;
+  readonly value: JsonValue;
+  /** Approximate stored size in bytes, supplied by the caller; drives the soft cap. */
+  readonly byteSize: number;
+  /** Injected-clock milliseconds of the last put or get. */
+  readonly lastUsedAt: number;
+}
+/** What a caller supplies; the adapter stamps `lastUsedAt`. */
+export type DerivedCacheInput = Omit<DerivedCacheRow, 'lastUsedAt'>;
+/** A cache write never throws and never touches SaveStatus: the cache is disposable, so a failure is a value. */
+export type DerivedPutResult = { readonly ok: true } | { readonly ok: false; readonly reason: 'quota' | 'error'; readonly message: string };
+
+/** Bytes of an asset record created in the ChangeSet being written; they travel in the same transaction (INV-20). */
+export interface AssetBlobWrite {
+  readonly assetId: string;
+  readonly sha256: string;
+  readonly blob: Blob;
+}
+
 export type OpenResult =
   | {
       readonly mode: 'read_write' | 'read_only';
@@ -68,22 +90,32 @@ export type OpenResult =
 export interface SaveStatus {
   readonly state: 'saved' | 'saving' | 'retrying' | 'failed' | 'read_only';
   readonly lastSavedRevision: number;
+  /** ChangeSets accepted but not yet durable. Kept while `failed`: nothing is dropped, memory stays authoritative. */
   readonly pendingRevisions: number;
   readonly lastError?: string;
 }
 
 export interface PersistenceAdapter {
   open(): Promise<OpenResult>;
-  /** Serial queue; each call is one transaction over records + meta. Retries with backoff. */
-  writeChanges(changes: ChangeSet, next: CanonicalState): Promise<void>;
+  /**
+   * Serial queue. ChangeSets waiting together are coalesced into one transaction over records + meta
+   * (+ `blobs`, the bytes of asset records created in `changes`); any failure writes nothing. Retries with
+   * backoff. Resolves when the write cycle holding this ChangeSet ends, durable or `failed`: read `getStatus()`.
+   */
+  writeChanges(changes: ChangeSet, next: CanonicalState, blobs?: readonly AssetBlobWrite[]): Promise<void>;
   /** Replace everything (import/migration/restore) in one transaction, after a snapshot. */
   replaceAll(state: CanonicalState, revision: number): Promise<void>;
   createSnapshot(reason: SnapshotReason, state: CanonicalState, revision: number, note?: string): Promise<SnapshotSummary>;
   listSnapshots(): Promise<readonly SnapshotSummary[]>;
   readSnapshot(id: string): Promise<DatasetDocument>;
   deleteSnapshot(id: string): Promise<void>;
-  putAssetBlob(assetId: string, sha256: string, blob: Blob): Promise<void>;
   getAssetBlob(assetId: string): Promise<Blob | undefined>;
+  putDerived(row: DerivedCacheInput): Promise<DerivedPutResult>;
+  /** Updates `lastUsedAt`. A failing cache read is a miss (undefined), never an error. */
+  getDerived(key: string): Promise<DerivedCacheRow | undefined>;
+  /** Clean-shutdown and integrity-check markers (meta rows). The caller checks `getStatus()` first. */
+  setLastCleanShutdownAt(at: string): Promise<void>;
+  setLastIntegrityCheckAt(at: string): Promise<void>;
   saveEditorSession(session: EditorSession): Promise<void>;
   listEditorSessions(): Promise<readonly EditorSession[]>;
   deleteEditorSession(id: string): Promise<void>;
@@ -91,6 +123,8 @@ export interface PersistenceAdapter {
   setUiState(key: string, value: JsonValue): Promise<void>;
   storageEstimate(): Promise<{ readonly usage: number; readonly quota: number; readonly persisted: boolean }>;
   requestPersistentStorage(): Promise<boolean>;
+  /** Synchronous. Pending writes (for `beforeunload`): `pendingRevisions > 0` or state saving, retrying or failed. */
+  getStatus(): SaveStatus;
   subscribeStatus(listener: (status: SaveStatus) => void): () => void;
   close(): Promise<void>;
 }

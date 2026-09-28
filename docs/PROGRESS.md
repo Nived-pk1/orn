@@ -1128,7 +1128,99 @@ Docs-only record of the reviewer's decisions on the contracts fit scan above. No
 - **Q11:** approved as ADR-033 with guards: `applyRemote` and `reload` are allowed only on a read-only (follower) store; `applyRemote` on a writable store is refused as a value (INV-28: never two writers); a follower has no write queue attached (skipping `cause: 'remote'` is a second guard, not the main one); re-validation uses `validateTouchedByRule` WITH the previous state; a revision that is not exactly current + 1 triggers a full reload; `reload` clears history; promotion = reload, then become writable. Lands in 3.4.
 - **Q12:** approved `TaskOptions { signal?, onProgress? }` in the io (and persistence) contracts, plus a type-level test under `tests/` asserting `TaskOptions` stays assignable to `RpcCallContext`. Pending import batch: at most one; a new preview or a cancel discards it; apply takes `batchId` + plan and is refused as a value when the batch is unknown or the live revision differs from the revision the preview was built on ("data changed since the preview; run it again"). Lands in 3.6/3.7; the stale-revision refusal is part of 3.7's INV-21 tests.
 
+### Step 3.1 — Dexie adapter, serial write queue, SaveStatus, P-01 on IndexedDB (2026-09-28)
+
+**Delivered** (`src/persistence`, every new source file under 190 lines)
+- `db.ts`: `OrnDb` (Dexie, stores from `DB_STORES`, DB `orn` v1) built by `createOrnDb({ indexedDB, IDBKeyRange })`; the
+  browser globals are never read (ESLint bans `indexedDB`, `IDBKeyRange`, `window`, `document` in `src/persistence`).
+  `DB_VERSION_STEPS` is the list of released versions with optional `upgrade` functions: the upgrade scaffold.
+- `coalesce.ts`: a pending batch = which records were touched + the newest state + revision + blobs; the latest value wins.
+- `write-queue.ts`: serial queue, `SaveStatus`, retry 250 ms / 1 s / 4 s → `failed` (pending kept), quota handling,
+  revision-gap guard, read-only refusal, `close()`; storage-agnostic (`persist(batch)` is injected).
+- `derived-cache.ts`: `derivedCache` put/get, LRU eviction, 100 MB soft cap, emergency eviction for quota.
+- `adapter.ts`: `createDexieAdapter({ db, clock, … })`: one transaction per write over records + meta + asset blobs,
+  `getAssetBlob`, `putDerived`/`getDerived`, the two meta markers, `getStatus`/`subscribeStatus`, `flush`, and
+  `readCommitted` (raw rows + meta read in ONE read transaction; boot in 3.3 validates each row, P-01 loads with it).
+- `events.ts`: `Scheduler` (injected timers; the tests' fake timers are a manual scheduler) and `PersistenceEvent` diagnostics.
+- Test support: `src/test-support/persistence-kit.ts` (fresh fake-indexeddb per test, manual scheduler, transaction spy,
+  mutation log, fault injector, seed/load pair).
+- `dexie` 4.4.6 (dependency), `fake-indexeddb` 6.2.5 (dev); `npm audit`: 0 vulnerabilities. Node 24.21.0.
+
+**Contract amendments applied** (CLAUDE.md §7; the approved list from "Phase 3 contract decisions"; entry under Amendments)
+- Q1 (c): `DerivedCacheRow`, `DerivedCacheInput`, `DerivedPutResult`, `putDerived`, `getDerived`.
+- Q1 (d): `setLastCleanShutdownAt`, `setLastIntegrityCheckAt`.
+- Q1 asset write: `AssetBlobWrite` and `writeChanges(changes, next, blobs?)`. **Reading of the shorthand to confirm:** the
+  decision text writes `writeChanges(changeSet, blobs?)`; the adapter needs the new record values, which a ChangeSet does
+  not carry (only Immer patches), so `next` stays and `blobs` is the third, optional parameter.
+- Q1 asset write, consequence to confirm: `putAssetBlob` is REMOVED from `PersistenceAdapter`. A standalone blob write
+  is exactly the "blob first, then the record" path the reviewer rejected (it cannot be atomic with the record).
+- Q2: `getStatus(): SaveStatus` (pending-writes rule in the doc comment). The `deletablePeriodicSnapshotIds` half lands in 3.2.
+- No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change.
+
+**Decisions**
+- *Coalescing and INV-20.* The plan says "one transaction per ChangeSet … coalescing per record". Implemented as: every
+  transaction is atomic and lands the database on a real committed revision; ChangeSets that wait together (same tick,
+  or while a write or backoff is running) share ONE transaction that ends at the newest revision. An idle queue writes
+  each ChangeSet on its own (the tests count the transactions). If the reviewer wants strictly one transaction per
+  ChangeSet even for queued ones, that is a change to `resolveWrites`/`mergeBatches` only.
+- *A failed batch is kept, never skipped.* Writing a later ChangeSet while an earlier one failed would leave a database
+  state memory never had. After `failed`, the next `writeChanges` or `flush()` starts a fresh retry cycle over
+  everything pending. `writeChanges` resolves when its write cycle ends (durable or `failed`); callers read `getStatus()`.
+- *Revision-gap guard.* A ChangeSet that does not follow the previous revision is refused (exception + status `failed`):
+  a ChangeSet the queue never saw would leave its record changes out of the database for good. The first ChangeSet
+  establishes the revision unless `initialRevision` is given (boot will).
+- *One microtask of grace* before a write cycle starts, so a command loop in one tick makes one transaction.
+- *Quota* (ADV-040 stage 1): evict the least recently used HALF of the derivedCache rows, retry at once (no timer), repeat
+  until nothing is left to free, then `failed`. Snapshot deletion (stage 2) is 3.2. A cache write that fails is a value
+  (`DerivedPutResult`), never SaveStatus.
+- *`DexieAdapter` is a `Pick` of `PersistenceAdapter`* plus `flush` and `readCommitted`. Not yet implemented, each in the
+  step that needs it: `open` (3.3), `replaceAll` (3.3, migration), snapshots (3.2/3.3), editor sessions and uiState (3.3
+  reads them at boot), `storageEstimate` and `requestPersistentStorage` (Phase 5/9 wiring). The clean-shutdown setters write
+  directly; the caller must check `getStatus()` first (that is what the pending-writes query is for).
+- *Read-only* is a constructor flag for now (status `read_only`, writes refused); promotion to writable is 3.4.
+- `test:coverage` now also covers `src/persistence` with an 80% lines threshold (`vitest.config.ts`, package script).
+
+**Tests** (`npm run check`: 77 files, 1,265 tests; before this step 70 files, 1,188)
+- Unit: coalesce (8), write queue (21), derived cache (11), events (4).
+- Integration `tests/integration/persistence-write-path.test.ts` (18) and `persistence-db.test.ts` (3): INV-20 (one read-write
+  transaction over records + meta + assetBlobs per write, a coalesced burst is one, meta rewritten only when changed, one
+  read transaction for `readCommitted`, asset record + blob in one transaction, a failed write stores neither);
+  ADV-038 integration part (a row IndexedDB cannot clone aborts the transaction mid-ChangeSet: reopening shows the last
+  committed revision, no partial record, no meta change; retry with backoff on the fake scheduler; the pending batch lands
+  whole with the next ChangeSet); ADV-040 write-path part (eviction frees room → saved; nothing to evict → failed with
+  quota named, memory kept, serialising the in-memory state still works, recovers on `flush`); DB upgrade scaffold
+  (newest step = `DB_VERSION`/`DB_STORES`, every store and index exists, a test-only version 2 keeps rows and runs its
+  upgrade once). Mutation-checked by hand: removing the transaction, the delete path, "latest wins" or the kept-batch
+  merge each fails several tests.
+- Property `tests/property/persistence-roundtrip.test.ts` (12), P-01 IndexedDB variant: both schema fixtures, the demo,
+  every generator shape (tiny), the initial-tier dense dataset (1,000 reactions), random small datasets, random command
+  sequences saved as one coalesced burst, and saved ChangeSet by ChangeSet with undo^n / redo^n, reopening the database
+  each time. Coverage of `src/persistence` (focused run): 99% lines, 92% branches.
+
+**Benchmark** (`tests/perf/persist.bench.ts`, run once and alone; `bench:baseline` NOT run, `baseline.json` untouched;
+design-tier "like water" state, 5,000 reactions; mean / p99 in ms; informal, no §2 row):
+- enqueue + coalesce, ordinary edit (1 record): 0.0006 / 0.0008
+- enqueue + coalesce, hub edit (replaceReferences on the 1,000-reaction hub, ~1,000 records): 0.17 / 1.26
+- flush on fake-indexeddb, ordinary edit (our overhead, not real IndexedDB): 22.3 / 30.9 (100 samples)
+- flush on fake-indexeddb, hub edit (our overhead, not real IndexedDB): 17,353 / 19,145 (5 samples, so p99 is the max)
+
+The flush numbers are fake-indexeddb's own scaling, not ours: a bare Dexie `bulkPut` on fake-indexeddb with the same row
+counts (no ORN code) measured 21.6 ms for one row into 25,000 rows and 28.2 s for 1,000 rows (1.2 s into 2,000 rows);
+its cost per put grows with the store size. Real IndexedDB is traced at Gates E/F. The synchronous enqueue is what the
+main thread pays per commit: microseconds for an ordinary edit, well under a millisecond for a hub edit. The bench file
+takes about 3 minutes, almost all of it the hub-edit flush.
+
+**Timing-sensitive tests.** `npm run check` ran twice on the final code (85-93 s each) and `npm run test:coverage` once (coverage thresholds met: `src/core` 98.98% lines / 91.7% branches, `src/persistence` above 80%). No timing or budget test failed in any run (ADV-013 and the rest passed first time; nothing else was running), so there is nothing to record or re-run.
+
+**Open items**
+- Not implemented on purpose, with their steps: see the `DexieAdapter` decision above (`open`, `replaceAll`: 3.3).
+- `SaveStatus.deletablePeriodicSnapshotIds` and the `readSnapshot` return type (Q1 (f)) are 3.2; Q1 (a), (b), (e) are 3.3.
+- Status `read_only` is a constructor flag; 3.4 makes it switchable for promotion.
+- `write-queue.test.ts` is 307 lines, just over the 300-line warning line (a warning, not an error).
+- `npm run bench:baseline` and `bench:compare` for the four new entries are step 3.12's (`budgets.mjs` already lists them).
+
 ## Amendments
+- **2026-09-28, step 3.1 — `PersistenceAdapter`: derived cache, meta markers, asset blobs in the write, `getStatus` (contract changes, reviewer-approved in "Phase 3 contract decisions").** Problem: the write side needed (Q1 c) a place for `derivedCache` rows and their LRU eviction (quota stage 1 has to evict something), (Q1 d) setters for the clean-shutdown and integrity-check markers, (Q1 asset write) one transaction over an asset record and its bytes (INV-20; "blob first, then the record" was rejected), and (Q2) a synchronous pending-writes query for `beforeunload`. Change, all additive except one removal: `DerivedCacheRow`, `DerivedCacheInput`, `DerivedPutResult`, `putDerived`, `getDerived`; `setLastCleanShutdownAt`, `setLastIntegrityCheckAt`; `AssetBlobWrite` and `writeChanges(changes, next, blobs?)` (the third parameter is optional; `next` stays, see step 3.1); `getStatus()`; **`putAssetBlob` removed** (a standalone blob write is the rejected path; blobs of deleted asset records are kept for undo, an orphan sweep is a Phase 9 Diagnostics action). Docs updated in the same commit: PERSISTENCE.md §2, §3, §5, §11, SONNET_HANDOFF.md §9. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change.
 - **2026-09-28, step 2.13 — `FindingStore.replaceForRules`, `Validator.validateTouchedByRule` (with `TouchedValidation`, `commitTouched`) and `ValidationRule.peerReads` (contract changes, ADR-032; all additive, reviewer-approved).** Problem: after ADR-031 a hub edit that changes a field its referrers read (a species' `review`, RVW-002) still re-ran every referrer whole (~50 ms of a 67-77 ms commit on the like-water hub), and touching a class re-ran SPC-006 on every species listing it (1,400 at the design tier; ~87 ms per commit), although one rule of about forty was affected. Change: `FindingStore.replaceForRules(subjects, ruleIds, findings)` replaces only the listed rules' findings for each subject (the whole-subject `replaceForSubjects` stays); `Validator.validateTouchedByRule(state, indexes, touched, previous, known)` returns the subjects re-validated whole plus, per rule set, the referrers and peers of which only the rules that read what changed (or that named them) were re-run, and the command store makes that one call per commit (the doubled `scopeOf` call is gone); an affected L2 rule keeps a record whole (an L2 ERROR gates its L3 rules), and a per-rule subject with an L1/L2 ERROR in the store is skipped. `peerReads` (the mirror of `referencedReads`: fields of a touched record a rule reads when validating one of its other records) makes `peers` field-aware; undeclared means called on every touch. `scopeOf`/`validateTouched` keep their meaning. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-032, VALIDATION_RULES.md §5, ARCHITECTURE.md §2.4, PERFORMANCE_ARCHITECTURE.md §3, IMPLEMENTATION_PLAN.md (§1 item 7, Phase 4 note), TEST_STRATEGY.md §6 (general performance rule for gates).
 - **2026-09-28, step 2.12 — PERFORMANCE_ARCHITECTURE.md §2/§4 wording (doc only, no contract change).** The "Commit on a record with >= 500 referrers" row is annotated as a backstop (the hub scenarios it was added for now meet the 16 ms Commit row) and kept for Phase 9; §4's incremental-validation bullet describes field-aware scope. Reason: the step 2.12 re-measure (see step entry).
 - **2026-09-28, step 2.12 — `ValidationRule.referencedReads` (contract change, ADR-031).** Problem: `Validator.scopeOf`/`validateTouched` added every referrer of a touched record, at record-kind granularity, so renaming a species used by 1,000 reactions re-validated 1,000 reactions although no rule of theirs reads a species' name (measured 65-94 ms per commit at the design tier against the 16 ms budget; step 2.10 found that a fix needed a rule-level field declaration and added a 50 ms row instead; the reviewer then approved this amendment). Change: `ValidationRule` gains an optional `referencedReads?: ReferencedReads` (per kind of referenced record, or `'*'`, the top-level fields the rule reads; `[]` = existence only). `scopeOf` keeps a referrer only if a rule of its kind reads a field that changed (diffed by reference against `previous`), or the record was created or deleted; a rule without the declaration re-runs on any change, and without `previous` nothing is diffed. Only the referrer expansion is narrowed; referents and `peers`/`watches` are unchanged. `Validator`'s interface is unchanged (`previous` was already there). No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-031, VALIDATION_RULES.md §4-§5, ARCHITECTURE.md §2.4, PERFORMANCE_ARCHITECTURE.md §4.

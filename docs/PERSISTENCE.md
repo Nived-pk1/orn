@@ -21,7 +21,7 @@ Database `orn`, Dexie version `DB_VERSION` (starts at 1). Store definitions live
 | assetBlobs | `assetId` (index `sha256`) | Image bytes as Blob |
 | snapshots | `id` (indexes `createdAt`, `reason`) | fflate-compressed DatasetDocument JSON + summary |
 | editorSessions | `id` | Authoring drafts (may be invalid) for crash recovery |
-| derivedCache | `key` (indexes `cacheKind`, `lastUsedAt`) | Depictions, layouts, search index, structure facts; LRU-evicted, disposable |
+| derivedCache | `key` (indexes `cacheKind`, `lastUsedAt`) | Depictions, layouts, search index, structure facts; `{ key, cacheKind, value, byteSize, lastUsedAt }`; LRU-evicted, disposable |
 | uiState | `key` | Selection, viewports, expansion, panels, active exam version; tolerant parsing |
 | importBatches | `id` | Import reports (what was created, decisions made) |
 | quarantine | `id` | Records that failed validation at boot or import, with issues |
@@ -40,8 +40,10 @@ dispatch(envelope) ─► commit (memory, revision n) ─► ChangeSet n
                     └─ failure  → retry 250 ms, 1 s, 4 s → SaveStatus.failed (banner, "Export now")
 ```
 
-- Consecutive queued ChangeSets for the same record coalesce (the latest value wins) while preserving order of deletes and creates.
-- `SaveStatus` is always visible in the status bar: saved / saving / retrying / failed / read-only. On `beforeunload` with pending writes the app warns.
+- ChangeSets that wait together are coalesced: the queue remembers WHICH records they touched and the newest state, so the latest value wins (delete then create = put; create then delete = delete). One transaction then moves the database from one committed revision straight to the newest. It is still one atomic transaction (INV-20): never a partial ChangeSet, and the database never holds a state memory did not have. ChangeSets committed in the same tick share a transaction.
+- A failed write is retried after 250 ms, 1 s and 4 s, then the state is `failed`. The pending ChangeSets are **kept**: the next ChangeSet, or `flush()`, starts a fresh cycle over everything pending, so no revision is ever skipped. A ChangeSet whose revision does not follow the previous one is refused loudly (status `failed`, an exception): the database would miss that change for good.
+- `writeChanges(changes, next, blobs?)`: the bytes of asset records created in that ChangeSet ride in the same transaction (§5). The promise resolves when the write cycle holding the ChangeSet ends, durable or `failed`; `getStatus()` says which.
+- `SaveStatus` is always visible in the status bar: saved / saving / retrying / failed / read-only. `getStatus()` is synchronous: writes are pending when `pendingRevisions > 0` or the state is saving, retrying or failed; on `beforeunload` with pending writes the app warns.
 - Undo and redo are ordinary commits and persist the same way.
 
 ## 4. Boot sequence
@@ -59,7 +61,7 @@ Cold boot budget: < 2.5 s at 2k species / 5k reactions (PERFORMANCE_ARCHITECTURE
 
 ## 5. Assets
 
-Ingest: size cap (20 MB) → magic-byte sniffing must agree with the declared media type → SHA-256 via `crypto.subtle` → de-duplicate by hash → store Blob in `assetBlobs` and the `asset` record in `records` in one transaction. Display uses object URLs created and revoked by a component-lifetime hook; SVG assets are displayed only through `<img>` (SECURITY.md §2). Boot integrity reports asset records whose blob is missing (AST-002).
+Ingest: size cap (20 MB) → magic-byte sniffing must agree with the declared media type → SHA-256 via `crypto.subtle` → de-duplicate by hash → store Blob in `assetBlobs` and the `asset` record in `records` in one transaction: the blob is passed to `writeChanges(changes, next, blobs)` with the ChangeSet that creates the record (there is no separate blob write, so a crash can leave neither an orphan blob nor a record without bytes). Blobs of deleted asset records are kept, because undo needs them; sweeping orphan blobs is a Phase 9 Diagnostics action, reported and confirmed by the user, never automatic. Display uses object URLs created and revoked by a component-lifetime hook; SVG assets are displayed only through `<img>` (SECURITY.md §2). Boot integrity reports asset records whose blob is missing (AST-002).
 
 ## 6. Import (#15)
 
@@ -102,7 +104,7 @@ The tab holding the Web Lock `orn-writer` is the only writer (INV-28). Other tab
 
 ## 11. Quota and durability
 
-`navigator.storage.persist()` is requested after the first edit. Diagnostics shows usage and quota. On quota errors: evict `derivedCache` (LRU, soft cap 100 MB) → ask to delete old periodic snapshots → otherwise `SaveStatus.failed` with "Export now".
+`navigator.storage.persist()` is requested after the first edit. Diagnostics shows usage and quota. `derivedCache` keeps itself under a 100 MB soft cap by evicting its least recently used rows when a row is put. On a quota error: evict `derivedCache` (the least recently used half of its rows per round, retrying the write at once after each round, no timer) → ask to delete old periodic snapshots → otherwise `SaveStatus.failed` with "Export now" (pending ChangeSets kept, memory untouched). A cache write that fails is a value (`DerivedPutResult`), never a SaveStatus problem, and every eviction is reported to the diagnostics sink.
 
 ## 12. Failure modes (#22)
 
