@@ -13,7 +13,7 @@ import type { QuarantineRow } from './contracts';
 
 const MAX_ISSUES_PER_ROW = 20;
 
-const issueOf = (finding: Finding): string => `${finding.path ?? '(record)'}: ${finding.message}`;
+export const issueOf = (finding: Finding): string => `${finding.path ?? '(record)'}: ${finding.message}`;
 
 /** Deterministic ID: the same row is one quarantine row, not one per attempt. */
 export const quarantineIdOf = (rowId: unknown): string => `qtn_boot-${hash64(String(rowId))}`;

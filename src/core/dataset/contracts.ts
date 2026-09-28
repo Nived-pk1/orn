@@ -6,10 +6,17 @@ import type { Patch } from 'immer';
 import type { RecordRef } from '../schema';
 
 export interface ChangeSet {
-  /** Store revision after this change. Revisions increase by exactly 1 per commit. */
+  /**
+   * Store revision after this change. Revisions increase by exactly 1 per commit, except for `'remote'`, which a
+   * follower tab applies for the writer's whole persisted transaction and which may therefore span several revisions.
+   */
   readonly revision: number;
   readonly label: string;
-  readonly cause: 'command' | 'undo' | 'redo' | 'replace';
+  /**
+   * `'remote'`: a follower tab mirroring what the writer already persisted (ADR-033). The write queue never persists
+   * it (the follower is not the writer, INV-28), and indexes accept it as a forward span.
+   */
+  readonly cause: 'command' | 'undo' | 'redo' | 'replace' | 'remote';
   readonly created: readonly RecordRef[];
   readonly updated: readonly RecordRef[];
   readonly deleted: readonly RecordRef[];

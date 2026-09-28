@@ -141,6 +141,11 @@ export interface BootReport {
   readonly uiStateReset: readonly string[];
   /** Rows this boot moved from `records` to `quarantine` (whole, never truncated). */
   readonly newlyQuarantined: number;
+  /**
+   * There are no Web Locks in this browser, so nothing can stop a second tab from writing: the app shows a
+   * single-tab warning (docs/PERSISTENCE.md §10). The tab runs as the writer.
+   */
+  readonly singleTab: boolean;
 }
 
 export type OpenResult =
@@ -238,7 +243,42 @@ export interface PersistenceAdapter {
   close(): Promise<void>;
 }
 
+/**
+ * The writer lock (INV-28, PERSISTENCE.md §10), behind a port: the real one wraps Web Locks and is handed its
+ * `LockManager` from outside `src/persistence` (`createWebLocksWriterLock`); tests use in-memory fakes.
+ */
 export interface WriterLock {
-  acquire(): Promise<'acquired' | 'held_elsewhere'>;
+  /**
+   * One non-blocking attempt. `'held_elsewhere'`: another tab is the writer (this tab is a follower and may wait with
+   * `whenAcquired`). `'unsupported'`: there are no Web Locks here, so nothing can stop a second writer: the tab
+   * runs as the writer and reports `bootReport.singleTab` (a single-tab warning), never silently.
+   */
+  acquire(): Promise<'acquired' | 'held_elsewhere' | 'unsupported'>;
+  /**
+   * Promotion: after `acquire()` answered `'held_elsewhere'`, resolves once this tab has been granted the lock (the
+   * writer closed). Never resolves before that, and is abandoned (never resolves) by `release()`.
+   */
+  whenAcquired(): Promise<void>;
+  /** Gives the lock up, or abandons a pending wait. */
   release(): Promise<void>;
+}
+
+/**
+ * What the writer tells the other tabs after each persisted transaction (PERSISTENCE.md §10, ADR-033).
+ * `fromRevision` is the revision the database was at before the transaction and `revision` the one it ended on, so a
+ * transaction that coalesced several ChangeSets names the whole span. `changedIds` are the record IDs it created,
+ * updated or deleted; `'all'` means "too much to list, or a wholesale replacement (`replaceAll`)": reload fully.
+ */
+export interface ChangeMessage {
+  readonly fromRevision: number;
+  readonly revision: number;
+  readonly changedIds: readonly string[] | 'all';
+}
+
+/** The change channel (BroadcastChannel `orn-changes`) behind a port; a channel never delivers a message to its own sender. */
+export interface ChangeChannel {
+  post(message: ChangeMessage): void;
+  /** Messages from other tabs, as posted (unvalidated: `parseChangeMessage` decides). Returns the unsubscribe function. */
+  subscribe(listener: (message: unknown) => void): () => void;
+  close(): void;
 }

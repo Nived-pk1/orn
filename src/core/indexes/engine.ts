@@ -222,7 +222,9 @@ function apply(previous: CoreIndexes, changes: ChangeSet, next: CanonicalState):
   // A forward step (a commit) or a one-step rollback (a rejected commit's own ChangeSet, reversed —
   // docs/PROGRESS.md step 2.10) both retract-then-add from the same `changes`; only a `replace` or an
   // actual gap in the revision chain cannot be applied incrementally and needs a rebuild instead.
-  const forward = changes.revision === previous.revision + 1;
+  // A 'remote' ChangeSet (ADR-033) covers the writer's whole transaction, which may span several revisions; its lists
+  // name every record that differs, so any forward span applies incrementally. No other cause may skip a revision.
+  const forward = changes.revision === previous.revision + 1 || (changes.cause === 'remote' && changes.revision > previous.revision);
   const rollback = changes.revision === previous.revision - 1;
   if (changes.cause === 'replace' || !(forward || rollback)) {
     return build(next, changes.revision);

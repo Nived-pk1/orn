@@ -13,3 +13,11 @@ export type { BuiltSnapshot, SnapshotBuildInput, SnapshotBuildResult, SnapshotDe
 export { createPeriodicPolicy, startPeriodicSnapshots, PERIODIC_ACTIVITY_MS, PERIODIC_REVISIONS } from './snapshot-policy';
 export type { PeriodicPolicy, PeriodicSnapshots } from './snapshot-policy';
 export { expiredPeriodicIds, periodicIdsOldestFirst, PERIODIC_SNAPSHOTS_KEPT } from './snapshot-retention';
+export { createWebLocksWriterLock, createBroadcastChangeChannel } from './web-locks';
+export type { BroadcastChannelFactory, BroadcastChannelLike, LockManagerLike } from './web-locks';
+export { changeMessageFor, parseChangeMessage, MAX_CHANGED_IDS } from './change-message';
+export { createFollower, MAX_FOLLOWER_BACKLOG } from './follower';
+export type { Follower, FollowerAdapter, FollowerEvent, FollowerOptions, FollowerStore, ReloadReason } from './follower';
+export type { ChangedRows, FollowerLoad, FollowerLoadFailure, RejectedRowReport } from './follower-read';
+export { attachWriteQueue } from './write-wiring';
+export type { WritableStoreLike, WriteWiring, WriteWiringOptions } from './write-wiring';

@@ -7,7 +7,9 @@ export type PersistenceEvent =
   | { readonly type: 'derived_cache_error'; readonly operation: 'put' | 'get'; readonly message: string }
   | { readonly type: 'status_listener_error'; readonly message: string }
   | { readonly type: 'snapshots_pruned'; readonly ids: readonly string[] }
-  | { readonly type: 'periodic_snapshot_failed'; readonly message: string };
+  | { readonly type: 'periodic_snapshot_failed'; readonly message: string }
+  /** The change message could not be posted: followers catch up at the next message, or by reloading (never a write failure). */
+  | { readonly type: 'channel_error'; readonly message: string };
 
 export type PersistenceEventSink = (event: PersistenceEvent) => void;
 

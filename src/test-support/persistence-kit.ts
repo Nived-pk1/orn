@@ -214,7 +214,7 @@ function injectFaults(db: OrnDb, mutations: TestDb['mutations']): Faults {
 export const quotaError = (): Error => new DOMException('The quota has been exceeded.', 'QuotaExceededError');
 
 /** A writer lock stub that answers `result` and records how it was used. */
-export function stubLock(result: 'acquired' | 'held_elsewhere' = 'acquired'): WriterLock & { readonly calls: string[] } {
+export function stubLock(result: 'acquired' | 'held_elsewhere' | 'unsupported' = 'acquired'): WriterLock & { readonly calls: string[] } {
   const calls: string[] = [];
   return {
     calls,
@@ -222,6 +222,7 @@ export function stubLock(result: 'acquired' | 'held_elsewhere' = 'acquired'): Wr
       calls.push('acquire');
       return Promise.resolve(result);
     },
+    whenAcquired: () => new Promise<void>(() => undefined),
     release: () => {
       calls.push('release');
       return Promise.resolve();

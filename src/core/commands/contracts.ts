@@ -38,6 +38,8 @@ export type CommandErrorCode =
   | 'DELETE_RESTRICTED'
   | 'STALE_REVISION'
   | 'READ_ONLY'
+  /** `applyRemote` / `reload` on a writable store: only a read-only follower may mirror storage (ADR-033, INV-28). */
+  | 'NOT_FOLLOWER'
   | 'EMPTY_COMMAND'
   | 'INTERNAL';
 
@@ -61,6 +63,21 @@ export interface HistoryEntry {
   readonly selectionHint?: readonly RecordRef[];
 }
 
+/**
+ * What a follower tab read from storage for one message of the writer (ADR-033): the records the writer changed, as
+ * stored at `revision` and already L1-parsed, and the IDs that no longer exist there.
+ */
+export interface RemoteChange {
+  /** Revision the follower must be at for this to apply; anything else is `STALE_REVISION` and the follower reloads. */
+  readonly fromRevision: number;
+  /** Revision the store is at afterwards. May be several ahead of `fromRevision` (the writer coalesced). */
+  readonly revision: number;
+  readonly upserts: readonly AnyRecord[];
+  readonly deletedIds: readonly string[];
+  /** The dataset meta, only when it differs from the follower's. */
+  readonly meta?: DatasetMeta;
+}
+
 export interface CanonicalStore {
   getState(): CanonicalState;
   getRevision(): number;
@@ -76,6 +93,20 @@ export interface CanonicalStore {
   historyLabels(): { readonly undo: readonly string[]; readonly redo: readonly string[] };
   /** Import, migration or snapshot restore. Validated like a commit; clears undo/redo history. */
   replaceState(next: CanonicalState, reason: 'import' | 'migration' | 'restore'): CommitResult;
+  /**
+   * FOLLOWER TABS ONLY (ADR-033). Mirrors one transaction the writer persisted: incremental indexes and
+   * `validateTouchedByRule` with the previous state, but no ERROR gate (the writer already validated; findings are
+   * reported, never a reason to refuse a durable state), no history entry, notifies with `cause: 'remote'`. Refused
+   * as a value on a writable store (`NOT_FOLLOWER`: two writers must never exist) and when `fromRevision` is not the
+   * current revision (`STALE_REVISION`: the caller reloads fully). On any failure the store is unchanged.
+   */
+  applyRemote(change: RemoteChange): CommitResult;
+  /**
+   * FOLLOWER TABS ONLY (ADR-033). Adopts a state read whole from storage AT `revision` (not revision + 1): rebuilds
+   * indexes, validates without a gate, clears undo/redo history, notifies with `cause: 'remote'`. Refused on a
+   * writable store (`NOT_FOLLOWER`). Promotion is `reload`, then the tab becomes writable.
+   */
+  reload(next: CanonicalState, revision: number): CommitResult;
 }
 
 /** Injected capabilities keep the core deterministic and environment-free. */

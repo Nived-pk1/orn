@@ -127,4 +127,16 @@ export const BUDGETS = {
     { operation: 'boot: validateAll', tier: 'design', shape: 'dense', budgetMs: 3000, budgetRow: 'Full validation L1–L3 (design target)', note: 'the same operation as validate.bench.ts, here on the state boot assembled' },
   'boot load (design tier, dense) > whole open(): read + L1 + state + indexes + validateAll + checks + markers (includes the fake-indexeddb read)':
     { operation: 'boot: whole open() (includes the fake-indexeddb read)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.3: informal; cold boot < 2.5 s is judged at Gate E in a real browser' },
+  'follower apply (design tier, hub_explosion): read the changed rows on fake-indexeddb > read the changed rows, ordinary edit (1 row; fake-indexeddb, not our code)':
+    { operation: 'follower: read the changed rows, ordinary edit (fake-indexeddb, not our code)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.4: no §2 row; informal; fake-indexeddb costs far more than real IndexedDB, real timing is traced at Gates E/F' },
+  'follower apply (design tier, hub_explosion): read the changed rows on fake-indexeddb > read the changed rows, hub edit (~1,000 rows; fake-indexeddb, not our code)':
+    { operation: 'follower: read the changed rows, hub edit (~1,000 rows; fake-indexeddb, not our code)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.4: informal; SLOW_BENCH_OPTIONS, few samples' },
+  'follower apply (design tier, hub_explosion): L1 parse of the rows read > L1 parse, ordinary edit (1 row)':
+    { operation: 'follower: L1 parse of the rows read, ordinary edit (our code)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.4: informal' },
+  'follower apply (design tier, hub_explosion): L1 parse of the rows read > L1 parse, hub edit (~1,000 rows)':
+    { operation: 'follower: L1 parse of the rows read, hub edit (our code)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.4: informal' },
+  'follower apply (design tier, hub_explosion): applyRemote > applyRemote, ordinary edit (our code: patches, incremental indexes, validateTouchedByRule)':
+    { operation: 'follower: applyRemote, ordinary edit (our code)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.4: no §2 row; informal; the same work as a writer commit, main thread until Phase 4' },
+  'follower apply (design tier, hub_explosion): applyRemote > applyRemote, hub edit (~1,000 records; our code: patches, incremental indexes, validateTouchedByRule)':
+    { operation: 'follower: applyRemote, hub edit (~1,000 records; our code)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.4: informal; SLOW_BENCH_OPTIONS; about a writer commit of that edit (dispatch + undo of it measured ~957 ms once, 2 commits); a Phase 4/9 candidate' },
 };

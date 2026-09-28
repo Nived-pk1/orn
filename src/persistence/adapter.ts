@@ -2,17 +2,20 @@
  * The Dexie implementation of PersistenceAdapter (steps 3.1 to 3.3): the serial queue with SaveStatus, one
  * transaction per write over records + meta + asset blobs (INV-20), the derived cache, markers, snapshots, the
  * small stores (quarantine, import batches, editor sessions, uiState), `replaceAll` and the boot sequence
- * (`open`). Every write except `derivedCache` runs in the queue's order. Not yet: `storageEstimate` and
- * `requestPersistentStorage` (Phase 5/9 wiring).
+ * (`open`), the change message after each persisted transaction and the follower side of ADR-033 (`readChanged`,
+ * `loadForFollower`, `promote`). Every write except `derivedCache` runs in the queue's order. Not yet:
+ * `storageEstimate` and `requestPersistentStorage` (Phase 5/9 wiring).
  */
 import type { Clock, IdFactory } from '@/core/dataset/contracts';
 import type { MigrationRunner } from '@/core/migrations/contracts';
 import type { JsonValue } from '@/core/schema';
 import { createAuxStores } from './aux-stores';
 import { runBoot } from './boot';
+import { changeMessageFor } from './change-message';
+import { interpretCommitted, type ChangedRows, type FollowerLoad } from './follower-read';
 import type { BootPorts, CommittedData, UiStateValidators } from './boot-ports';
 import type { PendingBatch } from './coalesce';
-import type { MetaKey, OpenResult, PersistenceAdapter, WriterLock } from './contracts';
+import type { ChangeChannel, MetaKey, OpenResult, PersistenceAdapter, WriterLock } from './contracts';
 import { createDerivedCache } from './derived-cache';
 import type { OrnDb } from './db';
 import { realScheduler, type PersistenceEventSink, type Scheduler } from './events';
@@ -28,8 +31,10 @@ export interface DexieAdapterOptions {
   readonly clock: Clock;
   /** Snapshot IDs (`snp_<ulid>`) and timestamps. */
   readonly ids: IdFactory;
-  /** The writer lock boot takes (INV-28). Step 3.4 supplies the Web Locks one; `alwaysGrantedLock` until then. */
+  /** The writer lock boot takes (INV-28): `createWebLocksWriterLock` in the app, a fake in tests. */
   readonly lock: WriterLock;
+  /** Where the writer announces each persisted transaction (`orn-changes`). Absent: nobody is told (a single tab). */
+  readonly channel?: ChangeChannel;
   /** Migrates an older database at boot (and is the arbiter of which stored versions are acceptable). */
   readonly runner: MigrationRunner;
   /** Optional per-key checks for the tolerant uiState restore; an entry that fails is reset and reported. */
@@ -52,8 +57,18 @@ export interface DexieAdapter extends Omit<PersistenceAdapter, 'storageEstimate'
   flush(): Promise<void>;
   /** Bulk read used by boot (which validates each row) and by P-01. */
   readCommitted(): Promise<CommittedData>;
-  /** Boot decides read-only after the adapter exists; promotion of a follower (step 3.4) makes it writable. */
+  /** Boot decides read-only after the adapter exists; promotion of a follower makes it writable (only `promote` does). */
   setReadOnly(readOnly: boolean): void;
+  /** FOLLOWER (ADR-033): the rows named by a change message, with the revision and meta, in ONE read transaction. */
+  readChanged(ids: readonly string[]): Promise<ChangedRows>;
+  /** FOLLOWER (ADR-033): a full read, L1 per row (rejects are reported, never quarantined: a follower never writes). */
+  loadForFollower(): Promise<FollowerLoad>;
+  /**
+   * PROMOTION (ADR-033), after the lock was granted: makes the write queue writable and runs boot again as the
+   * writer (migration, quarantine, markers, crash check). The caller reloads its store from the result, then becomes
+   * writable. A refusal (newer schema, failed migration, damaged meta) makes the queue read-only again.
+   */
+  promote(): Promise<OpenResult>;
 }
 
 export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
@@ -66,6 +81,18 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
   });
   /** The dataset meta last written; a new reference means it changed (Immer keeps unchanged objects identical). */
   let persistedMeta: object | undefined;
+  /** The revision the database is at (what a message calls `fromRevision`); undefined until boot or the first write says. */
+  let durableRevision: number | undefined = options.initialRevision;
+
+  /** Tells the other tabs; a failing channel is reported and never fails the write (they catch up at the next message). */
+  function announce(fromRevision: number, revision: number, ids: Iterable<string> | 'all'): void {
+    if (options.channel === undefined) return;
+    try {
+      options.channel.post(ids === 'all' ? { fromRevision, revision, changedIds: 'all' } : changeMessageFor(fromRevision, revision, ids));
+    } catch (error) {
+      options.onEvent?.({ type: 'channel_error', message: error instanceof Error ? error.message : String(error) });
+    }
+  }
 
   async function persist(batch: PendingBatch): Promise<void> {
     const writesMeta = batch.latest.meta !== persistedMeta;
@@ -77,6 +104,9 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
       await db.meta.bulkPut([...metaRows]);
     });
     if (writesMeta) persistedMeta = batch.latest.meta;
+    // `batch.count` ChangeSets, one revision each: an unknown start (no boot) is the span they cover.
+    announce(durableRevision ?? batch.revision - batch.count, batch.revision, batch.touched.keys());
+    durableRevision = batch.revision;
   }
 
   const queue = createWriteQueue({
@@ -116,6 +146,9 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
       await writeAllRecords(db, state, revision);
       persistedMeta = state.meta;
       queue.resync(revision);
+      // Everything may differ (migration, recovery): followers reload rather than trust a list of IDs.
+      announce(durableRevision ?? revision, revision, 'all');
+      durableRevision = revision;
     });
 
   let holdsLock = false;
@@ -125,6 +158,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
       holdsLock = result === 'acquired';
       return result;
     },
+    whenAcquired: () => options.lock.whenAcquired(),
     async release() {
       holdsLock = false;
       await options.lock.release();
@@ -159,6 +193,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     continueFrom: (revision, meta) =>
       queue.runOrdered(async () => {
         if (meta !== undefined) persistedMeta = meta;
+        durableRevision = revision;
         queue.resync(revision);
       }),
     listEditorSessionIds: async () => (await aux.listEditorSessions()).map((s) => s.id),
@@ -177,6 +212,21 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     getStatus: () => queue.getStatus(),
     subscribeStatus: (listener) => queue.subscribe(listener),
     setReadOnly: (readOnly) => queue.setReadOnly(readOnly),
+    readChanged: (ids) =>
+      db.transaction('r', [db.records, db.meta], async (): Promise<ChangedRows> => ({
+        rows: await db.records.bulkGet([...ids]),
+        revision: (await db.meta.get('revision'))?.value,
+        schemaVersion: (await db.meta.get('schemaVersion'))?.value,
+        datasetMeta: (await db.meta.get('datasetMeta'))?.value,
+      })),
+    async loadForFollower() {
+      return interpretCommitted(await readCommitted(), options.runner.target, options.ids.now());
+    },
+    async promote() {
+      holdsLock = true;
+      queue.setReadOnly(false);
+      return runBoot(ports, { promotion: true });
+    },
     createSnapshot: (reason, state, revision, note) => snapshots.createSnapshot(reason, state, revision, note),
     listSnapshots: () => snapshots.listSnapshots(),
     readSnapshot: (id) => snapshots.readSnapshot(id),

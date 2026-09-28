@@ -6,7 +6,7 @@
  *     → commit: revision + 1, history entry, finding store, subscribers.
  *
  * Undo, redo and replaceState use the same commit step, so they are validated and announced like any
- * other change. The core is environment-free: time and IDs are injected by the callers that need them.
+ * other change. A follower tab (read-only) mirrors the writer through `applyRemote` and `reload` (ADR-033). The core is environment-free: time and IDs are injected by the callers that need them.
  */
 import { applyPatches, enablePatches, freeze, type Patch } from 'immer';
 import { assembleChangeSet } from '../dataset/changeset';
@@ -18,10 +18,11 @@ import { createFindingStore } from '../validation/store';
 import { commitFindings, commitTouched, validator as defaultValidator } from '../validation/validator';
 import type { Finding, FindingStore, Validator } from '../validation/contracts';
 import { runBatch } from './batch';
-import type { CanonicalStore, CommandEnvelope, CommandError, CommitResult, HistoryEntry } from './contracts';
+import type { CanonicalStore, CommandEnvelope, CommandError, CommitResult, HistoryEntry, RemoteChange } from './contracts';
 import { createHistory, DEFAULT_HISTORY_LIMITS, type HistoryLimits } from './history';
 import { computeDeleteImpact } from './impact';
 import { allRefs } from './lookup';
+import { planRemote } from './remote';
 import { replacementPatches, shapeProblem } from './replace';
 
 enablePatches();
@@ -30,7 +31,7 @@ export interface StoreOptions {
   readonly initial: CanonicalState;
   /** Revision of `initial` (from persistence); default 0. */
   readonly revision?: number;
-  /** Read-only tabs (another tab holds the write lock). Consulted on every call. */
+  /** Read-only tabs (another tab holds the write lock). Consulted on every call; a follower is read-only until promoted. */
   readonly readOnly?: () => boolean;
   readonly validator?: Validator;
   readonly findings?: FindingStore;
@@ -55,6 +56,11 @@ const rethrowLater = (error: unknown): void => queueMicrotask(() => {
 });
 
 const failure = (error: CommandError): CommitResult => ({ ok: false, error });
+
+const notFollower = (method: string): CommandError => ({
+  code: 'NOT_FOLLOWER',
+  message: `${method} is for a read-only follower tab; this store is writable, and two tabs must never write (INV-28).`,
+});
 
 interface Commit {
   readonly label: string;
@@ -232,6 +238,71 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
     canUndo: () => !isReadOnly() && history.peekUndo() !== undefined,
     canRedo: () => !isReadOnly() && history.peekRedo() !== undefined,
     historyLabels: () => history.labels(),
+
+    applyRemote(change: RemoteChange): CommitResult {
+      if (!isReadOnly()) return failure(notFollower('applyRemote'));
+      if (change.fromRevision !== revision) {
+        return failure({ code: 'STALE_REVISION', message: `The change continues from revision ${change.fromRevision} but this store is at ${revision}; reload.` });
+      }
+      if (!Number.isInteger(change.revision) || change.revision <= revision) {
+        return failure({ code: 'STALE_REVISION', message: `The change ends at revision ${change.revision}, not after ${revision}; nothing to apply.` });
+      }
+      const plan = planRemote(state, change);
+      const changes = assembleChangeSet({
+        revision: change.revision,
+        label: 'Change from the writer tab',
+        cause: 'remote',
+        before: state,
+        after: plan.next,
+        patches: plan.patches,
+        inversePatches: plan.inversePatches,
+      });
+      try {
+        const nextIndexes = coreIndexEngine.apply(indexes, changes, plan.next);
+        const touched: RecordRef[] = [...changes.created, ...changes.updated, ...changes.deleted];
+        // No ERROR gate: the writer already accepted this state and it is durable. Errors become findings, visibly.
+        const validation = validator.validateTouchedByRule(plan.next, nextIndexes, touched, state, findings);
+        state = plan.next;
+        revision = changes.revision;
+        indexes = nextIndexes;
+        commitTouched(findings, validation);
+        history.clear();
+        notify(changes);
+        return { ok: true, changes, findings: validation.all };
+      } catch (error) {
+        indexes = coreIndexEngine.build(state, revision);
+        return failure({ code: 'INTERNAL', message: `Could not apply the writer's change: ${String(error)}` });
+      }
+    },
+
+    reload(next, adoptedRevision): CommitResult {
+      if (!isReadOnly()) return failure(notFollower('reload'));
+      if (!Number.isInteger(adoptedRevision) || adoptedRevision < 0) {
+        return failure({ code: 'STALE_REVISION', message: `Revision ${String(adoptedRevision)} is not a non-negative integer.` });
+      }
+      const problem = shapeProblem(next);
+      if (problem !== undefined) return failure(problem);
+      const replacement = freeze(next, true);
+      const nextIndexes = coreIndexEngine.build(replacement, adoptedRevision);
+      const found = validator.validateAll(replacement, nextIndexes);
+      const changes = assembleChangeSet({
+        revision: adoptedRevision,
+        label: 'Reload from storage',
+        cause: 'remote',
+        before: state,
+        after: replacement,
+        patches: replacementPatches(state, replacement),
+        inversePatches: replacementPatches(replacement, state),
+      });
+      const scope = [...allRefs(state), ...allRefs(replacement)];
+      state = replacement;
+      revision = adoptedRevision;
+      indexes = nextIndexes;
+      commitFindings(findings, [...new Map(scope.map((ref) => [`${ref.kind}:${ref.id}`, ref] as const)).values()], found);
+      history.clear();
+      notify(changes);
+      return { ok: true, changes, findings: found };
+    },
 
     replaceState(next, reason): CommitResult {
       if (isReadOnly()) return failure({ code: 'READ_ONLY', message: 'This tab is read-only.' });

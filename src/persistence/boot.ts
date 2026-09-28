@@ -1,7 +1,7 @@
 /**
  * The boot sequence (docs/PERSISTENCE.md §4), in this order:
  *  1. open the database (IndexedDB unavailable → session-only, the result says why);
- *  2. take the writer lock (not granted → read-only, nothing is written);
+ *  2. take the writer lock (not granted → read-only, nothing is written; no Web Locks → single-tab writer, reported);
  *  3. read rows and meta in one transaction and look at `schemaVersion`: newer → read-only; older or refused by the
  *     runner → `boot-migrate.ts`; damaged meta → read-only `integrity_failure`;
  *  4. per-record L1: invalid rows are MOVED to quarantine (issues and the full raw value, one transaction);
@@ -24,13 +24,32 @@ const isRevision = (value: unknown): value is number => typeof value === 'number
 
 type ReadOnlyReason = NonNullable<Extract<OpenResult, { mode: 'read_write' | 'read_only' }>['readOnlyReason']>;
 
-export async function runBoot(ports: BootPorts): Promise<OpenResult> {
-  try {
-    await ports.db.open();
-  } catch (error) {
-    return unavailable(error);
+export interface BootOptions {
+  /**
+   * Promotion of a follower (ADR-033): the database is already open and this tab was just granted the lock, so the
+   * same sequence runs again as the writer (migration, quarantine, markers, crash check: a follower did none of them).
+   */
+  readonly promotion?: boolean;
+}
+
+/** The report of a database with nothing in it: there is nothing to report, except that no lock exists. */
+const emptyReport = (singleTab: boolean): BootReport => ({
+  migrationSteps: [], findings: [], assetIdsWithoutBlob: [], crashSuspected: false, editorSessionIds: [], uiState: {}, uiStateReset: [], newlyQuarantined: 0, singleTab,
+});
+
+export async function runBoot(ports: BootPorts, options: BootOptions = {}): Promise<OpenResult> {
+  const promotion = options.promotion === true;
+  if (!promotion) {
+    try {
+      await ports.db.open();
+    } catch (error) {
+      return unavailable(error);
+    }
   }
-  const writer = (await ports.lock.acquire()) === 'acquired';
+  const acquired = promotion ? 'acquired' : await ports.lock.acquire();
+  const writer = acquired !== 'held_elsewhere';
+  // Without Web Locks nothing can keep a second tab out: this tab writes, and says so (PERSISTENCE.md §10).
+  const singleTab = acquired === 'unsupported';
   if (!writer) ports.setReadOnly(true);
 
   let committed;
@@ -57,7 +76,7 @@ export async function runBoot(ports: BootPorts): Promise<OpenResult> {
       await ports.setCleanShutdown(null);
       await ports.continueFrom(0);
     }
-    return { mode: writer ? 'read_write' : 'read_only', ...(writer ? {} : { readOnlyReason: 'other_tab_is_writer' as const }), state: null, revision: 0, storedSchemaVersion: null, quarantinedCount: await quarantined() };
+    return { mode: writer ? 'read_write' : 'read_only', ...(writer ? {} : { readOnlyReason: 'other_tab_is_writer' as const }), state: null, revision: 0, storedSchemaVersion: null, quarantinedCount: await quarantined(), bootReport: emptyReport(singleTab) };
   }
 
   const target = ports.runner.target;
@@ -113,6 +132,6 @@ export async function runBoot(ports: BootPorts): Promise<OpenResult> {
     revision: outRevision,
     storedSchemaVersion: storedVersion,
     quarantinedCount: await quarantined(),
-    bootReport: { migrationSteps, findings, assetIdsWithoutBlob, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined },
+    bootReport: { migrationSteps, findings, assetIdsWithoutBlob, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined, singleTab },
   };
 }

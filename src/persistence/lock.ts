@@ -1,10 +1,11 @@
 /**
- * The writer lock port (INV-28). Until step 3.4 brings the Web Locks implementation and the change channel, boot
- * runs with this stub, which always grants the lock: every tab believes it is the writer.
+ * A writer lock that always grants (INV-28 is then the caller's problem): for a session with a single tab by
+ * construction, and for tests that are not about locking. The real one is `createWebLocksWriterLock` (`web-locks.ts`).
  */
 import type { WriterLock } from './contracts';
 
 export const alwaysGrantedLock: WriterLock = {
   acquire: () => Promise.resolve('acquired'),
+  whenAcquired: () => new Promise<void>(() => undefined),
   release: () => Promise.resolve(),
 };
