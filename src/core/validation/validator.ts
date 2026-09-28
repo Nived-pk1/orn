@@ -10,6 +10,7 @@ import type { Finding, FindingStore, RuleContext, ValidationLevel, ValidationRul
 import { parseRecord } from './l1';
 import { runRules } from './runner';
 import { RULES } from './rules/registry';
+import { changeOf, referrerFilter, rulesByKind } from './scoping';
 
 const KIND_ORDER = new Map<string, number>(RECORD_KINDS.map((kind, i) => [kind, i]));
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -38,6 +39,7 @@ export function createValidator(rules: readonly ValidationRule[] = RULES): Valid
   const l2 = byKind(rules, 2);
   const l3 = byKind(rules, 3);
   const withPeers = rules.filter((rule) => rule.peers !== undefined);
+  const rulesOf = rulesByKind(rules);
 
   const findingsOf = (record: AnyRecord, ctx: RuleContext): readonly Finding[] => {
     const parsed = parseRecord(record.kind, record);
@@ -58,9 +60,18 @@ export function createValidator(rules: readonly ValidationRule[] = RULES): Valid
     };
     for (const ref of touched) {
       add(ref);
-      for (const version of [recordAt(state, ref), previous === undefined ? undefined : recordAt(previous, ref)]) {
+      const current = recordAt(state, ref);
+      const before = previous === undefined ? undefined : recordAt(previous, ref);
+      if (current !== undefined || before !== undefined) {
+        // Referrers depend on the ID alone, so one lookup serves both versions; each is kept only if a rule
+        // of its kind reads something that changed (ADR-031).
+        const rereads = referrerFilter(rulesOf, ref.kind, changeOf(current, before, previous !== undefined));
+        for (const referrer of indexes.referrersOf(ref.id)) {
+          if (rereads(referrer.owner.kind)) addIfPresent(referrer.owner);
+        }
+      }
+      for (const version of [current, before]) {
         if (version === undefined) continue;
-        for (const referrer of indexes.referrersOf(version.id)) addIfPresent(referrer.owner);
         for (const found of referenceEngine.extract(version)) {
           if (found.targetKind !== undefined) addIfPresent({ kind: found.targetKind, id: found.targetId });
         }

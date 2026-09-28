@@ -10,7 +10,7 @@ import type { AnyRecord, ChemicalClass, RecordKind, RecordRef, Species } from '.
 import { TOPIC_KINDS } from '../../schema';
 import { fold } from '../../text';
 import type { RuleContext, ValidationRule } from '../contracts';
-import { MAX_RELATED, MAX_WALK_NODES, allOfKinds, asRef, asRefs, at, existing, rule } from './helpers';
+import { MAX_RELATED, MAX_WALK_NODES, NO_REFERENCED_READS, allOfKinds, asRef, asRefs, at, existing, rule } from './helpers';
 
 type Named = Species | ChemicalClass;
 const fold_ = (text: string | undefined): string => (text === undefined ? '' : fold(text));
@@ -75,6 +75,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['species'],
     defaultSeverity: 'warning',
     scope: 'global',
+    // compares names with name twins found by the name index: `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'Two species share a folded canonical name without distinguishing qualifiers',
     peers: (record, ctx) => namePeers(record, ctx, ['species']),
     *check(species, ctx) {
@@ -95,6 +97,7 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['species'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'speciesKind ion with zero or absent charge',
     *check(species) {
       if (species.speciesKind !== 'ion' || (species.charge !== undefined && species.charge !== 0)) return;
@@ -108,6 +111,7 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['species'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'single_stereoisomer without descriptors',
     *check(species) {
       if (species.stereo?.kind !== 'single_stereoisomer' || species.stereo.descriptors.length > 0) return;
@@ -121,6 +125,7 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['species'],
     defaultSeverity: 'info',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Species with neither structure nor formula',
     *check(species) {
       if (species.structure !== undefined || species.formula !== undefined) return;
@@ -135,6 +140,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     watches: ['class'],
     defaultSeverity: 'info',
     scope: 'global',
+    // compares names with classes found by the name index: `watches` + `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'Species name equals a class name (possible hub-as-species confusion)',
     peers: (record, ctx) => (record.kind === 'class' ? namePeers(record, ctx, ['species']) : []),
     *check(species, ctx) {
@@ -181,6 +188,7 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['species'],
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: "Property key 'other' without a label",
     *check(species) {
       for (const [i, property] of species.properties.entries()) {
@@ -196,6 +204,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['class'],
     defaultSeverity: 'warning',
     scope: 'neighbourhood',
+    // reads which classes each example species lists; descendants come through `peers`
+    referencedReads: { species: ['classIds'] },
     description: 'Example species does not list the class (or a descendant)',
     peers: (record, ctx) => ancestorsThroughParents('class', record, ctx).map((id): RecordRef => ({ kind: 'class', id })),
     *check(cls, ctx) {
@@ -215,6 +225,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['class'],
     defaultSeverity: 'warning',
     scope: 'global',
+    // compares names with name twins found by the name index: `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'Two classes share a folded canonical name',
     peers: (record, ctx) => namePeers(record, ctx, ['class']),
     *check(cls, ctx) {
@@ -235,6 +247,7 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['reagent'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Reagent has both speciesId and components',
     *check(reagent) {
       if (reagent.speciesId === undefined || reagent.components.length === 0) return;
@@ -248,6 +261,7 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['reagent'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Duplicate profile labels within one reagent',
     *check(reagent) {
       const seen = new Map<string, number>();
@@ -298,6 +312,8 @@ export const SUBSTANCE_RULES: readonly ValidationRule[] = [
     kinds: ['topic'],
     defaultSeverity: 'warning',
     scope: 'neighbourhood',
+    // reads the parent topic's kind
+    referencedReads: { topic: ['topicKind'] },
     description: 'Topic parent has a lower-level topic kind than the child',
     *check(topic, ctx) {
       if (topic.parentId === undefined) return;

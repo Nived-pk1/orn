@@ -4,7 +4,7 @@
  */
 import type { Reaction, RecordRef } from '../../schema';
 import type { ValidationRule } from '../contracts';
-import { asRef, at, existing, rule } from './helpers';
+import { NO_REFERENCED_READS, asRef, at, existing, rule } from './helpers';
 import { stagesOfParticipants, substanceKey } from './reaction-utils';
 
 const REACTION = ['reaction'] as const;
@@ -25,6 +25,8 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'error',
     scope: 'neighbourhood',
+    // reads the generic reaction's scope and its own instanceOfId
+    referencedReads: { reaction: ['scope', 'instanceOfId'] },
     description: 'instanceOfId target is not generic, this reaction is not specific, or the target is itself an instance',
     *check(reaction, ctx) {
       if (reaction.instanceOfId === undefined) return;
@@ -45,6 +47,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'info',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Published reaction without reaction type, transformation and mechanism class',
     *check(reaction) {
       if (reaction.review.lifecycle !== 'published') return;
@@ -64,6 +67,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'A product equals a reactant within one outcome',
     *check(reaction) {
       const reactants = new Set(reaction.participants.filter((p) => p.role === 'reactant').map((p) => substanceKey(p.ref)));
@@ -86,6 +90,8 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'info',
     scope: 'neighbourhood',
+    // reads relationships that point at this reaction (its referrers): reached by the referent expansion, not by its own references
+    referencedReads: NO_REFERENCED_READS,
     description: 'Equilibrium without a reverse_of relationship or a note',
     *check(reaction, ctx) {
       if (reaction.reversibility.kind !== 'equilibrium' || reaction.reversibility.note !== undefined) return;
@@ -104,6 +110,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Intermediate with none of ref, label, structure',
     *check(reaction) {
       for (const [i, im] of reaction.intermediates.entries()) {
@@ -119,6 +126,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Condition variant referenced by no outcome (when at least two variants exist)',
     *check(reaction) {
       if (reaction.conditionVariants.length < 2) return;
@@ -138,6 +146,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Same substance twice with the same role',
     *check(reaction) {
       const stages = stagesOfParticipants(reaction);
@@ -164,6 +173,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Scope mismatch: generic reaction without class refs, or specific reaction with class refs',
     *check(reaction) {
       const refs: RecordRef[] = [
@@ -186,6 +196,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'workup_reagent outside a workup/quench stage when stages exist',
     *check(reaction) {
       if (reaction.stages.length === 0) return;
@@ -205,6 +216,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'info',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Coefficient on a catalyst or solvent',
     *check(reaction) {
       for (const [i, p] of reaction.participants.entries()) {

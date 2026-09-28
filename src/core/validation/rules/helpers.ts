@@ -4,7 +4,10 @@
  */
 import { formatPath } from '../../references';
 import type { AnyRecord, RecordKind, RecordRef } from '../../schema';
-import type { FindingDraft, RuleContext, Severity, ValidationRule } from '../contracts';
+import type { FindingDraft, ReferencedReads, RuleContext, Severity, ValidationRule } from '../contracts';
+
+/** For rules that read nothing of any record they refer to (`scope: 'record'`, and rules whose other reads are `peers`). */
+export const NO_REFERENCED_READS: ReferencedReads = Object.freeze({});
 
 /**
  * Declares a rule for records of `K`. `check` sees the narrowed record type; the runner only calls it

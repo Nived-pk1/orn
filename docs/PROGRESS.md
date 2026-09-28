@@ -833,7 +833,74 @@ after `8740c2c`; the navigator fix is covered by the existing differential/P-07/
 stopped — everything described above as "done" is committed at the hashes given, and everything "left to do"
 had not been written to any file yet (the interrupted bench run produced no on-disk artifact, as above).
 
+### Step 2.12 — Field-aware validation scope (2026-09-28)
+
+**Commit 1 — `phase-2.12: field-aware validation scope (ADR-031)`.** Reviewer decision: implement
+field-aware scoping in `validateTouched` (PERFORMANCE_ARCHITECTURE.md §4, "re-runs only affected rules for
+touched records and their reverse-index dependents") through an additive `ValidationRule` amendment; a rule that
+does not declare it keeps today's behaviour. Full amendment under "Amendments" below, and ADR-031.
+
+- **Contract** (`src/core/validation/contracts.ts`): `referencedReads?: ReferencedReads` - what a rule's `check`
+  reads of the records its subject refers to. The shape sits beside `watches`/`peers`: those say which *other*
+  records a change reaches, at kind/record level; this says which *fields* of the records a rule refers to it
+  reads, the missing half. Keys are a referenced kind or `'*'`; values are top-level field names; `[]` is "only
+  whether it exists", an absent kind is "not read".
+- **Scoping** (`src/core/validation/scoping.ts`, used by `validator.ts`): `changeOf` diffs the touched record's
+  new and previous versions by top-level field, by reference (exact under structural sharing; a created or
+  deleted record, or a call without `previous`, is `'all'`); `referrerFilter` answers once per referrer *kind*
+  per touched record, so a 1,000-referrer hub costs one rule scan, not 1,000. A referrer is kept if any L2/L3
+  rule of its kind reads a changed field. Referent expansion and `peers`/`watches` are untouched (RXN-018 and
+  AST-001 read their own referrers and depend on the referent expansion). The referrers lookup now runs once
+  per touched record instead of once per version (same ID).
+- **Declared: 69 of 74 rules; 60 declare `{}` (read nothing of any referenced record)**: every `scope: 'record'`
+  rule; the eight REF rules (REF-001 `'*': []` existence; REF-005 the container fields, derived from
+  `REFERENCE_SPECS`; the rest `{}`); RXN-013 (`reaction: scope, instanceOfId`), RXN-018 (`{}`: it reads its own
+  referrers, which the referent expansion brings in), REL-003/005 (`{}`, peers), REL-006 (`reaction:
+  reversibility`), SPC-001/005 (`{}`, peers), CLS-001 (`species: classIds`), CLS-002, HIER-002 (`topic:
+  topicKind`), CUR-003 (`exam_version: examId, label`), CUR-004/006 (`{}`, peers), CUR-005 (`reference:
+  refKind`), PRS-001/002, AST-001, RVW-002 (`'*': review`). **Left undeclared: SPC-006, HIER-001, HIER-003,
+  RTE-002, RTE-004** - they read derived hierarchy, composition or route walks, where a field list would be
+  right only by reasoning about `peers`, which is not "clearly correct". Effect: 15 kinds are fully declared
+  (`reaction`, `relationship`, `mechanism`, `caveat`, `exam`, `exam_version`, `exam_relevance`, `topic_mapping`,
+  `reaction_scheme`, `reference`, `transformation`, `view_preset`, `asset`, `entity_display`,
+  `navigator_anchor`), so a referrer of those kinds is skipped when nothing it reads changed; `species`,
+  `class`, `concept`, `named_reaction`, `topic`, `reagent` and `route` each still have one undeclared rule and
+  keep re-running on any change to what they refer to (their peers already re-run most of them anyway).
+- **Tests**: `src/core/validation/scoping.test.ts` (23): `changeOf`/`readsChange`/`referrerFilter`; a hub of 120
+  referrers with rule invocations counted - renaming it, adding an alias, editing its notes, changing its classes
+  or making it an ion re-runs **no** referrer rule, and findings still equal `validateAll`; changing
+  `review.lifecycle` (RVW-002) and deleting then re-creating it (REF-001) re-run **every** referrer; one
+  undeclared rule of the referrer kind restores the old behaviour; no `previous` re-runs everyone; one read-field
+  test each for RXN-013, REL-006, CLS-001, HIER-002, CUR-003/005, REF-005 (the read field re-runs the referrer, an
+  unread one does not). `src/core/validation/reads-audit.test.ts` (4): every declared rule is run over the
+  maximal fixture (also with every exam version official), the demo and every generator shape, with the records
+  it fetches through its subject's references wrapped in a Proxy - a read outside its declaration fails; a rule
+  declared to read nothing must give the same findings with the records its subject refers to hidden ("vanish",
+  1,000+ comparisons); a read outside the subject's references needs `peers` (or is RXN-018/AST-001's
+  referrer-side read). `tests/property/validation-scope.test.ts` (3, P-11): 20 kinds of edit aimed at a hub
+  species - its name, aliases, notes (with `[[links]]`), review, classes, kind, deletion and restoration; a
+  referrer's role, participant, lifecycle, `instanceOfId`/scope, reversibility, deletion; new `reverse_of`
+  relationships; neighbours renamed to the hub's name, linking to it, listing it twice - on the ADV-012 shape (one
+  hub, every reaction) and the like-water shape (several hubs, one relationship per reaction), as raw recipes so
+  a hub deletion leaves dangling references; after every edit the incrementally kept findings equal `validateAll`.
+  Fault-injected by hand to confirm the tests bite (RVW-002 not declaring `review`; RXN-013 not declaring
+  `instanceOfId`; REL-006 declaring the wrong field; REF-001 declaring nothing): each fails at least one of the
+  audit, the hub property test or the older fixture walk (`incremental.test.ts`). Note the hub property test
+  alone does not catch the RXN-013 fault (it needs an instance-of chain, which 24 random edits rarely build); the
+  audit and the targeted RXN-013 test do.
+- **Doubled `scopeOf` call: not removed.** Field-aware scoping does not remove it (the store calls `scopeOf`, then
+  `validateTouched` computes it again); removing it needs a `Validator` contract change or a memo keyed on
+  argument identity. After this change one `scopeOf` on the hub costs 0.02 ms (dense) to 0.57 ms (ADV-012 hub
+  without `previous`, where all 1,000 referrers are walked) - 0.1-4% of the 16 ms budget. Left as the Phase 9
+  candidate.
+- `npm run check`: 70 files, 1165 tests (was 67 / 1135), green.
+- **Tooling note (not fixed; not this step's)**: `npm run bench` fails on this machine (`spawnSync npx.cmd
+  EINVAL`: Node 24 refuses to spawn a `.cmd` without a shell); `scripts/run-bench-cli.mjs` needs `shell: true` on
+  win32. `bench:baseline`/`bench:compare` use the Node API and are unaffected; individual benches were run with
+  `npx vitest bench --run --no-file-parallelism <file>`.
+
 ## Amendments
+- **2026-09-28, step 2.12 — `ValidationRule.referencedReads` (contract change, ADR-031).** Problem: `Validator.scopeOf`/`validateTouched` added every referrer of a touched record, at record-kind granularity, so renaming a species used by 1,000 reactions re-validated 1,000 reactions although no rule of theirs reads a species' name (measured 65-94 ms per commit at the design tier against the 16 ms budget; step 2.10 found that a fix needed a rule-level field declaration and added a 50 ms row instead; the reviewer then approved this amendment). Change: `ValidationRule` gains an optional `referencedReads?: ReferencedReads` (per kind of referenced record, or `'*'`, the top-level fields the rule reads; `[]` = existence only). `scopeOf` keeps a referrer only if a rule of its kind reads a field that changed (diffed by reference against `previous`), or the record was created or deleted; a rule without the declaration re-runs on any change, and without `previous` nothing is diffed. Only the referrer expansion is narrowed; referents and `peers`/`watches` are unchanged. `Validator`'s interface is unchanged (`previous` was already there). No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-031, VALIDATION_RULES.md §4-§5, ARCHITECTURE.md §2.4, PERFORMANCE_ARCHITECTURE.md §4.
 - **2026-09-28, step 2.11 — PERFORMANCE_ARCHITECTURE.md §1, §9, §10 (benchmark method and tier definition; no contract, schema or invariant change).** Problem: (1) the design-tier navigator benchmark anchored a class-count ratio, so its hub count moved with the generator and was never a stated number; (2) single-run, low-sample benchmarks gave p99 values that were the sample max and varied 3× between runs of identical code, and a first fix that ran the repeats in one process was itself biased by JIT warm-up. Change: §1 states 60 anchored hubs at the design tier and 400 at the stress tier (judged against the ≤ 2× allowance, 32 ms informal); §9 documents isolation (PID lock), explicit warmup/100-sample floor, 3 fresh-process runs with median p99 and spread; §10 documents the deterministic anchor rule. Benchmark tooling and doc wording only.
 - **2026-09-27, step 2.10 — PERFORMANCE_ARCHITECTURE.md §2's Commit row covers rejected commits too (doc
   wording, no contract change).** Problem: a rejected commit paid for a full `O(dataset)` index rebuild

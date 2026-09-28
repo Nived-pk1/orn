@@ -3,7 +3,7 @@
  * outcome consistency. All are record-scope: a reaction is judged from its own content.
  */
 import type { ValidationRule } from '../contracts';
-import { at, lifecycleSeverity, rule } from './helpers';
+import { NO_REFERENCED_READS, at, lifecycleSeverity, rule } from './helpers';
 import { outcomeName, stagesOfParticipants, variantsOverlap } from './reaction-utils';
 
 const REACTION = ['reaction'] as const;
@@ -15,6 +15,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'No reactant participant (draft WARNING / published ERROR)',
     *check(reaction) {
       if (reaction.participants.some((p) => p.role === 'reactant')) return;
@@ -28,6 +29,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'No outcome with at least one product (draft WARNING / published ERROR)',
     *check(reaction) {
       if (reaction.outcomes.some((o) => o.products.length > 0)) return;
@@ -45,6 +47,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'An outcome has zero products (draft WARNING / published ERROR)',
     *check(reaction) {
       for (const [i, outcome] of reaction.outcomes.entries()) {
@@ -64,6 +67,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Spectator with contributesAtoms: true',
     *check(reaction) {
       for (const [i, p] of reaction.participants.entries()) {
@@ -82,6 +86,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Catalyst flagged consumed',
     *check(reaction) {
       for (const [i, p] of reaction.participants.entries()) {
@@ -100,6 +105,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'More than one primary substrate',
     *check(reaction) {
       const primary = reaction.participants.filter((p) => p.isPrimarySubstrate === true);
@@ -114,6 +120,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'With stages present, every participant is in exactly one stage',
     *check(reaction) {
       if (reaction.stages.length === 0) return;
@@ -136,6 +143,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'An exclusive outcome overlaps another outcome for the same variants',
     *check(reaction) {
       for (const [i, outcome] of reaction.outcomes.entries()) {
@@ -159,6 +167,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'A minor outcome without a major outcome for an overlapping variant set',
     *check(reaction) {
       for (const [i, outcome] of reaction.outcomes.entries()) {
@@ -181,6 +190,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'More than one major outcome for the same variant set and isomer group',
     *check(reaction) {
       const majors = reaction.outcomes.map((o, i) => [o, i] as const).filter(([o]) => o.selectivity === 'major');
@@ -203,6 +213,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'profileId on a participant whose ref is not a reagent',
     *check(reaction) {
       for (const [i, p] of reaction.participants.entries()) {
@@ -221,6 +232,7 @@ export const REACTION_RULES: readonly ValidationRule[] = [
     kinds: REACTION,
     defaultSeverity: 'info',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Some outcomes are variant-specific while others apply to all variants',
     *check(reaction) {
       const scoped = reaction.outcomes.filter((o) => o.conditionVariantIds.length > 0).length;

@@ -5,7 +5,7 @@
  */
 import type { AnyRecord, RecordKind, RecordRef, Route } from '../../schema';
 import type { RuleContext, ValidationRule } from '../contracts';
-import { MAX_WALK_NODES, allOfKinds, asRef, at, lifecycleSeverity, rule } from './helpers';
+import { MAX_WALK_NODES, NO_REFERENCED_READS, allOfKinds, asRef, at, lifecycleSeverity, rule } from './helpers';
 import { productsOf, reactants } from './reaction-utils';
 
 /** Kinds through which a change can reach a route: routes use reactions, reactions use species and classes. */
@@ -50,6 +50,7 @@ export const ROUTE_RULES: readonly ValidationRule[] = [
     kinds: ['route'],
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Route step graph has a cycle or references itself',
     *check(route) {
       const inputs = new Map<string, readonly string[]>(route.steps.map((s) => [s.id, s.inputFromStepIds]));
@@ -108,6 +109,7 @@ export const ROUTE_RULES: readonly ValidationRule[] = [
     kinds: ['route'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Route with no steps (draft WARNING / published ERROR)',
     *check(route) {
       if (route.steps.length > 0) return;

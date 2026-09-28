@@ -44,6 +44,14 @@ export interface RuleContext {
   readonly indexes: CoreIndexes;
 }
 
+/**
+ * What a rule reads of the records its subject refers to (ADR-031). Keys are the kind of the referenced
+ * record, or `'*'` for any kind; the value lists the top-level fields of that record the rule reads.
+ * `[]` means the rule reads only whether the record exists; a kind with no key (and no `'*'`) is not read
+ * at all. `id` and `kind` are always readable. A record being created or deleted changes everything about it.
+ */
+export type ReferencedReads = Readonly<Partial<Record<RecordKind | '*', readonly string[]>>>;
+
 export interface ValidationRule<K extends RecordKind = RecordKind> {
   readonly id: string;
   readonly level: 2 | 3;
@@ -65,6 +73,15 @@ export interface ValidationRule<K extends RecordKind = RecordKind> {
    * A superset is always safe; a missing peer leaves a stale finding (the incremental ≡ full test).
    */
   peers?(record: AnyRecord, ctx: RuleContext): Iterable<RecordRef>;
+  /**
+   * Optional (step 2.12). What `check` reads of the records the subject *refers to*, so that a change to a
+   * referenced record re-validates a referrer only if some rule of the referrer's kind reads a field that
+   * changed. Omitted (the default) means "may read anything": the rule re-runs on any change to a
+   * referenced record. Declares only reads made through the subject's own references; text links, name
+   * twins, the subject's referrers and transitive walks stay with `peers`/`watches` and are never narrowed.
+   * A wrong declaration leaves a stale finding, which the incremental ≡ full tests and the read audit catch.
+   */
+  readonly referencedReads?: ReferencedReads;
 }
 
 export interface Validator {

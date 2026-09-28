@@ -1,0 +1,211 @@
+/**
+ * Field-aware validation scope (ADR-031, docs/PERFORMANCE_ARCHITECTURE.md §4): after random edit sequences
+ * aimed at a high-referrer hub species — the ADV-012 shape (one hub, every reaction through it) and the
+ * "like water" shape (several hubs among many reactions, one relationship per reaction) — the findings
+ * kept by scopeOf + validateTouched + commitFindings equal a full validateAll after every edit. Edits
+ * are raw recipes, so hub deletions leave dangling references and other invalid states, on purpose.
+ */
+import fc from 'fast-check';
+import { describe, expect, it, vi } from 'vitest';
+import { documentToState } from '@/core/dataset';
+import type { CoreIndexes } from '@/core/indexes/contracts';
+import type { CanonicalState, RecordKind } from '@/core/schema';
+import { generateDataset, type GeneratorParams } from '@/test-support/generator';
+import { IncrementalRun } from '@/test-support/scope-walk';
+import type { Tables } from '@/test-support/state-fixture';
+import { PARAMS, TIMEOUT_MS } from './harness';
+
+vi.setConfig({ testTimeout: TIMEOUT_MS });
+
+type Loose = Record<string, unknown>;
+type Recipe = (tables: Tables) => void;
+
+const ADV_012: GeneratorParams = { species: 60, classes: 3, reagents: 5, reactions: 60, relationshipsPerReaction: 0, topics: 2, shape: 'hub_explosion', seed: 7 };
+const LIKE_WATER: GeneratorParams = { species: 100, classes: 6, reagents: 8, reactions: 100, relationshipsPerReaction: 1, topics: 4, shape: 'hub_explosion', seed: 11 };
+
+const stateOf = (params: GeneratorParams): CanonicalState => {
+  const parsed = documentToState(generateDataset(params));
+  if (!parsed.ok) throw new Error('generator produced duplicate IDs');
+  return parsed.state;
+};
+
+/** The species with the most referrers: the hub, found structurally (never by ID). */
+const hubOf = (state: CanonicalState, indexes: CoreIndexes): string =>
+  Object.keys(state.records.species).sort().reduce((best, id) => (indexes.referrersOf(id).length > indexes.referrersOf(best).length ? id : best));
+
+const rec = (t: Tables, kind: RecordKind, id: string): Loose | undefined => t[kind][id] as Loose | undefined;
+const list = (value: unknown): Loose[] => (Array.isArray(value) ? (value as Loose[]) : []);
+const pick = <T>(items: readonly T[], n: number): T | undefined => (items.length === 0 ? undefined : items[n % items.length]);
+
+interface Ctx {
+  readonly state: CanonicalState;
+  readonly indexes: CoreIndexes;
+  readonly hub: string;
+  readonly a: number;
+  readonly b: number;
+  readonly c: number;
+  readonly graveyard: { kind: RecordKind; record: Loose }[];
+}
+
+const ids = (state: CanonicalState, kind: RecordKind): string[] => Object.keys(state.records[kind]).sort();
+/** Reactions that refer to the hub (or any reaction once the hub is gone), so edits land on referrers. */
+const referrers = (x: Ctx): string[] => {
+  const found = x.indexes.referrersOf(x.hub).filter((r) => r.owner.kind === 'reaction').map((r) => r.owner.id);
+  return found.length > 0 ? [...new Set(found)].sort() : ids(x.state, 'reaction');
+};
+const reaction = (x: Ctx): string | undefined => pick(referrers(x), x.a);
+const hubExists = (x: Ctx): boolean => Object.hasOwn(x.state.records.species, x.hub);
+
+/** One edit per entry; each returns a recipe, or undefined when the current state has nothing to apply it to. */
+const EDITS: readonly ((x: Ctx) => Recipe | undefined)[] = [
+  // The hub itself: name, alias, notes, lifecycle, classes, kind, deletion and restoration.
+  (x) => {
+    const twin = pick(ids(x.state, 'species').filter((id) => id !== x.hub), x.b);
+    const other = twin === undefined ? undefined : (x.state.records.species[twin] as unknown as { names: { canonical: string } }).names.canonical;
+    return (t) => { const h = rec(t, 'species', x.hub); if (h !== undefined) (h['names'] as Loose)['canonical'] = x.c % 3 === 0 && other !== undefined ? other : `Hub ${x.c}`; };
+  },
+  (x) => (t) => {
+    const h = rec(t, 'species', x.hub);
+    if (h !== undefined) (h['names'] as Loose)['aliases'] = x.c % 2 === 0 ? [] : [`alias ${x.c % 4}`, `alias ${x.b % 3}`];
+  },
+  (x) => {
+    const target = reaction(x);
+    const text = x.c % 4 === 0 ? undefined : x.c % 4 === 1 ? 'plain text' : x.c % 4 === 2 ? `See [[${target ?? 'rxn_ghost'}]] and [[spc_ghost]].` : `Also [[${x.hub}]].`;
+    return (t) => { const h = rec(t, 'species', x.hub); if (h !== undefined) { if (text === undefined) delete h['notes']; else h['notes'] = text; } };
+  },
+  (x) => (t) => {
+    const h = rec(t, 'species', x.hub);
+    if (h !== undefined) Object.assign(h['review'] as Loose, { lifecycle: x.c % 2 === 0 ? 'draft' : 'published', status: x.c % 3 === 0 ? 'review_required' : 'unreviewed', reasons: x.c % 3 === 0 ? ['why'] : [] });
+  },
+  (x) => {
+    const classes = [pick(ids(x.state, 'class'), x.a), pick(ids(x.state, 'class'), x.b)].filter((c): c is string => c !== undefined);
+    return (t) => { const h = rec(t, 'species', x.hub); if (h !== undefined) h['classIds'] = x.c % 11 === 0 ? [...classes, 'cls_ghost'] : x.c % 5 === 0 ? [] : classes; };
+  },
+  (x) => (t) => {
+    const h = rec(t, 'species', x.hub);
+    if (h === undefined) return;
+    h['speciesKind'] = x.c % 2 === 0 ? 'ion' : 'molecule';
+    if (x.c % 2 === 0) delete h['charge']; else h['charge'] = 1;
+  },
+  (x) => {
+    if (!hubExists(x) || x.c % 4 !== 0) return undefined; // deletions are rarer: they turn every referrer into an ERROR
+    x.graveyard.push({ kind: 'species', record: x.state.records.species[x.hub] as unknown as Loose });
+    return (t) => { Reflect.deleteProperty(t.species, x.hub); };
+  },
+  (x) => {
+    const dead = pick(x.graveyard.filter((g) => rec(x.state.records as unknown as Tables, g.kind, g.record['id'] as string) === undefined), x.b);
+    return dead === undefined ? undefined : (t) => { t[dead.kind][dead.record['id'] as string] = JSON.parse(JSON.stringify(dead.record)) as unknown; };
+  },
+  // Referrers of the hub: a field no rule reads from the hub, then fields one does.
+  (x) => {
+    const id = reaction(x);
+    const role = pick(['reactant', 'spectator', 'catalyst', 'solvent'] as const, x.c);
+    return id === undefined ? undefined : (t) => { const p = list(rec(t, 'reaction', id)?.['participants'])[0]; if (p !== undefined) { p['role'] = role; if (x.c % 2 === 0) p['flags'] = { consumed: true, contributesAtoms: true }; else delete p['flags']; } };
+  },
+  (x) => {
+    const id = reaction(x);
+    const to = x.c % 2 === 0 ? { kind: 'class', id: pick(ids(x.state, 'class'), x.b) } : { kind: 'species', id: pick(ids(x.state, 'species'), x.b) };
+    return id === undefined ? undefined : (t) => { const p = list(rec(t, 'reaction', id)?.['participants'])[0]; if (p !== undefined) p['ref'] = to; };
+  },
+  (x) => {
+    const id = reaction(x);
+    const lifecycle = x.c % 2 === 0 ? 'draft' : 'published';
+    return id === undefined ? undefined : (t) => { const r = rec(t, 'reaction', id); if (r !== undefined) (r['review'] as Loose)['lifecycle'] = lifecycle; };
+  },
+  (x) => {
+    // A small pool, so that instance-of chains (an instance pointing at one that is itself an instance) form.
+    const pool = ids(x.state, 'reaction').slice(0, 6);
+    const id = pick(pool, x.a);
+    const other = pick(pool, x.b);
+    const scope = x.c % 2 === 0 ? 'generic' : 'specific';
+    return id === undefined ? undefined : (t) => { const r = rec(t, 'reaction', id); if (r === undefined) return; r['scope'] = scope; if (other !== undefined && x.c % 3 !== 0) r['instanceOfId'] = other; else delete r['instanceOfId']; };
+  },
+  (x) => {
+    const id = pick(ids(x.state, 'reaction'), x.b);
+    const kind = pick(['equilibrium', 'irreversible', 'unknown'] as const, x.c);
+    return id === undefined ? undefined : (t) => { const r = rec(t, 'reaction', id); if (r !== undefined) r['reversibility'] = { kind }; };
+  },
+  (x) => {
+    const id = reaction(x);
+    if (id === undefined || x.c % 3 !== 0) return undefined;
+    x.graveyard.push({ kind: 'reaction', record: x.state.records.reaction[id] as unknown as Loose });
+    return (t) => { Reflect.deleteProperty(t.reaction, id); };
+  },
+  (x) => {
+    const [from, to] = [pick(ids(x.state, 'reaction'), x.a), pick(ids(x.state, 'reaction'), x.b)];
+    const donor = pick(ids(x.state, 'species'), 0);
+    if (from === undefined || to === undefined || donor === undefined) return undefined;
+    const meta = x.state.records.species[donor] as unknown as Loose;
+    const id = `rel_scope-${x.a}-${x.b}-${x.c}`;
+    return (t) => {
+      t.relationship[id] = {
+        id, kind: 'relationship', type: 'reverse_of', reverseKind: x.c % 2 === 0 ? 'microscopic' : 'synthetic',
+        from: { kind: 'reaction', id: from }, to: { kind: 'reaction', id: to },
+        provenance: meta['provenance'], review: meta['review'], tags: [], citations: [],
+      };
+    };
+  },
+  (x) => {
+    const id = pick(ids(x.state, 'relationship'), x.b);
+    return id === undefined || x.c % 2 !== 0 ? undefined : (t) => { Reflect.deleteProperty(t.relationship, id); };
+  },
+  // Neighbours of the hub: a species taking its name, a class, a species linking to it, a reaction listing it twice.
+  (x) => {
+    const id = pick(ids(x.state, 'species').filter((s) => s !== x.hub), x.b);
+    const hub = x.state.records.species[x.hub] as unknown as { names: { canonical: string } } | undefined;
+    return id === undefined || hub === undefined ? undefined : (t) => { const s = rec(t, 'species', id); if (s !== undefined) (s['names'] as Loose)['canonical'] = hub.names.canonical; };
+  },
+  (x) => {
+    const id = pick(ids(x.state, 'class'), x.b);
+    return id === undefined ? undefined : (t) => { const c = rec(t, 'class', id); if (c === undefined) return; if (x.c % 2 === 0) (c['names'] as Loose)['canonical'] = `Class ${x.c % 3}`; else c['parentIds'] = [pick(ids(x.state, 'class'), x.c)].filter((p) => p !== undefined && p !== id); };
+  },
+  (x) => {
+    const id = pick(ids(x.state, 'species').filter((s) => s !== x.hub), x.b);
+    return id === undefined ? undefined : (t) => { const s = rec(t, 'species', id); if (s !== undefined) s['notes'] = `Compare [[${x.hub}]].`; };
+  },
+  (x) => {
+    const id = reaction(x);
+    return id === undefined ? undefined : (t) => { const ps = list(rec(t, 'reaction', id)?.['participants']); const first = ps[0]; if (first !== undefined) ps.push({ ...first, id: `prt_dup-${x.c}` }); };
+  },
+];
+
+describe('P-11 incremental validation equals full validation on high-referrer hubs (ADR-031)', () => {
+  const editArb = fc.record({ op: fc.integer({ min: 0, max: EDITS.length - 1 }), a: fc.nat(1_000_000), b: fc.nat(1_000_000), c: fc.nat(1_000_000) });
+
+  it.each([['ADV-012 hub', ADV_012], ['like-water hub', LIKE_WATER]] as const)('%s: after every random edit', (_name, params) => {
+    const initial = stateOf(params);
+    fc.assert(
+      fc.property(fc.array(editArb, { minLength: 1, maxLength: 24 }), (edits) => {
+        const run = new IncrementalRun(initial);
+        const hub = hubOf(initial, run.indexes);
+        expect(run.indexes.referrersOf(hub).length).toBeGreaterThan(20);
+        const graveyard: Ctx['graveyard'] = [];
+        edits.forEach((edit, i) => {
+          const recipe = EDITS[edit.op]?.({ state: run.state, indexes: run.indexes, hub, a: edit.a, b: edit.b, c: edit.c, graveyard });
+          if (recipe === undefined) return;
+          run.apply(recipe);
+          run.expectEqualsFull(`edit ${i} (op ${edit.op}, ${edit.a}/${edit.b}/${edit.c})`);
+        });
+      }),
+      PARAMS,
+    );
+  });
+
+  it('every kind of edit is applicable at least once (the property is not vacuous)', () => {
+    const initial = stateOf(LIKE_WATER);
+    const run = new IncrementalRun(initial);
+    const hub = hubOf(initial, run.indexes);
+    const graveyard: Ctx['graveyard'] = [];
+    const applied = new Set<number>();
+    for (let round = 0; round < 3; round += 1) {
+      EDITS.forEach((edit, op) => {
+        const recipe = edit({ state: run.state, indexes: run.indexes, hub, a: 3 + round, b: 5 + round, c: 12 * (round + 1), graveyard });
+        if (recipe === undefined) return;
+        run.apply(recipe);
+        run.expectEqualsFull(`op ${op}, round ${round}`);
+        applied.add(op);
+      });
+    }
+    expect([...applied].length).toBeGreaterThanOrEqual(EDITS.length - 1);
+  });
+});

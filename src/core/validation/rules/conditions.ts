@@ -5,7 +5,7 @@
  */
 import type { AnyRecord, ConditionParameters, Temperature } from '../../schema';
 import type { ValidationRule } from '../contracts';
-import { at, rule } from './helpers';
+import { NO_REFERENCED_READS, at, rule } from './helpers';
 
 interface ParameterSet {
   readonly path: string;
@@ -49,6 +49,7 @@ export const CONDITION_RULES: readonly ValidationRule[] = [
     kinds: KINDS,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Range with min > max, or temperature below absolute zero',
     *check(record) {
       for (const { path, params } of parameterSets(record)) {
@@ -70,6 +71,7 @@ export const CONDITION_RULES: readonly ValidationRule[] = [
     kinds: KINDS,
     defaultSeverity: 'review_required',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Conditions filled by a parser and not yet confirmed',
     *check(record) {
       for (const { path, params } of parameterSets(record)) {

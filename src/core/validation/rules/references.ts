@@ -11,7 +11,8 @@ import {
   type ReferenceSpec,
 } from '../../schema';
 import { referenceEngine } from '../../references';
-import type { FindingDraft, RuleContext, ValidationRule } from '../contracts';
+import type { FindingDraft, ReferencedReads, RuleContext, ValidationRule } from '../contracts';
+import { NO_REFERENCED_READS } from './helpers';
 import { analyseReferences, type ReferenceRuleId } from './reference-analysis';
 
 const ownersOf = (test: (spec: ReferenceSpec) => boolean): readonly RecordKind[] => [
@@ -24,11 +25,27 @@ interface RuleSpec {
   readonly severity: ValidationRule['defaultSeverity'];
   readonly scope: ValidationRule['scope'];
   readonly description: string;
+  /** What the rule's outcome depends on among the records this one refers to (see `ValidationRule.referencedReads`). */
+  readonly reads: ReferencedReads;
   readonly watches?: ValidationRule['watches'];
   readonly peers?: ValidationRule['peers'];
 }
 
 const isRecordTarget = (spec: ReferenceSpec): boolean => spec.target.type === 'id' || spec.target.type === 'ref';
+
+/**
+ * REF-005 looks inside the record a nested reference names (its container): the top-level fields that hold
+ * the nested collections, per container kind, taken from the registry (`outcomes[].products` -> `outcomes`).
+ */
+function containerReads(): ReferencedReads {
+  const fields = new Map<RecordKind, Set<string>>();
+  for (const { target } of REFERENCE_SPECS) {
+    if (target.type !== 'nested') continue;
+    const field = target.collection.split(/[.[]/)[0] as string;
+    fields.set(target.kind, (fields.get(target.kind) ?? new Set<string>()).add(field));
+  }
+  return Object.fromEntries([...fields].map(([kind, set]) => [kind, [...set].sort()]));
+}
 
 const SPECS: readonly RuleSpec[] = [
   {
@@ -37,6 +54,7 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'error',
     scope: 'neighbourhood',
     description: 'Referenced record does not exist',
+    reads: { '*': [] },
   },
   {
     id: 'REF-002',
@@ -44,6 +62,7 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'error',
     scope: 'record',
     description: 'Referenced kind not allowed for this field, or the ID prefix does not match the kind',
+    reads: NO_REFERENCED_READS,
   },
   {
     id: 'REF-003',
@@ -51,6 +70,7 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'error',
     scope: 'record',
     description: 'Reference points to a higher layer',
+    reads: NO_REFERENCED_READS,
   },
   {
     id: 'REF-004',
@@ -58,6 +78,7 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'error',
     scope: 'record',
     description: 'Local reference is not defined in the same record',
+    reads: NO_REFERENCED_READS,
   },
   {
     id: 'REF-005',
@@ -65,6 +86,7 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'error',
     scope: 'neighbourhood',
     description: 'Nested reference is not defined in the record it names',
+    reads: containerReads(),
   },
   {
     id: 'REF-006',
@@ -72,6 +94,7 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'error',
     scope: 'global',
     description: 'Nested ID defined more than once in the dataset',
+    reads: NO_REFERENCED_READS,
     peers: (record, ctx) =>
       referenceEngine.nestedIds(record).flatMap(({ id }) => ctx.indexes.definersOf(id)),
   },
@@ -81,6 +104,7 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'error',
     scope: 'record',
     description: 'A record refers to itself',
+    reads: NO_REFERENCED_READS,
   },
   {
     id: 'REF-008',
@@ -88,6 +112,7 @@ const SPECS: readonly RuleSpec[] = [
     severity: 'warning',
     scope: 'neighbourhood',
     description: 'Rich-text [[link]] target does not exist',
+    reads: NO_REFERENCED_READS,
     watches: RECORD_KINDS,
     peers: (record, ctx) => ctx.indexes.linkersOf(record.id),
   },
@@ -101,6 +126,7 @@ function referenceRule(spec: RuleSpec): ValidationRule {
     defaultSeverity: spec.severity,
     scope: spec.scope,
     description: spec.description,
+    referencedReads: spec.reads,
     ...(spec.watches === undefined ? {} : { watches: spec.watches }),
     ...(spec.peers === undefined ? {} : { peers: spec.peers }),
     *check(record, ctx: RuleContext): Iterable<FindingDraft> {

@@ -4,6 +4,7 @@
  * `participationsOf`, never by a generated ID), so a benchmark can target "the hub" of any shape without
  * a reaction-specific hack.
  */
+import { produce } from 'immer';
 import { documentToState } from '@/core/dataset';
 import { indexEngine } from '@/core/indexes';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
@@ -59,6 +60,21 @@ export function mostReferencedSpecies(state: CanonicalState, indexes: ReadonlyIn
   }
   if (best === undefined) throw new Error('state has no species');
   return best;
+}
+
+/**
+ * A state one edit after `state`, with indexes for it, so a bench can call `validateTouched(next, indexes, [hub],
+ * state)` the way the command store does (it always passes the previous state; ADR-031, step 2.12).
+ * `rename` changes a field no rule reads of a referenced species; `draft` changes `review.lifecycle`, which
+ * RVW-002 reads of every referenced record, so every referrer has to be re-validated.
+ */
+export function afterHubEdit(state: CanonicalState, hub: RecordRef, edit: 'rename' | 'draft'): { state: CanonicalState; indexes: ReadonlyIndexes } {
+  const next = produce(state, (draft) => {
+    const species = draft.records.species[hub.id] as unknown as { names: { canonical: string }; review: { lifecycle: string } };
+    if (edit === 'rename') species.names.canonical = `${species.names.canonical} (renamed)`;
+    else species.review.lifecycle = 'draft';
+  });
+  return { state: next, indexes: buildIndexes(next) };
 }
 
 /** The species referenced by the fewest participations (possibly zero) — a contrast case for "the hub". */

@@ -7,7 +7,7 @@
 import { referenceEngine } from '../../references';
 import { LAYER_OF_KIND, RECORD_KINDS, type AnyRecord, type RecordKind, type RecordRef } from '../../schema';
 import type { RuleContext, ValidationRule } from '../contracts';
-import { MAX_RELATED, asRef, asRefs, at, existing, rule } from './helpers';
+import { MAX_RELATED, NO_REFERENCED_READS, asRef, asRefs, at, existing, rule } from './helpers';
 import { variantsOverlap } from './reaction-utils';
 
 /** Records of `kind` whose `target` field points at `id`, other than `self`. */
@@ -38,6 +38,7 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['exam_version'],
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Exam version effectiveFrom after effectiveTo',
     *check(version) {
       if (version.effectiveFrom === undefined || version.effectiveTo === undefined || version.effectiveFrom <= version.effectiveTo) return;
@@ -51,6 +52,7 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['exam_version'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: "A topic appears twice in one exam version's coverage",
     *check(version) {
       const first = new Map<string, string>();
@@ -78,6 +80,8 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['exam_relevance'],
     defaultSeverity: 'error',
     scope: 'neighbourhood',
+    // reads which exam a version belongs to (and its label, for the message)
+    referencedReads: { exam_version: ['examId', 'label'] },
     description: 'exam_relevance.examVersionIds not belonging to examId',
     *check(relevance, ctx) {
       for (const [i, id] of relevance.examVersionIds.entries()) {
@@ -98,6 +102,8 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['exam_relevance'],
     defaultSeverity: 'warning',
     scope: 'global',
+    // compares with other records sharing the target: `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'Conflicting exam relevance for the same target, exam and overlapping versions',
     peers: peersSharingTarget('exam_relevance'),
     *check(relevance, ctx) {
@@ -123,6 +129,8 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['exam_version'],
     defaultSeverity: 'review_required',
     scope: 'neighbourhood',
+    // reads what kind of reference each citation names
+    referencedReads: { reference: ['refKind'] },
     description: 'Exam version official without a citation to a syllabus document',
     *check(version, ctx) {
       if (version.status !== 'official') return;
@@ -141,6 +149,8 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['topic_mapping'],
     defaultSeverity: 'warning',
     scope: 'global',
+    // compares with other mappings sharing the target: `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'Duplicate topic mapping (same topic, same target)',
     peers: peersSharingTarget('topic_mapping'),
     *check(mapping, ctx) {
@@ -158,6 +168,8 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['entity_display'],
     defaultSeverity: 'warning',
     scope: 'global',
+    // compares with other displays sharing the target: `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'More than one entity_display for a target (lowest ID wins)',
     peers: peersSharingTarget('entity_display'),
     *check(display, ctx) {
@@ -173,6 +185,8 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['navigator_anchor'],
     defaultSeverity: 'warning',
     scope: 'global',
+    // compares with other anchors sharing the target: `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'Duplicate navigator anchors for a target (lowest ID wins)',
     peers: peersSharingTarget('navigator_anchor'),
     *check(anchor, ctx) {
@@ -188,6 +202,7 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['reaction_scheme'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Duplicate participant placements in one reaction scheme',
     *check(scheme) {
       const seen = new Set<string>();
@@ -213,6 +228,8 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: ['asset'],
     defaultSeverity: 'info',
     scope: 'neighbourhood',
+    // reads what refers to this asset (its referrers): reached by the referent expansion
+    referencedReads: NO_REFERENCED_READS,
     description: 'Asset attached to nothing',
     *check(asset, ctx) {
       if (asset.attachedTo.length > 0 || ctx.indexes.referrersOf(asset.id).length > 0) return;
@@ -226,6 +243,7 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: REVIEWED,
     defaultSeverity: 'review_required',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Record needs review',
     *check(record) {
       const review = reviewOf(record);
@@ -241,6 +259,8 @@ export const CURRICULUM_RULES: readonly ValidationRule[] = [
     kinds: REVIEWED,
     defaultSeverity: 'info',
     scope: 'neighbourhood',
+    // reads the lifecycle of every record this one refers to
+    referencedReads: { '*': ['review'] },
     description: 'Published record references a draft record',
     *check(record, ctx) {
       if (reviewOf(record)?.lifecycle !== 'published') return;

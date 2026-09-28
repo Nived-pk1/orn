@@ -11,6 +11,7 @@ import { createCanonicalStore } from '@/core/commands';
 import { validator } from '@/core/validation';
 import { withFields } from '@/test-support/command-kit';
 import {
+  afterHubEdit,
   buildIndexes,
   designTierHubState,
   FAST_BENCH_OPTIONS,
@@ -122,6 +123,27 @@ describe('scopeOf / validateTouched — ADV-012 literal case: one hub, 1,000 rea
     },
     FAST_BENCH_OPTIONS,
   );
+
+  // The store always passes the previous state (ADR-031, step 2.12); without it nothing can be diffed and
+  // every referrer is re-validated (the entry above). Edited once here, outside the timed region.
+  const renamed = afterHubEdit(state, hub, 'rename');
+  const drafted = afterHubEdit(state, hub, 'draft');
+
+  bench(
+    'validateTouched, renaming the hub (previous state given, as the store does)',
+    () => {
+      validator.validateTouched(renamed.state, renamed.indexes, [hub], state);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+
+  bench(
+    "validateTouched, changing the hub's review lifecycle (a field RVW-002 reads: every referrer re-validated)",
+    () => {
+      validator.validateTouched(drafted.state, drafted.indexes, [hub], state);
+    },
+    FAST_BENCH_OPTIONS,
+  );
 });
 
 /**
@@ -151,6 +173,40 @@ describe('commit / validateTouched — design tier, one hub of 1,000 reactions (
     'validateTouched, touching the hub',
     () => {
       validator.validateTouched(initial, initialIndexes, [hub]);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+
+  const renamed = afterHubEdit(initial, hub, 'rename');
+  const drafted = afterHubEdit(initial, hub, 'draft');
+
+  bench(
+    'validateTouched, renaming the hub (previous state given, as the store does)',
+    () => {
+      validator.validateTouched(renamed.state, renamed.indexes, [hub], initial);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+
+  bench(
+    "validateTouched, changing the hub's review lifecycle (a field RVW-002 reads: every referrer re-validated)",
+    () => {
+      validator.validateTouched(drafted.state, drafted.indexes, [hub], initial);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+
+  // A whole commit that changes a field referrer rules read: alternates draft / published, so every commit
+  // changes `review.lifecycle` and re-validates all 1,000 referrers (accepted: RVW-002 is INFO).
+  const reviewStore = createCanonicalStore({ initial, validateInitial: false });
+  let m = 0;
+  bench(
+    "dispatch: change the hub's review lifecycle (every referrer re-validated)",
+    () => {
+      m += 1;
+      const record = must(reviewStore.getState().records.species[hub.id]);
+      const lifecycle = m % 2 === 1 ? 'draft' : 'published';
+      reviewStore.dispatch({ label: `bench-review-${m}`, commands: [{ type: 'record.update', record: withFields(record, { review: { ...record.review, lifecycle } }) }] });
     },
     FAST_BENCH_OPTIONS,
   );

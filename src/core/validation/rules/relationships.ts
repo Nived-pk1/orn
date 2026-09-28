@@ -6,7 +6,7 @@
 import { closure } from '../../indexes/hierarchy';
 import { RELATIONSHIP_TYPE_SPECS, type RecordKind, type RecordRef, type Relationship } from '../../schema';
 import type { RuleContext, ValidationRule } from '../contracts';
-import { MAX_RELATED, MAX_WALK_NODES, allOfKinds, asRefs, rule } from './helpers';
+import { MAX_RELATED, MAX_WALK_NODES, NO_REFERENCED_READS, allOfKinds, asRefs, rule } from './helpers';
 
 const REL = ['relationship'] as const;
 
@@ -61,6 +61,7 @@ export const RELATIONSHIP_RULES: readonly ValidationRule[] = [
     kinds: REL,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Endpoint kind not allowed for the relationship type',
     *check(rel) {
       const allowed: readonly RecordKind[] = RELATIONSHIP_TYPE_SPECS[rel.type].endpointKinds;
@@ -78,6 +79,7 @@ export const RELATIONSHIP_RULES: readonly ValidationRule[] = [
     kinds: REL,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'from equals to',
     *check(rel) {
       if (rel.from.id !== rel.to.id) return;
@@ -91,6 +93,8 @@ export const RELATIONSHIP_RULES: readonly ValidationRule[] = [
     kinds: REL,
     defaultSeverity: 'warning',
     scope: 'global',
+    // reads other relationships sharing an endpoint: `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'Duplicate relationship (same type and endpoints; unordered for symmetric types)',
     peers: (rel, ctx) =>
       rel.kind === 'relationship' ? [...relationshipsAt(rel.from.id, ctx), ...relationshipsAt(rel.to.id, ctx)].map((r): RecordRef => ({ kind: 'relationship', id: r.id })) : [],
@@ -113,6 +117,7 @@ export const RELATIONSHIP_RULES: readonly ValidationRule[] = [
     kinds: REL,
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'reverseKind missing on reverse_of, or present on another type',
     *check(rel) {
       if (rel.type === 'reverse_of' && rel.reverseKind === undefined) {
@@ -129,6 +134,8 @@ export const RELATIONSHIP_RULES: readonly ValidationRule[] = [
     kinds: REL,
     defaultSeverity: 'error',
     scope: 'global',
+    // walks other relationships of the same type: `peers`
+    referencedReads: NO_REFERENCED_READS,
     description: 'Cycle in an acyclic relationship type',
     peers: (rel, ctx) => {
       if (rel.kind !== 'relationship') return [];
@@ -152,6 +159,8 @@ export const RELATIONSHIP_RULES: readonly ValidationRule[] = [
     kinds: REL,
     defaultSeverity: 'warning',
     scope: 'neighbourhood',
+    // reads whether an endpoint reaction is irreversible
+    referencedReads: { reaction: ['reversibility'] },
     description: 'reverse_of microscopic while either reaction is marked irreversible',
     *check(rel, ctx) {
       if (rel.type !== 'reverse_of' || rel.reverseKind !== 'microscopic') return;

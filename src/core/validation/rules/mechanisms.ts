@@ -4,7 +4,7 @@
  */
 import type { CAVEAT_TARGET_ROLES, RecordKind, StructureRep } from '../../schema';
 import type { ValidationRule } from '../contracts';
-import { at, rule } from './helpers';
+import { NO_REFERENCED_READS, at, rule } from './helpers';
 
 /** A SMILES atom with a map number, e.g. `[CH3:1]`. Molfiles are opaque here (chem worker, CHEM-008). */
 const ATOM_MAP = /\[[^\]]*:\d+\]/;
@@ -28,6 +28,7 @@ export const MECHANISM_RULES: readonly ValidationRule[] = [
     kinds: ['mechanism'],
     defaultSeverity: 'info',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Mechanism with no variants, or a variant with no steps',
     *check(mechanism) {
       if (mechanism.variants.length === 0) {
@@ -47,6 +48,7 @@ export const MECHANISM_RULES: readonly ValidationRule[] = [
     kinds: ['mechanism'],
     defaultSeverity: 'error',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Step species with none of ref, label, structure',
     *check(mechanism) {
       for (const [i, variant] of mechanism.variants.entries()) {
@@ -69,6 +71,7 @@ export const MECHANISM_RULES: readonly ValidationRule[] = [
     kinds: ['mechanism'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Electron movements present but no step structure carries atom maps',
     *check(mechanism) {
       for (const [i, variant] of mechanism.variants.entries()) {
@@ -92,6 +95,7 @@ export const MECHANISM_RULES: readonly ValidationRule[] = [
     kinds: ['mechanism'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'More than one rate-determining step in a variant',
     *check(mechanism) {
       for (const [i, variant] of mechanism.variants.entries()) {
@@ -108,6 +112,7 @@ export const MECHANISM_RULES: readonly ValidationRule[] = [
     kinds: ['caveat'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Caveat with no targets',
     *check(caveat) {
       if (caveat.targets.length > 0) return;
@@ -121,6 +126,7 @@ export const MECHANISM_RULES: readonly ValidationRule[] = [
     kinds: ['caveat'],
     defaultSeverity: 'warning',
     scope: 'record',
+    referencedReads: NO_REFERENCED_READS,
     description: 'Target role inconsistent with target kind',
     *check(caveat) {
       for (const [i, target] of caveat.targets.entries()) {
