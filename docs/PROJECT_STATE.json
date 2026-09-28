@@ -112,7 +112,7 @@
     "validationScopeSuite": "steps 2.12-2.13: ValidationRule.referencedReads (ADR-031), FindingStore.replaceForRules + Validator.validateTouchedByRule + ValidationRule.peerReads (ADR-032). scoping.test.ts (32: change/read logic; 120-referrer hub with rule invocations counted; per-rule referrers - findings of rules that did not run survive, an L2-ERROR referrer is left alone; class hub rename/alias/notes re-run nothing on species, a parent move re-runs SPC-006 alone); reads-audit.test.ts (5: Proxy trace of every declared rule's referenced reads incl. hierarchy walks, vanish differential for rules declared to read nothing, peerReads trace); store.test.ts (6 replaceForRules); tests/property/validation-scope.test.ts (3, P-11: incremental == validateAll after random hub-, class-hub- and review-status-aimed edits on ADV-012 and like-water shapes); incremental.test.ts fixture walk on both commit paths."
   },
   "openItems": [
-    "Phase 3 plan reviewed; contracts fit scan answers in PROGRESS.md; reviewer to approve any gaps before step 3.1.",
+    "Phase 3 contract amendments approved (PROGRESS.md 'Phase 3 contract decisions'); each lands in its named step.",
     "Consider a WARNING for the same substance listed twice in the same role and stage (use coefficient) — decide in Phase 6.",
     "All exam coverage and the baseline topic tree are REVIEW REQUIRED until checked against official syllabi.",
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
