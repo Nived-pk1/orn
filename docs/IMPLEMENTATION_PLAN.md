@@ -92,6 +92,8 @@ Dependencies: `@rdkit/rdkit`, `elkjs`, `minisearch`.
 
 **Phase 4 note (step 2.13, from the Gate B performance work).** Any worker or service that re-validates after a commit must call `Validator.validateTouchedByRule` (or `validateTouched`/`scopeOf`) **with the previous state** — the compute worker's replica sync has both states (docs/PERFORMANCE_ARCHITECTURE.md §3), so it must pass them. Without `previous` nothing can be diffed (ADR-031/032), every referrer of a touched record is re-validated whole, and a hub record then costs about 39–47 ms per call on a 1,000-referrer hub (median p99 at the design tier, step 2.13) instead of 1–4 ms. `validateAll` is unaffected.
 
+**Phase 4 note (step 3.2 review).** `replaceState` runs `validateAll` on the main thread: about 2 s of a 3.5 s restore at the design tier (index build about 0.5 s, `validateAll` about 1.3 s, the rest about 0.15 s; docs/PROGRESS.md, step 3.2 review). From Phase 4 the compute worker validates the replica, and `replaceState` (and ADR-033's `reload`) must accept precomputed findings, so the main thread only swaps the state and rebuilds indexes.
+
 ### Phase 5 — Shell, rendering, navigator, inspector → Gate E
 Dependencies: `zustand`, Radix primitives, `cmdk`, `@tanstack/react-virtual`, `d3-zoom`, Fontsource Plex; dev: Testing Library, `jsdom`, `@playwright/test`, `@axe-core/playwright`.
 | Step | Work |

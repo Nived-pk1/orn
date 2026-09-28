@@ -1242,7 +1242,7 @@ Follow-ups done in the review commit ("phase-3: step 3.1 review follow-ups"):
   The step 3.1 enqueue numbers (0.0006 and 0.17 mean) were taken on a busier machine. `tests/perf/budgets.mjs` updated; `baseline.json` untouched.
 - Supersedes two statements in the step 3.1 entry above: the markers no longer write directly, and the hub-edit flush entry no longer exists.
 
-**Open item (from the review).** Recovery after a revision-gap refusal: the queue stays `failed`; decide in 3.3 (likely a full `replaceAll` re-save of the in-memory state, user-visible).
+**Open item (from the review), decided in the step 3.2 review below:** recovery after a revision-gap refusal.
 
 ### Step 3.2 — Snapshots: create, list, restore, delete, retention, periodic policy (2026-09-28)
 
@@ -1322,6 +1322,20 @@ it in the compute worker; the "no main-thread task > 50 ms" row is judged at Gat
 - Snapshot build and restore are 0.7 to 3.5 s on the main thread at the design tier until Phase 4 (worker hosting); a Gate E item.
 - `restoreSnapshot` does not wait for the restored state to reach IndexedDB; the app wiring (Phase 5) calls `flush()` where it matters.
 - Q1 (a), (b), (e), Q4, Q10 land in 3.3 as planned; `open`, `replaceAll`, the boot use of `pre_migration` snapshots are 3.3.
+
+### Step 3.2 review (reviewer, 2026-09-28)
+
+Verdict: step 3.2 ACCEPTED. The four REVIEW REQUIRED answers are all approved:
+1. `readSnapshot` returns `SnapshotReadResult` (errors are values), not the bare `MigratableDocument`.
+2. `ids: IdFactory` is a required adapter option.
+3. Older-snapshot tests use a fake runner; the real runner and `withVersionOffset` come in 3.3.
+4. `restoreSnapshot` does not await persistence.
+
+Decisions and notes recorded with the verdict:
+- **Open item (Phase 5).** The app reports a restore (and an import) as done only after `flush()` resolves with status `saved`; until then it shows "saving".
+- **Phase 4 note.** `replaceState` runs `validateAll` on the main thread. From Phase 4 the compute worker validates the replica, and `replaceState` (and ADR-033's `reload`) must accept precomputed findings, so the main thread only swaps the state and rebuilds indexes. Recorded in IMPLEMENTATION_PLAN.md's Phase 4 note and in PROJECT_STATE openItems. No code change to `replaceState` now.
+- **`replaceState` measured in parts** (design tier, `dense`, seed 2 replacing seed 1, median of 5 runs in one process, ms): `freeze` 0 (already frozen); core index build 500; `validateAll` 1,319; ChangeSet + replacement patches 15; `commitFindings` over both states' refs 124. Sum about 1,960. `hub_explosion`: index build 460, `validateAll` 1,389, ChangeSet + patches 14, `commitFindings` 122. So `validateAll` is about two thirds of the call, the index build about a quarter, the rest about 7%. Whole `replaceState` calls measured 2.0 to 2.4 s at steady state on both shapes; a few calls came back much faster (0.6 to 0.8 s, cause not established, possibly JIT and GC state), so the parts, not those calls, are the numbers to plan with. Measured with a throwaway script (not committed); the store's own construction (index build, about 0.4 to 0.5 s) is outside `replaceState`.
+- **Decision on the revision-gap open item (replaces it).** A refused gap sets status `failed` with its own reason, `'revision_gap'`. Recovery is a user-visible "save everything now": `replaceAll` of the in-memory state in one transaction through the queue's ordering, after which the queue continues from that revision. Built in 3.3 (API only; the button is Phase 5).
 
 ## Amendments
 - **2026-09-28, step 3.2 — snapshots: `readSnapshot` returns the tolerant document, `SaveStatus.deletablePeriodicSnapshotIds`, restore types (contract changes, reviewer-approved in "Phase 3 contract decisions", Q1 (f), Q2, Q9).** Problem: an older snapshot has to be migrated before it can be parsed strictly, so `readSnapshot(): Promise<DatasetDocument>` could not serve restore; the quota sequence's stage 2 (PERSISTENCE.md §11) had no place to report the periodic snapshots the user may delete; restore needed named result and port types. Change: `readSnapshot` returns `SnapshotReadResult` (`{ ok: true, summary, doc: MigratableDocument }` or `{ ok: false, code: 'NOT_FOUND' | 'CORRUPT', message }`; the wrapper beyond the approved wording is there because damage is a value, CLAUDE.md §6); `SaveStatus.deletablePeriodicSnapshotIds?`; `RestoreSnapshotResult`; doc comments on `createSnapshot`/`listSnapshots`/`deleteSnapshot` (write queue order, newest first, pruning). `DexieAdapterOptions` (an implementation option, not contract) gains a required `ids`. No schema change, no `DB_STORES`/`DB_VERSION` change (a snapshot row is the summary plus a Blob), no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §2, §9, §11.
