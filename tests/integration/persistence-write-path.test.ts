@@ -263,6 +263,35 @@ describe('meta markers and read-only', () => {
     expect(meta).toMatchObject({ lastCleanShutdownAt: '2026-09-28T10:00:00.000Z', lastIntegrityCheckAt: '2026-09-28T10:00:01.000Z', revision: 1 });
   });
 
+  it('a marker set while a write is pending lands after it (SONNET_HANDOFF §18.8: no IndexedDB write outside the queue)', async () => {
+    const t = await seeded();
+    const { after, changes } = annotate(base, speciesIds[0] as string, 2);
+    const mark = t.mutations.length;
+    const write = t.adapter.writeChanges(changes, after);
+    const marker = t.adapter.setLastCleanShutdownAt('2026-09-28T11:00:00.000Z');
+    const integrity = t.adapter.setLastIntegrityCheckAt('2026-09-28T11:00:01.000Z');
+    await Promise.all([write, marker, integrity]);
+    const keys = t.mutations.slice(mark).flatMap((m) => (m.store === 'meta' ? (m.values as { key: string }[]).map((v) => `meta:${v.key}`) : [m.store]));
+    expect(keys.indexOf('records')).toBeLessThan(keys.indexOf('meta:lastCleanShutdownAt'));
+    expect(keys.indexOf('meta:revision')).toBeLessThan(keys.indexOf('meta:lastCleanShutdownAt'));
+    expect(keys.indexOf('meta:lastCleanShutdownAt')).toBeLessThan(keys.indexOf('meta:lastIntegrityCheckAt'));
+  });
+
+  it('a marker set during a retry backoff waits for the write ahead of it', async () => {
+    const t = await seeded();
+    const { after, changes } = annotate(base, speciesIds[0] as string, 2);
+    t.faults.fail('records', () => new Error('transient'));
+    const write = t.adapter.writeChanges(changes, after);
+    await t.scheduler.waitForTimer();
+    const marker = t.adapter.setLastIntegrityCheckAt('2026-09-28T11:00:02.000Z');
+    t.faults.clear();
+    t.scheduler.fire();
+    await Promise.all([write, marker]);
+    const order = t.mutations.filter((m) => m.store === 'meta').flatMap((m) => (m.values as { key: string }[]).map((v) => v.key));
+    expect(order.slice(-2)).toEqual(['revision', 'lastIntegrityCheckAt']);
+    expect((await t.adapter.readCommitted()).meta.revision).toBe(2);
+  });
+
   it('a read-only adapter reports read_only and never writes (INV-28)', () => {
     const t = freshAdapter({ readOnly: true });
     expect(t.adapter.getStatus().state).toBe('read_only');

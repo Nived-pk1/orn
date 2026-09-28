@@ -153,7 +153,7 @@ Principles: fail visibly, keep memory authoritative, never corrupt stored data, 
 | INV-17 | Assets are optional: no chemistry exists only as an image; deleting an asset never invalidates chemistry |
 | INV-18 | Derived state is recomputable: incremental results equal full rebuilds |
 | INV-19 | Serialisation is deterministic: export → import → export is byte-identical |
-| INV-20 | Persistence is atomic: one transaction per commit |
+| INV-20 | Persistence is atomic: every IndexedDB transaction is atomic and ends on a committed revision; an idle queue writes one transaction per ChangeSet, and ChangeSets queued together may share one transaction |
 | INV-21 | Imports never mutate state before confirmation and apply atomically after a snapshot |
 | INV-22 | All traversals and searches are bounded and terminate on cyclic data |
 | INV-23 | No silent loss: unmapped legacy/unknown data is preserved in `provenance.legacy.unmapped` and reported |

@@ -4,8 +4,11 @@
  *  - enqueue + coalesce: the SYNCHRONOUS cost the main thread pays per commit (`writeChanges` up to the point
  *    where the transaction would start). The queue's `persist` never settles, so every ChangeSet after the
  *    first lands in the pending batch, which is exactly the coalescing path.
- *  - flush on fake-indexeddb: one whole write cycle. This is OUR overhead (batch resolution, Dexie, structured
- *    clone in a JS IndexedDB), NOT real IndexedDB: real timing is traced at Gates E/F.
+ *  - prepare transaction rows: the ORN code that turns a pending batch into the rows one transaction stores
+ *    (`prepareTransactionRows`), with no IndexedDB at all.
+ *  - flush on fake-indexeddb, ordinary edit: a SMOKE measurement that the whole cycle runs end to end. It is dominated
+ *    by fake-indexeddb (a bare Dexie put costs the same), NOT real IndexedDB: real timing is traced at Gates E/F. The
+ *    hub-edit flush was removed in the step 3.1 review: it measured fake-indexeddb only (~17 s per sample).
  * "Ordinary edit" = one record. "Hub edit" = `replaceReferences` on the design-tier "like water" hub
  * (5,000 reactions, one species used by 1,000 of them): one ChangeSet that updates ~1,000 reactions.
  */
@@ -13,10 +16,12 @@ import { bench, describe } from 'vitest';
 import { createCanonicalStore } from '@/core/commands';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
+import { startBatch } from '@/persistence/coalesce';
+import { prepareTransactionRows } from '@/persistence/rows';
 import { createWriteQueue } from '@/persistence/write-queue';
 import { withFields } from '@/test-support/command-kit';
 import { freshAdapter, seedChangeSet } from '@/test-support/persistence-kit';
-import { buildIndexes, designTierHubState, FAST_BENCH_OPTIONS, leastReferencedSpecies, mostReferencedSpecies, SLOW_BENCH_OPTIONS } from '@/test-support/perf-kit';
+import { buildIndexes, designTierHubState, FAST_BENCH_OPTIONS, leastReferencedSpecies, mostReferencedSpecies } from '@/test-support/perf-kit';
 import { must } from '@/test-support/state-fixture';
 
 interface Captured {
@@ -76,6 +81,27 @@ describe('persist (design tier, hub_explosion)', () => {
   );
 });
 
+describe('persist (design tier, hub_explosion, prepare rows)', () => {
+  const ordinaryBatch = startBatch(ordinary.changes, ordinary.next);
+  const hubBatch = startBatch(hubEdit.changes, hubEdit.next);
+
+  bench(
+    'prepare transaction rows, ordinary edit (no IndexedDB)',
+    () => {
+      prepareTransactionRows(ordinaryBatch, false);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+
+  bench(
+    'prepare transaction rows, hub edit (no IndexedDB)',
+    () => {
+      prepareTransactionRows(hubBatch, false);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+});
+
 // Seeded once, outside every timed region (top-level await): the database holds the whole design-tier state.
 const t = freshAdapter({ initialRevision: 0 });
 await t.adapter.writeChanges(seedChangeSet(initial, 1), initial);
@@ -87,6 +113,5 @@ describe('persist (design tier, hub_explosion, flush on fake-indexeddb)', () => 
     await t.adapter.writeChanges({ ...captured.changes, revision }, captured.next);
   };
 
-  bench('flush on fake-indexeddb, ordinary edit (our overhead, not real IndexedDB)', () => flush(ordinary), FAST_BENCH_OPTIONS);
-  bench('flush on fake-indexeddb, hub edit (our overhead, not real IndexedDB)', () => flush(hubEdit), SLOW_BENCH_OPTIONS);
+  bench('flush on fake-indexeddb, ordinary edit (smoke; dominated by fake-indexeddb, not real IndexedDB)', () => flush(ordinary), FAST_BENCH_OPTIONS);
 });

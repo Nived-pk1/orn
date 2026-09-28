@@ -105,8 +105,10 @@ export const BUDGETS = {
     { operation: 'persist: enqueue + coalesce, ordinary edit (synchronous part of writeChanges)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.1: no PERFORMANCE_ARCHITECTURE.md §2 row; informal, part of the main-thread commit cost' },
   'persist (design tier, hub_explosion) > enqueue + coalesce, hub edit (1,000+ records in one ChangeSet)':
     { operation: 'persist: enqueue + coalesce, hub edit (replaceReferences on the 1,000-reaction hub)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.1: no §2 row; informal' },
-  'persist (design tier, hub_explosion, flush on fake-indexeddb) > flush on fake-indexeddb, ordinary edit (our overhead, not real IndexedDB)':
-    { operation: 'persist: one flush on fake-indexeddb, ordinary edit', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'our overhead, not real IndexedDB; real timing is traced at Gates E/F' },
-  'persist (design tier, hub_explosion, flush on fake-indexeddb) > flush on fake-indexeddb, hub edit (our overhead, not real IndexedDB)':
-    { operation: 'persist: one flush on fake-indexeddb, hub edit (~1,000 rows)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'our overhead, not real IndexedDB; SLOW_BENCH_OPTIONS (few samples), so p99 is the sample max' },
+  'persist (design tier, hub_explosion, prepare rows) > prepare transaction rows, ordinary edit (no IndexedDB)':
+    { operation: 'persist: prepare transaction rows, ordinary edit (our code only)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.1 review: no §2 row; informal' },
+  'persist (design tier, hub_explosion, prepare rows) > prepare transaction rows, hub edit (no IndexedDB)':
+    { operation: 'persist: prepare transaction rows, hub edit (~1,000 records, our code only)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.1 review: no §2 row; informal' },
+  'persist (design tier, hub_explosion, flush on fake-indexeddb) > flush on fake-indexeddb, ordinary edit (smoke; dominated by fake-indexeddb, not real IndexedDB)':
+    { operation: 'persist: one flush on fake-indexeddb, ordinary edit (smoke)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'smoke measurement; dominated by fake-indexeddb (a bare Dexie put costs the same); real timing is traced at Gates E/F. The hub-edit flush entry was removed in the step 3.1 review' },
 };

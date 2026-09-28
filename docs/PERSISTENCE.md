@@ -5,7 +5,7 @@ Package sections: **#14 Persistence**, **#15 Import/Export**, **#22 Error Recove
 ## 1. Principles
 
 1. IndexedDB (via Dexie 4) is the on-device store of record. Nothing canonical lives in localStorage, cookies or the URL.
-2. One commit = one ChangeSet = one IndexedDB transaction (INV-20). Partial writes are impossible.
+2. Every IndexedDB transaction is atomic and ends on a committed revision (INV-20): an idle queue writes one transaction per ChangeSet; ChangeSets queued together may share one transaction that ends on the newest of them. Partial writes are impossible.
 3. Memory is authoritative while the app runs; persistence follows through a serial queue. A failed write never loses the in-memory state and is always visible.
 4. Imports, migrations and restores are previewed, snapshotted, and applied atomically (INV-21).
 5. Exports are deterministic (INV-19) and self-describing (format + schemaVersion).
@@ -40,9 +40,10 @@ dispatch(envelope) ─► commit (memory, revision n) ─► ChangeSet n
                     └─ failure  → retry 250 ms, 1 s, 4 s → SaveStatus.failed (banner, "Export now")
 ```
 
-- ChangeSets that wait together are coalesced: the queue remembers WHICH records they touched and the newest state, so the latest value wins (delete then create = put; create then delete = delete). One transaction then moves the database from one committed revision straight to the newest. It is still one atomic transaction (INV-20): never a partial ChangeSet, and the database never holds a state memory did not have. ChangeSets committed in the same tick share a transaction.
+- An idle queue writes one transaction per ChangeSet. ChangeSets that wait together are coalesced: the queue remembers WHICH records they touched and the newest state, so the latest value wins (delete then create = put; create then delete = delete). One transaction then moves the database from one committed revision straight to the newest. It is still one atomic transaction (INV-20): never a partial ChangeSet, and the database never holds a state memory did not have. ChangeSets committed in the same tick share a transaction.
 - A failed write is retried after 250 ms, 1 s and 4 s, then the state is `failed`. The pending ChangeSets are **kept**: the next ChangeSet, or `flush()`, starts a fresh cycle over everything pending, so no revision is ever skipped. A ChangeSet whose revision does not follow the previous one is refused loudly (status `failed`, an exception): the database would miss that change for good.
 - `writeChanges(changes, next, blobs?)`: the bytes of asset records created in that ChangeSet ride in the same transaction (§5). The promise resolves when the write cycle holding the ChangeSet ends, durable or `failed`; `getStatus()` says which.
+- Every other IndexedDB write (the clean-shutdown and integrity-check markers, snapshots) goes through the same queue and runs in its order, after the ChangeSets pending when it was requested (`runOrdered`); it never changes `SaveStatus`, and it is refused on a read-only tab. **The single exception is `derivedCache`**: it is disposable and never canonical, so cache puts and gets bypass the queue (a failed cache write is a value, never a SaveStatus problem). The caller of `setLastCleanShutdownAt` still checks `getStatus()` first.
 - `SaveStatus` is always visible in the status bar: saved / saving / retrying / failed / read-only. `getStatus()` is synchronous: writes are pending when `pendingRevisions > 0` or the state is saving, retrying or failed; on `beforeunload` with pending writes the app warns.
 - Undo and redo are ordinary commits and persist the same way.
 
@@ -100,7 +101,7 @@ Importers parse `DatasetEnvelopeSchema` first (format, version, `records` as arr
 
 ## 10. Multiple tabs
 
-The tab holding the Web Lock `orn-writer` is the only writer (INV-28). Other tabs open read-only, show "Open in another tab — read-only", and subscribe to the BroadcastChannel `orn-changes`. The writer posts `{revision, changedIds}` after each persisted transaction; followers re-read those rows and apply them. When the writer closes, a follower acquires the lock, reloads fully and becomes writable. Browsers without Web Locks get a single-tab warning banner.
+The tab holding the Web Lock `orn-writer` is the only writer (INV-28). Other tabs open read-only, show "Open in another tab — read-only", and subscribe to the BroadcastChannel `orn-changes`. The writer posts `{ fromRevision, revision, changedIds }` after each persisted transaction (`fromRevision` is the revision the database was at before it, so a coalesced transaction names the whole span); a follower re-reads those rows and applies them when `fromRevision` equals its current revision, and otherwise reloads fully. When the writer closes, a follower acquires the lock, reloads fully and becomes writable. Browsers without Web Locks get a single-tab warning banner.
 
 ## 11. Quota and durability
 

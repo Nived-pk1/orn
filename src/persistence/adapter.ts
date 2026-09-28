@@ -5,11 +5,12 @@
  * quarantine and import batches land in the steps docs/PROGRESS.md names.
  */
 import type { Clock } from '@/core/dataset/contracts';
-import { CURRENT_SCHEMA_VERSION, type JsonValue } from '@/core/schema';
-import { resolveWrites, type PendingBatch } from './coalesce';
-import type { MetaKey, MetaRow, PersistenceAdapter } from './contracts';
+import type { JsonValue } from '@/core/schema';
+import type { PendingBatch } from './coalesce';
+import type { MetaKey, PersistenceAdapter } from './contracts';
 import { createDerivedCache } from './derived-cache';
 import type { OrnDb } from './db';
+import { prepareTransactionRows } from './rows';
 import { realScheduler, type PersistenceEventSink, type Scheduler } from './events';
 import { createWriteQueue } from './write-queue';
 
@@ -61,17 +62,13 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
   let persistedMeta: object | undefined;
 
   async function persist(batch: PendingBatch): Promise<void> {
-    const { puts, deleteIds, blobs } = resolveWrites(batch);
-    const metaRows: MetaRow[] = [{ key: 'revision', value: batch.revision }];
     const writesMeta = batch.latest.meta !== persistedMeta;
-    if (writesMeta) {
-      metaRows.push({ key: 'schemaVersion', value: CURRENT_SCHEMA_VERSION }, { key: 'datasetMeta', value: batch.latest.meta as unknown as JsonValue });
-    }
+    const { puts, deleteIds, blobRows, metaRows } = prepareTransactionRows(batch, writesMeta);
     await db.transaction('rw', [db.records, db.meta, db.assetBlobs], async () => {
       await db.records.bulkPut([...puts]);
       await db.records.bulkDelete([...deleteIds]);
-      await db.assetBlobs.bulkPut(blobs.map((b) => ({ assetId: b.assetId, sha256: b.sha256, blob: b.blob })));
-      await db.meta.bulkPut(metaRows);
+      await db.assetBlobs.bulkPut([...blobRows]);
+      await db.meta.bulkPut([...metaRows]);
     });
     if (writesMeta) persistedMeta = batch.latest.meta;
   }
@@ -86,8 +83,11 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     ...(options.readOnly !== undefined ? { readOnly: options.readOnly } : {}),
   });
 
+  /** Markers are writes like any other: ordered after the ChangeSets pending when they are set (SONNET_HANDOFF §18.8). */
   const setMeta = (key: MetaKey, value: JsonValue): Promise<void> =>
-    db.meta.put({ key, value }).then(() => undefined);
+    queue.runOrdered(async () => {
+      await db.meta.put({ key, value });
+    });
 
   return {
     writeChanges: (changes, next, blobs) => queue.enqueue(changes, next, blobs),

@@ -40,6 +40,13 @@ export interface WriteQueue {
   flush(): Promise<void>;
   getStatus(): SaveStatus;
   subscribe(listener: (status: SaveStatus) => void): () => void;
+  /**
+   * Runs `task` (any other IndexedDB write: a marker, a snapshot) in the queue's order: after every ChangeSet
+   * pending when it was called, never in parallel with a write cycle. It runs whether those writes ended durable
+   * or `failed` (a task never stalls behind a failed batch, and never changes SaveStatus). Refused when the tab is
+   * read-only or the queue is closed. The promise carries the task's own outcome.
+   */
+  runOrdered<T>(task: () => Promise<T>): Promise<T>;
   /** Cancels a waiting retry, makes one last attempt without backoff, and refuses further ChangeSets. */
   close(): Promise<void>;
 }
@@ -50,6 +57,7 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
   let pending: PendingBatch | undefined;
   let inFlight: PendingBatch | undefined;
   let draining: Promise<void> | undefined;
+  const tasks: (() => Promise<void>)[] = [];
   let cancelWait: (() => void) | undefined;
   let closing = false;
   let lastEnqueued = options.initialRevision;
@@ -142,8 +150,15 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
     // `draining` is always assigned before this function can finish.
     await Promise.resolve();
     try {
-      while (pending !== undefined) {
-        if (!(await writeCycle())) return;
+      let writable = true;
+      for (;;) {
+        if (writable && pending !== undefined) {
+          writable = await writeCycle();
+          continue;
+        }
+        const task = tasks.shift();
+        if (task === undefined) return;
+        await task();
       }
     } finally {
       draining = undefined;
@@ -151,7 +166,7 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
   }
 
   const flush = (): Promise<void> => {
-    if (draining === undefined && pending !== undefined) draining = drain();
+    if (draining === undefined && (pending !== undefined || tasks.length > 0)) draining = drain();
     return draining ?? Promise.resolve();
   };
 
@@ -172,6 +187,14 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
       return flush();
     },
     flush,
+    runOrdered<T>(task: () => Promise<T>): Promise<T> {
+      if (options.readOnly === true) return Promise.reject(new Error('persistence is read-only: this tab is not the writer'));
+      if (closing) return Promise.reject(new Error('persistence is closed'));
+      return new Promise<T>((resolve, reject) => {
+        tasks.push(() => Promise.resolve().then(task).then(resolve, reject));
+        void flush();
+      });
+    },
     getStatus: () => status,
     subscribe(listener) {
       listeners.add(listener);
