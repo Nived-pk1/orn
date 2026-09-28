@@ -36,13 +36,14 @@ its own; `tests/perf/budgets.mjs`'s `informalBudgetMs`).
 | Main-thread long tasks | none > 50 ms during any interaction | Playwright long-task observer |
 | Heap after boot (design target) | < 150 MB | Chrome memory snapshot at Gate F |
 
-**Backstop row (step 2.12).** With field-aware scope (§4, ADR-031) the two hub scenarios this row was added for
-(ADV-012 hub, design-tier "like water" hub; edits the store makes, i.e. with the previous state) meet the plain
-16 ms Commit row: a rename or notes edit measures 1-3 ms p99 (was 33-71 ms), so the row is **no longer needed for
-them**. It is kept, as a backstop for Phase 9, for the one case that still re-validates every referrer: an edit
-to a field some referrer rule reads (e.g. `review`, read by RVW-002) or the record's creation/deletion. That case
-measures 34-37 ms p99 in `validateTouched` and 67 ms p99 for a whole commit on the like-water hub (this row's
-50 ms is missed there; docs/reviews/gate-b-packet.md §5).
+**Backstop row (steps 2.12-2.13).** With field-aware scope (§4, ADR-031) and per-rule re-validation (ADR-032) the hub
+scenarios this row was added for (ADV-012 hub, design-tier "like water" hub, the class hub every species lists) meet
+the plain 16 ms Commit row for the edits an author makes all day (rename, notes, alias): 1-3 ms p99 on the species
+hubs (was 33-71 ms), 15-17 ms on the class hub (was 97 ms), so the row is **no longer needed for them**. It is kept as
+a backstop for Phase 9 for the structural edits that still re-validate many records: a field every referrer reads
+(e.g. `review`, read by RVW-002; 21 ms per whole commit on the like-water hub, was 77 ms) and moving the class hub
+under another parent (46 ms, was 126 ms; SPC-006 re-runs on the 1,400 species that list it). Those are recorded as
+documented Phase 9 exceptions if over 16 ms (docs/TEST_STRATEGY.md §6, docs/reviews/gate-b-packet.md §8).
 
 ## 3. Threading
 
@@ -60,7 +61,7 @@ RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferabl
 
 - Immer structural sharing: a commit touching one reaction allocates only that path.
 - Indexes update from the ChangeSet: cost O(changed records × their reference count), never O(dataset).
-- Validation re-runs only affected records for touched records and their reverse-index dependents. `scopeOf` expands a touched record to its referents, the peers its rules name, and those referrers whose rules read a field that changed (`ValidationRule.referencedReads`, ADR-031, step 2.12): renaming, aliasing or annotating a record with hundreds of referrers re-validates none of them. Changing a field some referrer rule reads (e.g. `review`, read by RVW-002), or creating/deleting the record, still re-validates every referrer, whole records at a time (the finding store replaces per subject); that case is what §2's "Commit on a record with ≥ 500 referrers" row is for. Rules that declare nothing keep the record-kind-granular behaviour (docs/PROGRESS.md steps 2.10, 2.12).
+- Validation re-runs only affected work for touched records and their reverse-index dependents. `scopeOf`'s expansion has three parts. The touched records and their referents are re-validated whole. **Referrers** are re-run only for the rules that read a field that changed (`ValidationRule.referencedReads`, ADR-031): renaming, aliasing or annotating a record with hundreds of referrers re-runs nothing on them. **Peers** (name twins, class ancestors, species listing a class) are called only when a field their rule reads changed (`ValidationRule.peerReads`, ADR-032), and a peer named by an L3 rule has only that rule re-run. When a referrer or peer does need work, only the affected L3 rules run and their findings are merged into the finding store per rule (`Validator.validateTouchedByRule`, `FindingStore.replaceForRules`, ADR-032); an affected L2 rule keeps the record whole, because an L2 ERROR gates its L3 rules. Rules that declare nothing keep the coarser behaviour (docs/PROGRESS.md steps 2.10, 2.12, 2.13). Known remaining cost: RTE-002/004's `peers` walk every referrer chain upward from a touched species or class (~10 ms when a class listed by 1,400 species is touched) and have no `peerReads` yet (a Phase 9 candidate).
 - Projections are memoised by request + revisions of records they read; unrelated edits reuse them.
 - Search receives upserts/removals only.
 - Hot paths never use `JSON.stringify` for equality or deep clones; equality is by reference (structural sharing) or by revision.

@@ -7,6 +7,7 @@
 import { produce } from 'immer';
 import { documentToState } from '@/core/dataset';
 import { indexEngine } from '@/core/indexes';
+import { commitFindings, createFindingStore, validator, type FindingStore } from '@/core/validation';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import { emptyRecordTables, RECORD_KINDS, type AnyRecord, type CanonicalState, type RecordRef } from '@/core/schema';
 import { anchorOn } from './graph-state';
@@ -111,6 +112,14 @@ export function withSpareClass(state: CanonicalState, template: RecordRef, rootI
     copy.names.canonical = 'Spare root class';
     (draft.records.class as unknown as Record<string, unknown>)[rootId] = copy;
   });
+}
+
+/** A finding store holding `validateAll`'s findings for `state`, as the command store's would after boot. */
+export function knownFindings(state: CanonicalState, indexes: ReadonlyIndexes): FindingStore {
+  const store = createFindingStore();
+  const everyone = RECORD_KINDS.flatMap((kind) => Object.keys(state.records[kind]).map((id) => ({ kind, id }) as RecordRef));
+  commitFindings(store, everyone, validator.validateAll(state, indexes));
+  return store;
 }
 
 /** The species referenced by the fewest participations (possibly zero) — a contrast case for "the hub". */

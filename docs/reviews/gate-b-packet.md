@@ -1,102 +1,109 @@
 # Gate B review packet — Phase 2 (graph engine)
 
-Prepared 2026-09-27 (step 2.8); updated 2026-09-27 (steps 2.9-2.10) and 2026-09-28 (steps 2.11-2.12) for a
-reviewer who cannot see the repository. Everything below was produced or re-run in the 2.12 preparation session;
-where a claim comes from a project document rather than from a run, it says so. Not committed as part of
-`npm run check`'s gate (`docs/reviews/` is reference material, like the Gate A packet).
+Prepared 2026-09-27 (step 2.8); updated 2026-09-27 (steps 2.9-2.10) and 2026-09-28 (steps 2.11-2.13) for a reviewer
+who cannot see the repository. Everything below was produced or re-run in the step 2.13 session; where a claim comes
+from a project document rather than from a run, it says so. Not committed as part of `npm run check`'s gate
+(`docs/reviews/` is reference material, like the Gate A packet).
 
 **Status: self-reviewed; human review pending.** The step 2.8 version of this packet was reviewed and returned
-**not passed** (budgets) — §0 gives that verdict and what steps 2.9-2.12 did about each item. This is not a
-claim that the gate passes; it is the same self-review discipline, updated with what changed. The implementing
-agent does not mark a gate passed and does not tag `phase-N` (CLAUDE.md §6, SONNET_HANDOFF.md §20): a separate
-session tags `phase-2` only after a human reviewer records a **passed** verdict in `docs/PROGRESS.md`.
+**not passed** (budgets). This version is written against the **final exit rule** the reviewer set in step 2.13
+(`docs/TEST_STRATEGY.md` §6) and is not a claim that the gate passes: the implementing agent does not mark a gate
+passed and does not tag `phase-N` (CLAUDE.md §6, SONNET_HANDOFF.md §20); a separate session tags `phase-2` only after a
+human reviewer records a **passed** verdict in `docs/PROGRESS.md`.
 
-- Repository state: branch `master`, steps 2.1-2.12 committed. No `phase-2` tag exists.
+**Attribution convention.** "Reviewer" means the human reviewer, as recorded in `docs/PROGRESS.md` (the Gate B
+review of 2026-09-27) or in the instructions of the named step (steps 2.12 and 2.13, whose decisions
+`docs/PROGRESS.md` step 2.13 records). "Sonnet" means a choice the implementing agent made itself.
+
+- Repository state: branch `master`, steps 2.1-2.13 committed. No `phase-2` tag exists.
 - Toolchain: Node 24.21.0, npm 11.19.0, TypeScript 6.0.3, Zod 4.6.5 (`^4.1.0`), Immer 10.2.0 (`^10.1.1`),
-  Vitest 4.1.11, Vite 7.3.6 (`^7.0.0`), fast-check 3.23.2. `npm audit` was not re-run in 2.11-2.12 (no dependency
+  Vitest 4.1.11, Vite 7.3.6 (`^7.0.0`), fast-check 3.23.2. `npm audit` was not re-run in 2.11-2.13 (no dependency
   changed since it last reported 0 vulnerabilities).
 - `npm run check` (typecheck, lint, lint:deps, check:size, check:hardcode, tests): **green — 70 test files,
-  1,165 tests** (step 2.8: 66/1,110; 2.10-2.11: 67/1,135; 2.12 added 3 files / 30 tests).
-- Property tests at `ORN_PROPERTY_RUNS=200`: **7 files, 71 tests, all pass** (2.12 added
-  `tests/property/validation-scope.test.ts`, P-11).
-- `npm run test:coverage` (`src/core/**`): **97.32% statements, 91.54% branches, 98.39% functions, 98.88% lines**
+  1,188 tests** (step 2.8: 66/1,110; 2.10-2.11: 67/1,135; 2.12: 70/1,165; 2.13: +23 tests).
+- Property tests at `ORN_PROPERTY_RUNS=200`: **7 files, 71 tests, all pass**.
+- `npm run test:coverage` (`src/core/**`): **97.38% statements, 91.57% branches, 98.42% functions, 98.91% lines**
   (step 2.10: 97.28/91.22/98.38/98.87) — thresholds (90% lines / 85% branches) comfortably met.
-- Benchmarks: `npm run bench:baseline` (3 fresh-process runs, **median p99**, method of step 2.11,
-  PERFORMANCE_ARCHITECTURE.md §9) then `npm run bench:compare`, both run for this update on the developer
-  workstation with nothing else running. `tests/perf/baseline.json` is regenerated.
+- Benchmarks: `npm run bench:baseline` (3 fresh-process runs, **median p99**, PERFORMANCE_ARCHITECTURE.md §9) and
+  `npm run bench:compare`, run for this update with Edge closed and nothing else heavy running. **This session's
+  runs were noisier than step 2.12's** (31 of 42 entries over 25% spread; run 2 was slow across the board, run 1
+  and 3 agreed): the medians are the verdicts, and every over-target verdict below says how noisy it is.
 
 ## 0. What the reviewer should decide
 
-Numbered to match the step 2.8 packet, each with the reviewer decisions taken in steps 2.9-2.12 (as recorded in
-`docs/PROGRESS.md`, and for 2.12 in that step's instructions) and where things now stand.
+Numbered to match the step 2.8 packet, with who decided what and where each item now stands.
 
-1. **`navigator`'s projection build missed its 16 ms budget.** Decision (Gate B review, 2026-09-27): the
-   documented-exception proposal was **not accepted**; fix it. Step 2.9: incrementally maintained roll-up index
-   (`ReadonlyIndexes.navigatorRollup()`, ADR-030). Step 2.11: a stable benchmark method, a deterministic
-   60-anchor design-tier state, and a decision tree for `dense`; the profile showed 62% of the build in
-   edge-ID hashing on 7,492 candidates of which 800 survive `maxEdges`, so hashing was deferred to admitted
-   candidates (no contract change). **Now (median p99, §5): `dense` 6.73 ms, `hub_explosion` 3.73 ms, ADV-012
-   hub 2.73 ms — all under 16 ms; stress tier (400 anchors) 17.54 ms against the informal 32 ms (§1's "may
-   degrade <= 2x") — passes. Closed**, subject to the noise caveat: `dense` has a 52% run spread (worst run
-   9.84 ms, still under budget).
-2. **`validateTouched` on a hub with ~1,000 referrers.** Decisions: 2.8 review accepted a documented exception
-   for an extreme hub; 2.10 found no safe narrowing without a `ValidationRule` contract change and added a 50 ms
-   "Commit on a record with >= 500 referrers" row instead; **2.12 (reviewer): implement field-aware scoping as an
-   additive amendment** — `ValidationRule.referencedReads`, ADR-031, undeclared rules keep the old behaviour.
-   **Now: a hub edit the store makes (previous state given) that touches no field a referrer rule reads —
-   rename, alias, notes, classes — re-validates none of its referrers: `validateTouched` 0.96 ms (ADV-012 hub)
-   and 1.89 ms (like-water hub) median p99, and a whole commit on the like-water hub 3.27 ms, against the plain
-   16 ms Commit row (before: 70.86 ms commit, 32-33 ms `validateTouched`). Both scenarios now meet the 16 ms
-   row, so the 50 ms row is no longer needed for them; it is marked a backstop in
-   PERFORMANCE_ARCHITECTURE.md §2 and kept for Phase 9.** What is *not* fixed: an edit to a field some referrer
-   rule reads (`review`, read by RVW-002) or creating/deleting the hub still re-validates every referrer whole:
-   `validateTouched` 34.0 / 37.1 ms (passes the 50 ms row) but a whole commit on the like-water hub **67.5 ms
-   (fails 50 ms by 17.5 ms)** — the one budget failure left (§5, §8 item 1). **New decision needed**: accept that
-   case as a rare authoring edit, or fund per-rule re-runs on referrers (a finding-merge contract, Phase 9).
-3. **`scopeOf` computed twice per commit.** Decision 2.10: deferred to Phase 9. Decision 2.12: fold it in only if
-   field-aware scoping removes it without a further contract change. **It does not** (the store still calls
-   `scopeOf` and `validateTouched` computes it again; removing it needs a `Validator` change or an
-   identity-keyed memo). With scoping in place one `scopeOf` on the hub costs 0.02-0.96 ms p99, twice 0.05-1.71
-   ms: at most ~11% of a 16 ms commit in the worst scenario, ≤ 0.3% typically. Left as the Phase 9 candidate.
-4. **Rejected-commit index rebuild** (163-580 ms). Fixed in 2.10 (inverse `ChangeSet` through the same `apply`).
-   **Now 8.7 / 8.0 ms median p99 (`dense` / `hub_explosion`). Closed.**
-5. **`graph/route` coverage exceptions** — accepted as documented at the 2.8 review; the one open gap (injected
-   clock in `search.ts`) was closed in 2.10. Unchanged.
-6. **Benchmark noise (2.11, reviewer).** The same scenario read 35.6 ms and 107-129 ms in two runs of
-   identical code, and 3 in-process repeats were biased by JIT warm-up. Now: PID-locked isolation, explicit
-   warmup, a 100-sample floor, and 3 fresh-process runs judged on the **median p99** with per-entry spread.
-   14 of 35 entries exceed a 25% spread and are marked `noisy` in `baseline.json`; none of the *failing or
-   near-budget* verdicts below depends on a noisy entry (every noisy entry that passes has its worst run
-   well under its budget). `bench:compare` is still manual (not in CI).
-7. Same standing caveat as Gate A: nothing in the demo dataset is chemically verified; this packet is about
-   the graph engine's correctness and performance, not chemistry content.
+1. **`navigator`'s projection build missed its 16 ms budget.** *Reviewer* (Gate B review, 2026-09-27): the
+   self-review's proposed documented exception was **not accepted** for the navigator; fix it with an
+   incrementally maintained index. *Sonnet*, step 2.9: `ReadonlyIndexes.navigatorRollup()` (ADR-030). *Sonnet*, step
+   2.11: a fixed 60-anchor design-tier state and a profile-driven fix (edge-ID hashing deferred to admitted
+   candidates, no contract change). **Now (median p99, §5): `dense` 10.87 ms, `hub_explosion` 7.11 ms, ADV-012 hub
+   4.66 ms — all under 16 ms; stress tier (400 anchors) 19.94 ms against the informal 32 ms (§1's "may degrade <= 2x").
+   Closed** (noise caveat: `dense` spread 30%, `hub_explosion` 100%; the worst run of any of them is 12.0 ms).
+2. **`validateTouched` on a hub with ~1,000 referrers** (and, added in 2.13, on a class every species lists).
+   *Reviewer* (Gate B review): an exception was accepted for an extreme hub. *Sonnet*, step 2.10: found no safe
+   narrowing without a `ValidationRule` contract change (the step's instructions kept the contract unchanged) and
+   added a 50 ms "Commit on a record with >= 500 referrers" row. *Reviewer*, step 2.12: implement field-aware scoping
+   as an additive amendment (`ValidationRule.referencedReads`, ADR-031). *Reviewer*, step 2.13: approve an additive
+   `FindingStore` method for per-rule re-validation, accept per-rule re-runs for peers as well (a reading of the
+   `peers` contract that *Sonnet* proposed), approve an optional field for the fields a rule reads on its peers
+   (*Sonnet* proposed it as `watchedFields`; named `peerReads`), and fix the **exit rule** (below). Implemented as
+   ADR-032: `FindingStore.replaceForRules`, `Validator.validateTouchedByRule`, `ValidationRule.peerReads`.
+   **Now (median p99):** like-water hub, notes edit, whole commit **2.93 ms** (was 70.86 in 2.11); `validateTouchedByRule`
+   on a rename **2.04 ms** (like water) / **1.24 ms** (ADV-012); class hub (1,400 species) rename **16.5 ms**, notes
+   **15.5 ms** (both were ~97 ms). Structural edits: like-water `review` status change **21.2 ms** per commit (was
+   76.9), class-hub parent move **46.0 ms** (was 125.8). Details in §5 and §8.
+3. **`scopeOf` computed twice per commit.** *Sonnet*, 2.10: deferred to Phase 9 (the step's own framing).
+   *Reviewer*, 2.12: fold it in only if it disappears without a further contract change; it did not then.
+   **Closed in 2.13 as a side effect of ADR-032:** the command store now makes one call
+   (`validateTouchedByRule`) per commit; `scopeOf`/`validateTouched` remain for other callers.
+4. **Rejected-commit index rebuild** (163-580 ms). *Sonnet*, 2.10 (assigned by the Gate B review): incremental rollback
+   through the inverse `ChangeSet`. **Now 9.6 / 8.7 ms median p99 (`dense` / `hub_explosion`). Closed.**
+5. **`graph/route` coverage exceptions** — *Reviewer* accepted them as documented at the Gate B review; the one open
+   gap (injected clock in `search.ts`) was closed by *Sonnet* in 2.10. Unchanged.
+6. **Benchmark noise.** `docs/PERFORMANCE_ARCHITECTURE.md` §9 records that the Gate B reviewer found the step 2.8/2.9
+   numbers too noisy to judge; *Sonnet*, 2.11: PID-locked isolation, explicit warmup, a 100-sample floor, 3
+   fresh-process runs judged on the **median p99** with per-entry spread. `bench:compare` is still manual (not in CI).
+   `npm run bench` failed on Windows (`spawnSync npx.cmd EINVAL`); fixed in 2.13 and verified together with
+   `bench:baseline` and `bench:compare`.
+7. Same standing caveat as Gate A: nothing in the demo dataset is chemically verified; this packet is about the graph
+   engine's correctness and performance, not chemistry content.
+
+**Exit rule for Gate B (reviewer, step 2.13; final; general rule in `docs/TEST_STRATEGY.md` §6).** (1) Correctness
+green: the ADR-031/032 property tests, the read audit, `npm run check`. (2) Ordinary edits (rename, notes) on the
+like-water hub and the class hub under **50 ms** median p99. (3) Anything over its 16 ms target, and the structural
+edits (class parent move, review-status change), are recorded as **documented Phase 9 exceptions** with their numbers
+(§8), not re-litigated at the gate. No further rounds for Phase 2. **Assessment against it (self-review):** (1) met —
+`npm run check` green, P-11 and the fixture walks pass at 200 runs and on both commit paths, the read audit passes and
+was fault-injected; (2) met — like-water notes 2.93 ms, class-hub rename 16.5 ms, class-hub notes 15.5 ms; (3) the
+items over 16 ms are listed in §8. The reviewer records the verdict.
 
 ## 1. Gate B criteria
 
-Source: `docs/TEST_STRATEGY.md §6` (Gate B row) and `docs/IMPLEMENTATION_PLAN.md §3` (Phase 2 definition of
-done).
+Source: `docs/TEST_STRATEGY.md §6` (Gate B row and the general performance rule) and `docs/IMPLEMENTATION_PLAN.md §3`.
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| 1 | All projections registered | **pass** | `src/core/graph/registry.test.ts` — every `ViewKey` except `search` (Phase 4) has a registered `ProjectionDefinition`. Unchanged. |
+| 1 | All projections registered | **pass** | `src/core/graph/registry.test.ts` — every `ViewKey` except `search` (Phase 4). Unchanged. |
 | 2 | Route search | **pass** | `src/core/graph/route/` (step 2.7), 32 tests. |
 | 3 | P-09 | **pass** | 200-run fast-check property, unchanged. |
 | 4 | P-10 | **pass** | Unchanged. |
-| 5 | ADV rows marked B pass | **pass (titled)**; **ADV-013 itself: pass on median p99** | §3.1. All 25 rows are named in a test title; ADV-013's budget now holds on every entry it names (§3.1). |
-| 6 | Benchmarks meet budgets at the design tier, verdicts on **median p99 of 3 runs** | **fail — one entry** | §5: 34 of 35 entries pass or have no budget row; the failure is a whole commit on the like-water hub that edits a field referrer rules read (67.5 ms vs 50 ms, §0 item 2, §8 item 1). Every entry the step 2.8/2.9/2.10 packets failed (navigator `dense`, `reaction_explorer`, `precursor_explorer`, route search, commit dispatch/undo on `hub_explosion`, both hub `validateTouched`) now passes. |
+| 5 | ADV rows marked B pass | **pass (titled)**; **ADV-013 pass on median p99 for the projections** | §3.1. |
+| 6 | Benchmarks meet budgets at the design tier, judged by the general performance rule | **met under the exit rule; two entries over their 16 ms target, listed in §8** | §0 (exit rule), §5 (42 entries), §8. Correctness green; ordinary edits on both hubs under 50 ms; structural edits and over-16 items are Phase 9 exceptions. |
 
 Not part of the gate but relevant: chemistry content is still unverified.
 
 ## 2. Phase 2 steps, from `docs/PROGRESS.md`
 
-| Step | Delivered | Tests added |
+| Step | Delivered | Tests |
 |---|---|---|
-| 2.1-2.7 | See the step 2.8 packet (unchanged): indexes, hashing/traversal, projection registry + navigator, reaction explorer, precursor + bundling, reagent/named-reaction/mechanism/syllabus + scope, route search. | — |
-| 2.8 | Full generator sweep; `tests/perf/*.bench.ts` + `baseline.json`; Phase 1 perf items measured; first packet | 66 files / 1,110 tests |
-| 2.9 | Untagged `phase-2`; gate-tagging procedure; benchmarks record mean/p75/p99/count, verdicts on p99 (`bench:baseline`/`bench:compare`); "like water" hub scenario; incremental navigator roll-up index (ADR-030) | 67 / 1,130 |
-| 2.10 | Incremental rollback on rejected commits; field-aware scope investigated (no safe narrowing without a contract change; 50 ms row added); route-search clock test; packet update | 67 / 1,135 |
-| 2.11 | Deterministic navigator anchors + stress tier; stable benchmark method; navigator build fix (deferred edge-ID hashing); re-measure | 67 / 1,135 |
-| 2.12 | **Field-aware `validateTouched` scope (`ValidationRule.referencedReads`, ADR-031)**: 69 of 74 rules declare; `scoping.test.ts` (23), `reads-audit.test.ts` (4), P-11 `validation-scope.test.ts` (3); hub benches measure the previous-state path; re-measure; this packet | 70 / 1,165 |
+| 2.1-2.7 | See the step 2.8 packet: indexes, hashing/traversal, projection registry + navigator, reaction explorer, precursor + bundling, reagent/named-reaction/mechanism/syllabus + scope, route search. | — |
+| 2.8 | Full generator sweep; `tests/perf/*.bench.ts` + `baseline.json`; Phase 1 perf items measured; first packet | 66 / 1,110 |
+| 2.9 | Untagged `phase-2`; gate-tagging procedure; percentiles + `bench:compare`; "like water" hub scenario; incremental navigator roll-up index (ADR-030) | 67 / 1,130 |
+| 2.10 | Incremental rollback on rejected commits; field-aware scope investigated (50 ms row added); route-search clock test | 67 / 1,135 |
+| 2.11 | Fixed navigator anchors + stress tier; stable benchmark method; navigator build fix | 67 / 1,135 |
+| 2.12 | Field-aware `validateTouched` scope (`ValidationRule.referencedReads`, ADR-031); read audit; P-11 hub property test | 70 / 1,165 |
+| 2.13 | **Per-rule re-validation of referrers and peers (ADR-032)**: `FindingStore.replaceForRules`, `Validator.validateTouchedByRule`, `ValidationRule.peerReads`; SPC-006 declared; class-hub benchmarks; `npm run bench` fixed on Windows; this packet | 70 / 1,188 |
 
 ## 3. ADV/INV/P matrix — Gate B rows
 
@@ -108,9 +115,9 @@ All rows and their test files are unchanged from the step 2.8 packet **except**:
 
 | ID | Case | Test file — test name (representative) | Status |
 |---|---|---|---|
-| ADV-005 | self-loop A -> A | `reactions-more.test.ts` (validation half) and `reaction-explorer.test.ts`'s ADV-051(a) (graph half, `[ADV-005 graph half]`). `docs/TEST_STRATEGY.md §5` lists it as Phase "2, 5" / Gate "B, E"; the loop *glyph* is a render concept (Phase 5/Gate E), not claimed here. | titled, correctly scoped |
-| ADV-012 | hub with 1,000 reactions | `precursor.test.ts` (cap + overflow, correctness) and `gate-b-performance.test.ts` (performance part). Performance of the hub's *commit*: ADV-012 literal hub `validateTouched` on a rename (previous state given) **0.96 ms** median p99 vs 16 ms — **pass** (was 32.15 ms against the 50 ms row); read-field edit 33.97 ms, no-previous fallback 31.22 ms (both pass the 50 ms backstop row). Projection part: navigator 2.73 ms, precursor 0.005 ms — pass. | titled; performance **pass** |
-| ADV-013 | dense 5k-reaction graph, projection < 16 ms p95 | `gate-b-performance.test.ts` asserts `reaction_explorer`/`precursor_explorer` only (single-measurement assertions against a tight budget would be flaky). Judged on `baseline.json` median p99 (design tier, `dense`): navigator **6.73 ms**, reaction_explorer **7.80 ms**, precursor_explorer **7.41 ms**, route search **9.30 ms**; `hub_explosion`: navigator 3.73, reaction_explorer 9.32, precursor_explorer 1.80 ms — **all under 16 ms. Status: pass** (was: fail on navigator `dense`, 35.95 ms, in the 2.10 packet). Noise caveat: navigator `dense` spread 52% (worst run 9.84 ms), reaction/precursor explorer `dense` 22% / 30%. | titled; ADV-013 **pass** on median p99 |
+| ADV-005 | self-loop A -> A | `reactions-more.test.ts` (validation half) and `reaction-explorer.test.ts`'s ADV-051(a) (graph half). `docs/TEST_STRATEGY.md §5` lists it as Phase "2, 5" / Gate "B, E"; the loop *glyph* is a render concept (Phase 5/Gate E). | titled, correctly scoped |
+| ADV-012 | hub with 1,000 reactions | `precursor.test.ts` (cap + overflow) and `gate-b-performance.test.ts` (performance part). Commit performance of the hub: `validateTouchedByRule` on a rename **1.24 ms** median p99 vs 16 ms (**pass**); review status changed **15.6 ms** (per rule; 39.1 ms through the whole-subject API); no previous state 47.1 ms (fallback, not the commit path). Projection part: navigator 4.66 ms, precursor 0.009 ms — pass. | titled; performance **pass** |
+| ADV-013 | dense 5k-reaction graph, projection < 16 ms p95 | `gate-b-performance.test.ts` asserts `reaction_explorer`/`precursor_explorer` only (single-measurement assertions against a tight budget would be flaky). On `baseline.json` median p99 (design tier, `dense`): navigator **10.87 ms**, reaction_explorer **11.11 ms**, precursor_explorer **8.09 ms**; `hub_explosion`: navigator 7.11, reaction_explorer 14.46, precursor_explorer 2.62 ms — **all under 16 ms**. Route search (no §2 row; bounded like a projection) `dense` reads **17.24 ms** this run (runs 17.97 / 11.10 / 17.24; earlier baselines 9.3-12.1 ms, code untouched): over its 16 ms target, listed in §8 as noise. **Status: pass for the projections.** Noise caveat: reaction_explorer `hub_explosion` spread 222% (one 45.5 ms run; the other two 13-14 ms). | titled; ADV-013 **pass** (projections) |
 
 All 25 rows: **titled** (unchanged claim from step 2.8).
 
@@ -120,159 +127,172 @@ All 25 rows: **titled** (unchanged claim from step 2.8).
 |---|---|
 | P-09 | titled, unchanged. |
 | P-10 | titled, unchanged. |
-| P-11 (new, 2.12) | `tests/property/validation-scope.test.ts`: after random edit sequences aimed at a high-referrer hub (ADV-012 shape, like-water shape; hub name/alias/notes/review/classes/kind/deletion/restoration, referrer edits, new relationships, neighbours), incrementally maintained findings equal `validateAll` after every edit; passes at the default and at 200 runs. Fault-injected by hand to confirm it can fail (§ PROGRESS step 2.12). |
+| P-11 (2.12, extended 2.13) | `tests/property/validation-scope.test.ts`: after random edit sequences aimed at a high-referrer hub species and at the class hub every species lists (names incl. a twin's, aliases, notes with `[[links]]`, review lifecycle and status, classes, kind, parents incl. cycles, deletion and restoration, referrer edits, new relationships, neighbours), the findings kept by `validateTouchedByRule` + `commitTouched` equal `validateAll` after every edit; ADV-012 and like-water shapes; passes at the default and at 200 runs. Fault-injected by hand (§4). |
 | INV-22 | titled (graph part), including the injected-clock route-search test (2.10). |
 | INV-26 | titled, unchanged. |
 
 ## 4. `src/core/graph`, `src/core/indexes` and `src/core/validation` coverage detail
 
-Full-suite `src/core` coverage: 97.32% statements, 91.54% branches, 98.39% functions, 98.88% lines. The
-`graph/route` defensive-branch exceptions stand as accepted at the 2.8 review (§0 item 5). `src/core/indexes`
-(navigator roll-up, rollback) is covered by the differential test, apply-≡-build scenarios and P-07 rather
-than an isolated percentage. **New in `src/core/validation` (2.12)**: `scoping.ts` is covered by
-`scoping.test.ts`; a declared `referencedReads` is verified rather than trusted by `reads-audit.test.ts` (a Proxy
-trace of every field each declared rule reads through its subject's references, over the maximal fixture, the
-demo and every generator shape, plus a "referenced records vanish" differential for rules declared to read
-nothing). The audit and P-11 were each fault-injected (a rule dropping a declared field, declaring the wrong
-field, declaring nothing): each fault fails at least one of them. One honest limit: P-11 alone does not catch a
-wrong RXN-013 declaration (it needs an instance-of chain that random edits rarely build); the audit and the
-targeted RXN-013 test do.
+Full-suite `src/core` coverage: 97.38% statements, 91.57% branches, 98.42% functions, 98.91% lines. The `graph/route`
+defensive-branch exceptions stand as accepted at the Gate B review (§0 item 5). `src/core/indexes` (navigator
+roll-up, rollback) is covered by the differential test, apply-≡-build scenarios and P-07.
+
+**`src/core/validation` (2.12-2.13).** A rule's `referencedReads` and `peerReads` declarations are promises about what
+`check` reads, so they are verified rather than trusted. `reads-audit.test.ts` runs every declaring rule over the
+maximal fixture (also with every exam version official), the demo and every generator shape: it traces the fields
+read of records the rule refers to (a Proxy) and of records it does not (direct fetches, name-index lookups,
+hierarchy walks, which it counts as reads of that kind's parent field), checks them against the declaration, requires
+`peers` for reads outside the rule's references, refuses index lookups through other records' reference fields for
+`peerReads` rules, and checks that a rule declared to read nothing gives the same findings with the records it refers
+to hidden. Together with P-11, the fixture walks (`incremental.test.ts`, on both the whole-record and the per-rule
+commit paths) and `scoping.test.ts`, fault injection by hand confirmed each can fail: RVW-002 not declaring `review`,
+RXN-013 not declaring `instanceOfId`, REL-006 and SPC-006 declaring the wrong field, REF-001 declaring nothing,
+SPC-001/CLS-002/HIER-001 with wrong `peerReads`, the per-rule store not removing findings, L2 rules allowed to be
+partial, and the L1/L2-error gate removed. One honest limit: P-11 alone does not catch a wrong RXN-013 declaration
+(it needs an instance-of chain that random edits rarely build); the audit and the targeted RXN-013 test do.
 
 ## 5. Benchmarks vs. budgets (`tests/perf/*.bench.ts`, `tests/perf/baseline.json`)
 
-Design tier = `docs/PERFORMANCE_ARCHITECTURE.md §1` (2,000 entities, 5,000 reactions, 15,000
-relationships+mappings). **Verdict = median over 3 fresh-process runs of each run's p99** (a conservative
-stand-in for §2's p95; `vitest bench` does not report p95), method of PERFORMANCE_ARCHITECTURE.md §9. Spread =
-(max - min) / median of the 3 p99s; "noisy" = over 25%. Developer workstation, not a dedicated runner class.
-Budget "no row" means PERFORMANCE_ARCHITECTURE.md §2 has no row for the entry.
+Design tier = `docs/PERFORMANCE_ARCHITECTURE.md §1` (2,000 entities, 5,000 reactions, 15,000 relationships+mappings).
+**Verdict = median over 3 fresh-process runs of each run's p99** (a conservative stand-in for §2's p95; `vitest bench`
+does not report p95), method of PERFORMANCE_ARCHITECTURE.md §9. Spread = (max - min) / median of the 3 p99s; "noisy" =
+over 25%. Developer workstation, not a dedicated runner class. Budget "no row" means §2 has no row for the entry;
+"over target" means over its listed budget (the exit rule decides what that means, §0 and §8).
 
 | Entry | Tier / shape | Budget | Median p99 (ms) | 3 runs | Spread | Verdict |
 |---|---|---|---|---|---|---|
-| commit: dispatch (update one species) | design / dense | 16 ms | 2.26 | 2.43 / 1.84 / 2.26 | 26% (noisy) | pass |
-| commit: undo + redo (one pair) | design / dense | 16 ms | 5.36 | 5.55 / 5.36 / 5.05 | 9% | pass |
-| commit: rejected (incremental rollback) | design / dense | 16 ms | 8.73 | 10.3 / 8.73 / 6.36 | 45% (noisy) | pass |
-| scopeOf: once, on the design-tier hub | design / dense | no row | 0.0241 | 0.0241 / 0.0234 / 0.0312 | 32% (noisy) | n/a (no budget row) |
-| scopeOf: twice (today's store.commit() pattern), design-tier hub | design / dense | no row | 0.0469 | 0.0574 / 0.0436 / 0.0469 | 29% (noisy) | n/a (no budget row) |
-| validateTouched: on the design-tier hub | design / dense | 16 ms | 1.35 | 1.35 / 1.28 / 1.36 | 6% | pass |
-| commit: dispatch (update one species) | design / hub_explosion | 16 ms | 2.52 | 2.79 / 2.39 / 2.52 | 16% | pass |
-| commit: undo + redo (one pair) | design / hub_explosion | 16 ms | 4.14 | 4.75 / 3.79 / 4.14 | 23% | pass |
-| commit: rejected (incremental rollback) | design / hub_explosion | 16 ms | 8.00 | 8.00 / 8.56 / 6.65 | 24% | pass |
-| scopeOf: once, on the design-tier hub | design / hub_explosion | no row | 0.1791 | 0.1791 / 0.1705 / 0.3099 | 78% (noisy) | n/a (no budget row) |
-| scopeOf: twice (today's store.commit() pattern), design-tier hub | design / hub_explosion | no row | 0.4541 | 0.4541 / 0.3673 / 0.5746 | 46% (noisy) | n/a (no budget row) |
-| validateTouched: on the design-tier hub | design / hub_explosion | 16 ms | 6.70 | 6.70 / 5.55 / 6.95 | 21% | pass |
-| scopeOf: once, on the ADV-012 literal hub (1,000 reactions) | adv-012 / hub_explosion | no row | 0.9584 | 1.02 / 0.6487 / 0.9584 | 38% (noisy) | n/a (no budget row) |
-| scopeOf: twice (today's store.commit() pattern), ADV-012 literal hub | adv-012 / hub_explosion | no row | 1.71 | 1.71 / 1.47 / 1.81 | 20% | n/a (no budget row) |
-| validateTouched: ADV-012 literal hub, no previous state given (every referrer re-validated: the safe fallback) | adv-012 / hub_explosion | 50 ms | 31.2 | 32.6 / 31.2 / 29.3 | 11% | pass |
-| validateTouched: ADV-012 literal hub, renamed (previous state given) | adv-012 / hub_explosion | 16 ms | 0.9600 | 0.9600 / 0.7940 / 1.04 | 26% (noisy) | pass |
-| validateTouched: ADV-012 literal hub, review lifecycle changed (a field referrer rules read) | adv-012 / hub_explosion | 50 ms | 34.0 | 34.0 / 33.1 / 38.9 | 17% | pass |
-| commit: dispatch (update the design-tier "like water" hub) | design-hub-1000 / hub_explosion | 16 ms | 3.27 | 4.10 / 3.20 / 3.27 | 28% (noisy) | pass |
-| validateTouched: "like water" hub, no previous state given (every referrer re-validated: the safe fallback) | design-hub-1000 / hub_explosion | 50 ms | 31.0 | 31.0 / 28.3 / 36.0 | 25% | pass |
-| validateTouched: "like water" hub, renamed (previous state given) | design-hub-1000 / hub_explosion | 16 ms | 1.89 | 1.89 / 2.02 / 1.25 | 41% (noisy) | pass |
-| validateTouched: "like water" hub, review lifecycle changed (a field referrer rules read) | design-hub-1000 / hub_explosion | 50 ms | 37.1 | 37.1 / 34.8 / 39.2 | 12% | pass |
-| commit: dispatch (like-water hub, review lifecycle changed) | design-hub-1000 / hub_explosion | 50 ms | 67.5 | 68.2 / 61.2 / 67.5 | 10% | **FAIL** |
-| projection: navigator, focused on the hub | design / dense | 16 ms | 6.73 | 9.84 / 6.73 / 6.34 | 52% (noisy) | pass |
-| projection: reaction_explorer, focused on the hub | design / dense | 16 ms | 7.80 | 8.03 / 7.80 / 6.29 | 22% | pass |
-| projection: precursor_explorer, focused on the hub | design / dense | 16 ms | 7.41 | 7.59 / 7.41 / 5.38 | 30% (noisy) | pass |
-| projection: navigator, focused on the hub | design / hub_explosion | 16 ms | 3.73 | 3.52 / 3.76 / 3.73 | 7% | pass |
-| projection: reaction_explorer, focused on the hub | design / hub_explosion | 16 ms | 9.32 | 8.83 / 10.2 / 9.32 | 15% | pass |
-| projection: precursor_explorer, focused on the hub | design / hub_explosion | 16 ms | 1.80 | 1.97 / 1.80 / 1.72 | 14% | pass |
-| projection: navigator, focused on the hub | adv-012 / hub_explosion | 16 ms | 2.73 | 2.79 / 2.73 / 2.39 | 15% | pass |
-| projection: precursor_explorer, focused on the hub | adv-012 / hub_explosion | 16 ms | 0.0051 | 0.0055 / 0.0051 / 0.0042 | 25% (noisy) | pass |
-| projection: navigator, focused on the hub, stress tier (400 anchors) | stress / dense | 32 ms (informal) | 17.5 | 16.8 / 17.5 / 17.7 | 5% | pass |
-| route search: searchRoutes to the hub, no startFrom | design / dense | 16 ms | 9.30 | 9.30 / 10.3 / 8.57 | 19% | pass |
-| route search: searchRoutes to the hub, no startFrom | design / chain | 16 ms | 0.0008 | 0.0008 / 0.0007 / 0.0010 | 38% (noisy) | pass |
-| validateAll: whole state | design / dense | 3000 ms | 246 | 265 / 246 / 244 | 8% | pass |
-| validateAll: whole state | design / hub_explosion | 3000 ms | 228 | 240 / 228 / 221 | 8% | pass |
+| commit: dispatch (rename the class hub, ~1,400 species referrers) | design-class-hub / hub_explosion | 16 ms | 16.5 | 31.1 / 16.5 / 16.4 | 89% (noisy) | **over target** |
+| commit: dispatch (edit the class hub notes, ~1,400 species referrers) | design-class-hub / hub_explosion | 16 ms | 15.5 | 36.9 / 15.5 / 15.0 | 141% (noisy) | pass |
+| commit: dispatch (move the class hub to another parent, ~1,400 species referrers) | design-class-hub / hub_explosion | 50 ms | 46.0 | 124 / 46.0 / 44.3 | 173% (noisy) | pass |
+| commit: dispatch (update one species) | design / dense | 16 ms | 3.11 | 3.11 / 6.28 / 2.82 | 111% (noisy) | pass |
+| commit: undo + redo (one pair) | design / dense | 16 ms | 6.18 | 6.18 / 10.3 / 4.45 | 95% (noisy) | pass |
+| commit: rejected (incremental rollback) | design / dense | 16 ms | 9.62 | 9.62 / 21.3 / 9.25 | 125% (noisy) | pass |
+| scopeOf: once, on the design-tier hub | design / dense | no row | 0.0589 | 0.0550 / 0.1067 / 0.0589 | 88% (noisy) | n/a (no budget row) |
+| scopeOf: twice (today's store.commit() pattern), design-tier hub | design / dense | no row | 0.0962 | 0.0889 / 0.1308 / 0.0962 | 44% (noisy) | n/a (no budget row) |
+| validateTouched: on the design-tier hub | design / dense | 16 ms | 2.09 | 2.09 / 3.91 / 1.94 | 94% (noisy) | pass |
+| commit: dispatch (update one species) | design / hub_explosion | 16 ms | 3.26 | 3.26 / 5.58 / 2.91 | 82% (noisy) | pass |
+| commit: undo + redo (one pair) | design / hub_explosion | 16 ms | 4.88 | 4.88 / 10.9 / 4.47 | 131% (noisy) | pass |
+| commit: rejected (incremental rollback) | design / hub_explosion | 16 ms | 8.72 | 8.72 / 15.8 / 7.64 | 94% (noisy) | pass |
+| scopeOf: once, on the design-tier hub | design / hub_explosion | no row | 0.3657 | 0.3657 / 0.8022 / 0.3136 | 134% (noisy) | n/a (no budget row) |
+| scopeOf: twice (today's store.commit() pattern), design-tier hub | design / hub_explosion | no row | 0.7145 | 0.7145 / 1.19 / 0.3803 | 114% (noisy) | n/a (no budget row) |
+| validateTouched: on the design-tier hub | design / hub_explosion | 16 ms | 10.7 | 10.7 / 27.9 / 7.85 | 187% (noisy) | pass |
+| scopeOf: once, on the ADV-012 literal hub (1,000 reactions) | adv-012 / hub_explosion | no row | 1.43 | 1.32 / 2.67 / 1.43 | 94% (noisy) | n/a (no budget row) |
+| scopeOf: twice (today's store.commit() pattern), ADV-012 literal hub | adv-012 / hub_explosion | no row | 2.87 | 2.87 / 4.95 / 2.44 | 87% (noisy) | n/a (no budget row) |
+| validateTouched: ADV-012 literal hub, no previous state given (every referrer re-validated: the safe fallback) | adv-012 / hub_explosion | 50 ms | 47.1 | 47.1 / 119 / 36.9 | 173% (noisy) | pass |
+| validateTouched: ADV-012 literal hub, renamed (previous state given) | adv-012 / hub_explosion | 16 ms | 1.09 | 1.04 / 2.58 / 1.09 | 141% (noisy) | pass |
+| validateTouched: ADV-012 literal hub, review lifecycle changed (a field referrer rules read) | adv-012 / hub_explosion | 50 ms | 39.1 | 36.9 / 128 / 39.1 | 234% (noisy) | pass |
+| validateTouchedByRule: ADV-012 literal hub, renamed (the store's call, previous state given) | adv-012 / hub_explosion | 16 ms | 1.24 | 1.11 / 1.54 / 1.24 | 34% (noisy) | pass |
+| validateTouchedByRule: ADV-012 literal hub, review lifecycle changed (per rule) | adv-012 / hub_explosion | 50 ms | 15.6 | 18.3 / 15.5 / 15.6 | 18% | pass |
+| commit: dispatch (update the design-tier "like water" hub) | design-hub-1000 / hub_explosion | 16 ms | 2.93 | 2.77 / 2.93 / 3.01 | 8% | pass |
+| validateTouched: "like water" hub, no previous state given (every referrer re-validated: the safe fallback) | design-hub-1000 / hub_explosion | 50 ms | 38.7 | 38.7 / 36.7 / 41.7 | 13% | pass |
+| validateTouched: "like water" hub, renamed (previous state given) | design-hub-1000 / hub_explosion | 16 ms | 2.29 | 2.29 / 2.22 / 2.40 | 8% | pass |
+| validateTouched: "like water" hub, review lifecycle changed (a field referrer rules read) | design-hub-1000 / hub_explosion | 50 ms | 44.7 | 44.2 / 54.0 / 44.7 | 22% | pass |
+| validateTouchedByRule: "like water" hub, renamed (the store's call, previous state given) | design-hub-1000 / hub_explosion | 16 ms | 2.04 | 2.04 / 2.07 / 1.84 | 11% | pass |
+| validateTouchedByRule: "like water" hub, review lifecycle changed (per rule) | design-hub-1000 / hub_explosion | 50 ms | 18.8 | 21.3 / 17.4 / 18.8 | 21% | pass |
+| commit: dispatch (like-water hub, review lifecycle changed) | design-hub-1000 / hub_explosion | 50 ms | 21.2 | 21.2 / 19.8 / 24.4 | 22% | pass |
+| projection: navigator, focused on the hub | design / dense | 16 ms | 10.9 | 10.9 / 8.71 / 12.0 | 30% (noisy) | pass |
+| projection: reaction_explorer, focused on the hub | design / dense | 16 ms | 11.1 | 11.1 / 12.8 / 9.97 | 25% (noisy) | pass |
+| projection: precursor_explorer, focused on the hub | design / dense | 16 ms | 8.09 | 10.6 / 8.09 / 7.49 | 39% (noisy) | pass |
+| projection: navigator, focused on the hub | design / hub_explosion | 16 ms | 7.11 | 11.9 / 4.79 / 7.11 | 100% (noisy) | pass |
+| projection: reaction_explorer, focused on the hub | design / hub_explosion | 16 ms | 14.5 | 45.5 / 14.5 / 13.4 | 222% (noisy) | pass |
+| projection: precursor_explorer, focused on the hub | design / hub_explosion | 16 ms | 2.62 | 7.43 / 2.62 / 2.13 | 202% (noisy) | pass |
+| projection: navigator, focused on the hub | adv-012 / hub_explosion | 16 ms | 4.66 | 8.10 / 4.45 / 4.66 | 78% (noisy) | pass |
+| projection: precursor_explorer, focused on the hub | adv-012 / hub_explosion | 16 ms | 0.0090 | 0.0373 / 0.0090 / 0.0068 | 339% (noisy) | pass |
+| projection: navigator, focused on the hub, stress tier (400 anchors) | stress / dense | 32 ms (informal) | 19.9 | 57.5 / 19.9 / 19.6 | 190% (noisy) | pass |
+| route search: searchRoutes to the hub, no startFrom | design / dense | 16 ms | 17.2 | 18.0 / 11.1 / 17.2 | 40% (noisy) | **over target** |
+| route search: searchRoutes to the hub, no startFrom | design / chain | 16 ms | 0.0014 | 0.0014 / 0.0014 / 0.0012 | 14% | pass |
+| validateAll: whole state | design / dense | 3000 ms | 297 | 327 / 292 / 297 | 12% | pass |
+| validateAll: whole state | design / hub_explosion | 3000 ms | 285 | 283 / 285 / 297 | 5% | pass |
 
-**How to read the hub rows** (ADR-031). "no previous state given" is the safe fallback: nothing can be diffed,
-so every referrer is re-validated; the store never takes this path (it always passes the previous state) and no
-other caller exists yet. "renamed (previous state given)" is what the store does for an edit no referrer rule
-reads. "review lifecycle changed" is an edit to a field RVW-002 reads of every record its subject refers to, so
-all ~1,000 referrers are re-validated whole. The hub entries' budget column follows what each is *for*: the
-rename and notes edits are judged against the 16 ms Commit row (the question the reviewer put in 2.12), the
-read-field and fallback ones against the 50 ms backstop row.
+**How to read the hub rows** (ADR-031, ADR-032). "no previous state given" is the safe fallback: nothing can be
+diffed, so every referrer is re-validated; the store never takes this path and no other caller exists yet (Phase 4 note
+in `docs/IMPLEMENTATION_PLAN.md`: the compute worker must always pass the previous state). "renamed (previous state
+given)" is what the store does for an edit no referrer rule reads. "review lifecycle changed" is an edit to a field
+RVW-002 reads of every record its subject refers to. `validateTouched` is the whole-subject API; `validateTouchedByRule`
+is what the command store calls since 2.13 (per rule for referrers and peers). The "dispatch" entries are whole
+commits through the store. The class-hub entries edit the class every one of the design tier's 1,400 `hub_explosion`
+species lists.
 
-**Before / after, hub scenarios** (median p99, ms; before = the 2.11 baseline, same method):
+**Before / after, hub and class-hub scenarios** (median p99, ms; before = the step 2.13 part-1 baseline, whole commits;
+the 2.11/2.12 figure in brackets):
 
-| Scenario | Before (2.11) | After (2.12) | 16 ms Commit row |
-|---|---|---|---|
-| `validateTouched`, ADV-012 hub (1,000 referrers), rename, previous given | 32.15 (no-previous call, the only one measured) | **0.96** | pass |
-| `validateTouched`, like-water hub (1,000 of 5,000 reactions), rename, previous given | 32.82 (same) | **1.89** | pass |
-| Commit dispatch, like-water hub, notes edit | 70.86 (runs 94.10 / 70.86 / 65.54) | **3.27** | pass (was the only failing entry in 2.11) |
-| `validateTouched`, either hub, no previous state | 32.15 / 32.82 | 31.22 / 31.03 | n/a (fallback; passes the 50 ms row) |
-| `validateTouched`, either hub, `review` changed | not measured | 33.97 / 37.10 | not applicable (50 ms row: pass) |
-| Commit dispatch, like-water hub, `review` changed | not measured | 67.47 | not applicable (50 ms row: **fail**) |
+| Scenario | Row | Before | After | Verdict |
+|---|---|---|---|---|
+| Class hub (1,400 species), rename | 16 | 97.0 | 16.5 | over 16 by 0.5 (runs 31.1 / 16.5 / 16.4): Phase 9 exception |
+| Class hub, notes edit | 16 | 97.2 | 15.5 | pass (runs 36.9 / 15.5 / 15.0) |
+| Class hub, move under another parent | 50 | 125.8 | 46.0 | structural; Phase 9 exception |
+| Like-water hub, notes edit, commit | 16 | 5.76 (2.12: 3.27; 2.11: 70.86) | 2.93 | pass |
+| Like-water hub, rename, `validateTouchedByRule` | 16 | 2.01 (`validateTouched`) | 2.04 | pass |
+| ADV-012 hub, rename, `validateTouchedByRule` | 16 | 1.31 (`validateTouched`) | 1.24 | pass |
+| Like-water hub, `review` changed, commit | 50 | 76.9 (2.12: 67.5) | 21.2 | structural; Phase 9 exception |
+| Like-water hub, `review` changed, `validateTouchedByRule` | 50 | 43.5 (`validateTouched`) | 18.8 | structural |
+| ADV-012 hub, `review` changed, `validateTouchedByRule` | 50 | 43.0 (`validateTouched`) | 15.6 | structural |
 
-**`bench:compare`** (one run against the fresh baseline) flagged 4 entries over +20% p99: undo+redo `dense`
-(5.36 -> 6.50 ms, +21%), rejected commit `dense` (8.73 -> 10.81 ms, +24%), `scopeOf` twice `dense` (0.047 ->
-0.067 ms, +42%), route search `dense` (9.30 -> 11.21 ms, +21%). All four are far under budget; none is a hub
-validation entry and none of their code paths changed beyond a per-touched-record set diff (microseconds) in
-`scopeOf`. Read as workstation noise on entries whose baseline spread is 9-45%, not re-run a second time; if
-the reviewer wants certainty, run `bench:compare` again on a quiet machine.
-
-**Summary of what changed since the 2.10 packet**: navigator `dense` 35.95 -> 6.73 ms (2.11); the hub commit
-70.86 -> 3.27 ms and hub `validateTouched` 32-33 -> 1-2 ms for edits that touch no referrer-read field (2.12);
-all other verdicts unchanged in kind, with tighter numbers from the stable method.
+**`bench:compare`** (once, against the final baseline): the four entries flagged in step 2.12 (undo+redo `dense`,
+rejected commit `dense`, `scopeOf` twice `dense`, route search `dense`) are **no longer flagged**. Four different
+entries were flagged instead, all single-run spikes on the hub commits (class-hub notes +36%, like-water notes commit
+2.9 -> 13.5 ms, like-water rename `validateTouchedByRule` +30%, like-water review commit 21.2 -> 35.6 ms). No code
+changed between the baseline and the compare run, so these read as this session's noise, not a regression; a
+quiet-machine re-run would settle it. Against the *2.12* baseline the final medians of the four earlier entries are
+undo+redo 6.18 vs 5.36 ms (+15%), rejected commit 9.62 vs 8.73 ms (+10%), `scopeOf` twice 0.096 vs 0.047 ms (a
+microsecond entry), route search 17.2 vs 9.3 ms (§8 item 4).
 
 ## 6. Full generator tier × shape sweep
 
 Unchanged from step 2.8 (`tests/property/generator-tiers.test.ts`, 24 combinations, all zero L1-L3 ERROR).
 
-## 7. Deviations and decisions, steps 2.1-2.12
+## 7. Deviations and decisions, steps 2.1-2.13
 
-Steps 2.1-2.8: see the step 2.8 packet (also in `docs/PROGRESS.md`). Steps 2.9-2.12, summarised (detail in
+Steps 2.1-2.8: see the step 2.8 packet (also in `docs/PROGRESS.md`). Steps 2.9-2.13, summarised (detail in
 `docs/PROGRESS.md` step entries and Amendments):
 
 | Step | Decision |
 |---|---|
 | 2.9 | `ReadonlyIndexes.navigatorRollup()` (additive, ADR-030); hub resolution moved into `core/indexes`; truncation order made an explicit `(reactionId, outcomeId, productId)` sort; deleted-but-dangling species handled — bugs found by the differential/apply-≡-build tests before commit. |
-| 2.10 | `coreIndexEngine.apply` accepts one step backward (no interface change) for incremental rollback; field-aware scoping found unsafe without a contract change, so a 50 ms row was added; route-search clock test. |
-| 2.11 | Benchmarks: fixed anchor counts (60 design / 400 stress, stress judged against an informal 32 ms), PID-locked isolation, 100-sample floor, 3 fresh-process runs, median p99; navigator build defers edge-ID hashing (no contract change). |
-| 2.12 | `ValidationRule.referencedReads` (additive contract change, ADR-031): a referrer is re-validated only if a rule of its kind reads a field that changed (diff by reference against `previous`) or the record was created/deleted; undeclared rules re-run on any change; referents and `peers`/`watches` are not narrowed; scope stays whole records (the finding store replaces per subject). 69 of 74 rules declare (60 declare "reads nothing"); SPC-006, HIER-001, HIER-003, RTE-002, RTE-004 stay undeclared because they read derived hierarchy/composition/route walks. The 50 ms row is kept as a Phase 9 backstop. Doubled `scopeOf` left as is. |
+| 2.10 | `coreIndexEngine.apply` accepts one step backward (no interface change) for incremental rollback; field-aware scoping found unsafe without a contract change, so a 50 ms row was added (Sonnet). |
+| 2.11 | Fixed anchor counts (60 design / 400 stress, stress judged against an informal 32 ms), PID-locked isolation, 100-sample floor, 3 fresh-process runs, median p99; navigator build defers edge-ID hashing (no contract change). |
+| 2.12 | `ValidationRule.referencedReads` (additive, ADR-031; reviewer-approved): a referrer is re-validated only if a rule of its kind reads a field that changed. |
+| 2.13 | ADR-032 (additive, reviewer-approved): `FindingStore.replaceForRules`, `Validator.validateTouchedByRule`/`commitTouched`, `ValidationRule.peerReads`. Referrers and peers re-run only affected rules, merged per rule; an affected L2 rule keeps a record whole (an L2 ERROR gates L3), and a per-rule subject with an L1/L2 ERROR in the store is skipped. Peers named by an L3 rule have only that rule re-run (a reading of the `peers` contract, Sonnet's, accepted by the reviewer). SPC-006 declared for `referencedReads` and `peerReads`. Declared `peerReads`: SPC-001/005/006, CLS-001/002, HIER-001. Not declared: REF-006/008, REL-003/005, CUR-004/006, PRS-001/002, HIER-003, RTE-002/004. |
 
-## 8. Remaining misses and open items
+## 8. Phase 9 exceptions, remaining misses and open items
 
-**Budget misses on median p99 (one):**
+**Documented Phase 9 exceptions (exit rule item 3), median p99:**
 
-1. **Commit dispatch on the like-water hub, editing a field a referrer rule reads (`review`), or deleting or
-   creating the hub: 67.47 ms vs the 50 ms backstop row (+17.5 ms, +35%; runs 68.2 / 61.2 / 67.5, spread 10%).**
-   Cause, measured in a commit-shaped loop: ~50 ms is `validateTouched` re-validating all 1,023 in-scope records
-   whole (~45-50 µs each: reference-path walking in REF analysis ~48% and L1 zod re-parse ~10% per the 2.11
-   profile; not RVW-002 itself, which is a few lines); `scopeOf` ~1.7 ms, `commitFindings` ~3 ms, index apply
-   0.1 ms. Whole records are re-run because `FindingStore.replaceForSubjects` replaces a subject's findings
-   per level, so a referrer cannot be partly re-validated without a finding-merge contract. Options: per-rule
-   re-runs for context-only referrers (a `Validator`/`FindingStore` contract change, Phase 9); a faster path
-   walker; or accept it as a rare authoring edit (a hub's lifecycle or deletion, not a rename). Reviewer's call.
+1. **Class-hub rename: 16.5 ms vs 16** (+0.5 ms; runs 31.1 / 16.5 / 16.4, noisy). Cause, timed with a one-off script: 10.5
+   of the ~11 ms in `validateTouchedByRule` is RTE-002/004's `peers` (`routesAffectedBy` walks referrers upward from a
+   touched class through its 1,400 species and their reactions); without them it is 0.4 ms. They declare no `peerReads`.
+   Fix: declare `peerReads` on RTE-002/004 (reactions' participants/outcomes, species `classIds`, classes'
+   `parentIds`) and extend the audit; not done here because the exit rule closes rounds for Phase 2. The class-hub notes
+   edit (15.5 ms) shares the cause and sits just under 16.
+2. **Class-hub parent move: 46.0 ms** (row 50: under it; over 16; structural). SPC-006 re-runs on the 1,400 species that list
+   it (~20 ms), the same RTE-002/004 peers walk (~10 ms), and merging ~1,400 findings into the store (8-10 ms) —
+   each of those species yields an SPC-006 finding in this generator shape.
+3. **Review-status change on the like-water hub: 21.2 ms per commit** (row 50: under it; over 16; structural; was 76.9).
+   One RVW-002 run per referrer over ~1,000 referrers plus the finding-store merge; 18.8 ms (like water) / 15.6 ms
+   (ADV-012) in `validateTouchedByRule` alone.
+4. **Route search `dense`: 17.2 ms vs 16** this run (runs 18.0 / 11.1 / 17.2, spread 40%; 9.3-12.1 ms in every earlier
+   baseline; no route-search code has changed). Read as noise; re-check on a quiet machine. It has no §2 row of its own.
+5. **`validateTouched`/`validateTouchedByRule` without a previous state: 38.7-47.1 ms** on a 1,000-referrer hub. It is the
+   safe fallback and the commit path never takes it; the compute worker must always pass the previous state (Phase 4
+   note, `docs/IMPLEMENTATION_PLAN.md`; `docs/PERFORMANCE_ARCHITECTURE.md` §3).
 
-**Entries that pass but that a reader should not over-read:**
+**Also open, not budget failures:**
 
-2. `validateTouched` on the two hubs without a previous state (31 ms) and with a read-field edit (34-37 ms): pass
-   the 50 ms backstop row, exceed 16 ms. The first is a fallback the store does not use; the second is item 1's
-   cause, before `commitFindings` and the store's own overhead.
-3. Noisy entries (spread > 25%, 14 of 35, listed in `baseline.json`): every one passes with its worst run well
-   under budget (largest: navigator `dense`, worst run 9.84 ms of 16). `bench:compare` flagged four more single-run
-   moves (§5), all entries far under budget.
-
-**Not measured:**
-
-4. Editing a **class** hub (a class listed by hundreds of species): `species` still has an undeclared rule
-   (SPC-006) and its `peers` name every species listing a touched class, so such an edit is expected to
-   re-validate them all as before. The benchmarks touch a *species* hub; a class-hub benchmark does not exist.
-
-**Open, carried forward:**
-
-5. Doubled `scopeOf` call — Phase 9 (§0 item 3).
-6. `npm run bench:compare` is manual, not in CI. `npm run bench` (`scripts/run-bench-cli.mjs`) fails on Windows
-   with `spawnSync npx.cmd EINVAL` (needs `shell: true`); `bench:baseline`/`bench:compare` are unaffected.
-   Individual benches were run with `npx vitest bench --run --no-file-parallelism <file>`.
-7. The command store still carries only the part-1 `coreIndexEngine`, not the full `indexEngine` with
+6. Noise: 31 of 42 entries exceed a 25% spread in this run (list in `baseline.json`). Every entry that passes has its
+   median under budget; a few have one outlier run over it (e.g. reaction_explorer `hub_explosion`, one 45.5 ms run of
+   three; stress navigator, one 57.5 ms run of three).
+7. `npm run bench:compare` is manual, not in CI (unchanged).
+8. The command store still carries only the part-1 `coreIndexEngine`, not the full `indexEngine` with
    `navigatorRollup()` (PROGRESS step 2.1's open item; tests work around it as P-07 always has).
-8. Everything from Gate A's own list (chemistry and exam coverage unverified).
-9. `docs/PROGRESS.md` still contains a stray, stale fragment at the end of the step 2.11 section (an interrupted
-   session's note that says the Amendments list was not yet updated; it now is). Cosmetic; not removed by this step.
+9. HIER-001, HIER-003, RTE-002 and RTE-004 declare no `referencedReads`; REF-006/008, REL-003/005, CUR-004/006,
+   PRS-001/002, HIER-003 and RTE-002/004 declare no `peerReads` (they keep the coarser behaviour).
+10. Everything from Gate A's own list (chemistry and exam coverage unverified).
+
+**Closed in 2.13:** the doubled `scopeOf` call (§0 item 3); `npm run bench` on Windows (§0 item 6); the stale fragment in
+`docs/PROGRESS.md`.
 
 ---
-Preparation notes: prepared alongside `docs/PROGRESS.md` step 2.12 and `docs/PROJECT_STATE.json`.
-`tests/perf/*.bench.ts`, `tests/perf/budgets.mjs` and `tests/perf/baseline.json` are committed; regenerate the
-baseline with `npm run bench:baseline` and compare against it with `npm run bench:compare`. The raw `vitest
-bench` output that produced §5 is not committed (reproducible with either command).
+Preparation notes: prepared alongside `docs/PROGRESS.md` step 2.13 and `docs/PROJECT_STATE.json`.
+`tests/perf/*.bench.ts`, `tests/perf/budgets.mjs` and `tests/perf/baseline.json` are committed; regenerate the baseline
+with `npm run bench:baseline` and compare against it with `npm run bench:compare`. The raw `vitest bench` output that
+produced §5 is not committed (reproducible with either command).

@@ -14,6 +14,7 @@ import {
   afterHubEdit,
   buildIndexes,
   designTierHubState,
+  knownFindings,
   FAST_BENCH_OPTIONS,
   mostReferencedSpecies,
   oneHubState,
@@ -144,6 +145,25 @@ describe('scopeOf / validateTouched — ADV-012 literal case: one hub, 1,000 rea
     },
     FAST_BENCH_OPTIONS,
   );
+
+  // What the store calls since step 2.13 (ADR-032): whole subjects for the touched record, per-rule for referrers.
+  const known = knownFindings(state, buildIndexes(state));
+
+  bench(
+    'validateTouchedByRule, renaming the hub (previous state given, as the store does)',
+    () => {
+      validator.validateTouchedByRule(renamed.state, renamed.indexes, [hub], state, known);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+
+  bench(
+    "validateTouchedByRule, changing the hub's review lifecycle (per rule: RVW-002 only on each referrer)",
+    () => {
+      validator.validateTouchedByRule(drafted.state, drafted.indexes, [hub], state, known);
+    },
+    FAST_BENCH_OPTIONS,
+  );
 });
 
 /**
@@ -192,6 +212,25 @@ describe('commit / validateTouched — design tier, one hub of 1,000 reactions (
     "validateTouched, changing the hub's review lifecycle (a field RVW-002 reads: every referrer re-validated)",
     () => {
       validator.validateTouched(drafted.state, drafted.indexes, [hub], initial);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+
+  // What the store calls since step 2.13 (ADR-032): whole subjects for the touched record, per-rule for referrers.
+  const known = knownFindings(initial, buildIndexes(initial));
+
+  bench(
+    'validateTouchedByRule, renaming the hub (previous state given, as the store does)',
+    () => {
+      validator.validateTouchedByRule(renamed.state, renamed.indexes, [hub], initial, known);
+    },
+    FAST_BENCH_OPTIONS,
+  );
+
+  bench(
+    "validateTouchedByRule, changing the hub's review lifecycle (per rule: RVW-002 only on each referrer)",
+    () => {
+      validator.validateTouchedByRule(drafted.state, drafted.indexes, [hub], initial, known);
     },
     FAST_BENCH_OPTIONS,
   );
