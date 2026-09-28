@@ -23,7 +23,7 @@ its own; `tests/perf/budgets.mjs`'s `informalBudgetMs`).
 |---|---|---|
 | Cold boot to interactive (design target) | < 2.5 s (warm cache < 1.5 s) | Playwright trace, mid-range laptop profile |
 | Commit, accepted or rejected (command → state + indexes + L1–L3 incremental) | < 16 ms | vitest bench |
-| Commit on a record with ≥ 500 referrers | < 50 ms p95 | bench |
+| Commit on a record with ≥ 500 referrers (backstop, see below) | < 50 ms p95 | bench |
 | Undo / redo | < 16 ms | bench |
 | Projection build (bounded, ≤ 400 nodes) | < 16 ms | bench |
 | Layout (≤ 400 nodes, worker) | < 300 ms; hard timeout 2 s → fallback | bench (worker code in Node) |
@@ -35,6 +35,14 @@ its own; `tests/perf/budgets.mjs`'s `informalBudgetMs`).
 | Export full dataset | < 2 s | bench |
 | Main-thread long tasks | none > 50 ms during any interaction | Playwright long-task observer |
 | Heap after boot (design target) | < 150 MB | Chrome memory snapshot at Gate F |
+
+**Backstop row (step 2.12).** With field-aware scope (§4, ADR-031) the two hub scenarios this row was added for
+(ADV-012 hub, design-tier "like water" hub; edits the store makes, i.e. with the previous state) meet the plain
+16 ms Commit row: a rename or notes edit measures 1-3 ms p99 (was 33-71 ms), so the row is **no longer needed for
+them**. It is kept, as a backstop for Phase 9, for the one case that still re-validates every referrer: an edit
+to a field some referrer rule reads (e.g. `review`, read by RVW-002) or the record's creation/deletion. That case
+measures 34-37 ms p99 in `validateTouched` and 67 ms p99 for a whole commit on the like-water hub (this row's
+50 ms is missed there; docs/reviews/gate-b-packet.md §5).
 
 ## 3. Threading
 

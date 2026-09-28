@@ -899,7 +899,50 @@ does not declare it keeps today's behaviour. Full amendment under "Amendments" b
   win32. `bench:baseline`/`bench:compare` use the Node API and are unaffected; individual benches were run with
   `npx vitest bench --run --no-file-parallelism <file>`.
 
+**Commit 2 — `phase-2.12: re-measure; Gate B packet`.** `npm run bench:baseline` (3 fresh-process runs, median
+p99) and `npm run bench:compare`; `tests/perf/baseline.json` regenerated; `docs/reviews/gate-b-packet.md`
+rewritten (median-p99 verdict for all 35 entries, §0 answered with the reviewer decisions of 2.9-2.12, ADV-013
+status, remaining misses with causes). No source change. The hub benches (`commit.bench.ts`, `budgets.mjs`,
+`perf-kit.ts`'s `afterHubEdit`) were extended in commit 1 so they measure what the store does (previous state
+given): the old "no previous state" entries stay, as the safe-fallback measurement.
+
+Hub scenarios, median p99 (ms), before = the 2.11 baseline:
+
+| Scenario | Before | After | 16 ms Commit row |
+|---|---|---|---|
+| Commit dispatch, like-water hub (1,000 referrers), notes edit | 70.86 | 3.27 | pass |
+| `validateTouched`, ADV-012 hub (1,000 referrers), rename, previous given | 32.15 (no-previous call) | 0.96 | pass |
+| `validateTouched`, like-water hub, rename, previous given | 32.82 (no-previous call) | 1.89 | pass |
+| `validateTouched` either hub, no previous state (fallback) | 32.15 / 32.82 | 31.22 / 31.03 | n/a (50 ms row: pass) |
+| `validateTouched` either hub, `review` changed (a field RVW-002 reads) | not measured | 33.97 / 37.10 | n/a (50 ms row: pass) |
+| Commit dispatch, like-water hub, `review` changed | not measured | **67.47** | n/a (50 ms row: **fail**) |
+
+**Judgement on the "Commit on a record with >= 500 referrers" row.** The two hub scenarios (ADV-012 hub,
+like-water hub, edited the way the store edits them) now meet the plain 16 ms Commit row by 5-17x, so the row is
+no longer needed *for them*: PERFORMANCE_ARCHITECTURE.md §2 marks it a backstop (kept for Phase 9). It is not
+dead, though: an edit to a field a referrer rule reads (or creating/deleting the hub) still re-validates every
+referrer whole, and the whole-commit version of that on the like-water hub misses even 50 ms by 17.5 ms (+35%).
+Cause (timed in a commit-shaped loop, one-off script, not committed): `validateTouched` ~50 ms over 1,023
+in-scope records (~45-50 us each: REF path walking and L1 re-parse, per the 2.11 profile), `commitFindings` ~3 ms,
+`scopeOf` ~1.7 ms, index apply 0.1 ms. Making that cheaper needs per-rule re-runs on context-only referrers
+(the finding store replaces per subject, so a finding-merge contract) or a faster path walker: Phase 9.
+
+**Every failing entry on median p99 — one** (the entry above). Every entry the 2.10 packet failed now passes.
+`bench:compare` flagged 4 entries over +20% (undo+redo `dense` +21%, rejected commit `dense` +24%, `scopeOf`
+twice `dense` +42%, route search `dense` +21%), all far under budget and none a hub-validation entry; treated as
+noise (baseline spreads 9-45%), not re-run.
+
+**Checks:** `npm run check` green (70 files, 1,165 tests); property tests at `ORN_PROPERTY_RUNS=200`: 7 files, 71
+tests pass; `npm run test:coverage`: 97.32% statements, 91.54% branches, 98.39% functions, 98.88% lines.
+`IMPLEMENTATION_PLAN.md` §2 gained rows for 2.11 and 2.12.
+
+**Not done / left for the reviewer:** Gate B is **not** marked passed (self-reviewed; human review pending);
+`phase-2` is not tagged. Open: the read-field hub commit (67.5 ms vs 50 ms); the doubled `scopeOf` call (Phase 9);
+class-hub edits are not benchmarked (species still has SPC-006 undeclared, and class `peers` re-run every species
+listing the class); `npm run bench` fails on Windows (`shell: true` needed); `bench:compare` not in CI.
+
 ## Amendments
+- **2026-09-28, step 2.12 — PERFORMANCE_ARCHITECTURE.md §2/§4 wording (doc only, no contract change).** The "Commit on a record with >= 500 referrers" row is annotated as a backstop (the hub scenarios it was added for now meet the 16 ms Commit row) and kept for Phase 9; §4's incremental-validation bullet describes field-aware scope. Reason: the step 2.12 re-measure (see step entry).
 - **2026-09-28, step 2.12 — `ValidationRule.referencedReads` (contract change, ADR-031).** Problem: `Validator.scopeOf`/`validateTouched` added every referrer of a touched record, at record-kind granularity, so renaming a species used by 1,000 reactions re-validated 1,000 reactions although no rule of theirs reads a species' name (measured 65-94 ms per commit at the design tier against the 16 ms budget; step 2.10 found that a fix needed a rule-level field declaration and added a 50 ms row instead; the reviewer then approved this amendment). Change: `ValidationRule` gains an optional `referencedReads?: ReferencedReads` (per kind of referenced record, or `'*'`, the top-level fields the rule reads; `[]` = existence only). `scopeOf` keeps a referrer only if a rule of its kind reads a field that changed (diffed by reference against `previous`), or the record was created or deleted; a rule without the declaration re-runs on any change, and without `previous` nothing is diffed. Only the referrer expansion is narrowed; referents and `peers`/`watches` are unchanged. `Validator`'s interface is unchanged (`previous` was already there). No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-031, VALIDATION_RULES.md §4-§5, ARCHITECTURE.md §2.4, PERFORMANCE_ARCHITECTURE.md §4.
 - **2026-09-28, step 2.11 — PERFORMANCE_ARCHITECTURE.md §1, §9, §10 (benchmark method and tier definition; no contract, schema or invariant change).** Problem: (1) the design-tier navigator benchmark anchored a class-count ratio, so its hub count moved with the generator and was never a stated number; (2) single-run, low-sample benchmarks gave p99 values that were the sample max and varied 3× between runs of identical code, and a first fix that ran the repeats in one process was itself biased by JIT warm-up. Change: §1 states 60 anchored hubs at the design tier and 400 at the stress tier (judged against the ≤ 2× allowance, 32 ms informal); §9 documents isolation (PID lock), explicit warmup/100-sample floor, 3 fresh-process runs with median p99 and spread; §10 documents the deterministic anchor rule. Benchmark tooling and doc wording only.
 - **2026-09-27, step 2.10 — PERFORMANCE_ARCHITECTURE.md §2's Commit row covers rejected commits too (doc

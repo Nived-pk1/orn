@@ -48,6 +48,8 @@ Dependencies: none new (src/core/graph stays pure; benchmarks use Vitest bench).
 | 2.8 | Benchmarks at all tiers and shapes; full generator tier × shape validity sweep (closes the 1.11 sampling); measure Phase 1 performance open items (validateTouched on hubs, index rebuild after a rejected commit, scopeOf computed twice); baseline.json; Gate B packet in the Gate A packet format with the title-level ADV/INV/P scan; Gate B self-review | ADV-012 performance part, ADV-013; budgets at the design tier |
 | 2.9 | Benchmark percentiles and `bench:compare`; incremental navigator roll-up index | ADV-013 re-measured; navigator build budget at the design tier |
 | 2.10 | Incremental rollback on rejected commits; field-aware `validateTouched` scope; route-search clock test; re-measure; Gate B packet update | Remaining Gate B open items closed or explicitly deferred by the reviewer |
+| 2.11 | Deterministic navigator anchors and stress tier; stable benchmark method (isolation, warmup, 100-sample floor, 3 fresh-process runs, median p99); navigator build fix; re-measure | Navigator `dense` at the design tier under 16 ms on median p99 |
+| 2.12 | Field-aware `validateTouched` scope (`ValidationRule.referencedReads`, ADR-031); re-measure; Gate B packet update | Hub-referrer commits judged against the 16 ms Commit row; remaining misses listed with causes |
 
 ### Phase 3 — Persistence, import/export, legacy → Gate C
 Dependencies: `dexie`, `fflate`, dev `fake-indexeddb`.
