@@ -72,7 +72,7 @@ The demo is real JEE chemistry chosen to exercise every feature. It is built in 
 |---|---|
 | P-01 | save → load (fake-indexeddb) yields a state deep-equal to the original |
 | P-02 | export → import → export is byte-identical |
-| P-03 | migrate(vN fixture) then export equals the committed expected output; migration is deterministic |
+| P-03 | migrate(vN fixture) then export equals the committed expected output; migration is deterministic (framework form with synthetic test-only steps until the first real schema bump; IMPLEMENTATION_PLAN Phase 3 notes) |
 | P-04 | after any delete with `apply_cascade`, no reference dangles (INV-04) |
 | P-05 | rename never changes any reference or ID |
 | P-06 | duplicate produces globally unique record and nested IDs |
@@ -152,6 +152,10 @@ ADV-001…ADV-058 cover the adversarial cases requested in the requirements (§4
 ADV-005 splits across two gates: the validation half (RXN-017 warning) and the graph shape itself
 (consumes+produces between the same node) are Phase 2/Gate B; the "loop glyph" GRAPH_SEMANTICS.md §9
 describes is a render/layout concept and is Phase 5/Gate E.
+
+ADV-038 and ADV-039 split the same way: the integration half (fake-indexeddb, in-process lock/channel fakes) is Gate C; the real-browser e2e half is Gate E.
+
+ADV-019's search half is Phase 4 (step 4.5).
 
 ## 6. Gates
 

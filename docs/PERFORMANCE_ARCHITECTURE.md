@@ -55,7 +55,7 @@ documented Phase 9 exceptions if over 16 ms (docs/TEST_STRATEGY.md §6, docs/rev
 | Chem worker | RDKit.js (WASM): parse, depict (sanitised SVG), L4 checks, SMARTS matching |
 | Layout worker | ELK layered/radial/stress; fallback layered layout |
 | Search worker | MiniSearch index, incremental updates, queries |
-| Compute worker | Replica of canonical state: full validation, route search, import parse/preview, export building, migrations |
+| Compute worker | Replica of canonical state: full validation, route search, import parse/preview, export building, snapshot building, migrations |
 
 RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferables for large buffers, `cancel` messages wired to `AbortSignal`, progress events, per-call timeouts, automatic worker restart on crash with replica reload. The compute replica stays in sync by applying the same ChangeSets (Immer patches) with a revision check; on mismatch it reloads the full state. Any incremental re-validation in the compute worker must pass the **previous state** to `validateTouchedByRule`/`validateTouched` (ADR-031/032): without it every referrer of a touched record is re-validated whole (39–47 ms on a 1,000-referrer hub at the design tier, median p99 in step 2.13, instead of 1–4 ms).
 
