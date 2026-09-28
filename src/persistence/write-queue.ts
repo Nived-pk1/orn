@@ -34,7 +34,7 @@ export interface WriteQueueOptions {
   readonly retryDelaysMs?: readonly number[];
   /** Revision already durable when the queue starts (boot). Unknown: the first ChangeSet establishes it. */
   readonly initialRevision?: number;
-  /** A read-only tab has no writer (INV-28): status `read_only`, and enqueueing is refused. */
+  /** A read-only tab has no writer (INV-28): status `read_only`, and enqueueing is refused. Switchable: `setReadOnly`. */
   readonly readOnly?: boolean;
 }
 
@@ -53,6 +53,16 @@ export interface WriteQueue {
    * batch (deleting a snapshot to make room must not trigger a doomed retry); `flush()` does.
    */
   runOrdered<T>(task: () => Promise<T>): Promise<T>;
+  /** Boot decides read-only after the queue exists; promotion (step 3.4) makes a follower writable. */
+  setReadOnly(readOnly: boolean): void;
+  /** Revision of the newest ChangeSet waiting to be written, if any. */
+  pendingRevision(): number | undefined;
+  /**
+   * Continues from `revision` after a full re-save of the state at that revision (`replaceAll`). Only call it from
+   * inside an ordered task, after the write succeeded: it supersedes pending ChangeSets up to `revision` (newer ones
+   * that arrived meanwhile are kept), clears a `revision_gap`, and reports `saved`.
+   */
+  resync(revision: number): void;
   /** Cancels a waiting retry, makes one last attempt without backoff, and refuses further ChangeSets. */
   close(): Promise<void>;
 }
@@ -69,10 +79,11 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
   let closing = false;
   let lastEnqueued = options.initialRevision;
   let desynced = false;
+  let readOnly = options.readOnly === true;
   /** False after a failed cycle until a new ChangeSet or `flush()` asks for a fresh one. */
   let retryAllowed = true;
   let status: SaveStatus = {
-    state: options.readOnly === true ? 'read_only' : 'saved',
+    state: readOnly ? 'read_only' : 'saved',
     lastSavedRevision: options.initialRevision ?? 0,
     pendingRevisions: 0,
   };
@@ -84,6 +95,7 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
     lastError?: string,
     lastSavedRevision = status.lastSavedRevision,
     deletable: readonly string[] = [],
+    failureReason?: SaveStatus['failureReason'],
   ): void {
     status = {
       state,
@@ -91,6 +103,7 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
       pendingRevisions: pendingCount(),
       ...(lastError !== undefined ? { lastError } : {}),
       ...(deletable.length > 0 ? { deletablePeriodicSnapshotIds: deletable } : {}),
+      ...(failureReason !== undefined ? { failureReason } : {}),
     };
     for (const listener of [...listeners]) {
       try {
@@ -205,12 +218,18 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
 
   return {
     enqueue(changes, next, blobs) {
-      if (options.readOnly === true) throw new Error('persistence is read-only: this tab is not the writer');
+      if (readOnly) throw new Error('persistence is read-only: this tab is not the writer');
       if (closing) throw new Error('persistence is closed');
       if (desynced || (lastEnqueued !== undefined && changes.revision !== lastEnqueued + 1)) {
         // A ChangeSet the queue never saw would leave the database missing that record change for good.
         desynced = true;
-        setStatus('failed', `ChangeSet revision ${changes.revision} does not follow ${lastEnqueued ?? 'the persisted revision'}; reload or restore to resync`);
+        setStatus(
+          'failed',
+          `ChangeSet revision ${changes.revision} does not follow ${lastEnqueued ?? 'the persisted revision'}; save everything now (replaceAll) to resync`,
+          undefined,
+          [],
+          'revision_gap',
+        );
         throw new RangeError(status.lastError);
       }
       const batch = startBatch(changes, next, blobs);
@@ -221,7 +240,7 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
     },
     flush,
     runOrdered<T>(task: () => Promise<T>): Promise<T> {
-      if (options.readOnly === true) return Promise.reject(new Error('persistence is read-only: this tab is not the writer'));
+      if (readOnly) return Promise.reject(new Error('persistence is read-only: this tab is not the writer'));
       if (closing) return Promise.reject(new Error('persistence is closed'));
       return new Promise<T>((resolve, reject) => {
         tasks.push(() =>
@@ -234,6 +253,19 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
         );
         void startDrain();
       });
+    },
+    setReadOnly(next) {
+      readOnly = next;
+      if (next) setStatus('read_only');
+      else if (status.state === 'read_only') setStatus(pendingCount() > 0 ? 'saving' : 'saved');
+    },
+    pendingRevision: () => pending?.revision,
+    resync(revision) {
+      if (pending !== undefined && pending.revision <= revision) pending = undefined;
+      if (pending === undefined) lastEnqueued = revision;
+      desynced = false;
+      retryAllowed = true;
+      setStatus(pending === undefined ? 'saved' : 'saving', undefined, revision);
     },
     getStatus: () => status,
     subscribe(listener) {

@@ -117,4 +117,14 @@ export const BUDGETS = {
     { operation: 'snapshot: restore without the store (decode + migrate + L1 parse + state)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.2: informal; SLOW_BENCH_OPTIONS, few samples' },
   'snapshot restore (design tier, dense, whole) > restoreSnapshot: decode, L1, pre_restore build, replaceState (L1-L3)':
     { operation: 'snapshot: restoreSnapshot whole (decode, L1, pre_restore build, replaceState L1-L3)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.2: informal; in-memory port, no IndexedDB; replaceState re-validates the whole state (compare the 3 s full-validation row)' },
+  'boot load (design tier, dense) > bulk read from fake-indexeddb (readCommitted; not our code)':
+    { operation: 'boot: bulk read on fake-indexeddb (not our code)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.3: no §2 row for the parts (cold boot < 2.5 s is judged at Gate E in a real browser); informal; fake-indexeddb costs far more than real IndexedDB' },
+  'boot load (design tier, dense) > per-record L1 + state (assembleState over the rows)':
+    { operation: 'boot: per-record L1 + state assembly (our code)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.3: informal; SLOW_BENCH_OPTIONS, few samples' },
+  'boot load (design tier, dense) > index build (coreIndexEngine.build)':
+    { operation: 'boot: index build (core)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.3: informal; SLOW_BENCH_OPTIONS, few samples' },
+  'boot load (design tier, dense) > validateAll (L1-L3, findings returned to the app)':
+    { operation: 'boot: validateAll', tier: 'design', shape: 'dense', budgetMs: 3000, budgetRow: 'Full validation L1–L3 (design target)', note: 'the same operation as validate.bench.ts, here on the state boot assembled' },
+  'boot load (design tier, dense) > whole open(): read + L1 + state + indexes + validateAll + checks + markers (includes the fake-indexeddb read)':
+    { operation: 'boot: whole open() (includes the fake-indexeddb read)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.3: informal; cold boot < 2.5 s is judged at Gate E in a real browser' },
 };

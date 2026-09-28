@@ -11,12 +11,24 @@ import { strFromU8, strToU8, Unzlib, zlibSync } from 'fflate';
 import { serializeDocument, stateToDocument } from '@/core/dataset';
 import type { SerializeIssue } from '@/core/dataset';
 import type { MigratableDocument } from '@/core/migrations/contracts';
-import { CURRENT_SCHEMA_VERSION, DatasetEnvelopeSchema, type CanonicalState, type DatasetDocument } from '@/core/schema';
+import { z } from 'zod';
+import { CURRENT_SCHEMA_VERSION, DATASET_FORMAT, type CanonicalState, type DatasetDocument } from '@/core/schema';
 import type { SnapshotReason, SnapshotSummary } from './contracts';
 
 /** Same as the package-import cap (docs/SECURITY.md §3): the largest JSON text a snapshot may inflate to. */
 export const SNAPSHOT_MAX_JSON_BYTES = 200 * 1024 * 1024;
 const COMPRESSION_LEVEL = 6;
+
+/**
+ * What a stored document must look like to be handed to a migration: the format and a records object. The version is
+ * only required to be a number here; whether it is a version the app can use is the migration runner's call, so a
+ * snapshot of data the runner will refuse still reads back (and is refused with the runner's reason, not "corrupt").
+ */
+const StoredEnvelopeSchema = z.object({
+  format: z.literal(DATASET_FORMAT),
+  schemaVersion: z.number(),
+  records: z.record(z.string(), z.array(z.unknown())),
+});
 
 export interface SnapshotBuildInput {
   readonly id: string;
@@ -55,6 +67,36 @@ export function buildSnapshot(input: SnapshotBuildInput): SnapshotBuildResult {
   return { ok: true, built: { summary, bytes } };
 }
 
+export interface RawSnapshotInput {
+  readonly id: string;
+  readonly createdAt: string;
+  readonly reason: SnapshotReason;
+  /** A document exactly as it was stored, possibly in an older shape: it is NOT validated (that is the point). */
+  readonly doc: MigratableDocument;
+  readonly revision: number;
+  readonly note?: string;
+}
+
+/**
+ * Snapshot of a tolerant document, for the `pre_migration` snapshot: on-disk data of an older schema version cannot
+ * pass the strict schema, and it is exactly that data the snapshot has to keep. Same format, same decoder.
+ */
+export function buildRawSnapshot(input: RawSnapshotInput): BuiltSnapshot {
+  const bytes = zlibSync(strToU8(JSON.stringify(input.doc)), { level: COMPRESSION_LEVEL });
+  return {
+    bytes,
+    summary: {
+      id: input.id,
+      createdAt: input.createdAt,
+      reason: input.reason,
+      revision: input.revision,
+      schemaVersion: input.doc.schemaVersion,
+      byteSize: bytes.length,
+      ...(input.note !== undefined ? { note: input.note } : {}),
+    },
+  };
+}
+
 export type SnapshotDecodeResult =
   | { readonly ok: true; readonly doc: MigratableDocument }
   | { readonly ok: false; readonly message: string };
@@ -85,7 +127,7 @@ export function decodeSnapshot(bytes: Uint8Array, maxJsonBytes = SNAPSHOT_MAX_JS
   } catch (error) {
     return { ok: false, message: `the stored bytes are not a readable snapshot (${error instanceof Error ? error.message : String(error)})` };
   }
-  const envelope = DatasetEnvelopeSchema.safeParse(raw);
+  const envelope = StoredEnvelopeSchema.safeParse(raw);
   if (!envelope.success) return { ok: false, message: 'the stored document is not an ORN dataset (format, schemaVersion or records missing or malformed)' };
   // The envelope only checks the parts every migration needs; the document itself goes on untouched.
   return { ok: true, doc: raw as MigratableDocument };

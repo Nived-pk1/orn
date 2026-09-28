@@ -17,7 +17,7 @@ Database `orn`, Dexie version `DB_VERSION` (starts at 1). Store definitions live
 | Store | Key | Contents |
 |---|---|---|
 | records | `id` (index `kind`) | Every canonical record, one row per record, exactly as the schema defines it |
-| meta | `key` | `schemaVersion`, `datasetMeta`, `revision`, `lastCleanShutdownAt`, `lastIntegrityCheckAt` |
+| meta | `key` | `schemaVersion`, `datasetMeta`, `revision`, `lastCleanShutdownAt` (a time, or `null` while a session runs), `lastIntegrityCheckAt` |
 | assetBlobs | `assetId` (index `sha256`) | Image bytes as Blob |
 | snapshots | `id` (indexes `createdAt`, `reason`) | The summary fields (`id`, `createdAt`, `reason`, `revision`, `schemaVersion`, `byteSize`, `note?`) plus the fflate-compressed DatasetDocument JSON as a Blob (so listing rows does not load the bytes) |
 | editorSessions | `id` | Authoring drafts (may be invalid) for crash recovery |
@@ -49,14 +49,19 @@ dispatch(envelope) ─► commit (memory, revision n) ─► ChangeSet n
 
 ## 4. Boot sequence
 
-1. Open the database; run Dexie upgrades if `DB_VERSION` increased.
-2. Acquire the Web Lock `orn-writer`. If another tab holds it, open **read-only** and follow changes (§10).
-3. Read `meta.schemaVersion`:
-   - older → create a `pre_migration` snapshot, migrate in the compute worker (MIGRATION.md §2), `replaceAll`;
-   - newer → open read-only with a clear message ("Data was saved by a newer version").
-4. Bulk-read records; in the compute worker L1-parse each; invalid rows move to `quarantine` with their issues (Diagnostics shows them; nothing is silently deleted).
-5. Build indexes; run `validateAll` in the worker; hydrate search; restore uiState (reset any invalid entry).
-6. Crash check: if the previous session did not record a clean shutdown and editor sessions exist, offer to restore drafts.
+`adapter.open()` runs it once and returns an `OpenResult` (`src/persistence/boot.ts`); its parts are pure or take the adapter's ports (`boot-load.ts`, `boot-migrate.ts`, `boot-checks.ts`). Boot takes an injected `WriterLock` (`alwaysGrantedLock` until step 3.4) and an injected `MigrationRunner`. Every branch that cannot make the data writable leaves the queue read-only and writes **nothing**.
+
+1. Open the database; run Dexie upgrades if `DB_VERSION` increased. IndexedDB missing, refused or out of quota → `mode: 'unavailable'` (session-only mode; `reason` and `detail` say why).
+2. Acquire the writer lock `orn-writer`. Not granted → open **read-only**, load the state, write nothing (no quarantine rows, no markers), follow changes (§10, step 3.4). If the stored data then needs a migration, only the writer may run it: the tab opens read-only without data.
+3. Read records and meta in one transaction, then look at `meta.schemaVersion`:
+   - newer than the runner's target → read-only, `readOnlyReason: 'newer_schema'`, `state: null`, `detail` explains ("Data was saved by a newer version"), the lock is released, nothing changed;
+   - anything else that is not the current version goes to the runner, in memory, before anything is written. A version the runner refuses outright (0, negative, non-integer, not a number, missing next to stored records) → read-only `migration_failed`, nothing written, no snapshot. An older version: `pre_migration` snapshot of the stored rows exactly as they are (raw, not validated: they are in the old shape) → the migrated document → strict parse → L1–L3 (`validateAll`, no ERROR) → `replaceAll` at `revision + 1`. Any failure after the snapshot puts the stored rows back from that snapshot, opens read-only with `readOnlyReason: 'migration_failed'` and keeps the error detail. The undo history starts empty (the store is built afterwards);
+   - a current version with a missing or invalid `datasetMeta`, or a missing or invalid `revision`, is `integrity_failure`: read-only, `state: null`, nothing written.
+4. L1-parse each row. A row that fails L1 (or has no known kind) is left out of the state and gets a `quarantine` row with its issues and its raw value (§7). **The row itself is not deleted** from `records`: quarantine is a copy, so nothing is lost even when the raw copy is truncated. The quarantine ID is derived from the row's ID, so the same row at the next boot is not quarantined again.
+5. Build indexes; run `validateAll` (the findings are returned in the `bootReport`, so the store need not run it again); report asset records whose bytes are missing from `assetBlobs` (AST-002); restore uiState tolerantly (an entry that is not plain JSON, or fails the caller's validator for its key, is reset and reported, never a reason not to boot).
+6. Crash check: `meta.lastCleanShutdownAt` is `null` while a session runs (boot writes `null` once it has read the previous value) and a time after a clean shutdown; a `null` (or unreadable) value at boot means the previous session did not shut down cleanly, and only then are the editor-session IDs offered in the `bootReport`. Boot ends by writing `lastIntegrityCheckAt` and continuing the write queue from the loaded revision (so its gap guard is armed). A `revision_gap` (§3) is recovered with `replaceAll`: the user-visible "save everything now" (the button is Phase 5).
+
+`OpenResult` for a loaded database: `mode` (`read_write`, or `read_only` with `readOnlyReason` `other_tab_is_writer` / `newer_schema` / `integrity_failure` / `migration_failed` and a `detail`), `state` (null when nothing is stored or it could not be interpreted), `revision`, `storedSchemaVersion` (as found on disk, before any migration), `quarantinedCount` and the `bootReport` (migration step reports, findings, `assetIdsWithoutBlob`, `crashSuspected`, `editorSessionIds`, `uiState`, `uiStateReset`, `newlyQuarantined`, `quarantineTruncated`; a `singleTab` warning is added in step 3.4).
 
 Cold boot budget: < 2.5 s at 2k species / 5k reactions (PERFORMANCE_ARCHITECTURE.md §2).
 
@@ -84,7 +89,7 @@ Undo history is cleared after an import because patches cannot span a wholesale 
 
 ## 7. Tolerant envelope and quarantine
 
-Importers parse `DatasetEnvelopeSchema` first (format, version, `records` as arrays of unknown) so one bad record never rejects a whole file. Records failing L1 go to `quarantine` with the raw value (truncated to 64 KB) and the issues. Keys `__proto__`, `constructor` and `prototype` are renamed during parsing (`__unsafe_key__…`) and reported, preventing prototype pollution without silent loss.
+Importers parse `DatasetEnvelopeSchema` first (format, version, `records` as arrays of unknown) so one bad record never rejects a whole file. Records failing L1 go to `quarantine` with the raw value and the issues. The raw value is kept whole up to 64 Ki characters of its JSON text (the cap is in characters, like the other text limits); a longer one is kept as its first 64 Ki characters and `rawTruncated.originalChars` says how long it was. At boot the offending row stays in `records`, so truncation loses nothing. `import` rows carry the `importBatchId`; rows are added in the write queue's order and a row whose ID exists is kept as it is. Keys `__proto__`, `constructor` and `prototype` are renamed during parsing (`__unsafe_key__…`) and reported, preventing prototype pollution without silent loss.
 
 ## 8. Export
 

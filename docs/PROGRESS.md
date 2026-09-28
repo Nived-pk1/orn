@@ -1337,7 +1337,114 @@ Decisions and notes recorded with the verdict:
 - **`replaceState` measured in parts** (design tier, `dense`, seed 2 replacing seed 1, median of 5 runs in one process, ms): `freeze` 0 (already frozen); core index build 500; `validateAll` 1,319; ChangeSet + replacement patches 15; `commitFindings` over both states' refs 124. Sum about 1,960. `hub_explosion`: index build 460, `validateAll` 1,389, ChangeSet + patches 14, `commitFindings` 122. So `validateAll` is about two thirds of the call, the index build about a quarter, the rest about 7%. Whole `replaceState` calls measured 2.0 to 2.4 s at steady state on both shapes; a few calls came back much faster (0.6 to 0.8 s, cause not established, possibly JIT and GC state), so the parts, not those calls, are the numbers to plan with. Measured with a throwaway script (not committed); the store's own construction (index build, about 0.4 to 0.5 s) is outside `replaceState`.
 - **Decision on the revision-gap open item (replaces it).** A refused gap sets status `failed` with its own reason, `'revision_gap'`. Recovery is a user-visible "save everything now": `replaceAll` of the in-memory state in one transaction through the queue's ordering, after which the queue continues from that revision. Built in 3.3 (API only; the button is Phase 5).
 
+### Step 3.3 — Boot sequence (2026-09-28)
+
+**Delivered** (`src/persistence`, every new source file under 190 lines)
+- `boot.ts` (`runBoot`, run once by `adapter.open()`), `boot-load.ts` (per-record L1 → state, quarantine rows, raw cap),
+  `boot-migrate.ts` (the older-schema path), `boot-checks.ts` (open-failure mapping, tolerant uiState, bounded `isJsonValue`),
+  `boot-ports.ts` (what boot needs from the adapter). Boot takes an injected `WriterLock` (`lock.ts`: `alwaysGrantedLock`
+  until 3.4) and an injected `MigrationRunner`. The order and every branch are in PERSISTENCE.md §4 (rewritten).
+- `aux-stores.ts`: quarantine, import batches, editor sessions, uiState, asset-blob IDs, meta markers; every write through
+  `runOrdered`. `replace.ts`: `writeAllRecords` (`replaceAll`) and `writeRawDocument` (rollback), each one transaction.
+- `write-queue.ts`: `setReadOnly` (boot decides after the queue exists; 3.4 uses it for promotion), `pendingRevision`, `resync`,
+  and the `revision_gap` failure reason. `adapter.ts` now implements the whole `PersistenceAdapter` except `storageEstimate` and
+  `requestPersistentStorage` (Phase 5/9 wiring), plus `setReadOnly`.
+- `snapshot-codec.ts`: `buildRawSnapshot` (the `pre_migration` snapshot of data in an OLD shape, which cannot pass the strict
+  schema); `decodeSnapshot` now only requires the version to be a number (see Decisions). `snapshot-store.ts`: `createRawSnapshot`.
+- Test support: `version-offset.ts` (Q10, with its own self-test), `synthetic-migration.ts` (synthetic 0 → 1 step, canonical JSON),
+  `persistence-kit.ts` gains `stubLock` and `savedDatabase`. Frozen fixtures: `tests/fixtures/migrations/synthetic-v0.orn.json` and
+  `expected/synthetic-v1.canonical.json` (generated once from `minimal-valid`, committed, never edited).
+
+**Contract amendments applied** (CLAUDE.md §7; Amendments entry below)
+- Approved (Q1 a, b, e; Q4; Q10): `addQuarantine`, `listQuarantine`, `deleteQuarantine`; `ImportBatchRow`, `saveImportBatch`,
+  `listImportBatches`; `listAssetBlobIds`; `OpenResult` gains `readOnlyReason: 'migration_failed'`, `detail` and `bootReport`
+  (`BootReport`, no `singleTab`: that is 3.4); `withVersionOffset` in `src/test-support` with its self-test.
+- Needed by the step and recorded here for confirmation: (1) `setLastCleanShutdownAt(at: string | null)`: `null` marks a session as
+  running (a timestamp alone cannot say "this session has not ended"); (2) `SaveStatus.failureReason?: 'revision_gap'` (the step 3.2
+  review decision); (3) `addQuarantine` returns the IDs that were new (not a count), so boot can report how many of them were
+  truncated; (4) `QuarantineRow.rawTruncated?: { originalChars }` and `QUARANTINE_RAW_MAX_CHARS` (64 Ki characters, the LIMITS
+  convention), because "truncation reported" needs a place to be reported; (5) `replaceAll`'s semantics (queue order, resync,
+  refusal of a stale state) written into its doc comment.
+- No schema change, no `DB_STORES`/`DB_VERSION` change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change.
+
+**Decisions**
+- *Migration order.* The runner is the arbiter of stored versions. Boot builds the tolerant document from the stored rows and runs
+  the migration IN MEMORY first (pure, writes nothing). A version the runner refuses outright (INVALID_VERSION, NEWER_VERSION) is
+  reported with nothing written and no snapshot. Otherwise the `pre_migration` snapshot is written (raw, exactly the stored rows)
+  BEFORE the first write to `records`, then strict parse → L1–L3 → `replaceAll`. Any failure after the snapshot restores the stored rows
+  from it (today a no-op in effect, because `replaceAll` is one atomic transaction; it stays correct if that ever changes, and a
+  failing restore is reported next to the original error). The plan's order is "snapshot → migrate"; the difference is that the pure
+  migration runs first so a refused version leaves no mandatory snapshot behind.
+- *A migration ends at `revision + 1`*: the migrated state is a different state, so observers (followers, 3.4) see a new revision.
+- *Quarantine is a copy, not a move.* The offending row stays in `records` (PERSISTENCE.md §4 said "move"; the reviewer's brief says
+  nothing is deleted, and a raw copy capped at 64 Ki characters would lose the rest). The quarantine ID is derived from the row's ID,
+  so a row that is still bad at the next boot is not quarantined again. Rows that never load stay in `records` until Diagnostics
+  (Phase 9) offers repair or removal.
+- *Crash check* uses `lastCleanShutdownAt`: `null` while a session runs (boot writes it after reading the previous value), a time
+  after a clean shutdown. A `null` or unreadable value at boot is a suspected crash, and only then are editor-session IDs offered.
+  A database from before the marker existed (no row) is not treated as a crash.
+- *A tab without the lock* loads the state (current schema) and writes nothing: no quarantine rows, no markers, no uiState resets
+  (it reports them). If the stored data needs a migration it opens read-only without data (`state: null`); following changes and
+  promotion are 3.4.
+- *Newer schema* releases the lock it took, so a newer app in another tab can become the writer. A non-integer version above the
+  target (1.5) is INVALID_VERSION (the runner checks integrality first), not "newer".
+- *Boot returns the L1–L3 findings* in the `bootReport`; the app can hand them to the store (`validateInitial: false` plus
+  `commitFindings`). The store still builds its own indexes (about 0.4 to 0.5 s at the design tier): a Phase 4 item (workers).
+- *`decodeSnapshot` is tolerant about the version* (a number; whether the runner can use it is the runner's call). Before, a
+  snapshot with `schemaVersion` 0 read as CORRUPT; now restore reports the runner's own reason. Needed so a `pre_migration` snapshot of a
+  synthetic version 0 can be restored on rollback; a real database never holds a version below 1.
+- *The write queue continues from the loaded revision*: boot calls `resync` inside an ordered task, so the gap guard is armed from
+  the first ChangeSet. A gap is recovered with `replaceAll(state, revision)` ("save everything now", API only).
+- *Editor sessions and uiState writes go through the queue too* (SONNET_HANDOFF §18.8); a read-only tab's calls reject.
+- P-03 framework form and the migrations-framework evidence: see Tests.
+
+**Tests** (`npm run check`: 91 files, 1,414 tests; before this step 85 files, 1,337)
+- `version-offset.test.ts` (9): versions, the steps' own view and reports map back; INVALID_VERSION, NEWER_VERSION, MISSING_STEP,
+  STEP_FAILED, STEP_CONTRACT pass through; offset 0 equals the real runner; input not mutated.
+- `migrations-framework.test.ts` (6): P-03 framework form: the frozen v0 fixture is refused by the real runner alone; output is byte-equal
+  to the committed expected file, identical across runs and input key orders, input untouched, nothing dropped (INV-23: every input
+  leaf is in the output or in `provenance.legacy.unmapped`), strict-schema valid and equal to the minimal fixture apart from the moved field.
+- `persistence-boot.test.ts` (24): fresh and current databases, the queue continuing from the stored revision, damaged meta (4 kinds), INV-23
+  quarantine (state without the bad rows, issues, raw values, rows not removed, truncation reported, no duplicates at the next boot, a
+  read-only tab writes nothing), the writer lock and its release, AST-002, the crash check, tolerant uiState, IndexedDB unavailable (4 reasons).
+- `persistence-boot-migration.test.ts` (18): ADV-041 (disk part): newer schema, and every version the real runner refuses, read-only with nothing
+  written and no snapshot; ADV-045 (migration part): the migrated database, its `pre_migration` snapshot, a store from the boot result with no
+  undo or redo, the queue continuing, a second boot finding it current, a tab without the lock; six failure paths (throwing step, strict
+  schema, L2 error, write fails once, write and restore both fail, snapshot cannot be written), each ending read-only with the stored rows as before.
+- `persistence-recovery.test.ts` (14): `replaceAll` (one transaction, blobs and snapshots untouched, queue order, stale refusal, failure, read-only),
+  revision-gap recovery end to end, Q1 (a), (b), (e), editor sessions, uiState, the `null` marker. `write-queue-resync.test.ts` (5).
+- Hand-checked mutations: deleting quarantined rows, dropping the rollback, and not setting read-only after a refusal each fail tests.
+- Coverage of `src/persistence` (focused run): 99.4% lines, 88.9% branches; `test:coverage` thresholds met.
+
+**replaceState split** was recorded in the step 3.2 review (no change here).
+
+**Benchmark** (`tests/perf/boot.bench.ts`, run once and alone; `bench:baseline` NOT run; design tier, dense; fake-indexeddb; SLOW options,
+5 to 9 samples; mean / max in ms; informal):
+- bulk read from fake-indexeddb (`readCommitted`; not our code): 383 / 408
+- per-record L1 + state (`assembleState`, our code): 371 / 426
+- index build (`coreIndexEngine.build`): 449 / 584
+- validateAll (the same operation as `validate.bench.ts`, on the state boot assembled): 777 / 810
+- whole `open()` (new adapter each time; includes the fake-indexeddb read, marker writes and checks): 2,466 / 2,570
+The parts sum to about 1.98 s; the rest of `open()` (about 0.5 s) is opening a new database handle, the asset and uiState checks and the
+marker writes. Cold boot < 2.5 s is judged at Gate E in a real browser; all of this runs on the main thread until Phase 4.
+
+**Timing-sensitive tests.** `npm run check` passed on the final code (twice). The FIRST `npm run test:coverage` run failed on three
+timing tests: `tests/adversarial/gate-b-performance.test.ts` ADV-013 precursor_explorer (282.8 ms against its 80 ms limit under v8
+instrumentation) and ADV-012 navigator (82.8 ms against 80), and `tests/property/validation-scope.test.ts` P-11 "ADV-012 hub: after every
+random edit" (30 s timeout). Re-run once, alone: all 1,414 tests passed. Failed 1 of 2 runs; nothing else was intentionally running (it started
+right after `npm run check` finished, on a Windows laptop); cause not established. No timing test was loosened.
+
+**Open items**
+- `test:coverage` timing flake above (1 of 2 runs); the same three tests passed in the steps 3.1 and 3.2 coverage runs.
+- The store rebuilds indexes that boot already built (about 0.5 s at the design tier); Phase 4 (compute worker owns boot's heavy part).
+- Rows that fail L1 stay in `records` (copy, not move); a Diagnostics repair/remove action is Phase 9.
+- 3.4: the Web Locks lock and change channel replace the stub; `singleTab`; promotion (`setReadOnly(false)` plus reload); follower
+  boot of an older database.
+- Phase 5: the "save everything now" button (`replaceAll`) and reading `SaveStatus.failureReason`.
+- `storageEstimate` and `requestPersistentStorage` are still unimplemented (Phase 5/9).
+
 ## Amendments
+- **2026-09-28, step 3.3 — boot: quarantine rows, import batches, asset-blob IDs, `OpenResult` (`migration_failed`, `detail`, `bootReport`), and what the step needed beyond the approved list (contract changes, reviewer-approved in "Phase 3 contract decisions", Q1 a, b, e, Q4, Q10).** Problem: boot (PERSISTENCE.md §4) had nowhere to put rows that fail L1, no way to report a failed migration or what it found, no asset-blob list for AST-002, and no way to tell a crashed session from a clean one. Change: `PersistenceAdapter` gains `addQuarantine` (ordered; rows whose ID exists are kept; returns the IDs that were new), `listQuarantine`, `deleteQuarantine`, `saveImportBatch`, `listImportBatches`, `listAssetBlobIds`; `ImportBatchRow` (report as opaque `JsonValue`, no io import); `QuarantineRow.rawTruncated` and `QUARANTINE_RAW_MAX_CHARS` (64 Ki characters); `OpenResult` (`readOnlyReason: 'migration_failed'`, `detail`, `bootReport: BootReport`); `setLastCleanShutdownAt(at: string | null)` (`null` = a session is running); `SaveStatus.failureReason?: 'revision_gap'` (step 3.2 review decision); `replaceAll` documented as ordered, resyncing and refusing a stale state. Test support: `withVersionOffset` (Q10). Also an implementation change to step 3.2's `decodeSnapshot`: it accepts any numeric `schemaVersion` (the runner decides usability), so a snapshot of data the runner refuses reports the runner's reason instead of "corrupt". `DexieAdapterOptions` (implementation options, not contract) gains `lock`, `runner`, `uiStateValidators`. No schema change, no `DB_STORES`/`DB_VERSION` change (the quarantine, importBatches, editorSessions and uiState stores already existed), no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §2, §4 (rewritten), §7.
 - **2026-09-28, step 3.2 — snapshots: `readSnapshot` returns the tolerant document, `SaveStatus.deletablePeriodicSnapshotIds`, restore types (contract changes, reviewer-approved in "Phase 3 contract decisions", Q1 (f), Q2, Q9).** Problem: an older snapshot has to be migrated before it can be parsed strictly, so `readSnapshot(): Promise<DatasetDocument>` could not serve restore; the quota sequence's stage 2 (PERSISTENCE.md §11) had no place to report the periodic snapshots the user may delete; restore needed named result and port types. Change: `readSnapshot` returns `SnapshotReadResult` (`{ ok: true, summary, doc: MigratableDocument }` or `{ ok: false, code: 'NOT_FOUND' | 'CORRUPT', message }`; the wrapper beyond the approved wording is there because damage is a value, CLAUDE.md §6); `SaveStatus.deletablePeriodicSnapshotIds?`; `RestoreSnapshotResult`; doc comments on `createSnapshot`/`listSnapshots`/`deleteSnapshot` (write queue order, newest first, pruning). `DexieAdapterOptions` (an implementation option, not contract) gains a required `ids`. No schema change, no `DB_STORES`/`DB_VERSION` change (a snapshot row is the summary plus a Blob), no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §2, §9, §11.
 - **2026-09-28, step 3.1 review — INV-20, PERSISTENCE.md §1/§3 and §10 wording (doc wording, no contract change).** Problem: INV-20 and PERSISTENCE.md said "one transaction per commit", while step 3.1 (reviewer-approved) lets ChangeSets queued together share one transaction. Change: every IndexedDB transaction is atomic and ends on a committed revision; an idle queue writes one transaction per ChangeSet; ChangeSets queued together may share one transaction ending on the newest. Also recorded in the same commit: every non-ChangeSet IndexedDB write (markers, snapshots) runs through the queue's ordering (`runOrdered`) and `derivedCache` is the single documented exception (PERSISTENCE.md §2/§3); the change-channel message is `{ fromRevision, revision, changedIds }` (PERSISTENCE.md §10, 3.4 Must cover cell; the type itself lands in 3.4).
 - **2026-09-28, step 3.1 — `PersistenceAdapter`: derived cache, meta markers, asset blobs in the write, `getStatus` (contract changes, reviewer-approved in "Phase 3 contract decisions").** Problem: the write side needed (Q1 c) a place for `derivedCache` rows and their LRU eviction (quota stage 1 has to evict something), (Q1 d) setters for the clean-shutdown and integrity-check markers, (Q1 asset write) one transaction over an asset record and its bytes (INV-20; "blob first, then the record" was rejected), and (Q2) a synchronous pending-writes query for `beforeunload`. Change, all additive except one removal: `DerivedCacheRow`, `DerivedCacheInput`, `DerivedPutResult`, `putDerived`, `getDerived`; `setLastCleanShutdownAt`, `setLastIntegrityCheckAt`; `AssetBlobWrite` and `writeChanges(changes, next, blobs?)` (the third parameter is optional; `next` stays, see step 3.1); `getStatus()`; **`putAssetBlob` removed** (a standalone blob write is the rejected path; blobs of deleted asset records are kept for undo, an orphan sweep is a Phase 9 Diagnostics action). Docs updated in the same commit: PERSISTENCE.md §2, §3, §5, §11, SONNET_HANDOFF.md §9. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change.

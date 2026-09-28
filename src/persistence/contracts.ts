@@ -6,6 +6,7 @@ import type { CanonicalState, JsonValue } from '@/core/schema';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { CommandError, EditorSession } from '@/core/commands/contracts';
 import type { MigratableDocument, MigrationError, MigrationStepReport } from '@/core/migrations/contracts';
+import type { Finding } from '@/core/validation/contracts';
 
 export const DB_NAME = 'orn';
 export const DB_VERSION = 1;
@@ -71,15 +72,31 @@ export type RestoreSnapshotResult =
       readonly error?: CommandError;
     };
 
+/** Cap on the raw value kept with a quarantined row, in characters of its JSON text (docs/PERSISTENCE.md §7). */
+export const QUARANTINE_RAW_MAX_CHARS = 64 * 1024;
+
 export interface QuarantineRow {
   readonly id: string;
   readonly createdAt: string;
   readonly source: 'boot_integrity' | 'import';
   readonly importBatchId?: string;
   readonly claimedKind?: string;
-  /** Original value, truncated to the quarantine cap. */
+  /**
+   * The original value when its JSON text fits `QUARANTINE_RAW_MAX_CHARS`; otherwise the first
+   * `QUARANTINE_RAW_MAX_CHARS` characters of that text as a string, and `rawTruncated` says so. At boot the
+   * original row stays in `records` (nothing is deleted), so truncation loses nothing.
+   */
   readonly raw: JsonValue;
+  /** Present only when `raw` is a truncated text: the length of the full JSON text. */
+  readonly rawTruncated?: { readonly originalChars: number };
   readonly issues: readonly string[];
+}
+
+/** An import's stored report. The report is opaque JSON here: persistence never imports io (Phase 3 note 3). */
+export interface ImportBatchRow {
+  readonly id: string;
+  readonly createdAt: string;
+  readonly report: JsonValue;
 }
 
 export type DerivedCacheKind = 'depiction' | 'layout' | 'search_index' | 'structure_facts';
@@ -106,14 +123,40 @@ export interface AssetBlobWrite {
   readonly blob: Blob;
 }
 
+/** What boot found and did, for the app to show and offer (docs/PERSISTENCE.md §4). */
+export interface BootReport {
+  /** One report per migration step applied to an older database; empty when the data was current. */
+  readonly migrationSteps: readonly MigrationStepReport[];
+  /** L1–L3 findings for the loaded (or migrated) state, so the store need not validate it again. */
+  readonly findings: readonly Finding[];
+  /** Asset records whose bytes are missing from `assetBlobs` (AST-002), sorted. */
+  readonly assetIdsWithoutBlob: readonly string[];
+  /** The previous session did not record a clean shutdown. */
+  readonly crashSuspected: boolean;
+  /** Authoring drafts to offer for restore: only when a crash is suspected. */
+  readonly editorSessionIds: readonly string[];
+  /** Valid UI state entries; invalid ones are reset (`uiStateReset`), never a reason not to boot. */
+  readonly uiState: Readonly<Record<string, JsonValue>>;
+  readonly uiStateReset: readonly string[];
+  /** Rows newly quarantined by this boot, and how many of those had a raw value that had to be truncated. */
+  readonly newlyQuarantined: number;
+  readonly quarantineTruncated: number;
+}
+
 export type OpenResult =
   | {
       readonly mode: 'read_write' | 'read_only';
-      readonly readOnlyReason?: 'other_tab_is_writer' | 'newer_schema' | 'integrity_failure';
+      readonly readOnlyReason?: 'other_tab_is_writer' | 'newer_schema' | 'integrity_failure' | 'migration_failed';
+      /** Why boot is read-only, in words (newer schema, failed migration, damaged meta), error detail kept. */
+      readonly detail?: string;
+      /** null: nothing stored yet, or the stored data could not be interpreted (see `readOnlyReason`). */
       readonly state: CanonicalState | null;
       readonly revision: number;
+      /** Schema version found on disk before any migration; null when there was none. */
       readonly storedSchemaVersion: number | null;
+      /** Rows in the quarantine store after boot. */
       readonly quarantinedCount: number;
+      readonly bootReport?: BootReport;
     }
   | { readonly mode: 'unavailable'; readonly reason: 'indexeddb_blocked' | 'private_mode_quota' | 'unknown'; readonly detail: string };
 
@@ -129,6 +172,11 @@ export interface SaveStatus {
    * snapshots are never listed. Absent when there are none.
    */
   readonly deletablePeriodicSnapshotIds?: readonly string[];
+  /**
+   * Why the state is `failed`, when it is not just a failing write. `revision_gap`: a ChangeSet arrived that does not
+   * follow the previous revision and was refused; `replaceAll` of the in-memory state resyncs the queue.
+   */
+  readonly failureReason?: 'revision_gap';
 }
 
 export interface PersistenceAdapter {
@@ -139,7 +187,12 @@ export interface PersistenceAdapter {
    * backoff. Resolves when the write cycle holding this ChangeSet ends, durable or `failed`: read `getStatus()`.
    */
   writeChanges(changes: ChangeSet, next: CanonicalState, blobs?: readonly AssetBlobWrite[]): Promise<void>;
-  /** Replace everything (import/migration/restore) in one transaction, after a snapshot. */
+  /**
+   * Replace everything in ONE transaction, in the write queue's order (after the ChangeSets pending when it was
+   * called): boot-time migration, and the user-visible "save everything now" that recovers from a `revision_gap`.
+   * On success the queue continues from `revision`, pending ChangeSets are superseded, and the status is `saved`.
+   * Rejects on storage failure (nothing written) and refuses (RangeError) a state older than a pending ChangeSet.
+   */
   replaceAll(state: CanonicalState, revision: number): Promise<void>;
   /**
    * Builds, compresses and stores a snapshot in the write queue's order (after pending ChangeSets). Rejects only when
@@ -156,9 +209,22 @@ export interface PersistenceAdapter {
   putDerived(row: DerivedCacheInput): Promise<DerivedPutResult>;
   /** Updates `lastUsedAt`. A failing cache read is a miss (undefined), never an error. */
   getDerived(key: string): Promise<DerivedCacheRow | undefined>;
-  /** Clean-shutdown and integrity-check markers (meta rows). The caller checks `getStatus()` first. */
-  setLastCleanShutdownAt(at: string): Promise<void>;
+  /**
+   * Clean-shutdown and integrity-check markers (meta rows), written in the write queue's order. `null` marks a
+   * session as running: boot writes it after reading the previous marker, so a marker still `null` at the next
+   * boot means the previous session never shut down cleanly. The caller checks `getStatus()` before writing a time.
+   */
+  setLastCleanShutdownAt(at: string | null): Promise<void>;
   setLastIntegrityCheckAt(at: string): Promise<void>;
+  /** Rows that failed validation at boot or import, kept with their issues. Ordered write; rows whose ID is already there are kept as they are. Returns the IDs that were new. */
+  addQuarantine(rows: readonly QuarantineRow[]): Promise<readonly string[]>;
+  listQuarantine(): Promise<readonly QuarantineRow[]>;
+  deleteQuarantine(ids: readonly string[]): Promise<void>;
+  saveImportBatch(row: ImportBatchRow): Promise<void>;
+  /** Newest first. */
+  listImportBatches(): Promise<readonly ImportBatchRow[]>;
+  /** IDs of every stored asset blob, for the boot integrity check (AST-002). */
+  listAssetBlobIds(): Promise<readonly string[]>;
   saveEditorSession(session: EditorSession): Promise<void>;
   listEditorSessions(): Promise<readonly EditorSession[]>;
   deleteEditorSession(id: string): Promise<void>;

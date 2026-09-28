@@ -37,11 +37,12 @@
     "2.12",
     "2.13",
     "3.1",
-    "3.2"
+    "3.2",
+    "3.3"
   ],
   "nextPhase": 3,
-  "nextStep": "3.3",
-  "nextStepTitle": "Boot sequence: open/upgrade, session-only and read-only modes, pre_migration snapshot and migration, quarantine, integrity check, crash check",
+  "nextStep": "3.4",
+  "nextStepTitle": "Writer lock (orn-writer) and change channel (orn-changes) behind injected ports; follower apply (ADR-033); promotion",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -84,7 +85,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (Vitest 4.1.11: 85 files, 1337 tests; step 3.2, 2026-09-28).",
+    "npmRunCheck": "passed (Vitest 4.1.11: 91 files, 1414 tests; step 3.3, 2026-09-28).",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -115,10 +116,12 @@
     "persistenceSuite": "step 3.1: coalesce (8), write queue with a manual scheduler (21), derived cache (11), events (4); integration write path on fake-indexeddb (18: INV-20, ADV-038 integration part, ADV-040 write-path part, asset record + blob in one transaction, meta markers, read-only) and DB upgrade scaffold (3); P-01 IndexedDB variant (12: fixtures, demo, every shape at tiny, initial-tier dense, random datasets, random command sequences coalesced and ChangeSet by ChangeSet with undo/redo). src/persistence coverage 99% lines, 92% branches (focused run); 80% lines threshold in test:coverage.",
     "persistBench": "step 3.1 review: tests/perf/persist.bench.ts run once alone (bench:baseline not run): enqueue+coalesce ordinary 0.0002 ms mean, hub edit 0.0546 ms mean (p99 0.0804); prepare transaction rows (no IndexedDB) ordinary 0.0001 ms, hub edit 0.0327 ms (p99 0.0504); flush on fake-indexeddb ordinary edit 11.2 ms (smoke, dominated by fake-indexeddb). The hub-edit flush entry was removed.",
     "snapshotSuite": "step 3.2: codec (12), retention (4), periodic policy and wiring (9), write queue tasks and quota stage 2 (11 with the 3.1 review ones); integration snapshots on fake-indexeddb (12: create/list/read/delete, one transaction, queue order, retention with pruned IDs, four kinds of CORRUPT, ADV-040 snapshot stage) and restore (12: ADV-045 snapshot-restore part, migration through an injected runner, every failure changes nothing, live-data race); property snapshot round trip (10: fixtures, demo, every shape, random datasets and command sequences, deterministic bytes). src/persistence coverage 99.7% lines, 91.7% branches (focused run).",
-    "snapshotBench": "step 3.2: tests/perf/snapshot.bench.ts run once alone (bench:baseline not run), design tier dense, no IndexedDB, 5 samples: build 788 ms mean (max 859); restore without the store 699 ms (max 743); restoreSnapshot whole 3,489 ms (max 3,671), about 2 s of it replaceState. Main thread until Phase 4."
+    "snapshotBench": "step 3.2: tests/perf/snapshot.bench.ts run once alone (bench:baseline not run), design tier dense, no IndexedDB, 5 samples: build 788 ms mean (max 859); restore without the store 699 ms (max 743); restoreSnapshot whole 3,489 ms (max 3,671), about 2 s of it replaceState. Main thread until Phase 4.",
+    "bootSuite": "step 3.3: boot on fake-indexeddb (24: fresh/current databases, damaged meta, INV-23 quarantine, writer lock, AST-002, crash check, tolerant uiState, IndexedDB unavailable), boot migration (18: ADV-041 disk part, ADV-045 migration part, six failure paths with rollback), recovery (14: replaceAll, revision-gap recovery, quarantine/import batches/asset IDs/editor sessions/uiState), queue resync (5), withVersionOffset self-test (9), migrations-framework P-03 framework form over frozen synthetic fixtures (6). src/persistence coverage 99.4% lines, 88.9% branches (focused run).",
+    "bootBench": "step 3.3: tests/perf/boot.bench.ts run once alone (bench:baseline not run), design tier dense on fake-indexeddb, mean ms: bulk read 383 (not our code), per-record L1 + state 371, index build 449, validateAll 777, whole open() 2,466 (includes the fake-indexeddb read)."
   },
   "openItems": [
-    "Phase 3 contract amendments approved (PROGRESS.md 'Phase 3 contract decisions'); applied so far: step 3.1 (Q1 c, d, one-transaction asset write, Q2 getStatus) and step 3.2 (Q1 f, Q2 deletablePeriodicSnapshotIds, Q9 restore side). Still to land: Q1 (a), (b), (e), Q4, Q10 in 3.3; Q3, Q11 (ADR-033, ChangeMessage { fromRevision, revision, changedIds }) in 3.4; Q7 in 3.5; Q5, Q6 unsafeKeysRenamed, Q12, io ports (SnapshotPort, ImportBatchSink) in 3.5-3.7. For reviewer confirmation (step 3.2): readSnapshot returns SnapshotReadResult (a value wrapping the MigratableDocument), not the bare document.",
+    "Phase 3 contract amendments approved (PROGRESS.md 'Phase 3 contract decisions'); applied so far: steps 3.1 (Q1 c, d, one-transaction asset write, Q2 getStatus), 3.2 (Q1 f, Q2 deletablePeriodicSnapshotIds, Q9 restore side) and 3.3 (Q1 a, b, e, Q4, Q10). Still to land: Q3, Q11 (ADR-033, ChangeMessage { fromRevision, revision, changedIds }) in 3.4; Q7 in 3.5; Q5, Q6 unsafeKeysRenamed, Q12, io ports (SnapshotPort, ImportBatchSink) in 3.5-3.7. For reviewer confirmation (step 3.3): setLastCleanShutdownAt takes string | null (null = session running); addQuarantine returns new IDs; QuarantineRow.rawTruncated; quarantine is a copy (rows stay in records); the in-memory migration runs before the pre_migration snapshot; decodeSnapshot accepts any numeric schemaVersion.",
     "Consider a WARNING for the same substance listed twice in the same role and stage (use coefficient) — decide in Phase 6.",
     "All exam coverage and the baseline topic tree are REVIEW REQUIRED until checked against official syllabi.",
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
@@ -129,8 +132,10 @@
     "Phase 9 exceptions from Gate B (step 2.13, docs/reviews/gate-b-packet.md §8; numbers are median p99 of 3 runs): (1) class-hub rename 16.5 ms vs 16 - cause RTE-002/004 `peers` (routesAffectedBy walks referrers upward, ~10.5 ms); fix: declare peerReads on RTE-002/004 (and audit it); (2) class-hub parent move 46.0 ms (structural: SPC-006 re-runs on 1,400 species + merging ~1,400 findings); (3) review-status change on the like-water hub 21.2 ms per commit (structural: RVW-002 on ~1,000 referrers + finding-store merge); (4) route search dense 17.2 ms this run - untouched code, noise (earlier runs 9.3-12.1 ms), re-check on a quiet machine; (5) validateTouched/validateTouchedByRule without previous state: 38.7-47.1 ms on a 1,000-referrer hub - the compute worker must always pass previous (IMPLEMENTATION_PLAN.md Phase 4 note).",
     "Step 2.13: HIER-001, HIER-003, RTE-002 and RTE-004 declare no referencedReads (they walk hierarchies, compositions or routes through derived indexes); REF-006/REF-008, REL-003/005, CUR-004/006, PRS-001/002, HIER-003, RTE-002/004 declare no peerReads. Those rules keep the coarser behaviour.",
     "Step 3.2: snapshot build (0.8 s) and whole restore (3.5 s) run on the main thread at the design tier until Phase 4 hosts them in the compute worker; judged at Gate E. restoreSnapshot does not wait for the restored state to reach IndexedDB (callers flush()).",
-    "Revision-gap recovery (decided in the step 3.2 review): a refused gap sets status failed with reason 'revision_gap'; recovery is a user-visible 'save everything now', a replaceAll of the in-memory state in one transaction through the queue's ordering, after which the queue continues from that revision. API in 3.3, the button in Phase 5.",
     "Phase 5: the app reports a restore or an import as done only after flush() resolves with status saved; until then it shows 'saving'.",
-    "Phase 4: replaceState runs validateAll on the main thread (about 2 s of a 3.5 s restore at the design tier; index build about 0.5 s, validateAll about 1.3 s). From Phase 4 the compute worker validates the replica; replaceState and ADR-033's reload must accept precomputed findings so the main thread only swaps state and rebuilds indexes."
+    "Phase 4: replaceState runs validateAll on the main thread (about 2 s of a 3.5 s restore at the design tier; index build about 0.5 s, validateAll about 1.3 s). From Phase 4 the compute worker validates the replica; replaceState and ADR-033's reload must accept precomputed findings so the main thread only swaps state and rebuilds indexes.",
+    "Revision-gap recovery API is built (step 3.3: replaceAll + SaveStatus.failureReason 'revision_gap'); the 'save everything now' button and reading the reason are Phase 5.",
+    "Step 3.3: test:coverage failed 1 of 2 runs on timing tests under v8 instrumentation (gate-b-performance ADV-013 precursor_explorer 282.8 ms vs 80, ADV-012 navigator 82.8 vs 80, P-11 ADV-012 hub 30 s timeout); the re-run passed; npm run check passed both times. Cause not established.",
+    "Step 3.3: the store rebuilds indexes that boot already built (about 0.4 to 0.5 s at the design tier); rows that fail L1 stay in records (quarantine is a copy): Diagnostics repair is Phase 9; follower boot of an older database and promotion are 3.4."
   ]
 }

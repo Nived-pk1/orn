@@ -7,7 +7,8 @@ import type { IdFactory } from '@/core/dataset/contracts';
 import type { PersistenceAdapter, SnapshotSummary } from './contracts';
 import type { OrnDb, SnapshotRow } from './db';
 import type { PersistenceEventSink } from './events';
-import { buildSnapshot, decodeSnapshot } from './snapshot-codec';
+import type { MigratableDocument } from '@/core/migrations/contracts';
+import { buildRawSnapshot, buildSnapshot, decodeSnapshot, type BuiltSnapshot } from './snapshot-codec';
 import { expiredPeriodicIds, oldestFirst, periodicIdsOldestFirst } from './snapshot-retention';
 import type { WriteQueue } from './write-queue';
 
@@ -22,6 +23,8 @@ export interface SnapshotStoreOptions {
 export type SnapshotStore = Pick<PersistenceAdapter, 'createSnapshot' | 'listSnapshots' | 'readSnapshot' | 'deleteSnapshot'> & {
   /** Periodic snapshots, oldest first: what the quota status offers for deletion. */
   deletablePeriodicIds(): Promise<readonly string[]>;
+  /** Snapshot of a tolerant document as stored (the `pre_migration` snapshot); same queue order, same retention. */
+  createRawSnapshot(reason: SnapshotSummary['reason'], doc: MigratableDocument, revision: number, note?: string): Promise<SnapshotSummary>;
 };
 
 const summaryOf = (row: SnapshotRow): SnapshotSummary => {
@@ -34,6 +37,23 @@ export function createSnapshotStore(options: SnapshotStoreOptions): SnapshotStor
 
   async function summaries(): Promise<SnapshotSummary[]> {
     return (await db.snapshots.toArray()).map(summaryOf);
+  }
+
+  /** One `snapshots`-only transaction in the queue's order; a periodic snapshot prunes the older ones with it. */
+  async function store(built: BuiltSnapshot): Promise<SnapshotSummary> {
+    const { summary, bytes } = built;
+    const row: SnapshotRow = { ...summary, blob: new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/zlib' }) };
+    const pruned = await queue.runOrdered(() =>
+      db.transaction('rw', db.snapshots, async () => {
+        await db.snapshots.put(row);
+        if (summary.reason !== 'periodic') return [];
+        const expired = expiredPeriodicIds(await summaries());
+        await db.snapshots.bulkDelete(expired);
+        return expired;
+      }),
+    );
+    if (pruned.length > 0) onEvent?.({ type: 'snapshots_pruned', ids: pruned });
+    return summary;
   }
 
   return {
@@ -51,21 +71,11 @@ export function createSnapshotStore(options: SnapshotStoreOptions): SnapshotStor
         const first = built.issues[0];
         throw new Error(`cannot snapshot revision ${revision}: the state does not serialise (${first?.path ?? ''} ${first?.message ?? ''})`);
       }
-      const { summary, bytes } = built.built;
-      const row: SnapshotRow = { ...summary, blob: new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/zlib' }) };
-      const pruned = await queue.runOrdered(() =>
-        db.transaction('rw', db.snapshots, async () => {
-          await db.snapshots.put(row);
-          if (reason !== 'periodic') return [];
-          const expired = expiredPeriodicIds(await summaries());
-          await db.snapshots.bulkDelete(expired);
-          return expired;
-        }),
-      );
-      if (pruned.length > 0) onEvent?.({ type: 'snapshots_pruned', ids: pruned });
-      return summary;
+      return store(built.built);
     },
 
+    createRawSnapshot: (reason, doc, revision, note) =>
+      store(buildRawSnapshot({ id: ids.newId('snp'), createdAt: ids.now(), reason, doc, revision, ...(note !== undefined ? { note } : {}) })),
     async listSnapshots() {
       return (await summaries()).sort((a, b) => oldestFirst(b, a));
     },

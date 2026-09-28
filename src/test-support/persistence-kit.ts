@@ -15,8 +15,11 @@ import {
   type DatasetDocument,
   type RecordKind,
 } from '@/core/schema';
+import { createMigrationRunner } from '@/core/migrations';
+import { alwaysGrantedLock } from '@/persistence/lock';
 import { createDexieAdapter, type DexieAdapter, type DexieAdapterOptions } from '@/persistence/adapter';
 import { createOrnDb, type DbVersionStep, type OrnDb } from '@/persistence/db';
+import type { WriterLock } from '@/persistence/contracts';
 import type { PersistenceEvent, Scheduler } from '@/persistence/events';
 
 export interface ManualScheduler extends Scheduler {
@@ -100,6 +103,8 @@ export function freshAdapter(options: Partial<Omit<DexieAdapterOptions, 'db'>> =
     db: testDb.db,
     clock,
     ids: createIdFactory(clock, { next: () => ((step += 1) * 0.0137) % 1 }),
+    lock: alwaysGrantedLock,
+    runner: createMigrationRunner(),
     scheduler,
     onEvent: (event) => events.push(event),
     ...options,
@@ -207,3 +212,26 @@ function injectFaults(db: OrnDb, mutations: TestDb['mutations']): Faults {
 
 /** A DOMException as the browser raises it when storage is full. */
 export const quotaError = (): Error => new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+
+/** A writer lock stub that answers `result` and records how it was used. */
+export function stubLock(result: 'acquired' | 'held_elsewhere' = 'acquired'): WriterLock & { readonly calls: string[] } {
+  const calls: string[] = [];
+  return {
+    calls,
+    acquire: () => {
+      calls.push('acquire');
+      return Promise.resolve(result);
+    },
+    release: () => {
+      calls.push('release');
+      return Promise.resolve();
+    },
+  };
+}
+
+/** Saves `state` (revision 1, or `revision`) through the queue into a fresh fake IndexedDB, then reopens it: a page reload before boot. */
+export async function savedDatabase(state: CanonicalState, options: Partial<Omit<DexieAdapterOptions, 'db'>> = {}, revision = 1): Promise<TestAdapter> {
+  const first = freshAdapter();
+  await first.adapter.writeChanges(seedChangeSet(state, revision), state);
+  return reopen(first, options);
+}

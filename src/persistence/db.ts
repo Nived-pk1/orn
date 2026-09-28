@@ -4,12 +4,27 @@
  */
 import Dexie, { type DexieOptions, type Table, type Transaction } from 'dexie';
 import type { AnyRecord } from '@/core/schema';
-import { DB_NAME, DB_STORES, DB_VERSION, type DerivedCacheRow, type MetaRow, type SnapshotSummary } from './contracts';
+import type { EditorSession } from '@/core/commands/contracts';
+import {
+  DB_NAME,
+  DB_STORES,
+  DB_VERSION,
+  type DerivedCacheRow,
+  type ImportBatchRow,
+  type MetaRow,
+  type QuarantineRow,
+  type SnapshotSummary,
+} from './contracts';
 
 export interface AssetBlobRow {
   readonly assetId: string;
   readonly sha256: string;
   readonly blob: Blob;
+}
+
+export interface UiStateRow {
+  readonly key: string;
+  readonly value: unknown;
 }
 
 /** A snapshot row: the summary fields plus the compressed document as a Blob, so listing rows does not load the bytes. */
@@ -42,6 +57,10 @@ export class OrnDb extends Dexie {
   declare assetBlobs: Table<AssetBlobRow, string>;
   declare derivedCache: Table<DerivedCacheRow, string>;
   declare snapshots: Table<SnapshotRow, string>;
+  declare editorSessions: Table<EditorSession, string>;
+  declare uiState: Table<UiStateRow, string>;
+  declare importBatches: Table<ImportBatchRow, string>;
+  declare quarantine: Table<QuarantineRow, string>;
 }
 
 export function createOrnDb(options: OrnDbOptions): OrnDb {

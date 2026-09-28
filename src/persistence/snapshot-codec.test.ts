@@ -91,8 +91,15 @@ describe('decodeSnapshot', () => {
   });
 
   it('valid JSON that is not an ORN dataset is reported', () => {
-    for (const text of ['[]', '{}', '{"format":"other","schemaVersion":1,"records":{}}', '{"format":"orn.dataset","schemaVersion":0,"records":{}}', '{"format":"orn.dataset","schemaVersion":1,"records":[]}']) {
+    for (const text of ['[]', '{}', '{"format":"other","schemaVersion":1,"records":{}}', '{"format":"orn.dataset","schemaVersion":"1","records":{}}', '{"format":"orn.dataset","schemaVersion":1,"records":[]}']) {
       expect(decodeSnapshot(zlibSync(strToU8(text)))).toMatchObject({ ok: false, message: expect.stringContaining('not an ORN dataset') });
+    }
+  });
+
+  it('the version only has to be a number: whether the runner accepts it is not the codec’s call', () => {
+    for (const version of [0, -1, 1.5, 7]) {
+      const bytes = zlibSync(strToU8(JSON.stringify({ format: 'orn.dataset', schemaVersion: version, records: {} })));
+      expect(decodeSnapshot(bytes)).toMatchObject({ ok: true, doc: { schemaVersion: version } });
     }
   });
 
