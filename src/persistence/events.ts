@@ -5,7 +5,9 @@
 export type PersistenceEvent =
   | { readonly type: 'derived_cache_evicted'; readonly rows: number; readonly bytes: number; readonly reason: 'quota' | 'soft_cap' }
   | { readonly type: 'derived_cache_error'; readonly operation: 'put' | 'get'; readonly message: string }
-  | { readonly type: 'status_listener_error'; readonly message: string };
+  | { readonly type: 'status_listener_error'; readonly message: string }
+  | { readonly type: 'snapshots_pruned'; readonly ids: readonly string[] }
+  | { readonly type: 'periodic_snapshot_failed'; readonly message: string };
 
 export type PersistenceEventSink = (event: PersistenceEvent) => void;
 

@@ -111,4 +111,10 @@ export const BUDGETS = {
     { operation: 'persist: prepare transaction rows, hub edit (~1,000 records, our code only)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.1 review: no §2 row; informal' },
   'persist (design tier, hub_explosion, flush on fake-indexeddb) > flush on fake-indexeddb, ordinary edit (smoke; dominated by fake-indexeddb, not real IndexedDB)':
     { operation: 'persist: one flush on fake-indexeddb, ordinary edit (smoke)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'smoke measurement; dominated by fake-indexeddb (a bare Dexie put costs the same); real timing is traced at Gates E/F. The hub-edit flush entry was removed in the step 3.1 review' },
+  'snapshot (design tier, dense) > build: serialise + compress':
+    { operation: 'snapshot: build (serialise with L1 + compress)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.2: no PERFORMANCE_ARCHITECTURE.md §2 row; informal (hosted by the compute worker from Phase 4); SLOW_BENCH_OPTIONS, few samples' },
+  'snapshot (design tier, dense) > restore without the store: decode + migrate + L1 parse + state':
+    { operation: 'snapshot: restore without the store (decode + migrate + L1 parse + state)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.2: informal; SLOW_BENCH_OPTIONS, few samples' },
+  'snapshot restore (design tier, dense, whole) > restoreSnapshot: decode, L1, pre_restore build, replaceState (L1-L3)':
+    { operation: 'snapshot: restoreSnapshot whole (decode, L1, pre_restore build, replaceState L1-L3)', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 3.2: informal; in-memory port, no IndexedDB; replaceState re-validates the whole state (compare the 3 s full-validation row)' },
 };

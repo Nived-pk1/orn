@@ -4,11 +4,16 @@
  */
 import Dexie, { type DexieOptions, type Table, type Transaction } from 'dexie';
 import type { AnyRecord } from '@/core/schema';
-import { DB_NAME, DB_STORES, DB_VERSION, type DerivedCacheRow, type MetaRow } from './contracts';
+import { DB_NAME, DB_STORES, DB_VERSION, type DerivedCacheRow, type MetaRow, type SnapshotSummary } from './contracts';
 
 export interface AssetBlobRow {
   readonly assetId: string;
   readonly sha256: string;
+  readonly blob: Blob;
+}
+
+/** A snapshot row: the summary fields plus the compressed document as a Blob, so listing rows does not load the bytes. */
+export interface SnapshotRow extends SnapshotSummary {
   readonly blob: Blob;
 }
 
@@ -36,6 +41,7 @@ export class OrnDb extends Dexie {
   declare meta: Table<MetaRow, string>;
   declare assetBlobs: Table<AssetBlobRow, string>;
   declare derivedCache: Table<DerivedCacheRow, string>;
+  declare snapshots: Table<SnapshotRow, string>;
 }
 
 export function createOrnDb(options: OrnDbOptions): OrnDb {

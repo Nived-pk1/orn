@@ -1244,7 +1244,87 @@ Follow-ups done in the review commit ("phase-3: step 3.1 review follow-ups"):
 
 **Open item (from the review).** Recovery after a revision-gap refusal: the queue stays `failed`; decide in 3.3 (likely a full `replaceAll` re-save of the in-memory state, user-visible).
 
+### Step 3.2 — Snapshots: create, list, restore, delete, retention, periodic policy (2026-09-28)
+
+**Delivered** (`src/persistence`, every new source file under 130 lines)
+- `snapshot-codec.ts`: `buildSnapshot` (state → `full` DatasetDocument as deterministic JSON through the strict schema →
+  fflate zlib; a state that does not serialise is refused, never stored) and `decodeSnapshot` (bounded inflate, cap 200 MB;
+  bad stream, bad JSON, not an ORN dataset are values). zlib rather than gzip because fflate's gzip header carries the
+  current time, which would make identical states differ. Pure and structured-clone-safe, ready for the compute worker.
+- `snapshot-retention.ts`: newest 5 periodic kept; mandatory reasons and manual snapshots never pruned; the list of
+  deletable periodic snapshots (oldest first) for the quota status.
+- `snapshot-policy.ts`: `createPeriodicPolicy` (30 min of activity or 200 revisions, injected clock; activity starts with the
+  first ChangeSet after the previous snapshot, so an idle gap then one edit does not fire) and `startPeriodicSnapshots`
+  (one at a time, a failed one is reported and retried at the next ChangeSet).
+- `snapshot-store.ts`: create (build, then one `snapshots`-only transaction that also prunes older periodic snapshots and
+  reports them), list (newest first, summaries only), read, delete, all in the write queue's order via `runOrdered`.
+  A row is the summary plus the compressed bytes as a Blob, so `DB_STORES` and `DB_VERSION` are unchanged.
+- `restore.ts`: `restoreSnapshot` (see Decisions). `adapter.ts` now implements the four snapshot methods.
+- `write-queue.ts`: quota stage 2 (`deletableSnapshotIds` provider, list refreshed after each task), and tasks no longer
+  restart a failed batch (`retryAllowed`).
+- `fflate` 0.8.3 (dependency); `npm audit`: 0 vulnerabilities.
+
+**Contract amendments applied** (CLAUDE.md §7; Amendments entry below)
+- Q1 (f): `readSnapshot` returns the tolerant `MigratableDocument`. **To confirm:** it returns `SnapshotReadResult`
+  (`{ ok: true, summary, doc } | { ok: false, code: 'NOT_FOUND' | 'CORRUPT', message }`), not the bare document, because
+  a corrupt snapshot is a data condition and errors across module boundaries are values (CLAUDE.md §6).
+- Q2: `SaveStatus.deletablePeriodicSnapshotIds`.
+- Q9 (restore side): restore takes the core `MigrationRunner` and `Pick<CanonicalStore, 'getState' | 'getRevision' |
+  'isReadOnly' | 'replaceState'>`, and a `Pick<PersistenceAdapter, 'createSnapshot' | 'readSnapshot' | 'deleteSnapshot'>`
+  (all existing types; new: `RestoreSnapshotResult` in the persistence contracts). `WriterLock` for boot is 3.3; io's
+  `SnapshotPort` is 3.5/3.7 (the adapter's `createSnapshot` already satisfies it structurally).
+- Also new in the contracts: `SnapshotReadResult`, `RestoreSnapshotResult`. `DexieAdapterOptions` gains a required `ids: IdFactory`
+  (snapshot IDs `snp_<ulid>` and timestamps) and an optional `generator`.
+- No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change.
+
+**Decisions**
+- *Restore order and failure.* read → migrate → strict L1 parse → `pre_restore` snapshot → `replaceState` (L1–L3, history
+  cleared). Every failure is a value and changes nothing. If `replaceState` refuses (an L2/L3 ERROR in the snapshot's
+  state), the `pre_restore` snapshot made for it is deleted again, so a refused restore leaves no mandatory snapshot behind.
+  If the live data changes while the `pre_restore` snapshot is written, it is taken again (3 attempts, then
+  `SNAPSHOT_FAILED`): the pre-restore snapshot always holds exactly what the restore replaced.
+- *Persistence of the restored state* is not awaited inside `restoreSnapshot`: `replaceState` notifies subscribers with a
+  `replace` ChangeSet and the write queue persists it like any other; callers `flush()` (the tests do).
+- *Quota stage 2* is a status event only (no UI): `SaveStatus.failed` carries `deletablePeriodicSnapshotIds`, oldest first,
+  only for quota failures and only when periodic snapshots exist. Deleting one refreshes the list but never retries the
+  write (a task must not trigger a doomed retry); a new ChangeSet or `flush()` does.
+- *Snapshot build validates through the strict schema* (as export does), which costs a full L1 pass (see the benchmark);
+  the alternative, a bare `JSON.stringify`, would risk storing a snapshot that cannot be restored.
+- *Older-snapshot tests* use a fake runner over a stored document in an "older shape" (the envelope requires
+  `schemaVersion >= 1`, as the runner does, so a version-0 document cannot exist); `withVersionOffset` and the real-runner
+  boot tests are 3.3's. A newer-version snapshot is tested through the real `createMigrationRunner()` (`NEWER_VERSION`).
+
+**Tests** (`npm run check`: 85 files, 1,337 tests; before this step 78 files, 1,273)
+- Unit: codec (12: summary, determinism, compression, refusal of an unserialisable state, garbage / truncated / flipped-byte /
+  not-JSON / not-a-dataset input, inflate cap, unknown keys kept), retention (4), policy and periodic wiring (9), write queue
+  tasks and quota stage 2 (6 + 5 new).
+- Integration `persistence-snapshots.test.ts` (12: create/list/read/delete, one transaction over `snapshots` only, ordering
+  after a pending ChangeSet, read-only refusal, retention with pruned IDs reported, damage reported as CORRUPT four ways,
+  ADV-040 snapshot stage) and `persistence-restore.test.ts` (12: ADV-045 snapshot-restore part with history cleared and the
+  restored state persisted and "undo restore", migration through an injected runner, and every failure changing nothing:
+  NOT_FOUND, CORRUPT, MIGRATION_FAILED, NEWER_VERSION, INVALID twice, REJECTED, READ_ONLY, SNAPSHOT_FAILED, and the
+  live-data race twice). `persistence-markers.test.ts` was split out of the write-path file (no test changed).
+- Property `snapshot-roundtrip.test.ts` (10): fixtures, demo, every generator shape (tiny), initial-tier dense, random
+  datasets, random command sequences; build is deterministic.
+- Coverage of `src/persistence` (focused run): 99.7% lines, 91.7% branches.
+
+**Benchmark** (`tests/perf/snapshot.bench.ts`, run once and alone; `bench:baseline` NOT run; design tier, dense, no
+IndexedDB; SLOW options, 5 samples, so p99 is the maximum; mean / max in ms; informal, no §2 row):
+- build: serialise (with L1) + compress: 788 / 859
+- restore without the store: decode + migrate + L1 parse + state: 699 / 743
+- restoreSnapshot, whole (decode, L1, `pre_restore` build, `replaceState` L1–L3): 3,489 / 3,671
+About 2 s of the whole restore is `replaceState`'s full validation. All of this runs on the main thread until Phase 4 hosts
+it in the compute worker; the "no main-thread task > 50 ms" row is judged at Gate E.
+
+**Timing-sensitive tests.** `npm run check` ran twice on the final code; no timing or budget test failed (nothing else was running).
+
+**Open items**
+- Snapshot build and restore are 0.7 to 3.5 s on the main thread at the design tier until Phase 4 (worker hosting); a Gate E item.
+- `restoreSnapshot` does not wait for the restored state to reach IndexedDB; the app wiring (Phase 5) calls `flush()` where it matters.
+- Q1 (a), (b), (e), Q4, Q10 land in 3.3 as planned; `open`, `replaceAll`, the boot use of `pre_migration` snapshots are 3.3.
+
 ## Amendments
+- **2026-09-28, step 3.2 — snapshots: `readSnapshot` returns the tolerant document, `SaveStatus.deletablePeriodicSnapshotIds`, restore types (contract changes, reviewer-approved in "Phase 3 contract decisions", Q1 (f), Q2, Q9).** Problem: an older snapshot has to be migrated before it can be parsed strictly, so `readSnapshot(): Promise<DatasetDocument>` could not serve restore; the quota sequence's stage 2 (PERSISTENCE.md §11) had no place to report the periodic snapshots the user may delete; restore needed named result and port types. Change: `readSnapshot` returns `SnapshotReadResult` (`{ ok: true, summary, doc: MigratableDocument }` or `{ ok: false, code: 'NOT_FOUND' | 'CORRUPT', message }`; the wrapper beyond the approved wording is there because damage is a value, CLAUDE.md §6); `SaveStatus.deletablePeriodicSnapshotIds?`; `RestoreSnapshotResult`; doc comments on `createSnapshot`/`listSnapshots`/`deleteSnapshot` (write queue order, newest first, pruning). `DexieAdapterOptions` (an implementation option, not contract) gains a required `ids`. No schema change, no `DB_STORES`/`DB_VERSION` change (a snapshot row is the summary plus a Blob), no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §2, §9, §11.
 - **2026-09-28, step 3.1 review — INV-20, PERSISTENCE.md §1/§3 and §10 wording (doc wording, no contract change).** Problem: INV-20 and PERSISTENCE.md said "one transaction per commit", while step 3.1 (reviewer-approved) lets ChangeSets queued together share one transaction. Change: every IndexedDB transaction is atomic and ends on a committed revision; an idle queue writes one transaction per ChangeSet; ChangeSets queued together may share one transaction ending on the newest. Also recorded in the same commit: every non-ChangeSet IndexedDB write (markers, snapshots) runs through the queue's ordering (`runOrdered`) and `derivedCache` is the single documented exception (PERSISTENCE.md §2/§3); the change-channel message is `{ fromRevision, revision, changedIds }` (PERSISTENCE.md §10, 3.4 Must cover cell; the type itself lands in 3.4).
 - **2026-09-28, step 3.1 — `PersistenceAdapter`: derived cache, meta markers, asset blobs in the write, `getStatus` (contract changes, reviewer-approved in "Phase 3 contract decisions").** Problem: the write side needed (Q1 c) a place for `derivedCache` rows and their LRU eviction (quota stage 1 has to evict something), (Q1 d) setters for the clean-shutdown and integrity-check markers, (Q1 asset write) one transaction over an asset record and its bytes (INV-20; "blob first, then the record" was rejected), and (Q2) a synchronous pending-writes query for `beforeunload`. Change, all additive except one removal: `DerivedCacheRow`, `DerivedCacheInput`, `DerivedPutResult`, `putDerived`, `getDerived`; `setLastCleanShutdownAt`, `setLastIntegrityCheckAt`; `AssetBlobWrite` and `writeChanges(changes, next, blobs?)` (the third parameter is optional; `next` stays, see step 3.1); `getStatus()`; **`putAssetBlob` removed** (a standalone blob write is the rejected path; blobs of deleted asset records are kept for undo, an orphan sweep is a Phase 9 Diagnostics action). Docs updated in the same commit: PERSISTENCE.md §2, §3, §5, §11, SONNET_HANDOFF.md §9. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change.
 - **2026-09-28, step 2.13 — `FindingStore.replaceForRules`, `Validator.validateTouchedByRule` (with `TouchedValidation`, `commitTouched`) and `ValidationRule.peerReads` (contract changes, ADR-032; all additive, reviewer-approved).** Problem: after ADR-031 a hub edit that changes a field its referrers read (a species' `review`, RVW-002) still re-ran every referrer whole (~50 ms of a 67-77 ms commit on the like-water hub), and touching a class re-ran SPC-006 on every species listing it (1,400 at the design tier; ~87 ms per commit), although one rule of about forty was affected. Change: `FindingStore.replaceForRules(subjects, ruleIds, findings)` replaces only the listed rules' findings for each subject (the whole-subject `replaceForSubjects` stays); `Validator.validateTouchedByRule(state, indexes, touched, previous, known)` returns the subjects re-validated whole plus, per rule set, the referrers and peers of which only the rules that read what changed (or that named them) were re-run, and the command store makes that one call per commit (the doubled `scopeOf` call is gone); an affected L2 rule keeps a record whole (an L2 ERROR gates its L3 rules), and a per-rule subject with an L1/L2 ERROR in the store is skipped. `peerReads` (the mirror of `referencedReads`: fields of a touched record a rule reads when validating one of its other records) makes `peers` field-aware; undeclared means called on every touch. `scopeOf`/`validateTouched` keep their meaning. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-032, VALIDATION_RULES.md §5, ARCHITECTURE.md §2.4, PERFORMANCE_ARCHITECTURE.md §3, IMPLEMENTATION_PLAN.md (§1 item 7, Phase 4 note), TEST_STRATEGY.md §6 (general performance rule for gates).

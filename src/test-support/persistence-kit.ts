@@ -3,7 +3,7 @@
  * delays are asserted, never slept), a transaction spy, and the seed / load pair P-01 needs. Test-only.
  */
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
-import { assembleChangeSet, documentToState } from '@/core/dataset';
+import { assembleChangeSet, createIdFactory, documentToState } from '@/core/dataset';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import {
   DATASET_FORMAT,
@@ -94,9 +94,12 @@ export function freshAdapter(options: Partial<Omit<DexieAdapterOptions, 'db'>> =
   const scheduler = manualScheduler();
   const events: PersistenceEvent[] = [];
   let ms = 1_790_000_000_000;
+  const clock = { nowMs: () => (ms += 1000) };
+  let step = 0;
   const adapter = createDexieAdapter({
     db: testDb.db,
-    clock: { nowMs: () => (ms += 1) },
+    clock,
+    ids: createIdFactory(clock, { next: () => ((step += 1) * 0.0137) % 1 }),
     scheduler,
     onEvent: (event) => events.push(event),
     ...options,

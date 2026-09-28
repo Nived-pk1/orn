@@ -2,9 +2,10 @@
  * Persistence contracts — docs/PERSISTENCE.md. IndexedDB (Dexie) is the canonical store on device.
  * One IndexedDB transaction per commit (INV-20); a single writer tab via Web Locks (INV-28).
  */
-import type { CanonicalState, DatasetDocument, JsonValue } from '@/core/schema';
+import type { CanonicalState, JsonValue } from '@/core/schema';
 import type { ChangeSet } from '@/core/dataset/contracts';
-import type { EditorSession } from '@/core/commands/contracts';
+import type { CommandError, EditorSession } from '@/core/commands/contracts';
+import type { MigratableDocument, MigrationError, MigrationStepReport } from '@/core/migrations/contracts';
 
 export const DB_NAME = 'orn';
 export const DB_VERSION = 1;
@@ -40,6 +41,35 @@ export interface SnapshotSummary {
   readonly byteSize: number;
   readonly note?: string;
 }
+
+/**
+ * A snapshot read back as the TOLERANT document: an older snapshot has to be migrated before it can be parsed
+ * strictly, so it is never handed out as a strict `DatasetDocument`. Damage is a value, never an exception.
+ */
+export type SnapshotReadResult =
+  | { readonly ok: true; readonly summary: SnapshotSummary; readonly doc: MigratableDocument }
+  | { readonly ok: false; readonly code: 'NOT_FOUND' | 'CORRUPT'; readonly message: string };
+
+/** Outcome of `restoreSnapshot`. Every `ok: false` leaves the live state, the history and the stored data as they were. */
+export type RestoreSnapshotResult =
+  | {
+      readonly ok: true;
+      /** The mandatory snapshot of what was live just before the restore ("undo restore" restores it). */
+      readonly preRestore: SnapshotSummary;
+      /** One report per migration step applied to an older snapshot; empty when it was current. */
+      readonly migrationSteps: readonly MigrationStepReport[];
+      readonly revision: number;
+    }
+  | {
+      readonly ok: false;
+      readonly code: 'READ_ONLY' | 'NOT_FOUND' | 'CORRUPT' | 'MIGRATION_FAILED' | 'INVALID' | 'REJECTED' | 'SNAPSHOT_FAILED';
+      readonly message: string;
+      readonly migration?: MigrationError;
+      /** L1 issues (bounded) for INVALID. */
+      readonly issues?: readonly { readonly path: string; readonly message: string }[];
+      /** The store's refusal for REJECTED (L1–L3 findings of the restored state). */
+      readonly error?: CommandError;
+    };
 
 export interface QuarantineRow {
   readonly id: string;
@@ -93,6 +123,12 @@ export interface SaveStatus {
   /** ChangeSets accepted but not yet durable. Kept while `failed`: nothing is dropped, memory stays authoritative. */
   readonly pendingRevisions: number;
   readonly lastError?: string;
+  /**
+   * Set with `failed` after a quota error once the derived cache had nothing left to evict (PERSISTENCE.md §11,
+   * stage 2): the periodic snapshots the user may delete to make room, oldest first. Mandatory and manual
+   * snapshots are never listed. Absent when there are none.
+   */
+  readonly deletablePeriodicSnapshotIds?: readonly string[];
 }
 
 export interface PersistenceAdapter {
@@ -105,9 +141,16 @@ export interface PersistenceAdapter {
   writeChanges(changes: ChangeSet, next: CanonicalState, blobs?: readonly AssetBlobWrite[]): Promise<void>;
   /** Replace everything (import/migration/restore) in one transaction, after a snapshot. */
   replaceAll(state: CanonicalState, revision: number): Promise<void>;
+  /**
+   * Builds, compresses and stores a snapshot in the write queue's order (after pending ChangeSets). Rejects only when
+   * storage fails or the state cannot be serialised. A periodic snapshot also prunes older periodic ones beyond the
+   * newest five, in the same transaction (mandatory reasons and manual snapshots are never pruned).
+   */
   createSnapshot(reason: SnapshotReason, state: CanonicalState, revision: number, note?: string): Promise<SnapshotSummary>;
+  /** Newest first. Rows hold the compressed bytes as a Blob, so listing does not load them. */
   listSnapshots(): Promise<readonly SnapshotSummary[]>;
-  readSnapshot(id: string): Promise<DatasetDocument>;
+  readSnapshot(id: string): Promise<SnapshotReadResult>;
+  /** In the write queue's order. Deleting an unknown ID is not an error. */
   deleteSnapshot(id: string): Promise<void>;
   getAssetBlob(assetId: string): Promise<Blob | undefined>;
   putDerived(row: DerivedCacheInput): Promise<DerivedPutResult>;

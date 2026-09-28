@@ -36,11 +36,12 @@
     "2.11",
     "2.12",
     "2.13",
-    "3.1"
+    "3.1",
+    "3.2"
   ],
   "nextPhase": 3,
-  "nextStep": "3.2",
-  "nextStepTitle": "Snapshots: pure builder, create/list/restore/delete, retention, periodic policy, restore through an injected MigrationRunner",
+  "nextStep": "3.3",
+  "nextStepTitle": "Boot sequence: open/upgrade, session-only and read-only modes, pre_migration snapshot and migration, quarantine, integrity check, crash check",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -83,7 +84,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (Vitest 4.1.11: 78 files, 1273 tests; step 3.1 review, 2026-09-28). Step 2.13 figures for src/core coverage unchanged.",
+    "npmRunCheck": "passed (Vitest 4.1.11: 85 files, 1337 tests; step 3.2, 2026-09-28).",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -112,10 +113,12 @@
     "benchTooling": "step 2.9: tests/perf/budgets.mjs + scripts/bench-report.mjs/generate-baseline.mjs/bench-compare.mjs (npm run bench:baseline / bench:compare); baseline.json now records mean/p75/p99/sampleCount per entry with the verdict computed on p99 (documented stand-in for the §2 budgets' p95). Recomputing on p99 flipped several step-2.8 pass verdicts to fail (commit dispatch/undo-redo, reaction_explorer/precursor_explorer projection builds at the design tier) — not fixed this step, carried to 2.10. Step 2.13: npm run bench fixed on Windows (scripts/run-bench-cli.mjs runs vitest's entry file via process.execPath); bench, bench:baseline and bench:compare all verified; class-hub benches (tests/perf/class-hub.bench.ts) and validateTouchedByRule hub entries added (42 entries).",
     "validationScopeSuite": "steps 2.12-2.13: ValidationRule.referencedReads (ADR-031), FindingStore.replaceForRules + Validator.validateTouchedByRule + ValidationRule.peerReads (ADR-032). scoping.test.ts (32: change/read logic; 120-referrer hub with rule invocations counted; per-rule referrers - findings of rules that did not run survive, an L2-ERROR referrer is left alone; class hub rename/alias/notes re-run nothing on species, a parent move re-runs SPC-006 alone); reads-audit.test.ts (5: Proxy trace of every declared rule's referenced reads incl. hierarchy walks, vanish differential for rules declared to read nothing, peerReads trace); store.test.ts (6 replaceForRules); tests/property/validation-scope.test.ts (3, P-11: incremental == validateAll after random hub-, class-hub- and review-status-aimed edits on ADV-012 and like-water shapes); incremental.test.ts fixture walk on both commit paths.",
     "persistenceSuite": "step 3.1: coalesce (8), write queue with a manual scheduler (21), derived cache (11), events (4); integration write path on fake-indexeddb (18: INV-20, ADV-038 integration part, ADV-040 write-path part, asset record + blob in one transaction, meta markers, read-only) and DB upgrade scaffold (3); P-01 IndexedDB variant (12: fixtures, demo, every shape at tiny, initial-tier dense, random datasets, random command sequences coalesced and ChangeSet by ChangeSet with undo/redo). src/persistence coverage 99% lines, 92% branches (focused run); 80% lines threshold in test:coverage.",
-    "persistBench": "step 3.1 review: tests/perf/persist.bench.ts run once alone (bench:baseline not run): enqueue+coalesce ordinary 0.0002 ms mean, hub edit 0.0546 ms mean (p99 0.0804); prepare transaction rows (no IndexedDB) ordinary 0.0001 ms, hub edit 0.0327 ms (p99 0.0504); flush on fake-indexeddb ordinary edit 11.2 ms (smoke, dominated by fake-indexeddb). The hub-edit flush entry was removed."
+    "persistBench": "step 3.1 review: tests/perf/persist.bench.ts run once alone (bench:baseline not run): enqueue+coalesce ordinary 0.0002 ms mean, hub edit 0.0546 ms mean (p99 0.0804); prepare transaction rows (no IndexedDB) ordinary 0.0001 ms, hub edit 0.0327 ms (p99 0.0504); flush on fake-indexeddb ordinary edit 11.2 ms (smoke, dominated by fake-indexeddb). The hub-edit flush entry was removed.",
+    "snapshotSuite": "step 3.2: codec (12), retention (4), periodic policy and wiring (9), write queue tasks and quota stage 2 (11 with the 3.1 review ones); integration snapshots on fake-indexeddb (12: create/list/read/delete, one transaction, queue order, retention with pruned IDs, four kinds of CORRUPT, ADV-040 snapshot stage) and restore (12: ADV-045 snapshot-restore part, migration through an injected runner, every failure changes nothing, live-data race); property snapshot round trip (10: fixtures, demo, every shape, random datasets and command sequences, deterministic bytes). src/persistence coverage 99.7% lines, 91.7% branches (focused run).",
+    "snapshotBench": "step 3.2: tests/perf/snapshot.bench.ts run once alone (bench:baseline not run), design tier dense, no IndexedDB, 5 samples: build 788 ms mean (max 859); restore without the store 699 ms (max 743); restoreSnapshot whole 3,489 ms (max 3,671), about 2 s of it replaceState. Main thread until Phase 4."
   },
   "openItems": [
-    "Phase 3 contract amendments approved (PROGRESS.md 'Phase 3 contract decisions'); step 3.1 applied Q1 (c), (d), the one-transaction asset write and Q2 getStatus (Amendments, 2026-09-28). Still to land: Q2 deletablePeriodicSnapshotIds and Q1 (f) in 3.2; Q1 (a), (b), (e), Q4, Q10 in 3.3; Q3, Q11 (ADR-033) in 3.4; Q7 in 3.5; Q5, Q6 unsafeKeysRenamed, Q12 in 3.6/3.7. For reviewer confirmation (step 3.1): writeChanges keeps `next` as its second parameter with blobs third, putAssetBlob removed, and one transaction may span several queued ChangeSets (coalescing).",
+    "Phase 3 contract amendments approved (PROGRESS.md 'Phase 3 contract decisions'); applied so far: step 3.1 (Q1 c, d, one-transaction asset write, Q2 getStatus) and step 3.2 (Q1 f, Q2 deletablePeriodicSnapshotIds, Q9 restore side). Still to land: Q1 (a), (b), (e), Q4, Q10 in 3.3; Q3, Q11 (ADR-033, ChangeMessage { fromRevision, revision, changedIds }) in 3.4; Q7 in 3.5; Q5, Q6 unsafeKeysRenamed, Q12, io ports (SnapshotPort, ImportBatchSink) in 3.5-3.7. For reviewer confirmation (step 3.2): readSnapshot returns SnapshotReadResult (a value wrapping the MigratableDocument), not the bare document.",
     "Consider a WARNING for the same substance listed twice in the same role and stage (use coefficient) — decide in Phase 6.",
     "All exam coverage and the baseline topic tree are REVIEW REQUIRED until checked against official syllabi.",
     "Demo dataset chemistry must be verified by a human before any record is marked verified.",
@@ -125,6 +128,7 @@
     "The command store (docs/PROGRESS.md step 2.1) still only maintains the part-1 coreIndexEngine, not the full indexEngine with navigatorRollup(); no live UI can read the navigator roll-up through the store yet. Not this step's problem to fix (no consumer forces the switch until a real navigator feature is wired, Phase 5+), but tests that need it (P-07, the differential test) work around it by subscribing and applying the full engine independently.",
     "Phase 9 exceptions from Gate B (step 2.13, docs/reviews/gate-b-packet.md §8; numbers are median p99 of 3 runs): (1) class-hub rename 16.5 ms vs 16 - cause RTE-002/004 `peers` (routesAffectedBy walks referrers upward, ~10.5 ms); fix: declare peerReads on RTE-002/004 (and audit it); (2) class-hub parent move 46.0 ms (structural: SPC-006 re-runs on 1,400 species + merging ~1,400 findings); (3) review-status change on the like-water hub 21.2 ms per commit (structural: RVW-002 on ~1,000 referrers + finding-store merge); (4) route search dense 17.2 ms this run - untouched code, noise (earlier runs 9.3-12.1 ms), re-check on a quiet machine; (5) validateTouched/validateTouchedByRule without previous state: 38.7-47.1 ms on a 1,000-referrer hub - the compute worker must always pass previous (IMPLEMENTATION_PLAN.md Phase 4 note).",
     "Step 2.13: HIER-001, HIER-003, RTE-002 and RTE-004 declare no referencedReads (they walk hierarchies, compositions or routes through derived indexes); REF-006/REF-008, REL-003/005, CUR-004/006, PRS-001/002, HIER-003, RTE-002/004 declare no peerReads. Those rules keep the coarser behaviour.",
-    "Recovery after a revision-gap refusal: the queue stays failed; decide in 3.3 (likely a full replaceAll re-save of the in-memory state, user-visible)."
+    "Recovery after a revision-gap refusal: the queue stays failed; decide in 3.3 (likely a full replaceAll re-save of the in-memory state, user-visible).",
+    "Step 3.2: snapshot build (0.8 s) and whole restore (3.5 s) run on the main thread at the design tier until Phase 4 hosts them in the compute worker; judged at Gate E. restoreSnapshot does not wait for the restored state to reach IndexedDB (callers flush())."
   ]
 }

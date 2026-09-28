@@ -19,7 +19,7 @@ Database `orn`, Dexie version `DB_VERSION` (starts at 1). Store definitions live
 | records | `id` (index `kind`) | Every canonical record, one row per record, exactly as the schema defines it |
 | meta | `key` | `schemaVersion`, `datasetMeta`, `revision`, `lastCleanShutdownAt`, `lastIntegrityCheckAt` |
 | assetBlobs | `assetId` (index `sha256`) | Image bytes as Blob |
-| snapshots | `id` (indexes `createdAt`, `reason`) | fflate-compressed DatasetDocument JSON + summary |
+| snapshots | `id` (indexes `createdAt`, `reason`) | The summary fields (`id`, `createdAt`, `reason`, `revision`, `schemaVersion`, `byteSize`, `note?`) plus the fflate-compressed DatasetDocument JSON as a Blob (so listing rows does not load the bytes) |
 | editorSessions | `id` | Authoring drafts (may be invalid) for crash recovery |
 | derivedCache | `key` (indexes `cacheKind`, `lastUsedAt`) | Depictions, layouts, search index, structure facts; `{ key, cacheKind, value, byteSize, lastUsedAt }`; LRU-evicted, disposable |
 | uiState | `key` | Selection, viewports, expansion, panels, active exam version; tolerant parsing |
@@ -95,9 +95,10 @@ Importers parse `DatasetEnvelopeSchema` first (format, version, `records` as arr
 
 ## 9. Snapshots
 
-- Mandatory before import, migration and restore. Periodic during editing (every 30 minutes of activity or 200 revisions); the last 5 periodic snapshots are kept. Manual snapshots are kept until the user deletes them.
-- Format: fflate-compressed DatasetDocument JSON with a summary row.
-- Restore: validate the snapshot (migrating if older) → `pre_restore` snapshot → `replaceState` → history cleared.
+- Mandatory before import, migration and restore (reasons `pre_import`, `pre_migration`, `pre_restore`; never pruned). Manual snapshots are kept until the user deletes them. Periodic snapshots are taken during editing, after 30 minutes of activity or 200 revisions, whichever comes first (activity starts with the first ChangeSet after the previous snapshot; injected clock; `createPeriodicPolicy`, `startPeriodicSnapshots`). Creating a periodic snapshot prunes all but the newest 5 periodic ones in the same transaction, and reports the pruned IDs.
+- Format: a `full` DatasetDocument as deterministic JSON text (the strict schema, so a state that does not serialise is refused, never stored), compressed with fflate (zlib: no timestamp, so identical states give identical bytes). Building and decoding are pure functions (`buildSnapshot`, `decodeSnapshot`) hosted by the compute worker from Phase 4. Decoding is bounded (inflated size cap 200 MB) and every kind of damage is a value: `readSnapshot` returns `{ ok: true, summary, doc }` with the TOLERANT `MigratableDocument` (an older snapshot must be migrated before it parses strictly) or `{ ok: false, code: 'NOT_FOUND' | 'CORRUPT', message }`.
+- Creating and deleting run in the write queue's order (§3). Snapshot bytes are never part of a ChangeSet transaction.
+- Restore (`restoreSnapshot`): read → migrate (the injected `MigrationRunner`, if the snapshot is older) → strict L1 parse → `pre_restore` snapshot of the live state (taken again, at most 3 times, if the live data changed while it was written) → `replaceState(…, 'restore')` (validated like a commit, history cleared) . The result is a value: `ok: true` with the `pre_restore` summary (restoring it is "undo restore") and the migration step reports, or `ok: false` with `READ_ONLY`, `NOT_FOUND`, `CORRUPT`, `MIGRATION_FAILED` (the runner's error attached), `INVALID` (bounded L1 issues), `REJECTED` (the store's L1–L3 refusal; the `pre_restore` snapshot made for it is removed again) or `SNAPSHOT_FAILED`. A failed restore changes nothing: not the live state, not its history, not the stored snapshots. The restored state reaches IndexedDB like any ChangeSet (the store's `replace` ChangeSet through the write queue); the caller may `flush()` to wait for it.
 
 ## 10. Multiple tabs
 
@@ -105,7 +106,7 @@ The tab holding the Web Lock `orn-writer` is the only writer (INV-28). Other tab
 
 ## 11. Quota and durability
 
-`navigator.storage.persist()` is requested after the first edit. Diagnostics shows usage and quota. `derivedCache` keeps itself under a 100 MB soft cap by evicting its least recently used rows when a row is put. On a quota error: evict `derivedCache` (the least recently used half of its rows per round, retrying the write at once after each round, no timer) → ask to delete old periodic snapshots → otherwise `SaveStatus.failed` with "Export now" (pending ChangeSets kept, memory untouched). A cache write that fails is a value (`DerivedPutResult`), never a SaveStatus problem, and every eviction is reported to the diagnostics sink.
+`navigator.storage.persist()` is requested after the first edit. Diagnostics shows usage and quota. `derivedCache` keeps itself under a 100 MB soft cap by evicting its least recently used rows when a row is put. On a quota error: evict `derivedCache` (the least recently used half of its rows per round, retrying the write at once after each round, no timer) → **stage 2:** `SaveStatus.failed` carries `deletablePeriodicSnapshotIds`, the periodic snapshots the user may delete to make room, oldest first (mandatory and manual snapshots are never offered; the field is absent when there are none; there is no UI before Phase 5, only the status). Deleting one refreshes the list but does not retry the write: a new ChangeSet or `flush()` does → otherwise `SaveStatus.failed` with "Export now" (pending ChangeSets kept, memory untouched). A cache write that fails is a value (`DerivedPutResult`), never a SaveStatus problem, and every eviction is reported to the diagnostics sink.
 
 ## 12. Failure modes (#22)
 

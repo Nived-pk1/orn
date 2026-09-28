@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { CanonicalState } from '@/core/schema';
+import { quotaError } from '@/test-support/persistence-kit';
 import { boom, history, rig } from '@/test-support/queue-rig';
 
 describe('write queue: ordered tasks', () => {
@@ -73,5 +74,70 @@ describe('write queue: ordered tasks', () => {
     const r = rig();
     await r.queue.close();
     await expect(r.queue.runOrdered(async () => 1)).rejects.toThrow(/closed/);
+  });
+});
+
+describe('write queue: a task never restarts a failed batch', () => {
+  it('only a new ChangeSet or flush() does', async () => {
+    const { states, changes } = history(1);
+    const r = rig({ retryDelaysMs: [] });
+    r.script.fail.push(boom());
+    await r.queue.enqueue(changes[0] as ChangeSet, states[0] as CanonicalState);
+    expect(r.batches).toHaveLength(1);
+    await r.queue.runOrdered(async () => 'task');
+    expect(r.batches).toHaveLength(1);
+    expect(r.queue.getStatus().state).toBe('failed');
+    await r.queue.flush();
+    expect(r.batches).toHaveLength(2);
+    expect(r.queue.getStatus().state).toBe('saved');
+  });
+});
+
+describe('write queue: quota stage 2, periodic snapshots offered for deletion (ADV-040 snapshot stage)', () => {
+  const failQuota = async (r: ReturnType<typeof rig>) => {
+    const { states, changes } = history(1);
+    r.script.fail.push(() => quotaError());
+    await r.queue.enqueue(changes[0] as ChangeSet, states[0] as CanonicalState);
+  };
+
+  it('a quota failure with nothing left to evict lists the deletable snapshots, oldest first, in the failed status', async () => {
+    const r = rig({ deletableSnapshotIds: async () => ['snp_old', 'snp_new'] });
+    await failQuota(r);
+    expect(r.queue.getStatus()).toMatchObject({ state: 'failed', pendingRevisions: 1, deletablePeriodicSnapshotIds: ['snp_old', 'snp_new'] });
+    expect(r.statuses.at(-1)?.deletablePeriodicSnapshotIds).toEqual(['snp_old', 'snp_new']);
+  });
+
+  it('without periodic snapshots, or when the lookup itself fails, the field is absent (never an empty promise)', async () => {
+    for (const lookup of [async () => [], async () => Promise.reject(new Error('cannot list'))]) {
+      const r = rig({ deletableSnapshotIds: lookup });
+      await failQuota(r);
+      expect(r.queue.getStatus().state).toBe('failed');
+      expect('deletablePeriodicSnapshotIds' in r.queue.getStatus()).toBe(false);
+    }
+  });
+
+  it('a failure that is not quota never offers snapshots', async () => {
+    const { states, changes } = history(1);
+    const r = rig({ retryDelaysMs: [], deletableSnapshotIds: async () => ['snp_a'] });
+    r.script.fail.push(boom());
+    await r.queue.enqueue(changes[0] as ChangeSet, states[0] as CanonicalState);
+    expect('deletablePeriodicSnapshotIds' in r.queue.getStatus()).toBe(false);
+  });
+
+  it('the list is refreshed after a task ran (a snapshot was deleted); an empty list clears the field; flush then saves', async () => {
+    let ids = ['snp_a', 'snp_b'];
+    const r = rig({ deletableSnapshotIds: async () => ids });
+    await failQuota(r);
+    await r.queue.runOrdered(async () => {
+      ids = ['snp_b'];
+    });
+    expect(r.queue.getStatus().deletablePeriodicSnapshotIds).toEqual(['snp_b']);
+    await r.queue.runOrdered(async () => {
+      ids = [];
+    });
+    expect('deletablePeriodicSnapshotIds' in r.queue.getStatus()).toBe(false);
+    expect(r.queue.getStatus()).toMatchObject({ state: 'failed', pendingRevisions: 1 });
+    await r.queue.flush();
+    expect(r.queue.getStatus()).toEqual({ state: 'saved', pendingRevisions: 0, lastSavedRevision: 1 });
   });
 });

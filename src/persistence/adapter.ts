@@ -1,10 +1,10 @@
 /**
- * The Dexie implementation of the write side of PersistenceAdapter (step 3.1): the serial queue with
+ * The Dexie implementation of the write side of PersistenceAdapter (steps 3.1, 3.2): the serial queue with
  * SaveStatus, one transaction per write over records + meta + asset blobs (INV-20), the derived cache, the
- * meta markers and the committed read. Snapshots, boot (`open`), `replaceAll`, editor sessions, uiState,
+ * meta markers, snapshots and the committed read. Boot (`open`), `replaceAll`, editor sessions, uiState,
  * quarantine and import batches land in the steps docs/PROGRESS.md names.
  */
-import type { Clock } from '@/core/dataset/contracts';
+import type { Clock, IdFactory } from '@/core/dataset/contracts';
 import type { JsonValue } from '@/core/schema';
 import type { PendingBatch } from './coalesce';
 import type { MetaKey, PersistenceAdapter } from './contracts';
@@ -12,11 +12,18 @@ import { createDerivedCache } from './derived-cache';
 import type { OrnDb } from './db';
 import { prepareTransactionRows } from './rows';
 import { realScheduler, type PersistenceEventSink, type Scheduler } from './events';
+import { createSnapshotStore } from './snapshot-store';
 import { createWriteQueue } from './write-queue';
+
+const DEFAULT_GENERATOR = { app: 'organic-reaction-navigator', version: '0.1.0' } as const;
 
 export interface DexieAdapterOptions {
   readonly db: OrnDb;
   readonly clock: Clock;
+  /** Snapshot IDs (`snp_<ulid>`) and timestamps. */
+  readonly ids: IdFactory;
+  /** Written into every snapshot document. */
+  readonly generator?: { readonly app: string; readonly version: string };
   readonly scheduler?: Scheduler;
   readonly onEvent?: PersistenceEventSink;
   readonly retryDelaysMs?: readonly number[];
@@ -39,6 +46,10 @@ type Implemented =
   | 'getDerived'
   | 'setLastCleanShutdownAt'
   | 'setLastIntegrityCheckAt'
+  | 'createSnapshot'
+  | 'listSnapshots'
+  | 'readSnapshot'
+  | 'deleteSnapshot'
   | 'getStatus'
   | 'subscribeStatus'
   | 'close';
@@ -76,6 +87,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
   const queue = createWriteQueue({
     persist,
     onQuota: async () => (await cache.evictForQuota()) > 0,
+    deletableSnapshotIds: () => snapshots.deletablePeriodicIds(),
     scheduler: options.scheduler ?? realScheduler,
     ...(options.onEvent !== undefined ? { onEvent: options.onEvent } : {}),
     ...(options.retryDelaysMs !== undefined ? { retryDelaysMs: options.retryDelaysMs } : {}),
@@ -84,6 +96,14 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
   });
 
   /** Markers are writes like any other: ordered after the ChangeSets pending when they are set (SONNET_HANDOFF §18.8). */
+  const snapshots = createSnapshotStore({
+    db,
+    queue,
+    ids: options.ids,
+    generator: options.generator ?? DEFAULT_GENERATOR,
+    ...(options.onEvent !== undefined ? { onEvent: options.onEvent } : {}),
+  });
+
   const setMeta = (key: MetaKey, value: JsonValue): Promise<void> =>
     queue.runOrdered(async () => {
       await db.meta.put({ key, value });
@@ -94,6 +114,10 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     flush: () => queue.flush(),
     getStatus: () => queue.getStatus(),
     subscribeStatus: (listener) => queue.subscribe(listener),
+    createSnapshot: (reason, state, revision, note) => snapshots.createSnapshot(reason, state, revision, note),
+    listSnapshots: () => snapshots.listSnapshots(),
+    readSnapshot: (id) => snapshots.readSnapshot(id),
+    deleteSnapshot: (id) => snapshots.deleteSnapshot(id),
     putDerived: (row) => cache.put(row),
     getDerived: (key) => cache.get(key),
     async getAssetBlob(assetId) {
