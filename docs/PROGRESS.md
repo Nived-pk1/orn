@@ -1127,6 +1127,7 @@ Docs-only record of the reviewer's decisions on the contracts fit scan above. No
 - **Q1 asset write: REJECTED "blob first, then the record".** One transaction per ChangeSet stays (PERSISTENCE §5, INV-20): `writeChanges(changeSet, blobs?)` takes the blobs of asset records created in that ChangeSet and writes records + meta + `assetBlobs` in one Dexie transaction; any failure writes nothing. Blobs of deleted asset records are kept (undo needs them); an orphan-blob sweep is a Phase 9 Diagnostics action (reported, user-confirmed), never automatic. Lands in 3.1 (signature and tests); used by 3.7 and 3.11.
 - **Q11:** approved as ADR-033 with guards: `applyRemote` and `reload` are allowed only on a read-only (follower) store; `applyRemote` on a writable store is refused as a value (INV-28: never two writers); a follower has no write queue attached (skipping `cause: 'remote'` is a second guard, not the main one); re-validation uses `validateTouchedByRule` WITH the previous state; a revision that is not exactly current + 1 triggers a full reload; `reload` clears history; promotion = reload, then become writable. Lands in 3.4.
 - **Q12:** approved `TaskOptions { signal?, onProgress? }` in the io (and persistence) contracts, plus a type-level test under `tests/` asserting `TaskOptions` stays assignable to `RpcCallContext`. Pending import batch: at most one; a new preview or a cancel discards it; apply takes `batchId` + plan and is refused as a value when the batch is unknown or the live revision differs from the revision the preview was built on ("data changed since the preview; run it again"). Lands in 3.6/3.7; the stale-revision refusal is part of 3.7's INV-21 tests.
+  **Correction (reviewer, step 3.5 review, 2026-09-29):** the direction above is reversed and does not typecheck (`RpcCallContext.signal`/`.progress` are required; `TaskOptions`'s are optional and `TaskOptions` has no `progress` property at all, only `onProgress`). The correct, useful direction — approved — is `RpcCallContext` assignable to `TaskOptions`, so a Phase 4 compute-worker method already holding a real `RpcCallContext` can pass it straight through to one of these pure functions without adapting it. `tests/types/task-options.test.ts` (step 3.5) already asserts the correct direction; this line only fixes the record. The original bullet is left as written above, not deleted (CLAUDE.md §7).
 
 **Addendum (reviewer, 2026-09-28, after step 3.1) — change-channel message, to Q3/Q11.** `ChangeMessage = { fromRevision, revision, changedIds }`. `fromRevision` is the revision the database was at before the writer's transaction (a transaction that coalesced several ChangeSets names the whole span). A follower applies the message only when `fromRevision` equals its current revision; otherwise it reloads fully (ADR-033: `reload`). Lands in 3.4 (contract type, tests, PERSISTENCE.md §10, and the 3.4 Must cover cell, already updated).
 
@@ -1680,6 +1681,33 @@ deflate; no per-format split budget exists so both are judged against the same r
   Phase 4" (IMPLEMENTATION_PLAN.md Phase 3 notes item 4). `TaskOptions`/`RpcCallContext` are kept assignable in the
   direction Phase 4 needs (see REVIEW REQUIRED 2) so that wiring does not need an adapter.
 - The two REVIEW REQUIRED items above need reviewer confirmation before Gate C.
+
+### Step 3.5 review (reviewer, 2026-09-29)
+
+Verdict: step 3.5 ACCEPTED. Both REVIEW REQUIRED items approved:
+
+1. Every named scope always closes (zero dangling references), unconditionally — not gated by any option.
+   `curriculum` always includes the chemistry it maps: on import into a dataset that already has that
+   chemistry record, the reference engine's canonical-deep-equal conflict analysis (3.7) resolves it as
+   `identical_skip`, so re-including it costs nothing. A "curriculum without its mapped chemistry" option is
+   not built — FUTURE, nothing needs it today. PERSISTENCE.md §8 updated in the review commit: the scopes
+   bullet now says "approved in the step 3.5 review, 2026-09-29" instead of "REVIEW REQUIRED", and names the
+   FUTURE option explicitly.
+2. The correct direction is `RpcCallContext` assignable to `TaskOptions`; the reviewer's own earlier wording
+   in "Phase 3 contract decisions" (Q12) was reversed. Corrected there with a dated correction line (the
+   original bullet is left as written, per CLAUDE.md §7 — supersede, never delete).
+
+**Self-caught overwrite, verified.** Step 3.5's report disclosed overwriting `tests/property/export-roundtrip.test.ts`
+by mistake before catching it via `git status` and restoring it with `git checkout --`. Verified this session:
+`git diff 924edd9 b5bc416 -- tests/property/export-roundtrip.test.ts` is empty (no output, exit 0) — the file is
+byte-identical across both commits of that step, and (checked further) identical all the way back to `54279ab`
+(the commit before step 3.4 review started). The file was never actually touched in what got committed.
+
+**Open item kept, unchanged.** Asset-heavy export at scale (embedding/packaging many real asset files, not just
+functional coverage on one) stays unmeasured until a real asset-bearing dataset exists — the synthetic generator
+makes none. Re-bench when authoring (Phase 6) or legacy import (3.8–3.11) provides one.
+
+No code change this review; docs only (PROGRESS.md, PERSISTENCE.md §8).
 
 ## Amendments
 - **2026-09-29, step 3.5 — export: `AssetBytesProvider`, `MissingReference`, `ExportResult`, `ExportBuildResult`, `TaskOptions` (contract changes, reviewer-approved in "Phase 3 contract decisions", Q7, part of Q9, part of Q12).** Problem: `ExportOptions` (scope, subset, `includeDependencies`, `assets`) had no way to hand export a source of asset bytes without breaking options' structured-clone-safety, no result type to report bytes/counts/gaps, and no cancel/progress shape that does not require importing `src/workers` (io and persistence must not). Change: `AssetBytesProvider(assetId, sha256) => Promise<Uint8Array | undefined>`; `MissingReference { from, path, targetKind?, targetId }`; `ExportResult { bytes, counts, missingAssets, missingReferences }`; `ExportBuildResult` (`ExportErrorCode` `'CANCELLED' | 'SERIALIZE_FAILED'`); `TaskOptions { signal?, onProgress? }` (all in `src/io/contracts.ts`). No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §8 (scope-closure algorithm spelled out, REVIEW REQUIRED), PROGRESS.md step 3.5.
