@@ -26,11 +26,14 @@ export interface BatchWrites {
   readonly blobs: readonly AssetBlobWrite[];
 }
 
-/** Blobs are only accepted for asset records the ChangeSet created, with the record's own hash. */
+/**
+ * Blobs are only accepted for asset records the ChangeSet created or updated (an import that replaces an asset record with
+ * one that has different bytes, step 3.7), with the record's own hash.
+ */
 function checkBlobs(changes: ChangeSet, next: CanonicalState, blobs: readonly AssetBlobWrite[]): void {
   for (const blob of blobs) {
-    if (!changes.created.some((ref) => ref.kind === 'asset' && ref.id === blob.assetId)) {
-      throw new RangeError(`blob for ${blob.assetId}: no asset record with that ID was created in revision ${changes.revision}`);
+    if (![...changes.created, ...changes.updated].some((ref) => ref.kind === 'asset' && ref.id === blob.assetId)) {
+      throw new RangeError(`blob for ${blob.assetId}: no asset record with that ID was created or updated in revision ${changes.revision}`);
     }
     const record = next.records.asset[blob.assetId];
     if (record === undefined || record.sha256 !== blob.sha256) {

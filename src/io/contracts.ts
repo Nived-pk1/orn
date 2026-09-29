@@ -4,6 +4,7 @@
  * and is applied as ONE replaceState/commit after a pre-import snapshot.
  */
 import type { AnyRecord, AssetId, JsonValue, RecordKind, RecordRef } from '@/core/schema';
+import type { CommandError } from '@/core/commands/contracts';
 import type { Finding } from '@/core/validation/contracts';
 
 export const IMPORT_LIMITS = {
@@ -140,6 +141,11 @@ export type ConflictResolution = 'identical_skip' | 'keep_current' | 'replace' |
 export interface IdConflict {
   readonly ref: RecordRef;
   readonly resolution: ConflictResolution;
+  /**
+   * The incoming record is canonically deep-equal to the live one (step 3.7, decided per record by deterministic
+   * serialisation, never by name or ID). `identical_skip` is valid only when this is true; it is then the default.
+   */
+  readonly identical: boolean;
 }
 
 /** A choice the user confirms in the preview (defaults are always the non-destructive option). */
@@ -163,6 +169,31 @@ export interface LegacyImportReport {
   readonly notImported: readonly { readonly legacyId: string; readonly reason: string }[];
 }
 
+/** How many findings of each severity the merged result has (all of them, even when the list below is capped). */
+export interface FindingSummary {
+  readonly error: number;
+  readonly warning: number;
+  readonly info: number;
+  readonly reviewRequired: number;
+  /** `findings` lists errors first, then the rest, and stops at `IMPORT_PREVIEW_MAX_FINDINGS`; true when it stopped early. */
+  readonly truncated: boolean;
+}
+
+/** Cap on the findings LISTED in a preview (the summary always counts all of them). */
+export const IMPORT_PREVIEW_MAX_FINDINGS = 2_000;
+
+/** What the plan does with the asset bytes recovered from the file (step 3.7; the bytes ride in the same transaction as their record, Q1). */
+export interface ImportAssetSummary {
+  /** Verified byte payloads that will be written with an asset record this plan creates or replaces. */
+  readonly toStore: number;
+  /** Verified byte payloads left out because the plan does not write their record (skipped, kept as the live one, excluded). */
+  readonly notStored: number;
+  /** Asset IDs whose live record is replaced by one with a different SHA-256: the bytes stored under that ID are overwritten. */
+  readonly overwritten: readonly string[];
+  /** Asset records the plan writes (or re-points at different bytes) for which the file carries no verified bytes: AST-002 will report them. */
+  readonly withoutBytes: number;
+}
+
 export interface ImportPreview {
   readonly batchId: string;
   readonly format: ImportFormat;
@@ -171,20 +202,101 @@ export interface ImportPreview {
   readonly counts: Readonly<
     Partial<Record<RecordKind, { readonly incoming: number; readonly new: number; readonly identical: number; readonly conflicting: number }>>
   >;
+  /** Records that failed L1 in the file, plus records that repeat an ID already seen earlier in the same file (never silently dropped). */
   readonly quarantined: readonly QuarantinedItem[];
   readonly conflicts: readonly IdConflict[];
-  /** Findings for the MERGED result, computed on a replica (never on live state). */
+  /** Findings for the MERGED result, computed on a replica (never on live state). Capped; see `findingSummary`. */
   readonly findings: readonly Finding[];
+  readonly findingSummary: FindingSummary;
   readonly decisions: readonly ImportDecision[];
   readonly legacyReport?: LegacyImportReport;
+  /** Q6: `[[id]]` links rewritten to new IDs across the records copied with `import_as_copy` and the records that reference them. */
+  readonly richTextLinksRewritten: number;
+  /** Q6: unsafe keys renamed while parsing (ADV-035). */
+  readonly unsafeKeysRenamed: readonly UnsafeKeyRename[];
+  readonly kindMismatches: readonly KindMismatch[];
+  readonly rejectedAssets: readonly RejectedAsset[];
+  readonly packageIssues: readonly PackageEntryIssue[];
+  readonly assets: ImportAssetSummary;
+  /** Records in the merged result. */
+  readonly mergedRecordCount: number;
+  /** False while the merged result has an L1–L3 ERROR or cannot be built; `blockers` says why. Apply is refused then. */
+  readonly canConfirm: boolean;
+  readonly blockers: readonly string[];
 }
 
+/** What the user confirms. `apply` does exactly this, on the merged replica the preview showed (Q6). */
 export interface ImportPlan {
   readonly preview: ImportPreview;
   readonly mode: 'replace_all' | 'merge';
   readonly decisions: readonly ImportDecision[];
+  /** One entry per incoming ID that already exists in the live dataset (merge mode; empty for `replace_all`), sorted by kind then ID. */
   readonly conflicts: readonly IdConflict[];
+  /** Incoming records left out of the import entirely (the user's way past a blocking finding), sorted. */
+  readonly excluded: readonly RecordRef[];
+  /** `import_as_copy`: every old ID (record and nested IDs) → its new ID, sorted by old ID. Empty when nothing is copied. */
+  readonly copyIdMap: readonly { readonly from: string; readonly to: string }[];
 }
+
+/** A change to the plan. Anything omitted keeps its default (non-destructive): `merge`, identical → `identical_skip`, different → `keep_current`, nothing excluded. */
+export interface ImportPlanRequest {
+  readonly mode?: 'replace_all' | 'merge';
+  /** Merge mode only: refused as a value in `replace_all` (there is nothing to resolve). */
+  readonly resolutions?: readonly { readonly id: string; readonly resolution: ConflictResolution }[];
+  readonly excluded?: readonly RecordRef[];
+}
+
+export type ImportPreviewErrorCode = 'LEGACY_NOT_CONVERTED' | 'UNKNOWN_BATCH' | 'INVALID_REQUEST' | 'INVALID_META' | 'CANCELLED';
+
+export type ImportPreviewOutcome =
+  | { readonly ok: true; readonly plan: ImportPlan }
+  | { readonly ok: false; readonly code: ImportPreviewErrorCode; readonly message: string };
+
+export type ImportApplyErrorCode =
+  | 'UNKNOWN_BATCH'
+  | 'STALE_REVISION'
+  | 'PLAN_MISMATCH'
+  | 'BLOCKED'
+  | 'READ_ONLY'
+  | 'SNAPSHOT_FAILED'
+  | 'REJECTED';
+
+/** The stored record of an import (`importBatches`); plain JSON so persistence can keep it as opaque `JsonValue`. */
+export interface ImportBatchReport {
+  readonly batchId: string;
+  readonly appliedAt: string;
+  readonly fileName: string;
+  readonly format: ImportFormat;
+  readonly mode: 'replace_all' | 'merge';
+  readonly snapshotId: string;
+  readonly revisionBefore: number;
+  readonly revisionAfter: number;
+  readonly mergedRecordCount: number;
+  readonly counts: ImportPreview['counts'];
+  readonly conflicts: readonly IdConflict[];
+  readonly excluded: readonly RecordRef[];
+  readonly copyIdMap: ImportPlan['copyIdMap'];
+  readonly decisions: readonly ImportDecision[];
+  readonly richTextLinksRewritten: number;
+  readonly unsafeKeysRenamed: number;
+  readonly quarantinedCount: number;
+  readonly rejectedAssets: readonly RejectedAsset[];
+  readonly assets: ImportAssetSummary;
+  readonly findingSummary: FindingSummary;
+}
+
+export type ImportApplyResult =
+  | {
+      readonly ok: true;
+      readonly revision: number;
+      /** The mandatory `pre_import` snapshot: restoring it is "Undo import". */
+      readonly snapshotId: string;
+      readonly report: ImportBatchReport;
+      /** False when the batch report or the quarantine rows could not be stored (the import itself is applied); `reportError` says why. */
+      readonly reportSaved: boolean;
+      readonly reportError?: string;
+    }
+  | { readonly ok: false; readonly code: ImportApplyErrorCode; readonly message: string; readonly error?: CommandError };
 
 export interface ExportOptions {
   readonly scope: 'full' | 'chemistry' | 'curriculum' | 'presentation' | 'subset';

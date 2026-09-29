@@ -39,7 +39,7 @@ export interface EnvelopeParseData {
 
 export type EnvelopeParseOutcome = { readonly ok: true; readonly data: EnvelopeParseData } | { readonly ok: false; readonly code: ImportRejectionCode; readonly message: string };
 
-function quarantineRaw(row: unknown): { readonly raw: JsonValue; readonly rawTruncated?: { readonly originalChars: number } } {
+export function quarantineRaw(row: unknown): { readonly raw: JsonValue; readonly rawTruncated?: { readonly originalChars: number } } {
   const text = JSON.stringify(row);
   if (text.length <= IMPORT_LIMITS.maxQuarantineRawBytes) return { raw: row as JsonValue };
   return { raw: text.slice(0, IMPORT_LIMITS.maxQuarantineRawBytes), rawTruncated: { originalChars: text.length } };

@@ -117,7 +117,7 @@ export type DerivedCacheInput = Omit<DerivedCacheRow, 'lastUsedAt'>;
 /** A cache write never throws and never touches SaveStatus: the cache is disposable, so a failure is a value. */
 export type DerivedPutResult = { readonly ok: true } | { readonly ok: false; readonly reason: 'quota' | 'error'; readonly message: string };
 
-/** Bytes of an asset record created in the ChangeSet being written; they travel in the same transaction (INV-20). */
+/** Bytes of an asset record created or updated (different bytes) in the ChangeSet being written; they travel in the same transaction (INV-20). */
 export interface AssetBlobWrite {
   readonly assetId: string;
   readonly sha256: string;
@@ -188,7 +188,7 @@ export interface PersistenceAdapter {
   open(): Promise<OpenResult>;
   /**
    * Serial queue. ChangeSets waiting together are coalesced into one transaction over records + meta
-   * (+ `blobs`, the bytes of asset records created in `changes`); any failure writes nothing. Retries with
+   * (+ `blobs`, the bytes of asset records created or updated in `changes`); any failure writes nothing. Retries with
    * backoff. Resolves when the write cycle holding this ChangeSet ends, durable or `failed`: read `getStatus()`.
    */
   writeChanges(changes: ChangeSet, next: CanonicalState, blobs?: readonly AssetBlobWrite[]): Promise<void>;

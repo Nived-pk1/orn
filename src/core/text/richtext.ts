@@ -14,9 +14,21 @@ const MAX_DEPTH = 4;
 const BUDGET_BASE = 1_000;
 const BUDGET_PER_CHAR = 50;
 
+/** Where the ID of a parsed `[[link]]` starts in the ORIGINAL source (only collected by `rewriteRichTextLinks`). */
+interface LinkSpan {
+  readonly idStart: number;
+  readonly id: string;
+}
+
 interface Context {
   budget: number;
+  /** Set only while collecting link positions; parsing itself never depends on it. */
+  spans?: LinkSpan[];
+  /** Maps an offset in the string being parsed (a joined paragraph, or one bullet's text) to the original source. */
+  toOriginal: (offset: number) => number;
 }
+
+const identity = (offset: number): number => offset;
 
 interface Parsed {
   readonly node: RichNode;
@@ -82,13 +94,13 @@ function findEmphasisClose(src: string, from: number, delimiter: '*' | '**', ctx
   return -1;
 }
 
-function parseEmphasis(src: string, at: number, depth: number, ctx: Context): Parsed | undefined {
+function parseEmphasis(src: string, at: number, depth: number, ctx: Context, base: number): Parsed | undefined {
   const delimiter = src.startsWith('**', at) ? '**' : '*';
   const start = at + delimiter.length;
   if (isSpace(src[start])) return undefined;
   const close = findEmphasisClose(src, start, delimiter, ctx);
   if (close < 0) return undefined;
-  const children = parseInline(src.slice(start, close), depth + 1, ctx);
+  const children = parseInline(src.slice(start, close), depth + 1, ctx, base + start);
   return { node: { type: delimiter === '**' ? 'strong' : 'em', children }, next: close + delimiter.length };
 }
 
@@ -113,7 +125,8 @@ function parseLink(src: string, at: number, ctx: Context): Parsed | undefined {
   return { node: { type: 'link', target: { kind, id }, label }, next: end + 2 };
 }
 
-function parseInline(src: string, depth: number, ctx: Context): RichNode[] {
+/** `base`: the offset of `src[0]` in the string handed to the top-level call (only used to place link IDs). */
+function parseInline(src: string, depth: number, ctx: Context, base = 0): RichNode[] {
   if (depth > MAX_DEPTH) return src === '' ? [] : [{ type: 'text', text: src }];
   const sink = new Sink();
   let i = 0;
@@ -122,7 +135,7 @@ function parseInline(src: string, depth: number, ctx: Context): RichNode[] {
     let parsed: Parsed | undefined;
     let literalLength = 1;
     if (ch === '*') {
-      parsed = parseEmphasis(src, i, depth, ctx);
+      parsed = parseEmphasis(src, i, depth, ctx, base);
       if (src.startsWith('**', i)) literalLength = 2;
     } else if ((ch === '_' || ch === '^') && src[i + 1] === '{') {
       parsed = parseScript(src, i, ctx);
@@ -130,6 +143,7 @@ function parseInline(src: string, depth: number, ctx: Context): RichNode[] {
       parsed = parseLink(src, i, ctx);
     }
     if (parsed) {
+      if (parsed.node.type === 'link') ctx.spans?.push({ idStart: ctx.toOriginal(base + i + 2), id: parsed.node.target.id });
       sink.push(parsed.node);
       i = parsed.next;
     } else {
@@ -140,14 +154,56 @@ function parseInline(src: string, depth: number, ctx: Context): RichNode[] {
   return sink.done();
 }
 
-export function parseRichText(source: string): readonly RichNode[] {
-  const ctx: Context = { budget: BUDGET_BASE + BUDGET_PER_CHAR * source.length };
+interface SourceLine {
+  readonly text: string;
+  /** Offset of the line's first character in the original source. */
+  readonly start: number;
+}
+
+/** Lines split on \r\n, \r or \n, each with its offset in `source`. */
+function splitLines(source: string): SourceLine[] {
+  const lines: SourceLine[] = [];
+  let start = 0;
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+    if (ch !== '\n' && ch !== '\r') continue;
+    lines.push({ text: source.slice(start, i), start });
+    if (ch === '\r' && source[i + 1] === '\n') i += 1;
+    start = i + 1;
+  }
+  lines.push({ text: source.slice(start), start });
+  return lines;
+}
+
+/** Offset in `lines.join('\n')` → offset in the original source (binary search over the line starts). */
+function paragraphOffsetMapper(lines: readonly SourceLine[]): (offset: number) => number {
+  const logicalStarts: number[] = [];
+  let at = 0;
+  for (const line of lines) {
+    logicalStarts.push(at);
+    at += line.text.length + 1;
+  }
+  return (offset) => {
+    let lo = 0;
+    let hi = lines.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if ((logicalStarts[mid] as number) <= offset) lo = mid;
+      else hi = mid - 1;
+    }
+    return (lines[lo] as SourceLine).start + (offset - (logicalStarts[lo] as number));
+  };
+}
+
+function parseWithContext(source: string, ctx: Context): RichNode[] {
   const out: RichNode[] = [];
-  let paragraph: string[] = [];
+  let paragraph: SourceLine[] = [];
   let items: RichNode[][] = [];
 
   const flushParagraph = (): void => {
-    if (paragraph.length > 0) out.push({ type: 'paragraph', children: parseInline(paragraph.join('\n'), 0, ctx) });
+    if (paragraph.length === 0) return;
+    if (ctx.spans !== undefined) ctx.toOriginal = paragraphOffsetMapper(paragraph);
+    out.push({ type: 'paragraph', children: parseInline(paragraph.map((l) => l.text).join('\n'), 0, ctx) });
     paragraph = [];
   };
   const flushItems = (): void => {
@@ -155,13 +211,14 @@ export function parseRichText(source: string): readonly RichNode[] {
     items = [];
   };
 
-  for (const line of source.split(/\r\n|\r|\n/)) {
-    if (line.trim() === '') {
+  for (const line of splitLines(source)) {
+    if (line.text.trim() === '') {
       flushParagraph();
       flushItems();
-    } else if (line.startsWith('- ')) {
+    } else if (line.text.startsWith('- ')) {
       flushParagraph();
-      items.push(parseInline(line.slice(2), 0, ctx));
+      ctx.toOriginal = (offset) => line.start + 2 + offset;
+      items.push(parseInline(line.text.slice(2), 0, ctx));
     } else {
       flushItems();
       paragraph.push(line);
@@ -170,6 +227,32 @@ export function parseRichText(source: string): readonly RichNode[] {
   flushParagraph();
   flushItems();
   return out;
+}
+
+export function parseRichText(source: string): readonly RichNode[] {
+  return parseWithContext(source, { budget: BUDGET_BASE + BUDGET_PER_CHAR * source.length, toOriginal: identity });
+}
+
+/**
+ * Rewrites the ID of every `[[id]]` / `[[id|label]]` the PARSER treats as a link (a `[[…]]` that is literal text, for
+ * example inside `_{ }`, is never touched) for which `mapId` returns a different ID. Everything else in `source` is kept
+ * byte for byte. Same bounded work as parsing. `rewritten` counts the links changed.
+ */
+export function rewriteRichTextLinks(source: string, mapId: (id: string) => string | undefined): { readonly text: string; readonly rewritten: number } {
+  const ctx: Context = { budget: BUDGET_BASE + BUDGET_PER_CHAR * source.length, toOriginal: identity, spans: [] };
+  parseWithContext(source, ctx);
+  const spans = [...(ctx.spans ?? [])].sort((x, y) => x.idStart - y.idStart);
+  let text = '';
+  let at = 0;
+  let rewritten = 0;
+  for (const span of spans) {
+    const next = mapId(span.id);
+    if (next === undefined || next === span.id) continue;
+    text += source.slice(at, span.idStart) + next;
+    at = span.idStart + span.id.length;
+    rewritten += 1;
+  }
+  return { text: rewritten === 0 ? source : text + source.slice(at), rewritten };
 }
 
 function collectLinks(nodes: readonly RichNode[], into: Map<string, RecordRef>): void {

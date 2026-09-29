@@ -20,3 +20,15 @@ export type { EnvelopeParseData, EnvelopeParseDeps, EnvelopeParseOutcome } from 
 export { resolveAssets } from './asset-resolve';
 export { parseImportSource } from './import-source';
 export type { ImportParseDeps } from './import-source';
+export { canonicalJson, canonicallyEqual } from './canonical-json';
+export { analyzeConflicts } from './import-conflicts';
+export type { ConflictAnalysis, ConflictEntry, KindCounts } from './import-conflicts';
+export { resolveRequest } from './import-request';
+export type { ResolvedRequest, ResolveRequestOutcome } from './import-request';
+export { buildMergedReplica } from './import-merge';
+export type { MergeInput, MergeOutcome } from './import-merge';
+export { summarizeFindings, validateMerged } from './import-validate';
+export type { MergedValidation, ValidateMergedOutcome } from './import-validate';
+export { createImportSession } from './import-session';
+export type { ImportSession, ImportSessionDeps, PreviewInput } from './import-session';
+export type { AssetStagePort, ImportBatchRowLike, ImportBatchSink, ImportQuarantineRowLike, ImportStorePort, SnapshotPort } from './import-ports';
