@@ -5,19 +5,20 @@
  * anywhere. An aborted signal returns a value with no partial result; progress is reported per phase.
  */
 import type { MigrationRunner } from '@/core/migrations/contracts';
-import type { AnyRecord, JsonValue } from '@/core/schema';
+import type { AnyRecord, AssetId, JsonValue } from '@/core/schema';
 import { resolveAssets } from './asset-resolve';
 import { IMPORT_LIMITS, type ImportParseOutcome, type ImportSource, type RejectedAsset, type TaskOptions } from './contracts';
 import { detectFormat, looksLikeZip } from './format-detect';
 import { parseDatasetEnvelope } from './import-envelope';
 import { unpackPackage } from './package-unpack';
+import { sha256Hex } from './hash';
 import { parseJsonSafely } from './safe-json';
 
 export interface ImportParseDeps {
   readonly runner: MigrationRunner;
 }
 
-const EMPTY_RESULT_FIELDS = { migrationsApplied: [], records: {}, counts: {}, quarantined: [], assets: [], rejectedAssets: [], packageIssues: [] } as const;
+const EMPTY_RESULT_FIELDS = { migrationsApplied: [], records: {}, counts: {}, quarantined: [], kindMismatches: [], assets: [], rejectedAssets: [], packageIssues: [] } as const;
 const CAP_LIMITS = { maxDepth: IMPORT_LIMITS.maxJsonDepth, maxStringLength: IMPORT_LIMITS.maxStringLength };
 
 function base64ToBytes(base64: string): Uint8Array {
@@ -28,29 +29,55 @@ function base64ToBytes(base64: string): Uint8Array {
 }
 
 /**
- * An `embeddedAssets` entry carries `assetId` + `base64`, not its own sha256: this decodes each entry and
- * keys it by the sha256 its matching asset record declares, so `resolveAssets` can treat it exactly like a
- * package's `assets/<sha256>.<ext>` file (which IS named by hash) — one shared verification path either way.
+ * An `embeddedAssets` entry carries `assetId` + `base64`, not its own sha256: each is decoded, its SHA-256 computed and
+ * compared with the sha256 its matching asset record declares (SECURITY.md §3: "SHA-256 verified"), and only then keyed by
+ * it so `resolveAssets` treats it exactly like a package's `assets/<sha256>.<ext>` file — one shared verification path.
+ * Every entry that cannot be used is REPORTED as a `RejectedAsset` with a reason (step 3.6 review, item c): a malformed
+ * entry, malformed or oversized base64, an ID with no asset record, bytes that do not hash to the record's value. The asset
+ * RECORD still imports either way (AST-002 shows the missing bytes later); nothing is thrown and nothing is silent.
  */
-function embeddedAssetBytesBySha256(value: JsonValue, assetRecords: readonly AnyRecord[]): ReadonlyMap<string, Uint8Array> {
+async function embeddedAssetBytesBySha256(
+  value: JsonValue,
+  assetRecords: readonly AnyRecord[],
+): Promise<{ readonly bytesBySha256: ReadonlyMap<string, Uint8Array>; readonly rejected: readonly RejectedAsset[] }> {
   const embedded = typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as { embeddedAssets?: unknown }).embeddedAssets : undefined;
-  const bySha256 = new Map<string, Uint8Array>();
-  if (!Array.isArray(embedded)) return bySha256;
-  const shaById = new Map<string, string>(assetRecords.map((r) => [String(r.id), (r as unknown as { sha256: string }).sha256]));
-  for (const entry of embedded) {
-    if (typeof entry !== 'object' || entry === null) continue;
-    const assetId = (entry as { assetId?: unknown }).assetId;
-    const base64 = (entry as { base64?: unknown }).base64;
-    if (typeof assetId !== 'string' || typeof base64 !== 'string') continue;
-    const sha256 = shaById.get(assetId);
-    if (sha256 === undefined) continue; // no asset record for this ID; nothing to verify against
-    try {
-      bySha256.set(sha256, base64ToBytes(base64));
-    } catch {
-      // Malformed base64: no bytes for this entry; never a whole-file rejection (the asset record still imports).
+  const bytesBySha256 = new Map<string, Uint8Array>();
+  const rejected: RejectedAsset[] = [];
+  if (embedded === undefined) return { bytesBySha256, rejected };
+  if (!Array.isArray(embedded)) return { bytesBySha256, rejected: [{ sha256: '', reason: 'embeddedAssets is not an array; no embedded bytes were read' }] };
+  const recordById = new Map<string, { readonly id: AssetId; readonly sha256: string }>(
+    assetRecords.map((r) => [String(r.id), r as unknown as { id: AssetId; sha256: string }]),
+  );
+  for (const [index, entry] of embedded.entries()) {
+    const assetId = typeof entry === 'object' && entry !== null ? (entry as { assetId?: unknown }).assetId : undefined;
+    const base64 = typeof entry === 'object' && entry !== null ? (entry as { base64?: unknown }).base64 : undefined;
+    if (typeof assetId !== 'string' || typeof base64 !== 'string') {
+      rejected.push({ sha256: '', reason: `embeddedAssets[${index}] has no string assetId and base64` });
+      continue;
     }
+    const record = recordById.get(assetId);
+    if (record === undefined) {
+      rejected.push({ sha256: '', reason: `embeddedAssets[${index}] (${assetId}): no asset record with that ID in the import` });
+      continue;
+    }
+    if ((base64.length * 3) / 4 > IMPORT_LIMITS.maxAssetBytes) {
+      rejected.push({ sha256: record.sha256, assetId: record.id, reason: `embedded bytes exceed the ${IMPORT_LIMITS.maxAssetBytes}-byte asset cap` });
+      continue;
+    }
+    let bytes: Uint8Array;
+    try {
+      bytes = base64ToBytes(base64);
+    } catch {
+      rejected.push({ sha256: record.sha256, assetId: record.id, reason: 'embedded bytes are not valid base64' });
+      continue;
+    }
+    if ((await sha256Hex(bytes)) !== record.sha256) {
+      rejected.push({ sha256: record.sha256, assetId: record.id, reason: "embedded bytes do not match the record's SHA-256" });
+      continue;
+    }
+    bytesBySha256.set(record.sha256, bytes);
   }
-  return bySha256;
+  return { bytesBySha256, rejected };
 }
 
 function isAborted(task: TaskOptions): boolean {
@@ -88,8 +115,8 @@ async function parseJsonPath(source: ImportSource, deps: ImportParseDeps, task: 
   task.onProgress?.(3, 4, 'envelope');
 
   const assetRecords = envelope.data.records.asset ?? [];
-  const assetBytes = embeddedAssetBytesBySha256(parsed.value, assetRecords);
-  const { assets, rejected } = resolveAssets(assetBytes, assetRecords);
+  const embedded = await embeddedAssetBytesBySha256(parsed.value, assetRecords);
+  const resolved = resolveAssets(embedded.bytesBySha256, assetRecords);
   task.onProgress?.(4, 4, 'assets');
 
   return {
@@ -103,8 +130,9 @@ async function parseJsonPath(source: ImportSource, deps: ImportParseDeps, task: 
       counts: envelope.data.counts,
       quarantined: envelope.data.quarantined,
       unsafeKeysRenamed: parsed.unsafeKeysRenamed,
-      assets,
-      rejectedAssets: rejected,
+      kindMismatches: envelope.data.kindMismatches,
+      assets: resolved.assets,
+      rejectedAssets: [...embedded.rejected, ...resolved.rejected],
       packageIssues: [],
     },
   };
@@ -152,6 +180,7 @@ async function parsePackagePath(source: ImportSource, deps: ImportParseDeps, tas
       counts: envelope.data.counts,
       quarantined: envelope.data.quarantined,
       unsafeKeysRenamed: parsed.unsafeKeysRenamed,
+      kindMismatches: envelope.data.kindMismatches,
       assets,
       rejectedAssets: [...rejected, ...hashMismatchRejections],
       packageIssues: unpacked.unpacked.packageIssues,

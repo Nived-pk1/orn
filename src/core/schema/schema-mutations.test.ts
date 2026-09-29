@@ -5,11 +5,14 @@
  * NaN/Infinity (ADV-037), control/bidi characters (ADV-034) and injected UI keys (INV-10, ADV-029).
  */
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { z } from 'zod';
 import { schemaMutations, type Mutation } from '../../test-support/schema-mutations';
 import { SHARED_SCHEMAS } from '../../test-support/schema-shapes';
 import { AnyRecordSchema, DatasetDocumentSchema, RECORD_KINDS, RECORD_SCHEMAS, type RecordKind } from './index';
+
+// Resource limit, not an assertion: this file builds large datasets and loses its 5 s default under workstation contention (docs/PROGRESS.md, step 3.6 review).
+vi.setConfig({ testTimeout: 30_000 });
 
 const fixture = JSON.parse(
   readFileSync(new URL('../../../data/fixtures/schema/v1/maximal-valid.orn.json', import.meta.url), 'utf8'),

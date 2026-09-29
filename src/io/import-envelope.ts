@@ -15,7 +15,7 @@ import type { MigratableDocument, MigrationRunner } from '@/core/migrations/cont
 import { validator } from '@/core/validation';
 import { z } from 'zod';
 import { issueOf } from './l1-issues';
-import { IMPORT_LIMITS, type ImportRejectionCode, type QuarantinedItem } from './contracts';
+import { IMPORT_LIMITS, type ImportRejectionCode, type KindMismatch, type QuarantinedItem } from './contracts';
 
 const ImportEnvelopeSchema = z.object({
   format: z.literal(DATASET_FORMAT),
@@ -34,6 +34,7 @@ export interface EnvelopeParseData {
   readonly records: Readonly<Partial<Record<RecordKind, readonly AnyRecord[]>>>;
   readonly counts: Readonly<Partial<Record<RecordKind, number>>>;
   readonly quarantined: readonly QuarantinedItem[];
+  readonly kindMismatches: readonly KindMismatch[];
 }
 
 export type EnvelopeParseOutcome = { readonly ok: true; readonly data: EnvelopeParseData } | { readonly ok: false; readonly code: ImportRejectionCode; readonly message: string };
@@ -73,6 +74,7 @@ export function parseDatasetEnvelope(value: unknown, deps: EnvelopeParseDeps): E
   const records: Partial<Record<RecordKind, AnyRecord[]>> = {};
   const counts: Partial<Record<RecordKind, number>> = {};
   const quarantined: QuarantinedItem[] = [];
+  const kindMismatches: KindMismatch[] = [];
   for (const [kindKey, rows] of Object.entries(migrated.doc.records)) {
     for (const row of rows) {
       const claimedKind = typeof row === 'object' && row !== null ? (row as { kind?: unknown }).kind : kindKey;
@@ -88,13 +90,14 @@ export function parseDatasetEnvelope(value: unknown, deps: EnvelopeParseDeps): E
         continue;
       }
       const kind = parsed.record.kind;
+      if (kind !== kindKey) kindMismatches.push({ id: parsed.record.id, envelopeKind: kindKey, ownKind: kind });
       (records[kind] ??= []).push(parsed.record);
       counts[kind] = (counts[kind] ?? 0) + 1;
     }
   }
-  // A row filed under an envelope key that is not itself a real record kind is still parsed above by its OWN
-  // `.kind` field (matching boot's convention, src/persistence/boot-load.ts): the envelope's grouping is
-  // informational, never authoritative.
+  // A row filed under another envelope key is still parsed above by its OWN `.kind` field (matching boot's
+  // convention, src/persistence/boot-load.ts): the envelope's grouping is informational, never authoritative,
+  // and the mismatch is reported in `kindMismatches` (step 3.6 review, item e).
   const meta = migrated.doc['meta'];
 
   return {
@@ -106,6 +109,7 @@ export function parseDatasetEnvelope(value: unknown, deps: EnvelopeParseDeps): E
       records,
       counts,
       quarantined,
+      kindMismatches,
     },
   };
 }

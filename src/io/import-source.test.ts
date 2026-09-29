@@ -67,7 +67,7 @@ describe('parseImportSource — .orn.json', () => {
     expect(result.result.rejectedAssets).toEqual([]);
   });
 
-  it('malformed base64 in an embedded asset is skipped, never thrown, and the rest of the import still succeeds', async () => {
+  it('malformed base64 in an embedded asset is REPORTED as a rejected asset (never thrown, never silent); the rest of the import still succeeds', async () => {
     const validAsset = state.records.asset['ast_max-grignard-scheme'];
     if (validAsset === undefined) throw new Error('fixture asset missing');
     const exported = await buildOrnJsonExport(state, { scope: 'full', includeDependencies: false, assets: 'none' }, exportDeps);
@@ -77,7 +77,7 @@ describe('parseImportSource — .orn.json', () => {
     const result = await parseImportSource(sourceOf(new TextEncoder().encode(`${JSON.stringify(dataset)}\n`)), deps);
     if (!result.ok) throw new Error(`expected ok: ${result.message}`);
     expect(result.result.assets).toEqual([]);
-    expect(result.result.rejectedAssets).toEqual([]);
+    expect(result.result.rejectedAssets).toEqual([{ sha256: validAsset.sha256, assetId: validAsset.id, reason: 'embedded bytes are not valid base64' }]);
     expect(result.result.counts.asset).toBe(Object.keys(state.records.asset).length);
   });
 

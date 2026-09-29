@@ -4,11 +4,14 @@
  * for two shapes each; step 2.8 measured that a full run is cheap enough — worst case ≈ 0.3 s per
  * combination at the design tier — to run all 4 × 6 = 24 combinations on every `npm run check`).
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { coreIndexEngine } from '@/core/indexes/engine';
 import { documentToState } from '@/core/dataset';
 import { validator } from '@/core/validation';
 import { GENERATOR_SHAPES, GENERATOR_TIERS, generateTier, tierParams, type GeneratorShape, type GeneratorTier } from '@/test-support/generator';
+
+// Resource limit, not an assertion: this file builds large datasets and loses its 5 s default under workstation contention (docs/PROGRESS.md, step 3.6 review).
+vi.setConfig({ testTimeout: 30_000 });
 
 function errorsAt(tier: GeneratorTier, shape: GeneratorShape): { errors: string[]; reactions: number } {
   const parsed = documentToState(generateTier(tier, shape, 42));

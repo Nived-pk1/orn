@@ -12,6 +12,12 @@ export const IMPORT_LIMITS = {
   /** Q5 (docs/PROGRESS.md "Phase 3 contract decisions"): matches SECURITY.md §3's asset cap. */
   maxAssetBytes: 20 * 1024 * 1024,
   maxRecords: 200_000,
+  /**
+   * Entries in a `.ornpkg` (step 3.6 review, item b): 65,535, the most a classic zip can hold (its entry count is 16 bits;
+   * the exporter writes classic zips and never zip64). An archive claiming more is refused as a whole while its directory is
+   * read, before any entry is inflated.
+   */
+  maxPackageEntries: 65_535,
   maxJsonDepth: 64,
   maxStringLength: 1_000_000,
   maxQuarantineRawBytes: 64 * 1024,
@@ -24,6 +30,16 @@ export const IMPORT_LIMITS = {
  * (grep confirmed), so renaming is additive in effect.
  */
 export type ImportFormat = 'orn.dataset' | 'orn.package' | 'legacy_v6' | 'legacy_v4';
+
+/**
+ * A record whose OWN `kind` differs from the envelope group it was listed under (step 3.6 review, item e). It still imports
+ * (its own kind wins, matching boot); the mismatch is reported, never silent.
+ */
+export interface KindMismatch {
+  readonly id: string;
+  readonly envelopeKind: string;
+  readonly ownKind: RecordKind;
+}
 
 export interface ImportSource {
   readonly fileName: string;
@@ -102,11 +118,16 @@ export interface ImportParseResult {
   readonly counts: Readonly<Partial<Record<RecordKind, number>>>;
   readonly quarantined: readonly QuarantinedItem[];
   readonly unsafeKeysRenamed: readonly UnsafeKeyRename[];
+  /** Records that imported under their own kind although the envelope listed them under another one. */
+  readonly kindMismatches: readonly KindMismatch[];
   readonly assets: readonly ParsedAsset[];
   readonly rejectedAssets: readonly RejectedAsset[];
   /** `orn.package` only. */
   readonly packageIssues: readonly PackageEntryIssue[];
-  /** `legacy_v6`/`legacy_v4` only: the raw parsed JSON (capped, unsafe keys already renamed), for step 3.8+. */
+  /**
+   * `legacy_v6`/`legacy_v4` only: the COMPLETE parsed JSON for steps 3.8–3.11, which map every leaf of it. Only cap-checked
+   * (bytes, depth, string length) and key-sanitised (unsafe keys renamed and reported), never truncated or shortened.
+   */
   readonly legacyPayload?: JsonValue;
 }
 

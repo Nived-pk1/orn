@@ -18,6 +18,9 @@ const MANIFEST_PATH = 'manifest.json';
 const DATASET_PATH = 'dataset.json';
 const ASSET_PREFIX = 'assets/';
 
+/** Thrown from the entry filter to stop reading the archive directory at once (caught below, never escapes). */
+class EntryCapExceeded extends Error {}
+
 export interface UnpackedPackage {
   readonly datasetText: string;
   /** sha256 -> bytes, only for `assets/<sha256>.<ext>` entries whose bytes match their manifest-declared hash. */
@@ -68,15 +71,19 @@ function readManifest(bytes: Uint8Array): ParsedManifest | undefined {
   return { format: (raw as { format?: unknown }).format, files };
 }
 
-export async function unpackPackage(bytes: Uint8Array): Promise<PackageUnpackOutcome> {
+/** `limits.maxEntries` exists so a test can reach the cap without building a 65,536-entry archive. */
+export async function unpackPackage(bytes: Uint8Array, limits: { readonly maxEntries: number } = { maxEntries: IMPORT_LIMITS.maxPackageEntries }): Promise<PackageUnpackOutcome> {
   const packageIssues: PackageEntryIssue[] = [];
   const seenNames = new Set<string>();
   let totalAccepted = 0;
+  let entriesSeen = 0;
 
   let files: Record<string, Uint8Array>;
   try {
     files = unzipSync(bytes, {
       filter: (file) => {
+        entriesSeen += 1;
+        if (entriesSeen > limits.maxEntries) throw new EntryCapExceeded();
         const unsafe = unsafeNameReason(file.name);
         if (unsafe !== undefined) {
           packageIssues.push({ path: file.name, reason: `unsafe entry name: ${unsafe}` });
@@ -105,6 +112,9 @@ export async function unpackPackage(bytes: Uint8Array): Promise<PackageUnpackOut
       },
     });
   } catch (error) {
+    if (error instanceof EntryCapExceeded) {
+      return { ok: false, code: 'PACKAGE_INVALID', message: `the package has more than ${limits.maxEntries} entries; refused before any entry was inflated` };
+    }
     return { ok: false, code: 'PACKAGE_INVALID', message: `not a readable zip archive: ${error instanceof Error ? error.message : String(error)}` };
   }
 

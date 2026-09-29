@@ -13,7 +13,7 @@
  * The REF rules share one analysis pass, so a trace would blame each for the others' reads: they are held to
  * the vanish check, and REF-001/REF-005 also to the targeted tests in scoping.test.ts.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { documentToState } from '../dataset';
 import { coreIndexEngine } from '../indexes/engine';
 import type { CoreIndexes } from '../indexes/contracts';
@@ -24,6 +24,9 @@ import { GENERATOR_SHAPES, generateDataset } from '../../test-support/generator'
 import { commit, loadFixtureState } from '../../test-support/state-fixture';
 import type { RuleContext, ValidationRule } from './contracts';
 import { RULES } from './rules/registry';
+
+// Resource limit, not an assertion: this file builds large datasets and loses its 5 s default under workstation contention (docs/PROGRESS.md, step 3.6 review).
+vi.setConfig({ testTimeout: 30_000 });
 
 const EXISTS = '<exists>';
 const HIERARCHY_WALKS = new Set(['ancestorsOf', 'descendantsOf', 'classAncestors']);

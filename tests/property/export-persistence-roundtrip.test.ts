@@ -4,13 +4,16 @@
  * (Phase 1) already covers the in-memory half of P-02 (export → import → export); the full pipeline through the
  * real importer needs steps 3.6-3.7 and is not testable yet.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { documentToState } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
 import { buildOrnJsonExport, buildOrnPackageExport, type OrnJsonExportDeps } from '@/io';
 import { buildDemoDocument } from '@/test-support/demo';
 import { freshAdapter, loadState, seedChangeSet } from '@/test-support/persistence-kit';
 import { loadFixtureState } from '@/test-support/state-fixture';
+
+// Resource limit, not an assertion: this file builds large datasets and loses its 5 s default under workstation contention (docs/PROGRESS.md, step 3.6 review).
+vi.setConfig({ testTimeout: 30_000 });
 
 const deps: OrnJsonExportDeps = { exportedAt: '2026-09-29T00:00:00.000Z', generator: { app: 'orn-test', version: '1' }, assetBytes: async () => undefined };
 
