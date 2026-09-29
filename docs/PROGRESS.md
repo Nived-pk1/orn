@@ -1709,7 +1709,155 @@ makes none. Re-bench when authoring (Phase 6) or legacy import (3.8–3.11) prov
 
 No code change this review; docs only (PROGRESS.md, PERSISTENCE.md §8).
 
+### Step 3.6 — Import part 1: caps, safe parser, format detection, `.ornpkg` unpack, migration hook, tolerant envelope, per-record L1 quarantine (2026-09-29)
+
+**Delivered** (`src/io`, every new file under 175 lines)
+- `json-caps.ts`: `scanJsonCaps` — a single linear, string/escape-aware pass over the RAW TEXT (no recursion,
+  no parse tree) tracking nesting depth and each string literal's length, stopping at the first violation.
+  Runs BEFORE `JSON.parse`, so a hostile 60 MB / depth-100 / 5 MB-string file is rejected without ever
+  touching the call stack or building an object graph (ADV-032 io part).
+- `safe-json.ts`: `parseJsonSafely` (the scan, then `JSON.parse`, then sanitise) and `sanitizeUnsafeKeys` — an
+  iterative-in-spirit, depth-bounded rewrite (recursion is safe here specifically because the scan already
+  proved depth ≤ 64, CLAUDE.md's non-negotiable is UNBOUNDED recursion) that renames `__proto__`/
+  `constructor`/`prototype` at ANY depth to `__unsafe_key__…`, disambiguated against any key already at that
+  name (never a silent overwrite either way — see the bug this caught, below) and reported (`path` +
+  original key). `JSON.parse` itself is already safe (`CreateDataProperty`, never `[[Set]]`, so it never
+  touches the prototype chain even for a literal `"__proto__"` key); the danger is entirely in code
+  downstream that might later do `obj[key] = value` with an untrusted key — sanitizing here means nothing
+  downstream ever sees one of the three names again.
+- `format-detect.ts`: `looksLikeZip` (byte-level `PK` magic-number sniff, container detection one level above
+  format detection) and `detectFormat` — a discriminated result over the parsed top level: `orn.dataset`,
+  `legacy_v6` (MIGRATION.md §4.1: `compounds[]`/`reactions[]`/`schemaVersion: 5`, checked first, exact),
+  `legacy_v4` (any reaction lacking a `participants` array), or a refusal with a reason, never a guess.
+- `asset-magic.ts`: `magicBytesMatch` — real magic-byte signatures for png/jpeg/gif/webp, a text sniff for svg
+  (`<svg`/`<?xml`), against a declared media type.
+- `package-unpack.ts`: `unpackPackage` — fflate `unzipSync` with a `filter` that rejects (and reports) unsafe
+  entry names (absolute, `..`, a backslash), duplicates and paths outside `manifest.json`/`dataset.json`/
+  `assets/…`, checks each entry's DECLARED size against its own cap before fflate even attempts to inflate
+  it, and a running total against the package cap. (fflate's own `unzipSync` additionally pre-allocates the
+  OUTPUT buffer at the zip's declared size and decompresses into that fixed buffer — confirmed by reading
+  `inflateSync(…, { out: new u8(su) })` in `node_modules/fflate` — so even a maliciously mislabelled entry
+  cannot inflate past what it declared, a second, independent bound.) `manifest.json` is required;
+  `dataset.json`'s SHA-256 must match the manifest or the whole import is refused; a file not in the
+  manifest, or a manifest entry with no file, is reported; an asset whose bytes do not hash to the
+  manifest's declared value is reported separately (`assetHashMismatches`), never fatal on its own.
+- `asset-resolve.ts`: `resolveAssets` — cross-references recovered bytes (by SHA-256) against parsed `asset`
+  records; a hash with no record, or bytes that fail the magic-byte check against the record's declared
+  media type, is reported (`RejectedAsset`) and left out — the asset RECORD still imports and shows AST-002
+  (missing blob) later, never silent, never thrown.
+- `import-envelope.ts`: `parseDatasetEnvelope` — the tolerant envelope (a locally-defined, looser schema than
+  the exported `DatasetEnvelopeSchema`: `schemaVersion` accepts ANY number, not `min(1)`, so a version-0 or
+  negative file gets the migration runner's own `INVALID_VERSION` explanation instead of a flat envelope
+  rejection — the same reading step 3.3's review gave `decodeSnapshot`) → record-count cap (≤ 200,000,
+  checked on the envelope) → the injected `MigrationRunner` (a newer version refused with an explanation,
+  ADV-041 file part; an older one migrated; `meta` rides alongside the migration, not lost between the
+  envelope check and the runner — see the bug this caught, below) → per-record L1 (`validator.parseRecord`
+  keyed by each row's OWN `.kind` field, matching boot's convention: the envelope's grouping is
+  informational, never authoritative) → quarantine (raw JSON text capped at 64 Ki characters, `rawTruncated`
+  when cut, matching `QuarantineRow`'s existing convention).
+- `import-source.ts`: `parseImportSource` — the top-level orchestrator. Byte size checked against the LARGER
+  package cap before anything is read; a 4-byte magic-number peek decides the JSON vs `.ornpkg` path (the
+  only read before the path-specific cap applies); the JSON path then checks its own 50 MB cap before
+  `.text()` is ever called. An `.orn.json`'s `embeddedAssets` (base64, keyed by `assetId`) are decoded and
+  re-keyed by their record's declared SHA-256 so `resolveAssets` treats them exactly like a package's
+  `assets/<sha256>.<ext>` files — one shared verification path either way; malformed base64 is skipped, never
+  thrown. `TaskOptions`: an aborted signal returns a value with no partial result at every phase boundary;
+  progress is reported once per phase (read, parsed/unpacked, envelope, assets).
+- `hash.ts`, `l1-issues.ts`: tiny shared helpers (`sha256Hex`, `issueOf`) — `l1-issues.ts` exists because io
+  must not import persistence (`src/persistence/boot-load.ts` has its own copy of `issueOf`; a one-line
+  function, not worth a shared core module for).
+- `index.ts`: barrel additions.
+
+**Contract amendments applied** (CLAUDE.md §7; approved list from "Phase 3 contract decisions"; entry under Amendments)
+- Q5: `IMPORT_LIMITS.maxAssetBytes` (20 MB, matching SECURITY.md §3).
+- Q6 (the unsafe-keys part only; preview/plan fields land in 3.7): nothing new needed — `unsafeKeysRenamed`
+  is reported directly on `ImportParseResult`, this step's own result type (`ImportPreview.unsafeKeysRenamed`
+  is 3.7's).
+- Q12 (the import functions part): `TaskOptions` used throughout `src/io/import-*.ts`.
+- Beyond the approved list, recorded here: `ImportFormat` renamed from the placeholder `'legacy-orn-html'`
+  (wrong — the legacy app is HTML, but only its exported JSON is ever imported) to `'legacy_v6' | 'legacy_v4'`
+  (unused before this step, confirmed by grep, so the rename is additive in effect); `QuarantinedItem` gains
+  `raw`/`rawTruncated` (PERSISTENCE.md §7 always required them; the step 3.5-era type predates any importer
+  needing them); new types `UnsafeKeyRename`, `DetectFormatResult`, `ParsedAsset`, `RejectedAsset`,
+  `PackageEntryIssue`, `ImportRejectionCode`, `ImportParseResult`, `ImportParseOutcome` (all `src/io/contracts.ts`).
+  No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change.
+
+**Two real bugs found and fixed while writing tests (nothing silent, CLAUDE.md §1.5)**
+1. `sanitizeUnsafeKeys`'s disambiguation only checked for a collision on the RENAMED branch, not the ordinary
+   one: a benign key arriving AFTER a renamed dangerous key (in the JSON's own key order) would silently
+   overwrite it. Fixed by disambiguating on every insert, whichever branch it came from. Caught by
+   `safe-json.test.ts`'s collision test, which failed with a swapped value before the fix.
+2. `parseDatasetEnvelope` passed only the STRIPPED envelope (`format`/`schemaVersion`/`records`) to the
+   migration runner, silently dropping `meta` — any real migration step that reads or rewrites `meta` (the
+   synthetic test step does) would see `undefined` and throw. Fixed by carrying `meta` alongside the document
+   handed to the runner and reading it back from the migrated output. Caught by
+   `import-envelope.test.ts`'s "older schema version is migrated" test.
+
+**Tests** (`npm run check`: 113 files, 1,662 tests; before this step 105 files, 1,573 tests)
+- `json-caps.test.ts` (8): depth/string caps, escape-aware scanning, ADV-032 io part (depth-100, 5 MB string
+  rejected fast).
+- `safe-json.test.ts` (9): ADV-035 renaming at any depth with path + original key, `Object.prototype` proved
+  unchanged even after the sanitised value is spread/`Object.assign`-merged, the disambiguation bug's own
+  regression test, cap propagation, `INVALID_JSON` for text that passes the scan but fails to parse.
+- `format-detect.test.ts` (10), `asset-magic.test.ts` (14), `asset-resolve.test.ts` (4): format/container
+  detection including the v6-checked-before-v4 ordering; real magic bytes for every media type incl. svg's
+  text sniff, rejecting cross-type bytes and empty buffers; hash-with-no-record and magic-mismatch reporting.
+- `package-unpack.test.ts` (15): a valid package; missing manifest; dataset.json hash mismatch or missing;
+  an unreadable zip; unsafe names (absolute, drive letter, `..`, backslash) reported while the rest still
+  imports; an oversized declared entry rejected; a file not in the manifest; a manifest entry with no file;
+  an asset hash mismatch; an unexpected top-level path; a manifest that is not readable JSON.
+- `import-envelope.test.ts` (11): envelope-shape rejection, good records passing L1, a bad record quarantined
+  with issues/raw value and the rest still importing, raw-text truncation at the 64 Ki cap, envelope grouping
+  being informational (a record found by its OWN kind field), the record-count cap, ADV-041 file part (newer
+  refused with an explanation), an older version migrated (with `meta` carried through), a version with no
+  registered path to the target, and version-0's own distinct path through the now-loosened envelope check.
+- `import-source.test.ts` (19): real `.orn.json`/`.ornpkg` files exported by step 3.5's own builders and
+  re-imported (round-trip confidence across the two steps); a genuinely matching embedded asset recovered
+  end to end; malformed embedded-asset base64 skipped; ADV-035 through the full pipeline; ADV-041 file part
+  through the full pipeline; v6/v4 legacy detection; unknown-format refusal; ADV-032 io part at the
+  orchestrator level (a Blob whose `.slice(0,4)` is allowed but whose FULL content throws if ever read,
+  proving the size cap is checked before the body is read; depth-100; a 5 MB string); abort returns
+  `CANCELLED` with no partial result; progress is monotonic through both paths; a package's dataset.json that
+  is not an orn.dataset document is refused.
+- Coverage of `src/io` (focused run, including its integration/property/type tests): 98.1% lines, 88.7%
+  branches. `npm run test:coverage` (core + persistence + io) passed on its first run: 96.75% statements,
+  90.98% branches, 98.4% lines overall.
+
+**Timing-sensitive tests.** A full `npm run check` run (default file-parallelism) intermittently timed out 8-10
+unrelated tests (`generator-tiers.test.ts`, `schema-mutations.test.ts`, `reads-audit.test.ts`, and this session's
+own `export-persistence-roundtrip.test.ts`) at their 5,000 ms default, twice in a row, while several benchmark
+runs (`import.bench.ts`, `export.bench.ts` reruns) had just finished on the same machine. A `--no-file-parallelism`
+run immediately after passed all 112 files/1,654 tests clean, and a THIRD default-parallelism `npm run check` (a
+few minutes later, machine quieter) also passed clean in 26 s (vs. 140 s+ for the contended runs) — confirming
+workstation contention (PERFORMANCE_ARCHITECTURE.md §9), not a real failure; none of the flagged tests touch this
+step's code.
+
+**Benchmark** (`tests/perf/import.bench.ts`, run once and alone via `npx vitest bench run tests/perf/import.bench.ts
+--no-file-parallelism`; `bench:baseline` NOT run; `tests/perf/budgets.mjs` gains four entries, reported informally
+against the "Import 5k reactions (parse → preview)" < 5 s row — this step's own scope stops before conflict
+analysis/preview, so 3.7 adds more cost before the full row applies; design tier, both `dense` and
+`hub_explosion`; mean / p99 in ms; `assets: 'none'`, the generator makes none):
+- `.orn.json`: dense 1,211.1 / 1,256.8 (5 samples); hub_explosion 1,111.9 / 1,170.8 (5 samples)
+- `.ornpkg`: dense 1,373.4 / 1,457.5 (5 samples); hub_explosion 1,218.5 / 1,236.3 (5 samples)
+
+All four comfortably under 5 s even before accounting for 3.7's added cost.
+
+**Open items**
+- ADV-031: a wrong-ID-prefix reference caught only at L2 (not L1) is untested here by design — this step only
+  ever runs L1 (per-record shape); the L2 half needs the merged-replica validation 3.7 builds. Recorded for
+  3.7.
+- Legacy formats (`legacy_v6`/`legacy_v4`) are detected and their raw, capped, sanitised payload is carried
+  through (`legacyPayload`), but not converted — that is steps 3.8–3.11 (the v4→v5 port, ID/label/condition
+  parsers, compound and reaction mapping).
+- The pending-import-batch shape (Q12: at most one, discarded by a new preview or cancel, `batchId` +
+  staleness refusal) is not built — it belongs to 3.7's preview/apply, not this step's parse.
+- Heavy work (safe parse, unzip, migration, L1) runs in-process, per Phase 3 note 4; hosted by the compute
+  worker from Phase 4.
+- `ExportOptions`/`ImportParseResult` are not wired into `ComputeWorkerApi` (Phase 4's, already noted for
+  export in the step 3.5 entry).
+
 ## Amendments
+- **2026-09-29, step 3.6 — import part 1: `IMPORT_LIMITS.maxAssetBytes`, `ImportFormat` renamed, `QuarantinedItem` gains `raw`/`rawTruncated`, new types `UnsafeKeyRename`/`DetectFormatResult`/`ParsedAsset`/`RejectedAsset`/`PackageEntryIssue`/`ImportRejectionCode`/`ImportParseResult`/`ImportParseOutcome` (contract changes, reviewer-approved in "Phase 3 contract decisions" Q5, Q6 unsafe-keys part, Q12 import-functions part; the rest recorded here).** Problem: `IMPORT_LIMITS` had no asset-bytes cap (Q5); `ImportFormat`'s legacy variant was named `'legacy-orn-html'`, which names the wrong thing (the legacy app is HTML, but only its exported JSON is ever imported, MIGRATION.md §4.1) and cannot distinguish v6 from v4; `QuarantinedItem` had no `raw`/`rawTruncated`, although PERSISTENCE.md §7 has always required them for import quarantine; parsing a file end to end (caps, safe parse, format detection, `.ornpkg` unpack, migration, per-record L1) had no result type at all. Change: `IMPORT_LIMITS.maxAssetBytes = 20 * 1024 * 1024`; `ImportFormat = 'orn.dataset' | 'orn.package' | 'legacy_v6' | 'legacy_v4'` (`'legacy-orn-html'` was unused, confirmed by grep, so this is additive in effect); `QuarantinedItem` gains `raw: JsonValue` and `rawTruncated?: { originalChars: number }`; `UnsafeKeyRename { path, originalKey }`; `DetectFormatResult`; `ParsedAsset`, `RejectedAsset`, `PackageEntryIssue`; `ImportRejectionCode`; `ImportParseResult` and `ImportParseOutcome` (all `src/io/contracts.ts`). No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §6-§7, PROGRESS.md step 3.6.
 - **2026-09-29, step 3.5 — export: `AssetBytesProvider`, `MissingReference`, `ExportResult`, `ExportBuildResult`, `TaskOptions` (contract changes, reviewer-approved in "Phase 3 contract decisions", Q7, part of Q9, part of Q12).** Problem: `ExportOptions` (scope, subset, `includeDependencies`, `assets`) had no way to hand export a source of asset bytes without breaking options' structured-clone-safety, no result type to report bytes/counts/gaps, and no cancel/progress shape that does not require importing `src/workers` (io and persistence must not). Change: `AssetBytesProvider(assetId, sha256) => Promise<Uint8Array | undefined>`; `MissingReference { from, path, targetKind?, targetId }`; `ExportResult { bytes, counts, missingAssets, missingReferences }`; `ExportBuildResult` (`ExportErrorCode` `'CANCELLED' | 'SERIALIZE_FAILED'`); `TaskOptions { signal?, onProgress? }` (all in `src/io/contracts.ts`). No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §8 (scope-closure algorithm spelled out, REVIEW REQUIRED), PROGRESS.md step 3.5.
 - **2026-09-28, step 3.4 — writer lock, change channel, follower mode, promotion (contract changes, ADR-033; reviewer-approved in "Phase 3 contract decisions", Q3, Q4 `singleTab`, Q11 and the addendum, plus what the step needed beyond that list).** Problem: the lock port could not express a wait (promotion) or a browser without Web Locks, there was no change-channel contract, boot could not report a single-tab session, and the store had no way for a follower tab to mirror the writer: `replaceState` refuses while read-only, validates the whole state on every call and assigns revision + 1. Change: `WriterLock` gains `whenAcquired()` and the acquire result `'unsupported'`; new `ChangeChannel { post, subscribe, close }` and `ChangeMessage { fromRevision, revision, changedIds }` (`changedIds` may be `'all'`, `subscribe` hands out `unknown`); `BootReport.singleTab` (required); `CanonicalStore` gains `applyRemote(RemoteChange)` and `reload(state, revision)`, allowed only on a read-only store (`CommandErrorCode 'NOT_FOLLOWER'` otherwise), `ChangeSet.cause` gains `'remote'` (documented as possibly spanning revisions; the core index engine applies a remote ChangeSet incrementally as a forward span, every other cause keeps the +1 guard); adapter additions `readChanged`, `loadForFollower`, `promote`, option `channel`; `PersistenceEvent 'channel_error'`; `attachWriteQueue`. Guards, semantics and rejected alternatives: ADR-033. No schema change, no `DB_STORES`/`DB_VERSION` change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-033, ARCHITECTURE.md §2.4, PERSISTENCE.md §4 and §10, SONNET_HANDOFF.md §9.
 - **2026-09-28, step 3.3 review — boot quarantine is a move; `BootReport.quarantineTruncated` removed; `QuarantineRow.raw` documented per source (reviewer decision; contract and doc changes).** Problem: step 3.3 quarantined a bad boot row as a COPY (the row stayed in `records`, the quarantine row's raw value was capped at 64 Ki characters). `records` then differed from the in-memory state, so `replaceAll`, a snapshot restore or a revision-gap recovery would silently delete a row that was only ever kept there, and a capped copy could not stand in for it (CLAUDE.md non-negotiable 5). Change: a bad row is removed from `records` and written to `quarantine`, whole and exactly as stored, in one transaction through `runOrdered` (`BootPorts.moveToQuarantine` replaces `addQuarantine`; `assembleState` returns `RejectedRow`s). The 64 Ki cap (`QUARANTINE_RAW_MAX_CHARS`, `QuarantineRow.rawTruncated`) stays for display and import quarantine (3.6); `rawTruncated` is never set on boot rows. `BootReport.quarantineTruncated` is removed because it is always 0; `newlyQuarantined` counts the rows moved. `QuarantineRow.raw` and `rawTruncated` comments say which source they apply to. No schema change, no `DB_STORES`/`DB_VERSION` change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §4, §7. Also in the same commit (test tooling, no contract change): wall-clock assertions moved to `npm run test:timing` (TEST_STRATEGY §1, SONNET_HANDOFF §19, IMPLEMENTATION_PLAN 3.12).

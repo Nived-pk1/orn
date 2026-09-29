@@ -149,4 +149,12 @@ export const BUDGETS = {
     { operation: 'export: .orn.json, full dataset', tier: 'design', shape: 'hub_explosion', budgetMs: 2000, budgetRow: 'Export full dataset', note: 'step 3.5; assets: none; SLOW_BENCH_OPTIONS' },
   'export full dataset (design tier, hub_explosion) > .ornpkg':
     { operation: 'export: .ornpkg, full dataset', tier: 'design', shape: 'hub_explosion', budgetMs: 2000, budgetRow: 'Export full dataset', note: 'step 3.5; assets: none; SLOW_BENCH_OPTIONS' },
+  'import parse -> envelope -> L1 (design tier, dense) > .orn.json':
+    { operation: 'import: parse -> envelope -> L1, .orn.json', tier: 'design', shape: 'dense', budgetMs: null, budgetRow: 'Import 5k reactions (parse -> preview)', note: 'step 3.6: informal, reported against the 5 s row (which also includes 3.7\'s conflict analysis and preview, not built yet); SLOW_BENCH_OPTIONS; assets: none' },
+  'import parse -> envelope -> L1 (design tier, dense) > .ornpkg':
+    { operation: 'import: parse -> envelope -> L1, .ornpkg', tier: 'design', shape: 'dense', budgetMs: null, budgetRow: 'Import 5k reactions (parse -> preview)', note: 'step 3.6: informal, reported against the 5 s row; SLOW_BENCH_OPTIONS; assets: none' },
+  'import parse -> envelope -> L1 (design tier, hub_explosion) > .orn.json':
+    { operation: 'import: parse -> envelope -> L1, .orn.json', tier: 'design', shape: 'hub_explosion', budgetMs: null, budgetRow: 'Import 5k reactions (parse -> preview)', note: 'step 3.6: informal, reported against the 5 s row; SLOW_BENCH_OPTIONS; assets: none' },
+  'import parse -> envelope -> L1 (design tier, hub_explosion) > .ornpkg':
+    { operation: 'import: parse -> envelope -> L1, .ornpkg', tier: 'design', shape: 'hub_explosion', budgetMs: null, budgetRow: 'Import 5k reactions (parse -> preview)', note: 'step 3.6: informal, reported against the 5 s row; SLOW_BENCH_OPTIONS; assets: none' },
 };

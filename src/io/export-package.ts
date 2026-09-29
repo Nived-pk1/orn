@@ -12,6 +12,7 @@ import { PACKAGE_FORMAT, CURRENT_SCHEMA_VERSION, type AssetId, type CanonicalSta
 import type { ASSET_MEDIA_TYPES } from '@/core/schema';
 import type { AssetBytesProvider, ExportBuildResult, ExportOptions, TaskOptions } from './contracts';
 import { buildScopedDocument } from './export-document';
+import { sha256Hex } from './hash';
 
 export interface OrnPackageExportDeps {
   readonly exportedAt: string;
@@ -33,11 +34,6 @@ const EXTENSION_OF_MEDIA_TYPE: Readonly<Record<(typeof ASSET_MEDIA_TYPES)[number
   'image/gif': 'gif',
   'image/svg+xml': 'svg',
 };
-
-async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', bytes as unknown as BufferSource);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 export async function buildOrnPackageExport(state: CanonicalState, options: ExportOptions, deps: OrnPackageExportDeps, task: TaskOptions = {}): Promise<ExportBuildResult> {
   const scoped = buildScopedDocument(state, options, deps);
