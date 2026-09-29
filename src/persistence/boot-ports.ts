@@ -6,7 +6,7 @@ import type { IdFactory } from '@/core/dataset/contracts';
 import type { MigratableDocument, MigrationRunner } from '@/core/migrations/contracts';
 import type { CanonicalState, JsonValue } from '@/core/schema';
 import type { RejectedRow } from './boot-load';
-import type { MetaKey, SnapshotSummary, WriterLock } from './contracts';
+import type { MetaKey, SnapshotSummary, UnverifiedAssetBlob, WriterLock } from './contracts';
 import type { OrnDb, UiStateRow } from './db';
 import type { PersistenceEventSink } from './events';
 
@@ -39,7 +39,8 @@ export interface BootPorts {
   /** Tells the write queue which revision is durable, so its gap guard starts from the right place. */
   continueFrom(revision: number, meta?: object): Promise<void>;
   listEditorSessionIds(): Promise<readonly string[]>;
-  listAssetBlobIds(): Promise<readonly string[]>;
+  listAssetBlobHashes(): Promise<readonly string[]>;
+  listUnverifiedAssetBlobs(): Promise<readonly UnverifiedAssetBlob[]>;
   listUiStateRows(): Promise<readonly UiStateRow[]>;
   deleteUiState(keys: readonly string[]): Promise<void>;
   setReadOnly(readOnly: boolean): void;

@@ -9,7 +9,7 @@ import type { MigratableDocument, MigrationError, MigrationStepReport } from '@/
 import type { Finding } from '@/core/validation/contracts';
 
 export const DB_NAME = 'orn';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 export const WRITER_LOCK_NAME = 'orn-writer';
 export const BROADCAST_CHANNEL = 'orn-changes';
 
@@ -17,7 +17,8 @@ export const BROADCAST_CHANNEL = 'orn-changes';
 export const DB_STORES = {
   records: 'id, kind',
   meta: 'key',
-  assetBlobs: 'assetId, sha256',
+  assetBlobs: 'sha256',
+  assetBlobsUnverified: 'assetId',
   snapshots: 'id, createdAt, reason',
   editorSessions: 'id, updatedAt',
   derivedCache: 'key, cacheKind, lastUsedAt',
@@ -117,11 +118,24 @@ export type DerivedCacheInput = Omit<DerivedCacheRow, 'lastUsedAt'>;
 /** A cache write never throws and never touches SaveStatus: the cache is disposable, so a failure is a value. */
 export type DerivedPutResult = { readonly ok: true } | { readonly ok: false; readonly reason: 'quota' | 'error'; readonly message: string };
 
-/** Bytes of an asset record created or updated (different bytes) in the ChangeSet being written; they travel in the same transaction (INV-20). */
+/**
+ * Bytes of an asset record created or updated (different bytes) in the ChangeSet being written; they travel in the same
+ * transaction (INV-20). `assetBlobs` is content-addressed: the write hashes the bytes first (a mismatch with `sha256`
+ * refuses the write) and stores them under that hash only if no row with it exists. Nothing is ever overwritten or deleted.
+ */
 export interface AssetBlobWrite {
   readonly assetId: string;
   readonly sha256: string;
   readonly blob: Blob;
+}
+
+/** A version-1 blob row the DB upgrade could not verify (kept whole in `assetBlobsUnverified`, never used as the asset's bytes). */
+export interface UnverifiedAssetBlob {
+  readonly assetId: string;
+  readonly recordedSha256: string | null;
+  /** What the bytes really hash to; null when they were never hashed. */
+  readonly actualSha256: string | null;
+  readonly byteSize: number;
 }
 
 /** What boot found and did, for the app to show and offer (docs/PERSISTENCE.md §4). */
@@ -130,8 +144,10 @@ export interface BootReport {
   readonly migrationSteps: readonly MigrationStepReport[];
   /** L1–L3 findings for the loaded (or migrated) state, so the store need not validate it again. */
   readonly findings: readonly Finding[];
-  /** Asset records whose bytes are missing from `assetBlobs` (AST-002), sorted. */
+  /** Asset records whose SHA-256 has no row in `assetBlobs` (AST-002), sorted by asset ID. */
   readonly assetIdsWithoutBlob: readonly string[];
+  /** Version-1 blob rows the DB upgrade could not verify and kept aside (sorted by asset ID); empty unless an upgrade found some. */
+  readonly unverifiedAssetBlobs: readonly UnverifiedAssetBlob[];
   /** The previous session did not record a clean shutdown. */
   readonly crashSuspected: boolean;
   /** Authoring drafts to offer for restore: only when a crash is suspected. */
@@ -210,6 +226,7 @@ export interface PersistenceAdapter {
   readSnapshot(id: string): Promise<SnapshotReadResult>;
   /** In the write queue's order. Deleting an unknown ID is not an error. */
   deleteSnapshot(id: string): Promise<void>;
+  /** The bytes of the asset record's own SHA-256 (looked up through the record); undefined when there is no such record or no such bytes. */
   getAssetBlob(assetId: string): Promise<Blob | undefined>;
   putDerived(row: DerivedCacheInput): Promise<DerivedPutResult>;
   /** Updates `lastUsedAt`. A failing cache read is a miss (undefined), never an error. */
@@ -228,8 +245,10 @@ export interface PersistenceAdapter {
   saveImportBatch(row: ImportBatchRow): Promise<void>;
   /** Newest first. */
   listImportBatches(): Promise<readonly ImportBatchRow[]>;
-  /** IDs of every stored asset blob, for the boot integrity check (AST-002). */
-  listAssetBlobIds(): Promise<readonly string[]>;
+  /** SHA-256 of every stored asset blob (the store's keys), for the boot integrity check (AST-002). */
+  listAssetBlobHashes(): Promise<readonly string[]>;
+  /** Version-1 rows the DB upgrade could not verify, sorted by asset ID. */
+  listUnverifiedAssetBlobs(): Promise<readonly UnverifiedAssetBlob[]>;
   saveEditorSession(session: EditorSession): Promise<void>;
   listEditorSessions(): Promise<readonly EditorSession[]>;
   deleteEditorSession(id: string): Promise<void>;

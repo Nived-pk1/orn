@@ -16,11 +16,18 @@ import {
   type RecordKind,
 } from '@/core/schema';
 import { createMigrationRunner } from '@/core/migrations';
+import { sha256OfBlob } from '@/persistence/blob-hash';
 import { alwaysGrantedLock } from '@/persistence/lock';
 import { createDexieAdapter, type DexieAdapter, type DexieAdapterOptions } from '@/persistence/adapter';
 import { createOrnDb, type DbVersionStep, type OrnDb } from '@/persistence/db';
 import type { WriterLock } from '@/persistence/contracts';
 import type { PersistenceEvent, Scheduler } from '@/persistence/events';
+
+/** Bytes with their real SHA-256: `assetBlobs` is content-addressed, so a write whose bytes do not hash to the record's sha256 is refused. */
+export async function hashedBlob(text: string, type = 'image/png'): Promise<{ readonly sha256: string; readonly blob: Blob }> {
+  const blob = new Blob([text], { type });
+  return { sha256: await sha256OfBlob(blob), blob };
+}
 
 export interface ManualScheduler extends Scheduler {
   /** Delays of every timer ever scheduled, in order. */

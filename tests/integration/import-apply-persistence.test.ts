@@ -87,7 +87,7 @@ describe('apply through the real adapter', () => {
     expect(parsed.assets.map((a) => a.assetId)).toEqual([NEW_ASSET_ID]);
 
     const plan = planOf(session.preview({ parsed, fileName: 'with-asset.orn.json' }));
-    expect(plan.preview.assets).toMatchObject({ toStore: 1, notStored: 0, overwritten: [] });
+    expect(plan.preview.assets).toMatchObject({ toStore: 1, notStored: 0 });
     const writesBefore = t.log.writes().length;
     const result = await session.apply(plan.preview.batchId, plan);
     if (!result.ok) throw new Error(result.message);
@@ -172,5 +172,75 @@ describe('apply through the real adapter', () => {
     expect(store.getState().meta).toEqual(replacement.meta);
     expect(store.getState().records).toEqual(replacement.records);
     expect((await loadState(t.adapter)).state).toEqual(store.getState());
+  });
+});
+
+describe('asset bytes are never overwritten: Undo import and snapshot restore bring the OLD bytes back', () => {
+  const REPLACED_ID = 'ast_import-replaced';
+  const bytesOf = (tail: number): Uint8Array => new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, tail, tail, tail, tail]);
+  const [OLD, MIDDLE, NEWEST] = [bytesOf(1), bytesOf(2), bytesOf(3)];
+
+  async function withAsset(bytes: Uint8Array): Promise<CanonicalState> {
+    const template = Object.values(base.records.asset)[0] as unknown as Record<string, unknown>;
+    const record = { ...template, id: REPLACED_ID, sha256: await sha256(bytes), byteSize: bytes.length, mediaType: 'image/png' } as unknown as AnyRecord;
+    return produce(base, (draft) => {
+      (draft.records.asset as Record<string, AnyRecord>)[REPLACED_ID] = record;
+    });
+  }
+
+  const stored = async (t: TestAdapter, id: string): Promise<Uint8Array | undefined> => {
+    const blob = await t.adapter.getAssetBlob(id);
+    return blob === undefined ? undefined : new Uint8Array(await blob.arrayBuffer());
+  };
+
+  /** The live store holds the asset with `OLD` bytes (record and bytes both on disk), as if it had been ingested earlier. */
+  async function liveWithOldBytes(): Promise<Rig> {
+    const live = await withAsset(OLD);
+    const r = await rig(live);
+    await r.t.db.assetBlobs.put({ sha256: await sha256(OLD), blob: new Blob([OLD as BlobPart]) });
+    return r;
+  }
+
+  async function importReplacing(r: Rig, bytes: Uint8Array): Promise<Extract<Awaited<ReturnType<ImportSession['apply']>>, { ok: true }>> {
+    const incoming = await withAsset(bytes);
+    const parsed = await parseBytes(await exportBytes(incoming, 'json', 'embed', async (id) => (id === REPLACED_ID ? bytes : undefined)));
+    const plan = planOf(r.session.preview({ parsed, fileName: 'replace.orn.json', request: { resolutions: [{ id: REPLACED_ID, resolution: 'replace' }] } }));
+    expect(plan.preview.assets).toMatchObject({ toStore: 1, notStored: 0 });
+    const result = await r.session.apply(plan.preview.batchId, plan);
+    if (!result.ok) throw new Error(result.message);
+    await r.t.adapter.flush();
+    return result;
+  }
+
+  it('an import that replaces an asset with different bytes, then "Undo import": the old record AND its old bytes are back', async () => {
+    const r = await liveWithOldBytes();
+    const before = r.store.getState();
+    const applied = await importReplacing(r, NEWEST);
+    expect(r.store.getState().records.asset[REPLACED_ID]?.sha256).toBe(await sha256(NEWEST));
+    expect(await stored(r.t, REPLACED_ID)).toEqual(NEWEST);
+
+    const restored = await restoreSnapshot({ id: applied.snapshotId, snapshots: r.t.adapter, runner: createMigrationRunner(), store: r.store });
+    if (!restored.ok) throw new Error(restored.message);
+    await r.t.adapter.flush();
+    expect(r.store.getState().records.asset[REPLACED_ID]?.sha256).toBe(await sha256(OLD));
+    expect(await stored(r.t, REPLACED_ID)).toEqual(OLD);
+    expect((await loadState(r.t.adapter)).state).toEqual(before);
+    // Both byte payloads are still stored, each under its own hash.
+    expect([...(await r.t.adapter.listAssetBlobHashes())].sort()).toEqual([await sha256(OLD), await sha256(NEWEST)].sort());
+  });
+
+  it('snapshot restore likewise: a manual snapshot taken with the old bytes survives two later replacements', async () => {
+    const r = await liveWithOldBytes();
+    const manual = await r.t.adapter.createSnapshot('manual', r.store.getState(), r.store.getRevision());
+    await importReplacing(r, MIDDLE);
+    await importReplacing(r, NEWEST);
+    expect(await stored(r.t, REPLACED_ID)).toEqual(NEWEST);
+
+    const restored = await restoreSnapshot({ id: manual.id, snapshots: r.t.adapter, runner: createMigrationRunner(), store: r.store });
+    if (!restored.ok) throw new Error(restored.message);
+    await r.t.adapter.flush();
+    expect(r.store.getState().records.asset[REPLACED_ID]?.sha256).toBe(await sha256(OLD));
+    expect(await stored(r.t, REPLACED_ID)).toEqual(OLD);
+    expect([...(await r.t.adapter.listAssetBlobHashes())].sort()).toEqual([await sha256(OLD), await sha256(MIDDLE), await sha256(NEWEST)].sort());
   });
 });

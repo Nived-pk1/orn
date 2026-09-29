@@ -11,7 +11,11 @@ import type { AssetBlobWrite } from './contracts';
 export interface PendingBatch {
   /** id → kind of every record any queued ChangeSet created, updated or deleted, in first-touch order. */
   readonly touched: Map<string, RecordKind>;
-  /** Blobs by asset ID (same asset, same bytes: the hash is the identity). Kept even if the record is deleted (undo). */
+  /**
+   * Blobs by SHA-256, the store's own key: two ChangeSets that write different bytes under one asset ID (an import that
+   * replaces an asset, then another) BOTH reach the store, and equal bytes under two IDs are one entry. Kept even if the
+   * record is deleted (undo).
+   */
   readonly blobs: Map<string, AssetBlobWrite>;
   latest: CanonicalState;
   /** Revision of `latest`. */
@@ -48,14 +52,14 @@ export function startBatch(changes: ChangeSet, next: CanonicalState, blobs: read
   for (const list of [changes.created, changes.updated, changes.deleted]) {
     for (const ref of list) batch.touched.set(ref.id, ref.kind);
   }
-  for (const blob of blobs) batch.blobs.set(blob.assetId, blob);
+  for (const blob of blobs) batch.blobs.set(blob.sha256, blob);
   return batch;
 }
 
 /** Folds `newer` into `older` (which is mutated and returned); `newer` must not be used afterwards. */
 export function mergeBatches(older: PendingBatch, newer: PendingBatch): PendingBatch {
   for (const [id, kind] of newer.touched) older.touched.set(id, kind);
-  for (const [id, blob] of newer.blobs) older.blobs.set(id, blob);
+  for (const [sha256, blob] of newer.blobs) older.blobs.set(sha256, blob);
   older.latest = newer.latest;
   older.revision = newer.revision;
   older.count += newer.count;

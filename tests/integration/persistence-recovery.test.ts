@@ -29,7 +29,7 @@ describe('replaceAll: one transaction over records + meta, in the queue’s orde
   it('replaces every record and the meta, removes rows the state does not have, and leaves blobs and snapshots alone', async () => {
     const t = await seeded();
     const assetId = Object.keys(base.records.asset)[0] as string;
-    await t.db.assetBlobs.put({ assetId, sha256: must(base.records.asset[assetId]).sha256, blob: new Blob(['keep me']) });
+    await t.db.assetBlobs.put({ sha256: must(base.records.asset[assetId]).sha256, blob: new Blob(['keep me']) });
     const snapshot = await t.adapter.createSnapshot('manual', base, 1);
     const next = commit(base, 9, (tables) => {
       remove(tables, 'species', second);
@@ -150,12 +150,12 @@ describe('Q1 (b): import batches', () => {
   });
 });
 
-describe('Q1 (e): asset blob IDs', () => {
-  it('lists the IDs of every stored blob, and none when there are none', async () => {
+describe('Q1 (e): asset blob hashes', () => {
+  it('lists the SHA-256 of every stored blob, and none when there are none', async () => {
     const t = await seeded();
-    expect(await t.adapter.listAssetBlobIds()).toEqual([]);
-    for (const id of ['ast_b', 'ast_a']) await t.db.assetBlobs.put({ assetId: id, sha256: 'x', blob: new Blob(['1']) });
-    expect([...(await t.adapter.listAssetBlobIds())].sort()).toEqual(['ast_a', 'ast_b']);
+    expect(await t.adapter.listAssetBlobHashes()).toEqual([]);
+    for (const sha256 of ['b'.repeat(64), 'a'.repeat(64)]) await t.db.assetBlobs.put({ sha256, blob: new Blob(['1']) });
+    expect([...(await t.adapter.listAssetBlobHashes())].sort()).toEqual(['a'.repeat(64), 'b'.repeat(64)]);
   });
 });
 

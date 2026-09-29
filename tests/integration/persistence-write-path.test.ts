@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { serializeDocument, stateToDocument } from '@/core/dataset';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { AnyRecord, CanonicalState } from '@/core/schema';
-import { freshAdapter, loadState, quotaError, reopen, seedChangeSet, type TestAdapter } from '@/test-support/persistence-kit';
+import { freshAdapter, hashedBlob, loadState, quotaError, reopen, seedChangeSet, type TestAdapter } from '@/test-support/persistence-kit';
 import { commit, loadFixtureState, must, remove } from '@/test-support/state-fixture';
 
 const base = loadFixtureState('maximal-valid');
@@ -101,48 +101,56 @@ describe('INV-20 persistence is atomic: one transaction per write, covering reco
   });
 });
 
+const stored = await hashedBlob('PNG bytes');
+
 describe('INV-20 one transaction covers the asset record, its blob and meta', () => {
-  const asset = must(Object.values(base.records.asset)[0]);
+  const asset = { ...must(Object.values(base.records.asset)[0]), sha256: stored.sha256 };
   const withoutAsset = commit(base, 1, (tables) => {
     remove(tables, 'asset', asset.id);
   }).after;
-  const bytes = () => new Blob(['\u0089PNG bytes'], { type: asset.mediaType });
+  const bytes = () => new Blob(['PNG bytes'], { type: asset.mediaType });
+  const withRecord = (tables: Parameters<typeof remove>[0], record = asset) => {
+    (tables.asset as Record<string, AnyRecord>)[record.id] = record as AnyRecord;
+  };
 
   it('a created asset and its bytes are written together and read back', async () => {
     const t = await seeded(withoutAsset);
     const before = t.log.writes().length;
     const { after, changes } = commit(withoutAsset, 2, (tables) => {
-      tables.asset[asset.id] = asset;
+      withRecord(tables);
     });
     await t.adapter.writeChanges(changes, after, [{ assetId: asset.id, sha256: asset.sha256, blob: bytes() }]);
     expect(t.log.writes().length - before).toBe(1);
     const blob = await t.adapter.getAssetBlob(asset.id);
-    expect(await blob?.text()).toBe('\u0089PNG bytes');
+    expect(await blob?.text()).toBe('PNG bytes');
     expect((await loadState(t.adapter)).state).toEqual(after);
   });
 
   it('deleting the record keeps the blob (undo needs it); undo writes the record back without blobs', async () => {
     const t = await seeded(withoutAsset);
     const created = commit(withoutAsset, 2, (tables) => {
-      tables.asset[asset.id] = asset;
+      withRecord(tables);
     });
     await t.adapter.writeChanges(created.changes, created.after, [{ assetId: asset.id, sha256: asset.sha256, blob: bytes() }]);
     const deleted = commit(created.after, 3, (tables) => {
       remove(tables, 'asset', asset.id);
     });
     await t.adapter.writeChanges(deleted.changes, deleted.after);
-    expect(await t.adapter.getAssetBlob(asset.id)).toBeDefined();
+    // No record, nothing to look the bytes up by; they are still stored under their hash.
+    expect(await t.adapter.getAssetBlob(asset.id)).toBeUndefined();
+    expect(await t.db.assetBlobs.get(asset.sha256)).toBeDefined();
     const restored = commit(deleted.after, 4, (tables) => {
-      tables.asset[asset.id] = asset;
+      withRecord(tables);
     }, 'undo');
     await t.adapter.writeChanges(restored.changes, restored.after);
     expect((await loadState(t.adapter)).state).toEqual(restored.after);
+    expect(await (await t.adapter.getAssetBlob(asset.id))?.text()).toBe('PNG bytes');
   });
 
   it('a failing write stores neither the record nor the blob', async () => {
     const t = await seeded(withoutAsset, { retryDelaysMs: [] });
     const { after, changes } = commit(withoutAsset, 2, (tables) => {
-      tables.asset[asset.id] = asset;
+      withRecord(tables);
     });
     t.faults.fail('assetBlobs', () => new Error('blob store broken'));
     await t.adapter.writeChanges(changes, after, [{ assetId: asset.id, sha256: asset.sha256, blob: bytes() }]);

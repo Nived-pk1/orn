@@ -20,7 +20,10 @@ describe('DB upgrade scaffold', () => {
   it('the newest version step is DB_VERSION and its stores are DB_STORES', () => {
     const last = DB_VERSION_STEPS.at(-1);
     expect(last?.version).toBe(DB_VERSION);
-    expect(last?.stores).toEqual(DB_STORES);
+    // Stores the newest step lists as `null` are the ones it drops (the version-2 holding store); the rest ARE DB_STORES.
+    const kept = Object.fromEntries(Object.entries(last?.stores ?? {}).filter(([, definition]) => definition !== null));
+    expect(kept).toEqual(DB_STORES);
+    expect(Object.keys(last?.stores ?? {}).filter((name) => last?.stores[name] === null && name in DB_STORES)).toEqual([]);
     expect(DB_VERSION_STEPS.map((s) => s.version)).toEqual([...DB_VERSION_STEPS.map((s) => s.version)].sort((a, b) => a - b));
   });
 

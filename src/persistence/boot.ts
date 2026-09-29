@@ -34,7 +34,7 @@ export interface BootOptions {
 
 /** The report of a database with nothing in it: there is nothing to report, except that no lock exists. */
 const emptyReport = (singleTab: boolean): BootReport => ({
-  migrationSteps: [], findings: [], assetIdsWithoutBlob: [], crashSuspected: false, editorSessionIds: [], uiState: {}, uiStateReset: [], newlyQuarantined: 0, singleTab,
+  migrationSteps: [], findings: [], assetIdsWithoutBlob: [], unverifiedAssetBlobs: [], crashSuspected: false, editorSessionIds: [], uiState: {}, uiStateReset: [], newlyQuarantined: 0, singleTab,
 });
 
 export async function runBoot(ports: BootPorts, options: BootOptions = {}): Promise<OpenResult> {
@@ -110,8 +110,11 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     findings = validator.validateAll(state, coreIndexEngine.build(state, revision));
   }
 
-  const blobIds = new Set(await ports.listAssetBlobIds());
-  const assetIdsWithoutBlob = Object.keys(state.records.asset).filter((id) => !blobIds.has(id)).sort();
+  // AST-002: an asset record's bytes live under ITS sha256 (content-addressed store), whatever asset ID asked.
+  const storedHashes = new Set(await ports.listAssetBlobHashes());
+  const assets = state.records.asset as Readonly<Record<string, { readonly sha256: string }>>;
+  const assetIdsWithoutBlob = Object.keys(assets).filter((id) => !storedHashes.has((assets[id] as { readonly sha256: string }).sha256)).sort();
+  const unverifiedAssetBlobs = await ports.listUnverifiedAssetBlobs();
 
   const marker = meta.lastCleanShutdownAt;
   const crashSuspected = marker !== undefined && typeof marker !== 'string';
@@ -132,6 +135,6 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     revision: outRevision,
     storedSchemaVersion: storedVersion,
     quarantinedCount: await quarantined(),
-    bootReport: { migrationSteps, findings, assetIdsWithoutBlob, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined, singleTab },
+    bootReport: { migrationSteps, findings, assetIdsWithoutBlob, unverifiedAssetBlobs, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined, singleTab },
   };
 }

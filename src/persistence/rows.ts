@@ -21,5 +21,5 @@ export function prepareTransactionRows(batch: PendingBatch, writesMeta: boolean)
   if (writesMeta) {
     metaRows.push({ key: 'schemaVersion', value: CURRENT_SCHEMA_VERSION }, { key: 'datasetMeta', value: batch.latest.meta as unknown as JsonValue });
   }
-  return { puts, deleteIds, blobRows: blobs.map((b) => ({ assetId: b.assetId, sha256: b.sha256, blob: b.blob })), metaRows };
+  return { puts, deleteIds, blobRows: blobs.map((b) => ({ sha256: b.sha256, blob: b.blob })), metaRows };
 }

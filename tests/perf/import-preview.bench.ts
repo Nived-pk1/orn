@@ -4,6 +4,12 @@
  * same IDs with different content). The stages are measured separately (parse, conflict analysis, merged replica, merged-replica
  * validation) and together (parse + a whole `session.preview`, the number the 5 s row is about). Heavy work runs in-process in
  * Phase 3 (Phase 3 note 4); fake ports, no IndexedDB (assets: none: the generator makes no asset records).
+ *
+ * Reading the rows (step 3.7 review, item c): vitest runs the cases one after another, minutes apart, and this machine's speed
+ * drifts by up to about 2x over that span (the same `validateMerged` measured 1.4 s in one bench run and 2.6 s in a plain test
+ * minutes later). So a stage row and the total are NOT comparable across rows: there is no shortcut in the total (it runs every
+ * stage). The row 'stage functions back to back' does exactly the total's work by calling the stage functions itself and runs
+ * right next to it: compare the total with THAT row, never with the sum of the stage rows.
  */
 import { bench, describe } from 'vitest';
 import { createIdFactory } from '@/core/dataset';
@@ -59,6 +65,19 @@ for (const shape of ['dense', 'hub_explosion'] as const) {
       bench('conflict analysis', () => void analyzeConflicts(live, parsed), SLOW_BENCH_OPTIONS);
       bench('merged replica (build)', () => void buildMergedReplica({ ...mergeInput, copyIds: new Map() }), SLOW_BENCH_OPTIONS);
       bench('merged-replica validation (index build + validateAll)', () => void validateMerged(merged.state, 2), SLOW_BENCH_OPTIONS);
+      bench(
+        'stage functions back to back (parse, analysis, merge, validation)',
+        async () => {
+          const result = await parseOnce();
+          const found = analyzeConflicts(live, result);
+          const request = resolveRequest(undefined, found);
+          if (!request.ok) throw new Error(request.message);
+          const built = buildMergedReplica({ live, parsed: result, analysis: found, request: request.value, copyIds: new Map(), ids });
+          if (!built.ok) throw new Error(built.message);
+          validateMerged(built.state, 2);
+        },
+        SLOW_BENCH_OPTIONS,
+      );
       bench(
         'parse -> preview (total)',
         async () => {

@@ -112,7 +112,6 @@ function planAssets(input: MergeInput, written: readonly Written[]): { readonly 
   const bytesBySourceId = new Map(input.parsed.assets.map((asset) => [String(asset.assetId), asset] as const));
   const liveAssets = input.live.records.asset as Readonly<Record<string, { readonly sha256: string } | undefined>>;
   const staged: ParsedAsset[] = [];
-  const overwritten: string[] = [];
   let withoutBytes = 0;
   for (const { record, sourceId, how } of written) {
     if (record.kind !== 'asset') continue;
@@ -125,10 +124,9 @@ function planAssets(input: MergeInput, written: readonly Written[]): { readonly 
       continue;
     }
     staged.push({ ...bytes, assetId: record.id });
-    if (liveAsset !== undefined) overwritten.push(record.id);
   }
   return {
     stagedAssets: staged,
-    assets: { toStore: staged.length, notStored: input.parsed.assets.length - staged.length, overwritten: overwritten.sort(), withoutBytes },
+    assets: { toStore: staged.length, notStored: input.parsed.assets.length - staged.length, withoutBytes },
   };
 }

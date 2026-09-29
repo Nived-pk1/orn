@@ -188,8 +188,8 @@ export interface ImportAssetSummary {
   readonly toStore: number;
   /** Verified byte payloads left out because the plan does not write their record (skipped, kept as the live one, excluded). */
   readonly notStored: number;
-  /** Asset IDs whose live record is replaced by one with a different SHA-256: the bytes stored under that ID are overwritten. */
-  readonly overwritten: readonly string[];
+  // Nothing is ever overwritten: `assetBlobs` is content-addressed (docs/PERSISTENCE.md §5), so a replaced asset's old bytes stay
+  // under their hash and "Undo import" brings the old record AND its bytes back.
   /** Asset records the plan writes (or re-points at different bytes) for which the file carries no verified bytes: AST-002 will report them. */
   readonly withoutBytes: number;
 }

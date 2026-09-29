@@ -1,6 +1,6 @@
 /**
  * The small stores around the records (docs/PERSISTENCE.md §2): quarantine, import batches, editor sessions,
- * uiState, and the asset-blob ID list. Every write goes through the write queue's ordering (`runOrdered`,
+ * uiState, and the asset-blob hash lists. Every write goes through the write queue's ordering (`runOrdered`,
  * SONNET_HANDOFF §18.8); reads go straight to IndexedDB. `derivedCache` is the one store outside the queue.
  */
 import type { EditorSession } from '@/core/commands/contracts';
@@ -18,7 +18,8 @@ export type AuxStores = Pick<
   | 'deleteQuarantine'
   | 'saveImportBatch'
   | 'listImportBatches'
-  | 'listAssetBlobIds'
+  | 'listAssetBlobHashes'
+  | 'listUnverifiedAssetBlobs'
   | 'saveEditorSession'
   | 'listEditorSessions'
   | 'deleteEditorSession'
@@ -98,7 +99,11 @@ export function createAuxStores(db: OrnDb, queue: Pick<WriteQueue, 'runOrdered'>
       }),
     listImportBatches: async () => (await db.importBatches.toArray()).sort((a, b) => byCreatedAt(b, a)),
 
-    listAssetBlobIds: async () => (await db.assetBlobs.toCollection().primaryKeys()) as string[],
+    listAssetBlobHashes: async () => (await db.assetBlobs.toCollection().primaryKeys()) as string[],
+    listUnverifiedAssetBlobs: async () =>
+      (await db.assetBlobsUnverified.toArray())
+        .map((row) => ({ assetId: row.assetId, recordedSha256: row.recordedSha256, actualSha256: row.actualSha256, byteSize: row.blob.size }))
+        .sort((a, b) => (a.assetId < b.assetId ? -1 : a.assetId > b.assetId ? 1 : 0)),
 
     saveEditorSession: (session: EditorSession) =>
       queue.runOrdered(async () => {

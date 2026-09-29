@@ -281,10 +281,11 @@ describe('boot: asset blobs (AST-002)', () => {
     const ids = Object.keys(base.records.asset).sort();
     expect(ids.length).toBeGreaterThan(0);
     const t = await savedDatabase(base);
-    await t.db.assetBlobs.put({ assetId: ids[0] as string, sha256: must(base.records.asset[ids[0] as string]).sha256, blob: new Blob(['x']) });
+    const firstHash = must(base.records.asset[ids[0] as string]).sha256;
+    await t.db.assetBlobs.put({ sha256: firstHash, blob: new Blob(['x']) });
     const { result } = await boot(t);
     expect(result.bootReport?.assetIdsWithoutBlob).toEqual(ids.slice(1));
-    expect(await t.adapter.listAssetBlobIds()).toEqual([ids[0]]);
+    expect(await t.adapter.listAssetBlobHashes()).toEqual([firstHash]);
   });
 });
 

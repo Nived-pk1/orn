@@ -10,6 +10,7 @@ import type { Clock, IdFactory } from '@/core/dataset/contracts';
 import type { MigrationRunner } from '@/core/migrations/contracts';
 import type { JsonValue } from '@/core/schema';
 import { createAuxStores } from './aux-stores';
+import { sha256OfBlob } from './blob-hash';
 import { runBoot } from './boot';
 import { changeMessageFor } from './change-message';
 import { interpretCommitted, type ChangedRows, type FollowerLoad } from './follower-read';
@@ -17,7 +18,7 @@ import type { BootPorts, CommittedData, UiStateValidators } from './boot-ports';
 import type { PendingBatch } from './coalesce';
 import type { ChangeChannel, MetaKey, OpenResult, PersistenceAdapter, WriterLock } from './contracts';
 import { createDerivedCache } from './derived-cache';
-import type { OrnDb } from './db';
+import type { AssetBlobRow, OrnDb } from './db';
 import { realScheduler, type PersistenceEventSink, type Scheduler } from './events';
 import { writeAllRecords, writeRawDocument } from './replace';
 import { prepareTransactionRows } from './rows';
@@ -25,6 +26,18 @@ import { createSnapshotStore } from './snapshot-store';
 import { createWriteQueue } from './write-queue';
 
 const DEFAULT_GENERATOR = { app: 'organic-reaction-navigator', version: '0.1.0' } as const;
+
+/** Blobs whose bytes were hashed and matched; a retried write does not hash them again. */
+const verifiedBlobs = new WeakSet<Blob>();
+
+async function verifyBlobRows(rows: readonly AssetBlobRow[]): Promise<void> {
+  for (const row of rows) {
+    if (verifiedBlobs.has(row.blob)) continue;
+    const actual = await sha256OfBlob(row.blob);
+    if (actual !== row.sha256) throw new RangeError(`asset bytes refused: they hash to ${actual}, not the recorded SHA-256 ${row.sha256}; nothing was written`);
+    verifiedBlobs.add(row.blob);
+  }
+}
 
 export interface DexieAdapterOptions {
   readonly db: OrnDb;
@@ -97,10 +110,16 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
   async function persist(batch: PendingBatch): Promise<void> {
     const writesMeta = batch.latest.meta !== persistedMeta;
     const { puts, deleteIds, blobRows, metaRows } = prepareTransactionRows(batch, writesMeta);
+    // Hashing cannot happen inside a transaction (awaiting it would end the transaction), so verify first: bytes that
+    // do not hash to their key are refused, and nothing is written.
+    await verifyBlobRows(blobRows);
     await db.transaction('rw', [db.records, db.meta, db.assetBlobs], async () => {
       await db.records.bulkPut([...puts]);
       await db.records.bulkDelete([...deleteIds]);
-      await db.assetBlobs.bulkPut([...blobRows]);
+      // Content-addressed: a row is only ever added. Bytes already stored under their hash are left as they are.
+      const stored = await db.assetBlobs.bulkGet(blobRows.map((row) => row.sha256));
+      const missing = blobRows.filter((_, i) => stored[i] === undefined);
+      if (missing.length > 0) await db.assetBlobs.bulkAdd(missing);
       await db.meta.bulkPut([...metaRows]);
     });
     if (writesMeta) persistedMeta = batch.latest.meta;
@@ -197,7 +216,8 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
         queue.resync(revision);
       }),
     listEditorSessionIds: async () => (await aux.listEditorSessions()).map((s) => s.id),
-    listAssetBlobIds: aux.listAssetBlobIds,
+    listAssetBlobHashes: aux.listAssetBlobHashes,
+    listUnverifiedAssetBlobs: aux.listUnverifiedAssetBlobs,
     listUiStateRows: aux.listUiStateRows,
     deleteUiState: aux.deleteUiState,
     setReadOnly: (readOnly) => queue.setReadOnly(readOnly),
@@ -234,7 +254,11 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     putDerived: (row) => cache.put(row),
     getDerived: (key) => cache.get(key),
     async getAssetBlob(assetId) {
-      return (await db.assetBlobs.get(assetId))?.blob;
+      return db.transaction('r', [db.records, db.assetBlobs], async () => {
+        const record = await db.records.get(assetId);
+        const sha256 = record?.kind === 'asset' ? record.sha256 : undefined;
+        return sha256 === undefined ? undefined : (await db.assetBlobs.get(sha256))?.blob;
+      });
     },
     setLastCleanShutdownAt: (at) => aux.setMeta('lastCleanShutdownAt', at),
     setLastIntegrityCheckAt: (at) => aux.setMeta('lastIntegrityCheckAt', at),
@@ -243,7 +267,8 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     deleteQuarantine: aux.deleteQuarantine,
     saveImportBatch: aux.saveImportBatch,
     listImportBatches: aux.listImportBatches,
-    listAssetBlobIds: aux.listAssetBlobIds,
+    listAssetBlobHashes: aux.listAssetBlobHashes,
+    listUnverifiedAssetBlobs: aux.listUnverifiedAssetBlobs,
     saveEditorSession: aux.saveEditorSession,
     listEditorSessions: aux.listEditorSessions,
     deleteEditorSession: aux.deleteEditorSession,
