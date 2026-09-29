@@ -2,6 +2,8 @@
 // Guards the "no reaction-specific hacks" rule (docs/ARCHITECTURE.md §2.6, INV-25).
 // Collects record IDs and names from data/seed and data/fixtures and fails if any appears
 // as a string literal in production source. Justified exceptions: append `// hardcode-ok: <reason>`.
+// A line containing the marker is skipped whole (only the marker is tested, not the reason), so the reason is
+// mandatory by review: it must say why the literal is data of a format and that nothing branches on it.
 // In src/core/schema only the NAME comparison is skipped: the schema defines the vocabulary (enum words such
 // as 'elimination'), so a dataset name that shares a word with it is not a hardcoded record name. Record IDs
 // carry a prefix and cannot collide with vocabulary, so the ID comparison stays on everywhere.
