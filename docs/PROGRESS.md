@@ -1570,7 +1570,119 @@ Follow-ups done in the review commit ("phase-3: step 3.4 review follow-ups"):
 Tests after this review: `npm run check` — 100 files, 1,535 tests (2 more than step 3.4's 1,533: the promotion-window
 integration test and the capped-issues unit test).
 
+### Step 3.5 — Export: `.orn.json` and `.ornpkg`, scopes, dependency closure (2026-09-29)
+
+**Delivered** (`src/io`, every new file under 145 lines)
+- `contracts.ts` (additive): `AssetBytesProvider(assetId, sha256) => Promise<Uint8Array | undefined>`; `MissingReference`;
+  `ExportResult { bytes, counts, missingAssets, missingReferences }`; `ExportBuildResult` (`ExportErrorCode` `'CANCELLED'
+  | 'SERIALIZE_FAILED'`); `TaskOptions { signal?, onProgress? }`.
+- `export-scope.ts`: `selectScope(state, options)` — the reference closure behind every scope, driven entirely by
+  `REFERENCE_SPECS` through `ReferenceEngine.extract` (never a per-kind/per-field special case). `full` is everything;
+  `chemistry` is layers 1-2 whole plus a REVERSE pass pulling in any asset that attaches to something in it (assets
+  forward-reference what they attach to, never the other way, so a forward closure from chemistry alone finds nothing
+  new, INV-29); `curriculum` and `presentation` are their own layer whole plus a forward closure of whatever they
+  reference; `subset` is exactly the given records plus a forward closure when `includeDependencies`, otherwise every
+  reference leaving the subset is reported in `missingReferences` (never dropped or silently kept).
+- `export-document.ts`: `buildScopedDocument` — `selectScope`'s included IDs applied to the state, reusing the
+  existing deterministic `stateToDocument`/`serializeDocument` (records sorted by ID, keys in schema order, INV-19).
+- `export-json.ts`: `buildOrnJsonExport` — the scoped document, `assets: 'embed'` adds base64 `embeddedAssets`
+  (chunked `btoa`, no call-stack overflow on the 20 MB asset cap), a missing provider result is reported and never
+  thrown, an aborted signal returns a value with no partial bytes at two points (before/after the asset loop),
+  progress once per embedded asset plus once for the final serialise.
+- `export-package.ts`: `buildOrnPackageExport` — fflate zip: `manifest.json` (`{ format: 'orn.package', schemaVersion,
+  files: [{ path, sha256 }] }`, `dataset.json`'s own SHA-256 via `crypto.subtle.digest` plus one entry per asset file),
+  `dataset.json`, `assets/<sha256>.<ext>` (written when `assets` is `'embed'` or `'package'`). Determinism (INV-19):
+  every zip entry carries one FIXED modification time — the ZIP/MS-DOS format's own epoch (1980-01-01; Unix's 1970
+  epoch is rejected by fflate's DOS-date range check) — and a fixed entry order (manifest, dataset, assets sorted by
+  sha256), so the same state and clock give byte-identical bytes on every run. Same abort/progress/missing-asset
+  handling as the JSON builder.
+- `index.ts`: barrel.
+- `vitest.config.ts`, `package.json`: `src/io` added to the coverage include list and thresholds (80% lines, matching
+  `src/persistence`).
+
+**Contract amendments applied** (CLAUDE.md §7; approved list from "Phase 3 contract decisions"; entry under Amendments)
+- Q7: `AssetBytesProvider` and `ExportResult` as approved (a function port beside `ExportOptions`, never inside them,
+  so options stay structured-clone-safe).
+- Q9 (the part step 3.5 needs): `AssetBytesProvider` lives in io, no persistence import; `SnapshotPort`/`ImportBatchSink`
+  are not needed by export and stay for 3.6/3.7.
+- Q12 (the part step 3.5 needs): `TaskOptions { signal?, onProgress? }` added to `src/io/contracts.ts`; a type-level
+  test (`tests/types/task-options.test.ts`) asserts `RpcCallContext` (from `src/workers/rpc/contracts.ts`, not
+  imported by `src/io` itself) is assignable to `TaskOptions` — see "Reading beyond the approved list" below for why
+  this is the direction that actually holds. The persistence-side half of Q12 (snapshot build, boot) and the pending
+  import-batch shape stay for 3.6/3.7.
+- No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change.
+
+**Reading beyond the approved list, both flagged REVIEW REQUIRED**
+1. *Scope closures.* PERSISTENCE.md §8 named the layers for `chemistry`/`curriculum` but left the exact closure
+   algorithm and `presentation`'s composition unstated ("Where §8 leaves a scope's closure ambiguous ... choose the
+   reading that produces a file which imports cleanly ... and list it as REVIEW REQUIRED" — IMPLEMENTATION_PLAN.md §2
+   step 3.5). Chosen reading, applied uniformly and always on for the four named scopes (never gated by any option,
+   since `ExportOptions` has none for this): every named scope's output must have no dangling reference, so
+   `curriculum`'s "with the chemistry records they map, optional" is read as "always included" and `presentation`
+   (unstated in §8) gets the same forward-closure treatment. PERSISTENCE.md §8 updated in this commit with the exact
+   algorithm; `src/io/export-scope.ts`'s doc comment states it too.
+2. *`TaskOptions`/`RpcCallContext` assignability direction.* Q12's approved text says `TaskOptions` is "structurally
+   identical" to `RpcCallContext` "minus the required-ness"; the master prompt for this step asked for a type-level
+   test that "TaskOptions stays assignable to RpcCallContext". Taken literally that fails to typecheck and would be
+   pointless if it did: `RpcCallContext.signal`/`.progress` are required and `TaskOptions` has no `progress` property
+   at all (it has `onProgress`, a different name), so no `TaskOptions` value can ever satisfy `RpcCallContext`. The
+   direction that is both true and useful is the reverse — `RpcCallContext extends TaskOptions` — since it lets a
+   Phase 4 compute-worker method, which already holds a real `RpcCallContext`, pass it straight through to one of
+   these pure functions without adapting it (works because `TaskOptions`'s fields are all optional: any richer object
+   with a compatible `signal` satisfies it regardless of its other properties). `tests/types/task-options.test.ts`
+   asserts that direction; the literal reading is noted here for the reviewer instead of silently substituted.
+
+**Tests** (`npm run check`: 105 files, 1,573 tests; before this step 100 files, 1,535 tests)
+- `src/io/export-scope.test.ts` (18): every named scope on the maximal fixture (every record kind, an asset attached
+  to a reaction, curriculum records mapping a reaction, presentation records decorating chemistry across four layers)
+  and the demo dataset — `full`/`chemistry`/`curriculum`/`presentation` always report zero `missingReferences`;
+  `chemistry` pulls the attached asset and nothing from curriculum/presentation; `curriculum` pulls the mapped
+  reaction (and what it needs); `presentation` pulls every kind of thing layer 5 points at; `subset` with and without
+  `includeDependencies`, an empty subset, and closure encountering an actually-dangling reference (a species removed
+  from a copy of the state) reporting it rather than crashing.
+- `src/io/export-json.test.ts` (9) and `src/io/export-package.test.ts` (8): determinism (two builds of the same
+  state/options/clock byte-identical), scoped counts and no `embeddedAssets`/no asset files when `assets: 'none'`,
+  embedding/packaging real bytes byte-identical after decoding, a provider that cannot supply bytes reported in
+  `missingAssets` never thrown, `assets: 'none'` never calls the provider, an already-aborted signal and a signal
+  aborted between the asset loop and the final step both return `CANCELLED` with no bytes, progress once per asset
+  plus once for the final step. `export-package.test.ts` additionally unzips the real bytes and checks the manifest
+  shape and fixed entry order.
+- `tests/property/export-persistence-roundtrip.test.ts` (6), P-02 persistence part: demo dataset and the maximal
+  fixture, `.orn.json` (scopes `full`/`chemistry`) and `.ornpkg` (`full`) — save (fake-indexeddb) → load → export
+  equals export of the original state. (`tests/property/export-roundtrip.test.ts`, Phase 1, already covers P-02's
+  in-memory half, export → import → export; I initially overwrote that file by mistake with this test's content
+  before writing it — caught immediately via `git status` showing it as modified rather than new, restored with `git
+  checkout --`, and rewrote this test under its own new file name instead. No other file was affected; flagging it
+  here because CLAUDE.md §1.5 asks for nothing silent, including about my own mistakes.)
+- `tests/types/task-options.test.ts` (1): the type-level assertion above.
+- `tests/perf/export.bench.ts`: see Benchmark.
+- Coverage of `src/io` (focused run): 98.5% lines, 86.1% branches (the two uncovered lines are both the defensive
+  `SERIALIZE_FAILED` branch, unreachable from a document `buildScopedDocument` already built from valid canonical
+  records). `npm run test:coverage` (core + persistence + io) passed on its first run after adding `src/io` to the
+  include list and an 80%-lines threshold: 97.34% statements, 91.35% branches, 98.86% lines overall.
+
+**Benchmark** (`tests/perf/export.bench.ts`, run once and alone via `npx vitest bench run tests/perf/export.bench.ts
+--no-file-parallelism`; `bench:baseline` NOT run; `tests/perf/budgets.mjs` gains four entries against the "Export full
+dataset" < 2 s row; design tier, both `dense` and `hub_explosion`; mean / p99 in ms, `assets: 'none'` — the generator
+makes no asset records):
+- `.orn.json`: dense 393.2 / 446.8 (8 samples); hub_explosion 341.9 / 384.1 (9 samples)
+- `.ornpkg`: dense 994.1 / 1,040.7 (5 samples); hub_explosion 1,107.5 / 1,218.5 (5 samples)
+
+All four comfortably under the 2,000 ms budget (the zip format costs roughly 3× the plain JSON, mostly fflate's own
+deflate; no per-format split budget exists so both are judged against the same row).
+
+**Open items**
+- Asset-heavy export is exercised functionally (`export-{json,package}.test.ts`) but not at scale (the generator
+  produces no assets, so the design-tier bench above never calls `AssetBytesProvider` or the base64/zip-file paths at
+  volume); a real asset-bearing dataset does not exist until authoring (Phase 6) or legacy import (3.8-3.11).
+- `ExportOptions`/`buildExport` are not wired into `ComputeWorkerApi.buildExport` (`src/workers/rpc/contracts.ts`,
+  already stubbed for Phase 4): that wiring is Phase 4's, per "heavy work runs in-process now, compute worker in
+  Phase 4" (IMPLEMENTATION_PLAN.md Phase 3 notes item 4). `TaskOptions`/`RpcCallContext` are kept assignable in the
+  direction Phase 4 needs (see REVIEW REQUIRED 2) so that wiring does not need an adapter.
+- The two REVIEW REQUIRED items above need reviewer confirmation before Gate C.
+
 ## Amendments
+- **2026-09-29, step 3.5 — export: `AssetBytesProvider`, `MissingReference`, `ExportResult`, `ExportBuildResult`, `TaskOptions` (contract changes, reviewer-approved in "Phase 3 contract decisions", Q7, part of Q9, part of Q12).** Problem: `ExportOptions` (scope, subset, `includeDependencies`, `assets`) had no way to hand export a source of asset bytes without breaking options' structured-clone-safety, no result type to report bytes/counts/gaps, and no cancel/progress shape that does not require importing `src/workers` (io and persistence must not). Change: `AssetBytesProvider(assetId, sha256) => Promise<Uint8Array | undefined>`; `MissingReference { from, path, targetKind?, targetId }`; `ExportResult { bytes, counts, missingAssets, missingReferences }`; `ExportBuildResult` (`ExportErrorCode` `'CANCELLED' | 'SERIALIZE_FAILED'`); `TaskOptions { signal?, onProgress? }` (all in `src/io/contracts.ts`). No schema change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §8 (scope-closure algorithm spelled out, REVIEW REQUIRED), PROGRESS.md step 3.5.
 - **2026-09-28, step 3.4 — writer lock, change channel, follower mode, promotion (contract changes, ADR-033; reviewer-approved in "Phase 3 contract decisions", Q3, Q4 `singleTab`, Q11 and the addendum, plus what the step needed beyond that list).** Problem: the lock port could not express a wait (promotion) or a browser without Web Locks, there was no change-channel contract, boot could not report a single-tab session, and the store had no way for a follower tab to mirror the writer: `replaceState` refuses while read-only, validates the whole state on every call and assigns revision + 1. Change: `WriterLock` gains `whenAcquired()` and the acquire result `'unsupported'`; new `ChangeChannel { post, subscribe, close }` and `ChangeMessage { fromRevision, revision, changedIds }` (`changedIds` may be `'all'`, `subscribe` hands out `unknown`); `BootReport.singleTab` (required); `CanonicalStore` gains `applyRemote(RemoteChange)` and `reload(state, revision)`, allowed only on a read-only store (`CommandErrorCode 'NOT_FOLLOWER'` otherwise), `ChangeSet.cause` gains `'remote'` (documented as possibly spanning revisions; the core index engine applies a remote ChangeSet incrementally as a forward span, every other cause keeps the +1 guard); adapter additions `readChanged`, `loadForFollower`, `promote`, option `channel`; `PersistenceEvent 'channel_error'`; `attachWriteQueue`. Guards, semantics and rejected alternatives: ADR-033. No schema change, no `DB_STORES`/`DB_VERSION` change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-033, ARCHITECTURE.md §2.4, PERSISTENCE.md §4 and §10, SONNET_HANDOFF.md §9.
 - **2026-09-28, step 3.3 review — boot quarantine is a move; `BootReport.quarantineTruncated` removed; `QuarantineRow.raw` documented per source (reviewer decision; contract and doc changes).** Problem: step 3.3 quarantined a bad boot row as a COPY (the row stayed in `records`, the quarantine row's raw value was capped at 64 Ki characters). `records` then differed from the in-memory state, so `replaceAll`, a snapshot restore or a revision-gap recovery would silently delete a row that was only ever kept there, and a capped copy could not stand in for it (CLAUDE.md non-negotiable 5). Change: a bad row is removed from `records` and written to `quarantine`, whole and exactly as stored, in one transaction through `runOrdered` (`BootPorts.moveToQuarantine` replaces `addQuarantine`; `assembleState` returns `RejectedRow`s). The 64 Ki cap (`QUARANTINE_RAW_MAX_CHARS`, `QuarantineRow.rawTruncated`) stays for display and import quarantine (3.6); `rawTruncated` is never set on boot rows. `BootReport.quarantineTruncated` is removed because it is always 0; `newlyQuarantined` counts the rows moved. `QuarantineRow.raw` and `rawTruncated` comments say which source they apply to. No schema change, no `DB_STORES`/`DB_VERSION` change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §4, §7. Also in the same commit (test tooling, no contract change): wall-clock assertions moved to `npm run test:timing` (TEST_STRATEGY §1, SONNET_HANDOFF §19, IMPLEMENTATION_PLAN 3.12).
 - **2026-09-28, step 3.3 — boot: quarantine rows, import batches, asset-blob IDs, `OpenResult` (`migration_failed`, `detail`, `bootReport`), and what the step needed beyond the approved list (contract changes, reviewer-approved in "Phase 3 contract decisions", Q1 a, b, e, Q4, Q10).** Problem: boot (PERSISTENCE.md §4) had nowhere to put rows that fail L1, no way to report a failed migration or what it found, no asset-blob list for AST-002, and no way to tell a crashed session from a clean one. Change: `PersistenceAdapter` gains `addQuarantine` (ordered; rows whose ID exists are kept; returns the IDs that were new), `listQuarantine`, `deleteQuarantine`, `saveImportBatch`, `listImportBatches`, `listAssetBlobIds`; `ImportBatchRow` (report as opaque `JsonValue`, no io import); `QuarantineRow.rawTruncated` and `QUARANTINE_RAW_MAX_CHARS` (64 Ki characters); `OpenResult` (`readOnlyReason: 'migration_failed'`, `detail`, `bootReport: BootReport`); `setLastCleanShutdownAt(at: string | null)` (`null` = a session is running); `SaveStatus.failureReason?: 'revision_gap'` (step 3.2 review decision); `replaceAll` documented as ordered, resyncing and refusing a stale state. Test support: `withVersionOffset` (Q10). Also an implementation change to step 3.2's `decodeSnapshot`: it accepts any numeric `schemaVersion` (the runner decides usability), so a snapshot of data the runner refuses reports the runner's reason instead of "corrupt". `DexieAdapterOptions` (implementation options, not contract) gains `lock`, `runner`, `uiStateValidators`. No schema change, no `DB_STORES`/`DB_VERSION` change (the quarantine, importBatches, editorSessions and uiState stores already existed), no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §2, §4 (rewritten), §7.

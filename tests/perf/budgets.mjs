@@ -141,4 +141,12 @@ export const BUDGETS = {
     { operation: 'follower: applyRemote, hub edit (~1,000 records; our code)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.4: informal; SLOW_BENCH_OPTIONS; about a writer commit of that edit (dispatch + undo of it measured ~957 ms once, 2 commits); a Phase 4/9 candidate' },
   'commit — writer side (design tier, hub_explosion): replaceReferences on the 1,000-reaction hub > commit: replaceReferences on the 1,000-reaction hub (~1,000 referrers rewritten)':
     { operation: 'commit: replaceReferences on the 1,000-reaction hub (writer side)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 3.4 review, Part A(d): informal, no §2 row; SLOW_BENCH_OPTIONS; a structural edit (Commit on a record with ≥ 500 referrers backstop, 50 ms, is also blown through here); recorded as a Phase 9 exception candidate (PROJECT_STATE.json openItems) pending confirmation with numbers in the Gate C packet; compare against the applyRemote hub-edit entry above' },
+  'export full dataset (design tier, dense) > .orn.json':
+    { operation: 'export: .orn.json, full dataset', tier: 'design', shape: 'dense', budgetMs: 2000, budgetRow: 'Export full dataset', note: 'step 3.5; assets: none (the generator makes no asset records); SLOW_BENCH_OPTIONS' },
+  'export full dataset (design tier, dense) > .ornpkg':
+    { operation: 'export: .ornpkg, full dataset', tier: 'design', shape: 'dense', budgetMs: 2000, budgetRow: 'Export full dataset', note: 'step 3.5; assets: none; SLOW_BENCH_OPTIONS' },
+  'export full dataset (design tier, hub_explosion) > .orn.json':
+    { operation: 'export: .orn.json, full dataset', tier: 'design', shape: 'hub_explosion', budgetMs: 2000, budgetRow: 'Export full dataset', note: 'step 3.5; assets: none; SLOW_BENCH_OPTIONS' },
+  'export full dataset (design tier, hub_explosion) > .ornpkg':
+    { operation: 'export: .ornpkg, full dataset', tier: 'design', shape: 'hub_explosion', budgetMs: 2000, budgetRow: 'Export full dataset', note: 'step 3.5; assets: none; SLOW_BENCH_OPTIONS' },
 };
