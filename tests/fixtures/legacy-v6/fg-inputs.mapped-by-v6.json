@@ -1,0 +1,88 @@
+[
+  {
+    "input": "Olefin",
+    "result": "alkene"
+  },
+  {
+    "input": "  ALKENE ",
+    "result": "alkene"
+  },
+  {
+    "input": "alkene",
+    "result": "alkene"
+  },
+  {
+    "input": "1° Alcohol",
+    "result": "1-alcohol"
+  },
+  {
+    "input": "primary alcohol",
+    "result": "1-alcohol"
+  },
+  {
+    "input": "1-alcohol",
+    "result": "1-alcohol"
+  },
+  {
+    "input": "COOH",
+    "result": "carboxylic-acid"
+  },
+  {
+    "input": "cooh",
+    "result": "carboxylic-acid"
+  },
+  {
+    "input": "diazonium",
+    "result": "diazonium"
+  },
+  {
+    "input": "Diazonium salt",
+    "result": "diazonium"
+  },
+  {
+    "input": "sulfonic acid",
+    "result": "sulphonic-acid"
+  },
+  {
+    "input": "Sulphonic Acid",
+    "result": "sulphonic-acid"
+  },
+  {
+    "input": "isonitrile",
+    "result": "isocyanide"
+  },
+  {
+    "input": "mystery group",
+    "result": "mystery group"
+  },
+  {
+    "input": "  Mystery Group  ",
+    "result": "Mystery Group"
+  },
+  {
+    "input": "",
+    "result": ""
+  },
+  {
+    "input": "   ",
+    "result": ""
+  },
+  {
+    "input": null,
+    "result": ""
+  },
+  {
+    "input": 0,
+    "result": ""
+  },
+  {
+    "input": 5,
+    "result": "5"
+  },
+  {
+    "input": [
+      "alkene"
+    ],
+    "result": "alkene"
+  }
+]

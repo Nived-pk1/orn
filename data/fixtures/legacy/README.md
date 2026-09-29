@@ -9,6 +9,11 @@ in a Node `vm` context with DOM stubs. Nothing here was hand-edited except `v4-s
 | `v6-demo-export.json` | Byte-for-byte what v6's "Export JSON" produces for its built-in demo (21 compounds, 22 reactions, schemaVersion 5) | v5 → ORN mapper tests, Gate C/F audit |
 | `v4-sample.json` | Hand-made v4 prototype data covering every v4 field and edge case (duplicate names, dangling IDs, staged reagents, temperatures in reagent strings, unknown fields) | v4 → v5 port tests |
 | `v4-sample.normalized-by-v6.json` | Oracle: v6's own `normalizeData` applied to `v4-sample.json` | The TypeScript port must deep-equal this |
+| `v6-demo-export.normalized-by-v6.json` | Oracle (step 3.8, same method): v6's own `normalizeData` applied to `v6-demo-export.json`; v6 is idempotent on it (checked through the vm) | The port must deep-equal this: v5 input passes through as v6 would |
+
+`scripts/legacy-oracle.mjs` is that method as a script (legacy HTML path as an argument; the HTML is not in the repository). Run on
+`v4-sample.json` it reproduces `v4-sample.normalized-by-v6.json` byte for byte. Further oracles generated with it (a quirk workbook and
+tables for `splitLegacyReagent`, `autofillConditionFlags`, `fgId`) live in `tests/fixtures/legacy-v6/`.
 
 These files are frozen. If the legacy behaviour must be re-derived, regenerate them with the same method and record it in docs/PROGRESS.md.
 See docs/MIGRATION.md §4.

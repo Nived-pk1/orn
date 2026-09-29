@@ -1,0 +1,692 @@
+{
+  "title": "Quirk workbook",
+  "schemaVersion": 5,
+  "unknownTopLevel": {
+    "kept": [
+      1,
+      2,
+      {
+        "deep": true
+      }
+    ]
+  },
+  "compounds": [
+    {
+      "tags": [
+        "a",
+        "b"
+      ],
+      "image": "",
+      "smiles": "",
+      "formula": "",
+      "properties": "",
+      "node": true,
+      "functionalGroups": [
+        "alkene",
+        "1-alcohol",
+        "mystery"
+      ],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "arene",
+      "id": "c1",
+      "name": "Alkenes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      },
+      "custom": {
+        "deep": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "tags": [
+        "x",
+        "5",
+        "null",
+        "y"
+      ],
+      "image": "",
+      "smiles": "",
+      "formula": "",
+      "properties": "",
+      "node": false,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c2",
+      "name": "Water",
+      "jee": {
+        "level": "A",
+        "notes": "",
+        "extra": 1
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CCO",
+      "formula": "",
+      "properties": "",
+      "node": true,
+      "functionalGroups": [
+        "Alcohol",
+        "carboxylic-acid",
+        "alkyne"
+      ],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "nitrile",
+      "id": "c4",
+      "name": "  Ethanol ",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "",
+      "formula": "",
+      "properties": "second compound with the same folded name",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c5",
+      "name": "ethanol",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    }
+  ],
+  "reactions": [
+    {
+      "id": "r1",
+      "name": "v4 with every legacy key",
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "c1",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": ""
+        },
+        {
+          "ref": "c4",
+          "label": "",
+          "role": "product",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c4",
+          "label": "",
+          "role": "product",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "KOH",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "H3O+",
+          "role": "workup",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "Unknown",
+          "role": "reactant",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "reflux",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": true,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "a",
+        "to": "b → c",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": "m"
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "F",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": true,
+      "_v4": {
+        "reagent": "ethanol, KOH, then H3O+",
+        "extra": "Ethanol, Unknown",
+        "condition": "reflux"
+      }
+    },
+    {
+      "id": "r2",
+      "name": "v4 numeric start, staged reagent",
+      "customV4": 1,
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": 5,
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "O3",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "Zn/H2O",
+          "role": "workup",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "conc. H2SO4",
+          "role": "workup",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "X",
+          "role": "workup",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "c",
+          "role": "reactant",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "d",
+          "role": "reactant",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "dry ether",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": true
+      },
+      "transformation": {
+        "from": "no arrow",
+        "to": "",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": true,
+      "_v4": {
+        "reagent": "(i) O3 (ii) Zn/H2O, conc. H2SO4 (iii) X",
+        "extra": [
+          "c",
+          "d"
+        ],
+        "condition": "dry ether"
+      }
+    },
+    {
+      "id": "r3",
+      "name": "v4 with structured fields",
+      "jee": {
+        "difficulty": 3,
+        "traps": [
+          "a",
+          "b"
+        ],
+        "prerequisites": [
+          "p1",
+          "p2"
+        ],
+        "concepts": [
+          "c"
+        ],
+        "relevance": ""
+      },
+      "relatedReactions": [
+        "r1",
+        "r2"
+      ],
+      "tags": [
+        "t1",
+        "t2"
+      ],
+      "conditions": {
+        "text": "Dilute aqueous acid",
+        "temperature": "",
+        "medium": "acidic",
+        "phase": "aqueous",
+        "strength": "dilute",
+        "heat": false,
+        "light": false,
+        "pressure": "1 atm",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "",
+          "label": "PCC",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "CH2Cl2",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        },
+        {
+          "ref": "",
+          "label": "NaBH4",
+          "role": "workup",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "transformation": {
+        "from": "x",
+        "to": "",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "",
+      "chapter": "Uncategorised",
+      "collapseIntermediates": true,
+      "_v4": {
+        "reagent": "PCC; CH2Cl2 ; then NaBH4",
+        "extra": "",
+        "condition": "Dilute aqueous acid"
+      }
+    },
+    {
+      "id": "r4",
+      "name": "Untitled reaction",
+      "participants": [
+        {
+          "ref": "c1",
+          "label": "",
+          "role": "substrate",
+          "major": true,
+          "note": "n",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "KOH",
+          "role": "toString",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "q",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "product",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "z",
+          "role": [
+            "reagent"
+          ],
+          "major": false,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "Dilute aqueous acid, heat, hv, dry, 25 °C",
+        "temperature": "25 °C",
+        "medium": "acidic",
+        "phase": "aqueous",
+        "strength": "dilute",
+        "heat": true,
+        "light": true,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": true
+      },
+      "transformation": {
+        "from": "A",
+        "to": "B",
+        "fgFrom": [
+          "alkene",
+          "alkene"
+        ],
+        "fgTo": [
+          "mystery"
+        ],
+        "bondChanges": 5,
+        "extra": "keep"
+      },
+      "mechanism": {
+        "type": "SN2",
+        "summary": "legacy mech",
+        "foo": "bar"
+      },
+      "reagentFamily": "fam",
+      "reactionType": "x",
+      "chapter": "Uncategorised",
+      "namedReaction": "NR",
+      "image": "data:,",
+      "jee": {
+        "relevance": "main",
+        "difficulty": 0,
+        "traps": [
+          "t"
+        ],
+        "other": true,
+        "prerequisites": [],
+        "concepts": []
+      },
+      "mystery": {
+        "a": 1
+      },
+      "reactionFamily": "",
+      "tags": [],
+      "relatedReactions": [],
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r5",
+      "name": "v5 with odd containers",
+      "participants": [],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "transformation": {
+        "from": "P",
+        "to": "Q",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "collapseIntermediates": false,
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "namedReaction": "",
+      "image": "",
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "relatedReactions": []
+    },
+    {
+      "id": "r6",
+      "name": "v4 with only conditions in the reagent string",
+      "namedReaction": "",
+      "image": "",
+      "participants": [
+        {
+          "ref": "",
+          "label": "443 K",
+          "role": "reagent",
+          "major": false,
+          "note": ""
+        }
+      ],
+      "conditions": {
+        "text": "heat, light, high temperature, hν, 25 °C, room temperature",
+        "temperature": "25 °C",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": true,
+        "light": true,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "",
+        "to": "",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": false,
+      "_v4": {
+        "reagent": "heat, light, 443 K, high temperature, hν, 25 °C, room temperature",
+        "extra": "",
+        "condition": ""
+      }
+    },
+    {
+      "id": "r7",
+      "name": "v5, two products none major",
+      "participants": [
+        {
+          "ref": "c4",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "product",
+          "major": false,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "Concentrated basic medium, alcoholic, at -78 °C, then rt",
+        "temperature": "-78 °C",
+        "medium": "basic",
+        "phase": "alcoholic",
+        "strength": "custom",
+        "heat": "yes",
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "namedReaction": "",
+      "image": "",
+      "transformation": {
+        "from": "",
+        "to": "",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "",
+      "chapter": "Uncategorised",
+      "tags": [],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "collapseIntermediates": true
+    }
+  ]
+}

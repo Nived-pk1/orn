@@ -1,0 +1,213 @@
+[
+  {
+    "input": {
+      "text": ""
+    },
+    "result": {
+      "text": ""
+    }
+  },
+  {
+    "input": {
+      "text": "Heated under reflux"
+    },
+    "result": {
+      "text": "Heated under reflux",
+      "heat": true
+    }
+  },
+  {
+    "input": {
+      "text": "Hot, dilute HCl"
+    },
+    "result": {
+      "text": "Hot, dilute HCl",
+      "heat": true,
+      "strength": "dilute"
+    }
+  },
+  {
+    "input": {
+      "text": "Conc. H2SO4, 443 K"
+    },
+    "result": {
+      "text": "Conc. H2SO4, 443 K",
+      "strength": "concentrated"
+    }
+  },
+  {
+    "input": {
+      "text": "Concentrated, acidic medium"
+    },
+    "result": {
+      "text": "Concentrated, acidic medium",
+      "strength": "concentrated",
+      "medium": "acidic"
+    }
+  },
+  {
+    "input": {
+      "text": "basic, alkaline solution"
+    },
+    "result": {
+      "text": "basic, alkaline solution",
+      "medium": "basic"
+    }
+  },
+  {
+    "input": {
+      "text": "neutral medium at room temperature"
+    },
+    "result": {
+      "text": "neutral medium at room temperature",
+      "medium": "neutral",
+      "temperature": "room temperature"
+    }
+  },
+  {
+    "input": {
+      "text": "aqueous KOH"
+    },
+    "result": {
+      "text": "aqueous KOH",
+      "phase": "aqueous"
+    }
+  },
+  {
+    "input": {
+      "text": "alc. KOH"
+    },
+    "result": {
+      "text": "alc. KOH",
+      "phase": "alcoholic"
+    }
+  },
+  {
+    "input": {
+      "text": "alcoholic, aq."
+    },
+    "result": {
+      "text": "alcoholic, aq.",
+      "phase": "aqueous"
+    }
+  },
+  {
+    "input": {
+      "text": "hv, UV light, photolysis"
+    },
+    "result": {
+      "text": "hv, UV light, photolysis",
+      "light": true
+    }
+  },
+  {
+    "input": {
+      "text": "anhydrous AlCl3, dry ether"
+    },
+    "result": {
+      "text": "anhydrous AlCl3, dry ether",
+      "anhydrous": true
+    }
+  },
+  {
+    "input": {
+      "text": "25 °C"
+    },
+    "result": {
+      "text": "25 °C",
+      "temperature": "25 °C"
+    }
+  },
+  {
+    "input": {
+      "text": "-78 °C then 0 ° C"
+    },
+    "result": {
+      "text": "-78 °C then 0 ° C",
+      "temperature": "-78 °C"
+    }
+  },
+  {
+    "input": {
+      "text": "at rt"
+    },
+    "result": {
+      "text": "at rt",
+      "temperature": "rt"
+    }
+  },
+  {
+    "input": {
+      "text": "Δ"
+    },
+    "result": {
+      "text": "Δ"
+    }
+  },
+  {
+    "input": {
+      "text": "high temperature"
+    },
+    "result": {
+      "text": "high temperature",
+      "heat": true
+    }
+  },
+  {
+    "input": {
+      "text": "Dilute aqueous acid, heat, hv, dry, 25 °C"
+    },
+    "result": {
+      "text": "Dilute aqueous acid, heat, hv, dry, 25 °C",
+      "heat": true,
+      "light": true,
+      "anhydrous": true,
+      "strength": "dilute",
+      "medium": "acidic",
+      "phase": "aqueous",
+      "temperature": "25 °C"
+    }
+  },
+  {
+    "input": {
+      "text": "text with heat",
+      "heat": "yes",
+      "strength": "custom",
+      "medium": "m",
+      "phase": "p",
+      "temperature": "t",
+      "light": true,
+      "anhydrous": true
+    },
+    "result": {
+      "text": "text with heat",
+      "heat": "yes",
+      "strength": "custom",
+      "medium": "m",
+      "phase": "p",
+      "temperature": "t",
+      "light": true,
+      "anhydrous": true
+    }
+  },
+  {
+    "input": {
+      "text": 5
+    },
+    "result": {
+      "text": 5
+    }
+  },
+  {
+    "input": {
+      "text": null
+    },
+    "result": {
+      "text": null
+    }
+  },
+  {
+    "input": {},
+    "result": {}
+  }
+]

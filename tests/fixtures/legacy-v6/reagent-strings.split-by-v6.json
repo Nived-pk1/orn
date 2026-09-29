@@ -1,0 +1,399 @@
+[
+  {
+    "input": "NH2NH2, KOH, high temperature",
+    "result": {
+      "reagents": [
+        "NH2NH2",
+        "KOH"
+      ],
+      "workup": [],
+      "conditions": [
+        "high temperature"
+      ]
+    }
+  },
+  {
+    "input": "O2, then H3O+",
+    "result": {
+      "reagents": [
+        "O2"
+      ],
+      "workup": [
+        "H3O+"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "(i) O3 (ii) Zn/H2O",
+    "result": {
+      "reagents": [
+        "O3"
+      ],
+      "workup": [
+        "Zn/H2O"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "conc. H2SO4, 443 K",
+    "result": {
+      "reagents": [
+        "conc. H2SO4",
+        "443 K"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "B2H6, then H2O2, NaOH",
+    "result": {
+      "reagents": [
+        "B2H6"
+      ],
+      "workup": [
+        "H2O2",
+        "NaOH"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "PCC; CH2Cl2",
+    "result": {
+      "reagents": [
+        "PCC",
+        "CH2Cl2"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "PCC; CH2Cl2 ; then NaBH4",
+    "result": {
+      "reagents": [
+        "PCC",
+        "CH2Cl2"
+      ],
+      "workup": [
+        "NaBH4"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "",
+    "result": {
+      "reagents": [],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "   ",
+    "result": {
+      "reagents": [],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "Δ, hv",
+    "result": {
+      "reagents": [],
+      "workup": [],
+      "conditions": [
+        "Δ",
+        "hv"
+      ]
+    }
+  },
+  {
+    "input": "H2O, dilute HCl, reflux",
+    "result": {
+      "reagents": [
+        "H2O"
+      ],
+      "workup": [],
+      "conditions": [
+        "dilute HCl",
+        "reflux"
+      ]
+    }
+  },
+  {
+    "input": "(i) LiAlH4 (ii) H2O (iii) H+",
+    "result": {
+      "reagents": [
+        "LiAlH4"
+      ],
+      "workup": [
+        "H2O",
+        "H+"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "(I) A (II) B",
+    "result": {
+      "reagents": [
+        "A"
+      ],
+      "workup": [
+        "B"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "(i) A (iv) B (ii)",
+    "result": {
+      "reagents": [
+        "A"
+      ],
+      "workup": [
+        "B"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "Br2/hv",
+    "result": {
+      "reagents": [
+        "Br2/hv"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "KMnO4 then heat",
+    "result": {
+      "reagents": [
+        "KMnO4"
+      ],
+      "workup": [],
+      "conditions": [
+        "heat"
+      ]
+    }
+  },
+  {
+    "input": "alc. KOH, heat",
+    "result": {
+      "reagents": [
+        "alc. KOH"
+      ],
+      "workup": [],
+      "conditions": [
+        "heat"
+      ]
+    }
+  },
+  {
+    "input": "aq. NaOH",
+    "result": {
+      "reagents": [
+        "aq. NaOH"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "NaBH4, then, H2O",
+    "result": {
+      "reagents": [
+        "NaBH4"
+      ],
+      "workup": [
+        "H2O"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "H2, Pd/C, 25 °C",
+    "result": {
+      "reagents": [
+        "H2",
+        "Pd/C"
+      ],
+      "workup": [],
+      "conditions": [
+        "25 °C"
+      ]
+    }
+  },
+  {
+    "input": "Cl2, hν; then",
+    "result": {
+      "reagents": [
+        "Cl2"
+      ],
+      "workup": [],
+      "conditions": [
+        "hν"
+      ]
+    }
+  },
+  {
+    "input": "then A",
+    "result": {
+      "reagents": [],
+      "workup": [
+        "A"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "x then y then z",
+    "result": {
+      "reagents": [
+        "x"
+      ],
+      "workup": [
+        "y",
+        "z"
+      ],
+      "conditions": []
+    }
+  },
+  {
+    "input": "Zn dust, cold dil. acid",
+    "result": {
+      "reagents": [
+        "Zn dust"
+      ],
+      "workup": [],
+      "conditions": [
+        "cold dil. acid"
+      ]
+    }
+  },
+  {
+    "input": "CH3MgBr, dry ether then H3O+",
+    "result": {
+      "reagents": [
+        "CH3MgBr"
+      ],
+      "workup": [
+        "H3O+"
+      ],
+      "conditions": [
+        "dry ether"
+      ]
+    }
+  },
+  {
+    "input": "room temperature, RT, rt",
+    "result": {
+      "reagents": [],
+      "workup": [],
+      "conditions": [
+        "room temperature",
+        "RT",
+        "rt"
+      ]
+    }
+  },
+  {
+    "input": "atmosphere of N2, 1 atm pressure",
+    "result": {
+      "reagents": [
+        "atmosphere of N2"
+      ],
+      "workup": [],
+      "conditions": [
+        "1 atm pressure"
+      ]
+    }
+  },
+  {
+    "input": "thenardite",
+    "result": {
+      "reagents": [
+        "thenardite"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "Ph3P=CH2",
+    "result": {
+      "reagents": [
+        "Ph3P=CH2"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "H2O2",
+    "result": {
+      "reagents": [
+        "H2O2"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": "Cl2",
+    "result": {
+      "reagents": [
+        "Cl2"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": null,
+    "result": {
+      "reagents": [],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": 0,
+    "result": {
+      "reagents": [],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": 5,
+    "result": {
+      "reagents": [
+        "5"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  },
+  {
+    "input": [
+      "a, b",
+      "c"
+    ],
+    "result": {
+      "reagents": [
+        "a",
+        "b",
+        "c"
+      ],
+      "workup": [],
+      "conditions": []
+    }
+  }
+]

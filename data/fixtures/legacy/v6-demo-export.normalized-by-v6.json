@@ -1,0 +1,2258 @@
+{
+  "compounds": [
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CCCC",
+      "formula": "CnH2n+2",
+      "properties": "Saturated hydrocarbons — the least reactive functional-group hub; free-radical chemistry only.",
+      "node": true,
+      "functionalGroups": [
+        "alkane"
+      ],
+      "compoundClass": "alkane",
+      "acidBase": "",
+      "aromaticity": "non-aromatic",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–H",
+      "fgId": "alkane",
+      "id": "c1",
+      "name": "Alkanes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "C=CC",
+      "formula": "CnH2n",
+      "properties": "π-bond hub; electrophilic addition chemistry.",
+      "node": true,
+      "functionalGroups": [
+        "alkene"
+      ],
+      "compoundClass": "alkene",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R2C=CR2",
+      "fgId": "alkene",
+      "id": "c2",
+      "name": "Alkenes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "",
+      "formula": "CnH2n-2",
+      "properties": "Triple-bond hub; no structure supplied here — shown by its generic formula alone (demonstrates a major with no SMILES).",
+      "node": true,
+      "functionalGroups": [
+        "alkyne"
+      ],
+      "compoundClass": "alkyne",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "RC≡CR′",
+      "fgId": "alkyne",
+      "id": "c3",
+      "name": "Alkynes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "c1ccc2cc3ccccc3cc2c1",
+      "formula": "CnHm",
+      "properties": "Aromatic hub — shown here as anthracene, a fused tri-ring system, to demonstrate a node box that widens to fit a genuinely large structure instead of squeezing it.",
+      "node": true,
+      "functionalGroups": [
+        "arene"
+      ],
+      "compoundClass": "aromatic hydrocarbon",
+      "acidBase": "",
+      "aromaticity": "aromatic",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "Ar–H",
+      "fgId": "arene",
+      "id": "c4",
+      "name": "Arenes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "",
+      "formula": "R–X",
+      "properties": "Halogen hub — heavy MOP traffic in this demo (four independent routes lead in).",
+      "node": true,
+      "functionalGroups": [
+        "haloalkane"
+      ],
+      "compoundClass": "haloalkane",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–X",
+      "fgId": "haloalkane",
+      "id": "c5",
+      "name": "Haloalkanes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CCO",
+      "formula": "R–OH",
+      "properties": "Hydroxyl hub — the busiest MOP in this demo (four independent synthetic routes lead in).",
+      "node": true,
+      "functionalGroups": [
+        "1-alcohol"
+      ],
+      "compoundClass": "alcohol",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–OH",
+      "fgId": "",
+      "id": "c6",
+      "name": "Alcohols",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "Oc1ccccc1",
+      "formula": "ArOH",
+      "properties": "Aromatic –OH hub; weakly acidic, phenoxide resonance-stabilised.",
+      "node": true,
+      "functionalGroups": [
+        "phenol"
+      ],
+      "compoundClass": "phenol",
+      "acidBase": "",
+      "aromaticity": "aromatic",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "Ar–OH",
+      "fgId": "phenol",
+      "id": "c7",
+      "name": "Phenols",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "",
+      "formula": "R–O–R′",
+      "properties": "Ether hub — shown by generic formula alone.",
+      "node": true,
+      "functionalGroups": [
+        "ether"
+      ],
+      "compoundClass": "ether",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–O–R′",
+      "fgId": "ether",
+      "id": "c8",
+      "name": "Ethers",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "",
+      "formula": "R–CHO",
+      "properties": "Carbonyl hub (terminal) — shown by generic formula alone.",
+      "node": true,
+      "functionalGroups": [
+        "aldehyde"
+      ],
+      "compoundClass": "aldehyde",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–CHO",
+      "fgId": "aldehyde",
+      "id": "c9",
+      "name": "Aldehydes",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CC(=O)C",
+      "formula": "R2C=O",
+      "properties": "Carbonyl hub (internal); three independent outgoing routes in this demo.",
+      "node": true,
+      "functionalGroups": [
+        "ketone"
+      ],
+      "compoundClass": "ketone",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–CO–R′",
+      "fgId": "ketone",
+      "id": "c10",
+      "name": "Ketones",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CC(=O)O",
+      "formula": "RCOOH",
+      "properties": "Acid hub; weakly acidic.",
+      "node": true,
+      "functionalGroups": [
+        "carboxylic-acid"
+      ],
+      "compoundClass": "carboxylic acid",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–COOH",
+      "fgId": "carboxylic-acid",
+      "id": "c11",
+      "name": "Carboxylic acids",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "",
+      "formula": "RCOOR′",
+      "properties": "Ester hub — shown by generic formula alone.",
+      "node": true,
+      "functionalGroups": [
+        "ester"
+      ],
+      "compoundClass": "ester",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–COOR′",
+      "fgId": "ester",
+      "id": "c12",
+      "name": "Esters",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "",
+      "formula": "R–NH2",
+      "properties": "Amine hub — shown by generic formula alone.",
+      "node": true,
+      "functionalGroups": [
+        "1-amine"
+      ],
+      "compoundClass": "amine",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "major",
+      "genericFormula": "R–NH2",
+      "fgId": "",
+      "id": "c13",
+      "name": "Amines",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [
+        "solvent"
+      ],
+      "image": "",
+      "smiles": "O",
+      "formula": "H2O",
+      "properties": "Excess/byproduct species; not drawn as a node.",
+      "node": false,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c14",
+      "name": "Water",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CC(C)c1ccccc1",
+      "formula": "C9H12",
+      "properties": "Isopropylbenzene; industrial route to phenol + acetone. Has two outgoing reactions here, so it auto-resolves to a Branched node.",
+      "node": true,
+      "functionalGroups": [
+        "arene"
+      ],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "aromatic",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c15",
+      "name": "Cumene",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CCCCCCCCCCCCCCCC(=O)O",
+      "formula": "C16H32O2",
+      "properties": "Saturated C16 fatty acid from ester hydrolysis; solid at room temperature. Demo case for a long chain — the box widens to fit it instead of squeezing the structure.",
+      "node": true,
+      "functionalGroups": [
+        "carboxylic-acid"
+      ],
+      "compoundClass": "long-chain fatty acid",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c16",
+      "name": "Palmitic acid",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CC(C)=NO",
+      "formula": "R2C=N–OH",
+      "properties": "Formed from a ketone and hydroxylamine; a dead-end Sub node in this demo.",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c17",
+      "name": "Oxime",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CC(O)C#N",
+      "formula": "R2C(OH)CN",
+      "properties": "Formed from an aldehyde and HCN; a dead-end Sub node in this demo.",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c18",
+      "name": "Cyanohydrin",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CC(C)c1ccc(Br)cc1",
+      "formula": "C9H11Br",
+      "properties": "EAS bromination product of cumene; a dead-end Sub node.",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c19",
+      "name": "p-Bromocumene",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CCN",
+      "formula": "C2H7N",
+      "properties": "Demo only — deliberately not connected to any major, to show the anchoring rule (§2.3): it and its reaction never appear on the graph, only in the reaction list's warning group.",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c20",
+      "name": "Test compound A (unanchored)",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    },
+    {
+      "tags": [],
+      "image": "",
+      "smiles": "CCCN",
+      "formula": "C3H9N",
+      "properties": "Demo only — the product of the deliberately unanchored test reaction.",
+      "node": true,
+      "functionalGroups": [],
+      "compoundClass": "",
+      "acidBase": "",
+      "aromaticity": "",
+      "stereo": "",
+      "nodeType": "auto",
+      "genericFormula": "",
+      "fgId": "",
+      "id": "c21",
+      "name": "Test compound B (unanchored)",
+      "jee": {
+        "level": "",
+        "notes": ""
+      }
+    }
+  ],
+  "reactions": [
+    {
+      "id": "r1",
+      "name": "Addition of HBr to an alkene",
+      "participants": [
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "HBr",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "Markovnikov addition",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R2C=CR2",
+        "to": "R–CHX–CHR2",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "electrophilic addition",
+        "summary": "Protonation gives the more stable carbocation, then Br⁻ attacks."
+      },
+      "reactionType": "addition",
+      "reactionFamily": "electrophilic aromatic substitution",
+      "reagentFamily": "HBr",
+      "chapter": "Hydrocarbons",
+      "tags": [
+        "addition"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 1,
+        "traps": [
+          "Markovnikov vs anti-Markovnikov (peroxide effect) — check for HBr + peroxide"
+        ],
+        "prerequisites": [
+          "carbocation stability"
+        ],
+        "concepts": [
+          "electrophilic addition"
+        ]
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r2",
+      "name": "Hydrolysis of a haloalkane",
+      "participants": [
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "aq. KOH",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "aqueous, heat",
+        "temperature": "",
+        "medium": "",
+        "phase": "aqueous",
+        "strength": "",
+        "heat": true,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R–X",
+        "to": "R–OH",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "SN2",
+        "summary": "Hydroxide attacks the electrophilic carbon, displacing halide."
+      },
+      "reactionType": "substitution",
+      "reactionFamily": "nucleophilic substitution",
+      "reagentFamily": "aq. KOH",
+      "chapter": "Haloalkanes & Haloarenes",
+      "tags": [
+        "substitution"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 1,
+        "traps": [
+          "3° substrates favour E1/SN1 — elimination competes"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "SN2"
+        ]
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r3",
+      "name": "Oxidation of a 1° alcohol to an aldehyde",
+      "participants": [
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "PCC",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "CH2Cl2",
+          "role": "solvent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c9",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "mild oxidation",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R–CH2OH",
+        "to": "R–CHO",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "redox",
+        "summary": "PCC stops oxidation at the aldehyde stage (unlike KMnO4/K2Cr2O7)."
+      },
+      "reactionType": "oxidation",
+      "reactionFamily": "",
+      "reagentFamily": "PCC",
+      "chapter": "Aldehydes, Ketones & Carboxylic Acids",
+      "tags": [
+        "oxidation"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "PCC does not over-oxidise to the acid — that needs KMnO4/K2Cr2O7"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "selective oxidation"
+        ]
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r4",
+      "name": "Oxidation of an aldehyde to an acid",
+      "participants": [
+        {
+          "ref": "c9",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "KMnO4",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c11",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R–CHO",
+        "to": "R–COOH",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "redox",
+        "summary": "Aldehyde is readily oxidised further to the carboxylic acid."
+      },
+      "reactionType": "oxidation",
+      "reactionFamily": "",
+      "reagentFamily": "KMnO4",
+      "chapter": "Aldehydes, Ketones & Carboxylic Acids",
+      "tags": [
+        "oxidation"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 1,
+        "traps": [
+          "Ketones resist this oxidation (no H on the carbonyl carbon)"
+        ],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r5",
+      "name": "Esterification of a carboxylic acid",
+      "namedReaction": "Fischer esterification",
+      "participants": [
+        {
+          "ref": "c11",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "reactant",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "conc. H2SO4",
+          "role": "catalyst",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c12",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c14",
+          "label": "",
+          "role": "byproduct",
+          "major": false,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "heat, reversible",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": true,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "RCOOH + R′OH",
+        "to": "RCOOR′ + H2O",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "nucleophilic acyl substitution",
+        "summary": "Protonated acid attacked by the alcohol; loss of water gives the ester."
+      },
+      "reactionType": "esterification",
+      "reactionFamily": "acyl substitution",
+      "reagentFamily": "H2SO4",
+      "chapter": "Aldehydes, Ketones & Carboxylic Acids",
+      "tags": [
+        "esterification"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Reversible — excess alcohol or removing water drives it forward"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "equilibrium"
+        ]
+      },
+      "relatedReactions": [],
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r6",
+      "name": "Reduction of a ketone (hydride)",
+      "participants": [
+        {
+          "ref": "c10",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "NaBH4",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "EtOH",
+          "role": "solvent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R2C=O",
+        "to": "R2CHOH",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "nucleophilic addition",
+        "summary": "Hydride transfer to the carbonyl carbon, then protonation."
+      },
+      "reactionType": "reduction",
+      "reactionFamily": "carbonyl reduction",
+      "reagentFamily": "NaBH4",
+      "chapter": "Aldehydes, Ketones & Carboxylic Acids",
+      "tags": [
+        "reduction"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 1,
+        "traps": [
+          "NaBH4 does not reduce esters, acids or amides — LiAlH4 does"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "hydride donors"
+        ]
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r7",
+      "name": "Dehydrohalogenation of a haloalkane",
+      "participants": [
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "alc. KOH",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "alcoholic, heat",
+        "temperature": "",
+        "medium": "",
+        "phase": "alcoholic",
+        "strength": "",
+        "heat": true,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R–X",
+        "to": "alkene",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "E2",
+        "summary": "Anti-periplanar elimination of H and X gives the alkene (Zaitsev product favoured)."
+      },
+      "reactionType": "elimination",
+      "reactionFamily": "elimination",
+      "reagentFamily": "alc. KOH",
+      "chapter": "Hydrocarbons",
+      "tags": [
+        "elimination"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Solvent decides the pathway: aqueous KOH → substitution, alcoholic KOH → elimination"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "E2",
+          "Zaitsev rule"
+        ]
+      },
+      "relatedReactions": [
+        "r2"
+      ],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r8",
+      "name": "Partial hydrogenation of an alkyne",
+      "namedReaction": "Lindlar reduction",
+      "participants": [
+        {
+          "ref": "c3",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "H2 / Lindlar catalyst",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "alkyne",
+        "to": "cis-alkene",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "redox",
+        "summary": "Poisoned Pd catalyst stops hydrogenation at the cis-alkene."
+      },
+      "reactionType": "reduction",
+      "reactionFamily": "",
+      "reagentFamily": "H2/Lindlar",
+      "chapter": "Hydrocarbons",
+      "tags": [
+        "reduction"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Lindlar → cis-alkene; Na/NH3(l) → trans-alkene"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "syn addition"
+        ]
+      },
+      "relatedReactions": [],
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r9",
+      "name": "Free-radical chlorination of an alkane",
+      "participants": [
+        {
+          "ref": "c1",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "Cl2",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "light",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": true,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R–H",
+        "to": "R–Cl",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "free-radical substitution",
+        "summary": "Initiation, propagation, termination — a radical-chain halogenation."
+      },
+      "reactionType": "substitution",
+      "reactionFamily": "free-radical halogenation",
+      "reagentFamily": "Cl2/hv",
+      "chapter": "Hydrocarbons",
+      "tags": [
+        "radical"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Statistically/stability-weighted mixture of products — not selective"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "radical chain mechanism"
+        ]
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r10",
+      "name": "Conversion of an alcohol to a haloalkane",
+      "participants": [
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "PBr3",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R–OH",
+        "to": "R–Br",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "SN2",
+        "summary": "PBr3 converts the poor leaving group –OH into a good one."
+      },
+      "reactionType": "substitution",
+      "reactionFamily": "nucleophilic substitution",
+      "reagentFamily": "PBr3",
+      "chapter": "Haloalkanes & Haloarenes",
+      "tags": [
+        "substitution"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [
+        "r2"
+      ],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r11",
+      "name": "Acid-catalysed hydration of an alkene",
+      "participants": [
+        {
+          "ref": "c2",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "H2O",
+          "role": "reactant",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "dil. H2SO4",
+          "role": "catalyst",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "Markovnikov addition",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "alkene",
+        "to": "R–OH",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "electrophilic addition",
+        "summary": "Protonation gives the more stable carbocation, then water attacks."
+      },
+      "reactionType": "addition",
+      "reactionFamily": "",
+      "reagentFamily": "H3O+",
+      "chapter": "Alcohols, Phenols & Ethers",
+      "tags": [
+        "addition"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Carbocation rearrangement is possible with 2° substrates"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "Markovnikov addition"
+        ]
+      },
+      "relatedReactions": [
+        "r1"
+      ],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r12",
+      "name": "Intermolecular dehydration of an alcohol",
+      "participants": [
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "reactant",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "conc. H2SO4",
+          "role": "catalyst",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c8",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c14",
+          "label": "",
+          "role": "byproduct",
+          "major": false,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "140°C",
+        "temperature": "140°C",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "2 R–OH",
+        "to": "R–O–R + H2O",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "nucleophilic substitution",
+        "summary": "Protonated alcohol is attacked by a second alcohol molecule."
+      },
+      "reactionType": "condensation",
+      "reactionFamily": "",
+      "reagentFamily": "H2SO4",
+      "chapter": "Alcohols, Phenols & Ethers",
+      "tags": [
+        "ether synthesis"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "At 170°C the same reagent instead eliminates to the alkene"
+        ],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r13",
+      "name": "Ammonolysis of a haloalkane",
+      "namedReaction": "Hofmann ammonolysis",
+      "participants": [
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "NH3 (excess)",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c13",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "excess ammonia, sealed tube",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R–X",
+        "to": "R–NH2",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "SN2",
+        "summary": "Ammonia displaces halide; excess NH3 limits over-alkylation."
+      },
+      "reactionType": "substitution",
+      "reactionFamily": "nucleophilic substitution",
+      "reagentFamily": "NH3",
+      "chapter": "Amines",
+      "tags": [
+        "substitution"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Without excess NH3 this over-alkylates to 2°/3° amines and quaternary salts"
+        ],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r14",
+      "name": "Hydrolysis of an ester",
+      "namedReaction": "Saponification",
+      "participants": [
+        {
+          "ref": "c12",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "NaOH (aq.)",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c16",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "byproduct",
+          "major": false,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "aqueous, heat",
+        "temperature": "",
+        "medium": "",
+        "phase": "aqueous",
+        "strength": "",
+        "heat": true,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "RCOOR′",
+        "to": "RCOOH + R′OH",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "nucleophilic acyl substitution",
+        "summary": "Hydroxide attacks the carbonyl; the alkoxide leaving group is protonated on work-up."
+      },
+      "reactionType": "hydrolysis",
+      "reactionFamily": "acyl substitution",
+      "reagentFamily": "NaOH",
+      "chapter": "Aldehydes, Ketones & Carboxylic Acids",
+      "tags": [
+        "hydrolysis",
+        "long-chain demo"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Base-mediated hydrolysis is irreversible (forms the carboxylate)"
+        ],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [
+        "r5"
+      ],
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r15",
+      "name": "Addition of excess HBr to an alkyne",
+      "participants": [
+        {
+          "ref": "c3",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "HBr (excess)",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c5",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "Markovnikov, excess HBr",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "alkyne",
+        "to": "gem-dihaloalkane",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "electrophilic addition",
+        "summary": "Two successive Markovnikov additions give the geminal dihalide."
+      },
+      "reactionType": "addition",
+      "reactionFamily": "",
+      "reagentFamily": "HBr",
+      "chapter": "Hydrocarbons",
+      "tags": [
+        "addition"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [
+        "r1"
+      ],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r16",
+      "name": "Grignard addition to a ketone",
+      "namedReaction": "Grignard reaction",
+      "participants": [
+        {
+          "ref": "c10",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "CH3MgBr",
+          "role": "reactant",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "dry ether",
+          "role": "solvent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "H3O+",
+          "role": "workup",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c6",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "anhydrous",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": true
+      },
+      "transformation": {
+        "from": "R2C=O",
+        "to": "R2C(CH3)OH",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "nucleophilic addition",
+        "summary": "The carbanion-like methyl adds to the carbonyl; acidic work-up protonates the alkoxide."
+      },
+      "reactionType": "addition",
+      "reactionFamily": "organometallic addition",
+      "reagentFamily": "RMgX",
+      "chapter": "Aldehydes, Ketones & Carboxylic Acids",
+      "tags": [
+        "C–C bond formation"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Any acidic H (–OH, –NH, –COOH, terminal alkyne) destroys RMgX"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "organometallics"
+        ]
+      },
+      "relatedReactions": [
+        "r6"
+      ],
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r17",
+      "name": "Alkylation of benzene",
+      "namedReaction": "Friedel–Crafts alkylation",
+      "participants": [
+        {
+          "ref": "c4",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "propene",
+          "role": "reactant",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "AlCl3",
+          "role": "catalyst",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c15",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "Ar–H",
+        "to": "Ar–R",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "electrophilic aromatic substitution",
+        "summary": "AlCl3 generates the isopropyl carbocation, which the arene ring attacks."
+      },
+      "reactionType": "EAS",
+      "reactionFamily": "electrophilic aromatic substitution",
+      "reagentFamily": "AlCl3",
+      "chapter": "Hydrocarbons",
+      "tags": [
+        "EAS"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Carbocation rearrangement is possible — watch the alkyl halide/alkene used"
+        ],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r18",
+      "name": "Cumene process",
+      "participants": [
+        {
+          "ref": "c15",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "O2",
+          "role": "reactant",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "H3O+",
+          "role": "workup",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c7",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c10",
+          "label": "",
+          "role": "product",
+          "major": false,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "air oxidation, then acid-catalysed rearrangement",
+        "temperature": "",
+        "medium": "acidic",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "ArCH(CH3)2",
+        "to": "ArOH + (CH3)2C=O",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "radical autoxidation + rearrangement",
+        "summary": "Autoxidation to the hydroperoxide, then acid-catalysed rearrangement/cleavage giving phenol and acetone."
+      },
+      "reactionType": "oxidation",
+      "reactionFamily": "industrial synthesis",
+      "reagentFamily": "Cumene process",
+      "chapter": "Alcohols, Phenols & Ethers",
+      "tags": [
+        "industrial"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 2,
+        "traps": [
+          "Gives two products — phenol AND a ketone (acetone)"
+        ],
+        "prerequisites": [],
+        "concepts": [
+          "1,2-aryl shift"
+        ]
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r19",
+      "name": "Oxime formation",
+      "participants": [
+        {
+          "ref": "c10",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "NH2OH",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c17",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c14",
+          "label": "",
+          "role": "byproduct",
+          "major": false,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R2C=O",
+        "to": "R2C=N–OH",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "nucleophilic addition–elimination",
+        "summary": "Hydroxylamine condenses with the carbonyl, losing water."
+      },
+      "reactionType": "condensation",
+      "reactionFamily": "",
+      "reagentFamily": "NH2OH",
+      "chapter": "Aldehydes, Ketones & Carboxylic Acids",
+      "tags": [
+        "condensation"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 1,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r20",
+      "name": "Cyanohydrin formation",
+      "participants": [
+        {
+          "ref": "c9",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "HCN",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c18",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "R–CHO",
+        "to": "R–CH(OH)CN",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "nucleophilic addition",
+        "summary": "Cyanide adds to the carbonyl carbon."
+      },
+      "reactionType": "addition",
+      "reactionFamily": "carbonyl addition",
+      "reagentFamily": "HCN",
+      "chapter": "Aldehydes, Ketones & Carboxylic Acids",
+      "tags": [
+        "addition"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 1,
+        "traps": [],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r21",
+      "name": "Bromination of cumene",
+      "namedReaction": "EAS bromination",
+      "participants": [
+        {
+          "ref": "c15",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "Br2",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "FeBr3",
+          "role": "catalyst",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c19",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "Ar–H",
+        "to": "Ar–Br",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "electrophilic aromatic substitution",
+        "summary": "FeBr3 polarises Br2; the ring attacks the electrophilic bromine."
+      },
+      "reactionType": "EAS",
+      "reactionFamily": "electrophilic aromatic substitution",
+      "reagentFamily": "Br2/FeBr3",
+      "chapter": "Hydrocarbons",
+      "tags": [
+        "EAS"
+      ],
+      "jee": {
+        "relevance": "both",
+        "difficulty": 1,
+        "traps": [
+          "Isopropyl is an ortho/para director — this gives cumene a second outgoing branch, so it auto-resolves to Branched"
+        ],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "image": "",
+      "collapseIntermediates": true
+    },
+    {
+      "id": "r22",
+      "name": "Unanchored test reaction (demo)",
+      "participants": [
+        {
+          "ref": "c20",
+          "label": "",
+          "role": "substrate",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "",
+          "label": "X (placeholder)",
+          "role": "reagent",
+          "major": false,
+          "note": "",
+          "image": ""
+        },
+        {
+          "ref": "c21",
+          "label": "",
+          "role": "product",
+          "major": true,
+          "note": "",
+          "image": ""
+        }
+      ],
+      "conditions": {
+        "text": "",
+        "temperature": "",
+        "medium": "",
+        "phase": "",
+        "strength": "",
+        "heat": false,
+        "light": false,
+        "pressure": "",
+        "atmosphere": "",
+        "anhydrous": false
+      },
+      "transformation": {
+        "from": "",
+        "to": "",
+        "fgFrom": [],
+        "fgTo": [],
+        "bondChanges": ""
+      },
+      "mechanism": {
+        "type": "",
+        "summary": ""
+      },
+      "reactionType": "",
+      "reactionFamily": "",
+      "reagentFamily": "",
+      "chapter": "Uncategorised",
+      "tags": [
+        "demo",
+        "anchoring test"
+      ],
+      "jee": {
+        "relevance": "",
+        "difficulty": 0,
+        "traps": [
+          "Neither compound touches a major node, so §2.3 hides this reaction and both nodes from the graph — check the reaction list's warning group instead"
+        ],
+        "prerequisites": [],
+        "concepts": []
+      },
+      "relatedReactions": [],
+      "namedReaction": "",
+      "image": "",
+      "collapseIntermediates": true
+    }
+  ],
+  "schemaVersion": 5
+}
