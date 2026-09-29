@@ -32,5 +32,27 @@ export type { MergedValidation, ValidateMergedOutcome } from './import-validate'
 export { createImportSession } from './import-session';
 export type { ImportSession, ImportSessionDeps, PreviewInput } from './import-session';
 export type { AssetStagePort, ImportBatchRowLike, ImportBatchSink, ImportQuarantineRowLike, ImportStorePort, SnapshotPort } from './import-ports';
-export { normalizeLegacyData, findDroppedLeaves, splitLegacyReagent, migrateLegacyReaction, LEGACY_V5_SCHEMA_VERSION } from './legacy-v6';
-export type { DroppedLeaf, LegacyNormalizeResult, LegacyRefusalCode, LegacyV5Data } from './legacy-v6';
+export {
+  createLegacyIdSpace,
+  findDroppedLeaves,
+  legacyAssetId,
+  LEGACY_V5_SCHEMA_VERSION,
+  migrateLegacyReaction,
+  normalizeLegacyData,
+  parseConditionField,
+  parseLabel,
+  parseLegacyConditions,
+  splitLegacyReagent,
+} from './legacy-v6';
+export type {
+  DroppedLeaf,
+  IdCollision,
+  LegacyIdSpace,
+  LegacyIdSpaceInput,
+  LegacyNormalizeResult,
+  LegacyRefusalCode,
+  LegacyV5Data,
+  ParsedConditions,
+  ParsedLabel,
+  ParseReview,
+} from './legacy-v6';

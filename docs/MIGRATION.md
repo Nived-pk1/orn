@@ -59,6 +59,15 @@ Legacy IDs are sanitised to `[0-9a-z-]` (lowercase, other characters → `-`); i
 
 Re-importing the same file therefore produces identical IDs, and the conflict analysis resolves them as `identical_skip`.
 
+**How the parts are built (step 3.9, `src/io/legacy-v6/id-parts.ts`, `id-space.ts`).**
+- *Hash*: the deterministic core `hash64` (`src/core/hash.ts`, step 2.2), its first 6 hex characters, of the ORIGINAL value (§4.2 names no other function).
+- *Sanitising*: ASCII letters are lowercased, digits and `-` kept, every other code point (one per code point, not per UTF-16 unit) becomes `-`; `Ab.c` gives `ab-c-<hash6>`, an unchanged `c15` stays `c15`, an empty ID gives `-<hash6>`.
+- *Length*: an ID body is at most 63 characters, so a part is capped at 27 characters. A longer value is truncated (to 20 characters plus `-<hash6>`); truncation counts as "sanitising changed the value", so the hash of the whole original is always there.
+- *Text-derived parts* (`l-<slug>-<hash6>`, `cpt_v6-<slug>-<hash6>`, …): the key is the FOLDED text (`fold`, core), so labels that fold alike share one record; the slug is the folded text's `[0-9a-z]` runs joined by `-`, at most 40 characters (empty slug: the hash alone); the hash is `hash64` of the folded text. Matching text against existing records is step 3.10/3.11.
+- *`rel_v6-<lower>-<higher>`*: "lower" is the smaller of the two legacy reaction IDs in plain code-unit order (`r12` before `r3`); a reaction related to itself has no relationship.
+- *Collisions inside one document* (two different originals with one part: a hash collision, or an original that already looks like a produced part, such as `c15!` and `c15--<its hash>`): never merged. The whole document is settled at once, per namespace (compound, reaction, label, concept, named reaction, topic, relationship): every colliding original moves to a 12-character hash, then a 16-character hash, then `<hash16>-<n>`, repeating until all parts are unique. The result does not depend on the order of the input. Each collision is returned in `collisions` for the import report. Consequence, stated: the IDs of the colliding values differ from what a document without the collision would give them.
+- Every generated ID is tested against the schema's ID pattern of its kind, including for arbitrary strings.
+
 **Records without an `id`** (v6 would draw a random one) are never refused. The port (step 3.8) assigns the deterministic placeholders `c-missing-<n>` (compound) / `r-missing-<n>` (reaction), `n` = the first free number counting from the record's position, and lists them in `assignedIds`. From then on they are ordinary legacy IDs: they map through the table above like any other (`spc_v6-c-missing-3`, `rxn_v6-r-missing-1`; they need no hash suffix because they are already `[0-9a-z-]`). Every such record is a REVIEW REQUIRED item (§4.7).
 
 ### 4.3 Pipeline
@@ -103,7 +112,7 @@ Re-importing the same file therefore produces identical IDs, and the conflict an
 | participant with only `label` | label parser (§4.6) → matched or newly created reagent (for reagent-like roles) or species (for substance roles), review |
 | participant `note`, `image` | `note`; asset attached to the reaction with the label as note |
 | `conditions.text` | stage 1 `parameters.text` and `originalText` |
-| `conditions.temperature/medium/phase/strength/pressure/atmosphere` | parsed into structured fields when unambiguous, else `other[]`; all listed in `parsedFields` (RXN-015 review) |
+| `conditions.temperature/medium/phase/strength/pressure/atmosphere` | parsed into structured fields when unambiguous, else `other[]`; all listed in `parsedFields` (RXN-015 review). Step 3.9 (`condition-fields.ts`): temperature and pressure as `value` / `range` (K and °C; atm, bar, kPa, mmHg; hyphen or en-dash; a range written downwards, an unsupported unit, a second number or two values are NOT decided and go to `other[]`), qualitative words from small tables (`rt`, `reflux`, `heat`, …); `medium` and `atmosphere` by whole-value tables; `phase` `aqueous`/`alcoholic` → `solventCharacter`; `strength` has no stage field (it belongs to a participant, not decidable here), so it is kept as `other[]` `strength: dilute`. Anything else: `other[]` `<field>: <text>` + review. |
 | flags `heat`, `light`, `anhydrous` (regex-inferred by v6) | `temperature: qualitative heat` (if no temperature), `light: hv`, `anhydrous: true`; all in `parsedFields` |
 | `transformation.from/to` | `generalizedEquation` "from → to" |
 | `transformation.fgFrom/fgTo` | `transformation` record matched by class sets or created (review); `bondChanges` → its `bondChangeSummary` |
@@ -138,6 +147,8 @@ Tokens are removed from a participant label into structured fields; `originalTex
 | `(cat.)`, `catalytic` | `quantity.qualifier: 'catalytic'` |
 | a whole label that is a temperature (`443 K`, `140°C`, `0-5 °C`) | not a participant: moved to the stage's `temperature`, added to `parsedFields` |
 | `hv`, `hν`, `light`, `UV` as a whole label | moved to `light` in stage parameters |
+
+Step 3.9 (`label-parser.ts`) reads the table as follows. Matching is case-insensitive and by whole word (`dry` is not taken out of `drying agent`); `aq`, `alc`, `conc`, `dil` are also accepted without the dot (as v6's own regexes do), and `saturated` next to `sat.`; any token may stand in parentheses (`(aq)`, `(aq.)`, `(excess)`, `(cat.)`). `non-aqueous` is not `aqueous` (left in the label, reported). Two tokens that disagree on one field (`aq. alc. KOH`) are none of them taken out and the label is reported; a label of tokens only keeps an empty remainder and is reported; a temperature inside a longer label (`H2SO4, 443 K`) is not split off (reported). A whole label that is a temperature (units K and °C, ranges with hyphen or en-dash) or `hv`/`hν`/`light` (→ `light: hv`) / `UV` (→ `light: uv`) is a stage parameter; a whole label that is clearly a temperature but not storable (`100 °F`, `5-0 °C`) is a stage parameter in `other[]`, reported. The result always carries `originalText` and `segments` that tile the label exactly, so no character is lost.
 
 The remainder is matched against existing reagents/species by folded name or alias (so "aq. KOH" and "alc. KOH" both resolve to the single reagent **KOH** with different phases). Unmatched remainders create one shared record per folded label, `review_required`.
 
