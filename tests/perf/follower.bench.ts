@@ -103,3 +103,27 @@ describe('follower apply (design tier, hub_explosion): applyRemote', () => {
     SLOW_BENCH_OPTIONS,
   );
 });
+
+/**
+ * The WRITER's own side of the same edit (step 3.4 review, Part A(d)): `dispatch`ing `replaceReferences` on the
+ * design-tier "like water" hub, for direct comparison with `applyRemote`'s hub-edit entry above. `hub` and `other`
+ * swap roles each sample (`replaceReferences(hub, other)`, then `replaceReferences(other, hub)`, …): `from`'s own
+ * record is never deleted by this command (only its referrers are rewritten, `plan.ts`'s `planReplaceReferences`),
+ * so the store can be dispatched to forever without a fresh store per sample, and every call still rewrites the
+ * same ~1,000 referrer records (they merely change which of the two IDs they point at).
+ */
+describe('commit — writer side (design tier, hub_explosion): replaceReferences on the 1,000-reaction hub', () => {
+  const store = createCanonicalStore({ initial, validateInitial: false });
+  let forward = true;
+
+  bench(
+    'commit: replaceReferences on the 1,000-reaction hub (~1,000 referrers rewritten)',
+    () => {
+      const [from, to] = forward ? [hub, other] : [other, hub];
+      forward = !forward;
+      const result = store.dispatch({ label: 'bench: merge hub', commands: [{ type: 'record.replaceReferences', from, to }] });
+      if (!result.ok) throw new Error(`bench: replaceReferences rejected: ${result.error.code} ${result.error.message}`);
+    },
+    SLOW_BENCH_OPTIONS,
+  );
+});

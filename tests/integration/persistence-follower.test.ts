@@ -215,6 +215,42 @@ describe('promotion (fakes)', () => {
     expect(seen).toEqual([true]);
   });
 
+  it('while boot runs the write queue writable again, the store still refuses to commit, until reload finishes (PERSISTENCE.md §10 promotion order)', async () => {
+    const rig = await fakeRig();
+    const a = await openTab(rig.env);
+    const b = await openTab(rig.env);
+
+    // Gate the promotion boot so the test can observe the window between "queue writable" (inside adapter.promote())
+    // and "store writable" (only after follower.ts's own store.reload() returns).
+    let promoteCalled = false;
+    let releaseGate: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      releaseGate = resolve;
+    });
+    const realPromote = b.t.adapter.promote.bind(b.t.adapter);
+    b.t.adapter.promote = async () => {
+      promoteCalled = true;
+      await gate;
+      return realPromote();
+    };
+
+    await a.t.adapter.setLastCleanShutdownAt('2026-09-28T12:00:00.000Z');
+    await a.t.adapter.close(); // releases the lock; b's whenAcquired() resolves and promotion starts
+
+    for (let turn = 0; turn < 200 && !promoteCalled; turn += 1) await Promise.resolve();
+    if (!promoteCalled) throw new Error('test setup: adapter.promote() was never called');
+
+    // Boot (inside the gated adapter.promote()) is still pending: the store must still be read-only and refuse a commit.
+    expect(b.store()?.isReadOnly()).toBe(true);
+    expect(edit(b, 'during promotion')).toMatchObject({ ok: false, error: { code: 'READ_ONLY' } });
+    expect(b.wiring()).toBeUndefined();
+
+    releaseGate?.();
+    await settle(rig, b, () => b.follower?.isReadOnly() === false);
+    expect(b.store()?.isReadOnly()).toBe(false);
+    mustCommit(edit(b, 'after promotion'));
+  });
+
   it('the promoted tab runs boot as the writer: a bad row is moved to quarantine and a crash of the old writer is reported', async () => {
     const rig = await fakeRig();
     const a = await openTab(rig.env);

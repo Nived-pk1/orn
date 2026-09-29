@@ -103,6 +103,17 @@ describe('what the follower decides for a message', () => {
     expect(r.store?.applyRemote).not.toHaveBeenCalled();
   });
 
+  it('a row that fails L1 with more than 20 issues reports all of them capped, with the true total named (step 3.4 review)', async () => {
+    const badRow = { kind: 'species', id: 'spc_bad', classIds: Array.from({ length: 25 }, (_, i) => i) };
+    const r = rig({ adapter: { readChanged: () => Promise.resolve({ rows: [badRow], revision: 2, schemaVersion: 1, datasetMeta: state.meta }) } });
+    await r.send(message(1, 2, ['spc_bad']));
+    const rejected = r.events.find((e) => e.type === 'row_rejected');
+    if (rejected?.type !== 'row_rejected') throw new Error('expected a row_rejected event');
+    expect(rejected.issues.length).toBe(21); // 20 shown + one trailer naming the rest
+    expect(rejected.issues.at(-1)).toMatch(/^… and \d+ more issue\(s\)$/);
+    expect(r.events.at(-1)).toEqual({ type: 'reloaded', reason: 'invalid_row', revision: 2, rejectedRows: 0 });
+  });
+
   it('a row of another schema version is never applied incrementally', async () => {
     const r = rig({ adapter: { readChanged: () => Promise.resolve({ rows: [undefined], revision: 2, schemaVersion: 2, datasetMeta: state.meta }) } });
     await r.send(message(1, 2));

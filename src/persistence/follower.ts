@@ -12,7 +12,7 @@ import type { CommitResult, RemoteChange } from '@/core/commands/contracts';
 import { jsonEqual } from '@/core/commands/lookup';
 import { DatasetMetaSchema, type AnyRecord, type CanonicalState, type RecordKind } from '@/core/schema';
 import { validator } from '@/core/validation';
-import { issueOf } from './boot-load';
+import { capIssues, issueOf } from './boot-load';
 import { parseChangeMessage } from './change-message';
 import type { BootReport, ChangeChannel, ChangeMessage, OpenResult, WriterLock } from './contracts';
 import { describeError } from './events';
@@ -152,7 +152,7 @@ export function createFollower(options: FollowerOptions): Follower {
       const kind = typeof row === 'object' && row !== null ? (row as { kind?: unknown }).kind : undefined;
       const parsed = validator.parseRecord(kind as RecordKind, row);
       if (!parsed.ok) {
-        emit({ type: 'row_rejected', id, issues: parsed.findings.map(issueOf).slice(0, MAX_REPORTED_REJECTS) });
+        emit({ type: 'row_rejected', id, issues: capIssues(parsed.findings.map(issueOf)) });
         return reload('invalid_row');
       }
       upserts.push(parsed.record);

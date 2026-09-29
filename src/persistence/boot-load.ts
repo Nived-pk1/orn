@@ -18,11 +18,21 @@ export const issueOf = (finding: Finding): string => `${finding.path ?? '(record
 /** Deterministic ID: the same row is one quarantine row, not one per attempt. */
 export const quarantineIdOf = (rowId: unknown): string => `qtn_boot-${hash64(String(rowId))}`;
 
+/**
+ * Caps a list of issues for display, never silently: an overflow always leaves a trailing "… and N more
+ * issue(s)" entry naming the true total (CLAUDE.md §1.5). Shared by boot/import quarantine (`quarantineRow`)
+ * and a follower's own `row_rejected` report (step 3.4 review) so both cap the same way.
+ */
+export function capIssues(issues: readonly string[], max = MAX_ISSUES_PER_ROW): string[] {
+  const shown = issues.slice(0, max);
+  if (issues.length > shown.length) shown.push(`… and ${issues.length - shown.length} more issue(s)`);
+  return shown;
+}
+
 export function quarantineRow(row: unknown, issues: readonly string[], createdAt: string): QuarantineRow {
   const kind = typeof row === 'object' && row !== null ? (row as { kind?: unknown }).kind : undefined;
   const id = typeof row === 'object' && row !== null ? (row as { id?: unknown }).id : undefined;
-  const shown = issues.slice(0, MAX_ISSUES_PER_ROW);
-  if (issues.length > shown.length) shown.push(`… and ${issues.length - shown.length} more issue(s)`);
+  const shown = capIssues(issues);
   // IndexedDB keeps more than JSON (a Date, NaN, undefined): the value is stored as it is, and the issue list says so.
   if (!isJsonValue(row)) shown.push('the stored value is not plain JSON (or is very large or deep); it is kept exactly as stored');
   return {

@@ -1517,6 +1517,59 @@ Follow-ups done in the review commit ("phase-3: step 3.3 review follow-ups"):
 6. The fresh-database boot result now carries a `bootReport` (all empty, `singleTab` set), and `BootReport.singleTab` is a required boolean.
 7. New public helper `attachWriteQueue` (guards 2 and 3) and `PersistenceEvent 'channel_error'`.
 
+### Step 3.4 review (reviewer, 2026-09-29)
+
+Verdict: step 3.4 ACCEPTED. All seven REVIEW REQUIRED items above are approved as reported: `changedIds` may be
+`'all'`; `ChangeChannel.subscribe` hands out `unknown`, validated by `parseChangeMessage`; no ERROR gate on
+`applyRemote`/`reload`; the promotion order (queue writable → boot as writer → store reload while read-only →
+writable); `release()` waits for the lock to be really free and `acquire()` answers `'unsupported'` when `request`
+throws; `bootReport` is always present with a required `singleTab`; `attachWriteQueue` and the `channel_error` event.
+Refused-promotion retry (open item) stays a Phase 5 decision.
+
+Follow-ups done in the review commit ("phase-3: step 3.4 review follow-ups"):
+
+1. **Promotion window.** No existing test asserted that a command dispatched on the store is refused while the write
+   queue is already writable (inside the gated `adapter.promote()`) but the store has not yet reloaded — the closest
+   existing coverage (`tests/integration/persistence-follower.test.ts`, "the store reloads while still read-only, and
+   only then does the tab become writable") only checks a `'remote'`-cause reload notification, not an attempted
+   writer-style commit. Added: `tests/integration/persistence-follower.test.ts`, "while boot runs the write queue
+   writable again, the store still refuses to commit, until reload finishes (PERSISTENCE.md §10 promotion order)" —
+   gates `adapter.promote()` behind a manually-released Promise so the test can dispatch on the store while boot is
+   provably still pending, confirms `READ_ONLY`, then releases the gate and confirms the tab becomes writable and can
+   commit. No code change: the guard was already correct (`follower.ts`'s `readOnly` local variable, read live by the
+   store's injected `readOnly: follower.isReadOnly` on every `dispatch`, flips to `false` only after `store.reload`
+   returns inside `promote()`); only the gap in test coverage is closed.
+2. **Capped lists report their true total (fixed a real gap).** Checked all four approved constants (2,000 changed
+   IDs per message, 512 characters per ID, follower backlog 100, 20 reported rejected rows) against "wherever a list
+   is capped, the total count is still reported": the first two are validity/mode-switch bounds (an over-long message
+   becomes `'all'`; an over-long ID makes the whole message malformed), not a partial-keep-of-a-list, so nothing to
+   report a count for. The backlog-100 overflow already discards the queue and reloads fully (`reason: 'backlog'`),
+   not a partial keep. The 20-reported-rejected-ROWS cap in `follower.ts`'s `reload()` already paired the shown list
+   with `rejectedRows: loaded.rejected.length` (the true total). But `handle()`'s single-message apply path capped
+   the ISSUES of the one rejected row to the same 20 by a bare `.slice(0, MAX_REPORTED_REJECTS)`, with no trailer and
+   no total — silently dropping issues beyond the 20th for a badly malformed row (CLAUDE.md §1.5). Fixed: extracted
+   the cap-with-trailer logic `quarantineRow` (boot/import quarantine) already used ("… and N more issue(s)") into a
+   shared `capIssues` (`src/persistence/boot-load.ts`), used by both `quarantineRow` and `follower.ts`'s
+   `row_rejected` emission, so a follower's issue report caps exactly the way quarantine already does. Test:
+   `src/persistence/follower.test.ts`, "a row that fails L1 with more than 20 issues reports all of them capped, with
+   the true total named" (a row with 25 wrong-typed array entries; confirms exactly 21 issues reported, the last one
+   matching `"… and N more issue(s)"`).
+3. **Structural hub edit: writer-side benchmark added.** `tests/perf/follower.bench.ts` gains a describe block
+   ("commit — writer side (design tier, hub_explosion): replaceReferences on the 1,000-reaction hub") next to the
+   `applyRemote` hub-edit entry: `hub` and `other` swap roles each sample via real `store.dispatch` calls (`from`'s
+   record is never deleted by `replaceReferences`, only its referrers rewritten, so the same store can be dispatched
+   to indefinitely — no store pool needed). `tests/perf/budgets.mjs` gains the matching entry (`budgetMs: null`,
+   informal, tier `design`/`hub_explosion`). Run once alone (`npx vitest bench run tests/perf/follower.bench.ts
+   --no-file-parallelism`; `bench:baseline` NOT run): **699.7 ms mean / 717.0 ms p99 (5 samples)**. The same run's
+   `applyRemote` hub-edit entry (unchanged code) read 636.1/667.8 ms mean/p99 in this run, against 394.9/439.7 ms
+   committed in step 3.4 — workstation noise (PERFORMANCE_ARCHITECTURE.md §9 documents spreads over 100% on this
+   machine for slow entries), not a regression; the step 3.4 entry is left as committed. Recorded in
+   `docs/PROJECT_STATE.json` openItems as a Phase 9 exception candidate, numbers to be confirmed in the Gate C
+   packet.
+
+Tests after this review: `npm run check` — 100 files, 1,535 tests (2 more than step 3.4's 1,533: the promotion-window
+integration test and the capped-issues unit test).
+
 ## Amendments
 - **2026-09-28, step 3.4 — writer lock, change channel, follower mode, promotion (contract changes, ADR-033; reviewer-approved in "Phase 3 contract decisions", Q3, Q4 `singleTab`, Q11 and the addendum, plus what the step needed beyond that list).** Problem: the lock port could not express a wait (promotion) or a browser without Web Locks, there was no change-channel contract, boot could not report a single-tab session, and the store had no way for a follower tab to mirror the writer: `replaceState` refuses while read-only, validates the whole state on every call and assigns revision + 1. Change: `WriterLock` gains `whenAcquired()` and the acquire result `'unsupported'`; new `ChangeChannel { post, subscribe, close }` and `ChangeMessage { fromRevision, revision, changedIds }` (`changedIds` may be `'all'`, `subscribe` hands out `unknown`); `BootReport.singleTab` (required); `CanonicalStore` gains `applyRemote(RemoteChange)` and `reload(state, revision)`, allowed only on a read-only store (`CommandErrorCode 'NOT_FOLLOWER'` otherwise), `ChangeSet.cause` gains `'remote'` (documented as possibly spanning revisions; the core index engine applies a remote ChangeSet incrementally as a forward span, every other cause keeps the +1 guard); adapter additions `readChanged`, `loadForFollower`, `promote`, option `channel`; `PersistenceEvent 'channel_error'`; `attachWriteQueue`. Guards, semantics and rejected alternatives: ADR-033. No schema change, no `DB_STORES`/`DB_VERSION` change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: ARCHITECTURE_DECISIONS.md ADR-033, ARCHITECTURE.md §2.4, PERSISTENCE.md §4 and §10, SONNET_HANDOFF.md §9.
 - **2026-09-28, step 3.3 review — boot quarantine is a move; `BootReport.quarantineTruncated` removed; `QuarantineRow.raw` documented per source (reviewer decision; contract and doc changes).** Problem: step 3.3 quarantined a bad boot row as a COPY (the row stayed in `records`, the quarantine row's raw value was capped at 64 Ki characters). `records` then differed from the in-memory state, so `replaceAll`, a snapshot restore or a revision-gap recovery would silently delete a row that was only ever kept there, and a capped copy could not stand in for it (CLAUDE.md non-negotiable 5). Change: a bad row is removed from `records` and written to `quarantine`, whole and exactly as stored, in one transaction through `runOrdered` (`BootPorts.moveToQuarantine` replaces `addQuarantine`; `assembleState` returns `RejectedRow`s). The 64 Ki cap (`QUARANTINE_RAW_MAX_CHARS`, `QuarantineRow.rawTruncated`) stays for display and import quarantine (3.6); `rawTruncated` is never set on boot rows. `BootReport.quarantineTruncated` is removed because it is always 0; `newlyQuarantined` counts the rows moved. `QuarantineRow.raw` and `rawTruncated` comments say which source they apply to. No schema change, no `DB_STORES`/`DB_VERSION` change, no `CURRENT_SCHEMA_VERSION` bump, no migration, no fixture change. Docs updated in the same commit: PERSISTENCE.md §4, §7. Also in the same commit (test tooling, no contract change): wall-clock assertions moved to `npm run test:timing` (TEST_STRATEGY §1, SONNET_HANDOFF §19, IMPLEMENTATION_PLAN 3.12).
