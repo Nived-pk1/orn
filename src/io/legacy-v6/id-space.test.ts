@@ -12,6 +12,7 @@ import {
   ConceptIdSchema,
   EntityDisplayIdSchema,
   ExamRelevanceIdSchema,
+  IntermediateIdSchema,
   NamedReactionIdSchema,
   NavigatorAnchorIdSchema,
   OutcomeIdSchema,
@@ -106,6 +107,10 @@ describe('every row of the §4.2 table', () => {
     expect(space.topicId('Haloalkanes and Haloarenes')).toBe(`top_v6-haloalkanes-and-haloarenes-${h6('haloalkanes and haloarenes')}`);
   });
 
+  it('intermediate (step 3.11a row)', () => {
+    expect(space.intermediateId('r16', 3)).toBe('int_v6-r16-3');
+  });
+
   it('trap -> caveat, relevance', () => {
     expect(space.caveatId('r16', 1)).toBe('cav_v6-r16-1');
     expect(space.relevanceId('r16', 'main')).toBe('erl_v6-r16-main');
@@ -158,6 +163,7 @@ describe('the schema ID pattern for every kind', () => {
     ['stage', StageIdSchema, (o) => all.stageId(o, 16)],
     ['outcome', OutcomeIdSchema, (o) => all.outcomeId(o, 32)],
     ['product', ProductIdSchema, (o) => all.productId(o, 32)],
+    ['intermediate', IntermediateIdSchema, (o) => all.intermediateId(o, 32)],
     ['caveat', CaveatIdSchema, (o) => all.caveatId(o, 64)],
     ['relevance', ExamRelevanceIdSchema, (o) => all.relevanceId(o, 'advanced')],
     ['reagent from label', ReagentIdSchema, (o) => all.reagentFromLabelId(o)],

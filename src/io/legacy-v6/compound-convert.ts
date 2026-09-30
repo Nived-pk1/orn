@@ -58,7 +58,7 @@ const valid = (schema: { safeParse: (v: unknown) => { success: boolean } }, valu
  * Reads one legacy field that goes to one text field: `stored` when it fits `schema`, nothing when empty; otherwise the value is kept
  * in `unmapped` with `reasonWhenKept` (when given: some kept values need no decision).
  */
-function take(scope: CompoundScope, path: readonly string[], value: unknown, schema: Parameters<typeof valid>[0], reasonWhenKept?: string): string | undefined {
+export function take(scope: CompoundScope, path: readonly string[], value: unknown, schema: Parameters<typeof valid>[0], reasonWhenKept?: string): string | undefined {
   if (isEmpty(value)) {
     if (value !== undefined) scope.consume(path, value);
     return undefined;
@@ -73,7 +73,7 @@ function take(scope: CompoundScope, path: readonly string[], value: unknown, sch
 }
 
 /** A field the target record kind has no place for: kept whole (consumed when empty). `reason` only when a person must decide. */
-function keepOnly(scope: CompoundScope, path: readonly string[], value: unknown, reason?: string): void {
+export function keepOnly(scope: CompoundScope, path: readonly string[], value: unknown, reason?: string): void {
   if (isEmpty(value)) {
     if (value !== undefined) scope.consume(path, value);
     return;
@@ -82,7 +82,7 @@ function keepOnly(scope: CompoundScope, path: readonly string[], value: unknown,
   if (reason !== undefined) scope.reason(reason);
 }
 
-function tagsOf(scope: CompoundScope, value: unknown): string[] {
+export function tagsOf(scope: CompoundScope, value: unknown): string[] {
   if (value === undefined) return [];
   if (!Array.isArray(value)) {
     keepOnly(scope, ['tags'], value, `tags is not a list (${excerpt(value)}); kept in legacy.unmapped`);

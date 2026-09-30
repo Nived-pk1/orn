@@ -39,6 +39,8 @@ export interface LegacyIdSpace {
   stageId(reactionId: string, n: number): string;
   outcomeId(reactionId: string, n?: number): string;
   productId(reactionId: string, n: number): string;
+  /** `int_v6-<part>-<n>` (step 3.11a): an entry of `intermediates[]`, `n` = the 1-based position of the participant in the legacy list. */
+  intermediateId(reactionId: string, n: number): string;
   caveatId(reactionId: string, n: number): string;
   relevanceId(reactionId: string, which: 'main' | 'advanced'): string;
   /** `rel_v6-<lower>-<higher>`: symmetric. `undefined` for a reaction related to itself (no relationship exists). */
@@ -134,6 +136,7 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
     stageId: (id, n) => `stg_v6-${reactionPart(id)}-${requireCount(n, 'stage number')}`,
     outcomeId: (id, n = 1) => `out_v6-${reactionPart(id)}-${requireCount(n, 'outcome number')}`,
     productId: (id, n) => `pdt_v6-${reactionPart(id)}-${requireCount(n, 'product number')}`,
+    intermediateId: (id, n) => `int_v6-${reactionPart(id)}-${requireCount(n, 'intermediate number')}`,
     caveatId: (id, n) => `cav_v6-${reactionPart(id)}-${requireCount(n, 'caveat number')}`,
     relevanceId: (id, which) => `erl_v6-${reactionPart(id)}-${which}`,
     relatedReactionId(a, b) {

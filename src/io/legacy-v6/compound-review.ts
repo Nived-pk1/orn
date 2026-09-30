@@ -18,6 +18,13 @@ export function duplicatedIds(ids: readonly string[]): string[] {
   return [...duplicated].sort();
 }
 
+/** The review reason of a value whose ID part moved because it collided (docs/MIGRATION.md §4.2). `entry` is one of `collision.resolved`. */
+export function collisionReason(collision: IdCollision, entry: IdCollision['resolved'][number]): string {
+  const namespace = entry.space ?? collision.namespace;
+  const others = list(collision.resolved.filter((other) => other.original !== entry.original || (other.space ?? collision.namespace) !== namespace).map((other) => excerpt(other.original, 40)));
+  return `its ID part collided with ${others} (${collision.namespace}); the colliding values got longer hash suffixes, so this ID differs from the one a file without the collision would give`;
+}
+
 export interface PlannedName {
   readonly key: string;
   readonly legacyId: string;
@@ -43,8 +50,7 @@ export function extraReasons(planned: readonly PlannedName[], names: readonly st
   for (const collision of collisions) {
     for (const { original, space } of collision.resolved) {
       const namespace = space ?? collision.namespace;
-      const others = list(collision.resolved.filter((other) => other.original !== original || (other.space ?? collision.namespace) !== namespace).map((other) => excerpt(other.original, 40)));
-      const text = `its ID part collided with ${others} (${collision.namespace}); the colliding values got longer hash suffixes, so this ID differs from the one a file without the collision would give`;
+      const text = collisionReason(collision, { original, part: '', ...(space === undefined ? {} : { space }) });
       if (namespace === 'compound') {
         const index = indexOfKey.get(original);
         if (index !== undefined) add(byCompound, index, text);

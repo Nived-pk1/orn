@@ -41,14 +41,22 @@ export interface CompoundScope {
 }
 
 export function createCompoundScope(index: number, trace: ConsumedTrace, report: ReportBuilder): CompoundScope {
-  const base: readonly Segment[] = ['compounds', index];
+  return createScope(['compounds', index], trace, report, '');
+}
+
+/**
+ * The same bookkeeping for any legacy record: `base` is the path of the record in the legacy document (`['reactions', 3]`);
+ * `countPrefix` is put before a kept field's name in the report's `preservedUnmappedFields` (`reaction.` keeps a reaction's `image`
+ * apart from a compound's).
+ */
+export function createScope(base: readonly Segment[], trace: ConsumedTrace, report: ReportBuilder, countPrefix: string): CompoundScope {
   const kept = new Map<string, unknown>();
   const reasons: string[] = [];
   return {
     reasons,
     consume: (path, value) => trace.consume([...base, ...path], value),
     keep(path, value) {
-      report.preserved(generalizePath(path.join('.')));
+      report.preserved(`${countPrefix}${generalizePath(path.join('.'))}`);
       const [head, ...rest] = path as readonly [string, ...string[]];
       if (rest.length === 0) {
         kept.set(head, jsonSafe(value));

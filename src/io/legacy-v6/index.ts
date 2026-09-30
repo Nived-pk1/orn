@@ -3,7 +3,8 @@
  * data exactly as the v6 app's own `normalizeData` produces it (oracle fixtures in `data/fixtures/legacy/`). Pure: no clock, no
  * randomness, no I/O. Step 3.9 adds the deterministic ORN IDs (`createLegacyIdSpace`), the participant label parser (`parseLabel`) and
  * the condition parsers (`parseLegacyConditions`, `parseConditionField`). Step 3.10 maps the compounds (`createDocumentIds`, `mapLegacyCompounds`, the
- * report skeleton and the consumed-path trace); mapping the reactions is step 3.11.
+ * report skeleton and the consumed-path trace); step 3.11a maps the reactions' participants, stages, outcomes, conditions, notes, images, scope and
+ * lifecycle (`mapLegacyReactions`); the rest of the reaction fields is step 3.11b.
  */
 import { findDroppedLeaves, type DroppedLeaf } from './dropped';
 import type { LegacyV5Data } from './legacy-types';
@@ -26,6 +27,10 @@ export type { LegacyDocumentIds } from './id-collect';
 export { createLegacyIdSpace, legacyAssetId } from './id-space';
 export { mapLegacyCompounds } from './compound-map';
 export type { HubDecision, HubInfo, MapCompoundsInput, MapCompoundsOptions, MapCompoundsResult, MappedCompoundRecords, MappedCompounds } from './compound-map';
+export { DEFERRED_REACTION_FIELDS, mapLegacyReactions } from './reaction-map';
+export type { MapReactionsInput, MapReactionsOptions, MapReactionsResult, MappedReactionRecords, MappedReactions } from './reaction-map';
+export { mergeMappedRecords } from './merge-records';
+export type { MergedMapping } from './merge-records';
 export { createReportBuilder, LEGACY_SYSTEM } from './report';
 export type { ReportBuilder } from './report';
 export { createTrace, generalizePath, isEmptyLegacyValue } from './trace';

@@ -69,7 +69,11 @@ export function createDocumentIds(data: { readonly compounds: readonly LegacyObj
         if (!compoundKeyOfId.has(key)) referenced.add(key);
       } else if (typeof participant.label === 'string') {
         const parsed = parseLabel(participant.label);
-        if (parsed.kind === 'participant' && parsed.remainder !== '') labels.add(parsed.remainder);
+        // a label of tokens only has no remainder: the trimmed label itself names the record made for it (step 3.11a)
+        if (parsed.kind === 'participant') {
+          const named = parsed.remainder !== '' ? parsed.remainder : participant.label.trim();
+          if (named !== '') labels.add(named);
+        }
       }
     }
     for (const key of [reaction.reactionType, reaction.reactionFamily, field(reaction.mechanism, 'type')]) text(key).forEach((t) => concepts.add(t));
