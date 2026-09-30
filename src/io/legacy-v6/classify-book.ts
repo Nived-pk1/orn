@@ -6,6 +6,8 @@
  *
  * Concepts are matched within their kind when the legacy field says which kind it is (`reaction_type`, `mechanism_class`,
  * `reaction_family`); a concept written under another kind in the dataset is not reused for that role and the new record says so.
+ * A context record whose ID is one this import would create itself (its own earlier output, found again on a re-import) is not a match:
+ * the record is created again, identical, so a re-import resolves every record as `identical_skip`.
  * The `general` kind (prerequisites, concepts) reuses a concept of any kind. Several dataset matches: the first by record ID, and
  * the returned `note` says so (the reaction carries it as a review reason).
  */
@@ -66,7 +68,9 @@ export function createClassificationBook(input: BookInput): ClassificationBook {
   return {
     concept(text, kind, field) {
       const folded = fold(text);
-      const found = index.find('concept', folded);
+      // records this very import would create (same deterministic IDs) are never "matches": a re-import must produce the same records
+      const own = new Set(ids.conceptIdsOf(text));
+      const found = index.find('concept', folded).filter((candidate) => !own.has(candidate.id));
       const usable = kind === 'general' ? found : found.filter((candidate) => candidate.conceptKind === kind);
       const first = usable[0];
       if (first !== undefined) return { id: first.id, ...noteOf(ambiguity('concept', text, usable)) };
@@ -93,7 +97,7 @@ export function createClassificationBook(input: BookInput): ClassificationBook {
     },
 
     namedReaction(text) {
-      const found = index.find('named_reaction', fold(text));
+      const found = index.find('named_reaction', fold(text)).filter((candidate) => candidate.id !== ids.namedReactionId(text));
       const first = found[0];
       if (first !== undefined) return { id: first.id, ...noteOf(ambiguity('named reaction', text, found)) };
       const id = ids.namedReactionId(text);
@@ -110,7 +114,7 @@ export function createClassificationBook(input: BookInput): ClassificationBook {
     },
 
     topic(text) {
-      const found = index.find('topic', fold(text));
+      const found = index.find('topic', fold(text)).filter((candidate) => candidate.id !== ids.topicId(text));
       // a chapter sits under a subject: a match that has a parent is preferred to a root topic of the same name
       const first = found.find((candidate) => candidate.parentId !== undefined) ?? found[0];
       if (first !== undefined) return { id: first.id, ...noteOf(ambiguity('topic', text, found)) };

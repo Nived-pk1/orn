@@ -22,6 +22,10 @@ describe('createReportBuilder', () => {
       consumedByDefault: {},
       notes: {},
       documentUnmapped: {},
+      collisions: [],
+      unsafeKeysRenamed: [],
+      decisions: [],
+      reagentFamilies: [],
     });
   });
 

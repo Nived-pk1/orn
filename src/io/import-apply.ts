@@ -69,6 +69,7 @@ function buildReport(batch: ApplyBatch, appliedAt: string, snapshotId: string, r
     rejectedAssets: preview.rejectedAssets,
     assets: preview.assets,
     findingSummary: preview.findingSummary,
+    ...(preview.legacyReport === undefined ? {} : { legacyReport: preview.legacyReport }),
   };
 }
 

@@ -1,0 +1,1019 @@
+{
+  "assets": {
+    "notStored": 0,
+    "toStore": 0,
+    "withoutBytes": 0
+  },
+  "batchId": "imp_01m3250v0001zpgce7hq84rg6b",
+  "blockers": [],
+  "canConfirm": true,
+  "conflicts": [],
+  "counts": {
+    "entity_display": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 1,
+      "new": 1
+    },
+    "mechanism": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 2,
+      "new": 2
+    },
+    "reaction": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 6,
+      "new": 6
+    },
+    "reagent": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 10,
+      "new": 10
+    },
+    "species": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 10,
+      "new": 10
+    }
+  },
+  "decisions": [
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Addition",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Addition\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Elimination",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Elimination\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Oxidation",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Oxidation\" (2 reactions; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r1",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Oxidative cleavage",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Oxidative cleavage\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r4",
+        "kind": "reaction"
+      }
+    }
+  ],
+  "detectedSchemaVersion": 0,
+  "findingSummary": {
+    "error": 0,
+    "info": 14,
+    "reviewRequired": 23,
+    "truncated": false,
+    "warning": 2
+  },
+  "findings": [
+    {
+      "data": {
+        "reasons": [
+          "same folded name as \"c6\" (SPC-001); check whether they are duplicates"
+        ]
+      },
+      "id": "fnd_a22834406395708f",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: same folded name as \"c6\" (SPC-001); check whether they are duplicates.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-c1",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "count": 1
+      },
+      "id": "fnd_f05ed621d2cae96e",
+      "level": 3,
+      "message": "1 other species share the name \"Alcohols\". Add a qualifier to tell them apart.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "spc_v6-c6",
+          "kind": "species"
+        }
+      ],
+      "ruleId": "SPC-001",
+      "severity": "warning",
+      "subject": {
+        "id": "spc_v6-c1",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c404\"; placeholder created so nothing dangles"
+        ]
+      },
+      "id": "fnd_2d60e8ab9497e85c",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c404\"; placeholder created so nothing dangles.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-c404",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_081578e456dca797",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c404",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "same folded name as \"c1\" (SPC-001); check whether they are duplicates"
+        ]
+      },
+      "id": "fnd_a0ad14cdc101d146",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: same folded name as \"c1\" (SPC-001); check whether they are duplicates.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-c6",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "count": 1
+      },
+      "id": "fnd_cead23bc0bd95747",
+      "level": 3,
+      "message": "1 other species share the name \"alcohols \". Add a qualifier to tell them apart.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "spc_v6-c1",
+          "kind": "species"
+        }
+      ],
+      "ruleId": "SPC-001",
+      "severity": "warning",
+      "subject": {
+        "id": "spc_v6-c6",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_533d8812dcb492bd",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c6",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c999\"; placeholder created so nothing dangles"
+        ]
+      },
+      "id": "fnd_8f24ef1e13f4c2e1",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c999\"; placeholder created so nothing dangles.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-c999",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_2e10cc2d7c3f50d6",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c999",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"O2\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_462fa521327bfa00",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"O2\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-l-o2-1d33c4",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_14b531f677b42127",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-l-o2-1d33c4",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"Unknown thing\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_94e75dad652a776a",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"Unknown thing\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-l-unknown-thing-d1e5b5",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_714b809e083277c5",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-l-unknown-thing-d1e5b5",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"B2H6\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_c24376f762922cee",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"B2H6\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-b2h6-4eee8c",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"CH2Cl2\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_7e9dd955c1ab7b6c",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"CH2Cl2\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-ch2cl2-b7f9b6",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"H+\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_e6fccc427ea30f95",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"H+\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-h-a63b58",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"H2O2\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_bf7c52e5785db298",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"H2O2\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-h2o2-8efa7d",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"conc. H2SO4\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_5e834dc664aa2019",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"conc. H2SO4\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-h2so4-704e8e",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"KMnO4\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_6036208d1dee938e",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"KMnO4\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-kmno4-490a74",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"NaOH\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_10eb2483b17377ee",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"NaOH\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-naoh-963e49",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"O3\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_edd1daead28fd8df",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"O3\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-o3-1e33c6",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"PCC\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_b3c6086f30050504",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"PCC\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-pcc-4c4fda",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"Zn/H2O\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_10d22a7faa4c5366",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"Zn/H2O\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-zn-h2o-4cfd2c",
+        "kind": "reagent"
+      }
+    },
+    {
+      "id": "fnd_01a99883a18301d6",
+      "level": 3,
+      "message": "This mechanism has no variants yet, only what its summary says.",
+      "path": "variants",
+      "related": [],
+      "ruleId": "MEC-001",
+      "severity": "info",
+      "subject": {
+        "id": "mec_v6-r1",
+        "kind": "mechanism"
+      }
+    },
+    {
+      "id": "fnd_c29015e5225f4510",
+      "level": 3,
+      "message": "This mechanism has no variants yet, only what its summary says.",
+      "path": "variants",
+      "related": [],
+      "ruleId": "MEC-001",
+      "severity": "info",
+      "subject": {
+        "id": "mec_v6-r3",
+        "kind": "mechanism"
+      }
+    },
+    {
+      "id": "fnd_38b26a8fff83bd0e",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r1",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "conditions were read from text by the importer (temperature; RXN-015): check them against the original wording",
+          "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")"
+        ]
+      },
+      "id": "fnd_13bbf4a961a310d0",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: conditions were read from text by the importer (temperature; RXN-015): check them against the original wording; 1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\").",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "fields": [
+          "temperature"
+        ]
+      },
+      "id": "fnd_af7dd9427695b30f",
+      "level": 3,
+      "message": "These conditions were filled in from text and need a person to confirm them: temperature.",
+      "path": "stages[0].parameters.parsedFields",
+      "related": [],
+      "ruleId": "RXN-015",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_6e42fff265fe878b",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")"
+        ]
+      },
+      "id": "fnd_fa4c7e9ef979d503",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: 1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\").",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "fields": [
+          "temperature"
+        ]
+      },
+      "id": "fnd_af81e441a85538c8",
+      "level": 3,
+      "message": "These conditions were filled in from text and need a person to confirm them: temperature.",
+      "path": "stages[0].parameters.parsedFields",
+      "related": [],
+      "ruleId": "RXN-015",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_652747a1ca4de074",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_9ebdc5b42a6fce61",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r4",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "unknown legacy field(s) kept in legacy.unmapped: \"customField\""
+        ]
+      },
+      "id": "fnd_03c0d0f438f41e5d",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: unknown legacy field(s) kept in legacy.unmapped: \"customField\".",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_5ea753cbaee290b2",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "conditions were read from text by the importer (anhydrous; RXN-015): check them against the original wording",
+          "1 product(s) not marked major were imported as coproduct (\"c999\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+          "participant(s) refer to compound id(s) \"c404\", \"c999\" that the file does not have; placeholder species were created"
+        ]
+      },
+      "id": "fnd_46bdb2e57cb15acc",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: conditions were read from text by the importer (anhydrous; RXN-015): check them against the original wording; 1 product(s) not marked major were imported as coproduct (\"c999\"): coproduct or minor isomer? (v6's major meant \"main arrow target\"); participant(s) refer to compound id(s) \"c404\", \"c999\" that the file does not have; placeholder species were created.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "count": 2
+      },
+      "id": "fnd_43c12998aca637c7",
+      "level": 3,
+      "message": "This published record refers to 2 draft records.",
+      "path": "review.lifecycle",
+      "related": [
+        {
+          "id": "spc_v6-c404",
+          "kind": "species"
+        },
+        {
+          "id": "spc_v6-c999",
+          "kind": "species"
+        }
+      ],
+      "ruleId": "RVW-002",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "fields": [
+          "anhydrous"
+        ]
+      },
+      "id": "fnd_435760367597ce83",
+      "level": 3,
+      "message": "These conditions were filled in from text and need a person to confirm them: anhydrous.",
+      "path": "stages[0].parameters.parsedFields",
+      "related": [],
+      "ruleId": "RXN-015",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_db96214e1952d24f",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    }
+  ],
+  "format": "legacy_v4",
+  "kindMismatches": [],
+  "legacyReport": {
+    "collisions": [],
+    "consumedByDefault": {},
+    "createdCounts": {
+      "entity_display": 1,
+      "mechanism": 2,
+      "reaction": 6,
+      "reagent": 10,
+      "species": 10
+    },
+    "decisions": [
+      {
+        "chosen": "keep",
+        "id": "reagent_family:Addition",
+        "options": [
+          "keep"
+        ],
+        "question": "Reagent family \"Addition\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+        "subject": {
+          "id": "rxn_v6-r5",
+          "kind": "reaction"
+        }
+      },
+      {
+        "chosen": "keep",
+        "id": "reagent_family:Elimination",
+        "options": [
+          "keep"
+        ],
+        "question": "Reagent family \"Elimination\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+        "subject": {
+          "id": "rxn_v6-r3",
+          "kind": "reaction"
+        }
+      },
+      {
+        "chosen": "keep",
+        "id": "reagent_family:Oxidation",
+        "options": [
+          "keep"
+        ],
+        "question": "Reagent family \"Oxidation\" (2 reactions; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+        "subject": {
+          "id": "rxn_v6-r1",
+          "kind": "reaction"
+        }
+      },
+      {
+        "chosen": "keep",
+        "id": "reagent_family:Oxidative cleavage",
+        "options": [
+          "keep"
+        ],
+        "question": "Reagent family \"Oxidative cleavage\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+        "subject": {
+          "id": "rxn_v6-r4",
+          "kind": "reaction"
+        }
+      }
+    ],
+    "documentUnmapped": {},
+    "notImported": [],
+    "notes": {},
+    "preservedUnmappedFields": {
+      "reaction._v4": 6,
+      "reaction.collapseIntermediates": 6,
+      "reaction.customField": 1,
+      "reaction.reagentFamily": 5
+    },
+    "reagentFamilies": [
+      {
+        "count": 1,
+        "value": "Addition"
+      },
+      {
+        "count": 1,
+        "value": "Elimination"
+      },
+      {
+        "count": 2,
+        "value": "Oxidation"
+      },
+      {
+        "count": 1,
+        "value": "Oxidative cleavage"
+      }
+    ],
+    "reviewItems": [
+      {
+        "reason": "same folded name as \"c6\" (SPC-001); check whether they are duplicates",
+        "subject": {
+          "id": "spc_v6-c1",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "same folded name as \"c1\" (SPC-001); check whether they are duplicates",
+        "subject": {
+          "id": "spc_v6-c6",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "conditions were read from text by the importer (temperature; RXN-015): check them against the original wording",
+        "subject": {
+          "id": "rxn_v6-r2",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+        "subject": {
+          "id": "rxn_v6-r2",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+        "subject": {
+          "id": "rxn_v6-r3",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "unknown legacy field(s) kept in legacy.unmapped: \"customField\"",
+        "subject": {
+          "id": "rxn_v6-r5",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "conditions were read from text by the importer (anhydrous; RXN-015): check them against the original wording",
+        "subject": {
+          "id": "rxn_v6-r6",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "1 product(s) not marked major were imported as coproduct (\"c999\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+        "subject": {
+          "id": "rxn_v6-r6",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "participant(s) refer to compound id(s) \"c404\", \"c999\" that the file does not have; placeholder species were created",
+        "subject": {
+          "id": "rxn_v6-r6",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "created from the participant label \"O2\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "spc_v6-l-o2-1d33c4",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c404\"; placeholder created so nothing dangles",
+        "subject": {
+          "id": "spc_v6-c404",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c999\"; placeholder created so nothing dangles",
+        "subject": {
+          "id": "spc_v6-c999",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "created from the participant label \"Unknown thing\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "spc_v6-l-unknown-thing-d1e5b5",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "created from the participant label \"PCC\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-pcc-4c4fda",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"CH2Cl2\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-ch2cl2-b7f9b6",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"KMnO4\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-kmno4-490a74",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"H+\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-h-a63b58",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"conc. H2SO4\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-h2so4-704e8e",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"O3\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-o3-1e33c6",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"Zn/H2O\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-zn-h2o-4cfd2c",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"B2H6\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-b2h6-4eee8c",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"H2O2\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-h2o2-8efa7d",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"NaOH\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-naoh-963e49",
+          "kind": "reagent"
+        }
+      }
+    ],
+    "sourceSchemaVersion": 5,
+    "sourceSystem": "organic-reaction-navigator-v6",
+    "unsafeKeysRenamed": []
+  },
+  "mergedRecordCount": 29,
+  "migrationsApplied": [],
+  "packageIssues": [],
+  "quarantined": [],
+  "rejectedAssets": [],
+  "richTextLinksRewritten": 0,
+  "unsafeKeysRenamed": []
+}

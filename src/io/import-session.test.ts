@@ -21,7 +21,7 @@ const renamed = (state: CanonicalState, id: string, name: string): CanonicalStat
     (draft.records.species[id] as unknown as { names: { canonical: string } }).names.canonical = name;
   });
 
-function planOf(outcome: ReturnType<ReturnType<typeof testSession>['session']['preview']>): ImportPlan {
+function planOf(outcome: Awaited<ReturnType<ReturnType<typeof testSession>['session']['preview']>>): ImportPlan {
   if (!outcome.ok) throw new Error(`preview refused: ${outcome.code} ${outcome.message}`);
   return outcome.plan;
 }
@@ -33,7 +33,7 @@ describe('preview: INV-21 (nothing changes before confirmation)', () => {
     const seen: unknown[] = [];
     store.subscribe((c) => seen.push(c));
     const before = store.getState();
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'a.orn.json' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'a.orn.json' }));
     expect(plan.mode).toBe('merge');
     expect(plan.conflicts).toEqual([]);
     expect(plan.preview.canConfirm).toBe(true);
@@ -47,7 +47,7 @@ describe('preview: INV-21 (nothing changes before confirmation)', () => {
   it('cancel discards the batch and changes nothing; the cancelled batch cannot be applied', async () => {
     const store = makeStore(empty);
     const { session, ports } = testSession(store);
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'a' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'a' }));
     expect(session.pendingBatchId()).toBe(plan.preview.batchId);
     expect(session.cancel(plan.preview.batchId)).toBe(true);
     expect(session.cancel(plan.preview.batchId)).toBe(false);
@@ -61,28 +61,28 @@ describe('preview: INV-21 (nothing changes before confirmation)', () => {
     const store = makeStore(empty);
     const { session } = testSession(store);
     const parsed = await parsedFrom(base);
-    const first = planOf(session.preview({ parsed, fileName: 'a' }));
-    const second = planOf(session.preview({ parsed, fileName: 'b' }));
+    const first = planOf(await session.preview({ parsed, fileName: 'a' }));
+    const second = planOf(await session.preview({ parsed, fileName: 'b' }));
     expect(second.preview.batchId).not.toBe(first.preview.batchId);
     expect(session.pendingBatchId()).toBe(second.preview.batchId);
     expect(await session.apply(first.preview.batchId, first)).toMatchObject({ ok: false, code: 'UNKNOWN_BATCH' });
   });
 
-  it('legacy formats are refused as a value until step 3.8', async () => {
+  it('a legacy format without a usable payload is refused as a value (LEGACY_INVALID); legacy imports are converted since step 3.11c', async () => {
     const store = makeStore(empty);
     const { session } = testSession(store);
     const parsed = { ...(await parsedFrom(base)), format: 'legacy_v6' as const };
-    expect(session.preview({ parsed, fileName: 'legacy.json' })).toMatchObject({ ok: false, code: 'LEGACY_NOT_CONVERTED' });
+    expect(await session.preview({ parsed, fileName: 'legacy.json' })).toMatchObject({ ok: false, code: 'LEGACY_INVALID' });
   });
 
   it('an aborted signal returns CANCELLED and leaves the pending batch alone', async () => {
     const store = makeStore(empty);
     const { session } = testSession(store);
     const parsed = await parsedFrom(base);
-    const first = planOf(session.preview({ parsed, fileName: 'a' }));
+    const first = planOf(await session.preview({ parsed, fileName: 'a' }));
     const controller = new AbortController();
     controller.abort();
-    expect(session.preview({ parsed, fileName: 'a' }, { signal: controller.signal })).toMatchObject({ ok: false, code: 'CANCELLED' });
+    expect(await session.preview({ parsed, fileName: 'a' }, { signal: controller.signal })).toMatchObject({ ok: false, code: 'CANCELLED' });
     expect(session.pendingBatchId()).toBe(first.preview.batchId);
   });
 });
@@ -91,7 +91,7 @@ describe('conflict analysis and the four resolutions (ADV-042)', () => {
   it('identical records are decided by canonical deep equality and default to identical_skip; the merged replica equals live', async () => {
     const store = makeStore(base);
     const { session } = testSession(store);
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'same' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'same' }));
     expect(plan.conflicts.length).toBe(plan.preview.mergedRecordCount);
     expect(plan.conflicts.every((c) => c.identical && c.resolution === 'identical_skip')).toBe(true);
     const total = Object.values(plan.preview.counts).reduce((n, c) => n + (c?.identical ?? 0), 0);
@@ -103,11 +103,11 @@ describe('conflict analysis and the four resolutions (ADV-042)', () => {
     const store = makeStore(base);
     const { session } = testSession(store);
     const parsed = await parsedFrom(renamed(base, anySpeciesId, 'A different name'));
-    const plan = planOf(session.preview({ parsed, fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed, fileName: 'x' }));
     const conflict = plan.conflicts.find((c) => c.ref.id === anySpeciesId);
     expect(conflict).toMatchObject({ identical: false, resolution: 'keep_current' });
     expect(plan.conflicts.filter((c) => !c.identical)).toHaveLength(1);
-    const refused = session.revise(plan.preview.batchId, { resolutions: [{ id: anySpeciesId, resolution: 'identical_skip' }] });
+    const refused = await session.revise(plan.preview.batchId, { resolutions: [{ id: anySpeciesId, resolution: 'identical_skip' }] });
     expect(refused).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
   });
 
@@ -116,8 +116,8 @@ describe('conflict analysis and the four resolutions (ADV-042)', () => {
       const store = makeStore(base);
       const { session } = testSession(store);
       const parsed = await parsedFrom(renamed(base, anySpeciesId, 'A different name'));
-      const first = planOf(session.preview({ parsed, fileName: 'x' }));
-      const plan = planOf(session.revise(first.preview.batchId, { resolutions: [{ id: anySpeciesId, resolution }] }));
+      const first = planOf(await session.preview({ parsed, fileName: 'x' }));
+      const plan = planOf(await session.revise(first.preview.batchId, { resolutions: [{ id: anySpeciesId, resolution }] }));
       const result = await session.apply(plan.preview.batchId, plan);
       expect(result.ok).toBe(true);
       const name = (store.getState().records.species[anySpeciesId] as unknown as { names: { canonical: string } }).names.canonical;
@@ -138,9 +138,9 @@ describe('conflict analysis and the four resolutions (ADV-042)', () => {
       const store = makeStore(base);
       const { session } = testSession(store, { seed: 11 });
       const parsed = await parsedFrom(incoming);
-      const first = planOf(session.preview({ parsed, fileName: 'x' }));
+      const first = planOf(await session.preview({ parsed, fileName: 'x' }));
       const plan = planOf(
-        session.revise(first.preview.batchId, {
+        await session.revise(first.preview.batchId, {
           resolutions: [
             { id: reaction.id, resolution: 'import_as_copy' },
             { id: referrer.id, resolution: 'replace' },
@@ -181,10 +181,10 @@ describe('conflict analysis and the four resolutions (ADV-042)', () => {
     const store = makeStore(base);
     const { session } = testSession(store);
     const parsed = await parsedFrom(base);
-    const first = planOf(session.preview({ parsed, fileName: 'x' }));
+    const first = planOf(await session.preview({ parsed, fileName: 'x' }));
     const request = { resolutions: [{ id: reaction.id, resolution: 'import_as_copy' as const }] };
-    const a = planOf(session.revise(first.preview.batchId, request));
-    const b = planOf(session.revise(a.preview.batchId, { ...request, excluded: [ref('species', anySpeciesId)] }));
+    const a = planOf(await session.revise(first.preview.batchId, request));
+    const b = planOf(await session.revise(a.preview.batchId, { ...request, excluded: [ref('species', anySpeciesId)] }));
     expect(b.copyIdMap).toEqual(a.copyIdMap);
   });
 });
@@ -193,15 +193,15 @@ describe('request validation', () => {
   it('refuses contradictions as values', async () => {
     const store = makeStore(base);
     const { session } = testSession(store);
-    const plan = planOf(session.preview({ parsed: await parsedFrom(renamed(base, anySpeciesId, 'Other')), fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(renamed(base, anySpeciesId, 'Other')), fileName: 'x' }));
     const id = plan.preview.batchId;
-    expect(session.revise(id, { resolutions: [{ id: 'spc_not-there', resolution: 'replace' }] })).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
-    expect(session.revise(id, { excluded: [ref('species', 'spc_not-there')] })).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
-    expect(session.revise(id, { mode: 'replace_all', resolutions: [{ id: anySpeciesId, resolution: 'replace' }] })).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
+    expect(await session.revise(id, { resolutions: [{ id: 'spc_not-there', resolution: 'replace' }] })).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
+    expect(await session.revise(id, { excluded: [ref('species', 'spc_not-there')] })).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
+    expect(await session.revise(id, { mode: 'replace_all', resolutions: [{ id: anySpeciesId, resolution: 'replace' }] })).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
     expect(
-      session.revise(id, { resolutions: [{ id: anySpeciesId, resolution: 'replace' }], excluded: [ref('species', anySpeciesId)] }),
+      await session.revise(id, { resolutions: [{ id: anySpeciesId, resolution: 'replace' }], excluded: [ref('species', anySpeciesId)] }),
     ).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
-    expect(session.revise(id, { resolutions: [{ id: anySpeciesId, resolution: 'replace' }, { id: anySpeciesId, resolution: 'keep_current' }] })).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
+    expect(await session.revise(id, { resolutions: [{ id: anySpeciesId, resolution: 'replace' }, { id: anySpeciesId, resolution: 'keep_current' }] })).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
     expect(session.pendingBatchId()).toBe(id); // a refused revision leaves the batch as it was
   });
 });
@@ -218,7 +218,7 @@ describe('ADV-030: dangling references block confirmation until resolved', () =>
     const store = makeStore(empty);
     const { session, ports } = testSession(store);
     const parsed = await parsedFrom(dangling());
-    const plan = planOf(session.preview({ parsed, fileName: 'dangling.orn.json' }));
+    const plan = planOf(await session.preview({ parsed, fileName: 'dangling.orn.json' }));
     expect(plan.preview.canConfirm).toBe(false);
     expect(plan.preview.findingSummary.error).toBeGreaterThan(0);
     expect(plan.preview.findings.some((f) => f.severity === 'error')).toBe(true);
@@ -229,12 +229,12 @@ describe('ADV-030: dangling references block confirmation until resolved', () =>
     expect(ports.calls).toEqual([]); // not even a snapshot
 
     const offenders = [...new Set(plan.preview.findings.filter((f) => f.severity === 'error').map((f) => f.subject))];
-    const revised = planOf(session.revise(plan.preview.batchId, { excluded: offenders }));
+    const revised = planOf(await session.revise(plan.preview.batchId, { excluded: offenders }));
     // Excluding an offender can expose its referrers; keep excluding until clean (bounded).
     let current = revised;
     for (let i = 0; i < 20 && !current.preview.canConfirm; i += 1) {
       const more = current.preview.findings.filter((f) => f.severity === 'error').map((f) => f.subject);
-      current = planOf(session.revise(current.preview.batchId, { excluded: [...current.excluded, ...more] }));
+      current = planOf(await session.revise(current.preview.batchId, { excluded: [...current.excluded, ...more] }));
     }
     expect(current.preview.canConfirm).toBe(true);
     expect(current.excluded.length).toBeGreaterThan(0);

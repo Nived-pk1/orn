@@ -4,7 +4,7 @@
  */
 import type { RecordKind } from '@/core/schema';
 import type { ConflictAnalysis } from './import-conflicts';
-import type { ImportParseResult, ImportPlan, ImportPreview, IdConflict } from './contracts';
+import type { ImportDecision, ImportParseResult, ImportPlan, ImportPreview, IdConflict, LegacyImportReport } from './contracts';
 import type { MergeOutcome } from './import-merge';
 import type { ResolvedRequest } from './import-request';
 import type { MergedValidation } from './import-validate';
@@ -16,6 +16,8 @@ export interface AssembleInput {
   readonly request: ResolvedRequest;
   readonly merge: Extract<MergeOutcome, { ok: true }>;
   readonly validation: MergedValidation;
+  /** Legacy imports (step 3.11c): the full report and the decisions in force. */
+  readonly legacy?: { readonly report: LegacyImportReport; readonly decisions: readonly ImportDecision[] };
 }
 
 function conflictsOf(analysis: ConflictAnalysis, request: ResolvedRequest): readonly IdConflict[] {
@@ -53,7 +55,8 @@ export function assemblePlan(input: AssembleInput): ImportPlan {
     conflicts,
     findings: validation.findings,
     findingSummary: validation.summary,
-    decisions: [],
+    decisions: input.legacy?.decisions ?? [],
+    ...(input.legacy === undefined ? {} : { legacyReport: input.legacy.report }),
     richTextLinksRewritten: merge.richTextLinksRewritten,
     unsafeKeysRenamed: parsed.unsafeKeysRenamed,
     kindMismatches: parsed.kindMismatches,

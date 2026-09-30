@@ -62,6 +62,10 @@ export function createReportBuilder(sourceSchemaVersion: number): ReportBuilder 
       notImported: [...notImported],
       consumedByDefault: sortedCounts(byDefault),
       notes: sortedCounts(notes),
+      collisions: [],
+      unsafeKeysRenamed: [],
+      decisions: [],
+      reagentFamilies: [],
       documentUnmapped: Object.fromEntries([...documentValues].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))),
     }),
   };

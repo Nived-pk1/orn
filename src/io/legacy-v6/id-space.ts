@@ -60,6 +60,8 @@ export interface LegacyIdSpace {
   speciesFromLabelId(label: string): string;
   /** `cpt_v6-<slug>-<hash6>`: with `kind` (a kind-specific role) the key is `<kind>:<folded text>`, so one text under two kinds is two concepts; without it the folded text alone. */
   conceptId(text: string, kind?: string): string;
+  /** Every concept ID a text can have in this document (the generic one and one per kind-specific role it was registered for); never throws. */
+  conceptIdsOf(text: string): readonly string[];
   namedReactionId(text: string): string;
   topicId(text: string): string;
   /** `cls_v6-fg-<part>`: the `functional_group` class of a functional-group id (exact text, as v6 stores it). */
@@ -176,6 +178,11 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
     },
     reagentFromLabelId: (label) => `rgt_v6-l-${text(labels, label, 'label')}`,
     speciesFromLabelId: (label) => `spc_v6-l-${text(labels, label, 'label')}`,
+    conceptIdsOf: (value) =>
+      [undefined, 'reaction_type', 'reaction_family', 'mechanism_class'].flatMap((kind) => {
+        const part = concepts.get(conceptKey(kind, fold(value)));
+        return part === undefined ? [] : [`cpt_v6-${part}`];
+      }),
     conceptId: (value, kind) => `cpt_v6-${lookup(concepts, conceptKey(kind, fold(value)), 'concept text')}`,
     namedReactionId: (value) => `nrx_v6-${text(namedReactions, value, 'named reaction text')}`,
     topicId: (value) => `top_v6-${text(topics, value, 'topic text')}`,

@@ -1,4 +1,6 @@
 export * from './contracts';
+export { convertLegacy } from './import-legacy';
+export type { LegacyConversion } from './import-legacy';
 export { selectScope } from './export-scope';
 export type { ScopeSelection } from './export-scope';
 export { buildScopedDocument } from './export-document';

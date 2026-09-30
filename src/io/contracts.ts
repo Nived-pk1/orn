@@ -180,6 +180,23 @@ export interface LegacyImportReport {
    * empty for both real v6 exports.
    */
   readonly documentUnmapped: Readonly<Record<string, JsonValue>>;
+  // ---- step 3.11c: what only the whole import knows (the mappers leave these empty; `import-legacy.ts` fills them)
+  /** ID-part collisions settled by the ID space (MIGRATION.md §4.2); empty for an ordinary document. */
+  readonly collisions: readonly LegacyIdCollisionReport[];
+  /** Unsafe keys renamed while parsing the legacy file (the same list as `ImportPreview.unsafeKeysRenamed`). */
+  readonly unsafeKeysRenamed: readonly UnsafeKeyRename[];
+  /** The preview decisions in force (defaults or the user's choices): hub class / species, `reagentFamily` values. */
+  readonly decisions: readonly ImportDecision[];
+  /** Distinct `reagentFamily` values with the number of reactions that carry them (kept in `legacy.unmapped`). */
+  readonly reagentFamilies: readonly { readonly value: string; readonly count: number }[];
+}
+
+/** One ID-part collision of the legacy ID space (plain data; see `IdCollision` in `src/io/legacy-v6/id-parts.ts`). */
+export interface LegacyIdCollisionReport {
+  readonly namespace: string;
+  readonly originals: readonly string[];
+  readonly sharedPart: string;
+  readonly resolved: readonly { readonly original: string; readonly part: string; readonly space?: string }[];
 }
 
 /** How many findings of each severity the merged result has (all of them, even when the list below is capped). */
@@ -257,9 +274,15 @@ export interface ImportPlanRequest {
   /** Merge mode only: refused as a value in `replace_all` (there is nothing to resolve). */
   readonly resolutions?: readonly { readonly id: string; readonly resolution: ConflictResolution }[];
   readonly excluded?: readonly RecordRef[];
+  /**
+   * Step 3.11c, legacy imports only (refused as a value for any other format): the choices made for the preview decisions
+   * (`ImportPreview.decisions`), by decision ID. Omitted decisions keep their default; like everything here the request is the FULL
+   * desired state, not a delta.
+   */
+  readonly decisions?: readonly { readonly id: string; readonly chosen: string }[];
 }
 
-export type ImportPreviewErrorCode = 'LEGACY_NOT_CONVERTED' | 'UNKNOWN_BATCH' | 'INVALID_REQUEST' | 'INVALID_META' | 'CANCELLED';
+export type ImportPreviewErrorCode = 'LEGACY_INVALID' | 'UNKNOWN_BATCH' | 'INVALID_REQUEST' | 'INVALID_META' | 'CANCELLED';
 
 export type ImportPreviewOutcome =
   | { readonly ok: true; readonly plan: ImportPlan }
@@ -296,6 +319,8 @@ export interface ImportBatchReport {
   readonly rejectedAssets: readonly RejectedAsset[];
   readonly assets: ImportAssetSummary;
   readonly findingSummary: FindingSummary;
+  /** Legacy imports (step 3.11c): the full report, stored with the batch. */
+  readonly legacyReport?: LegacyImportReport;
 }
 
 export type ImportApplyResult =

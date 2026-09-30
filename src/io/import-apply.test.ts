@@ -18,7 +18,7 @@ const renamed = (state: CanonicalState, id: string, name: string): CanonicalStat
     (draft.records.species[id] as unknown as { names: { canonical: string } }).names.canonical = name;
   });
 
-function planOf(outcome: ReturnType<ReturnType<typeof testSession>['session']['preview']>): ImportPlan {
+function planOf(outcome: Awaited<ReturnType<ReturnType<typeof testSession>['session']['preview']>>): ImportPlan {
   if (!outcome.ok) throw new Error(`preview refused: ${outcome.code} ${outcome.message}`);
   return outcome.plan;
 }
@@ -34,8 +34,8 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
 
     const { session, ports } = testSession(store);
     const parsed = await parsedFrom(renamed(base, anySpeciesId, 'Imported name'));
-    const first = planOf(session.preview({ parsed, fileName: 'x.orn.json' }));
-    const plan = planOf(session.revise(first.preview.batchId, { resolutions: [{ id: anySpeciesId, resolution: 'replace' }] }));
+    const first = planOf(await session.preview({ parsed, fileName: 'x.orn.json' }));
+    const plan = planOf(await session.revise(first.preview.batchId, { resolutions: [{ id: anySpeciesId, resolution: 'replace' }] }));
     const result = await session.apply(plan.preview.batchId, plan);
     if (!result.ok) throw new Error(`${result.code}: ${result.message}`);
 
@@ -71,7 +71,7 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
     mustCommit(store.dispatch(envelope('meta', { type: 'meta.update', meta: { ...base.meta, title: 'Live title' } as never })));
     const { session } = testSession(store);
     const parsed = await parsedFrom(base);
-    const plan = planOf(session.preview({ parsed, fileName: 'backup', request: { mode: 'replace_all' } }));
+    const plan = planOf(await session.preview({ parsed, fileName: 'backup', request: { mode: 'replace_all' } }));
     expect(plan.mode).toBe('replace_all');
     expect(plan.conflicts).toEqual([]);
     const result = await session.apply(plan.preview.batchId, plan);
@@ -86,14 +86,14 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
     const parsed = { ...(await parsedFrom(base)) };
     const { meta: _meta, ...withoutMeta } = parsed;
     void _meta;
-    expect(session.preview({ parsed: withoutMeta, fileName: 'x', request: { mode: 'replace_all' } })).toMatchObject({ ok: false, code: 'INVALID_META' });
+    expect(await session.preview({ parsed: withoutMeta, fileName: 'x', request: { mode: 'replace_all' } })).toMatchObject({ ok: false, code: 'INVALID_META' });
     expect(session.pendingBatchId()).toBeUndefined();
   });
 
   it('stale revision: a commit after the preview makes apply refuse, without a snapshot or any change of its own', async () => {
     const store = makeStore(empty);
     const { session, ports } = testSession(store);
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
     mustCommit(store.dispatch(envelope('meta', { type: 'meta.update', meta: { ...store.getState().meta, title: 'Changed' } as never })));
     const revision = store.getRevision();
     const result = await session.apply(plan.preview.batchId, plan);
@@ -106,7 +106,7 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
   it('a commit WHILE the snapshot is being written: refused, the snapshot removed again, nothing imported', async () => {
     const store = makeStore(empty);
     const { session, ports } = testSession(store);
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
     ports.snapshots.duringCreate = () => {
       mustCommit(store.dispatch(envelope('meta', { type: 'meta.update', meta: { ...store.getState().meta, title: 'Raced' } as never })));
     };
@@ -119,7 +119,7 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
   it('a plan that differs from the previewed one is refused (PLAN_MISMATCH); the batch stays valid', async () => {
     const store = makeStore(base);
     const { session } = testSession(store);
-    const plan = planOf(session.preview({ parsed: await parsedFrom(renamed(base, anySpeciesId, 'Other')), fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(renamed(base, anySpeciesId, 'Other')), fileName: 'x' }));
     const tampered: ImportPlan = { ...plan, conflicts: plan.conflicts.map((c) => (c.identical ? c : { ...c, resolution: 'replace' as const })) };
     expect(await session.apply(plan.preview.batchId, tampered)).toMatchObject({ ok: false, code: 'PLAN_MISMATCH' });
     expect(session.pendingBatchId()).toBe(plan.preview.batchId);
@@ -130,7 +130,7 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
     const store = makeStore(empty);
     const { session, ports } = testSession(store);
     ports.snapshots.failWith = new Error('disk full');
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
     expect(await session.apply(plan.preview.batchId, plan)).toMatchObject({ ok: false, code: 'SNAPSHOT_FAILED' });
     expect(store.getRevision()).toBe(0);
     expect(ports.calls).toEqual(['snapshot']);
@@ -146,7 +146,7 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
       replaceState: () => ({ ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: 'refused' } }),
     };
     const { session } = testSession(store, { ports, storePort: refusing });
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
     expect(await session.apply(plan.preview.batchId, plan)).toMatchObject({ ok: false, code: 'REJECTED' });
     expect(ports.calls).toEqual(['snapshot', 'clear', 'snapshot-deleted']);
     expect(store.getRevision()).toBe(0);
@@ -155,7 +155,7 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
   it('a read-only tab cannot apply', async () => {
     const store = makeStore(empty, { readOnly: () => true });
     const { session, ports } = testSession(store);
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
     expect(await session.apply(plan.preview.batchId, plan)).toMatchObject({ ok: false, code: 'READ_ONLY' });
     expect(ports.calls).toEqual([]);
   });
@@ -164,7 +164,7 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
     const store = makeStore(empty);
     const { session, ports } = testSession(store);
     ports.batches.failWith = new Error('quota');
-    const plan = planOf(session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: await parsedFrom(base), fileName: 'x' }));
     const result = await session.apply(plan.preview.batchId, plan);
     expect(result).toMatchObject({ ok: true, reportSaved: false, reportError: expect.stringContaining('quota') });
     expect(Object.keys(store.getState().records.species).length).toBeGreaterThan(0);
@@ -182,7 +182,7 @@ describe('quarantine and in-file duplicates', () => {
       records: { ...parsed.records, species: [...species, species[0] as AnyRecord] },
       quarantined: [{ claimedKind: 'concept', claimedId: 'cpt_broken', issues: ['bad'], raw: { id: 'cpt_broken' } as never }],
     };
-    const plan = planOf(session.preview({ parsed: withRepeat, fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed: withRepeat, fileName: 'x' }));
     expect(plan.preview.quarantined).toHaveLength(2);
     expect(plan.preview.quarantined[1]?.issues[0]).toContain('repeats an ID');
     expect(plan.preview.counts.species?.incoming).toBe(species.length);

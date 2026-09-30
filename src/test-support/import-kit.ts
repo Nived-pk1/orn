@@ -125,9 +125,9 @@ export interface TestSession {
   readonly ports: FakePorts;
 }
 
-export function testSession(store: StoreHandle, options: { readonly seed?: number; readonly ports?: FakePorts; readonly storePort?: ImportStorePort } = {}): TestSession {
+export function testSession(store: StoreHandle, options: { readonly seed?: number; readonly nowMs?: number; readonly ports?: FakePorts; readonly storePort?: ImportStorePort } = {}): TestSession {
   const ports = options.ports ?? fakePorts();
-  const ids = createIdFactory({ nowMs: () => 1_790_000_000_000 }, { next: mulberry32(options.seed ?? 7) });
+  const ids = createIdFactory({ nowMs: () => options.nowMs ?? 1_790_000_000_000 }, { next: mulberry32(options.seed ?? 7) });
   const session = createImportSession({
     store: options.storePort ?? loggingStore(store, ports.calls),
     ids,

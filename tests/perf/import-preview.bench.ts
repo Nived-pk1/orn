@@ -83,7 +83,7 @@ for (const shape of ['dense', 'hub_explosion'] as const) {
         async () => {
           const result = await parseOnce();
           const session = createImportSession({ store, ids, snapshots: ports.snapshotPort, batches: ports.sink, assetStage: ports.stage });
-          const outcome = session.preview({ parsed: result, fileName: 'bench.orn.json' });
+          const outcome = await session.preview({ parsed: result, fileName: 'bench.orn.json' });
           if (!outcome.ok) throw new Error(`bench: preview failed: ${outcome.code} ${outcome.message}`);
         },
         SLOW_BENCH_OPTIONS,

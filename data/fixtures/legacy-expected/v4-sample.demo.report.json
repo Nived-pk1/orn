@@ -1,0 +1,254 @@
+{
+  "collisions": [],
+  "consumedByDefault": {},
+  "createdCounts": {
+    "entity_display": 1,
+    "mechanism": 2,
+    "reaction": 6,
+    "reagent": 10,
+    "species": 10
+  },
+  "decisions": [
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Addition",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Addition\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Elimination",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Elimination\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Oxidation",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Oxidation\" (2 reactions; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r1",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Oxidative cleavage",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Oxidative cleavage\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r4",
+        "kind": "reaction"
+      }
+    }
+  ],
+  "documentUnmapped": {},
+  "notImported": [],
+  "notes": {},
+  "preservedUnmappedFields": {
+    "reaction._v4": 6,
+    "reaction.collapseIntermediates": 6,
+    "reaction.customField": 1,
+    "reaction.reagentFamily": 5
+  },
+  "reagentFamilies": [
+    {
+      "count": 1,
+      "value": "Addition"
+    },
+    {
+      "count": 1,
+      "value": "Elimination"
+    },
+    {
+      "count": 2,
+      "value": "Oxidation"
+    },
+    {
+      "count": 1,
+      "value": "Oxidative cleavage"
+    }
+  ],
+  "reviewItems": [
+    {
+      "reason": "same folded name as \"c6\" (SPC-001); check whether they are duplicates",
+      "subject": {
+        "id": "spc_v6-c1",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "same folded name as \"c1\" (SPC-001); check whether they are duplicates",
+      "subject": {
+        "id": "spc_v6-c6",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (temperature; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "unknown legacy field(s) kept in legacy.unmapped: \"customField\"",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (anhydrous; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "1 product(s) not marked major were imported as coproduct (\"c999\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "participant(s) refer to compound id(s) \"c404\", \"c999\" that the file does not have; placeholder species were created",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "created from the participant label \"O2\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "spc_v6-l-o2-1d33c4",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c404\"; placeholder created so nothing dangles",
+      "subject": {
+        "id": "spc_v6-c404",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c999\"; placeholder created so nothing dangles",
+      "subject": {
+        "id": "spc_v6-c999",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "created from the participant label \"Unknown thing\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "spc_v6-l-unknown-thing-d1e5b5",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "created from the participant label \"PCC\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-pcc-4c4fda",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"CH2Cl2\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-ch2cl2-b7f9b6",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"KMnO4\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-kmno4-490a74",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"H+\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-h-a63b58",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"conc. H2SO4\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-h2so4-704e8e",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"O3\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-o3-1e33c6",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"Zn/H2O\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-zn-h2o-4cfd2c",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"B2H6\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-b2h6-4eee8c",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"H2O2\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-h2o2-8efa7d",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"NaOH\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-naoh-963e49",
+        "kind": "reagent"
+      }
+    }
+  ],
+  "sourceSchemaVersion": 5,
+  "sourceSystem": "organic-reaction-navigator-v6",
+  "unsafeKeysRenamed": []
+}

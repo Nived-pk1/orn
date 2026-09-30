@@ -1,0 +1,2077 @@
+{
+  "assets": {
+    "notStored": 0,
+    "toStore": 0,
+    "withoutBytes": 0
+  },
+  "batchId": "imp_01m3250v0001zpgce7hq84rg6b",
+  "blockers": [],
+  "canConfirm": true,
+  "conflicts": [],
+  "counts": {
+    "entity_display": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 1,
+      "new": 1
+    },
+    "mechanism": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 2,
+      "new": 2
+    },
+    "reaction": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 6,
+      "new": 6
+    },
+    "reagent": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 10,
+      "new": 10
+    },
+    "species": {
+      "conflicting": 0,
+      "identical": 0,
+      "incoming": 10,
+      "new": 10
+    }
+  },
+  "decisions": [
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Addition",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Addition\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Elimination",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Elimination\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Oxidation",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Oxidation\" (2 reactions; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r1",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Oxidative cleavage",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Oxidative cleavage\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r4",
+        "kind": "reaction"
+      }
+    }
+  ],
+  "detectedSchemaVersion": 0,
+  "findingSummary": {
+    "error": 0,
+    "info": 36,
+    "reviewRequired": 61,
+    "truncated": false,
+    "warning": 5
+  },
+  "findings": [
+    {
+      "data": {
+        "reasons": [
+          "Deliberately has a very long IUPAC name and no structure; the name is entered from memory and needs checking."
+        ]
+      },
+      "id": "fnd_a50417cf792efd40",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Deliberately has a very long IUPAC name and no structure; the name is entered from memory and needs checking..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_cholesterol",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Structure is deliberately unparsable: exercises CHEM-001 when the chemistry worker exists (phase 4)."
+        ]
+      },
+      "id": "fnd_91caf4b253ff5155",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Structure is deliberately unparsable: exercises CHEM-001 when the chemistry worker exists (phase 4)..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_invalid-smiles-demo",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "same folded name as \"c6\" (SPC-001); check whether they are duplicates"
+        ]
+      },
+      "id": "fnd_a22834406395708f",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: same folded name as \"c6\" (SPC-001); check whether they are duplicates.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-c1",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "count": 1
+      },
+      "id": "fnd_f05ed621d2cae96e",
+      "level": 3,
+      "message": "1 other species share the name \"Alcohols\". Add a qualifier to tell them apart.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "spc_v6-c6",
+          "kind": "species"
+        }
+      ],
+      "ruleId": "SPC-001",
+      "severity": "warning",
+      "subject": {
+        "id": "spc_v6-c1",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_3522dcd54521d14a",
+      "level": 3,
+      "message": "A class has the same name as this species (\"Alcohols\"). Check that a class is not being used as a species.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "cls_alcohols",
+          "kind": "class"
+        }
+      ],
+      "ruleId": "SPC-005",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c1",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_fd17d39c09a0772f",
+      "level": 3,
+      "message": "A class has the same name as this species (\"Aldehydes\"). Check that a class is not being used as a species.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "cls_aldehydes",
+          "kind": "class"
+        }
+      ],
+      "ruleId": "SPC-005",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c2",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_af348ba7c1915724",
+      "level": 3,
+      "message": "A class has the same name as this species (\"Carboxylic acids\"). Check that a class is not being used as a species.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "cls_carboxylic-acids",
+          "kind": "class"
+        }
+      ],
+      "ruleId": "SPC-005",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c3",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "count": 1
+      },
+      "id": "fnd_8102faa27842d375",
+      "level": 3,
+      "message": "1 other species share the name \"Water\". Add a qualifier to tell them apart.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "spc_water",
+          "kind": "species"
+        }
+      ],
+      "ruleId": "SPC-001",
+      "severity": "warning",
+      "subject": {
+        "id": "spc_v6-c4",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c404\"; placeholder created so nothing dangles"
+        ]
+      },
+      "id": "fnd_2d60e8ab9497e85c",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c404\"; placeholder created so nothing dangles.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-c404",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_081578e456dca797",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c404",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_f0a24581eda76996",
+      "level": 3,
+      "message": "A class has the same name as this species (\"Alkenes\"). Check that a class is not being used as a species.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "cls_alkenes",
+          "kind": "class"
+        }
+      ],
+      "ruleId": "SPC-005",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c5",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "same folded name as \"c1\" (SPC-001); check whether they are duplicates"
+        ]
+      },
+      "id": "fnd_a0ad14cdc101d146",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: same folded name as \"c1\" (SPC-001); check whether they are duplicates.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-c6",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "count": 1
+      },
+      "id": "fnd_cead23bc0bd95747",
+      "level": 3,
+      "message": "1 other species share the name \"alcohols \". Add a qualifier to tell them apart.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "spc_v6-c1",
+          "kind": "species"
+        }
+      ],
+      "ruleId": "SPC-001",
+      "severity": "warning",
+      "subject": {
+        "id": "spc_v6-c6",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_533d8812dcb492bd",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c6",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_2a9184c82139ef5b",
+      "level": 3,
+      "message": "A class has the same name as this species (\"alcohols \"). Check that a class is not being used as a species.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "cls_alcohols",
+          "kind": "class"
+        }
+      ],
+      "ruleId": "SPC-005",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c6",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c999\"; placeholder created so nothing dangles"
+        ]
+      },
+      "id": "fnd_8f24ef1e13f4c2e1",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c999\"; placeholder created so nothing dangles.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-c999",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_2e10cc2d7c3f50d6",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-c999",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"O2\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_462fa521327bfa00",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"O2\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-l-o2-1d33c4",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_14b531f677b42127",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-l-o2-1d33c4",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"Unknown thing\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_94e75dad652a776a",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"Unknown thing\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "spc_v6-l-unknown-thing-d1e5b5",
+        "kind": "species"
+      }
+    },
+    {
+      "id": "fnd_714b809e083277c5",
+      "level": 3,
+      "message": "This species has neither a structure nor a formula.",
+      "path": "structure",
+      "related": [],
+      "ruleId": "SPC-004",
+      "severity": "info",
+      "subject": {
+        "id": "spc_v6-l-unknown-thing-d1e5b5",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "count": 1
+      },
+      "id": "fnd_59d99081b279331a",
+      "level": 3,
+      "message": "1 other species share the name \"Water\". Add a qualifier to tell them apart.",
+      "path": "names.canonical",
+      "related": [
+        {
+          "id": "spc_v6-c4",
+          "kind": "species"
+        }
+      ],
+      "ruleId": "SPC-001",
+      "severity": "warning",
+      "subject": {
+        "id": "spc_water",
+        "kind": "species"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"B2H6\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_c24376f762922cee",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"B2H6\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-b2h6-4eee8c",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"CH2Cl2\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_7e9dd955c1ab7b6c",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"CH2Cl2\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-ch2cl2-b7f9b6",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"H+\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_e6fccc427ea30f95",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"H+\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-h-a63b58",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"H2O2\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_bf7c52e5785db298",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"H2O2\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-h2o2-8efa7d",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"conc. H2SO4\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_5e834dc664aa2019",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"conc. H2SO4\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-h2so4-704e8e",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"KMnO4\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_6036208d1dee938e",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"KMnO4\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-kmno4-490a74",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"NaOH\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_10eb2483b17377ee",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"NaOH\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-naoh-963e49",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"O3\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_edd1daead28fd8df",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"O3\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-o3-1e33c6",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"PCC\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_b3c6086f30050504",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"PCC\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-pcc-4c4fda",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "created from the participant label \"Zn/H2O\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound"
+        ]
+      },
+      "id": "fnd_10d22a7faa4c5366",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: created from the participant label \"Zn/H2O\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rgt_v6-l-zn-h2o-4cfd2c",
+        "kind": "reagent"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Mechanism steps and atom maps were entered by hand; verify before marking verified."
+        ]
+      },
+      "id": "fnd_b1ed1a53d2c96da4",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Mechanism steps and atom maps were entered by hand; verify before marking verified..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "mec_aldol-ethanal",
+        "kind": "mechanism"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Mechanism steps and atom maps were entered by hand; verify before marking verified."
+        ]
+      },
+      "id": "fnd_1378e173cdb83d7c",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Mechanism steps and atom maps were entered by hand; verify before marking verified..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "mec_e2-haloalkane",
+        "kind": "mechanism"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Mechanism steps and atom maps were entered by hand; verify before marking verified."
+        ]
+      },
+      "id": "fnd_90c8b537c801b02a",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Mechanism steps and atom maps were entered by hand; verify before marking verified..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "mec_sn2-haloalkane",
+        "kind": "mechanism"
+      }
+    },
+    {
+      "id": "fnd_01a99883a18301d6",
+      "level": 3,
+      "message": "This mechanism has no variants yet, only what its summary says.",
+      "path": "variants",
+      "related": [],
+      "ruleId": "MEC-001",
+      "severity": "info",
+      "subject": {
+        "id": "mec_v6-r1",
+        "kind": "mechanism"
+      }
+    },
+    {
+      "id": "fnd_c29015e5225f4510",
+      "level": 3,
+      "message": "This mechanism has no variants yet, only what its summary says.",
+      "path": "variants",
+      "related": [],
+      "ruleId": "MEC-001",
+      "severity": "info",
+      "subject": {
+        "id": "mec_v6-r3",
+        "kind": "mechanism"
+      }
+    },
+    {
+      "id": "fnd_8418ec929be770bd",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_alcohol1-to-aldehyde-pcc",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_b4a8d3206ea57df9",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_aniline-diazotisation",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_fd64ec952f37aeaa",
+      "level": 3,
+      "message": "\"Nitration of benzene (draft)\" has no outcome with a product.",
+      "path": "outcomes",
+      "related": [],
+      "ruleId": "RXN-002",
+      "severity": "warning",
+      "subject": {
+        "id": "rxn_benzene-nitration-draft",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_74458f2740e752ac",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_benzenediazonium-sandmeyer",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_b2d2475b56fdcef8",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_benzenediazonium-to-phenol",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_83e41be3a92c3cce",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_but-2-yne-lindlar",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Deliberately unanchored (no class on its species) and mapped outside JEE Main scope; scope is unverified."
+        ]
+      },
+      "id": "fnd_46dec3e1b467a192",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Deliberately unanchored (no class on its species) and mapped outside JEE Main scope; scope is unverified..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_cyclohexanone-oxime-beckmann",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_9fe73a4431c395e7",
+      "level": 3,
+      "message": "This published reaction has no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_cyclohexanone-oxime-beckmann",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_cc28b2320ffd2675",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_ethanal-to-ethanoic-acid",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_1d9f53e1c9ad7f2a",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_ethanol-conc-h2so4",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_a76658853d928b24",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_ethanol-to-ethanal-dichromate",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_ab8638cb456baee0",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_ethanol-to-ethanal-pcc",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_90bdf2cc91710ae7",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_ethanol-to-ethanoic-acid",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_05f379e803a987c3",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_ethene-baeyers",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_3d6df3ca8853fa11",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_ethyl-ethanoate-hydrolysis",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_5d8f04233d45578c",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_fischer-esterification",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_a519761135028e56",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_haloform-ethanol",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_986f4e0c73fb05bf",
+      "level": 3,
+      "message": "This published reaction has no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_haloform-propanone",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_38b26a8fff83bd0e",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r1",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "conditions were read from text by the importer (temperature; RXN-015): check them against the original wording",
+          "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")"
+        ]
+      },
+      "id": "fnd_13bbf4a961a310d0",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: conditions were read from text by the importer (temperature; RXN-015): check them against the original wording; 1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\").",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "fields": [
+          "temperature"
+        ]
+      },
+      "id": "fnd_af7dd9427695b30f",
+      "level": 3,
+      "message": "These conditions were filled in from text and need a person to confirm them: temperature.",
+      "path": "stages[0].parameters.parsedFields",
+      "related": [],
+      "ruleId": "RXN-015",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_6e42fff265fe878b",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")"
+        ]
+      },
+      "id": "fnd_fa4c7e9ef979d503",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: 1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\").",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "fields": [
+          "temperature"
+        ]
+      },
+      "id": "fnd_af81e441a85538c8",
+      "level": 3,
+      "message": "These conditions were filled in from text and need a person to confirm them: temperature.",
+      "path": "stages[0].parameters.parsedFields",
+      "related": [],
+      "ruleId": "RXN-015",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_652747a1ca4de074",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_9ebdc5b42a6fce61",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r4",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "unknown legacy field(s) kept in legacy.unmapped: \"customField\""
+        ]
+      },
+      "id": "fnd_03c0d0f438f41e5d",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: unknown legacy field(s) kept in legacy.unmapped: \"customField\".",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_5ea753cbaee290b2",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "conditions were read from text by the importer (anhydrous; RXN-015): check them against the original wording",
+          "1 product(s) not marked major were imported as coproduct (\"c999\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+          "participant(s) refer to compound id(s) \"c404\", \"c999\" that the file does not have; placeholder species were created"
+        ]
+      },
+      "id": "fnd_46bdb2e57cb15acc",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: conditions were read from text by the importer (anhydrous; RXN-015): check them against the original wording; 1 product(s) not marked major were imported as coproduct (\"c999\"): coproduct or minor isomer? (v6's major meant \"main arrow target\"); participant(s) refer to compound id(s) \"c404\", \"c999\" that the file does not have; placeholder species were created.",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "count": 2
+      },
+      "id": "fnd_43c12998aca637c7",
+      "level": 3,
+      "message": "This published record refers to 2 draft records.",
+      "path": "review.lifecycle",
+      "related": [
+        {
+          "id": "spc_v6-c404",
+          "kind": "species"
+        },
+        {
+          "id": "spc_v6-c999",
+          "kind": "species"
+        }
+      ],
+      "ruleId": "RVW-002",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "fields": [
+          "anhydrous"
+        ]
+      },
+      "id": "fnd_435760367597ce83",
+      "level": 3,
+      "message": "These conditions were filled in from text and need a person to confirm them: anhydrous.",
+      "path": "stages[0].parameters.parsedFields",
+      "related": [],
+      "ruleId": "RXN-015",
+      "severity": "review_required",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "id": "fnd_db96214e1952d24f",
+      "level": 3,
+      "message": "This published reaction has no reaction type, no transformation, no mechanism class. Adding them makes it easier to find.",
+      "path": "reactionTypes",
+      "related": [],
+      "ruleId": "RXN-016",
+      "severity": "info",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_2f8e9d73c3e06544",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "exm_jee-advanced",
+        "kind": "exam"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_281a8760b8779adf",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "exm_jee-main",
+        "kind": "exam"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_2100956eb38d6023",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "exv_jee-advanced-2026",
+        "kind": "exam_version"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_39306e4f507a15ea",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "exv_jee-main-2026",
+        "kind": "exam_version"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_f303f26dbf0c7d88",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_acid-derivatives",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_a292570f0e961090",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_alcohol-oxidation-dehydration",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_ad292a76d92dd03d",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_alcohols-phenols-ethers",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_1b0709999482e1d4",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_aldol-cannizzaro",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_d8a0fc80d910be63",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_alkenes",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_a2a1188437710d77",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_alkynes",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_289377d168db2e44",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_amines-diazonium",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_84cd30dc95f2ef03",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_aromatic-hydrocarbons",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_ffc4725401051c15",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_biomolecules",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_e5221fcc3da92c81",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_carbonyl-acids",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_2c2e009c9f569a73",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_diazonium-chemistry",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_e61aecaea1976ad7",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_electronic-effects",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_af5d0d4c6ef01791",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_functional-group-tests",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_0c139cfae50b516d",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_goc",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_e307b51ba88741ae",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_haloalkanes-haloarenes",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_0b63f34fc940417a",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_haloform-and-tests",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_8bb14c77004c788a",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_hydrocarbons",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_317ab9d38ad17060",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_nucleophilic-addition",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_3ea45e97892ae6c4",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_organic-chemistry",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_5c8938e8739807c7",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_phenols",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_3f063a0ccd3609bd",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_polymers",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_b48530a2bfe5f731",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_practical",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_210e6ccf36a80622",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_reactive-intermediates",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_6e744d4b38bdd3e6",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_rearrangements",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_5be9d9b398e9305c",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_stereochemical-outcomes",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_a366264bb022710c",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_stereochemistry",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_201ee1e6e46e4303",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "top_substitution-elimination",
+        "kind": "topic"
+      }
+    },
+    {
+      "data": {
+        "count": 1
+      },
+      "id": "fnd_2179cac132a0daf0",
+      "level": 3,
+      "message": "This published record refers to 1 draft record.",
+      "path": "review.lifecycle",
+      "related": [
+        {
+          "id": "rxn_benzene-nitration-draft",
+          "kind": "reaction"
+        }
+      ],
+      "ruleId": "RVW-002",
+      "severity": "info",
+      "subject": {
+        "id": "tmp_benzene-nitration-draft-aromatic-hydrocarbons",
+        "kind": "topic_mapping"
+      }
+    },
+    {
+      "data": {
+        "reasons": [
+          "Exam coverage and the baseline topic tree are unverified against the official syllabi."
+        ]
+      },
+      "id": "fnd_5b4ba03165ab7fe4",
+      "level": 3,
+      "message": "A person needs to check this record. Reasons: Exam coverage and the baseline topic tree are unverified against the official syllabi..",
+      "path": "review.status",
+      "related": [],
+      "ruleId": "RVW-001",
+      "severity": "review_required",
+      "subject": {
+        "id": "erl_beckmann-advanced",
+        "kind": "exam_relevance"
+      }
+    }
+  ],
+  "format": "legacy_v4",
+  "kindMismatches": [],
+  "legacyReport": {
+    "collisions": [],
+    "consumedByDefault": {},
+    "createdCounts": {
+      "entity_display": 1,
+      "mechanism": 2,
+      "reaction": 6,
+      "reagent": 10,
+      "species": 10
+    },
+    "decisions": [
+      {
+        "chosen": "keep",
+        "id": "reagent_family:Addition",
+        "options": [
+          "keep"
+        ],
+        "question": "Reagent family \"Addition\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+        "subject": {
+          "id": "rxn_v6-r5",
+          "kind": "reaction"
+        }
+      },
+      {
+        "chosen": "keep",
+        "id": "reagent_family:Elimination",
+        "options": [
+          "keep"
+        ],
+        "question": "Reagent family \"Elimination\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+        "subject": {
+          "id": "rxn_v6-r3",
+          "kind": "reaction"
+        }
+      },
+      {
+        "chosen": "keep",
+        "id": "reagent_family:Oxidation",
+        "options": [
+          "keep"
+        ],
+        "question": "Reagent family \"Oxidation\" (2 reactions; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+        "subject": {
+          "id": "rxn_v6-r1",
+          "kind": "reaction"
+        }
+      },
+      {
+        "chosen": "keep",
+        "id": "reagent_family:Oxidative cleavage",
+        "options": [
+          "keep"
+        ],
+        "question": "Reagent family \"Oxidative cleavage\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+        "subject": {
+          "id": "rxn_v6-r4",
+          "kind": "reaction"
+        }
+      }
+    ],
+    "documentUnmapped": {},
+    "notImported": [],
+    "notes": {},
+    "preservedUnmappedFields": {
+      "reaction._v4": 6,
+      "reaction.collapseIntermediates": 6,
+      "reaction.customField": 1,
+      "reaction.reagentFamily": 5
+    },
+    "reagentFamilies": [
+      {
+        "count": 1,
+        "value": "Addition"
+      },
+      {
+        "count": 1,
+        "value": "Elimination"
+      },
+      {
+        "count": 2,
+        "value": "Oxidation"
+      },
+      {
+        "count": 1,
+        "value": "Oxidative cleavage"
+      }
+    ],
+    "reviewItems": [
+      {
+        "reason": "same folded name as \"c6\" (SPC-001); check whether they are duplicates",
+        "subject": {
+          "id": "spc_v6-c1",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "same folded name as \"c1\" (SPC-001); check whether they are duplicates",
+        "subject": {
+          "id": "spc_v6-c6",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "conditions were read from text by the importer (temperature; RXN-015): check them against the original wording",
+        "subject": {
+          "id": "rxn_v6-r2",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+        "subject": {
+          "id": "rxn_v6-r2",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "1 product(s) not marked major were imported as coproduct (\"c4\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+        "subject": {
+          "id": "rxn_v6-r3",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "unknown legacy field(s) kept in legacy.unmapped: \"customField\"",
+        "subject": {
+          "id": "rxn_v6-r5",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "conditions were read from text by the importer (anhydrous; RXN-015): check them against the original wording",
+        "subject": {
+          "id": "rxn_v6-r6",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "1 product(s) not marked major were imported as coproduct (\"c999\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+        "subject": {
+          "id": "rxn_v6-r6",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "participant(s) refer to compound id(s) \"c404\", \"c999\" that the file does not have; placeholder species were created",
+        "subject": {
+          "id": "rxn_v6-r6",
+          "kind": "reaction"
+        }
+      },
+      {
+        "reason": "created from the participant label \"O2\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "spc_v6-l-o2-1d33c4",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c404\"; placeholder created so nothing dangles",
+        "subject": {
+          "id": "spc_v6-c404",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "referenced by 1 reaction(s) (\"r6\") but no compound has the legacy id \"c999\"; placeholder created so nothing dangles",
+        "subject": {
+          "id": "spc_v6-c999",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "created from the participant label \"Unknown thing\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "spc_v6-l-unknown-thing-d1e5b5",
+          "kind": "species"
+        }
+      },
+      {
+        "reason": "created from the participant label \"PCC\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-pcc-4c4fda",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"CH2Cl2\" in 1 reaction(s) (\"r1\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-ch2cl2-b7f9b6",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"KMnO4\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-kmno4-490a74",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"H+\" in 1 reaction(s) (\"r2\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-h-a63b58",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"conc. H2SO4\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-h2so4-704e8e",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"O3\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-o3-1e33c6",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"Zn/H2O\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-zn-h2o-4cfd2c",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"B2H6\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-b2h6-4eee8c",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"H2O2\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-h2o2-8efa7d",
+          "kind": "reagent"
+        }
+      },
+      {
+        "reason": "created from the participant label \"NaOH\" in 1 reaction(s) (\"r5\"); no compound of this name in the file: check whether it is an existing compound",
+        "subject": {
+          "id": "rgt_v6-l-naoh-963e49",
+          "kind": "reagent"
+        }
+      }
+    ],
+    "sourceSchemaVersion": 5,
+    "sourceSystem": "organic-reaction-navigator-v6",
+    "unsafeKeysRenamed": []
+  },
+  "mergedRecordCount": 334,
+  "migrationsApplied": [],
+  "packageIssues": [],
+  "quarantined": [],
+  "rejectedAssets": [],
+  "richTextLinksRewritten": 0,
+  "unsafeKeysRenamed": []
+}

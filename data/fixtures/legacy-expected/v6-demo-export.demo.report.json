@@ -1,0 +1,1530 @@
+{
+  "collisions": [],
+  "consumedByDefault": {},
+  "createdCounts": {
+    "caveat": 18,
+    "class": 14,
+    "concept": 26,
+    "entity_display": 1,
+    "exam_relevance": 42,
+    "mechanism": 21,
+    "named_reaction": 4,
+    "navigator_anchor": 13,
+    "reaction": 22,
+    "reagent": 21,
+    "relationship": 6,
+    "species": 12,
+    "topic": 4,
+    "topic_mapping": 21
+  },
+  "decisions": [
+    {
+      "chosen": "class",
+      "id": "hub:c1",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Alkanes\" (legacy c1): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c1",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c2",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Alkenes\" (legacy c2): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c2",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c3",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Alkynes\" (legacy c3): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c3",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c4",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Arenes\" (legacy c4): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c4",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c5",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Haloalkanes\" (legacy c5): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c5",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c6",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Alcohols\" (legacy c6): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c6",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c7",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Phenols\" (legacy c7): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c7",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c8",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Ethers\" (legacy c8): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c8",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c9",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Aldehydes\" (legacy c9): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c9",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c10",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Ketones\" (legacy c10): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c10",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c11",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Carboxylic acids\" (legacy c11): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c11",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c12",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Esters\" (legacy c12): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c12",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "class",
+      "id": "hub:c13",
+      "options": [
+        "class",
+        "species"
+      ],
+      "question": "Hub \"Amines\" (legacy c13): a class of substances, or one specific species?",
+      "subject": {
+        "id": "cls_v6-c13",
+        "kind": "class"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:AlCl3",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"AlCl3\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r17",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Br2/FeBr3",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Br2/FeBr3\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r21",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Cl2/hv",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Cl2/hv\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r9",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:Cumene process",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"Cumene process\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r18",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:H2/Lindlar",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"H2/Lindlar\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r8",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:H2SO4",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"H2SO4\" (2 reactions; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:H3O+",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"H3O+\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r11",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:HBr",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"HBr\" (2 reactions; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r1",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:HCN",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"HCN\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r20",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:KMnO4",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"KMnO4\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r4",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:NH2OH",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"NH2OH\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r19",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:NH3",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"NH3\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r13",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:NaBH4",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"NaBH4\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r6",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:NaOH",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"NaOH\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r14",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:PBr3",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"PBr3\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r10",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:PCC",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"PCC\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r3",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:RMgX",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"RMgX\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r16",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:alc. KOH",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"alc. KOH\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r7",
+        "kind": "reaction"
+      }
+    },
+    {
+      "chosen": "keep",
+      "id": "reagent_family:aq. KOH",
+      "options": [
+        "keep"
+      ],
+      "question": "Reagent family \"aq. KOH\" (1 reaction; the subject is the first): the schema has no field for it, so it is kept in legacy.unmapped",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    }
+  ],
+  "documentUnmapped": {},
+  "notImported": [],
+  "notes": {},
+  "preservedUnmappedFields": {
+    "aromaticity": 3,
+    "compoundClass": 13,
+    "fgId": 11,
+    "formula": 5,
+    "functionalGroups": 13,
+    "reaction.collapseIntermediates": 22,
+    "reaction.reagentFamily": 21,
+    "smiles": 7
+  },
+  "reagentFamilies": [
+    {
+      "count": 1,
+      "value": "AlCl3"
+    },
+    {
+      "count": 1,
+      "value": "Br2/FeBr3"
+    },
+    {
+      "count": 1,
+      "value": "Cl2/hv"
+    },
+    {
+      "count": 1,
+      "value": "Cumene process"
+    },
+    {
+      "count": 1,
+      "value": "H2/Lindlar"
+    },
+    {
+      "count": 2,
+      "value": "H2SO4"
+    },
+    {
+      "count": 1,
+      "value": "H3O+"
+    },
+    {
+      "count": 2,
+      "value": "HBr"
+    },
+    {
+      "count": 1,
+      "value": "HCN"
+    },
+    {
+      "count": 1,
+      "value": "KMnO4"
+    },
+    {
+      "count": 1,
+      "value": "NH2OH"
+    },
+    {
+      "count": 1,
+      "value": "NH3"
+    },
+    {
+      "count": 1,
+      "value": "NaBH4"
+    },
+    {
+      "count": 1,
+      "value": "NaOH"
+    },
+    {
+      "count": 1,
+      "value": "PBr3"
+    },
+    {
+      "count": 1,
+      "value": "PCC"
+    },
+    {
+      "count": 1,
+      "value": "RMgX"
+    },
+    {
+      "count": 1,
+      "value": "alc. KOH"
+    },
+    {
+      "count": 1,
+      "value": "aq. KOH"
+    }
+  ],
+  "reviewItems": [
+    {
+      "reason": "representative SMILES not used; add an example species if intended",
+      "subject": {
+        "id": "cls_v6-c1",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "general formula taken from the legacy hub formula; check it",
+      "subject": {
+        "id": "cls_v6-c1",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "representative SMILES not used; add an example species if intended",
+      "subject": {
+        "id": "cls_v6-c2",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "general formula taken from the legacy hub formula; check it",
+      "subject": {
+        "id": "cls_v6-c2",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "general formula taken from the legacy hub formula; check it",
+      "subject": {
+        "id": "cls_v6-c3",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "representative SMILES not used; add an example species if intended",
+      "subject": {
+        "id": "cls_v6-c4",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "general formula taken from the legacy hub formula; check it",
+      "subject": {
+        "id": "cls_v6-c4",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "representative SMILES not used; add an example species if intended",
+      "subject": {
+        "id": "cls_v6-c6",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "representative SMILES not used; add an example species if intended",
+      "subject": {
+        "id": "cls_v6-c7",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "general formula taken from the legacy hub formula; check it",
+      "subject": {
+        "id": "cls_v6-c7",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "representative SMILES not used; add an example species if intended",
+      "subject": {
+        "id": "cls_v6-c10",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "general formula taken from the legacy hub formula; check it",
+      "subject": {
+        "id": "cls_v6-c10",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "representative SMILES not used; add an example species if intended",
+      "subject": {
+        "id": "cls_v6-c11",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "general formula taken from the legacy hub formula; check it",
+      "subject": {
+        "id": "cls_v6-c11",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "general formula taken from the legacy hub formula; check it",
+      "subject": {
+        "id": "cls_v6-c12",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "no class has the folded name of compoundClass \"long-chain fatty acid\"; class created from that text",
+      "subject": {
+        "id": "cls_v6-l-long-chain-fatty-acid-888d19",
+        "kind": "class"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (temperature, solventCharacter; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r2",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (temperature; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 1 species and 3 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r5",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (temperature, solventCharacter; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r7",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (light; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r9",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 1 species and 2 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r11",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (temperature; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r12",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "the same substance appears more than once with the same role (class:cls_v6-c6; RXN-021); kept, not merged",
+      "subject": {
+        "id": "rxn_v6-r12",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 1 species and 3 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r12",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (temperature, solventCharacter; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r14",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "coproduct/byproduct \"c6\" points at a class; a specific species may be intended",
+      "subject": {
+        "id": "rxn_v6-r14",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 1 species and 2 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r14",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (anhydrous; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r16",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 1 species and 2 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r16",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 2 species and 1 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r17",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "conditions were read from text by the importer (medium; RXN-015): check them against the original wording",
+      "subject": {
+        "id": "rxn_v6-r18",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "1 product(s) not marked major were imported as coproduct (\"c10\"): coproduct or minor isomer? (v6's major meant \"main arrow target\")",
+      "subject": {
+        "id": "rxn_v6-r18",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "coproduct/byproduct \"c10\" points at a class; a specific species may be intended",
+      "subject": {
+        "id": "rxn_v6-r18",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 2 species and 2 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r18",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 2 species and 1 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r19",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "mixed scope: 1 species and 1 class reference(s) in one reaction; imported as generic (RXN-022)",
+      "subject": {
+        "id": "rxn_v6-r20",
+        "kind": "reaction"
+      }
+    },
+    {
+      "reason": "created from the participant label \"H2O\" in 1 reaction(s) (\"r11\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "spc_v6-l-h2o-0a322b",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "created from the participant label \"CH3MgBr\" in 1 reaction(s) (\"r16\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "spc_v6-l-ch3mgbr-c88693",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "created from the participant label \"propene\" in 1 reaction(s) (\"r17\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "spc_v6-l-propene-93e19f",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "created from the participant label \"O2\" in 1 reaction(s) (\"r18\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "spc_v6-l-o2-1d33c4",
+        "kind": "species"
+      }
+    },
+    {
+      "reason": "created from the participant label \"HBr\" (and 1 other spelling(s)) in 2 reaction(s) (\"r1\", \"r15\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-hbr-06bb65",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"aq. KOH\" (and 1 other spelling(s)) in 2 reaction(s) (\"r2\", \"r7\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-koh-7cfc51",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"PCC\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-pcc-4c4fda",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"CH2Cl2\" in 1 reaction(s) (\"r3\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-ch2cl2-b7f9b6",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"KMnO4\" in 1 reaction(s) (\"r4\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-kmno4-490a74",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"conc. H2SO4\" (and 1 other spelling(s)) in 3 reaction(s) (\"r5\", \"r11\", \"r12\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-h2so4-704e8e",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"NaBH4\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-nabh4-057df9",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"EtOH\" in 1 reaction(s) (\"r6\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-etoh-09aec4",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"H2 / Lindlar catalyst\" in 1 reaction(s) (\"r8\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-h2-lindlar-catalyst-e1336c",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"Cl2\" in 1 reaction(s) (\"r9\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-cl2-c28fc7",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"PBr3\" in 1 reaction(s) (\"r10\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-pbr3-5466f3",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"NH3 (excess)\" in 1 reaction(s) (\"r13\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-nh3-e4a5f6",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"NaOH (aq.)\" in 1 reaction(s) (\"r14\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-naoh-963e49",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"dry ether\" in 1 reaction(s) (\"r16\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-ether-9c123c",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"H3O+\" in 2 reaction(s) (\"r16\", \"r18\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-h3o-3b22b3",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"AlCl3\" in 1 reaction(s) (\"r17\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-alcl3-afb70d",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"NH2OH\" in 1 reaction(s) (\"r19\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-nh2oh-ab7719",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"HCN\" in 1 reaction(s) (\"r20\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-hcn-08b92a",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"Br2\" in 1 reaction(s) (\"r21\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-br2-28e660",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"FeBr3\" in 1 reaction(s) (\"r21\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-febr3-b1cdff",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the participant label \"X (placeholder)\" in 1 reaction(s) (\"r22\"); no compound of this name in the file: check whether it is an existing compound",
+      "subject": {
+        "id": "rgt_v6-l-x-placeholder-aa37d8",
+        "kind": "reagent"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"electrophilic addition\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-electrophilic-addition-c55a3b",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "the dataset has a concept named \"electrophilic addition\" of another kind (reaction_type); it was not reused for a mechanism_class role",
+      "subject": {
+        "id": "cpt_v6-electrophilic-addition-c55a3b",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"electrophilic aromatic substitution\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-electrophilic-aromatic-substitution-4bc6a6",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "the dataset has a concept named \"electrophilic aromatic substitution\" of another kind (reaction_type); it was not reused for a reaction_family role",
+      "subject": {
+        "id": "cpt_v6-electrophilic-aromatic-substitution-4bc6a6",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"nucleophilic substitution\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-nucleophilic-substitution-da5c6d",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "the dataset has a concept named \"nucleophilic substitution\" of another kind (reaction_type); it was not reused for a reaction_family role",
+      "subject": {
+        "id": "cpt_v6-nucleophilic-substitution-da5c6d",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"redox\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-redox-bb76a8",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy jee.concepts text \"selective oxidation\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-selective-oxidation-582cc2",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"nucleophilic acyl substitution\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-nucleophilic-acyl-substitution-d17e63",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"acyl substitution\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-acyl-substitution-e5aa82",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy jee.concepts text \"equilibrium\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-equilibrium-391d35",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"nucleophilic addition\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-nucleophilic-addition-2661da",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "the dataset has a concept named \"nucleophilic addition\" of another kind (reaction_type); it was not reused for a mechanism_class role",
+      "subject": {
+        "id": "cpt_v6-nucleophilic-addition-2661da",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"carbonyl reduction\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-carbonyl-reduction-9b75ea",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy jee.concepts text \"hydride donors\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-hydride-donors-80fb33",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"elimination\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-elimination-aea7e8",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "the dataset has a concept named \"elimination\" of another kind (reaction_type); it was not reused for a reaction_family role",
+      "subject": {
+        "id": "cpt_v6-elimination-aea7e8",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"free-radical substitution\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-free-radical-substitution-3230dc",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"free-radical halogenation\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-free-radical-halogenation-efd50e",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy jee.concepts text \"radical chain mechanism\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-radical-chain-mechanism-f45977",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy jee.concepts text \"Markovnikov addition\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-markovnikov-addition-426063",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"nucleophilic substitution\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-nucleophilic-substitution-49407f",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "the dataset has a concept named \"nucleophilic substitution\" of another kind (reaction_type); it was not reused for a mechanism_class role",
+      "subject": {
+        "id": "cpt_v6-nucleophilic-substitution-49407f",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"organometallic addition\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-organometallic-addition-a04676",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy jee.concepts text \"organometallics\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-organometallics-2b59e9",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"electrophilic aromatic substitution\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-electrophilic-aromatic-substitution-1dcf7c",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "the dataset has a concept named \"electrophilic aromatic substitution\" of another kind (reaction_type); it was not reused for a mechanism_class role",
+      "subject": {
+        "id": "cpt_v6-electrophilic-aromatic-substitution-1dcf7c",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionType text \"EAS\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-eas-72120b",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"radical autoxidation + rearrangement\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-radical-autoxidation-rearrangement-23bb3a",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"industrial synthesis\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-industrial-synthesis-2f2b8f",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy jee.concepts text \"1,2-aryl shift\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-1-2-aryl-shift-456b07",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy mechanism.type text \"nucleophilic addition–elimination\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-nucleophilic-addition-elimination-1a5ffc",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy reactionFamily text \"carbonyl addition\": no concept with this name in the file or the dataset",
+      "subject": {
+        "id": "cpt_v6-carbonyl-addition-d3e1ea",
+        "kind": "concept"
+      }
+    },
+    {
+      "reason": "created from the legacy namedReaction text \"Hofmann ammonolysis\": no named reaction with this name in the file or the dataset",
+      "subject": {
+        "id": "nrx_v6-hofmann-ammonolysis-069a50",
+        "kind": "named_reaction"
+      }
+    },
+    {
+      "reason": "created from the legacy namedReaction text \"Saponification\": no named reaction with this name in the file or the dataset",
+      "subject": {
+        "id": "nrx_v6-saponification-c180b7",
+        "kind": "named_reaction"
+      }
+    },
+    {
+      "reason": "created from the legacy namedReaction text \"Friedel–Crafts alkylation\": no named reaction with this name in the file or the dataset",
+      "subject": {
+        "id": "nrx_v6-friedel-crafts-alkylation-70e0de",
+        "kind": "named_reaction"
+      }
+    },
+    {
+      "reason": "created from the legacy namedReaction text \"EAS bromination\": no named reaction with this name in the file or the dataset",
+      "subject": {
+        "id": "nrx_v6-eas-bromination-0d992e",
+        "kind": "named_reaction"
+      }
+    },
+    {
+      "reason": "created as a chapter (no parent) from the legacy chapter text \"Haloalkanes & Haloarenes\": no topic with this name in the file or the dataset; place it in the topic tree",
+      "subject": {
+        "id": "top_v6-haloalkanes-haloarenes-36a28b",
+        "kind": "topic"
+      }
+    },
+    {
+      "reason": "created as a chapter (no parent) from the legacy chapter text \"Aldehydes, Ketones & Carboxylic Acids\": no topic with this name in the file or the dataset; place it in the topic tree",
+      "subject": {
+        "id": "top_v6-aldehydes-ketones-carboxylic-acids-f467d3",
+        "kind": "topic"
+      }
+    },
+    {
+      "reason": "created as a chapter (no parent) from the legacy chapter text \"Alcohols, Phenols & Ethers\": no topic with this name in the file or the dataset; place it in the topic tree",
+      "subject": {
+        "id": "top_v6-alcohols-phenols-ethers-2fb67c",
+        "kind": "topic"
+      }
+    },
+    {
+      "reason": "created as a chapter (no parent) from the legacy chapter text \"Amines\": no topic with this name in the file or the dataset; place it in the topic tree",
+      "subject": {
+        "id": "top_v6-amines-ec733f",
+        "kind": "topic"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r1-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r1-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r2-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r2-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r3-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r3-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r4-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r4-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r5-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r5-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r6-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r6-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r7-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r7-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r8-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r8-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r9-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r9-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r10-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r10-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r11-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r11-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r12-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r12-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r13-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r13-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r14-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r14-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r15-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r15-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r16-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r16-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r17-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r17-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r18-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r18-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r19-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r19-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r20-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r20-advanced",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r21-main",
+        "kind": "exam_relevance"
+      }
+    },
+    {
+      "reason": "imported flag, not verified against a syllabus",
+      "subject": {
+        "id": "erl_v6-r21-advanced",
+        "kind": "exam_relevance"
+      }
+    }
+  ],
+  "sourceSchemaVersion": 5,
+  "sourceSystem": "organic-reaction-navigator-v6",
+  "unsafeKeysRenamed": []
+}

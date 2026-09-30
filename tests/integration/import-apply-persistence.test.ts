@@ -74,7 +74,7 @@ async function rig(state: CanonicalState): Promise<Rig> {
   return { t, store, session };
 }
 
-function planOf(outcome: ReturnType<ImportSession['preview']>): ImportPlan {
+function planOf(outcome: Awaited<ReturnType<ImportSession['preview']>>): ImportPlan {
   if (!outcome.ok) throw new Error(`${outcome.code}: ${outcome.message}`);
   return outcome.plan;
 }
@@ -86,7 +86,7 @@ describe('apply through the real adapter', () => {
     const parsed = await parseBytes(await exportBytes(incoming, 'json', 'embed', async (id) => (id === NEW_ASSET_ID ? PNG : undefined)));
     expect(parsed.assets.map((a) => a.assetId)).toEqual([NEW_ASSET_ID]);
 
-    const plan = planOf(session.preview({ parsed, fileName: 'with-asset.orn.json' }));
+    const plan = planOf(await session.preview({ parsed, fileName: 'with-asset.orn.json' }));
     expect(plan.preview.assets).toMatchObject({ toStore: 1, notStored: 0 });
     const writesBefore = t.log.writes().length;
     const result = await session.apply(plan.preview.batchId, plan);
@@ -114,7 +114,7 @@ describe('apply through the real adapter', () => {
     const beforeState = store.getState();
 
     const parsed = await parseBytes(await exportBytes(incoming));
-    const plan = planOf(session.preview({ parsed, fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed, fileName: 'x' }));
     const revisionBefore = store.getRevision();
     const applied = await session.apply(plan.preview.batchId, plan);
     if (!applied.ok) throw new Error(applied.message);
@@ -141,7 +141,7 @@ describe('apply through the real adapter', () => {
   it('INV-21: when the pre_import snapshot cannot be stored, nothing changes in memory or on disk', async () => {
     const { t, store, session } = await rig(base);
     const parsed = await parseBytes(await exportBytes(await stateWithRealAsset()));
-    const plan = planOf(session.preview({ parsed, fileName: 'x' }));
+    const plan = planOf(await session.preview({ parsed, fileName: 'x' }));
     t.faults.fail('snapshots', quotaError);
     const revision = store.getRevision();
     const stateBefore = store.getState();
@@ -164,7 +164,7 @@ describe('apply through the real adapter', () => {
       (draft.records.species[id] as unknown as { names: { canonical: string } }).names.canonical = 'Restored name';
     });
     const parsed = await parseBytes(await exportBytes(replacement));
-    const plan = planOf(session.preview({ parsed, fileName: 'backup.orn.json', request: { mode: 'replace_all' } }));
+    const plan = planOf(await session.preview({ parsed, fileName: 'backup.orn.json', request: { mode: 'replace_all' } }));
     expect(plan.preview.canConfirm).toBe(true);
     const applied = await session.apply(plan.preview.batchId, plan);
     expect(applied.ok).toBe(true);
@@ -204,7 +204,7 @@ describe('asset bytes are never overwritten: Undo import and snapshot restore br
   async function importReplacing(r: Rig, bytes: Uint8Array): Promise<Extract<Awaited<ReturnType<ImportSession['apply']>>, { ok: true }>> {
     const incoming = await withAsset(bytes);
     const parsed = await parseBytes(await exportBytes(incoming, 'json', 'embed', async (id) => (id === REPLACED_ID ? bytes : undefined)));
-    const plan = planOf(r.session.preview({ parsed, fileName: 'replace.orn.json', request: { resolutions: [{ id: REPLACED_ID, resolution: 'replace' }] } }));
+    const plan = planOf(await r.session.preview({ parsed, fileName: 'replace.orn.json', request: { resolutions: [{ id: REPLACED_ID, resolution: 'replace' }] } }));
     expect(plan.preview.assets).toMatchObject({ toStore: 1, notStored: 0 });
     const result = await r.session.apply(plan.preview.batchId, plan);
     if (!result.ok) throw new Error(result.message);

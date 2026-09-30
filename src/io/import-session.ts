@@ -8,15 +8,16 @@
  * change live state, the snapshot store or the batch store (INV-21): only `apply` writes, and only after its snapshot.
  *
  * Determinism: IDs (the batch, `import_as_copy` copies) and the report time come from the injected `IdFactory`. Legacy formats
- * are detected by step 3.6 but converted from step 3.8 on, so they are refused here as a value.
+ * are detected by step 3.6 and converted here (step 3.11c, `import-legacy.ts`) on every preview and revise, so preview and revise are async.
  */
 import type { IdFactory } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
 import { canonicalJson } from './canonical-json';
-import type { ImportParseResult, ImportPlan, ImportPlanRequest, ImportPreviewOutcome, ImportApplyResult, TaskOptions } from './contracts';
+import type { ImportDecision, ImportParseResult, LegacyImportReport, ImportPlan, ImportPlanRequest, ImportPreviewOutcome, ImportApplyResult, TaskOptions } from './contracts';
 import { applyImport, type ApplyBatch } from './import-apply';
 import { analyzeConflicts } from './import-conflicts';
 import { buildMergedReplica } from './import-merge';
+import { convertLegacy } from './import-legacy';
 import { assemblePlan } from './import-preview';
 import type { AssetStagePort, ImportBatchSink, ImportStorePort, SnapshotPort } from './import-ports';
 import { resolveRequest } from './import-request';
@@ -38,9 +39,9 @@ export interface PreviewInput {
 
 export interface ImportSession {
   /** Builds a preview and plan for a parsed file; on success it becomes THE pending batch (an earlier one is discarded). */
-  preview(input: PreviewInput, task?: TaskOptions): ImportPreviewOutcome;
+  preview(input: PreviewInput, task?: TaskOptions): Promise<ImportPreviewOutcome>;
   /** A new plan for the pending batch with the FULL desired request (not a delta); a new `batchId`, the old one is discarded. */
-  revise(batchId: string, request: ImportPlanRequest, task?: TaskOptions): ImportPreviewOutcome;
+  revise(batchId: string, request: ImportPlanRequest, task?: TaskOptions): Promise<ImportPreviewOutcome>;
   apply(batchId: string, plan: ImportPlan): Promise<ImportApplyResult>;
   /** Discards the pending batch if it is `batchId`; false for an unknown batch. Changes nothing else. */
   cancel(batchId: string): boolean;
@@ -72,11 +73,23 @@ const UNKNOWN = 'no such pending import: it was cancelled, replaced by a newer p
 export function createImportSession(deps: ImportSessionDeps): ImportSession {
   let pending: Pending | undefined;
 
-  function build(parsed: ImportParseResult, fileName: string, copyIds: Map<string, string>, request: ImportPlanRequest | undefined, task: TaskOptions): { readonly ok: true; readonly batch: Pending } | Extract<ImportPreviewOutcome, { ok: false }> {
+  async function build(source: ImportParseResult, fileName: string, copyIds: Map<string, string>, request: ImportPlanRequest | undefined, task: TaskOptions): Promise<{ readonly ok: true; readonly batch: Pending } | Extract<ImportPreviewOutcome, { ok: false }>> {
     const aborted = { ok: false, code: 'CANCELLED', message: 'import preview aborted' } as const;
     const live: CanonicalState = deps.store.getState();
     const baseRevision = deps.store.getRevision();
     if (isAborted(task.signal)) return aborted;
+
+    const legacyFormat = source.format === 'legacy_v6' || source.format === 'legacy_v4';
+    if (!legacyFormat && request?.decisions !== undefined && request.decisions.length > 0) return { ok: false, code: 'INVALID_REQUEST', message: 'preview decisions exist only for legacy imports' };
+    let parsed = source;
+    let legacy: { readonly report: LegacyImportReport; readonly decisions: readonly ImportDecision[] } | undefined;
+    if (legacyFormat) {
+      const converted = await convertLegacy({ parsed: source, live, now: () => deps.ids.now(), request });
+      if (!converted.ok) return { ok: false, code: converted.code, message: converted.message };
+      if (isAborted(task.signal)) return aborted;
+      parsed = converted.parsed;
+      legacy = { report: converted.report, decisions: converted.decisions };
+    }
 
     const analysis = analyzeConflicts(live, parsed);
     task.onProgress?.(1, 4, 'conflicts');
@@ -93,9 +106,9 @@ export function createImportSession(deps: ImportSessionDeps): ImportSession {
     task.onProgress?.(3, 4, 'validated');
 
     const batchId = deps.ids.newId('imp');
-    const plan = assemblePlan({ batchId, parsed, analysis, request: resolved.value, merge, validation: validated.validation });
+    const plan = assemblePlan({ batchId, parsed, analysis, request: resolved.value, merge, validation: validated.validation, ...(legacy === undefined ? {} : { legacy }) });
     task.onProgress?.(4, 4, 'planned');
-    return { ok: true, batch: { batchId, fileName, baseRevision, merged: merge.state, stagedAssets: merge.stagedAssets, plan, parsed, copyIds } };
+    return { ok: true, batch: { batchId, fileName, baseRevision, merged: merge.state, stagedAssets: merge.stagedAssets, plan, parsed: source, copyIds } };
   }
 
   function install(batch: Pending): ImportPreviewOutcome {
@@ -104,19 +117,15 @@ export function createImportSession(deps: ImportSessionDeps): ImportSession {
   }
 
   return {
-    preview(input, task = {}) {
-      const { parsed } = input;
-      if (parsed.format === 'legacy_v6' || parsed.format === 'legacy_v4') {
-        return { ok: false, code: 'LEGACY_NOT_CONVERTED', message: `a ${parsed.format} export is detected but is converted only from step 3.8; nothing can be previewed yet` };
-      }
-      const built = build(parsed, input.fileName, new Map(), input.request, task);
+    async preview(input, task = {}) {
+      const built = await build(input.parsed, input.fileName, new Map(), input.request, task);
       return built.ok ? install(built.batch) : built;
     },
 
-    revise(batchId, request, task = {}) {
+    async revise(batchId, request, task = {}) {
       const current = pending;
       if (current === undefined || current.batchId !== batchId) return { ok: false, code: 'UNKNOWN_BATCH', message: UNKNOWN };
-      const built = build(current.parsed, current.fileName, current.copyIds, request, task);
+      const built = await build(current.parsed, current.fileName, current.copyIds, request, task);
       return built.ok ? install(built.batch) : built;
     },
 

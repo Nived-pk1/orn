@@ -42,7 +42,7 @@ describe('ADV-031: wrong ID prefix / wrong-kind reference', () => {
     });
     expect(parsed.quarantined.some((q) => q.claimedId === brokenId && q.issues.length > 0)).toBe(true);
     const { session } = testSession(makeStore(empty));
-    const outcome = session.preview({ parsed, fileName: 'x' });
+    const outcome = await session.preview({ parsed, fileName: 'x' });
     if (!outcome.ok) throw new Error(outcome.message);
     expect(outcome.plan.preview.quarantined.some((q) => q.claimedId === brokenId)).toBe(true);
   });
@@ -59,7 +59,7 @@ describe('ADV-031: wrong ID prefix / wrong-kind reference', () => {
     expect(parsed.quarantined.some((q) => q.claimedId === brokenId && q.issues.length > 0)).toBe(true);
     expect((parsed.records.reaction ?? []).some((r) => r.id === brokenId)).toBe(false);
     const { session } = testSession(makeStore(empty));
-    const outcome = session.preview({ parsed, fileName: 'x' });
+    const outcome = await session.preview({ parsed, fileName: 'x' });
     if (!outcome.ok) throw new Error(outcome.message);
     expect((outcome.plan.preview.counts.reaction?.incoming ?? 0)).toBe((parsed.counts.reaction ?? 0));
     // Records that pointed at the quarantined one are then dangling: that is ADV-030's L2 path (import-session.test.ts).

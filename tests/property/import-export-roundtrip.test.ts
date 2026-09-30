@@ -45,7 +45,7 @@ async function importAndExport(state: CanonicalState, format: 'json' | 'pkg', mo
   const start: CanonicalState = mode === 'merge' ? { meta: state.meta, records: emptyRecordTables() } : { meta: { ...state.meta, title: 'Something else' } as never, records: emptyRecordTables() };
   const store = makeStore(start);
   const { session } = testSession(store);
-  const outcome = session.preview({ parsed, fileName: 'x', request: { mode } });
+  const outcome = await session.preview({ parsed, fileName: 'x', request: { mode } });
   if (!outcome.ok) throw new Error(`${outcome.code}: ${outcome.message}`);
   expect(outcome.plan.preview.canConfirm).toBe(true);
   const applied = await session.apply(outcome.plan.preview.batchId, outcome.plan);
@@ -76,11 +76,11 @@ describe('P-02 full: export → import (real importer) → export is byte-identi
     const parsed = await parseBytes(first);
     const store = makeStore({ meta: state.meta, records: emptyRecordTables() });
     const { session } = testSession(store);
-    const plan1 = session.preview({ parsed, fileName: 'x' });
+    const plan1 = await session.preview({ parsed, fileName: 'x' });
     if (!plan1.ok) throw new Error(plan1.message);
     await session.apply(plan1.plan.preview.batchId, plan1.plan);
     const revision = store.getRevision();
-    const plan2 = session.preview({ parsed, fileName: 'x' });
+    const plan2 = await session.preview({ parsed, fileName: 'x' });
     if (!plan2.ok) throw new Error(plan2.message);
     expect(plan2.plan.conflicts.every((c) => c.identical && c.resolution === 'identical_skip')).toBe(true);
     await session.apply(plan2.plan.preview.batchId, plan2.plan);
