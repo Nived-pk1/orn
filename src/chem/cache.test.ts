@@ -89,7 +89,8 @@ describe('withChemCache', () => {
     await toolkit.depict(smiles('CCO'), DRAW);
     await toolkit.depict(smiles('CCO'), DRAW);
     expect(toolkit.stats()).toMatchObject({ hits: 2, facts: 1, depictions: 1 });
-    expect(fake.calls.getMol).toEqual(['C1CC', 'CCO']);
+    // the invalid structure was read once normally and once without sanitising (which says WHY it is invalid); the repeats never reached RDKit
+    expect(fake.calls.getMol).toEqual(['C1CC', 'C1CC#nosan', 'CCO']);
   });
 
   it('`unavailable` is never cached (it says nothing about the structure): the next call asks again', async () => {

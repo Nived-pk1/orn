@@ -10,6 +10,7 @@ import type { ChangeSet } from '@/core/dataset/contracts';
 import type { RouteQuery, RouteSearchResult } from '@/core/graph/contracts';
 import type { Finding } from '@/core/validation/contracts';
 import type { DepictionOptions, DepictOutcome, ParseOutcome } from '@/chem/contracts';
+import type { BalanceAnswer, BalanceRequest, MatchesAnswer, MatchProbe, SpeciesCheckRequest, SpeciesChecksAnswer, StepCheckRequest, StepChecksAnswer } from '@/chem/checks/contracts';
 import type { ExportBuildResult, ExportOptions, ImportPlan, ImportPlanRequest, ImportPreviewErrorCode, ImportRejectionCode, ParsedAsset } from '@/io/contracts';
 import type { ImportQuarantineDraft, ImportReportDraft } from '@/io';
 import type { LayoutRequest, LayoutResult } from '@/layout/contracts';
@@ -126,12 +127,19 @@ export interface RpcClientOptions<Api extends WorkerApi<Api>> {
 
 /**
  * The chem worker holds no state (ADR-034 D1): each call carries its input. `parse` answers facts or a failure value with a
- * reason (only `invalid` means the structure is bad); `depict` answers sanitised SVG or a failure value. The checks (CHEM-*)
- * come with step 4.3b, replacing the earlier `checkAll({ revision })`, which assumed state in the worker (Q2).
+ * reason (only `invalid` means the structure is bad); `depict` answers sanitised SVG or a failure value. The L4 checks (Q2,
+ * step 4.3b; they replaced the earlier `checkAll({ revision })`, which assumed state in the worker) each take the records they
+ * are about, with their structures, in one batch (at most `MAX_CHECK_BATCH` items) and answer plain data per item:
+ * `checkSpecies` (CHEM-001 to 004), `checkReaction` (CHEM-005, the balance of each outcome), `checkMechanism` (CHEM-008, one
+ * item per step), `matches` (SMARTS probes; CHEM-007 sends the class SMARTS with the species).
  */
 export interface ChemWorkerApi {
   parse(params: { readonly structure: StructureRep }, ctx: RpcCallContext): Promise<ParseOutcome>;
   depict(params: { readonly structure: StructureRep; readonly options: DepictionOptions }, ctx: RpcCallContext): Promise<DepictOutcome>;
+  checkSpecies(params: { readonly species: readonly SpeciesCheckRequest[] }, ctx: RpcCallContext): Promise<SpeciesChecksAnswer>;
+  checkReaction(params: { readonly outcomes: readonly BalanceRequest[] }, ctx: RpcCallContext): Promise<BalanceAnswer>;
+  checkMechanism(params: { readonly steps: readonly StepCheckRequest[] }, ctx: RpcCallContext): Promise<StepChecksAnswer>;
+  matches(params: { readonly probes: readonly MatchProbe[] }, ctx: RpcCallContext): Promise<MatchesAnswer>;
 }
 
 export interface LayoutWorkerApi {

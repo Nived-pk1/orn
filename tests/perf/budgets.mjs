@@ -341,4 +341,12 @@ export const BUDGETS = {
     { operation: "step 4.3a: sanitiser on a small drawing", tier: 'chem', shape: 'sanitiser', budgetMs: null, note: "informal; pure string work; run once alone; not bench:baseline" },
   "chem: the sanitiser on a typical RDKit depiction > sanitise benzoyl peroxide's drawing":
     { operation: "step 4.3a: sanitiser on the largest demo drawing", tier: 'chem', shape: 'sanitiser', budgetMs: null, note: "informal; pure string work; run once alone; not bench:baseline" },
+  "chem checks (step 4.3b) > check every species of the demo, 65 structures in batches of 32, worker code only (no service, no cache)":
+    { operation: "step 4.3b: checkSpecies over every demo species, batched", tier: 'chem', shape: 'checks', budgetMs: null, note: "informal; worker code only: parse, formula and charge checks, no service; SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
+  "chem checks (step 4.3b) > check the whole demo through the L4 service (65 species, 27 reactions, 3 mechanisms; real RDKit in process, no cache)":
+    { operation: "step 4.3b: the L4 service checks the whole demo", tier: 'chem', shape: 'checks', budgetMs: null, note: "informal; species, reactions (planning only: none is comparable), mechanisms, merge into a finding store; SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
+  "chem checks (step 4.3b) > check the whole demo in a fresh real thread (spawn, load RDKit, three species batches, reactions, mechanisms; thread start under tsx included)":
+    { operation: "step 4.3b: the whole demo in a fresh real thread", tier: 'chem', shape: 'checks', budgetMs: null, note: "informal; thread start under tsx and the WASM load are in the figure (a test-only cost); SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
+  "chem checks (step 4.3b) > check 1,400 synthetic species through the L4 service (the design tier species count; the generator gives no structures; in process, no cache)":
+    { operation: "step 4.3b: 1,400 synthetic species through the L4 service", tier: 'chem', shape: 'checks', budgetMs: null, note: "informal; the generator gives no structures, so the species are 1,400 distinct synthetic alcohols; SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
 };

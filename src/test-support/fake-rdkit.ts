@@ -85,12 +85,14 @@ export function createFakeRdkit(
 
   const module: RdkitModule = {
     version: () => version,
-    get_mol: (input) => {
-      calls.getMol.push(input);
-      const spec = molecules[input];
+    // A read with details is looked up under `<input>#nosan` (sanitize: false) or `<input>#keeph` (removeHs: false).
+    get_mol: (input, details) => {
+      const key = details === undefined ? input : `${input}${details.includes('sanitize') ? '#nosan' : '#keeph'}`;
+      calls.getMol.push(key);
+      const spec = molecules[key];
       if (spec instanceof Error) throw spec;
       if (spec === undefined || spec === null) return null;
-      const handle: FakeHandle = { kind: 'mol', input, deleted: 0 };
+      const handle: FakeHandle = { kind: 'mol', input: key, deleted: 0 };
       handles.push(handle);
       return wrap(handle, spec);
     },

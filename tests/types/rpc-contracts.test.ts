@@ -55,6 +55,6 @@ it('type: the chem worker answers failure values with a reason; only `invalid` m
   expectTypeOf<Failed<SmartsOutcome>['reason']>().toEqualTypeOf<'invalid' | 'unavailable' | 'timeout' | 'invalid_smarts'>();
   expectTypeOf<RpcClient<ChemWorkerApi>['parse']>().returns.resolves.toEqualTypeOf<RpcResult<ParseOutcome>>();
   expectTypeOf<RpcClient<ChemWorkerApi>['depict']>().returns.resolves.toEqualTypeOf<RpcResult<DepictOutcome>>();
-  // checkAll({ revision }) assumed state in the chem worker (D1): it is gone; the checks come with 4.3b.
-  expectTypeOf<keyof ChemWorkerApi>().toEqualTypeOf<'parse' | 'depict'>();
+  // checkAll({ revision }) assumed state in the chem worker (D1): it is gone; the batch checks replaced it (step 4.3b, Q2).
+  expectTypeOf<keyof ChemWorkerApi>().toEqualTypeOf<'parse' | 'depict' | 'checkSpecies' | 'checkReaction' | 'checkMechanism' | 'matches'>();
 });

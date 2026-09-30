@@ -119,6 +119,30 @@ describe('parse', () => {
     expect(await toolkit.parse(smiles('C1CC'))).toMatchObject({ ok: false, reason: 'invalid' });
   });
 
+  it('an invalid structure says WHY (step 4.3b): unreadable notation, or readable without sanitising but not valid (CHEM-001 / CHEM-002)', async () => {
+    const fake = createFakeRdkit({ 'C1CC(': null, 'C(C)(C)(C)(C)C': null, 'C(C)(C)(C)(C)C#nosan': ETHANOL_SPEC });
+    const { toolkit } = toolkitOver(fake);
+    expect(await toolkit.parse(smiles('C1CC('))).toMatchObject({ ok: false, reason: 'invalid', problem: 'unreadable' });
+    expect(await toolkit.parse(smiles('C(C)(C)(C)(C)C'))).toMatchObject({ ok: false, reason: 'invalid', problem: 'sanitisation' });
+    expect(await toolkit.parse(smiles('C'.repeat(20_001)))).toMatchObject({ ok: false, reason: 'invalid', problem: 'unreadable' }); // refused before RDKit
+    expect(fake.leaked()).toEqual([]);
+    const gone = await toolkit.parse(smiles('x'));
+    expect(gone.ok ? '' : gone.reason === 'invalid' ? gone.problem : 'n/a').toBe('unreadable');
+  });
+
+  it('a map on a hydrogen RDKit removes is still an atom map of the structure (read again with the hydrogens kept)', async () => {
+    const fake = createFakeRdkit({
+      '[H:2][OH:1]': { ...ETHANOL_SPEC, smiles: '[OH2:1]' },
+      '[H:2][OH:1]#keeph': { ...ETHANOL_SPEC, smiles: '[OH:1][H:2]' },
+      CCO: ETHANOL_SPEC,
+    });
+    const { toolkit } = toolkitOver(fake);
+    expect(await toolkit.parse(smiles('[H:2][OH:1]'))).toMatchObject({ ok: true, facts: { canonicalSmiles: '[OH2:1]', atomMaps: [1, 2] } });
+    await toolkit.parse(smiles('CCO'));
+    expect(fake.calls.getMol).toEqual(['[H:2][OH:1]', '[H:2][OH:1]#keeph', 'CCO']); // no second read without a map in the text
+    expect(fake.leaked()).toEqual([]);
+  });
+
   it('a C++ exception from RDKit is `invalid` for THIS structure and the module stays loaded', async () => {
     const fake = createFakeRdkit({ bad: new Error('RDKit refused'), CCO: ETHANOL_SPEC });
     const { toolkit, loads } = toolkitOver(fake);

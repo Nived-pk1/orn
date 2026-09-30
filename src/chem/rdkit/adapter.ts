@@ -16,6 +16,7 @@ import { describe, isTrap } from './errors';
 import { factsOf } from './facts';
 import { depictionDetails } from '../depiction-options';
 import { drawMol } from './draw';
+import { mapsKeepingHydrogens } from './mapped-hydrogens';
 import { withHandle } from './scope';
 import type { RdkitLoad, RdkitModule } from './types';
 
@@ -91,6 +92,7 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
       : { ok: false, reason: 'unavailable', error: `RDKit could not process this structure (${describe(error)})` };
 
   const invalid = (error: string): { readonly ok: false; readonly reason: 'invalid'; readonly error: string } => ({ ok: false, reason: 'invalid', error });
+  const unreadableParse = (error: string): ParseOutcome => ({ ok: false, reason: 'invalid', problem: 'unreadable', error });
   const unreadable = (structure: StructureRep): string => `RDKit cannot read this ${structure.format}`;
 
   return {
@@ -105,7 +107,7 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
 
     async parse(structure): Promise<ParseOutcome> {
       const problem = inputProblem(structure);
-      if (problem !== undefined) return invalid(problem);
+      if (problem !== undefined) return unreadableParse(problem);
       const loaded = await acquire();
       if (!loaded.ok) return unavailable(loaded.error);
       const at: { stage: 'structure' | 'work' } = { stage: 'structure' };
@@ -117,9 +119,25 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
             return factsOf(mol);
           },
         );
-        return parsed.opened ? { ok: true, facts: parsed.value } : invalid(unreadable(structure));
+        if (parsed.opened) {
+          const maps = mapsKeepingHydrogens(loaded.module, structure.format, structure.value);
+          return { ok: true, facts: maps === undefined ? parsed.value : { ...parsed.value, atomMaps: maps } };
+        }
+        // RDKit would not open it. Reading it WITHOUT sanitising says whether the notation is bad (CHEM-001) or only the chemistry
+        // is (valence, another sanitisation step: CHEM-002).
+        const bare = withHandle(
+          () => loaded.module.get_mol(structure.value, '{"sanitize":false}'),
+          () => true,
+        );
+        return bare.opened
+          ? { ok: false, reason: 'invalid', problem: 'sanitisation', error: `RDKit reads this ${structure.format} but it does not sanitise (valence or another chemistry check fails)` }
+          : unreadableParse(unreadable(structure));
       } catch (error) {
-        return crashed(error) ?? refused(error, at.stage);
+        const trapped = crashed(error);
+        if (trapped !== undefined) return trapped;
+        return at.stage === 'structure'
+          ? unreadableParse(`RDKit could not read this structure (${describe(error)})`)
+          : { ok: false, reason: 'unavailable', error: `RDKit could not process this structure (${describe(error)})` };
       }
     },
 

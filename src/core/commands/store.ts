@@ -14,6 +14,7 @@ import type { ChangeSet } from '../dataset/contracts';
 import type { CoreIndexes } from '../indexes/contracts';
 import { coreIndexEngine } from '../indexes/engine';
 import type { CanonicalState, RecordRef } from '../schema';
+import { clearLevel4, vanishedRefs } from '../validation/level4';
 import { createFindingStore } from '../validation/store';
 import { commitFindings, commitTouched, validator as defaultValidator } from '../validation/validator';
 import type { Finding, FindingStore, Validator } from '../validation/contracts';
@@ -165,6 +166,7 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
       revision = changes.revision;
       indexes = nextIndexes;
       commitTouched(findings, validation);
+      clearLevel4(findings, changes.deleted); // Q10 b: no finding outlives its subject
       return { result: { ok: true, changes, findings: found }, changes };
     } catch (error) {
       indexes = coreIndexEngine.build(state, revision);
@@ -286,6 +288,7 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
         revision = changes.revision;
         indexes = nextIndexes;
         commitTouched(findings, validation);
+        clearLevel4(findings, changes.deleted);
         history.clear();
         notify(changes);
         return { ok: true, changes, findings: validation.all };
@@ -315,11 +318,14 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
         patches: replacementPatches(state, replacement),
         inversePatches: replacementPatches(replacement, state),
       });
-      const scope = [...allRefs(state), ...allRefs(replacement)];
+      const oldRefs = allRefs(state);
+      const newRefs = allRefs(replacement);
+      const scope = [...oldRefs, ...newRefs];
       state = replacement;
       revision = adoptedRevision;
       indexes = nextIndexes;
       commitFindings(findings, [...new Map(scope.map((ref) => [`${ref.kind}:${ref.id}`, ref] as const)).values()], found);
+      clearLevel4(findings, vanishedRefs(oldRefs, newRefs));
       history.clear();
       notify(changes);
       return { ok: true, changes, findings: found };
@@ -350,11 +356,14 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
         patches: replacementPatches(state, replacement),
         inversePatches: replacementPatches(replacement, state),
       });
-      const scope = [...allRefs(state), ...allRefs(replacement)];
+      const oldRefs = allRefs(state);
+      const newRefs = allRefs(replacement);
+      const scope = [...oldRefs, ...newRefs];
       state = replacement;
       revision = changes.revision;
       indexes = nextIndexes;
       commitFindings(findings, [...new Map(scope.map((ref) => [`${ref.kind}:${ref.id}`, ref] as const)).values()], found);
+      clearLevel4(findings, vanishedRefs(oldRefs, newRefs));
       history.clear();
       notify(changes);
       return { ok: true, changes, findings: found };

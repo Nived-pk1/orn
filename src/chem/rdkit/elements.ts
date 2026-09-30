@@ -11,3 +11,8 @@ export const MAX_ATOMIC_NUMBER = SYMBOLS.length;
 export function symbolOf(atomicNumber: number): string | undefined {
   return Number.isInteger(atomicNumber) && atomicNumber >= 1 ? SYMBOLS[atomicNumber - 1] : undefined;
 }
+
+const KNOWN: ReadonlySet<string> = new Set(SYMBOLS);
+
+/** Whether `symbol` (exact case) is an element symbol of the table; for reading an entered formula. */
+export const isElementSymbol = (symbol: string): boolean => KNOWN.has(symbol);

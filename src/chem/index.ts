@@ -11,3 +11,4 @@ export type { RdkitLoadOptions } from './rdkit/loader';
 export { withChemCache, CHEM_CACHE_SIZE } from './cached-toolkit';
 export type { CachedToolkit, ChemCacheStats } from './cached-toolkit';
 export { LruCache } from './lru';
+export * from './checks';

@@ -26,9 +26,17 @@ export interface StructureFacts {
  */
 export type ToolkitFailureReason = 'invalid' | 'unavailable' | 'timeout';
 
+/**
+ * `problem` says which way an `invalid` structure is bad (step 4.3b: CHEM-001 and CHEM-002): `unreadable` (RDKit cannot read the
+ * notation, or the input was refused before RDKit saw it) or `sanitisation` (RDKit reads it without sanitising, but valence or
+ * another sanitisation step fails). Present on every `invalid` outcome of `parse`; never on `unavailable` or `timeout`.
+ */
+export type InvalidProblem = 'unreadable' | 'sanitisation';
+
 export type ParseOutcome =
   | { readonly ok: true; readonly facts: StructureFacts }
-  | { readonly ok: false; readonly reason: ToolkitFailureReason; readonly error: string };
+  | { readonly ok: false; readonly reason: 'invalid'; readonly problem: InvalidProblem; readonly error: string }
+  | { readonly ok: false; readonly reason: Exclude<ToolkitFailureReason, 'invalid'>; readonly error: string };
 
 export interface DepictionOptions {
   readonly width: number;

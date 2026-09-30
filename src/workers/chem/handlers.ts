@@ -5,17 +5,10 @@
  * SVG or a failure value: nothing else leaves this worker as markup.
  */
 import { depictionDetails, type DepictionOptions, type StructureToolkit } from '@/chem';
-import { STRUCTURE_FORMATS, type StructureRep } from '@/core/schema';
+import { createChemChecks } from '@/chem/checks';
 import type { ChemWorkerApi } from '@/workers/rpc/contracts';
 import { RpcHostError } from '@/workers/rpc/helpers';
-
-function structureOf(value: unknown): StructureRep {
-  const candidate = value as { format?: unknown; value?: unknown } | null;
-  if (typeof candidate !== 'object' || candidate === null || typeof candidate.value !== 'string' || !STRUCTURE_FORMATS.some((format) => format === candidate.format)) {
-    throw new RpcHostError('BAD_REQUEST', `structure must be { format: ${STRUCTURE_FORMATS.join(' | ')}, value: string }`);
-  }
-  return candidate as StructureRep;
-}
+import { balanceRequestsOf, probesOf, speciesRequestsOf, stepRequestsOf, structureOf } from './wire';
 
 function optionsOf(value: unknown): DepictionOptions {
   if (typeof value !== 'object' || value === null) throw new RpcHostError('BAD_REQUEST', 'options must be an object');
@@ -28,8 +21,13 @@ function optionsOf(value: unknown): DepictionOptions {
 }
 
 export function createChemHandlers(toolkit: StructureToolkit): ChemWorkerApi {
+  const checks = createChemChecks(toolkit);
   return {
     parse: async ({ structure }) => toolkit.parse(structureOf(structure)),
     depict: async ({ structure, options }) => toolkit.depict(structureOf(structure), optionsOf(options)),
+    checkSpecies: async ({ species }) => checks.checkSpecies(speciesRequestsOf(species)),
+    checkReaction: async ({ outcomes }) => checks.checkReaction(balanceRequestsOf(outcomes)),
+    checkMechanism: async ({ steps }) => checks.checkMechanism(stepRequestsOf(steps)),
+    matches: async ({ probes }) => checks.matches(probesOf(probes)),
   };
 }

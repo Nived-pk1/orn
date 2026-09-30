@@ -6,8 +6,11 @@
  * src/workers/chem/handlers.test.ts.
  */
 import { afterEach, describe, expect, it } from 'vitest';
-import type { StructureRep } from '@/core/schema';
+import type { CanonicalState, StructureRep } from '@/core/schema';
 import { spawnChemWorker } from '@/test-support/rpc-node-port';
+import { createFindingStore } from '@/core/validation/store';
+import { speciesRecord } from '@/test-support/l4-kit';
+import { createL4Service } from '@/workers/chem';
 import { createChemService } from '@/workers/chem/client';
 import { CHEM_CALL_TIMEOUT_MS, CHEM_SPECS } from '@/workers/chem/specs';
 import { createRpcClient, type RpcClient } from '@/workers/rpc';
@@ -84,5 +87,44 @@ describe('the chem worker in a real thread', () => {
   it('an over-long structure is refused before RDKit, in the thread, as `invalid`', async () => {
     const { chem } = start();
     expect(await chem.parse(smiles('C'.repeat(20_001)))).toMatchObject({ ok: false, reason: 'invalid' });
+  }, THREAD_TEST_TIMEOUT_MS);
+});
+
+describe('the batch checks and the L4 service in a real thread (step 4.3b)', () => {
+  it('checkSpecies answers real findings, and a trap inside a batch is one item not_checked while the rest are answered', async () => {
+    const { chem, events } = start();
+    const out = await chem.checkSpecies([
+      { id: 'spc_bad', structure: smiles('C1CC(') },
+      { id: 'spc_trap', structure: smiles(TRAPS_RDKIT) },
+      { id: 'spc_f', structure: smiles('CCO'), formula: 'C2H4O' },
+    ]);
+    if (!out.ok) throw new Error(out.error);
+    expect(out.value.results.map((r) => [r.id, r.status.state, r.drafts.map((d) => d.ruleId)])).toEqual([
+      ['spc_bad', 'checked', ['CHEM-001']],
+      ['spc_trap', 'not_checked', []],
+      ['spc_f', 'checked', ['CHEM-003']],
+    ]);
+    expect(events).toEqual([]);
+  }, THREAD_TEST_TIMEOUT_MS);
+
+  it('a batch with a hanging structure: the call times out (thread terminated), the service sends the items one by one, remembers the culprit and never sends it again', async () => {
+    const { client, events } = start();
+    const findings = createFindingStore();
+    const records = Object.fromEntries([speciesRecord('spc_1', 'CCO'), speciesRecord('spc_h', HANGS_RDKIT), speciesRecord('spc_3', 'CCCO')].map((r) => [r.id, r]));
+    const state = { meta: {}, records: { species: records, reaction: {}, mechanism: {}, class: {} } } as unknown as CanonicalState;
+    const service = createL4Service({ state: () => state, findings, chem: createChemService(client), schedule: () => undefined });
+    service.checkAll();
+    await service.flush();
+    expect(service.statusOf({ kind: 'species', id: 'spc_h' })).toMatchObject({ state: 'not_checked', reason: 'timeout', remembered: true });
+    expect(service.statusOf({ kind: 'species', id: 'spc_1' })).toEqual({ state: 'checked', notCompared: [] });
+    expect(service.statusOf({ kind: 'species', id: 'spc_3' })).toEqual({ state: 'checked', notCompared: [] });
+    expect(findings.all()).toEqual([]); // a hang is never CHEM-001
+    expect(events.filter((e) => e.type === 'timeout')).toHaveLength(2); // the whole batch, then the culprit alone
+    const calls = service.stats().calls.checkSpecies;
+    service.checkAll();
+    await service.flush();
+    expect(service.stats().calls.checkSpecies).toBe(calls + 1); // the two healthy species only: no third timeout
+    expect(events.filter((e) => e.type === 'timeout')).toHaveLength(2);
+    service.dispose();
   }, THREAD_TEST_TIMEOUT_MS);
 });
