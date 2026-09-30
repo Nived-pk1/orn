@@ -65,6 +65,14 @@ export interface ReplicaSync {
   status(): ReplicaStatus;
   /** Resolves when the replica has caught up with every ChangeSet announced so far, or when the sync is down or stopped. */
   settled(): Promise<ReplicaStatus>;
+  /**
+   * An import is about to `replaceState` the store to `revision` (step 4.2c): when the sync sees that `replace` ChangeSet it
+   * sends `adoptPending` (the worker adopts the state it prepared) instead of forwarding the ChangeSet, so the whole state
+   * is not sent twice. A refusal makes the sync reload. Only one adoption is expected at a time.
+   */
+  expectAdoption(revision: number): void;
+  /** The import failed before or instead of the `replace` ChangeSet: forget the expectation. */
+  clearAdoption(): void;
   /** Stops following the store and terminates the worker. */
   stop(): void;
 }
@@ -83,6 +91,7 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
   let replicaRevision: number | null = null;
   let reloads = 0;
   let needsReload = true;
+  let adoptAt: number | undefined;
   let running = false;
   let stopped = false;
   let hooksRunning = 0;
@@ -209,6 +218,22 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
     }
   }
 
+  /** The store took the state the worker prepared: the worker swaps it in. Anything but a clean adoption reloads instead. */
+  async function adopt(changes: ChangeSet): Promise<void> {
+    adoptAt = undefined;
+    const since = restarts;
+    const result = await client.adoptPending({ revision: changes.revision });
+    if (result.ok) {
+      const answer = result.value;
+      if (answer.ok) replicaRevision = answer.revision;
+      else requestReload(`adoptPending refused (${answer.code}: ${answer.message}); reloading the replica`);
+    } else if (result.error.code === 'WORKER_CRASHED' || result.error.code === 'TIMEOUT') {
+      await restartDone(since);
+    } else {
+      requestReload(`adoptPending failed (${result.error.code}: ${result.error.message})`);
+    }
+  }
+
   async function pump(): Promise<void> {
     if (running || stopped || isDown()) return;
     running = true;
@@ -223,7 +248,8 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
         queuedRecords -= weightOf(next);
         // Already inside the loaded state (a reload or a restart captured the store after this commit).
         if (replicaRevision !== null && next.revision <= replicaRevision) continue;
-        await forward(next);
+        if (next.cause === 'replace' && adoptAt === next.revision) await adopt(next);
+        else await forward(next);
       }
     } finally {
       running = false;
@@ -246,6 +272,12 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
     client,
     status,
     settled: () => (isIdle() ? Promise.resolve(status()) : new Promise<void>((resolve) => idleWaiters.push(resolve)).then(status)),
+    expectAdoption(revision) {
+      adoptAt = revision;
+    },
+    clearAdoption() {
+      adoptAt = undefined;
+    },
     stop() {
       if (stopped) return;
       stopped = true;

@@ -45,16 +45,21 @@ async function discardSnapshot(deps: ImportApplyDeps, id: string): Promise<void>
   await deps.snapshots.deleteSnapshot(id).catch(() => undefined);
 }
 
-function buildReport(batch: ApplyBatch, appliedAt: string, snapshotId: string, revisionAfter: number): ImportBatchReport {
+/** What only the applier fills in: when it was applied and the `pre_import` snapshot's ID. Everything else is known at preview time. */
+export type ImportReportDraft = Omit<ImportBatchReport, 'appliedAt' | 'snapshotId'>;
+
+/** A quarantined import item as a row, minus the time it is stored (the applier's clock). */
+export type ImportQuarantineDraft = Omit<ImportQuarantineRowLike, 'createdAt'>;
+
+/** Everything the report says except when it was applied and the snapshot: the compute worker builds this (step 4.2c). */
+export function buildReportDraft(batch: ApplyBatch, revisionAfter: number): ImportReportDraft {
   const { plan } = batch;
   const { preview } = plan;
   return {
     batchId: batch.batchId,
-    appliedAt,
     fileName: batch.fileName,
     format: preview.format,
     mode: plan.mode,
-    snapshotId,
     revisionBefore: batch.baseRevision,
     revisionAfter,
     mergedRecordCount: preview.mergedRecordCount,
@@ -73,16 +78,11 @@ function buildReport(batch: ApplyBatch, appliedAt: string, snapshotId: string, r
   };
 }
 
-async function storeReport(deps: ImportApplyDeps, batch: ApplyBatch, report: ImportBatchReport): Promise<string | undefined> {
-  const problems: string[] = [];
-  try {
-    await deps.batches.saveImportBatch({ id: batch.batchId, createdAt: report.appliedAt, report: report as unknown as JsonValue });
-  } catch (error) {
-    problems.push(`the batch report was not stored (${messageOf(error)})`);
-  }
-  const rows: ImportQuarantineRowLike[] = batch.plan.preview.quarantined.map((item, index) => ({
+export const completeReport = (draft: ImportReportDraft, appliedAt: string, snapshotId: string): ImportBatchReport => ({ ...draft, appliedAt, snapshotId });
+
+export function quarantineDraftsOf(batch: Pick<ApplyBatch, 'batchId' | 'plan'>): readonly ImportQuarantineDraft[] {
+  return batch.plan.preview.quarantined.map((item, index) => ({
     id: `qtn_${batch.batchId}-${index}`,
-    createdAt: report.appliedAt,
     source: 'import',
     importBatchId: batch.batchId,
     ...(item.claimedKind === undefined ? {} : { claimedKind: item.claimedKind }),
@@ -90,9 +90,20 @@ async function storeReport(deps: ImportApplyDeps, batch: ApplyBatch, report: Imp
     ...(item.rawTruncated === undefined ? {} : { rawTruncated: item.rawTruncated }),
     issues: item.issues,
   }));
+}
+
+/** Stores the batch report and its quarantine rows; a failure is reported, never thrown (the import itself is already applied). */
+export async function storeImportReport(sink: ImportBatchSink, report: ImportBatchReport, drafts: readonly ImportQuarantineDraft[]): Promise<string | undefined> {
+  const problems: string[] = [];
+  try {
+    await sink.saveImportBatch({ id: report.batchId, createdAt: report.appliedAt, report: report as unknown as JsonValue });
+  } catch (error) {
+    problems.push(`the batch report was not stored (${messageOf(error)})`);
+  }
+  const rows: ImportQuarantineRowLike[] = drafts.map((draft) => ({ ...draft, createdAt: report.appliedAt }));
   if (rows.length > 0) {
     try {
-      await deps.batches.addQuarantine(rows);
+      await sink.addQuarantine(rows);
     } catch (error) {
       problems.push(`the quarantine rows were not stored (${messageOf(error)})`);
     }
@@ -145,7 +156,7 @@ export async function applyImport(deps: ImportApplyDeps, batch: ApplyBatch, hook
   hooks.consume();
 
   const revision = committed.changes.revision;
-  const report = buildReport(batch, deps.ids.now(), snapshotId, revision);
-  const reportError = await storeReport(deps, batch, report);
+  const report = completeReport(buildReportDraft(batch, revision), deps.ids.now(), snapshotId);
+  const reportError = await storeImportReport(deps.batches, report, quarantineDraftsOf(batch));
   return { ok: true, revision, snapshotId, report, reportSaved: reportError === undefined, ...(reportError === undefined ? {} : { reportError }) };
 }

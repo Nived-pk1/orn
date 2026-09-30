@@ -14,18 +14,21 @@ import type { WriteQueue } from './write-queue';
 
 export interface SnapshotStoreOptions {
   readonly db: OrnDb;
-  readonly queue: Pick<WriteQueue, 'runOrdered'>;
+  readonly queue: Pick<WriteQueue, 'runOrdered' | 'currentRevision'>;
   readonly ids: IdFactory;
   readonly generator: { readonly app: string; readonly version: string };
   readonly onEvent?: PersistenceEventSink;
 }
 
-export type SnapshotStore = Pick<PersistenceAdapter, 'createSnapshot' | 'listSnapshots' | 'readSnapshot' | 'deleteSnapshot'> & {
+export type SnapshotStore = Pick<PersistenceAdapter, 'createSnapshot' | 'storeSnapshotBytes' | 'listSnapshots' | 'readSnapshot' | 'deleteSnapshot'> & {
   /** Periodic snapshots, oldest first: what the quota status offers for deletion. */
   deletablePeriodicIds(): Promise<readonly string[]>;
   /** Snapshot of a tolerant document as stored (the `pre_migration` snapshot); same queue order, same retention. */
   createRawSnapshot(reason: SnapshotSummary['reason'], doc: MigratableDocument, revision: number, note?: string): Promise<SnapshotSummary>;
 };
+
+/** RFC 1950 header: deflate with a window of at most 32 KiB, and the two header bytes a multiple of 31. */
+const looksLikeZlib = (bytes: Uint8Array): boolean => bytes.length > 6 && ((bytes[0] ?? 0) & 0x0f) === 8 && (((bytes[0] ?? 0) << 8) | (bytes[1] ?? 0)) % 31 === 0;
 
 const summaryOf = (row: SnapshotRow): SnapshotSummary => {
   const { blob: _blob, ...summary } = row;
@@ -72,6 +75,29 @@ export function createSnapshotStore(options: SnapshotStoreOptions): SnapshotStor
         throw new Error(`cannot snapshot revision ${revision}: the state does not serialise (${first?.path ?? ''} ${first?.message ?? ''})`);
       }
       return store(built.built);
+    },
+
+    async storeSnapshotBytes(input) {
+      const current = queue.currentRevision();
+      if (current === undefined || input.revision !== current) {
+        return {
+          ok: false,
+          code: 'STALE_REVISION',
+          message: current === undefined ? `the snapshot bytes are revision ${input.revision} but the adapter does not know its revision yet` : `the snapshot bytes are revision ${input.revision}, the adapter is at revision ${current}`,
+          ...(current === undefined ? {} : { current }),
+        };
+      }
+      if (!looksLikeZlib(input.bytes)) return { ok: false, code: 'BAD_BYTES', message: 'the snapshot bytes are not a zlib stream' };
+      const summary: SnapshotSummary = {
+        id: ids.newId('snp'),
+        createdAt: ids.now(),
+        reason: input.reason,
+        revision: input.revision,
+        schemaVersion: input.schemaVersion,
+        byteSize: input.bytes.length,
+        ...(input.note !== undefined ? { note: input.note } : {}),
+      };
+      return { ok: true, summary: await store({ summary, bytes: input.bytes }) };
     },
 
     createRawSnapshot: (reason, doc, revision, note) =>

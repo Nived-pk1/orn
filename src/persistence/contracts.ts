@@ -44,6 +44,22 @@ export interface SnapshotSummary {
   readonly note?: string;
 }
 
+/** Snapshot bytes built elsewhere (the compute worker, step 4.2c): a compressed `full` DatasetDocument, exactly as `buildSnapshot` makes it. */
+export interface SnapshotBytesInput {
+  readonly bytes: Uint8Array;
+  readonly reason: SnapshotReason;
+  /** The revision the bytes were built at. */
+  readonly revision: number;
+  /** The schema version of the document inside. */
+  readonly schemaVersion: number;
+  readonly note?: string;
+}
+
+/** `STALE_REVISION`: the bytes are not of the adapter's current revision. `BAD_BYTES`: not a zlib stream, or empty. Nothing was written in either case. */
+export type StoreSnapshotBytesResult =
+  | { readonly ok: true; readonly summary: SnapshotSummary }
+  | { readonly ok: false; readonly code: 'STALE_REVISION' | 'BAD_BYTES'; readonly message: string; readonly current?: number };
+
 /**
  * A snapshot read back as the TOLERANT document: an older snapshot has to be migrated before it can be parsed
  * strictly, so it is never handed out as a strict `DatasetDocument`. Damage is a value, never an exception.
@@ -221,6 +237,14 @@ export interface PersistenceAdapter {
    * newest five, in the same transaction (mandatory reasons and manual snapshots are never pruned).
    */
   createSnapshot(reason: SnapshotReason, state: CanonicalState, revision: number, note?: string): Promise<SnapshotSummary>;
+  /**
+   * The bytes entry point (step 4.2c, Phase 4 contract decision Q1): stores snapshot bytes built in the compute worker AS
+   * THEY ARE (no decode, no re-encode), in the write queue's order like `createSnapshot`. Refused as a value, with nothing
+   * written, when `input.revision` is not the adapter's current revision (the newest revision the write queue has been
+   * given, or the one boot loaded): a snapshot must never claim a revision the database has not reached, nor a stale one.
+   * Rejects only when storage fails.
+   */
+  storeSnapshotBytes(input: SnapshotBytesInput): Promise<StoreSnapshotBytesResult>;
   /** Newest first. Rows hold the compressed bytes as a Blob, so listing does not load them. */
   listSnapshots(): Promise<readonly SnapshotSummary[]>;
   readSnapshot(id: string): Promise<SnapshotReadResult>;

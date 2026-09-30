@@ -241,4 +241,20 @@ export const BUDGETS = {
     { operation: 'compute worker: loadReplica round trip, whole state', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 4.2b: informal; SLOW_BENCH_OPTIONS; the clone cost of D3 plus the worker part' },
   'compute worker in a real thread (design tier, hub_explosion) > sender side of that clone: v8.serialize of the design-tier state (blocks the caller)':
     { operation: 'compute worker: sender side of the state clone (v8.serialize)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 4.2b: informal; SLOW_BENCH_OPTIONS; a proxy for the main-thread blocking part of postMessage' },
+  "import in the worker code (design tier, dense, into an empty store) > importPrepareApply: the merged state's replica (freeze + index build + validateAll)":
+    { operation: "import in the worker: prepareApply (empty)", tier: 'design', shape: 'dense', budgetMs: null, note: "step 4.2c: informal; SLOW_BENCH_OPTIONS; assets: none; the worker part of the apply payload (index build + validateAll of the merged state)" },
+  "import in the worker code (design tier, dense, into an empty store) > importPreview: parse -> preview (total)":
+    { operation: "import in the worker: parse -> preview (total) (empty)", tier: 'design', shape: 'dense', budgetMs: 5000, budgetRow: 'Import 5k reactions (parse -> preview)', note: "step 4.2c: the whole parse -> preview path in the worker code (Blob in); judged against the 5 s row; SLOW_BENCH_OPTIONS; assets: none; no thread, no IndexedDB" },
+  "import in the worker code (design tier, hub_explosion, into a design-tier store, every ID conflicting) > importPrepareApply: the merged state's replica (freeze + index build + validateAll)":
+    { operation: "import in the worker: prepareApply (conflicting)", tier: 'design', shape: 'hub_explosion', budgetMs: null, note: "step 4.2c: informal; SLOW_BENCH_OPTIONS; assets: none; the worker part of the apply payload (index build + validateAll of the merged state)" },
+  "import in the worker code (design tier, hub_explosion, into a design-tier store, every ID conflicting) > importPreview: parse -> preview (total)":
+    { operation: "import in the worker: parse -> preview (total) (conflicting)", tier: 'design', shape: 'hub_explosion', budgetMs: 5000, budgetRow: 'Import 5k reactions (parse -> preview)', note: "step 4.2c: the whole parse -> preview path in the worker code (Blob in); judged against the 5 s row; SLOW_BENCH_OPTIONS; assets: none; no thread, no IndexedDB" },
+  "snapshotBuild in the worker code (design tier, dense) > snapshotBuild: serialise + compress the replica":
+    { operation: "snapshotBuild in the worker", tier: 'design', shape: 'dense', budgetMs: null, note: "step 4.2c: no PERFORMANCE_ARCHITECTURE.md §2 row; informal; SLOW_BENCH_OPTIONS; the snapshot bytes without the transfer (same work as the main-thread build of step 3.2)" },
+  "import through a real thread (design tier, dense, into an empty store) > importPrepareApply round trip (merged state and findings back)":
+    { operation: "compute worker: importPrepareApply round trip", tier: 'design', shape: 'dense', budgetMs: null, note: "step 4.2c: informal; real worker_threads thread; the merged state and its findings come back (D3)" },
+  "import through a real thread (design tier, dense, into an empty store) > receiving side of the merged state: v8.deserialize (blocks the caller)":
+    { operation: "compute worker: receiving side of the merged state (v8.deserialize)", tier: 'design', shape: 'dense', budgetMs: null, note: "step 4.2c: informal; SLOW_BENCH_OPTIONS; a proxy for the main-thread blocking part of receiving a postMessage (D3)" },
+  "import through a real thread (design tier, dense, into an empty store) > importPreview round trip (Blob in, plan out)":
+    { operation: "compute worker: importPreview round trip", tier: 'design', shape: 'dense', budgetMs: 5000, budgetRow: 'Import 5k reactions (parse -> preview)', note: "step 4.2c: informal beside the 5 s row; real worker_threads thread; the file is a Blob" },
 };

@@ -11,5 +11,13 @@ export const COMPUTE_SPECS: RpcMethodSpecs<ComputeWorkerApi> = {
   validateAll: { idempotent: true, timeoutMs: 30_000 },
   findRoutes: { idempotent: true, timeoutMs: 5_000 },
   importPreview: { idempotent: true, timeoutMs: 60_000 },
+  // The pending batch lives in the worker and is lost with it: a retried revise or prepare would only answer UNKNOWN_BATCH,
+  // and prepare is apply-like (D4), so neither is retried.
+  importRevise: { idempotent: false, timeoutMs: 60_000 },
+  importCancel: { idempotent: true, timeoutMs: 5_000 },
+  importPrepareApply: { idempotent: false, timeoutMs: 30_000 },
+  snapshotBuild: { idempotent: true, timeoutMs: 30_000 },
+  adoptPending: { idempotent: false, timeoutMs: 5_000 },
+  dropPending: { idempotent: true, timeoutMs: 5_000 },
   buildExport: { idempotent: true, timeoutMs: 30_000 },
 };

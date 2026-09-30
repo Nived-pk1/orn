@@ -9,7 +9,8 @@ import type { ChangeSet } from '@/core/dataset/contracts';
 import type { RouteQuery, RouteSearchResult } from '@/core/graph/contracts';
 import type { Finding } from '@/core/validation/contracts';
 import type { Depiction, DepictionOptions, ParseOutcome } from '@/chem/contracts';
-import type { ExportOptions, ImportPreview, ImportSource } from '@/io/contracts';
+import type { ExportOptions, ImportPlan, ImportPlanRequest, ImportPreviewErrorCode, ImportRejectionCode, ParsedAsset } from '@/io/contracts';
+import type { ImportQuarantineDraft, ImportReportDraft } from '@/io';
 import type { LayoutRequest, LayoutResult } from '@/layout/contracts';
 import type { SearchDocument, SearchHit, SearchIndexUpdate, SearchQuery } from '@/search/contracts';
 
@@ -141,6 +142,62 @@ export interface ReplicaStale {
 }
 export type ReplicaAnswer<T extends object> = ({ readonly ok: true } & T) | ReplicaStale;
 
+/**
+ * What main hands the worker in place of a clock and a random source (step 4.2c, Phase 4 contract decision Q1): the worker
+ * rebuilds an `IdFactory` from it, so its IDs are a function of the call. `nowIso` is a canonical UTC ISO timestamp with
+ * milliseconds (`toISOString()` form), `seed` an unsigned 32-bit integer. Main supplies both from its injected clock and
+ * RNG, and a NEW seed for every call (a revise that reused the previous seed would mint the previous batch's ID).
+ */
+export interface IdData {
+  readonly nowIso: string;
+  readonly seed: number;
+}
+
+/** Every reason a worker import call can be refused as a value: the session's, the parser's, and the revision rule's. */
+export interface WorkerImportFailure {
+  readonly ok: false;
+  readonly code: ImportPreviewErrorCode | ImportRejectionCode | 'STALE_REVISION';
+  readonly message: string;
+  readonly detail?: Readonly<Record<string, unknown>>;
+}
+export type WorkerImportOutcome = { readonly ok: true; readonly plan: ImportPlan } | WorkerImportFailure;
+
+/**
+ * The payload main needs to carry out an apply (step 4.2c): the merged state, its findings stamped for revision
+ * `baseRevision + 1` (what `replaceState` takes as precomputed), the report without its time and snapshot ID, the quarantine
+ * rows without their time, and the verified asset bytes (their buffers are transferred, not copied).
+ */
+export interface ImportPrepared {
+  readonly ok: true;
+  readonly batchId: string;
+  readonly baseRevision: number;
+  readonly mergedState: CanonicalState;
+  readonly precomputed: PrecomputedFindings;
+  readonly report: ImportReportDraft;
+  readonly quarantine: readonly ImportQuarantineDraft[];
+  readonly assets: readonly ParsedAsset[];
+}
+export interface ImportPrepareRefused {
+  readonly ok: false;
+  readonly code: 'UNKNOWN_BATCH' | 'PLAN_MISMATCH' | 'BLOCKED' | 'STALE_REVISION';
+  readonly message: string;
+}
+
+export type SnapshotReasonName = 'pre_import' | 'pre_migration' | 'pre_restore' | 'periodic' | 'manual';
+export type SnapshotBuildAnswer =
+  | { readonly ok: true; readonly bytes: Uint8Array; readonly revision: number; readonly reason: SnapshotReasonName; readonly schemaVersion: number }
+  | ReplicaStale
+  | { readonly ok: false; readonly code: 'SERIALIZE_FAILED'; readonly message: string };
+
+/** `adoptPending` refused as a value: the sync then reloads the replica. `have` is the replica's revision. */
+export interface AdoptRefused {
+  readonly ok: false;
+  readonly code: 'NO_PENDING' | 'PENDING_REVISION' | 'REPLICA_STALE';
+  readonly message: string;
+  readonly have: number | null;
+}
+export type AdoptAnswer = { readonly ok: true; readonly revision: number } | AdoptRefused;
+
 export interface ComputeWorkerApi {
   /**
    * Replaces the replica with `state` at `revision` and answers `validateAll` of it, stamped for adoption at that
@@ -157,6 +214,28 @@ export interface ComputeWorkerApi {
   validateAll(params: { readonly revision: number }, ctx: RpcCallContext): Promise<ReplicaAnswer<{ readonly findings: readonly Finding[] }>>;
   /** Route search over the replica (its time budget is timed inside the worker); `REPLICA_STALE` as above. `query.limits.signal` is set by the worker. */
   findRoutes(params: { readonly revision: number; readonly query: RouteQuery }, ctx: RpcCallContext): Promise<ReplicaAnswer<{ readonly result: RouteSearchResult }>>;
-  importPreview(params: { readonly source: ImportSource }, ctx: RpcCallContext): Promise<ImportPreview>;
+  /**
+   * Parse, convert (legacy), analyse against the replica, merge and validate; the result becomes THE pending batch of the
+   * worker (at most one). `source` is a Blob: structured clone shares its bytes, they are not copied. Idempotent.
+   */
+  importPreview(params: { readonly source: Blob; readonly fileName: string; readonly request?: ImportPlanRequest; readonly ids: IdData }, ctx: RpcCallContext): Promise<WorkerImportOutcome>;
+  /** The FULL desired request (not a delta) for the pending batch; `STALE_REVISION` when the replica moved since the preview. NOT idempotent (a restart lost the batch). */
+  importRevise(params: { readonly batchId: string; readonly request: ImportPlanRequest; readonly ids: IdData }, ctx: RpcCallContext): Promise<WorkerImportOutcome>;
+  importCancel(params: { readonly batchId: string }, ctx: RpcCallContext): Promise<{ readonly cancelled: boolean }>;
+  /**
+   * The pure half of apply. Refuses (as a value) an unknown batch, a plan that is not the previewed one, a blocked plan and
+   * a stale revision (`baseRevision` is main's live revision; the replica and the batch must both be at it). On success the
+   * merged state is the worker's PENDING state and the batch stays pending until `adoptPending` or `dropPending`. NOT idempotent.
+   */
+  importPrepareApply(params: { readonly batchId: string; readonly plan: ImportPlan; readonly baseRevision: number }, ctx: RpcCallContext): Promise<ImportPrepared | ImportPrepareRefused>;
+  /**
+   * Snapshot bytes of the replica at `revision`, built here and transferred; `REPLICA_STALE` for another revision. The
+   * document's `exportedAt` is `exportedAt`, main's wall-clock time (the worker's own clock is monotonic, not a date). Idempotent.
+   */
+  snapshotBuild(params: { readonly revision: number; readonly reason: SnapshotReasonName; readonly exportedAt: string }, ctx: RpcCallContext): Promise<SnapshotBuildAnswer>;
+  /** The store accepted the pending state at `revision`: the replica becomes it (no second whole-state transfer). Refusals are values. NOT idempotent. */
+  adoptPending(params: { readonly revision: number }, ctx: RpcCallContext): Promise<AdoptAnswer>;
+  /** The apply failed or was cancelled: forget the pending state (and the batch when its asset bytes already left). Idempotent. */
+  dropPending(params: Readonly<Record<string, never>>, ctx: RpcCallContext): Promise<{ readonly dropped: boolean }>;
   buildExport(params: ExportOptions, ctx: RpcCallContext): Promise<Blob>;
 }

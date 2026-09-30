@@ -16,7 +16,7 @@ import { indexEngine } from '@/core/indexes/full';
 import { RECORD_KINDS, type CanonicalState, type RecordKind, type RecordRef } from '@/core/schema';
 import { RULE_SET_ID, commitFindings, commitTouched, createFindingStore, validator as defaultValidator } from '@/core/validation';
 import type { Finding, FindingStore, Validator } from '@/core/validation';
-import type { ReplicaAnswer } from '@/workers/rpc/contracts';
+import type { AdoptAnswer, ReplicaAnswer } from '@/workers/rpc/contracts';
 import { RpcHostError } from '@/workers/rpc/helpers';
 
 enablePatches();
@@ -35,6 +35,18 @@ export interface Replica {
   apply(changes: ChangeSet): ReplicaAnswer<{ readonly revision: number }>;
   validateAll(revision: number, signal?: AbortSignal): ReplicaAnswer<{ readonly findings: readonly Finding[] }>;
   findRoutes(revision: number, query: RouteQuery, signal?: AbortSignal): ReplicaAnswer<{ readonly result: RouteSearchResult }>;
+  /**
+   * Import (step 4.2c): builds the replica for `state` at `revision` (= the replica's revision + 1) and holds it as the
+   * PENDING one, not yet the replica; answers its findings, stamped for that revision. An earlier pending state is replaced.
+   * Nothing changes if it throws. `BAD_REQUEST` when the revision does not follow the replica's.
+   */
+  prepare(state: CanonicalState, revision: number): PrecomputedFindings;
+  /** The store accepted the pending state at `revision`: it becomes the replica. Refusals are values and keep everything as it was. */
+  adopt(revision: number): AdoptAnswer;
+  /** Forgets the pending state; true when there was one. */
+  drop(): boolean;
+  /** The revision of the pending state, if any. */
+  pendingRevision(): number | undefined;
   /** The revision held, or null before the first `load`. */
   revision(): number | null;
   /** Test and bench access; throws NOT_READY before the first `load`. */
@@ -70,6 +82,17 @@ function shapeProblem(state: unknown, revision: unknown): string | undefined {
 export function createReplica(options: ReplicaOptions = {}): Replica {
   const validator = options.validator ?? defaultValidator;
   let held: Held | undefined;
+  let pending: Held | undefined;
+
+  /** The replica for a whole state: indexes, `validateAll`, a finding store filled with the result. */
+  function buildHeld(state: CanonicalState, revision: number): { readonly held: Held; readonly precomputed: PrecomputedFindings } {
+    const frozen = freeze(state, true);
+    const indexes = indexEngine.build(frozen, revision);
+    const found = validator.validateAll(frozen, indexes);
+    const findings = createFindingStore();
+    commitFindings(findings, refsOf(frozen), found);
+    return { held: { state: frozen, revision, indexes, findings }, precomputed: { findings: found, ruleSet: RULE_SET_ID, revision, recordCounts: recordCountsOf(frozen) } };
+  }
 
   const stale = (have: number): { readonly ok: false; readonly code: 'REPLICA_STALE'; readonly have: number } => ({ ok: false, code: 'REPLICA_STALE', have });
   const need = (): Held => {
@@ -84,14 +107,41 @@ export function createReplica(options: ReplicaOptions = {}): Replica {
     load(state, revision) {
       const problem = shapeProblem(state, revision);
       if (problem !== undefined) throw new RpcHostError('BAD_REQUEST', `loadReplica: ${problem}`);
-      const frozen = freeze(state, true);
-      const indexes = indexEngine.build(frozen, revision);
-      const found = validator.validateAll(frozen, indexes);
-      const findings = createFindingStore();
-      commitFindings(findings, refsOf(frozen), found);
-      held = { state: frozen, revision, indexes, findings };
-      return { findings: found, ruleSet: RULE_SET_ID, revision, recordCounts: recordCountsOf(frozen) };
+      const built = buildHeld(state, revision);
+      held = built.held;
+      // A whole new state supersedes anything prepared against the old one.
+      pending = undefined;
+      return built.precomputed;
     },
+
+    prepare(state, revision) {
+      const replica = need();
+      const problem = shapeProblem(state, revision);
+      if (problem !== undefined) throw new RpcHostError('BAD_REQUEST', `prepare: ${problem}`);
+      if (revision !== replica.revision + 1) throw new RpcHostError('BAD_REQUEST', `prepare: the pending state must be revision ${replica.revision + 1}, not ${revision}`);
+      const built = buildHeld(state, revision);
+      pending = built.held;
+      return built.precomputed;
+    },
+
+    adopt(revision) {
+      const have = held?.revision ?? null;
+      if (held === undefined) return { ok: false, code: 'REPLICA_STALE', message: 'no replica is loaded', have };
+      if (pending === undefined) return { ok: false, code: 'NO_PENDING', message: 'there is no pending state to adopt', have };
+      if (pending.revision !== revision) return { ok: false, code: 'PENDING_REVISION', message: `the pending state is revision ${pending.revision}, not ${revision}`, have };
+      if (held.revision + 1 !== revision) return { ok: false, code: 'REPLICA_STALE', message: `the replica is at revision ${held.revision}, the pending state does not follow it`, have };
+      held = pending;
+      pending = undefined;
+      return { ok: true, revision };
+    },
+
+    drop() {
+      const had = pending !== undefined;
+      pending = undefined;
+      return had;
+    },
+
+    pendingRevision: () => pending?.revision,
 
     apply(changes) {
       const replica = need();
@@ -109,6 +159,8 @@ export function createReplica(options: ReplicaOptions = {}): Replica {
         replica.revision = changes.revision;
         replica.indexes = nextIndexes;
         commitTouched(replica.findings, validation);
+        // A pending import was prepared against the revision before this one; it can never be adopted now.
+        pending = undefined;
         return { ok: true, revision: replica.revision };
       } catch (error) {
         // `indexEngine.apply` consumes the old handle; rebuild it for the state the replica still holds.

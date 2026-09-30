@@ -14,7 +14,8 @@ import type { IdFactory } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
 import { canonicalJson } from './canonical-json';
 import type { ImportDecision, ImportParseResult, LegacyImportReport, ImportPlan, ImportPlanRequest, ImportPreviewOutcome, ImportApplyResult, TaskOptions } from './contracts';
-import { applyImport, type ApplyBatch } from './import-apply';
+import { applyImport, type ApplyBatch, type ImportApplyDeps } from './import-apply';
+import { prepareImportApply, type PrepareApplyOutcome } from './import-prepare';
 import { analyzeConflicts } from './import-conflicts';
 import { buildMergedReplica } from './import-merge';
 import { convertLegacy } from './import-legacy';
@@ -24,11 +25,16 @@ import { resolveRequest } from './import-request';
 import { validateMerged } from './import-validate';
 
 export interface ImportSessionDeps {
-  readonly store: ImportStorePort;
+  /** A session that only previews needs `getState` and `getRevision`; `apply` needs the whole port. */
+  readonly store: Pick<ImportStorePort, 'getState' | 'getRevision'> & Partial<ImportStorePort>;
   readonly ids: IdFactory;
-  readonly snapshots: SnapshotPort;
-  readonly batches: ImportBatchSink;
-  readonly assetStage: AssetStagePort;
+  /**
+   * The write ports of `apply`. A session without them (the compute worker's, step 4.2c) previews, revises, cancels and
+   * `prepareApply`s; its `apply` answers `REJECTED` as a value. Give all three or none.
+   */
+  readonly snapshots?: SnapshotPort;
+  readonly batches?: ImportBatchSink;
+  readonly assetStage?: AssetStagePort;
 }
 
 export interface PreviewInput {
@@ -43,9 +49,19 @@ export interface ImportSession {
   /** A new plan for the pending batch with the FULL desired request (not a delta); a new `batchId`, the old one is discarded. */
   revise(batchId: string, request: ImportPlanRequest, task?: TaskOptions): Promise<ImportPreviewOutcome>;
   apply(batchId: string, plan: ImportPlan): Promise<ImportApplyResult>;
+  /**
+   * The pure half of `apply` (step 4.2c): the refusals and the payload, nothing written. `liveRevision` is the caller's
+   * current revision; the batch is valid only while it equals the revision the preview was built on (a stale one is
+   * consumed, as in `apply`). A success leaves the batch pending: call `consume` once the apply succeeded.
+   */
+  prepareApply(batchId: string, plan: ImportPlan, liveRevision: number): PrepareApplyOutcome;
+  /** The batch is used up (an apply the caller carried out succeeded). False for an unknown batch. */
+  consume(batchId: string): boolean;
   /** Discards the pending batch if it is `batchId`; false for an unknown batch. Changes nothing else. */
   cancel(batchId: string): boolean;
   pendingBatchId(): string | undefined;
+  /** The revision the pending batch was built on. */
+  pendingBaseRevision(): number | undefined;
 }
 
 interface Pending extends ApplyBatch {
@@ -111,6 +127,17 @@ export function createImportSession(deps: ImportSessionDeps): ImportSession {
     return { ok: true, batch: { batchId, fileName, baseRevision, merged: merge.state, stagedAssets: merge.stagedAssets, plan, parsed: source, copyIds } };
   }
 
+  /** The pending batch when `batchId` names it and `plan` is the one that was previewed; otherwise the refusal as a value. */
+  function checkedBatch(batchId: string, plan: ImportPlan): Pending | Extract<PrepareApplyOutcome, { ok: false }> {
+    const batch = pending;
+    if (batch === undefined || batch.batchId !== batchId) return { ok: false, code: 'UNKNOWN_BATCH', message: UNKNOWN };
+    const submitted = planIdentity(plan);
+    if (submitted === undefined || submitted !== planIdentity(batch.plan)) {
+      return { ok: false, code: 'PLAN_MISMATCH', message: 'the plan differs from the one that was previewed; revise it to get a new preview, then confirm that one' };
+    }
+    return batch;
+  }
+
   function install(batch: Pending): ImportPreviewOutcome {
     pending = batch;
     return { ok: true, plan: batch.plan };
@@ -129,14 +156,29 @@ export function createImportSession(deps: ImportSessionDeps): ImportSession {
       return built.ok ? install(built.batch) : built;
     },
 
+    prepareApply(batchId, plan, liveRevision) {
+      const batch = checkedBatch(batchId, plan);
+      if ('code' in batch) return batch;
+      const prepared = prepareImportApply(batch, liveRevision);
+      if (!prepared.ok && prepared.code === 'STALE_REVISION') pending = undefined;
+      return prepared;
+    },
+
+    consume(batchId) {
+      if (pending === undefined || pending.batchId !== batchId) return false;
+      pending = undefined;
+      return true;
+    },
+
     async apply(batchId, plan) {
-      const batch = pending;
-      if (batch === undefined || batch.batchId !== batchId) return { ok: false, code: 'UNKNOWN_BATCH', message: UNKNOWN };
-      const submitted = planIdentity(plan);
-      if (submitted === undefined || submitted !== planIdentity(batch.plan)) {
-        return { ok: false, code: 'PLAN_MISMATCH', message: 'the plan differs from the one that was previewed; revise it to get a new preview, then confirm that one' };
+      const batch = checkedBatch(batchId, plan);
+      if ('code' in batch) return batch;
+      const { snapshots, batches, assetStage, store } = deps;
+      if (snapshots === undefined || batches === undefined || assetStage === undefined || store.isReadOnly === undefined || store.replaceState === undefined) {
+        return { ok: false, code: 'REJECTED', message: 'this import session has no write ports (it only prepares an apply); nothing was imported' };
       }
-      return applyImport(deps, batch, {
+      const applyDeps: ImportApplyDeps = { store: store as ImportStorePort, ids: deps.ids, snapshots, batches, assetStage };
+      return applyImport(applyDeps, batch, {
         stillPending: () => pending === batch,
         consume: () => {
           if (pending === batch) pending = undefined;
@@ -151,5 +193,6 @@ export function createImportSession(deps: ImportSessionDeps): ImportSession {
     },
 
     pendingBatchId: () => pending?.batchId,
+    pendingBaseRevision: () => pending?.baseRevision,
   };
 }

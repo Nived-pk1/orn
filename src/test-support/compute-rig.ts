@@ -36,6 +36,8 @@ export interface RigOptions {
   readonly maxBacklog?: number;
   readonly maxBacklogRecords?: number;
   readonly maxRestarts?: number;
+  /** The instant the workers' handlers report as their monotonic clock (the route budget's). */
+  readonly nowMs?: () => number;
   /** Wraps the handlers of worker `index` (0 = the first start, 1 = after the first restart, ...). */
   readonly wrap?: (index: number, api: ComputeWorkerApi, worker: MemoryWorker) => ComputeWorkerApi;
 }
@@ -47,7 +49,7 @@ export function rig(options: RigOptions = {}): Rig {
   const calls: Call[] = [];
   const concurrency = { current: 0, max: 0 };
   const memory = createMemoryWorkers((worker, index) => {
-    const { api: real, replica } = createComputeHandlers();
+    const { api: real, replica } = createComputeHandlers(options.nowMs === undefined ? {} : { nowMs: options.nowMs });
     replicas.push(replica);
     const api = options.wrap?.(index, real, worker) ?? real;
     // Logged outside the wrapper, so a call that crashes the worker is on record too.
@@ -72,6 +74,14 @@ export function rig(options: RigOptions = {}): Rig {
         return api.validateAll(params, ctx);
       },
     };
+    // The import-related calls (step 4.2c) are on record too, by name.
+    for (const method of ['importPreview', 'importRevise', 'importCancel', 'importPrepareApply', 'snapshotBuild', 'adoptPending', 'dropPending'] as const) {
+      const inner = logged[method] as (params: never, ctx: never) => Promise<unknown>;
+      (logged as unknown as Record<string, unknown>)[method] = (params: never, ctx: never) => {
+        calls.push({ worker: index, method });
+        return inner(params, ctx);
+      };
+    }
     createRpcHost(worker.host, logged);
   });
   const sync = createReplicaSync({

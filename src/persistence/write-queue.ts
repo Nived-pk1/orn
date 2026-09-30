@@ -57,6 +57,8 @@ export interface WriteQueue {
   setReadOnly(readOnly: boolean): void;
   /** Revision of the newest ChangeSet waiting to be written, if any. */
   pendingRevision(): number | undefined;
+  /** The newest revision the queue has been given (or started from); undefined when it does not know one yet. */
+  currentRevision(): number | undefined;
   /**
    * Continues from `revision` after a full re-save of the state at that revision (`replaceAll`). Only call it from
    * inside an ordered task, after the write succeeded: it supersedes pending ChangeSets up to `revision` (newer ones
@@ -260,6 +262,7 @@ export function createWriteQueue(options: WriteQueueOptions): WriteQueue {
       else if (status.state === 'read_only') setStatus(pendingCount() > 0 ? 'saving' : 'saved');
     },
     pendingRevision: () => pending?.revision,
+    currentRevision: () => lastEnqueued,
     resync(revision) {
       if (pending !== undefined && pending.revision <= revision) pending = undefined;
       if (pending === undefined) lastEnqueued = revision;

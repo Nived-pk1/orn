@@ -248,6 +248,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
       return runBoot(ports, { promotion: true });
     },
     createSnapshot: (reason, state, revision, note) => snapshots.createSnapshot(reason, state, revision, note),
+    storeSnapshotBytes: (input) => snapshots.storeSnapshotBytes(input),
     listSnapshots: () => snapshots.listSnapshots(),
     readSnapshot: (id) => snapshots.readSnapshot(id),
     deleteSnapshot: (id) => snapshots.deleteSnapshot(id),
