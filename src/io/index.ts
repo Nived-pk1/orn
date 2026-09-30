@@ -33,9 +33,12 @@ export { createImportSession } from './import-session';
 export type { ImportSession, ImportSessionDeps, PreviewInput } from './import-session';
 export type { AssetStagePort, ImportBatchRowLike, ImportBatchSink, ImportQuarantineRowLike, ImportStorePort, SnapshotPort } from './import-ports';
 export {
+  createDocumentIds,
   createLegacyIdSpace,
+  createReportBuilder,
   findDroppedLeaves,
   legacyAssetId,
+  mapLegacyCompounds,
   LEGACY_V5_SCHEMA_VERSION,
   migrateLegacyReaction,
   normalizeLegacyData,
@@ -46,6 +49,14 @@ export {
 } from './legacy-v6';
 export type {
   DroppedLeaf,
+  HubDecision,
+  HubInfo,
+  LegacyDocumentIds,
+  MapCompoundsInput,
+  MapCompoundsOptions,
+  MapCompoundsResult,
+  MappedCompounds,
+  ReportBuilder,
   IdCollision,
   LegacyIdSpace,
   LegacyIdSpaceInput,

@@ -167,6 +167,13 @@ export interface LegacyImportReport {
   readonly preservedUnmappedFields: Readonly<Record<string, number>>;
   /** Anything that could not be imported at all (should be empty; each entry explains why). */
   readonly notImported: readonly { readonly legacyId: string; readonly reason: string }[];
+  /**
+   * MIGRATION.md §4.8: empty legacy values that v6 replaced by defaults (`""`, `[]`, `{}`, `null`) count as consumed by default.
+   * Legacy path with every index written `[*]` (for example `compounds[*].name`) → occurrences.
+   */
+  readonly consumedByDefault: Readonly<Record<string, number>>;
+  /** Informational items nobody has to decide (not in `reviewItems`), by code → occurrences (for example `FLAG_SUBSUMED`). */
+  readonly notes: Readonly<Record<string, number>>;
 }
 
 /** How many findings of each severity the merged result has (all of them, even when the list below is capped). */

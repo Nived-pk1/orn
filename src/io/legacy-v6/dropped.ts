@@ -25,7 +25,7 @@ export interface DroppedLeaf {
   readonly reason: 'changed' | 'not_in_output';
 }
 
-type Segment = string | number;
+export type Segment = string | number;
 
 const isScalar = (value: unknown): value is LegacyScalar => value === null || ['string', 'number', 'boolean'].includes(typeof value);
 
@@ -47,7 +47,7 @@ function getAt(root: unknown, path: readonly Segment[]): unknown {
 }
 
 /** Every scalar leaf of `value`, depth-first, in key order. Iterative: legacy input depth is capped upstream, but nothing here recurses. */
-function* leavesOf(value: unknown, base: readonly Segment[] = []): Generator<{ path: readonly Segment[]; value: LegacyScalar }> {
+export function* leavesOf(value: unknown, base: readonly Segment[] = []): Generator<{ path: readonly Segment[]; value: LegacyScalar }> {
   const stack: { path: readonly Segment[]; value: unknown }[] = [{ path: base, value }];
   while (stack.length > 0) {
     const item = stack.pop() as { path: readonly Segment[]; value: unknown };

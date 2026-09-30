@@ -19,6 +19,10 @@ export interface LegacyIdSpaceInput {
   readonly concepts?: Iterable<string>;
   readonly namedReactions?: Iterable<string>;
   readonly topics?: Iterable<string>;
+  /** Functional-group ids as they stand in v5 data (`fgId`, `functionalGroups[]`), exact text: each may become a `functional_group` class. */
+  readonly functionalGroups?: Iterable<string>;
+  /** `compoundClass` texts: each may become a class (matched by folded name first, else created). */
+  readonly classTexts?: Iterable<string>;
   /** `relatedReactions` pairs of legacy reaction IDs; order and repeats do not matter, a reaction related to itself is ignored. */
   readonly relatedPairs?: Iterable<readonly [string, string]>;
 }
@@ -44,6 +48,10 @@ export interface LegacyIdSpace {
   conceptId(text: string): string;
   namedReactionId(text: string): string;
   topicId(text: string): string;
+  /** `cls_v6-fg-<part>`: the `functional_group` class of a functional-group id (exact text, as v6 stores it). */
+  functionalGroupClassId(functionalGroup: string): string;
+  /** `cls_v6-l-<slug>-<hash6>`: the class created from a `compoundClass` text (deduplicated by folded text). */
+  classFromTextId(text: string): string;
 }
 
 /** Injective key of an unordered pair (a separator character could be part of a legacy ID). */
@@ -74,6 +82,8 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
   const concepts = settle('concept', folded(input.concepts), textLadder);
   const namedReactions = settle('named_reaction', folded(input.namedReactions), textLadder);
   const topics = settle('topic', folded(input.topics), textLadder);
+  const functionalGroups = settle('functional_group', input.functionalGroups ?? [], legacyLadder);
+  const classTexts = settle('class_text', folded(input.classTexts), textLadder);
 
   // A pair's natural part joins the two reaction parts; different pairs can join to the same text ("a-b"+"c" vs "a"+"b-c").
   // Every pair whose reactions are registered is settled here; a pair naming an unregistered reaction is a programmer error.
@@ -123,6 +133,8 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
     conceptId: (value) => `cpt_v6-${text(concepts, value, 'concept text')}`,
     namedReactionId: (value) => `nrx_v6-${text(namedReactions, value, 'named reaction text')}`,
     topicId: (value) => `top_v6-${text(topics, value, 'topic text')}`,
+    functionalGroupClassId: (value) => `cls_v6-fg-${lookup(functionalGroups, value, 'functional-group id')}`,
+    classFromTextId: (value) => `cls_v6-l-${text(classTexts, value, 'compoundClass text')}`,
   };
 }
 
