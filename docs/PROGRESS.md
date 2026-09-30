@@ -2296,6 +2296,7 @@ Docs-only record of the reviewer's decisions on the "Phase 4 plan review" contra
 5. **Plan observations:** 1 → `snapshotBuild` and the bytes entry point move to the import/export step (4.2c); 2 → `adoptPending` approved (compute-core step 4.2b); 3 → measure boot's per-record L1 and the clone into the worker in the boot/follower step (4.2d), decide at its review; 4 → step 4.1 decides the worker fixture (tsx first, else a self-contained `.mjs` host, and says which); 5 → check `elkjs` under the production CSP in 4.4; 6 → split (below); 7 → ADR-034 states it.
 6. **Step split.** IMPLEMENTATION_PLAN §2 replaces 4.2a-4.2c with 4.2a (store accepts precomputed findings, no worker), 4.2b (compute worker core), 4.2c (import, export, `snapshotBuild`, bytes entry point) and 4.2d (snapshot decode and restore, boot, follower; measurements D3 and observation 3). Each moved Work and Must cover text is kept. PROJECT_STATE openItems' " -> step 4.x" markers follow the new numbers; `nextStep` is 4.1.
 7. **2026-09-30 (step 4.2a review): Q1 `adoptPending` moves from 4.2b to 4.2c** (the first producer of a pending state is import). 4.2b keeps `loadReplica` returning the findings; Q10 (b) stays with 4.3b.
+8. **2026-09-30 (step 4.2b review): the old 4.2c is split.** 4.2c = import in the worker, `snapshotBuild`, the bytes entry point, `adoptPending`; new 4.2e (after 4.2d) = export (`exportPlan`, `exportBuild`). The Q1 landing (`snapshotBuild`, bytes entry point, per-call IdFactory data) stays in 4.2c.
 
 ### Step 4.1 — RPC library (`src/workers/rpc`) (2026-09-30)
 
@@ -2391,6 +2392,18 @@ Follow-ups, done in commit "phase-4.1: review follow-ups" (`src/workers/rpc`):
 7. `in_sync` means "following": ChangeSets may still be queued (`queued`, `settled()` says when caught up).
 
 **Open items.** See PROJECT_STATE openItems (Phase 9 exception 5 closed on the worker path; the D3 clone measurements; app wiring in Phase 5).
+
+### Step 4.2b review (reviewer, 2026-09-30)
+
+**Verdict: ACCEPTED.** Decisions:
+1. `findRoutes { revision, query }` and the new result shapes: approved.
+2. The replica keeps the full index engine: approved (off the main thread; hub edits are rare).
+3. Backlog bounds 100 ChangeSets AND 2,000 touched records: approved.
+4. A refused reload ends in `down`: approved. PROJECT_STATE openItem added: "Phase 5: show the compute replica status (down, reloading) and offer a retry that creates a new sync."
+5. `NOT_READY` for import/export until their steps: approved. 6 and 7: approved.
+8. Watch item (openItem, Gate E): sending the whole state to the worker blocks the main thread for the serialise part (56.8-190.8 ms p99 measured); it happens at boot, restart and reload only.
+9. Plan change: the old 4.2c is split. New 4.2c = import in the worker + `snapshotBuild` + the bytes entry point + `adoptPending`. New 4.2e (after 4.2d) = export (`exportPlan`, `exportBuild`). IMPLEMENTATION_PLAN §2 updated (the export Work and Must cover text moved to 4.2e), the " -> step 4.x" markers in PROJECT_STATE follow, and a dated line 8 is added to "Phase 4 contract decisions".
+
 
 ## Amendments
 - **2026-09-30, step 4.2b — `ComputeWorkerApi`: `loadReplica` answers `PrecomputedFindings`; `applyChanges`, `validateAll`, `findRoutes` answer `ReplicaAnswer<...>` (ok or `ReplicaStale` with `have`); `findRoutes` takes `{ revision, query }`; `WorkerEvent` gains `replica_status` (contract additions and one shape change, CLAUDE.md §7; Phase 4 plan row 4.2b).** Problem: the replica must be revision-checked and its stale answers must be values the client can act on; `loadReplica` must return what the store accepts as precomputed findings; a bare `RouteQuery` cannot name a revision. Smallest change: the result types above (a stale answer is `{ ok: false, code: 'REPLICA_STALE', have }`, the same value for the three calls), `findRoutes` params `{ revision, query }`, one new `WorkerEvent` variant. No other method changed. ADR-034 gets a bullet; `tests/types/rpc-contracts.test.ts` updated for the new `validateAll` type. Reason: docs/IMPLEMENTATION_PLAN.md step 4.2b and its specifics (loadReplica returns the findings; REPLICA_STALE as a value).
