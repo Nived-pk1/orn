@@ -3,6 +3,7 @@
  * `startChemHost`, which the tests also start over an in-memory port and a `worker_threads` port. RDKit and its WASM are loaded
  * lazily, on the first call, from the build's own asset (no CDN).
  */
+import '@/workers/zod-jitless';
 import { loadRdkit } from '@/chem';
 import { RDKIT_WASM_URL } from '@/chem/rdkit/wasm-url';
 import { workerScopePort, type WorkerScopeLike } from '@/workers/rpc/browser-port';
