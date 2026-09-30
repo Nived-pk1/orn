@@ -32,6 +32,9 @@ export interface ImportHost {
   failed(): boolean;
 }
 
+/** Later calls on a batch whose asset bytes left with a failed apply (follow-up a, step 4.2c review): say why, not just "unknown". */
+const USED_UP = 'the file data of this preview was handed over to an apply that failed and is gone; run the preview again';
+
 const cancelled = { ok: false, code: 'CANCELLED', message: 'the import was cancelled before it started' } as const;
 
 /** The buffers behind `assets`, each once; a SharedArrayBuffer cannot be transferred and is left to be cloned. */
@@ -60,6 +63,8 @@ export function createImportHost(replica: Replica): ImportHost {
 
   /** The batch whose merged state is the replica's pending one, and whether its asset bytes already left the worker. */
   let prepared: { readonly batchId: string; handedOver: boolean } | undefined;
+  /** The one batch (at most) that a failed apply used up; forgotten when a newer preview replaces the pending batch. */
+  let usedUp: string | undefined;
   let queue: Promise<unknown> = Promise.resolve();
   /** One call at a time: the session is stateful and the preview awaits. */
   function serial<T>(job: () => Promise<T>): Promise<T> {
@@ -90,6 +95,7 @@ export function createImportHost(replica: Replica): ImportHost {
           if (!parsed.ok) return { ok: false, code: parsed.code, message: parsed.message, ...(parsed.detail === undefined ? {} : { detail: parsed.detail }) };
           const outcome: ImportPreviewOutcome = await session.preview({ parsed: parsed.result, fileName: params.fileName, ...(params.request === undefined ? {} : { request: params.request }) }, task);
           syncPending();
+          usedUp = undefined;
           return outcome;
         } finally {
           current = undefined;
@@ -100,6 +106,7 @@ export function createImportHost(replica: Replica): ImportHost {
       serial(async () => {
         if (ctx.signal.aborted) return cancelled;
         const live = replica.snapshot().revision;
+        if (params.batchId === usedUp) return { ok: false, code: 'UNKNOWN_BATCH', message: USED_UP };
         current = idFactoryFrom(params.ids);
         try {
           if (session.pendingBatchId() === params.batchId && session.pendingBaseRevision() !== live) {
@@ -125,6 +132,7 @@ export function createImportHost(replica: Replica): ImportHost {
     prepareApply: (params) =>
       serial(async () => {
         const live = replica.snapshot().revision;
+        if (params.batchId === usedUp) return { ok: false, code: 'UNKNOWN_BATCH', message: USED_UP };
         // The replica must be where main's store is, and where the preview was built.
         const outcome = session.prepareApply(params.batchId, params.plan, params.baseRevision);
         if (!outcome.ok) return outcome;
@@ -157,7 +165,10 @@ export function createImportHost(replica: Replica): ImportHost {
 
     failed() {
       const dropped = replica.drop();
-      if (prepared?.handedOver === true) session.cancel(prepared.batchId);
+      if (prepared?.handedOver === true) {
+        session.cancel(prepared.batchId);
+        usedUp = prepared.batchId;
+      }
       prepared = undefined;
       return dropped;
     },

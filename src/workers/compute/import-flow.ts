@@ -50,6 +50,8 @@ export interface ComputeImport {
 }
 
 const STALE = 'data changed since the preview; run it again';
+/** Said by every failed apply of a batch whose asset files left the worker with the prepared result (the import host says it for later calls). */
+export const PREVIEW_AGAIN = ' The file data of this preview was handed over to the failed apply and is gone; run the preview again.';
 const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 type Failure = Extract<ImportApplyResult, { ok: false }>;
 const failure = (code: Failure['code'], message: string, error?: CommandError): Failure => ({ ok: false, code, message, ...(error === undefined ? {} : { error }) });
@@ -89,20 +91,23 @@ export function createComputeImport(deps: ComputeImportDeps): ComputeImport {
     if (!prepared.ok) return rpcFailure(prepared.error, 'prepare the import');
     if (!prepared.value.ok) return failure(prepared.value.code, prepared.value.message);
     const batch = prepared.value;
+    // Its asset buffers were transferred to main: whatever happens next, this batch cannot be applied again (follow-up a).
+    const again = batch.assets.length > 0 ? PREVIEW_AGAIN : '';
+    const fail = (code: Failure['code'], message: string, error?: CommandError): Failure => failure(code, message + again, error);
     if (store.getRevision() !== baseRevision) {
       await abandon(undefined);
-      return failure('STALE_REVISION', STALE);
+      return fail('STALE_REVISION', STALE);
     }
 
     const built = await client.snapshotBuild({ revision: baseRevision, reason: 'pre_import', exportedAt: deps.ids.now() });
     if (!built.ok) {
       await abandon(undefined);
-      return failure('SNAPSHOT_FAILED', `the pre_import snapshot could not be built, so nothing was imported (${built.error.code}: ${built.error.message})`);
+      return fail('SNAPSHOT_FAILED', `the pre_import snapshot could not be built, so nothing was imported (${built.error.code}: ${built.error.message})`);
     }
     const bytes = built.value;
     if (!bytes.ok) {
       await abandon(undefined);
-      return bytes.code === 'REPLICA_STALE' ? failure('STALE_REVISION', STALE) : failure('SNAPSHOT_FAILED', `the pre_import snapshot could not be built, so nothing was imported (${bytes.message})`);
+      return bytes.code === 'REPLICA_STALE' ? fail('STALE_REVISION', STALE) : fail('SNAPSHOT_FAILED', `the pre_import snapshot could not be built, so nothing was imported (${bytes.message})`);
     }
     let snapshotId: string;
     try {
@@ -115,21 +120,21 @@ export function createComputeImport(deps: ComputeImportDeps): ComputeImport {
       });
       if (!stored.ok) {
         await abandon(undefined);
-        return stored.code === 'STALE_REVISION' ? failure('STALE_REVISION', STALE) : failure('SNAPSHOT_FAILED', `the pre_import snapshot was refused, so nothing was imported (${stored.message})`);
+        return stored.code === 'STALE_REVISION' ? fail('STALE_REVISION', STALE) : fail('SNAPSHOT_FAILED', `the pre_import snapshot was refused, so nothing was imported (${stored.message})`);
       }
       snapshotId = stored.summary.id;
     } catch (error) {
       await abandon(undefined);
-      return failure('SNAPSHOT_FAILED', `the pre_import snapshot could not be written, so nothing was imported (${messageOf(error)})`);
+      return fail('SNAPSHOT_FAILED', `the pre_import snapshot could not be written, so nothing was imported (${messageOf(error)})`);
     }
 
     if (applying?.superseded === true) {
       await abandon(snapshotId);
-      return failure('UNKNOWN_BATCH', 'the import was cancelled or replaced by a newer preview; nothing was imported');
+      return fail('UNKNOWN_BATCH', 'the import was cancelled or replaced by a newer preview; nothing was imported');
     }
     if (store.getRevision() !== baseRevision) {
       await abandon(snapshotId);
-      return failure('STALE_REVISION', STALE);
+      return fail('STALE_REVISION', STALE);
     }
 
     let committed: ReturnType<ImportStorePort['replaceState']>;
@@ -139,13 +144,13 @@ export function createComputeImport(deps: ComputeImportDeps): ComputeImport {
       committed = store.replaceState(batch.mergedState, 'import', batch.precomputed);
     } catch (error) {
       await abandon(snapshotId);
-      return failure('REJECTED', `the import could not be applied (${messageOf(error)}); nothing was changed`);
+      return fail('REJECTED', `the import could not be applied (${messageOf(error)}); nothing was changed`);
     } finally {
       deps.assetStage.clear();
     }
     if (!committed.ok) {
       await abandon(snapshotId);
-      return failure(committed.error.code === 'READ_ONLY' ? 'READ_ONLY' : 'REJECTED', committed.error.message, committed.error);
+      return fail(committed.error.code === 'READ_ONLY' ? 'READ_ONLY' : 'REJECTED', committed.error.message, committed.error);
     }
 
     const revision = committed.changes.revision;

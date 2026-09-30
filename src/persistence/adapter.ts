@@ -25,7 +25,7 @@ import { prepareTransactionRows } from './rows';
 import { createSnapshotStore } from './snapshot-store';
 import { createWriteQueue } from './write-queue';
 
-const DEFAULT_GENERATOR = { app: 'organic-reaction-navigator', version: '0.1.0' } as const;
+export const DEFAULT_GENERATOR = { app: 'organic-reaction-navigator', version: '0.1.0' } as const;
 
 /** Blobs whose bytes were hashed and matched; a retried write does not hash them again. */
 const verifiedBlobs = new WeakSet<Blob>();

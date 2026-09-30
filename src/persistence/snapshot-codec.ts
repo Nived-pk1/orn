@@ -17,7 +17,7 @@ import type { SnapshotReason, SnapshotSummary } from './contracts';
 
 /** Same as the package-import cap (docs/SECURITY.md §3): the largest JSON text a snapshot may inflate to. */
 export const SNAPSHOT_MAX_JSON_BYTES = 200 * 1024 * 1024;
-const COMPRESSION_LEVEL = 6;
+export const COMPRESSION_LEVEL = 6;
 
 /**
  * What a stored document must look like to be handed to a migration: the format and a records object. The version is
