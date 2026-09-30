@@ -66,7 +66,7 @@ Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§
 The current phase, completed steps, gate statuses and next step are recorded in `docs/PROJECT_STATE.json` (read it every session; it is the only place they are kept). Do not restate them here. History and decisions: `docs/PROGRESS.md`.
 
 ## 17. Next phase
-Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 3, step 3.1; Gates A and B passed.)
+Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 4 plan review next; Gates A, B, C passed.)
 
 ## 18. Forbidden shortcuts
 1. Storing graphs, edges, layouts, derived relations, computed chemistry, scope or findings in records.
@@ -98,6 +98,7 @@ npm run lint:deps            # dependency-cruiser boundary rules
 npm run check:size           # ≤ 400 lines per source file
 npm run check:hardcode       # no dataset IDs/names in production code
 npm run check:control-chars  # no raw control characters (NUL etc.) in docs, data, source
+npm run check:bench-budgets  # every bench() has a tests/perf/budgets.mjs entry and vice versa (static)
 npm test                     # all Vitest tests
 npm run test:property        # property tests only
 npm run test:adversarial     # adversarial matrix only

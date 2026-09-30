@@ -2,12 +2,13 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-09-30",
-  "currentPhase": 3,
-  "currentPhaseStatus": "in_progress",
+  "currentPhase": 4,
+  "currentPhaseStatus": "not_started",
   "completedPhases": [
     0,
     1,
-    2
+    2,
+    3
   ],
   "completedSteps": [
     "0",
@@ -51,9 +52,9 @@
     "3.11c",
     "3.12"
   ],
-  "nextPhase": 3,
-  "nextStep": "Gate C review",
-  "nextStepTitle": "Gate C review (human reviewer): verdict to be recorded in docs/PROGRESS.md (\"Gate C review: verdict pending (reviewer)\"); then a separate session tags phase-3. No Phase 4 step yet. Packet: docs/reviews/gate-c-packet.md",
+  "nextPhase": 4,
+  "nextStep": "Phase 4 plan review (reviewer)",
+  "nextStepTitle": "Phase 4 plan review (reviewer): the plan for Phase 4 (compute worker) is reviewed before any Phase 4 step starts. No step 4.1 yet.",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -72,8 +73,9 @@
     "C": {
       "phase": 3,
       "title": "Persistence and import",
-      "status": "pending",
-      "note": "packet written 2026-09-30, docs/reviews/gate-c-packet.md"
+      "status": "passed",
+      "date": "2026-09-30",
+      "note": "Reviewed by the human reviewer: PASS after steps 3.1-3.12, under the exit rule in docs/TEST_STRATEGY.md §6 (recorded in docs/PROGRESS.md, \"Gate C review recorded (reviewer, 2026-09-30)\"). Six documented Phase 9 exceptions from docs/reviews/gate-c-packet.md §8 (class-hub parent move 51.0 ms, like-water hub review-status change 21.6 ms, validateTouched without previous state 34.9/41.5 ms, writer replaceReferences on the 1,000-reaction hub 216 ms, follower applyRemote 200 ms, snapshot build 395 ms / restore 1,621 ms on the main thread); the import-preview candidate is a watch item, not an exception. Packet: docs/reviews/gate-c-packet.md. Tag phase-3."
     },
     "E": {
       "phase": 5,
@@ -97,7 +99,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (Vitest 4.1.11: 158 files, 2606 tests; step 3.12, 2026-09-30).",
+    "npmRunCheck": "passed (Vitest 4.1.11: 159 files, 2612 tests; Gate C review recorded, 2026-09-30).",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -150,7 +152,9 @@
     "legacyImportBench": "step 3.11c: tests/perf/legacy-import.bench.ts run once alone (bench:baseline not run), parse -> preview into an empty store, mean / p99 ms against the 5,000 ms \"Import 5k reactions (parse -> preview)\" row: v6-demo-export.json (22 reactions) 16.7 / 24.1; synthetic legacy file, 5,000 reactions 3,808.7 / 3,911.7 (5 samples, p99 is the maximum).",
     "gateCSuite": "step 3.12: all 19 Gate C rows (11 ADV, INV-19/20/21/23/28, P-01/02/03) named in test titles; tests/adversarial/gate-c.test.ts (20 tests); npm audit 0 vulnerabilities; test:timing 10/10",
     "coveragePhase3": "step 3.12 (npm run test:coverage): src/core 98.89% lines / 91.83% branches; src/persistence 99.11% / 90.11%; src/io 97.05% / 90.15%; whole run 98.15% lines, 90.89% branches",
-    "benchBaseline": "step 3.12: tests/perf/baseline.json has 96 entries (42 Phase 2 + 54 Phase 3), median p99 of 3 fresh-process runs; bench:compare showed no Phase 2 regression after one re-run"
+    "benchBaseline": "step 3.12: tests/perf/baseline.json has 96 entries (42 Phase 2 + 54 Phase 3), median p99 of 3 fresh-process runs; bench:compare showed no Phase 2 regression after one re-run",
+    "benchBudgetsCheck": "Gate C review: npm run check:bench-budgets (scripts/check-bench-budgets.mjs, part of npm run check, 6 tests): every bench() has a tests/perf/budgets.mjs entry and every entry names a bench; static, no bench is run. Repository: 83 benches (loop shapes expanded), 96 entries.",
+    "propertySuite200": "Gate C review (2026-09-30): ORN_PROPERTY_RUNS=200 npm run test:property green, 12 files, 130 tests, 33.6 s."
   },
   "openItems": [
     "CLOSED (step 3.7, Gate C sweep 2026-09-30): Phase 3 contract amendments approved (PROGRESS.md 'Phase 3 contract decisions'); applied so far: steps 3.1 (Q1 c, d, one-transaction asset write, Q2 getStatus), 3.2 (Q1 f, Q2 deletablePeriodicSnapshotIds, Q9 restore side), 3.3 (Q1 a, b, e, Q4, Q10; boot quarantine is a MOVE after the step 3.3 review), 3.4 (Q3, Q4 singleTab, Q11 as ADR-033) and 3.5 (Q7 AssetBytesProvider + ExportResult, Q9 io export-port need, Q12 TaskOptions in io contracts). Still to land: Q5, Q6 unsafeKeysRenamed, Q12 the rest (persistence side, pending import batch), io ports (SnapshotPort, ImportBatchSink) in 3.6-3.7. For reviewer confirmation (step 3.4, PROGRESS.md REVIEW REQUIRED): ChangeMessage.changedIds may be 'all'; ChangeChannel.subscribe hands out unknown; no ERROR gate on applyRemote/reload; promotion order (queue writable, boot as writer, store reload while read-only, then writable); release() waits until the lock is free; fresh-database boot result carries a bootReport; attachWriteQueue. Step 3.4 review (2026-09-29): step 3.4 ACCEPTED, all seven items confirmed.",
@@ -162,6 +166,7 @@
     "npm run bench:compare (step 2.9, PERFORMANCE_ARCHITECTURE.md §9) exists and was run for the step 2.10 packet update, but is not wired into any CI workflow — it must be run manually at gates.",
     "The command store (docs/PROGRESS.md step 2.1) still only maintains the part-1 coreIndexEngine, not the full indexEngine with navigatorRollup(); no live UI can read the navigator roll-up through the store yet. Not this step's problem to fix (no consumer forces the switch until a real navigator feature is wired, Phase 5+), but tests that need it (P-07, the differential test) work around it by subscribing and applying the full engine independently.",
     "Phase 9 exceptions from Gate B (step 2.13, docs/reviews/gate-b-packet.md §8; numbers are median p99 of 3 runs): (1) class-hub rename 16.5 ms vs 16 - cause RTE-002/004 `peers` (routesAffectedBy walks referrers upward, ~10.5 ms); fix: declare peerReads on RTE-002/004 (and audit it); (2) class-hub parent move 46.0 ms (structural: SPC-006 re-runs on 1,400 species + merging ~1,400 findings); (3) review-status change on the like-water hub 21.2 ms per commit (structural: RVW-002 on ~1,000 referrers + finding-store merge); (4) route search dense 17.2 ms this run - untouched code, noise (earlier runs 9.3-12.1 ms), re-check on a quiet machine; (5) validateTouched/validateTouchedByRule without previous state: 38.7-47.1 ms on a 1,000-referrer hub - the compute worker must always pass previous (IMPLEMENTATION_PLAN.md Phase 4 note). Gate C re-measure (2026-09-30, docs/reviews/gate-c-packet.md §8): class-hub rename 13.5 ms and route search dense 12.3 ms are back under 16; class-hub parent move 51.0 ms (over the 50 ms row by 1.0, structural); like-water review-status commit 21.6 ms; validateTouched without previous state 34.9/41.5 ms.",
+    "FINAL Phase 9 exception list (Gate C review, 2026-09-30; docs/reviews/gate-c-packet.md §8 items 2, 3, 5, 6, 7, 9, median p99 of 3 runs): class-hub parent move 51.0 ms (structural; fix peerReads on RTE-002/004, Phase 9); review-status change on the like-water hub 21.6 ms; validateTouched without previous state 34.9 ms (ADV-012) / 41.5 ms (like water); writer replaceReferences on the 1,000-reaction hub 216 ms; follower applyRemote 200 ms; snapshot build 395 ms / whole restore 1,621 ms on the main thread (judged at Gate E; Phase 4 compute worker). Closed, below budget on the 3-run median: class-hub rename 13.5 ms, route search dense 12.3 ms.",
     "Step 2.13: HIER-001, HIER-003, RTE-002 and RTE-004 declare no referencedReads (they walk hierarchies, compositions or routes through derived indexes); REF-006/REF-008, REL-003/005, CUR-004/006, PRS-001/002, HIER-003, RTE-002/004 declare no peerReads. Those rules keep the coarser behaviour.",
     "Step 3.2: snapshot build (0.8 s) and whole restore (3.5 s) run on the main thread at the design tier until Phase 4 hosts them in the compute worker; judged at Gate E. restoreSnapshot does not wait for the restored state to reach IndexedDB (callers flush()).",
     "Phase 5: the app reports a restore or an import as done only after flush() resolves with status saved; until then it shows 'saving'.",
@@ -184,7 +189,8 @@
     "Step 3.7: the import session runs in-process; the compute worker hosts it from Phase 4. Phase 5 wiring: connect AssetStagePort to attachWriteQueue blobsFor (shown in tests/integration/import-apply-persistence.test.ts), and report an import as done only after flush().",
     "Step 3.7 review: asset blobs are content-addressed (DB version 2, assetBlobs keyed by sha256; a write verifies the hash and only ever adds a row; nothing overwritten or deleted), so Undo import and snapshot restore bring the old bytes back; version-1 rows that fail verification are kept in assetBlobsUnverified and reported at boot (bootReport.unverifiedAssetBlobs). The orphan-blob sweep stays a Phase 9, user-confirmed Diagnostics action. checkBlobs accepts blobs for updated asset records.",
     "Step 3.7: preview validates the merged replica and replaceState validates it again at apply (about 1.7-2.1 s each at the design tier); the Phase 4 precomputed-replica item covers both. Conflict analysis into a full design-tier store costs about 0.57 s (canonical text of both sides), a hashing candidate if the 5 s row tightens.",
-    "Phase 9 exception candidate (step 3.8 review, 2026-09-29; accepted): import preview of hub_explosion into a design-tier store with every ID conflicting measured 5.0-5.3 s in two runs (step 3.7 review) against the 5,000 ms \"Import 5k reactions (parse -> preview)\" row; the preview adds no overhead over its stages (validation is about half). Reason accepted: worst case only, and the import runs in the compute worker from Phase 4 with progress. To be judged at Gate C on the 3-run median (npm run bench:baseline, step 3.12); remedy = the Phase 4 validate-once open item. Gate C (2026-09-30): 3-run median p99 1,224 ms (1,205/1,224/1,302) against 5,000; the 5.0-5.3 s readings did not reproduce (machine drift about 4x between sessions). Candidate not confirmed, kept listed for the reviewer (packet exception 8).",
+    "SUPERSEDED (Gate C review, 2026-09-30; see the watch item below): Phase 9 exception candidate (step 3.8 review, 2026-09-29; accepted): import preview of hub_explosion into a design-tier store with every ID conflicting measured 5.0-5.3 s in two runs (step 3.7 review) against the 5,000 ms \"Import 5k reactions (parse -> preview)\" row; the preview adds no overhead over its stages (validation is about half). Reason accepted: worst case only, and the import runs in the compute worker from Phase 4 with progress. To be judged at Gate C on the 3-run median (npm run bench:baseline, step 3.12); remedy = the Phase 4 validate-once open item. Gate C (2026-09-30): 3-run median p99 1,224 ms (1,205/1,224/1,302) against 5,000; the 5.0-5.3 s readings did not reproduce (machine drift about 4x between sessions). Candidate not confirmed, kept listed for the reviewer (packet exception 8).",
+    "WATCH (Gate C review, 2026-09-30): re-measure the conflicting hub_explosion import preview (design tier, every ID conflicting) at Gate E against the 5,000 ms \"Import 5k reactions (parse -> preview)\" row. Not a Phase 9 exception: the 5.0-5.3 s readings of the step 3.7 review did not reproduce (3-run median p99 1,224 ms). Remedy if it recurs: the Phase 4 validate-once item.",
     "CLOSED (step 3.11, Gate C sweep 2026-09-30): Step 3.8: the legacy port is oracle-equal for v4-sample.json, v6-demo-export.json (new oracle data/fixtures/legacy/v6-demo-export.normalized-by-v6.json) and a quirk workbook (tests/fixtures/legacy-v6/, all generated by v6 itself with scripts/legacy-oracle.mjs); it returns dropped leaves (path to value; empty for both fixtures), assignedIds (deterministic placeholders for records without an id, approved at the step 3.8 review, MIGRATION.md §4.2) and refusal values. Step 3.11 carries dropped into provenance.legacy.unmapped; ImportSession.preview still refuses legacy formats as LEGACY_NOT_CONVERTED until 3.11 wires the port in.",
     "CLOSED (step 3.10-3.11c, Gate C sweep 2026-09-30): Step 3.9: the ID space, label parser and condition parser (src/io/legacy-v6) are pure building blocks; nothing calls them yet. Step 3.10/3.11 must: register every legacy value with createLegacyIdSpace before mapping (compound IDs incl. dangling references, reaction IDs, label remainders, concept / named reaction / topic texts, related pairs whose reactions exist), report IdSpace.collisions, turn ParseReview items into REVIEW REQUIRED report items, use parsedFields (RXN-015), carry ParsedConditions.unconsumed / overflowOther into provenance.legacy.unmapped, and apply the MIGRATION.md §4.8 rule for empty dropped leaves. Step 3.9 REVIEW REQUIRED (PROGRESS.md): FLAG_SUBSUMED as a review item, strength in a condition goes to other[], §4.6 extensions, collision side effect, a second hardcode-ok (condition-fields.ts), rel_ ordering.",
     "Step 3.9 review (2026-09-29): step 3.9 ACCEPTED. Possible Phase 6 authoring question: `strength` (dil./conc.) of a legacy CONDITION has no stage-parameter field and stays in other[] as `strength: dilute`; no schema field and no rule attaching it to the single acid/base participant (that would guess chemistry). FLAG_SUBSUMED is an informational note (ParsedConditions.notes), counted in the report, not a review item.",
@@ -195,7 +201,7 @@
     "CLOSED (step 3.11c review, Gate C sweep 2026-09-30): Step 3.11c: legacy import is complete and wired (convertLegacy, decisions, full report, expected outputs in data/fixtures/legacy-expected/ regenerated only by node scripts/legacy-expected.mjs with a reason in PROGRESS.md). For reviewer confirmation (PROGRESS.md step 3.11c REVIEW REQUIRED): reagentFamily offers keep only (no schema field); re-import with another clock differs only in provenance timestamps; preview/revise are async; the preview must show documentUnmapped (UI, Phase 5).",
     "Phase 5: legacy re-import reuses the earlier batch's clock when the file's SHA-256 matches (step 3.11c review); the batch report must record the source file's SHA-256 and the clock time used; add them if missing.",
     "Phase 6: reagentFamily (legacy) offers 'keep' only in the import preview because no schema field holds it; linking a reaction's reagentFamily value to the reagents it uses is an authoring question (step 3.11c review).",
-    "Step 3.12: tests/perf/budgets.mjs lacked entries for six benches (four import-preview stage rows from the 3.7 review, two legacy rows from 3.11c), so bench:compare aborted until they were added. npm run check does not run benches; consider a check that every bench() has a budget entry (Phase 9 or a docs decision).",
-    "Step 3.12: baseline.json runner text says no other heavy applications were open; Edge was open (idle) during the step 3.12 runs (packet header). 43 of 96 entries exceed 25% spread."
+    "CLOSED (Gate C review, 2026-09-30, npm run check:bench-budgets): Step 3.12: tests/perf/budgets.mjs lacked entries for six benches (four import-preview stage rows from the 3.7 review, two legacy rows from 3.11c), so bench:compare aborted until they were added. npm run check does not run benches; consider a check that every bench() has a budget entry (Phase 9 or a docs decision).",
+    "Step 3.12: baseline.json runner text says no other heavy applications were open; Edge was open (idle) during the step 3.12 runs (packet header). 43 of 96 entries exceed 25% spread. Correction recorded at the Gate C review (PROGRESS.md): Edge was open and idle during the runs; baseline.json is not edited."
   ]
 }
