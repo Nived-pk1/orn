@@ -3,7 +3,7 @@
   "stateFileVersion": 1,
   "lastUpdated": "2026-09-30",
   "currentPhase": 4,
-  "currentPhaseStatus": "not_started",
+  "currentPhaseStatus": "in_progress",
   "completedPhases": [
     0,
     1,
@@ -50,11 +50,12 @@
     "3.11a",
     "3.11b",
     "3.11c",
-    "3.12"
+    "3.12",
+    "4.1"
   ],
   "nextPhase": 4,
-  "nextStep": "4.1",
-  "nextStepTitle": "RPC library (src/workers/rpc): client, host, ports, restart, retry-once, transfer, ADR-034",
+  "nextStep": "4.2a",
+  "nextStepTitle": "Store accepts precomputed findings (Q3): replaceState and reload, RULE_SET_ID, FINDINGS_MISMATCH, verifyPrecomputed; no worker yet",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -99,7 +100,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (Vitest 4.1.11: 159 files, 2612 tests; Gate C review recorded, 2026-09-30).",
+    "npmRunCheck": "passed (Vitest 4.1.11: 165 files, 2,661 tests; Gate C review recorded, 2026-09-30).",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -203,6 +204,8 @@
     "Phase 6: reagentFamily (legacy) offers 'keep' only in the import preview because no schema field holds it; linking a reaction's reagentFamily value to the reagents it uses is an authoring question (step 3.11c review).",
     "CLOSED (Gate C review, 2026-09-30, npm run check:bench-budgets): Step 3.12: tests/perf/budgets.mjs lacked entries for six benches (four import-preview stage rows from the 3.7 review, two legacy rows from 3.11c), so bench:compare aborted until they were added. npm run check does not run benches; consider a check that every bench() has a budget entry (Phase 9 or a docs decision).",
     "Step 3.12: baseline.json runner text says no other heavy applications were open; Edge was open (idle) during the step 3.12 runs (packet header). 43 of 96 entries exceed 25% spread. Correction recorded at the Gate C review (PROGRESS.md): Edge was open and idle during the runs; baseline.json is not edited.",
-    "check:bench-budgets: narrow tuple-loop title matches to entries of the same bench file if budgets.mjs can say which file an entry belongs to (Phase 9, or earlier if a bench is removed)."
+    "check:bench-budgets: narrow tuple-loop title matches to entries of the same bench file if budgets.mjs can say which file an entry belongs to (Phase 9, or earlier if a bench is removed).",
+    "Step 4.1 REVIEW REQUIRED (PROGRESS.md): RpcClient calls answer RpcResult values (not rejections); default timeouts in ADR-034 (compute and search are proposals); callWithRetry does not retry after TIMEOUT; no timeout on the onRestart hook itself.",
+    "Step 4.1: browserWorkerPort and workerScopePort are tested against stand-ins only; the real-browser test is Phase 5 (D7). tests/perf/rpc.bench.ts entries have no baseline until the Gate E baseline."
   ]
 }

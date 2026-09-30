@@ -209,4 +209,10 @@ export const BUDGETS = {
     { operation: 'legacy import: parse -> preview (total), v6-demo-export.json (22 reactions)', tier: 'design', shape: 'legacy-demo-22', budgetMs: null, budgetRow: 'Import 5k reactions (parse -> preview)', note: 'step 3.11c: informal (22 reactions is not the 5k row); conversion + import pipeline; in-process, fake ports' },
   'legacy parse -> preview (synthetic legacy file, 5,000 reactions, into an empty store) > parse -> preview (total)':
     { operation: 'legacy import: parse -> preview (total), synthetic legacy file, 5,000 reactions', tier: 'design', shape: 'legacy-synthetic-5k', budgetMs: 5000, budgetRow: 'Import 5k reactions (parse -> preview)', note: 'step 3.11c / 3.12: the legacy synthetic 5k file judged against the 5 s row; conversion + import pipeline; few samples, so p99 is the maximum; in-process, fake ports' },
+  'rpc round trip (worker_threads) > small payload (add)':
+    { operation: 'rpc: round trip, small payload', tier: 'rpc', shape: 'small', budgetMs: null, note: 'step 4.1: no PERFORMANCE_ARCHITECTURE.md §2 row; informal. Real worker_threads, fixture worker echoing its param' },
+  'rpc round trip (worker_threads) > ChangeSet-sized payload (about 8 KB echoed)':
+    { operation: 'rpc: round trip, ChangeSet-sized payload', tier: 'rpc', shape: 'changeset', budgetMs: null, note: 'step 4.1: informal; what the replica sync sends per commit' },
+  'rpc round trip (worker_threads) > about 1 MB payload echoed':
+    { operation: 'rpc: round trip, about 1 MB payload', tier: 'rpc', shape: '1mb', budgetMs: null, note: 'step 4.1: informal; structured clone both ways, 10,000 small records' },
 };

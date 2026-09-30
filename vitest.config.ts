@@ -12,11 +12,11 @@ export default mergeConfig(
       environment: 'node',
       benchmark: { include: ['tests/perf/**/*.bench.ts'] },
       restoreMocks: true,
-      // Targets: src/core >= 90% lines, >= 85% branches; src/persistence, src/io >= 80% lines (services, TEST_STRATEGY §1).
+      // Targets: src/core >= 90% lines, >= 85% branches; src/persistence, src/io, src/workers >= 80% lines (services, TEST_STRATEGY §1).
       // Enforced by npm run test:coverage only, not by npm run check.
       coverage: {
         provider: 'v8',
-        thresholds: { 'src/core/**': { lines: 90, branches: 85 }, 'src/persistence/**': { lines: 80 }, 'src/io/**': { lines: 80 } },
+        thresholds: { 'src/core/**': { lines: 90, branches: 85 }, 'src/persistence/**': { lines: 80 }, 'src/io/**': { lines: 80 }, 'src/workers/**': { lines: 80 } },
       },
     },
   }),
