@@ -10,7 +10,7 @@ import { createScopeOf } from '@/core/graph';
 import { contextOf } from '@/test-support/graph-state';
 import { AnyRecordSchema, type Reaction } from '@/core/schema';
 import { validator } from '@/core/validation';
-import { demoContext, mapClassified, stateWithDemo, type ChainOptions, type ClassifiedAll } from '@/test-support/legacy-classify-kit';
+import { demoContext, demoRecords, mapClassified, stateWithDemo, type ChainOptions, type ClassifiedAll } from '@/test-support/legacy-classify-kit';
 import { legacyFixture, legacyTestFixture } from '@/test-support/legacy-kit';
 import { stateOfRecords } from '@/test-support/legacy-map-kit';
 import { createReportBuilder } from './report';
@@ -114,7 +114,7 @@ describe('pinned findings of the whole mapped set (warnings and INFO counts, bot
       'info:MEC-001': 21,
       'info:RXN-016': 22,
       'info:SPC-004': 4,
-      'review_required:RVW-001': 104,
+      'review_required:RVW-001': 107,
       'review_required:RXN-015': 8,
       'warning:RXN-021': 1,
     });
@@ -140,6 +140,22 @@ describe('pinned findings of the whole mapped set (warnings and INFO counts, bot
       'review_required:RXN-015': 3,
       'warning:SPC-001': 2,
     });
+  });
+});
+
+describe('every kind-specific reference names a concept of the matching kind', () => {
+  it.each(fixtures.flatMap(([name, load]) => [true, false].map((withContext): [string, () => unknown, boolean] => [name, load, withContext])))('%s, demo context %s', async (_name, load, withContext) => {
+    const all = await mapClassified(load(), withContext ? { context: demoContext() } : {});
+    const kindOf = new Map(all.all.filter((r) => r.kind === 'concept').map((r) => [r.id as string, (r as { conceptKind: string }).conceptKind] as const));
+    if (withContext) for (const r of demoRecords()) if (r.kind === 'concept') kindOf.set(r.id as string, (r as { conceptKind: string }).conceptKind);
+    let checked = 0;
+    for (const r of all.classification.records.reaction) {
+      for (const t of r.reactionTypes) { expect(kindOf.get(t.conceptId)).toBe('reaction_type'); checked += 1; }
+      for (const m of r.mechanismClasses) { expect(kindOf.get(m.conceptId)).toBe('mechanism_class'); checked += 1; }
+    }
+    const family = new Set(all.data.reactions.flatMap((r) => (typeof r.reactionFamily === 'string' && r.reactionFamily !== '' ? [r.reactionFamily.toLowerCase()] : [])));
+    for (const r of all.classification.records.reaction) for (const id of r.conceptIds) if (family.has((all.classification.records.concept.find((c) => c.id === id)?.name ?? '').toLowerCase()) && all.classification.records.concept.some((c) => c.id === id && c.conceptKind === 'reaction_family')) checked += 1;
+    if (_name.startsWith('v6-demo')) expect(checked).toBeGreaterThan(20); // the v4 sample has no such fields
   });
 });
 

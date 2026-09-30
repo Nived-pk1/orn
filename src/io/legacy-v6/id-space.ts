@@ -9,14 +9,17 @@
  * text against existing records (concepts, topics, labels) is not done here (steps 3.10 and 3.11).
  */
 import { fold } from '@/core/text';
-import { hashOf, legacyPart, resolveParts, resolveSharedParts, textPart, type IdCollision, type PartLadder } from './id-parts';
+import { hashOf, legacyPart, resolveParts, resolveSharedParts, slugOf, textPart, type IdCollision, type PartLadder } from './id-parts';
 
 export interface LegacyIdSpaceInput {
   readonly compoundIds?: Iterable<string>;
   readonly reactionIds?: Iterable<string>;
   /** Participant labels (after the label parser took its tokens out) that will become a reagent or species. */
   readonly labels?: Iterable<string>;
+  /** Concept texts of the generic roles (`jee.prerequisites`, `jee.concepts`): keyed by the folded text alone. */
   readonly concepts?: Iterable<string>;
+  /** Concept texts of the kind-specific roles (`reaction_type`, `mechanism_class`, `reaction_family`): keyed by kind AND folded text (step 3.11b review). */
+  readonly kindedConcepts?: Iterable<{ readonly kind: string; readonly text: string }>;
   readonly namedReactions?: Iterable<string>;
   readonly topics?: Iterable<string>;
   /** Functional-group ids as they stand in v5 data (`fgId`, `functionalGroups[]`), exact text: each may become a `functional_group` class. */
@@ -55,7 +58,8 @@ export interface LegacyIdSpace {
   relatedReactionId(a: string, b: string): string | undefined;
   reagentFromLabelId(label: string): string;
   speciesFromLabelId(label: string): string;
-  conceptId(text: string): string;
+  /** `cpt_v6-<slug>-<hash6>`: with `kind` (a kind-specific role) the key is `<kind>:<folded text>`, so one text under two kinds is two concepts; without it the folded text alone. */
+  conceptId(text: string, kind?: string): string;
   namedReactionId(text: string): string;
   topicId(text: string): string;
   /** `cls_v6-fg-<part>`: the `functional_group` class of a functional-group id (exact text, as v6 stores it). */
@@ -109,7 +113,16 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
   const functionalGroups = part('functional_group');
   const classTexts = part('class_text');
   const reactions = settle('reaction', input.reactionIds ?? [], legacyLadder);
-  const concepts = settle('concept', folded(input.concepts), textLadder);
+  const conceptKey = (kind: string | undefined, foldedText: string): string => (kind === undefined ? foldedText : `${kind} ${foldedText}`);
+  // slug from the text, hash of the whole (kind-qualified) key; a generic key gives exactly the plain text part
+  const conceptLadder: PartLadder = (key, tier) => {
+    const at = key.indexOf(' ');
+    if (at < 0) return textPart(key, tier);
+    const slug = slugOf(key.slice(at + 1));
+    const hash = hashOf(key, hashLength[tier]);
+    return slug === '' ? hash : `${slug}-${hash}`;
+  };
+  const concepts = settle('concept', [...folded(input.concepts), ...[...(input.kindedConcepts ?? [])].map((c) => conceptKey(c.kind, fold(c.text)))], conceptLadder);
   const namedReactions = settle('named_reaction', folded(input.namedReactions), textLadder);
   const topics = settle('topic', folded(input.topics), textLadder);
 
@@ -163,7 +176,7 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
     },
     reagentFromLabelId: (label) => `rgt_v6-l-${text(labels, label, 'label')}`,
     speciesFromLabelId: (label) => `spc_v6-l-${text(labels, label, 'label')}`,
-    conceptId: (value) => `cpt_v6-${text(concepts, value, 'concept text')}`,
+    conceptId: (value, kind) => `cpt_v6-${lookup(concepts, conceptKey(kind, fold(value)), 'concept text')}`,
     namedReactionId: (value) => `nrx_v6-${text(namedReactions, value, 'named reaction text')}`,
     topicId: (value) => `top_v6-${text(topics, value, 'topic text')}`,
     functionalGroupClassId: (value) => `cls_v6-fg-${lookup(functionalGroups, value, 'functional-group id')}`,

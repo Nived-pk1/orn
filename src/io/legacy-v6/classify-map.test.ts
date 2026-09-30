@@ -84,13 +84,37 @@ describe('reactionType, reactionFamily', () => {
     expect(all.classification.records.reaction.map((r) => r.reactionTypes[0]?.conceptId)).toEqual([all.classification.records.concept[0]?.id, all.classification.records.concept[0]?.id, all.classification.records.concept[0]?.id]);
   });
 
-  it('the same text under two roles is ONE record, and the record says so', async () => {
-    const all = await run([rx('r1', { reactionType: 'oxidation', reactionFamily: 'Oxidation' })]);
-    expect(all.classification.records.concept).toHaveLength(1);
-    const concept = all.classification.records.concept[0];
-    expect(concept?.conceptKind).toBe('reaction_type');
-    expect(concept?.review.reasons.some((r) => r.includes('also used as a reaction_family concept'))).toBe(true);
-    expect(reactionOf(all).conceptIds).toEqual([concept?.id]);
+  it('the same text under two kind-specific roles is TWO concepts of the right kinds (supersedes the step 3.11b one-record rule)', async () => {
+    const all = await run([rx('r1', { reactionType: 'oxidation', reactionFamily: 'Oxidation', mechanism: { type: 'OXIDATION', summary: '' } })]);
+    const concepts = all.classification.records.concept;
+    expect(concepts.map((c) => c.conceptKind).sort()).toEqual(['mechanism_class', 'reaction_family', 'reaction_type']);
+    expect(new Set(concepts.map((c) => c.id)).size).toBe(3);
+    const reaction = reactionOf(all);
+    const kindOf = (id: string) => concepts.find((c) => c.id === id)?.conceptKind;
+    expect(reaction.reactionTypes.map((t) => kindOf(t.conceptId))).toEqual(['reaction_type']);
+    expect(reaction.mechanismClasses.map((t) => kindOf(t.conceptId))).toEqual(['mechanism_class']);
+    expect(reaction.conceptIds.map(kindOf)).toEqual(['reaction_family']);
+    for (const c of concepts) expect(ConceptIdSchema.safeParse(c.id).success).toBe(true);
+  });
+
+  it('one text as mechanism.type in one reaction and reactionType in another: two concepts, each reaction names its own kind', async () => {
+    const all = await run([rx('r1', { mechanism: { type: 'addition', summary: '' } }), rx('r2', { reactionType: 'Addition' })]);
+    const [a, b] = all.classification.records.reaction as [Reaction, Reaction];
+    const concepts = all.classification.records.concept;
+    expect(concepts).toHaveLength(2);
+    expect(concepts.find((c) => c.id === a.mechanismClasses[0]?.conceptId)?.conceptKind).toBe('mechanism_class');
+    expect(concepts.find((c) => c.id === b.reactionTypes[0]?.conceptId)?.conceptKind).toBe('reaction_type');
+  });
+
+  it('a generic role reuses a concept this import made for that text (any kind); several: the first by ID, said on the reaction', async () => {
+    const one = await run([rx('r1', { reactionType: 'oxidation' }), rx('r2', { jee: { concepts: ['Oxidation'] } })]);
+    expect(one.classification.records.concept).toHaveLength(1);
+    expect(reactionOf(one, 1).conceptIds).toEqual([one.classification.records.concept[0]?.id]);
+    const two = await run([rx('r1', { reactionType: 'oxidation', reactionFamily: 'oxidation' }), rx('r2', { jee: { prerequisites: ['oxidation'] } })]);
+    expect(two.classification.records.concept).toHaveLength(2);
+    const first = two.classification.records.concept.map((c) => c.id).sort()[0];
+    expect(reactionOf(two, 1).prerequisiteConceptIds).toEqual([first]);
+    expect(reasonsOf(reactionOf(two, 1)).some((r) => r.startsWith('2 concepts created by this import are named'))).toBe(true);
   });
 
   it('a value the schema cannot name is kept with a reason; whitespace-only is kept too', async () => {

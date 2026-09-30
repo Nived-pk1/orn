@@ -50,6 +50,7 @@ export function createDocumentIds(data: { readonly compounds: readonly LegacyObj
   const referenced = new Set<string>();
   const labels = new Set<string>();
   const concepts = new Set<string>();
+  const kindedConcepts: { kind: string; text: string }[] = [];
   const namedReactions = new Set<string>();
   const topics = new Set<string>();
   const firstReaction = new Map<string, string>();
@@ -77,7 +78,7 @@ export function createDocumentIds(data: { readonly compounds: readonly LegacyObj
         }
       }
     }
-    for (const key of [reaction.reactionType, reaction.reactionFamily, field(reaction.mechanism, 'type')]) text(key).forEach((t) => concepts.add(t));
+    for (const [kind, value] of [['reaction_type', reaction.reactionType], ['reaction_family', reaction.reactionFamily], ['mechanism_class', field(reaction.mechanism, 'type')]] as const) text(value).forEach((t) => kindedConcepts.push({ kind, text: t }));
     for (const key of [field(reaction.jee, 'prerequisites'), field(reaction.jee, 'concepts')]) texts(key).forEach((t) => concepts.add(t));
     const fgFrom = texts(field(reaction.transformation, 'fgFrom'));
     const fgTo = texts(field(reaction.transformation, 'fgTo'));
@@ -103,6 +104,7 @@ export function createDocumentIds(data: { readonly compounds: readonly LegacyObj
     reactionIds: reactionKeys,
     labels,
     concepts,
+    kindedConcepts,
     namedReactions,
     topics,
     relatedPairs: pairs,

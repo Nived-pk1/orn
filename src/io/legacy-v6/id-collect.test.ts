@@ -80,8 +80,10 @@ describe('createDocumentIds registers every value first', () => {
   });
 
   it('concept, named-reaction and topic texts; "Uncategorised" gets no topic', () => {
-    for (const text of ['addition', 'Family', 'E2', 'Acidity', 'Carbocation']) expect(() => ids.conceptId(text), text).not.toThrow();
-    expect(ids.conceptId('ADDITION')).toBe(ids.conceptId('addition')); // one concept per folded text, listed under two fields
+    for (const [text, kind] of [['addition', 'reaction_type'], ['Family', 'reaction_family'], ['E2', 'mechanism_class'], ['Acidity', undefined], ['Carbocation', undefined], ['addition', undefined]] as const) expect(() => ids.conceptId(text, kind), text).not.toThrow();
+    expect(ids.conceptId('ADDITION', 'reaction_type')).toBe(ids.conceptId('addition', 'reaction_type'));
+    expect(ids.conceptId('addition', 'reaction_type')).not.toBe(ids.conceptId('addition')); // kind-qualified key (step 3.11b review)
+    expect(() => ids.conceptId('E2')).toThrow(); // registered under its kind only
     expect(ids.namedReactionId('Wurtz reaction')).toMatch(/^nrx_v6-wurtz-reaction-/);
     expect(ids.topicId('Hydrocarbons')).toMatch(/^top_v6-hydrocarbons-/);
     expect(() => ids.topicId('Uncategorised')).toThrow();
