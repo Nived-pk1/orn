@@ -14,7 +14,7 @@ import type { LegacyImportReport, ParsedAsset } from '../contracts';
 import { planClasses, type HubClass } from './compound-classes';
 import { canonicalNameOf, convertFields, KNOWN_COMPOUND_KEYS } from './compound-convert';
 import { decodeLegacyImage, type DecodedImage } from './compound-image';
-import { extraReasons, list } from './compound-review';
+import { duplicatedIds, extraReasons, list } from './compound-review';
 import { anchorRecord, assetRecord, classRecord, createdClassRecord, neverNodeRecord, provenanceOf, reviewOf, speciesRecord, type Stamp } from './compound-records';
 import { createCompoundScope, excerpt, type CompoundScope } from './compound-scope';
 import type { DroppedLeaf } from './dropped';
@@ -254,12 +254,10 @@ export async function mapLegacyCompounds(input: MapCompoundsInput, options: MapC
   for (const _display of displays) report.created('entity_display');
   for (const _asset of assets.values()) report.created('asset');
 
-  const all = [...speciesOut, ...classOut, ...anchors, ...displays, ...assets.values()].map((record) => record.id as string);
-  const seen = new Set<string>();
-  const duplicated = new Set<string>();
-  for (const id of all) (seen.has(id) ? duplicated : seen).add(id);
-  if (duplicated.size > 0) {
-    return { ok: false, code: 'DUPLICATE_RECORD_ID', message: `two records of the mapped compounds got the same ID (an original that looks like a produced ID part, in another namespace): ${list([...duplicated].sort())}; nothing was mapped`, ids: [...duplicated].sort() };
+  // Last-resort guard: the ID space settles every clash it knows (id-space.ts), so this is not reachable from any input tried so far.
+  const duplicated = duplicatedIds([...speciesOut, ...classOut, ...anchors, ...displays, ...assets.values()].map((record) => record.id as string));
+  if (duplicated.length > 0) {
+    return { ok: false, code: 'DUPLICATE_RECORD_ID', message: `two records of the mapped compounds got the same ID: ${list(duplicated)}; nothing was mapped`, ids: duplicated };
   }
 
   const compoundReport = report.build();

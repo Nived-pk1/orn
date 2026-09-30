@@ -70,10 +70,10 @@ export interface IdCollision {
   readonly namespace: string;
   /** The different originals (keys) that produced one part at some tier, sorted. */
   readonly originals: readonly string[];
-  /** The part they shared. */
+  /** The part they shared (for a shared pass: the ID body, without the ID family). */
   readonly sharedPart: string;
-  /** What each original finally got, in the order of `originals`. */
-  readonly resolved: readonly { readonly original: string; readonly part: string }[];
+  /** What each original finally got, in the order of `originals`. `space` is set only when the collision spans several namespaces. */
+  readonly resolved: readonly { readonly original: string; readonly part: string; readonly space?: string }[];
 }
 
 export interface ResolvedParts {
@@ -82,64 +82,140 @@ export interface ResolvedParts {
 }
 
 /**
+ * Where a key's part lives in the ID space: `family` is the group of ID prefixes that share one range of IDs (`spc`, `cls`), `body`
+ * the text after the prefix. Two keys collide only when they hold the same body in the same family.
+ */
+export interface IdSlot {
+  readonly family: string;
+  readonly body: string;
+}
+
+/** One namespace of keys that takes part in a shared pass. */
+export interface PartSpace {
+  readonly namespace: string;
+  readonly keys: Iterable<string>;
+  readonly ladder: PartLadder;
+  /** The slots a part occupies. Default: one slot in the family named like the namespace, body = part. */
+  readonly slots?: (part: string) => readonly IdSlot[];
+}
+
+export interface ResolvedSharedParts {
+  /** Namespace → key → part. */
+  readonly parts: ReadonlyMap<string, ReadonlyMap<string, string>>;
+  readonly collisions: readonly IdCollision[];
+}
+
+const SEP = '\u0000';
+const slotKey = (slot: IdSlot): string => `${slot.family}${SEP}${slot.body}`;
+
+/**
  * Parts for a set of distinct keys of ONE namespace. Deterministic and independent of the order the keys arrive in. A key whose
  * part is shared with another key moves up a tier, together with everyone it collides with; this repeats until every part is
  * unique. Tier 3 (`<hash16>-<n>`, the smallest free `n`) is only reached by crafted input and always ends the search.
  */
 export function resolveParts(namespace: string, keys: Iterable<string>, ladder: PartLadder): ResolvedParts {
-  const sorted = [...new Set(keys)].sort();
+  const result = resolveSharedParts([{ namespace, keys, ladder }]);
+  return { parts: result.parts.get(namespace) as ReadonlyMap<string, string>, collisions: result.collisions };
+}
+
+interface Entry {
+  readonly composite: string;
+  readonly space: PartSpace;
+  readonly key: string;
+}
+
+/**
+ * Several namespaces settled in ONE pass (step 3.10 review, MIGRATION.md §4.2): namespaces whose IDs can read alike because they share
+ * an ID family (a compound part and a functional-group part both end up as `cls_v6-<body>`) are collision-checked together, so a
+ * crafted clash between them is settled by the ladder like any other. Namespaces that share no family never collide (a label and a
+ * class text that fold alike share nothing). For one namespace this is exactly the per-namespace resolution.
+ */
+export function resolveSharedParts(spaces: readonly PartSpace[]): ResolvedSharedParts {
+  const entries: Entry[] = [];
+  for (const space of spaces) for (const key of new Set(space.keys)) entries.push({ composite: `${space.namespace}${SEP}${key}`, space, key });
+  entries.sort((a, b) => (a.composite < b.composite ? -1 : a.composite > b.composite ? 1 : 0));
+  const entryOf = new Map(entries.map((entry) => [entry.composite, entry] as const));
+
   const tierOf = new Map<string, IdTier>();
   const partOf = new Map<string, string>();
+  const heldSlots = new Map<string, string[]>();
   const holders = new Map<string, string[]>();
-  const place = (key: string, tier: IdTier, part: string): void => {
-    tierOf.set(key, tier);
-    partOf.set(key, part);
-    const list = holders.get(part);
-    if (list === undefined) holders.set(part, [key]);
-    else list.push(key);
+  const slotsOf = (entry: Entry, part: string): string[] =>
+    (entry.space.slots === undefined ? [{ family: entry.space.namespace, body: part }] : [...entry.space.slots(part)]).map(slotKey);
+  const place = (entry: Entry, tier: IdTier, part: string): void => {
+    tierOf.set(entry.composite, tier);
+    partOf.set(entry.composite, part);
+    const slots = slotsOf(entry, part);
+    heldSlots.set(entry.composite, slots);
+    for (const slot of slots) {
+      const list = holders.get(slot);
+      if (list === undefined) holders.set(slot, [entry.composite]);
+      else list.push(entry.composite);
+    }
   };
-  for (const key of sorted) place(key, 0, ladder(key, 0));
+  const leave = (composite: string): void => {
+    for (const slot of heldSlots.get(composite) ?? []) {
+      const rest = (holders.get(slot) ?? []).filter((held) => held !== composite);
+      if (rest.length === 0) holders.delete(slot);
+      else holders.set(slot, rest);
+    }
+    heldSlots.delete(composite);
+  };
+  for (const entry of entries) place(entry, 0, entry.space.ladder(entry.key, 0));
 
-  const events = new Map<string, { sharedPart: string; originals: string[] }>();
-  const queue = [...holders].filter(([, list]) => list.length > 1).map(([part]) => part);
+  const events = new Map<string, { sharedPart: string; members: string[] }>();
+  const queue = [...holders].filter(([, list]) => list.length > 1).map(([slot]) => slot);
   while (queue.length > 0) {
-    const part = queue.pop() as string;
-    const members = holders.get(part);
+    const slot = queue.pop() as string;
+    const members = holders.get(slot);
     if (members === undefined || members.length < 2) continue;
     const originals = [...members].sort();
-    events.set(`${part}\u0000${originals.join('\u0000')}`, { sharedPart: part, originals });
-    holders.delete(part);
-    const stayed: string[] = [];
+    events.set(`${slot}${SEP}${originals.join(SEP)}`, { sharedPart: slot.slice(slot.indexOf(SEP) + 1), members: originals });
+    // the members leave every slot they hold, then those that can move take their next candidate; a tier-3 member stays where it is
+    for (const composite of originals) leave(composite);
+    const stayed: Entry[] = [];
     let moved = false;
-    for (const key of originals) {
-      const tier = tierOf.get(key) as IdTier;
+    for (const composite of originals) {
+      const entry = entryOf.get(composite) as Entry;
+      const tier = tierOf.get(composite) as IdTier;
       if (tier === 3) {
-        stayed.push(key);
+        stayed.push(entry);
         continue;
       }
       moved = true;
       if (tier < 2) {
         const next = (tier + 1) as 1 | 2;
-        place(key, next, ladder(key, next));
+        place(entry, next, entry.space.ladder(entry.key, next));
       } else {
+        const base = hashOf(entry.key, 16);
         let n = 1;
-        while (holders.has(`${hashOf(key, 16)}-${n}`)) n += 1;
-        place(key, 3, `${hashOf(key, 16)}-${n}`);
+        while (slotsOf(entry, `${base}-${n}`).some((candidate) => holders.has(candidate))) n += 1;
+        place(entry, 3, `${base}-${n}`);
       }
     }
-    if (stayed.length > 0) holders.set(part, stayed);
+    for (const entry of stayed) place(entry, 3, partOf.get(entry.composite) as string);
     if (!moved) continue;
-    for (const key of originals) {
-      const now = partOf.get(key) as string;
-      if ((holders.get(now)?.length ?? 0) > 1) queue.push(now);
+    for (const composite of originals) {
+      for (const now of heldSlots.get(composite) ?? []) if ((holders.get(now)?.length ?? 0) > 1) queue.push(now);
     }
   }
 
-  const collisions = [...events.values()].map((event) => ({
-    namespace,
-    sharedPart: event.sharedPart,
-    originals: event.originals,
-    resolved: event.originals.map((original) => ({ original, part: partOf.get(original) as string })),
-  }));
-  return { parts: partOf, collisions };
+  const collisions: IdCollision[] = [...events.values()].map((event) => {
+    const members = event.members.map((composite) => entryOf.get(composite) as Entry);
+    const namespaces = [...new Set(members.map((entry) => entry.space.namespace))].sort();
+    const mixed = namespaces.length > 1;
+    return {
+      namespace: namespaces.join('+'),
+      originals: members.map((entry) => entry.key),
+      sharedPart: event.sharedPart,
+      resolved: members.map((entry) => ({
+        original: entry.key,
+        part: partOf.get(entry.composite) as string,
+        ...(mixed ? { space: entry.space.namespace } : {}),
+      })),
+    };
+  });
+  const parts = new Map<string, Map<string, string>>(spaces.map((space) => [space.namespace, new Map<string, string>()] as const));
+  for (const entry of entries) parts.get(entry.space.namespace)?.set(entry.key, partOf.get(entry.composite) as string);
+  return { parts, collisions };
 }

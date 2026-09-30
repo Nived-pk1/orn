@@ -44,6 +44,8 @@ export interface ConvertedFields {
   readonly studyNotes?: string;
   /** Class `generic.formulaText` (from `genericFormula`). */
   readonly formulaText?: string;
+  /** Class `generic.generalFormula` (from a hub `formula` that differs from its `genericFormula`, step 3.10 review). */
+  readonly generalFormula?: string;
   readonly tags: string[];
   /** `node: false`: an `entity_display { showAsNode: 'never' }` is created. */
   readonly neverNode: boolean;
@@ -128,7 +130,18 @@ export function convertFields(compound: LegacyObject, kind: 'species' | 'class',
   } else keepOnly(scope, ['smiles'], compound.smiles, `smiles cannot be stored as a structure (${excerpt(compound.smiles)}); kept in legacy.unmapped`);
 
   const formula = isClass ? undefined : take(scope, ['formula'], compound.formula, LabelTextSchema);
-  if (isClass) keepOnly(scope, ['formula'], compound.formula);
+  let generalFormula: string | undefined;
+  if (isClass) {
+    // A hub's `formula` that is not just its `genericFormula` again (the demo: CnH2n+2 next to R-notation) is the series' general
+    // formula; compared exactly as stored. It needs a person's eye. Equal to `genericFormula`: nothing new, kept in unmapped, no review.
+    const legacy = compound.formula;
+    if (isEmpty(legacy) || legacy === compound.genericFormula) keepOnly(scope, ['formula'], legacy);
+    else if (valid(LabelTextSchema, legacy)) {
+      generalFormula = legacy;
+      scope.consume(['formula'], legacy);
+      scope.reason('general formula taken from the legacy hub formula; check it');
+    } else keepOnly(scope, ['formula'], legacy, `formula cannot be stored as a general formula (${excerpt(legacy)}); kept in legacy.unmapped`);
+  }
   const properties = take(scope, ['properties'], compound.properties, RichTextSchema);
   let acidBaseNotes: string | undefined;
   if (isClass) keepOnly(scope, ['acidBase'], compound.acidBase);
@@ -181,6 +194,7 @@ export function convertFields(compound: LegacyObject, kind: 'species' | 'class',
     ...(stereo === undefined ? {} : { stereo }),
     ...(studyNotes === undefined ? {} : { studyNotes }),
     ...(formulaText === undefined ? {} : { formulaText }),
+    ...(generalFormula === undefined ? {} : { generalFormula }),
     tags: tagsOf(scope, compound.tags),
     neverNode: compound.node === false,
   };

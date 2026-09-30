@@ -10,6 +10,14 @@ import type { IdCollision } from './id-parts';
 
 export const list = (items: readonly string[], max = 5): string => `${items.slice(0, max).join(', ')}${items.length > max ? `, … (${items.length} in all)` : ''}`;
 
+/** The IDs that occur more than once, sorted. The last-resort guard of the mapper: the ID space settles every known clash, so this stays empty. */
+export function duplicatedIds(ids: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const duplicated = new Set<string>();
+  for (const id of ids) (seen.has(id) ? duplicated : seen).add(id);
+  return [...duplicated].sort();
+}
+
 export interface PlannedName {
   readonly key: string;
   readonly legacyId: string;
@@ -33,14 +41,15 @@ export function extraReasons(planned: readonly PlannedName[], names: readonly st
   const functionalGroupOf = new Map(created.filter((c) => c.classKind === 'functional_group').map((c) => [c.origin.slice('functionalGroup:'.length), c] as const));
   const classTextOf = new Map(created.filter((c) => c.classKind === 'compound_class').map((c) => [fold(c.name), c] as const));
   for (const collision of collisions) {
-    for (const { original } of collision.resolved) {
-      const others = list(collision.originals.filter((other) => other !== original).map((other) => excerpt(other, 40)));
+    for (const { original, space } of collision.resolved) {
+      const namespace = space ?? collision.namespace;
+      const others = list(collision.resolved.filter((other) => other.original !== original || (other.space ?? collision.namespace) !== namespace).map((other) => excerpt(other.original, 40)));
       const text = `its ID part collided with ${others} (${collision.namespace}); the colliding values got longer hash suffixes, so this ID differs from the one a file without the collision would give`;
-      if (collision.namespace === 'compound') {
+      if (namespace === 'compound') {
         const index = indexOfKey.get(original);
         if (index !== undefined) add(byCompound, index, text);
       } else {
-        const hit = collision.namespace === 'functional_group' ? functionalGroupOf.get(original) : collision.namespace === 'class_text' ? classTextOf.get(original) : undefined;
+        const hit = namespace === 'functional_group' ? functionalGroupOf.get(original) : namespace === 'class_text' ? classTextOf.get(original) : undefined;
         if (hit !== undefined) add(byCreatedClass, hit.id, text);
       }
     }

@@ -69,7 +69,9 @@ export function classRecord(parts: RecordParts): ChemicalClass {
     names: namesOf(fields.canonicalName),
     classKind: 'compound_class',
     parentIds: [],
-    ...(fields.formulaText === undefined ? {} : { generic: { formulaText: fields.formulaText } }),
+    ...(fields.formulaText === undefined && fields.generalFormula === undefined
+      ? {}
+      : { generic: { ...(fields.formulaText === undefined ? {} : { formulaText: fields.formulaText }), ...(fields.generalFormula === undefined ? {} : { generalFormula: fields.generalFormula }) } }),
     exampleSpeciesIds: [],
     ...(fields.description === undefined ? {} : { description: fields.description }),
     ...(fields.studyNotes === undefined ? {} : { studyNotes: fields.studyNotes }),
@@ -80,7 +82,11 @@ export function classRecord(parts: RecordParts): ChemicalClass {
   };
 }
 
-/** A class the importer made (functional group, `compoundClass` text): a draft, always review-required. */
+/**
+ * A class the importer made (functional group, `compoundClass` text): lifecycle `published` (the record is complete, like a reaction
+ * whose RXN-001/002 pass) and status `review_required` (nobody has checked it). Published, so that the published compounds that list
+ * it raise no RVW-002 finding.
+ */
 export function createdClassRecord(created: CreatedClass, stamp: Stamp, legacyId: string | undefined, reasons: readonly string[]): ChemicalClass {
   return {
     id: created.id as ChemicalClass['id'],
@@ -92,7 +98,7 @@ export function createdClassRecord(created: CreatedClass, stamp: Stamp, legacyId
     tags: [],
     citations: [],
     provenance: provenanceOf(stamp, legacyId),
-    review: { lifecycle: 'draft', status: 'review_required', reasons: fitReasons([created.reason, ...reasons]) },
+    review: { lifecycle: 'published', status: 'review_required', reasons: fitReasons([created.reason, ...reasons]) },
   };
 }
 

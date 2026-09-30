@@ -3,7 +3,7 @@
  * consumed-by-default counts, informational notes (never review items), notImported. Deterministic key order.
  */
 import { describe, expect, it } from 'vitest';
-import { FIXED_NOW, mapLegacy } from '@/test-support/legacy-map-kit';
+import { mapLegacy } from '@/test-support/legacy-map-kit';
 import { createDocumentIds, mapLegacyCompounds, normalizeLegacyData } from './index';
 import { createReportBuilder, LEGACY_SYSTEM } from './report';
 import { generalizePath, isEmptyLegacyValue } from './trace';
@@ -89,14 +89,14 @@ describe('the report of the compound mapper', () => {
     expect(shared.build().reviewItems).toEqual(mapped.report.reviewItems);
   });
 
-  it('a REFUSED run leaves the caller\'s builder exactly as it was', async () => {
+  it("a REFUSED run leaves the caller's builder exactly as it was", async () => {
     const shared = createReportBuilder(5);
     shared.created('reaction');
     const before = JSON.stringify(shared.build());
-    const n = normalizeLegacyData({ schemaVersion: 5, reactions: [], compounds: [{ id: 'fg-alkene', name: 'H', nodeType: 'major' }, { id: 'c1', name: 'S', fgId: 'alkene' }] });
+    const n = normalizeLegacyData({ schemaVersion: 5, reactions: [], compounds: [{ id: 'h', name: 'H', nodeType: 'major' }, { id: 'c1', name: 'S', fgId: 'alkene' }] });
     if (!n.ok) throw new Error(n.message);
-    const result = await mapLegacyCompounds({ data: n.data, dropped: n.dropped, assignedIds: n.assignedIds, ids: createDocumentIds(n.data) }, { now: () => FIXED_NOW, report: shared });
-    expect(result).toMatchObject({ ok: false, code: 'DUPLICATE_RECORD_ID' });
+    const result = await mapLegacyCompounds({ data: n.data, dropped: n.dropped, assignedIds: n.assignedIds, ids: createDocumentIds(n.data) }, { now: () => 'yesterday', report: shared });
+    expect(result).toMatchObject({ ok: false, code: 'INVALID_CLOCK' });
     expect(JSON.stringify(shared.build())).toBe(before);
   });
 

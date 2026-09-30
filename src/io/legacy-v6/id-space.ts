@@ -9,7 +9,7 @@
  * text against existing records (concepts, topics, labels) is not done here (steps 3.10 and 3.11).
  */
 import { fold } from '@/core/text';
-import { hashOf, legacyPart, resolveParts, textPart, type IdCollision, type PartLadder } from './id-parts';
+import { hashOf, legacyPart, resolveParts, resolveSharedParts, textPart, type IdCollision, type PartLadder } from './id-parts';
 
 export interface LegacyIdSpaceInput {
   readonly compoundIds?: Iterable<string>;
@@ -76,14 +76,26 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
   };
   const folded = (texts: Iterable<string> | undefined): string[] => [...(texts ?? [])].map(fold);
 
-  const compounds = settle('compound', input.compoundIds ?? [], legacyLadder);
+  // The namespaces whose IDs can read alike are settled in ONE pass, per ID family (step 3.10 review): a compound part is the body of
+  // both `spc_v6-` and `cls_v6-`, a label part of `spc_v6-l-`, a functional-group part of `cls_v6-fg-`, a class text of `cls_v6-l-`.
+  // A crafted clash (a hub `fg-x` and the functional-group class of `x`) is therefore settled by the ladder, not refused. A label and a
+  // class text that fold alike share no family, so they never collide.
+  const shared = resolveSharedParts([
+    { namespace: 'compound', keys: input.compoundIds ?? [], ladder: legacyLadder, slots: (part) => [{ family: 'spc', body: part }, { family: 'cls', body: part }] },
+    { namespace: 'label', keys: folded(input.labels), ladder: textLadder, slots: (part) => [{ family: 'spc', body: `l-${part}` }] },
+    { namespace: 'functional_group', keys: input.functionalGroups ?? [], ladder: legacyLadder, slots: (part) => [{ family: 'cls', body: `fg-${part}` }] },
+    { namespace: 'class_text', keys: folded(input.classTexts), ladder: textLadder, slots: (part) => [{ family: 'cls', body: `l-${part}` }] },
+  ]);
+  collisions.push(...shared.collisions);
+  const part = (namespace: string): ReadonlyMap<string, string> => shared.parts.get(namespace) as ReadonlyMap<string, string>;
+  const compounds = part('compound');
+  const labels = part('label');
+  const functionalGroups = part('functional_group');
+  const classTexts = part('class_text');
   const reactions = settle('reaction', input.reactionIds ?? [], legacyLadder);
-  const labels = settle('label', folded(input.labels), textLadder);
   const concepts = settle('concept', folded(input.concepts), textLadder);
   const namedReactions = settle('named_reaction', folded(input.namedReactions), textLadder);
   const topics = settle('topic', folded(input.topics), textLadder);
-  const functionalGroups = settle('functional_group', input.functionalGroups ?? [], legacyLadder);
-  const classTexts = settle('class_text', folded(input.classTexts), textLadder);
 
   // A pair's natural part joins the two reaction parts; different pairs can join to the same text ("a-b"+"c" vs "a"+"b-c").
   // Every pair whose reactions are registered is settled here; a pair naming an unregistered reaction is a programmer error.

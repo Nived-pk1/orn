@@ -48,8 +48,8 @@
     "3.10"
   ],
   "nextPhase": 3,
-  "nextStep": "3.11",
-  "nextStepTitle": "v5 → ORN reaction mapping (MIGRATION.md §4.5); preview decisions (hub as class/species, reagentFamily values); full report; dry run of both fixtures through the import pipeline (3.6–3.7) with committed expected outputs (fixed clock) in data/fixtures/legacy-expected/ (docs/IMPLEMENTATION_PLAN.md §2 step 3.11; the step 3.10 report suggests splitting it into 3.11a reactions, 3.11b classification and curriculum, 3.11c decisions, report and dry run)",
+  "nextStep": "3.11a",
+  "nextStepTitle": "v5 → ORN reaction mapping, part 1 (MIGRATION.md §4.5): participants, stages, outcomes/products, intermediates, missing-compound placeholders, conditions, notes/images, scope, lifecycle; reaction-side completeness (docs/IMPLEMENTATION_PLAN.md §2 step 3.11a; 3.11b classification and curriculum, 3.11c decisions, report and dry run follow)",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {

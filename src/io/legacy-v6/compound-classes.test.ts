@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { hash64 } from '@/core/hash';
 import type { ChemicalClass, Species } from '@/core/schema';
-import { FIXED_NOW, mapLegacy } from '@/test-support/legacy-map-kit';
+import { mapLegacy } from '@/test-support/legacy-map-kit';
 import type { HubDecision } from './compound-map';
 
 const doc = (compounds: unknown[]) => ({ schemaVersion: 5, compounds, reactions: [] });
@@ -28,7 +28,7 @@ describe('class membership (fgId, functionalGroups, compoundClass)', () => {
     const created = classOf(mapped);
     expect(created).toMatchObject({ id: 'cls_v6-fg-1-alcohol', classKind: 'functional_group' });
     expect(created.names.canonical).toBe('1° alcohol');
-    expect(created.review).toEqual({ lifecycle: 'draft', status: 'review_required', reasons: ['no hub carries fgId "1-alcohol"; functional-group class created from the legacy registry label "1° alcohol"'] });
+    expect(created.review).toEqual({ lifecycle: 'published', status: 'review_required', reasons: ['no hub carries fgId "1-alcohol"; functional-group class created from the legacy registry label "1° alcohol"'] });
     expect(mapped.records.species.map((s) => s.classIds)).toEqual([['cls_v6-fg-1-alcohol'], ['cls_v6-fg-1-alcohol']]);
     expect(mapped.functionalGroupClass.get('1-alcohol')).toBe('cls_v6-fg-1-alcohol');
   });
@@ -63,7 +63,7 @@ describe('class membership (fgId, functionalGroups, compoundClass)', () => {
     const created = mapped.records.class.filter((c) => c.id !== 'cls_v6-h1');
     expect(byId.get('spc_v6-c1')).toEqual(['cls_v6-h1']);
     expect(created).toHaveLength(1);
-    expect(created[0]).toMatchObject({ classKind: 'compound_class', review: { lifecycle: 'draft', status: 'review_required' } });
+    expect(created[0]).toMatchObject({ classKind: 'compound_class', review: { lifecycle: 'published', status: 'review_required' } });
     expect(created[0]?.names.canonical).toBe('long-chain fatty acid');
     expect(created[0]?.id).toBe(`cls_v6-l-long-chain-fatty-acid-${hash64('long chain fatty acid').slice(0, 6)}`);
     expect(byId.get('spc_v6-c2')).toEqual([created[0]?.id]);
@@ -122,12 +122,13 @@ describe('ID collisions in the compound namespace', () => {
     expect(b.review.reasons[0]).toContain('its ID part collided with');
   });
 
-  it('two records that get the same ID from different namespaces are refused as a value, not written', async () => {
-    const { normalizeLegacyData, createDocumentIds, mapLegacyCompounds } = await import('./index');
-    // a hub whose id reads like a functional-group class part, and a species whose fgId creates that class
-    const n = normalizeLegacyData(doc([{ id: 'fg-alkene', name: 'H', nodeType: 'major' }, { id: 'c1', name: 'S', fgId: 'alkene' }]));
-    if (!n.ok) throw new Error('port');
-    const result = await mapLegacyCompounds({ data: n.data, dropped: n.dropped, assignedIds: n.assignedIds, ids: createDocumentIds(n.data) }, { now: () => FIXED_NOW });
-    expect(result).toMatchObject({ ok: false, code: 'DUPLICATE_RECORD_ID', ids: ['cls_v6-fg-alkene'] });
+  it('a hub whose id reads like a functional-group class part is settled by the collision ladder, not refused (step 3.10 review)', async () => {
+    // hub `fg-alkene` is `cls_v6-fg-alkene`; the functional-group class of `alkene` would be `cls_v6-fg-alkene` too
+    const { mapped } = await mapLegacy(doc([{ id: 'fg-alkene', name: 'H', nodeType: 'major' }, { id: 'c1', name: 'S', fgId: 'alkene' }]));
+    const ids = mapped.records.class.map((c) => c.id);
+    expect(new Set(ids).size).toBe(2);
+    expect(ids).toEqual([`cls_v6-fg-alkene-${hash64('fg-alkene').slice(0, 12)}`, `cls_v6-fg-alkene-${hash64('alkene').slice(0, 12)}`]);
+    expect(mapped.functionalGroupClass.get('alkene')).toBe(ids[1]);
+    expect((mapped.records.species[0] as Species).classIds).toEqual([ids[1]]);
   });
 });

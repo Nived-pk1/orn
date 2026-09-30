@@ -41,10 +41,10 @@ describe('§4.9: hubs carry example structures', () => {
     expect(mapped.records.navigator_anchor.find((a) => a.id === `anc_v6-${legacyId}`)?.target).toEqual({ kind: 'species', id: `spc_v6-${legacyId}` });
   });
 
-  it('a hub without an example structure (Alkynes, no SMILES) needs no review for it', async () => {
+  it('a hub without an example structure (Alkynes, no SMILES) needs no review for it (only its general formula is to be checked)', async () => {
     const { mapped } = await mapLegacy(legacyFixture('v6-demo-export.json'));
     const alkynes = mapped.records.class.find((c) => c.id === 'cls_v6-c3') as ChemicalClass;
-    expect(alkynes.review.reasons).toEqual([]);
+    expect(alkynes.review.reasons).toEqual(['general formula taken from the legacy hub formula; check it']);
     expect(alkynes.provenance.legacy?.unmapped).not.toHaveProperty('smiles');
   });
 });

@@ -105,7 +105,7 @@ const VERBATIM: Readonly<Record<string, (record: AnyRecord, value: string) => bo
   id: (r, v) => (r.kind === 'species' || r.kind === 'class') && r.provenance.legacy?.legacyId === v,
   name: (r, v) => (r.kind === 'species' || r.kind === 'class') && r.names.canonical === v,
   smiles: (r, v) => r.kind === 'species' && r.structure?.value === v,
-  formula: (r, v) => r.kind === 'species' && r.formula === v,
+  formula: (r, v) => (r.kind === 'species' && r.formula === v) || (r.kind === 'class' && r.generic?.generalFormula === v),
   properties: (r, v) => (r.kind === 'species' && r.notes === v) || (r.kind === 'class' && r.description === v),
   acidBase: (r, v) => r.kind === 'species' && r.acidBaseNotes === v,
   genericFormula: (r, v) => r.kind === 'class' && r.generic?.formulaText === v,
