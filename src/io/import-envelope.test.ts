@@ -34,7 +34,7 @@ describe('parseDatasetEnvelope', () => {
     expect(result.data.quarantined).toEqual([]);
   });
 
-  it('a record failing L1 is quarantined with its issues and raw value; the rest still import (one bad record never rejects the whole file)', () => {
+  it('INV-23 (quarantine on import): a record failing L1 is quarantined with its issues and raw value; the rest still import (one bad record never rejects the whole file)', () => {
     const bad = { kind: 'species', id: 'spc_bad' }; // missing every other required field
     const result = parseDatasetEnvelope(envelopeWith({ species: [...(validSpecies as unknown[]), bad] }), { runner: migrationRunner });
     if (!result.ok) throw new Error(`expected ok: ${result.message}`);

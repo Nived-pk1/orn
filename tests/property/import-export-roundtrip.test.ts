@@ -53,7 +53,7 @@ async function importAndExport(state: CanonicalState, format: 'json' | 'pkg', mo
   return { first, second: await exportBytes(store.getState(), format) };
 }
 
-describe('P-02 full: export → import (real importer) → export is byte-identical', () => {
+describe('P-02 full (INV-19): export → import (real importer) → export is byte-identical', () => {
   describe.each(cases)('%s', (_name, state) => {
     it.each([
       ['json', 'replace_all'],

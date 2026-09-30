@@ -172,7 +172,7 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
 });
 
 describe('quarantine and in-file duplicates', () => {
-  it('records that repeat an ID keep the first and are listed as quarantined; L1 failures are stored as import quarantine rows with the batch ID on apply', async () => {
+  it('INV-23 (quarantine on import): records that repeat an ID keep the first and are listed as quarantined; L1 failures are stored as import quarantine rows with the batch ID on apply', async () => {
     const store = makeStore(empty);
     const { session, ports } = testSession(store);
     const parsed = await parsedFrom(base);

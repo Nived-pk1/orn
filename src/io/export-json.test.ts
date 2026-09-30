@@ -21,7 +21,7 @@ function deps(assetBytes: AssetBytesProvider = noBytes): OrnJsonExportDeps {
 }
 
 describe('buildOrnJsonExport', () => {
-  it('is deterministic: the same state, options and clock give byte-identical bytes', async () => {
+  it('INV-19 export is deterministic: the same state, options and clock give byte-identical bytes', async () => {
     const options = { scope: 'full', includeDependencies: false, assets: 'none' } as const;
     const a = await buildOrnJsonExport(state, options, deps());
     const b = await buildOrnJsonExport(state, options, deps());

@@ -22,7 +22,7 @@ function deps(assetBytes: AssetBytesProvider = noBytes): OrnPackageExportDeps {
 }
 
 describe('buildOrnPackageExport', () => {
-  it('is deterministic: the same state, options and clock give byte-identical bytes (fixed mtime, fixed entry order)', async () => {
+  it('INV-19 export is deterministic: the same state, options and clock give byte-identical bytes (fixed mtime, fixed entry order)', async () => {
     const options = { scope: 'full', includeDependencies: false, assets: 'package' } as const;
     const a = await buildOrnPackageExport(state, options, deps(withBytes));
     const b = await buildOrnPackageExport(state, options, deps(withBytes));
