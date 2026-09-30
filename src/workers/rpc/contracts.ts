@@ -9,7 +9,7 @@ import type { PrecomputedFindings } from '@/core/commands';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { RouteQuery, RouteSearchResult } from '@/core/graph/contracts';
 import type { Finding } from '@/core/validation/contracts';
-import type { Depiction, DepictionOptions, ParseOutcome } from '@/chem/contracts';
+import type { DepictionOptions, DepictOutcome, ParseOutcome } from '@/chem/contracts';
 import type { ExportBuildResult, ExportOptions, ImportPlan, ImportPlanRequest, ImportPreviewErrorCode, ImportRejectionCode, ParsedAsset } from '@/io/contracts';
 import type { ImportQuarantineDraft, ImportReportDraft } from '@/io';
 import type { LayoutRequest, LayoutResult } from '@/layout/contracts';
@@ -124,10 +124,14 @@ export interface RpcClientOptions<Api extends WorkerApi<Api>> {
   readonly onEvent?: (event: WorkerEvent) => void;
 }
 
+/**
+ * The chem worker holds no state (ADR-034 D1): each call carries its input. `parse` answers facts or a failure value with a
+ * reason (only `invalid` means the structure is bad); `depict` answers sanitised SVG or a failure value. The checks (CHEM-*)
+ * come with step 4.3b, replacing the earlier `checkAll({ revision })`, which assumed state in the worker (Q2).
+ */
 export interface ChemWorkerApi {
   parse(params: { readonly structure: StructureRep }, ctx: RpcCallContext): Promise<ParseOutcome>;
-  depict(params: { readonly structure: StructureRep; readonly options: DepictionOptions }, ctx: RpcCallContext): Promise<Depiction>;
-  checkAll(params: { readonly revision: number }, ctx: RpcCallContext): Promise<readonly Finding[]>;
+  depict(params: { readonly structure: StructureRep; readonly options: DepictionOptions }, ctx: RpcCallContext): Promise<DepictOutcome>;
 }
 
 export interface LayoutWorkerApi {

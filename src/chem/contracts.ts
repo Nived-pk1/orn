@@ -19,9 +19,16 @@ export interface StructureFacts {
   readonly warnings: readonly string[];
 }
 
+/**
+ * Why a toolkit call did not answer (Phase 4 contract decisions Q7). ONLY `invalid` says the structure is bad (CHEM-001 fires
+ * for it and for nothing else); `unavailable` (the toolkit did not load, crashed, or the worker is down) and `timeout` (the
+ * worker was terminated after its per-call limit) say nothing about the structure and are shown as "check unavailable".
+ */
+export type ToolkitFailureReason = 'invalid' | 'unavailable' | 'timeout';
+
 export type ParseOutcome =
   | { readonly ok: true; readonly facts: StructureFacts }
-  | { readonly ok: false; readonly error: string };
+  | { readonly ok: false; readonly reason: ToolkitFailureReason; readonly error: string };
 
 export interface DepictionOptions {
   readonly width: number;
@@ -39,13 +46,25 @@ export interface Depiction {
   readonly height: number;
 }
 
+/** `refused`: the toolkit drew it, but the sanitiser refused the drawing (over the size cap, or not an svg): nothing is shown. */
+export type DepictOutcome =
+  | { readonly ok: true; readonly depiction: Depiction }
+  | { readonly ok: false; readonly reason: ToolkitFailureReason | 'refused'; readonly error: string };
+
+/** `invalid_smarts`: the pattern does not parse. `invalid`: the STRUCTURE does not parse. */
+export type SmartsOutcome =
+  | { readonly ok: true; readonly matches: boolean }
+  | { readonly ok: false; readonly reason: ToolkitFailureReason | 'invalid_smarts'; readonly error: string };
+
 export interface StructureToolkit {
   readonly name: string;
   readonly version: string;
+  /** Resolves when loading has finished, successfully or not (never rejects): a toolkit that did not load answers `unavailable`. */
   ready(): Promise<void>;
   parse(structure: StructureRep): Promise<ParseOutcome>;
-  depict(structure: StructureRep, options: DepictionOptions): Promise<Depiction>;
-  matchesSmarts(structure: StructureRep, smarts: string): Promise<boolean | 'invalid_smarts'>;
+  /** Always answers sanitised SVG (or a failure value); nothing else leaves the chem worker as markup. */
+  depict(structure: StructureRep, options: DepictionOptions): Promise<DepictOutcome>;
+  matchesSmarts(structure: StructureRep, smarts: string): Promise<SmartsOutcome>;
 }
 
 /** L4 checks (CHEM-*) produced in the chem worker. Never blocking; never modify data. */

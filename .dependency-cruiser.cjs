@@ -51,6 +51,13 @@ module.exports = {
       to: { path: '^src/workers/' },
     },
     {
+      name: 'rdkit-only-in-adapter',
+      comment: 'ADR-009: only the RDKit adapter files (src/chem/rdkit/) import @rdkit/rdkit; everything else goes through StructureToolkit.',
+      severity: 'error',
+      from: { path: '^src/', pathNot: '^src/chem/rdkit/' },
+      to: { path: 'node_modules/@rdkit/' },
+    },
+    {
       name: 'worker-entry-chem',
       comment: 'ADR-034 D1: a worker entry imports only its own service and core (compute also io).',
       severity: 'error',

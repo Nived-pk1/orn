@@ -16,6 +16,7 @@ import type {
   RpcResult,
   SearchWorkerApi,
 } from '@/workers/rpc/contracts';
+import type { DepictOutcome, ParseOutcome, SmartsOutcome } from '@/chem/contracts';
 import type { PrecomputedFindings } from '@/core/commands';
 import type { Finding } from '@/core/validation/contracts';
 
@@ -45,4 +46,15 @@ it('type: the compute replica calls answer what the store takes and refuse stale
   expectTypeOf<Extract<ReplicaAnswer<{ readonly revision: number }>, { ok: false }>>().toEqualTypeOf<ReplicaStale>();
   expectTypeOf<ReplicaStale>().toEqualTypeOf<{ readonly ok: false; readonly code: 'REPLICA_STALE'; readonly have: number }>();
   expectTypeOf<Extract<ReplicaAnswer<{ readonly revision: number }>, { ok: true }>['revision']>().toBeNumber();
+});
+
+it('type: the chem worker answers failure values with a reason; only `invalid` means the structure is bad (step 4.3a, Q7)', () => {
+  type Failed<T> = Extract<T, { readonly ok: false }>;
+  expectTypeOf<Failed<ParseOutcome>['reason']>().toEqualTypeOf<'invalid' | 'unavailable' | 'timeout'>();
+  expectTypeOf<Failed<DepictOutcome>['reason']>().toEqualTypeOf<'invalid' | 'unavailable' | 'timeout' | 'refused'>();
+  expectTypeOf<Failed<SmartsOutcome>['reason']>().toEqualTypeOf<'invalid' | 'unavailable' | 'timeout' | 'invalid_smarts'>();
+  expectTypeOf<RpcClient<ChemWorkerApi>['parse']>().returns.resolves.toEqualTypeOf<RpcResult<ParseOutcome>>();
+  expectTypeOf<RpcClient<ChemWorkerApi>['depict']>().returns.resolves.toEqualTypeOf<RpcResult<DepictOutcome>>();
+  // checkAll({ revision }) assumed state in the chem worker (D1): it is gone; the checks come with 4.3b.
+  expectTypeOf<keyof ChemWorkerApi>().toEqualTypeOf<'parse' | 'depict'>();
 });

@@ -48,3 +48,8 @@ const COMPUTE_FIXTURE = new URL('../../tests/fixtures/compute/worker.ts', import
  */
 export const spawnComputeWorker = (crashOn?: string): RpcPort =>
   nodeWorkerPort(new Worker(COMPUTE_FIXTURE, { execArgv: ['--import', 'tsx'], workerData: { crashOn } }));
+
+const CHEM_FIXTURE = new URL('../../tests/fixtures/chem/worker.ts', import.meta.url);
+
+/** Starts the real chem worker (`startChemHost` over RDKit) in a real thread. */
+export const spawnChemWorker: WorkerFactory = () => nodeWorkerPort(new Worker(CHEM_FIXTURE, { execArgv: ['--import', 'tsx'] }));

@@ -319,4 +319,26 @@ export const BUDGETS = {
     { operation: "step 4.2e: .ornpkg, assets package with 20 MiB of assets through a real thread", tier: 'design', shape: 'dense', budgetMs: null, note: "step 4.2e: informal (first asset-bearing export; wall clock); SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
   "asset-bearing export through a real thread (design tier, dense, 20 MiB): end to end, wall clock > .orn.json, assets embed: settle + plan + read + build + result back":
     { operation: "step 4.2e: .orn.json, assets embed with 20 MiB of assets through a real thread", tier: 'design', shape: 'dense', budgetMs: null, note: "step 4.2e: informal (first asset-bearing export; wall clock); SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
+  "chem: WASM init > loadRdkit() in process: read and compile the 7 MB WASM, instantiate, disable logging":
+    { operation: "step 4.3a: WASM init in process", tier: 'chem', shape: 'wasm', budgetMs: null, note: "informal; no PERFORMANCE_ARCHITECTURE.md row; SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
+  "chem: WASM init > real thread, cold: spawn a thread, load RDKit, first parse of ethanol":
+    { operation: "step 4.3a: cold real thread, first parse", tier: 'chem', shape: 'wasm', budgetMs: null, note: "informal; thread start under tsx is in the figure (a test-only cost); SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
+  "chem: WASM init > real thread, after a restart: a call limited to 50 ms terminates the thread, then the first parse in the NEW thread (the 50 ms limit is in the figure)":
+    { operation: "step 4.3a: first parse after a restart (WASM loaded again)", tier: 'chem', shape: 'wasm', budgetMs: null, note: "informal; includes the 50 ms limit of the killed call and the first thread's own start; SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
+  "chem: parse and depict of demo species (in process, no cache) > parse ethanol (3 heavy atoms)":
+    { operation: "step 4.3a: parse, typical demo species", tier: 'chem', shape: 'species', budgetMs: null, note: "informal; no cache; run once alone; not bench:baseline" },
+  "chem: parse and depict of demo species (in process, no cache) > depict ethanol, 300 x 200, sanitised":
+    { operation: "step 4.3a: depict + sanitise, typical demo species", tier: 'chem', shape: 'species', budgetMs: null, note: "informal; RDKit drawing plus the sanitiser; no cache; run once alone; not bench:baseline" },
+  "chem: parse and depict of demo species (in process, no cache) > parse benzoyl peroxide (18 heavy atoms, the largest demo species)":
+    { operation: "step 4.3a: parse, largest demo species", tier: 'chem', shape: 'species', budgetMs: null, note: "informal; no cache; run once alone; not bench:baseline" },
+  "chem: parse and depict of demo species (in process, no cache) > depict benzoyl peroxide, 300 x 200, sanitised":
+    { operation: "step 4.3a: depict + sanitise, largest demo species", tier: 'chem', shape: 'species', budgetMs: null, note: "informal; RDKit drawing plus the sanitiser; no cache; run once alone; not bench:baseline" },
+  "chem: a 20,000-character SMILES > parse in process (10,001 fragments): facts, canonical SMILES of 20,000 characters":
+    { operation: "step 4.3a: parse of a 20,000-character SMILES", tier: 'chem', shape: 'cap', budgetMs: null, note: "informal; the input cap (SECURITY §3); SLOW_BENCH_OPTIONS; run once alone; not bench:baseline" },
+  "chem: a 20,000-character SMILES > depict through a real thread: runs into the 2 s limit, answers timeout, the thread is replaced (thread start and restart included)":
+    { operation: "step 4.3a: depict of a 20,000-character SMILES (times out)", tier: 'chem', shape: 'cap', budgetMs: null, note: "informal; the answer is `timeout` at the 2 s limit, so the figure is the limit plus thread start and restart; 3 iterations; run once alone; not bench:baseline" },
+  "chem: the sanitiser on a typical RDKit depiction > sanitise ethanol's drawing":
+    { operation: "step 4.3a: sanitiser on a small drawing", tier: 'chem', shape: 'sanitiser', budgetMs: null, note: "informal; pure string work; run once alone; not bench:baseline" },
+  "chem: the sanitiser on a typical RDKit depiction > sanitise benzoyl peroxide's drawing":
+    { operation: "step 4.3a: sanitiser on the largest demo drawing", tier: 'chem', shape: 'sanitiser', budgetMs: null, note: "informal; pure string work; run once alone; not bench:baseline" },
 };
