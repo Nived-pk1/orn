@@ -9,6 +9,7 @@ export type {
   DraftCommitOutcome,
   EditorSession,
   HistoryEntry,
+  PrecomputedFindings,
   RemoteChange,
 } from './contracts';
 export { duplicateRecord, mergeRecords, reorderItems } from './builders';

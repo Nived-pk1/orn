@@ -18,10 +18,11 @@ import { createFindingStore } from '../validation/store';
 import { commitFindings, commitTouched, validator as defaultValidator } from '../validation/validator';
 import type { Finding, FindingStore, Validator } from '../validation/contracts';
 import { runBatch } from './batch';
-import type { CanonicalStore, CommandEnvelope, CommandError, CommitResult, HistoryEntry, RemoteChange } from './contracts';
+import type { CanonicalStore, CommandEnvelope, CommandError, CommitResult, HistoryEntry, PrecomputedFindings, RemoteChange } from './contracts';
 import { createHistory, DEFAULT_HISTORY_LIMITS, type HistoryLimits } from './history';
 import { computeDeleteImpact } from './impact';
 import { allRefs } from './lookup';
+import { checkPrecomputed, differsFrom } from './precomputed';
 import { planRemote } from './remote';
 import { replacementPatches, shapeProblem } from './replace';
 
@@ -38,6 +39,8 @@ export interface StoreOptions {
   readonly historyLimits?: HistoryLimits;
   /** Run `validateAll` on `initial` to fill the finding store (default true). Errors do not stop construction. */
   readonly validateInitial?: boolean;
+  /** Tests only, default false: `replaceState`/`reload` with precomputed findings also run `validateAll` and refuse `FINDINGS_MISMATCH` if they differ. */
+  readonly verifyPrecomputed?: boolean;
   /** Called when a subscriber throws; the others still run. Default: rethrow from a microtask so it stays visible. */
   readonly onListenerError?: (error: unknown) => void;
 }
@@ -158,6 +161,12 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
     }
   }
 
+  /** The findings a whole-state adoption uses: recomputed, or the checked precomputed ones. Refusal is a value. */
+  function findingsOf(replacement: CanonicalState, nextIndexes: CoreIndexes, precomputed: PrecomputedFindings | undefined): readonly Finding[] | CommandError {
+    if (precomputed === undefined) return validator.validateAll(replacement, nextIndexes);
+    return (options.verifyPrecomputed === true ? differsFrom(precomputed.findings, validator.validateAll(replacement, nextIndexes)) : undefined) ?? precomputed.findings;
+  }
+
   function travel(direction: 'undo' | 'redo'): CommitResult | null {
     const entry = direction === 'undo' ? history.peekUndo() : history.peekRedo();
     if (entry === undefined) return null;
@@ -275,16 +284,17 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
       }
     },
 
-    reload(next, adoptedRevision): CommitResult {
+    reload(next, adoptedRevision, precomputed): CommitResult {
       if (!isReadOnly()) return failure(notFollower('reload'));
       if (!Number.isInteger(adoptedRevision) || adoptedRevision < 0) {
         return failure({ code: 'STALE_REVISION', message: `Revision ${String(adoptedRevision)} is not a non-negative integer.` });
       }
-      const problem = shapeProblem(next);
+      const problem = shapeProblem(next) ?? (precomputed === undefined ? undefined : checkPrecomputed(next, adoptedRevision, precomputed));
       if (problem !== undefined) return failure(problem);
       const replacement = freeze(next, true);
       const nextIndexes = coreIndexEngine.build(replacement, adoptedRevision);
-      const found = validator.validateAll(replacement, nextIndexes);
+      const found = findingsOf(replacement, nextIndexes, precomputed);
+      if ('code' in found) return failure(found);
       const changes = assembleChangeSet({
         revision: adoptedRevision,
         label: 'Reload from storage',
@@ -304,13 +314,14 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
       return { ok: true, changes, findings: found };
     },
 
-    replaceState(next, reason): CommitResult {
+    replaceState(next, reason, precomputed): CommitResult {
       if (isReadOnly()) return failure({ code: 'READ_ONLY', message: 'This tab is read-only.' });
-      const problem = shapeProblem(next);
+      const problem = shapeProblem(next) ?? (precomputed === undefined ? undefined : checkPrecomputed(next, revision + 1, precomputed));
       if (problem !== undefined) return failure(problem);
       const replacement = freeze(next, true);
       const nextIndexes = coreIndexEngine.build(replacement, revision + 1);
-      const found = validator.validateAll(replacement, nextIndexes);
+      const found = findingsOf(replacement, nextIndexes, precomputed);
+      if ('code' in found) return failure(found);
       const errors = found.filter((finding) => finding.severity === 'error');
       if (errors.length > 0) {
         return failure({

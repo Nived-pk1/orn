@@ -40,6 +40,8 @@ export type CommandErrorCode =
   | 'READ_ONLY'
   /** `applyRemote` / `reload` on a writable store: only a read-only follower may mirror storage (ADR-033, INV-28). */
   | 'NOT_FOLLOWER'
+  /** Precomputed findings do not belong to the state being adopted (or, with `verifyPrecomputed`, differ from `validateAll`). */
+  | 'FINDINGS_MISMATCH'
   | 'EMPTY_COMMAND'
   | 'INTERNAL';
 
@@ -78,6 +80,21 @@ export interface RemoteChange {
   readonly meta?: DatasetMeta;
 }
 
+/**
+ * L1-L3 findings produced elsewhere (the compute worker) for exactly the state passed to `replaceState` or `reload`
+ * (Phase 4 contract decisions, Q3). The store accepts them only if every cheap, exact check holds (`checkPrecomputed`):
+ * `ruleSet` is `RULE_SET_ID`; `revision` is the revision the store will adopt; `recordCounts` equal the new state's
+ * count per kind; every finding is about a record of the new state, is level 1-3 and of a rule of the rule set; no
+ * finding ID is repeated. Otherwise the call is refused as `FINDINGS_MISMATCH` and nothing changes; the store never
+ * falls back to recomputing. L4 findings are never passed.
+ */
+export interface PrecomputedFindings {
+  readonly findings: readonly Finding[];
+  readonly ruleSet: string;
+  readonly revision: number;
+  readonly recordCounts: Readonly<Record<RecordKind, number>>;
+}
+
 export interface CanonicalStore {
   getState(): CanonicalState;
   getRevision(): number;
@@ -91,8 +108,12 @@ export interface CanonicalStore {
   canUndo(): boolean;
   canRedo(): boolean;
   historyLabels(): { readonly undo: readonly string[]; readonly redo: readonly string[] };
-  /** Import, migration or snapshot restore. Validated like a commit; clears undo/redo history. */
-  replaceState(next: CanonicalState, reason: 'import' | 'migration' | 'restore'): CommitResult;
+  /**
+   * Import, migration or snapshot restore. Validated like a commit; clears undo/redo history. With `precomputed` the
+   * findings are not recomputed: they are checked (`PrecomputedFindings`), the ERROR gate runs on them, and a failed
+   * check is `FINDINGS_MISMATCH`. Without it the behaviour is unchanged.
+   */
+  replaceState(next: CanonicalState, reason: 'import' | 'migration' | 'restore', precomputed?: PrecomputedFindings): CommitResult;
   /**
    * FOLLOWER TABS ONLY (ADR-033). Mirrors one transaction the writer persisted: incremental indexes and
    * `validateTouchedByRule` with the previous state, but no ERROR gate (the writer already validated; findings are
@@ -103,10 +124,11 @@ export interface CanonicalStore {
   applyRemote(change: RemoteChange): CommitResult;
   /**
    * FOLLOWER TABS ONLY (ADR-033). Adopts a state read whole from storage AT `revision` (not revision + 1): rebuilds
-   * indexes, validates without a gate, clears undo/redo history, notifies with `cause: 'remote'`. Refused on a
-   * writable store (`NOT_FOLLOWER`). Promotion is `reload`, then the tab becomes writable.
+   * indexes, validates without a gate (or takes `precomputed` findings, checked for `revision`), clears undo/redo
+   * history, notifies with `cause: 'remote'`. Refused on a writable store (`NOT_FOLLOWER`). Promotion is `reload`,
+   * then the tab becomes writable.
    */
-  reload(next: CanonicalState, revision: number): CommitResult;
+  reload(next: CanonicalState, revision: number, precomputed?: PrecomputedFindings): CommitResult;
 }
 
 /** Injected capabilities keep the core deterministic and environment-free. */

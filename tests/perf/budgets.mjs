@@ -215,4 +215,12 @@ export const BUDGETS = {
     { operation: 'rpc: round trip, ChangeSet-sized payload', tier: 'rpc', shape: 'changeset', budgetMs: null, note: 'step 4.1: informal; what the replica sync sends per commit' },
   'rpc round trip (worker_threads) > about 1 MB payload echoed':
     { operation: 'rpc: round trip, about 1 MB payload', tier: 'rpc', shape: '1mb', budgetMs: null, note: 'step 4.1: informal; structured clone both ways, 10,000 small records' },
+  'replaceState (design tier, dense) > in-process: validateAll + index build + commit':
+    { operation: 'replaceState: in-process', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 4.2a: no PERFORMANCE_ARCHITECTURE.md §2 row; informal; SLOW_BENCH_OPTIONS, few samples; validateAll + index build + commit, the path before step 4.2a' },
+  'replaceState (design tier, dense) > precomputed findings: check + index build + commit':
+    { operation: 'replaceState: precomputed', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 4.2a: no PERFORMANCE_ARCHITECTURE.md §2 row; informal; SLOW_BENCH_OPTIONS, few samples; precomputed findings checked and committed; index build stays on main (D2)' },
+  'reload (design tier, dense) > in-process: validateAll + index build + commit':
+    { operation: 'reload: in-process', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 4.2a: no PERFORMANCE_ARCHITECTURE.md §2 row; informal; SLOW_BENCH_OPTIONS, few samples; validateAll + index build + commit, the path before step 4.2a' },
+  'reload (design tier, dense) > precomputed findings: check + index build + commit':
+    { operation: 'reload: precomputed', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 4.2a: no PERFORMANCE_ARCHITECTURE.md §2 row; informal; SLOW_BENCH_OPTIONS, few samples; precomputed findings checked and committed; index build stays on main (D2)' },
 };
