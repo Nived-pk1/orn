@@ -2245,6 +2245,15 @@ Gate C reviewed by the human reviewer: **PASS** after steps 3.1-3.12, under the 
 
 **Phase 4 note (carried):** the compute worker always passes `previous` to `validateTouched` (exception 5's fallback must never be its normal path).
 
+### Gate C tagging session review (reviewer, 2026-09-30)
+
+Docs-only record of the review of the Gate C tagging session (commit `cdf23ba`, tag `phase-3`). No source, test, dependency, contract or benchmark change.
+
+1. **ACCEPTED:** the verdict recording, decisions (a)-(e), the follow-ups (`check:bench-budgets`, the property suite at 200 runs: 12 files, 130 tests, all passed; the SONNET_HANDOFF §17 line; the PROJECT_STATE update) and the tag `phase-3` on `cdf23ba`.
+2. **Approved:** the extra Amendments line for `npm run check:bench-budgets` (CLAUDE.md §7 requires it) and the SONNET_HANDOFF.md §19 line (the command list).
+3. **Known limit of `check:bench-budgets`, accepted:** a bench title built from a tuple loop acts as a pattern and can cover several entries, so an orphan entry matching that pattern is not reported. Recorded as a PROJECT_STATE openItem (narrow the match to entries of the same bench file if `budgets.mjs` can say which file an entry belongs to; Phase 9, or earlier if a bench is removed).
+4. **The stopped background command** (a wait loop on `baseline-run.txt`) was a leftover of step 3.12's benchmark runs. Nothing to do.
+
 ## Amendments
 - **2026-09-30, Gate C review recorded — `npm run check:bench-budgets` (`scripts/check-bench-budgets.mjs`, part of `npm run check`; tooling only, no contract, schema or invariant change).** Problem: the six missing budget entries of step 3.12 were only found when `bench:compare` aborted. Change: a static check that every `bench()` has a `budgets.mjs` entry and every entry has a bench. Docs: SONNET_HANDOFF.md §19.
 - **2026-09-30, step 3.12 — Gate C packet: `tests/perf/budgets.mjs` gains six entries (four import-preview "stage functions back to back" rows, two legacy import rows); `tests/adversarial/gate-c.test.ts`; three test titles name INV-19 / INV-23 (tooling and tests only; no contract, schema or invariant change).** Problem: `bench:compare` refused to run because six benches had no budget metadata; the Gate C rows had no permanent completeness test and INV-19 / INV-23 were not named at the io layer. Change: the entries (budget 5,000 ms only for the legacy synthetic 5k total), the completeness test, the titles.

@@ -202,6 +202,7 @@
     "Phase 5: legacy re-import reuses the earlier batch's clock when the file's SHA-256 matches (step 3.11c review); the batch report must record the source file's SHA-256 and the clock time used; add them if missing.",
     "Phase 6: reagentFamily (legacy) offers 'keep' only in the import preview because no schema field holds it; linking a reaction's reagentFamily value to the reagents it uses is an authoring question (step 3.11c review).",
     "CLOSED (Gate C review, 2026-09-30, npm run check:bench-budgets): Step 3.12: tests/perf/budgets.mjs lacked entries for six benches (four import-preview stage rows from the 3.7 review, two legacy rows from 3.11c), so bench:compare aborted until they were added. npm run check does not run benches; consider a check that every bench() has a budget entry (Phase 9 or a docs decision).",
-    "Step 3.12: baseline.json runner text says no other heavy applications were open; Edge was open (idle) during the step 3.12 runs (packet header). 43 of 96 entries exceed 25% spread. Correction recorded at the Gate C review (PROGRESS.md): Edge was open and idle during the runs; baseline.json is not edited."
+    "Step 3.12: baseline.json runner text says no other heavy applications were open; Edge was open (idle) during the step 3.12 runs (packet header). 43 of 96 entries exceed 25% spread. Correction recorded at the Gate C review (PROGRESS.md): Edge was open and idle during the runs; baseline.json is not edited.",
+    "check:bench-budgets: narrow tuple-loop title matches to entries of the same bench file if budgets.mjs can say which file an entry belongs to (Phase 9, or earlier if a bench is removed)."
   ]
 }
