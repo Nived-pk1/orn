@@ -83,6 +83,10 @@ export type WorkerEvent =
   | { readonly type: 'dropped_response'; readonly id: number; readonly method?: string; readonly reason: 'cancelled' | 'timeout' | 'unknown' | 'malformed' }
   | { readonly type: 'busy'; readonly method: string; readonly inFlight: number }
   | { readonly type: 'restart_hook_failed'; readonly message: string }
+  /** The hook did not finish in `restartHookTimeoutMs`: the restart counts as failed and the worker starts over. */
+  | { readonly type: 'restart_hook_timeout'; readonly timeoutMs: number; readonly attempt: number }
+  /** The client is down for good (restart cap or no worker could be created); every call answers `WORKER_CRASHED`. */
+  | { readonly type: 'gave_up'; readonly reason: 'restart_cap' | 'start_failed'; readonly restarts: number }
   | { readonly type: 'callback_error'; readonly message: string };
 
 export interface RestartInfo {
@@ -99,6 +103,8 @@ export interface RpcClientOptions<Api extends WorkerApi<Api>> {
   readonly onRestart?: (raw: RpcClient<Api>, info: RestartInfo) => void | Promise<void>;
   /** Restarts allowed in a row without a successful response in between; then the client stays down. Default 3. */
   readonly maxRestarts?: number;
+  /** The hook's own timeout. On expiry the restart counts as failed (towards `maxRestarts`), calls waiting for it answer `WORKER_CRASHED`. Default 30 000. */
+  readonly restartHookTimeoutMs?: number;
   /** Calls in flight at once (from the caller's side); more are answered `BUSY`. Default 16. */
   readonly maxInFlight?: number;
   readonly onEvent?: (event: WorkerEvent) => void;

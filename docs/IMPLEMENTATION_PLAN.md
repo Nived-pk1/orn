@@ -109,7 +109,7 @@ Refined by Phase 4 note D2 (2026-09-30).
 - **D1 Worker model (ADR-034, written in step 4.1).** The chem and layout workers hold no state; the compute worker holds the only replica. Synchronous engines (RDKit, ELK) are stopped by terminating their worker: cancel means "drop the result". Worker entries may import core, io, chem, layout and search; never persistence, ui or features. Persistence stays on the main thread (one write queue).
 - **D2 The compute worker returns precomputed findings.** Prebuilt indexes are NOT transferred by default: once `validateAll` leaves `open()`, boot builds indexes once (in the store). An index transfer is adopted only if a step 4.2 measurement shows it cheaper than a rebuild.
 - **D3 Moving a whole state** between the worker and main is measured (main-thread receive time) and reported, not optimised in Phase 4; judged at Gate E.
-- **D4 Retry once after a restart** only for idempotent calls (`validateAll`, `findRoutes`, preview, build, parse, depict, layout, search); never for apply-like calls.
+- **D4 Retry once after a restart** only for idempotent calls (`validateAll`, `findRoutes`, preview, build, parse, depict, layout, search); never for apply-like calls. Only after `WORKER_CRASHED` (the worker died or was restarted under the call), never after `TIMEOUT`: a call that timed out would most likely time out again.
 - **D5 Dependencies** are pinned at install, versions recorded, `npm audit` 0; the RDKit WASM is bundled locally.
 - **D6 Phase 4 has no gate.** Step 4.6 closes it; the reviewer's acceptance is recorded in PROGRESS.md; a separate session tags `phase-4`. `bench:compare` (compare only) is allowed at 4.6.
 - **D7 Creating workers in the app**, status banners and every UI wiring are Phase 5.

@@ -66,4 +66,22 @@ describe('callWithRetry', () => {
     expect(await callWithRetry(down, TEST_SPECS, 'add', { a: 1, b: 1 })).toMatchObject({ ok: false, error: { code: 'WORKER_CRASHED' } });
     expect(await callWithRetry(client, TEST_SPECS, 'add', { a: 1, b: 1 })).toMatchObject({ ok: false });
   });
+
+  it('when a TIMEOUT on one call terminates the worker, the other pending calls answer WORKER_CRASHED and an idempotent one is retried', async () => {
+    const events: WorkerEvent[] = [];
+    const rig = createMemoryWorkers((worker, index) => {
+      // the first worker never answers `echo`; the restarted one is healthy
+      createRpcHost(worker.host, index === 0 ? { ...testHandlers, echo: () => new Promise<never>(() => undefined) } : testHandlers);
+    });
+    const client = createRpcClient<TestApi>({ factory: rig.factory, specs: TEST_SPECS, options: { onEvent: (e) => events.push(e) } });
+    const culprit = client.hang({});
+    const victimRaw = client.echo({ value: 1 });
+    const victimRetried = callWithRetry(client, TEST_SPECS, 'echo', { value: 7 });
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(await culprit).toMatchObject({ ok: false, error: { code: 'TIMEOUT' } });
+    expect(await victimRaw).toMatchObject({ ok: false, error: { code: 'WORKER_CRASHED' } });
+    expect(await victimRetried).toEqual({ ok: true, value: 7 });
+    expect(events.filter((e) => e.type === 'timeout')).toHaveLength(1);
+    expect(rig.workers).toHaveLength(2);
+  });
 });

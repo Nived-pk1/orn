@@ -186,7 +186,8 @@ describe('rpc client: timeout, crash, restart', () => {
       await vi.advanceTimersByTimeAsync(1_000);
       await call;
     }
-    expect(events.at(-1)).toMatchObject({ type: 'crash', willRestart: false });
+    expect(events.at(-2)).toMatchObject({ type: 'crash', willRestart: false });
+    expect(events.at(-1)).toEqual({ type: 'gave_up', reason: 'restart_cap', restarts: 1 });
     expect(await client.add({ a: 1, b: 1 })).toMatchObject({ ok: false, error: { code: 'WORKER_CRASHED' } });
   });
 
@@ -269,5 +270,106 @@ describe('rpc client: in-flight cap and the restart hook', () => {
     client.terminate();
     release();
     expect(await waiting).toMatchObject({ ok: false, error: { code: 'CANCELLED' } });
+  });
+});
+
+describe('rpc client: restart hook timeout and giving up', () => {
+  const never = (): Promise<void> => new Promise<void>(() => undefined);
+
+  it('a hook that outlives restartHookTimeoutMs counts as a failed restart: reported, waiting calls answer WORKER_CRASHED, the worker starts over', async () => {
+    const attempts: number[] = [];
+    const { client, rig, events } = make({
+      restartHookTimeoutMs: 500,
+      onRestart: async (_raw, info) => {
+        attempts.push(info.attempt);
+        if (info.attempt === 1) await never();
+      },
+    });
+    rig.workers[0]?.crash('exit');
+    await vi.advanceTimersByTimeAsync(0);
+    const waiting = client.add({ a: 1, b: 1 });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(await waiting).toMatchObject({ ok: false, error: { code: 'WORKER_CRASHED' } });
+    expect(events).toContainEqual({ type: 'restart_hook_timeout', timeoutMs: 500, attempt: 1 });
+    expect(rig.workers).toHaveLength(3);
+    expect(rig.workers[1]?.alive()).toBe(false);
+    expect(attempts).toEqual([1, 2]);
+    expect(await client.add({ a: 2, b: 2 })).toEqual({ ok: true, value: 4 });
+  });
+
+  it('the default hook timeout is 30 s, and a hook that finishes in time is not touched', async () => {
+    let done = false;
+    const { client, rig, events } = make({
+      onRestart: async () => {
+        await new Promise<void>((resolve) => setTimeout(resolve, 29_000));
+        done = true;
+      },
+    });
+    rig.workers[0]?.crash('exit');
+    await vi.advanceTimersByTimeAsync(0);
+    const waiting = client.add({ a: 1, b: 1 });
+    await vi.advanceTimersByTimeAsync(29_000);
+    expect(await waiting).toEqual({ ok: true, value: 2 });
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(done).toBe(true);
+    expect(types(events)).not.toContain('restart_hook_timeout');
+    expect(rig.workers).toHaveLength(2);
+
+    const stuck = make({ onRestart: never });
+    stuck.rig.workers[0]?.crash('exit');
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(29_999);
+    expect(types(stuck.events)).not.toContain('restart_hook_timeout');
+    await vi.advanceTimersByTimeAsync(1);
+    expect(stuck.events).toContainEqual({ type: 'restart_hook_timeout', timeoutMs: 30_000, attempt: 1 });
+  });
+
+  it('hook timeouts count towards maxRestarts: the client gives up, says so, and every call answers WORKER_CRASHED', async () => {
+    const { client, rig, events } = make({ restartHookTimeoutMs: 100, maxRestarts: 2, onRestart: never });
+    rig.workers[0]?.crash('exit');
+    await vi.advanceTimersByTimeAsync(0);
+    const waiting = client.add({ a: 1, b: 1 });
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(await waiting).toMatchObject({ ok: false, error: { code: 'WORKER_CRASHED' } });
+    expect(events.filter((e) => e.type === 'restart_hook_timeout')).toHaveLength(2);
+    expect(events.at(-1)).toEqual({ type: 'gave_up', reason: 'restart_cap', restarts: 2 });
+    expect(rig.workers).toHaveLength(3);
+    expect(await client.add({ a: 1, b: 1 })).toMatchObject({ ok: false, error: { code: 'WORKER_CRASHED' } });
+  });
+
+  it('a hook that is still running when its worker is replaced cannot reach the new worker through raw', async () => {
+    let lateResult: unknown;
+    const { client, rig } = make({
+      restartHookTimeoutMs: 100,
+      onRestart: async (raw, info) => {
+        if (info.attempt !== 1) return;
+        await new Promise<void>((resolve) => setTimeout(resolve, 300));
+        lateResult = await raw.add({ a: 1, b: 1 });
+      },
+    });
+    rig.workers[0]?.crash('exit');
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lateResult).toMatchObject({ ok: false, error: { code: 'WORKER_CRASHED' } });
+    expect(rig.workers[2]?.received).toEqual([]);
+    expect(await client.add({ a: 1, b: 1 })).toEqual({ ok: true, value: 2 });
+  });
+
+  it('gave_up is emitted when the restart cap is reached and when no worker can be created', async () => {
+    const { rig, events } = make({ maxRestarts: 2 });
+    for (let i = 0; i < 3; i += 1) {
+      rig.workers[i]?.crash('exit');
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    expect(events.filter((e) => e.type === 'gave_up')).toEqual([{ type: 'gave_up', reason: 'restart_cap', restarts: 2 }]);
+
+    const startEvents: WorkerEvent[] = [];
+    createRpcClient<TestApi>({
+      factory: () => {
+        throw new Error('no worker for you');
+      },
+      specs: TEST_SPECS,
+      options: { onEvent: (e) => startEvents.push(e) },
+    });
+    expect(startEvents.at(-1)).toEqual({ type: 'gave_up', reason: 'start_failed', restarts: 0 });
   });
 });

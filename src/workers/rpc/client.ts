@@ -2,7 +2,8 @@
  * The main thread's side of the RPC (docs/PERFORMANCE_ARCHITECTURE.md §3, ADR-034). Every call answers a value
  * (`RpcResult`), never rejects. Rules: a response after a cancel or a timeout is dropped and reported, never
  * delivered; a crash fails every pending call with `WORKER_CRASHED`, then the worker is restarted (capped); a timeout
- * terminates and restarts the worker (a synchronous task cannot see a cancel, D1); more calls in flight than
+ * terminates and restarts the worker (a synchronous task cannot see a cancel, D1; the other pending calls answer
+ * `WORKER_CRASHED`); a restart hook has its own timeout; going down for good emits `gave_up`; more calls in flight than
  * `maxInFlight` answer `BUSY`.
  */
 import type {
@@ -43,6 +44,7 @@ export function createRpcClient<Api extends WorkerApi<Api>>(config: RpcClientCon
   const options = config.options ?? {};
   const maxRestarts = options.maxRestarts ?? 3;
   const maxInFlight = options.maxInFlight ?? 16;
+  const restartHookTimeoutMs = options.restartHookTimeoutMs ?? 30_000;
   const methods = Object.keys(specs);
   for (const method of methods) {
     if (method === 'terminate') throw new TypeError('"terminate" is reserved: a worker method cannot use that name');
@@ -57,7 +59,8 @@ export function createRpcClient<Api extends WorkerApi<Api>>(config: RpcClientCon
   let nextId = 1;
   let inFlight = 0;
   let restartsInARow = 0;
-  let gate: Promise<void> | undefined;
+  /** Settles `true` when the restart hook is done (or failed and calls proceed), `false` when it timed out. */
+  let gate: Promise<boolean> | undefined;
   const pending = new Map<number, Pending>();
   /** Calls whose answer is no longer wanted (cancelled, timed out): a late response is reported and dropped. */
   const abandoned = new Map<number, { method: string; reason: 'cancelled' | 'timeout' }>();
@@ -151,8 +154,9 @@ export function createRpcClient<Api extends WorkerApi<Api>>(config: RpcClientCon
     }
   }
 
-  const goDown = (): void => {
+  const goDown = (why: 'restart_cap' | 'start_failed'): void => {
     state = 'down';
+    emit({ type: 'gave_up', reason: why, restarts: restartsInARow });
     failAll('WORKER_CRASHED', `the worker is down after ${restartsInARow} restart(s)`);
   };
 
@@ -162,25 +166,38 @@ export function createRpcClient<Api extends WorkerApi<Api>>(config: RpcClientCon
     failAll('WORKER_CRASHED', why);
     if (restartsInARow >= maxRestarts) {
       if (reason === 'timeout') emit({ type: 'crash', reason: 'error', message: 'restart cap reached after a timeout', pending: 0, willRestart: false });
-      goDown();
+      goDown('restart_cap');
       return;
     }
     restartsInARow += 1;
     if (!start()) {
-      goDown();
+      goDown('start_failed');
       return;
     }
     emit({ type: 'restart', reason, restarts: restartsInARow });
     const hook = options.onRestart;
     if (hook === undefined) return;
     const info: RestartInfo = { reason, attempt: restartsInARow };
-    const mine: Promise<void> = (async () => {
-      try {
-        await hook(build(true), info);
-      } catch (error) {
-        emit({ type: 'restart_hook_failed', message: messageOf(error) });
-      }
-    })().finally(() => {
+    const born = generation;
+    const mine: Promise<boolean> = new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => {
+        if (gate !== mine || state !== 'up') return resolve(true);
+        emit({ type: 'restart_hook_timeout', timeoutMs: restartHookTimeoutMs, attempt: info.attempt });
+        resolve(false);
+        // the worker's replica was never reloaded: this restart failed, so it counts and the worker starts over
+        restart('crash', `the restart hook did not finish within ${restartHookTimeoutMs} ms`);
+      }, restartHookTimeoutMs);
+      (async () => {
+        try {
+          await hook(build(true, born), info);
+        } catch (error) {
+          emit({ type: 'restart_hook_failed', message: messageOf(error) });
+        }
+      })().then(() => {
+        clearTimeout(timer);
+        resolve(true);
+      });
+    }).finally(() => {
       if (gate === mine) gate = undefined;
     });
     gate = mine;
@@ -226,8 +243,9 @@ export function createRpcClient<Api extends WorkerApi<Api>>(config: RpcClientCon
       }
     });
 
-  const call = async (method: string, params: unknown, callOptions: RpcCallOptions, bypass: boolean): Promise<RpcResult<unknown>> => {
+  const call = async (method: string, params: unknown, callOptions: RpcCallOptions, bypass: boolean, born?: number): Promise<RpcResult<unknown>> => {
     const unusable = (): RpcResult<unknown> | undefined => {
+      if (born !== undefined && born !== generation) return rpcError('WORKER_CRASHED', 'the worker this restart hook was started for is gone');
       if (state === 'terminated') return rpcError('CANCELLED', 'the client was terminated');
       if (state === 'down') return rpcError('WORKER_CRASHED', `the worker is down after ${restartsInARow} restart(s)`);
       if (callOptions.signal?.aborted === true) return rpcError('CANCELLED', `${method} was cancelled`);
@@ -242,7 +260,7 @@ export function createRpcClient<Api extends WorkerApi<Api>>(config: RpcClientCon
     if (!bypass) inFlight += 1;
     try {
       if (!bypass && gate !== undefined) {
-        await gate;
+        if (!(await gate)) return rpcError('WORKER_CRASHED', 'the worker was restarted again: its restart hook did not finish in time');
         const changed = unusable();
         if (changed !== undefined) return changed;
       }
@@ -252,9 +270,10 @@ export function createRpcClient<Api extends WorkerApi<Api>>(config: RpcClientCon
     }
   };
 
-  function build(bypass: boolean): RpcClient<Api> {
+  /** `born`: the worker generation a restart hook's `raw` client belongs to; after another restart its calls fail. */
+  function build(bypass: boolean, born?: number): RpcClient<Api> {
     const api: Record<string, unknown> = {};
-    for (const method of methods) api[method] = (params: unknown, callOptions: RpcCallOptions = {}) => call(method, params, callOptions, bypass);
+    for (const method of methods) api[method] = (params: unknown, callOptions: RpcCallOptions = {}) => call(method, params, callOptions, bypass, born);
     api.terminate = () => {
       if (state === 'terminated') return;
       state = 'terminated';
@@ -264,6 +283,6 @@ export function createRpcClient<Api extends WorkerApi<Api>>(config: RpcClientCon
     return api as unknown as RpcClient<Api>;
   }
 
-  if (!start()) state = 'down';
+  if (!start()) goDown('start_failed');
   return build(false);
 }
