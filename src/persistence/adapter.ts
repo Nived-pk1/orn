@@ -48,6 +48,11 @@ export interface DexieAdapterOptions {
   readonly lock: WriterLock;
   /** Where the writer announces each persisted transaction (`orn-changes`). Absent: nobody is told (a single tab). */
   readonly channel?: ChangeChannel;
+  /**
+   * Boot's L1-L3 pass and promotion's (step 4.2d, Q4): findings for the loaded state stamped for the store. Absent: this thread
+   * validates. The compute worker's implementation is `createComputeBootValidator` (src/workers/compute/boot-port.ts).
+   */
+  readonly validate?: BootPorts['validate'];
   /** Migrates an older database at boot (and is the arbiter of which stored versions are acceptable). */
   readonly runner: MigrationRunner;
   /** Optional per-key checks for the tolerant uiState restore; an entry that fails is reset and reported. */
@@ -191,6 +196,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     ids: options.ids,
     generator: options.generator ?? DEFAULT_GENERATOR,
     ...(options.uiStateValidators !== undefined ? { uiStateValidators: options.uiStateValidators } : {}),
+    ...(options.validate !== undefined ? { validate: options.validate } : {}),
     ...(options.onEvent !== undefined ? { onEvent: options.onEvent } : {}),
     readCommitted,
     moveToQuarantine: aux.moveToQuarantine,
@@ -251,6 +257,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     storeSnapshotBytes: (input) => snapshots.storeSnapshotBytes(input),
     listSnapshots: () => snapshots.listSnapshots(),
     readSnapshot: (id) => snapshots.readSnapshot(id),
+    readSnapshotBytes: (id) => snapshots.readSnapshotBytes(id),
     deleteSnapshot: (id) => snapshots.deleteSnapshot(id),
     putDerived: (row) => cache.put(row),
     getDerived: (key) => cache.get(key),

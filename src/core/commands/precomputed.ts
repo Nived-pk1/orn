@@ -16,6 +16,16 @@ const KINDS: ReadonlySet<string> = new Set(RECORD_KINDS);
 const mismatch = (message: string): CommandError => ({ code: 'FINDINGS_MISMATCH', message: `Precomputed findings refused: ${message}` });
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
+/** The number of records of each kind: the cheap fingerprint that ties findings to a state (`PrecomputedFindings.recordCounts`). */
+export function recordCountsOf(state: CanonicalState): Record<RecordKind, number> {
+  return Object.fromEntries(RECORD_KINDS.map((kind) => [kind, Object.keys(state.records[kind]).length])) as Record<RecordKind, number>;
+}
+
+/** `findings` (a `validateAll` result of `state`) stamped for adoption at `revision`: what a producer in this thread hands the store. */
+export function precomputedFor(state: CanonicalState, revision: number, findings: readonly Finding[]): PrecomputedFindings {
+  return { findings, ruleSet: RULE_SET_ID, revision, recordCounts: recordCountsOf(state) };
+}
+
 /** Why `pre` cannot be the L1-L3 findings of `next` adopted at `revision`, or undefined. `next` has the shape of a state. */
 export function checkPrecomputed(next: CanonicalState, revision: number, pre: PrecomputedFindings): CommandError | undefined {
   if (!isObject(pre) || !Array.isArray(pre.findings) || !isObject(pre.recordCounts)) return mismatch('the value is not { findings, ruleSet, revision, recordCounts }.');

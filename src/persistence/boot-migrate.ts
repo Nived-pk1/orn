@@ -7,11 +7,11 @@
  * today, because `replaceAll` is one atomic transaction, and stays correct if that ever changes).
  */
 import { documentToState } from '@/core/dataset';
-import { coreIndexEngine } from '@/core/indexes/engine';
 import type { MigratableDocument, MigrationStepReport } from '@/core/migrations/contracts';
 import { DatasetDocumentSchema, RECORD_KINDS, type CanonicalState } from '@/core/schema';
-import { validator } from '@/core/validation';
 import type { Finding } from '@/core/validation/contracts';
+import type { PrecomputedFindings } from '@/core/commands/contracts';
+import { validateForBoot, type BootValidation } from './boot-validate';
 import type { BootPorts } from './boot-ports';
 import type { SnapshotSummary } from './contracts';
 import { describeError } from './events';
@@ -19,7 +19,7 @@ import { describeError } from './events';
 const MAX_DETAIL_ISSUES = 5;
 
 export type MigrateOutcome =
-  | { readonly ok: true; readonly state: CanonicalState; readonly revision: number; readonly steps: readonly MigrationStepReport[]; readonly findings: readonly Finding[] }
+  | { readonly ok: true; readonly state: CanonicalState; readonly revision: number; readonly steps: readonly MigrationStepReport[]; readonly findings: readonly Finding[]; readonly precomputed: PrecomputedFindings; readonly validation: BootValidation['report'] }
   | { readonly ok: false; readonly reason: 'migration_failed' | 'newer_schema'; readonly detail: string };
 
 /** The stored rows as the tolerant document a migration step expects (rows of unknown kinds keep their own key). */
@@ -64,7 +64,9 @@ export async function migrateOnDisk(ports: BootPorts, doc: MigratableDocument, s
   if (!converted.ok) return fail(`the migrated document repeats record IDs (${converted.duplicates.slice(0, MAX_DETAIL_ISSUES).map((d) => d.id).join(', ')})`);
 
   const revision = storedRevision + 1;
-  const findings = validator.validateAll(converted.state, coreIndexEngine.build(converted.state, revision));
+  // Awaited before `replaceAll`, and the ERROR gate below still decides: nothing is written for data that does not pass.
+  const validated = await validateForBoot(ports, converted.state, revision);
+  const findings = validated.precomputed.findings;
   const errors = findings.filter((f) => f.severity === 'error');
   if (errors.length > 0) {
     return fail(`the migrated data has ${errors.length} L1–L3 error(s), e.g. ${errors.slice(0, MAX_DETAIL_ISSUES).map((f) => `${f.ruleId} ${f.subject.id}`).join(', ')}`);
@@ -74,5 +76,5 @@ export async function migrateOnDisk(ports: BootPorts, doc: MigratableDocument, s
   } catch (error) {
     return fail(`writing the migrated data failed (${describeError(error)})`);
   }
-  return { ok: true, state: converted.state, revision, steps: migrated.steps, findings };
+  return { ok: true, state: converted.state, revision, steps: migrated.steps, findings, precomputed: validated.precomputed, validation: validated.report };
 }

@@ -26,6 +26,8 @@ export interface ImportHost {
   revise(params: { readonly batchId: string; readonly request: ImportPlanRequest; readonly ids: IdData }, ctx: RpcCallContext): Promise<WorkerImportOutcome>;
   cancel(batchId: string): Promise<{ readonly cancelled: boolean }>;
   prepareApply(params: { readonly batchId: string; readonly plan: ImportPlan; readonly baseRevision: number }, ctx: RpcCallContext): Promise<ImportPrepared | ImportPrepareRefused>;
+  /** An import batch is prepared: its merged state is the replica's pending state. */
+  hasPrepared(): boolean;
   /** The store took the pending state (or the sync is about to reload): the batch it came from is used up. */
   applied(): void;
   /** The apply failed or was cancelled: drop the pending state; a batch whose asset bytes already left is dropped with it. */
@@ -132,6 +134,8 @@ export function createImportHost(replica: Replica): ImportHost {
     prepareApply: (params) =>
       serial(async () => {
         const live = replica.snapshot().revision;
+        // A restored snapshot holds the one pending slot (step 4.2d): preparing now would replace it and misdirect its adoption.
+        if (replica.pendingRevision() !== undefined && prepared === undefined) return { ok: false, code: 'BUSY', message: 'a snapshot restore is under way; try the import again when it has finished' };
         if (params.batchId === usedUp) return { ok: false, code: 'UNKNOWN_BATCH', message: USED_UP };
         // The replica must be where main's store is, and where the preview was built.
         const outcome = session.prepareApply(params.batchId, params.plan, params.baseRevision);
@@ -156,6 +160,8 @@ export function createImportHost(replica: Replica): ImportHost {
         };
         return withTransfer(result, transferListOf(batch.assets));
       }),
+
+    hasPrepared: () => prepared !== undefined,
 
     applied() {
       if (prepared === undefined) return;

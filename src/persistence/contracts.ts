@@ -4,7 +4,7 @@
  */
 import type { CanonicalState, JsonValue } from '@/core/schema';
 import type { ChangeSet } from '@/core/dataset/contracts';
-import type { CommandError, EditorSession } from '@/core/commands/contracts';
+import type { CommandError, EditorSession, PrecomputedFindings } from '@/core/commands/contracts';
 import type { MigratableDocument, MigrationError, MigrationStepReport } from '@/core/migrations/contracts';
 import type { Finding } from '@/core/validation/contracts';
 
@@ -66,6 +66,14 @@ export type StoreSnapshotBytesResult =
  */
 export type SnapshotReadResult =
   | { readonly ok: true; readonly summary: SnapshotSummary; readonly doc: MigratableDocument }
+  | { readonly ok: false; readonly code: 'NOT_FOUND' | 'CORRUPT'; readonly message: string };
+
+/**
+ * A stored snapshot's bytes exactly as stored (step 4.2d): the compressed document, not decoded. The compute worker decodes it
+ * (`snapshotDecode`); the size check of `readSnapshot` has already been made. Damage is a value.
+ */
+export type SnapshotBytesReadResult =
+  | { readonly ok: true; readonly summary: SnapshotSummary; readonly bytes: Uint8Array }
   | { readonly ok: false; readonly code: 'NOT_FOUND' | 'CORRUPT'; readonly message: string };
 
 /** Outcome of `restoreSnapshot`. Every `ok: false` leaves the live state, the history and the stored data as they were. */
@@ -155,11 +163,21 @@ export interface UnverifiedAssetBlob {
 }
 
 /** What boot found and did, for the app to show and offer (docs/PERSISTENCE.md §4). */
+/** Where boot's L1-L3 pass ran (step 4.2d): `worker` (the injected validation port), `main` (this thread; `reason` says why, for a fallback), or `none` (nothing was stored). */
+export interface BootValidationReport {
+  readonly where: 'worker' | 'main' | 'none';
+  readonly reason: string;
+}
+
 export interface BootReport {
   /** One report per migration step applied to an older database; empty when the data was current. */
   readonly migrationSteps: readonly MigrationStepReport[];
   /** L1–L3 findings for the loaded (or migrated) state, so the store need not validate it again. */
   readonly findings: readonly Finding[];
+  /** The same findings stamped for the store (`createCanonicalStore({ precomputed })`, `reload`): rule set, revision, record counts. Absent when nothing was stored. */
+  readonly precomputed?: PrecomputedFindings;
+  /** Where the findings were computed and why (step 4.2d). */
+  readonly validation: BootValidationReport;
   /** Asset records whose SHA-256 has no row in `assetBlobs` (AST-002), sorted by asset ID. */
   readonly assetIdsWithoutBlob: readonly string[];
   /** Version-1 blob rows the DB upgrade could not verify and kept aside (sorted by asset ID); empty unless an upgrade found some. */
@@ -248,6 +266,8 @@ export interface PersistenceAdapter {
   /** Newest first. Rows hold the compressed bytes as a Blob, so listing does not load them. */
   listSnapshots(): Promise<readonly SnapshotSummary[]>;
   readSnapshot(id: string): Promise<SnapshotReadResult>;
+  /** The stored bytes of a snapshot, not decoded (step 4.2d: the compute worker decodes, migrates and validates them). `NOT_FOUND` / `CORRUPT` as `readSnapshot`. */
+  readSnapshotBytes(id: string): Promise<SnapshotBytesReadResult>;
   /** In the write queue's order. Deleting an unknown ID is not an error. */
   deleteSnapshot(id: string): Promise<void>;
   /** The bytes of the asset record's own SHA-256 (looked up through the record); undefined when there is no such record or no such bytes. */

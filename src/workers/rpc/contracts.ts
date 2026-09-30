@@ -4,6 +4,7 @@
  * of canonical state: full validation, route search, import preview, export building).
  */
 import type { CanonicalState, StructureRep } from '@/core/schema';
+import type { MigrationError, MigrationStepReport } from '@/core/migrations/contracts';
 import type { PrecomputedFindings } from '@/core/commands';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { RouteQuery, RouteSearchResult } from '@/core/graph/contracts';
@@ -95,6 +96,11 @@ export type WorkerEvent =
    * ChangeSets), `reloading` (one `loadReplica` of the store's current state is under way) or `down` (the worker is
    * gone for good). Emitted on every change of state, with the reason.
    */
+  /**
+   * Boot, a promotion or a follower's reload could not validate in the compute worker and validated in process instead (step
+   * 4.2d): the worker did not start, gave up, timed out or answered wrongly. The boot report says the same. Never silent.
+   */
+  | { readonly type: 'validation_fallback'; readonly reason: string }
   | { readonly type: 'replica_status'; readonly status: 'in_sync' | 'reloading' | 'down'; readonly reason: string; readonly revision: number | null };
 
 export interface RestartInfo {
@@ -179,7 +185,8 @@ export interface ImportPrepared {
 }
 export interface ImportPrepareRefused {
   readonly ok: false;
-  readonly code: 'UNKNOWN_BATCH' | 'PLAN_MISMATCH' | 'BLOCKED' | 'STALE_REVISION';
+  /** `BUSY`: a restored snapshot is the pending state (step 4.2d); one whole-state operation at a time. */
+  readonly code: 'UNKNOWN_BATCH' | 'PLAN_MISMATCH' | 'BLOCKED' | 'STALE_REVISION' | 'BUSY';
   readonly message: string;
 }
 
@@ -188,6 +195,34 @@ export type SnapshotBuildAnswer =
   | { readonly ok: true; readonly bytes: Uint8Array; readonly revision: number; readonly reason: SnapshotReasonName; readonly schemaVersion: number }
   | ReplicaStale
   | { readonly ok: false; readonly code: 'SERIALIZE_FAILED'; readonly message: string };
+
+/**
+ * A stored snapshot's bytes to decode, migrate, validate strictly and prepare as the PENDING state (step 4.2d). `id` and
+ * `schemaVersion` are the stored summary's: they make the worker's refusals read like `readSnapshot`'s (a document whose
+ * version differs from the summary is CORRUPT). `baseRevision` is main's live revision: the pending state is revision
+ * `baseRevision + 1`. The bytes are transferred.
+ */
+export interface SnapshotDecodeParams {
+  readonly bytes: Uint8Array;
+  readonly id: string;
+  readonly schemaVersion: number;
+  readonly baseRevision: number;
+}
+/**
+ * `CORRUPT` / `MIGRATION_FAILED` / `INVALID` are the Phase 3 restore codes with the same messages; `BUSY`: an import batch is
+ * prepared (one pending state at a time). A successful answer carries what `replaceState(state, 'restore', precomputed)` takes.
+ */
+export interface SnapshotDecodeRefused {
+  readonly ok: false;
+  readonly code: 'CORRUPT' | 'MIGRATION_FAILED' | 'INVALID' | 'BUSY';
+  readonly message: string;
+  readonly migration?: MigrationError;
+  readonly issues?: readonly { readonly path: string; readonly message: string }[];
+}
+export type SnapshotDecodeAnswer =
+  | { readonly ok: true; readonly state: CanonicalState; readonly precomputed: PrecomputedFindings; readonly steps: readonly MigrationStepReport[] }
+  | ReplicaStale
+  | SnapshotDecodeRefused;
 
 /** `adoptPending` refused as a value: the sync then reloads the replica. `have` is the replica's revision. */
 export interface AdoptRefused {
@@ -233,6 +268,12 @@ export interface ComputeWorkerApi {
    * document's `exportedAt` is `exportedAt`, main's wall-clock time (the worker's own clock is monotonic, not a date). Idempotent.
    */
   snapshotBuild(params: { readonly revision: number; readonly reason: SnapshotReasonName; readonly exportedAt: string }, ctx: RpcCallContext): Promise<SnapshotBuildAnswer>;
+  /**
+   * Decode the stored snapshot bytes, migrate (the worker's injected runner), parse strictly and prepare the result as the
+   * PENDING state (index build and `validateAll` once); the caller then `replaceState`s it with the findings and the sync adopts
+   * it, or sends `dropPending`. Failures are values with the Phase 3 codes. Idempotent (a retry after a restart decodes again).
+   */
+  snapshotDecode(params: SnapshotDecodeParams, ctx: RpcCallContext): Promise<SnapshotDecodeAnswer>;
   /** The store accepted the pending state at `revision`: the replica becomes it (no second whole-state transfer). Refusals are values. NOT idempotent. */
   adoptPending(params: { readonly revision: number }, ctx: RpcCallContext): Promise<AdoptAnswer>;
   /** The apply failed or was cancelled: forget the pending state (and the batch when its asset bytes already left). Idempotent. */

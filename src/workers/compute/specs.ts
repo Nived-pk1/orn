@@ -17,6 +17,7 @@ export const COMPUTE_SPECS: RpcMethodSpecs<ComputeWorkerApi> = {
   importCancel: { idempotent: true, timeoutMs: 5_000 },
   importPrepareApply: { idempotent: false, timeoutMs: 30_000 },
   snapshotBuild: { idempotent: true, timeoutMs: 30_000 },
+  snapshotDecode: { idempotent: true, timeoutMs: 60_000 },
   adoptPending: { idempotent: false, timeoutMs: 5_000 },
   dropPending: { idempotent: true, timeoutMs: 5_000 },
   buildExport: { idempotent: true, timeoutMs: 30_000 },

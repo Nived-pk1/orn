@@ -4,9 +4,12 @@
  */
 import type { ComputeWorkerApi } from '@/workers/rpc/contracts';
 import { RpcHostError, withTransfer } from '@/workers/rpc/helpers';
+import { migrationRunner } from '@/core/migrations';
+import type { MigrationRunner } from '@/core/migrations/contracts';
 import { createImportHost, type ImportHost } from './import-host';
 import { createReplica, type Replica, type ReplicaOptions } from './replica';
 import { buildSnapshotBytes } from './snapshot-build';
+import { restoreDocument } from './snapshot-decode';
 
 export interface ComputeHandlers {
   readonly api: ComputeWorkerApi;
@@ -14,7 +17,13 @@ export interface ComputeHandlers {
   readonly imports: ImportHost;
 }
 
-export function createComputeHandlers(options: ReplicaOptions = {}): ComputeHandlers {
+export interface ComputeHandlerOptions extends ReplicaOptions {
+  /** Migrates a decoded snapshot (`snapshotDecode`); default: the app's runner. Injected so tests can run a synthetic chain. */
+  readonly runner?: MigrationRunner;
+}
+
+export function createComputeHandlers(options: ComputeHandlerOptions = {}): ComputeHandlers {
+  const runner = options.runner ?? migrationRunner;
   const replica = createReplica(options);
   const imports = createImportHost(replica);
   const api: ComputeWorkerApi = {
@@ -36,6 +45,16 @@ export function createComputeHandlers(options: ReplicaOptions = {}): ComputeHand
       if (!built.ok) return { ok: false, code: 'SERIALIZE_FAILED', message: built.message };
       // The bytes move to the caller; the copy here is not needed again.
       return withTransfer({ ok: true, bytes: built.bytes, revision, reason, schemaVersion: built.schemaVersion }, [built.bytes.buffer as ArrayBuffer]);
+    },
+    snapshotDecode: async ({ bytes, id, schemaVersion, baseRevision }) => {
+      // One pending state at a time (an import batch may hold it); the replica must be where main's store is.
+      if (imports.hasPrepared()) return { ok: false, code: 'BUSY', message: 'an import is prepared; finish or cancel it before restoring a snapshot' };
+      const held = replica.snapshot();
+      if (held.revision !== baseRevision) return { ok: false, code: 'REPLICA_STALE', have: held.revision };
+      const restored = restoreDocument({ bytes, id, schemaVersion }, runner);
+      if (!restored.ok) return restored.answer;
+      const precomputed = replica.prepare(restored.state, baseRevision + 1);
+      return { ok: true, state: restored.state, precomputed, steps: restored.steps };
     },
     adoptPending: async ({ revision }) => {
       const answer = replica.adopt(revision);

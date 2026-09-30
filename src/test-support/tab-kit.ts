@@ -5,6 +5,7 @@
  */
 import { IDBFactory } from 'fake-indexeddb';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
+import type { PrecomputedFindings } from '@/core/commands';
 import type { CanonicalState } from '@/core/schema';
 import type { ChangeChannel, OpenResult, WriterLock } from '@/persistence/contracts';
 import { createFollower, type Follower, type FollowerEvent } from '@/persistence/follower';
@@ -32,7 +33,15 @@ export interface Tab {
 
 export const newIndexedDb = (): IDBFactory => new IDBFactory();
 
-export async function openTab(env: TabEnv, options: Partial<Omit<DexieAdapterOptions, 'db'>> = {}): Promise<Tab> {
+/** Step 4.2d: what the compute worker adds to a tab. Absent: the tab is what it was before (its store validates nothing at creation). */
+export interface TabExtras {
+  /** The follower's validation port (`FollowerOptions.validate`). */
+  readonly validate?: (state: CanonicalState, revision: number) => Promise<PrecomputedFindings>;
+  /** Build stores from the boot result's / the follower's `precomputed` findings (`createCanonicalStore({ precomputed })`). */
+  readonly precomputed?: boolean;
+}
+
+export async function openTab(env: TabEnv, options: Partial<Omit<DexieAdapterOptions, 'db'>> = {}, extras: TabExtras = {}): Promise<Tab> {
   const lock = env.newLock();
   const channel = env.newChannel();
   const t = freshAdapter({ lock, ...(channel !== undefined ? { channel } : {}), ...options }, freshDb(undefined, env.indexedDB));
@@ -45,21 +54,27 @@ export async function openTab(env: TabEnv, options: Partial<Omit<DexieAdapterOpt
   const writable = opened.mode === 'read_write';
   const follower = writable || opened.readOnlyReason !== 'other_tab_is_writer'
     ? undefined
-    : createFollower({ adapter: t.adapter, ...(channel !== undefined ? { channel } : {}), lock, revision: opened.state === null ? null : opened.revision, schemaVersion: 1 });
+    : createFollower({ adapter: t.adapter, ...(channel !== undefined ? { channel } : {}), lock, revision: opened.state === null ? null : opened.revision, schemaVersion: 1, ...(extras.validate === undefined ? {} : { validate: extras.validate }) });
   follower?.subscribe((event) => events.push(event));
 
-  const buildStore = (state: CanonicalState, revision: number): StoreHandle =>
-    createCanonicalStore({ initial: state, revision, validateInitial: false, readOnly: follower?.isReadOnly ?? (() => !writable) });
+  const buildStore = (state: CanonicalState, revision: number, precomputed?: PrecomputedFindings): StoreHandle =>
+    createCanonicalStore({
+      initial: state,
+      revision,
+      validateInitial: false,
+      ...(extras.precomputed === true && precomputed !== undefined ? { precomputed } : {}),
+      readOnly: follower?.isReadOnly ?? (() => !writable),
+    });
 
   if (opened.state !== null) {
-    store = buildStore(opened.state, opened.revision);
+    store = buildStore(opened.state, opened.revision, opened.bootReport?.precomputed);
     follower?.attach(store);
     if (writable) wiring = attachWriteQueue(store, t.adapter);
   }
   follower?.subscribe((event) => {
     // What the app does: a state that arrives without a store gets one; a promoted tab gets a write queue.
     if ((event.type === 'loaded' || event.type === 'promoted') && event.state !== null && store === undefined) {
-      store = buildStore(event.state, event.revision);
+      store = buildStore(event.state, event.revision, event.type === 'loaded' ? event.precomputed : event.bootReport?.precomputed);
       follower.attach(store);
     }
     if (event.type === 'promoted' && store !== undefined) wiring = attachWriteQueue(store, t.adapter);

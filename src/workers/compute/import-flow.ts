@@ -89,7 +89,7 @@ export function createComputeImport(deps: ComputeImportDeps): ComputeImport {
 
     const prepared = await client.importPrepareApply({ batchId, plan, baseRevision });
     if (!prepared.ok) return rpcFailure(prepared.error, 'prepare the import');
-    if (!prepared.value.ok) return failure(prepared.value.code, prepared.value.message);
+    if (!prepared.value.ok) return failure(prepared.value.code === 'BUSY' ? 'REJECTED' : prepared.value.code, prepared.value.message);
     const batch = prepared.value;
     // Its asset buffers were transferred to main: whatever happens next, this batch cannot be applied again (follow-up a).
     const again = batch.assets.length > 0 ? PREVIEW_AGAIN : '';

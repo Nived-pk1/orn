@@ -7,13 +7,13 @@
  * comes from the injected clock, never `Date.now`.
  */
 import { applyPatches, enablePatches, freeze, type Patch } from 'immer';
-import type { PrecomputedFindings } from '@/core/commands';
+import { recordCountsOf, type PrecomputedFindings } from '@/core/commands';
 import type { ChangeSet } from '@/core/dataset';
 import type { ProjectionContext, RouteQuery, RouteSearchResult } from '@/core/graph/contracts';
 import { searchRoutes } from '@/core/graph/route';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import { indexEngine } from '@/core/indexes/full';
-import { RECORD_KINDS, type CanonicalState, type RecordKind, type RecordRef } from '@/core/schema';
+import { RECORD_KINDS, type CanonicalState, type RecordRef } from '@/core/schema';
 import { RULE_SET_ID, commitFindings, commitTouched, createFindingStore, validator as defaultValidator } from '@/core/validation';
 import type { Finding, FindingStore, Validator } from '@/core/validation';
 import type { AdoptAnswer, ReplicaAnswer } from '@/workers/rpc/contracts';
@@ -60,9 +60,7 @@ interface Held {
   findings: FindingStore;
 }
 
-export function recordCountsOf(state: CanonicalState): Record<RecordKind, number> {
-  return Object.fromEntries(RECORD_KINDS.map((kind) => [kind, Object.keys(state.records[kind]).length])) as Record<RecordKind, number>;
-}
+export { recordCountsOf };
 
 const refsOf = (state: CanonicalState): RecordRef[] =>
   RECORD_KINDS.flatMap((kind) => Object.keys(state.records[kind]).map((id) => ({ kind, id }) as RecordRef));

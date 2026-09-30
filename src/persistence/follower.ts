@@ -8,7 +8,8 @@
  *
  * Messages are handled strictly one at a time, in order, with a bounded backlog (beyond it: one full reload).
  */
-import type { CommitResult, RemoteChange } from '@/core/commands/contracts';
+import type { CommitResult, PrecomputedFindings, RemoteChange } from '@/core/commands/contracts';
+import { checkPrecomputed } from '@/core/commands/precomputed';
 import { jsonEqual } from '@/core/commands/lookup';
 import { DatasetMetaSchema, type AnyRecord, type CanonicalState, type RecordKind } from '@/core/schema';
 import { validator } from '@/core/validation';
@@ -35,7 +36,7 @@ export interface FollowerStore {
   getState(): CanonicalState;
   getRevision(): number;
   applyRemote(change: RemoteChange): CommitResult;
-  reload(next: CanonicalState, revision: number): CommitResult;
+  reload(next: CanonicalState, revision: number, precomputed?: PrecomputedFindings): CommitResult;
 }
 
 export type ReloadReason = 'no_state' | 'gap' | 'everything' | 'database_moved' | 'invalid_row' | 'invalid_meta' | 'stale' | 'store_failed' | 'backlog';
@@ -43,8 +44,13 @@ export type ReloadReason = 'no_state' | 'gap' | 'everything' | 'database_moved' 
 export type FollowerEvent =
   | { readonly type: 'applied'; readonly revision: number; readonly changed: number }
   | { readonly type: 'reloaded'; readonly reason: ReloadReason; readonly revision: number; readonly rejectedRows: number }
-  /** A full read succeeded while no store is attached: build one (`readOnly: follower.isReadOnly`), then `attach` it. */
-  | { readonly type: 'loaded'; readonly reason: ReloadReason; readonly state: CanonicalState; readonly revision: number; readonly rejectedRows: number }
+  /**
+   * A full read succeeded while no store is attached: build one (`readOnly: follower.isReadOnly`, `precomputed` when present), then
+   * `attach` it.
+   */
+  | { readonly type: 'loaded'; readonly reason: ReloadReason; readonly state: CanonicalState; readonly revision: number; readonly rejectedRows: number; readonly precomputed?: PrecomputedFindings }
+  /** A full reload could not use the validation port (or its findings were refused) and validated in this thread instead (step 4.2d). */
+  | { readonly type: 'validation_fallback'; readonly reason: string }
   /** A stored row failed L1: not applied (a follower never quarantines); the writer's next boot or promotion moves it. */
   | { readonly type: 'row_rejected'; readonly id: string; readonly issues: readonly string[] }
   | { readonly type: 'reload_failed'; readonly reason: string; readonly detail: string }
@@ -68,6 +74,12 @@ export interface FollowerOptions {
   /** The schema version this app writes; rows of another version are never applied incrementally. */
   readonly schemaVersion: number;
   readonly onEvent?: (event: FollowerEvent) => void;
+  /**
+   * L1-L3 findings of a state a full reload just read, computed elsewhere (the compute worker's `BootReplica.validate`, step 4.2d):
+   * `store.reload(state, revision, precomputed)` then builds indexes only. Absent, rejected or refused: this thread validates, and a
+   * `validation_fallback` event says so.
+   */
+  readonly validate?: (state: CanonicalState, revision: number) => Promise<PrecomputedFindings>;
 }
 
 export interface Follower {
@@ -107,6 +119,22 @@ export function createFollower(options: FollowerOptions): Follower {
     running = running.then(task).catch((error: unknown) => emit({ type: 'error', message: describeError(error) }));
   };
 
+  /** The findings the validation port computed for a full read, or undefined (no port, it failed, or its answer is wrong: said, never silent). */
+  async function validated(state: CanonicalState, at: number): Promise<PrecomputedFindings | undefined> {
+    if (options.validate === undefined) return undefined;
+    let why: string;
+    try {
+      const answer = await options.validate(state, at);
+      const problem = checkPrecomputed(state, at, answer);
+      if (problem === undefined) return answer;
+      why = `the validation port's findings were refused (${problem.message})`;
+    } catch (error) {
+      why = `the validation port could not validate (${describeError(error)})`;
+    }
+    emit({ type: 'validation_fallback', reason: `${why}; validating in this thread instead` });
+    return undefined;
+  }
+
   /** A full read. On success adopt it (store attached) or announce it (no store); on failure keep what we have. */
   async function reload(reason: ReloadReason): Promise<void> {
     const loaded = await adapter.loadForFollower();
@@ -115,12 +143,17 @@ export function createFollower(options: FollowerOptions): Follower {
       return;
     }
     for (const rejected of loaded.rejected.slice(0, MAX_REPORTED_REJECTS)) emit({ type: 'row_rejected', ...rejected });
+    const precomputed = await validated(loaded.state, loaded.revision);
     if (store === undefined) {
       revision = loaded.revision;
-      emit({ type: 'loaded', reason, state: loaded.state, revision: loaded.revision, rejectedRows: loaded.rejected.length });
+      emit({ type: 'loaded', reason, state: loaded.state, revision: loaded.revision, rejectedRows: loaded.rejected.length, ...(precomputed === undefined ? {} : { precomputed }) });
       return;
     }
-    const result = store.reload(loaded.state, loaded.revision);
+    let result = store.reload(loaded.state, loaded.revision, precomputed);
+    if (!result.ok && result.error.code === 'FINDINGS_MISMATCH' && precomputed !== undefined) {
+      emit({ type: 'validation_fallback', reason: `the store refused the validation port's findings (${result.error.message}); validating in this thread instead` });
+      result = store.reload(loaded.state, loaded.revision);
+    }
     if (!result.ok) {
       emit({ type: 'reload_failed', reason: result.error.code, detail: result.error.message });
       return;
@@ -226,7 +259,12 @@ export function createFollower(options: FollowerOptions): Follower {
     }
     if (store !== undefined) {
       if (opened.state === null) return fail('state_missing', 'the database holds no data although this tab had some');
-      const result = store.reload(opened.state, opened.revision);
+      // Boot (the promotion's) validated the state through the same port, so its findings are the ones the store checks and adopts.
+      let result = store.reload(opened.state, opened.revision, opened.bootReport?.precomputed);
+      if (!result.ok && result.error.code === 'FINDINGS_MISMATCH' && opened.bootReport?.precomputed !== undefined) {
+        emit({ type: 'validation_fallback', reason: `the store refused the promotion's findings (${result.error.message}); validating in this thread instead` });
+        result = store.reload(opened.state, opened.revision);
+      }
       if (!result.ok) return fail(result.error.code, result.error.message);
     }
     readOnly = false;

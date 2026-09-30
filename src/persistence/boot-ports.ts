@@ -2,6 +2,7 @@
  * What boot needs from the adapter, as one injected object: keeps `boot.ts` testable and the adapter the only
  * place that touches Dexie tables and the write queue.
  */
+import type { PrecomputedFindings } from '@/core/commands/contracts';
 import type { IdFactory } from '@/core/dataset/contracts';
 import type { MigratableDocument, MigrationRunner } from '@/core/migrations/contracts';
 import type { CanonicalState, JsonValue } from '@/core/schema';
@@ -26,6 +27,12 @@ export interface BootPorts {
   readonly generator: { readonly app: string; readonly version: string };
   readonly uiStateValidators?: UiStateValidators;
   readonly onEvent?: PersistenceEventSink;
+  /**
+   * L1-L3 findings of `state` at `revision`, stamped for the store (step 4.2d, Q4). Absent: boot validates in this thread. The
+   * compute worker implements it with `loadReplica`, so `open()` builds no indexes (the store builds them once). A rejection or
+   * an answer that fails `checkPrecomputed` makes boot validate in this thread instead and say so in the report.
+   */
+  validate?(state: CanonicalState, revision: number): Promise<PrecomputedFindings>;
   readCommitted(): Promise<CommittedData>;
   /** Moves rows that failed L1 out of `records` into `quarantine` (full raw value), in one transaction. */
   moveToQuarantine(rejected: readonly RejectedRow[]): Promise<number>;

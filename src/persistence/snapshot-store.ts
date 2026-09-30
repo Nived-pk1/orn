@@ -4,7 +4,7 @@
  * a snapshot never claims a revision the database has not reached.
  */
 import type { IdFactory } from '@/core/dataset/contracts';
-import type { PersistenceAdapter, SnapshotSummary } from './contracts';
+import type { PersistenceAdapter, SnapshotBytesReadResult, SnapshotSummary } from './contracts';
 import type { OrnDb, SnapshotRow } from './db';
 import type { PersistenceEventSink } from './events';
 import type { MigratableDocument } from '@/core/migrations/contracts';
@@ -20,7 +20,7 @@ export interface SnapshotStoreOptions {
   readonly onEvent?: PersistenceEventSink;
 }
 
-export type SnapshotStore = Pick<PersistenceAdapter, 'createSnapshot' | 'storeSnapshotBytes' | 'listSnapshots' | 'readSnapshot' | 'deleteSnapshot'> & {
+export type SnapshotStore = Pick<PersistenceAdapter, 'createSnapshot' | 'storeSnapshotBytes' | 'listSnapshots' | 'readSnapshot' | 'readSnapshotBytes' | 'deleteSnapshot'> & {
   /** Periodic snapshots, oldest first: what the quota status offers for deletion. */
   deletablePeriodicIds(): Promise<readonly string[]>;
   /** Snapshot of a tolerant document as stored (the `pre_migration` snapshot); same queue order, same retention. */
@@ -57,6 +57,20 @@ export function createSnapshotStore(options: SnapshotStoreOptions): SnapshotStor
     );
     if (pruned.length > 0) onEvent?.({ type: 'snapshots_pruned', ids: pruned });
     return summary;
+  }
+
+  async function readSnapshotBytes(id: string): Promise<SnapshotBytesReadResult> {
+    const row = await db.snapshots.get(id);
+    if (row === undefined) return { ok: false, code: 'NOT_FOUND', message: `there is no snapshot ${id}` };
+    const summary = summaryOf(row);
+    if (row.blob.size !== row.byteSize) {
+      return { ok: false, code: 'CORRUPT', message: `snapshot ${id} holds ${row.blob.size} bytes but was written with ${row.byteSize}` };
+    }
+    try {
+      return { ok: true, summary, bytes: new Uint8Array(await row.blob.arrayBuffer()) };
+    } catch (error) {
+      return { ok: false, code: 'CORRUPT', message: `snapshot ${id} could not be read (${error instanceof Error ? error.message : String(error)})` };
+    }
   }
 
   return {
@@ -106,19 +120,12 @@ export function createSnapshotStore(options: SnapshotStoreOptions): SnapshotStor
       return (await summaries()).sort((a, b) => oldestFirst(b, a));
     },
 
+    readSnapshotBytes,
+
     async readSnapshot(id) {
-      const row = await db.snapshots.get(id);
-      if (row === undefined) return { ok: false, code: 'NOT_FOUND', message: `there is no snapshot ${id}` };
-      const summary = summaryOf(row);
-      if (row.blob.size !== row.byteSize) {
-        return { ok: false, code: 'CORRUPT', message: `snapshot ${id} holds ${row.blob.size} bytes but was written with ${row.byteSize}` };
-      }
-      let bytes: Uint8Array;
-      try {
-        bytes = new Uint8Array(await row.blob.arrayBuffer());
-      } catch (error) {
-        return { ok: false, code: 'CORRUPT', message: `snapshot ${id} could not be read (${error instanceof Error ? error.message : String(error)})` };
-      }
+      const read = await readSnapshotBytes(id);
+      if (!read.ok) return read;
+      const { summary, bytes } = read;
       const decoded = decodeSnapshot(bytes);
       if (!decoded.ok) return { ok: false, code: 'CORRUPT', message: `snapshot ${id}: ${decoded.message}` };
       if (decoded.doc.schemaVersion !== summary.schemaVersion) {

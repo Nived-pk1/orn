@@ -9,13 +9,13 @@
  *  6. markers: this session is running, integrity check done.
  * Every branch that cannot make the data writable leaves the queue read-only and writes NOTHING.
  */
-import { coreIndexEngine } from '@/core/indexes/engine';
 import { DatasetMetaSchema, type CanonicalState } from '@/core/schema';
-import { validator } from '@/core/validation';
+import type { PrecomputedFindings } from '@/core/commands/contracts';
 import type { Finding } from '@/core/validation/contracts';
 import { assembleState } from './boot-load';
 import { migrateOnDisk, tolerantDocument } from './boot-migrate';
 import { restoreUiState, unavailable } from './boot-checks';
+import { validateForBoot } from './boot-validate';
 import type { BootPorts } from './boot-ports';
 import type { BootReport, OpenResult } from './contracts';
 import { describeError } from './events';
@@ -34,7 +34,7 @@ export interface BootOptions {
 
 /** The report of a database with nothing in it: there is nothing to report, except that no lock exists. */
 const emptyReport = (singleTab: boolean): BootReport => ({
-  migrationSteps: [], findings: [], assetIdsWithoutBlob: [], unverifiedAssetBlobs: [], crashSuspected: false, editorSessionIds: [], uiState: {}, uiStateReset: [], newlyQuarantined: 0, singleTab,
+  migrationSteps: [], findings: [], validation: { where: 'none', reason: 'nothing is stored, so there was nothing to validate' }, assetIdsWithoutBlob: [], unverifiedAssetBlobs: [], crashSuspected: false, editorSessionIds: [], uiState: {}, uiStateReset: [], newlyQuarantined: 0, singleTab,
 });
 
 export async function runBoot(ports: BootPorts, options: BootOptions = {}): Promise<OpenResult> {
@@ -88,6 +88,8 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
 
   let state: CanonicalState;
   let findings: readonly Finding[];
+  let precomputed: PrecomputedFindings;
+  let validation: BootReport['validation'];
   let migrationSteps: BootReport['migrationSteps'] = [];
   let outRevision = revision;
   let newlyQuarantined = 0;
@@ -98,7 +100,7 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     const doc = tolerantDocument(rows, meta.datasetMeta, stored, now, ports.generator);
     const migrated = await migrateOnDisk(ports, doc, stored, revision);
     if (!migrated.ok) return refuse(migrated.reason, migrated.detail, revision);
-    ({ state, findings, steps: migrationSteps, revision: outRevision } = migrated);
+    ({ state, findings, precomputed, validation, steps: migrationSteps, revision: outRevision } = migrated);
   } else {
     const datasetMeta = DatasetMetaSchema.safeParse(meta.datasetMeta);
     if (!datasetMeta.success) {
@@ -107,7 +109,11 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     const assembled = assembleState(rows, datasetMeta.data, now);
     state = assembled.state;
     if (writer && assembled.rejected.length > 0) newlyQuarantined = await ports.moveToQuarantine(assembled.rejected);
-    findings = validator.validateAll(state, coreIndexEngine.build(state, revision));
+    // No index is built here when a validation port answers: the store builds them once, from the state it is given.
+    const validated = await validateForBoot(ports, state, revision);
+    precomputed = validated.precomputed;
+    findings = precomputed.findings;
+    validation = validated.report;
   }
 
   // AST-002: an asset record's bytes live under ITS sha256 (content-addressed store), whatever asset ID asked.
@@ -135,6 +141,6 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     revision: outRevision,
     storedSchemaVersion: storedVersion,
     quarantinedCount: await quarantined(),
-    bootReport: { migrationSteps, findings, assetIdsWithoutBlob, unverifiedAssetBlobs, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined, singleTab },
+    bootReport: { migrationSteps, findings, precomputed, validation, assetIdsWithoutBlob, unverifiedAssetBlobs, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined, singleTab },
   };
 }

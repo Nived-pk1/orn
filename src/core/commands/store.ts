@@ -39,6 +39,13 @@ export interface StoreOptions {
   readonly historyLimits?: HistoryLimits;
   /** Run `validateAll` on `initial` to fill the finding store (default true). Errors do not stop construction. */
   readonly validateInitial?: boolean;
+  /**
+   * L1-L3 findings of `initial` produced elsewhere (boot with the compute worker, step 4.2d, Phase 4 contract decision Q4): checked
+   * by `checkPrecomputed` for `revision`, then used instead of a `validateAll` (which `validateInitial` no longer decides). The
+   * indexes are still built here, once. A mismatch is a programmer error at this point (boot already refused a bad answer and fell
+   * back), so construction throws a `RangeError` naming it; nothing is silently recomputed.
+   */
+  readonly precomputed?: PrecomputedFindings;
   /** Tests only, default false: `replaceState`/`reload` with precomputed findings also run `validateAll` and refuse `FINDINGS_MISMATCH` if they differ. */
   readonly verifyPrecomputed?: boolean;
   /** Called when a subscriber throws; the others still run. Default: rethrow from a microtask so it stays visible. */
@@ -84,7 +91,11 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
   let state = freeze(options.initial, true);
   let revision = options.revision ?? 0;
   let indexes: CoreIndexes = coreIndexEngine.build(state, revision);
-  if (options.validateInitial !== false) commitFindings(findings, allRefs(state), validator.validateAll(state, indexes));
+  if (options.precomputed !== undefined) {
+    const problem = checkPrecomputed(state, revision, options.precomputed) ?? (options.verifyPrecomputed === true ? differsFrom(options.precomputed.findings, validator.validateAll(state, indexes)) : undefined);
+    if (problem !== undefined) throw new RangeError(`createCanonicalStore: ${problem.message}`);
+    commitFindings(findings, allRefs(state), options.precomputed.findings);
+  } else if (options.validateInitial !== false) commitFindings(findings, allRefs(state), validator.validateAll(state, indexes));
 
   // Notifications are queued so a subscriber that dispatches sees commits announced in order.
   const pending: ChangeSet[] = [];

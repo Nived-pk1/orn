@@ -17,5 +17,6 @@ export type { BuildResult, DuplicateOptions, MergeOptions, ReorderSpec } from '.
 export { DEFAULT_HISTORY_LIMITS } from './history';
 export type { HistoryLimits } from './history';
 export { computeDeleteImpact } from './impact';
+export { checkPrecomputed, precomputedFor, recordCountsOf } from './precomputed';
 export { createCanonicalStore } from './store';
 export type { StoreHandle, StoreOptions } from './store';

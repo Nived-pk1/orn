@@ -18,6 +18,7 @@ import type { CanonicalStore } from '@/core/commands';
 import type { ChangeSet } from '@/core/dataset';
 import { createRpcClient } from '@/workers/rpc/client';
 import type { ComputeWorkerApi, RpcClient, RpcClientOptions, WorkerEvent, WorkerFactory } from '@/workers/rpc/contracts';
+import type { ReplicaAdoption } from './boot-port';
 import { COMPUTE_SPECS } from './specs';
 
 /**
@@ -58,6 +59,12 @@ export interface ReplicaSyncOptions {
   readonly client?: Omit<RpcClientOptions<ComputeWorkerApi>, 'onRestart' | 'onEvent'>;
   /** Every WorkerEvent of the client, plus `replica_status`. */
   readonly onEvent?: (event: WorkerEvent) => void;
+  /**
+   * Boot validated in the worker (step 4.2d, `BootReplica.adoption()`): its client already holds a replica at `revision`, so the
+   * sync starts from it without a second `loadReplica`. The store must be at that revision, else the sync reloads (and says so).
+   * `factory` and `client` are then not used to make a client.
+   */
+  readonly adopt?: ReplicaAdoption;
 }
 
 export interface ReplicaSync {
@@ -73,6 +80,12 @@ export interface ReplicaSync {
   expectAdoption(revision: number): void;
   /** The import failed before or instead of the `replace` ChangeSet: forget the expectation. */
   clearAdoption(): void;
+  /**
+   * The worker's replica was loaded outside the sync at `revision` (a follower's reload or a promotion validated in the worker,
+   * step 4.2d) and the store is about to adopt that state with `reload`: the ChangeSet the store then announces for `revision` is
+   * dropped instead of forwarded. Any other ChangeSet, a restart or a reload of the sync's own cancels the expectation.
+   */
+  noteLoaded(revision: number): void;
   /** Stops following the store and terminates the worker. */
   stop(): void;
 }
@@ -92,6 +105,7 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
   let reloads = 0;
   let needsReload = true;
   let adoptAt: number | undefined;
+  let loadedAhead: number | undefined;
   let running = false;
   let stopped = false;
   let hooksRunning = 0;
@@ -142,50 +156,49 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
     wake(idleWaiters);
   };
   const requestReload = (why: string): void => {
+    loadedAhead = undefined;
     needsReload = true;
     clearQueue();
     setState('reloading', why);
   };
 
-  const client = createRpcClient<ComputeWorkerApi>({
-    factory: options.factory,
-    specs: COMPUTE_SPECS,
-    options: {
-      ...options.client,
-      onEvent(event) {
-        emit(event);
-        if (event.type === 'gave_up') goDown(`the compute worker is down for good (${event.reason} after ${event.restarts} restarts)`);
-      },
-      /** The worker started over with no replica: load the store's CURRENT state before any other call is sent. */
-      async onRestart(raw, info) {
-        if (stopped || isDown()) return;
-        const mine = (hookSeq += 1);
-        hooksRunning += 1;
-        replicaRevision = null;
-        setState('reloading', `the worker restarted (${info.reason}); reloading the replica from the store`);
-        try {
-          const revision = store.getRevision();
-          const loaded = await raw.loadReplica({ state: store.getState(), revision });
-          if (mine !== hookSeq || stopped || isDown()) return;
-          if (loaded.ok) {
-            replicaRevision = revision;
-            reloads += 1;
-            needsReload = false;
-            setState('in_sync', `replica reloaded at revision ${revision} after a restart`);
-          } else {
-            needsReload = true;
-            throw new Error(`the replica could not be reloaded after a restart: ${loaded.error.code}: ${loaded.error.message}`);
-          }
-        } finally {
-          hooksRunning -= 1;
-          if (mine === hookSeq) restarts += 1;
-          wake(restartWaiters);
-          void pump();
-          checkIdle();
-        }
-      },
+  const clientOptions: RpcClientOptions<ComputeWorkerApi> & Required<Pick<RpcClientOptions<ComputeWorkerApi>, 'onEvent' | 'onRestart'>> = {
+    ...options.client,
+    onEvent(event) {
+      emit(event);
+      if (event.type === 'gave_up') goDown(`the compute worker is down for good (${event.reason} after ${event.restarts} restarts)`);
     },
-  });
+    /** The worker started over with no replica: load the store's CURRENT state before any other call is sent. */
+    async onRestart(raw, info) {
+      if (stopped || isDown()) return;
+      loadedAhead = undefined;
+      const mine = (hookSeq += 1);
+      hooksRunning += 1;
+      replicaRevision = null;
+      setState('reloading', `the worker restarted (${info.reason}); reloading the replica from the store`);
+      try {
+        const revision = store.getRevision();
+        const loaded = await raw.loadReplica({ state: store.getState(), revision });
+        if (mine !== hookSeq || stopped || isDown()) return;
+        if (loaded.ok) {
+          replicaRevision = revision;
+          reloads += 1;
+          needsReload = false;
+          setState('in_sync', `replica reloaded at revision ${revision} after a restart`);
+        } else {
+          needsReload = true;
+          throw new Error(`the replica could not be reloaded after a restart: ${loaded.error.code}: ${loaded.error.message}`);
+        }
+      } finally {
+        hooksRunning -= 1;
+        if (mine === hookSeq) restarts += 1;
+        wake(restartWaiters);
+        void pump();
+        checkIdle();
+      }
+    },
+  };
+  const client = options.adopt?.client ?? createRpcClient<ComputeWorkerApi>({ factory: options.factory, specs: COMPUTE_SPECS, options: clientOptions });
 
   /** Sends the store's current state once. A crash or timeout is answered by the restart hook; anything else that fails ends the sync. */
   async function reload(): Promise<void> {
@@ -246,6 +259,18 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
         const next = queue.shift();
         if (next === undefined) break;
         queuedRecords -= weightOf(next);
+        // The worker loaded this state outside the sync (a follower's reload, a promotion): its ChangeSet is not forwarded.
+        if (loadedAhead !== undefined) {
+          const at = loadedAhead;
+          if (next.revision <= at) {
+            if (next.revision === at) {
+              replicaRevision = at;
+              loadedAhead = undefined;
+            }
+            continue;
+          }
+          loadedAhead = undefined;
+        }
         // Already inside the loaded state (a reload or a restart captured the store after this commit).
         if (replicaRevision !== null && next.revision <= replicaRevision) continue;
         if (next.cause === 'replace' && adoptAt === next.revision) await adopt(next);
@@ -257,7 +282,27 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
     checkIdle();
   }
 
-  emit({ type: 'replica_status', status: state, reason, revision: null });
+  /** See `ReplicaSync.noteLoaded`. */
+  function noteLoaded(revision: number): void {
+    if (stopped || isDown()) return;
+    loadedAhead = revision;
+    reloads += 1;
+  }
+
+  if (options.adopt !== undefined) {
+    const held = options.adopt.revision;
+    if (store.getRevision() === held) {
+      replicaRevision = held;
+      reloads = 1;
+      needsReload = false;
+      state = 'in_sync';
+      reason = `started from the replica the boot validation loaded at revision ${held}`;
+    } else {
+      reason = `the boot replica is at revision ${held}, the store at ${store.getRevision()}; reloading`;
+    }
+    options.adopt.attach({ onRestart: clientOptions.onRestart, onEvent: clientOptions.onEvent, noteLoaded });
+  }
+  emit({ type: 'replica_status', status: state, reason, revision: replicaRevision });
   unsubscribe = store.subscribe((changes) => {
     if (stopped || isDown()) return;
     queue.push(changes);
@@ -278,6 +323,7 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
     clearAdoption() {
       adoptAt = undefined;
     },
+    noteLoaded,
     stop() {
       if (stopped) return;
       stopped = true;
