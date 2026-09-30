@@ -174,6 +174,12 @@ export interface LegacyImportReport {
   readonly consumedByDefault: Readonly<Record<string, number>>;
   /** Informational items nobody has to decide (not in `reviewItems`), by code → occurrences (for example `FLAG_SUBSUMED`). */
   readonly notes: Readonly<Record<string, number>>;
+  /**
+   * Step 3.11b: legacy values that belong to the DOCUMENT, not to any record (a top-level field next to `compounds` and `reactions`,
+   * a dropped leaf whose path names no record): top-level key or `dropped.<path>` → the value, verbatim. Kept here so nothing is lost;
+   * empty for both real v6 exports.
+   */
+  readonly documentUnmapped: Readonly<Record<string, JsonValue>>;
 }
 
 /** How many findings of each severity the merged result has (all of them, even when the list below is capped). */

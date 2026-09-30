@@ -8,7 +8,7 @@
  * Duplicate IDs in the legacy file (v6 does not forbid them) are never merged: the first record keeps the ID as its key, every
  * later one gets `<id>\u0000<n>`, which the sanitiser turns into a different, hash-carrying part.
  */
-import { createLegacyIdSpace, type LegacyIdSpace } from './id-space';
+import { createLegacyIdSpace, transformationKey, type LegacyIdSpace } from './id-space';
 import { parseLabel } from './label-parser';
 import { arr, field, isObj, type LegacyObject } from './text';
 
@@ -34,7 +34,7 @@ function keysOf(records: readonly LegacyObject[]): string[] {
   });
 }
 
-const texts = (value: unknown): string[] => arr(value).filter((item): item is string => typeof item === 'string' && item.trim() !== '');
+export const texts = (value: unknown): string[] => arr(value).filter((item): item is string => typeof item === 'string' && item.trim() !== '');
 const text = (value: unknown): string[] => (typeof value === 'string' && value.trim() !== '' ? [value] : []);
 
 /** Builds the ID space of one v5 document. Total: never throws for any (JSON) input. */
@@ -58,6 +58,7 @@ export function createDocumentIds(data: { readonly compounds: readonly LegacyObj
     if (!firstReaction.has(id)) firstReaction.set(id, key);
   });
   const pairs: (readonly [string, string])[] = [];
+  const transformations = new Set<string>();
 
   data.reactions.forEach((reaction, index) => {
     for (const participant of arr(reaction.participants)) {
@@ -78,6 +79,9 @@ export function createDocumentIds(data: { readonly compounds: readonly LegacyObj
     }
     for (const key of [reaction.reactionType, reaction.reactionFamily, field(reaction.mechanism, 'type')]) text(key).forEach((t) => concepts.add(t));
     for (const key of [field(reaction.jee, 'prerequisites'), field(reaction.jee, 'concepts')]) texts(key).forEach((t) => concepts.add(t));
+    const fgFrom = texts(field(reaction.transformation, 'fgFrom'));
+    const fgTo = texts(field(reaction.transformation, 'fgTo'));
+    if (fgFrom.length + fgTo.length > 0) transformations.add(transformationKey(fgFrom, fgTo));
     text(reaction.namedReaction).forEach((t) => namedReactions.add(t));
     text(reaction.chapter).filter((t) => t !== 'Uncategorised').forEach((t) => topics.add(t));
     for (const other of texts(reaction.relatedReactions)) {
@@ -102,6 +106,7 @@ export function createDocumentIds(data: { readonly compounds: readonly LegacyObj
     namedReactions,
     topics,
     relatedPairs: pairs,
+    transformations,
     functionalGroups,
     classTexts,
   });

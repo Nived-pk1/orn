@@ -23,6 +23,8 @@ export interface LegacyIdSpaceInput {
   readonly functionalGroups?: Iterable<string>;
   /** `compoundClass` texts: each may become a class (matched by folded name first, else created). */
   readonly classTexts?: Iterable<string>;
+  /** Transformation keys (`transformationKey`): the functional-group ids of a reaction's `transformation.fgFrom` / `fgTo` (step 3.11b). */
+  readonly transformations?: Iterable<string>;
   /** `relatedReactions` pairs of legacy reaction IDs; order and repeats do not matter, a reaction related to itself is ignored. */
   readonly relatedPairs?: Iterable<readonly [string, string]>;
 }
@@ -42,6 +44,12 @@ export interface LegacyIdSpace {
   /** `int_v6-<part>-<n>` (step 3.11a): an entry of `intermediates[]`, `n` = the 1-based position of the participant in the legacy list. */
   intermediateId(reactionId: string, n: number): string;
   caveatId(reactionId: string, n: number): string;
+  /** `mec_v6-<reaction part>` (step 3.11b): the mechanism made from a reaction's `mechanism.summary`, one per reaction. */
+  mechanismId(reactionId: string): string;
+  /** `tmp_v6-<reaction part>` (step 3.11b): the topic mapping of a reaction's `chapter`, one per reaction. */
+  topicMappingId(reactionId: string): string;
+  /** `trf_v6-<slug>-<hash6>` (step 3.11b): the transformation of a set of functional-group ids (`fgFrom`, `fgTo`), order and repeats do not matter. */
+  transformationId(fgFrom: readonly string[], fgTo: readonly string[]): string;
   relevanceId(reactionId: string, which: 'main' | 'advanced'): string;
   /** `rel_v6-<lower>-<higher>`: symmetric. `undefined` for a reaction related to itself (no relationship exists). */
   relatedReactionId(a: string, b: string): string | undefined;
@@ -55,6 +63,12 @@ export interface LegacyIdSpace {
   /** `cls_v6-l-<slug>-<hash6>`: the class created from a `compoundClass` text (deduplicated by folded text). */
   classFromTextId(text: string): string;
 }
+
+/** Injective key of a transformation: the sorted, de-duplicated functional-group ids on each side. */
+export const transformationKey = (fgFrom: readonly string[], fgTo: readonly string[]): string => {
+  const side = (ids: readonly string[]): string[] => [...new Set(ids)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  return JSON.stringify([side(fgFrom), side(fgTo)]);
+};
 
 /** Injective key of an unordered pair (a separator character could be part of a legacy ID). */
 const pairKey = (a: string, b: string): string => JSON.stringify(a < b ? [a, b] : [b, a]);
@@ -116,6 +130,7 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
     return tier === 0 ? `${reactionPart(pair[0])}-${reactionPart(pair[1])}` : hashOf(key, hashLength[tier]);
   };
   const related = settle('relationship', pairs.keys(), pairLadder);
+  const transformations = settle('transformation', input.transformations ?? [], textLadder);
 
   const lookup = (table: ReadonlyMap<string, string>, key: string, what: string): string => {
     const part = table.get(key);
@@ -138,6 +153,9 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
     productId: (id, n) => `pdt_v6-${reactionPart(id)}-${requireCount(n, 'product number')}`,
     intermediateId: (id, n) => `int_v6-${reactionPart(id)}-${requireCount(n, 'intermediate number')}`,
     caveatId: (id, n) => `cav_v6-${reactionPart(id)}-${requireCount(n, 'caveat number')}`,
+    mechanismId: (id) => `mec_v6-${reactionPart(id)}`,
+    topicMappingId: (id) => `tmp_v6-${reactionPart(id)}`,
+    transformationId: (from, to) => `trf_v6-${lookup(transformations, transformationKey(from, to), 'transformation key')}`,
     relevanceId: (id, which) => `erl_v6-${reactionPart(id)}-${which}`,
     relatedReactionId(a, b) {
       if (a === b) return undefined;

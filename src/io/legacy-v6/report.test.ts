@@ -21,6 +21,7 @@ describe('createReportBuilder', () => {
       notImported: [],
       consumedByDefault: {},
       notes: {},
+      documentUnmapped: {},
     });
   });
 

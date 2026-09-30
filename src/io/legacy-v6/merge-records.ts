@@ -6,6 +6,7 @@
 import type { AnyRecord, RecordKind } from '@/core/schema';
 import type { ParsedAsset } from '../contracts';
 import type { MappedCompounds } from './compound-map';
+import type { MappedClassification } from './classify-map';
 import type { MappedReactions } from './reaction-map';
 
 export interface MergedMapping {
@@ -27,4 +28,15 @@ export function mergeMappedRecords(compounds: MappedCompounds, reactions: Mapped
     },
     assetBytes: [...compounds.assetBytes, ...reactions.assetBytes],
   };
+}
+
+/**
+ * The compound, reaction and classification results (step 3.11b) as one set: the completed reactions replace the 3.11a ones (same
+ * IDs, same order), and the concepts, named reactions, topics, topic mappings, transformations, mechanisms, caveats, relationships and
+ * exam relevance records are added.
+ */
+export function mergeAllMappedRecords(compounds: MappedCompounds, reactions: MappedReactions, classification: MappedClassification): MergedMapping {
+  const base = mergeMappedRecords(compounds, reactions);
+  const { reaction, ...added } = classification.records;
+  return { records: { ...base.records, reaction, ...added }, assetBytes: base.assetBytes };
 }

@@ -4,7 +4,7 @@
  * randomness, no I/O. Step 3.9 adds the deterministic ORN IDs (`createLegacyIdSpace`), the participant label parser (`parseLabel`) and
  * the condition parsers (`parseLegacyConditions`, `parseConditionField`). Step 3.10 maps the compounds (`createDocumentIds`, `mapLegacyCompounds`, the
  * report skeleton and the consumed-path trace); step 3.11a maps the reactions' participants, stages, outcomes, conditions, notes, images, scope and
- * lifecycle (`mapLegacyReactions`); the rest of the reaction fields is step 3.11b.
+ * lifecycle (`mapLegacyReactions`); step 3.11b maps the classification and curriculum fields and the remaining dropped leaves (`mapLegacyClassification`).
  */
 import { findDroppedLeaves, type DroppedLeaf } from './dropped';
 import type { LegacyV5Data } from './legacy-types';
@@ -29,7 +29,12 @@ export { mapLegacyCompounds } from './compound-map';
 export type { HubDecision, HubInfo, MapCompoundsInput, MapCompoundsOptions, MapCompoundsResult, MappedCompoundRecords, MappedCompounds } from './compound-map';
 export { DEFERRED_REACTION_FIELDS, mapLegacyReactions } from './reaction-map';
 export type { MapReactionsInput, MapReactionsOptions, MapReactionsResult, MappedReactionRecords, MappedReactions } from './reaction-map';
-export { mergeMappedRecords } from './merge-records';
+export { mapLegacyClassification } from './classify-map';
+export type { MapClassificationInput, MapClassificationOptions, MapClassificationResult, MappedClassification, MappedClassificationRecords } from './classify-map';
+export { EMPTY_MATCH_CONTEXT, createMatchIndex, matchContextFromRecords } from './match-context';
+export type { ConceptKind, LegacyMatchContext, MatchIndex, MatchKind, MatchRecord } from './match-context';
+export { examTargetsOf } from './exam-vocab';
+export { mergeAllMappedRecords, mergeMappedRecords } from './merge-records';
 export type { MergedMapping } from './merge-records';
 export { createReportBuilder, LEGACY_SYSTEM } from './report';
 export type { ReportBuilder } from './report';
