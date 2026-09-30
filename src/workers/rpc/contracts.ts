@@ -4,6 +4,7 @@
  * of canonical state: full validation, route search, import preview, export building).
  */
 import type { CanonicalState, StructureRep } from '@/core/schema';
+import type { PrecomputedFindings } from '@/core/commands';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { RouteQuery, RouteSearchResult } from '@/core/graph/contracts';
 import type { Finding } from '@/core/validation/contracts';
@@ -87,7 +88,13 @@ export type WorkerEvent =
   | { readonly type: 'restart_hook_timeout'; readonly timeoutMs: number; readonly attempt: number }
   /** The client is down for good (restart cap or no worker could be created); every call answers `WORKER_CRASHED`. */
   | { readonly type: 'gave_up'; readonly reason: 'restart_cap' | 'start_failed'; readonly restarts: number }
-  | { readonly type: 'callback_error'; readonly message: string };
+  | { readonly type: 'callback_error'; readonly message: string }
+  /**
+   * The compute replica's sync with the store changed state (step 4.2b): `in_sync` (the replica follows the store's
+   * ChangeSets), `reloading` (one `loadReplica` of the store's current state is under way) or `down` (the worker is
+   * gone for good). Emitted on every change of state, with the reason.
+   */
+  | { readonly type: 'replica_status'; readonly status: 'in_sync' | 'reloading' | 'down'; readonly reason: string; readonly revision: number | null };
 
 export interface RestartInfo {
   readonly reason: 'crash' | 'timeout';
@@ -126,12 +133,30 @@ export interface SearchWorkerApi {
   search(params: SearchQuery, ctx: RpcCallContext): Promise<readonly SearchHit[]>;
 }
 
+/** A replica call refused as a value: the replica is at revision `have`, not the one the call needs. */
+export interface ReplicaStale {
+  readonly ok: false;
+  readonly code: 'REPLICA_STALE';
+  readonly have: number;
+}
+export type ReplicaAnswer<T extends object> = ({ readonly ok: true } & T) | ReplicaStale;
+
 export interface ComputeWorkerApi {
-  loadReplica(params: { readonly state: CanonicalState; readonly revision: number }, ctx: RpcCallContext): Promise<void>;
-  /** Replica stays in sync by applying the same ChangeSets as the main store (revision-checked). */
-  applyChanges(params: { readonly changes: ChangeSet }, ctx: RpcCallContext): Promise<void>;
-  validateAll(params: { readonly revision: number }, ctx: RpcCallContext): Promise<readonly Finding[]>;
-  findRoutes(params: RouteQuery, ctx: RpcCallContext): Promise<RouteSearchResult>;
+  /**
+   * Replaces the replica with `state` at `revision` and answers `validateAll` of it, stamped for adoption at that
+   * revision: exactly what `replaceState` / `reload` take as precomputed findings (step 4.2a). Idempotent.
+   */
+  loadReplica(params: { readonly state: CanonicalState; readonly revision: number }, ctx: RpcCallContext): Promise<PrecomputedFindings>;
+  /**
+   * Replica stays in sync by applying the same ChangeSets as the main store, in order. `REPLICA_STALE` (a value) when
+   * the ChangeSet does not follow the replica's revision (a `'remote'` one may span revisions); the caller reloads.
+   * NOT idempotent: a second application would fail the revision check or, worse, double an edit.
+   */
+  applyChanges(params: { readonly changes: ChangeSet }, ctx: RpcCallContext): Promise<ReplicaAnswer<{ readonly revision: number }>>;
+  /** Full L1-L3 pass over the replica; `REPLICA_STALE` when the replica is not at `revision`. */
+  validateAll(params: { readonly revision: number }, ctx: RpcCallContext): Promise<ReplicaAnswer<{ readonly findings: readonly Finding[] }>>;
+  /** Route search over the replica (its time budget is timed inside the worker); `REPLICA_STALE` as above. `query.limits.signal` is set by the worker. */
+  findRoutes(params: { readonly revision: number; readonly query: RouteQuery }, ctx: RpcCallContext): Promise<ReplicaAnswer<{ readonly result: RouteSearchResult }>>;
   importPreview(params: { readonly source: ImportSource }, ctx: RpcCallContext): Promise<ImportPreview>;
   buildExport(params: ExportOptions, ctx: RpcCallContext): Promise<Blob>;
 }

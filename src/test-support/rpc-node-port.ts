@@ -39,3 +39,12 @@ const FIXTURE = new URL('../../tests/fixtures/rpc/worker.ts', import.meta.url);
 
 /** Starts the fixture worker (`TestApi` from `rpc-test-api.ts`) in a real thread. */
 export const spawnTestWorker: WorkerFactory = () => nodeWorkerPort(new Worker(FIXTURE, { execArgv: ['--import', 'tsx'] }));
+
+const COMPUTE_FIXTURE = new URL('../../tests/fixtures/compute/worker.ts', import.meta.url);
+
+/**
+ * Starts the real compute worker entry (`startComputeHost`) in a real thread. `crashOn` ends the thread, before the host
+ * sees it, when a request for that method arrives (an induced crash; nothing in the host or the handlers changes).
+ */
+export const spawnComputeWorker = (crashOn?: string): RpcPort =>
+  nodeWorkerPort(new Worker(COMPUTE_FIXTURE, { execArgv: ['--import', 'tsx'], workerData: { crashOn } }));

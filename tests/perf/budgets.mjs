@@ -223,4 +223,22 @@ export const BUDGETS = {
     { operation: 'reload: in-process', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 4.2a: no PERFORMANCE_ARCHITECTURE.md §2 row; informal; SLOW_BENCH_OPTIONS, few samples; validateAll + index build + commit, the path before step 4.2a' },
   'reload (design tier, dense) > precomputed findings: check + index build + commit':
     { operation: 'reload: precomputed', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 4.2a: no PERFORMANCE_ARCHITECTURE.md §2 row; informal; SLOW_BENCH_OPTIONS, few samples; precomputed findings checked and committed; index build stays on main (D2)' },
+  'replica applyChanges in the worker code (design tier, hub_explosion) > ordinary edit (one species)':
+    { operation: 'replica applyChanges: ordinary edit', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 4.2b: no PERFORMANCE_ARCHITECTURE.md §2 row; informal; worker code, no thread; patches + index apply + validateTouchedByRule with previous' },
+  'replica applyChanges in the worker code (design tier, hub_explosion) > hub record edit (rename of the ~1,000-referrer hub species, one record)':
+    { operation: 'replica applyChanges: hub record edit', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 4.2b: informal; worker code, no thread; ONE record touched, ~1,000 referrers re-validated by rule, WITH previous (Phase 9 exception 5 scenario)' },
+  'replica applyChanges in the worker code (design tier, hub_explosion) > hub edit (replaceReferences on the ~1,000-reaction hub)':
+    { operation: 'replica applyChanges: hub edit', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 4.2b: informal; SLOW_BENCH_OPTIONS; worker code, no thread; ~1,000 records touched' },
+  'replica validateAll in the worker code (design tier) > dense: validateAll over the replica':
+    { operation: 'replica validateAll: whole state', tier: 'design', shape: 'dense', budgetMs: 3000, budgetRow: 'Full validation L1–L3 (design target)' },
+  'replica validateAll in the worker code (design tier) > hub_explosion: validateAll over the replica':
+    { operation: 'replica validateAll: whole state', tier: 'design', shape: 'hub_explosion', budgetMs: 3000, budgetRow: 'Full validation L1–L3 (design target)' },
+  'replica load in the worker code (design tier, dense) > load: freeze + index build + validateAll + finding store':
+    { operation: 'replica load', tier: 'design', shape: 'dense', budgetMs: null, note: 'step 4.2b: informal; SLOW_BENCH_OPTIONS; the worker part of loadReplica without the clone' },
+  'compute worker in a real thread (design tier, hub_explosion) > applyChanges round trip, ordinary edit':
+    { operation: 'compute worker: applyChanges round trip, ordinary edit', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 4.2b: informal; real worker_threads thread running the real compute entry' },
+  'compute worker in a real thread (design tier, hub_explosion) > loadReplica round trip, the whole design-tier state (clone out, index build, validateAll, findings back)':
+    { operation: 'compute worker: loadReplica round trip, whole state', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 4.2b: informal; SLOW_BENCH_OPTIONS; the clone cost of D3 plus the worker part' },
+  'compute worker in a real thread (design tier, hub_explosion) > sender side of that clone: v8.serialize of the design-tier state (blocks the caller)':
+    { operation: 'compute worker: sender side of the state clone (v8.serialize)', tier: 'design', shape: 'hub_explosion', budgetMs: null, note: 'step 4.2b: informal; SLOW_BENCH_OPTIONS; a proxy for the main-thread blocking part of postMessage' },
 };

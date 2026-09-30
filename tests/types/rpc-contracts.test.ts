@@ -11,14 +11,17 @@ import type {
   RpcCallOptions,
   RpcClient,
   RpcMethodSpecs,
+  ReplicaAnswer,
+  ReplicaStale,
   RpcResult,
   SearchWorkerApi,
 } from '@/workers/rpc/contracts';
+import type { PrecomputedFindings } from '@/core/commands';
 import type { Finding } from '@/core/validation/contracts';
 
 it('type: RpcClient<Api> exists for all four worker APIs and answers RpcResult values', () => {
   expectTypeOf<RpcClient<ComputeWorkerApi>['validateAll']>().toEqualTypeOf<
-    (params: { readonly revision: number }, options?: RpcCallOptions) => Promise<RpcResult<readonly Finding[]>>
+    (params: { readonly revision: number }, options?: RpcCallOptions) => Promise<RpcResult<ReplicaAnswer<{ readonly findings: readonly Finding[] }>>>
   >();
   expectTypeOf<RpcClient<ChemWorkerApi>>().toHaveProperty('parse');
   expectTypeOf<RpcClient<LayoutWorkerApi>>().toHaveProperty('layout');
@@ -33,4 +36,13 @@ it('type: RpcMethodSpecs names every method, with idempotent and timeoutMs', () 
   // @ts-expect-error timeoutMs is required
   const noTimeout: RpcMethodSpecs<LayoutWorkerApi> = { layout: { idempotent: true } };
   void [full, missing, noTimeout];
+});
+
+it('type: the compute replica calls answer what the store takes and refuse stale revisions as values (step 4.2b)', () => {
+  // loadReplica answers exactly the precomputed findings replaceState and reload accept.
+  expectTypeOf<RpcClient<ComputeWorkerApi>['loadReplica']>().returns.resolves.toEqualTypeOf<RpcResult<PrecomputedFindings>>();
+  // applyChanges, validateAll and findRoutes answer ok or REPLICA_STALE with the revision held; a stale answer is a value.
+  expectTypeOf<Extract<ReplicaAnswer<{ readonly revision: number }>, { ok: false }>>().toEqualTypeOf<ReplicaStale>();
+  expectTypeOf<ReplicaStale>().toEqualTypeOf<{ readonly ok: false; readonly code: 'REPLICA_STALE'; readonly have: number }>();
+  expectTypeOf<Extract<ReplicaAnswer<{ readonly revision: number }>, { ok: true }>['revision']>().toBeNumber();
 });
