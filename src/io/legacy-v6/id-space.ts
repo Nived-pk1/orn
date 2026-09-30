@@ -115,10 +115,10 @@ export function createLegacyIdSpace(input: LegacyIdSpaceInput = {}): LegacyIdSpa
   const functionalGroups = part('functional_group');
   const classTexts = part('class_text');
   const reactions = settle('reaction', input.reactionIds ?? [], legacyLadder);
-  const conceptKey = (kind: string | undefined, foldedText: string): string => (kind === undefined ? foldedText : `${kind} ${foldedText}`);
+  const conceptKey = (kind: string | undefined, foldedText: string): string => (kind === undefined ? foldedText : `${kind}\u0000${foldedText}`);
   // slug from the text, hash of the whole (kind-qualified) key; a generic key gives exactly the plain text part
   const conceptLadder: PartLadder = (key, tier) => {
-    const at = key.indexOf(' ');
+    const at = key.indexOf('\u0000');
     if (at < 0) return textPart(key, tier);
     const slug = slugOf(key.slice(at + 1));
     const hash = hashOf(key, hashLength[tier]);

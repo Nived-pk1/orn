@@ -97,6 +97,7 @@ npm run lint                 # ESLint
 npm run lint:deps            # dependency-cruiser boundary rules
 npm run check:size           # ≤ 400 lines per source file
 npm run check:hardcode       # no dataset IDs/names in production code
+npm run check:control-chars  # no raw control characters (NUL etc.) in docs, data, source
 npm test                     # all Vitest tests
 npm run test:property        # property tests only
 npm run test:adversarial     # adversarial matrix only

@@ -27,7 +27,8 @@
     "lint:deps": "depcruise src --config .dependency-cruiser.cjs",
     "check:size": "node scripts/check-file-size.mjs",
     "check:hardcode": "node scripts/check-hardcode.mjs",
-    "check": "npm run typecheck && npm run lint && npm run lint:deps && npm run check:size && npm run check:hardcode && npm run test"
+    "check:control-chars": "node scripts/check-control-chars.mjs",
+    "check": "npm run typecheck && npm run lint && npm run lint:deps && npm run check:size && npm run check:hardcode && npm run check:control-chars && npm run test"
   },
   "dependencies": {
     "dexie": "^4.4.6",
