@@ -78,7 +78,7 @@ export function rig(options: RigOptions = {}): Rig {
       },
     };
     // The import-related calls (step 4.2c) are on record too, by name.
-    for (const method of ['importPreview', 'importRevise', 'importCancel', 'importPrepareApply', 'snapshotBuild', 'snapshotDecode', 'adoptPending', 'dropPending'] as const) {
+    for (const method of ['importPreview', 'importRevise', 'importCancel', 'importPrepareApply', 'snapshotBuild', 'snapshotDecode', 'adoptPending', 'dropPending', 'exportPlan', 'exportBuild'] as const) {
       const inner = logged[method] as (params: never, ctx: never) => Promise<unknown>;
       (logged as unknown as Record<string, unknown>)[method] = (params: never, ctx: never) => {
         calls.push({ worker: index, method });

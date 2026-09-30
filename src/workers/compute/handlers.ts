@@ -1,11 +1,12 @@
 /**
- * The compute worker's RPC handlers: thin wrappers over the replica (step 4.2b) and the import host (step 4.2c). The export
- * method keeps its old shape until step 4.2e; until then it answers `NOT_READY` as a value, never a silent no-op.
+ * The compute worker's RPC handlers: thin wrappers over the replica (step 4.2b), the import host (step 4.2c) and the export
+ * functions (step 4.2e).
  */
 import type { ComputeWorkerApi } from '@/workers/rpc/contracts';
-import { RpcHostError, withTransfer } from '@/workers/rpc/helpers';
+import { taskOptionsFrom, withTransfer } from '@/workers/rpc/helpers';
 import { migrationRunner } from '@/core/migrations';
 import type { MigrationRunner } from '@/core/migrations/contracts';
+import { assertUtcInstant, buildExportBytes, planExport } from './export-flow';
 import { createImportHost, type ImportHost } from './import-host';
 import { createReplica, type Replica, type ReplicaOptions } from './replica';
 import { buildSnapshotBytes } from './snapshot-build';
@@ -38,9 +39,7 @@ export function createComputeHandlers(options: ComputeHandlerOptions = {}): Comp
     snapshotBuild: async ({ revision, reason, exportedAt }) => {
       const held = replica.snapshot();
       if (held.revision !== revision) return { ok: false, code: 'REPLICA_STALE', have: held.revision };
-      if (Number.isNaN(Date.parse(exportedAt)) || new Date(exportedAt).toISOString() !== exportedAt) {
-        throw new RpcHostError('BAD_REQUEST', `snapshotBuild: exportedAt must be a UTC ISO timestamp with milliseconds, got ${JSON.stringify(exportedAt)}`);
-      }
+      assertUtcInstant('snapshotBuild', exportedAt);
       const built = buildSnapshotBytes(held.state, exportedAt);
       if (!built.ok) return { ok: false, code: 'SERIALIZE_FAILED', message: built.message };
       // The bytes move to the caller; the copy here is not needed again.
@@ -62,8 +61,21 @@ export function createComputeHandlers(options: ComputeHandlerOptions = {}): Comp
       return answer;
     },
     dropPending: async () => ({ dropped: imports.failed() }),
-    buildExport: async () => {
-      throw new RpcHostError('NOT_READY', 'buildExport is built in step 4.2e');
+    exportPlan: async (params) => {
+      const held = replica.snapshot();
+      if (held.revision !== params.revision) return { ok: false, code: 'REPLICA_STALE', have: held.revision };
+      return { ok: true, assets: planExport(held.state, params) };
+    },
+    exportBuild: async (params, ctx) => {
+      const held = replica.snapshot();
+      if (held.revision !== params.revision) return { ok: false, code: 'REPLICA_STALE', have: held.revision };
+      assertUtcInstant('exportBuild', params.exportedAt);
+      const built = await buildExportBytes(held.state, params, taskOptionsFrom(ctx));
+      if (!built.ok) return built;
+      // The file moves to the caller; the copy here is not needed again. A view onto part of a larger buffer is copied first.
+      const bytes = built.result.bytes;
+      const whole = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength ? bytes : bytes.slice();
+      return withTransfer({ ok: true, result: { ...built.result, bytes: whole } }, [whole.buffer as ArrayBuffer]);
     },
   };
   return { api, replica, imports };

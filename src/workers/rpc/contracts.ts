@@ -3,14 +3,14 @@
  * report progress. Workers: chem (RDKit, L4), layout (ELK), search (MiniSearch), compute (replica
  * of canonical state: full validation, route search, import preview, export building).
  */
-import type { CanonicalState, StructureRep } from '@/core/schema';
+import type { AssetId, CanonicalState, StructureRep } from '@/core/schema';
 import type { MigrationError, MigrationStepReport } from '@/core/migrations/contracts';
 import type { PrecomputedFindings } from '@/core/commands';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { RouteQuery, RouteSearchResult } from '@/core/graph/contracts';
 import type { Finding } from '@/core/validation/contracts';
 import type { Depiction, DepictionOptions, ParseOutcome } from '@/chem/contracts';
-import type { ExportOptions, ImportPlan, ImportPlanRequest, ImportPreviewErrorCode, ImportRejectionCode, ParsedAsset } from '@/io/contracts';
+import type { ExportBuildResult, ExportOptions, ImportPlan, ImportPlanRequest, ImportPreviewErrorCode, ImportRejectionCode, ParsedAsset } from '@/io/contracts';
 import type { ImportQuarantineDraft, ImportReportDraft } from '@/io';
 import type { LayoutRequest, LayoutResult } from '@/layout/contracts';
 import type { SearchDocument, SearchHit, SearchIndexUpdate, SearchQuery } from '@/search/contracts';
@@ -233,6 +233,33 @@ export interface AdoptRefused {
 }
 export type AdoptAnswer = { readonly ok: true; readonly revision: number } | AdoptRefused;
 
+/** The two export files: `.orn.json` (one dataset document) and `.ornpkg` (a zip: manifest, dataset, asset files). */
+export type ExportFormat = 'orn.json' | 'ornpkg';
+
+/** What an export needs to know of the replica to plan: the format decides which options make it read asset bytes. */
+export interface ExportPlanParams {
+  readonly options: ExportOptions;
+  readonly format: ExportFormat;
+  readonly revision: number;
+}
+/** The asset records the export will ask bytes for (scope closure applied, in ID order); empty when the options ask for none. */
+export type ExportPlanAnswer = ReplicaAnswer<{ readonly assets: readonly { readonly assetId: AssetId; readonly sha256: string }[] }>;
+
+/**
+ * `assets` are the bytes main read for the plan's list (an asset it could not read is simply left out: the worker reports it in
+ * `missingAssets`). Their buffers are transferred. `exportedAt` is main's wall-clock time (INV-19: the same state and clock give
+ * the same bytes).
+ */
+export interface ExportBuildParams {
+  readonly options: ExportOptions;
+  readonly format: ExportFormat;
+  readonly revision: number;
+  readonly assets: readonly { readonly assetId: AssetId; readonly sha256: string; readonly bytes: Uint8Array }[];
+  readonly exportedAt: string;
+}
+/** The export's own result as a value (`CANCELLED`, `SERIALIZE_FAILED`) or `REPLICA_STALE`; the result bytes are transferred. */
+export type ExportBuildAnswer = ExportBuildResult | ReplicaStale;
+
 export interface ComputeWorkerApi {
   /**
    * Replaces the replica with `state` at `revision` and answers `validateAll` of it, stamped for adoption at that
@@ -278,5 +305,11 @@ export interface ComputeWorkerApi {
   adoptPending(params: { readonly revision: number }, ctx: RpcCallContext): Promise<AdoptAnswer>;
   /** The apply failed or was cancelled: forget the pending state (and the batch when its asset bytes already left). Idempotent. */
   dropPending(params: Readonly<Record<string, never>>, ctx: RpcCallContext): Promise<{ readonly dropped: boolean }>;
-  buildExport(params: ExportOptions, ctx: RpcCallContext): Promise<Blob>;
+  /**
+   * Export in two calls (step 4.2e; no function crosses the worker boundary). The plan is the scope closure over the replica
+   * and the asset IDs the export needs bytes of; `REPLICA_STALE` when the replica is not at `revision`. Idempotent.
+   */
+  exportPlan(params: ExportPlanParams, ctx: RpcCallContext): Promise<ExportPlanAnswer>;
+  /** Builds the file from the replica at `revision` and the bytes main read; cancel and progress through the context. Idempotent. */
+  exportBuild(params: ExportBuildParams, ctx: RpcCallContext): Promise<ExportBuildAnswer>;
 }
