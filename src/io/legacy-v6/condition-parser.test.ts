@@ -212,7 +212,9 @@ describe('flags, text and parsedFields (MIGRATION.md §4.5)', () => {
     const parsed = parseLegacyConditions({ temperature: '140°C', heat: true });
     expect(parsed.parameters.temperature).toEqual({ kind: 'value', value: 140, unit: 'C' });
     expect(parsed.flags).toEqual([{ flag: 'heat', outcome: 'subsumed_by_temperature' }]);
-    expect(parsed.review.map((r) => r.code)).toEqual(['FLAG_SUBSUMED']);
+    // Informational: counted in the report, not a review item (a person has nothing to decide).
+    expect(parsed.review).toEqual([]);
+    expect(parsed.notes.map((n) => [n.code, n.field])).toEqual([['FLAG_SUBSUMED', 'heat']]);
     expect(parsed.consumed).toContain('heat');
   });
 

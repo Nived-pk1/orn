@@ -26,7 +26,6 @@ export type ParseReviewCode =
   | 'QUANTITY_NOT_DECIDED'
   | 'UNPARSED_FIELD_VALUE'
   | 'PARTIAL_FIELD_PARSE'
-  | 'FLAG_SUBSUMED'
   | 'NON_BOOLEAN_FLAG'
   | 'UNSUPPORTED_VALUE_TYPE'
   | 'CONTROL_CHARACTERS_ESCAPED'
@@ -41,6 +40,15 @@ export interface ParseReview {
   readonly field?: string;
   readonly start?: number;
   readonly end?: number;
+}
+
+/** Something worth counting in the import report that no person has to decide (so it is NOT in the review queue). */
+export type ParseNoteCode = 'FLAG_SUBSUMED';
+
+export interface ParseNote {
+  readonly code: ParseNoteCode;
+  readonly message: string;
+  readonly field?: string;
 }
 
 export interface Parsed {

@@ -12,7 +12,7 @@
  */
 import { PARAMETER_FIELDS, ShortTextSchema, type ConditionParameters } from '@/core/schema';
 import { parseConditionField, type ConditionField, type FieldParse } from './condition-fields';
-import type { ParseReview } from './parse-spans';
+import type { ParseNote, ParseReview } from './parse-spans';
 
 /** `ConditionParametersSchema.other` holds at most this many entries (a test checks the schema still says so). */
 const MAX_OTHER = 16;
@@ -39,7 +39,10 @@ export interface ParsedConditions {
   readonly consumed: readonly string[];
   /** Legacy fields whose value could not be represented at all (wrong type); the caller carries them in `unmapped`. */
   readonly unconsumed: readonly string[];
+  /** Things a person must decide (the review queue). */
   readonly review: readonly ParseReview[];
+  /** Informational only, counted in the report: a heat flag next to a decided temperature (`FLAG_SUBSUMED`). */
+  readonly notes: readonly ParseNote[];
 }
 
 const own = (source: object, key: string): unknown => (Object.hasOwn(source, key) ? (source as Record<string, unknown>)[key] : undefined);
@@ -54,6 +57,7 @@ function textOf(value: unknown): string | undefined {
 export function parseLegacyConditions(conditions: unknown): ParsedConditions {
   const source: object = typeof conditions === 'object' && conditions !== null && !Array.isArray(conditions) ? conditions : {};
   const review: ParseReview[] = [];
+  const notes: ParseNote[] = [];
   const consumed: string[] = [];
   const unconsumed: string[] = [];
   const unsupported = (key: string, value: unknown): void => {
@@ -101,7 +105,7 @@ export function parseLegacyConditions(conditions: unknown): ParsedConditions {
           parsedFields.add('temperature');
         } else {
           flags.push({ flag: key, outcome: 'subsumed_by_temperature' });
-          review.push({ code: 'FLAG_SUBSUMED', message: 'conditions.heat is true and a temperature was also read; the temperature is kept, the flag adds nothing', field: key });
+          notes.push({ code: 'FLAG_SUBSUMED', message: 'conditions.heat is true and a temperature was also read; the temperature is kept, the flag adds nothing', field: key });
         }
       } else if (key === 'light') {
         light = 'hv';
@@ -154,5 +158,5 @@ export function parseLegacyConditions(conditions: unknown): ParsedConditions {
     ...(text === undefined ? {} : { text }),
     parsedFields: PARAMETER_FIELDS.filter((field) => parsedFields.has(field)),
   };
-  return { originalText, parameters, overflowOther, fields, flags, consumed: [...new Set(consumed)], unconsumed: [...new Set(unconsumed)], review };
+  return { originalText, parameters, overflowOther, fields, flags, consumed: [...new Set(consumed)], unconsumed: [...new Set(unconsumed)], review, notes };
 }

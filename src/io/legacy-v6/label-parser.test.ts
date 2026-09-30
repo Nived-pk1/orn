@@ -258,3 +258,32 @@ describe('the labels of both legacy fixtures', () => {
     expect(parsed.stageParameters?.temperature).toEqual({ kind: 'value', value: 443, unit: 'K' });
   });
 });
+
+describe('"any token in parentheses" means the parenthesised forms of the LISTED tokens only (MIGRATION.md §4.6)', () => {
+  it.each([
+    ['(aq) KOH', { phase: 'aq' }],
+    ['KOH (aq.)', { phase: 'aq' }],
+    ['NH3 (excess)', { quantityQualifier: 'excess' }],
+    ['H2SO4 (conc.)', { strength: 'concentrated' }],
+    ['AlCl3 ( cat. )', { quantityQualifier: 'catalytic' }],
+    ['ether (dry)', { dry: true }],
+  ])('%j: the parenthesised listed token is taken out', (label, expected) => {
+    const parsed = parseLabel(label);
+    expect(parsed).toMatchObject(expected);
+    expect(parsed.remainder).not.toContain('(');
+    expect(parsed.tokens).toHaveLength(1);
+  });
+
+  it.each(['NaBH4 (ice bath)', 'H2 (2 eq)', 'CH3I (1 mol)', 'KOH (in water)', 'HCl (g)'])('%j: other parenthesised text stays in the remainder, untouched', (label) => {
+    const parsed = parseLabel(label);
+    expect(parsed.tokens).toEqual([]);
+    expect(parsed.remainder).toBe(label);
+    expect(parsed.review.map((r) => r.code)).toEqual([]);
+  });
+
+  it('a parenthesised text around a listed word is not swallowed whole: only the word is a token', () => {
+    const parsed = parseLabel('Zn (dry ice)');
+    expect(parsed.tokens.map((token) => token.text)).toEqual(['dry']);
+    expect(parsed.segments.map((segment) => segment.text).join('')).toBe('Zn (dry ice)');
+  });
+});

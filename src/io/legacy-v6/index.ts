@@ -23,7 +23,7 @@ export { createLegacyIdSpace, legacyAssetId } from './id-space';
 export type { LegacyIdSpace, LegacyIdSpaceInput } from './id-space';
 export { parseLabel } from './label-parser';
 export type { LabelField, LabelKind, LabelToken, ParsedLabel } from './label-parser';
-export type { ParseReview, ParseReviewCode, Segment } from './parse-spans';
+export type { ParseNote, ParseNoteCode, ParseReview, ParseReviewCode, Segment } from './parse-spans';
 export { createCompoundNameLookup, LEGACY_REACTION_KEYS, migrateLegacy, migrateLegacyReaction } from './migrate';
 export type { CompoundNameLookup, MigratedReaction } from './migrate';
 export { LEGACY_V5_SCHEMA_VERSION } from './normalize';
