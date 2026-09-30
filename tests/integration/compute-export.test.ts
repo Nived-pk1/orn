@@ -11,6 +11,7 @@ import type { CanonicalState, RecordRef } from '@/core/schema';
 import type { ExportOptions } from '@/io';
 import { withSyntheticAssets } from '@/test-support/asset-kit';
 import { FORMATS, exportRig, inProcessExport } from '@/test-support/compute-export-kit';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { buildDemoDocument } from '@/test-support/demo';
 import { GENERATOR_SHAPES, generateTier } from '@/test-support/generator';
 import { loadFixtureState } from '@/test-support/state-fixture';
@@ -173,7 +174,7 @@ describe('what crosses the worker boundary', () => {
     const plan = await client.exportPlan(params);
     if (!plan.ok || !plan.value.ok) throw new Error('plan failed');
     expect(structuredClone(plan.value)).toEqual(plan.value);
-    const buildParams = { ...params, assets: plan.value.assets.map((a) => ({ ...a, bytes: bytes.get(a.assetId) ?? new Uint8Array([1]) })), exportedAt: '2026-09-30T12:00:00.000Z' };
+    const buildParams = { ...params, assets: plan.value.assets.map((a) => ({ ...a, bytes: bytes.get(a.assetId) ?? new Uint8Array([1]) })), exportedAt: '2026-09-30T12:00:00.000Z', generator: TEST_GENERATOR };
     expect(structuredClone(buildParams)).toEqual(buildParams);
     const build = await client.exportBuild(buildParams);
     if (!build.ok || !build.value.ok) throw new Error('build failed');

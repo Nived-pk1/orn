@@ -14,6 +14,9 @@ import { createReplicaSync, type ReplicaSync } from '@/workers/compute/sync';
 import type { ComputeWorkerApi, WorkerEvent } from '@/workers/rpc/contracts';
 import { createRpcHost } from '@/workers/rpc/host';
 
+/** The app identity main gives the flows and the adapter in tests: deliberately NOT the adapter's default, so a worker that kept a generator of its own would show. */
+export const TEST_GENERATOR = { app: 'orn-main-test', version: '9.9.9' } as const;
+
 export interface Call {
   readonly worker: number;
   readonly method: keyof ComputeWorkerApi;

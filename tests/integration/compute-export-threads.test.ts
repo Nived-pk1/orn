@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { makeStore } from '@/test-support/command-kit';
 import { withSyntheticAssets } from '@/test-support/asset-kit';
 import { EXPORTED_AT, inProcessExport } from '@/test-support/compute-export-kit';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { freshAdapter, seedChangeSet } from '@/test-support/persistence-kit';
 import { spawnComputeWorker } from '@/test-support/rpc-node-port';
 import { loadFixtureState } from '@/test-support/state-fixture';
@@ -42,7 +43,7 @@ describe('export in a real thread', () => {
         const blob = await t.adapter.getAssetBlob(assetId);
         return blob === undefined ? undefined : new Uint8Array(await blob.arrayBuffer());
       },
-      ids: { now: () => EXPORTED_AT },
+      ids: { now: () => EXPORTED_AT }, generator: TEST_GENERATOR,
     });
     const options = { scope: 'full', includeDependencies: false, assets: 'package' } as const;
     const exported = await flow.export({ format: 'ornpkg', options });
@@ -69,7 +70,7 @@ describe('export in a real thread', () => {
     const sync = createReplicaSync({ store, factory: () => spawnComputeWorker() });
     running.push(sync);
     await sync.settled();
-    const flow = createComputeExport({ sync, store, assetBytes: async (assetId) => made.bytes.get(assetId), ids: { now: () => EXPORTED_AT } });
+    const flow = createComputeExport({ sync, store, assetBytes: async (assetId) => made.bytes.get(assetId), ids: { now: () => EXPORTED_AT }, generator: TEST_GENERATOR });
     const options = { scope: 'full', includeDependencies: false, assets: 'embed' } as const;
 
     const controller = new AbortController();

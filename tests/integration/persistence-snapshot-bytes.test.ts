@@ -8,13 +8,14 @@ import { createMigrationRunner } from '@/core/migrations';
 import { restoreSnapshot } from '@/persistence/restore';
 import { attachWriteQueue } from '@/persistence/write-wiring';
 import { envelope, makeStore, mustCommit } from '@/test-support/command-kit';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { freshAdapter, seedChangeSet } from '@/test-support/persistence-kit';
 import { loadFixtureState } from '@/test-support/state-fixture';
 import { buildSnapshotBytes } from '@/workers/compute/snapshot-build';
 
 const base = loadFixtureState('maximal-valid');
 const built = (state = base) => {
-  const out = buildSnapshotBytes(state, '2026-09-30T12:00:00.000Z');
+  const out = buildSnapshotBytes(state, '2026-09-30T12:00:00.000Z', TEST_GENERATOR);
   if (!out.ok) throw new Error(out.message);
   return out;
 };

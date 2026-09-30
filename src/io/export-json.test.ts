@@ -57,7 +57,7 @@ describe('buildOrnJsonExport', () => {
   it('a provider that cannot supply bytes is reported in missingAssets, never thrown or silently dropped', async () => {
     const result = await buildOrnJsonExport(state, { scope: 'full', includeDependencies: false, assets: 'embed' }, deps(noBytes));
     if (!result.ok) throw new Error('export failed');
-    expect(result.result.missingAssets).toEqual([{ assetId: ASSET_ID, sha256: expect.any(String) }]);
+    expect(result.result.missingAssets).toEqual([{ assetId: ASSET_ID, sha256: expect.any(String), reason: 'no_bytes' }]);
     const parsed = deserializeDocument(new TextDecoder().decode(result.result.bytes));
     if (!parsed.ok) throw new Error('exported bytes do not parse');
     expect(parsed.document.embeddedAssets).toBeUndefined();

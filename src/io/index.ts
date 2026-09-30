@@ -7,6 +7,8 @@ export { buildScopedDocument } from './export-document';
 export type { ScopedDocumentBuildInfo, ScopedDocumentResult } from './export-document';
 export { buildOrnJsonExport } from './export-json';
 export type { OrnJsonExportDeps } from './export-json';
+export { readAssetBytes } from './export-assets';
+export type { AssetRead } from './export-assets';
 export { buildOrnPackageExport } from './export-package';
 export type { OrnPackageExportDeps } from './export-package';
 export { scanJsonCaps } from './json-caps';

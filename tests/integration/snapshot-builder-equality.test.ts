@@ -9,17 +9,18 @@ import { describe, expect, it } from 'vitest';
 import { documentToState } from '@/core/dataset';
 import { CURRENT_SCHEMA_VERSION, DatasetDocumentSchema, type CanonicalState } from '@/core/schema';
 import { DEFAULT_GENERATOR } from '@/persistence/adapter';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { COMPRESSION_LEVEL, buildSnapshot, decodeSnapshot } from '@/persistence/snapshot-codec';
 import { buildDemoDocument } from '@/test-support/demo';
 import { GENERATOR_SHAPES, generateTier } from '@/test-support/generator';
 import { loadFixtureState } from '@/test-support/state-fixture';
-import { SNAPSHOT_COMPRESSION_LEVEL, SNAPSHOT_GENERATOR, buildSnapshotBytes } from '@/workers/compute/snapshot-build';
+import { SNAPSHOT_COMPRESSION_LEVEL, buildSnapshotBytes } from '@/workers/compute/snapshot-build';
 
 const AT = '2026-09-30T12:00:00.000Z';
 
 function expectEqualBytes(state: CanonicalState): void {
-  const mine = buildSnapshotBytes(state, AT);
-  const theirs = buildSnapshot({ id: 'snp_x', createdAt: AT, reason: 'pre_import', state, revision: 1, generator: DEFAULT_GENERATOR });
+  const mine = buildSnapshotBytes(state, AT, TEST_GENERATOR);
+  const theirs = buildSnapshot({ id: 'snp_x', createdAt: AT, reason: 'pre_import', state, revision: 1, generator: TEST_GENERATOR });
   if (!mine.ok || !theirs.ok) throw new Error('did not serialise');
   expect(mine.bytes).toEqual(theirs.built.bytes);
   expect(mine.schemaVersion).toBe(theirs.built.summary.schemaVersion);
@@ -30,11 +31,15 @@ function expectEqualBytes(state: CanonicalState): void {
 }
 
 describe('the worker snapshot builder equals the persistence codec', () => {
-  it('uses the same generator, compression level and schema version', () => {
-    expect(SNAPSHOT_GENERATOR).toEqual(DEFAULT_GENERATOR);
+  it('uses the same compression level and schema version, and writes the generator it is given', () => {
     expect(SNAPSHOT_COMPRESSION_LEVEL).toBe(COMPRESSION_LEVEL);
-    const built = buildSnapshotBytes(loadFixtureState('minimal-valid'), AT);
+    const built = buildSnapshotBytes(loadFixtureState('minimal-valid'), AT, TEST_GENERATOR);
     expect(built.ok && built.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    if (!built.ok) throw new Error(built.message);
+    const decoded = decodeSnapshot(built.bytes);
+    if (!decoded.ok) throw new Error(decoded.message);
+    expect(DatasetDocumentSchema.parse(decoded.doc).generator).toEqual(TEST_GENERATOR);
+    expect(TEST_GENERATOR).not.toEqual(DEFAULT_GENERATOR);
   });
 
   it.each(['minimal-valid', 'maximal-valid'] as const)('byte for byte on fixture %s', (name) => expectEqualBytes(loadFixtureState(name)));

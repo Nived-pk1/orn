@@ -4,14 +4,13 @@
  * format and options will ask bytes of; `buildExportBytes` runs the SAME exporters as the in-process export
  * (`buildOrnJsonExport`, `buildOrnPackageExport`) over the bytes main read and transferred in, so INV-19 holds: the same state,
  * options and clock give the same bytes. The provider is a map lookup; an asset main could not read is answered `undefined` and
- * the exporter reports it in `missingAssets`, never thrown. No chemistry here: what is included is the io layer's decision.
+ * the exporter reports it in `missingAssets` (with its reason), never thrown. No chemistry here: what is included is the io layer's decision.
  */
 import { buildOrnJsonExport, buildOrnPackageExport, selectScope } from '@/io';
 import type { AssetBytesProvider, ExportBuildResult, TaskOptions } from '@/io';
 import type { AssetId, CanonicalState } from '@/core/schema';
 import { RpcHostError } from '@/workers/rpc/helpers';
 import type { ExportBuildParams, ExportFormat, ExportPlanParams } from '@/workers/rpc/contracts';
-import { SNAPSHOT_GENERATOR } from './snapshot-build';
 
 export type PlannedAsset = { readonly assetId: AssetId; readonly sha256: string };
 
@@ -37,8 +36,16 @@ const keyOf = (assetId: string, sha256: string): string => `${assetId}\u0000${sh
 export async function buildExportBytes(state: CanonicalState, params: ExportBuildParams, task: TaskOptions): Promise<ExportBuildResult> {
   const held = new Map<string, Uint8Array>();
   for (const asset of params.assets) held.set(keyOf(asset.assetId, asset.sha256), asset.bytes);
-  const assetBytes: AssetBytesProvider = async (assetId, sha256) => held.get(keyOf(assetId, sha256));
-  const deps = { exportedAt: params.exportedAt, generator: SNAPSHOT_GENERATOR, assetBytes };
+  const failed = new Map<string, string>();
+  for (const asset of params.unreadable ?? []) failed.set(keyOf(asset.assetId, asset.sha256), asset.message);
+  // Main's read failure is rethrown here so the exporter records it exactly as it would a provider that threw in process.
+  const assetBytes: AssetBytesProvider = async (assetId, sha256) => {
+    const key = keyOf(assetId, sha256);
+    const message = failed.get(key);
+    if (message !== undefined) throw new Error(message);
+    return held.get(key);
+  };
+  const deps = { exportedAt: params.exportedAt, generator: params.generator, assetBytes };
   return params.format === 'orn.json' ? buildOrnJsonExport(state, params.options, deps, task) : buildOrnPackageExport(state, params.options, deps, task);
 }
 

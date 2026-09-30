@@ -16,7 +16,7 @@ import { restoreSnapshot } from '@/persistence/restore';
 import { createComputeRestore, type ComputeRestore, type RestoreSnapshotsPort } from '@/workers/compute/restore-flow';
 import { envelope, recordIn, withFields } from './command-kit';
 import { persistedStore } from './compute-import-kit';
-import { rig, type Rig, type RigOptions } from './compute-rig';
+import { rig, TEST_GENERATOR, type Rig, type RigOptions } from './compute-rig';
 import type { TestAdapter } from './persistence-kit';
 
 export const NOW_ISO = '2026-09-30T12:00:00.000Z';
@@ -90,6 +90,7 @@ export async function restoreRig(state: CanonicalState, options: { readonly rig?
     },
     snapshots,
     ids: { now: () => NOW_ISO },
+    generator: TEST_GENERATOR,
   });
   const speciesId = firstSpeciesId(state);
   return { store, t, r, flow, hooks, calls, edit: speciesEditor(store, speciesId) };

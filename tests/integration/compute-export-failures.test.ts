@@ -9,6 +9,7 @@ import { createComputeHandlers } from '@/workers/compute/handlers';
 import { MAX_EXPORT_ATTEMPTS } from '@/workers/compute/export-main';
 import { withSyntheticAssets } from '@/test-support/asset-kit';
 import { EXPORTED_AT, exportRig, inProcessExport } from '@/test-support/compute-export-kit';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { firstSpeciesId, speciesEditor } from '@/test-support/compute-restore-kit';
 import { expectReplicaEqualsStore } from '@/test-support/replica-kit';
 import { quotaError } from '@/test-support/persistence-kit';
@@ -83,7 +84,7 @@ describe('cancel: CANCELLED, no bytes, nothing changed', () => {
     const { api } = createComputeHandlers();
     await api.loadReplica({ state: made.state, revision: 1 }, { signal: new AbortController().signal, progress: () => undefined });
     const assets = [...made.bytes].map(([assetId, bytes]) => ({ assetId: assetId as never, sha256: (made.state.records.asset[assetId as never] as { sha256: string }).sha256, bytes }));
-    const params = { options: PKG, format: 'ornpkg', revision: 1, assets, exportedAt: EXPORTED_AT } as const;
+    const params = { options: PKG, format: 'ornpkg', revision: 1, assets, exportedAt: EXPORTED_AT, generator: TEST_GENERATOR } as const;
 
     const progress: [number, number | undefined, string | undefined][] = [];
     const done = await api.exportBuild(params, { signal: new AbortController().signal, progress: (d, t, n) => progress.push([d, t, n]) });
@@ -103,7 +104,7 @@ describe('REPLICA_STALE', () => {
     const client = rig.r.sync.client;
     const options = { scope: 'full', includeDependencies: false, assets: 'none' } as const;
     expect(await client.exportPlan({ options, format: 'orn.json', revision: 7 })).toEqual({ ok: true, value: { ok: false, code: 'REPLICA_STALE', have: 1 } });
-    expect(await client.exportBuild({ options, format: 'orn.json', revision: 0, assets: [], exportedAt: EXPORTED_AT })).toEqual({ ok: true, value: { ok: false, code: 'REPLICA_STALE', have: 1 } });
+    expect(await client.exportBuild({ options, format: 'orn.json', revision: 0, assets: [], exportedAt: EXPORTED_AT, generator: TEST_GENERATOR })).toEqual({ ok: true, value: { ok: false, code: 'REPLICA_STALE', have: 1 } });
     rig.r.sync.stop();
   });
 

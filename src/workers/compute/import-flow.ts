@@ -15,7 +15,7 @@ import type { IdFactory, RandomSource } from '@/core/dataset';
 import type { CommandError } from '@/core/commands';
 import { completeReport, storeImportReport } from '@/io';
 import type { AssetStagePort, ImportApplyResult, ImportBatchSink, ImportPlan, ImportPlanRequest, ImportStorePort } from '@/io';
-import type { IdData, RpcCallOptions, RpcError, RpcResult, WorkerImportOutcome } from '@/workers/rpc/contracts';
+import type { DocumentGenerator, IdData, RpcCallOptions, RpcError, RpcResult, WorkerImportOutcome } from '@/workers/rpc/contracts';
 import type { ReplicaSync } from './sync';
 
 /** What the flow needs of the persistence adapter: `storeSnapshotBytes` and `deleteSnapshot` satisfy it structurally. */
@@ -38,6 +38,8 @@ export interface ComputeImportDeps {
   readonly assetStage: AssetStagePort;
   /** The report time and the worker's per-call instant come from here (main's injected clock). */
   readonly ids: Pick<IdFactory, 'now'>;
+  /** The snapshot document's `generator`: the value main gives the persistence adapter (the worker keeps none of its own). */
+  readonly generator: DocumentGenerator;
   /** Main's injected random source: one seed per call to the worker. */
   readonly rng: RandomSource;
 }
@@ -99,7 +101,7 @@ export function createComputeImport(deps: ComputeImportDeps): ComputeImport {
       return fail('STALE_REVISION', STALE);
     }
 
-    const built = await client.snapshotBuild({ revision: baseRevision, reason: 'pre_import', exportedAt: deps.ids.now() });
+    const built = await client.snapshotBuild({ revision: baseRevision, reason: 'pre_import', exportedAt: deps.ids.now(), generator: deps.generator });
     if (!built.ok) {
       await abandon(undefined);
       return fail('SNAPSHOT_FAILED', `the pre_import snapshot could not be built, so nothing was imported (${built.error.code}: ${built.error.message})`);

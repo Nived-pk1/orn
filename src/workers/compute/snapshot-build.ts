@@ -3,23 +3,22 @@
  * JSON, the same zlib stream as `buildSnapshot` in `src/persistence/snapshot-codec.ts`, so the persistence adapter reads
  * them back with its own decoder. A worker never imports persistence (ADR-034 D1), hence the few lines here instead of an
  * import; tests/integration/snapshot-builder-equality.test.ts proves the bytes equal the codec's byte for byte (fixtures, demo,
- * every generator shape) and that the generator and the compression level are the codec's and the adapter's.
+ * every generator shape, the same generator given to both sides) and that the compression level is the codec's. The generator
+ * is main's: it arrives with each call and the worker keeps no constant of its own (step 4.2e review, follow-up b).
  */
 import { strToU8, zlibSync } from 'fflate';
 import { serializeDocument, stateToDocument } from '@/core/dataset';
 import { CURRENT_SCHEMA_VERSION, type CanonicalState } from '@/core/schema';
+import type { DocumentGenerator } from '@/workers/rpc/contracts';
 
 /** The codec's compression level (`COMPRESSION_LEVEL` in snapshot-codec.ts): the same level makes the same bytes. */
 export const SNAPSHOT_COMPRESSION_LEVEL = 6;
-
-/** The adapter's default generator (`DEFAULT_GENERATOR` in adapter.ts); a document field, not behaviour. */
-export const SNAPSHOT_GENERATOR = { app: 'organic-reaction-navigator', version: '0.1.0' } as const;
 
 export type SnapshotBytesOutcome =
   | { readonly ok: true; readonly bytes: Uint8Array; readonly schemaVersion: number }
   | { readonly ok: false; readonly message: string };
 
-export function buildSnapshotBytes(state: CanonicalState, exportedAt: string, generator: { readonly app: string; readonly version: string } = SNAPSHOT_GENERATOR): SnapshotBytesOutcome {
+export function buildSnapshotBytes(state: CanonicalState, exportedAt: string, generator: DocumentGenerator): SnapshotBytesOutcome {
   const doc = stateToDocument(state, { exportedAt, exportScope: 'full', generator });
   const serialized = serializeDocument(doc);
   if (!serialized.ok) {

@@ -7,11 +7,10 @@
 import type { StoreHandle } from '@/core/commands';
 import type { CanonicalState } from '@/core/schema';
 import { buildOrnJsonExport, buildOrnPackageExport, type AssetBytesProvider, type ExportBuildResult, type ExportOptions } from '@/io';
-import { SNAPSHOT_GENERATOR } from '@/workers/compute/snapshot-build';
 import { createComputeExport, type ComputeExport } from '@/workers/compute/export-main';
 import type { ExportFormat } from '@/workers/rpc/contracts';
 import { persistedStore } from './compute-import-kit';
-import { rig, type Rig, type RigOptions } from './compute-rig';
+import { rig, TEST_GENERATOR, type Rig, type RigOptions } from './compute-rig';
 import type { TestAdapter } from './persistence-kit';
 
 export const EXPORTED_AT = '2026-09-30T12:00:00.000Z';
@@ -41,6 +40,7 @@ export async function exportRig(state: CanonicalState, bytes: ReadonlyMap<string
       return held.provider(assetId, sha256);
     },
     ids: { now: () => EXPORTED_AT },
+    generator: TEST_GENERATOR,
   });
   return {
     store,
@@ -59,7 +59,7 @@ export async function exportRig(state: CanonicalState, bytes: ReadonlyMap<string
 
 /** The Phase 3 export, in process, with the worker's clock and generator (the reference of INV-19). */
 export async function inProcessExport(state: CanonicalState, format: ExportFormat, options: ExportOptions, assetBytes: AssetBytesProvider = async () => undefined): Promise<ExportBuildResult> {
-  const deps = { exportedAt: EXPORTED_AT, generator: SNAPSHOT_GENERATOR, assetBytes };
+  const deps = { exportedAt: EXPORTED_AT, generator: TEST_GENERATOR, assetBytes };
   return format === 'orn.json' ? buildOrnJsonExport(state, options, deps) : buildOrnPackageExport(state, options, deps);
 }
 

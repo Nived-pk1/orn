@@ -17,7 +17,7 @@ import { idFactoryFrom } from '@/workers/compute/ids';
 import type { Replica } from '@/workers/compute/replica';
 import type { ReplicaSync } from '@/workers/compute/sync';
 import { makeStore, mulberry32 } from './command-kit';
-import { rig, type Rig, type RigOptions } from './compute-rig';
+import { rig, TEST_GENERATOR, type Rig, type RigOptions } from './compute-rig';
 import { fakePorts, parseBytes, type FakePorts } from './import-kit';
 import { freshAdapter, seedChangeSet, type TestAdapter } from './persistence-kit';
 
@@ -117,7 +117,7 @@ export function importFlowFor(store: StoreHandle, t: TestAdapter, sync: ReplicaS
       stage.clear();
     },
   };
-  const flow = createComputeImport({ sync, store: storePort, snapshots, batches: t.adapter, assetStage: loggedStage, ids: { now: () => NOW_ISO }, rng: { next: mulberry32(seed) } });
+  const flow = createComputeImport({ sync, store: storePort, snapshots, batches: t.adapter, assetStage: loggedStage, ids: { now: () => NOW_ISO }, generator: TEST_GENERATOR, rng: { next: mulberry32(seed) } });
   return { flow, hooks, calls };
 }
 

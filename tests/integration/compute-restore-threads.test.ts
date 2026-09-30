@@ -10,6 +10,7 @@ import { createCanonicalStore } from '@/core/commands';
 import type { OpenResult } from '@/persistence/contracts';
 import { speciesEditor, firstSpeciesId, NOW_ISO } from '@/test-support/compute-restore-kit';
 import { persistedStore } from '@/test-support/compute-import-kit';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { savedDatabase } from '@/test-support/persistence-kit';
 import { sortedFindings } from '@/test-support/replica-kit';
 import { spawnComputeWorker } from '@/test-support/rpc-node-port';
@@ -84,6 +85,7 @@ describe('a snapshot restore in a real thread', () => {
       store: { getRevision: () => store.getRevision(), isReadOnly: () => store.isReadOnly(), replaceState: (next, reason, pre) => store.replaceState(next, reason, pre) },
       snapshots: t.adapter,
       ids: { now: () => NOW_ISO },
+      generator: TEST_GENERATOR,
     });
     const revisionBefore = store.getRevision();
     const result = await flow.restore(source.id);
@@ -121,6 +123,7 @@ describe('a snapshot restore in a real thread', () => {
       store: { getRevision: () => store.getRevision(), isReadOnly: () => store.isReadOnly(), replaceState: (next, reason, pre) => store.replaceState(next, reason, pre) },
       snapshots: t.adapter,
       ids: { now: () => NOW_ISO },
+      generator: TEST_GENERATOR,
     });
     expect(await flow.restore(source.id)).toMatchObject({ ok: false, code: 'REJECTED', message: expect.stringContaining('nothing was restored') });
     await sync.settled();

@@ -4,14 +4,16 @@
  * export needs, scope closure applied), read those bytes here through the injected `AssetBytesProvider` (persistence's
  * `getAssetBlob` satisfies it), and send them with the build request. No function crosses the worker boundary; the buffers are
  * transferred (copies, so a buffer the provider keeps is never detached). An asset whose bytes are missing, or whose read
- * fails, is left out of the request and reported by the worker in `missingAssets`, never thrown. An export needs only the
+ * fails (its error message travels along), is left out of the request and reported by the worker in `missingAssets` with its
+ * reason, never thrown. An export needs only the
  * live state: a failed save (ADV-040) does not block it. Cancel and progress go through `TaskOptions`. Nothing here decides
  * anything about chemistry.
  */
 import type { CanonicalStore } from '@/core/commands';
 import type { IdFactory } from '@/core/dataset';
 import type { AssetBytesProvider, ExportErrorCode, ExportOptions, ExportResult, TaskOptions } from '@/io/contracts';
-import type { ExportBuildParams, ExportFormat, ExportPlanAnswer, RpcError } from '@/workers/rpc/contracts';
+import { readAssetBytes } from '@/io/export-assets';
+import type { DocumentGenerator, ExportBuildParams, ExportFormat, ExportPlanAnswer, RpcError } from '@/workers/rpc/contracts';
 import type { ReplicaSync } from './sync';
 
 export interface ComputeExportRequest {
@@ -25,6 +27,8 @@ export interface ComputeExportDeps {
   readonly assetBytes: AssetBytesProvider;
   /** The file's `exportedAt` comes from main's injected clock. */
   readonly ids: Pick<IdFactory, 'now'>;
+  /** The file's `generator`: the value main gives the persistence adapter (the worker keeps none of its own). */
+  readonly generator: DocumentGenerator;
 }
 
 /** `REJECTED`: the worker could not do it (down, timed out, crashed, refused) and nothing was exported. */
@@ -50,14 +54,19 @@ export function createComputeExport(deps: ComputeExportDeps): ComputeExport {
   const { sync, store } = deps;
   const client = sync.client;
 
-  async function readBytes(planned: Extract<ExportPlanAnswer, { ok: true }>['assets'], task: TaskOptions): Promise<ExportBuildParams['assets'] | undefined> {
-    const read: ExportBuildParams['assets'][number][] = [];
+  type Planned = Extract<ExportPlanAnswer, { ok: true }>['assets'];
+  type Read = { readonly assets: ExportBuildParams['assets']; readonly unreadable: NonNullable<ExportBuildParams['unreadable']> };
+
+  async function readBytes(planned: Planned, task: TaskOptions): Promise<Read | undefined> {
+    const assets: ExportBuildParams['assets'][number][] = [];
+    const unreadable: { assetId: Planned[number]['assetId']; sha256: string; message: string }[] = [];
     for (const asset of planned) {
       if (task.signal?.aborted === true) return undefined;
-      const bytes = await deps.assetBytes(asset.assetId, asset.sha256).catch(() => undefined);
-      if (bytes !== undefined) read.push({ assetId: asset.assetId, sha256: asset.sha256, bytes: bytes.slice() });
+      const read = await readAssetBytes(deps.assetBytes, asset.assetId, asset.sha256);
+      if (read.ok) assets.push({ assetId: asset.assetId, sha256: asset.sha256, bytes: read.bytes.slice() });
+      else if (read.missing.reason === 'read_failed') unreadable.push({ assetId: asset.assetId, sha256: asset.sha256, message: read.missing.message ?? '' });
     }
-    return read;
+    return { assets, unreadable };
   }
 
   async function run({ format, options }: ComputeExportRequest, task: TaskOptions): Promise<ComputeExportResult> {
@@ -72,10 +81,11 @@ export function createComputeExport(deps: ComputeExportDeps): ComputeExport {
       if (!plan.ok) return rejected('plan the export', plan.error, task);
       if (!plan.value.ok) continue; // a commit landed after `settled`: settle again
 
-      const assets = await readBytes(plan.value.assets, task);
-      if (assets === undefined) return cancelled();
+      const read = await readBytes(plan.value.assets, task);
+      if (read === undefined) return cancelled();
+      const { assets, unreadable } = read;
       const build = await client.exportBuild(
-        { options, format, revision, assets, exportedAt: deps.ids.now() },
+        { options, format, revision, assets, unreadable, exportedAt: deps.ids.now(), generator: deps.generator },
         { ...callOptions, transfer: assets.map((asset) => asset.bytes.buffer as ArrayBuffer), ...(task.onProgress === undefined ? {} : { onProgress: task.onProgress }) },
       );
       if (!build.ok) return rejected('build the export', build.error, task);

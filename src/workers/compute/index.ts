@@ -15,7 +15,7 @@ export type { ComputeRestore, ComputeRestoreDeps, ComputeRestoreResult, RestoreS
 export { decodeSnapshotBytes, restoreDocument } from './snapshot-decode';
 export { createImportHost } from './import-host';
 export type { ImportHost } from './import-host';
-export { buildSnapshotBytes, SNAPSHOT_GENERATOR } from './snapshot-build';
+export { buildSnapshotBytes } from './snapshot-build';
 export { idFactoryFrom, seededRandom } from './ids';
 export { MAX_EXPORT_ATTEMPTS, createComputeExport } from './export-main';
 export type { ComputeExport, ComputeExportDeps, ComputeExportRequest, ComputeExportResult } from './export-main';

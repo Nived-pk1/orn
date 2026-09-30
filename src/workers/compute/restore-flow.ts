@@ -15,7 +15,7 @@
 import type { CommandError, CanonicalStore } from '@/core/commands';
 import type { IdFactory } from '@/core/dataset';
 import type { MigrationError, MigrationStepReport } from '@/core/migrations/contracts';
-import type { SnapshotDecodeAnswer } from '@/workers/rpc/contracts';
+import type { DocumentGenerator, SnapshotDecodeAnswer } from '@/workers/rpc/contracts';
 import type { ReplicaSync } from './sync';
 
 /** The fields of a stored snapshot's summary this flow reads (the adapter's `SnapshotSummary` satisfies it). */
@@ -62,6 +62,8 @@ export interface ComputeRestoreDeps {
   readonly snapshots: RestoreSnapshotsPort;
   /** The `pre_restore` snapshot document's `exportedAt` comes from main's injected clock. */
   readonly ids: Pick<IdFactory, 'now'>;
+  /** The snapshot document's `generator`: the value main gives the persistence adapter (the worker keeps none of its own). */
+  readonly generator: DocumentGenerator;
 }
 
 export interface ComputeRestore {
@@ -114,7 +116,7 @@ export function createComputeRestore(deps: ComputeRestoreDeps): ComputeRestore {
         decoded = { ...value, baseRevision: revision };
       }
 
-      const built = await client.snapshotBuild({ revision, reason: 'pre_restore', exportedAt: deps.ids.now() });
+      const built = await client.snapshotBuild({ revision, reason: 'pre_restore', exportedAt: deps.ids.now(), generator: deps.generator });
       if (!built.ok) return abandonWith(failure('SNAPSHOT_FAILED', `the pre_restore snapshot could not be written, so nothing was restored (${built.error.code}: ${built.error.message})`));
       if (!built.value.ok) {
         if (built.value.code === 'REPLICA_STALE') continue;

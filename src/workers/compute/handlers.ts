@@ -36,11 +36,11 @@ export function createComputeHandlers(options: ComputeHandlerOptions = {}): Comp
     importRevise: (params, ctx) => imports.revise(params, ctx),
     importCancel: ({ batchId }) => imports.cancel(batchId),
     importPrepareApply: (params, ctx) => imports.prepareApply(params, ctx),
-    snapshotBuild: async ({ revision, reason, exportedAt }) => {
+    snapshotBuild: async ({ revision, reason, exportedAt, generator }) => {
       const held = replica.snapshot();
       if (held.revision !== revision) return { ok: false, code: 'REPLICA_STALE', have: held.revision };
       assertUtcInstant('snapshotBuild', exportedAt);
-      const built = buildSnapshotBytes(held.state, exportedAt);
+      const built = buildSnapshotBytes(held.state, exportedAt, generator);
       if (!built.ok) return { ok: false, code: 'SERIALIZE_FAILED', message: built.message };
       // The bytes move to the caller; the copy here is not needed again.
       return withTransfer({ ok: true, bytes: built.bytes, revision, reason, schemaVersion: built.schemaVersion }, [built.bytes.buffer as ArrayBuffer]);

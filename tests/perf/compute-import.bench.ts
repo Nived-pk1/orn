@@ -14,6 +14,7 @@ import { deserialize, serialize } from 'node:v8';
 import { afterAll, bench, describe } from 'vitest';
 import { emptyRecordTables, type CanonicalState } from '@/core/schema';
 import { buildOrnJsonExport, type OrnJsonExportDeps } from '@/io';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { SLOW_BENCH_OPTIONS, tierState } from '@/test-support/perf-kit';
 import { spawnComputeWorker } from '@/test-support/rpc-node-port';
 import { createComputeHandlers } from '@/workers/compute/handlers';
@@ -67,7 +68,7 @@ describe('snapshotBuild in the worker code (design tier, dense)', () => {
   bench(
     'snapshotBuild: serialise + compress the replica',
     async () => {
-      const answer = await api.snapshotBuild({ revision: 0, reason: 'pre_import', exportedAt: ids.nowIso }, ctx);
+      const answer = await api.snapshotBuild({ revision: 0, reason: 'pre_import', exportedAt: ids.nowIso, generator: TEST_GENERATOR }, ctx);
       if (!answer.ok) throw new Error('bench: snapshotBuild failed');
     },
     SLOW_BENCH_OPTIONS,

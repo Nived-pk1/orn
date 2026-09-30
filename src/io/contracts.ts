@@ -352,6 +352,16 @@ export interface ExportOptions {
  */
 export type AssetBytesProvider = (assetId: AssetId, sha256: string) => Promise<Uint8Array | undefined>;
 
+/** Longest `MissingAsset.message` (characters): a provider's error text is kept, but bounded (CLAUDE.md §1.6). */
+export const MISSING_ASSET_MESSAGE_CAP = 500;
+/** An included asset whose bytes the export could not supply: `no_bytes` (provider answered `undefined`) or `read_failed` (it threw; `message` capped). */
+export interface MissingAsset {
+  readonly assetId: AssetId;
+  readonly sha256: string;
+  readonly reason?: 'no_bytes' | 'read_failed';
+  readonly message?: string;
+}
+
 /** A reference that does not resolve inside the exported set (only possible for `scope: 'subset'` without closure). */
 export interface MissingReference {
   readonly from: RecordRef;
@@ -365,7 +375,7 @@ export interface ExportResult {
   readonly bytes: Uint8Array;
   readonly counts: Readonly<Partial<Record<RecordKind, number>>>;
   /** Asset records included whose bytes `AssetBytesProvider` could not supply. */
-  readonly missingAssets: readonly { readonly assetId: AssetId; readonly sha256: string }[];
+  readonly missingAssets: readonly MissingAsset[];
   /** Only ever non-empty for `scope: 'subset'` with `includeDependencies: false`. */
   readonly missingReferences: readonly MissingReference[];
 }

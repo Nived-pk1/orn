@@ -27,6 +27,7 @@ import { restoreSnapshot } from '@/persistence/restore';
 import { buildSnapshot, decodeSnapshot } from '@/persistence/snapshot-codec';
 import { buildIndexes, designTierHubState, leastReferencedSpecies, mostReferencedSpecies, SLOW_BENCH_OPTIONS, tierState } from '@/test-support/perf-kit';
 import { freshAdapter, reopen, seedChangeSet } from '@/test-support/persistence-kit';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { precomputedOf } from '@/test-support/precomputed-kit';
 import { spawnComputeWorker } from '@/test-support/rpc-node-port';
 import { must } from '@/test-support/state-fixture';
@@ -88,6 +89,7 @@ describe('restore through a real thread (design tier, dense): end to end, wall c
       deleteSnapshot: async () => undefined,
     },
     ids: { now: () => NOW },
+    generator: TEST_GENERATOR,
   });
   let n = 0;
   bench(

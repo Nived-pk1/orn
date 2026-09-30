@@ -10,6 +10,7 @@ import { emptyRecordTables, type CanonicalState } from '@/core/schema';
 import { planOf, workerDriver, workerImportRig } from '@/test-support/compute-import-kit';
 import { buildDemoDocument } from '@/test-support/demo';
 import { GENERATOR_SHAPES, generateTier } from '@/test-support/generator';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { EXPORTED_AT, exportRig } from '@/test-support/compute-export-kit';
 import { createComputeExport, type ComputeExportRequest } from '@/workers/compute/export-main';
 import { expectReplicaEqualsStore } from '@/test-support/replica-kit';
@@ -61,7 +62,7 @@ async function importAndExport(state: CanonicalState, format: 'json' | 'pkg', mo
   if (!applied.ok) throw new Error(`${applied.code}: ${applied.message}`);
   await rig.r.sync.settled();
   expectReplicaEqualsStore(rig.r.replicas[rig.r.replicas.length - 1] as NonNullable<(typeof rig.r.replicas)[number]>, rig.store, 'replica after the import');
-  const second = await workerExport(createComputeExport({ sync: rig.r.sync, store: rig.store, assetBytes: async () => undefined, ids: { now: () => EXPORTED_AT } }), wire);
+  const second = await workerExport(createComputeExport({ sync: rig.r.sync, store: rig.store, assetBytes: async () => undefined, ids: { now: () => EXPORTED_AT }, generator: TEST_GENERATOR }), wire);
   rig.r.sync.stop();
   return { first, second };
 }

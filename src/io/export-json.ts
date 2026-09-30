@@ -7,7 +7,8 @@
  */
 import { serializeDocument } from '@/core/dataset';
 import type { AssetId, CanonicalState, DatasetDocument } from '@/core/schema';
-import type { AssetBytesProvider, ExportBuildResult, ExportOptions, TaskOptions } from './contracts';
+import type { AssetBytesProvider, ExportBuildResult, ExportOptions, MissingAsset, TaskOptions } from './contracts';
+import { readAssetBytes } from './export-assets';
 import { buildScopedDocument } from './export-document';
 
 export interface OrnJsonExportDeps {
@@ -28,7 +29,7 @@ function toBase64(bytes: Uint8Array): string {
 export async function buildOrnJsonExport(state: CanonicalState, options: ExportOptions, deps: OrnJsonExportDeps, task: TaskOptions = {}): Promise<ExportBuildResult> {
   const scoped = buildScopedDocument(state, options, deps);
   let document = scoped.document;
-  const missingAssets: { readonly assetId: AssetId; readonly sha256: string }[] = [];
+  const missingAssets: MissingAsset[] = [];
   const assetRecords = document.records.asset;
   const embedAssets = options.assets === 'embed' && assetRecords.length > 0;
   const total = (embedAssets ? assetRecords.length : 0) + 1;
@@ -38,14 +39,14 @@ export async function buildOrnJsonExport(state: CanonicalState, options: ExportO
     const embedded: { readonly assetId: AssetId; readonly base64: string }[] = [];
     for (const asset of assetRecords) {
       if (task.signal?.aborted === true) return { ok: false, code: 'CANCELLED', message: 'export aborted' };
-      const bytes = await deps.assetBytes(asset.id, asset.sha256);
+      const read = await readAssetBytes(deps.assetBytes, asset.id, asset.sha256);
       done += 1;
       task.onProgress?.(done, total, `asset ${asset.id}`);
-      if (bytes === undefined) {
-        missingAssets.push({ assetId: asset.id, sha256: asset.sha256 });
+      if (!read.ok) {
+        missingAssets.push(read.missing);
         continue;
       }
-      embedded.push({ assetId: asset.id, base64: toBase64(bytes) });
+      embedded.push({ assetId: asset.id, base64: toBase64(read.bytes) });
     }
     if (embedded.length > 0) document = { ...document, embeddedAssets: embedded };
   }

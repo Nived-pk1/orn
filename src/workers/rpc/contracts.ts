@@ -191,6 +191,14 @@ export interface ImportPrepareRefused {
 }
 
 export type SnapshotReasonName = 'pre_import' | 'pre_migration' | 'pre_restore' | 'periodic' | 'manual';
+/** The `generator` document field: the app identity main gives the persistence adapter (step 4.2e review, follow-up b). */
+export type DocumentGenerator = { readonly app: string; readonly version: string };
+export interface SnapshotBuildParams {
+  readonly revision: number;
+  readonly reason: SnapshotReasonName;
+  readonly exportedAt: string;
+  readonly generator: DocumentGenerator;
+}
 export type SnapshotBuildAnswer =
   | { readonly ok: true; readonly bytes: Uint8Array; readonly revision: number; readonly reason: SnapshotReasonName; readonly schemaVersion: number }
   | ReplicaStale
@@ -246,16 +254,19 @@ export interface ExportPlanParams {
 export type ExportPlanAnswer = ReplicaAnswer<{ readonly assets: readonly { readonly assetId: AssetId; readonly sha256: string }[] }>;
 
 /**
- * `assets` are the bytes main read for the plan's list (an asset it could not read is simply left out: the worker reports it in
- * `missingAssets`). Their buffers are transferred. `exportedAt` is main's wall-clock time (INV-19: the same state and clock give
- * the same bytes).
+ * `assets` are the bytes main read for the plan's list (an asset it could not read is left out: the worker reports it in
+ * `missingAssets`, as `no_bytes`, or as `read_failed` when it is also listed in `unreadable` with main's error message). Their
+ * buffers are transferred. `exportedAt` is main's wall-clock time and `generator` the app identity main gives the adapter
+ * (INV-19: the same state, clock and generator give the same bytes; the worker keeps no generator of its own).
  */
 export interface ExportBuildParams {
   readonly options: ExportOptions;
   readonly format: ExportFormat;
   readonly revision: number;
   readonly assets: readonly { readonly assetId: AssetId; readonly sha256: string; readonly bytes: Uint8Array }[];
+  readonly unreadable?: readonly { readonly assetId: AssetId; readonly sha256: string; readonly message: string }[];
   readonly exportedAt: string;
+  readonly generator: DocumentGenerator;
 }
 /** The export's own result as a value (`CANCELLED`, `SERIALIZE_FAILED`) or `REPLICA_STALE`; the result bytes are transferred. */
 export type ExportBuildAnswer = ExportBuildResult | ReplicaStale;
@@ -292,9 +303,10 @@ export interface ComputeWorkerApi {
   importPrepareApply(params: { readonly batchId: string; readonly plan: ImportPlan; readonly baseRevision: number }, ctx: RpcCallContext): Promise<ImportPrepared | ImportPrepareRefused>;
   /**
    * Snapshot bytes of the replica at `revision`, built here and transferred; `REPLICA_STALE` for another revision. The
-   * document's `exportedAt` is `exportedAt`, main's wall-clock time (the worker's own clock is monotonic, not a date). Idempotent.
+   * document's `exportedAt` is `exportedAt`, main's wall-clock time (the worker's own clock is monotonic, not a date), and its
+   * `generator` is main's too. Idempotent.
    */
-  snapshotBuild(params: { readonly revision: number; readonly reason: SnapshotReasonName; readonly exportedAt: string }, ctx: RpcCallContext): Promise<SnapshotBuildAnswer>;
+  snapshotBuild(params: SnapshotBuildParams, ctx: RpcCallContext): Promise<SnapshotBuildAnswer>;
   /**
    * Decode the stored snapshot bytes, migrate (the worker's injected runner), parse strictly and prepare the result as the
    * PENDING state (index build and `validateAll` once); the caller then `replaceState`s it with the findings and the sync adopts

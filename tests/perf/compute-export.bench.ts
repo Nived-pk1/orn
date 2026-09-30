@@ -15,6 +15,7 @@ import type { CanonicalState } from '@/core/schema';
 import type { ExportOptions } from '@/io';
 import { providerOf, withSyntheticAssets } from '@/test-support/asset-kit';
 import { EXPORTED_AT } from '@/test-support/compute-export-kit';
+import { TEST_GENERATOR } from '@/test-support/compute-rig';
 import { SLOW_BENCH_OPTIONS, tierState } from '@/test-support/perf-kit';
 import { spawnComputeWorker } from '@/test-support/rpc-node-port';
 import { createComputeExport } from '@/workers/compute/export-main';
@@ -48,7 +49,7 @@ for (const shape of ['dense', 'hub_explosion'] as const) {
       bench(
         `${label}`,
         async () => {
-          const built = await api.exportBuild({ options: NONE, format, revision: 1, assets: [], exportedAt: EXPORTED_AT }, ctx);
+          const built = await api.exportBuild({ options: NONE, format, revision: 1, assets: [], exportedAt: EXPORTED_AT, generator: TEST_GENERATOR }, ctx);
           if (!built.ok) fail('exportBuild', built);
         },
         SLOW_BENCH_OPTIONS,
@@ -63,7 +64,7 @@ describe('export full dataset through a real thread (design tier, dense): end to
   const sync = createReplicaSync({ store, factory: () => spawnComputeWorker() });
   afterAll(() => sync.stop());
   await sync.settled();
-  const flow = createComputeExport({ sync, store, assetBytes: async () => undefined, ids: { now: () => EXPORTED_AT } });
+  const flow = createComputeExport({ sync, store, assetBytes: async () => undefined, ids: { now: () => EXPORTED_AT }, generator: TEST_GENERATOR });
   for (const [label, format] of FORMATS) {
     bench(
       `${label}`,
@@ -93,7 +94,7 @@ describe("asset-bearing export in the worker's code (design tier, dense, 20 asse
       async () => {
         // A fresh copy per run: the handler owns the buffers it is given (a transfer would have moved them).
         const assets = listed.map((asset) => ({ ...asset, bytes: (made.bytes.get(asset.assetId) as Uint8Array).slice() }));
-        const built = await api.exportBuild({ options, format, revision: 1, assets, exportedAt: EXPORTED_AT }, ctx);
+        const built = await api.exportBuild({ options, format, revision: 1, assets, exportedAt: EXPORTED_AT, generator: TEST_GENERATOR }, ctx);
         if (!built.ok) fail('exportBuild', built);
       },
       SLOW_BENCH_OPTIONS,
@@ -119,7 +120,7 @@ describe('asset-bearing export through a real thread (design tier, dense, 20 MiB
   const sync = createReplicaSync({ store, factory: () => spawnComputeWorker() });
   afterAll(() => sync.stop());
   await sync.settled();
-  const flow = createComputeExport({ sync, store, assetBytes: providerOf(made.bytes), ids: { now: () => EXPORTED_AT } });
+  const flow = createComputeExport({ sync, store, assetBytes: providerOf(made.bytes), ids: { now: () => EXPORTED_AT }, generator: TEST_GENERATOR });
   for (const [label, format, options] of ASSET_CASES) {
     bench(
       `${label}: settle + plan + read + build + result back`,

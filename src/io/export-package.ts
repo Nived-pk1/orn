@@ -8,9 +8,10 @@
  */
 import { zipSync, type Zippable } from 'fflate';
 import { serializeDocument } from '@/core/dataset';
-import { PACKAGE_FORMAT, CURRENT_SCHEMA_VERSION, type AssetId, type CanonicalState, type DatasetDocument } from '@/core/schema';
+import { PACKAGE_FORMAT, CURRENT_SCHEMA_VERSION, type CanonicalState, type DatasetDocument } from '@/core/schema';
 import type { ASSET_MEDIA_TYPES } from '@/core/schema';
-import type { AssetBytesProvider, ExportBuildResult, ExportOptions, TaskOptions } from './contracts';
+import type { AssetBytesProvider, ExportBuildResult, ExportOptions, MissingAsset, TaskOptions } from './contracts';
+import { readAssetBytes } from './export-assets';
 import { buildScopedDocument } from './export-document';
 import { sha256Hex } from './hash';
 
@@ -44,7 +45,7 @@ export async function buildOrnPackageExport(state: CanonicalState, options: Expo
   }
   const datasetBytes = new TextEncoder().encode(serialized.text);
 
-  const missingAssets: { readonly assetId: AssetId; readonly sha256: string }[] = [];
+  const missingAssets: MissingAsset[] = [];
   const wantsAssetFiles = (options.assets === 'embed' || options.assets === 'package') && document.records.asset.length > 0;
   const total = (wantsAssetFiles ? document.records.asset.length : 0) + 1;
   let done = 0;
@@ -55,14 +56,14 @@ export async function buildOrnPackageExport(state: CanonicalState, options: Expo
     const sorted = [...document.records.asset].sort((a, b) => (a.sha256 < b.sha256 ? -1 : a.sha256 > b.sha256 ? 1 : 0));
     for (const asset of sorted) {
       if (task.signal?.aborted === true) return { ok: false, code: 'CANCELLED', message: 'export aborted' };
-      const bytes = await deps.assetBytes(asset.id, asset.sha256);
+      const read = await readAssetBytes(deps.assetBytes, asset.id, asset.sha256);
       done += 1;
       task.onProgress?.(done, total, `asset ${asset.id}`);
-      if (bytes === undefined) {
-        missingAssets.push({ assetId: asset.id, sha256: asset.sha256 });
+      if (!read.ok) {
+        missingAssets.push(read.missing);
         continue;
       }
-      assetFiles.push({ path: `assets/${asset.sha256}.${EXTENSION_OF_MEDIA_TYPE[asset.mediaType]}`, sha256: asset.sha256, bytes });
+      assetFiles.push({ path: `assets/${asset.sha256}.${EXTENSION_OF_MEDIA_TYPE[asset.mediaType]}`, sha256: asset.sha256, bytes: read.bytes });
     }
   }
 

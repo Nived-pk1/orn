@@ -55,7 +55,7 @@ describe('buildOrnPackageExport', () => {
   it('a provider that cannot supply bytes is reported in missingAssets, never thrown, and the zip has no file for it', async () => {
     const result = await buildOrnPackageExport(state, { scope: 'full', includeDependencies: false, assets: 'package' }, deps(noBytes));
     if (!result.ok) throw new Error('export failed');
-    expect(result.result.missingAssets).toEqual([{ assetId: ASSET_ID, sha256: expect.any(String) }]);
+    expect(result.result.missingAssets).toEqual([{ assetId: ASSET_ID, sha256: expect.any(String), reason: 'no_bytes' }]);
     const files = unzipSync(result.result.bytes);
     expect(Object.keys(files)).toEqual(['manifest.json', 'dataset.json']);
   });
