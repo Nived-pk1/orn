@@ -1,6 +1,18 @@
 import { defineConfig, mergeConfig } from 'vitest/config';
 import viteConfig from './vite.config';
 
+/**
+ * Resource limit, not an assertion: Vitest's default (one worker per core) lets heavy tests time out under load on the
+ * reference workstation, so `npm run check` runs at most 4 workers. Override with ORN_TEST_WORKERS (docs/TEST_STRATEGY.md §1).
+ */
+function testWorkers(): number {
+  const raw = process.env.ORN_TEST_WORKERS;
+  if (raw === undefined || raw === '') return 4;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) throw new Error(`ORN_TEST_WORKERS must be a positive integer, got "${raw}"`);
+  return n;
+}
+
 export default mergeConfig(
   viteConfig,
   defineConfig({
@@ -12,6 +24,7 @@ export default mergeConfig(
       environment: 'node',
       benchmark: { include: ['tests/perf/**/*.bench.ts'] },
       restoreMocks: true,
+      maxWorkers: testWorkers(),
       // Targets: src/core >= 90% lines, >= 85% branches; src/persistence, src/io, src/workers >= 80% lines (services, TEST_STRATEGY §1).
       // Enforced by npm run test:coverage only, not by npm run check.
       coverage: {

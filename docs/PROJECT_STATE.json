@@ -101,7 +101,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed (Vitest 4.1.11: 168 files, 2,728 tests; step 4.2a, 2026-09-30). On this workstation the default 16 workers time out heavy tests under load (different tests each run, all green alone); the recorded run used vitest --maxWorkers=4.",
+    "npmRunCheck": "passed (Vitest 4.1.11: 168 files, 2,728 tests; step 4.2a, 2026-09-30). Since the step 4.2a review, vitest.config.ts caps workers at 4 (env ORN_TEST_WORKERS overrides) and npm run check passes as one command: 168 files, 2,728 tests, Vitest 154 s.",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",

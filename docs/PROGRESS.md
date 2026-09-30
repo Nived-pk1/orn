@@ -2295,6 +2295,7 @@ Docs-only record of the reviewer's decisions on the "Phase 4 plan review" contra
 4. **Q10 (a), (b), (c) approved.** (b) changes store behaviour: level-4 findings of a subject that no longer exists are cleared in the same commit step. The CHEM-009 group map is derived data, never stored canonically.
 5. **Plan observations:** 1 → `snapshotBuild` and the bytes entry point move to the import/export step (4.2c); 2 → `adoptPending` approved (compute-core step 4.2b); 3 → measure boot's per-record L1 and the clone into the worker in the boot/follower step (4.2d), decide at its review; 4 → step 4.1 decides the worker fixture (tsx first, else a self-contained `.mjs` host, and says which); 5 → check `elkjs` under the production CSP in 4.4; 6 → split (below); 7 → ADR-034 states it.
 6. **Step split.** IMPLEMENTATION_PLAN §2 replaces 4.2a-4.2c with 4.2a (store accepts precomputed findings, no worker), 4.2b (compute worker core), 4.2c (import, export, `snapshotBuild`, bytes entry point) and 4.2d (snapshot decode and restore, boot, follower; measurements D3 and observation 3). Each moved Work and Must cover text is kept. PROJECT_STATE openItems' " -> step 4.x" markers follow the new numbers; `nextStep` is 4.1.
+7. **2026-09-30 (step 4.2a review): Q1 `adoptPending` moves from 4.2b to 4.2c** (the first producer of a pending state is import). 4.2b keeps `loadReplica` returning the findings; Q10 (b) stays with 4.3b.
 
 ### Step 4.1 — RPC library (`src/workers/rpc`) (2026-09-30)
 
@@ -2354,6 +2355,18 @@ Follow-ups, done in commit "phase-4.1: review follow-ups" (`src/workers/rpc`):
 4. Completeness of the precomputed findings (none missing) is not checkable cheaply; it rests on the worker's replica (4.2b). Only `verifyPrecomputed` proves it, in tests.
 
 **Open items.** PROJECT_STATE openItems marked "-> step 4.2a": (a) "Phase 4: replaceState runs validateAll on the main thread": the store side is closed; waits for 4.2b (the producer) and 4.2d (boot, indexes built once); (b) "Step 3.7: preview validates the merged replica and replaceState validates it again": the store side is closed; waits for 4.2b and 4.2c (the worker returns the merged state and its findings).
+
+### Step 4.2a review (reviewer, 2026-09-30)
+
+**Verdict: ACCEPTED.** Decisions:
+1. Q10 (b) stays with 4.3b. The 4.2a row of IMPLEMENTATION_PLAN §2 no longer names it; the 4.3b row does (in Work and in Must cover).
+2. The stricter checks in `checkPrecomputed` (level against the rule's level, severity, shape): approved.
+3. The `SCHEMA` (L1) rule inside `RULE_SET_ID`: approved.
+4. Completeness of the precomputed findings rests on the replica; step 4.2b proves replica == store.
+5. `adoptPending` moves from 4.2b to 4.2c, where the first producer of a pending state (import) is built. The 4.2b and 4.2c rows are updated; dated line added to "Phase 4 contract decisions" item 5 (below it; nothing deleted).
+6. The test run as recorded was NOT acceptable: `npm run check` must pass as ONE command (CLAUDE.md §4). Fixed as a resource limit, no assertion or timeout changed: `vitest.config.ts` caps test workers at 4 by default, overridable with `ORN_TEST_WORKERS` (a positive integer; anything else throws). Documented in TEST_STRATEGY §1 (next to the timing rule) and SONNET_HANDOFF §19.
+
+**Result.** `npm run check` as one command, default cap (4 workers): green. Vitest 4.1.11: 168 files, 2,728 tests, Vitest duration 154.3 s (whole check about 3 min 30 s). The line in PROJECT_STATE `verification.npmRunCheck` is updated.
 
 ## Amendments
 - **2026-09-30, step 4.2a — `CanonicalStore.replaceState` and `reload` gain an optional last parameter `PrecomputedFindings`; `CommandErrorCode` gains `FINDINGS_MISMATCH`; `StoreOptions.verifyPrecomputed`; `RULE_SET_ID` (contract additions, CLAUDE.md §7; Phase 4 contract decisions Q3).** Problem: `replaceState` and `reload` validated the whole state on the main thread (about 2-2.8 s of 2.9 s at the design tier), although the compute worker will already have the findings. Change: additive optional parameter, checked by `checkPrecomputed` (rule set, revision, record counts, subjects, levels, unique IDs); refusal as a value that leaves the store unchanged; `RULE_SET_ID` computed in core from the sorted (rule ID, level) pairs; test-only `verifyPrecomputed`. Docs: ARCHITECTURE.md §2.4, ADR-034. No schema change, no `CURRENT_SCHEMA_VERSION` bump, no invariant change.

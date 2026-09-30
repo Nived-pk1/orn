@@ -109,6 +109,7 @@ npm run bench:compare        # fail if any entry's p99 regresses > 20% against b
 npm run e2e                  # Playwright (available from Phase 5: npx playwright install first)
 npm run check                # everything required before each commit
 ```
+Test workers: Vitest runs at most 4 workers (`vitest.config.ts`); set `ORN_TEST_WORKERS=<n>` to change it (e.g. `ORN_TEST_WORKERS=8 npm test`). It is a resource limit, never a reason to raise a timeout or weaken a test (docs/TEST_STRATEGY.md §1).
 Single test file: `npx vitest run src/core/schema/schema.smoke.test.ts`. The app must be served over http(s); `file://` is unsupported.
 
 ## 20. Definition of done per phase
