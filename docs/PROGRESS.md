@@ -2111,6 +2111,16 @@ Verdict: step 3.10 ACCEPTED. Changes applied in the commit "phase-3: step 3.10 r
 10. `reversibility` is set to `unknown` (v6 has no such datum); `aliases`, `purposes` and the other classification lists are empty until 3.11b.
 11. `createDocumentIds` now also registers the trimmed label of a tokens-only participant (its name); the registered set stays a superset of what is used.
 
+### Step 3.11a review (reviewer, 2026-09-30)
+
+Verdict: step 3.11a ACCEPTED. No contract, schema or invariant change; the doc-only items below are recorded here.
+
+**(a) Approved as reported (items 1-11):** label remainders are matched only inside the imported document (live matching would make the output depend on the user's data and break re-import -> `identical_skip`; reusing a user's existing reagent is a merge done by the author, not the importer); label-only intermediates keep their label and get no species; reagent-like roles = reagent, catalyst, solvent, spectator, workup; created-from-label records are published + `review_required`; missing-compound placeholders are draft + `review_required` (the RVW-002 INFO is correct: it is a stand-in); scope counts species/class refs only; a tokens-only label becomes the name; product tokens live only in `originalText`; a clashing whole-label temperature goes to `other[]` with a reason; one coproduct reason per reaction; reversibility `unknown`; tokens-only label names are registered. The intermediate ID row (Amendments) is approved.
+
+**(b)** The 120 s limit on `reaction-scale.test.ts` is approved as a resource limit (the test asserts read counts, never time), the same kind as the step 3.6 review's 30 s per-file limits.
+
+**(c)** PROJECT_STATE `openItems` gained: "Legacy labels are matched only inside the imported file; reusing a user's existing reagent/species is an authoring merge (Phase 6), not an import step."
+
 ## Amendments
 - **2026-09-30, step 3.11a — §4.2 gets an intermediate ID row; `LegacyIdSpace.intermediateId` (doc and `src/io` change, no `contracts.ts`, schema or invariant change; CLAUDE.md §7).** Problem: §4.5 maps `intermediate` participants to `intermediates[]`, whose entries need an `int_` ID, but §4.2 had no row for it. Change, smallest: `int_v6-<reaction part>-<n>` (`n` = the participant's 1-based position in the legacy list, like `prt_` and `pdt_`), `LegacyIdSpace.intermediateId(reactionId, n)`, tested against `IntermediateIdSchema`; §4.2 states how `n` is counted. Also recorded: `createDocumentIds` registers the name of a tokens-only label. Docs updated in the same commit: MIGRATION.md §4.2, §4.5.
 - **2026-09-30, step 3.10 review — MIGRATION.md §4.2, §4.4, §4.8 (behaviour decisions of the reviewer; no contract, schema or invariant change).** §4.2: the compound, functional-group, class-text and label namespaces are collision-checked in ONE pass per ID family (a crafted clash is settled by the ladder, never refused; `IdCollision.resolved[].space` is set for a collision across namespaces; `DUPLICATE_RECORD_ID` stays as a last-resort guard). §4.4: a hub `formula` that differs from `genericFormula` is `generic.generalFormula` + review; created classes are `published` + `review_required`. §4.8: `notImported` lists only values preserved nowhere. Step 3.11 is split into 3.11a/b/c in IMPLEMENTATION_PLAN.md §2.
