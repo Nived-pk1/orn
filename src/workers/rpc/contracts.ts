@@ -13,7 +13,7 @@ import type { DepictionOptions, DepictOutcome, ParseOutcome } from '@/chem/contr
 import type { BalanceAnswer, BalanceRequest, MatchesAnswer, MatchProbe, SpeciesCheckRequest, SpeciesChecksAnswer, StepCheckRequest, StepChecksAnswer } from '@/chem/checks/contracts';
 import type { ExportBuildResult, ExportOptions, ImportPlan, ImportPlanRequest, ImportPreviewErrorCode, ImportRejectionCode, ParsedAsset } from '@/io/contracts';
 import type { ImportQuarantineDraft, ImportReportDraft } from '@/io';
-import type { LayoutRequest, LayoutResult } from '@/layout/contracts';
+import type { FallbackReason, LayoutRequest, LayoutResult } from '@/layout/contracts';
 import type { SearchDocument, SearchHit, SearchIndexUpdate, SearchQuery } from '@/search/contracts';
 
 export type RpcErrorCode = 'CANCELLED' | 'TIMEOUT' | 'BAD_REQUEST' | 'WORKER_CRASHED' | 'NOT_READY' | 'INTERNAL' | 'BUSY';
@@ -142,8 +142,16 @@ export interface ChemWorkerApi {
   matches(params: { readonly probes: readonly MatchProbe[] }, ctx: RpcCallContext): Promise<MatchesAnswer>;
 }
 
+/**
+ * The layout worker holds no state (ADR-034 D1). `layout` answers ELK's result, or the fallback layout (`engine: 'fallback'`,
+ * `fallbackReason: 'elk_error'` or `'engine_unavailable'`) when ELK throws or cannot load. `layoutFallback` (step 4.4) answers
+ * the fallback ALONE, with the reason the caller gives: after a timeout the main-side service restarts the worker and asks the NEW
+ * one for it (`'timeout'`), so no layout ever runs on the main thread (PERFORMANCE_ARCHITECTURE §11). A request that is not
+ * sorted by id, over the caps, or malformed is `BAD_REQUEST` for both.
+ */
 export interface LayoutWorkerApi {
   layout(params: LayoutRequest, ctx: RpcCallContext): Promise<LayoutResult>;
+  layoutFallback(params: { readonly request: LayoutRequest; readonly reason: FallbackReason }, ctx: RpcCallContext): Promise<LayoutResult>;
 }
 
 export interface SearchWorkerApi {

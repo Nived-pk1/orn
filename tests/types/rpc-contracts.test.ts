@@ -31,11 +31,11 @@ it('type: RpcClient<Api> exists for all four worker APIs and answers RpcResult v
 });
 
 it('type: RpcMethodSpecs names every method, with idempotent and timeoutMs', () => {
-  const full: RpcMethodSpecs<LayoutWorkerApi> = { layout: { idempotent: true, timeoutMs: 2_000 } };
+  const full: RpcMethodSpecs<LayoutWorkerApi> = { layout: { idempotent: true, timeoutMs: 2_000 }, layoutFallback: { idempotent: true, timeoutMs: 2_000 } };
   // @ts-expect-error a method without a spec is a compile error
   const missing: RpcMethodSpecs<SearchWorkerApi> = { load: { idempotent: true, timeoutMs: 1 } };
   // @ts-expect-error timeoutMs is required
-  const noTimeout: RpcMethodSpecs<LayoutWorkerApi> = { layout: { idempotent: true } };
+  const noTimeout: RpcMethodSpecs<LayoutWorkerApi> = { layout: { idempotent: true }, layoutFallback: { idempotent: true, timeoutMs: 2_000 } };
   void [full, missing, noTimeout];
 });
 

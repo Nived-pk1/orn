@@ -53,3 +53,12 @@ const CHEM_FIXTURE = new URL('../../tests/fixtures/chem/worker.ts', import.meta.
 
 /** Starts the real chem worker (`startChemHost` over RDKit) in a real thread. */
 export const spawnChemWorker: WorkerFactory = () => nodeWorkerPort(new Worker(CHEM_FIXTURE, { execArgv: ['--import', 'tsx'] }));
+
+const LAYOUT_FIXTURE = new URL('../../tests/fixtures/layout/worker.ts', import.meta.url);
+
+/**
+ * Starts the real layout worker (`startLayoutHost`) in a real thread. `mode`: `real` (elkjs), `busy` (ELK replaced by a
+ * synchronous loop of `busyMs`, uninterruptible) or `throw` (ELK replaced by one that throws); the fallback is always real.
+ */
+export const spawnLayoutWorker = (mode: 'real' | 'busy' | 'throw' = 'real', busyMs = 5_000): RpcPort =>
+  nodeWorkerPort(new Worker(LAYOUT_FIXTURE, { execArgv: ['--import', 'tsx'], workerData: { mode, busyMs } }));

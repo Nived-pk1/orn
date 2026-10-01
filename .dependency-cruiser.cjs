@@ -58,6 +58,13 @@ module.exports = {
       to: { path: 'node_modules/@rdkit/' },
     },
     {
+      name: 'elk-only-in-adapter',
+      comment: 'ADR-007: only the ELK adapter folder (src/layout/elk/) imports elkjs; everything else goes through LayoutEngine.',
+      severity: 'error',
+      from: { path: '^src/', pathNot: '^src/layout/elk/' },
+      to: { path: 'node_modules/elkjs/' },
+    },
+    {
       name: 'worker-entry-chem',
       comment: 'ADR-034 D1: a worker entry imports only its own service and core (compute also io).',
       severity: 'error',

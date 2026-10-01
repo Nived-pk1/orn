@@ -70,7 +70,9 @@ RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferabl
 
 ## 5. Layout
 
-ELK (`elkjs`) in the layout worker: `layered` for navigator, reaction and precursor views; `radial` for focus-neighbourhood views; `stress` for relationship maps. Inputs are sorted and seeded, so identical requests produce identical outputs. Results are cached in `derivedCache` by `cacheKey`. Superseded requests are cancelled. If ELK throws or exceeds 2 s, a deterministic in-house layered layout (longest-path layering + barycentric ordering, O(V + E) per sweep) is used and Diagnostics records the fallback.
+ELK (`elkjs`) in the layout worker: `layered` for navigator, reaction and precursor views; `radial` for focus-neighbourhood views; `stress` for relationship maps. Inputs are sorted and seeded, so identical requests produce identical outputs. Results are cached in `derivedCache` by `cacheKey`. Superseded requests are cancelled. If ELK throws or exceeds 2 s, a deterministic in-house layered layout (longest-path layering + barycentric ordering, O(V + E) per sweep for the barycentres, 8 sweeps, plus an O(m log m) sort per layer) is used and Diagnostics records the fallback.
+
+**Step 4.4 (2026-10-01).** Built as ADR-034's "Layout worker (step 4.4)" paragraph says. Requests are limited to 2,000 nodes / 4,000 edges and must be sorted by id; a timeout restarts the worker and the NEW worker answers the fallback (`fallbackReason: 'timeout'`); results are cached on main by `cacheKey` (LRU 32, memory only until Phase 5). Measured at 4.4 (Windows, one run alone, mean): ELK layered 400-node projections 550-575 ms (row < 300 ms: MISSED on this machine), fallback 400 nodes / 800 edges 4.5 ms, 2,000 / 4,000 22.5 ms.
 
 ## 6. Rendering
 
