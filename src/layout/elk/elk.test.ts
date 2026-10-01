@@ -7,7 +7,7 @@ import { LayoutEngineUnavailable } from '../errors';
 import { layoutProblems, request } from '@/test-support/layout-kit';
 import { createFakeElk } from '@/test-support/layout-fakes';
 import { createElkEngine } from './engine';
-import { mapRequest } from './map-request';
+import { elkSeed, mapRequest } from './map-request';
 import { radialPlan } from './radial-tree';
 import { MAX_SPREAD, spread, spreadFactor } from './spread';
 
@@ -21,7 +21,7 @@ describe('mapRequest', () => {
     expect(input.graph.layoutOptions).toMatchObject({
       'elk.algorithm': 'layered',
       'elk.direction': 'DOWN',
-      'elk.randomSeed': '77',
+      'elk.randomSeed': '78',
       'elk.padding': '[top=0,left=0,bottom=0,right=0]',
       'elk.spacing.nodeNode': '20',
       'elk.layered.spacing.nodeNodeBetweenLayers': '60',
@@ -30,6 +30,25 @@ describe('mapRequest', () => {
     expect(input.graph.children.map((c) => [c.id, c.width, c.height])).toEqual([['a', 120, 40], ['b', 120, 40]]);
     expect(input.graph.edges).toEqual([{ id: 'e00000', sources: ['a'], targets: ['b'] }]);
     expect(input.notes).toEqual([]);
+  });
+
+  it('layered: polyline edge routing and thoroughness 3 (step 4.4 review, ADR-007)', () => {
+    const options = mapRequest(request({ nodes: ['a', 'b'], edges: [['a', 'b']] })).graph.layoutOptions;
+    expect(options['elk.edgeRouting']).toBe('POLYLINE');
+    expect(options['elk.layered.thoroughness']).toBe('3');
+    const radial = mapRequest(request({ nodes: ['a', 'b'], edges: [['a', 'b']], algorithm: 'radial' })).graph.layoutOptions;
+    expect(radial['elk.edgeRouting']).toBeUndefined();
+    expect(radial['elk.layered.thoroughness']).toBeUndefined();
+  });
+
+  it('the seed given to ELK is never 0 (ELK reads 0 as "from the clock") and stays within a Java int', () => {
+    expect(elkSeed(0)).toBe(1);
+    expect(elkSeed(77)).toBe(78);
+    for (const seed of [0, 1, 2_147_483_645, 2_147_483_646, 2_147_483_647, 4_294_967_295]) {
+      expect(elkSeed(seed)).toBeGreaterThanOrEqual(1);
+      expect(elkSeed(seed)).toBeLessThanOrEqual(2_147_483_647);
+    }
+    expect(elkSeed(5)).not.toBe(elkSeed(6));
   });
 
   it('layerHint becomes ELK partitions; orderHint becomes model order with the children listed in hint order', () => {

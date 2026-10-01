@@ -9,7 +9,7 @@ import { afterAll, bench, describe } from 'vitest';
 import { createFallbackEngine, createElkEngine, loadElk } from '@/layout';
 import type { LayoutRequest, LayoutResult } from '@/layout/contracts';
 import { MAX_LAYOUT_EDGES, MAX_LAYOUT_NODES } from '@/layout/contracts';
-import { randomRequest } from '@/test-support/layout-kit';
+import { projectionRequest, randomRequest } from '@/test-support/layout-kit';
 import { designLayoutRequests, demoLayoutRequests, type NamedLayoutRequest } from '@/test-support/layout-projections';
 import { spawnLayoutWorker } from '@/test-support/rpc-node-port';
 import { createLayoutHandlers } from '@/workers/layout/handlers';
@@ -47,6 +47,9 @@ const hub = pick('hub_explosion', 'reaction explorer');
 const denseNavigator = pick('dense', 'navigator (');
 const demoReaction = demoLayoutRequests().find((item) => item.name.includes('reaction explorer'));
 if (demoReaction === undefined) throw new Error('no demo reaction explorer');
+const denseNavigatorBundled = projectionRequest(denseNavigator.projection, { edges: 'bundled' });
+const denseBundled = projectionRequest(dense.projection, { edges: 'bundled' });
+const hubBundled = projectionRequest(hub.projection, { edges: 'bundled' });
 const synthetic = randomRequest({ nodes: 400, edges: 800, seed: 5, acyclic: true });
 const syntheticCyclic = randomRequest({ nodes: 400, edges: 800, seed: 5, selfLoops: 5, parallel: 10 });
 const atTheCaps = randomRequest({ nodes: MAX_LAYOUT_NODES, edges: MAX_LAYOUT_EDGES, seed: 9, selfLoops: 20, parallel: 40 });
@@ -56,6 +59,9 @@ describe('layout: ELK layered, worker code in Node (step 4.4)', () => {
   bench(`design tier, ${hub.name}`, () => elk(hub.request), OPTIONS);
   bench(`design tier, ${denseNavigator.name}`, () => elk(denseNavigator.request), OPTIONS);
   bench(`demo, ${demoReaction.name}`, () => elk(demoReaction.request), OPTIONS);
+  bench(`bundled, design tier, ${dense.name}`, () => elk(denseBundled), OPTIONS);
+  bench(`bundled, design tier, ${hub.name}`, () => elk(hubBundled), OPTIONS);
+  bench(`bundled, design tier, ${denseNavigator.name}`, () => elk(denseNavigatorBundled), OPTIONS);
   bench('synthetic 400 nodes / 800 edges, acyclic', () => elk(synthetic), OPTIONS);
   bench('synthetic 400 nodes / 800 edges, with cycles, loops and parallel edges', () => elk(syntheticCyclic), OPTIONS);
 });
@@ -81,8 +87,8 @@ const threadClient = createRpcClient<LayoutWorkerApi>({ factory: () => spawnLayo
 clients.push(threadClient);
 const small = demoReaction.request;
 // the thread is started and ELK loaded before the first measured iteration
-const warm = await threadClient.layout(small);
-if (!warm.ok || warm.value.engine !== 'elk') throw new Error('bench: the layout thread did not answer with ELK');
+const warm = await threadClient.layout(small, { timeoutMs: 30_000 });
+if (!warm.ok || warm.value.engine !== 'elk') throw new Error('bench: the layout thread did not answer with ELK: ' + JSON.stringify(warm).slice(0, 400));
 
 describe('layout: one round trip through a real worker thread (step 4.4)', () => {
   bench(

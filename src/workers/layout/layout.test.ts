@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import type { LayoutRequest } from '@/layout/contracts';
-import { MAX_LAYOUT_EDGES, MAX_LAYOUT_NODES } from '@/layout/contracts';
+import { MAX_LAYOUT_EDGES, MAX_LAYOUT_NODES, MAX_STRESS_NODES } from '@/layout/contracts';
 import { createElkEngine } from '@/layout/elk';
 import { layoutProblems, randomRequest, request } from '@/test-support/layout-kit';
 import { createFakeElk, type FakeElk } from '@/test-support/layout-fakes';
@@ -257,5 +257,41 @@ describe('the service: a crash', () => {
     workers.workers[0]?.crash('exit');
     expect(await pending).toMatchObject({ ok: true, result: { engine: 'elk' } });
     expect(workers.workers).toHaveLength(2);
+  });
+});
+
+describe('the service: stress over the node cap', () => {
+  const stress = (nodes: number, requestId = 'req'): LayoutRequest => ({ ...randomRequest({ nodes, edges: nodes, seed: 3 }), algorithm: 'stress', requestId });
+
+  it('lays out MAX_STRESS_NODES nodes with stress, no note', async () => {
+    const { service, elk } = rig();
+    const outcome = await service.layout('v', stress(MAX_STRESS_NODES));
+    expect(outcome).toMatchObject({ ok: true, result: { engine: 'elk', notes: [] } });
+    expect(elk.graphs[0]?.layoutOptions['elk.algorithm']).toBe('org.eclipse.elk.stress');
+  });
+
+  it('lays out more with ELK layered instead and says so in notes (engine elk), also when the answer comes from the cache', async () => {
+    const { service, elk } = rig();
+    const first = await service.layout('v', stress(MAX_STRESS_NODES + 1));
+    const again = await service.layout('v', stress(MAX_STRESS_NODES + 1, 'two'));
+    expect(elk.graphs).toHaveLength(1);
+    expect(elk.graphs[0]?.layoutOptions['elk.algorithm']).toBe('layered');
+    for (const outcome of [first, again]) {
+      if (!outcome.ok) throw new Error('unreachable');
+      expect(outcome.result.engine).toBe('elk');
+      expect(outcome.result.fallbackReason).toBeUndefined();
+      expect(outcome.result.notes.filter((note) => note.includes('laid out with ELK layered instead'))).toHaveLength(1);
+      expect(outcome.result.notes.join(' ')).toContain(`limited to ${MAX_STRESS_NODES} nodes`);
+    }
+    expect(again).toMatchObject({ ok: true, cached: true });
+  });
+
+  it('does not change layered or radial requests of any size', async () => {
+    const { service, elk } = rig();
+    const big = randomRequest({ nodes: MAX_STRESS_NODES + 20, edges: 50, seed: 4 });
+    const outcome = await service.layout('v', { ...big, algorithm: 'radial' });
+    expect(outcome).toMatchObject({ ok: true, result: { engine: 'elk' } });
+    if (outcome.ok) expect(outcome.result.notes.join(' ')).not.toContain('limited to');
+    expect(elk.graphs[0]?.layoutOptions['elk.algorithm']).toBe('org.eclipse.elk.radial');
   });
 });

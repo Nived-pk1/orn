@@ -147,12 +147,29 @@ export const withoutTiming = (result: LayoutResult): Omit<LayoutResult, 'duratio
   return rest;
 };
 
-/** The request for a real projection: its nodes and edges with FIXED sizes, sorted by `<` (the Scene mapping is Phase 5). */
-export function projectionRequest(projection: Projection, over: Partial<Pick<RequestSpec, 'algorithm' | 'direction' | 'seed'>> = {}): LayoutRequest {
+/**
+ * The edges a layout request carries for a projection. Raw: every edge. Bundled (GRAPH_SEMANTICS bundling, the Phase 5 rule):
+ * one edge per bundle (id and endpoints of the bundle), plus every edge that is in no bundle; never the raw parallel edges.
+ */
+export function projectionLayoutEdges(projection: Projection, mode: 'raw' | 'bundled'): LayoutEdgeInput[] {
+  if (mode === 'raw') return projection.edges.map((edge) => ({ id: edge.id, from: edge.from, to: edge.to }));
+  const bundled = new Set(projection.bundles.flatMap((bundle) => bundle.edgeIds));
+  return [
+    ...projection.bundles.map((bundle) => ({ id: bundle.id, from: bundle.from, to: bundle.to })),
+    ...projection.edges.filter((edge) => !bundled.has(edge.id)).map((edge) => ({ id: edge.id, from: edge.from, to: edge.to })),
+  ];
+}
+
+/** The request for a real projection: its nodes and edges (`raw`, or `bundled`) with FIXED sizes, sorted by `<` (the Scene mapping is Phase 5). */
+export function projectionRequest(
+  projection: Projection,
+  over: Partial<Pick<RequestSpec, 'algorithm' | 'direction' | 'seed'>> & { readonly edges?: 'raw' | 'bundled' } = {},
+): LayoutRequest {
+  const { edges: mode = 'raw', ...rest } = over;
   return request({
     nodes: projection.nodes.map((node) => node.id),
-    edges: projection.edges.map((edge) => ({ id: edge.id, from: edge.from, to: edge.to })),
+    edges: projectionLayoutEdges(projection, mode),
     requestId: projection.key,
-    ...over,
+    ...rest,
   });
 }

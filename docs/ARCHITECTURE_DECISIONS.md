@@ -80,6 +80,7 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 - **Migration implications**: engine replaceable per algorithm.
 - **Why chosen**: quality and determinism.
 - **Rejected**: dagre (unmaintained, weaker for hubs); D3-force (non-deterministic, unstable positions between expansions); Graphviz-WASM (strong but heavier and awkward in workers).
+- **2026-10-01 (step 4.4 review, follow-up a).** ELK layered runs with `elk.edgeRouting` = `POLYLINE` and `elk.layered.thoroughness` = 3. Reason: measured on the 400-node projections they cut layout time from about 590-820 ms to about 300-370 ms (dense navigator 3,300-3,600 to 1,650-1,700 ms) at an acceptable loss of edge-route smoothness and crossing-minimisation effort; the layout stays deterministic (property tests re-run). Also: the request seed reaches ELK as `1 + seed % 2,147,483,646`, because ELK reads a raw 0 as "seed from the clock" (found by the determinism property). Stress over 40 nodes (`MAX_STRESS_NODES`) is laid out by the layout service with ELK layered and says so in `notes`.
 
 ### ADR-008 — Web workers with a small typed RPC
 - **Requirements**: no main-thread task > 50 ms; cancellation; progress.

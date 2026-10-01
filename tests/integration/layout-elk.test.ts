@@ -201,6 +201,16 @@ describe('the seed reaches ELK', () => {
     expect(JSON.stringify(a.positions)).not.toBe(JSON.stringify(b.positions));
     expect(JSON.stringify((await run({ ...base, seed: 1 })).positions)).toBe(JSON.stringify(a.positions));
   });
+
+  it('seed 0 and the largest seed are deterministic too (ELK reads a raw 0 as "from the clock": found by the determinism property)', async () => {
+    for (const algorithm of ALGORITHMS) {
+      for (const seed of [0, 4_294_967_295]) {
+        const req = { ...randomRequest({ nodes: 2, edges: 1, seed: 2, algorithm }), seed };
+        const first = JSON.stringify((await run(req)).positions);
+        for (let i = 0; i < 4; i += 1) expect(JSON.stringify((await run(req)).positions), `${algorithm} seed ${seed}`).toBe(first);
+      }
+    }
+  });
 });
 
 describe('determinism: the same request gives byte-identical positions and routes, fresh instances, both engines', () => {

@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { createElkEngine, loadElk } from '@/layout/elk';
 import { createFallbackEngine } from '@/layout';
 import type { LayoutAlgorithm, LayoutRequest, LayoutResult } from '@/layout/contracts';
-import { layoutProblems, withoutTiming } from '@/test-support/layout-kit';
+import { layoutProblems, projectionRequest, withoutTiming } from '@/test-support/layout-kit';
 import { demoLayoutRequests, designLayoutRequests } from '@/test-support/layout-projections';
 import { createLayoutHandlers } from '@/workers/layout/handlers';
 
@@ -73,4 +73,33 @@ describe('the fallback on the same projections', () => {
       expect(JSON.stringify(withoutTiming(await engine.layout(structuredClone(request), signal))), name).toBe(JSON.stringify(withoutTiming(first)));
     }
   });
+});
+
+describe('bundled requests (one edge per bundle, never the raw parallel edges)', () => {
+  it('carry one edge per bundle plus the edges in no bundle, and every raw edge is accounted for', () => {
+    let sawBundle = false;
+    for (const { name, projection } of all) {
+      const raw = projectionRequest(projection);
+      const bundled = projectionRequest(projection, { edges: 'bundled' });
+      const inBundles = new Set(projection.bundles.flatMap((bundle) => bundle.edgeIds));
+      sawBundle ||= projection.bundles.length > 0;
+      expect(bundled.edges.length, name).toBe(raw.edges.length - inBundles.size + projection.bundles.length);
+      expect(bundled.nodes, name).toEqual(raw.nodes);
+      for (const edge of bundled.edges) expect(inBundles.has(edge.id), name).toBe(false);
+      // no two edges of the request join the same ordered pair
+      const pairs = bundled.edges.map((edge) => `${edge.from}|${edge.to}`);
+      expect(new Set(pairs).size, name).toBe(pairs.length);
+      const sorted = [...bundled.edges].sort((a, b) => (a.id < b.id ? -1 : 1));
+      expect(bundled.edges, name).toEqual(sorted);
+    }
+    expect(sawBundle).toBe(true);
+  });
+
+  it('are laid out validly by real ELK (layered) and are never larger than the raw request', async () => {
+    for (const { name, projection } of all) {
+      const bundled = projectionRequest(projection, { edges: 'bundled' });
+      expect(layoutProblems(bundled, await layout(bundled)), name).toEqual([]);
+      expect(bundled.edges.length).toBeLessThanOrEqual(projection.edges.length);
+    }
+  }, 120_000);
 });

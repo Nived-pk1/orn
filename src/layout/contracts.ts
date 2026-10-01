@@ -31,6 +31,11 @@ export interface LayoutEdgeInput {
 /** Requests over these are refused as a value (step 4.4): ELK and the fallback are bounded, and the render budget is 400 / 800. */
 export const MAX_LAYOUT_NODES = 2_000;
 export const MAX_LAYOUT_EDGES = 4_000;
+/**
+ * Stress is all-pairs (100 nodes took about 4 s on elkjs 0.12.0, over the 2 s limit): the service lays out a stress request with
+ * more nodes than this with ELK layered instead and says so in `notes` (step 4.4 review, decision 3).
+ */
+export const MAX_STRESS_NODES = 40;
 
 export interface LayoutRequest {
   readonly requestId: string;

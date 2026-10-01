@@ -129,6 +129,8 @@ Dependencies: `zustand`, Radix primitives, `cmdk`, `@tanstack/react-virtual`, `d
 | 5.8 | Command palette and search UI; exam-scope selector |
 | 5.9 | Playwright e2e, axe checks, FPS trace; Gate E review |
 
+Phase 5 note (step 4.4 review, decision 2): layout requests carry one edge per bundle (GRAPH_SEMANTICS bundling), never the raw parallel edges.
+
 ### Phase 6 — Authoring workbench → Gate D
 | Step | Work |
 |---|---|

@@ -93,11 +93,18 @@ function notesFor(request: LayoutRequest, usesPrevious: boolean): string[] {
   return notes;
 }
 
+/**
+ * ELK's `randomSeed` is a Java int and ELK treats 0 as "seed from the clock" (measured on 0.12.0: stress with seed 0 gave a new
+ * layout on every call). The request's unsigned 32-bit seed is mapped into 1..2^31-1: seeds 0..2^31-3 map one to one (shifted by
+ * one); larger seeds wrap, so two of them can share a layout.
+ */
+export const elkSeed = (seed: number): number => 1 + (seed % 2_147_483_646);
+
 export function mapRequest(request: LayoutRequest): ElkInput {
   const { algorithm, spacing } = request;
   const options: Record<string, string> = {
     'elk.algorithm': ALGORITHM[algorithm],
-    'elk.randomSeed': String(request.seed),
+    'elk.randomSeed': String(elkSeed(request.seed)),
     'elk.padding': NO_PADDING,
     'elk.spacing.nodeNode': String(spacing.node),
     'elk.spacing.edgeEdge': String(spacing.edge),
@@ -112,6 +119,8 @@ export function mapRequest(request: LayoutRequest): ElkInput {
 
   if (algorithm === 'layered') {
     options['elk.direction'] = request.direction;
+    options['elk.edgeRouting'] = 'POLYLINE';
+    options['elk.layered.thoroughness'] = '3';
     options['elk.layered.spacing.nodeNodeBetweenLayers'] = String(spacing.layer);
     options['elk.layered.spacing.edgeNodeBetweenLayers'] = String(spacing.edge);
     options['elk.layered.spacing.edgeEdgeBetweenLayers'] = String(spacing.edge);

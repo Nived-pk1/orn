@@ -16,7 +16,7 @@
 import { layoutCacheKey } from '@/layout/cache-key';
 import { LruCache } from '@/layout/lru';
 import { checkRequest } from '@/layout/validate';
-import type { FallbackReason, LayoutRequest, LayoutResult } from '@/layout/contracts';
+import { MAX_STRESS_NODES, type FallbackReason, type LayoutRequest, type LayoutResult } from '@/layout/contracts';
 import { callWithRetry } from '@/workers/rpc/retry';
 import type { LayoutWorkerApi, RpcCallOptions, RpcClient, RpcError } from '@/workers/rpc/contracts';
 import { LAYOUT_SPECS } from './specs';
@@ -64,7 +64,7 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
 
   const cancelled: LayoutOutcome = { ok: false, code: 'CANCELLED', message: 'a newer layout request for this view replaced this one' };
 
-  async function layout(view: string, request: LayoutRequest, call?: Pick<RpcCallOptions, 'timeoutMs'>): Promise<LayoutOutcome> {
+  async function run(view: string, request: LayoutRequest, call?: Pick<RpcCallOptions, 'timeoutMs'>): Promise<LayoutOutcome> {
     const problem = checkRequest(request);
     if (problem !== undefined) return { ok: false, code: problem.code, message: problem.message };
     const earlier = running.get(view);
@@ -108,6 +108,15 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
     } finally {
       if (running.get(view) === mine) running.delete(view);
     }
+  }
+
+  /** Stress over `MAX_STRESS_NODES` nodes is laid out with ELK layered; the result says so (never silent), cached or not. */
+  async function layout(view: string, request: LayoutRequest, call?: Pick<RpcCallOptions, 'timeoutMs'>): Promise<LayoutOutcome> {
+    if (request.algorithm !== 'stress' || request.nodes.length <= MAX_STRESS_NODES) return run(view, request, call);
+    const outcome = await run(view, { ...request, algorithm: 'layered' }, call);
+    if (!outcome.ok) return outcome;
+    const note = `stress layout is limited to ${MAX_STRESS_NODES} nodes (this request has ${request.nodes.length}): laid out with ELK layered instead`;
+    return { ...outcome, result: { ...outcome.result, notes: [...outcome.result.notes, note].sort() } };
   }
 
   return {
