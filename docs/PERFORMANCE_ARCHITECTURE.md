@@ -74,6 +74,8 @@ ELK (`elkjs`) in the layout worker: `layered` for navigator, reaction and precur
 
 **Step 4.4 (2026-10-01).** Built as ADR-034's "Layout worker (step 4.4)" paragraph says. Requests are limited to 2,000 nodes / 4,000 edges and must be sorted by id; a timeout restarts the worker and the NEW worker answers the fallback (`fallbackReason: 'timeout'`); results are cached on main by `cacheKey` (LRU 32, memory only until Phase 5). Measured at 4.4 (Windows, one run alone, mean): ELK layered 400-node projections 550-575 ms (row < 300 ms: MISSED on this machine), fallback 400 nodes / 800 edges 4.5 ms, 2,000 / 4,000 22.5 ms.
 
+**Step 4.5 (2026-10-01).** Built as ADR-034's "Search worker (step 4.5)" paragraph says; measured numbers are in docs/PROGRESS.md step 4.5 (design tier, 5,000 reactions, worker code in Node).
+
 ## 6. Rendering
 
 Render budget 400 visible nodes / 800 visible edges; above it LOD is capped at 1. Viewport culling via a uniform grid index; pan/zoom by a single imperative transform; hover and focus rings on an overlay layer so the node layer does not re-render; text measurement cached per (string, font size); depictions lazily loaded and cached; long lists (inspector, overflow, search, diagnostics) virtualised with TanStack Virtual.

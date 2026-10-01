@@ -59,11 +59,12 @@
     "4.2e",
     "4.3a",
     "4.3b",
-    "4.4"
+    "4.4",
+    "4.5"
   ],
   "nextPhase": 4,
-  "nextStep": "4.5",
-  "nextStepTitle": "Search worker (docs/IMPLEMENTATION_PLAN.md §2 row 4.5): minisearch, SearchDocument builder, config, incremental upsert/remove with a revision check, serialise/load, palette grammar parser; the search entry imports src/workers/zod-jitless.ts first (ADR-035)",
+  "nextStep": "4.6",
+  "nextStepTitle": "Phase 4 close (docs/IMPLEMENTATION_PLAN.md §2 row 4.6): crash → restart test for all four workers (DoD); a list proving every worker API method has an in-process test; `npm run build` includes the worker entries (chem, layout, search, compute) and the RDKit WASM under the production CSP (build smoke; say how the entries are referenced; check the ELK, minisearch and RDKit chunks for eval / new Function as ADR-035 says); `bench:compare` once against the Gate C baseline (compare only, no baseline rewrite); Phase 4 summary in PROGRESS.md with the Phase 9 exceptions re-measured where Phase 4 touched them; stop for the reviewer (D6)",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -108,7 +109,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command (Vitest 4.1.11: 205 files, 3,282 tests, Vitest duration 62.3 s, whole check 1 min 24.6 s; step 4.3a, 2026-09-30). Test workers are capped at 4 in vitest.config.ts (env ORN_TEST_WORKERS overrides; step 4.2a review).",
+    "npmRunCheck": "passed as ONE command (Vitest 4.1.11: 228 files, 3,675 tests, Vitest duration 101.0 s, whole check 2 min 6 s; step 4.5, 2026-10-01). Test workers are capped at 4 in vitest.config.ts (env ORN_TEST_WORKERS overrides; step 4.2a review).",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -178,7 +179,7 @@
     "chemDependency": "step 4.3a: @rdkit/rdkit 2026.3.6 pinned (package's own version string 2026.03.6), npm audit 0 vulnerabilities; only src/chem/rdkit/ may import it (dependency-cruiser rule rdkit-only-in-adapter, checked with a throwaway violation); glue scan: eval( 0, new Function 2 (embind), see openItems."
   },
   "openItems": [
-    "Step 4.4 REVIEW REQUIRED (PROGRESS.md): cacheKey widened beyond the contract text; the ELK layered row (< 300 ms at 400 nodes) is missed (about 550-575 ms mean on the dev machine) and a 60-node / 800-edge dense navigator takes about 3.5 s (over the 2 s limit); stress is all-pairs (100 nodes about 4 s) with no node cap; radial falls back (elk_error) when ELK puts two nodes on one spot; pinned is not honoured by any ELK algorithm.",
+    "Step 4.4 review ACCEPTED (PROGRESS.md \"Step 4.4 review (reviewer, 2026-10-01)\"; follow-ups in commit \"phase-4.4: review follow-ups\"): ELK layered defaults are polyline routing and thoroughness 3 (ADR-007); the 300 ms row for 400-node layered projections is still missed (raw 464 to 576 ms mean, bundled 425 to 462 ms; dense navigator raw 2,650 ms, bundled 1,509 ms) and is a documented Phase 9 exception (layout runs in the worker); stress over 40 nodes is laid out with ELK layered and says so in notes; pinned is honoured by no algorithm (revisit only if a view needs it); the ELK seed is never 0 (ELK reads 0 as random).",
     "Step 4.4: Phase 5 creates the layout worker and service in the app (D7), maps Scene bundles (not raw edges) to layout edges, persists layouts in derivedCache (4.4 caches in memory only, LRU 32), shows the fallback reason and notes in Diagnostics; step 4.6's build smoke references src/workers/layout/entry.ts and checks ELK's chunk for eval / new Function.",
     "Step 4.2c: Phase 5 wiring of the import flow: create the sync and `createComputeImport` in the app with the real ports (`adapter.storeSnapshotBytes` / `deleteSnapshot`, `saveImportBatch` / `addQuarantine`, the asset stage connected to `attachWriteQueue` blobsFor), pass main's clock and RNG, and report an import as done only after flush(). The flow needs `sync.settled()` before an apply; the UI should show the replica status while it waits.",
     "Step 4.2c: preview and prepare both validate the merged state in the worker (prepare builds the full index engine and `validateAll` again, about 1.4-2.3 s at the design tier). If the apply latency matters at Gate E, keep the preview's full index engine and findings in the pending batch instead (a change to `validateMerged`).",
@@ -258,6 +259,8 @@
     "Step 4.3b: Phase 5 wires the L4 service: `store.subscribe(changes => service.onChange(changes))`, `checkAll()` after boot and after every reload/restore (the CHEM-009 map is built from checked species), a debounce as `schedule`, `statusOf`/`subscribe` in the UI (\"check unavailable\" for not_checked, \"not compared\" notes); the not-checkable memory is per session.",
     "Step 4.3b review (2026-09-30) ACCEPTED and its follow-ups built: CHEM-006 (reviewer's reading, VALIDATION_RULES.md §3), referrer re-checks (reactions of a changed species, species of a changed class; at most 500 queued per change, the rest behind), palmitic acid SMILES corrected to 16 carbons by the reviewer (record stays REVIEW REQUIRED). Open: the L4 service now needs an `indexes` port (the store's `getIndexes()`) in the Phase 5 wiring; mechanisms are not queued by species changes (their checks read only embedded structures); a class change on cause `replace` is `checkAll`'s job.",
     "Step 4.3b: the generator gives its species no structures, so the design tier has no L4 bench of its own (1,400 synthetic alcohols: 3,205.6 / 3,265.8 ms mean / p99); tests/perf/chem-checks.bench.ts has no baseline until the Gate E baseline.",
-    "Step 4.3b: docs/reviews/demo-chem-findings.md lists the demo findings for the human reviewer (the deliberately invalid record; the palmitic acid SMILES was corrected to 16 carbons by the reviewer, so CHEM-003 no longer fires); regenerate with `node scripts/demo-chem-findings.mjs` (a test checks it is current)."
+    "Step 4.3b: docs/reviews/demo-chem-findings.md lists the demo findings for the human reviewer (the deliberately invalid record; the palmitic acid SMILES was corrected to 16 carbons by the reviewer, so CHEM-003 no longer fires); regenerate with `node scripts/demo-chem-findings.mjs` (a test checks it is current).",
+    "Step 4.5 REVIEW REQUIRED (PROGRESS.md): contract additions beyond Q6 (aliases, textTruncated, facets.scopes, limits, SearchService became SearchEngine, serialize / loadSerialized); a document never holds another record's text, so reactions are not found by their participants' names; documents carry the entered formula only (derived formulas need the chem worker, Phase 5); prefix applies to every query word (broad prefixes cost about 30 ms on the synthetic names; last-word-only would be about 10 ms); a swap of two letters counts as two edits; building every document on the main thread is 193 ms (870 ms with indexes) at the design tier and a curriculum edit that moves everything is about 22 ms per slice of 500; the sync needs the full ReadonlyIndexes, which the store does not expose; scores are rounded to 9 decimals.",
+    "Step 4.5: Phase 5 creates the search worker and service in the app (D7), provides the sync ports (state, full indexes, revision, debounce), wires the warm-boot cache (serialize keyed by revision, loadSerialized at boot, BAD_INDEX falls back to a load), calls sync.reload() from the client onRestart hook and shows sync.status() in Diagnostics; step 4.6's build smoke references src/workers/search/entry.ts and checks minisearch's chunk for eval / new Function."
   ]
 }

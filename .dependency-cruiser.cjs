@@ -65,6 +65,13 @@ module.exports = {
       to: { path: 'node_modules/elkjs/' },
     },
     {
+      name: 'minisearch-only-in-adapter',
+      comment: 'ADR-011: only the MiniSearch adapter folder (src/search/engine/) imports minisearch; everything else goes through SearchEngine.',
+      severity: 'error',
+      from: { path: '^src/', pathNot: '^src/search/engine/' },
+      to: { path: 'node_modules/minisearch/' },
+    },
+    {
       name: 'worker-entry-chem',
       comment: 'ADR-034 D1: a worker entry imports only its own service and core (compute also io).',
       severity: 'error',

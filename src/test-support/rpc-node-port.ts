@@ -62,3 +62,8 @@ const LAYOUT_FIXTURE = new URL('../../tests/fixtures/layout/worker.ts', import.m
  */
 export const spawnLayoutWorker = (mode: 'real' | 'busy' | 'throw' = 'real', busyMs = 5_000): RpcPort =>
   nodeWorkerPort(new Worker(LAYOUT_FIXTURE, { execArgv: ['--import', 'tsx'], workerData: { mode, busyMs } }));
+
+const SEARCH_FIXTURE = new URL('../../tests/fixtures/search/worker.ts', import.meta.url);
+
+/** Starts the real search worker (`startSearchHost`) in a real thread (step 4.5). */
+export const spawnSearchWorker = (): RpcPort => nodeWorkerPort(new Worker(SEARCH_FIXTURE, { execArgv: ['--import', 'tsx'] }));

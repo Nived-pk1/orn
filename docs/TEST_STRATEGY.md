@@ -156,7 +156,7 @@ describes is a render/layout concept and is Phase 5/Gate E.
 
 ADV-038 and ADV-039 split the same way: the integration half (fake-indexeddb, in-process lock/channel fakes) is Gate C; the real-browser e2e half is Gate E.
 
-ADV-019's search half is Phase 4 (step 4.5).
+ADV-019's search half is Phase 4 (step 4.5; done: `src/workers/search/search.test.ts`, with ADV-058's search part and the incremental-equals-rebuild property in `tests/property/search-incremental.test.ts`).
 
 ## 6. Gates
 

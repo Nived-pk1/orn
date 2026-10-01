@@ -11,6 +11,7 @@ Phase 10's documentation sweep keeps this list current. Each new dependency is r
 | elkjs | 0.12.0 | EPL-2.0 OR GPL-3.0-or-later (EPL-2.0 used) | step 4.4 | Layout worker only (`src/layout/elk/`); bundled build, our worker |
 | fflate | 0.8.3 | MIT | (before 4.x) | Zip for snapshots and exports |
 | immer | 10.2.0 | MIT | (before 4.x) | Command store |
+| minisearch | 7.2.0 | MIT | step 4.5 | Search worker only (`src/search/engine/`); scanned: no eval, no new Function |
 | react | 19.3.0 | MIT | (before 4.x) | UI |
 | react-dom | 19.3.0 | MIT | (before 4.x) | UI |
 | zod | 4.6.5 | MIT | (before 4.x) | Schemas (jitless in workers, ADR-035) |

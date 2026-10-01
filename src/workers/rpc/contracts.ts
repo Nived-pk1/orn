@@ -14,7 +14,7 @@ import type { BalanceAnswer, BalanceRequest, MatchesAnswer, MatchProbe, SpeciesC
 import type { ExportBuildResult, ExportOptions, ImportPlan, ImportPlanRequest, ImportPreviewErrorCode, ImportRejectionCode, ParsedAsset } from '@/io/contracts';
 import type { ImportQuarantineDraft, ImportReportDraft } from '@/io';
 import type { FallbackReason, LayoutRequest, LayoutResult } from '@/layout/contracts';
-import type { SearchDocument, SearchHit, SearchIndexUpdate, SearchQuery } from '@/search/contracts';
+import type { ApplyAnswer, LoadSerializedAnswer, SearchDocument, SearchHit, SearchIndexUpdate, SearchQuery, SerializedSearchIndex } from '@/search/contracts';
 
 export type RpcErrorCode = 'CANCELLED' | 'TIMEOUT' | 'BAD_REQUEST' | 'WORKER_CRASHED' | 'NOT_READY' | 'INTERNAL' | 'BUSY';
 export interface RpcError {
@@ -154,10 +154,20 @@ export interface LayoutWorkerApi {
   layoutFallback(params: { readonly request: LayoutRequest; readonly reason: FallbackReason }, ctx: RpcCallContext): Promise<LayoutResult>;
 }
 
+/**
+ * The search worker holds the index and nothing else (step 4.5, Phase 4 contract decisions Q6). `load` replaces the whole index;
+ * `apply` carries `fromRevision` and answers a value: `{ ok: true, revision }`, or `REVISION_MISMATCH` with the revision the
+ * worker has (-1: nothing loaded, as after a restart) and the caller does one full `load`. `search` is `NOT_READY` until an index
+ * is loaded, so a restarted worker never answers an empty list as if it were an answer. `serialize` / `loadSerialized` carry the
+ * index as one JSON text for the warm-boot cache (wiring is Phase 5); a text that does not load is `BAD_INDEX` as a value.
+ * Malformed documents or queries are `BAD_REQUEST`.
+ */
 export interface SearchWorkerApi {
   load(params: { readonly documents: readonly SearchDocument[]; readonly revision: number }, ctx: RpcCallContext): Promise<void>;
-  apply(params: SearchIndexUpdate, ctx: RpcCallContext): Promise<void>;
+  apply(params: SearchIndexUpdate, ctx: RpcCallContext): Promise<ApplyAnswer>;
   search(params: SearchQuery, ctx: RpcCallContext): Promise<readonly SearchHit[]>;
+  serialize(params: Readonly<Record<string, never>>, ctx: RpcCallContext): Promise<SerializedSearchIndex>;
+  loadSerialized(params: SerializedSearchIndex, ctx: RpcCallContext): Promise<LoadSerializedAnswer>;
 }
 
 /** A replica call refused as a value: the replica is at revision `have`, not the one the call needs. */
