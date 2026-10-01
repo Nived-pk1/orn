@@ -91,6 +91,47 @@ export interface Tables {
   class?: Record<string, unknown>;
 }
 
+type Row = Record<string, unknown>;
+const rows = (table: unknown): Row[] => Object.values((table ?? {}) as Record<string, Row>);
+
+/**
+ * The two indexes the service reads, answered by scanning the scripted tables (test only): which records refer to an ID (reaction
+ * participants and products, species class lists) and the descendants of a class (`parentIds`).
+ */
+export function fakeIndexes(get: () => CanonicalState): L4Ports['indexes'] {
+  return () => {
+    const records = get().records as unknown as Record<string, unknown>;
+    return {
+      referrersOf(id) {
+        const out: { owner: RecordRef; path: string; targetId: string; onDelete: 'restrict' }[] = [];
+        const add = (kind: RecordRef['kind'], owner: string, path: string): void => void out.push({ owner: ref(kind, owner), path, targetId: id, onDelete: 'restrict' });
+        for (const reaction of rows(records.reaction)) {
+          for (const [i, p] of ((reaction.participants ?? []) as { ref: { id: string } }[]).entries()) if (p.ref.id === id) add('reaction', reaction.id as string, `participants[${i}].ref`);
+          for (const [o, outcome] of ((reaction.outcomes ?? []) as { products: { ref: { id: string } }[] }[]).entries()) {
+            for (const [i, p] of outcome.products.entries()) if (p.ref.id === id) add('reaction', reaction.id as string, `outcomes[${o}].products[${i}].ref`);
+          }
+        }
+        for (const species of rows(records.species)) for (const [i, c] of ((species.classIds ?? []) as string[]).entries()) if (c === id) add('species', species.id as string, `classIds[${i}]`);
+        return out as never;
+      },
+      descendantsOf(_kind, id) {
+        const classes = rows(records.class);
+        const out: string[] = [];
+        for (let head = -1, queue = [id]; head < queue.length - 1; ) {
+          const current = queue[(head += 1)] as string;
+          for (const cls of classes) {
+            if (((cls.parentIds ?? []) as string[]).includes(current) && !out.includes(cls.id as string)) {
+              out.push(cls.id as string);
+              queue.push(cls.id as string);
+            }
+          }
+        }
+        return out;
+      },
+    };
+  };
+}
+
 export interface L4Rig {
   readonly state: { current: CanonicalState };
   readonly findings: FindingStore;
@@ -100,7 +141,7 @@ export interface L4Rig {
   readonly errors: unknown[];
   readonly ports: L4Ports;
   /** Replaces the tables (what a commit did) and returns the ChangeSet that says which records moved. */
-  commit(tables: Tables, moved: { created?: RecordRef[]; updated?: RecordRef[]; deleted?: RecordRef[] }): ChangeSet;
+  commit(tables: Tables, moved: { created?: RecordRef[]; updated?: RecordRef[]; deleted?: RecordRef[]; patches?: ChangeSet['patches'] }): ChangeSet;
 }
 
 export const ref = (kind: RecordRef['kind'], id: string): RecordRef => ({ kind, id }) as RecordRef;
@@ -119,7 +160,7 @@ export function createL4Rig(fake: FakeChem, initial: Tables = {}): L4Rig {
       findings.replaceForRules(subjects, ruleIds, list);
     },
   };
-  const ports: L4Ports = { state: () => state.current, findings: spying, chem: fake.port, schedule: (run) => void scheduled.push(run) };
+  const ports: L4Ports = { state: () => state.current, findings: spying, indexes: fakeIndexes(() => state.current), chem: fake.port, schedule: (run) => void scheduled.push(run) };
   return {
     state,
     findings,
@@ -131,7 +172,7 @@ export function createL4Rig(fake: FakeChem, initial: Tables = {}): L4Rig {
       const records = { ...(state.current.records as unknown as Record<string, unknown>) };
       for (const [kind, table] of Object.entries(next)) records[kind] = table;
       state.current = { ...state.current, records } as unknown as CanonicalState;
-      return { revision: 1, label: 'test', cause: 'command', created: moved.created ?? [], updated: moved.updated ?? [], deleted: moved.deleted ?? [], patches: [], inversePatches: [] };
+      return { revision: 1, label: 'test', cause: 'command', created: moved.created ?? [], updated: moved.updated ?? [], deleted: moved.deleted ?? [], patches: moved.patches ?? [], inversePatches: [] };
     },
   };
 }

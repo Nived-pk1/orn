@@ -5,6 +5,7 @@
  */
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
+import type { CoreIndexes } from '@/core/indexes/contracts';
 import type { FindingStore } from '@/core/validation/contracts';
 import type { NotCompared } from '@/chem/checks/contracts';
 import type { ChemService } from '../client';
@@ -14,6 +15,11 @@ export interface L4Ports {
   /** The current canonical state (read only). */
   readonly state: () => CanonicalState;
   readonly findings: Pick<FindingStore, 'replaceForRules'>;
+  /**
+   * The store's indexes as of the change being announced (the store applies them before it notifies): which reactions refer to a
+   * species, which species list a class (`referrersOf`) and the class's descendants (`descendantsOf`). Read only, never kept past the call.
+   */
+  readonly indexes: () => Pick<CoreIndexes, 'referrersOf' | 'descendantsOf'>;
   /** The chem worker's checks as values (`timeout` and `unavailable` are answers, never exceptions). */
   readonly chem: Pick<ChemService, 'checkSpecies' | 'checkReaction' | 'checkMechanism' | 'matches'>;
   /**
@@ -44,6 +50,12 @@ export interface L4Stats {
   readonly staleDropped: number;
   /** Subjects not sent because their structure is remembered as not checkable. */
   readonly rememberedSkipped: number;
+  /** Records queued only because something they refer to changed (reactions of a species, species of a class), ever. */
+  readonly referrerQueued: number;
+  /** The most of them one change put in the queue at once (at most `RECHECK_CAP`); the rest waited behind them. */
+  readonly maxQueuedAtOnce: number;
+  /** Referrers waiting behind the cap right now (they show as `pending`). */
+  readonly backlog: number;
 }
 
 export interface L4Service {

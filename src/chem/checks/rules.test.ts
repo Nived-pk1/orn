@@ -29,12 +29,10 @@ describe('L4_RULES', () => {
     }
   });
 
-  it('owns every rule once; CHEM-009 is the service\'s, the rest the worker\'s; CHEM-006 is the one not built, with its reason', () => {
+  it('owns every rule once; CHEM-009 is the service\'s, the rest the worker\'s; every rule is built', () => {
     expect(new Set(L4_RULE_IDS).size).toBe(L4_RULES.length);
     expect(L4_RULES.filter((rule) => rule.owner === 'service').map((rule) => rule.id)).toEqual(['CHEM-009']);
-    const unbuilt = L4_RULES.filter((rule) => !rule.implemented);
-    expect(unbuilt.map((rule) => rule.id)).toEqual(['CHEM-006']);
-    expect(unbuilt[0]?.reason).toBeTruthy();
+    expect(L4_RULES.filter((rule) => !rule.implemented).map((rule) => `${rule.id}: ${rule.reason ?? 'no reason given'}`)).toEqual([]);
   });
 
   it('L4 rule IDs are not part of RULE_SET_ID (L1-L3 only)', () => {

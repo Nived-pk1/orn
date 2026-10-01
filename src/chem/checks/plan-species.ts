@@ -19,6 +19,7 @@ export function speciesRequest(species: Species): SpeciesCheckRequest | undefine
     structure: species.structure,
     ...(species.formula === undefined ? {} : { formula: species.formula }),
     ...(species.charge === undefined ? {} : { charge: species.charge }),
+    ...(species.stereo === undefined || species.stereo.descriptors.length === 0 ? {} : { stereoDescriptors: species.stereo.descriptors }),
   };
 }
 

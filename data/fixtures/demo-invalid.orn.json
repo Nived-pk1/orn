@@ -2332,7 +2332,7 @@
         "speciesKind": "molecule",
         "structure": {
           "format": "smiles",
-          "value": "CCCCCCCCCCCCCCC(=O)O"
+          "value": "CCCCCCCCCCCCCCCC(=O)O"
         },
         "formula": "C16H32O2",
         "classIds": [

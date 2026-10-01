@@ -1,7 +1,7 @@
 /**
  * CHEM-001 to CHEM-009 (step 4.3b) over REAL RDKit in Node, one RDKit load for the file: every rule that is built fires on a minimal
  * case and stays silent on a clean one; what could not be compared is said out loud; every request and every answer survives
- * `structuredClone` (they cross a worker port). CHEM-006 is the rule that is not built (reviewer decision needed); a test says so.
+ * `structuredClone` (they cross a worker port). CHEM-006 follows the reviewer's reading (letters only, cautious).
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -37,7 +37,7 @@ function cloned<T>(value: T): T {
   return copy;
 }
 
-async function species(structure: string, extra: { formula?: string; charge?: number } = {}) {
+async function species(structure: string, extra: { formula?: string; charge?: number; stereoDescriptors?: string[] } = {}) {
   const request = cloned({ id: 'spc_t', structure: smiles(structure), ...extra });
   const answer = cloned(await checks.checkSpecies([request]));
   const result = answer.results[0];
@@ -241,10 +241,47 @@ describe('CHEM-008: an atom map a step uses must be on an atom of one of its str
   });
 });
 
-describe('CHEM-006 is not built: the rule text does not define the comparison (step 4.3b, reviewer decision)', () => {
-  it('a species with stereo descriptors gets no CHEM-006 from any check', async () => {
-    const result = await species('CC[C@H](C)O');
-    expect(rulesOf(result)).toEqual([]);
+describe('CHEM-006: only the letters R/S and E/Z against RDKit, cautiously (reviewer, 2026-09-30)', () => {
+  const six = (result: Awaited<ReturnType<typeof species>>) => ({
+    rules: rulesOf(result),
+    notCompared: result.status.state === 'checked' ? result.status.notCompared.filter((n) => n.ruleId === 'CHEM-006').length : -1,
+  });
+
+  it('agrees: no finding, nothing left out (locants ignored, order ignored)', async () => {
+    expect(six(await species('C[C@H](O)C(=O)O', { stereoDescriptors: ['2S'] }))).toEqual({ rules: [], notCompared: 0 });
+    expect(six(await species('C[C@H](O)[C@@H](C)O', { stereoDescriptors: ['(3R,2S)'] }))).toEqual({ rules: [], notCompared: 0 });
+    expect(six(await species('C[C@H](O)[C@@H](C)O', { stereoDescriptors: ['R', '9S'] }))).toEqual({ rules: [], notCompared: 0 });
+    expect(six(await species('F/C=C/F', { stereoDescriptors: ['E'] }))).toEqual({ rules: [], notCompared: 0 });
+  });
+
+  it('a descriptor that names the other letter is a finding on stereo.descriptors, with the catalogued severity (WARNING)', async () => {
+    const wrong = await species('C[C@H](O)C(=O)O', { stereoDescriptors: ['2R'] });
+    expect(six(wrong)).toEqual({ rules: ['CHEM-006'], notCompared: 0 });
+    expect(wrong.drafts[0]).toMatchObject({ path: 'stereo.descriptors', data: { entered: { R: 1, S: 0 }, derived: { R: 0, S: 1 } } });
+    expect(rulesOf(await species('F/C=C/F', { stereoDescriptors: ['Z'] }))).toEqual(['CHEM-006']);
+    expect(rulesOf(await species('C[C@H](O)[C@@H](C)O', { stereoDescriptors: ['R', 'R'] }))).toEqual(['CHEM-006']);
+    // more centres named than the structure has: not a case of naming fewer
+    expect(rulesOf(await species('C[C@H](O)C(=O)O', { stereoDescriptors: ['2S', '3S'] }))).toEqual(['CHEM-006']);
+  });
+
+  it('is NOT compared, and says so (never a finding): words, lower-case, unspecified centres, fewer centres named', async () => {
+    const cases: [string, string[]][] = [
+      ['C[C@H](O)C(=O)O', ['cis']],
+      ['CC(O)C(C)O', ['meso']],
+      ['C[C@@H]1CC[C@H](C)CC1', ['1r', '4s']],
+      ['CC(O)C(C)O', ['2R']],
+      ['C[C@H](O)[C@@H](C)O', ['2S']],
+      ['C[C@H](O)C(=O)O', ['rel-(2S)']],
+      ['CC=CC', ['E']],
+    ];
+    for (const [value, descriptors] of cases) {
+      const result = await species(value, { stereoDescriptors: descriptors });
+      expect(six(result), value + ' ' + descriptors.join(',')).toEqual({ rules: [], notCompared: 1 });
+    }
+  });
+
+  it('is silent when the species has no descriptors, and a request with them survives structuredClone', async () => {
+    expect(six(await species('C[C@H](O)C(=O)O'))).toEqual({ rules: [], notCompared: 0 });
   });
 });
 

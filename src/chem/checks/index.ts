@@ -11,4 +11,6 @@ export { balancePlan, contributesAtoms } from './plan-reaction';
 export type { BalancePlan } from './plan-reaction';
 export { mechanismPlan } from './plan-mechanism';
 export type { MechanismPlan } from './plan-mechanism';
+export { compareStereo, readDescriptors } from './stereo';
+export type { StereoInput, StereoOutcome, Letters, DescriptorRead } from './stereo';
 export { duplicateDrafts, MAX_DUPLICATE_RELATED } from './duplicates';

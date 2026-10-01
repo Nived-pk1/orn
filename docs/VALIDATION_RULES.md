@@ -140,6 +140,8 @@ Rules are **lifecycle-aware**: some rules are WARNING for `draft` and ERROR for 
 | CHEM-008 | Mechanism bond change or electron movement uses an atom map absent from the step structures | WARNING |
 | CHEM-009 | Two species have identical canonical structures | WARNING |
 
+**CHEM-006 reading (reviewer, 2026-09-30).** Compare only the multiset of R/S letters and the multiset of E/Z letters found in the species' stereo descriptors with RDKit's CIP labels for the structure; locants and words are ignored. "Not compared" (shown in the subject's L4 status, never a finding) when: a descriptor has words only (cis, trans, meso, achiral, rel-, ...) or any form other than `[locant]R|S|E|Z`; a descriptor or the structure uses lower-case r/s; the structure has unspecified stereocentres; the R/S letters named are fewer than the structure has and fit inside it (the descriptors may not name every centre); the E/Z counts differ (RDKit does not list a double bond whose geometry is not given, so an unequal count may be an unspecified bond). A finding (the catalogued WARNING, path `stereo.descriptors`) only for a certain disagreement: a different letter at equal count, more centres named than the structure has, a letter the structure lacks.
+
 ## 4. Engine design
 
 - A rule is a `ValidationRule` object `{id, level, kinds, defaultSeverity, scope, description, check}` (plus optional `watches`, `peers`, `referencedReads` and `peerReads`, §5) registered in a rule list. Adding a rule never edits another rule. Rules are pure functions of `(record, RuleContext)`; they read neighbours through indexes, never by scanning all records.

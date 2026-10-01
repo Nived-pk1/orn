@@ -10,10 +10,10 @@ Checked: 66 species (65 with a structure), 27 reactions, 3 mechanisms; no class 
 
 - CHEM-001: 1
 - CHEM-002: 0
-- CHEM-003: 1
+- CHEM-003: 0
 - CHEM-004: 0
 - CHEM-005: 0
-- CHEM-006: 0 (rule not built: its comparison is not defined, see PROGRESS.md step 4.3b)
+- CHEM-006: 0
 - CHEM-007: 0
 - CHEM-008: 0
 - CHEM-009: 0
@@ -21,7 +21,6 @@ Checked: 66 species (65 with a structure), 27 reactions, 3 mechanisms; no class 
 ## Every finding
 
 - CHEM-001 (warning) on species `spc_invalid-smiles-demo` "Unparsable structure (demo record)", path `structure`: The structure cannot be read: RDKit cannot read this smiles.
-- CHEM-003 (warning) on species `spc_palmitic-acid` "Palmitic acid", path `formula`: The entered formula C16H32O2 does not match the structure, which has C15H30O2.
 
 ## What could not be compared (said by the service, never silent)
 
@@ -57,11 +56,11 @@ Checked: 66 species (65 with a structure), 27 reactions, 3 mechanisms; no class 
 - CHEM-005 on reaction `rxn_r-2-bromobutane-alc-koh` "(R)-2-Bromobutane + alc. KOH": outcomes[1] was not compared: prt_r-2-bromobutane-alc-koh-1 has no coefficient
 - CHEM-005 on reaction `rxn_r-2-bromobutane-aq-koh` "(R)-2-Bromobutane + aq. KOH": outcomes[0] was not compared: prt_r-2-bromobutane-aq-koh-1 has no coefficient
 
-Stereo descriptors (CHEM-006) are not compared for any species: the rule is not built.
+CHEM-006 compares only the multisets of R/S and of E/Z letters of the stereo descriptors with the CIP labels RDKit gives (docs/VALIDATION_RULES.md, 2026-09-30 line); what it could not compare is listed above.
 
 ## Questions for the reviewer
 
 - `spc_invalid-smiles-demo` is the demo's deliberately unparsable record (CHEM-001 is the expected finding). Confirm it stays in the demo.
-- `spc_palmitic-acid`: the stored SMILES has 15 carbons, the entered formula and the name say 16. One of the three is wrong; the check only says the formula and the structure disagree.
+- `spc_palmitic-acid`: DATA CORRECTION BY THE REVIEWER (2026-09-30): the SMILES had 15 carbons; it is now `CCCCCCCCCCCCCCCC(=O)O` (16, hexadecanoic acid). The record stays REVIEW REQUIRED; nothing is marked verified, and CHEM-003 no longer fires for it.
 - Reactions: CHEM-005 compares nothing on the demo, because no reaction has a coefficient on every atom-contributing participant and a species (not a class or a reagent) for each of them. That is data, not a check failure.
 - Mechanisms: CHEM-008 is silent for all three. Mapped hydrogens (`[H:2]`) count as atoms of the step (RDKit removes them when it reads a structure; the adapter reads such a structure a second time to keep their maps).

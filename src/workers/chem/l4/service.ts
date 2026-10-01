@@ -4,12 +4,15 @@
  *     species, and CHEM-009 for its old AND its new canonical-structure group (through the derived map), nothing else;
  *   - a reaction or a mechanism that was created or updated: that record;
  *   - a deleted species: its groups are refreshed (its findings were cleared by the store's commit step, Q10 b).
- * Not re-checked, on purpose (reviewer's item c; see the step 4.3b report): records that merely REFER to what changed (a reaction
- * whose species changed structure, a species whose class changed its SMARTS). `checkAll` re-checks everything.
+ * Records that merely REFER to what changed are re-checked too (reviewer's follow-up b, step 4.3b review; fanout.ts): the reactions
+ * of a species whose check signature changed, the species of a class whose SMARTS or parents changed. At most RECHECK_CAP such
+ * records per change are queued at once; the rest wait in a backlog, in order, and are queued behind them as the queue empties
+ * (never dropped; they show as `pending`). `checkAll` re-checks everything.
  */
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { RecordRef } from '@/core/schema';
 import { createContext, refKey } from './context';
+import { classesReadByChecks, reactionsReferring, RECHECK_CAP, speciesListingClasses } from './fanout';
 import type { L4Ports, L4Service } from './contracts';
 import { runMechanismJob, runReactionJob } from './record-jobs';
 import { forgetSpecies, runSpeciesJob, speciesSignature } from './species-job';
@@ -31,10 +34,40 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
   const ctx = createContext(options);
   const onError = options.onError ?? rethrowLater;
   const dirty: Record<CheckedKind, Set<string>> = { species: new Set(), reaction: new Set(), mechanism: new Set() };
+  /** Queued only because something they refer to changed: a reaction among them with an unchanged plan is not sent again. */
+  const referred = new Set<string>();
+  /** Referrers behind the cap, in the order they will be queued (key `kind:id`). */
+  const backlog = new Map<string, RecordRef>();
+  ctx.watchBacklog(() => backlog.size);
   let scheduled = false;
   let running: Promise<void> | undefined;
 
-  const hasWork = (): boolean => KINDS.some((kind) => dirty[kind].size > 0);
+  const hasDirty = (): boolean => KINDS.some((kind) => dirty[kind].size > 0);
+  const hasWork = (): boolean => hasDirty() || backlog.size > 0;
+  const promote = (): void => {
+    for (const [key, ref] of [...backlog].slice(0, RECHECK_CAP)) {
+      backlog.delete(key);
+      if (isChecked(ref.kind)) dirty[ref.kind].add(ref.id);
+    }
+  };
+  const mark = (ref: RecordRef): void => {
+    if (!isChecked(ref.kind)) return;
+    backlog.delete(refKey(ref));
+    dirty[ref.kind].add(ref.id);
+  };
+  /** Queues referrers: the first RECHECK_CAP now (unless already queued), the rest behind them. */
+  const queueReferrers = (refs: readonly RecordRef[]): void => {
+    const fresh = refs.filter((ref) => !(isChecked(ref.kind) && dirty[ref.kind].has(ref.id)) && !backlog.has(refKey(ref)));
+    fresh.slice(0, RECHECK_CAP).forEach((ref) => {
+      mark(ref);
+      referred.add(refKey(ref));
+    });
+    for (const ref of fresh.slice(RECHECK_CAP)) {
+      backlog.set(refKey(ref), ref);
+      referred.add(refKey(ref));
+    }
+    if (fresh.length > 0) ctx.countReferrers(Math.min(fresh.length, RECHECK_CAP), fresh.length);
+  };
   const queue = (): void => {
     if (scheduled || ctx.disposed()) return;
     scheduled = true;
@@ -43,12 +76,15 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
 
   async function loop(): Promise<void> {
     while (hasWork() && !ctx.disposed()) {
+      if (!hasDirty()) promote();
       const due = { species: [...dirty.species].sort(), reaction: [...dirty.reaction].sort(), mechanism: [...dirty.mechanism].sort() };
+      const onlyIfChanged = new Set(due.reaction.filter((id) => referred.delete(refKey({ kind: 'reaction', id }))));
+      for (const id of due.species) referred.delete(refKey({ kind: 'species', id }));
       for (const kind of KINDS) dirty[kind].clear();
       try {
         // Species first: what they find (the not-checkable memory, the canonical structures) is what the others may lean on.
         await runSpeciesJob(ctx, due.species);
-        await runReactionJob(ctx, due.reaction);
+        await runReactionJob(ctx, due.reaction, onlyIfChanged);
         await runMechanismJob(ctx, due.mechanism);
       } catch (error) {
         onError(error);
@@ -71,6 +107,8 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
 
   const markAll = (): void => {
     const { records } = options.state();
+    backlog.clear();
+    referred.clear();
     for (const kind of KINDS) for (const id of Object.keys(records[kind])) dirty[kind].add(id);
   };
 
@@ -78,23 +116,39 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
     onChange(changes: ChangeSet): void {
       if (ctx.disposed()) return;
       const state = options.state();
+      const speciesMoved: string[] = [];
       for (const ref of changes.deleted) {
         if (!isChecked(ref.kind)) continue;
         dirty[ref.kind].delete(ref.id);
+        backlog.delete(refKey(ref));
+        referred.delete(refKey(ref));
+        if (ref.kind === 'species') speciesMoved.push(ref.id);
         if (ref.kind === 'species') forgetSpecies(ctx, ref.id);
         else ctx.forget(ref);
       }
-      for (const ref of changes.created) if (isChecked(ref.kind)) dirty[ref.kind].add(ref.id);
+      for (const ref of changes.created) {
+        if (!isChecked(ref.kind)) continue;
+        mark(ref);
+        referred.delete(refKey(ref));
+        if (ref.kind === 'species') speciesMoved.push(ref.id);
+      }
       for (const ref of changes.updated) {
         if (!isChecked(ref.kind)) continue;
         if (ref.kind !== 'species') {
-          dirty[ref.kind].add(ref.id);
+          mark(ref);
+          referred.delete(refKey(ref));
           continue;
         }
         const table = state.records.species;
         const species = Object.hasOwn(table, ref.id) ? table[ref.id] : undefined;
-        if (speciesSignature(species) !== ctx.sent.get(refKey(ref))) dirty.species.add(ref.id);
+        if (speciesSignature(species) !== ctx.sent.get(refKey(ref))) {
+          mark(ref);
+          referred.delete(refKey(ref));
+          speciesMoved.push(ref.id);
+        }
       }
+      // what refers to what changed (reactions of a species, species of a class), bounded: see queueReferrers
+      queueReferrers([...reactionsReferring(options, speciesMoved), ...speciesListingClasses(options, classesReadByChecks(changes))]);
       if (hasWork()) queue();
     },
     checkAll(): void {
@@ -103,7 +157,7 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
     },
     flush,
     statusOf(ref: RecordRef) {
-      if (isChecked(ref.kind) && dirty[ref.kind].has(ref.id)) return { state: 'pending' };
+      if (isChecked(ref.kind) && (dirty[ref.kind].has(ref.id) || backlog.has(refKey(ref)))) return { state: 'pending' };
       return ctx.statusOf(ref);
     },
     subscribe: ctx.subscribe,

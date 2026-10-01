@@ -1,11 +1,12 @@
 /**
- * CHEM-001 to CHEM-004 for one species (worker side, over a `StructureToolkit`). Only `invalid` means the structure is bad;
+ * CHEM-001 to CHEM-004 and CHEM-006 for one species (worker side, over a `StructureToolkit`). Only `invalid` means the structure is bad;
  * `unavailable` and `timeout` say nothing about it and give NO finding (Q7). What could not be compared is listed, not dropped:
  * a formula that cannot be read as element counts, a structure whose formula the toolkit could not derive.
  */
 import type { StructureFacts, StructureToolkit } from '../contracts';
 import type { CheckDraft, NotCompared, SpeciesCheckRequest, SpeciesCheckResult } from './contracts';
 import { countDifferences, countsText, parseFormula } from './formula';
+import { compareStereo } from './stereo';
 
 const checked = (notCompared: readonly NotCompared[] = []) => ({ state: 'checked', notCompared }) as const;
 
@@ -57,6 +58,15 @@ export async function checkOneSpecies(toolkit: StructureToolkit, request: Specie
       message: `The entered charge is ${request.charge}, but the structure has a net charge of ${outcome.facts.charge}.`,
       data: { entered: request.charge, derived: outcome.facts.charge },
     });
+  }
+  if (request.stereoDescriptors !== undefined) {
+    const stereo = compareStereo({
+      descriptors: request.stereoDescriptors,
+      cip: outcome.facts.cipCounts,
+      unspecifiedStereocentres: outcome.facts.unspecifiedStereocentres,
+    });
+    drafts.push(...stereo.drafts);
+    notCompared.push(...stereo.notCompared);
   }
   return {
     id: request.id,

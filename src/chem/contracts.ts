@@ -6,6 +6,20 @@
 import type { Species, StructureRep } from '@/core/schema';
 import type { FindingDraft } from '@/core/validation/contracts';
 
+/**
+ * RDKit's CIP labels of the structure, as counts (step 4.3b follow-up, CHEM-006): atoms `R`, `S`, and the pseudo-asymmetric
+ * lower-case `r`, `s`; double bonds `E`, `Z`. Unspecified elements are not counted here (see `unspecifiedStereocentres`); a
+ * double bond whose geometry is not given is not listed by RDKit at all.
+ */
+export interface CipCounts {
+  readonly R: number;
+  readonly S: number;
+  readonly r: number;
+  readonly s: number;
+  readonly E: number;
+  readonly Z: number;
+}
+
 export interface StructureFacts {
   readonly canonicalSmiles?: string;
   readonly formula?: string;
@@ -14,6 +28,8 @@ export interface StructureFacts {
   readonly specifiedStereocentres?: number;
   readonly unspecifiedStereocentres?: number;
   readonly hasDoubleBondStereo?: boolean;
+  /** The CIP labels RDKit gave, counted; undefined when RDKit did not give stereo tags (a warning says so). */
+  readonly cipCounts?: CipCounts;
   readonly aromatic?: boolean;
   readonly atomMaps: readonly number[];
   readonly warnings: readonly string[];

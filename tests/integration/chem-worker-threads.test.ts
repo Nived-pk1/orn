@@ -10,6 +10,7 @@ import type { CanonicalState, StructureRep } from '@/core/schema';
 import { spawnChemWorker } from '@/test-support/rpc-node-port';
 import { createFindingStore } from '@/core/validation/store';
 import { speciesRecord } from '@/test-support/l4-kit';
+import { realIndexes } from '@/test-support/l4-real-kit';
 import { createL4Service } from '@/workers/chem';
 import { createChemService } from '@/workers/chem/client';
 import { CHEM_CALL_TIMEOUT_MS, CHEM_SPECS } from '@/workers/chem/specs';
@@ -112,7 +113,7 @@ describe('the batch checks and the L4 service in a real thread (step 4.3b)', () 
     const findings = createFindingStore();
     const records = Object.fromEntries([speciesRecord('spc_1', 'CCO'), speciesRecord('spc_h', HANGS_RDKIT), speciesRecord('spc_3', 'CCCO')].map((r) => [r.id, r]));
     const state = { meta: {}, records: { species: records, reaction: {}, mechanism: {}, class: {} } } as unknown as CanonicalState;
-    const service = createL4Service({ state: () => state, findings, chem: createChemService(client), schedule: () => undefined });
+    const service = createL4Service({ state: () => state, findings, indexes: realIndexes(() => state), chem: createChemService(client), schedule: () => undefined });
     service.checkAll();
     await service.flush();
     expect(service.statusOf({ kind: 'species', id: 'spc_h' })).toMatchObject({ state: 'not_checked', reason: 'timeout', remembered: true });

@@ -124,7 +124,7 @@ function edges(): Species[] {
       reasons: ['Deliberately has a very long IUPAC name and no structure; the name is entered from memory and needs checking.'],
     }),
     species('palmitic-acid', 'Palmitic acid', {
-      smiles: `${'C'.repeat(15)}(=O)O`, formula: 'C16H32O2', classes: ['carboxylic-acids'], iupac: 'Hexadecanoic acid',
+      smiles: `${'C'.repeat(16)}(=O)O`, formula: 'C16H32O2', classes: ['carboxylic-acids'], iupac: 'Hexadecanoic acid',
       notes: 'Long unbranched chain: exercises structure depiction of long chains.',
     }),
   ];

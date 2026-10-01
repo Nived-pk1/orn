@@ -35,7 +35,7 @@ export interface ToolkitIdentity {
 /** The most items one call may carry (the worker refuses more with `BAD_REQUEST`); the service sends fewer. */
 export const MAX_CHECK_BATCH = 64;
 
-// ---- species: CHEM-001, 002, 003, 004 -------------------------------------------------------------------------------------
+// ---- species: CHEM-001 to 004 and 006 -------------------------------------------------------------------------------------
 
 export interface SpeciesCheckRequest {
   readonly id: string;
@@ -44,6 +44,8 @@ export interface SpeciesCheckRequest {
   readonly formula?: string;
   /** The charge as entered, if any. */
   readonly charge?: number;
+  /** The species' stereo descriptors as entered (CHEM-006); absent when it has none. */
+  readonly stereoDescriptors?: readonly string[];
 }
 
 export interface SpeciesCheckResult {

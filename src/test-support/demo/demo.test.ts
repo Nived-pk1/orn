@@ -110,7 +110,7 @@ describe('demo dataset covers the specification (TEST_STRATEGY.md §3)', () => {
     expect(species('spc_invalid-smiles-demo').review.status).toBe('review_required');
     expect(species('spc_cholesterol').structure).toBeUndefined();
     expect((species('spc_cholesterol').names.iupac ?? '').length).toBeGreaterThan(100);
-    expect(species('spc_palmitic-acid').structure?.value).toContain('C'.repeat(15));
+    expect(species('spc_palmitic-acid').structure?.value).toBe('CCCCCCCCCCCCCCCC(=O)O'); // 16 carbons (reviewer data correction, step 4.3b review)
     expect(species('spc_lactic-acid').names.aliases.some((a) => /[α₃₆]/.test(a))).toBe(true);
   });
 

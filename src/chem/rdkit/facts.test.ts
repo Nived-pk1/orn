@@ -82,6 +82,12 @@ describe('stereo', () => {
     expect([out.specifiedStereocentres, out.unspecifiedStereocentres, out.hasDoubleBondStereo]).toEqual([2, 2, true]);
   });
 
+  it('counts the CIP labels by letter (R, S, lower-case r, s, E, Z); unspecified ones are not counted; undefined when no tags', () => {
+    const out = factsFor({ ...ETHANOL_SPEC, stereo: stereo([[1, '(S)'], [3, '(R)'], [4, '(R)'], [5, '(r)'], [7, '(?)'], [8, '(s)']], [[1, 2, '(E)'], [3, 4, '(Z)'], [5, 6, '(?)']]) });
+    expect(out.cipCounts).toEqual({ R: 2, S: 1, r: 1, s: 1, E: 1, Z: 1 });
+    expect(factsFor({ ...ETHANOL_SPEC, stereo: '{"x":1}' }).cipCounts).toBeUndefined();
+  });
+
   it('an unconfigured double bond is not specified stereo', () => {
     expect(factsFor({ ...ETHANOL_SPEC, stereo: stereo([], [[1, 2, '(?)']]) }).hasDoubleBondStereo).toBe(false);
   });

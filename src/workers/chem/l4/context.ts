@@ -39,7 +39,11 @@ export interface L4Context {
   call<T>(method: Method, items: number, run: () => Promise<CheckCall<T>>): Promise<CheckCall<T>>;
   countStale(): void;
   countRemembered(): void;
+  /** One change queued `now` referrer records at once (and `total` of them in all, the rest behind the cap). */
+  countReferrers(now: number, total: number): void;
   stats(): L4Stats;
+  /** The service tells where to read how many referrers wait behind the cap. */
+  watchBacklog(size: () => number): void;
   subscribe(listener: () => void): () => void;
   dispose(): void;
   disposed(): boolean;
@@ -52,6 +56,9 @@ export function createContext(ports: L4Ports): L4Context {
   const items: Record<Method, number> = { checkSpecies: 0, checkReaction: 0, checkMechanism: 0, matches: 0 };
   let stale = 0;
   let remembered = 0;
+  let backlogSize = (): number => 0;
+  let queued = 0;
+  let maxAtOnce = 0;
   let version = 'unknown';
   let done = false;
   const tell = (): void => {
@@ -90,7 +97,12 @@ export function createContext(ports: L4Ports): L4Context {
     },
     countStale: () => void (stale += 1),
     countRemembered: () => void (remembered += 1),
-    stats: () => ({ calls: { ...calls }, items: { ...items }, staleDropped: stale, rememberedSkipped: remembered }),
+    countReferrers(now, total) {
+      queued += total;
+      maxAtOnce = Math.max(maxAtOnce, now);
+    },
+    watchBacklog: (size) => void (backlogSize = size),
+    stats: () => ({ calls: { ...calls }, items: { ...items }, staleDropped: stale, rememberedSkipped: remembered, referrerQueued: queued, maxQueuedAtOnce: maxAtOnce, backlog: backlogSize() }),
     subscribe(listener) {
       listeners.add(listener);
       return () => void listeners.delete(listener);

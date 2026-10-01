@@ -59,6 +59,7 @@ async function runKind<Q extends { readonly path: string }, R extends { readonly
   ctx: L4Context,
   config: Kind<Q, R>,
   ids: readonly string[],
+  unchangedOk: ReadonlySet<string>,
 ): Promise<void> {
   const state = ctx.ports.state();
   interface Due {
@@ -79,6 +80,8 @@ async function runKind<Q extends { readonly path: string }, R extends { readonly
       continue;
     }
     const sig = sigOf(plan);
+    // queued only because something it refers to changed, and its plan came out the same: its answer cannot differ
+    if (unchangedOk.has(id) && ctx.sent.get(refKey(ref)) === sig) continue;
     ctx.sent.set(refKey(ref), sig);
     const entry: Due = { id, ref, sig, plan, held: [] };
     ctx.setStatus(ref, { state: 'pending' });
@@ -135,5 +138,7 @@ async function runKind<Q extends { readonly path: string }, R extends { readonly
   ctx.merge(subjects, config.ruleIds, entries);
 }
 
-export const runReactionJob = (ctx: L4Context, ids: readonly string[]): Promise<void> => runKind(ctx, reactionKind, ids);
-export const runMechanismJob = (ctx: L4Context, ids: readonly string[]): Promise<void> => runKind(ctx, mechanismKind, ids);
+/** `unchangedOk`: ids queued only because a referenced record changed; one whose plan is the one already answered is not sent again. */
+export const runReactionJob = (ctx: L4Context, ids: readonly string[], unchangedOk: ReadonlySet<string> = new Set()): Promise<void> =>
+  runKind(ctx, reactionKind, ids, unchangedOk);
+export const runMechanismJob = (ctx: L4Context, ids: readonly string[]): Promise<void> => runKind(ctx, mechanismKind, ids, new Set());

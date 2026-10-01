@@ -17,7 +17,7 @@ import { L4_BATCH_SIZE } from './contracts';
 import type { Entry, L4Context } from './context';
 import { refKey } from './context';
 
-export const SPECIES_RULES: readonly string[] = ['CHEM-001', 'CHEM-002', 'CHEM-003', 'CHEM-004', 'CHEM-007'];
+export const SPECIES_RULES: readonly string[] = ['CHEM-001', 'CHEM-002', 'CHEM-003', 'CHEM-004', 'CHEM-006', 'CHEM-007'];
 const GROUP_RULES: readonly string[] = ['CHEM-009'];
 
 const structureKey = (request: SpeciesCheckRequest): string => `${request.structure.format}\u0000${request.structure.value}`;

@@ -10,7 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import type { CanonicalState, Reaction, RecordRef, Species } from '@/core/schema';
 import { validator } from '@/core/validation';
-import { realChemPort, realChecks } from '@/test-support/l4-real-kit';
+import { realChemPort, realChecks, realIndexes } from '@/test-support/l4-real-kit';
 import { demoRecords } from '@/test-support/legacy-classify-kit';
 import { stateOfRecords } from '@/test-support/legacy-map-kit';
 import { createL4Service, type L4Service } from '@/workers/chem';
@@ -30,7 +30,7 @@ afterAll(() => services.forEach((service) => service.dispose()));
 /** A real store over `state`, a service attached to it (the store's ChangeSets feed `onChange`), scheduling left to `flush`. */
 function attach(state: CanonicalState) {
   const store = createCanonicalStore({ initial: state });
-  const service = createL4Service({ state: () => store.getState(), findings: store.findings, chem: realChemPort(checks), schedule: () => undefined });
+  const service = createL4Service({ state: () => store.getState(), findings: store.findings, indexes: () => store.getIndexes(), chem: realChemPort(checks), schedule: () => undefined });
   services.push(service);
   store.subscribe((changes) => service.onChange(changes));
   return { store, service };
@@ -54,8 +54,8 @@ describe('the demo dataset (Phase 4 DoD)', () => {
     expect(store.findings.all({ severity: 'error' })).toHaveLength(errorsBefore);
     const perRule: Record<string, number> = {};
     for (const f of found) perRule[f.ruleId] = (perRule[f.ruleId] ?? 0) + 1;
-    expect(perRule).toEqual({ 'CHEM-001': 1, 'CHEM-003': 1 });
-    expect(found.find((f) => f.ruleId === 'CHEM-003')?.subject).toEqual(sp('spc_palmitic-acid'));
+    // palmitic acid had a 15-carbon SMILES (CHEM-003); the reviewer corrected it to 16 carbons (step 4.3b review, follow-up c)
+    expect(perRule).toEqual({ 'CHEM-001': 1 });
     // every species with a structure was checked, in batches of 32
     expect(service.stats().items.checkSpecies).toBe(65);
     expect(service.stats().calls.checkSpecies).toBe(3);
@@ -152,13 +152,16 @@ describe('what an edit re-checks, through the real store', () => {
     const { store, service } = attach(demo());
     service.checkAll();
     await service.flush();
+    mustOk(store.dispatch({ label: 'Add', commands: [{ type: 'record.create', record: { ...speciesOf(store, 'spc_ethanol'), id: 'spc_keep', names: { canonical: 'Keep', common: [], aliases: [] }, structure: smiles('C(C)(C)(C)(C)C'), formula: undefined } as unknown as Species }] }));
+    await service.flush();
+    expect(l4(store)).toContain('CHEM-002 spc_keep structure');
     const records = { ...store.getState().records.species };
     delete (records as Record<string, unknown>)['spc_invalid-smiles-demo'];
     const next = { ...store.getState(), records: { ...store.getState().records, species: records } } as CanonicalState;
     const result = store.replaceState(next, 'restore');
     if (!result.ok) throw new Error(result.error.message);
     expect(l4(store).some((line) => line.includes('invalid-smiles'))).toBe(false);
-    expect(l4(store)).toContain('CHEM-003 spc_palmitic-acid formula'); // untouched subjects keep theirs
+    expect(l4(store)).toContain('CHEM-002 spc_keep structure'); // untouched subjects keep theirs
   });
 });
 
@@ -192,7 +195,7 @@ describe('CHEM-009 and CHEM-005 through the real worker checks', () => {
     const stateWith = (r: Reaction): CanonicalState => stateOfRecords([species('spc_a', 'CCO'), species('spc_b', 'O=O'), species('spc_c', 'CC=O'), species('spc_d', 'O'), r]);
     const findings = (await import('@/core/validation/store')).createFindingStore();
     const state = { current: stateWith(reaction(1)) };
-    const service = createL4Service({ state: () => state.current, findings, chem: realChemPort(checks), schedule: () => undefined });
+    const service = createL4Service({ state: () => state.current, findings, indexes: realIndexes(() => state.current), chem: realChemPort(checks), schedule: () => undefined });
     services.push(service);
     service.checkAll();
     await service.flush();
@@ -202,6 +205,61 @@ describe('CHEM-009 and CHEM-005 through the real worker checks', () => {
     await service.flush();
     expect(findings.all({ level: 4 })).toEqual([]);
     expect(service.statusOf({ kind: 'reaction', id: 'rxn_t' })).toEqual({ state: 'checked', notCompared: [] });
+  });
+});
+
+describe('records that refer to a changed record are re-checked (follow-up b), real RDKit', () => {
+  const species = (id: string, value: string, classIds: string[] = []) => ({ id, kind: 'species', structure: smiles(value), classIds }) as unknown as Species;
+  const reaction = {
+    id: 'rxn_t',
+    kind: 'reaction',
+    namedReactionIds: [],
+    transformationIds: [],
+    conceptIds: [],
+    reactionTypes: [],
+    mechanismClasses: [],
+    mechanismIds: [],
+    participants: [
+      { id: 'prt_a', ref: { kind: 'species', id: 'spc_a' }, role: 'reactant', coefficient: 2 },
+      { id: 'prt_b', ref: { kind: 'species', id: 'spc_b' }, role: 'reactant', coefficient: 1 },
+    ],
+    conditionVariants: [],
+    outcomes: [{ id: 'out_1', conceptIds: [], selectivity: 'none', conditionVariantIds: [], products: [{ id: 'prd_1', ref: { kind: 'species', id: 'spc_c' }, role: 'main', coefficient: 2 }, { id: 'prd_2', ref: { kind: 'species', id: 'spc_d' }, role: 'byproduct', coefficient: 2 }] }],
+  } as unknown as Reaction;
+
+  async function start(records: readonly unknown[]) {
+    const findings = (await import('@/core/validation/store')).createFindingStore();
+    const state = { current: stateOfRecords(records as never) };
+    const service = createL4Service({ state: () => state.current, findings, indexes: realIndexes(() => state.current), chem: realChemPort(checks), schedule: () => undefined });
+    services.push(service);
+    service.checkAll();
+    await service.flush();
+    return { findings, state, service };
+  }
+  const change = (updated: { kind: string; id: string }[], patches: unknown[] = []) =>
+    ({ revision: 1, label: 't', cause: 'command', created: [], updated, deleted: [], patches, inversePatches: [] }) as never;
+
+  it('a species edit changes the CHEM-005 of its reaction, which was not edited', async () => {
+    const { findings, state, service } = await start([species('spc_a', 'CCO'), species('spc_b', 'O=O'), species('spc_c', 'CC=O'), species('spc_d', 'O'), reaction]);
+    expect(findings.all({ level: 4 })).toEqual([]);
+    state.current = stateOfRecords([species('spc_a', 'CCO'), species('spc_b', 'O=O'), species('spc_c', 'CC(C)=O'), species('spc_d', 'O'), reaction] as never);
+    service.onChange(change([{ kind: 'species', id: 'spc_c' }]));
+    await service.flush();
+    expect(findings.all({ level: 4 }).map((f) => [f.ruleId, f.subject.id])).toEqual([['CHEM-005', 'rxn_t']]);
+    state.current = stateOfRecords([species('spc_a', 'CCO'), species('spc_b', 'O=O'), species('spc_c', 'CC=O'), species('spc_d', 'O'), reaction] as never);
+    service.onChange(change([{ kind: 'species', id: 'spc_c' }]));
+    await service.flush();
+    expect(findings.all({ level: 4 })).toEqual([]);
+  });
+
+  it('a class SMARTS edit changes the CHEM-007 of the species that list it, which were not edited', async () => {
+    const klass = (smarts: string) => ({ id: 'cls_alc', kind: 'class', parentIds: [], generic: { smarts } }) as never;
+    const { findings, state, service } = await start([klass('[CX4][OX2H]'), species('spc_a', 'CCO', ['cls_alc']), species('spc_other', 'CC=O')]);
+    expect(findings.all({ level: 4 })).toEqual([]);
+    state.current = stateOfRecords([klass('[CX3]=O'), species('spc_a', 'CCO', ['cls_alc']), species('spc_other', 'CC=O')] as never);
+    service.onChange(change([{ kind: 'class', id: 'cls_alc' }], [{ op: 'replace', path: ['records', 'class', 'cls_alc', 'generic', 'smarts'], value: '[CX3]=O' }]));
+    await service.flush();
+    expect(findings.all({ level: 4 }).map((f) => [f.ruleId, f.subject.id])).toContainEqual(['CHEM-007', 'spc_a']);
   });
 });
 

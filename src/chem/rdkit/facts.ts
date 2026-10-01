@@ -12,7 +12,7 @@
  *   atomMaps         the map numbers in the canonical SMILES, ascending, repeats kept.
  * A trap (see errors.ts) is NOT caught here: it propagates so the adapter can drop the module.
  */
-import type { StructureFacts } from '../contracts';
+import type { CipCounts, StructureFacts } from '../contracts';
 import { describe, isTrap } from './errors';
 import { symbolOf } from './elements';
 import { atomMapsOf, smilesAtoms } from './smiles-atoms';
@@ -74,7 +74,10 @@ interface StereoCounts {
   readonly specified: number;
   readonly unspecified: number;
   readonly doubleBond: boolean;
+  readonly cip: CipCounts;
 }
+
+const LABELS: readonly (keyof CipCounts)[] = ['R', 'S', 'r', 's', 'E', 'Z'];
 
 /** `(?)` marks an element with no configuration given; any other label ((R), (S), (r), (s), (E), (Z)) is a configuration. */
 function readStereo(text: string): StereoCounts | undefined {
@@ -82,7 +85,10 @@ function readStereo(text: string): StereoCounts | undefined {
   if (!isRecord(root) || !Array.isArray(root.CIP_atoms) || !Array.isArray(root.CIP_bonds)) return undefined;
   const labelOf = (entry: unknown): string => (Array.isArray(entry) ? String(entry[entry.length - 1]) : '');
   const atoms = root.CIP_atoms.map(labelOf);
-  return { specified: atoms.filter((l) => l !== '(?)').length, unspecified: atoms.filter((l) => l === '(?)').length, doubleBond: root.CIP_bonds.map(labelOf).some((l) => l !== '(?)') };
+  const bonds = root.CIP_bonds.map(labelOf);
+  const count = (label: string): number => atoms.filter((l) => l === `(${label})`).length + bonds.filter((l) => l === `(${label})`).length;
+  const cip = Object.fromEntries(LABELS.map((label) => [label, count(label)])) as unknown as CipCounts;
+  return { specified: atoms.filter((l) => l !== '(?)').length, unspecified: atoms.filter((l) => l === '(?)').length, doubleBond: bonds.some((l) => l !== '(?)'), cip };
 }
 
 export function factsOf(mol: RdkitMol): StructureFacts {
@@ -118,7 +124,7 @@ export function factsOf(mol: RdkitMol): StructureFacts {
     ...(formula === undefined ? {} : { formula }),
     ...(total === undefined ? {} : { charge: total }),
     ...(heavy === undefined ? {} : { heavyAtomCount: heavy }),
-    ...(stereo === undefined ? {} : { specifiedStereocentres: stereo.specified, unspecifiedStereocentres: stereo.unspecified, hasDoubleBondStereo: stereo.doubleBond }),
+    ...(stereo === undefined ? {} : { specifiedStereocentres: stereo.specified, unspecifiedStereocentres: stereo.unspecified, hasDoubleBondStereo: stereo.doubleBond, cipCounts: stereo.cip }),
     ...(json?.aromaticAtoms === undefined ? {} : { aromatic: json.aromaticAtoms > 0 }),
     atomMaps: atoms === undefined ? [] : atomMapsOf(atoms),
     warnings,

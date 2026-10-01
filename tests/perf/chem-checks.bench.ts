@@ -9,7 +9,7 @@ import { afterAll, bench, describe } from 'vitest';
 import { createChemChecks, createRdkitToolkit, loadRdkit, type RdkitModule } from '@/chem';
 import type { CanonicalState, Species } from '@/core/schema';
 import { createFindingStore } from '@/core/validation/store';
-import { realChemPort } from '@/test-support/l4-real-kit';
+import { realChemPort, realIndexes } from '@/test-support/l4-real-kit';
 import { demoRecords } from '@/test-support/legacy-classify-kit';
 import { stateOfRecords } from '@/test-support/legacy-map-kit';
 import { SLOW_BENCH_OPTIONS } from '@/test-support/perf-kit';
@@ -45,7 +45,7 @@ const fail = (what: string, answer: unknown): never => {
 
 async function serviceRun(state: CanonicalState, chem: ReturnType<typeof realChemPort>, expectFindings?: (n: number) => boolean): Promise<void> {
   const findings = createFindingStore();
-  const service = createL4Service({ state: () => state, findings, chem, schedule: () => undefined });
+  const service = createL4Service({ state: () => state, findings, indexes: realIndexes(() => state), chem, schedule: () => undefined });
   service.checkAll();
   await service.flush();
   service.dispose();

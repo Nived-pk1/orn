@@ -36,9 +36,9 @@ export const L4_RULES: readonly L4Rule[] = [
     id: 'CHEM-006',
     defaultSeverity: 'warning',
     owner: 'worker',
-    implemented: false,
-    reason: 'the rule does not say how a free-text descriptor ("2R", "Z", "cis") is compared with a structure; needs the reviewer (step 4.3b)',
-    description: 'Stereo descriptors disagree with the structure',
+    implemented: true,
+    description:
+      'Stereo descriptors disagree with the structure: only the multisets of R/S and of E/Z letters against RDKit CIP labels, locants and words ignored; not compared (status, never a finding) for words-only descriptors, lower-case r/s, unspecified stereocentres, or a count that may only be fewer centres named',
   },
   {
     id: 'CHEM-007',
