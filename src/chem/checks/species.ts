@@ -73,5 +73,6 @@ export async function checkOneSpecies(toolkit: StructureToolkit, request: Specie
     status: checked(notCompared),
     drafts,
     ...(outcome.facts.canonicalSmiles === undefined ? {} : { canonicalSmiles: outcome.facts.canonicalSmiles }),
+    ...(outcome.facts.formula === undefined || outcome.facts.formula.trim() === '' ? {} : { formula: outcome.facts.formula }),
   };
 }

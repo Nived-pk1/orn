@@ -107,6 +107,8 @@ export interface TestEnvOptions {
   /** Replaces the compute worker factory (a start that fails). */
   readonly computeFactory?: WorkerFactory;
   readonly seed?: number;
+  /** Chem, layout and search factories (step 5.1b: `engineKit().factories`); absent: the environment has no such worker. */
+  readonly workers?: Partial<Pick<AppEnv['workers'], 'chem' | 'layout' | 'search'>>;
 }
 
 export interface TestEnv {
@@ -147,7 +149,7 @@ export function testEnv(options: TestEnvOptions = {}): TestEnv {
     ...(options.noIndexedDb === true ? {} : { indexedDB: world.indexedDB, IDBKeyRange }),
     ...(options.noLocks === true ? {} : { locks: world.locks }),
     ...(options.noChannel === true ? {} : { channel: memoryBroadcastFactory(world.channels) }),
-    workers: { compute: options.computeFactory ?? memory.factory },
+    workers: { compute: options.computeFactory ?? memory.factory, ...(options.workers ?? {}) },
     clock: { nowMs: () => (ms += 1) },
     random: { next: random },
     timers: scheduler,

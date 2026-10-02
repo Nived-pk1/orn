@@ -12,6 +12,11 @@
  *     record is refreshed, its document is the last one sent (`status().backlog` says how many wait).
  *   - `replace` and `remote` changes, a `REVISION_MISMATCH` (a restarted worker, a missed change) and any failure of the worker
  *     lead to ONE full load of the current state. The previous index keeps answering searches until the load lands.
+ *   - `refresh(ids)` (step 5.1b, Q9): the formulas the L4 service derived for these species changed; their documents are rebuilt
+ *     (and sent only if they differ), like any other derived-data change.
+ *   - `adopt(revision)` (step 5.1b): the worker's index was loaded from the warm-boot cache (`loadSerialized`) instead of by a
+ *     full load. Allowed only while the store is still at that revision (else answers false and the caller loads); the sync then
+ *     does not know which documents the cache held, so from then on every rebuilt document is sent and every removal is sent.
  *   - Changes are never analysed against a state that moved on: documents are built from the state as it is when the pass runs,
  *     labelled with the store's revision at that moment, and every change since the last send is in the queue by then.
  * No search, no chemistry, no persistence: the engine is in the worker, the document in `src/search`.
@@ -35,6 +40,10 @@ export interface SearchSyncPorts {
   /** The store's revision, as of `state()`. */
   readonly revision: () => number;
   readonly service: Pick<SearchService, 'load' | 'apply'>;
+  /** The formula the chem worker derived for a record's structure (the L4 service's memory); absent: no derived formulas. */
+  readonly derivedFormulaOf?: (ref: RecordRef) => string | undefined;
+  /** Called whenever `status()` may have changed (work queued, a pass done, a load adopted); optional. */
+  readonly onStatus?: () => void;
   /** The debounce: called when work is waiting, with the function that does it; called at most once until it has run. */
   readonly schedule: (run: () => void) => void;
 }
@@ -56,6 +65,8 @@ export interface SearchSyncStatus {
 
 export interface SearchSyncStats {
   readonly loads: number;
+  /** Times a warm-boot cache was adopted instead of a full load. */
+  readonly adopts: number;
   readonly updates: number;
   readonly upserts: number;
   readonly removals: number;
@@ -75,6 +86,13 @@ export interface SearchSync {
   onChange(changes: ChangeSet): void;
   /** Load the whole current state into the worker's index (boot, a restarted worker, "rebuild"). */
   reload(): void;
+  /** The L4 service derived (or dropped) the formula of these species: rebuild their documents. Ignored while a full load is pending. */
+  refresh(ids: readonly string[]): void;
+  /**
+   * The worker's index holds the documents of `revision` (loaded from the warm-boot cache). True when adopted (nothing is loaded
+   * again); false, and nothing changes, when the store is no longer at `revision` or the sync was disposed.
+   */
+  adopt(revision: number): boolean;
   /** Runs what is queued now and resolves when it and anything queued meanwhile is done (or the worker failed). */
   flush(): Promise<void>;
   status(): SearchSyncStatus;
@@ -90,20 +108,24 @@ export function createSearchSync(ports: SearchSyncPorts): SearchSync {
   const dirty = new Map<string, RecordRef>();
   const backlog = new Map<string, RecordRef>();
   let needsLoad = true;
+  /** True after `adopt`: the signatures of what the worker holds are unknown, so nothing is skipped as unchanged. */
+  let sentUnknown = false;
   let indexRevision: number | null = null;
   let reason = '';
   let failed = false;
   let scheduled = false;
   let disposed = false;
   let running: Promise<void> | undefined;
-  const stat = { loads: 0, updates: 0, upserts: 0, removals: 0, removalsUnknown: 0, mismatches: 0, failures: 0, dependentQueued: 0, maxQueuedAtOnce: 0, unchanged: 0 };
+  const stat = { loads: 0, adopts: 0, updates: 0, upserts: 0, removals: 0, removalsUnknown: 0, mismatches: 0, failures: 0, dependentQueued: 0, maxQueuedAtOnce: 0, unchanged: 0 };
 
   /** Also: the store moved on without a document changing; the index revision follows it (the warm-boot cache is keyed by it). */
   const hasWork = (): boolean => needsLoad || dirty.size > 0 || backlog.size > 0 || (indexRevision !== null && indexRevision !== ports.revision());
+  const tell = (): void => ports.onStatus?.();
   const queue = (): void => {
     if (scheduled || disposed) return;
     scheduled = true;
     ports.schedule(() => void flush());
+    tell();
   };
   const promote = (): void => {
     for (const [key, ref] of [...backlog].slice(0, REFRESH_CAP)) {
@@ -118,7 +140,7 @@ export function createSearchSync(ports: SearchSyncPorts): SearchSync {
 
   function build(refs: readonly RecordRef[]): { readonly docs: Map<string, SearchDocument>; readonly gone: string[] } {
     const state = ports.state();
-    const documentPorts: DocumentPorts = documentPortsOf(state, ports.indexes());
+    const documentPorts: DocumentPorts = documentPortsOf(state, ports.indexes(), ports.derivedFormulaOf);
     const docs = new Map<string, SearchDocument>();
     const gone: string[] = [];
     for (const ref of refs) {
@@ -146,6 +168,7 @@ export function createSearchSync(ports: SearchSyncPorts): SearchSync {
       return;
     }
     sent = new Map([...docs].map(([id, doc]) => [id, sign(doc)] as const));
+    sentUnknown = false;
     indexRevision = revision;
     reason = '';
     stat.loads += 1;
@@ -161,13 +184,13 @@ export function createSearchSync(ports: SearchSyncPorts): SearchSync {
     const signatures = new Map<string, string>();
     for (const [id, doc] of docs) {
       const signature = sign(doc);
-      if (sent.get(id) === signature) stat.unchanged += 1;
+      if (!sentUnknown && sent.get(id) === signature) stat.unchanged += 1;
       else {
         upsert.push(doc);
         signatures.set(id, signature);
       }
     }
-    const remove = gone.filter((id) => sent.has(id));
+    const remove = sentUnknown ? gone : gone.filter((id) => sent.has(id));
     if (upsert.length === 0 && remove.length === 0 && indexRevision === revision) return;
     const outcome = await ports.service.apply({ fromRevision: indexRevision as number, revision, upsert, remove });
     if (!outcome.ok) {
@@ -205,9 +228,11 @@ export function createSearchSync(ports: SearchSyncPorts): SearchSync {
         await running;
         continue;
       }
-      if (!hasWork() || disposed || failed) return;
+      if (!hasWork() || disposed || failed) return tell();
       running = pass().finally(() => void (running = undefined));
+      tell();
       await running;
+      tell();
     }
   }
 
@@ -241,6 +266,30 @@ export function createSearchSync(ports: SearchSyncPorts): SearchSync {
       needsLoad = true;
       forget();
       queue();
+    },
+    refresh(ids) {
+      if (disposed || needsLoad) return;
+      const table = ports.state().records.species;
+      for (const id of ids) {
+        if (!Object.hasOwn(table, id)) continue;
+        const ref: RecordRef = { kind: 'species', id };
+        backlog.delete(keyOf(ref));
+        dirty.set(keyOf(ref), ref);
+      }
+      if (hasWork()) queue();
+    },
+    adopt(revision) {
+      if (disposed || revision !== ports.revision()) return false;
+      forget();
+      needsLoad = false;
+      sentUnknown = true;
+      sent = new Map();
+      indexRevision = revision;
+      reason = '';
+      failed = false;
+      stat.adopts += 1;
+      tell();
+      return true;
     },
     flush,
     status: () => ({

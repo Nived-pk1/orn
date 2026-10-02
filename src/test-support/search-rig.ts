@@ -6,7 +6,7 @@
 import type { StoreHandle } from '@/core/commands';
 import { indexEngine } from '@/core/indexes/full';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
-import type { CanonicalState } from '@/core/schema';
+import type { CanonicalState, RecordRef } from '@/core/schema';
 import { createSearchEngine } from '@/search/engine';
 import type { SearchDocument, SearchEngine, SearchHit, SearchQuery } from '@/search/contracts';
 import { createSearchHandlers } from '@/workers/search/handlers';
@@ -31,7 +31,7 @@ export interface SearchRig {
   boot(): Promise<void>;
 }
 
-export function searchRig(store: StoreHandle, options: { readonly schedule?: (run: () => void) => void } = {}): SearchRig {
+export function searchRig(store: StoreHandle, options: { readonly schedule?: (run: () => void) => void; readonly derivedFormulaOf?: (ref: RecordRef) => string | undefined } = {}): SearchRig {
   const engines: SearchEngine[] = [];
   const events: WorkerEvent[] = [];
   const workers = createMemoryWorkers((worker) => {
@@ -43,7 +43,7 @@ export function searchRig(store: StoreHandle, options: { readonly schedule?: (ru
   const service = createSearchService({ client });
   // the store keeps the core indexes only; the full ones (topics, relationships) are kept like the app will: apply each change
   let indexes: ReadonlyIndexes = indexEngine.build(store.getState(), store.getRevision());
-  const sync = createSearchSync({ state: store.getState, indexes: () => indexes, revision: store.getRevision, service, schedule: options.schedule ?? (() => undefined) });
+  const sync = createSearchSync({ state: store.getState, indexes: () => indexes, revision: store.getRevision, service, schedule: options.schedule ?? (() => undefined), ...(options.derivedFormulaOf === undefined ? {} : { derivedFormulaOf: options.derivedFormulaOf }) });
   store.subscribe((changes) => {
     indexes = changes.cause === 'replace' ? indexEngine.build(store.getState(), store.getRevision()) : indexEngine.apply(indexes, changes, store.getState());
     sync.onChange(changes);
@@ -71,9 +71,9 @@ export function documentsOf(engine: SearchEngine): SearchDocument[] {
 }
 
 /** An engine loaded with a fresh build of the state's documents. */
-export function freshEngine(state: CanonicalState, revision: number): SearchEngine {
+export function freshEngine(state: CanonicalState, revision: number, derivedFormulaOf?: (ref: RecordRef) => string | undefined): SearchEngine {
   const engine = createSearchEngine();
-  engine.load(fullDocuments(state, revision), revision);
+  engine.load(fullDocuments(state, revision, derivedFormulaOf), revision);
   return engine;
 }
 

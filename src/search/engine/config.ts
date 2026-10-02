@@ -3,7 +3,8 @@
  * Nothing outside `src/search/engine/` imports minisearch (dependency-cruiser `minisearch-only-in-adapter`).
  *
  *   name, alias   boost 4, prefix search ON (the only fields it applies to), fuzzy by term length
- *   formula       boost 3, exact term, no prefix, no fuzzy (formulas and abbreviations must be exact)
+ *   formula       boost 3, exact term, no prefix, no fuzzy (formulas and abbreviations must be exact); the entered AND the derived formula
+ *                 of a document are one field (config 2, step 5.1b)
  *   structure     boost 2, the trimmed text as ONE case-sensitive term, exact
  *   tags          boost 2, text boost 1: no prefix, fuzzy by term length
  * Fuzzy: edit distance 1 for terms of 5 or more characters, 2 for 9 or more, none shorter.
@@ -17,7 +18,7 @@ export type FieldName = (typeof FIELDS)[number];
 export const BOOST: Readonly<Record<FieldName, number>> = { name: 4, alias: 4, formula: 3, structure: 2, tags: 2, text: 1 };
 
 /** Changes whenever the options above change; a serialised index built under another value is refused (`BAD_INDEX`). */
-export const CONFIG_ID = 'orn-search-config-1';
+export const CONFIG_ID = 'orn-search-config-2';
 
 /** What MiniSearch indexes for one document: one string per field (several values joined by newlines). */
 export interface MiniDoc {

@@ -30,7 +30,7 @@ export function miniDocOf(doc: SearchDocument): MiniDoc {
     id: doc.id,
     name: lines(doc.names),
     alias: lines(doc.aliases),
-    formula: doc.formula ?? '',
+    formula: lines([doc.formula ?? '', doc.derivedFormula ?? ''].filter((value) => value !== '')),
     structure: doc.structureText ?? '',
     tags: lines(doc.tags),
     text: doc.text,

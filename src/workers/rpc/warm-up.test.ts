@@ -224,3 +224,64 @@ describe('layout warmUp', () => {
     for (const result of [first, failed] satisfies WarmUpResult[]) expect(structuredClone(result)).toEqual(result);
   });
 });
+
+describe('gate.retry (step 5.1b, step 5.0 review decision 3): an engine that could not load is retried ONLY when asked', () => {
+  it('unavailable -> cold on retry(), then the next call loads again and works; nothing retries by itself, however long we wait', async () => {
+    const fake = createFakeRdkit({ CCO: ETHANOL_SPEC });
+    let loads = 0;
+    const { chem, workers, gate } = chemRig(async () => {
+      loads += 1;
+      if (loads === 1) throw new Error('the wasm file is blocked');
+      return fake.module;
+    });
+    const heard: string[] = [];
+    gate.subscribe((state, message) => heard.push(`${state}${message === null ? '' : `:${message}`}`));
+    expect(await chem.parse(smiles('CCO'))).toMatchObject({ ok: false, reason: 'unavailable' });
+    expect(gate.state()).toBe('unavailable');
+    expect(gate.message()).toContain('could not be loaded');
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(methodsReceived(workers.workers[0])).toEqual(['warmUp']);
+    expect(await chem.parse(smiles('CCO'))).toMatchObject({ ok: false, reason: 'unavailable' });
+    expect(loads).toBe(1);
+
+    expect(gate.retry()).toBe(true);
+    expect(gate.state()).toBe('cold');
+    expect(gate.message()).toBeNull();
+    expect(await chem.parse(smiles('CCO'))).toMatchObject({ ok: true });
+    expect(loads).toBe(2);
+    expect(gate.state()).toBe('warm');
+    expect(methodsReceived(workers.workers[0])).toEqual(['warmUp', 'warmUp', 'parse']);
+    expect(heard).toEqual(['warming', expect.stringMatching(/^unavailable:/), 'cold', 'warming', 'warm']);
+  });
+
+  it('retry() changes nothing unless the engine is unavailable (cold, warming, warm), and a failing retry stays unavailable', async () => {
+    const fake = createFakeRdkit({ CCO: ETHANOL_SPEC });
+    const { chem, gate } = chemRig(() => Promise.resolve(fake.module));
+    expect(gate.retry()).toBe(false);
+    expect(gate.state()).toBe('cold');
+    await chem.parse(smiles('CCO'));
+    expect(gate.retry()).toBe(false);
+    expect(gate.state()).toBe('warm');
+    const broken = chemRig(async () => {
+      throw new Error('still blocked');
+    });
+    await broken.chem.parse(smiles('CCO'));
+    expect(broken.gate.retry()).toBe(true);
+    expect(await broken.chem.parse(smiles('CCO'))).toMatchObject({ ok: false, reason: 'unavailable' });
+    expect(broken.gate.state()).toBe('unavailable');
+  });
+
+  it('a listener that throws does not stop the gate, and an unsubscribed one hears nothing', async () => {
+    const fake = createFakeRdkit({ CCO: ETHANOL_SPEC });
+    const { chem, gate } = chemRig(() => Promise.resolve(fake.module));
+    const heard: string[] = [];
+    gate.subscribe(() => {
+      throw new Error('listener failure');
+    });
+    const off = gate.subscribe((state) => heard.push(state));
+    off();
+    expect(await chem.parse(smiles('CCO'))).toMatchObject({ ok: true });
+    expect(heard).toEqual([]);
+    expect(gate.state()).toBe('warm');
+  });
+});

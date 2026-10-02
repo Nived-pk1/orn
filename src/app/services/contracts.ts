@@ -1,16 +1,22 @@
 /**
  * Contracts of the app services (step 5.1a, E1): plain TypeScript, no React, no DOM. Everything the services need from the
  * outside world arrives in `AppEnv`; they read no global and never throw for an environment problem: the answer is a value
- * and a status. This step creates the COMPUTE client only; chem, layout and search are step 5.1b.
+ * and a status. Step 5.1a made the compute client; step 5.1b adds the engines (chem, L4, layout, search, depictions). Their worker
+ * threads are created at their first need, never at boot (PERFORMANCE §7).
  */
 import type { WorkerFactories } from '@/app/worker-factories';
+import type { ChemService, L4Service } from '@/workers/chem';
+import type { LayoutService } from '@/workers/layout';
+import type { SearchService, SearchSync } from '@/workers/search';
 import type { StoreHandle } from '@/core/commands';
 import type { Clock, RandomSource } from '@/core/dataset/contracts';
 import type { MigrationRunner } from '@/core/migrations/contracts';
 import type { BootReport, BroadcastChannelFactory, DexieAdapter, LockManagerLike, OrnDbOptions, Scheduler } from '@/persistence';
 import type { ReplicaSync } from '@/workers/compute';
+import type { DepictionService } from './depiction';
 import type { DerivedIndexes } from './derived-indexes';
-import type { AppMode, EventLog, StatusStore } from './status';
+import type { RetryEngineResult } from './engine-client';
+import type { AppMode, EngineName, EventLog, StatusStore } from './status';
 
 export interface AppEnv {
   /** Both absent (or one): nothing can be stored, the session is session-only and says so. */
@@ -20,7 +26,7 @@ export interface AppEnv {
   readonly locks?: LockManagerLike;
   /** Makes the change channel (`new BroadcastChannel(name)`); absent: nobody is told about a commit. */
   readonly channel?: BroadcastChannelFactory;
-  /** Step 5.1a uses `compute`; the other three are taken by step 5.1b. */
+  /** `compute` is required; a missing chem, layout or search factory is a status (`workers.*.state` is `absent`), not an error. */
   readonly workers: Pick<WorkerFactories, 'compute'> & Partial<WorkerFactories>;
   readonly clock: Clock;
   readonly random: RandomSource;
@@ -55,6 +61,23 @@ export interface AppServices {
   readonly persistence: DexieAdapter | undefined;
   /** The compute replica sync; undefined while none exists (it could not be created). */
   replicaSync(): ReplicaSync | undefined;
+  /** Structure parsing, depiction and the batch checks. Every call answers a value; "unavailable" and "timeout" are answers. */
+  readonly chem: ChemService;
+  /** The L4 checks: per-subject status, derived formulas, summary. Feed and control belong to the services (`retryEngine`). */
+  readonly l4: Pick<L4Service, 'statusOf' | 'subscribe' | 'subscribeFormulas' | 'derivedFormulaOf' | 'summary' | 'flush' | 'stats'>;
+  /** Layout over the layout worker, with the warm-up gate; a fallback layout or a note is reported in the log and `layoutNotice`. */
+  readonly layout: LayoutService;
+  /** Search queries (a newer query on the same channel supersedes the older). The index is kept by the services. */
+  readonly search: Pick<SearchService, 'search' | 'superseded'>;
+  /** The search sync, for tests and diagnostics; undefined when the environment has no search worker. */
+  searchSync(): SearchSync | undefined;
+  /** Sanitised SVG text for a structure: at most 4 calls in flight, cancellable, memory LRU. No object URLs here. */
+  readonly depictions: DepictionService;
+  /**
+   * The user asked to try an engine again (AppStatus shows it `unavailable` with its message): back to cold and one load now. Never
+   * called by a timer. After a successful chem retry every structure is checked again. Answers a value.
+   */
+  retryEngine(name: EngineName): Promise<RetryEngineResult>;
   /** Synchronous: ChangeSets accepted but not yet durable, or a failing save (for `beforeunload`). */
   pendingWrites(): boolean;
   /** `replaceAll` of the store's state; only for a `revision_gap` failure, any other state is refused as a value. */

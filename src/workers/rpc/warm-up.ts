@@ -8,6 +8,9 @@
  *     failure: the client has restarted the worker (counting towards `maxRestarts`; `gave_up` is a status), the gate goes back to
  *     cold and the next call tries again on the new worker.
  *   - `onRestart` is the hook for `RpcClientOptions.onRestart`: it warms up again ONLY if the engine had been warmed.
+ *   - `retry()` (step 5.1b, step 5.0 review decision 3) takes an `unavailable` engine back to cold. It is called ONLY on a user
+ *     action (the services' `retryEngine`), never by a timer and never per call; the next `ready()` then loads the engine again.
+ *   - `subscribe` tells a listener every change of state (the app services show it in AppStatus).
  * The caller creates the client with `onRestart: gate.onRestart` and gives the same gate to its service.
  */
 import { callWithRetry } from './retry';
@@ -31,6 +34,12 @@ export interface WarmUpGate<Api extends WarmableApi<Api>> {
   /** For `createRpcClient(..., { onRestart })`. */
   readonly onRestart: (raw: RpcClient<Api>, info: RestartInfo) => Promise<void>;
   state(): WarmState;
+  /** Why the engine is `unavailable` (the worker's message); null in every other state. */
+  message(): string | null;
+  /** `unavailable` -> `cold`; answers false (and changes nothing) in any other state. */
+  retry(): boolean;
+  /** Called after every change of state; returns the unsubscribe function. */
+  subscribe(listener: (state: WarmState, message: string | null) => void): () => void;
 }
 
 export function createWarmUpGate<Api extends WarmableApi<Api>>(): WarmUpGate<Api> {
@@ -38,28 +47,52 @@ export function createWarmUpGate<Api extends WarmableApi<Api>>(): WarmUpGate<Api
   let unavailable: WarmOutcome | undefined;
   let pending: Promise<WarmOutcome> | undefined;
   let everWarm = false;
+  const listeners = new Set<(state: WarmState, message: string | null) => void>();
+  const message = (): string | null => (state === 'unavailable' && unavailable !== undefined && !unavailable.ok && unavailable.reason === 'engine_unavailable' ? unavailable.message : null);
+  const move = (next: WarmState): void => {
+    if (state === next) return;
+    state = next;
+    for (const listener of [...listeners]) {
+      try {
+        listener(state, message());
+      } catch {
+        // a listener that throws must not stop the gate
+      }
+    }
+  };
 
   const settle = (result: WarmUpResult): WarmOutcome => {
     if (result.ok) {
-      state = 'warm';
       everWarm = true;
+      move('warm');
       return { ok: true, loadMs: result.loadMs };
     }
-    state = 'unavailable';
     unavailable = { ok: false, reason: 'engine_unavailable', message: result.message };
+    move('unavailable');
     return unavailable;
   };
 
   return {
     state: () => state,
+    message,
+    retry() {
+      if (state !== 'unavailable') return false;
+      unavailable = undefined;
+      move('cold');
+      return true;
+    },
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => void listeners.delete(listener);
+    },
     ready(client, specs) {
       if (state === 'warm') return Promise.resolve({ ok: true, loadMs: 0 });
       if (state === 'unavailable' && unavailable !== undefined) return Promise.resolve(unavailable);
       if (pending !== undefined) return pending;
-      state = 'warming';
+      move('warming');
       const mine = (callWithRetry(client, specs, 'warmUp', {} as never) as Promise<Answer>).then((answer): WarmOutcome => {
         if (answer.ok) return settle(answer.value);
-        state = 'cold';
+        move('cold');
         return { ok: false, reason: 'rpc', error: answer.error };
       });
       pending = mine;
@@ -70,10 +103,10 @@ export function createWarmUpGate<Api extends WarmableApi<Api>>(): WarmUpGate<Api
     },
     async onRestart(raw) {
       if (!everWarm || state === 'unavailable') return;
-      state = 'warming';
+      move('warming');
       const answer = (await (raw.warmUp as unknown as (params: WarmUpParams) => Promise<Answer>)({}));
       if (answer.ok) settle(answer.value);
-      else state = 'cold';
+      else move('cold');
     },
   };
 }

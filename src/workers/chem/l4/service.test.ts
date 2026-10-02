@@ -291,3 +291,83 @@ describe('the CHEM-007 probes travel in the batch; the subscription and dispose'
     expect(fake.log).toEqual([]);
   });
 });
+
+describe('derived formulas (step 5.1b, Q9)', () => {
+  const formulaOf = (service: L4Service, id: string) => service.derivedFormulaOf(ref('species', id));
+
+  it('is learned from the worker, listeners are told once per run with exactly the species whose formula changed', async () => {
+    const { r, service } = rig({ species: table(species('spc_a', 'CCO'), species('spc_b', 'CCC'), species('spc_none', undefined)) });
+    const told: (readonly string[])[] = [];
+    service.subscribeFormulas((ids) => told.push(ids));
+    expect(formulaOf(service, 'spc_a')).toBeUndefined();
+    service.checkAll();
+    await service.flush();
+    expect(formulaOf(service, 'spc_a')).toBe('F(CCO)');
+    expect(formulaOf(service, 'spc_b')).toBe('F(CCC)');
+    expect(formulaOf(service, 'spc_none')).toBeUndefined();
+    expect(service.derivedFormulaOf(ref('reaction', 'spc_a'))).toBeUndefined();
+    expect(told).toEqual([['spc_a', 'spc_b']]);
+    service.checkAll(); // the same answers: nothing changed, nobody is told
+    await service.flush();
+    expect(told).toHaveLength(1);
+    void r;
+  });
+
+  it('a structure edit drops the old formula at once (it belongs to the old structure) and learns the new one; a deletion drops it', async () => {
+    const { r, service } = rig({ species: table(species('spc_a', 'CCO'), species('spc_b', 'CCC')) });
+    service.checkAll();
+    await service.flush();
+    const told: (readonly string[])[] = [];
+    service.subscribeFormulas((ids) => told.push(ids));
+    const speciesTable = r.state.current.records.species as unknown as Record<string, unknown>;
+    service.onChange(r.commit({ species: { ...speciesTable, spc_a: species('spc_a', 'CCCC') } }, { updated: [ref('species', 'spc_a')] }));
+    expect(formulaOf(service, 'spc_a')).toBeUndefined();
+    expect(told).toEqual([['spc_a']]);
+    await service.flush();
+    expect(formulaOf(service, 'spc_a')).toBe('F(CCCC)');
+    const { spc_b: _gone, ...rest } = r.state.current.records.species as unknown as Record<string, unknown>;
+    service.onChange(r.commit({ species: rest }, { deleted: [ref('species', 'spc_b')] }));
+    expect(formulaOf(service, 'spc_b')).toBeUndefined();
+    expect(told.at(-1)).toEqual(['spc_b']);
+  });
+
+  it('an edit that leaves the structure alone keeps the formula; a species the toolkit cannot check has none', async () => {
+    const { fake, r, service } = rig({ species: table(species('spc_a', 'CCO'), species('spc_x', 'BAD(')) });
+    service.checkAll();
+    await service.flush();
+    fake.log.length = 0;
+    const speciesTable = r.state.current.records.species as unknown as Record<string, unknown>;
+    service.onChange(r.commit({ species: { ...speciesTable, spc_a: { ...(speciesTable.spc_a as object), notes: 'edited' } } }, { updated: [ref('species', 'spc_a')] }));
+    await service.flush();
+    expect(fake.log).toEqual([]);
+    expect(formulaOf(service, 'spc_a')).toBe('F(CCO)');
+  });
+});
+
+describe('summary (step 5.1b)', () => {
+  it('counts queued work while it waits and runs, and records the toolkit did not answer for', async () => {
+    const { r, service } = rig({ species: table(species('spc_a', 'CCO'), species('spc_b', 'CCC')) });
+    expect(service.summary()).toEqual({ queued: 0, notChecked: 0 });
+    let announced = 0;
+    service.subscribe(() => void (announced += 1));
+    service.checkAll();
+    expect(service.summary()).toEqual({ queued: 2, notChecked: 0 });
+    expect(announced).toBeGreaterThan(0);
+    await service.flush();
+    expect(service.summary()).toEqual({ queued: 0, notChecked: 0 });
+    void r;
+  });
+
+  it('a record the toolkit could not check is counted, and a worker that is down leaves nothing counted as clean', async () => {
+    const { fake, service } = rig({ species: table(species('spc_a', 'CCO'), species('spc_trap', 'TRAP1')) });
+    service.checkAll();
+    await service.flush();
+    expect(service.summary()).toEqual({ queued: 0, notChecked: 1 });
+    expect(formulaOfTrap(service)).toBeUndefined();
+    fake.down = true;
+    service.checkAll();
+    await service.flush();
+    expect(service.summary()).toEqual({ queued: 0, notChecked: 2 });
+  });
+});
+const formulaOfTrap = (service: L4Service) => service.derivedFormulaOf(ref('species', 'spc_trap'));

@@ -42,7 +42,7 @@ export function createFakeChem(): FakeChem {
     if (value.startsWith('TRAP')) return { id: request.id, status: { state: 'not_checked', reason: 'unavailable', message: 'the toolkit crashed on this input' }, drafts: [] };
     if (value.startsWith('BAD')) return { id: request.id, status: { state: 'checked', notCompared: [] }, drafts: [{ ruleId: 'CHEM-001', path: 'structure', message: 'cannot be read' }] };
     const notCompared = request.formula === '??' ? [{ ruleId: 'CHEM-003', reason: 'the entered formula was not compared' }] : [];
-    return { id: request.id, status: { state: 'checked', notCompared }, drafts: [], canonicalSmiles: canonicalOf(value) };
+    return { id: request.id, status: { state: 'checked', notCompared }, drafts: [], canonicalSmiles: canonicalOf(value), formula: `F(${value})` };
   };
   const balance = (request: BalanceRequest): BalanceResult => {
     const sum = (list: readonly { coefficient: number }[]): number => list.reduce((total, side) => total + side.coefficient, 0);

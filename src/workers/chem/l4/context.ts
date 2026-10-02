@@ -31,6 +31,15 @@ export interface L4Context {
   /** `true` when a toolkit version is known that makes "remember it" meaningful (it is not `not loaded`). */
   canRemember(): boolean;
   setStatus(ref: RecordRef, status: SubjectStatus): void;
+  /** Learns (or, with `undefined`, drops) a species' derived formula; listeners are told, once per run, by `flushFormulas`. */
+  setFormula(id: string, formula: string | undefined): void;
+  formulaOf(id: string): string | undefined;
+  /** Tells the formula listeners the ids whose formula changed since the last call. */
+  flushFormulas(): void;
+  subscribeFormulas(listener: (ids: readonly string[]) => void): () => void;
+  /** Tells the status listeners (work was queued, a run ended) without a status having changed. */
+  announce(): void;
+  counts(): { readonly pending: number; readonly notChecked: number };
   forget(ref: RecordRef): void;
   statusOf(ref: RecordRef): SubjectStatus;
   /** Replaces, for `subjects`, their findings of `ruleIds` with `entries` (a subject with none has them cleared). */
@@ -52,6 +61,14 @@ export interface L4Context {
 export function createContext(ports: L4Ports): L4Context {
   const statuses = new Map<string, SubjectStatus>();
   const listeners = new Set<() => void>();
+  const formulas = new Map<string, string>();
+  const formulaListeners = new Set<(ids: readonly string[]) => void>();
+  const formulaChanged = new Set<string>();
+  const counted = { pending: 0, notChecked: 0 };
+  const count = (status: SubjectStatus | undefined, by: 1 | -1): void => {
+    if (status?.state === 'pending') counted.pending += by;
+    else if (status?.state === 'not_checked') counted.notChecked += by;
+  };
   const calls: Record<Method, number> = { checkSpecies: 0, checkReaction: 0, checkMechanism: 0, matches: 0 };
   const items: Record<Method, number> = { checkSpecies: 0, checkReaction: 0, checkMechanism: 0, matches: 0 };
   let stale = 0;
@@ -73,12 +90,35 @@ export function createContext(ports: L4Ports): L4Context {
     noteToolkit: (toolkit) => void (version = toolkit.version),
     canRemember: () => version !== 'not loaded',
     setStatus(ref, status) {
+      count(statuses.get(refKey(ref)), -1);
       statuses.set(refKey(ref), status);
+      count(status, 1);
       tell();
     },
+    setFormula(id, formula) {
+      if (formulas.get(id) === formula) return;
+      if (formula === undefined) formulas.delete(id);
+      else formulas.set(id, formula);
+      formulaChanged.add(id);
+    },
+    formulaOf: (id) => formulas.get(id),
+    flushFormulas() {
+      if (formulaChanged.size === 0) return;
+      const ids = [...formulaChanged].sort();
+      formulaChanged.clear();
+      for (const listener of [...formulaListeners]) listener(ids);
+    },
+    subscribeFormulas(listener) {
+      formulaListeners.add(listener);
+      return () => void formulaListeners.delete(listener);
+    },
+    announce: tell,
+    counts: () => ({ ...counted }),
     forget(ref) {
+      count(statuses.get(refKey(ref)), -1);
       statuses.delete(refKey(ref));
       this.sent.delete(refKey(ref));
+      if (ref.kind === 'species') this.setFormula(ref.id, undefined);
       tell();
     },
     statusOf: (ref) => statuses.get(refKey(ref)) ?? { state: 'none' },

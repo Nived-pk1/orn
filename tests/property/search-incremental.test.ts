@@ -13,25 +13,64 @@ import { makeStore, testContext } from '@/test-support/command-kit';
 import { resolveSearchIntent, searchIntentsArb, type SearchIntent } from '@/test-support/search-edits';
 import { documentsOf, firstDifference, freshEngine, queriesOf, searchRig, type SearchRig } from '@/test-support/search-rig';
 import { fullDocuments, searchStateOf } from '@/test-support/search-state';
+import type { CanonicalState, RecordRef } from '@/core/schema';
+import type { SearchSync } from '@/workers/search/sync';
 import { PARAMS, TIMEOUT_MS } from './harness';
 
 vi.setConfig({ testTimeout: Math.max(TIMEOUT_MS, 120_000) });
 
-async function expectEqualToRebuild(rig: SearchRig, label: string): Promise<void> {
+/**
+ * A stand-in for the L4 service (step 5.1b, Q9): the derived formula of a species is a pure function of its structure, learned LATE
+ * (at the flush points, as the chem worker's answers arrive) and announced with `refresh(ids)`, the way the app's wiring does.
+ */
+interface Formulas {
+  readonly of: (ref: RecordRef) => string | undefined;
+  /** Learns what the current state's structures derive to and tells the sync which species changed (new, edited, deleted). */
+  learn(state: CanonicalState, sync: SearchSync): void;
+  /** The toolkit "re-reads" every structure (a new version): every derived formula changes without any record changing. */
+  bump(): void;
+}
+const derivedOf = (state: CanonicalState, id: string, version: number): string | undefined => {
+  const species = Object.hasOwn(state.records.species, id) ? state.records.species[id] : undefined;
+  // the generated species have no structure, so the stand-in derives from the canonical name (an edit of it changes the formula)
+  const name = species?.names.canonical;
+  return name === undefined ? undefined : `Dx${name.length}Q${name.charCodeAt(0) % 7}V${version}`;
+};
+function newFormulas(): Formulas {
+  let known = new Map<string, string>();
+  let version = 0;
+  return {
+    bump: () => void (version += 1),
+    of: (ref) => (ref.kind === 'species' ? known.get(ref.id) : undefined),
+    learn(state, sync) {
+      const next = new Map<string, string>();
+      for (const id of Object.keys(state.records.species)) {
+        const formula = derivedOf(state, id, version);
+        if (formula !== undefined) next.set(id, formula);
+      }
+      const changed = [...new Set([...known.keys(), ...next.keys()])].filter((id) => known.get(id) !== next.get(id));
+      known = next;
+      sync.refresh(changed);
+    },
+  };
+}
+
+async function expectEqualToRebuild(rig: SearchRig, label: string, formulas?: Formulas): Promise<void> {
+  formulas?.learn(rig.store.getState(), rig.sync);
   await rig.sync.flush();
   const state = rig.store.getState();
   const revision = rig.store.getRevision();
-  const full = fullDocuments(state, revision);
+  const full = fullDocuments(state, revision, formulas?.of);
   const held = documentsOf(rig.engine());
   expect(held.map((d) => d.id), `${label}: which documents`).toEqual(full.map((d) => d.id));
   expect(held, `${label}: documents`).toEqual(full);
   expect(rig.engine().revision, `${label}: revision`).toBe(revision);
-  const difference = firstDifference(rig.engine(), freshEngine(state, revision), queriesOf(full, Object.keys(state.records.exam_version)));
+  const difference = firstDifference(rig.engine(), freshEngine(state, revision, formulas?.of), queriesOf(full, Object.keys(state.records.exam_version)));
   expect(difference, `${label}: answers`).toBeUndefined();
   expect(rig.sync.status(), label).toMatchObject({ state: 'idle', queued: 0, backlog: 0 });
 }
 
-async function walk(rig: SearchRig, intents: readonly SearchIntent[], other: ReturnType<typeof searchStateOf>, every: number): Promise<{ applied: number; kinds: Set<string> }> {
+async function walk(rig: SearchRig, intents: readonly SearchIntent[], other: ReturnType<typeof searchStateOf>, every: number, formulas?: Formulas): Promise<{ applied: number; kinds: Set<string> }> {
   const ctx = testContext(23);
   let applied = 0;
   let replaced = false;
@@ -53,9 +92,12 @@ async function walk(rig: SearchRig, intents: readonly SearchIntent[], other: Ret
         kinds.add(intent.op);
       }
     }
-    if (i % every === every - 1) await expectEqualToRebuild(rig, `step ${i} (${intent.op})`);
+    if (i % every === every - 1) {
+      if (i % 3 === 1) formulas?.bump();
+      await expectEqualToRebuild(rig, `step ${i} (${intent.op})`, formulas);
+    }
   }
-  await expectEqualToRebuild(rig, 'after the sequence');
+  await expectEqualToRebuild(rig, 'after the sequence', formulas);
   return { applied, kinds };
 }
 
@@ -69,6 +111,22 @@ describe('P-07 incremental search index ≡ full rebuild after random command se
       }),
       { ...PARAMS, numRuns: Math.max(PARAMS.numRuns, 25) },
     );
+  });
+
+  it('derived formulas (step 5.1b): learned late and announced with refresh(ids), the index still equals a full rebuild, and formulas are really indexed', async () => {
+    let withFormula = 0;
+    await fc.assert(
+      fc.asyncProperty(smallParamsArb, searchIntentsArb(24), fc.integer({ min: 1, max: 6 }), async (params, intents, every) => {
+        const formulas = newFormulas();
+        const rig = searchRig(makeStore(searchStateOf(params)), { derivedFormulaOf: formulas.of });
+        formulas.learn(rig.store.getState(), rig.sync);
+        await rig.boot();
+        await walk(rig, intents, searchStateOf({ ...params, seed: params.seed + 1 }), every, formulas);
+        withFormula += documentsOf(rig.engine()).filter((d) => d.derivedFormula !== undefined).length;
+      }),
+      { ...PARAMS, numRuns: Math.max(PARAMS.numRuns, 25) },
+    );
+    expect(withFormula).toBeGreaterThan(0);
   });
 
   it('the walk is not vacuous: every kind of edit is reached and applied, and documents really change', async () => {

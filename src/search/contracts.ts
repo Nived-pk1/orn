@@ -37,6 +37,12 @@ export interface SearchDocument {
   readonly aliases: readonly string[];
   /** Entered formula (boost 3), exact token match, no prefix, no fuzzy. */
   readonly formula?: string;
+  /**
+   * The formula the chem worker derived from the species' structure (step 5.1b, Phase 5 contract decisions Q9; SEARCH §3: "entered or
+   * derived"). Species only. Indexed like `formula` (boost 3, exact token match) and reported as a `formula` hit. Derived data: built
+   * from the L4 service's memory, never stored in the record, rebuilt when the service learns a new one (`SearchSync.refresh`).
+   */
+  readonly derivedFormula?: string;
   /** Exact-match only (after trim); substructure search is architecturally supported, not required now. */
   readonly structureText?: string;
   /** Secondary text (summaries, notes), capped at `SEARCH_TEXT_CAP` characters per document (boost 1). */

@@ -10,15 +10,22 @@
  *   unavailable                                 → session-only (a store in memory, no adapter, nothing saved)
  *   nothing stored yet                          → an empty writer
  *
- * Step 5.1a creates the COMPUTE client only; chem, layout and search arrive in 5.1b.
+ * Step 5.1b adds the engines on top (docs/PROGRESS.md): chem and layout clients with their warm-up gates, the L4 service, the search
+ * client, service and sync with the warm-boot cache, and the depiction service. Their worker threads are created at their first
+ * need, not here: chem at the first L4 run (a debounce after boot), layout at the first layout request, search when the boot path
+ * reads the cache or loads. A missing factory is a status.
  */
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import { createIdFactory } from '@/core/dataset';
 import type { Follower } from '@/persistence';
 import { decideMode, emptyState, noticesOf, openStorage } from './boot';
 import type { AppEnv, AppServices } from './contracts';
+import { createChemPart, createLayoutPart } from './chem-layout';
+import { createDepictionService } from './depiction';
 import { createDerivedIndexes } from './derived-indexes';
 import { startFollower } from './follower';
+import { createL4Part } from './l4-part';
+import { createSearchPart } from './search-part';
 import { createReplicaPart } from './replica';
 import { createEventLog, createStatusStore } from './status';
 import { createWriterPart } from './writer';
@@ -30,6 +37,9 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   const status = createStatusStore((error) => log.add({ source: 'app', event: { type: 'status_listener_error', message: describe(error) } }));
   const ids = createIdFactory(env.clock, env.random);
   const replica = createReplicaPart({ factory: env.workers.compute, status, log });
+  const chemPart = createChemPart({ factory: env.workers.chem, status, log });
+  const layoutPart = createLayoutPart({ factory: env.workers.layout, status, log });
+  const depictions = createDepictionService(chemPart.service);
 
   const storage = await openStorage(env, { ids, validate: replica.validate, onEvent: (event) => log.add({ source: 'persistence', event }) });
   for (const note of storage.notes) log.add({ source: 'app', event: { type: 'storage_note', message: note } });
@@ -53,6 +63,9 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   } catch (error) {
     // The boot report and the store disagree: a programmer error, not an environment problem. Release what was opened first.
     replica.stop();
+    depictions.dispose();
+    chemPart.stop();
+    layoutPart.stop();
     await Promise.allSettled([storage.lock?.release(), adapter?.close()]);
     throw error;
   }
@@ -71,6 +84,18 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   replica.start(store);
   const indexes = createDerivedIndexes({ store, clock: env.clock });
   const writer = createWriterPart({ store, adapter, status, log, ids });
+  const l4 = createL4Part({ store, indexes, chem: chemPart.service, timers: env.timers, status, log });
+  const search = createSearchPart({
+    factory: env.workers.search,
+    store,
+    indexes,
+    derivedFormulaOf: l4.service.derivedFormulaOf,
+    adapter,
+    timers: env.timers,
+    status,
+    log,
+  });
+  const offFormulas = l4.service.subscribeFormulas((changed) => search.refresh(changed));
 
   let follower: Follower | undefined;
   if (decision.mode === 'writer') writer.attach();
@@ -85,17 +110,26 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
       status,
       log,
       writer,
+      onReload: () => l4.checkAll(),
     });
     // The store is read-only until the controller has reloaded it after a promotion (INV-28).
     isReadOnly = () => follower?.isReadOnly() ?? true;
   }
   status.update({ stage: 'ready' });
+  l4.checkAll();
+  void search.started();
 
   let disposing: Promise<void> | undefined;
   const dispose = (): Promise<void> => {
     disposing ??= (async () => {
       if (writer.pendingWrites()) log.add({ source: 'app', event: { type: 'disposed_with_pending_writes', message: 'the services were disposed while writes were pending' } });
       writer.stop();
+      offFormulas();
+      search.stop();
+      l4.stop();
+      depictions.dispose();
+      chemPart.stop();
+      layoutPart.stop();
       indexes.dispose();
       replica.stop();
       await Promise.allSettled([follower?.close(), storage.lock?.release()]);
@@ -123,6 +157,18 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     pendingWrites: () => writer.pendingWrites(),
     saveEverythingNow: () => writer.saveEverythingNow(),
     retryReplica: () => replica.retry(),
+    chem: chemPart.service,
+    l4: l4.service,
+    layout: layoutPart.service,
+    search: search.search,
+    searchSync: () => search.sync(),
+    depictions,
+    async retryEngine(name) {
+      const result = await (name === 'chem' ? chemPart : layoutPart).retry();
+      log.add({ source: 'app', event: { type: 'engine_retry', message: `retry of the ${name} engine: ${result.ok ? 'ready' : result.message}` } });
+      if (result.ok && name === 'chem') l4.checkAll();
+      return result;
+    },
     shutdown: () => writer.shutdown(),
     dispose,
   };

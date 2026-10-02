@@ -54,6 +54,12 @@ export interface SpeciesCheckResult {
   readonly drafts: readonly CheckDraft[];
   /** RDKit's canonical SMILES (atom map numbers kept), when the structure was read: the key of CHEM-009's derived map. */
   readonly canonicalSmiles?: string;
+  /**
+   * The molecular formula the toolkit derived from the structure (Hill order, as `StructureFacts.formula`), when the structure was
+   * read and a formula exists. Additive (step 5.1b, Phase 5 contract decisions Q9): the L4 service keeps it as the species'
+   * DERIVED formula, never as canonical data (INV-11), and the search document indexes it beside the entered one.
+   */
+  readonly formula?: string;
 }
 
 export interface SpeciesChecksAnswer {

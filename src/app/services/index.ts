@@ -4,4 +4,23 @@ export { createDerivedIndexes } from './derived-indexes';
 export type { BuildReason, DerivedIndexes, DerivedIndexStats, DerivedIndexesOptions } from './derived-indexes';
 export { decideMode, emptyState } from './boot';
 export { EVENT_LOG_LIMIT, INITIAL_STATUS, createEventLog, createStatusStore, sameValue } from './status';
-export type { AppLogEntry, AppMode, AppStatus, BootNotices, EventLog, ReplicaView, SaveView, StatusStore } from './status';
+export type {
+  AppLogEntry,
+  AppMode,
+  AppStatus,
+  BootNotices,
+  EngineName,
+  EngineView,
+  EventLog,
+  L4View,
+  ReplicaView,
+  SaveView,
+  SearchView,
+  StatusStore,
+  WorkerName,
+  WorkerView,
+} from './status';
+export { createDepictionService, depictionKeyOf, DEPICTION_CACHE_SIZE, MAX_DEPICTIONS_IN_FLIGHT } from './depiction';
+export type { DepictionResult, DepictionService, DepictionStats } from './depiction';
+export type { RetryEngineResult } from './engine-client';
+export { L4_QUIET_MS, SEARCH_CACHE_QUIET_MS, SEARCH_QUIET_MS } from './timing';

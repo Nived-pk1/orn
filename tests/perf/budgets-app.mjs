@@ -1,4 +1,4 @@
-// Budget metadata for tests/perf/app-services.bench.ts (step 5.1a), merged into BUDGETS by budgets.mjs (kept apart so no file passes 400 lines).
+// Budget metadata for tests/perf/app-services.bench.ts (step 5.1a) and tests/perf/app-engines.bench.ts (step 5.1b), merged into BUDGETS by budgets.mjs (kept apart so no file passes 400 lines).
 
 export const APP_BUDGETS = {
   "DerivedIndexes (design tier, hub_explosion): first build > first build (indexEngine.build at the first current())":
@@ -13,4 +13,12 @@ export const APP_BUDGETS = {
     { operation: "services boot: the store from precomputed findings (main-thread part)", tier: 'design', shape: 'hub_explosion', budgetMs: null, note: "step 5.1a: informal; SLOW_BENCH_OPTIONS" },
   "services boot (design tier, hub_explosion): the main-thread parts > whole createAppServices over fake-indexeddb, compute host in memory on this thread (upper bound)":
     { operation: "services boot: whole createAppServices (upper bound)", tier: 'design', shape: 'hub_explosion', budgetMs: null, note: "step 5.1a: informal; compute host in memory on this thread and fake-indexeddb reads are not main-thread time or our code; SLOW_BENCH_OPTIONS" },
+  "search full load on the main thread (design tier, dense, 5,000 reactions) > documents built from the state, first DerivedIndexes build included (worker stubbed, no message copy)":
+    { operation: "search full load on main: documents + first DerivedIndexes build", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1b: informal; Gate E watch item; worker stubbed; SLOW_BENCH_OPTIONS" },
+  "search full load on the main thread (design tier, dense, 5,000 reactions) > the same plus the structuredClone of the load message (what postMessage costs the sender)":
+    { operation: "search full load on main: documents + first build + message copy", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1b: informal; SLOW_BENCH_OPTIONS" },
+  "search boot until the index answers: warm cache against a full load (design tier, no RPC) > full load: documents + first index build (main) + engine.load (worker)":
+    { operation: "search boot: full load until the index answers", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1b: informal; no RPC; SLOW_BENCH_OPTIONS" },
+  "search boot until the index answers: warm cache against a full load (design tier, no RPC) > warm boot: engine.loadSerialized (worker) + adopt (main)":
+    { operation: "search boot: warm cache until the index answers", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1b: informal; no RPC; SLOW_BENCH_OPTIONS" },
 };

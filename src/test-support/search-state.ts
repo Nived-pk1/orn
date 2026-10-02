@@ -3,7 +3,7 @@
  * generator does not make, so exam scope, topics, concepts, aliases and the other indexed kinds are all present. Deterministic.
  * Test-only.
  */
-import type { AnyRecord, CanonicalState, RecordKind } from '@/core/schema';
+import type { AnyRecord, CanonicalState, RecordKind, RecordRef } from '@/core/schema';
 import { indexEngine } from '@/core/indexes/full';
 import { buildDocument, documentPortsOf } from '@/search/document';
 import type { SearchDocument } from '@/search/contracts';
@@ -55,9 +55,9 @@ export function withSearchExtras(base: CanonicalState): CanonicalState {
 }
 
 /** The documents of a state, built from scratch (the reference the incremental index must equal), sorted by id. */
-export function fullDocuments(state: CanonicalState, revision = 0): SearchDocument[] {
+export function fullDocuments(state: CanonicalState, revision = 0, derivedFormulaOf?: (ref: RecordRef) => string | undefined): SearchDocument[] {
   const indexes = indexEngine.build(state, revision);
-  const ports = documentPortsOf(state, indexes);
+  const ports = documentPortsOf(state, indexes, derivedFormulaOf);
   const docs: SearchDocument[] = [];
   for (const kind of Object.keys(state.records) as RecordKind[]) {
     for (const record of Object.values(state.records[kind] as Record<string, AnyRecord>)) {

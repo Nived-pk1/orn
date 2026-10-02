@@ -31,6 +31,8 @@ export interface FollowerPartOptions {
   readonly status: StatusWriter;
   readonly log: EventLogWriter;
   readonly writer: WriterPart;
+  /** Called after the store was reloaded whole (a follower reload, a first load, a promotion): derived checks start over. */
+  readonly onReload?: () => void;
 }
 
 /** A follower event as one log line. The events that carry a whole state are summarised, never stored. */
@@ -79,6 +81,7 @@ export function startFollower(options: FollowerPartOptions): Follower {
       case 'reloaded':
       case 'loaded':
         status.update({ followerReloads: status.get().followerReloads + 1, reloadFailure: null });
+        options.onReload?.();
         break;
       case 'row_rejected':
         status.update({ rejectedRows: status.get().rejectedRows + 1 });
@@ -100,6 +103,7 @@ export function startFollower(options: FollowerPartOptions): Follower {
           save: writer.currentSave(),
           ...(report === undefined ? {} : { notices: noticesOf(report), validation: report.validation, singleTab: report.singleTab }),
         });
+        options.onReload?.();
         break;
       }
       case 'promotion_failed':

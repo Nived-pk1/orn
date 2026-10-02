@@ -20,9 +20,11 @@ export interface DocumentPorts {
   topicIdsOf(ref: RecordRef): readonly string[];
   /** The record as a reagent, when the id is one (a reaction's participant). */
   reagentOf(id: string): Reagent | undefined;
+  /** The formula the chem worker derived from the record's structure, when it is known (species; step 5.1b, Q9). */
+  derivedFormulaOf(ref: RecordRef): string | undefined;
 }
 
-export function documentPortsOf(state: CanonicalState, indexes: ReadonlyIndexes): DocumentPorts {
+export function documentPortsOf(state: CanonicalState, indexes: ReadonlyIndexes, derivedFormulaOf: (ref: RecordRef) => string | undefined = () => undefined): DocumentPorts {
   const versions = Object.values(state.records.exam_version)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
     .map((version) => ({ id: version.id, scopeOf: createScopeOf(indexes, version.examId, version.id) }));
@@ -41,5 +43,6 @@ export function documentPortsOf(state: CanonicalState, indexes: ReadonlyIndexes)
       const record = indexes.get(id);
       return record?.kind === 'reagent' ? record : undefined;
     },
+    derivedFormulaOf,
   };
 }

@@ -25,6 +25,47 @@ export interface ReplicaView {
   readonly revision: number | null;
 }
 
+export type WorkerName = 'chem' | 'layout' | 'search';
+export type EngineName = 'chem' | 'layout';
+
+/**
+ * One engine worker (chem, layout, search; the compute worker is `replica`). `absent`: the environment gave no factory (a status,
+ * not an error). `started`: the thread exists (workers are created at their FIRST NEED, PERFORMANCE §7). `restarting`: crashed or
+ * timed out, the client has started a new one and its restart hook is running. `down`: gave up (restart cap, or no thread could be made).
+ */
+export interface WorkerView {
+  readonly state: 'absent' | 'ok' | 'restarting' | 'down';
+  readonly started: boolean;
+  readonly reason: string;
+}
+
+/** The engine inside a worker (RDKit WASM, ELK): `cold` until the first real call, `unavailable` with the worker's message until a Retry. */
+export interface EngineView {
+  readonly state: 'cold' | 'loading' | 'ready' | 'unavailable';
+  readonly message: string | null;
+}
+
+/** The L4 chemistry checks. `unavailable`: the engine cannot answer, so nothing is claimed about the structures. */
+export interface L4View {
+  readonly state: 'idle' | 'checking' | 'unavailable';
+  /** Records the toolkit did not answer for; they are NOT clean (said out loud, never CHEM-001). */
+  readonly notChecked: number;
+  /** Records waiting or being checked. */
+  readonly queued: number;
+  readonly message: string | null;
+}
+
+/** The search index sync and its warm-boot cache. */
+export interface SearchView {
+  readonly state: 'absent' | 'idle' | 'pending' | 'down';
+  readonly indexRevision: number | null;
+  /** How the worker's index got its documents at boot: nothing yet, one full load, or the cache. */
+  readonly loadedFrom: 'none' | 'full_load' | 'warm_cache';
+  readonly reason: string;
+  /** The last cache write: none yet, saved (with the revision), or refused (a status, never an error). */
+  readonly cache: { readonly state: 'none' | 'saved' | 'refused'; readonly revision: number | null; readonly message: string | null };
+}
+
 /** What boot found, for the one-line notices of step 5.1d (nothing silent, CLAUDE.md §1.5). */
 export interface BootNotices {
   readonly crashSuspected: boolean;
@@ -56,6 +97,12 @@ export interface AppStatus {
   /** Full reloads a follower has done. */
   readonly followerReloads: number;
   readonly notices: BootNotices | null;
+  readonly workers: { readonly chem: WorkerView; readonly layout: WorkerView; readonly search: WorkerView };
+  readonly engines: { readonly chem: EngineView; readonly layout: EngineView };
+  readonly l4: L4View;
+  readonly search: SearchView;
+  /** The last layout notice: a fallback layout (with its reason) or a note the layout service made; null when there was none. */
+  readonly layoutNotice: string | null;
 }
 
 export const INITIAL_STATUS: AppStatus = Object.freeze({
@@ -72,6 +119,15 @@ export const INITIAL_STATUS: AppStatus = Object.freeze({
   rejectedRows: 0,
   followerReloads: 0,
   notices: null,
+  workers: Object.freeze({
+    chem: Object.freeze({ state: 'absent', started: false, reason: 'not started' }),
+    layout: Object.freeze({ state: 'absent', started: false, reason: 'not started' }),
+    search: Object.freeze({ state: 'absent', started: false, reason: 'not started' }),
+  }),
+  engines: Object.freeze({ chem: Object.freeze({ state: 'cold', message: null }), layout: Object.freeze({ state: 'cold', message: null }) }),
+  l4: Object.freeze({ state: 'idle', notChecked: 0, queued: 0, message: null }),
+  search: Object.freeze({ state: 'absent', indexRevision: null, loadedFrom: 'none', reason: 'not started', cache: Object.freeze({ state: 'none', revision: null, message: null }) }),
+  layoutNotice: null,
 });
 
 export interface StatusStore {

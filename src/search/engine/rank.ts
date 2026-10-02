@@ -90,7 +90,7 @@ export function describeMatch(doc: SearchDocument, match: SearchResult['match'])
         : matchedField === 'tag'
           ? firstWithTerm(doc.tags, terms)
           : matchedField === 'formula'
-            ? doc.formula
+            ? firstWithTerm([doc.formula ?? '', doc.derivedFormula ?? ''].filter((value) => value !== ''), terms)
             : matchedField === 'structure'
               ? doc.structureText
               : undefined;

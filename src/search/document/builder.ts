@@ -22,7 +22,8 @@
  * does read from elsewhere is DERIVED DATA, never indexed as text: `scopeRanks` and `facets.scopes` (core's `scopeOf` per exam
  * version), `facets.topicIds` (topic mappings and the topic tree) and, for a reaction, `facets.reagentFamilies` (the families of
  * its reagent participants). `src/workers/search/fanout.ts` refreshes a document when one of those changes.
- * The entered formula only: a formula derived from a structure belongs to the chem worker and joins when Phase 5 wires it.
+ * The entered formula, and for a species the formula the chem worker derived from its structure (`derivedFormula`, from the port
+ * `derivedFormulaOf`; absent until the L4 service has read the structure; step 5.1b).
  */
 import type { AnyRecord, ExamScope, RecordKind } from '@/core/schema';
 import { SCOPE_NAMES, type ScopeRank, type SearchDocument } from '../contracts';
@@ -68,6 +69,8 @@ export function buildDocument(record: AnyRecord, ports: DocumentPorts): SearchDo
         ? record.participants.flatMap((participant) => (participant.ref.kind === 'reagent' ? (ports.reagentOf(participant.ref.id)?.families ?? []) : []))
         : [];
   const { text, textTruncated } = part.pieces.finish();
+  const known = record.kind === 'species' ? ports.derivedFormulaOf(ref)?.trim() : undefined;
+  const derived = known === undefined || known === '' ? undefined : known;
   return {
     id: record.id,
     kind: record.kind,
@@ -75,6 +78,7 @@ export function buildDocument(record: AnyRecord, ports: DocumentPorts): SearchDo
     names: part.names,
     aliases: part.aliases,
     ...(part.formula === undefined ? {} : { formula: part.formula }),
+    ...(derived === undefined ? {} : { derivedFormula: derived }),
     ...(part.structureText === undefined ? {} : { structureText: part.structureText }),
     text,
     textTruncated,

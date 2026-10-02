@@ -3,7 +3,8 @@
  * asks the worker in batches, asks the SMARTS probes of the ones that were read, and only then, in one synchronous step, drops
  * every result whose species changed while the worker was busy (its request signature no longer matches the record) and applies
  * the rest: statuses, the derived groups, and the findings, merged by rule. CHEM-009 refreshes exactly the old and the new group
- * of each species the run touched.
+ * of each species the run touched. The formula the toolkit derived from a structure is kept per species (`derivedFormulaOf`) and
+ * dropped whenever the species is not read (changed, not checkable, no structure); the listeners are told once per run.
  */
 import { duplicateDrafts } from '@/chem/checks/duplicates';
 import { membershipPlan, readMembership, speciesRequest } from '@/chem/checks/plan-species';
@@ -124,6 +125,7 @@ export async function runSpeciesJob(ctx: L4Context, ids: readonly string[]): Pro
     const request = speciesRequest(species);
     if (request === undefined) {
       ctx.sent.delete(refKey(ref));
+      ctx.setFormula(id, undefined);
       ctx.setStatus(ref, { state: 'checked', notCompared: [] });
       cleared.push(ref);
       groups.set(id, undefined);
@@ -134,6 +136,7 @@ export async function runSpeciesJob(ctx: L4Context, ids: readonly string[]): Pro
     const known = ctx.memory.get(structureKey(request), ctx.version());
     if (known !== undefined) {
       ctx.countRemembered();
+      ctx.setFormula(id, undefined);
       ctx.setStatus(ref, { state: 'not_checked', reason: known.reason, message: known.message, remembered: true });
       cleared.push(ref);
       groups.set(id, undefined);
@@ -177,6 +180,7 @@ export async function runSpeciesJob(ctx: L4Context, ids: readonly string[]): Pro
     const remember = !unseen && ctx.canRemember();
     if (remember) ctx.memory.add(structureKey(candidate.request), ctx.version(), { reason, message });
     ctx.setStatus(candidate.ref, { state: 'not_checked', reason, message, remembered: remember });
+    ctx.setFormula(candidate.id, undefined);
     subjects.push(candidate.ref);
     groups.set(candidate.id, undefined);
   }
@@ -190,12 +194,14 @@ export async function runSpeciesJob(ctx: L4Context, ids: readonly string[]): Pro
       ctx.setStatus(read.candidate.ref, { state: 'checked', notCompared });
     }
     subjects.push(read.candidate.ref);
+    ctx.setFormula(read.candidate.id, read.result.formula);
     const drafts: readonly CheckDraft[] = membership?.unanswered === undefined ? [...read.result.drafts, ...(membership?.drafts ?? [])] : read.result.drafts;
     for (const draft of drafts) entries.push({ subject: read.candidate.ref, draft });
     groups.set(read.candidate.id, read.result.canonicalSmiles);
   }
   ctx.merge(subjects, SPECIES_RULES, entries);
   groups.refresh();
+  ctx.flushFormulas();
 }
 
 /** A species that was deleted: its status and groups go, and its old group is refreshed (its findings were cleared by the store). */

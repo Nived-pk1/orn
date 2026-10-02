@@ -19,7 +19,7 @@ export function checkDocument(value: unknown): string | undefined {
   if (typeof value.kind !== 'string' || !KINDS.has(value.kind)) return bad(`kind ${String(value.kind)} is not an indexed kind`);
   if (typeof value.title !== 'string') return bad('title must be a string');
   for (const key of ['names', 'aliases', 'tags'] as const) if (!strings(value[key])) return bad(`${key} must be an array of strings`);
-  for (const key of ['formula', 'structureText'] as const) if (value[key] !== undefined && typeof value[key] !== 'string') return bad(`${key} must be a string`);
+  for (const key of ['formula', 'derivedFormula', 'structureText'] as const) if (value[key] !== undefined && typeof value[key] !== 'string') return bad(`${key} must be a string`);
   if (typeof value.text !== 'string' || value.text.length > SEARCH_TEXT_CAP) return bad(`text must be a string of at most ${SEARCH_TEXT_CAP} characters`);
   if (typeof value.textTruncated !== 'boolean') return bad('textTruncated must be a boolean');
   if (value.lifecycle !== 'draft' && value.lifecycle !== 'published') return bad('lifecycle must be draft or published');

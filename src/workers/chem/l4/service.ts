@@ -102,6 +102,7 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
       if (!hasWork() || ctx.disposed()) return;
       running = loop().finally(() => void (running = undefined));
       await running;
+      ctx.announce();
     }
   }
 
@@ -142,6 +143,7 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
         const table = state.records.species;
         const species = Object.hasOwn(table, ref.id) ? table[ref.id] : undefined;
         if (speciesSignature(species) !== ctx.sent.get(refKey(ref))) {
+          ctx.setFormula(ref.id, undefined); // what was derived belongs to the old structure
           mark(ref);
           referred.delete(refKey(ref));
           speciesMoved.push(ref.id);
@@ -150,16 +152,25 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
       // what refers to what changed (reactions of a species, species of a class), bounded: see queueReferrers
       queueReferrers([...reactionsReferring(options, speciesMoved), ...speciesListingClasses(options, classesReadByChecks(changes))]);
       if (hasWork()) queue();
+      ctx.flushFormulas();
+      ctx.announce();
     },
     checkAll(): void {
       markAll();
       if (hasWork()) queue();
+      ctx.announce();
     },
     flush,
     statusOf(ref: RecordRef) {
       if (isChecked(ref.kind) && (dirty[ref.kind].has(ref.id) || backlog.has(refKey(ref)))) return { state: 'pending' };
       return ctx.statusOf(ref);
     },
+    summary() {
+      const { pending, notChecked } = ctx.counts();
+      return { queued: Math.max(pending, dirty.species.size + dirty.reaction.size + dirty.mechanism.size + backlog.size), notChecked };
+    },
+    derivedFormulaOf: (ref) => (ref.kind === 'species' ? ctx.formulaOf(ref.id) : undefined),
+    subscribeFormulas: ctx.subscribeFormulas,
     subscribe: ctx.subscribe,
     stats: ctx.stats,
     dispose: ctx.dispose,

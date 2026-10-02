@@ -38,6 +38,10 @@ export interface ManualScheduler extends Scheduler {
   waitForTimer(): Promise<number>;
   /** Fires the oldest live timer. */
   fire(): void;
+  /** Delays of the live timers, oldest first. */
+  liveDelays(): number[];
+  /** Fires the oldest live timer whose delay is `ms`; false when there is none. */
+  fireAfter(ms: number): boolean;
 }
 
 export function manualScheduler(): ManualScheduler {
@@ -65,6 +69,14 @@ export function manualScheduler(): ManualScheduler {
     async waitForTimer() {
       while (liveTimers().length === 0) await new Promise<void>((resolve) => (waiting = resolve));
       return (liveTimers()[0] as Timer).ms;
+    },
+    liveDelays: () => liveTimers().map((timer) => timer.ms),
+    fireAfter(ms) {
+      const timer = liveTimers().find((candidate) => candidate.ms === ms);
+      if (timer === undefined) return false;
+      timer.done = true;
+      timer.run();
+      return true;
     },
     fire() {
       const timer = liveTimers()[0];

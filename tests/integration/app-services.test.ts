@@ -35,7 +35,10 @@ describe('the services are plain TypeScript (E1)', () => {
     expect(services.status.get().stage).toBe('ready');
     expect(services.status.get().mode).toBe('writer');
     expect(Object.keys(services).sort()).toEqual(
-      ['bootReport', 'dispose', 'indexes', 'log', 'pendingWrites', 'persistence', 'replicaSync', 'retryReplica', 'saveEverythingNow', 'shutdown', 'status', 'store'].sort(),
+      [
+        'bootReport', 'chem', 'depictions', 'dispose', 'indexes', 'l4', 'layout', 'log', 'pendingWrites', 'persistence', 'replicaSync', 'retryEngine', 'retryReplica',
+        'saveEverythingNow', 'search', 'searchSync', 'shutdown', 'status', 'store',
+      ].sort(),
     );
   });
 });

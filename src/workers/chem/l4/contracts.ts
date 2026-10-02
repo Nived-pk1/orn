@@ -58,6 +58,15 @@ export interface L4Stats {
   readonly backlog: number;
 }
 
+/**
+ * How the L4 checks stand, for the status line (step 5.1b): `queued` records are waiting or being checked, `notChecked` records
+ * have a `not_checked` status (the toolkit did not answer for them; they are said out loud, never counted as clean).
+ */
+export interface L4Summary {
+  readonly queued: number;
+  readonly notChecked: number;
+}
+
 export interface L4Service {
   /** Feed every ChangeSet the store announces. Decides what to re-check and schedules it; returns at once. */
   onChange(changes: ChangeSet): void;
@@ -66,7 +75,16 @@ export interface L4Service {
   /** Runs what is queued now (the debounce's target) and resolves when it and anything queued meanwhile is done. */
   flush(): Promise<void>;
   statusOf(ref: RecordRef): SubjectStatus;
-  /** Called when any status changed. Returns the unsubscribe function. */
+  /** Cheap (counters, no scan): what the status line shows. */
+  summary(): L4Summary;
+  /**
+   * The formula the toolkit derived from the species' structure (step 5.1b, Q9), or undefined when none is known: not read yet, the
+   * structure changed since, or the toolkit did not answer. Derived data, held in memory only (INV-11).
+   */
+  derivedFormulaOf(ref: RecordRef): string | undefined;
+  /** Called with the ids of the species whose derived formula was learned, changed or dropped. Returns the unsubscribe function. */
+  subscribeFormulas(listener: (ids: readonly string[]) => void): () => void;
+  /** Called when any status changed or work was queued. Returns the unsubscribe function. */
   subscribe(listener: () => void): () => void;
   stats(): L4Stats;
   /** Stops for good: results still in flight are dropped, nothing more is sent. */
