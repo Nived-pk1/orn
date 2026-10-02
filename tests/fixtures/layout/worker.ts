@@ -4,15 +4,16 @@
  * instance is made differs, and only for tests (`workerData.mode`): `real` is the real elkjs (what the browser entry starts);
  * `busy` is an ELK whose layout runs a synchronous loop for `busyMs` (the thing a real ELK does on a graph it cannot finish: it
  * cannot be interrupted, so only terminating the thread ends it); `throw` is an ELK that throws. The fallback is always real.
+ * `workerData.crashOn` ends the thread when a request for that method arrives (step 4.6).
  */
 import { parentPort, workerData } from 'node:worker_threads';
 import { loadElk } from '@/layout/elk';
 import type { ElkLike } from '@/layout/elk';
-import { nodeParentPort } from '@/test-support/rpc-node-port';
+import { nodeParentPortCrashingOn } from '@/test-support/rpc-node-port';
 import { startLayoutHost } from '@/workers/layout/host';
 
 if (parentPort === null) throw new Error('this file runs only as a worker thread');
-const { mode = 'real', busyMs = 5_000 } = (workerData ?? {}) as { mode?: 'real' | 'busy' | 'throw'; busyMs?: number };
+const { mode = 'real', busyMs = 5_000, crashOn } = (workerData ?? {}) as { mode?: 'real' | 'busy' | 'throw'; busyMs?: number; crashOn?: string };
 
 let factory: ReturnType<typeof loadElk> | undefined;
 const make = async (): Promise<ElkLike> => {
@@ -31,4 +32,4 @@ const make = async (): Promise<ElkLike> => {
   return (await (factory ??= loadElk()))();
 };
 
-startLayoutHost(nodeParentPort(parentPort), make, () => performance.now());
+startLayoutHost(nodeParentPortCrashingOn(parentPort, crashOn), make, () => performance.now());

@@ -193,7 +193,7 @@ describe('adoption instead of a second whole-state transfer', () => {
     expectReplicaEqualsStore(lastReplica(rig), rig.store, 'after the refusal');
   });
 
-  it('adoptPending refuses as values: nothing pending, and another revision', async () => {
+  it('adoptPending refuses as values: nothing pending, and another revision; dropPending then discards what importPrepareApply left pending', async () => {
     const rig = await workerImportRig(base);
     const client = rig.r.sync.client;
     expect(await client.adoptPending({ revision: 2 })).toMatchObject({ ok: true, value: { ok: false, code: 'NO_PENDING' } });

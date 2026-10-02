@@ -172,7 +172,7 @@ describe('STALE_REVISION and cancel', () => {
     expect(revised).toEqual({ ok: true, value: { ok: false, code: 'STALE_REVISION', message: 'data changed since the preview; run it again' } });
   });
 
-  it('cancel changes nothing: state, revision, history, snapshots, replica; the cancelled batch cannot be applied', async () => {
+  it('cancel (importCancel) changes nothing: state, revision, history, snapshots, replica; the cancelled batch cannot be applied', async () => {
     const rig = await workerImportRig(base);
     const driver = workerDriver(rig);
     const before = { state: rig.store.getState(), revision: rig.store.getRevision(), history: rig.store.historyLabels() };
@@ -184,7 +184,7 @@ describe('STALE_REVISION and cancel', () => {
     await expectNothingChanged(rig, before, 'cancel');
   });
 
-  it('a preview and a revise change no state, revision, history or snapshot either (INV-21)', async () => {
+  it('a preview and a revise (importPreview, importRevise) change no state, revision, history or snapshot either (INV-21)', async () => {
     const rig = await workerImportRig(base);
     const driver = workerDriver(rig);
     const before = { state: rig.store.getState(), revision: rig.store.getRevision(), history: rig.store.historyLabels() };
@@ -195,7 +195,7 @@ describe('STALE_REVISION and cancel', () => {
     await expectNothingChanged(rig, before, 'preview and revise');
   });
 
-  it('a plan that is not the previewed one is refused (PLAN_MISMATCH) and the batch stays valid', async () => {
+  it('a plan that is not the previewed one is refused by importPrepareApply (PLAN_MISMATCH) and the batch stays valid', async () => {
     const rig = await workerImportRig(base);
     const driver = workerDriver(rig);
     const plan = planOf(await driver.preview(await jsonFile(renamed(base, speciesId, 'Imported')), 'x.orn.json'));

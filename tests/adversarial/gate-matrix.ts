@@ -23,15 +23,22 @@ function testFiles(dir: string): string[] {
   return found;
 }
 
+/** Every describe/it/test title under src/ and tests/ (a string literal directly after the call; see TITLE). */
+export function testTitles(): string[] {
+  const titles: string[] = [];
+  for (const dir of ['src', 'tests']) {
+    for (const file of testFiles(fileURLToPath(new URL(dir, ROOT)))) {
+      for (const title of readFileSync(file, 'utf8').matchAll(TITLE)) titles.push(title[2] ?? '');
+    }
+  }
+  return titles;
+}
+
 /** IDs found in test titles under src/ and tests/. */
 export function titledIds(): Set<string> {
   const ids = new Set<string>();
-  for (const dir of ['src', 'tests']) {
-    for (const file of testFiles(fileURLToPath(new URL(dir, ROOT)))) {
-      for (const title of readFileSync(file, 'utf8').matchAll(TITLE)) {
-        for (const id of (title[2] ?? '').matchAll(ID)) ids.add(id[0]);
-      }
-    }
+  for (const title of testTitles()) {
+    for (const id of title.matchAll(ID)) ids.add(id[0]);
   }
   return ids;
 }

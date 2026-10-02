@@ -154,7 +154,7 @@ describe('the main-side service', () => {
 describe('the batch checks over the port (step 4.3b)', () => {
   const side = (label: string, value: string, coefficient = 1) => ({ label, structure: smiles(value), coefficient });
 
-  it('every check answers plain data through a port that clones every message, and names the toolkit', async () => {
+  it('every check (checkSpecies, checkReaction, checkMechanism, matches) answers plain data through a port that clones every message, and names the toolkit', async () => {
     const { chem } = rig();
     const species = await chem.checkSpecies([{ id: 'spc_a', structure: smiles('CCO'), formula: 'C2H5OH', charge: 0 }, { id: 'spc_b', structure: smiles('C1CC(') }]);
     if (!species.ok) throw new Error(species.error);

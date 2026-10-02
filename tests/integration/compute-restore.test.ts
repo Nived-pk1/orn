@@ -26,7 +26,7 @@ const comparable = (result: unknown): unknown => {
 };
 
 describe('ADV-045 through the worker: restore returns the prior state, clears history, persists (snapshot-restore part)', () => {
-  it('equals the in-process restore: result, state, revision, cleared history, findings, stored snapshots, persisted state', async () => {
+  it('equals the in-process restore (snapshotDecode in the worker): result, state, revision, cleared history, findings, stored snapshots, persisted state', async () => {
     const rig = await restoreRig(base);
     const twin = await twinRestore(base);
     const scenario = async (edit: () => void, store: typeof rig.store, t: typeof rig.t, restore: (id: string) => Promise<unknown>) => {

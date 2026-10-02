@@ -25,11 +25,11 @@ export default mergeConfig(
       benchmark: { include: ['tests/perf/**/*.bench.ts'] },
       restoreMocks: true,
       maxWorkers: testWorkers(),
-      // Targets: src/core >= 90% lines, >= 85% branches; src/persistence, src/io, src/workers >= 80% lines (services, TEST_STRATEGY §1).
+      // Targets: src/core >= 90% lines, >= 85% branches; src/persistence, src/io, src/workers, src/chem, src/layout, src/search >= 80% lines (services, TEST_STRATEGY §1; the last three from step 4.6).
       // Enforced by npm run test:coverage only, not by npm run check.
       coverage: {
         provider: 'v8',
-        thresholds: { 'src/core/**': { lines: 90, branches: 85 }, 'src/persistence/**': { lines: 80 }, 'src/io/**': { lines: 80 }, 'src/workers/**': { lines: 80 } },
+        thresholds: { 'src/core/**': { lines: 90, branches: 85 }, 'src/persistence/**': { lines: 80 }, 'src/io/**': { lines: 80 }, 'src/workers/**': { lines: 80 }, 'src/chem/**': { lines: 80 }, 'src/layout/**': { lines: 80 }, 'src/search/**': { lines: 80 } },
       },
     },
   }),

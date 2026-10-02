@@ -35,6 +35,24 @@ export function nodeParentPort(port: MessagePort): RpcMessagePort {
   };
 }
 
+/**
+ * The host's side with an induced crash (step 4.6): with `crashOn` set, a request for that method ends the thread before the host
+ * sees it (`process.exit`, what a crashed worker looks like to the client). Nothing in the host or the handlers changes.
+ */
+export function nodeParentPortCrashingOn(port: MessagePort, crashOn: string | undefined): RpcMessagePort {
+  const real = nodeParentPort(port);
+  if (crashOn === undefined) return real;
+  return {
+    postMessage: (message, transfer) => real.postMessage(message, transfer),
+    onMessage: (listener) =>
+      real.onMessage((message) => {
+        const { type, method } = (typeof message === 'object' && message !== null ? message : {}) as { type?: unknown; method?: unknown };
+        if (type === 'request' && method === crashOn) process.exit(3);
+        listener(message);
+      }),
+  };
+}
+
 const FIXTURE = new URL('../../tests/fixtures/rpc/worker.ts', import.meta.url);
 
 /** Starts the fixture worker (`TestApi` from `rpc-test-api.ts`) in a real thread. */
@@ -51,8 +69,8 @@ export const spawnComputeWorker = (crashOn?: string): RpcPort =>
 
 const CHEM_FIXTURE = new URL('../../tests/fixtures/chem/worker.ts', import.meta.url);
 
-/** Starts the real chem worker (`startChemHost` over RDKit) in a real thread. */
-export const spawnChemWorker: WorkerFactory = () => nodeWorkerPort(new Worker(CHEM_FIXTURE, { execArgv: ['--import', 'tsx'] }));
+/** Starts the real chem worker (`startChemHost` over RDKit) in a real thread; `crashOn` as for the compute worker. */
+export const spawnChemWorker = (crashOn?: string): RpcPort => nodeWorkerPort(new Worker(CHEM_FIXTURE, { execArgv: ['--import', 'tsx'], workerData: { crashOn } }));
 
 const LAYOUT_FIXTURE = new URL('../../tests/fixtures/layout/worker.ts', import.meta.url);
 
@@ -60,10 +78,10 @@ const LAYOUT_FIXTURE = new URL('../../tests/fixtures/layout/worker.ts', import.m
  * Starts the real layout worker (`startLayoutHost`) in a real thread. `mode`: `real` (elkjs), `busy` (ELK replaced by a
  * synchronous loop of `busyMs`, uninterruptible) or `throw` (ELK replaced by one that throws); the fallback is always real.
  */
-export const spawnLayoutWorker = (mode: 'real' | 'busy' | 'throw' = 'real', busyMs = 5_000): RpcPort =>
-  nodeWorkerPort(new Worker(LAYOUT_FIXTURE, { execArgv: ['--import', 'tsx'], workerData: { mode, busyMs } }));
+export const spawnLayoutWorker = (mode: 'real' | 'busy' | 'throw' = 'real', busyMs = 5_000, crashOn?: string): RpcPort =>
+  nodeWorkerPort(new Worker(LAYOUT_FIXTURE, { execArgv: ['--import', 'tsx'], workerData: { mode, busyMs, crashOn } }));
 
 const SEARCH_FIXTURE = new URL('../../tests/fixtures/search/worker.ts', import.meta.url);
 
-/** Starts the real search worker (`startSearchHost`) in a real thread (step 4.5). */
-export const spawnSearchWorker = (): RpcPort => nodeWorkerPort(new Worker(SEARCH_FIXTURE, { execArgv: ['--import', 'tsx'] }));
+/** Starts the real search worker (`startSearchHost`) in a real thread (step 4.5); `crashOn` as for the compute worker. */
+export const spawnSearchWorker = (crashOn?: string): RpcPort => nodeWorkerPort(new Worker(SEARCH_FIXTURE, { execArgv: ['--import', 'tsx'], workerData: { crashOn } }));
