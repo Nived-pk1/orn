@@ -11,4 +11,4 @@ import { nodeParentPortCrashingOn } from '@/test-support/rpc-node-port';
 import { startChemHost } from '@/workers/chem/host';
 
 if (parentPort === null) throw new Error('this file runs only as a worker thread');
-startChemHost(nodeParentPortCrashingOn(parentPort, (workerData as { crashOn?: string } | null)?.crashOn), () => loadRdkit());
+startChemHost(nodeParentPortCrashingOn(parentPort, (workerData as { crashOn?: string } | null)?.crashOn), () => loadRdkit(), () => performance.now());

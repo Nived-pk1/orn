@@ -3,7 +3,8 @@
  * no state (ADR-034 D1). The request is checked first (`BAD_REQUEST`: not sorted by id, over the caps, malformed). `layout` answers
  * ELK's result, or, when ELK throws, the fallback with `fallbackReason: 'elk_error'` (`'engine_unavailable'` when ELK could not
  * load) and a note naming what ELK said; a call that was cancelled is not answered with a fallback, it is dropped by the RPC layer.
- * `layoutFallback` answers the fallback alone, for the reason the caller states (the timeout path).
+ * `layoutFallback` answers the fallback alone, for the reason the caller states (the timeout path). `warmUp` (step 5.0) loads ELK
+ * and answers `{ ok: true, loadMs }` or `engine_unavailable` with a message.
  */
 import { LayoutEngineUnavailable } from '@/layout/errors';
 import { layoutFallback } from '@/layout/fallback';
@@ -28,6 +29,15 @@ export function createLayoutHandlers(engine: LayoutEngine, clock: () => number):
     return extra.length === 0 ? result : { ...result, notes: [...result.notes, ...extra].sort() };
   };
   return {
+    async warmUp() {
+      const began = clock();
+      try {
+        await engine.warmUp?.();
+      } catch (error) {
+        return { ok: false, reason: 'engine_unavailable', message: `ELK could not be loaded (${messageOf(error).slice(0, 200)})` };
+      }
+      return { ok: true, loadMs: clock() - began };
+    },
     async layout(params, ctx) {
       const request = checked(params);
       try {

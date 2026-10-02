@@ -21,6 +21,11 @@ const aborted = (): DOMException => new DOMException('layout cancelled', 'AbortE
 
 export function createElkEngine(options: ElkEngineOptions): LayoutEngine {
   return {
+    async warmUp() {
+      await Promise.resolve(options.make()).catch((error: unknown) => {
+        throw new LayoutEngineUnavailable(error instanceof Error ? error.message : String(error));
+      });
+    },
     async layout(request, signal) {
       if (signal.aborted) throw aborted();
       const began = options.clock();

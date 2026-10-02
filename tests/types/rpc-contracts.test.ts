@@ -31,11 +31,11 @@ it('type: RpcClient<Api> exists for all four worker APIs and answers RpcResult v
 });
 
 it('type: RpcMethodSpecs names every method, with idempotent and timeoutMs', () => {
-  const full: RpcMethodSpecs<LayoutWorkerApi> = { layout: { idempotent: true, timeoutMs: 2_000 }, layoutFallback: { idempotent: true, timeoutMs: 2_000 } };
+  const full: RpcMethodSpecs<LayoutWorkerApi> = { warmUp: { idempotent: true, timeoutMs: 20_000 }, layout: { idempotent: true, timeoutMs: 2_000 }, layoutFallback: { idempotent: true, timeoutMs: 2_000 } };
   // @ts-expect-error a method without a spec is a compile error
   const missing: RpcMethodSpecs<SearchWorkerApi> = { load: { idempotent: true, timeoutMs: 1 } };
   // @ts-expect-error timeoutMs is required
-  const noTimeout: RpcMethodSpecs<LayoutWorkerApi> = { layout: { idempotent: true }, layoutFallback: { idempotent: true, timeoutMs: 2_000 } };
+  const noTimeout: RpcMethodSpecs<LayoutWorkerApi> = { warmUp: { idempotent: true, timeoutMs: 20_000 }, layout: { idempotent: true }, layoutFallback: { idempotent: true, timeoutMs: 2_000 } };
   void [full, missing, noTimeout];
 });
 
@@ -56,5 +56,5 @@ it('type: the chem worker answers failure values with a reason; only `invalid` m
   expectTypeOf<RpcClient<ChemWorkerApi>['parse']>().returns.resolves.toEqualTypeOf<RpcResult<ParseOutcome>>();
   expectTypeOf<RpcClient<ChemWorkerApi>['depict']>().returns.resolves.toEqualTypeOf<RpcResult<DepictOutcome>>();
   // checkAll({ revision }) assumed state in the chem worker (D1): it is gone; the batch checks replaced it (step 4.3b, Q2).
-  expectTypeOf<keyof ChemWorkerApi>().toEqualTypeOf<'parse' | 'depict' | 'checkSpecies' | 'checkReaction' | 'checkMechanism' | 'matches'>();
+  expectTypeOf<keyof ChemWorkerApi>().toEqualTypeOf<'warmUp' | 'parse' | 'depict' | 'checkSpecies' | 'checkReaction' | 'checkMechanism' | 'matches'>();
 });

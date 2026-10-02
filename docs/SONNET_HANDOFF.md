@@ -17,7 +17,7 @@ src/core/{schema,text,references,dataset,indexes,validation,commands,graph,migra
 src/{chem,search,layout,io,io/legacy-v6,persistence,workers/rpc}
 src/render/{scene,svg,viewport,export}
 src/ui/{design,primitives,state,hooks}
-src/features/{navigator,reaction-explorer,precursor-explorer,reagent-explorer,named-reactions,mechanisms,syllabus,search,workbench,inspector,diagnostics}
+src/features/{data-exchange,navigator,reaction-explorer,precursor-explorer,reagent-explorer,named-reactions,mechanisms,syllabus,search,workbench,inspector,diagnostics}
 src/app/                  composition root
 src/test-support/         generator, arbitraries (test-only)
 tests/{property,integration,adversarial,perf,e2e}
@@ -80,7 +80,7 @@ Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its t
 9. Auto-fixing data during validation, import or migration without an explicit, reported decision.
 10. Dropping unknown legacy fields.
 11. Putting chemistry logic in React components or UI stores.
-12. Files over 400 lines; cross-feature imports; services importing UI.
+12. Files over 400 lines; cross-feature imports; services importing UI. ui, render and features importing persistence or workers (except types), the engines (chem, layout, search, io: types and an allow-list of pure modules only) or `src/core/validation/rules`; creating Workers, IndexedDB, BroadcastChannel or `navigator.locks` outside src/app, persistence, workers, test-support and tests (step 5.0, ADR-017).
 13. Adding dependencies not listed for the current phase without an ADR.
 14. Weakening a test or a rule to make CI pass.
 15. Building FUTURE capabilities (ARCHITECTURE.md §A) or ARCHITECTURALLY SUPPORTED ones before their phase.

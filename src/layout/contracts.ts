@@ -83,4 +83,6 @@ export interface LayoutResult {
 
 export interface LayoutEngine {
   layout(request: LayoutRequest, signal: AbortSignal): Promise<LayoutResult>;
+  /** Loads the engine ahead of the first layout (step 5.0, Q7). Rejects `LayoutEngineUnavailable` if it cannot. An engine with nothing to load omits it. */
+  warmUp?(): Promise<void>;
 }

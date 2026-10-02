@@ -17,7 +17,7 @@ import { spawnChemWorker } from '@/test-support/rpc-node-port';
 import { createL4Service, L4_BATCH_SIZE } from '@/workers/chem';
 import { createChemService } from '@/workers/chem/client';
 import { CHEM_SPECS } from '@/workers/chem/specs';
-import { createRpcClient, type RpcClient } from '@/workers/rpc';
+import { createRpcClient, createWarmUpGate, type RpcClient } from '@/workers/rpc';
 import type { ChemWorkerApi } from '@/workers/rpc/contracts';
 
 const demo: CanonicalState = stateOfRecords(demoRecords());
@@ -82,9 +82,10 @@ describe('chem checks (step 4.3b)', () => {
   bench(
     'check the whole demo in a fresh real thread (spawn, load RDKit, three species batches, reactions, mechanisms; thread start under tsx included)',
     async () => {
-      const client = createRpcClient<ChemWorkerApi>({ factory: spawnChemWorker, specs: CHEM_SPECS, options: { maxRestarts: 1_000 } });
+      const gate = createWarmUpGate<ChemWorkerApi>();
+      const client = createRpcClient<ChemWorkerApi>({ factory: spawnChemWorker, specs: CHEM_SPECS, options: { maxRestarts: 1_000, onRestart: gate.onRestart } });
       clients.push(client);
-      await serviceRun(demo, createChemService(client), (n) => n === 2);
+      await serviceRun(demo, createChemService(client, gate), (n) => n === 2);
       client.terminate();
     },
     SLOW_BENCH_OPTIONS,

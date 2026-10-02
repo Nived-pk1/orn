@@ -81,6 +81,8 @@ Rebuild the Organic Reaction Navigator as an **offline-first TypeScript/React ap
 | `src/app` | composition root, boot, wiring | everything |
 | `src/test-support` | generator, arbitraries, fixtures helpers (tests only) | core |
 
+*2026-10-02 (Phase 5 contract decisions, Q10):* import and export UI live in `src/features/data-exchange`; the first-run screen is app shell; palette commands come from a registry that `src/app` fills. ui, render and features reach persistence, workers and the engines only as types or through src/app services (ADR-017).
+
 ### 2.3 Dependency direction
 
 ```

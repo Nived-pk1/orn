@@ -3,7 +3,7 @@
   "stateFileVersion": 1,
   "lastUpdated": "2026-10-02",
   "currentPhase": 5,
-  "currentPhaseStatus": "not_started",
+  "currentPhaseStatus": "in_progress",
   "completedPhases": [
     0,
     1,
@@ -62,11 +62,12 @@
     "4.3b",
     "4.4",
     "4.5",
-    "4.6"
+    "4.6",
+    "5.0"
   ],
   "nextPhase": 5,
-  "nextStep": "5.0",
-  "nextStepTitle": "Phase 5, step 5.0 - Boundaries and engine warm-up: (a) dependency-cruiser and ESLint boundary rules; (b) warmUp on ChemWorkerApi and LayoutWorkerApi with ENGINE_LOAD_TIMEOUT_MS = 20,000 (ADR-034 line, note E4); (c) the navigator fact sheet for step 5.4c. Phase 5 contract decisions are recorded (docs/PROGRESS.md, \"Phase 5 contract decisions (reviewer, 2026-10-02)\"). Phase 4 is closed and tagged phase-4. Do not start 5.1a.",
+  "nextStep": "5.1a",
+  "nextStepTitle": "Phase 5, step 5.1a - App services, part 1 (headless): createAppServices, DerivedIndexes service, AppStatus, clean-shutdown marker (docs/IMPLEMENTATION_PLAN.md §2). Step 5.0 (boundary rules, engine warm-up, navigator fact sheet) is done; the reviewer writes step 5.4c from the fact sheet in docs/PROGRESS.md.",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -111,7 +112,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command, three times in a row from a \"failed last time\" cache state (Vitest 4.1.11: 232 files, 3,728 tests; Vitest 175.5 s, 197.6 s, 195.1 s; Phase 4 close follow-up, 2026-10-02). Test workers are capped at 4 in vitest.config.ts (env ORN_TEST_WORKERS overrides; step 4.2a review). The 9 real-thread files run as their own serial Vitest project (real-threads) after the rest, and the results cache is off (Phase 4 close review, decision 1).",
+    "npmRunCheck": "passed as ONE command at step 5.0 (Vitest 4.1.11: 233 files, 3,741 tests; Vitest 187.2 s; before the step 232 files, 3,728 tests, 187.8 s). passed as ONE command, three times in a row from a \"failed last time\" cache state (Vitest 4.1.11: 232 files, 3,728 tests; Vitest 175.5 s, 197.6 s, 195.1 s; Phase 4 close follow-up, 2026-10-02). Test workers are capped at 4 in vitest.config.ts (env ORN_TEST_WORKERS overrides; step 4.2a review). The 9 real-thread files run as their own serial Vitest project (real-threads) after the rest, and the results cache is off (Phase 4 close review, decision 1).",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -269,9 +270,11 @@
     "Step 4.6: src/app/worker-factories.ts (`createWorkerFactories()`) creates the four module workers through `browserWorkerPort`; nothing calls it yet. src/app/main.tsx imports it for its side effect only so the build bundles the entries; Phase 5 replaces that import with real use (D7). -> step 5.1d",
     "ACCEPTED as a known limitation (Phase 4 close review, 2026-10-02, decision 2): regression guard, not proof. Step 4.6: tests/adversarial/phase4-dod.test.ts checks that every worker API method is named as a whole word in a test title; generic names (search, load, apply, layout, parse, depict, matches) make that weak evidence. A runtime check (a recording client per worker, as compute-rig.ts has) would be stronger; not built.",
     "Step 4.6 (Gate E, from the 4.5 review decision 6): the full-load document build for search on the main thread (193 ms with the indexes ready) is a Gate E watch item; remedy candidate: build the documents in the compute worker. -> step 5.1b, 5.10b",
-    "Phase 5 plan review (Phase 4 close review, decision 6): the 2 s limit of the chem and layout workers also covers the engine start-up in a fresh thread; on a slow device a cold RDKit load may not fit, the first call times out, the worker restarts, and three restarts in a row end in gave_up (ADR-034). Decide whether start-up gets its own limit (candidate: a warm-up call on creation and in onRestart with a load timeout; a contract amendment, CLAUDE.md §7). Step 5.1 measures the real-browser cold start. Nothing is built. -> step 5.0, 5.1d",
+    "PARTLY CLOSED in step 5.0 (2026-10-02): engine start-up has its own limit (warmUp, ENGINE_LOAD_TIMEOUT_MS = 20,000; ADR-034 dated line). Open: the real-browser cold start of RDKit and ELK is measured in step 5.1d, which also revisits the 20 s; step 5.1b creates the clients with onRestart: gate.onRestart (createWarmUpGate, src/workers/rpc/warm-up.ts) and the services with the same gate. -> step 5.1b, 5.1d",
     "Moved out of Phase 5 (Phase 5 contract decisions, 2026-10-02): periodic snapshots are built in Phase 6 step 6.1, when edits exist, through the compute worker's snapshotBuild. -> step 6.1",
     "Moved out of Phase 5 (Phase 5 contract decisions, 2026-10-02): bundle fan-out (listing and expanding the reactions inside a bundle or overflow node in the graph); Phase 5 only lists them in the inspector (step 5.5b). -> Phase 7",
-    "Moved out of Phase 5 (Phase 5 contract decisions, 2026-10-02): the persistent depiction cache in derivedCache (Phase 5 keeps a memory LRU), storageEstimate in Diagnostics, and derived tables over the store's own core handle (Q1 candidate, so the core part is not built twice). -> Phase 9"
+    "Moved out of Phase 5 (Phase 5 contract decisions, 2026-10-02): the persistent depiction cache in derivedCache (Phase 5 keeps a memory LRU), storageEstimate in Diagnostics, and derived tables over the store's own core handle (Q1 candidate, so the core part is not built twice). -> Phase 9",
+    "Step 5.0: an engine whose warmUp answered engine_unavailable stays unavailable for the life of its gate (a page reload retries); chem answers unavailable with the message, layout the fallback layout. The reviewer may want a retry after a pause or on user action. -> step 5.1d",
+    "Step 5.0: the navigator fact sheet (docs/PROGRESS.md, step 5.0 item c) is the input of step 5.4c: bundles are made from admitted edges only and do not know their full count, hidden counts dropped edges at admitted ends, and the roll-up has no per-pair index. -> step 5.4c"
   ]
 }

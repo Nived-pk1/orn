@@ -15,7 +15,7 @@ import { SLOW_BENCH_OPTIONS } from '@/test-support/perf-kit';
 import { spawnChemWorker } from '@/test-support/rpc-node-port';
 import { createChemService } from '@/workers/chem/client';
 import { CHEM_SPECS } from '@/workers/chem/specs';
-import { createRpcClient, type RpcClient } from '@/workers/rpc';
+import { createRpcClient, createWarmUpGate, type RpcClient } from '@/workers/rpc';
 import type { ChemWorkerApi } from '@/workers/rpc/contracts';
 
 const smiles = (value: string): StructureRep => ({ format: 'smiles', value });
@@ -37,9 +37,10 @@ await toolkit.ready();
 
 const clients: RpcClient<ChemWorkerApi>[] = [];
 const freshThread = () => {
-  const client = createRpcClient<ChemWorkerApi>({ factory: spawnChemWorker, specs: CHEM_SPECS, options: { maxRestarts: 1_000 } });
+  const gate = createWarmUpGate<ChemWorkerApi>();
+  const client = createRpcClient<ChemWorkerApi>({ factory: spawnChemWorker, specs: CHEM_SPECS, options: { maxRestarts: 1_000, onRestart: gate.onRestart } });
   clients.push(client);
-  return { client, chem: createChemService(client) };
+  return { client, chem: createChemService(client, gate) };
 };
 afterAll(() => {
   for (const client of clients.splice(0)) client.terminate();

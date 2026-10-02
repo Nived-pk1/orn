@@ -6,3 +6,5 @@ export type { RpcHost, RpcHostOptions } from './host';
 export { RpcHostError, messageOf, taskOptionsFrom, withTransfer } from './helpers';
 export { callWithRetry } from './retry';
 export { browserWorkerPort, workerScopePort } from './browser-port';
+export { createWarmUpGate } from './warm-up';
+export type { WarmableApi, WarmOutcome, WarmState, WarmUpGate } from './warm-up';

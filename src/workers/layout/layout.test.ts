@@ -5,15 +5,15 @@
  * timeout path (the worker is replaced and the NEW worker answers the fallback), a crash retried once, no worker able to answer.
  * The real-thread twin with real ELK is tests/integration/layout-worker-threads.test.ts.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { LayoutRequest } from '@/layout/contracts';
 import { MAX_LAYOUT_EDGES, MAX_LAYOUT_NODES, MAX_STRESS_NODES } from '@/layout/contracts';
 import { createElkEngine } from '@/layout/elk';
 import { layoutProblems, randomRequest, request } from '@/test-support/layout-kit';
 import { createFakeElk, type FakeElk } from '@/test-support/layout-fakes';
 import { createMemoryWorkers } from '@/test-support/rpc-memory-port';
-import { createRpcClient, createRpcHost } from '@/workers/rpc';
-import type { LayoutWorkerApi, WorkerEvent } from '@/workers/rpc/contracts';
+import { createRpcClient, createRpcHost, createWarmUpGate } from '@/workers/rpc';
+import { ENGINE_LOAD_TIMEOUT_MS, type LayoutWorkerApi, type WorkerEvent } from '@/workers/rpc/contracts';
 import { createLayoutHandlers } from './handlers';
 import { createLayoutService, LAYOUT_CACHE_SIZE } from './service';
 import { LAYOUT_CALL_TIMEOUT_MS, LAYOUT_SPECS } from './specs';
@@ -27,16 +27,17 @@ function rig(options: { cacheSize?: number; hostless?: boolean } = {}) {
   const workers = createMemoryWorkers((worker) => {
     if (options.hostless !== true) void createRpcHost(worker.host, createLayoutHandlers(createElkEngine({ make: elk.make, clock }), clock));
   });
-  const client = createRpcClient<LayoutWorkerApi>({ factory: workers.factory, specs: LAYOUT_SPECS, options: { onEvent: (event) => events.push(event) } });
-  const service = createLayoutService({ client, ...(options.cacheSize === undefined ? {} : { cacheSize: options.cacheSize }) });
-  return { elk, events, workers, client, service };
+  const gate = createWarmUpGate<LayoutWorkerApi>();
+  const client = createRpcClient<LayoutWorkerApi>({ factory: workers.factory, specs: LAYOUT_SPECS, options: { onEvent: (event) => events.push(event), onRestart: gate.onRestart } });
+  const service = createLayoutService({ client, gate, ...(options.cacheSize === undefined ? {} : { cacheSize: options.cacheSize }) });
+  return { elk, events, workers, client, gate, service };
 }
 
 describe('the specs', () => {
-  it('both calls are idempotent and limited to 2 s (ADR-034, ADR-007)', () => {
+  it('every call is idempotent and limited to 2 s, `warmUp` to the engine load limit (ADR-034, ADR-007, step 5.0)', () => {
     expect(LAYOUT_CALL_TIMEOUT_MS).toBe(2_000);
     const spec = { idempotent: true, timeoutMs: 2_000 };
-    expect(LAYOUT_SPECS).toEqual({ layout: spec, layoutFallback: spec });
+    expect(LAYOUT_SPECS).toEqual({ warmUp: { idempotent: true, timeoutMs: ENGINE_LOAD_TIMEOUT_MS }, layout: spec, layoutFallback: spec });
     expect(LAYOUT_CACHE_SIZE).toBe(32);
   });
 });
@@ -225,7 +226,11 @@ describe('the service: the timeout path', () => {
 
   it('no worker can answer: layout is UNAVAILABLE as a value (never a layout on the main thread)', async () => {
     const { service, workers } = rig({ hostless: true });
-    const out = await service.layout('view', small(), { timeoutMs: 30 });
+    vi.useFakeTimers(); // the warm-up has its own 20 s limit, then the fallback call its 30 ms
+    const pending = service.layout('view', small(), { timeoutMs: 30 });
+    await vi.advanceTimersByTimeAsync(ENGINE_LOAD_TIMEOUT_MS + 1_000);
+    const out = await pending;
+    vi.useRealTimers();
     expect(out).toMatchObject({ ok: false, code: 'UNAVAILABLE', message: expect.stringContaining('layout is unavailable') });
     expect(workers.workers.length).toBeGreaterThanOrEqual(2);
     expect(service.stats()).toMatchObject({ unavailable: 1, elk: 0 });

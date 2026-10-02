@@ -6,7 +6,7 @@
  * port does exactly that).
  */
 import { afterEach, describe, expect, it } from 'vitest';
-import { createRpcClient, type RpcClient } from '@/workers/rpc';
+import { createRpcClient, createWarmUpGate, type RpcClient } from '@/workers/rpc';
 import type { LayoutWorkerApi, WorkerEvent } from '@/workers/rpc/contracts';
 import { createLayoutService, LAYOUT_SPECS, type LayoutService } from '@/workers/layout';
 import { spawnLayoutWorker } from '@/test-support/rpc-node-port';
@@ -20,11 +20,12 @@ afterEach(() => {
   for (const client of running.splice(0)) client.terminate();
 });
 
-function start(mode: 'real' | 'busy' | 'throw' = 'real', busyMs = 5_000): { client: RpcClient<LayoutWorkerApi>; events: WorkerEvent[]; service: LayoutService } {
+function start(mode: 'real' | 'busy' | 'throw' = 'real', busyMs = 5_000): { client: RpcClient<LayoutWorkerApi>; events: WorkerEvent[]; service: LayoutService; warm: () => Promise<unknown> } {
   const events: WorkerEvent[] = [];
-  const client = createRpcClient<LayoutWorkerApi>({ factory: () => spawnLayoutWorker(mode, busyMs), specs: LAYOUT_SPECS, options: { onEvent: (event) => events.push(event) } });
+  const gate = createWarmUpGate<LayoutWorkerApi>();
+  const client = createRpcClient<LayoutWorkerApi>({ factory: () => spawnLayoutWorker(mode, busyMs), specs: LAYOUT_SPECS, options: { onEvent: (event) => events.push(event), onRestart: gate.onRestart } });
   running.push(client);
-  return { client, events, service: createLayoutService({ client }) };
+  return { client, events, service: createLayoutService({ client, gate }), warm: () => gate.ready(client, LAYOUT_SPECS) };
 }
 
 const small = () => request({ nodes: ['a', 'b', 'c', 'd'], edges: [['a', 'b'], ['b', 'c'], ['c', 'a'], ['a', 'd']] });
@@ -44,7 +45,8 @@ describe('the layout worker in a real thread', () => {
   }, THREAD_TEST_TIMEOUT_MS);
 
   it('a layout that cannot finish: TIMEOUT at the limit, the thread is terminated, a NEW thread answers the fallback (reason `timeout`)', async () => {
-    const { service, events } = start('busy', 8_000);
+    const { service, events, warm } = start('busy', 8_000);
+    await warm(); // ELK is loaded first (step 5.0): the 500 ms below is a calculation limit
     const began = performance.now();
     const out = await service.layout('view', small(), { timeoutMs: 500 });
     const took = performance.now() - began;

@@ -18,6 +18,14 @@ const noWebStorage = [
   { name: 'sessionStorage', message: 'Canonical and UI state live in IndexedDB — docs/PERSISTENCE.md.' },
 ];
 
+// Browser capabilities only src/app, src/persistence (injected), src/workers, src/test-support and tests may touch (step 5.0, ADR-017).
+const confinedMsg = 'Create and touch this browser object only in src/app, src/persistence, src/workers, src/test-support or tests; inject it elsewhere.';
+const confinedGlobals = ['Worker', 'SharedWorker', 'indexedDB', 'IDBKeyRange', 'BroadcastChannel'].map((name) => ({ name, message: confinedMsg }));
+const confinedSyntax = [
+  { selector: "MemberExpression[object.name=/^(window|self|globalThis)$/][property.name=/^(Worker|SharedWorker|indexedDB|IDBKeyRange|BroadcastChannel)$/]", message: confinedMsg },
+];
+const confinedProperties = [{ object: 'navigator', property: 'locks', message: confinedMsg }];
+
 export default tseslint.config(
   { ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'] },
   js.configs.recommended,
@@ -28,8 +36,12 @@ export default tseslint.config(
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'no-restricted-syntax': ['error', ...bannedSyntax],
-      'no-restricted-globals': ['error', ...noWebStorage],
+      'no-restricted-syntax': ['error', ...bannedSyntax, ...confinedSyntax],
+      'no-restricted-globals': ['error', ...noWebStorage, ...confinedGlobals],
+      'no-restricted-properties': ['error', ...confinedProperties],
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      'no-script-url': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
@@ -42,12 +54,14 @@ export default tseslint.config(
       'no-restricted-globals': [
         'error',
         ...noWebStorage,
-        ...['window', 'document', 'navigator', 'indexedDB', 'fetch', 'XMLHttpRequest', 'location', 'performance'].map(
+        ...confinedGlobals,
+        ...['window', 'document', 'navigator', 'fetch', 'XMLHttpRequest', 'location', 'performance'].map(
           (name) => ({ name, message: 'src/core is environment-free; inject capabilities instead.' }),
         ),
       ],
       'no-restricted-properties': [
         'error',
+        ...confinedProperties,
         { object: 'Math', property: 'random', message: 'Use the injected RNG (determinism).' },
         { object: 'Date', property: 'now', message: 'Use the injected clock (determinism).' },
       ],
@@ -61,12 +75,27 @@ export default tseslint.config(
       'no-restricted-globals': [
         'error',
         ...noWebStorage,
+        ...confinedGlobals.filter((g) => g.name !== 'indexedDB' && g.name !== 'IDBKeyRange'),
         ...['indexedDB', 'IDBKeyRange', 'window', 'document'].map((name) => ({
           name,
           message: 'src/persistence receives indexedDB and IDBKeyRange through createOrnDb options; never read the global.',
         })),
       ],
     },
+  },
+  {
+    // The composition root, the worker side, test support and tests may create and use these objects.
+    files: ['src/app/**/*.{ts,tsx}', 'src/workers/**/*.ts', 'src/test-support/**/*.ts', 'tests/**/*.ts', '**/*.{test,bench}.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': ['error', ...bannedSyntax],
+      'no-restricted-globals': ['error', ...noWebStorage],
+      'no-restricted-properties': 'off',
+    },
+  },
+  {
+    // Tests feed hostile "javascript:" strings to the code under test on purpose (ADV-033, SafeUrl, the SVG sanitiser).
+    files: ['**/*.{test,bench}.{ts,tsx}', 'tests/**/*.ts'],
+    rules: { 'no-script-url': 'off' },
   },
   {
     files: ['scripts/**/*.mjs', '*.config.{js,ts}'],

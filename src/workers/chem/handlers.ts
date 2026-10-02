@@ -2,7 +2,8 @@
  * The chem worker's RPC handlers: thin wrappers over a `StructureToolkit` (step 4.3a). The worker holds no state but the
  * toolkit's own cache (ADR-034 D1). Params arrive over the wire, so their SHAPE is checked here (`BAD_REQUEST`); their
  * content (size caps, a structure RDKit cannot read) is the toolkit's business and answers a value. Depict answers sanitised
- * SVG or a failure value: nothing else leaves this worker as markup.
+ * SVG or a failure value: nothing else leaves this worker as markup. `warmUp` (step 5.0) awaits the toolkit's load and answers a value:
+ * `{ ok: true, loadMs }` (from the injected clock) or `engine_unavailable` with a message; loading again is free once loaded.
  */
 import { depictionDetails, type DepictionOptions, type StructureToolkit } from '@/chem';
 import { createChemChecks } from '@/chem/checks';
@@ -20,9 +21,15 @@ function optionsOf(value: unknown): DepictionOptions {
   return value as DepictionOptions;
 }
 
-export function createChemHandlers(toolkit: StructureToolkit): ChemWorkerApi {
+export function createChemHandlers(toolkit: StructureToolkit, clock: () => number): ChemWorkerApi {
   const checks = createChemChecks(toolkit);
   return {
+    async warmUp() {
+      const began = clock();
+      await toolkit.ready();
+      if (toolkit.version === 'not loaded') return { ok: false, reason: 'engine_unavailable', message: 'the structure toolkit (RDKit) could not be loaded' };
+      return { ok: true, loadMs: clock() - began };
+    },
     parse: async ({ structure }) => toolkit.parse(structureOf(structure)),
     depict: async ({ structure, options }) => toolkit.depict(structureOf(structure), optionsOf(options)),
     checkSpecies: async ({ species }) => checks.checkSpecies(speciesRequestsOf(species)),

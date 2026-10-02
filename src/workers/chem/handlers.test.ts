@@ -9,8 +9,8 @@ import { createRdkitToolkit, withChemCache, type DepictionOptions, type Structur
 import type { StructureRep } from '@/core/schema';
 import { createFakeRdkit, ETHANOL_SPEC } from '@/test-support/fake-rdkit';
 import { createMemoryWorkers, type MemoryWorker } from '@/test-support/rpc-memory-port';
-import { createRpcClient, createRpcHost } from '@/workers/rpc';
-import type { ChemWorkerApi } from '@/workers/rpc/contracts';
+import { createRpcClient, createRpcHost, createWarmUpGate } from '@/workers/rpc';
+import { ENGINE_LOAD_TIMEOUT_MS, type ChemWorkerApi } from '@/workers/rpc/contracts';
 import { createChemService } from './client';
 import { createChemHandlers } from './handlers';
 import { CHEM_CALL_TIMEOUT_MS, CHEM_SPECS } from './specs';
@@ -18,19 +18,22 @@ import { CHEM_CALL_TIMEOUT_MS, CHEM_SPECS } from './specs';
 const smiles = (value: string): StructureRep => ({ format: 'smiles', value });
 const DRAW: DepictionOptions = { width: 200, height: 150, showAtomMaps: true };
 
+const clock = (): number => performance.now();
+
 function rig() {
   const fake = createFakeRdkit({ CCO: ETHANOL_SPEC });
   const toolkit = withChemCache(createRdkitToolkit({ load: async () => fake.module }));
-  const workers = createMemoryWorkers((worker) => void createRpcHost(worker.host, createChemHandlers(toolkit)));
-  const client = createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS });
-  return { fake, toolkit, workers, client, chem: createChemService(client) };
+  const workers = createMemoryWorkers((worker) => void createRpcHost(worker.host, createChemHandlers(toolkit, clock)));
+  const gate = createWarmUpGate<ChemWorkerApi>();
+  const client = createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS, options: { onRestart: gate.onRestart } });
+  return { fake, toolkit, workers, client, gate, chem: createChemService(client, gate) };
 }
 
 describe('the chem specs', () => {
   it('every call is idempotent and limited to 2 s (ADR-034, SECURITY §3)', () => {
     expect(CHEM_CALL_TIMEOUT_MS).toBe(2_000);
     const spec = { idempotent: true, timeoutMs: 2_000 };
-    expect(CHEM_SPECS).toEqual({ parse: spec, depict: spec, checkSpecies: spec, checkReaction: spec, checkMechanism: spec, matches: spec });
+    expect(CHEM_SPECS).toEqual({ warmUp: { idempotent: true, timeoutMs: ENGINE_LOAD_TIMEOUT_MS }, parse: spec, depict: spec, checkSpecies: spec, checkReaction: spec, checkMechanism: spec, matches: spec });
   });
 });
 
@@ -104,11 +107,12 @@ describe('the main-side service', () => {
   function hangingService() {
     const workers = createMemoryWorkers((worker) => {
       const never = (): Promise<never> => new Promise(() => undefined);
-      const api: ChemWorkerApi = { parse: never, depict: never, checkSpecies: never, checkReaction: never, checkMechanism: never, matches: never };
+      const api: ChemWorkerApi = { warmUp: async () => ({ ok: true, loadMs: 0 }), parse: never, depict: never, checkSpecies: never, checkReaction: never, checkMechanism: never, matches: never };
       createRpcHost(worker.host, api);
     });
-    const client = createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS, options: { maxRestarts: 5 } });
-    return { workers, client, chem: createChemService(client) };
+    const gate = createWarmUpGate<ChemWorkerApi>();
+    const client = createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS, options: { maxRestarts: 5, onRestart: gate.onRestart } });
+    return { workers, client, chem: createChemService(client, gate) };
   }
 
   it('a call that runs into its limit is `timeout` (not invalid, not unavailable); the worker is terminated and replaced; it is NOT retried', async () => {
@@ -118,7 +122,7 @@ describe('the main-side service', () => {
     expect(out.ok ? '' : out.error).toContain('2000 ms');
     expect(workers.workers[0]?.alive()).toBe(false);
     expect(workers.workers).toHaveLength(2); // restarted, and the call was not repeated on the new worker
-    expect(workers.workers[1]?.received.filter((m) => m.type === 'request')).toHaveLength(0);
+    expect(workers.workers[1]?.received.filter((m) => m.type === 'request' && m.method !== 'warmUp')).toHaveLength(0); // only the re-warm-up (step 5.0) reached the new worker
     const drawn = await chem.depict(smiles('CCO'), DRAW, { timeoutMs: 30 });
     expect(drawn).toMatchObject({ ok: false, reason: 'timeout' });
   });
@@ -129,19 +133,20 @@ describe('the main-side service', () => {
     const toolkit: StructureToolkit = withChemCache(createRdkitToolkit({ load: async () => fake.module }));
     const workers = createMemoryWorkers((worker) => {
       started += 1;
-      const api = createChemHandlers(toolkit);
+      const api = createChemHandlers(toolkit, clock);
       if (started === 1) createRpcHost(worker.host, { ...api, parse: async () => (worker.crash('exit'), new Promise(() => undefined)) });
       else createRpcHost(worker.host, api);
     });
-    const chem = createChemService(createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS }));
+    const gate = createWarmUpGate<ChemWorkerApi>();
+    const chem = createChemService(createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS, options: { onRestart: gate.onRestart } }), gate);
     expect(await chem.parse(smiles('CCO'))).toMatchObject({ ok: true, facts: { formula: 'C2H6O' } });
     expect(started).toBe(2);
   });
 
   it('a worker that crashes on both attempts is `unavailable`, saying why; a stopped client is `unavailable` too', async () => {
-    const workers = createMemoryWorkers((worker) => createRpcHost(worker.host, { parse: async () => (worker.crash('exit'), new Promise(() => undefined)), depict: async () => new Promise(() => undefined) }));
+    const workers = createMemoryWorkers((worker) => createRpcHost(worker.host, { warmUp: async () => ({ ok: true, loadMs: 0 }), parse: async () => (worker.crash('exit'), new Promise(() => undefined)), depict: async () => new Promise(() => undefined) }));
     const client = createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS, options: { maxRestarts: 5 } });
-    const chem = createChemService(client);
+    const chem = createChemService(client, createWarmUpGate<ChemWorkerApi>());
     const out = await chem.parse(smiles('CCO'));
     expect(out).toMatchObject({ ok: false, reason: 'unavailable' });
     expect(out.ok ? '' : out.error).toContain('WORKER_CRASHED');
@@ -190,9 +195,10 @@ describe('the batch checks over the port (step 4.3b)', () => {
   it('a check that runs into its limit is `timeout` for the service (the worker was terminated), and is not retried', async () => {
     const workers = createMemoryWorkers((worker) => {
       const never = (): Promise<never> => new Promise(() => undefined);
-      createRpcHost(worker.host, { parse: never, depict: never, checkSpecies: never, checkReaction: never, checkMechanism: never, matches: never });
+      createRpcHost(worker.host, { warmUp: async () => ({ ok: true, loadMs: 0 }), parse: never, depict: never, checkSpecies: never, checkReaction: never, checkMechanism: never, matches: never });
     });
-    const chem = createChemService(createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS, options: { maxRestarts: 5 } }));
+    const gate = createWarmUpGate<ChemWorkerApi>();
+    const chem = createChemService(createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS, options: { maxRestarts: 5, onRestart: gate.onRestart } }), gate);
     expect(await chem.checkSpecies([{ id: 'a', structure: smiles('CCO') }], { timeoutMs: 30 })).toMatchObject({ ok: false, reason: 'timeout' });
     expect(workers.workers).toHaveLength(2);
     expect(await chem.matches([], { timeoutMs: 30 })).toMatchObject({ ok: false, reason: 'timeout' });

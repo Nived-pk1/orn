@@ -11,6 +11,10 @@
  *     asks the NEW worker for the fallback layout (`fallbackReason: 'timeout'`). The same for a worker that crashed twice or is
  *     busy or not ready (`'engine_unavailable'`). If no worker can answer, the result is `UNAVAILABLE` as a value: there is NEVER a
  *     layout on the main thread (PERFORMANCE_ARCHITECTURE §11).
+ *   - Engine start-up (step 5.0, Q7): `warmUp` is sent before the first real layout and the calls wait behind it (`gate`; create the
+ *     client with `onRestart: gate.onRestart`). If ELK cannot load, the answer is the fallback layout (`engine_unavailable`), never a
+ *     restart loop; a warm-up the RPC layer could not answer is an ordinary RPC failure (`TIMEOUT` past `ENGINE_LOAD_TIMEOUT_MS`:
+ *     restart, then the fallback with `'timeout'`).
  * No layout code runs here; the pure request checks and the cache key are shared with the worker.
  */
 import { layoutCacheKey } from '@/layout/cache-key';
@@ -18,7 +22,8 @@ import { LruCache } from '@/layout/lru';
 import { checkRequest } from '@/layout/validate';
 import { MAX_STRESS_NODES, type FallbackReason, type LayoutRequest, type LayoutResult } from '@/layout/contracts';
 import { callWithRetry } from '@/workers/rpc/retry';
-import type { LayoutWorkerApi, RpcCallOptions, RpcClient, RpcError } from '@/workers/rpc/contracts';
+import type { LayoutWorkerApi, RpcCallOptions, RpcClient, RpcError, RpcResult } from '@/workers/rpc/contracts';
+import type { WarmUpGate } from '@/workers/rpc/warm-up';
 import { LAYOUT_SPECS } from './specs';
 
 /** Layouts kept by cache key (the largest, 2,000 nodes, is a few hundred KB; 32 of the usual 400-node ones are a few MB). */
@@ -46,6 +51,8 @@ export interface LayoutService {
 
 export interface LayoutServiceOptions {
   readonly client: RpcClient<LayoutWorkerApi>;
+  /** One gate per client (the client's `onRestart` is `gate.onRestart`). */
+  readonly gate: WarmUpGate<LayoutWorkerApi>;
   /** Default `LAYOUT_CACHE_SIZE`. */
   readonly cacheSize?: number;
 }
@@ -83,7 +90,11 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
     running.set(view, mine);
     const options_: RpcCallOptions = { signal: mine.controller.signal, ...(call?.timeoutMs === undefined ? {} : { timeoutMs: call.timeoutMs }) };
     try {
-      const first = await callWithRetry(client, LAYOUT_SPECS, 'layout', request, options_);
+      const warm = await options.gate.ready(client, LAYOUT_SPECS);
+      if (mine.controller.signal.aborted) return cancelled;
+      const first: RpcResult<LayoutResult> = warm.ok
+        ? await callWithRetry(client, LAYOUT_SPECS, 'layout', request, options_)
+        : { ok: false, error: warm.reason === 'rpc' ? warm.error : { code: 'NOT_READY', message: warm.message } };
       if (mine.controller.signal.aborted) return cancelled;
       if (first.ok) {
         const result = first.value;

@@ -126,6 +126,18 @@ export interface RpcClientOptions<Api extends WorkerApi<Api>> {
 }
 
 /**
+ * Engine start-up (step 5.0, Phase 5 contract decisions Q7, ADR-034 dated line). The chem and layout engines load lazily (RDKit's
+ * WASM, ELK's chunk), and a cold load on a slow device may not fit the 2 s CALCULATION limit. `warmUp` is the call that loads
+ * the engine, with its own limit. It is idempotent (a loaded engine answers at once), answers a value, never an `RpcError` for
+ * an engine that cannot load, and is sent by the main-side service before its first real call (see `warm-up.ts`).
+ */
+export const ENGINE_LOAD_TIMEOUT_MS = 20_000;
+export type WarmUpParams = Readonly<Record<string, never>>;
+export type WarmUpResult =
+  | { readonly ok: true; /** Milliseconds the worker spent loading, from its injected clock (about 0 when already loaded). */ readonly loadMs: number }
+  | { readonly ok: false; readonly reason: 'engine_unavailable'; readonly message: string };
+
+/**
  * The chem worker holds no state (ADR-034 D1): each call carries its input. `parse` answers facts or a failure value with a
  * reason (only `invalid` means the structure is bad); `depict` answers sanitised SVG or a failure value. The L4 checks (Q2,
  * step 4.3b; they replaced the earlier `checkAll({ revision })`, which assumed state in the worker) each take the records they
@@ -134,6 +146,7 @@ export interface RpcClientOptions<Api extends WorkerApi<Api>> {
  * item per step), `matches` (SMARTS probes; CHEM-007 sends the class SMARTS with the species).
  */
 export interface ChemWorkerApi {
+  warmUp(params: WarmUpParams, ctx: RpcCallContext): Promise<WarmUpResult>;
   parse(params: { readonly structure: StructureRep }, ctx: RpcCallContext): Promise<ParseOutcome>;
   depict(params: { readonly structure: StructureRep; readonly options: DepictionOptions }, ctx: RpcCallContext): Promise<DepictOutcome>;
   checkSpecies(params: { readonly species: readonly SpeciesCheckRequest[] }, ctx: RpcCallContext): Promise<SpeciesChecksAnswer>;
@@ -150,6 +163,7 @@ export interface ChemWorkerApi {
  * sorted by id, over the caps, or malformed is `BAD_REQUEST` for both.
  */
 export interface LayoutWorkerApi {
+  warmUp(params: WarmUpParams, ctx: RpcCallContext): Promise<WarmUpResult>;
   layout(params: LayoutRequest, ctx: RpcCallContext): Promise<LayoutResult>;
   layoutFallback(params: { readonly request: LayoutRequest; readonly reason: FallbackReason }, ctx: RpcCallContext): Promise<LayoutResult>;
 }

@@ -4,7 +4,12 @@
  * core imports only core, zod and immer. Features never import each other.
  */
 const TEST_FILE = '\\.(test|bench)\\.tsx?$';
-const SERVICES = '^src/(chem|search|layout|io|persistence|workers)/';
+// Pure modules the presentation layers may import at run time (step 5.0, decision Q10): the palette
+// grammar parser (step 5.8) and the constants in each service's contracts.ts. Everything else under
+// chem, layout, search and io is reachable from ui, render and features as a type only.
+const PURE_ALLOW_LIST = ['^src/search/palette/parse\\.ts$', '^src/(chem|layout|search|io)/contracts\\.ts$'];
+const PRESENTATION = '^src/(ui|render|features)/';
+const SERVICES ='^src/(chem|search|layout|io|persistence|workers)/';
 
 module.exports = {
   forbidden: [
@@ -117,6 +122,27 @@ module.exports = {
       severity: 'error',
       from: { path: '^src/features/([^/]+)/', pathNot: TEST_FILE },
       to: { path: '^src/features/', pathNot: '^src/features/$1/' },
+    },
+    {
+      name: 'presentation-not-persistence-workers',
+      comment: 'Step 5.0 (ADR-017): ui, render and features reach persistence and workers through src/app services; types only.',
+      severity: 'error',
+      from: { path: PRESENTATION, pathNot: TEST_FILE },
+      to: { path: '^src/(persistence|workers)/', dependencyTypesNot: ['type-only'] },
+    },
+    {
+      name: 'presentation-engines-types-only',
+      comment: 'Step 5.0 (ADR-017): ui, render and features import chem, layout, search and io as types, or the PURE_ALLOW_LIST modules.',
+      severity: 'error',
+      from: { path: PRESENTATION, pathNot: TEST_FILE },
+      to: { path: '^src/(chem|layout|search|io)/', pathNot: PURE_ALLOW_LIST, dependencyTypesNot: ['type-only'] },
+    },
+    {
+      name: 'presentation-no-validation-rules',
+      comment: 'Step 5.0 (ADR-017): the rule catalogue runs in core and the workers; presentation code never imports it, not even as a type.',
+      severity: 'error',
+      from: { path: PRESENTATION, pathNot: TEST_FILE },
+      to: { path: '^src/core/validation/rules' },
     },
     {
       name: 'no-test-code-in-production',

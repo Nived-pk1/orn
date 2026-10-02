@@ -17,7 +17,7 @@ import { freshEngine } from '@/test-support/search-rig';
 import { createChemService } from '@/workers/chem/client';
 import { CHEM_SPECS } from '@/workers/chem/specs';
 import { createLayoutService, LAYOUT_SPECS } from '@/workers/layout';
-import { createRpcClient } from '@/workers/rpc';
+import { createRpcClient, createWarmUpGate } from '@/workers/rpc';
 import type { ChemWorkerApi, LayoutWorkerApi, RpcPort, SearchWorkerApi, WorkerEvent } from '@/workers/rpc/contracts';
 import { createSearchService, createSearchSync, SEARCH_SPECS } from '@/workers/search';
 
@@ -40,9 +40,10 @@ const restarts = (events: readonly WorkerEvent[]) => events.filter((e) => e.type
 describe('Phase 4 DoD: an induced crash, a restart and a recovery, in a real thread', () => {
   it('the chem worker: a thread that exits under parse fails the call, is restarted, the call is retried once and answers from RDKit in the new thread', async () => {
     const rig = crashFirst(spawnChemWorker, 'parse');
-    const client = createRpcClient<ChemWorkerApi>({ factory: rig.factory, specs: CHEM_SPECS, options: { onEvent: rig.onEvent } });
+    const gate = createWarmUpGate<ChemWorkerApi>();
+    const client = createRpcClient<ChemWorkerApi>({ factory: rig.factory, specs: CHEM_SPECS, options: { onEvent: rig.onEvent, onRestart: gate.onRestart } });
     running.push(client);
-    const chem = createChemService(client);
+    const chem = createChemService(client, gate);
     expect(await chem.parse({ format: 'smiles', value: 'CCO' })).toMatchObject({ ok: true, facts: { formula: 'C2H6O' } });
     expect(rig.threads()).toBe(2);
     expect(crashes(rig.events)).toHaveLength(1);
@@ -53,9 +54,10 @@ describe('Phase 4 DoD: an induced crash, a restart and a recovery, in a real thr
 
   it('the layout worker: a thread that exits under layout is restarted, the retried layout is real ELK, the answer is valid and nothing fell back', async () => {
     const rig = crashFirst((crashOn) => spawnLayoutWorker('real', 5_000, crashOn), 'layout');
-    const client = createRpcClient<LayoutWorkerApi>({ factory: rig.factory, specs: LAYOUT_SPECS, options: { onEvent: rig.onEvent } });
+    const gate = createWarmUpGate<LayoutWorkerApi>();
+    const client = createRpcClient<LayoutWorkerApi>({ factory: rig.factory, specs: LAYOUT_SPECS, options: { onEvent: rig.onEvent, onRestart: gate.onRestart } });
     running.push(client);
-    const service = createLayoutService({ client });
+    const service = createLayoutService({ client, gate });
     const req = request({ nodes: ['a', 'b', 'c', 'd'], edges: [['a', 'b'], ['b', 'c'], ['c', 'a'], ['a', 'd']] });
     const out = await service.layout('view', req);
     if (!out.ok) throw new Error(out.message);

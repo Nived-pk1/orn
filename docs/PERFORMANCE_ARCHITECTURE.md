@@ -58,6 +58,7 @@ documented Phase 9 exceptions if over 16 ms (docs/TEST_STRATEGY.md §6, docs/rev
 | Compute worker | Replica of canonical state: full validation, route search, import parse/preview, export building, snapshot building, migrations |
 
 RPC (`src/workers/rpc`): numbered requests, structured-clone params, transferables for large buffers, `cancel` messages wired to `AbortSignal`, progress events, per-call timeouts, automatic worker restart on crash with replica reload. The compute replica stays in sync by applying the same ChangeSets (Immer patches) with a revision check; on mismatch it reloads the full state. Any incremental re-validation in the compute worker must pass the **previous state** to `validateTouchedByRule`/`validateTouched` (ADR-031/032): without it every referrer of a touched record is re-validated whole (39–47 ms on a 1,000-referrer hub at the design tier, median p99 in step 2.13, instead of 1–4 ms).
+**Engine start-up (step 5.0, 2026-10-02).** The 2 s call limit covers calculations only. RDKit's WASM and ELK load in a `warmUp` call with its own limit, `ENGINE_LOAD_TIMEOUT_MS` = 20,000 ms, sent before the first real call and again after a restart only if the engine had been warmed; a slow device is a slow warm-up, not a hang (ADR-034 dated line).
 
 ## 4. Incremental computation
 
@@ -83,6 +84,7 @@ Render budget 400 visible nodes / 800 visible edges; above it LOD is capped at 1
 ## 7. Boot and bundle
 
 Code-split per view; RDKit WASM (~6 MB), ELK and Ketcher load lazily on first need; the navigator can render with names and formulas before RDKit is ready. Warm boot reuses the cached search index and layouts keyed by revision. Initial JS (excluding lazy chunks) target < 400 KB gzip.
+Engines load on the first need through `warmUp` (step 5.0): the first chem or layout call of a session is held behind it, and a timeout of the load (20 s) is an ordinary worker timeout.
 
 ## 8. Memory
 

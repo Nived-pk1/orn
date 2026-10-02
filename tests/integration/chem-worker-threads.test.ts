@@ -14,7 +14,7 @@ import { realIndexes } from '@/test-support/l4-real-kit';
 import { createL4Service } from '@/workers/chem';
 import { createChemService } from '@/workers/chem/client';
 import { CHEM_CALL_TIMEOUT_MS, CHEM_SPECS } from '@/workers/chem/specs';
-import { createRpcClient, type RpcClient } from '@/workers/rpc';
+import { createRpcClient, createWarmUpGate, type RpcClient } from '@/workers/rpc';
 import type { ChemWorkerApi, WorkerEvent } from '@/workers/rpc/contracts';
 
 /** Starting a thread under tsx takes seconds when the whole suite runs in parallel (the default 5 s is too tight). */
@@ -34,9 +34,12 @@ afterEach(() => {
 
 function start() {
   const events: WorkerEvent[] = [];
-  const client = createRpcClient<ChemWorkerApi>({ factory: spawnChemWorker, specs: CHEM_SPECS, options: { onEvent: (event) => events.push(event) } });
+  const gate = createWarmUpGate<ChemWorkerApi>();
+  const client = createRpcClient<ChemWorkerApi>({ factory: spawnChemWorker, specs: CHEM_SPECS, options: { onEvent: (event) => events.push(event), onRestart: gate.onRestart } });
   running.push(client);
-  return { client, events, chem: createChemService(client) };
+  /** Loads RDKit in the new thread first (the 20 s load limit), so the 2 s limit below covers calculations only (step 5.0). */
+  const warm = () => gate.ready(client, CHEM_SPECS);
+  return { client, events, gate, warm, chem: createChemService(client, gate) };
 }
 
 describe('the chem worker in a real thread', () => {
@@ -70,7 +73,8 @@ describe('the chem worker in a real thread', () => {
   }, THREAD_TEST_TIMEOUT_MS);
 
   it('a hung depiction is stopped the same way', async () => {
-    const { chem } = start();
+    const { chem, warm } = start();
+    await warm(); // RDKit is loaded first (step 5.0): the 800 ms below is a calculation limit
     const out = await chem.depict(smiles(HANGS_RDKIT), DRAW, { timeoutMs: 800 });
     expect(out).toMatchObject({ ok: false, reason: 'timeout' });
     expect(await chem.depict(smiles('CCO'), DRAW)).toMatchObject({ ok: true });
@@ -109,11 +113,12 @@ describe('the batch checks and the L4 service in a real thread (step 4.3b)', () 
   }, THREAD_TEST_TIMEOUT_MS);
 
   it('a batch with a hanging structure: the call times out (thread terminated), the service sends the items one by one, remembers the culprit and never sends it again', async () => {
-    const { client, events } = start();
+    const { client, events, gate, warm } = start();
+    await warm();
     const findings = createFindingStore();
     const records = Object.fromEntries([speciesRecord('spc_1', 'CCO'), speciesRecord('spc_h', HANGS_RDKIT), speciesRecord('spc_3', 'CCCO')].map((r) => [r.id, r]));
     const state = { meta: {}, records: { species: records, reaction: {}, mechanism: {}, class: {} } } as unknown as CanonicalState;
-    const service = createL4Service({ state: () => state, findings, indexes: realIndexes(() => state), chem: createChemService(client), schedule: () => undefined });
+    const service = createL4Service({ state: () => state, findings, indexes: realIndexes(() => state), chem: createChemService(client, gate), schedule: () => undefined });
     service.checkAll();
     await service.flush();
     expect(service.statusOf({ kind: 'species', id: 'spc_h' })).toMatchObject({ state: 'not_checked', reason: 'timeout', remembered: true });
