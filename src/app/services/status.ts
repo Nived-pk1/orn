@@ -75,6 +75,23 @@ export interface BootNotices {
   readonly migrationSteps: number;
 }
 
+/** The whole-state operations of step 5.1c. One runs at a time (`flow-gate.ts`). */
+export type OperationKind = 'import_preview' | 'import_apply' | 'restore' | 'export';
+
+/** What the running operation is doing now; `progress` is null until the operation reports any. */
+export interface OperationView {
+  readonly kind: OperationKind;
+  readonly stage: string;
+  readonly progress: { readonly done: number; readonly total: number | null } | null;
+}
+
+/** Persistent storage (`navigator.storage.persist()`), asked once after the first successful import in a writer tab. */
+export interface StorageView {
+  /** `unknown`: not asked yet, or the environment could not answer (`message` says which). `refused` is an answer, not an error. */
+  readonly persistence: 'unknown' | 'persisted' | 'refused';
+  readonly message: string | null;
+}
+
 export interface AppStatus {
   readonly stage: 'booting' | 'ready' | 'disposed';
   /** null until boot has decided. */
@@ -103,6 +120,9 @@ export interface AppStatus {
   readonly search: SearchView;
   /** The last layout notice: a fallback layout (with its reason) or a note the layout service made; null when there was none. */
   readonly layoutNotice: string | null;
+  /** The whole-state operation that is running (import preview or apply, restore, export); null when none. */
+  readonly operation: OperationView | null;
+  readonly storage: StorageView;
 }
 
 export const INITIAL_STATUS: AppStatus = Object.freeze({
@@ -128,6 +148,8 @@ export const INITIAL_STATUS: AppStatus = Object.freeze({
   l4: Object.freeze({ state: 'idle', notChecked: 0, queued: 0, message: null }),
   search: Object.freeze({ state: 'absent', indexRevision: null, loadedFrom: 'none', reason: 'not started', cache: Object.freeze({ state: 'none', revision: null, message: null }) }),
   layoutNotice: null,
+  operation: null,
+  storage: Object.freeze({ persistence: 'unknown', message: null }),
 });
 
 export interface StatusStore {

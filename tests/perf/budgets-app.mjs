@@ -1,4 +1,4 @@
-// Budget metadata for tests/perf/app-services.bench.ts (step 5.1a) and tests/perf/app-engines.bench.ts (step 5.1b), merged into BUDGETS by budgets.mjs (kept apart so no file passes 400 lines).
+// Budget metadata for tests/perf/app-services.bench.ts (step 5.1a) and tests/perf/app-engines.bench.ts (step 5.1b) and tests/perf/app-import.bench.ts (step 5.1c), merged into BUDGETS by budgets.mjs (kept apart so no file passes 400 lines).
 
 export const APP_BUDGETS = {
   "DerivedIndexes (design tier, hub_explosion): first build > first build (indexEngine.build at the first current())":
@@ -21,4 +21,12 @@ export const APP_BUDGETS = {
     { operation: "search boot: full load until the index answers", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1b: informal; no RPC; SLOW_BENCH_OPTIONS" },
   "search boot until the index answers: warm cache against a full load (design tier, no RPC) > warm boot: engine.loadSerialized (worker) + adopt (main)":
     { operation: "search boot: warm cache until the index answers", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1b: informal; no RPC; SLOW_BENCH_OPTIONS" },
+  "import apply, the main-thread parts (design tier, dense, 5,000 reactions) > receive the merged state and the worker findings (structuredClone)":
+    { operation: "import apply on main: receive the merged state and findings", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c: informal; Gate E watch item (main-thread part of an import apply); Node; SLOW_BENCH_OPTIONS" },
+  "import apply, the main-thread parts (design tier, dense, 5,000 reactions) > store.replaceState(merged, \"import\", the worker findings) into an empty store":
+    { operation: "import apply on main: replaceState with the worker findings", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c: informal; Gate E watch item (main-thread part of an import apply); Node; SLOW_BENCH_OPTIONS" },
+  "import apply, the main-thread parts (design tier, dense, 5,000 reactions) > DerivedIndexes: the first build over the imported state":
+    { operation: "import apply on main: first DerivedIndexes build", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c: informal; Gate E watch item (main-thread part of an import apply); Node; SLOW_BENCH_OPTIONS" },
+  "import apply, the main-thread parts (design tier, dense, 5,000 reactions) > search full load on main: documents built, first DerivedIndexes build included (worker stubbed)":
+    { operation: "import apply on main: search full load", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c: informal; Gate E watch item (main-thread part of an import apply); Node; SLOW_BENCH_OPTIONS" },
 };

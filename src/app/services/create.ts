@@ -24,6 +24,8 @@ import { createChemPart, createLayoutPart } from './chem-layout';
 import { createDepictionService } from './depiction';
 import { createDerivedIndexes } from './derived-indexes';
 import { startFollower } from './follower';
+import { createFlows } from './flows';
+import { createAssetStage } from './flow-ports';
 import { createL4Part } from './l4-part';
 import { createSearchPart } from './search-part';
 import { createReplicaPart } from './replica';
@@ -83,7 +85,8 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
 
   replica.start(store);
   const indexes = createDerivedIndexes({ store, clock: env.clock });
-  const writer = createWriterPart({ store, adapter, status, log, ids });
+  const assetStage = createAssetStage();
+  const writer = createWriterPart({ store, adapter, status, log, ids, blobsFor: assetStage.blobsFor });
   const l4 = createL4Part({ store, indexes, chem: chemPart.service, timers: env.timers, status, log });
   const search = createSearchPart({
     factory: env.workers.search,
@@ -118,6 +121,8 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   status.update({ stage: 'ready' });
   l4.checkAll();
   void search.started();
+
+  const flows = createFlows({ store, adapter, assetStage, status, log, replica: { sync: () => replica.sync() }, env, ids });
 
   let disposing: Promise<void> | undefined;
   const dispose = (): Promise<void> => {
@@ -163,6 +168,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     search: search.search,
     searchSync: () => search.sync(),
     depictions,
+    flows,
     async retryEngine(name) {
       const result = await (name === 'chem' ? chemPart : layoutPart).retry();
       log.add({ source: 'app', event: { type: 'engine_retry', message: `retry of the ${name} engine: ${result.ok ? 'ready' : result.message}` } });

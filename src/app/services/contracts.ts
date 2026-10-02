@@ -15,6 +15,7 @@ import type { BootReport, BroadcastChannelFactory, DexieAdapter, LockManagerLike
 import type { ReplicaSync } from '@/workers/compute';
 import type { DepictionService } from './depiction';
 import type { DerivedIndexes } from './derived-indexes';
+import type { Flows } from './flow-types';
 import type { RetryEngineResult } from './engine-client';
 import type { AppMode, EngineName, EventLog, StatusStore } from './status';
 
@@ -34,6 +35,8 @@ export interface AppEnv {
   readonly migrationRunner: MigrationRunner;
   /** Written into snapshots and exports (`DexieAdapterOptions.generator`). */
   readonly generator: { readonly app: string; readonly version: string };
+  /** `navigator.storage`: asked once for persistent storage after the first successful import in a writer tab (step 5.1c). Absent: AppStatus.storage stays unknown, with the reason. */
+  readonly storage?: { persist(): Promise<boolean> };
 }
 
 export type SaveEverythingResult =
@@ -57,7 +60,7 @@ export interface AppServices {
   readonly indexes: DerivedIndexes;
   /** What boot found; undefined in a session-only tab. */
   readonly bootReport: BootReport | undefined;
-  /** The persistence adapter; undefined in a session-only tab. Flows (5.1c) use it; the UI never does. */
+  /** The persistence adapter; undefined in a session-only tab. The flows use it; the UI never does. */
   readonly persistence: DexieAdapter | undefined;
   /** The compute replica sync; undefined while none exists (it could not be created). */
   replicaSync(): ReplicaSync | undefined;
@@ -78,6 +81,11 @@ export interface AppServices {
    * called by a timer. After a successful chem retry every structure is checked again. Answers a value.
    */
   retryEngine(name: EngineName): Promise<RetryEngineResult>;
+  /**
+   * Import (preview, revise, cancel, apply, Undo import), restore of a snapshot by id, and export (step 5.1c). Plain async functions
+   * answering values; one whole-state operation at a time (`AppStatus.operation`); apply and restore answer only after `flush()`.
+   */
+  readonly flows: Flows;
   /** Synchronous: ChangeSets accepted but not yet durable, or a failing save (for `beforeunload`). */
   pendingWrites(): boolean;
   /** `replaceAll` of the store's state; only for a `revision_gap` failure, any other state is refused as a value. */

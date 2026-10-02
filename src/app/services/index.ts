@@ -13,10 +13,13 @@ export type {
   EngineView,
   EventLog,
   L4View,
+  OperationKind,
+  OperationView,
   ReplicaView,
   SaveView,
   SearchView,
   StatusStore,
+  StorageView,
   WorkerName,
   WorkerView,
 } from './status';
@@ -24,3 +27,15 @@ export { createDepictionService, depictionKeyOf, DEPICTION_CACHE_SIZE, MAX_DEPIC
 export type { DepictionResult, DepictionService, DepictionStats } from './depiction';
 export type { RetryEngineResult } from './engine-client';
 export { L4_QUIET_MS, SEARCH_CACHE_QUIET_MS, SEARCH_QUIET_MS } from './timing';
+export { MEMORY_SNAPSHOT_LIMIT } from './memory-store';
+export type {
+  Durability,
+  ExportAnswer,
+  FlowOptions,
+  FlowRefusal,
+  Flows,
+  ImportApplyAnswer,
+  ImportPreviewAnswer,
+  RestoreAnswer,
+  UndoRefusal,
+} from './flow-types';

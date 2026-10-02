@@ -5,7 +5,7 @@
  */
 import type { StoreHandle } from '@/core/commands';
 import type { IdFactory } from '@/core/dataset/contracts';
-import { attachWriteQueue, type DexieAdapter, type SaveStatus, type WriteWiring } from '@/persistence';
+import { attachWriteQueue, type DexieAdapter, type SaveStatus, type WriteWiring, type WriteWiringOptions } from '@/persistence';
 import type { SaveEverythingResult, ShutdownResult } from './contracts';
 import type { EventLogWriter, SaveView, StatusWriter } from './status';
 
@@ -27,6 +27,8 @@ export interface WriterPartOptions {
   readonly status: StatusWriter;
   readonly log: EventLogWriter;
   readonly ids: IdFactory;
+  /** The bytes of asset records an import creates ride in the same transaction as their records (the asset stage, step 5.1c). */
+  readonly blobsFor?: WriteWiringOptions['blobsFor'];
 }
 
 export const saveViewOf = (status: SaveStatus): SaveView => ({
@@ -41,7 +43,7 @@ export const saveViewOf = (status: SaveStatus): SaveView => ({
 const describe = (error: unknown): string => (error instanceof Error ? `${error.name}: ${error.message}` : String(error));
 
 export function createWriterPart(options: WriterPartOptions): WriterPart {
-  const { store, adapter, status, log, ids } = options;
+  const { store, adapter, status, log, ids, blobsFor } = options;
   let wiring: WriteWiring | undefined;
   let stopMirror: (() => void) | undefined;
   if (adapter !== undefined) {
@@ -65,6 +67,7 @@ export function createWriterPart(options: WriterPartOptions): WriterPart {
       if (adapter === undefined) return { ok: false, reason: 'read_only', message: 'nothing is saved in this session, so there is no write queue' };
       if (wiring?.ok) wiring.detach();
       wiring = attachWriteQueue(store, adapter, {
+        ...(blobsFor === undefined ? {} : { blobsFor }),
         onError: (error) => log.add({ source: 'app', event: { type: 'write_refused', message: `the write queue refused a ChangeSet (${describe(error)})` } }),
       });
       if (!wiring.ok) log.add({ source: 'app', event: { type: 'write_queue_refused', message: wiring.message } });

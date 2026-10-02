@@ -10,11 +10,13 @@
  *   replica       replica_status events of the compute sync
  *   promotion, reloadFailure, rejectedRows, followerReloads   follower events
  *   workers, engines, l4, search, layoutNotice   the engine clients, the warm-up gates, the L4 service, the search sync (step 5.1b)
+ *   operation, storage   the flows (step 5.1c): the running whole-state operation; the persistent-storage request after the first import
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AppServices, AppStatus } from '@/app/services';
 import { createBooter, demoState, editNote, renameDataset, smallState, tamper } from '@/test-support/app-boot-kit';
-import { testEnv, worldHolding } from '@/test-support/app-env-kit';
+import { newWorld, testEnv, worldHolding } from '@/test-support/app-env-kit';
+import { demoFile, importFile } from '@/test-support/app-flow-kit';
 import { seedChangeSet } from '@/test-support/persistence-kit';
 import { engineKit, fakeMoleculesFor } from '@/test-support/app-engines-kit';
 import { request } from '@/test-support/layout-kit';
@@ -264,5 +266,85 @@ describe('AppStatus: the engine fields (step 5.1b)', () => {
     await services.layout.layout('v', request({ nodes: ['a', 'b'], edges: [['a', 'b']] }));
     expect([...flat(seen.steps)].sort()).toEqual(['engines', 'layoutNotice', 'workers']);
     expect(services.status.get().layoutNotice).toContain('fallback layout');
+  });
+});
+
+/** Step 5.1c: the flows' fields. `operation` (kind, stage, progress) and `storage` (persistent storage) are the new ones. */
+describe('AppStatus: the flows (step 5.1c)', () => {
+  const settled = new Set<Field>(['stage', 'mode', 'reason', 'detail', 'singleTab', 'promotion', 'reloadFailure', 'rejectedRows', 'followerReloads', 'notices']);
+
+  it('an import apply: `operation` appears and clears, `save` and `storage` change; nothing about the mode or the boot moves', async () => {
+    const t = testEnv({ world: newWorld() });
+    const services = await booter.bootEnv(t, { ...t.env, storage: { persist: async () => true } });
+    const preview = await services.flows.preview(await demoFile(), 'demo.orn.json');
+    if (!preview.ok) throw new Error(preview.message);
+    const seen = watch(services);
+    const applied = await services.flows.apply(preview.plan.preview.batchId, preview.plan);
+    expect(applied.ok).toBe(true);
+    const fields = flat(seen.steps);
+    for (const field of ['operation', 'save', 'storage'] as const) expect(fields.has(field)).toBe(true);
+    for (const field of settled) expect(fields.has(field)).toBe(false);
+    expect(services.status.get()).toMatchObject({ operation: null, storage: { persistence: 'persisted' }, save: { state: 'saved', lastSavedRevision: 1 } });
+    // the first step that touches `operation` shows an operation, the last one clears it
+    const operationSteps = seen.steps.filter((step) => step.includes('operation'));
+    expect(operationSteps.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('a restore: `operation` and `save` change; `storage` does not', async () => {
+    const t = testEnv({ world: newWorld() });
+    const services = await booter.bootEnv(t, { ...t.env, storage: { persist: async () => true } });
+    const applied = await importFile(services, await demoFile());
+    const seen = watch(services);
+    expect((await services.flows.restore(applied.snapshotId)).ok).toBe(true);
+    const fields = flat(seen.steps);
+    expect(fields.has('operation')).toBe(true);
+    expect(fields.has('save')).toBe(true);
+    expect(fields.has('storage')).toBe(false);
+  });
+
+  it('a refusal (BUSY, READ_ONLY, WORKER_DOWN, UNKNOWN_BATCH) changes nothing in the status', async () => {
+    let open: () => void = () => undefined;
+    const hold = new Promise<void>((resolve) => void (open = resolve));
+    const { services } = await booter.boot({
+      world: newWorld(),
+      wrap: (_i, api) => ({ ...api, snapshotBuild: async (params, ctx) => (await hold, api.snapshotBuild(params, ctx)) }),
+    });
+    const preview = await services.flows.preview(await demoFile(), 'demo.orn.json');
+    if (!preview.ok) throw new Error(preview.message);
+    const running = services.flows.apply(preview.plan.preview.batchId, preview.plan);
+    await vi.waitFor(() => expect(services.status.get().operation).not.toBeNull());
+    const shown = services.status.get();
+    expect(await services.flows.restore('snp_x')).toMatchObject({ code: 'BUSY' });
+    expect(services.status.get()).toBe(shown);
+    open();
+    await running;
+
+    expect(await services.flows.apply('imp_nope', preview.plan)).toMatchObject({ code: 'UNKNOWN_BATCH' });
+    const after = services.status.get();
+    expect(await services.flows.apply('imp_nope', preview.plan)).toMatchObject({ code: 'UNKNOWN_BATCH' });
+    expect(services.status.get()).toBe(after);
+
+    const down = await booter.boot({ world: newWorld(), computeFactory: () => { throw new Error('no worker'); } });
+    await vi.waitFor(() => expect(down.services.status.get().replica.state).toBe('down'));
+    const before = down.services.status.get();
+    expect(await down.services.flows.preview(await demoFile(), 'x.orn.json')).toMatchObject({ code: 'WORKER_DOWN' });
+    expect(down.services.status.get()).toBe(before);
+
+    const readOnly = await booter.boot({ world: await worldHolding(smallState(), 1) });
+    const ro = await booter.bootEnv(testEnv({ world: readOnly.t.world }));
+    const roBefore = ro.status.get();
+    expect(await ro.flows.preview(await demoFile(), 'x.orn.json')).toMatchObject({ code: 'READ_ONLY' });
+    expect(ro.status.get()).toBe(roBefore);
+  });
+
+  it('a session-only import: `operation` changes, `save` stays null (nothing is saved), `storage` stays unknown', async () => {
+    const { services } = await booter.boot({ noIndexedDb: true });
+    const seen = watch(services);
+    await importFile(services, await demoFile());
+    const fields = flat(seen.steps);
+    expect(fields.has('operation')).toBe(true);
+    expect(fields.has('save')).toBe(false);
+    expect(fields.has('storage')).toBe(false);
+    expect(services.status.get()).toMatchObject({ save: null, storage: { persistence: 'unknown' } });
   });
 });

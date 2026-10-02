@@ -174,11 +174,7 @@ export interface LegacyImportReport {
   readonly consumedByDefault: Readonly<Record<string, number>>;
   /** Informational items nobody has to decide (not in `reviewItems`), by code → occurrences (for example `FLAG_SUBSUMED`). */
   readonly notes: Readonly<Record<string, number>>;
-  /**
-   * Step 3.11b: legacy values that belong to the DOCUMENT, not to any record (a top-level field next to `compounds` and `reactions`,
-   * a dropped leaf whose path names no record): top-level key or `dropped.<path>` → the value, verbatim. Kept here so nothing is lost;
-   * empty for both real v6 exports.
-   */
+  /** Step 3.11b: legacy values of the DOCUMENT, not of any record (a top-level field, a dropped leaf naming no record): key or `dropped.<path>` → the value, verbatim; empty for both real v6 exports. */
   readonly documentUnmapped: Readonly<Record<string, JsonValue>>;
   // ---- step 3.11c: what only the whole import knows (the mappers leave these empty; `import-legacy.ts` fills them)
   /** ID-part collisions settled by the ID space (MIGRATION.md §4.2); empty for an ordinary document. */
@@ -321,6 +317,9 @@ export interface ImportBatchReport {
   readonly findingSummary: FindingSummary;
   /** Legacy imports (step 3.11c): the full report, stored with the batch. */
   readonly legacyReport?: LegacyImportReport;
+  /** Step 5.1c (additive): SHA-256 of the source file (absent if it could not be hashed) and the clock instant the preview used; a legacy re-import with the same SHA-256 reuses that clock (5.9a). */
+  readonly sourceSha256?: string;
+  readonly clockNowIso?: string;
 }
 
 export type ImportApplyResult =
