@@ -66,7 +66,7 @@ Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§
 The current phase, completed steps, gate statuses and next step are recorded in `docs/PROJECT_STATE.json` (read it every session; it is the only place they are kept). Do not restate them here. History and decisions: `docs/PROGRESS.md`.
 
 ## 17. Next phase
-Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 5 contract decisions next; Phase 4 closed; Gates A, B, C passed.)
+Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 5 step 5.0 next; Phase 4 closed; Gates A, B, C passed.)
 
 ## 18. Forbidden shortcuts
 1. Storing graphs, edges, layouts, derived relations, computed chemistry, scope or findings in records.
@@ -115,6 +115,7 @@ Test workers: Vitest runs at most 4 workers (`vitest.config.ts`); set `ORN_TEST_
 Real-thread test files (`tests/integration/*-threads.test.ts`, `worker-crash-recovery.test.ts`) run as their own serial Vitest project (`real-threads`), after the rest of the suite; the results cache is off.
 If a real-thread test times out: plug the laptop in, close heavy apps, run again; if it persists delete `node_modules/.vite/vitest`; never raise a timeout.
 A change to `vitest.config.ts` or to a test script reports the file and test totals before and after (a double run was caught this way; Phase 4 tagging review, 2026-10-02).
+Every session starts by checking that the laptop is on AC power (PowerShell: `(Get-CimInstance Win32_Battery).BatteryStatus`; 2 = on AC); on battery, ask the user to plug in and wait for the answer (three sessions ran on battery; Phase 5 contract decisions, 2026-10-02).
 Single test file: `npx vitest run src/core/schema/schema.smoke.test.ts`. The app must be served over http(s); `file://` is unsupported.
 
 ## 20. Definition of done per phase

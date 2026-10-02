@@ -89,6 +89,7 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 - **LOD**: `LOD_THRESHOLDS` decide what each element shows (0 glyphs, 1 labels, 2 badges + condition text, 3 structures). Above `RENDER_BUDGET` visible elements, LOD is capped at 1 automatically (v6's "simplify mode" without a toggle).
 - **Culling**: a uniform-grid spatial index over Scene bounds returns visible IDs for the viewport; only those mount.
 - **Depictions**: requested lazily from the chem worker for visible species at LOD 3, cached in `derivedCache`, shown via `<image href>` (SECURITY.md §2).
+- *2026-10-02 (Phase 5 contract decisions):* Phase 5 keeps depictions in a memory LRU only; the persistent depiction cache in `derivedCache` is Phase 9.
 - **Layout stability**: previous positions are sent as ordering hints; expansion adds nodes without reshuffling the rest; transitions animate 200 ms (none with reduced motion). Layout requests are cancelled when superseded.
 - **Direction**: navigator and reaction explorer lay out left→right; precursor explorer right→left with forward arrowheads (GRAPH_SEMANTICS.md §5).
 
