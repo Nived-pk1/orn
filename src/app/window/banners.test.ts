@@ -1,0 +1,117 @@
+import { describe, expect, it } from 'vitest';
+import { INITIAL_STATUS, type AppStatus } from '@/app/services';
+import { bannersOf, bootLinesOf, operationTextOf, saveTextOf } from './banners';
+
+const status = (patch: Partial<AppStatus>): AppStatus => ({ ...INITIAL_STATUS, stage: 'ready', mode: 'writer', ...patch });
+const save = (patch: Partial<NonNullable<AppStatus['save']>>): NonNullable<AppStatus['save']> => ({
+  state: 'saved', lastSavedRevision: 3, pendingRevisions: 0, lastError: null, failureReason: null, deletablePeriodicSnapshotIds: [], ...patch,
+});
+const ids = (s: AppStatus): string[] => bannersOf(s).map((b) => b.id);
+
+describe('bannersOf: one banner per AppStatus condition', () => {
+  it('a healthy writer has none', () => {
+    expect(bannersOf(status({ save: save({}) }))).toEqual([]);
+  });
+
+  it.each([
+    ['read-only follower', { mode: 'follower', reason: 'other_tab_is_writer' } as Partial<AppStatus>, 'follower', /another tab .* is the writer/],
+    ['read-only for another reason', { mode: 'read_only', reason: 'newer_schema', detail: 'schema 9' } as Partial<AppStatus>, 'read_only', /read-only \(newer_schema\)\. schema 9/],
+    ['single tab', { singleTab: true } as Partial<AppStatus>, 'single_tab', /no tab locks/],
+    ['session-only', { mode: 'session_only', reason: 'indexeddb_unavailable' } as Partial<AppStatus>, 'session_only', /Nothing is saved in this session \(indexeddb_unavailable\)/],
+    ['replica down', { replica: { state: 'down', reason: 'worker gave up', revision: null } } as Partial<AppStatus>, 'replica_down', /background copy .* down \(worker gave up\)/],
+    ['validation fallback', { validation: { where: 'main', reason: 'no worker' } } as Partial<AppStatus>, 'validation_fallback', /ran on this page .* \(no worker\)/],
+    ['storage refused', { storage: { persistence: 'refused', message: 'the browser said no' } } as Partial<AppStatus>, 'storage_refused', /did not grant persistent storage/],
+    ['reload failure', { reloadFailure: { reason: 'read', detail: 'boom' } } as Partial<AppStatus>, 'reload_failure', /could not load another tab's changes \(read: boom\)/],
+    ['rejected rows', { rejectedRows: 2 } as Partial<AppStatus>, 'rejected_rows', /2 rows written by another tab/],
+    ['search down', { search: { ...INITIAL_STATUS.search, state: 'down', reason: 'index lost' } } as Partial<AppStatus>, 'search_down', /Search is unavailable \(index lost\)/],
+    ['unchecked structures', { l4: { state: 'idle', notChecked: 1, queued: 0, message: 'timeout' } } as Partial<AppStatus>, 'l4_not_checked', /1 structure was not checked/],
+  ])('%s', (_name, patch, id, text) => {
+    const found = bannersOf(status(patch)).find((b) => b.id === id);
+    expect(found?.text).toMatch(text);
+  });
+
+  it('a refused promotion says so, with Reload, and replaces the plain follower banner', () => {
+    const banners = bannersOf(status({ mode: 'follower', promotion: 'refused', reason: 'lock_denied', detail: 'x' }));
+    expect(banners.map((b) => b.id)).toEqual(['promotion_refused']);
+    expect(banners[0]?.action).toEqual({ label: 'Reload', kind: 'reload' });
+  });
+
+  it('a revision gap offers "Save everything now"', () => {
+    const banners = bannersOf(status({ save: save({ state: 'failed', failureReason: 'revision_gap', lastError: 'gap' }) }));
+    expect(banners).toHaveLength(1);
+    expect(banners[0]?.action).toEqual({ label: 'Save everything now', kind: 'save_everything' });
+  });
+
+  it('a down replica offers Retry', () => {
+    expect(bannersOf(status({ replica: { state: 'down', reason: 'x', revision: null } }))[0]?.action).toEqual({ label: 'Retry', kind: 'retry_replica' });
+  });
+
+  it('an engine that could not load says "Check unavailable" with Retry; a worker that gave up says reload the page, with no Retry', () => {
+    const unavailable = bannersOf(
+      status({
+        engines: { ...INITIAL_STATUS.engines, chem: { state: 'unavailable', message: 'wasm blocked' } },
+        l4: { state: 'unavailable', notChecked: 0, queued: 0, message: 'wasm blocked' },
+      }),
+    );
+    expect(unavailable.map((b) => b.id)).toEqual(['engine_chem']);
+    expect(unavailable[0]?.text).toMatch(/^Check unavailable: .*wasm blocked/);
+    expect(unavailable[0]?.action).toEqual({ label: 'Retry', kind: 'retry_chem' });
+    const layout = bannersOf(status({ engines: { ...INITIAL_STATUS.engines, layout: { state: 'unavailable', message: 'elk' } } }));
+    expect(layout[0]).toMatchObject({ id: 'engine_layout', action: { kind: 'retry_layout' } });
+
+    const down = bannersOf(
+      status({
+        workers: { ...INITIAL_STATUS.workers, chem: { state: 'down', started: true, reason: 'restart cap' } },
+        engines: { ...INITIAL_STATUS.engines, chem: { state: 'unavailable', message: 'x' } },
+      }),
+    );
+    expect(down.map((b) => b.id)).toEqual(['worker_down_chem']);
+    expect(down[0]?.text).toMatch(/Reload the page/);
+    expect(down[0]?.action).toEqual({ label: 'Reload', kind: 'reload' });
+    expect(bannersOf(status({ workers: { ...INITIAL_STATUS.workers, layout: { state: 'down', started: true, reason: 'r' } } }))[0]?.text).toMatch(/layout worker stopped and gave up/);
+    expect(
+      ids(status({ workers: { ...INITIAL_STATUS.workers, search: { state: 'down', started: true, reason: 'r' } }, search: { ...INITIAL_STATUS.search, state: 'down', reason: 'r' } })),
+    ).toEqual(['worker_down_search']);
+  });
+
+  it('an unavailable L4 without a chem banner still says "Check unavailable"', () => {
+    expect(bannersOf(status({ l4: { state: 'unavailable', notChecked: 0, queued: 0, message: 'no chem worker' } }))[0]?.text).toBe('Check unavailable: no chem worker.');
+  });
+});
+
+describe('bootLinesOf: one plain line each', () => {
+  const none = { crashSuspected: false, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 };
+  it('says nothing for a clean boot or no report', () => {
+    expect(bootLinesOf(none)).toEqual([]);
+    expect(bootLinesOf(null)).toEqual([]);
+  });
+  it('has a line for crashSuspected, quarantined rows, assets without bytes, unverified blobs, migration steps', () => {
+    const lines = bootLinesOf({ crashSuspected: true, quarantinedRows: 2, assetsWithoutBytes: 1, unverifiedAssetBlobs: 3, migrationSteps: 1 });
+    expect(lines).toHaveLength(5);
+    expect(lines[0]).toMatch(/crash is suspected/);
+    expect(lines[1]).toBe('2 stored rows failed validation and were set aside (quarantined).');
+    expect(lines[2]).toBe('1 asset record has no stored file.');
+    expect(lines[3]).toBe('3 stored files were not verified.');
+    expect(lines[4]).toBe('1 data migration step ran at start-up.');
+  });
+});
+
+describe('saveTextOf and operationTextOf', () => {
+  it.each([
+    [null, /Not saved: this session keeps nothing/],
+    [save({ state: 'saved', lastSavedRevision: 4 }), /^Saved \(revision 4\)$/],
+    [save({ state: 'saving', pendingRevisions: 2 }), /^Applied, not saved yet: saving 2 changes$/],
+    [save({ state: 'retrying', lastError: 'quota' }), /^Applied, not saved: retrying \(quota\)$/],
+    [save({ state: 'failed', lastError: 'denied' }), /^Applied, NOT saved: saving failed \(denied\)$/],
+    [save({ state: 'read_only' }), /^Read-only/],
+  ])('%j', (value, text) => {
+    expect(saveTextOf(status({ save: value }))).toMatch(text);
+  });
+
+  it('describes the running operation and its progress', () => {
+    expect(operationTextOf(status({}))).toBeNull();
+    expect(operationTextOf(status({ operation: { kind: 'import_apply', stage: 'snapshot', progress: { done: 3, total: 10 } } }))).toBe('Applying an import: snapshot, 3 of 10');
+    expect(operationTextOf(status({ operation: { kind: 'export', stage: 'building', progress: null } }))).toBe('Exporting: building');
+    expect(operationTextOf(status({ operation: { kind: 'restore', stage: 'reading', progress: { done: 1, total: null } } }))).toBe('Restoring a snapshot: reading, 1');
+  });
+});

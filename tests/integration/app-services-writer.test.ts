@@ -128,3 +128,40 @@ describe('the clean-shutdown marker (writer only)', () => {
     expect(result).toMatchObject({ written: true, at: expect.stringMatching(/^2026-.*Z$/) });
   });
 });
+
+describe('resume(): the session goes on after shutdown()', () => {
+  const markerOf = async (world: Awaited<ReturnType<typeof worldHolding>>): Promise<unknown> =>
+    JSON.parse(await storedMeta(world)).find((row: { key: string }) => row.key === 'lastCleanShutdownAt').value;
+
+  it('pageshow path: shutdown writes the marker, resume() makes it null again, a second resume has nothing to do', async () => {
+    const world = await worldHolding(smallState(), 2);
+    const { services } = await booter.boot({ world });
+    expect(await services.resume()).toMatchObject({ resumed: false, reason: 'not_shut_down' });
+    expect(await services.shutdown()).toMatchObject({ written: true });
+    expect(await markerOf(world)).not.toBeNull();
+    expect(await services.resume()).toEqual({ resumed: true });
+    expect(await markerOf(world)).toBeNull();
+    expect(await services.resume()).toMatchObject({ resumed: false, reason: 'not_shut_down' });
+  });
+
+  it('commit path: a ChangeSet accepted after shutdown() clears the marker by itself', async () => {
+    const world = await worldHolding(smallState(), 2);
+    const { services } = await booter.boot({ world });
+    expect(await services.shutdown()).toMatchObject({ written: true });
+    editNote(services, 'the session went on');
+    await services.persistence?.flush();
+    await services.resume(); // runs after the automatic one (operations are serial)
+    expect(await markerOf(world)).toBeNull();
+    expect(services.log.get().some((entry) => entry.source === 'app' && entry.event.type === 'resume_marker_failed')).toBe(false);
+  });
+
+  it('a later boot after resume and no second shutdown suspects a crash', async () => {
+    const world = await worldHolding(smallState(), 2);
+    const first = await booter.bootEnv(testEnv({ world }));
+    await first.shutdown();
+    await first.resume();
+    await first.dispose();
+    const second = await booter.bootEnv(testEnv({ world }));
+    expect(second.bootReport?.crashSuspected).toBe(true);
+  });
+});

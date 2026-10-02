@@ -44,6 +44,7 @@ describe('a tab that is not the writer follows it', () => {
     expect(attachWriteQueue(b.store, b.persistence as NonNullable<typeof b.persistence>)).toMatchObject({ ok: false, reason: 'read_only' });
     const before = await storedMeta(world);
     expect(await b.shutdown()).toMatchObject({ written: false, reason: 'not_writer' });
+    expect(await b.resume()).toMatchObject({ resumed: false, reason: 'not_writer' });
     expect(await b.saveEverythingNow()).toMatchObject({ ok: false, code: 'NOT_WRITER' });
     expect(b.pendingWrites()).toBe(false);
     expect(await storedMeta(world)).toBe(before);

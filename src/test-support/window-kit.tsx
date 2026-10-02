@@ -1,0 +1,92 @@
+/**
+ * Test kit for the plain window (step 5.1d): fake services made of a real status store, a real canonical store and `vi.fn`
+ * flows, plus a builder for `ImportPlan` values. Test-only.
+ */
+import { render } from '@testing-library/react';
+import { vi, type Mock } from 'vitest';
+import { AppProvider, type AppContextValue, type DemoLoad, type WindowServices } from '@/app/window/context';
+import { createStatusStore, emptyState, type AppStatus } from '@/app/services';
+import type { StatusWriter } from '@/app/services/status';
+import type { ImportPlan, ImportPreview } from '@/io';
+import { createCanonicalStore, type StoreHandle } from '@/core/commands';
+import { createIdFactory } from '@/core/dataset';
+import type { CanonicalState } from '@/core/schema';
+import { Window } from '@/app/window/window';
+import type { ReactNode } from 'react';
+
+export const WRITER_STATUS: Partial<AppStatus> = {
+  stage: 'ready',
+  mode: 'writer',
+  save: { state: 'saved', lastSavedRevision: 0, pendingRevisions: 0, lastError: null, failureReason: null, deletablePeriodicSnapshotIds: [] },
+};
+
+export interface FakeFlows {
+  readonly preview: Mock;
+  readonly apply: Mock;
+  readonly cancel: Mock;
+  readonly revise: Mock;
+  readonly undo: Mock;
+  readonly restore: Mock;
+  readonly export: Mock;
+}
+
+export interface FakeApp {
+  readonly status: StatusWriter;
+  readonly store: StoreHandle;
+  readonly flows: FakeFlows;
+  readonly saveEverythingNow: Mock;
+  readonly retryReplica: Mock;
+  readonly retryEngine: Mock;
+  readonly loadDemo: Mock;
+  readonly reload: Mock;
+  readonly value: AppContextValue;
+}
+
+export function emptyStoreState(): CanonicalState {
+  return emptyState(createIdFactory({ nowMs: () => 1_790_000_000_000 }, { next: () => 0.5 }));
+}
+
+export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppStatus> } = {}): FakeApp {
+  const status = createStatusStore(() => undefined);
+  status.update({ ...WRITER_STATUS, ...options.status });
+  const store = createCanonicalStore({ initial: options.state ?? emptyStoreState(), revision: 0, validateInitial: false });
+  const flows: FakeFlows = { preview: vi.fn(), apply: vi.fn(), cancel: vi.fn(() => Promise.resolve({ cancelled: true })), revise: vi.fn(), undo: vi.fn(), restore: vi.fn(), export: vi.fn() };
+  const saveEverythingNow = vi.fn(() => Promise.resolve({ ok: true, revision: 1 }));
+  const retryReplica = vi.fn(() => Promise.resolve({ ok: true }));
+  const retryEngine = vi.fn(() => Promise.resolve({ ok: true }));
+  const loadDemo = vi.fn((): Promise<DemoLoad> => Promise.resolve({ ok: true, blob: new Blob(['{}']), fileName: 'demo.orn.json' }));
+  const reload = vi.fn();
+  const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine } as unknown as WindowServices;
+  return { status, store, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, value: { services, loadDemo, reload } };
+}
+
+export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {
+  return render(<AppProvider value={app.value}>{ui}</AppProvider>);
+}
+
+/** An `ImportPlan` with every field present; `preview` overrides change what the summary shows. */
+export function planOf(preview: Partial<ImportPreview> = {}, plan: Partial<Pick<ImportPlan, 'mode'>> = {}): ImportPlan {
+  const full: ImportPreview = {
+    batchId: 'batch-1',
+    format: 'orn.dataset',
+    detectedSchemaVersion: 1,
+    migrationsApplied: [],
+    counts: { species: { incoming: 3, new: 3, identical: 0, conflicting: 0 }, reaction: { incoming: 2, new: 2, identical: 0, conflicting: 0 } },
+    quarantined: [],
+    conflicts: [],
+    findings: [],
+    findingSummary: { error: 0, warning: 1, info: 0, reviewRequired: 0, truncated: false },
+    decisions: [],
+    richTextLinksRewritten: 0,
+    unsafeKeysRenamed: [],
+    kindMismatches: [],
+    rejectedAssets: [],
+    packageIssues: [],
+    assets: { toStore: 0, notStored: 0, withoutBytes: 0 },
+    mergedRecordCount: 5,
+    canConfirm: true,
+    blockers: [],
+    ...preview,
+  } as ImportPreview;
+  return { preview: full, mode: plan.mode ?? 'replace_all', decisions: full.decisions, conflicts: [], excluded: [], copyIdMap: [] };
+}

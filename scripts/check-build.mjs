@@ -14,6 +14,7 @@
 // Usage: node scripts/check-build.mjs [distDir = dist] [securityDoc = docs/SECURITY.md]
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const WORKERS = ['chem', 'layout', 'search', 'compute'];
 const dist = process.argv[2] ?? 'dist';
@@ -119,6 +120,13 @@ for (const file of js) {
   }
 }
 report.push(`scanned ${js.length} JS chunk(s) for eval( / new Function / Function(`);
+
+// 5. the bundled demo dataset ("Load demo dataset", step 5.1d) is served from the origin and is the repo file, byte for byte
+const demoSource = fileURLToPath(new URL('../data/seed/demo.orn.json', import.meta.url));
+const demoCopies = all.filter((path) => /^assets\/demo\.orn-[^/]+\.json$/.test(rel(path)));
+if (demoCopies.length !== 1) fail('assets/demo.orn-<hash>.json', `expected exactly one copy of the demo dataset, found ${demoCopies.length}`);
+else if (!readFileSync(demoCopies[0]).equals(readFileSync(demoSource))) fail(rel(demoCopies[0]), 'differs from data/seed/demo.orn.json');
+else report.push(`demo dataset: ${rel(demoCopies[0])} (${kB(statSync(demoCopies[0]).size)}) is identical to data/seed/demo.orn.json`);
 
 for (const line of report) console.log(`ok   ${line}`);
 if (failures.length > 0) {

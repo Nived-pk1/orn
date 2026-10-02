@@ -4,7 +4,7 @@
  * but RDKit's glue chunk, the glue chunk mentioned by a chunk that is not the chem worker, RDKit merged into one of our chunks.
  */
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +14,7 @@ const SCRIPT = fileURLToPath(new URL('../../scripts/check-build.mjs', import.met
 const POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; object-src 'none'";
 const WASM_NAME = 'RDKit_minimal-AbCd1234.wasm';
 const WASM = Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 1, 2, 3, 4]);
+const DEMO = readFileSync(fileURLToPath(new URL('../../data/seed/demo.orn.json', import.meta.url)));
 const dirs: string[] = [];
 
 const page = (policy = POLICY): string =>
@@ -29,6 +30,7 @@ const good = (): Files => ({
   'assets/worker-compute-k1.js': 'export const compute = 1',
   'assets/rdkit-glue-g1.js': 'var f = new Function("a", "return a"); eval("1");',
   [`assets/${WASM_NAME}`]: WASM,
+  'assets/demo.orn-d1.json': DEMO,
 });
 
 function run(files: Files): { status: number | null; out: string } {
@@ -59,6 +61,19 @@ describe('scripts/check-build.mjs', () => {
     for (const name of ['chem', 'layout', 'search', 'compute']) expect(out).toContain(`worker ${name}: assets/worker-${name}-`);
     expect(out).toContain(`wasm: assets/${WASM_NAME}`);
     expect(out).toContain('rdkit glue: assets/rdkit-glue-g1.js');
+    expect(out).toContain('demo dataset: assets/demo.orn-d1.json');
+  });
+
+  it('fails when the demo dataset is missing, duplicated or not the repo file (step 5.1d)', () => {
+    const missing = run({ 'assets/demo.orn-d1.json': null });
+    expect(missing.status).toBe(1);
+    expect(missing.out).toContain('expected exactly one copy of the demo dataset, found 0');
+    const twice = run({ 'assets/demo.orn-d2.json': DEMO });
+    expect(twice.status).toBe(1);
+    expect(twice.out).toContain('found 2');
+    const changed = run({ 'assets/demo.orn-d1.json': Buffer.concat([DEMO, Buffer.from(' ')]) });
+    expect(changed.status).toBe(1);
+    expect(changed.out).toContain('FAIL assets/demo.orn-d1.json: differs from data/seed/demo.orn.json');
   });
 
   it('fails when the page policy differs from SECURITY section 4, naming index.html', () => {

@@ -55,6 +55,7 @@ describe('boot: IndexedDB unavailable is session-only', () => {
     expect(services.store.getRevision()).toBe(1);
     expect(await services.saveEverythingNow()).toMatchObject({ ok: false, code: 'NO_STORAGE' });
     expect(await services.shutdown()).toMatchObject({ written: false, reason: 'no_storage' });
+    expect(await services.resume()).toMatchObject({ resumed: false, reason: 'no_storage' });
     expect(services.log.get().some((entry) => entry.source === 'app' && entry.event.type === 'session_only')).toBe(true);
   }
 

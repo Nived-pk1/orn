@@ -176,6 +176,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
       return result;
     },
     shutdown: () => writer.shutdown(),
+    resume: () => writer.resume(),
     dispose,
   };
 }

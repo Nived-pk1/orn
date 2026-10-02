@@ -47,6 +47,11 @@ export type ShutdownResult =
   | { readonly written: true; readonly at: string }
   | { readonly written: false; readonly reason: 'not_writer' | 'no_storage' | 'pending_writes' | 'not_saved' | 'write_failed'; readonly message: string };
 
+/** `resume()`: the session goes on after a `shutdown()` (a page restored from the back/forward cache, or a commit after it). */
+export type ResumeResult =
+  | { readonly resumed: true }
+  | { readonly resumed: false; readonly reason: 'not_writer' | 'no_storage' | 'not_shut_down' | 'write_failed'; readonly message: string };
+
 export type RetryReplicaResult = { readonly ok: true } | { readonly ok: false; readonly message: string };
 
 export interface AppServices {
@@ -94,6 +99,12 @@ export interface AppServices {
   retryReplica(): Promise<RetryReplicaResult>;
   /** Writer only, nothing pending and saved: writes the clean-shutdown marker. Always answers a value. */
   shutdown(): Promise<ShutdownResult>;
+  /**
+   * Marks the session as running again (writes the clean-shutdown marker `null`). Called on `pageshow` with `persisted = true`; a
+   * ChangeSet accepted after `shutdown()` does the same by itself, so the marker never outlives a session that goes on (5.1a review).
+   * Nothing to do (`not_shut_down`) when this session wrote no marker.
+   */
+  resume(): Promise<ResumeResult>;
   /** Terminates the clients, stops the sync and the follower, releases the lock, closes the channel and the adapter. Safe twice. */
   dispose(): Promise<void>;
 }

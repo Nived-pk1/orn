@@ -1,12 +1,13 @@
 /**
- * Composition root placeholder (Phase 0). Phase 5 replaces this with the application shell
- * described in docs/UI_ARCHITECTURE.md. Keep chemistry logic out of this file.
+ * The app component (step 5.1d): the ONE services provider around the plain window. Chemistry logic never lives here.
  */
-export function App() {
+import { AppProvider, type AppContextValue } from './window/context';
+import { Window } from './window/window';
+
+export function App(props: { readonly value: AppContextValue }) {
   return (
-    <main>
-      <h1>Organic Reaction Navigator</h1>
-      <p>Architecture scaffold. Implementation starts at Phase 1 (docs/IMPLEMENTATION_PLAN.md).</p>
-    </main>
+    <AppProvider value={props.value}>
+      <Window />
+    </AppProvider>
   );
 }

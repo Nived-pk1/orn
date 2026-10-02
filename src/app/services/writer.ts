@@ -6,7 +6,7 @@
 import type { StoreHandle } from '@/core/commands';
 import type { IdFactory } from '@/core/dataset/contracts';
 import { attachWriteQueue, type DexieAdapter, type SaveStatus, type WriteWiring, type WriteWiringOptions } from '@/persistence';
-import type { SaveEverythingResult, ShutdownResult } from './contracts';
+import type { ResumeResult, SaveEverythingResult, ShutdownResult } from './contracts';
 import type { EventLogWriter, SaveView, StatusWriter } from './status';
 
 export interface WriterPart {
@@ -15,6 +15,7 @@ export interface WriterPart {
   pendingWrites(): boolean;
   saveEverythingNow(): Promise<SaveEverythingResult>;
   shutdown(): Promise<ShutdownResult>;
+  resume(): Promise<ResumeResult>;
   /** The adapter's save state as the status shows it; null when nothing is saved in this session. */
   currentSave(): SaveView | null;
   /** Detaches the write queue and stops mirroring SaveStatus. */
@@ -55,6 +56,34 @@ export function createWriterPart(options: WriterPartOptions): WriterPart {
       status.update({ save: saveViewOf(next) });
     });
   }
+
+  // The marker this session wrote (`shutdown`) and has not cleared; operations on it run one after the other.
+  let markerWritten = false;
+  let markerOps: Promise<unknown> = Promise.resolve();
+  const serial = <T>(op: () => Promise<T>): Promise<T> => {
+    const next = markerOps.then(op, op);
+    markerOps = next.catch(() => undefined);
+    return next;
+  };
+  const resume = (): Promise<ResumeResult> =>
+    serial(async (): Promise<ResumeResult> => {
+      if (adapter === undefined) return { resumed: false, reason: 'no_storage', message: 'nothing is saved in this session' };
+      if (status.get().mode !== 'writer') return { resumed: false, reason: 'not_writer', message: 'only the writer tab writes the marker' };
+      if (!markerWritten) return { resumed: false, reason: 'not_shut_down', message: 'this session wrote no clean-shutdown marker' };
+      try {
+        await adapter.setLastCleanShutdownAt(null);
+        markerWritten = false;
+        return { resumed: true };
+      } catch (error) {
+        const message = `the clean-shutdown marker could not be cleared (${describe(error)})`;
+        log.add({ source: 'app', event: { type: 'resume_marker_failed', message } });
+        return { resumed: false, reason: 'write_failed', message };
+      }
+    });
+  // A ChangeSet accepted after `shutdown()` means the session goes on: the marker must not say "clean" any longer.
+  const stopWatching = adapter === undefined ? undefined : store.subscribe(() => {
+    if (markerWritten) void resume();
+  });
 
   const pendingWrites = (): boolean => {
     if (adapter === undefined) return false;
@@ -107,8 +136,11 @@ export function createWriterPart(options: WriterPartOptions): WriterPart {
       if (save.state !== 'saved') return refuse('not_saved', `the save state is ${save.state}`);
       try {
         const at = ids.now();
-        await adapter.setLastCleanShutdownAt(at);
-        return { written: true, at };
+        return await serial(async (): Promise<ShutdownResult> => {
+          await adapter.setLastCleanShutdownAt(at);
+          markerWritten = true;
+          return { written: true, at };
+        });
       } catch (error) {
         const message = `the clean-shutdown marker could not be written (${describe(error)})`;
         log.add({ source: 'app', event: { type: 'shutdown_marker_failed', message } });
@@ -116,7 +148,10 @@ export function createWriterPart(options: WriterPartOptions): WriterPart {
       }
     },
 
+    resume,
+
     stop() {
+      stopWatching?.();
       if (wiring?.ok) wiring.detach();
       wiring = undefined;
       stopMirror?.();
