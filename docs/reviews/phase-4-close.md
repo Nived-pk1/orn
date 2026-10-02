@@ -1,5 +1,7 @@
 # Phase 4 close packet — workers and chemistry services (step 4.6)
 
+Reviewer verdict: ACCEPTED (2026-10-02), see docs/PROGRESS.md 'Phase 4 close review'.
+
 Prepared by the implementing agent on 2026-10-02 for the human reviewer. Phase 4 has no gate (D6): the reviewer's verdict is
 recorded in PROGRESS.md first, then a separate session tags `phase-4`. **This session did not mark Phase 4 complete and did not tag.**
 

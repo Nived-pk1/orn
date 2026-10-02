@@ -2,13 +2,14 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-10-02",
-  "currentPhase": 4,
-  "currentPhaseStatus": "awaiting_review",
+  "currentPhase": 5,
+  "currentPhaseStatus": "not_started",
   "completedPhases": [
     0,
     1,
     2,
-    3
+    3,
+    4
   ],
   "completedSteps": [
     "0",
@@ -63,9 +64,9 @@
     "4.5",
     "4.6"
   ],
-  "nextPhase": 4,
-  "nextStep": "Phase 4 close review (reviewer)",
-  "nextStepTitle": "Phase 4 close review (reviewer): read docs/reviews/phase-4-close.md (REVIEW REQUIRED 1: real-thread timeout tests and file scheduling); record the verdict in PROGRESS.md; a separate session then tags phase-4 (D6). Phase 5 (shell, rendering, navigator, inspector) starts only after that. completedPhases is unchanged: this session did not mark Phase 4 complete and did not tag.",
+  "nextPhase": 5,
+  "nextStep": "Phase 5 plan review (reviewer)",
+  "nextStepTitle": "Phase 5 plan review (reviewer): decide the Phase 5 plan (shell, rendering, navigator, inspector), including the start-up limit of the chem and layout workers (PROGRESS.md, Phase 4 close review, decision 6). Phase 4 is closed and tagged phase-4 (no gate, D6).",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -110,7 +111,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command (Vitest 4.1.11: 232 files, 3,728 tests, Vitest duration 119.6 s; step 4.6, 2026-10-02). Test workers are capped at 4 in vitest.config.ts (env ORN_TEST_WORKERS overrides; step 4.2a review). The real-thread timeout tests are sensitive to file scheduling (docs/reviews/phase-4-close.md section 11).",
+    "npmRunCheck": "passed as ONE command, three times in a row from a \"failed last time\" cache state (Vitest 4.1.11: 232 files, 3,728 tests; Vitest 175.5 s, 197.6 s, 195.1 s; Phase 4 close follow-up, 2026-10-02). Test workers are capped at 4 in vitest.config.ts (env ORN_TEST_WORKERS overrides; step 4.2a review). The 9 real-thread files run as their own serial Vitest project (real-threads) after the rest, and the results cache is off (Phase 4 close review, decision 1).",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -264,9 +265,10 @@
     "Step 4.3b: docs/reviews/demo-chem-findings.md lists the demo findings for the human reviewer (the deliberately invalid record; the palmitic acid SMILES was corrected to 16 carbons by the reviewer, so CHEM-003 no longer fires); regenerate with `node scripts/demo-chem-findings.mjs` (a test checks it is current).",
     "Step 4.5 REVIEW REQUIRED (PROGRESS.md): contract additions beyond Q6 (aliases, textTruncated, facets.scopes, limits, SearchService became SearchEngine, serialize / loadSerialized); a document never holds another record's text, so reactions are not found by their participants' names; documents carry the entered formula only (derived formulas need the chem worker, Phase 5); prefix applies to every query word (broad prefixes cost about 30 ms on the synthetic names; last-word-only would be about 10 ms); a swap of two letters counts as two edits; building every document on the main thread is 193 ms (870 ms with indexes) at the design tier and a curriculum edit that moves everything is about 22 ms per slice of 500; the sync needs the full ReadonlyIndexes, which the store does not expose; scores are rounded to 9 decimals.",
     "Step 4.5: Phase 5 creates the search worker and service in the app (D7), provides the sync ports (state, full indexes, revision, debounce), wires the warm-boot cache (serialize keyed by revision, loadSerialized at boot, BAD_INDEX falls back to a load), calls sync.reload() from the client onRestart hook and shows sync.status() in Diagnostics; step 4.6's build smoke references src/workers/search/entry.ts and checks minisearch's chunk for eval / new Function. Step 4.6: the build-smoke half is CLOSED (step 4.6): `npm run build:smoke` (scripts/check-build.mjs) checks the CSP, the four worker chunks, the WASM asset and eval / new Function; the Phase 5 half stays open.",
-    "Step 4.6 REVIEW REQUIRED (docs/reviews/phase-4-close.md section 11): the real-thread timeout tests (tests/integration/chem-worker-threads.test.ts, compute-import-threads.test.ts) need a fresh thread to load RDKit inside 2 s; they pass alone and failed in four consecutive full runs until Vitest's local results cache (node_modules/.vite/vitest) was deleted (probable cause: failed files are scheduled first, together with the cold transform of everything else). No test, timeout or rule was changed. Options for the reviewer: document it in SONNET_HANDOFF, give those files a serial Vitest project, or let a restarted thread tolerate a cold WASM load.",
+    "CLOSED (Phase 4 close review, 2026-10-02): scheduling fixed, no timeout touched: real-thread files are the serial Vitest project real-threads, results cache off (PROGRESS.md, decision 1). Was: Step 4.6 REVIEW REQUIRED (docs/reviews/phase-4-close.md section 11): the real-thread timeout tests (tests/integration/chem-worker-threads.test.ts, compute-import-threads.test.ts) need a fresh thread to load RDKit inside 2 s; they pass alone and failed in four consecutive full runs until Vitest's local results cache (node_modules/.vite/vitest) was deleted (probable cause: failed files are scheduled first, together with the cold transform of everything else). No test, timeout or rule was changed. Options for the reviewer: document it in SONNET_HANDOFF, give those files a serial Vitest project, or let a restarted thread tolerate a cold WASM load.",
     "Step 4.6: src/app/worker-factories.ts (`createWorkerFactories()`) creates the four module workers through `browserWorkerPort`; nothing calls it yet. src/app/main.tsx imports it for its side effect only so the build bundles the entries; Phase 5 replaces that import with real use (D7).",
-    "Step 4.6: tests/adversarial/phase4-dod.test.ts checks that every worker API method is named as a whole word in a test title; generic names (search, load, apply, layout, parse, depict, matches) make that weak evidence. A runtime check (a recording client per worker, as compute-rig.ts has) would be stronger; not built.",
-    "Step 4.6 (Gate E, from the 4.5 review decision 6): the full-load document build for search on the main thread (193 ms with the indexes ready) is a Gate E watch item; remedy candidate: build the documents in the compute worker."
+    "ACCEPTED as a known limitation (Phase 4 close review, 2026-10-02, decision 2): regression guard, not proof. Step 4.6: tests/adversarial/phase4-dod.test.ts checks that every worker API method is named as a whole word in a test title; generic names (search, load, apply, layout, parse, depict, matches) make that weak evidence. A runtime check (a recording client per worker, as compute-rig.ts has) would be stronger; not built.",
+    "Step 4.6 (Gate E, from the 4.5 review decision 6): the full-load document build for search on the main thread (193 ms with the indexes ready) is a Gate E watch item; remedy candidate: build the documents in the compute worker.",
+    "Phase 5 plan review (Phase 4 close review, decision 6): the 2 s limit of the chem and layout workers also covers the engine start-up in a fresh thread; on a slow device a cold RDKit load may not fit, the first call times out, the worker restarts, and three restarts in a row end in gave_up (ADR-034). Decide whether start-up gets its own limit (candidate: a warm-up call on creation and in onRestart with a load timeout; a contract amendment, CLAUDE.md §7). Step 5.1 measures the real-browser cold start. Nothing is built."
   ]
 }
