@@ -114,6 +114,7 @@ npm run check                # everything required before each commit
 Test workers: Vitest runs at most 4 workers (`vitest.config.ts`); set `ORN_TEST_WORKERS=<n>` to change it (e.g. `ORN_TEST_WORKERS=8 npm test`). It is a resource limit, never a reason to raise a timeout or weaken a test (docs/TEST_STRATEGY.md §1).
 Real-thread test files (`tests/integration/*-threads.test.ts`, `worker-crash-recovery.test.ts`) run as their own serial Vitest project (`real-threads`), after the rest of the suite; the results cache is off.
 If a real-thread test times out: plug the laptop in, close heavy apps, run again; if it persists delete `node_modules/.vite/vitest`; never raise a timeout.
+A change to `vitest.config.ts` or to a test script reports the file and test totals before and after (a double run was caught this way; Phase 4 tagging review, 2026-10-02).
 Single test file: `npx vitest run src/core/schema/schema.smoke.test.ts`. The app must be served over http(s); `file://` is unsupported.
 
 ## 20. Definition of done per phase

@@ -2781,6 +2781,23 @@ Also accepted: the build smoke (CSP exact, four worker chunks, the WASM a separa
 6. **New item for the Phase 5 plan review:** the 2 s limit of the chem and layout workers also covers the engine's start-up in a fresh thread (step 4.6 report: RDKit's start-up has to fit the 2 s window). In a real browser on a slow device a cold load may not fit: the first call times out, the worker restarts, and three such restarts in a row end in `gave_up` (ADR-034). The plan review decides whether start-up gets its own limit (candidate: a warm-up call sent on creation and in `onRestart` with a load timeout, so the 2 s limit covers calculations only; a contract amendment, CLAUDE.md §7); step 5.1 measures the real-browser cold start. Nothing is built now.
 7. **Environment:** the first full run of step 4.6 was on battery with Edge open and 7 real-thread tests timed out. Full checks, gates and phase closes run plugged in, heavy apps closed.
 
+### Phase 4 tagging session review (reviewer, 2026-10-02)
+
+**ACCEPTED.** Commits dee1e09 and b0754af, and the tag phase-4 on b0754af, are accepted.
+
+1. **Scheduling fix accepted:** two Vitest projects (`main` 223 files; `real-threads` 9 files, serial, after main) and the results cache off. Evidence accepted: from the marked-failed state the old config reproduced 2 chem timeouts, the new one passed three times. That shows file order is A trigger, not that it is the only one; the serial group covers contention in general.
+2. **Cost accepted** (Vitest 175-198 s, was 119.6 s). The thread files stay serial.
+3. **New standing rule** (SONNET_HANDOFF §19): a change to `vitest.config.ts` or to a test script reports the file and test totals before and after (this caught the double run).
+4. **Approved:** the new TEST_STRATEGY §1 bullet and the Phase 3 check mark.
+5. **Decisions on docs/reviews/phase-4-close.md** (now read by the reviewer):
+   a. The machine line says one Edge window was open and idle during the step 4.6 runs. No baseline was written, so nothing is corrected. At Gate E Edge is closed and the packet says what was open.
+   b. Self-review 10: no separate Phase 4 INV sweep. The Gate E packet sweeps INV coverage for Phases 4 and 5 (step 5.10b).
+   c. Self-review 7: the Gate E packet lists the margins of the ten bench entries closest to +20%.
+   d. Self-review 6 and the limits of the eval scan (a regex; it cannot see Function reached through constructor or a string given to setTimeout): accepted. `build:smoke` runs in every step that adds a dependency or changes `vite.config.ts` (note E12).
+   e. Sweep item 59 (the replica keeps the full index engine): confirmed as built; Phase 9 only.
+   f. Sweep item 5 (snapshot codec repeated in the worker, byte equality tested): keep the duplicate; accepted.
+   e and f are marked in PROJECT_STATE openItems (nothing deleted).
+
 ## Amendments
 - **2026-10-02, step 4.6 - tooling, build configuration and test support only; no contract, schema or invariant change.** `npm run build:smoke` and `scripts/check-build.mjs`; `vite.config.ts` names the worker chunks (`worker-<dir>-<hash>.js`, `rdkit-glue-<hash>.js`); `src/app/worker-factories.ts`; `workerData.crashOn` in the chem, layout and search test fixtures; coverage thresholds for `src/chem`, `src/layout`, `src/search`; `testTitles()` in `tests/adversarial/gate-matrix.ts`. Reason: DoD evidence and the ADR-035 guarantee ("the build smoke owns the nowhere-else guarantee"). SECURITY §4 and SONNET_HANDOFF §19 updated in the same commit.
 - **2026-10-01, step 4.5 - `SearchDocument` gains `aliases`, `textTruncated`, `lifecycle`, `scopeRanks` (`ScopeRank`, `UNRANKED`, `SCOPE_NAMES`) and `facets.scopes` / `facets.reagentFamilies` / `facets.topicIds` get a defined meaning (`names` no longer holds aliases); `SearchQuery.examVersionId`; `SearchIndexUpdate.fromRevision`; `ApplyAnswer`, `SerializedSearchIndex`, `LoadSerializedAnswer`; limits `SEARCH_TEXT_CAP`, `MAX_QUERY_CHARS`, `MAX_QUERY_WORDS`, `MAX_SEARCH_LIMIT`; `SearchService` becomes `SearchEngine` (in `src/search/contracts.ts`); `SearchWorkerApi.apply` answers `ApplyAnswer` and gains `serialize` and `loadSerialized` (contract change, CLAUDE.md §7; Phase 4 contract decisions Q6 approved; REVIEW REQUIRED 1).** Problem: the tie-breaks need exam scope and lifecycle as data; a revision mismatch could not be seen; the index could not be serialised; a hit could not say it matched an alias; a cut text was silent. Change: as listed. New runtime dependency `minisearch` 7.2.0 (docs/DEPENDENCIES.md, ADR-011 dated line, ADR-034 "Search worker (step 4.5)" paragraph, SEARCH §6). No schema change, no invariant change, no version bump.
