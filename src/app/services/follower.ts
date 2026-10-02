@@ -97,12 +97,13 @@ export function startFollower(options: FollowerPartOptions): Follower {
           reason: null,
           detail: null,
           promotion: 'promoted',
+          save: writer.currentSave(),
           ...(report === undefined ? {} : { notices: noticesOf(report), validation: report.validation, singleTab: report.singleTab }),
         });
         break;
       }
       case 'promotion_failed':
-        status.update({ mode: 'read_only', reason: event.reason, detail: event.detail, promotion: 'refused' });
+        status.update({ mode: 'read_only', reason: event.reason, detail: event.detail, promotion: 'refused', save: writer.currentSave() });
         break;
       default:
         break;

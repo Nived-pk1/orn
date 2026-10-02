@@ -5,6 +5,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import type { CommitResult } from '@/core/commands/contracts';
+import { RECORD_KINDS, type CanonicalState } from '@/core/schema';
 import { createMemoryChannelHub } from '@/test-support/tab-fakes';
 import { loadFixtureState } from '@/test-support/state-fixture';
 import type { OpenResult, WriterLock } from './contracts';
@@ -166,6 +167,22 @@ describe('promotion', () => {
     expect(r.adapter.setReadOnly).toHaveBeenCalledWith(true);
     expect(r.lock.release).toHaveBeenCalled();
     expect(r.follower.isReadOnly()).toBe(true);
+  });
+
+  it('an empty store and an empty database: the tab becomes an empty writer, the store is not reloaded', async () => {
+    const empty = { meta: state.meta, records: Object.fromEntries(RECORD_KINDS.map((kind) => [kind, {}])) } as unknown as CanonicalState;
+    const r = rig({
+      store: { getState: () => empty },
+      adapter: { promote: () => Promise.resolve({ mode: 'read_write', state: null, revision: 0, storedSchemaVersion: null, quarantinedCount: 0 }) },
+    });
+    r.grant();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await r.follower.idle();
+    expect(r.events).toEqual([{ type: 'promoted', state: null, revision: 0, bootReport: undefined }]);
+    expect(r.store?.reload).not.toHaveBeenCalled();
+    expect(r.adapter.setReadOnly).not.toHaveBeenCalled();
+    expect(r.lock.release).not.toHaveBeenCalled();
+    expect(r.follower.isReadOnly()).toBe(false);
   });
 
   it('a store that refuses the promoted state: same, and the tab stays read-only', async () => {

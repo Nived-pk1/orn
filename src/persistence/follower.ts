@@ -9,7 +9,7 @@
  * Messages are handled strictly one at a time, in order, with a bounded backlog (beyond it: one full reload).
  */
 import type { CommitResult, PrecomputedFindings, RemoteChange } from '@/core/commands/contracts';
-import { checkPrecomputed } from '@/core/commands/precomputed';
+import { checkPrecomputed, recordCountsOf } from '@/core/commands/precomputed';
 import { jsonEqual } from '@/core/commands/lookup';
 import { DatasetMetaSchema, type AnyRecord, type CanonicalState, type RecordKind } from '@/core/schema';
 import { validator } from '@/core/validation';
@@ -258,7 +258,17 @@ export function createFollower(options: FollowerOptions): Follower {
       return;
     }
     if (store !== undefined) {
-      if (opened.state === null) return fail('state_missing', 'the database holds no data although this tab had some');
+      if (opened.state === null) {
+        // An empty database and a store that holds no record: nothing is lost, the tab becomes an empty writer. Records in the store
+        // with an empty database are refused (INV-28 guards unchanged: the write queue is attached only after this check).
+        const held = Object.values(recordCountsOf(store.getState())).reduce((sum, n) => sum + n, 0);
+        if (held > 0) return fail('state_missing', 'the database holds no data although this tab had some');
+        readOnly = false;
+        revision = opened.revision;
+        unsubscribeChannel?.();
+        emit({ type: 'promoted', state: null, revision: opened.revision, bootReport: opened.bootReport });
+        return;
+      }
       // Boot (the promotion's) validated the state through the same port, so its findings are the ones the store checks and adopts.
       let result = store.reload(opened.state, opened.revision, opened.bootReport?.precomputed);
       if (!result.ok && result.error.code === 'FINDINGS_MISMATCH' && opened.bootReport?.precomputed !== undefined) {

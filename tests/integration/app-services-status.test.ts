@@ -105,6 +105,19 @@ describe('AppStatus: every transition', () => {
     expect(flat(seen.steps).has('stage')).toBe(false);
   });
 
+  it('a promotion: save stays read_only until the outcome is known, then takes the adapter value in the same notification as promoted', async () => {
+    const world = await worldHolding(demoState(), 2);
+    const a = await booter.bootEnv(testEnv({ world }));
+    const b = await booter.bootEnv(testEnv({ world }));
+    const seen: { promotion: string; save: string | undefined }[] = [];
+    b.status.subscribe((s) => seen.push({ promotion: s.promotion, save: s.save?.state }));
+    await a.dispose();
+    await vi.waitFor(() => expect(b.status.get().promotion).toBe('promoted'));
+    expect(b.status.get().save?.state).toBe('saved');
+    expect(seen.filter((s) => s.promotion === 'waiting' && s.save !== 'read_only')).toEqual([]);
+    expect(seen.at(-1)).toEqual({ promotion: 'promoted', save: 'saved' });
+  });
+
   it('a refused promotion: mode read_only, promotion refused, the reason and detail', async () => {
     const world = await worldHolding(demoState(), 2);
     const a = await booter.bootEnv(testEnv({ world }));
@@ -114,8 +127,8 @@ describe('AppStatus: every transition', () => {
     await a.dispose();
     await vi.waitFor(() => expect(b.status.get().promotion).toBe('refused'));
     expect(b.status.get()).toMatchObject({ mode: 'read_only', reason: 'newer_schema' });
-    // the adapter's save state flickers while the promotion boots as the writer and is refused: read_only at the end
-    expect([...flat(seen.steps)].sort()).toEqual(['detail', 'mode', 'promotion', 'reason', 'save']);
+    // the adapter's save state passes through writable while the promotion boots as the writer; the status never shows it
+    expect([...flat(seen.steps)].sort()).toEqual(['detail', 'mode', 'promotion', 'reason']);
     expect(b.status.get().save?.state).toBe('read_only');
   });
 

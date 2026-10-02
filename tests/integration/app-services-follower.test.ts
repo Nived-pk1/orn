@@ -120,6 +120,36 @@ describe('promotion', () => {
     expect(again.bootReport?.crashSuspected).toBe(false);
   });
 
+  it('two empty tabs: the writer closes, the follower becomes an empty writer and its first edit reaches IndexedDB', async () => {
+    const world = newWorld();
+    const a = await booter.bootEnv(testEnv({ world }));
+    const b = await booter.bootEnv(testEnv({ world }));
+    expect(b.status.get()).toMatchObject({ mode: 'follower', promotion: 'waiting' });
+    await a.dispose();
+    await vi.waitFor(() => expect(b.status.get().promotion).toBe('promoted'));
+    expect(b.status.get()).toMatchObject({ mode: 'writer', reason: null, detail: null, save: { state: 'saved' } });
+    expect(b.store.isReadOnly()).toBe(false);
+    expect(world.locks.held()).toEqual(['orn-writer']);
+    renameDataset(b, 'Written after promotion');
+    await b.persistence?.flush();
+    expect(b.status.get().save).toMatchObject({ state: 'saved', lastSavedRevision: 1 });
+    const c = await booter.bootEnv(testEnv({ world }));
+    expect(c.store.getState().meta.title).toBe('Written after promotion');
+  });
+
+  it('a store that holds records while the database holds nothing is still refused (state_missing)', async () => {
+    const { world, a, b } = await twoTabs();
+    await tamper(world, async (db) => {
+      await db.records.clear();
+      await db.meta.clear();
+    });
+    await a.dispose();
+    await vi.waitFor(() => expect(b.status.get().promotion).toBe('refused'));
+    expect(b.status.get()).toMatchObject({ mode: 'read_only', reason: 'state_missing', save: { state: 'read_only' } });
+    expect(b.store.isReadOnly()).toBe(true);
+    expect(b.log.get().some((entry) => entry.source === 'follower' && entry.event.type === 'promotion_failed')).toBe(true);
+  });
+
   it('a refused promotion stays read-only with its reason and does not ask for the lock again (E11)', async () => {
     const { world, a, b } = await twoTabs();
     await tamper(world, (db) => db.meta.put({ key: 'schemaVersion', value: 99 }));

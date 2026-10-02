@@ -15,6 +15,8 @@ export interface WriterPart {
   pendingWrites(): boolean;
   saveEverythingNow(): Promise<SaveEverythingResult>;
   shutdown(): Promise<ShutdownResult>;
+  /** The adapter's save state as the status shows it; null when nothing is saved in this session. */
+  currentSave(): SaveView | null;
   /** Detaches the write queue and stops mirroring SaveStatus. */
   stop(): void;
 }
@@ -44,7 +46,12 @@ export function createWriterPart(options: WriterPartOptions): WriterPart {
   let stopMirror: (() => void) | undefined;
   if (adapter !== undefined) {
     status.update({ save: saveViewOf(adapter.getStatus()) });
-    stopMirror = adapter.subscribeStatus((next) => void status.update({ save: saveViewOf(next) }));
+    // While a follower's promotion is unresolved the adapter's state passes through writable (the promotion boots as the writer);
+    // the tab is read-only until the outcome is known, so the status must not say otherwise, even for a moment.
+    stopMirror = adapter.subscribeStatus((next) => {
+      if (status.get().promotion === 'waiting') return;
+      status.update({ save: saveViewOf(next) });
+    });
   }
 
   const pendingWrites = (): boolean => {
@@ -65,6 +72,8 @@ export function createWriterPart(options: WriterPartOptions): WriterPart {
     },
 
     pendingWrites,
+
+    currentSave: () => (adapter === undefined ? null : saveViewOf(adapter.getStatus())),
 
     async saveEverythingNow() {
       if (adapter === undefined) return { ok: false, code: 'NO_STORAGE', message: 'nothing is saved in this session' };
