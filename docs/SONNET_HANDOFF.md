@@ -66,7 +66,7 @@ Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§
 The current phase, completed steps, gate statuses and next step are recorded in `docs/PROJECT_STATE.json` (read it every session; it is the only place they are kept). Do not restate them here. History and decisions: `docs/PROGRESS.md`.
 
 ## 17. Next phase
-Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 4 closed (tag phase-4); Phase 5 plan review next; Gates A, B, C passed.)
+Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 5 contract decisions next; Phase 4 closed; Gates A, B, C passed.)
 
 ## 18. Forbidden shortcuts
 1. Storing graphs, edges, layouts, derived relations, computed chemistry, scope or findings in records.
