@@ -2724,6 +2724,22 @@ ACCEPTED. Decisions:
 
 **Open items.** Phase 5: create the search worker and service in the app (D7); provide the sync's ports (state, full indexes, revision, a debounce); wire the warm-boot cache (`serialize` after a quiet period keyed by revision, `loadSerialized` at boot, `BAD_INDEX` falls back to a load); call `sync.reload()` from the client's `onRestart` hook; show `sync.status()` (down, backlog) in Diagnostics. Step 4.6: the build smoke must reference `src/workers/search/entry.ts` and check minisearch's chunk has no `eval` or `new Function`; every `SearchWorkerApi` method already has an in-process test (`engine.test.ts`, `search.test.ts`).
 
+### Step 4.5 review (reviewer, 2026-10-01)
+
+ACCEPTED. Decisions:
+1. Contract additions beyond Q6 (aliases, textTruncated, facets.scopes, limits, SearchEngine, serialize/loadSerialized): approved.
+2. Documents hold only their own record's text: approved (a reaction is reached from its species through the inspector's links, Phase 5).
+3. Derived formulas into search documents: Phase 5 (openItem).
+4. Prefix on every query word stays (SEARCH §3; "eth acid" must find ethanoic acid).
+5. No match for a two-letter swap: accepted as a known limitation (recorded in SEARCH.md §6).
+6. Follow-up a: REFRESH_CAP 500 -> 250 (about 11 ms per slice); the full-load document build on the main thread (193 ms) becomes a Gate E watch item, remedy candidate "build documents in the compute worker".
+7. The store must give the search sync the FULL indexes: Phase 5 openItem.
+8. Score rounding to 9 decimals: approved.
+
+Also recorded: the ELK layered row (300 ms at 400 nodes; bundled 425-462 ms mean) is a Phase 9 exception under TEST_STRATEGY §6, as decided in the step 4.4 review.
+
+**Follow-up a done (2026-10-02):** `REFRESH_CAP` 500 -> 250 in `src/workers/search/sync.ts` (tests use the constant). Commit "phase-4.5: review recorded".
+
 ## Amendments
 - **2026-10-01, step 4.5 - `SearchDocument` gains `aliases`, `textTruncated`, `lifecycle`, `scopeRanks` (`ScopeRank`, `UNRANKED`, `SCOPE_NAMES`) and `facets.scopes` / `facets.reagentFamilies` / `facets.topicIds` get a defined meaning (`names` no longer holds aliases); `SearchQuery.examVersionId`; `SearchIndexUpdate.fromRevision`; `ApplyAnswer`, `SerializedSearchIndex`, `LoadSerializedAnswer`; limits `SEARCH_TEXT_CAP`, `MAX_QUERY_CHARS`, `MAX_QUERY_WORDS`, `MAX_SEARCH_LIMIT`; `SearchService` becomes `SearchEngine` (in `src/search/contracts.ts`); `SearchWorkerApi.apply` answers `ApplyAnswer` and gains `serialize` and `loadSerialized` (contract change, CLAUDE.md §7; Phase 4 contract decisions Q6 approved; REVIEW REQUIRED 1).** Problem: the tie-breaks need exam scope and lifecycle as data; a revision mismatch could not be seen; the index could not be serialised; a hit could not say it matched an alias; a cut text was silent. Change: as listed. New runtime dependency `minisearch` 7.2.0 (docs/DEPENDENCIES.md, ADR-011 dated line, ADR-034 "Search worker (step 4.5)" paragraph, SEARCH §6). No schema change, no invariant change, no version bump.
 - **2026-10-01, step 4.4 review follow-ups - `MAX_STRESS_NODES` = 40 (`src/layout/contracts.ts`, additive); the layout service lays out stress requests over it with ELK layered and says so in `notes`; ELK layered options `elk.edgeRouting` = POLYLINE and `elk.layered.thoroughness` = 3; the seed passed to ELK is `1 + seed % 2,147,483,646` (`elkSeed`); new `docs/DEPENDENCIES.md`; ADR-007 dated line; IMPLEMENTATION_PLAN Phase 5 bundling note (reviewer decisions 2, 3, 7).** Problem: stress is all-pairs and always timed out over about 100 nodes; the 400-node layered row was missed; ELK treated seed 0 as random. Change: as listed. No schema change, no invariant change, no version bump.

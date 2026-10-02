@@ -26,7 +26,7 @@ import { affectedBy, allRefs, keyOf } from './fanout';
 import type { SearchService } from './service';
 
 /** Dependent documents queued at once; the rest of a change's fan-out waits behind them. */
-export const REFRESH_CAP = 500;
+export const REFRESH_CAP = 250;
 
 export interface SearchSyncPorts {
   readonly state: () => CanonicalState;
