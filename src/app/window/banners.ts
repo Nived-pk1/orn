@@ -82,7 +82,7 @@ export function bannersOf(status: AppStatus): readonly Banner[] {
     banners.push({ id: 'search_down', text: `Search is unavailable (${status.search.reason}).` });
   }
   if (status.storage.persistence === 'refused') {
-    banners.push({ id: 'storage_refused', text: `The browser did not grant persistent storage${suffix(status.storage.message)} It may delete this data when disk space runs low.` });
+    banners.push({ id: 'storage_refused', text: status.storage.message === null ? 'The browser did not grant persistent storage. It may delete this data when disk space runs low.' : `${status.storage.message.charAt(0).toUpperCase()}${status.storage.message.slice(1)}.` });
   }
   return banners;
 }
