@@ -66,7 +66,7 @@ Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§
 The current phase, completed steps, gate statuses and next step are recorded in `docs/PROJECT_STATE.json` (read it every session; it is the only place they are kept). Do not restate them here. History and decisions: `docs/PROGRESS.md`.
 
 ## 17. Next phase
-Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 4 step 4.1 done; Gates A, B, C passed.)
+Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 4 closed (tag phase-4); Phase 5 plan review next; Gates A, B, C passed.)
 
 ## 18. Forbidden shortcuts
 1. Storing graphs, edges, layouts, derived relations, computed chemistry, scope or findings in records.
@@ -112,6 +112,8 @@ npm run e2e                  # Playwright (available from Phase 5: npx playwrigh
 npm run check                # everything required before each commit
 ```
 Test workers: Vitest runs at most 4 workers (`vitest.config.ts`); set `ORN_TEST_WORKERS=<n>` to change it (e.g. `ORN_TEST_WORKERS=8 npm test`). It is a resource limit, never a reason to raise a timeout or weaken a test (docs/TEST_STRATEGY.md §1).
+Real-thread test files (`tests/integration/*-threads.test.ts`, `worker-crash-recovery.test.ts`) run as their own serial Vitest project (`real-threads`), after the rest of the suite; the results cache is off.
+If a real-thread test times out: plug the laptop in, close heavy apps, run again; if it persists delete `node_modules/.vite/vitest`; never raise a timeout.
 Single test file: `npx vitest run src/core/schema/schema.smoke.test.ts`. The app must be served over http(s); `file://` is unsupported.
 
 ## 20. Definition of done per phase

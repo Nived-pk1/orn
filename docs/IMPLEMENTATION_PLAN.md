@@ -53,7 +53,7 @@ Dependencies: none new (src/core/graph stays pure; benchmarks use Vitest bench).
 | 2.12 | Field-aware `validateTouched` scope (`ValidationRule.referencedReads`, ADR-031); re-measure; Gate B packet update | Hub-referrer commits judged against the 16 ms Commit row; remaining misses listed with causes |
 | 2.13 | Per-rule referrer re-validation; class-hub benchmarks; bench fixes; Gate B packet | Hub and class-hub commits meet their rows (16 ms ordinary edits, 50 ms backstop for edits every referrer reads), or the exception is documented for Phase 9 |
 
-### Phase 3 — Persistence, import/export, legacy → Gate C
+### Phase 3 — Persistence, import/export, legacy → Gate C ✅ (Gate C passed 2026-09-30; tag `phase-3`)
 Dependencies: `dexie`, `fflate`, dev `fake-indexeddb` (each added in the step that first uses it; versions recorded; `npm audit`).
 | Step | Work | Must cover |
 |---|---|---|
@@ -82,7 +82,7 @@ Dependencies: `dexie`, `fflate`, dev `fake-indexeddb` (each added in the step th
 5. *Browser-only parts.* ADV-038/039 are integration-tested at Gate C with fakes; their real-browser e2e halves belong to Gate E (Playwright arrives in Phase 5).
 6. *Contract amendments.* Contract amendments from the plan review are approved per docs/PROGRESS.md "Phase 3 contract decisions"; each lands in the step named there through CLAUDE.md §7 (contracts, docs and Amendments list in that step's commit).
 
-### Phase 4 — Workers and chemistry services
+### Phase 4 — Workers and chemistry services ✅ (closed 2026-10-02; tag `phase-4`)
 Dependencies: `@rdkit/rdkit`, `elkjs`, `minisearch` (each added in the step that first uses it; exact version pinned and recorded; `npm audit` 0).
 | Step | Work | Must cover |
 |---|---|---|

@@ -13,18 +13,31 @@ function testWorkers(): number {
   return n;
 }
 
+/**
+ * Test files that start a real worker_threads thread (the *-threads files and the crash-recovery file). They run as their own serial
+ * project, after the rest of the suite, so they never compete with it for the CPU (a resource arrangement, not an assertion change;
+ * docs/TEST_STRATEGY.md §1).
+ */
+const REAL_THREAD_FILES = ['tests/integration/*-threads.test.ts', 'tests/integration/worker-crash-recovery.test.ts'];
+const ALL_TESTS = ['src/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx}'];
+// tests/timing holds the wall-clock budget assertions: `npm run test:timing` only (docs/TEST_STRATEGY.md §1).
+const EXCLUDED = ['tests/e2e/**', 'tests/timing/**', 'node_modules/**'];
+
 export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
-      include: ['src/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx}'],
-      // tests/timing holds the wall-clock budget assertions: `npm run test:timing` only (docs/TEST_STRATEGY.md §1).
-      exclude: ['tests/e2e/**', 'tests/timing/**', 'node_modules/**'],
       // UI tests opt into a DOM per file with `// @vitest-environment jsdom` (jsdom is added in Phase 5).
       environment: 'node',
       benchmark: { include: ['tests/perf/**/*.bench.ts'] },
       restoreMocks: true,
       maxWorkers: testWorkers(),
+      // File order must not depend on an earlier run: no results cache (Vitest would otherwise run last time's failures first).
+      cache: false,
+      projects: [
+        { extends: true, test: { name: 'main', include: ALL_TESTS, exclude: [...EXCLUDED, ...REAL_THREAD_FILES] } },
+        { extends: true, test: { name: 'real-threads', include: REAL_THREAD_FILES, exclude: EXCLUDED, fileParallelism: false, maxWorkers: 1, sequence: { groupOrder: 1 } } },
+      ],
       // Targets: src/core >= 90% lines, >= 85% branches; src/persistence, src/io, src/workers, src/chem, src/layout, src/search >= 80% lines (services, TEST_STRATEGY §1; the last three from step 4.6).
       // Enforced by npm run test:coverage only, not by npm run check.
       coverage: {
