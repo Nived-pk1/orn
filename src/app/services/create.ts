@@ -1,0 +1,129 @@
+/**
+ * `createAppServices(env)` (step 5.1a, E1): boots the persistence adapter, builds the one canonical store, and wires the
+ * compute replica, the derived indexes, the write queue (writer) or the follower controller (follower). Everything comes from
+ * `env`; no global is read; an environment problem is a status, never an exception. Modes (docs/PERSISTENCE.md §4):
+ *
+ *   read_write                                  → writer (write queue attached; `singleTab` kept)
+ *   read_only, other_tab_is_writer              → follower (read-only until promoted)
+ *   read_only, newer_schema / integrity_failure
+ *              / migration_failed               → read-only with the reason and detail, an empty store, never promoted
+ *   unavailable                                 → session-only (a store in memory, no adapter, nothing saved)
+ *   nothing stored yet                          → an empty writer
+ *
+ * Step 5.1a creates the COMPUTE client only; chem, layout and search arrive in 5.1b.
+ */
+import { createCanonicalStore, type StoreHandle } from '@/core/commands';
+import { createIdFactory } from '@/core/dataset';
+import type { Follower } from '@/persistence';
+import { decideMode, emptyState, noticesOf, openStorage } from './boot';
+import type { AppEnv, AppServices } from './contracts';
+import { createDerivedIndexes } from './derived-indexes';
+import { startFollower } from './follower';
+import { createReplicaPart } from './replica';
+import { createEventLog, createStatusStore } from './status';
+import { createWriterPart } from './writer';
+
+const describe = (error: unknown): string => (error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+
+export async function createAppServices(env: AppEnv): Promise<AppServices> {
+  const log = createEventLog(() => env.clock.nowMs());
+  const status = createStatusStore((error) => log.add({ source: 'app', event: { type: 'status_listener_error', message: describe(error) } }));
+  const ids = createIdFactory(env.clock, env.random);
+  const replica = createReplicaPart({ factory: env.workers.compute, status, log });
+
+  const storage = await openStorage(env, { ids, validate: replica.validate, onEvent: (event) => log.add({ source: 'persistence', event }) });
+  for (const note of storage.notes) log.add({ source: 'app', event: { type: 'storage_note', message: note } });
+  const { adapter, opened } = storage;
+  const decision = decideMode(opened);
+  const report = opened.mode === 'unavailable' ? undefined : opened.bootReport;
+
+  const hasData = opened.mode !== 'unavailable' && opened.state !== null;
+  const initial = opened.mode !== 'unavailable' && opened.state !== null ? opened.state : emptyState(ids);
+  const revision = opened.mode === 'unavailable' ? 0 : opened.revision;
+  const precomputed = hasData ? report?.precomputed : undefined;
+  let isReadOnly = (): boolean => decision.mode !== 'writer' && decision.mode !== 'session_only';
+  let store: StoreHandle;
+  try {
+    store = createCanonicalStore({
+      initial,
+      revision,
+      readOnly: () => isReadOnly(),
+      ...(precomputed !== undefined ? { precomputed } : { validateInitial: hasData }),
+    });
+  } catch (error) {
+    // The boot report and the store disagree: a programmer error, not an environment problem. Release what was opened first.
+    replica.stop();
+    await Promise.allSettled([storage.lock?.release(), adapter?.close()]);
+    throw error;
+  }
+
+  status.update({
+    mode: decision.mode,
+    reason: decision.reason,
+    detail: decision.detail,
+    singleTab: report?.singleTab ?? false,
+    validation: report?.validation ?? null,
+    notices: report === undefined ? null : noticesOf(report),
+  });
+  if (decision.mode === 'session_only') log.add({ source: 'app', event: { type: 'session_only', message: `nothing is saved in this session (${decision.reason ?? 'unknown'}): ${decision.detail ?? ''}` } });
+  else if (decision.mode === 'read_only') log.add({ source: 'app', event: { type: 'read_only', message: `this tab is read-only (${decision.reason ?? 'unknown'}): ${decision.detail ?? ''}` } });
+
+  replica.start(store);
+  const indexes = createDerivedIndexes({ store, clock: env.clock });
+  const writer = createWriterPart({ store, adapter, status, log, ids });
+
+  let follower: Follower | undefined;
+  if (decision.mode === 'writer') writer.attach();
+  else if (decision.mode === 'follower' && adapter !== undefined && storage.lock !== undefined) {
+    follower = startFollower({
+      adapter,
+      channel: storage.channel,
+      lock: storage.lock,
+      store,
+      revision: opened.mode !== 'unavailable' && opened.state !== null ? opened.revision : null,
+      validate: replica.validate,
+      status,
+      log,
+      writer,
+    });
+    // The store is read-only until the controller has reloaded it after a promotion (INV-28).
+    isReadOnly = () => follower?.isReadOnly() ?? true;
+  }
+  status.update({ stage: 'ready' });
+
+  let disposing: Promise<void> | undefined;
+  const dispose = (): Promise<void> => {
+    disposing ??= (async () => {
+      if (writer.pendingWrites()) log.add({ source: 'app', event: { type: 'disposed_with_pending_writes', message: 'the services were disposed while writes were pending' } });
+      writer.stop();
+      indexes.dispose();
+      replica.stop();
+      await Promise.allSettled([follower?.close(), storage.lock?.release()]);
+      try {
+        storage.channel?.close();
+      } catch {
+        // a channel that is already closed is fine
+      }
+      await Promise.allSettled([adapter?.close()]);
+      status.update({ stage: 'disposed' });
+      status.clear();
+      log.clear();
+    })();
+    return disposing;
+  };
+
+  return {
+    store,
+    status,
+    log,
+    indexes,
+    bootReport: report,
+    persistence: adapter,
+    replicaSync: () => replica.sync(),
+    pendingWrites: () => writer.pendingWrites(),
+    saveEverythingNow: () => writer.saveEverythingNow(),
+    retryReplica: () => replica.retry(),
+    shutdown: () => writer.shutdown(),
+    dispose,
+  };
+}

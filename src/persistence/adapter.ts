@@ -50,7 +50,7 @@ export interface DexieAdapterOptions {
   readonly channel?: ChangeChannel;
   /**
    * Boot's L1-L3 pass and promotion's (step 4.2d, Q4): findings for the loaded state stamped for the store. Absent: this thread
-   * validates. The compute worker's implementation is `createComputeBootValidator` (src/workers/compute/boot-port.ts).
+   * validates. The compute worker's implementation is `createBootReplica().validate` (src/workers/compute/boot-port.ts).
    */
   readonly validate?: BootPorts['validate'];
   /** Migrates an older database at boot (and is the arbiter of which stored versions are acceptable). */
