@@ -3000,6 +3000,19 @@ Session start: AC power checked (BatteryStatus 2). Part A (the step 5.1a review 
 
 Next: step 5.1c (flows: import, restore, export; the in-process import as a value).
 
+### Step 5.1b review (reviewer, 2026-10-02)
+
+Verdict: ACCEPTED.
+
+1. Follow-ups a and b of the 5.1a review are accepted as built.
+2. Amendment (d) is approved, with the additions beyond the plan (`L4Service.summary`, `SearchSyncPorts.onStatus`, WarmUpGate retry / message / subscribe, `SearchSyncStats.adopts`) and search configuration id 2.
+3. The five decisions of the entry are approved (lazy threads; the cache written by the writer only; `absent` for a missing factory; the approximate `l4.queued`; announce).
+4. The remedy "build search documents in the compute worker" is NOT built now. It becomes a Gate E watch item, decided at Gate E from browser traces (first run, import). The warm cache already covers the returning user.
+5. REVIEW REQUIRED 1 (a follower's full search load on every remote change): accepted for Phase 5, where the only commits are imports. New open item for Phase 6, to be done BEFORE authoring (step 6.1): the search sync analyses a remote ChangeSet like a commit.
+6. REVIEW REQUIRED 2 (documents resent once after adopt): accepted; Phase 9 candidate (signatures in the cache row). 3: accepted. 5: accepted (it is part of the DerivedIndexes watch item).
+7. REVIEW REQUIRED 4: accepted. A worker that gave up needs a page reload; the 5.1d banner says so. The words are added to the 5.1d plan row.
+8. The full `npm run test:coverage` was not run in 5.1b: it is run once in step 5.1c and reported.
+
 ## Amendments
 - **2026-10-02, step 5.1b - `SpeciesCheckResult.formula?`; `L4Service.derivedFormulaOf` / `subscribeFormulas` / `summary` (`L4Summary`); `DocumentPorts.derivedFormulaOf`; `SearchDocument.derivedFormula?` (indexed with `formula`; search configuration id 2); `SearchSync.refresh(ids)` / `adopt(revision)`; `SearchSyncPorts.derivedFormulaOf` / `onStatus`; `SearchSyncStats.adopts`; `WarmUpGate.retry()` / `message()` / `subscribe()`; `AppServices` and `AppStatus` members (additive contract changes, CLAUDE.md §7; Phase 5 contract decisions Q7, Q8, Q9).** Problem: SEARCH §3 says "formula (entered or derived)" and the chem worker derives it, but no contract carried it to the search document; a warm boot needs the sync to take an index it did not build; an engine that could not load needs a user-asked retry; the app needs to show the engines. Change: the additive members above, the app wiring in `src/app/services`, SEARCH §3/§6, ADR-034 dated line, PERFORMANCE §7; nothing removed, no schema change, no migration. Tests: see the step 5.1b entry.
 - **2026-10-02, step 4.6 - tooling, build configuration and test support only; no contract, schema or invariant change.** `npm run build:smoke` and `scripts/check-build.mjs`; `vite.config.ts` names the worker chunks (`worker-<dir>-<hash>.js`, `rdkit-glue-<hash>.js`); `src/app/worker-factories.ts`; `workerData.crashOn` in the chem, layout and search test fixtures; coverage thresholds for `src/chem`, `src/layout`, `src/search`; `testTitles()` in `tests/adversarial/gate-matrix.ts`. Reason: DoD evidence and the ADR-035 guarantee ("the build smoke owns the nowhere-else guarantee"). SECURITY §4 and SONNET_HANDOFF §19 updated in the same commit.
