@@ -2,7 +2,7 @@
  * The two-spec smoke (step 5.1d, note E10): it runs in Chromium, Firefox and WebKit. 1: the app boots and loads the demo. 2: the chem
  * worker starts and parses (the demo's invalid structure arrives as a CHEM-001 warning in the counts).
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { expectClean, findingsText, loadDemo, openApp, recordCount, watch } from './kit';
 
 test('the app boots and loads the demo; its counts are shown', async ({ page }) => {

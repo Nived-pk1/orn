@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * End-to-end tests (step 5.1d, notes E10, E15). They ALWAYS run against the PRODUCTION build served by `vite preview`: the
  * Content-Security-Policy exists only there. Not part of `npm run check`; run with `npm run e2e`. The full suite runs in Chromium; the
- * two-spec smoke (smoke.spec.ts) also runs in Firefox and WebKit until Gate E (step 5.10a).
+ * two-spec smoke (smoke.spec.ts) also runs in Firefox and WebKit until Gate E (step 5.10a); WebKit runs in a persistent context (tests/e2e/fixtures.ts says why).
  */
 const PORT = 4173;
 
