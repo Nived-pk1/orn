@@ -26,8 +26,8 @@ export interface FlowDeps {
   readonly replica: { sync(): ReplicaSync | undefined };
   readonly env: Pick<AppEnv, 'migrationRunner' | 'generator' | 'random'>;
   readonly ids: IdFactory;
-  /** Called once an import has been applied (the persistent-storage request lives behind it). */
-  readonly afterImport: () => Promise<readonly string[]>;
+  /** Called once an import has been applied and its operation slot is free; starts the persistent-storage request and returns at once. */
+  readonly afterImport: () => void;
   /** The things a session-only tab dropped to stay inside its bound since the last call, logged; the answer repeats them. */
   readonly droppedNotes: () => readonly string[];
 }

@@ -20,6 +20,7 @@ describe('bannersOf: one banner per AppStatus condition', () => {
     ['session-only', { mode: 'session_only', reason: 'indexeddb_unavailable' } as Partial<AppStatus>, 'session_only', /Nothing is saved in this session \(indexeddb_unavailable\)/],
     ['replica down', { replica: { state: 'down', reason: 'worker gave up', revision: null } } as Partial<AppStatus>, 'replica_down', /background copy .* down \(worker gave up\)/],
     ['validation fallback', { validation: { where: 'main', reason: 'no worker' } } as Partial<AppStatus>, 'validation_fallback', /ran on this page .* \(no worker\)/],
+    ['storage asking', { storage: { persistence: 'asking', message: 'waiting' } } as Partial<AppStatus>, 'storage_asking', /^Waiting for the browser to answer the request for persistent storage\./],
     ['storage refused', { storage: { persistence: 'refused', message: 'the browser did not grant persistent storage; export a backup' } } as Partial<AppStatus>, 'storage_refused', /^The browser did not grant persistent storage; export a backup\.$/],
     ['storage refused, no message', { storage: { persistence: 'refused', message: null } } as Partial<AppStatus>, 'storage_refused', /^The browser did not grant persistent storage\. It may delete/],
     ['reload failure', { reloadFailure: { reason: 'read', detail: 'boom' } } as Partial<AppStatus>, 'reload_failure', /could not load another tab's changes \(read: boom\)/],

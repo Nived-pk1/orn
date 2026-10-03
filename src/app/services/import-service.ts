@@ -212,6 +212,7 @@ export function createImportService(deps: FlowDeps): ImportService {
       const guard = guardStore(store, options?.signal, () => op.stage('committing'));
       router.use(guard);
       activeOp = op;
+      let applied = false;
       try {
         let result: ImportApplyResult;
         if (route.kind === 'worker') result = await workerFlow(route.sync).apply(batchId, plan);
@@ -225,15 +226,17 @@ export function createImportService(deps: FlowDeps): ImportService {
         metas.delete(batchId);
         op.stage('saving');
         const durable = await durabilityOf(deps.adapter, result.revision);
-        const notes = [...deps.droppedNotes(), ...(await deps.afterImport())];
+        const notes = [...deps.droppedNotes()];
         if (durable.sessionOnly) {
           notes.push(`nothing is saved in this session${plan.preview.assets.toStore > 0 ? `; the bytes of ${plan.preview.assets.toStore} asset file(s) were not kept` : ''}`);
         }
+        applied = true;
         return { ...result, report: withMeta(result.report, meta), ...durable, inProcess: route.kind === 'in_process', notes };
       } finally {
         activeOp = undefined;
         router.clear();
         op.end();
+        if (applied) deps.afterImport(); // the slot is free; the browser's answer never holds a flow
       }
     },
   };

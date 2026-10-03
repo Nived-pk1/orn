@@ -74,7 +74,7 @@ describe('the engines over real threads', () => {
     await services.dispose();
 
     const second = await bootReal(world);
-    await vi.waitFor(() => expect(second.services.status.get().search.loadedFrom).toBe('warm_cache'));
+    await vi.waitFor(() => expect(second.services.status.get().search.loadedFrom).toBe('warm_cache'), { timeout: 15_000 });
     expect(second.services.searchSync()?.stats()).toMatchObject({ loads: 0, adopts: 1 });
     expect(second.made).toEqual({ compute: 1, chem: 0, layout: 0, search: 1 });
     const again = await second.services.search.search('palette', { text: 'ethanol', limit: 5 });

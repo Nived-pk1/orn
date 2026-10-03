@@ -81,6 +81,9 @@ export function bannersOf(status: AppStatus): readonly Banner[] {
   if (status.search.state === 'down' && status.workers.search.state !== 'down') {
     banners.push({ id: 'search_down', text: `Search is unavailable (${status.search.reason}).` });
   }
+  if (status.storage.persistence === 'asking') {
+    banners.push({ id: 'storage_asking', text: 'Waiting for the browser to answer the request for persistent storage. Your data is saved; you can keep working.' });
+  }
   if (status.storage.persistence === 'refused') {
     banners.push({ id: 'storage_refused', text: status.storage.message === null ? 'The browser did not grant persistent storage. It may delete this data when disk space runs low.' : `${status.storage.message.charAt(0).toUpperCase()}${status.storage.message.slice(1)}.` });
   }

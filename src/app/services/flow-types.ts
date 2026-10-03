@@ -39,7 +39,7 @@ export interface Durability {
   readonly save: SaveView | null;
   /** Which path ran. */
   readonly inProcess: boolean;
-  /** Things said out loud: dropped in-memory snapshots, asset bytes that could not be kept, a refused persistent-storage request. */
+  /** Things said out loud: dropped in-memory snapshots, asset bytes that could not be kept. A refused persistent-storage request is AppStatus.storage, not a note. */
   readonly notes: readonly string[];
 }
 

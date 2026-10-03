@@ -161,6 +161,11 @@ describe('the batch report', () => {
   });
 });
 
+/** Resolves when AppStatus.storage leaves `asking` (the request is asked after the answer; nothing waits for it). */
+async function storageSettled(services: Awaited<ReturnType<typeof booter.bootEnv>>): Promise<void> {
+  await vi.waitFor(() => expect(services.status.get().storage.persistence).not.toBe('asking'));
+}
+
 describe('persistent storage', () => {
   it('is requested ONCE after the first successful import in a writer tab; the answer is a status', async () => {
     let asks = 0;
@@ -168,18 +173,19 @@ describe('persistent storage', () => {
     const services = await booter.bootEnv(t, { ...t.env, storage: { persist: async () => (asks += 1, true) } });
     expect(services.status.get().storage).toEqual({ persistence: 'unknown', message: null });
     await importFile(services, await fileOf(smallState()));
+    await storageSettled(services);
     expect(asks).toBe(1);
     expect(services.status.get().storage).toEqual({ persistence: 'persisted', message: null });
     await importFile(services, await demoFile());
     expect(asks).toBe(1);
   });
 
-  it('a refusal is a status and a note in the answer, never an error', async () => {
+  it('a refusal is a status, never an error and never part of the answer', async () => {
     const t = testEnv({ world: newWorld() });
     const services = await booter.bootEnv(t, { ...t.env, storage: { persist: async () => false } });
     const applied = await importFile(services, await demoFile());
+    await storageSettled(services);
     expect(services.status.get().storage).toMatchObject({ persistence: 'refused', message: expect.stringContaining('persistent storage') });
-    expect(applied.notes.join(' ')).toContain('persistent storage');
     expect(applied.saved).toBe(true);
   });
 
@@ -187,10 +193,33 @@ describe('persistent storage', () => {
     const t = testEnv({ world: newWorld() });
     const throwing = await booter.bootEnv(t, { ...t.env, storage: { persist: async () => { throw new Error('denied by policy'); } } });
     await importFile(throwing, await fileOf(smallState()));
+    await storageSettled(throwing);
     expect(throwing.status.get().storage).toMatchObject({ persistence: 'unknown', message: expect.stringContaining('denied by policy') });
     const none = await booter.boot({ world: newWorld() });
     await importFile(none.services, await fileOf(smallState()));
     expect(none.services.status.get().storage).toMatchObject({ persistence: 'unknown', message: expect.stringContaining('cannot be asked') });
+  });
+
+  it('a request that rejects synchronously (not a promise) is a status too', async () => {
+    const t = testEnv({ world: newWorld() });
+    const services = await booter.bootEnv(t, { ...t.env, storage: { persist: () => { throw new Error('no permission API'); } } });
+    const applied = await importFile(services, await fileOf(smallState()));
+    expect(applied.saved).toBe(true);
+    expect(services.status.get().storage).toMatchObject({ persistence: 'unknown', message: expect.stringContaining('no permission API') });
+  });
+
+  it('a request that never resolves (Firefox waiting for a prompt) holds no flow: the apply answers, the slot is free, a second import works', async () => {
+    let asks = 0;
+    const t = testEnv({ world: newWorld() });
+    const services = await booter.bootEnv(t, { ...t.env, storage: { persist: () => (asks += 1, new Promise<boolean>(() => undefined)) } });
+    const first = await importFile(services, await fileOf(smallState()));
+    expect(first.saved).toBe(true);
+    expect(services.status.get().operation).toBeNull();
+    expect(services.status.get().storage).toMatchObject({ persistence: 'asking' });
+    const second = await importFile(services, await demoFile());
+    expect(second.saved).toBe(true);
+    expect(asks).toBe(1);
+    expect(services.status.get().storage.persistence).toBe('asking');
   });
 
   it('a refused import does not use the one request', async () => {

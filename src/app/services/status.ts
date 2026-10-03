@@ -85,10 +85,10 @@ export interface OperationView {
   readonly progress: { readonly done: number; readonly total: number | null } | null;
 }
 
-/** Persistent storage (`navigator.storage.persist()`), asked once after the first successful import in a writer tab. */
+/** Persistent storage (`navigator.storage.persist()`), asked once after the first successful import in a writer tab, after that import has answered. */
 export interface StorageView {
-  /** `unknown`: not asked yet, or the environment could not answer (`message` says which). `refused` is an answer, not an error. */
-  readonly persistence: 'unknown' | 'persisted' | 'refused';
+  /** `unknown`: not asked yet, or the environment could not answer (`message` says which). `asking`: the browser has not answered yet (it may be waiting for the user's permission); no flow waits for it. `refused` is an answer, not an error. */
+  readonly persistence: 'unknown' | 'asking' | 'persisted' | 'refused';
   readonly message: string | null;
 }
 
