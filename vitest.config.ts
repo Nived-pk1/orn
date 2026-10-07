@@ -42,7 +42,7 @@ export default mergeConfig(
       // Enforced by npm run test:coverage only, not by npm run check.
       coverage: {
         provider: 'v8',
-        thresholds: { 'src/core/**': { lines: 90, branches: 85 }, 'src/persistence/**': { lines: 80 }, 'src/io/**': { lines: 80 }, 'src/workers/**': { lines: 80 }, 'src/chem/**': { lines: 80 }, 'src/layout/**': { lines: 80 }, 'src/search/**': { lines: 80 }, 'src/app/services/**': { lines: 80 } },
+        thresholds: { 'src/core/**': { lines: 90, branches: 85 }, 'src/persistence/**': { lines: 80 }, 'src/io/**': { lines: 80 }, 'src/workers/**': { lines: 80 }, 'src/chem/**': { lines: 80 }, 'src/layout/**': { lines: 80 }, 'src/search/**': { lines: 80 }, 'src/app/services/**': { lines: 80 }, 'src/render/scene/**': { lines: 80 } },
       },
     },
   }),

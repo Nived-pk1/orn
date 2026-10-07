@@ -1,0 +1,114 @@
+/**
+ * Test kit for the scene builders (step 5.3): a deterministic text measurer, ports read from a canonical state, tiny hand-made
+ * projections, and the whole pure pipeline (projection -> sizes -> request -> fallback layout -> scene). Test code only.
+ */
+import type { EdgeBundle, GraphEdge, GraphNode, Projection } from '@/core/graph/contracts';
+import type { AnyRecord, CanonicalState, Reaction, RecordRef } from '@/core/schema';
+import { layoutFallback } from '@/layout';
+import type { LayoutResult } from '@/layout/contracts';
+import { buildLayoutRequest, buildScene, nodeSizes, type LayoutRequestOptions, type NodeSizes, type Scene, type ScenePorts, type TextMeasurer } from '@/render/scene';
+import type { LayoutRequest } from '@/layout/contracts';
+
+/** Width by characters, height by size: no fonts, no DOM. */
+export const fakeMeasurer: TextMeasurer = (runs, style) => ({
+  width: runs.reduce((sum, run) => sum + run.text.length * style.size * (style.mono ? 0.6 : 0.5) * (style.weight === 'strong' ? 1.1 : 1), 0),
+  height: style.size * 1.3,
+});
+
+type Loose = Record<string, unknown>;
+const recordOf = (state: CanonicalState, ref: RecordRef): Loose | undefined => (state.records[ref.kind] as Record<string, unknown>)[ref.id] as Loose | undefined;
+
+const ABOVE_ROLES: readonly string[] = ['reagent', 'catalyst', 'initiator', 'promoter'];
+
+/** Ports over a state: names and formulas of records, no depictions, arrow text from every participant but the carried substrate. */
+export function portsOf(state: CanonicalState, depictions = false): ScenePorts {
+  const nameOf = (record: Loose): string => {
+    const names = record.names as { canonical?: string; display?: string } | undefined;
+    return names?.display ?? names?.canonical ?? String(record.name ?? record.id);
+  };
+  return {
+    describe: (ref) => {
+      const record = recordOf(state, ref);
+      if (record === undefined) return undefined;
+      const formula = (record.formula ?? record.generalFormula ?? record.formulaText) as string | undefined;
+      return { name: nameOf(record), ...(formula === undefined ? {} : { formula }) };
+    },
+    depictionKeyOf: (ref) => (depictions ? `depiction:${ref.id}` : undefined),
+    arrowTextOf: (edge) => {
+      if (edge.reactionId === undefined) return undefined;
+      const reaction = state.records.reaction[edge.reactionId] as Reaction | undefined;
+      if (reaction === undefined) return undefined;
+      const names = (roles: (role: string) => boolean): string =>
+        reaction.participants
+          .filter((p) => p.id !== edge.participantId && roles(p.role))
+          .map((p) => {
+            const record = recordOf(state, p.ref as RecordRef);
+            return record === undefined ? p.ref.id : nameOf(record);
+          })
+          .join(', ');
+      const above = names((role) => ABOVE_ROLES.includes(role));
+      const below = names((role) => !ABOVE_ROLES.includes(role));
+      return { ...(above === '' ? {} : { above }), ...(below === '' ? {} : { below }) };
+    },
+  };
+}
+
+export const nobodyPorts: ScenePorts = { describe: () => undefined, depictionKeyOf: () => undefined, arrowTextOf: () => undefined };
+
+export const node = (id: string, over: Partial<GraphNode> = {}): GraphNode => ({
+  id,
+  kind: 'class',
+  record: { kind: 'class', id },
+  role: 'anchor',
+  depth: 0,
+  hidden: { outgoing: 0, incoming: 0 },
+  flags: [],
+  ...over,
+});
+
+export const edge = (id: string, from: string, to: string, over: Partial<GraphEdge> = {}): GraphEdge => ({
+  id,
+  from,
+  to,
+  semantic: 'transforms_to',
+  selectivity: 'major',
+  conditionVariantIds: [],
+  inferred: false,
+  layoutDirection: 'forward',
+  ...over,
+});
+
+export const bundle = (id: string, from: string, to: string, edgeIds: readonly string[], total = edgeIds.length): EdgeBundle => ({ id, from, to, edgeIds: [...edgeIds].sort(), total });
+
+export function projectionOf(parts: { nodes: readonly GraphNode[]; edges?: readonly GraphEdge[]; bundles?: readonly EdgeBundle[]; truncation?: Projection['truncation']; view?: Projection['view'] }): Projection {
+  return {
+    view: parts.view ?? 'navigator',
+    revision: 7,
+    key: 'key',
+    nodes: [...parts.nodes].sort((a, b) => (a.id < b.id ? -1 : 1)),
+    edges: [...(parts.edges ?? [])].sort((a, b) => (a.id < b.id ? -1 : 1)),
+    bundles: [...(parts.bundles ?? [])].sort((a, b) => (a.id < b.id ? -1 : 1)),
+    unanchoredReactionIds: [],
+    truncation: parts.truncation ?? null,
+  };
+}
+
+export interface Piped {
+  readonly sizes: NodeSizes;
+  readonly request: LayoutRequest;
+  readonly layout: LayoutResult;
+  readonly scene: Scene;
+}
+
+/** projection -> sizes -> request -> the pure fallback layout -> scene; throws on a refused step (a test bug or a real one). */
+export function pipe(projection: Projection, ports: ScenePorts, options: LayoutRequestOptions = {}): Piped {
+  const sizes = nodeSizes(projection, ports, fakeMeasurer);
+  const built = buildLayoutRequest(projection, sizes, options);
+  if (!built.ok) throw new Error(`layout request refused: ${built.code} ${built.message}`);
+  const layout = layoutFallback(built.request, 'engine_unavailable', () => 0);
+  const scene = buildScene(projection, layout, { sizes }, ports);
+  if (!scene.ok) throw new Error(`scene refused: ${scene.code} ${scene.message}`);
+  return { sizes, request: built.request, layout, scene: scene.scene };
+}
+
+export const recordsOf = (state: CanonicalState, kind: AnyRecord['kind']): readonly AnyRecord[] => Object.values(state.records[kind] as Record<string, AnyRecord>);

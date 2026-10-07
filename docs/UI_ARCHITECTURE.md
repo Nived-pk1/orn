@@ -92,6 +92,7 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 - *2026-10-02 (Phase 5 contract decisions):* Phase 5 keeps depictions in a memory LRU only; the persistent depiction cache in `derivedCache` is Phase 9.
 - **Layout stability**: previous positions are sent as ordering hints; expansion adds nodes without reshuffling the rest; transitions animate 200 ms (none with reduced motion). Layout requests are cancelled when superseded.
 - **Direction**: navigator and reaction explorer lay out left→right; precursor explorer right→left with forward arrowheads (GRAPH_SEMANTICS.md §5).
+- *2026-10-07 (step 5.3, Scene contract amendment; Phase 5 contract decisions Q4, Q5):* `selected` and `focused` leave `SceneNode.state` (the overlay draws selection and the focus ring from UI state; `dimmed` and `onPath` stay). `Scene.truncation` is added and `Scene.revision` is the store revision of the projection it was built from (informational; memos key on object identity). `SceneEdge.labelAt` is added (arrow text and count sit at the route midpoint). A self-loop is a `SceneEdge` with `from === to`, drawn by the builder beside its node; it is not in the `LayoutRequest`. A bundle is one `SceneEdge` (id = bundle id) with `bundleSize` = its TOTAL. `depictionKey` comes from an injected port; names, formulas and arrow text come through ports as text, and `src/render/scene` never imports `src/chem` at run time. The text measurer is injected (note E6); `NodeSizes` travel from `buildLayoutRequest` to `buildScene`.
 
 ## 7. Reaction authoring workbench (#11)
 

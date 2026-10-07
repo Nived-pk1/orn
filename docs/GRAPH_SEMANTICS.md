@@ -55,6 +55,8 @@ Inferred edges are never presented as stated facts, and route search reports cla
 
 Selectivity styling (produces edges): `exclusive` solid heavy, `major` solid heavy, `minor` dashed, `trace` dotted light, `mixture_component` solid normal, `unspecified` solid normal. Line style and shape always carry meaning together with colour so the view works in greyscale and for colour-blind users (UI_ARCHITECTURE.md §3).
 
+*Scene styling (step 5.3, 2026-10-07).* An inferred edge is dotted whatever its selectivity and keeps the weight of its selectivity (heavy for exclusive and major, light for trace, normal otherwise); minor stated edges are dashed, trace stated edges dotted. A bundle is ONE drawn path: dotted only when every drawn edge of it is inferred, otherwise the stroke of its best-ranked edge; the weight and arrowhead of its best-ranked edge (rank: exclusive, major, mixture_component, unspecified, minor, trace; then edge ID); it shows its TOTAL, not the number of edges materialised. Membership edges are solid light and overflow edges dashed light, both without an arrowhead.
+
 ## 5. Direction and the precursor view
 
 Arrows always point in the chemical direction (reactants → products). The **precursor explorer** traverses backwards from a target and lays the graph out right-to-left (`layoutDirection: 'reversed'`), but arrowheads still point forward. "Can be made from" never implies "can be converted back". Reversibility is shown only from `reversibility.kind` and `reverse_of` relationships (a ⇌ badge on the arrow, or a paired arrow for microscopic reverses).

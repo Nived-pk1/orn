@@ -69,11 +69,12 @@
     "5.1c",
     "5.1d",
     "5.2",
-    "5.4c"
+    "5.4c",
+    "5.3"
   ],
   "nextPhase": 5,
-  "nextStep": "5.3",
-  "nextStepTitle": "Phase 5, step 5.3 - Scene and layout-request builders (pure; src/render/scene): FormattedText, node sizes from an injected text measurer (note E6), buildLayoutRequest, buildScene (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.2 (design system and shell frame) is done; read its REVIEW REQUIRED items in docs/PROGRESS.md first (the persistence boot fix for uiState on an empty database, the audit fix of source-map-js, the 300 ms panel-save debounce). Step 5.4c (navigator scale and expansion) is done and changed the projection this step takes as input: EdgeBundle.total (a bundle knows its full size, fewer edge IDs than total are drawn), a loop is a pair with from === to, overflow nodes carry hiddenMembers, Truncation carries hiddenPairs and hiddenEdges, member nodes (role member, depth 1) and membership edges exist for expanded hubs (GRAPH_SEMANTICS section 11, ADR-036). Read the step 5.4c REVIEW REQUIRED items in docs/PROGRESS.md first. After 5.3: 5.4a, 5.4b, 5.5a.",
+  "nextStep": "5.4a",
+  "nextStepTitle": "Phase 5, step 5.4a - SVG renderer, static (src/render/svg): layered React SVG over the Scene (edges, nodes, labels, badges, overlay), glyphs of UI_ARCHITECTURE section 3, text as tspans from runs, LOD as an input, depictions as <image> (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.3 (Scene and layout-request builders, src/render/scene) is done: read its REVIEW REQUIRED items in docs/PROGRESS.md first (the Scene contract amendment: SceneEdge.labelAt, Scene.truncation, state without selected and focused; buildScene returns a value and takes the node sizes in its options; the arrow-text port has no producer yet; node boxes are capped at a maximum width, so the renderer clips). The Scene is the renderer's only input; src/render never imports src/chem at run time. After 5.4a: 5.4b, 5.5a (its plan row carries the 5.4c review decisions: stale expansion entries removed by the hook, an UNFILTERED default request, the number of drawn pairs).",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -118,7 +119,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command at step 5.4c (Vitest 4.1.11: 283 files, 4,220 tests; Vitest 214.3 s; before the step 277 files, 4,173 tests); the earlier figures: step 5.2 277 files, 4,173 tests; e2e and build:smoke not run in step 5.4c (core only; the last e2e is the step 5.2 one)",
+    "npmRunCheck": "passed as ONE command at step 5.3 (Vitest 4.1.11: 288 files, 4,346 tests; Vitest 213.7 s; before the step, after the 5.4c review follow-ups, 284 files, 4,234 tests; those follow-ups: 283 -> 284 files, 4,220 -> 4,234 tests); e2e and build:smoke not run in step 5.3 (pure builders, no UI); the earlier figures: step 5.4c 283 files, 4,220 tests; step 5.2 277 files, 4,173 tests; e2e and build:smoke not run in step 5.4c (core only; the last e2e is the step 5.2 one)",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -324,6 +325,8 @@
     "Step 5.2: Radix menus and tooltips opened INSIDE the native modal dialog mount inside it (PortalContainerContext) because everything outside a modal dialog is inert; no screen does this yet, so no e2e proves it. The first dialog that contains a menu (steps 5.9a, 5.9b) adds that e2e. -> step 5.9a",
     "Step 5.2: the Skeleton primitive has component tests only: no real screen shows it in a browser yet (the services are built before React renders, so 'Starting up' is not reachable). The first screen that loads asynchronously (the navigator, 5.5a) exercises it in the e2e. -> step 5.5a",
     "Step 5.2: the top bar's File menu, Search, Undo and Redo are listed and unavailable with the step that brings them (E8); the first-run screen is the only way to import until 5.9a. @tanstack/react-virtual and VirtualList move to step 5.5b. -> step 5.5b, 5.9a",
-    "Step 5.2: initial JS 312.7 kB gzip (Vite's figure; 304.9 kB at gzip level 9) against the 400 KB target, measured once; no earlier figure exists to compare. Gate E re-measures. -> step 5.10b"
+    "Step 5.2: initial JS 312.7 kB gzip (Vite's figure; 304.9 kB at gzip level 9) against the 400 KB target, measured once; no earlier figure exists to compare. Gate E re-measures. -> step 5.10b",
+    "Step 5.3 REVIEW REQUIRED 1 (PROGRESS.md \"Phase 5, step 5.3\"): core does NOT compute arrow text (PROGRESS.md step 2.4 says the UI reads participants for captions, and the step 5.3 prompt says core already computes it). buildScene gets it through the port ScenePorts.arrowTextOf(edge) (mini-markup, parsed to runs by the builder); the Scene tests use a fake from the participants. A pure producer (roles and reaction_scheme placements, DOMAIN_MODEL 6.2; the carried substrate and the products are not in it; a never-a-node species is) is NOT built: decide where it lives (core/graph) and when (before 5.5a). Until then the navigator draws no arrow text.",
+    "Step 5.3: node boxes are capped at a maximum width per box kind (BOXES in src/render/scene/sizes.ts); a longer text is in the Scene label in full and the renderer (5.4a) must clip it and keep the full text reachable (aria label, title). The 5.4c review's figure of about 1.5 s for 800 pairs between 60 hubs is the layout worker; the pure fallback layout runs the whole design-dense overview (projection, sizes, request, layout, scene) in 12.6 ms mean / 21.5 ms p99 here, so the 5.5a decision on the number of drawn pairs concerns ELK."
   ]
 }
