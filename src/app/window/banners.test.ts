@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_STATUS, type AppStatus } from '@/app/services';
-import { bannersOf, bootLinesOf, operationTextOf, saveTextOf, workersTextOf } from './banners';
+import { bannerKindOf, bannersOf, bootLinesOf, operationTextOf, saveTextOf, workersTextOf } from './banners';
 
 const status = (patch: Partial<AppStatus>): AppStatus => ({ ...INITIAL_STATUS, stage: 'ready', mode: 'writer', ...patch });
 const save = (patch: Partial<NonNullable<AppStatus['save']>>): NonNullable<AppStatus['save']> => ({
@@ -135,5 +135,39 @@ describe('workersTextOf', () => {
     });
     expect(workersTextOf(odd)).toBe('Workers: compute down, chem restarting, layout absent, search down');
     expect(workersTextOf(status({ replica: { state: 'reloading', reason: '', revision: 1 }, workers: INITIAL_STATUS.workers }))).toMatch(/^Workers: compute reloading,/);
+  });
+});
+
+describe('bannerKindOf', () => {
+  it.each([
+    ['follower', 'info'],
+    ['storage_asking', 'info'],
+    ['session_only', 'warning'],
+    ['worker_down_chem', 'warning'],
+    ['revision_gap', 'error'],
+    ['reload_failure', 'error'],
+    ['l4_not_checked', 'review'],
+  ] as const)('%s is a %s notice', (id, kind) => {
+    expect(bannerKindOf(id)).toBe(kind);
+  });
+
+  it('every banner a status can produce has a kind of its own; an unknown id is a warning, never hidden', () => {
+    const all = status({
+      mode: 'session_only',
+      reason: 'x',
+      singleTab: true,
+      replica: { state: 'down', reason: 'r', revision: null },
+      validation: { where: 'main', reason: 'r' },
+      reloadFailure: { reason: 'r', detail: 'd' },
+      rejectedRows: 1,
+      workers: { chem: { state: 'down', started: true, reason: 'r' }, layout: { state: 'down', started: true, reason: 'r' }, search: { state: 'down', started: true, reason: 'r' } },
+      l4: { state: 'idle', notChecked: 2, queued: 0, message: 'm' },
+      storage: { persistence: 'refused', message: null },
+      save: save({ failureReason: 'revision_gap', lastError: 'gap' }),
+    });
+    const produced = ids(all);
+    expect(produced.length).toBeGreaterThanOrEqual(10);
+    for (const id of produced) expect(['info', 'warning', 'error', 'review']).toContain(bannerKindOf(id));
+    expect(bannerKindOf('some_future_banner')).toBe('warning');
   });
 });

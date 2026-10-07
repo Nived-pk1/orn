@@ -64,6 +64,8 @@ dispatch(envelope) ─► commit (memory, revision n) ─► ChangeSet n
 
 **2026-10-03 (step 5.1d review, follow-up b).** The app shows "a crash is suspected" (a Start-up report line) only when the boot offers editor sessions to restore (`BootNotices.editorSessions` > 0). With none, nothing is shown and the app's event log records `crash_suspected`. Reason: a page unload cannot be trusted to finish the IndexedDB write of the clean-shutdown marker, so an ordinary reload left a false crash line; the line told the user nothing to act on. Draft recovery that does not depend on an unload-time write is the Phase 6 step 6.1 item.
 
+**2026-10-07 (step 5.2).** Boot restores `uiState` on a database that holds no dataset yet too (the "nothing stored" branch used to return an empty report): the same tolerant restore, bad rows deleted only by the writer and always reported. Reason: "Start empty" and the panel layout must survive a reload of an empty dataset.
+
 `OpenResult` for a loaded database: `mode` (`read_write`, or `read_only` with `readOnlyReason` `other_tab_is_writer` / `newer_schema` / `integrity_failure` / `migration_failed` and a `detail`), `state` (null when nothing is stored or it could not be interpreted), `revision`, `storedSchemaVersion` (as found on disk, before any migration), `quarantinedCount` and the `bootReport` (migration step reports, findings, `assetIdsWithoutBlob`, `crashSuspected`, `editorSessionIds`, `uiState`, `uiStateReset`, `newlyQuarantined`, `singleTab`).
 
 Cold boot budget: < 2.5 s at 2k species / 5k reactions (PERFORMANCE_ARCHITECTURE.md §2).

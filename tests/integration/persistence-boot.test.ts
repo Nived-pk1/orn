@@ -344,6 +344,31 @@ describe('boot: uiState is restored tolerantly', () => {
   });
 });
 
+describe('boot: uiState of a database with no dataset yet (step 5.2: "Start empty" and the panels outlive a reload)', () => {
+  it('a fresh database still restores the uiState rows it holds, resets invalid ones and says which', async () => {
+    const t = freshAdapter({ uiStateValidators: { viewport: (v) => typeof (v as { zoom?: unknown }).zoom === 'number' } });
+    await t.db.uiState.bulkPut([
+      { key: 'panels', value: { inspectorWidth: 448, startEmptyDismissed: true } },
+      { key: 'viewport', value: { zoom: 'wide' } },
+    ]);
+    const { result } = await boot(t);
+    expect(result).toMatchObject({ mode: 'read_write', state: null, revision: 0 });
+    expect(result.bootReport?.uiState).toEqual({ panels: { inspectorWidth: 448, startEmptyDismissed: true } });
+    expect(result.bootReport?.uiStateReset).toEqual(['viewport']);
+    expect((await t.db.uiState.toArray()).map((r) => r.key)).toEqual(['panels']);
+  });
+
+  it('a read-only tab of an empty database reports the rows and deletes nothing', async () => {
+    const t = freshAdapter({ lock: stubLock('held_elsewhere'), uiStateValidators: { boom: () => false } });
+    await t.db.uiState.bulkPut([{ key: 'panels', value: { inspectorOpen: false } }, { key: 'boom', value: 1 }]);
+    const { result, writes } = await boot(t);
+    expect(result.bootReport?.uiState).toEqual({ panels: { inspectorOpen: false } });
+    expect(result.bootReport?.uiStateReset).toEqual(['boom']);
+    expect(writes).toEqual([]);
+    expect(await t.db.uiState.count()).toBe(2);
+  });
+});
+
 describe('boot: IndexedDB unavailable', () => {
   const failing = (make: () => unknown) => ({ open: () => { throw make(); } }) as never;
   const bootWith = async (factory: unknown) => {

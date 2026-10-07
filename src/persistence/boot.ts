@@ -72,11 +72,22 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
 
   const nothingStored = rows.length === 0 && stored === undefined && meta.datasetMeta === undefined && meta.revision === undefined;
   if (nothingStored) {
+    // The UI state does not depend on a dataset: "Start empty" and the panel layout outlive a reload of an empty database (step 5.2).
+    const ui = restoreUiState(await ports.listUiStateRows(), ports.uiStateValidators);
     if (writer) {
+      if (ui.reset.length > 0) await ports.deleteUiState(ui.reset);
       await ports.setCleanShutdown(null);
       await ports.continueFrom(0);
     }
-    return { mode: writer ? 'read_write' : 'read_only', ...(writer ? {} : { readOnlyReason: 'other_tab_is_writer' as const }), state: null, revision: 0, storedSchemaVersion: null, quarantinedCount: await quarantined(), bootReport: emptyReport(singleTab) };
+    return {
+      mode: writer ? 'read_write' : 'read_only',
+      ...(writer ? {} : { readOnlyReason: 'other_tab_is_writer' as const }),
+      state: null,
+      revision: 0,
+      storedSchemaVersion: null,
+      quarantinedCount: await quarantined(),
+      bootReport: { ...emptyReport(singleTab), uiState: ui.valid, uiStateReset: ui.reset },
+    };
   }
 
   const target = ports.runner.target;

@@ -3,6 +3,7 @@
  * (CLAUDE.md §1.5). The component only renders what these return and runs the named action.
  */
 import type { AppStatus, BootNotices, EngineName, WorkerName } from '@/app/services';
+import type { NoticeKind } from '@/ui/primitives';
 
 export type BannerAction = 'reload' | 'save_everything' | 'retry_replica' | 'retry_chem' | 'retry_layout';
 
@@ -11,6 +12,33 @@ export interface Banner {
   readonly text: string;
   readonly action?: { readonly label: string; readonly kind: BannerAction };
 }
+
+/** How a banner looks (a word, a rule weight; colour is never the only carrier): by the condition it reports. */
+const KIND_OF: Readonly<Record<string, NoticeKind>> = {
+  follower: 'info',
+  read_only: 'info',
+  single_tab: 'info',
+  storage_asking: 'info',
+  validation_fallback: 'info',
+  promotion_refused: 'warning',
+  session_only: 'warning',
+  replica_down: 'warning',
+  rejected_rows: 'warning',
+  worker_down_chem: 'warning',
+  worker_down_layout: 'warning',
+  worker_down_search: 'warning',
+  engine_chem: 'warning',
+  engine_layout: 'warning',
+  l4_unavailable: 'warning',
+  search_down: 'warning',
+  storage_refused: 'warning',
+  revision_gap: 'error',
+  reload_failure: 'error',
+  l4_not_checked: 'review',
+};
+
+/** A banner id this table does not know is shown as a warning, never hidden. */
+export const bannerKindOf = (id: string): NoticeKind => KIND_OF[id] ?? 'warning';
 
 const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 const suffix = (detail: string | null): string => (detail === null || detail === '' ? '' : ` ${detail}`);

@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { tierState } from '@/test-support/perf-kit';
-import { fakeApp, planOf, renderWithApp, type FakeApp } from '@/test-support/window-kit';
+import { fakeApp, planOf, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 
+// jsdom has no showModal() / close() on <dialog>; the browser behaviour is proved by the e2e (tests/e2e/shell.spec.ts).
+beforeAll(stubDialog);
 afterEach(cleanup);
 
 const APPLIED = { ok: true, revision: 1, snapshotId: 's', report: {}, reportSaved: true, saved: true, sessionOnly: false, save: null, inProcess: false, notes: [] };
@@ -32,7 +34,7 @@ describe('first run (the store holds zero records)', () => {
 
   it('waits while booting and refuses (in words) in a read-only tab', () => {
     renderWithApp(app({ status: { stage: 'booting', mode: null } }));
-    expect(screen.getByText('Starting up…')).toBeTruthy();
+    expect(screen.getByRole('status', { name: 'Starting up' }).getAttribute('aria-busy')).toBe('true'); // a skeleton, not a spinner
     expect(screen.queryByRole('button', { name: 'Load demo dataset' })).toBeNull();
     cleanup();
     renderWithApp(app({ status: { mode: 'follower' } }));
@@ -61,7 +63,9 @@ describe('first run (the store holds zero records)', () => {
     fireEvent.click(button('Load demo dataset'));
     await screen.findByRole('heading', { name: 'Import summary' });
     expect(within(screen.getByRole('list', { name: 'Blockers' })).getByText('REF-001 on spc_x')).toBeTruthy();
-    expect((button('Confirm') as HTMLButtonElement).disabled).toBe(true);
+    expect(button('Confirm').getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Confirm', description: 'this file cannot be imported as it is' })).toBeTruthy();
+    fireEvent.click(button('Confirm'));
     expect(a.flows.apply).not.toHaveBeenCalled();
   });
 
@@ -75,12 +79,14 @@ describe('first run (the store holds zero records)', () => {
   });
 
   it('Start empty shows the dataset view with an empty-dataset note', () => {
-    renderWithApp(app());
+    const a = app();
+    renderWithApp(a);
     fireEvent.click(button('Start empty'));
     expect(screen.queryByRole('region', { name: 'First run' })).toBeNull();
     expect(screen.getByRole('region', { name: 'Dataset' })).toBeTruthy();
     expect(screen.getByText('The dataset is empty.')).toBeTruthy();
     expect(screen.getByText(/Started empty/)).toBeTruthy();
+    expect(a.panels.getState().startEmptyDismissed).toBe(true); // kept in the panels store (uiState), not in React state
   });
 });
 
@@ -127,7 +133,9 @@ describe('Import a file', () => {
     renderWithApp(a);
     choose('x.orn.json');
     await screen.findByRole('heading', { name: 'Import summary' });
-    expect((button('Confirm') as HTMLButtonElement).disabled).toBe(true);
+    expect(button('Confirm').getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(button('Confirm'));
+    expect(a.flows.apply).not.toHaveBeenCalled();
     expect(screen.getByText('an ERROR in the merged result')).toBeTruthy();
   });
 
@@ -183,8 +191,9 @@ describe('Import a file', () => {
     await screen.findByRole('heading', { name: 'Import summary' });
     fireEvent.click(button('Confirm'));
     await screen.findByText(/Applied 5 records from y\.orn\.json, but not saved yet/);
-    expect(screen.getByText('a note')).toBeTruthy();
-    expect(screen.getByText('The import report could not be stored (quota).')).toBeTruthy();
+    const toast = screen.getByRole('status', { name: 'Notifications' });
+    expect(toast.textContent).toContain('a note');
+    expect(toast.textContent).toContain('The import report could not be stored (quota).');
   });
 
   it('a session-only import says nothing is saved', async () => {
@@ -243,5 +252,43 @@ describe('a dataset with data', () => {
     expect(screen.queryByRole('region', { name: 'First run' })).toBeNull();
     expect(screen.getByRole('region', { name: 'Dataset' })).toBeTruthy();
     expect(screen.getByText('Imported 5 records from demo.orn.json.')).toBeTruthy();
+  });
+});
+
+describe('the shell frame around the window', () => {
+  it('Navigator is the only enabled mode; the others are listed with the phase that brings them', () => {
+    renderWithApp(app());
+    const rail = within(screen.getByRole('navigation', { name: 'Modes' }));
+    expect(rail.getByRole('button', { name: 'Navigator' }).getAttribute('aria-current')).toBe('page');
+    for (const [name, phase] of [['Reactions', 'Phase 7'], ['Syllabus', 'Phase 7'], ['Workbench', 'Phase 6']] as const) {
+      const mode = rail.getByRole('button', { name: new RegExp(name) });
+      expect(mode.getAttribute('aria-disabled')).toBe('true');
+      expect(within(mode).getByText(phase)).toBeTruthy();
+    }
+  });
+
+  it('the top bar lists what does not exist yet as unavailable, with the step that brings it', () => {
+    renderWithApp(app());
+    for (const [name, step] of [['Search', 'step 5.8'], ['Undo', 'step 5.9a'], ['Redo', 'step 5.9a']] as const) {
+      expect(screen.getByRole('button', { name, description: new RegExp(step) }).getAttribute('aria-disabled')).toBe('true');
+    }
+    expect(screen.getByRole('button', { name: 'File' })).toBeTruthy();
+  });
+
+  it('the inspector shows an empty state, the status line sits in the status bar, banners in the banner region', () => {
+    renderWithApp(app({ status: { singleTab: true } }));
+    expect(within(screen.getByRole('complementary', { name: 'Inspector' })).getByText('Nothing is selected.')).toBeTruthy();
+    expect(within(screen.getByRole('contentinfo')).getByRole('region', { name: 'Status' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Notices' }).textContent).toContain('no tab locks');
+    expect(screen.getByRole('main').textContent).not.toContain('no tab locks');
+  });
+
+  it('a panel change reaches the panels store; a read-only tab says its layout is not saved', () => {
+    const a = app({ status: { mode: 'follower' }, panels: { mode: () => 'read_only' } });
+    renderWithApp(a);
+    expect(within(screen.getByRole('region', { name: 'Panel layout' })).getByText('Panel layout is not saved: this tab is read-only.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Hide inspector' }));
+    expect(a.panels.getState().inspectorOpen).toBe(false);
+    expect(screen.queryByRole('complementary', { name: 'Inspector' })).toBeNull();
   });
 });

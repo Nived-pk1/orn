@@ -12,6 +12,7 @@ import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import { createIdFactory } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
 import { Window } from '@/app/window/window';
+import { createPanelsStore, type PanelsPort, type PanelsStore } from '@/ui/state';
 import type { ReactNode } from 'react';
 
 export const WRITER_STATUS: Partial<AppStatus> = {
@@ -39,6 +40,8 @@ export interface FakeApp {
   readonly retryEngine: Mock;
   readonly loadDemo: Mock;
   readonly reload: Mock;
+  readonly panels: PanelsStore;
+  readonly panelSaves: Record<string, unknown>[];
   readonly value: AppContextValue;
 }
 
@@ -46,7 +49,20 @@ export function emptyStoreState(): CanonicalState {
   return emptyState(createIdFactory({ nowMs: () => 1_790_000_000_000 }, { next: () => 0.5 }));
 }
 
-export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppStatus> } = {}): FakeApp {
+/** jsdom has neither `showModal()` nor `close()` of HTMLDialogElement: the documented behaviour, installed once for a test file. */
+export function stubDialog(): void {
+  const proto = HTMLDialogElement.prototype as { showModal?: () => void; close?: () => void };
+  proto.showModal = function showModal(this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  };
+  proto.close = function close(this: HTMLDialogElement) {
+    if (!this.hasAttribute('open')) return;
+    this.removeAttribute('open');
+    this.dispatchEvent(new Event('close'));
+  };
+}
+
+export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppStatus>; panels?: Partial<PanelsPort> } = {}): FakeApp {
   const status = createStatusStore(() => undefined);
   status.update({ ...WRITER_STATUS, ...options.status });
   const store = createCanonicalStore({ initial: options.state ?? emptyStoreState(), revision: 0, validateInitial: false });
@@ -57,7 +73,12 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
   const loadDemo = vi.fn((): Promise<DemoLoad> => Promise.resolve({ ok: true, blob: new Blob(['{}']), fileName: 'demo.orn.json' }));
   const reload = vi.fn();
   const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine } as unknown as WindowServices;
-  return { status, store, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, value: { services, loadDemo, reload } };
+  const panelSaves: Record<string, unknown>[] = [];
+  const panels = createPanelsStore(
+    { stored: undefined, mode: () => 'writable', save: (value) => (panelSaves.push({ ...value }), Promise.resolve()), ...options.panels },
+    { after: () => () => undefined },
+  );
+  return { status, store, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, value: { services, panels, loadDemo, reload } };
 }
 
 export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {

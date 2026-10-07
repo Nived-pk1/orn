@@ -1,15 +1,24 @@
 /**
- * The plain, unstyled window (step 5.1d): status line, banners, boot lines, the first-run screen while the store holds zero
- * records, and the record and finding counts once it holds some (the navigator is 5.5a). Semantic HTML, text nodes only.
+ * The window (steps 5.1d, 5.2): the shell frame of UI_ARCHITECTURE §2 filled with what exists. Status line -> status bar; banners and
+ * the start-up report -> the banner region; the first-run screen and the record counts -> the canvas; the import summary is a Dialog
+ * and its result a Toast (import-panel.tsx); the inspector shows an empty state until step 5.6. Composition only: the frame is
+ * `src/ui/shell` and knows nothing of `AppStatus`; chemistry never lives here.
  */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { RECORD_KINDS, type CanonicalState, type RecordKind } from '@/core/schema';
-import { useStoreSelector, useSubscribable } from '@/ui/hooks';
-import { ErrorBoundary } from '@/ui/primitives';
+import { useStoreSelector } from '@/ui/hooks';
+import { ErrorBoundary, ToastProvider } from '@/ui/primitives';
+import { Shell, type InspectorPane } from '@/ui/shell';
+import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from '@/ui/state';
 import { useApp } from './context';
+import { FirstRun } from './first-run';
 import { ImportPanel } from './import-panel';
+import { MODES, NAVIGATOR_MODE } from './modes';
+import { PanelsStatus } from './panels-status';
 import { BootLines, Banners, StatusLine } from './status-parts';
-import { useImportFlow, type ImportFlow } from './use-import-flow';
+import { TopBar } from './top-bar';
+import styles from './window.module.css';
+import { useImportFlow } from './use-import-flow';
 
 const countsOf = (state: CanonicalState): Readonly<Record<RecordKind, number>> =>
   Object.fromEntries(RECORD_KINDS.map((kind) => [kind, Object.keys(state.records[kind]).length])) as Record<RecordKind, number>;
@@ -30,58 +39,16 @@ function RecordCounts(props: { readonly counts: Readonly<Record<RecordKind, numb
   );
 }
 
-function FirstRun(props: { readonly flow: ImportFlow; readonly onStartEmpty: () => void }) {
-  const { services } = useApp();
-  const status = useSubscribable(services.status);
-  const { flow } = props;
-  const picker = useRef<HTMLInputElement>(null);
-  const writable = status.mode === 'writer' || status.mode === 'session_only';
-  const waiting = status.stage === 'booting' || status.mode === null;
-  return (
-    <section aria-label="First run">
-      <h2>Get started</h2>
-      <p>This dataset has no records yet.</p>
-      {waiting ? <p>Starting up…</p> : !writable ? <p>This tab is read-only, so it cannot load data. Use the writer tab.</p> : (
-        <>
-          <p>
-            <button type="button" disabled={flow.busy} onClick={flow.loadDemo}>
-              Load demo dataset
-            </button>{' '}
-            <button type="button" disabled={flow.busy} onClick={() => picker.current?.click()}>
-              Import a file
-            </button>{' '}
-            <button type="button" disabled={flow.busy} onClick={props.onStartEmpty}>
-              Start empty
-            </button>
-          </p>
-          <input
-            ref={picker}
-            type="file"
-            hidden
-            aria-label="Choose a file to import"
-            accept=".json,.orn,.ornpkg,.zip,application/json"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              event.currentTarget.value = '';
-              if (file !== undefined) flow.chooseFile(file);
-            }}
-          />
-        </>
-      )}
-    </section>
-  );
-}
-
-function Content() {
-  const { services } = useApp();
+function Canvas() {
+  const { services, panels } = useApp();
   const counts = useStoreSelector(services.store, countsOf);
   const flow = useImportFlow();
-  const [startedEmpty, setStartedEmpty] = useState(false);
+  const startedEmpty = usePanels(panels, (s) => s.startEmptyDismissed);
+  const onStartEmpty = useCallback(() => panels.getState().dismissStartEmpty(), [panels]);
   const empty = totalOf(counts) === 0;
-  const onStartEmpty = useCallback(() => setStartedEmpty(true), []);
-  // The import panel outlives the first-run screen: the result of an import is shown after the data has arrived.
+  // The import flow outlives the first-run screen: its dialog, banner and toast show after the data has arrived.
   return (
-    <>
+    <div className={styles.canvas}>
       {empty && !startedEmpty ? (
         <FirstRun flow={flow} onStartEmpty={onStartEmpty} />
       ) : (
@@ -92,22 +59,64 @@ function Content() {
         </section>
       )}
       <ImportPanel flow={flow} />
-    </>
+    </div>
+  );
+}
+
+function InspectorEmpty() {
+  return (
+    <section aria-label="Inspector empty state">
+      <p>Nothing is selected.</p>
+      <p>What you select in the navigator is described here. The navigator and the inspector arrive in steps 5.5 and 5.6.</p>
+    </section>
   );
 }
 
 export function Window() {
+  const { panels } = useApp();
+  const width = usePanels(panels, (s) => s.inspectorWidth);
+  const open = usePanels(panels, (s) => s.inspectorOpen);
+  const [mode, setMode] = useState(NAVIGATOR_MODE);
+  const pane = useMemo<InspectorPane>(
+    () => ({
+      width,
+      open,
+      min: INSPECTOR_MIN,
+      max: INSPECTOR_MAX,
+      onWidth: (next) => panels.getState().setInspectorWidth(next),
+      onOpen: (next) => panels.getState().setInspectorOpen(next),
+    }),
+    [width, open, panels],
+  );
   return (
-    <main>
-      <h1>Organic Reaction Navigator</h1>
-      <ErrorBoundary label="The status panel">
-        <StatusLine />
-        <Banners />
-        <BootLines />
-      </ErrorBoundary>
-      <ErrorBoundary label="The dataset panel">
-        <Content />
-      </ErrorBoundary>
-    </main>
+    <ToastProvider>
+      <Shell
+        title="Organic Reaction Navigator"
+        topBar={<TopBar />}
+        modes={MODES}
+        activeMode={mode}
+        onModeChange={setMode}
+        banners={
+          <ErrorBoundary label="The notices panel">
+            <Banners />
+            <BootLines />
+          </ErrorBoundary>
+        }
+        canvas={
+          <ErrorBoundary label="The dataset panel">
+            <Canvas />
+          </ErrorBoundary>
+        }
+        inspectorTitle="Inspector"
+        inspector={<InspectorEmpty />}
+        pane={pane}
+        statusBar={
+          <ErrorBoundary label="The status panel">
+            <StatusLine />
+            <PanelsStatus />
+          </ErrorBoundary>
+        }
+      />
+    </ToastProvider>
   );
 }

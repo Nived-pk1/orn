@@ -4,6 +4,7 @@
  */
 import { createContext, useContext, type ReactNode } from 'react';
 import type { AppServices } from '@/app/services';
+import type { PanelsStore } from '@/ui/state';
 
 /** What the window needs from the services (so a test can fake only these). */
 export type WindowServices = Pick<AppServices, 'store' | 'status' | 'flows' | 'saveEverythingNow' | 'retryReplica' | 'retryEngine'>;
@@ -14,6 +15,8 @@ export interface AppContextValue {
   readonly services: WindowServices;
   /** The bundled demo file, fetched from this origin. */
   loadDemo(): Promise<DemoLoad>;
+  /** The panels store (inspector width and open state, "Start empty" dismissed), persisted in `uiState`. */
+  readonly panels: PanelsStore;
   /** Reloads the page (`location.reload()` in the browser). */
   reload(): void;
 }

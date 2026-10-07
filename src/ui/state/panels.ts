@@ -1,0 +1,147 @@
+/**
+ * The panels store (step 5.2, UI_ARCHITECTURE §4, PERSISTENCE §12): the inspector's width and open state and "Start empty dismissed".
+ * A small Zustand store, persisted in `uiState` key `panels` through a PORT that `src/app` provides (src/ui imports neither
+ * `src/app` nor `src/persistence`). Reading is TOLERANT: each field is checked by itself, a bad field falls back to its default and
+ * the damage is reported in `resetFields` (never fatal, never silent); unknown fields are kept and written back. Writing is
+ * debounced; a tab that cannot write (read-only follower, session-only) keeps the values for this session, writes nothing, and says
+ * so in `persistence`. Pure of the DOM: timers arrive as an injected `{ after }`.
+ */
+import { createStore, type StoreApi } from 'zustand/vanilla';
+
+export const INSPECTOR_MIN = 360;
+export const INSPECTOR_MAX = 520;
+export const INSPECTOR_DEFAULT = 400;
+export const PANELS_KEY = 'panels';
+export const SAVE_DEBOUNCE_MS = 300;
+
+export interface PanelValues {
+  readonly inspectorWidth: number;
+  readonly inspectorOpen: boolean;
+  /** "Start empty" was chosen: the first-run screen is not shown again for this dataset (E-notes: kept in `uiState`, 5.1d review item 6). */
+  readonly startEmptyDismissed: boolean;
+}
+
+export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: true, startEmptyDismissed: false });
+
+/** What the store says about keeping its values (shown in the status bar; nothing here is silent). */
+export type PanelPersistence =
+  | { readonly kind: 'saved' }
+  | { readonly kind: 'read_only' }
+  | { readonly kind: 'session_only' }
+  | { readonly kind: 'save_failed'; readonly message: string };
+
+/** What `src/app` gives the store. */
+export interface PanelsPort {
+  /** The stored `panels` entry as boot read it (any shape: it is checked here); `undefined`: nothing stored. */
+  readonly stored: unknown;
+  /** `writable`: this tab writes. `read_only`: a follower or a read-only tab. `session_only`: no database. Read when a save is due. */
+  mode(): 'writable' | 'read_only' | 'session_only';
+  save(value: Readonly<Record<string, unknown>>): Promise<void>;
+}
+
+export interface PanelsTimers {
+  after(ms: number, run: () => void): () => void;
+}
+
+export interface PanelsState extends PanelValues {
+  readonly persistence: PanelPersistence;
+  /** Stored fields that were unusable at start and were reset to their defaults (stays for the session, so the report is not lost). */
+  readonly resetFields: readonly string[];
+  setInspectorWidth(width: number): void;
+  setInspectorOpen(open: boolean): void;
+  dismissStartEmpty(): void;
+}
+
+export type PanelsStore = StoreApi<PanelsState>;
+
+export const clampWidth = (width: number): number => Math.min(INSPECTOR_MAX, Math.max(INSPECTOR_MIN, Math.round(width)));
+
+export interface ParsedPanels {
+  readonly values: PanelValues;
+  /** Fields that were present but unusable (reset to their defaults). A missing field is not damage. */
+  readonly damaged: readonly string[];
+  /** Fields the store does not know, kept so a newer version's data is not dropped. */
+  readonly extra: Readonly<Record<string, unknown>>;
+}
+
+const KNOWN = new Set(['inspectorWidth', 'inspectorOpen', 'startEmptyDismissed']);
+
+export function parsePanels(raw: unknown): ParsedPanels {
+  if (raw === undefined) return { values: PANEL_DEFAULTS, damaged: [], extra: {} };
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return { values: PANEL_DEFAULTS, damaged: ['panels'], extra: {} };
+  const record = raw as Record<string, unknown>;
+  const damaged: string[] = [];
+  const width = record.inspectorWidth;
+  let inspectorWidth = PANEL_DEFAULTS.inspectorWidth;
+  if (width !== undefined) {
+    if (typeof width === 'number' && Number.isFinite(width) && width >= INSPECTOR_MIN && width <= INSPECTOR_MAX) inspectorWidth = Math.round(width);
+    else damaged.push('inspectorWidth');
+  }
+  const bool = (name: 'inspectorOpen' | 'startEmptyDismissed'): boolean => {
+    const value = record[name];
+    if (value === undefined) return PANEL_DEFAULTS[name];
+    if (typeof value === 'boolean') return value;
+    damaged.push(name);
+    return PANEL_DEFAULTS[name];
+  };
+  const inspectorOpen = bool('inspectorOpen');
+  const startEmptyDismissed = bool('startEmptyDismissed');
+  const extra = Object.fromEntries(Object.entries(record).filter(([key]) => !KNOWN.has(key)));
+  return { values: { inspectorWidth, inspectorOpen, startEmptyDismissed }, damaged, extra };
+}
+
+export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): PanelsStore {
+  const parsed = parsePanels(port.stored);
+  const mode = port.mode();
+  const initialPersistence: PanelPersistence = mode === 'read_only' ? { kind: 'read_only' } : mode === 'session_only' ? { kind: 'session_only' } : { kind: 'saved' };
+  let cancel: (() => void) | undefined;
+  let pending = false;
+
+  const store: PanelsStore = createStore<PanelsState>((set, get) => {
+    const change = (patch: Partial<PanelValues>): void => {
+      const current = get();
+      const next = { ...patch };
+      if ((Object.keys(next) as (keyof PanelValues)[]).every((key) => current[key] === next[key])) return;
+      set(next);
+      schedule();
+    };
+    return {
+      ...parsed.values,
+      persistence: initialPersistence,
+      resetFields: parsed.damaged,
+      setInspectorWidth: (width) => change({ inspectorWidth: clampWidth(width) }),
+      setInspectorOpen: (open) => change({ inspectorOpen: open }),
+      dismissStartEmpty: () => change({ startEmptyDismissed: true }),
+    };
+  });
+
+  function schedule(): void {
+    const now = port.mode();
+    if (now !== 'writable') {
+      // Nothing is written; the status says why (a tab that was promoted later writes from then on).
+      const kind = now === 'read_only' ? 'read_only' : 'session_only';
+      if (store.getState().persistence.kind !== kind) store.setState({ persistence: { kind } });
+      return;
+    }
+    pending = true;
+    cancel?.();
+    cancel = timers.after(SAVE_DEBOUNCE_MS, () => {
+      cancel = undefined;
+      void flushNow();
+    });
+  }
+
+  async function flushNow(): Promise<void> {
+    if (!pending) return;
+    pending = false;
+    const { inspectorWidth, inspectorOpen, startEmptyDismissed } = store.getState();
+    try {
+      await port.save({ ...parsed.extra, inspectorWidth, inspectorOpen, startEmptyDismissed });
+      if (store.getState().persistence.kind !== 'saved') store.setState({ persistence: { kind: 'saved' } });
+    } catch (error) {
+      store.setState({ persistence: { kind: 'save_failed', message: error instanceof Error ? error.message : String(error) } });
+    }
+  }
+
+  return store;
+}

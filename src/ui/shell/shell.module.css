@@ -1,0 +1,239 @@
+/*
+ * The shell grid (UI_ARCHITECTURE §2). Wide: top bar over [rail | canvas | handle | inspector] over the status bar. Medium
+ * (900-1279 px): the inspector floats over the canvas as a drawer. Narrow (< 900 px): one pane, the rail is a bottom bar and the
+ * inspector a bottom sheet. Breakpoints are the same numbers as use-breakpoint.ts.
+ */
+.shell {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: var(--mode-rail-width) minmax(0, 1fr) 0 var(--inspector-width);
+  grid-template-rows: var(--top-bar-height) auto minmax(0, 1fr) var(--status-bar-height);
+  grid-template-areas:
+    'top top top top'
+    'rail banners banners banners'
+    'rail canvas handle inspector'
+    'status status status status';
+  background: var(--color-paper);
+}
+
+.shell[data-inspector='closed'] {
+  grid-template-columns: var(--mode-rail-width) minmax(0, 1fr) 0 0;
+}
+
+.topBar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-surface);
+}
+
+.title {
+  font-size: var(--text-16);
+  white-space: nowrap;
+}
+
+.topControls {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.rail {
+  grid-area: rail;
+  overflow-y: auto;
+  border-right: 1px solid var(--color-rule);
+  background: var(--color-surface);
+}
+
+.modes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+}
+
+.mode {
+  display: block;
+}
+
+.modeButton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  padding: var(--space-1) var(--space-3);
+  text-align: left;
+}
+
+.modeButton[aria-current='page'] {
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-hover);
+  font-weight: 600;
+}
+
+.phase {
+  font-size: var(--text-12);
+  color: var(--color-ink-2);
+}
+
+.banners {
+  grid-area: banners;
+  min-width: 0;
+}
+
+.canvas {
+  grid-area: canvas;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.handle {
+  grid-area: handle;
+  position: relative;
+  z-index: 1;
+  width: 8px;
+  margin-left: -4px;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: var(--color-rule);
+}
+
+.handle:hover::after,
+.handle:focus-visible::after {
+  background: var(--color-accent);
+}
+
+.inspector {
+  grid-area: inspector;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--color-rule);
+  background: var(--color-surface);
+}
+
+.inspector[hidden] {
+  display: none;
+}
+
+.inspectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.inspectorTitle {
+  font-size: var(--text-14);
+}
+
+.inspectorBody {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-4);
+}
+
+.statusBar {
+  grid-area: status;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0 var(--space-3);
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-surface);
+  font-size: var(--text-13);
+}
+
+@media (max-width: 1279px) {
+  .shell,
+  .shell[data-inspector='closed'] {
+    grid-template-columns: var(--mode-rail-width) minmax(0, 1fr);
+    grid-template-areas:
+      'top top'
+      'rail banners'
+      'rail canvas'
+      'status status';
+  }
+
+  .inspector {
+    position: fixed;
+    z-index: var(--z-drawer);
+    top: var(--top-bar-height);
+    right: 0;
+    bottom: var(--status-bar-height);
+    width: min(var(--inspector-width), 100vw);
+    border-left: 1px solid var(--color-ink-2);
+    box-shadow: -2px 0 0 var(--color-rule);
+  }
+}
+
+@media (max-width: 899px) {
+  .shell,
+  .shell[data-inspector='closed'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: var(--top-bar-height) auto minmax(0, 1fr) auto var(--status-bar-height);
+    grid-template-areas:
+      'top'
+      'banners'
+      'canvas'
+      'rail'
+      'status';
+  }
+
+  .rail {
+    overflow: auto hidden;
+    border-top: 1px solid var(--color-rule);
+    border-right: 0;
+  }
+
+  .modes {
+    flex-direction: row;
+    width: max-content;
+  }
+
+  .modeButton {
+    min-width: 88px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .phase {
+    display: none;
+  }
+
+  .inspector {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--status-bar-height) + 56px);
+    width: auto;
+    max-height: 60vh;
+    border-left: 0;
+    border-top: 1px solid var(--color-ink-2);
+    box-shadow: 0 -2px 0 var(--color-rule);
+  }
+}

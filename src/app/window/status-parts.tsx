@@ -3,8 +3,10 @@
  * `banners.ts`, which is a pure function of `AppStatus`.
  */
 import { useCounts, useSubscribable } from '@/ui/hooks';
-import { bannersOf, bootLinesOf, operationTextOf, saveTextOf, workersTextOf, type BannerAction } from './banners';
+import { Banner, Button } from '@/ui/primitives';
+import { bannersOf, bannerKindOf, bootLinesOf, operationTextOf, saveTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
+import styles from './status-parts.module.css';
 
 export function StatusLine() {
   const { services } = useApp();
@@ -14,7 +16,7 @@ export function StatusLine() {
   const readOnly = status.mode === 'follower' || status.mode === 'read_only';
   return (
     <section aria-label="Status">
-      <ul>
+      <ul className={styles.inline}>
         <li>{saveTextOf(status)}</li>
         <li>
           Findings: E {counts.error} / W {counts.warning} / I {counts.info} / Review {counts.review_required}
@@ -42,18 +44,15 @@ export function Banners() {
   };
   return (
     <section aria-label="Notices">
-      <ul>
+      <ul className={styles.list}>
         {banners.map((banner) => (
           <li key={banner.id}>
-            {banner.text}
-            {banner.action === undefined ? null : (
-              <>
-                {' '}
-                <button type="button" onClick={() => run(banner.action?.kind ?? 'reload')}>
-                  {banner.action.label}
-                </button>
-              </>
-            )}
+            <Banner
+              kind={bannerKindOf(banner.id)}
+              actions={banner.action === undefined ? undefined : <Button onClick={() => run(banner.action?.kind ?? 'reload')}>{banner.action.label}</Button>}
+            >
+              {banner.text}
+            </Banner>
           </li>
         ))}
       </ul>
@@ -68,7 +67,7 @@ export function BootLines() {
   if (lines.length === 0) return null;
   return (
     <section aria-label="Start-up report">
-      <ul>
+      <ul className={styles.report}>
         {lines.map((line) => (
           <li key={line}>{line}</li>
         ))}
