@@ -69,6 +69,8 @@ export interface SearchView {
 /** What boot found, for the one-line notices of step 5.1d (nothing silent, CLAUDE.md §1.5). */
 export interface BootNotices {
   readonly crashSuspected: boolean;
+  /** Editor sessions the boot offers for restore (only offered after a suspected crash). The crash line is shown only when this is above 0 (step 5.1d review, follow-up b). */
+  readonly editorSessions: number;
   readonly quarantinedRows: number;
   readonly assetsWithoutBytes: number;
   readonly unverifiedAssetBlobs: number;

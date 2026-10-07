@@ -110,6 +110,30 @@ describe('the clean-shutdown marker (writer only)', () => {
     expect(second.status.get().notices?.crashSuspected).toBe(true);
   });
 
+  it('a suspected crash with no editor session to restore is logged and says nothing in the notices (5.1d review, follow-up b)', async () => {
+    const world = await worldHolding(smallState(), 2);
+    const first = await booter.bootEnv(testEnv({ world }));
+    await first.dispose();
+    const second = await booter.bootEnv(testEnv({ world }));
+    expect(second.status.get().notices).toMatchObject({ crashSuspected: true, editorSessions: 0 });
+    expect(second.log.get().filter((entry) => entry.source === 'app' && entry.event.type === 'crash_suspected')).toHaveLength(1);
+  });
+
+  it('a suspected crash WITH an editor session to restore counts it for the crash line and does not log the quiet case', async () => {
+    const world = await worldHolding(smallState(), 2);
+    const first = await booter.bootEnv(testEnv({ world }));
+    await first.dispose();
+    const tdb = freshDb(undefined, world.indexedDB);
+    try {
+      await tdb.db.editorSessions.put({ id: 'ses_one', kind: 'species', target: null, baseRevision: 1, baseRecord: null, draft: {}, past: [], future: [], updatedAt: '2026-09-28T10:00:00.000Z' });
+    } finally {
+      tdb.db.close();
+    }
+    const second = await booter.bootEnv(testEnv({ world }));
+    expect(second.status.get().notices).toMatchObject({ crashSuspected: true, editorSessions: 1 });
+    expect(second.log.get().some((entry) => entry.source === 'app' && entry.event.type === 'crash_suspected')).toBe(false);
+  });
+
   it('refuses, with the reason, while writes are pending; nothing is written', async () => {
     const world = await worldHolding(smallState(), 2);
     const { services } = await booter.boot({ world });

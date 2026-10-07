@@ -94,7 +94,8 @@ export function bannersOf(status: AppStatus): readonly Banner[] {
 export function bootLinesOf(notices: BootNotices | null): readonly string[] {
   if (notices === null) return [];
   const lines: string[] = [];
-  if (notices.crashSuspected) lines.push('The last session may not have closed cleanly (a crash is suspected). Check your latest changes.');
+  // Only with something to offer: a suspected crash with no editor session to restore says nothing (an unload may fail to write the marker; the event log has it).
+  if (notices.crashSuspected && notices.editorSessions > 0) lines.push('The last session may not have closed cleanly (a crash is suspected). Check your latest changes.');
   if (notices.quarantinedRows > 0) lines.push(`${plural(notices.quarantinedRows, 'stored row', 'stored rows')} failed validation and ${notices.quarantinedRows === 1 ? 'was' : 'were'} set aside (quarantined).`);
   if (notices.assetsWithoutBytes > 0) lines.push(`${plural(notices.assetsWithoutBytes, 'asset record has', 'asset records have')} no stored file.`);
   if (notices.unverifiedAssetBlobs > 0) lines.push(`${plural(notices.unverifiedAssetBlobs, 'stored file was', 'stored files were')} not verified.`);

@@ -80,6 +80,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     validation: report?.validation ?? null,
     notices: report === undefined ? null : noticesOf(report),
   });
+  if (report?.crashSuspected === true && report.editorSessionIds.length === 0) log.add({ source: 'app', event: { type: 'crash_suspected', message: 'the last session may not have closed cleanly; there are no editor sessions to restore, so nothing is shown' } });
   if (decision.mode === 'session_only') log.add({ source: 'app', event: { type: 'session_only', message: `nothing is saved in this session (${decision.reason ?? 'unknown'}): ${decision.detail ?? ''}` } });
   else if (decision.mode === 'read_only') log.add({ source: 'app', event: { type: 'read_only', message: `this tab is read-only (${decision.reason ?? 'unknown'}): ${decision.detail ?? ''}` } });
 

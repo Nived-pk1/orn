@@ -90,7 +90,7 @@ describe('boot: a database holding the demo', () => {
 
   it('carries the boot report notices into the status', async () => {
     const { services } = await boot({ world: await worldHolding(small) });
-    expect(services.status.get().notices).toEqual({ crashSuspected: false, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 });
+    expect(services.status.get().notices).toEqual({ crashSuspected: false, editorSessions: 0, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 });
   });
 });
 

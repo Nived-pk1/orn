@@ -1,8 +1,9 @@
 /**
  * The page lifecycle in a real browser (step 5.1d): the clean-shutdown marker and what boot says about it. Chromium only.
  * The marker is the `lastCleanShutdownAt` row of the `meta` store: a time string is "closed cleanly", `null` is "running".
- * 1: a renderer that dies without `pagehide` leaves `null` and the next boot says a crash is suspected; a clean shutdown written
- *    while the page is alive is not reported (an ordinary reload is a `test.fixme`, see below).
+ * 1: a renderer that dies without `pagehide` leaves `null`; the next boot says NOTHING while there is no editor session to restore
+ *    (5.1d review, follow-up b: the crash line is shown only when there is something to offer); a clean shutdown written while the
+ *    page is alive is not reported either (an ordinary reload is a `test.fixme`, see below).
  * 2: `pageshow` with `persisted = true` (a page back from the back/forward cache) writes `null` again after `pagehide` wrote a time.
  * Playwright's Chromium disables the back/forward cache, so the two events are dispatched on the real window and reach the real
  * listeners installed by `installLifecycle`.
@@ -40,7 +41,7 @@ async function loaded(page: Page): Promise<void> {
 }
 
 test.describe('the page lifecycle in Chromium', () => {
-  test('a renderer that dies without pagehide is reported at the next boot', async ({ context, page }) => {
+  test('a renderer that dies without pagehide leaves the marker running; with no editor session the next boot says nothing', async ({ context, page }) => {
     await loaded(page);
     expect(await marker(page)).toBeNull(); // boot marked the session as running
     const crashed = page.waitForEvent('crash');
@@ -50,9 +51,9 @@ test.describe('the page lifecycle in Chromium', () => {
     const after = await context.newPage();
     const seen = await watch(after);
     await openApp(after);
-    await expect(after.getByRole('region', { name: 'Start-up report' })).toBeVisible();
-    await expect(after.getByText(CRASH_LINE)).toBeVisible();
     await expect(after.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await expect(after.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
+    await expect(after.getByText(CRASH_LINE)).toHaveCount(0);
     await expectClean(seen);
   });
 
@@ -66,9 +67,11 @@ test.describe('the page lifecycle in Chromium', () => {
     await expect(page.getByText(CRASH_LINE)).toHaveCount(0);
   });
 
-  // Found by this step's browser run (docs/PROGRESS.md, step 5.1d, REVIEW REQUIRED 4): an ordinary reload says "a crash is
-  // suspected" at the next boot (2 of 2), because the marker write that `pagehide` starts does not finish while the page is
-  // torn down. The same write finishes when the page stays alive (the test above). Not fixed here: it is the reviewer's decision.
+  // Found by the 5.1d browser run (docs/PROGRESS.md, step 5.1d, REVIEW REQUIRED 4): the marker write that `pagehide` starts does
+  // not finish while the page is torn down, so an ordinary reload leaves the marker "running" (the same write finishes when the
+  // page stays alive: the test above). Decided in the 5.1d review (2026-10-03): no new marker mechanism now; the crash line is
+  // shown only with editor sessions to restore, so this test passes only because none exist. It stays a fixme until the openItem
+  // "Phase 6, step 6.1: draft recovery must not depend on an unload-time write" (docs/PROJECT_STATE.json) is done.
   test.fixme('an ordinary reload is not reported as a crash', async ({ page }) => {
     await loaded(page);
     await page.reload();

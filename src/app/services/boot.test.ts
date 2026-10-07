@@ -56,12 +56,12 @@ describe('noticesOf', () => {
       assetIdsWithoutBlob: ['ast_a'],
       unverifiedAssetBlobs: [{}, {}, {}],
       crashSuspected: true,
-      editorSessionIds: [],
+      editorSessionIds: ['eds_a', 'eds_b'],
       uiState: {},
       uiStateReset: [],
       newlyQuarantined: 4,
       singleTab: false,
     } as unknown as BootReport;
-    expect(noticesOf(report)).toEqual({ crashSuspected: true, quarantinedRows: 4, assetsWithoutBytes: 1, unverifiedAssetBlobs: 3, migrationSteps: 2 });
+    expect(noticesOf(report)).toEqual({ crashSuspected: true, editorSessions: 2, quarantinedRows: 4, assetsWithoutBytes: 1, unverifiedAssetBlobs: 3, migrationSteps: 2 });
   });
 });

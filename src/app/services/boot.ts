@@ -44,6 +44,7 @@ export function emptyState(ids: IdFactory): CanonicalState {
 export function noticesOf(report: BootReport): BootNotices {
   return {
     crashSuspected: report.crashSuspected,
+    editorSessions: report.editorSessionIds.length,
     quarantinedRows: report.newlyQuarantined,
     assetsWithoutBytes: report.assetIdsWithoutBlob.length,
     unverifiedAssetBlobs: report.unverifiedAssetBlobs.length,

@@ -134,7 +134,7 @@ describe('the banners: every one is rendered from AppStatus values, and its butt
 describe('the boot-report lines', () => {
   it('has one plain line for each notice', () => {
     renderWithApp(
-      fakeApp({ status: { notices: { crashSuspected: true, quarantinedRows: 1, assetsWithoutBytes: 2, unverifiedAssetBlobs: 1, migrationSteps: 3 } } }),
+      fakeApp({ status: { notices: { crashSuspected: true, editorSessions: 2, quarantinedRows: 1, assetsWithoutBytes: 2, unverifiedAssetBlobs: 1, migrationSteps: 3 } } }),
       <BootLines />,
     );
     const lines = within(screen.getByRole('region', { name: 'Start-up report' })).getAllByRole('listitem');
@@ -147,8 +147,23 @@ describe('the boot-report lines', () => {
     ]);
   });
 
+  it('shows no crash line when a crash is suspected but there is no editor session to restore (nothing to offer)', () => {
+    renderWithApp(
+      fakeApp({ status: { notices: { crashSuspected: true, editorSessions: 0, quarantinedRows: 1, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } }),
+      <BootLines />,
+    );
+    const lines = within(screen.getByRole('region', { name: 'Start-up report' })).getAllByRole('listitem');
+    expect(lines.map((l) => l.textContent)).toEqual(['1 stored row failed validation and was set aside (quarantined).']);
+    expect(screen.queryByText(/crash is suspected/)).toBeNull();
+  });
+
+  it('renders nothing for a suspected crash with no editor session and nothing else to report', () => {
+    renderWithApp(fakeApp({ status: { notices: { crashSuspected: true, editorSessions: 0, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } }), <BootLines />);
+    expect(screen.queryByRole('region', { name: 'Start-up report' })).toBeNull();
+  });
+
   it('renders nothing for a clean boot', () => {
-    renderWithApp(fakeApp({ status: { notices: { crashSuspected: false, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } }), <BootLines />);
+    renderWithApp(fakeApp({ status: { notices: { crashSuspected: false, editorSessions: 0, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } }), <BootLines />);
     expect(screen.queryByRole('region', { name: 'Start-up report' })).toBeNull();
   });
 });

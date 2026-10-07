@@ -82,13 +82,13 @@ describe('bannersOf: one banner per AppStatus condition', () => {
 });
 
 describe('bootLinesOf: one plain line each', () => {
-  const none = { crashSuspected: false, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 };
+  const none = { crashSuspected: false, editorSessions: 0, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 };
   it('says nothing for a clean boot or no report', () => {
     expect(bootLinesOf(none)).toEqual([]);
     expect(bootLinesOf(null)).toEqual([]);
   });
   it('has a line for crashSuspected, quarantined rows, assets without bytes, unverified blobs, migration steps', () => {
-    const lines = bootLinesOf({ crashSuspected: true, quarantinedRows: 2, assetsWithoutBytes: 1, unverifiedAssetBlobs: 3, migrationSteps: 1 });
+    const lines = bootLinesOf({ crashSuspected: true, editorSessions: 1, quarantinedRows: 2, assetsWithoutBytes: 1, unverifiedAssetBlobs: 3, migrationSteps: 1 });
     expect(lines).toHaveLength(5);
     expect(lines[0]).toMatch(/crash is suspected/);
     expect(lines[1]).toBe('2 stored rows failed validation and were set aside (quarantined).');
