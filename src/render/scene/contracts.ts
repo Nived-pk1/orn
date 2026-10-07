@@ -3,6 +3,7 @@
  * Projection + layout + display settings → Scene (pure, memoised) → SVG renderer / SVG export.
  * The same Scene feeds on-screen rendering and export, guaranteeing parity.
  */
+import type { ArrowText } from '@/core/graph/arrow-text';
 import type { EdgeSemantic, GraphEdge, Truncation } from '@/core/graph/contracts';
 import type { RecordRef } from '@/core/schema';
 import type { Point } from '@/layout/contracts';
@@ -117,10 +118,10 @@ export type NodeSizes = ReadonlyMap<string, NodeSize>;
 
 /** What the builders may ask the outside world (step 5.3, decision Q5 e). Nothing here returns a record. */
 export interface ScenePorts {
-  /** Display name and formula of a record, as plain text (never markup). Undefined: the record is gone. */
-  readonly describe: (ref: RecordRef) => { readonly name: string; readonly formula?: string } | undefined;
+  /** Display name, formula and the record's own charge, as plain text (never markup). Undefined: the record is gone. */
+  readonly describe: (ref: RecordRef) => { readonly name: string; readonly formula?: string; readonly charge?: number } | undefined;
   /** Key into the depiction cache: a hash of (format, value, depiction options). Undefined: nothing to draw. */
   readonly depictionKeyOf: (ref: RecordRef) => string | undefined;
-  /** The text over and under one arrow, in the mini-markup (core/text). Undefined: none. */
-  readonly arrowTextOf: (edge: GraphEdge) => { readonly above?: string; readonly below?: string } | undefined;
+  /** The parts over and under one arrow (`arrowTextOf` of core/graph, step 5.3 follow-up a). Undefined: none. */
+  readonly arrowTextOf: (edge: GraphEdge) => ArrowText | undefined;
 }

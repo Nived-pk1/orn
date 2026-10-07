@@ -128,17 +128,17 @@ describe('self-loops (ADV-005, decision Q4)', () => {
 
 describe('arrow text (ADV-027 scene part)', () => {
   it('a single edge carries the text above and below as runs; a bundle carries only its count', () => {
-    const withText: ScenePorts = { ...ports, arrowTextOf: (e) => (e.id === 'e1' ? { above: 'PCC, **dry**', below: 'water, CH2Cl2' } : undefined) };
+    const withText: ScenePorts = { ...ports, arrowTextOf: (e) => (e.id === 'e1' ? { above: [{ text: 'PCC', kind: 'name' }, { text: 'CH2Cl2', kind: 'formula' }], below: [{ text: '+2 more', kind: 'more' }] } : undefined) };
     const { scene } = pipe(projectionOf({ nodes: hubs, edges: [edge('e1', 'cls_a', 'cls_b'), edge('e2', 'cls_b', 'cls_c'), edge('e3', 'cls_b', 'cls_c')], bundles: [bundle('bnd_bc', 'cls_b', 'cls_c', ['e2', 'e3'])] }), withText);
-    expect(edgeOf(scene, 'e1')?.above).toEqual([{ text: 'PCC, ' }, { text: 'dry', emphasis: 'strong' }]);
-    expect(edgeOf(scene, 'e1')?.below).toEqual([{ text: 'water, CH2Cl2' }]);
+    expect(edgeOf(scene, 'e1')?.above).toEqual([{ text: 'PCC, CH' }, { text: '2', script: 'sub' }, { text: 'Cl' }, { text: '2', script: 'sub' }]);
+    expect(edgeOf(scene, 'e1')?.below).toEqual([{ text: '+2 more' }]);
     expect(edgeOf(scene, 'bnd_bc')?.above).toBeUndefined();
     expect(scene.nodes.map((n) => n.id)).toEqual(['cls_a', 'cls_b', 'cls_c']);
   });
 
   it('hostile arrow text stays text', () => {
     const hostile = '<script>alert(1)</script>';
-    const withText: ScenePorts = { ...ports, arrowTextOf: () => ({ above: hostile }) };
+    const withText: ScenePorts = { ...ports, arrowTextOf: () => ({ above: [{ text: hostile, kind: 'name' }], below: [] }) };
     const { scene } = pipe(projectionOf({ nodes: hubs, edges: [edge('e1', 'cls_a', 'cls_b')] }), withText);
     expect(scene.edges[0]?.above?.map((r) => r.text).join('')).toBe(hostile);
   });

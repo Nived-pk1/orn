@@ -3,7 +3,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { parseRichText, type RichNode } from '@/core/text';
 import type { FormattedText } from './contracts';
-import { formulaRuns, plainRuns, richToRuns } from './formatted-text';
+import { formulaRuns, partsToRuns, plainRuns, richToRuns } from './formatted-text';
 
 const joined = (runs: FormattedText): string => runs.map((run) => run.text).join('');
 /** Compact form for the table: `H` plain, `_2_` a subscript, `^2+^` a superscript. */
@@ -19,18 +19,61 @@ describe('formulaRuns: ordinary formulas', () => {
     ['(NH4)2SO4', '(NH_4_)_2_SO_4_'],
     ['K2Cr2O7', 'K_2_Cr_2_O_7_'],
     ['Cl2', 'Cl_2_'],
-    ['NH4+', 'NH_4_^+^'],
-    ['Ca2+', 'Ca^2+^'],
-    ['Fe3+', 'Fe^3+^'],
-    ['SO4 2-', 'SO_4_ ^2-^'],
-    ['SO42-', 'SO_4_^2-^'],
+    ['NH4+', 'NH4+'], // digits then a sign, no charge given: not guessed
+    ['Ca2+', 'Ca2+'],
+    ['Fe3+', 'Fe3+'],
+    ['SO4 2-', 'SO_4_ 2-'],
+    ['SO42-', 'SO42-'],
     ['Cl-', 'Cl^-^'],
     ['H3O+', 'H_3_O^+^'],
-    ['[Fe(CN)6]3-', '[Fe(CN)_6_]^3-^'],
-    ['[Cu(NH3)4]2+', '[Cu(NH_3_)_4_]^2+^'],
+    ['[Fe(CN)6]3-', '[Fe(CN)_6_]3-'],
+    ['[Cu(NH3)4]2+', '[Cu(NH_3_)_4_]2+'],
     ['CuSO4·5H2O', 'CuSO_4_·5H_2_O'],
   ];
   it.each(table)('%s', (input, expected) => expect(shown(formulaRuns(input))).toBe(expected));
+});
+
+describe('formulaRuns: the charge of the record decides', () => {
+  const table: readonly (readonly [string, number, string])[] = [
+    ['SO42-', -2, 'SO_4_^2-^'],
+    ['SO4 2-', -2, 'SO_4_ ^2-^'],
+    ['SO4-2', -2, 'SO_4_^-2^'],
+    ['SO4−2', -2, 'SO_4_^−2^'],
+    ['NH4+', 1, 'NH_4_^+^'],
+    ['C2H3-', -1, 'C_2_H_3_^-^'], // not a 3- charge
+    ['C2H3-', -3, 'C_2_H^3-^'],
+    ['Ti4+', 4, 'Ti^4+^'],
+    ['Ca2+', 2, 'Ca^2+^'],
+    ['Cl-', -1, 'Cl^-^'],
+    ['H3O+', 1, 'H_3_O^+^'],
+    ['[Fe(CN)6]3-', -3, '[Fe(CN)_6_]^3-^'],
+    ['NH4+', -1, 'NH_4_+'], // a tail that does not match the charge is no charge
+    ['SO42-', -1, 'SO_42_^-^'], // the charge says 1-, so 42 is the subscript
+    ['SO42-', 0, 'SO_42_-'], // neutral: no superscript
+    ['H2O', 0, 'H_2_O'],
+    ['H2O', -2, 'H_2_O'],
+    ['-', -1, '-'], // nothing before the tail
+  ];
+  it.each(table)('%s with charge %d', (input, charge, expected) => expect(shown(formulaRuns(input, charge))).toBe(expected));
+
+  it('the runs joined equal the input, for any string and charge', () => {
+    fc.assert(fc.property(fc.string({ unit: 'binary', maxLength: 40 }), fc.integer({ min: -20, max: 20 }), (text, charge) => joined(formulaRuns(text, charge)) === text));
+    const chars = fc.constantFrom(...'HCOSTi0123456789()+-−'.split(''));
+    fc.assert(fc.property(fc.array(chars, { maxLength: 20 }), fc.integer({ min: -5, max: 5 }), (parts, charge) => joined(formulaRuns(parts.join(''), charge)) === parts.join('')));
+  });
+});
+
+describe('partsToRuns', () => {
+  it('joins parts by commas, a stage number by a space, formulas with typography, names as they are', () => {
+    const runs = partsToRuns([
+      { text: '1.', kind: 'separator' },
+      { text: '<b>CH3MgBr</b>', kind: 'name' },
+      { text: 'H2O', kind: 'formula' },
+      { text: '+2 more', kind: 'more' },
+    ]);
+    expect(shown(runs)).toBe('1. <b>CH3MgBr</b>, H_2_O, +2 more');
+  });
+  it('is empty for no parts', () => expect(partsToRuns([])).toEqual([]));
 });
 
 describe('formulaRuns: odd formulas stay as they are', () => {
@@ -52,7 +95,7 @@ describe('formulaRuns: odd formulas stay as they are', () => {
     ['((', '(('],
     ['))2', '))_2_'],
     ['+2', '+2'],
-    ['H2-', 'H^2-^'],
+    ['H2-', 'H2-'],
   ];
   it.each(table)('%j', (input, expected) => expect(shown(formulaRuns(input))).toBe(expected));
 });

@@ -157,7 +157,7 @@ describe('ADV-027, scene part: a species that is never a node is no node, and is
 
   it('shows it in the arrow text of a reaction that uses it', () => {
     const texts = scene.edges.map((e) => `${textOf(e.above)} ${textOf(e.below)}`);
-    expect(texts.some((text) => text.includes('Water'))).toBe(true);
+    expect(texts.some((text) => text.includes('H2O'))).toBe(true);
   });
 });
 

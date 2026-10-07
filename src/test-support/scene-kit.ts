@@ -2,6 +2,7 @@
  * Test kit for the scene builders (step 5.3): a deterministic text measurer, ports read from a canonical state, tiny hand-made
  * projections, and the whole pure pipeline (projection -> sizes -> request -> fallback layout -> scene). Test code only.
  */
+import { arrowTextOf } from '@/core/graph/arrow-text';
 import type { EdgeBundle, GraphEdge, GraphNode, Projection } from '@/core/graph/contracts';
 import type { AnyRecord, CanonicalState, Reaction, RecordRef } from '@/core/schema';
 import { layoutFallback } from '@/layout';
@@ -18,37 +19,34 @@ export const fakeMeasurer: TextMeasurer = (runs, style) => ({
 type Loose = Record<string, unknown>;
 const recordOf = (state: CanonicalState, ref: RecordRef): Loose | undefined => (state.records[ref.kind] as Record<string, unknown>)[ref.id] as Loose | undefined;
 
-const ABOVE_ROLES: readonly string[] = ['reagent', 'catalyst', 'initiator', 'promoter'];
-
-/** Ports over a state: names and formulas of records, no depictions, arrow text from every participant but the carried substrate. */
+/** Ports over a state: names, formulas and charges of records, no depictions, arrow text from the real producer. */
 export function portsOf(state: CanonicalState, depictions = false): ScenePorts {
   const nameOf = (record: Loose): string => {
     const names = record.names as { canonical?: string; display?: string } | undefined;
     return names?.display ?? names?.canonical ?? String(record.name ?? record.id);
   };
+  const describe: ScenePorts['describe'] = (ref) => {
+    const record = recordOf(state, ref);
+    if (record === undefined) return undefined;
+    const formula = (record.formula ?? record.generalFormula ?? record.formulaText) as string | undefined;
+    const charge = record.charge as number | undefined;
+    return { name: nameOf(record), ...(formula === undefined ? {} : { formula }), ...(charge === undefined ? {} : { charge }) };
+  };
+  const hidden = new Set(Object.values(state.records.entity_display).filter((d) => d.showAsNode === 'never').map((d) => `${d.target.kind}:${d.target.id}`));
   return {
-    describe: (ref) => {
-      const record = recordOf(state, ref);
-      if (record === undefined) return undefined;
-      const formula = (record.formula ?? record.generalFormula ?? record.formulaText) as string | undefined;
-      return { name: nameOf(record), ...(formula === undefined ? {} : { formula }) };
-    },
+    describe,
     depictionKeyOf: (ref) => (depictions ? `depiction:${ref.id}` : undefined),
     arrowTextOf: (edge) => {
       if (edge.reactionId === undefined) return undefined;
       const reaction = state.records.reaction[edge.reactionId] as Reaction | undefined;
       if (reaction === undefined) return undefined;
-      const names = (roles: (role: string) => boolean): string =>
-        reaction.participants
-          .filter((p) => p.id !== edge.participantId && roles(p.role))
-          .map((p) => {
-            const record = recordOf(state, p.ref as RecordRef);
-            return record === undefined ? p.ref.id : nameOf(record);
-          })
-          .join(', ');
-      const above = names((role) => ABOVE_ROLES.includes(role));
-      const below = names((role) => !ABOVE_ROLES.includes(role));
-      return { ...(above === '' ? {} : { above }), ...(below === '' ? {} : { below }) };
+      return arrowTextOf(reaction, {
+        schemes: Object.values(state.records.reaction_scheme).filter((scheme) => scheme.reactionId === reaction.id),
+        conditionVariantIds: edge.conditionVariantIds,
+        ...(edge.participantId === undefined ? {} : { carriedParticipantId: edge.participantId }),
+        describe,
+        shownAsNode: (ref) => !hidden.has(`${ref.kind}:${ref.id}`),
+      });
     },
   };
 }

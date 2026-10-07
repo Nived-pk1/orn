@@ -7,6 +7,8 @@ export { createProjectionRegistry } from './registry';
 export type { BuildProjectionResult, ProjectionRegistry } from './registry';
 export { bundleEdges, drawnAsNode, flagsOf, projectionKey, referencing, sortEdges, sortNodes } from './kit';
 export { createDefaultProjectionRegistry, defaultProjectionDefinitions } from './defaults';
+export { arrowTextOf, MAX_ARROW_PARTS } from './arrow-text';
+export type { ArrowText, ArrowTextContext, ArrowTextPart, ArrowTextPartKind } from './arrow-text';
 export { createScopeOf } from './scope';
 export type { ScopeOf } from './scope';
 export { navigatorProjection, UNCLASSIFIED_HUB_ID } from './navigator';

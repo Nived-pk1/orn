@@ -68,7 +68,7 @@ export function contentOf(node: GraphNode, ports: ScenePorts): NodeContent {
     box,
     name,
     label: plainRuns(name),
-    ...(formula === undefined || formula === '' ? {} : { sublabel: formulaRuns(formula) }),
+    ...(formula === undefined || formula === '' ? {} : { sublabel: formulaRuns(formula, described?.charge) }),
     ...(depictionKey === undefined ? {} : { depictionKey }),
   };
 }

@@ -5,12 +5,11 @@
  * ports as text). A layout result that does not answer the projection (a stale result) is refused as a value, never patched.
  */
 import type { GraphNode, NodeFlag, Projection } from '@/core/graph/contracts';
-import { parseRichText } from '@/core/text';
 import type { LayoutResult, Point } from '@/layout/contracts';
 import { countsByNode, edgeAria, nodeAria } from './aria';
 import type { FormattedText, LodLevel, NodeSizes, Scene, SceneBadge, SceneEdge, SceneNode, ScenePorts } from './contracts';
 import { styleOf } from './edge-style';
-import { richToRuns } from './formatted-text';
+import { partsToRuns } from './formatted-text';
 import { loopGeometry } from './loops';
 import { contentOf, type NodeContent } from './node-content';
 import { drawnPaths, type DrawnPath } from './paths';
@@ -71,8 +70,8 @@ function arrowText(path: DrawnPath, ports: ScenePorts): { above?: FormattedText;
   const edge = path.edges[0] as DrawnPath['edges'][number];
   if (path.bundled || edge.semantic === 'membership' || edge.semantic === 'overflow') return {};
   const text = ports.arrowTextOf(edge);
-  const above = text?.above === undefined ? [] : richToRuns(parseRichText(text.above));
-  const below = text?.below === undefined ? [] : richToRuns(parseRichText(text.below));
+  const above = text === undefined ? [] : partsToRuns(text.above);
+  const below = text === undefined ? [] : partsToRuns(text.below);
   return { ...(above.length === 0 ? {} : { above }), ...(below.length === 0 ? {} : { below }) };
 }
 
