@@ -3266,6 +3266,26 @@ The eight rows ADV-001, 002, 014, 015, 046, 047, 048 and 053 are checked by name
 
 Next: step 5.3 (scene and layout-request builders), which now takes this projection as input: bundle `total`, loops (a pair with `from === to`), the overflow node's `hiddenMembers` and the truncation's `hiddenPairs` and `hiddenEdges` are what the scene builder shows. Background processes started in this session: none left running.
 
+### Step 5.4c review (reviewer, 2026-10-07)
+
+Verdict: ACCEPTED. Session start (the step 5.3 session): AC power checked (BatteryStatus 2), `git status` clean.
+1. The pair-based overview, hub expansion, the per-pair table, ADR-036 and the additive contract fields are approved, including `GraphNode.hiddenMembers` (REVIEW REQUIRED 1), the structural edges counting against `maxEdges` and the prefix rule (2), and the navigator's bundle IDs hashed from (from, to). The changed tests are accepted.
+2. REVIEW REQUIRED 3: core stays silent on an expansion entry that names no admitted hub. Step 5.5a's hook removes such entries from the UI state (added to the 5.5a plan row).
+3. REVIEW REQUIRED 7 and 8 are documented Phase 9 exceptions (TEST_STRATEGY §6): every hub expanded at design dense 18.9 / 25.0 ms; a FILTERED overview about 12 / 23 ms. Decision for 5.5a: the default navigator request is UNFILTERED; exam scope dims, it does not filter (added to the 5.5a plan row).
+4. Note for 5.5a (plan row): at design dense the overview draws 800 pairs between 60 hubs, which the layout worker measured at about 1.5 s. Step 5.5a decides, from a real look and a measurement, whether the navigator asks for fewer drawn pairs than 800 by default.
+5. Measurement a of the 5.2 review is accepted as a Gate E watch item, with the question whether zod's to-json-schema code is really unused.
+6. REVIEW REQUIRED 9: the proof of `readsKinds` is one-sided. Follow-up a (below).
+
+### Step 5.4c review follow-ups (2026-10-07)
+
+Follow-up a (tests only; `tests/property/navigator-reads-witness.test.ts`, +14 tests): one WITNESS per kind of `READS_KINDS`, a concrete edit of one record of that kind that makes `sameProjection` false (a table test; it also checks the table names exactly the kinds of the list and that each witness edits exactly one record). Over the demo dataset with the real `createScopeOf`:
+- reaction: an outcome's selectivity major -> minor (`rxn_ethene-hydration`). species: `classIds` of `spc_ethene` emptied (the species leaves its hub). class: `parentIds` of `cls_alcohols-primary` emptied. reagent: `families` of `rgt_pcc` emptied, under a reagent-family filter.
+- concept and named_reaction: an anchor on the record (the hub) and its review status set to review_required (the node flag). navigator_anchor: the anchor of alkenes retargeted to alkanes. entity_display: the display of water retargeted to ethene (`never`), so ethene is no longer drawn.
+- caveat: a target on the alcohols hub added (the `has_caveat` flag). topic: `parentId` of `top_alkenes` moved, under a topic filter on its old parent. topic_mapping: `topicId` changed, under a topic filter.
+- exam_version: every coverage set to included, under a scope filter `outside`. exam_relevance: an override enrichment -> official, advanced exam, under a scope filter `enrichment`.
+- REMOVED from the list, because no witness can be written: `exam` (`createScopeOf` compares its ID and never reads the record; deleting it cascades to listed kinds) and `relationship` (a `prerequisite_of` can only move a concept between `unmapped` and `prerequisite`, which neither the scope filter, nor the `outside_scope` flag, nor any other output shows). A relationship edit is a frequent authoring action, so it no longer rebuilds the navigator. The property test of 5.4c stays green (also at ORN_PROPERTY_RUNS=200). `reads.ts` says so.
+`npm run check` as ONE command: before 283 files, 4,220 tests; after 284 files, 4,234 tests (+1 file, +14 tests; Vitest 214.2 s), green. Commit: "phase-5.4c: review follow-ups".
+
 
 ## Amendments
 - **2026-10-07, step 5.2 - behaviour of `src/persistence/boot.ts` on an empty database (it restores `uiState`); no contract, schema or invariant change.** Problem: the `nothingStored` branch returned `emptyReport`, so `bootReport.uiState` was always `{}` for a database with no dataset, and the panels (`uiState` key `panels`, step 5.2) could not survive a reload of an empty dataset. Change: the branch calls the same `restoreUiState` and reports `uiState` / `uiStateReset`; the writer deletes the reset rows. Tests: tests/integration/persistence-boot.test.ts (+2). Also in this step: `npm run check:colours` (`scripts/check-colours.mjs`, part of `npm run check`; tooling only), new dependencies (docs/DEPENDENCIES.md), ADR-013 dated line.
