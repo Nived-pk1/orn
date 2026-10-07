@@ -3200,6 +3200,28 @@ Decision (rule of note E3: a candidate with any violation is out; both dialogs p
 
 Next: step 5.3 (scene and layout-request builders). Background processes started in this session (Playwright web servers, spike preview server) are stopped.
 
+### Step 5.2 review (reviewer, 2026-10-07)
+
+Verdict: ACCEPTED. Session start (the step 5.4c session): AC power checked (BatteryStatus 2), `git status` clean. `npm run check` as ONE command before this session: 277 files, 4,173 tests, green (Vitest 241.8 s).
+1. Follow-ups a (ELK) and b (the crash line) of the 5.1d review: accepted as built.
+2. The CSP spike and its decision are approved: native `<dialog>`; Radix DropdownMenu and Tooltip, non-modal; our own Toast. The primitives, tokens, shell frame, breakpoints and the panels store: approved as built.
+3. REVIEW REQUIRED 1 (the boot fix: an empty database now restores `uiState`): confirmed. 2 (`source-map-js` raised in the lockfile): accepted. 3 (a change inside the 300 ms debounce is not saved on reload): accepted. 4: the File menu stays unavailable until step 5.9a. 5, 6, 7: accepted.
+4. ORDER CHANGE: step 5.4c runs now, before 5.3. Reason: 5.4c changes the shape of the navigator projection (bundle totals, loops, truncation), which is the INPUT of the scene builder of 5.3. New order: 5.4c, 5.3, 5.4a, 5.4b, 5.5a. IMPLEMENTATION_PLAN §2 (the 5.4c row moved before 5.3 and says so; the 5.3 row says it runs after) and PROJECT_STATE (`nextStep`) are updated.
+5. Initial JS is 313 kB gzip of the 400 kB target and four UI steps are still to come: measurement a below (no product change).
+
+**Measurement a: the initial chunk (Gate E watch item).** Production build, the entry chunk `assets/index-*.js` (973.5 kB raw, 312.7 kB gzip). A throw-away script (scratchpad, not committed) read Rollup's `renderedLength` per module of that chunk (before minification: 2,133,676 bytes in total) and grouped by package or source folder. The gzip figure is each share of the 312.7 kB, so it is an estimate. Ten largest, rendered bytes / share / about gzip:
+1. react-dom (with react): 653.7 kB / 30.6% / 96 kB. Needed at first paint; not a lazy candidate.
+2. zod: 271.6 kB / 12.7% / 40 kB. Needed by the schema at boot (`core/schemas.js` 79.6 kB; `to-json-schema` and its processors, 57.2 kB, may be unused: check by a tree-shaking test).
+3. src/io: 218.0 kB / 10.2% / 32 kB. `io/legacy-v6` alone is 159.2 kB; the rest is the import pipeline (source, session, merge, apply, package unpack).
+4. dexie: 97.9 kB / 4.6% / 14 kB. Needed at boot.
+5. src/core/validation: 88.5 kB / 4.1% / 13 kB. Which main-thread path needs these rules at boot was not checked.
+6. src/workers: 80.8 kB / 3.8% / 12 kB. The worker handler code that is only reached in process: compute 25.5 kB, chem 26.4 kB, rpc 12.7 kB, search 12.1 kB, layout 4.0 kB.
+7. src/app/services: 69.0 kB / 3.2% / 10 kB.
+8. src/persistence: 64.7 kB / 3.0% / 9 kB. Needed at boot.
+9. src/core/schema: 56.9 kB / 2.7% / 8 kB. Needed at boot.
+10. fflate: 41.5 kB / 1.9% / 6 kB. Only package unpack and export use it.
+**Could load lazily (estimates, nothing built):** (a) the legacy importer, `io/legacy-v6` (159 kB, about 23 kB gzip), only when a v4 or v6 file is dropped; (b) the rest of `src/io` plus fflate, loaded with the first import or export (about 9 kB + 6 kB gzip; the in-process import, restore and export paths that run only when the compute worker is down); (c) the in-process handler code of `src/workers` (about 12 kB gzip), loaded only when a worker is down or unavailable; (d) possibly `core/validation` rules (13 kB) if no commit path on main needs them at boot. Together about 50 kB gzip (63 kB with the validation rules), which would leave the initial chunk at about 250-263 kB gzip against the 400 kB target for the UI steps still to come. Decide at Gate E from the measured size after 5.9b; a dynamic `import()` needs the loader to be a value (the flows already return the in-process path as a value, note E7), and the CSP and the worker-chunk smoke check must be re-run.
+
 
 ## Amendments
 - **2026-10-07, step 5.2 - behaviour of `src/persistence/boot.ts` on an empty database (it restores `uiState`); no contract, schema or invariant change.** Problem: the `nothingStored` branch returned `emptyReport`, so `bootReport.uiState` was always `{}` for a database with no dataset, and the panels (`uiState` key `panels`, step 5.2) could not survive a reload of an empty dataset. Change: the branch calls the same `restoreUiState` and reports `uiState` / `uiStateReset`; the writer deletes the reset rows. Tests: tests/integration/persistence-boot.test.ts (+2). Also in this step: `npm run check:colours` (`scripts/check-colours.mjs`, part of `npm run check`; tooling only), new dependencies (docs/DEPENDENCIES.md), ADR-013 dated line.

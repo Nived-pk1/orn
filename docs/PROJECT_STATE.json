@@ -71,8 +71,8 @@
     "5.2"
   ],
   "nextPhase": 5,
-  "nextStep": "5.3",
-  "nextStepTitle": "Phase 5, step 5.3 - Scene and layout-request builders (pure; src/render/scene): FormattedText, node sizes from an injected text measurer (note E6), buildLayoutRequest, buildScene (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.2 (design system and shell frame) is done; read its REVIEW REQUIRED items in docs/PROGRESS.md first (the persistence boot fix for uiState on an empty database, the audit fix of source-map-js, the 300 ms panel-save debounce).",
+  "nextStep": "5.4c",
+  "nextStepTitle": "Phase 5, step 5.4c - Navigator scale and expansion (core; src/core/graph/navigator): per-pair overview with full bundle totals, hub expansion, readsKinds and sameProjection (docs/IMPLEMENTATION_PLAN.md section 2, the 5.4c row). It runs BEFORE step 5.3 (reviewer, 2026-10-07), because it changes the projection that the scene builder of 5.3 takes as input. After it: 5.3, 5.4a, 5.4b, 5.5a. The step 5.2 review is recorded in docs/PROGRESS.md.",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -195,6 +195,7 @@
     "browserSuite": "step 5.1d: npm run e2e (production build, Playwright 1.63.0): 17 specs, 16 passed, 1 skipped (test.fixme: an ordinary reload is not reported as a crash). chromium: app 7, lifecycle 3 + 1 fixme, smoke 2; firefox 155.0: smoke 2; webkit 26.6 (persistent context): smoke 2. Browser measurements and the FindingStore.counts() figure: docs/PROGRESS.md step 5.1d item j (tests/measure). npm run check: 266 files, 4,037 tests (before the session 266 / 4,034; +3 persist() tests); build:smoke green."
   },
   "openItems": [
+    "GATE E WATCH ITEM (step 5.2 review, measurement a, 2026-10-07): the initial JS chunk is 312.7 kB gzip against the 400 kB target with four UI steps to come. Largest: react-dom 30.6%, zod 12.7%, src/io 10.2% (legacy-v6 alone 159 kB rendered), dexie 4.6%, core/validation 4.1%, src/workers 3.8% (in-process handlers). Lazy candidates (estimates, nothing built): the legacy importer (~23 kB gzip), the rest of src/io plus fflate (~15 kB), the in-process worker handlers (~12 kB), maybe the validation rules (~13 kB). Re-measure after 5.9b and decide at Gate E (PROGRESS.md \"Step 5.2 review\").",
     "CLOSED (step 5.1d): Was: Step 5.1c REVIEW REQUIRED 1: the default import mode into an EMPTY store is merge, which keeps the empty store's own dataset meta; the file's meta is reproduced only by replace_all (P-02 through the services uses it). Step 5.1d's \"Load demo dataset\" and first-run \"Import a file\" must choose the mode on purpose (note E7). -> step 5.1d",
     "Step 5.1c REVIEW REQUIRED 2: a cancel of an apply or restore is honoured at the commit point (a guarded store), so the worker's prepare work (about 1.4-2.3 s at the design tier) and the snapshot write are spent and then undone. Interrupting inside the worker needs a cancel path in createComputeImport / createComputeRestore; not built.",
     "Step 5.1c REVIEW REQUIRED 3: the source file is read into memory on main to hash it (Blob.arrayBuffer, crypto.subtle) in parallel with the preview. The worker could hash it (an additive field of the preview answer). Decide at Gate E from traces.",
