@@ -15,6 +15,7 @@
 import { APP_BUDGETS } from './budgets-app.mjs';
 import { NAVIGATOR_BUDGETS } from './budgets-navigator.mjs';
 import { SCENE_BUDGETS } from './budgets-scene.mjs';
+import { VIEWPORT_BUDGETS } from './budgets-viewport.mjs';
 import { SEARCH_BUDGETS } from './budgets-search.mjs';
 
 export const BUDGETS = {
@@ -392,4 +393,5 @@ export const BUDGETS = {
   ...SEARCH_BUDGETS,
   ...NAVIGATOR_BUDGETS,
   ...SCENE_BUDGETS,
+  ...VIEWPORT_BUDGETS,
 };

@@ -20,6 +20,8 @@ export interface DepictionSource {
   /** Asks for a depiction (idempotent: starts the fetch once, and marks the key most recently used). */
   readonly request: (key: string) => void;
   /** The current status; the same object until the status changes (useSyncExternalStore). */
+  /** Drops a request that is still loading (it left the viewport; step 5.4b). Optional: a stub need not have it. */
+  readonly cancel?: (key: string) => void;
   readonly snapshot: (key: string) => DepictionStatus;
   readonly subscribe: (key: string, listener: () => void) => () => void;
 }
@@ -36,6 +38,10 @@ export interface SceneSvgProps {
   readonly ariaLabel: string;
   /** The ONE world group that step 5.4b transforms (d3-zoom writes to it imperatively); nothing here moves it. */
   readonly worldRef?: Ref<SVGGElement>;
+  /** The root `<svg>` (step 5.4b binds gestures to it). */
+  readonly svgRef?: Ref<SVGSVGElement>;
+  /** True when gestures move the drawing (step 5.4b): the browser must not scroll or zoom the page on them. */
+  readonly interactive?: boolean;
   /** Called after a layer commits (not when a memoised layer is skipped): the render counters of the tests. Keep it stable. */
   readonly onLayerCommit?: (layer: LayerName) => void;
 }

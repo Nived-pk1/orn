@@ -1,6 +1,6 @@
 /** The depiction manager (step 5.4a): statuses, the LRU bound, revokes, timeouts, late answers. All injected, no clock, no DOM. */
 import { describe, expect, it, vi } from 'vitest';
-import { createDepictionManager, DEPICTION_LRU_CAPACITY, type DepictionAnswer, type DepictionDeps } from './depictions';
+import { createDepictionManager, DEPICTION_BUSY, DEPICTION_LRU_CAPACITY, type DepictionAnswer, type DepictionDeps } from './depictions';
 
 interface Harness {
   readonly deps: DepictionDeps;
@@ -244,5 +244,54 @@ describe('dispose', () => {
     expect(h.fetched).toEqual(['a', 'b']);
     expect(listener).not.toHaveBeenCalled();
     manager.dispose();
+  });
+});
+
+describe('cancel and busy (step 5.4b)', () => {
+  it('cancel drops a loading key to idle, clears its timer, tells its listener and ignores its late answer', async () => {
+    const h = harness();
+    const manager = createDepictionManager(h.deps);
+    const listener = vi.fn();
+    manager.subscribe('a', listener);
+    manager.request('a');
+    listener.mockClear();
+    manager.cancel('a');
+    expect(manager.snapshot('a')).toEqual({ state: 'idle' });
+    expect(manager.size()).toBe(0);
+    expect(h.timers.size).toBe(0);
+    expect(listener).toHaveBeenCalledTimes(1);
+    h.answers.get('a')?.({ ok: true, svg: 'late' });
+    await flush();
+    expect(h.created).toEqual([]);
+    expect(manager.snapshot('a')).toEqual({ state: 'idle' });
+  });
+
+  it('cancel leaves a ready or unavailable key, and an unknown key, alone', async () => {
+    const h = harness();
+    const manager = createDepictionManager(h.deps);
+    manager.request('ok');
+    manager.request('bad');
+    h.answers.get('ok')?.({ ok: true, svg: 'x' });
+    h.answers.get('bad')?.({ ok: false, reason: 'no_structure' });
+    await flush();
+    manager.cancel('ok');
+    manager.cancel('bad');
+    manager.cancel('never');
+    expect(manager.snapshot('ok').state).toBe('ready');
+    expect(manager.snapshot('bad')).toEqual({ state: 'unavailable', reason: 'no_structure' });
+  });
+
+  it('a BUSY answer is not cached: the key is idle again and can be asked for once more', async () => {
+    const h = harness();
+    const manager = createDepictionManager(h.deps);
+    manager.request('a');
+    h.answers.get('a')?.({ ok: false, reason: DEPICTION_BUSY });
+    await flush();
+    expect(manager.snapshot('a')).toEqual({ state: 'idle' });
+    expect(manager.size()).toBe(0);
+    expect(h.timers.size).toBe(0);
+    manager.request('a');
+    expect(h.fetched).toEqual(['a', 'a']);
+    expect(manager.snapshot('a')).toEqual({ state: 'loading' });
   });
 });

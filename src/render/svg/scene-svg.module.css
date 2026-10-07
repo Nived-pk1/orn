@@ -168,3 +168,9 @@
   stroke-width: var(--focus-ring-width);
   stroke-dasharray: 5 3;
 }
+
+/* The viewport (step 5.4b): the drawing is panned and zoomed by gestures, so the browser must not scroll or zoom the page on them. */
+.interactive {
+  touch-action: none;
+  cursor: grab;
+}

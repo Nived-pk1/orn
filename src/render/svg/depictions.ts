@@ -8,12 +8,18 @@
  *   the least recently REQUESTED is dropped, its URL revoked, its timer cleared, and a late answer for it is ignored.
  * - A key that does not answer within `timeoutMs` is `unavailable` (reason "timeout"); so is a failure value, a rejection, or a
  *   `createUrl` that throws. An unavailable key is not asked again while it stays in the cache.
+ * - `cancel(key)` drops a key that is still loading (the viewport queue: it left the screen); it becomes idle and a late answer is ignored.
+ * - An answer with reason `BUSY` (the chem service had no free worker) is not cached: the key becomes idle again and the viewport queue
+ *   asks once more, so a busy service never reaches the user as "unavailable".
  * - `dispose()` revokes every URL and drops every listener.
  */
 import type { DepictionSource, DepictionStatus } from './contracts';
 
 export const DEPICTION_LRU_CAPACITY = 500;
 export const DEPICTION_TIMEOUT_MS = 8000;
+
+/** The reason a failure value carries when the service was busy; never shown, never cached. */
+export const DEPICTION_BUSY = 'BUSY';
 
 export type DepictionAnswer = { readonly ok: true; readonly svg: string } | { readonly ok: false; readonly reason: string };
 
@@ -33,6 +39,7 @@ export interface DepictionManager extends DepictionSource {
   /** Keys held now (loading, ready or unavailable). */
   readonly size: () => number;
   readonly capacity: number;
+  readonly cancel: (key: string) => void;
   readonly dispose: () => void;
 }
 
@@ -81,6 +88,14 @@ export function createDepictionManager(deps: DepictionDeps): DepictionManager {
     }
   };
 
+  /** A busy answer for a live loading entry: forget the key (idle) so it can be asked for again. */
+  const dropBusy = (key: string, entry: Entry): void => {
+    if (disposed || entries.get(key) !== entry || entry.status.state !== 'loading') return;
+    entries.delete(key);
+    release(entry);
+    notify(key);
+  };
+
   const evict = (): void => {
     while (entries.size > capacity) {
       const oldest = entries.keys().next().value as string;
@@ -114,9 +129,16 @@ export function createDepictionManager(deps: DepictionDeps): DepictionManager {
         return;
       }
       pending.then(
-        (answer) => settle(key, entry, () => fromAnswer(answer)),
+        (answer) => (!answer.ok && answer.reason === DEPICTION_BUSY ? dropBusy(key, entry) : settle(key, entry, () => fromAnswer(answer))),
         () => settle(key, entry, () => ({ state: 'unavailable', reason: 'fetch_failed' })),
       );
+      notify(key);
+    },
+    cancel(key) {
+      const entry = entries.get(key);
+      if (disposed || entry === undefined || entry.status.state !== 'loading') return;
+      entries.delete(key);
+      release(entry);
       notify(key);
     },
     snapshot: (key) => entries.get(key)?.status ?? IDLE,

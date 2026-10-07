@@ -71,11 +71,12 @@
     "5.2",
     "5.4c",
     "5.3",
-    "5.4a"
+    "5.4a",
+    "5.4b"
   ],
   "nextPhase": 5,
-  "nextStep": "5.4b",
-  "nextStepTitle": "Phase 5, step 5.4b - Viewport (src/render/viewport): d3-zoom writing ONE transform imperatively to the world group of src/render/svg (SceneSvg exposes worldRef; nothing there moves it), zoom in / out / fit / focus selection, LOD from scale with the RENDER_BUDGET cap, a uniform-grid culling index, a viewport store that is not React state, depiction requests only for visible species at LOD 3 through a bounded queue (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.4a (static SVG renderer) is done: read its REVIEW REQUIRED 1 in docs/PROGRESS.md (a node box does not grow for a structure). The renderer takes the LOD, selected ids and the focused id as props; the layers are memoised and report commits through onLayerCommit (the render counters). After 5.4b: 5.5a (its plan row carries the 5.4c review decisions; the open choices about arrow text are in openItems, Step 5.3 review follow-up a).",
+  "nextStep": "5.5a",
+  "nextStepTitle": "Phase 5, step 5.5a - Navigator end to end (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.4b (viewport: d3-zoom binding, controller, LOD with hysteresis and the budget cap, grid culling index, depiction queue with 4 in flight) is done and committed; its e2e part moved here.",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {

@@ -19,7 +19,7 @@ export function SceneSvg(props: SceneSvgProps) {
   const prefix = `orn${useId().replace(/[^A-Za-z0-9_-]/g, '')}`;
   const ids = useMemo(() => defIds(prefix), [prefix]);
   return (
-    <svg className={styles.root} role="group" aria-label={props.ariaLabel} data-lod={lod} xmlns="http://www.w3.org/2000/svg">
+    <svg ref={props.svgRef} className={props.interactive === true ? `${styles.root} ${styles.interactive}` : styles.root} role="group" aria-label={props.ariaLabel} data-lod={lod} xmlns="http://www.w3.org/2000/svg">
       <SceneDefs scene={scene} ids={ids} />
       <g ref={worldRef} data-world="true">
         <EdgesLayer scene={scene} lod={lod} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />

@@ -7,6 +7,8 @@ Phase 10's documentation sweep keeps this list current. Each new dependency is r
 | Package | Version | Licence | Added | Notes |
 |---|---|---|---|---|
 | @rdkit/rdkit | 2026.3.6 | BSD-3-Clause | step 4.3a | Chem worker only; the only dependency allowed `new Function` (ADR-035) |
+| d3-selection | 3.0.0 | ISC | step 5.4b | `src/render/viewport/zoom-binding.ts` only (the selection d3-zoom attaches to); no eval, no new Function in its sources |
+| d3-zoom | 3.0.0 | ISC | step 5.4b | `src/render/viewport/zoom-binding.ts` only: gestures become viewports, d3 never writes the DOM transform; dblclick zoom off; inline style removed (CSP) |
 | dexie | 4.4.6 | Apache-2.0 | (before 4.x) | IndexedDB adapter |
 | elkjs | 0.12.0 | EPL-2.0 OR GPL-3.0-or-later (EPL-2.0 used) | step 4.4 | Layout worker only (`src/layout/elk/`); bundled build, our worker |
 | fflate | 0.8.3 | MIT | (before 4.x) | Zip for snapshots and exports |
@@ -27,6 +29,8 @@ Exact pins, added in the step that first uses them (note E12); `npm audit` 0 vul
 
 | Package | Version | Licence | Added | Notes |
 |---|---|---|---|---|
+| @types/d3-selection | 3.0.12 | MIT | step 5.4b | Types of d3-selection |
+| @types/d3-zoom | 3.0.9 | MIT | step 5.4b | Types of d3-zoom |
 | @testing-library/react | 16.3.3 | MIT | step 5.1d | Component tests (jsdom), roles and names (note E13) |
 | @testing-library/dom | 10.4.2 | MIT | step 5.1d | Peer dependency of @testing-library/react |
 | jsdom | 30.1.1 | MIT | step 5.1d | Opt-in per test file with `// @vitest-environment jsdom` |
