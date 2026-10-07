@@ -3376,6 +3376,41 @@ Session start: AC power checked (BatteryStatus 2), `git status` clean. Part A is
 
 Next: step 5.4b (viewport).
 
+### Step 5.4a review (reviewer, 2026-10-07)
+
+Verdict: ACCEPTED. Session start (the step 5.4b session): AC power checked (PowerOnline True, after one wait on battery), `git status` clean.
+1. Follow-up b of the 5.3 review (formula typography with the record's charge; ambiguous tails stay plain) is accepted, with the changed table rows.
+2. The renderer is approved as built: the five layers, the glyphs, dash and width as attributes, `role="graphics-symbol"`, the depiction manager (LRU 500, timeout 8,000 ms, the late-answer fix) and the additive `SceneNode.box`.
+3. REVIEW REQUIRED 1 (a structure is drawn small inside the name's box) is decided in step 5.5a from a real look (candidate: a taller box for a species that has a depiction key, fixed at size time so the layout needs no second pass). Added to the 5.5a plan row.
+4. Arrow text. Proceeding with provisional choices instead of stopping was acceptable, because nothing draws it yet. (1) CHANGED: a reactant that is not drawn as a node goes ABOVE the arrow, first (it is a reagent in the arrow's eyes): follow-up a. (2) approved for now: `originalText`, else a species by its formula, else the name; to be looked at again after the user's 5.5a look. (3) approved: stage numbers only with `showStageNumbers` and more than one stage. (4) conditions: not built yet; follow-up b is a PROPOSAL only.
+
+### Step 5.4a review follow-ups (2026-10-07)
+
+**Follow-up a (code; `src/core/graph/arrow-text.ts`).** An undrawn reactant (water, `entity_display` never) is now on the `above` side, ahead of the other parts of its own stage (a rank in the stable sort: stage, then undrawn first, then record order, so a stage-2 reactant never jumps before the stage-1 number). Tests: the ethene-hydration table row is now above `H2O`, `H3PO4 catalyst`, below nothing; one new test (ordering, below untouched, within a stage only, numbers kept). The demo snapshot `demo-navigator-lod2.svg.txt` changed in one arrow (water first above, nothing below); ADV-027's scene part still finds `H2O` on the arrow text. `npm run check` as ONE command: before 293 files, 4,454 tests; after 293 files, 4,455 tests (+1 test; Vitest 251.0 s), green. Commit: "phase-5.4a: review follow-ups".
+
+**Follow-up b (docs only; NOTHING BUILT): the proposal for condition text on the arrow.** For the reviewer to decide before step 5.5a wires the port. "Docs" means DOMAIN_MODEL §6.3 and `src/core/schema/conditions.ts`; everything else is a suggestion. The docs decide only these: the fields exist (below); structured fields are authoritative and the original wording is kept separately (`text`, stage `originalText`); a variant overrides fields of ONE stage (default: the first stage of kind `reaction`); a field filled by a parser and not confirmed is in `parsedFields` and raises REVIEW_REQUIRED (RXN-015); diazotisation is a range, not the string "0-5 C". Placement, wording and order on the arrow are NOT in the docs.
+
+Proposed side, order, form (suggested): conditions go BELOW the arrow, on their own line after the participants (the textbook habit: reagents above, conditions below), as parts of kind `condition` joined by ", ", at most 3 (`MAX_CONDITION_PARTS`) and then one `+N more` part, never silently cut. Order: temperature, pressure, time, light, activation, atmosphere, anhydrous, other (record order), text. The values are the EFFECTIVE parameters: the stage's fields overridden field by field by the arrow's condition variant (a bundle or an arrow with several variants or none shows the stage's own fields only). With `showStageNumbers` and several stages the numbers of follow-up 5.3 apply to the conditions of each stage as to its participants.
+
+Lines, field: text on the arrow: demo example: decided by the docs or suggested.
+- temperature value: "413 K", "25 °C" (value, a space, the unit; a degree sign for C): 413 K and 443 K variants of ethanol + conc. H2SO4 give "413 K" and "443 K": field and units decided by the docs, wording suggested.
+- temperature range: "0–5 °C" (en dash): diazotisation of aniline gives "0–5 °C": range decided by the docs, wording suggested.
+- temperature qualitative: the enum word with spaces ("reflux", "room temperature", "low temperature", "cold", "warm", "heat", "strong heat"): ethanol to ethanoic acid (excess K2Cr2O7/H+) gives "reflux": suggested.
+- pressure value or range: "60–70 atm", "1 bar"; qualitative "reduced pressure", "atmospheric pressure", "high pressure": ethene hydration gives "573 K, 60–70 atm": suggested.
+- time: "2 h", "30 min", "1 d"; qualitative "brief" / "prolonged": the demo has none: suggested.
+- light: "hν" for `hv`, "UV", "visible light", "sunlight", "diffuse light", "dark": propene + HBr with peroxide gives "hν": suggested.
+- activation (list): each word as is ("electrolysis", "ultrasound", "microwave", "radiation"): the demo has none: suggested.
+- atmosphere: "inert atmosphere" for `inert`; formula parts "N2", "Ar", "O2", "H2" for the gases; `air` left out (the default): the demo has none: suggested.
+- anhydrous (true): "anhydrous"; false or absent: nothing: the demo has none (the "dry ether" of the Grignard reactions is a solvent participant): suggested.
+- other (list): each qualifier as written ("sealed tube", "peroxide present"): propene + HBr gives "hν, peroxide present": suggested.
+- text (free restatement): shown only when no structured field gave any text (it restates them); never beside them: suggested; the schema comment says "shown beside structured values", so the reviewer may prefer that.
+- medium: LEFT OUT of the arrow (the acid or base is a participant already written above; the inspector shows it): diazotisation does not show "acidic": suggested.
+- solventCharacter: LEFT OUT (a solvent participant is written by name; the inspector shows the character): suggested.
+- parsedFields: nothing on the arrow; the existing review badge says a field is unconfirmed (RXN-015): suggested.
+- stage originalText: NOT used on the arrow (it restates participants and conditions, so it would duplicate the parts); the inspector shows it: suggested; the participant `originalText` rule (decision 2) stays.
+- stage label and kind, variant label and note: not on the arrow (the label "413 K, excess ethanol" gives its "413 K" through the field; "excess ethanol" is in the inspector): suggested.
+What the arrow does not say is derived display only: no record loses anything, and the inspector (5.8) lists every field.
+
 ## Amendments
 - **2026-10-07, step 5.4a - `SceneNode.box` (Scene contract, additive; no schema change, no invariant change).** Problem: the renderer must draw a member of a hub, a species outside one, a reagent chip, the overflow box and Unclassified in different shapes and fonts, but the Scene carried only the glyph (a member and a species share one). Change: `SceneNode.box: BoxKind` (hub, species, reagent, member, overflow, unclassified), set by the builder from the box it sized the node with; `BoxKind` moves to `src/render/scene/contracts.ts` (re-exported by `node-content.ts`). Tests: `build-scene.test.ts`, `src/render/svg/*.test.tsx`. Docs: UI_ARCHITECTURE §6 dated line.
 - **2026-10-07, step 5.3 - Scene contract (`src/render/scene/contracts.ts`); additive and narrowing, no schema change, no invariant change (Phase 5 contract decisions Q4, Q5).** Problem: the Scene could not carry what the 5.4c projection and decisions Q4 and Q5 need. Change, field by field: `SceneNode.state` loses `selected` and `focused` (the overlay draws them from UI state); `Scene.truncation` added; `Scene.revision` defined as the projection's store revision (informational); `SceneEdge.labelAt` added (label position at the route midpoint); `SceneEdge.bundleSize` documented as the bundle's total; a self-loop is a `SceneEdge` with `from === to` (documented); new types `TextStyle`, `TextMeasurer`, `NodeSize`, `NodeSizes`, `ScenePorts` (`describe`, `depictionKeyOf`, `arrowTextOf`). Nothing else changed; `src/layout/contracts.ts` untouched. Tests: src/render/scene/*.test.ts, tests/property/scene-builders.test.ts. Docs: UI_ARCHITECTURE §6 and GRAPH_SEMANTICS §4 dated lines.

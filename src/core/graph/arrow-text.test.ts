@@ -46,7 +46,7 @@ describe('the demo reactions', () => {
   const table: readonly (readonly [string, string, string, readonly string[], readonly string[]])[] = [
     // reaction, carried participant, label, above, below
     ['rxn_ethanol-to-ethanal-pcc', 'prt_ethanol-to-ethanal-pcc-1', 'PCC above, the solvent below', ['name:PCC'], ['formula:CH2Cl2']],
-    ['rxn_ethene-hydration', 'prt_ethene-hydration-1', 'water is never a node: below; the catalyst above', ['name:H₃PO₄ catalyst'], ['formula:H2O']],
+    ['rxn_ethene-hydration', 'prt_ethene-hydration-1', 'water is never a node: above, first; then the catalyst', ['formula:H2O', 'name:H₃PO₄ catalyst'], []],
     ['rxn_ethene-hydration', 'prt_ethene-hydration-2', 'carrying water: the ethene is a node, so it is left out', ['name:H₃PO₄ catalyst'], []],
     ['rxn_propene-hbr-peroxide', 'prt_propene-hbr-peroxide-1', 'reagent and initiator above', ['name:Hydrogen bromide', 'name:Benzoyl peroxide'], []],
     ['rxn_methylmgbr-ethanal', 'prt_methylmgbr-ethanal-2', 'two stages, no scheme: the work-up above, the solvent below', ['name:Acid (H⁺)'], ['formula:C4H10O']],
@@ -121,6 +121,21 @@ describe('a synthetic reaction', () => {
     const text = arrowTextOf(reactionOf(roles.map((role, i) => part(i, role))), contextOf());
     expect(text.above.map((p) => p.text)).toEqual(['name-rgt_x0', 'name-rgt_x1', 'name-rgt_x2', '+2 more']);
     expect(text.below.map((p) => p.text)).toEqual(['name-rgt_x5', 'name-rgt_x6']); // the spectator is hidden, the reactant is a node
+  });
+
+  it('a reactant nobody draws is above the arrow, first within its stage (5.4a review decision 1)', () => {
+    const r = reactionOf([part(1, 'reagent'), part(2, 'reactant'), part(3, 'solvent'), part(4, 'reactant')]);
+    const undrawn = new Set(['reagent:rgt_x2', 'reagent:rgt_x4']);
+    const text = arrowTextOf(r, contextOf({ shownAsNode: (ref) => !undrawn.has(`${ref.kind}:${ref.id}`) }));
+    expect(text.above.map((p) => p.text)).toEqual(['name-rgt_x2', 'name-rgt_x4', 'name-rgt_x1']);
+    expect(text.below.map((p) => p.text)).toEqual(['name-rgt_x3']);
+    // Within a stage only: a reactant of stage 2 does not jump before the reagent of stage 1.
+    const staged = reactionOf([part(1, 'reagent'), part(2, 'reactant')], [
+      { id: 'stg_x1' as Reaction['stages'][number]['id'], participantIds: ['prt_x-1' as ParticipantId] },
+      { id: 'stg_x2' as Reaction['stages'][number]['id'], participantIds: ['prt_x-2' as ParticipantId] },
+    ] as unknown as Reaction['stages']);
+    const two = arrowTextOf(staged, contextOf({ shownAsNode: (ref) => ref.id !== 'rgt_x2', schemes: [scheme([], { showStageNumbers: true })] }));
+    expect(shown(two.above)).toEqual(['separator:1.', 'name:name-rgt_x1', 'separator:2.', 'name:name-rgt_x2']);
   });
 
   it('at most 3 parts a side; the rest is one `more` part with its count, never silently cut', () => {

@@ -6,9 +6,9 @@
  * (§6.2). The carried substrate (the one this arrow starts from) and spectators are left out; products are
  * not participants. A reactant nobody draws as a node (water, `entity_display`) is written on the arrow
  * (ADV-027). Order: stage order (array order is stage order), then the participant order of the record.
- * OPEN CHOICES, decided provisionally and listed for the reviewer in docs/PROGRESS.md: that reactant goes
- * BELOW the arrow; a species is written by its formula, anything else by its name; a stage number
- * ("1.") is a separator part when the scheme says `showStageNumbers`; conditions (temperature, time) are
+ * Decided by the 5.4a review (2026-10-07): that reactant goes ABOVE the arrow, first within its stage (it is a
+ * reagent in the arrow's eyes). OPEN CHOICES, decided provisionally (docs/PROGRESS.md): a species is written
+ * by its formula, anything else by its name; a stage number ("1.") is a separator part when the scheme says `showStageNumbers`; conditions (temperature, time) are
  * not produced, their placement and format are not in the docs.
  */
 import type { ConditionVariantId, ParticipantId, Reaction, ReactionScheme, RecordRef, SubstanceRef } from '../schema';
@@ -56,8 +56,8 @@ const ROLE_POSITION: Readonly<Record<Reaction['participants'][number]['role'], P
   spectator: 'hidden',
 };
 
-/** The side a reactant takes when nothing draws it as a node. OPEN CHOICE (see the file comment). */
-const UNDRAWN_REACTANT_SIDE: Side = 'below';
+/** The side a reactant takes when nothing draws it as a node (5.4a review decision 1). */
+const UNDRAWN_REACTANT_SIDE: Side = 'above';
 
 const byId = (a: { readonly id: string }, b: { readonly id: string }): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
@@ -85,6 +85,8 @@ function partOf(ref: SubstanceRef, original: string | undefined, context: ArrowT
 interface Placed {
   readonly side: Side;
   readonly stage: number;
+  /** 0 for a reactant nobody draws: it goes first within its stage. */
+  readonly rank: number;
   readonly part: ArrowTextPart;
 }
 
@@ -124,12 +126,16 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
     const position = placementOf.get(p.id) ?? ROLE_POSITION[p.role];
     if (position === 'hidden') continue;
     let side: Side | undefined = position === 'above_arrow' ? 'above' : position === 'below_arrow' ? 'below' : undefined;
-    if (side === undefined && !context.shownAsNode(p.ref)) side = UNDRAWN_REACTANT_SIDE;
+    let rank = 1;
+    if (side === undefined && !context.shownAsNode(p.ref)) {
+      side = UNDRAWN_REACTANT_SIDE;
+      rank = 0;
+    }
     if (side === undefined) continue;
-    placed.push({ side, stage: stageOf(p.id), part: partOf(p.ref, p.originalText, context) });
+    placed.push({ side, stage: stageOf(p.id), rank, part: partOf(p.ref, p.originalText, context) });
   }
-  // Stable sort: stage order, then the order of the record.
-  const ordered = placed.map((item, index) => ({ item, index })).sort((a, b) => a.item.stage - b.item.stage || a.index - b.index);
+  // Stable sort: stage order, an undrawn reactant first, then the order of the record.
+  const ordered = placed.map((item, index) => ({ item, index })).sort((a, b) => a.item.stage - b.item.stage || a.item.rank - b.item.rank || a.index - b.index);
   const sides: Record<Side, ArrowTextPart[]> = { above: [], below: [] };
   const lastStage: Record<Side, number> = { above: -1, below: -1 };
   for (const { item } of ordered) {
