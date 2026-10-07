@@ -11,6 +11,9 @@
  *  - an anchor, class-hierarchy or display change can shift hub resolution for reactions with no direct
  *    reference to the changed record, so those rebuild this index only (not the whole `IndexEngine`).
  *
+ * Step 5.4c adds a per-pair table (`pair-table.ts`: every ordered hub pair with its candidates ranked for
+ * drawing) kept in the same retract-then-add step, and candidates now carry their substrate and product refs.
+ *
  * Hub resolution itself (`HubResolver`) and the "what does this reaction carry" selection
  * (`primarySubstrateOf`/`mainProductsOf`) are pure functions of a `HubBasis` (anchors, `get`, `displayOf`)
  * — the same shape `core/graph/navigator/hubs.ts` and `select.ts` used against `ReadonlyIndexes` before this
@@ -19,7 +22,10 @@
  * modules now re-export or delegate to these (see the amendment note in docs/PROGRESS.md).
  */
 import type { AnyRecord, ClassId, EntityDisplay, NavigatorAnchor, Outcome, Participant, Product, Reaction, ReactionId, RecordRef } from '../schema';
+import { PairTable, type NavigatorCandidate, type NavigatorPair } from './pair-table';
 import { compareStrings, Table } from './table';
+
+export type { NavigatorCandidate } from './pair-table';
 
 export const UNCLASSIFIED_HUB_ID = 'virtual:unclassified:hub';
 
@@ -42,20 +48,6 @@ export interface DisplaySource {
 export interface HubBasis extends DisplaySource {
   readonly anchors: readonly NavigatorAnchor[];
   get(id: string): AnyRecord | undefined;
-}
-
-/** One precomputed navigator arrow candidate: a reaction's carried substrate to one main product. */
-export interface NavigatorCandidate {
-  readonly fromHub: string;
-  readonly toHub: string;
-  /** True when either end was reached through class membership rather than a stated anchor. */
-  readonly inferred: boolean;
-  readonly reactionId: ReactionId;
-  readonly outcomeId: Outcome['id'];
-  readonly productId: Product['id'];
-  readonly participantId: Participant['id'];
-  readonly selectivity: Outcome['selectivity'];
-  readonly conditionVariantIds: Outcome['conditionVariantIds'];
 }
 
 const byRefId = (a: RecordRef, b: RecordRef): number => compareStrings(a.id, b.id);
@@ -175,6 +167,7 @@ export class NavigatorRollup {
   private readonly resolver: HubResolver;
   private readonly byFromHub = new Table<NavigatorCandidate>(compareCandidates);
   private readonly byToHub = new Table<NavigatorCandidate>(compareCandidates);
+  private readonly byPair = new PairTable();
   private readonly unanchored = new Set<ReactionId>();
 
   constructor(private basis: HubBasis) {
@@ -211,9 +204,12 @@ export class NavigatorRollup {
           participantId: substrate.id,
           selectivity: outcome.selectivity,
           conditionVariantIds: outcome.conditionVariantIds,
+          substrate: substrate.ref,
+          product: product.ref,
         };
         this.byFromHub.add(reaction.id, candidate.fromHub, candidate);
         this.byToHub.add(reaction.id, candidate.toHub, candidate);
+        this.byPair.add(candidate);
         reached ||= from.hub !== null || to.hub !== null;
       }
     }
@@ -224,6 +220,7 @@ export class NavigatorRollup {
   removeReaction(id: string): void {
     this.byFromHub.removeOwner(id);
     this.byToHub.removeOwner(id);
+    this.byPair.removeOwner(id);
     this.unanchored.delete(id as ReactionId);
   }
 
@@ -236,6 +233,7 @@ export class NavigatorRollup {
   commit(): void {
     this.byFromHub.commit();
     this.byToHub.commit();
+    this.byPair.commit();
   }
 
   candidatesFrom(hubId: string): readonly NavigatorCandidate[] {
@@ -244,6 +242,11 @@ export class NavigatorRollup {
 
   candidatesTo(hubId: string): readonly NavigatorCandidate[] {
     return this.byToHub.get(hubId);
+  }
+
+  /** Every ordered hub pair with its ranked candidates, largest first (step 5.4c); see `PairTable`. */
+  pairs(): readonly NavigatorPair[] {
+    return this.byPair.pairs();
   }
 
   get unanchoredReactionIds(): readonly ReactionId[] {

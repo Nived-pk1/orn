@@ -13,6 +13,7 @@
 // computed on single-run means, which this replaces.
 
 import { APP_BUDGETS } from './budgets-app.mjs';
+import { NAVIGATOR_BUDGETS } from './budgets-navigator.mjs';
 import { SEARCH_BUDGETS } from './budgets-search.mjs';
 
 export const BUDGETS = {
@@ -388,4 +389,5 @@ export const BUDGETS = {
     { operation: "step 4.4: one round trip through a real worker thread: demo: reaction explorer (49 nodes, 70 edges), ELK in a running thread (request and answer through the port; no cache)", tier: 'layout', shape: 'layout', budgetMs: null, note: "informal; worker code in Node (or one real thread round trip, thread and ELK already started); run once alone; not bench:baseline" },
   ...APP_BUDGETS,
   ...SEARCH_BUDGETS,
+  ...NAVIGATOR_BUDGETS,
 };

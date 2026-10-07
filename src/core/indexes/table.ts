@@ -57,6 +57,11 @@ export class Table<V> {
     this.pending.clear();
   }
 
+  /** Every key that has at least one value; only valid between `commit()` calls. */
+  keys(): IterableIterator<string> {
+    return this.buckets.keys();
+  }
+
   /** Values under `key`, in deterministic order; only valid between `commit()` calls. */
   get(key: string): readonly V[] {
     return this.buckets.get(key)?.view ?? EMPTY;

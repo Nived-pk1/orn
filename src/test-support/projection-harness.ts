@@ -45,6 +45,8 @@ export function checkStructure(p: Projection, request: ProjectionRequest, state:
       if (e === undefined) bad('bundle-edges', `${b.id} names unknown edge ${id}`);
       else if (e.from !== b.from || e.to !== b.to) bad('bundle-endpoints', `${b.id} vs ${id}`);
     }
+    if (b.total < b.edgeIds.length) bad('bundle-total', `${b.id}: total ${b.total} < ${b.edgeIds.length} drawn edges`);
+    if (b.edgeIds.length === 0) bad('bundle-empty', b.id);
   }
   if (p.nodes.length > request.limits.maxNodes) bad('INV-22-nodes', `${p.nodes.length} > ${request.limits.maxNodes}`);
   if (p.edges.length > request.limits.maxEdges) bad('INV-22-edges', `${p.edges.length} > ${request.limits.maxEdges}`);

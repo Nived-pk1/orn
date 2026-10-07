@@ -65,7 +65,7 @@ describe('projection harness', () => {
       view: 'navigator', revision: 9, key: 'nope',
       nodes: [{ id: 'b', kind: 'virtual', role: 'anchor', depth: 0, hidden: { outgoing: 0, incoming: 0 }, flags: [] }, { id: 'a', kind: 'virtual', role: 'anchor', depth: 0, hidden: { outgoing: 0, incoming: 0 }, flags: [] }],
       edges: [edge({ productId: 'pdt_r1-1-2' }), edge({ productId: 'pdt_r1-1-1', to: 'gone' })].sort((x, y) => (x.id < y.id ? 1 : -1)),
-      bundles: [{ id: 'bnd', from: 'a', to: 'b', edgeIds: ['missing'] }],
+      bundles: [{ id: 'bnd', from: 'a', to: 'b', edgeIds: ['missing'], total: 1 }],
       unanchoredReactionIds: ['rxn_r1', 'rxn_nope'] as never,
       truncation: null,
     };

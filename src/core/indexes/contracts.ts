@@ -27,8 +27,10 @@ import type { CanonicalState } from '../schema';
 import type { ChangeSet } from '../dataset/contracts';
 import type { Referrer } from '../references/contracts';
 import type { NavigatorCandidate } from './navigator-rollup';
+import type { NavigatorPair } from './pair-table';
 
 export type { NavigatorCandidate } from './navigator-rollup';
+export type { NavigatorPair } from './pair-table';
 
 export interface Participation {
   readonly reactionId: ReactionId;
@@ -90,6 +92,8 @@ export interface NavigatorRollupIndex {
   candidatesFrom(hubId: string): readonly NavigatorCandidate[];
   /** Candidates whose main product resolved to this hub, sorted by (reaction, outcome, product). */
   candidatesTo(hubId: string): readonly NavigatorCandidate[];
+  /** Every ordered hub pair with its candidates ranked for drawing, ordered by (total descending, from, to) (step 5.4c). */
+  pairs(): readonly NavigatorPair[];
 }
 
 export interface ReadonlyIndexes extends CoreIndexes {

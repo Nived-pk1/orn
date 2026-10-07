@@ -11,6 +11,7 @@ import type {
   ParticipantId,
   ProductId,
   ReactionId,
+  RecordKind,
   RecordRef,
   RelationshipId,
   RelationshipType,
@@ -52,6 +53,8 @@ export interface GraphNode {
   readonly depth: number;
   /** Neighbours not shown because of expansion state or limits. */
   readonly hidden: { readonly outgoing: number; readonly incoming: number };
+  /** Navigator overflow nodes only (step 5.4c): how many hub members the node stands for; `hidden` counts their arrows. */
+  readonly hiddenMembers?: number;
   readonly flags: readonly NodeFlag[];
 }
 
@@ -94,12 +97,19 @@ export interface EdgeBundle {
   readonly id: string;
   readonly from: string;
   readonly to: string;
+  /** The edges drawn for this pair: every arrow of the pair, or the best-ranked ones when `total` is larger. */
   readonly edgeIds: readonly string[];
+  /** How many arrows the pair has after the request's filters (step 5.4c); `edgeIds.length` for the other views. */
+  readonly total: number;
 }
 
 export interface Truncation {
   readonly reason: 'max_nodes' | 'max_edges' | 'max_depth' | 'time_budget' | 'aborted';
   readonly hiddenNodeEstimate: number;
+  /** Navigator only (step 5.4c): ordered node pairs that no drawn pair represents. */
+  readonly hiddenPairs?: number;
+  /** Navigator only (step 5.4c): arrows (candidates) that no drawn pair represents. */
+  readonly hiddenEdges?: number;
 }
 
 export interface Projection {
@@ -167,6 +177,11 @@ export interface ProjectionContext {
 export interface ProjectionDefinition {
   readonly view: ViewKey;
   readonly description: string;
+  /**
+   * The record kinds `build` reads (step 5.4c, decision Q3). A commit that touches none of them cannot change
+   * the projection, apart from its revision and key. Undefined: rebuild on every commit.
+   */
+  readonly readsKinds?: readonly RecordKind[];
   build(ctx: ProjectionContext, request: ProjectionRequest): Projection;
 }
 

@@ -97,7 +97,7 @@ export function bundleEdges(edges: readonly GraphEdge[]): EdgeBundle[] {
     if (list.length < 2) continue;
     const [from, to] = key.split('\u0000') as [string, string];
     const edgeIds = list.map((edge) => edge.id).sort();
-    bundles.push({ id: `bnd_${hashParts(['bundle', from, to, ...edgeIds])}`, from, to, edgeIds });
+    bundles.push({ id: `bnd_${hashParts(['bundle', from, to, ...edgeIds])}`, from, to, edgeIds, total: edgeIds.length });
   }
   return bundles.sort(byId);
 }

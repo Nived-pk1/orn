@@ -33,6 +33,8 @@ export function navigatorRollupSnapshot(ix: ReadonlyIndexes): unknown {
     hubs: rollup.hubs,
     unanchoredReactionIds: rollup.unanchoredReactionIds,
     byHub: hubIds.map((id) => [id, rollup.candidatesFrom(id), rollup.candidatesTo(id)]),
+    // Step 5.4c: the per-pair table (pair order, and each pair's candidates in rank order).
+    pairs: rollup.pairs(),
   };
 }
 

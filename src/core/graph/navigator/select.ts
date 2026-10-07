@@ -45,6 +45,11 @@ export function allowedByLookup(ctx: ProjectionContext, filters: ViewFilters): R
   return allowed;
 }
 
+/** True when `reactionFilter` lets every reaction through (the overview then reads the roll-up's pair table). */
+export function isUnfiltered(filters: ViewFilters): boolean {
+  return filters.topicIds.length === 0 && filters.reagentFamilies.length === 0 && filters.scopes.length === 0 && (filters.text === undefined || fold(filters.text) === '');
+}
+
 /** Builds the per-reaction predicate for `filters`. Filters only hide; they never change data. */
 export function reactionFilter(ctx: ProjectionContext, filters: ViewFilters): (reaction: Reaction) => boolean {
   const allowed = allowedByLookup(ctx, filters);

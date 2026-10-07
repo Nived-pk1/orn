@@ -2,6 +2,7 @@ export * from './contracts';
 export { EDGE_ID_PREFIX, graphEdgeId } from './ids';
 export type { EdgeIdentity } from './ids';
 export { traverse } from './traversal';
+export { sameProjection } from './same-projection';
 export { createProjectionRegistry } from './registry';
 export type { BuildProjectionResult, ProjectionRegistry } from './registry';
 export { bundleEdges, drawnAsNode, flagsOf, projectionKey, referencing, sortEdges, sortNodes } from './kit';

@@ -313,19 +313,32 @@ describe('filters, limits and edge data', () => {
     expect(p.edges).toHaveLength(2);
   });
 
-  it('INV-22: maxEdges keeps a prefix, counts what it hid on the hubs and reports the truncation', () => {
+  // Step 5.4c (approved semantic change): maxEdges bounds drawn PATHS (pairs), not raw arrows. One pair of two
+  // arrows under maxEdges 1 is drawn as one edge inside a bundle that knows its total: nothing is hidden.
+  it('INV-22 (step 5.4c): maxEdges bounds drawn pairs; one pair under maxEdges 1 is a bundle of 2 with one edge and no truncation', () => {
     const p = nav(two, { limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxEdges: 1 } });
     expect(p.edges).toHaveLength(1);
-    expect(p.truncation).toEqual({ reason: 'max_edges', hiddenNodeEstimate: 0 });
-    expect(p.nodes.find((n) => n.id === 'cls_hub-a')?.hidden.outgoing).toBe(1);
-    expect(p.nodes.find((n) => n.id === 'cls_hub-b')?.hidden.incoming).toBe(1);
+    expect(p.bundles.map((b) => [b.edgeIds.length, b.total])).toEqual([[1, 2]]);
+    expect(p.truncation).toBeNull();
+    expect(p.nodes.every((n) => n.hidden.outgoing === 0 && n.hidden.incoming === 0)).toBe(true);
+  });
+
+  it('INV-22 (step 5.4c): pairs beyond maxEdges are counted exactly on the hubs and in the truncation', () => {
+    const three = stateOf(...base, hubC, anchors[2] as AnyRecord, inC('sp-c'),
+      rx({ slug: 'r1', reactants: [sp('sp-a')], products: [sp('sp-b')] }), rx({ slug: 'r2', reactants: [sp('sp-a')], products: [sp('sp-b')] }),
+      rx({ slug: 'r3', reactants: [sp('sp-a')], products: [sp('sp-c')] }), rx({ slug: 'r4', reactants: [sp('sp-b')], products: [sp('sp-c')] }));
+    const p = nav(three, { limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxEdges: 2 } });
+    expect(p.edges).toHaveLength(2);
+    expect(p.truncation).toEqual({ reason: 'max_edges', hiddenNodeEstimate: 0, hiddenPairs: 1, hiddenEdges: 1 });
+    expect(p.nodes.find((n) => n.id === 'cls_hub-b')?.hidden).toEqual({ outgoing: 1, incoming: 0 });
+    expect(p.nodes.find((n) => n.id === 'cls_hub-c')?.hidden).toEqual({ outgoing: 0, incoming: 1 });
   });
 
   it('INV-22: maxNodes hides whole hubs (and the arrows to them), never silently', () => {
     const p = nav(two, { limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: 1 } });
     expect(p.nodes).toHaveLength(1);
     expect(p.edges).toEqual([]);
-    expect(p.truncation).toEqual({ reason: 'max_nodes', hiddenNodeEstimate: 1 });
+    expect(p.truncation).toEqual({ reason: 'max_nodes', hiddenNodeEstimate: 1, hiddenPairs: 1, hiddenEdges: 2 });
   });
 
   it('an aborted request reports it', () => {
