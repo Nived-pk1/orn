@@ -120,6 +120,16 @@ export function saveTextOf(status: AppStatus): string {
   }
 }
 
+/** The workers as the status line says them: the compute worker is the replica; an engine worker is started at its first need (PERFORMANCE §7). */
+export function workersTextOf(status: AppStatus): string {
+  const replica = { in_sync: 'ok', reloading: 'reloading', down: 'down', absent: 'absent' }[status.replica.state];
+  const worker = (name: WorkerName): string => {
+    const view = status.workers[name];
+    return view.state === 'ok' ? (view.started ? 'ok' : 'not started') : view.state;
+  };
+  return `Workers: compute ${replica}, chem ${worker('chem')}, layout ${worker('layout')}, search ${worker('search')}`;
+}
+
 export function operationTextOf(status: AppStatus): string | null {
   const op = status.operation;
   if (op === null) return null;

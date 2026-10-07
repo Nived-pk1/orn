@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_STATUS, type AppStatus } from '@/app/services';
-import { bannersOf, bootLinesOf, operationTextOf, saveTextOf } from './banners';
+import { bannersOf, bootLinesOf, operationTextOf, saveTextOf, workersTextOf } from './banners';
 
 const status = (patch: Partial<AppStatus>): AppStatus => ({ ...INITIAL_STATUS, stage: 'ready', mode: 'writer', ...patch });
 const save = (patch: Partial<NonNullable<AppStatus['save']>>): NonNullable<AppStatus['save']> => ({
@@ -115,5 +115,25 @@ describe('saveTextOf and operationTextOf', () => {
     expect(operationTextOf(status({ operation: { kind: 'import_apply', stage: 'snapshot', progress: { done: 3, total: 10 } } }))).toBe('Applying an import: snapshot, 3 of 10');
     expect(operationTextOf(status({ operation: { kind: 'export', stage: 'building', progress: null } }))).toBe('Exporting: building');
     expect(operationTextOf(status({ operation: { kind: 'restore', stage: 'reading', progress: { done: 1, total: null } } }))).toBe('Restoring a snapshot: reading, 1');
+  });
+});
+
+describe('workersTextOf', () => {
+  const worker = (state: 'absent' | 'ok' | 'restarting' | 'down', started: boolean) => ({ state, started, reason: 'r' });
+  it('names the compute worker (the replica) and the three engine workers', () => {
+    const healthy = status({
+      replica: { state: 'in_sync', reason: '', revision: 1 },
+      workers: { chem: worker('ok', true), layout: worker('ok', false), search: worker('ok', true) },
+    });
+    expect(workersTextOf(healthy)).toBe('Workers: compute ok, chem ok, layout not started, search ok');
+  });
+
+  it('says every other state in words', () => {
+    const odd = status({
+      replica: { state: 'down', reason: 'x', revision: null },
+      workers: { chem: worker('restarting', true), layout: worker('absent', false), search: worker('down', true) },
+    });
+    expect(workersTextOf(odd)).toBe('Workers: compute down, chem restarting, layout absent, search down');
+    expect(workersTextOf(status({ replica: { state: 'reloading', reason: '', revision: 1 }, workers: INITIAL_STATUS.workers }))).toMatch(/^Workers: compute reloading,/);
   });
 });

@@ -3,7 +3,7 @@
  * `banners.ts`, which is a pure function of `AppStatus`.
  */
 import { useCounts, useSubscribable } from '@/ui/hooks';
-import { bannersOf, bootLinesOf, operationTextOf, saveTextOf, type BannerAction } from './banners';
+import { bannersOf, bootLinesOf, operationTextOf, saveTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
 
 export function StatusLine() {
@@ -19,6 +19,7 @@ export function StatusLine() {
         <li>
           Findings: E {counts.error} / W {counts.warning} / I {counts.info} / Review {counts.review_required}
         </li>
+        <li>{workersTextOf(status)}</li>
         {status.stage === 'booting' ? <li>Starting up</li> : null}
         {readOnly ? <li>Read-only</li> : null}
         {status.singleTab ? <li>Single tab only</li> : null}

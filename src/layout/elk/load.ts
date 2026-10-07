@@ -17,8 +17,31 @@ function constructorOf(imported: unknown): Constructor {
   return candidate as Constructor;
 }
 
+/**
+ * elkjs 0.12.0's `elk-worker` ends with `if (typeof document === 'undefined' && typeof self !== 'undefined') { self.onmessage = ... }
+ * else if (module.exports) { module.exports = { Worker } }`. Inside a web worker (no `document`, but `self`) it therefore decides it
+ * IS ELK's own worker, installs its own `onmessage` on OUR worker scope and exports nothing, so the bundled build finds no in-thread
+ * `Worker` class ("_Worker is not a constructor"; found by the first real-browser load, step 5.1d review). The bundle is browserify
+ * style: `elk-worker` runs on the first `new Elk()`, not at import. So the first import AND the first construction run with an empty
+ * `document` in the scope: the module takes its `module.exports` branch, `self.onmessage` stays ours, and elkjs stays pinned and
+ * unpatched. The stub is removed in a `finally`; nothing else runs in the worker meanwhile (the scope is single-threaded and the
+ * only await inside is the module import). Outside a worker scope (Node, jsdom) nothing is stubbed.
+ */
+async function loadConstructor(): Promise<Constructor> {
+  const scope = globalThis as { document?: unknown };
+  const inWorkerScope = typeof scope.document === 'undefined' && typeof self !== 'undefined';
+  if (inWorkerScope) scope.document = {};
+  try {
+    const Elk = constructorOf(await import('elkjs/lib/elk.bundled.js'));
+    new Elk(); // runs `elk-worker` (and GWT's initialisation) once, under the stub; later instances reuse its exports
+    return Elk;
+  } finally {
+    if (inWorkerScope) delete scope.document;
+  }
+}
+
 /** Loads ELK once and answers a function that makes an instance (the adapter makes a fresh one per layout). */
 export async function loadElk(): Promise<() => ElkLike> {
-  const Elk = constructorOf(await import('elkjs/lib/elk.bundled.js'));
+  const Elk = await loadConstructor();
   return () => new Elk();
 }
