@@ -1,0 +1,170 @@
+/* The Scene renderer's look (step 5.4a). Colours come from the tokens only; meaning is carried by line style, shape and text too. */
+.root {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--color-paper);
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+}
+
+/* Edges: the dash pattern and the width are attributes (geometry.ts); the colour is here. */
+.edge {
+  fill: none;
+  stroke: var(--color-ink-2);
+  stroke-linejoin: round;
+}
+
+.edgeHeavy {
+  stroke: var(--color-ink);
+}
+
+.edgeDotted {
+  stroke-linecap: round;
+}
+
+.markerFilled {
+  fill: var(--color-ink-2);
+  stroke: none;
+}
+
+.markerOpen {
+  fill: none;
+  stroke: var(--color-ink-2);
+  stroke-width: 1.5;
+}
+
+/* Node glyphs */
+.box {
+  fill: var(--color-paper);
+  stroke: var(--color-ink-2);
+  stroke-width: 1;
+}
+
+.hubBlock {
+  fill: var(--color-surface);
+  stroke: none;
+}
+
+.hubRule {
+  fill: var(--color-ink);
+  stroke: none;
+}
+
+.chip {
+  fill: var(--color-surface);
+  stroke: var(--color-ink-2);
+  stroke-width: 1;
+}
+
+.member {
+  fill: var(--color-paper);
+  stroke: var(--color-rule);
+  stroke-width: 1;
+}
+
+.overflow,
+.unclassified {
+  fill: var(--color-paper);
+  stroke: var(--color-ink-2);
+  stroke-width: 1;
+}
+
+.target {
+  stroke: var(--color-ink);
+  stroke-width: 2;
+}
+
+.onPath {
+  stroke-width: 2;
+}
+
+.dimmed {
+  opacity: 0.5;
+}
+
+.depiction {
+  pointer-events: none;
+}
+
+/* Text */
+.label {
+  fill: var(--color-ink);
+}
+
+.sublabel {
+  font-family: var(--font-mono);
+  fill: var(--color-ink-2);
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.em {
+  font-style: italic;
+}
+
+.script {
+  font-size: 75%;
+}
+
+.arrowText {
+  fill: var(--color-ink-2);
+  text-anchor: middle;
+}
+
+/* Badges */
+.badgeShape {
+  fill: var(--color-paper);
+  stroke: var(--color-ink);
+  stroke-width: 1;
+}
+
+.badgeShapeReview {
+  stroke: var(--color-review);
+}
+
+.badgeShapeWarning {
+  stroke: var(--color-warning);
+}
+
+.badgeShapeError {
+  stroke: var(--color-error);
+}
+
+.badgeMark {
+  fill: var(--color-ink);
+  font-size: 10px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.count {
+  fill: var(--color-ink);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+}
+
+/* Overlay: selection is a solid outline, the focus ring a dashed one, so neither depends on colour. */
+.selected {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+
+.selectedEdge {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 5;
+  stroke-opacity: 0.35;
+  stroke-linejoin: round;
+}
+
+.focus {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: var(--focus-ring-width);
+  stroke-dasharray: 5 3;
+}

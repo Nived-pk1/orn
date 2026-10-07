@@ -70,11 +70,12 @@
     "5.1d",
     "5.2",
     "5.4c",
-    "5.3"
+    "5.3",
+    "5.4a"
   ],
   "nextPhase": 5,
-  "nextStep": "5.4a",
-  "nextStepTitle": "Phase 5, step 5.4a - SVG renderer, static (src/render/svg): layered React SVG over the Scene (edges, nodes, labels, badges, overlay), glyphs of UI_ARCHITECTURE section 3, text as tspans from runs, LOD as an input, depictions as <image> (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.3 (Scene and layout-request builders, src/render/scene) is done: read its REVIEW REQUIRED items in docs/PROGRESS.md first (the Scene contract amendment: SceneEdge.labelAt, Scene.truncation, state without selected and focused; buildScene returns a value and takes the node sizes in its options; the arrow-text port has no producer yet; node boxes are capped at a maximum width, so the renderer clips). The Scene is the renderer's only input; src/render never imports src/chem at run time. After 5.4a: 5.4b, 5.5a (its plan row carries the 5.4c review decisions: stale expansion entries removed by the hook, an UNFILTERED default request, the number of drawn pairs).",
+  "nextStep": "5.4b",
+  "nextStepTitle": "Phase 5, step 5.4b - Viewport (src/render/viewport): d3-zoom writing ONE transform imperatively to the world group of src/render/svg (SceneSvg exposes worldRef; nothing there moves it), zoom in / out / fit / focus selection, LOD from scale with the RENDER_BUDGET cap, a uniform-grid culling index, a viewport store that is not React state, depiction requests only for visible species at LOD 3 through a bounded queue (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.4a (static SVG renderer) is done: read its REVIEW REQUIRED 1 in docs/PROGRESS.md (a node box does not grow for a structure). The renderer takes the LOD, selected ids and the focused id as props; the layers are memoised and report commits through onLayerCommit (the render counters). After 5.4b: 5.5a (its plan row carries the 5.4c review decisions; the open choices about arrow text are in openItems, Step 5.3 review follow-up a).",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -119,7 +120,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command at step 5.3 (Vitest 4.1.11: 288 files, 4,346 tests; Vitest 213.7 s; before the step, after the 5.4c review follow-ups, 284 files, 4,234 tests; those follow-ups: 283 -> 284 files, 4,220 -> 4,234 tests); e2e and build:smoke not run in step 5.3 (pure builders, no UI); the earlier figures: step 5.4c 283 files, 4,220 tests; step 5.2 277 files, 4,173 tests; e2e and build:smoke not run in step 5.4c (core only; the last e2e is the step 5.2 one)",
+    "npmRunCheck": "passed as ONE command at step 5.4a (Vitest 4.1.11: 293 files, 4,454 tests; Vitest 159.2 s; before the step, after the 5.3 review follow-ups, 289 files, 4,385 tests; those follow-ups: 288 -> 289 files, 4,346 -> 4,385 tests); build:smoke run once in step 5.4a, green, initial JS 312.99 kB gzip; e2e not run (no screen uses the renderer); the earlier figures: step 5.3 288 files, 4,346 tests; step 5.4c 283 files, 4,220 tests; step 5.2 277 files, 4,173 tests",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -328,6 +329,7 @@
     "Step 5.2: initial JS 312.7 kB gzip (Vite's figure; 304.9 kB at gzip level 9) against the 400 KB target, measured once; no earlier figure exists to compare. Gate E re-measures. -> step 5.10b",
     "Step 5.3 review follow-up a (PROGRESS.md \"Step 5.3 review follow-ups\"): the arrow-text producer exists (src/core/graph/arrow-text.ts) and ScenePorts.arrowTextOf returns its structure. OPEN CHOICES for the reviewer before step 5.5a wires it: (1) a reactant not drawn as a node goes BELOW the arrow; (2) a species is written by its formula, anything else by its name, originalText wins; (3) a stage number is a separator part, only with showStageNumbers and more than one stage; (4) conditions (temperature, time, medium) are not produced (placement and format not in the docs).",
     "Step 5.3: node boxes are capped at a maximum width per box kind (BOXES in src/render/scene/sizes.ts); a longer text is in the Scene label in full and the renderer (5.4a) must clip it and keep the full text reachable (aria label, title). The 5.4c review's figure of about 1.5 s for 800 pairs between 60 hubs is the layout worker; the pure fallback layout runs the whole design-dense overview (projection, sizes, request, layout, scene) in 12.6 ms mean / 21.5 ms p99 here, so the 5.5a decision on the number of drawn pairs concerns ELK.",
-    "If a scope badge finer than outside_scope is ever drawn, `relationship` (prerequisite_of) returns to READS_KINDS in src/core/graph/navigator/reads.ts (step 5.3 review, 2026-10-07)."
+    "If a scope badge finer than outside_scope is ever drawn, `relationship` (prerequisite_of) returns to READS_KINDS in src/core/graph/navigator/reads.ts (step 5.3 review, 2026-10-07).",
+    "Step 5.4a REVIEW REQUIRED 1 (PROGRESS.md \"Phase 5, step 5.4a\"): a node box does not grow for a structure (sizes come from name and formula), so a depiction at LOD 3 is drawn small inside the same box; 5.5a decides with a real look whether LOD 3 species get a taller box. Real text metrics, hit areas and the keyboard model are 5.5a and 5.7; axe runs when a screen uses the renderer."
   ]
 }

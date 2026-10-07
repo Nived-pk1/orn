@@ -36,6 +36,9 @@ export type NodeGlyph =
   | 'overflow'
   | 'unclassified';
 
+/** The box a node is drawn in (note E6; step 5.3 item c): decides its font, padding and glyph shape. Added in step 5.4a. */
+export type BoxKind = 'hub' | 'species' | 'reagent' | 'member' | 'overflow' | 'unclassified';
+
 export interface SceneBadge {
   readonly kind: 'caveat' | 'mechanism' | 'review' | 'warning' | 'error' | 'outside_scope' | 'hidden_neighbours';
   readonly count?: number;
@@ -44,6 +47,8 @@ export interface SceneBadge {
 export interface SceneNode {
   readonly id: string;
   readonly glyph: NodeGlyph;
+  /** The box kind (a member of a hub and a species outside one share a glyph but not a box). */
+  readonly box: BoxKind;
   readonly x: number;
   readonly y: number;
   readonly width: number;

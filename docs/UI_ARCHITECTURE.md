@@ -143,6 +143,7 @@ Pointer state machine on the canvas: `idle → pressed → (moved > 4 px) pannin
 | Shift+F10 or context-menu key | context menu |
 
 Touch: one-finger pan, pinch zoom, tap select, double-tap expand, long-press (500 ms) context menu. Focus history (Alt+←/→) is UI state and survives view switches.
+- *2026-10-07 (step 5.4a, additive):* `SceneNode.box` (`BoxKind`: hub, species, reagent, member, overflow, unclassified) is added, because a member of a hub and a species outside one share a glyph but not a box, and the renderer needs the box for fonts and shape. `src/render/svg` draws the Scene in five memoised layers (edges, nodes, labels, badges, overlay) inside ONE root `<svg>` and ONE world `<g>`; selection and focus are props drawn by the overlay only; a depiction is only an `<image href>` served by a bounded LRU manager (500 keys) that is injected with its fetch, URL and timer functions.
 
 ## 11. Accessibility
 

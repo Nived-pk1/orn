@@ -93,6 +93,7 @@ export function buildScene(projection: Projection, layout: LayoutResult, options
     nodes.push({
       id: node.id,
       glyph: content.glyph,
+      box: content.box,
       x: at.x,
       y: at.y,
       width: size.width,

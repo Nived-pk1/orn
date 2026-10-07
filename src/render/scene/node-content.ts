@@ -4,11 +4,11 @@
  * Labels of virtual nodes are fixed words, never derived from a record.
  */
 import type { GraphNode } from '@/core/graph/contracts';
-import type { FormattedText, NodeGlyph, ScenePorts } from './contracts';
+import type { BoxKind, FormattedText, NodeGlyph, ScenePorts } from './contracts';
 import { formulaRuns, plainRuns } from './formatted-text';
 
-/** The boxes of note E6 and step 5.3 item c. Glyphs without a box of their own (reaction, concept, ...) use `species`. */
-export type BoxKind = 'hub' | 'species' | 'reagent' | 'member' | 'overflow' | 'unclassified';
+export type { BoxKind };
+/** Glyphs without a box of their own (reaction, concept, ...) use the `species` box. */
 
 export interface NodeContent {
   readonly glyph: NodeGlyph;

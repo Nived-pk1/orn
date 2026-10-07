@@ -159,6 +159,16 @@ describe('nodes', () => {
   const { scene } = pipe(projection, withKeys);
   const at = (id: string) => scene.nodes.find((n) => n.id === id);
 
+  it('carries the box kind the renderer draws it in (step 5.4a): a member and a species outside a hub share a glyph, not a box', () => {
+    expect(scene.nodes.map((n) => [n.id, n.glyph, n.box])).toEqual([
+      ['cls_a', 'class_hub', 'hub'],
+      ['spc_f', 'species', 'species'],
+      ['spc_m', 'species', 'member'],
+      ['virtual:overflow:cls_a', 'overflow', 'overflow'],
+      ['virtual:unclassified', 'unclassified', 'unclassified'],
+    ]);
+  });
+
   it('has a glyph, a box, a label and a sublabel per node kind', () => {
     expect(at('cls_a')).toMatchObject({ glyph: 'class_hub', label: [{ text: 'Alkenes' }], emphasis: 'anchor', minLod: 0 });
     expect(at('cls_a')?.sublabel?.map((r) => r.text).join('')).toBe('CnH2n');

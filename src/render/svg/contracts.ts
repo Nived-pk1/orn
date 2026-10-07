@@ -1,0 +1,41 @@
+/**
+ * The SVG renderer's inputs (step 5.4a; UI_ARCHITECTURE §6): a Scene, the LOD, selection and focus as props, and an optional
+ * depiction source. No data access, no services, no chemistry: the renderer draws what the Scene says.
+ */
+import type { Ref } from 'react';
+import type { LodLevel, Scene } from '@/render/scene';
+
+export const LAYER_NAMES = ['edges', 'nodes', 'labels', 'badges', 'overlay'] as const;
+export type LayerName = (typeof LAYER_NAMES)[number];
+
+/** What a depiction is right now. `idle`: nothing asked for it yet (or it was dropped from the cache); drawn like `loading`. */
+export type DepictionStatus =
+  | { readonly state: 'idle' }
+  | { readonly state: 'loading' }
+  | { readonly state: 'ready'; readonly url: string }
+  | { readonly state: 'unavailable'; readonly reason: string };
+
+/** What the layers need of a depiction manager (`createDepictionManager`); a test passes a stub. */
+export interface DepictionSource {
+  /** Asks for a depiction (idempotent: starts the fetch once, and marks the key most recently used). */
+  readonly request: (key: string) => void;
+  /** The current status; the same object until the status changes (useSyncExternalStore). */
+  readonly snapshot: (key: string) => DepictionStatus;
+  readonly subscribe: (key: string, listener: () => void) => () => void;
+}
+
+export interface SceneSvgProps {
+  readonly scene: Scene;
+  readonly lod: LodLevel;
+  /** Node IDs and edge IDs drawn as selected. Drawn by the overlay only. */
+  readonly selectedIds: ReadonlySet<string>;
+  /** The node or edge that has the keyboard focus (the ring is drawn by the overlay only). */
+  readonly focusedId?: string;
+  readonly depictions?: DepictionSource;
+  /** The accessible name of the whole drawing, e.g. "Navigator: 14 hubs, 31 arrows". */
+  readonly ariaLabel: string;
+  /** The ONE world group that step 5.4b transforms (d3-zoom writes to it imperatively); nothing here moves it. */
+  readonly worldRef?: Ref<SVGGElement>;
+  /** Called after a layer commits (not when a memoised layer is skipped): the render counters of the tests. Keep it stable. */
+  readonly onLayerCommit?: (layer: LayerName) => void;
+}
