@@ -1,0 +1,18 @@
+.region {
+  position: fixed;
+  right: var(--space-4);
+  bottom: calc(var(--status-bar-height) + var(--space-4));
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(420px, calc(100vw - 2 * var(--space-4)));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  border: 1px solid var(--color-ink-2);
+  border-radius: var(--radius-2);
+  background: var(--color-paper);
+}

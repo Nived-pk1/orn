@@ -1,0 +1,67 @@
+/*
+ * Design tokens (UI_ARCHITECTURE §3). The ONLY file with colour literals: scripts/check-colours.mjs (part of `npm run check`)
+ * fails on a colour written anywhere else under src. Light theme is required; a dark theme would redefine the colour tokens here.
+ * src/ui/design/tokens.test.ts computes the WCAG 2.2 AA contrast of every text/background pair listed there.
+ */
+:root {
+  --color-paper: #fcfcfb;
+  --color-surface: #f6f7f5;
+  --color-ink: #16191d;
+  --color-ink-2: #5a626b;
+  --color-rule: #d9dde1;
+  --color-accent: #2b4fd8;
+  --color-warning: #b45309;
+  --color-error: #b42318;
+  --color-review: #7a3fb0;
+  --color-on-accent: var(--color-paper);
+  --color-hover: color-mix(in srgb, var(--color-ink) 6%, var(--color-paper));
+  --color-scrim: color-mix(in srgb, var(--color-ink) 40%, transparent);
+
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --text-12: 0.75rem;
+  --text-13: 0.8125rem;
+  --text-14: 0.875rem;
+  --text-16: 1rem;
+  --text-20: 1.25rem;
+  --text-24: 1.5rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --radius-1: 2px;
+  --radius-2: 4px;
+
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--color-accent);
+  --hit-min: 24px;
+
+  --motion-fast: 120ms;
+  --motion-slow: 200ms;
+
+  --z-drawer: 20;
+  --z-menu: 40;
+  --z-toast: 60;
+
+  --top-bar-height: 48px;
+  --status-bar-height: 32px;
+  --mode-rail-width: 168px;
+  --inspector-min: 360px;
+  --inspector-max: 520px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --hit-min: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-slow: 0ms;
+  }
+}
