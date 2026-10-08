@@ -47,13 +47,13 @@ const shown = (parts: ArrowText['above']): string[] => parts.map((p) => `${p.kin
 describe('the demo reactions', () => {
   const table: readonly (readonly [string, string, string, readonly string[], readonly string[]])[] = [
     // reaction, carried participant, label, above, below
-    ['rxn_ethanol-to-ethanal-pcc', 'prt_ethanol-to-ethanal-pcc-1', 'PCC above, the solvent below', ['name:PCC'], ['name:Dichloromethane']],
-    ['rxn_ethene-hydration', 'prt_ethene-hydration-1', 'water is never a node: above, first; then the catalyst', ['formula:H2O', 'name:H₃PO₄ catalyst'], []],
-    ['rxn_ethene-hydration', 'prt_ethene-hydration-2', 'carrying water: the ethene is a node, so it is left out', ['name:H₃PO₄ catalyst'], []],
-    ['rxn_propene-hbr-peroxide', 'prt_propene-hbr-peroxide-1', 'reagent and initiator above', ['formula:HBr', 'name:Benzoyl peroxide'], []],
-    ['rxn_methylmgbr-ethanal', 'prt_methylmgbr-ethanal-2', 'two stages, no scheme: the work-up above, the solvent below', ['formula:H3O+'], ['name:Diethyl ether']],
-    ['rxn_methylmgbr-propanone', 'prt_methylmgbr-propanone-2', 'two stages with a scheme: placements and stage numbers', ['separator:1.', 'name:Diethyl ether'], ['separator:2.', 'formula:H3O+']],
-    ['rxn_haloform-ethanol', 'prt_haloform-ethanol-1', 'two reagents above, in the order of the record', ['formula:I2', 'formula:NaOH'], []],
+    ['rxn_ethanol-to-ethanal-pcc', 'prt_ethanol-to-ethanal-pcc-1', 'PCC above, the solvent below', ['name:PCC'], ['name:Dichloromethane', 'condition:anhydrous']],
+    ['rxn_ethene-hydration', 'prt_ethene-hydration-1', 'water is never a node: above, first; then the catalyst', ['formula:H2O', 'name:H₃PO₄ catalyst'], ['condition:573 K', 'condition:60–70 atm', 'condition:acidic medium']],
+    ['rxn_ethene-hydration', 'prt_ethene-hydration-2', 'carrying water: the ethene is a node, so it is left out', ['name:H₃PO₄ catalyst'], ['condition:573 K', 'condition:60–70 atm', 'condition:acidic medium']],
+    ['rxn_propene-hbr-peroxide', 'prt_propene-hbr-peroxide-1', 'reagent and initiator above', ['formula:HBr', 'name:Benzoyl peroxide'], ['condition:hv', 'condition:peroxide present']],
+    ['rxn_methylmgbr-ethanal', 'prt_methylmgbr-ethanal-2', 'two stages, no scheme: the work-up above, the solvent below', ['formula:H3O+'], ['name:Diethyl ether', 'condition:anhydrous', 'condition:acidic medium']],
+    ['rxn_methylmgbr-propanone', 'prt_methylmgbr-propanone-2', 'two stages with a scheme: placements and stage numbers', ['separator:1.', 'name:Diethyl ether'], ['separator:1.', 'condition:anhydrous', 'separator:2.', 'formula:H3O+', 'condition:acidic medium']],
+    ['rxn_haloform-ethanol', 'prt_haloform-ethanol-1', 'two reagents above, in the order of the record', ['formula:I2', 'formula:NaOH'], ['condition:warm', 'condition:basic medium']],
   ];
   it.each(table)('%s carrying %s: %s', (reactionId, carried, _label, above, below) => {
     const text = textOfDemo(reactionId, carried);
@@ -100,6 +100,9 @@ describe('condition variants', () => {
   });
 });
 
+/** A stage that states no condition. */
+const NO_PARAMETERS: Reaction['stages'][number]['parameters'] = { solventCharacter: [], activation: [], other: [], parsedFields: [] };
+
 describe('a synthetic reaction', () => {
   const base = DEMO.records.reaction['rxn_ethanol-to-ethanal-pcc' as keyof typeof DEMO.records.reaction] as Reaction;
   const part = (n: number, role: Reaction['participants'][number]['role'], over: Partial<Reaction['participants'][number]> = {}): Reaction['participants'][number] => ({
@@ -133,8 +136,8 @@ describe('a synthetic reaction', () => {
     expect(text.below.map((p) => p.text)).toEqual(['name-rgt_x3']);
     // Within a stage only: a reactant of stage 2 does not jump before the reagent of stage 1.
     const staged = reactionOf([part(1, 'reagent'), part(2, 'reactant')], [
-      { id: 'stg_x1' as Reaction['stages'][number]['id'], participantIds: ['prt_x-1' as ParticipantId] },
-      { id: 'stg_x2' as Reaction['stages'][number]['id'], participantIds: ['prt_x-2' as ParticipantId] },
+      { id: 'stg_x1' as Reaction['stages'][number]['id'], participantIds: ['prt_x-1' as ParticipantId], parameters: NO_PARAMETERS },
+      { id: 'stg_x2' as Reaction['stages'][number]['id'], participantIds: ['prt_x-2' as ParticipantId], parameters: NO_PARAMETERS },
     ] as unknown as Reaction['stages']);
     const two = arrowTextOf(staged, contextOf({ shownAsNode: (ref) => ref.id !== 'rgt_x2', schemes: [scheme([], { showStageNumbers: true })] }));
     expect(shown(two.above)).toEqual(['separator:1.', 'name:name-rgt_x1', 'separator:2.', 'name:name-rgt_x2']);
@@ -188,7 +191,7 @@ describe('a synthetic reaction', () => {
   });
 
   it('stage numbers only when the scheme asks and there is more than one stage', () => {
-    const stageOf = (ids: string[], kind: 'reaction' | 'workup'): Reaction['stages'][number] => ({ id: `stg_${ids[0]}` as Reaction['stages'][number]['id'], kind, participantIds: ids as ParticipantId[], parameters: { other: [], parsedFields: [] } as never });
+    const stageOf = (ids: string[], kind: 'reaction' | 'workup'): Reaction['stages'][number] => ({ id: `stg_${ids[0]}` as Reaction['stages'][number]['id'], kind, participantIds: ids as ParticipantId[], parameters: NO_PARAMETERS });
     const r = reactionOf([part(1, 'reagent'), part(2, 'workup_reagent'), part(3, 'reagent')], [stageOf(['prt_x-1', 'prt_x-3'], 'reaction'), stageOf(['prt_x-2'], 'workup')]);
     const plain = arrowTextOf(r, contextOf());
     expect(plain.above.map((p) => p.text)).toEqual(['name-rgt_x1', 'name-rgt_x3', 'name-rgt_x2']);
@@ -199,7 +202,7 @@ describe('a synthetic reaction', () => {
   });
 
   it('a stage number never stands alone at the cap', () => {
-    const stageOf = (ids: string[]): Reaction['stages'][number] => ({ id: `stg_${ids[0]}` as Reaction['stages'][number]['id'], kind: 'reaction', participantIds: ids as ParticipantId[], parameters: { other: [], parsedFields: [] } as never });
+    const stageOf = (ids: string[]): Reaction['stages'][number] => ({ id: `stg_${ids[0]}` as Reaction['stages'][number]['id'], kind: 'reaction', participantIds: ids as ParticipantId[], parameters: NO_PARAMETERS });
     const r = reactionOf([part(1, 'reagent'), part(2, 'reagent'), part(3, 'reagent'), part(4, 'reagent')], [stageOf(['prt_x-1', 'prt_x-2', 'prt_x-3']), stageOf(['prt_x-4'])]);
     const text = arrowTextOf(r, contextOf({ schemes: [scheme([], { showStageNumbers: true })] }));
     expect(shown(text.above)).toEqual(['separator:1.', 'name:name-rgt_x1', 'name:name-rgt_x2', 'name:name-rgt_x3', 'more:+1 more']);

@@ -177,7 +177,8 @@ describe('what an edit rebuilds (counters)', () => {
     mustCommit(store.dispatch(envelope('move reagents', { type: 'record.update', record: { ...scheme, placements: moved } })));
     await settle();
     const after = model.getState().scene?.edges.find((e) => e.from === 'cls_ketones' && e.to === 'cls_alcohols');
-    expect(after?.below).toBeUndefined();
+    // the participants left the below side; the conditions of the stages stay there (step 5.5a part 3, item l)
+    expect(after?.below?.map((run) => run.text).join('') ?? '').toBe('1. anhydrous, 2. acidic medium');
     expect(model.stats().projections).toBe(before.projections);
     expect(model.stats().scenes).toBe(before.scenes + 1);
     model.stop();

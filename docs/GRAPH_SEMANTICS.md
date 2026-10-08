@@ -61,6 +61,8 @@ Selectivity styling (produces edges): `exclusive` solid heavy, `major` solid hea
 
 *Arrow text names (2026-10-08, step 5.5a review, item e; replaces the 5.4a decision (2) for every view that uses `arrowTextOf`).* `originalText` wins; a SOLVENT participant is written by its name; any other species, and a reagent backed by ONE species, by its formula when the formula has at most 7 characters, else by its name; a reagent without a species by its name. A length rule, never a name rule.
 
+*Arrow text conditions (2026-10-08, step 5.5a part 3, item l; decision 5 of the 5.4b review in PROGRESS.md; wording in `src/core/graph/condition-text.ts`).* The BELOW side, after the participant parts of the same stage: the stage's own fields, overridden field by field by the arrow's condition variant only when the arrow has exactly one variant and it overrides that stage; at most 3 condition parts a side and ONE `more` part a side that counts everything not shown; order temperature, pressure, light, medium, time, activation, atmosphere, anhydrous, other; `air` and the medium are written; a gas is a formula part; free text only when no structured part was written. Units and enum words the decision does not name are the schema's words (listed in PROGRESS).
+
 ## 5. Direction and the precursor view
 
 Arrows always point in the chemical direction (reactants → products). The **precursor explorer** traverses backwards from a target and lays the graph out right-to-left (`layoutDirection: 'reversed'`), but arrowheads still point forward. "Can be made from" never implies "can be converted back". Reversibility is shown only from `reversibility.kind` and `reverse_of` relationships (a ⇌ badge on the arrow, or a paired arrow for microscopic reverses).

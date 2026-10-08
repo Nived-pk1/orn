@@ -97,6 +97,27 @@ test.describe('the demo overview is readable', () => {
     await expectClean(seen);
   });
 
+  test('a single-edge arrow with a condition shows it at LOD 2 (Amines to Diazonium salts: 0–5 C; Alcohols to Ethers: 413 K), and nothing overlaps', async ({ page }) => {
+    const seen = await watch(page);
+    await openDemo(page);
+    await zoomInTo(page, 2);
+    const textOf = async (name: string): Promise<string> => {
+      const edge = page.locator(`svg [data-edge-id][aria-label^="${name}"]`).first();
+      const id = await edge.getAttribute('data-edge-id');
+      expect(id, name).not.toBeNull();
+      expect(await edge.getAttribute('aria-label'), 'a single edge, not a bundle').toMatch(/, 1 reaction/);
+      return (await page.locator(`svg [data-arrow-text-of="${id}"]`).textContent()) ?? '';
+    };
+    expect(await textOf('Amines to Diazonium salts')).toContain('0–5 C');
+    expect(await textOf('Alcohols to Ethers')).toContain('413 K');
+    const problems = problemsOf(await measure(page));
+    expect(problems.labelOverLabel).toEqual([]);
+    expect(problems.labelOverNode).toEqual([]);
+    expect(problems.outside).toEqual([]);
+    writeFileSync(resolve(SHOTS, 'readability-overview-lod2-with-conditions.json'), JSON.stringify(problems, null, 1));
+    await expectClean(seen);
+  });
+
   test('the fitted overview, 1280 x 800 (screenshot)', async ({ page }) => {
     await openDemo(page);
     await page.getByRole('button', { name: 'Fit' }).click();

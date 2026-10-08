@@ -10,10 +10,14 @@
  * reagent in the arrow's eyes). Names (step 5.5a review, item e; replaces the 5.4a provisional choice): `originalText` wins; a
  * SOLVENT is written by its name; any other species, and a reagent backed by ONE species, by its formula when it has at most
  * `MAX_FORMULA_CHARS` characters, else by its name; a reagent without a species by its name. A length rule, never a name rule.
- * A stage number ("1.") is a separator part when the scheme says `showStageNumbers`; conditions (temperature, time) are
- * not produced, their placement and format are not in the docs.
+ * A stage number ("1.") is a separator part when the scheme says `showStageNumbers`.
+ * Conditions (step 5.5a part 3, item l; the 5.4b review, decision 5): on the BELOW side, after the participant parts of the same stage;
+ * the stage's own fields, overridden field by field by the arrow's condition variant only when the arrow has exactly ONE variant and it
+ * overrides that stage (`condition-text.ts` has the wording). At most `MAX_CONDITION_PARTS` condition parts a side, and each side ends
+ * with at most ONE `more` part that counts everything not shown (participants and conditions).
  */
-import type { ConditionVariantId, ParticipantId, Reaction, ReactionScheme, RecordRef, SubstanceRef } from '../schema';
+import type { ConditionVariantId, ConditionParameters, ParticipantId, Reaction, ReactionScheme, RecordRef, SubstanceRef } from '../schema';
+import { conditionPartsOf, overrideParameters } from './condition-text';
 
 export type ArrowTextPartKind = 'name' | 'formula' | 'condition' | 'separator' | 'more';
 
@@ -46,8 +50,10 @@ export interface ArrowTextContext {
 /** A formula longer than this (in characters) is not written on an arrow: the name is (item e). */
 export const MAX_FORMULA_CHARS = 7;
 
-/** At most this many parts a side; the rest is one `more` part with its count. */
+/** At most this many participant parts a side; the rest is counted in the one `more` part of the side. */
 export const MAX_ARROW_PARTS = 3;
+/** At most this many condition parts a side (the below side); the rest is counted in the one `more` part of the side. */
+export const MAX_CONDITION_PARTS = 3;
 
 type Side = 'above' | 'below';
 type Position = ReactionScheme['placements'][number]['position'];
@@ -99,25 +105,43 @@ interface Placed {
   readonly part: ArrowTextPart;
 }
 
-function cap(parts: readonly ArrowTextPart[]): readonly ArrowTextPart[] {
+/** A part of one side with where it came from: a participant, or a condition (a gas of an atmosphere is a formula part but a condition). */
+interface Sourced {
+  readonly part: ArrowTextPart;
+  readonly from: 'participant' | 'condition';
+}
+
+function cap(parts: readonly Sourced[]): readonly ArrowTextPart[] {
   const out: ArrowTextPart[] = [];
-  let content = 0;
+  const shown = { participant: 0, condition: 0 };
+  const limit = { participant: MAX_ARROW_PARTS, condition: MAX_CONDITION_PARTS };
   let pending: ArrowTextPart | undefined;
   let hidden = 0;
-  for (const part of parts) {
+  for (const { part, from } of parts) {
     if (part.kind === 'separator') {
       pending = part;
       continue;
     }
-    if (content < MAX_ARROW_PARTS) {
+    if (shown[from] < limit[from]) {
       if (pending !== undefined) out.push(pending);
       out.push(part);
-      content += 1;
+      shown[from] += 1;
     } else hidden += 1;
     pending = undefined;
   }
   if (hidden > 0) out.push({ text: `+${hidden} more`, kind: 'more' });
   return out;
+}
+
+/** The parameters the arrow writes for each stage: the stage's own, with the one variant's fields laid over the stage it overrides. */
+function effectiveParameters(reaction: Reaction, variantIds: readonly string[]): readonly ConditionParameters[] {
+  const own = reaction.stages.map((stage) => stage.parameters);
+  if (variantIds.length !== 1) return own;
+  const variant = reaction.conditionVariants.find((v) => v.id === variantIds[0]);
+  if (variant === undefined) return own;
+  const target = variant.stageId === undefined ? reaction.stages.findIndex((s) => s.kind === 'reaction') : reaction.stages.findIndex((s) => s.id === variant.stageId);
+  if (target < 0) return own;
+  return own.map((parameters, index) => (index === target ? overrideParameters(parameters, variant.parameters) : parameters));
 }
 
 export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): ArrowText {
@@ -145,14 +169,19 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
   }
   // Stable sort: stage order, an undrawn reactant first, then the order of the record.
   const ordered = placed.map((item, index) => ({ item, index })).sort((a, b) => a.item.stage - b.item.stage || a.item.rank - b.item.rank || a.index - b.index);
-  const sides: Record<Side, ArrowTextPart[]> = { above: [], below: [] };
+  const sides: Record<Side, Sourced[]> = { above: [], below: [] };
   const lastStage: Record<Side, number> = { above: -1, below: -1 };
-  for (const { item } of ordered) {
-    if (numbered && item.stage < reaction.stages.length && item.stage !== lastStage[item.side]) {
-      sides[item.side].push({ text: `${item.stage + 1}.`, kind: 'separator' });
-    }
-    lastStage[item.side] = item.stage;
-    sides[item.side].push(item.part);
+  const push = (side: Side, stage: number, entry: Sourced): void => {
+    if (numbered && stage < reaction.stages.length && stage !== lastStage[side]) sides[side].push({ part: { text: `${stage + 1}.`, kind: 'separator' }, from: entry.from });
+    lastStage[side] = stage;
+    sides[side].push(entry);
+  };
+  // The conditions of a stage come after its participants on the below side: each stage's parts are pushed in turn.
+  const conditions = effectiveParameters(reaction, context.conditionVariantIds).map((parameters) => conditionPartsOf(parameters));
+  const stageCount = reaction.stages.length;
+  for (let stage = 0; stage <= stageCount; stage += 1) {
+    for (const { item } of ordered) if (item.stage === stage) push(item.side, stage, { part: item.part, from: 'participant' });
+    for (const condition of conditions[stage] ?? []) push('below', stage, { part: { text: condition.text, kind: condition.kind }, from: 'condition' });
   }
   return { above: cap(sides.above), below: cap(sides.below) };
 }

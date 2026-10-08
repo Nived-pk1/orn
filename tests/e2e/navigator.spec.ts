@@ -206,6 +206,9 @@ test.describe('selection and expansion', () => {
   test('a double click expands a hub and a second collapses it; the hub stays at the same screen point', async ({ page }) => {
     const seen = await watch(page);
     await openNavigator(page);
+    // The fitted overview is LOD 0 at 1280 x 720 now (the drawing is larger, with room for the arrow text), and LOD 0 draws hubs only:
+    // members are not in the DOM, so zoom in until they would be before counting nodes.
+    await zoomInTo(page, 1);
     const before = await nodeCount(page);
     const at = await centreOf(page, 'cls_aldehydes');
     await hubGroup(page, 'cls_aldehydes').dblclick();
@@ -224,6 +227,7 @@ test.describe('selection and expansion', () => {
     const expand = page.getByRole('button', { name: 'Expand' });
     const collapse = page.getByRole('button', { name: 'Collapse' });
     await expect(expand).toHaveAccessibleDescription('select a hub first');
+    await zoomInTo(page, 1); // LOD 0 draws hubs only (see the double click test)
     const before = await nodeCount(page);
     await hubGroup(page, 'cls_alkenes').click();
     await expect(collapse).toHaveAccessibleDescription('this hub is not expanded');

@@ -347,7 +347,7 @@
         </g>
       </g>
       <g data-arrow-text-of="edg_1a1946269d939e45">
-        <text class="_arrowText_e97cec" x="862" y="150.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="862" y="143.6" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">O, H</tspan>
@@ -355,45 +355,61 @@
           <tspan dy="-2.75">O</tspan>
           <tspan class="_script_e97cec" dy="-4.4">+</tspan>
         </text>
+        <text class="_arrowText_e97cec" x="862" y="157.9" font-size="11" data-side="below">
+          <tspan>heat, acidic medium</tspan>
+        </text>
       </g>
       <g data-arrow-text-of="edg_1c182e6b0d66f2d2">
         <text class="_arrowText_e97cec" x="405" y="159.6" font-size="11" data-side="above">
           <tspan>1. Diethyl ether</tspan>
         </text>
         <text class="_arrowText_e97cec" x="405" y="173.9" font-size="11" data-side="below">
-          <tspan>2. H</tspan>
+          <tspan>1. anhydrous, 2. H</tspan>
           <tspan class="_script_e97cec" dy="2.75">3</tspan>
           <tspan dy="-2.75">O</tspan>
           <tspan class="_script_e97cec" dy="-4.4">+</tspan>
+          <tspan dy="4.4">, acidic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_259afb9089da1c8f">
-        <text class="_arrowText_e97cec" x="630" y="166.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="630" y="159.6" font-size="11" data-side="above">
           <tspan>I</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">, NaOH</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="630" y="173.9" font-size="11" data-side="below">
+          <tspan>warm, basic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_34c28eb87d128965">
-        <text class="_arrowText_e97cec" x="745" y="182.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="745" y="175.6" font-size="11" data-side="above">
           <tspan>I</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">, NaOH</tspan>
         </text>
+        <text class="_arrowText_e97cec" x="745" y="189.9" font-size="11" data-side="below">
+          <tspan>warm, basic medium</tspan>
+        </text>
       </g>
       <g data-arrow-text-of="edg_35346729a67ed440">
-        <text class="_arrowText_e97cec" x="168" y="86.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="168" y="79.60000000000001" font-size="11" data-side="above">
           <tspan>NaNO</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">, HCl</tspan>
         </text>
+        <text class="_arrowText_e97cec" x="168" y="93.9" font-size="11" data-side="below">
+          <tspan>0–5 C, acidic medium</tspan>
+        </text>
       </g>
       <g data-arrow-text-of="edg_385c3a964b49c487">
-        <text class="_arrowText_e97cec" x="628" y="150.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="628" y="143.6" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">SO</tspan>
           <tspan class="_script_e97cec" dy="2.75">4</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="628" y="157.9" font-size="11" data-side="below">
+          <tspan>443 K</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_39cef07c4a0169b5">
@@ -402,38 +418,57 @@
         </text>
       </g>
       <g data-arrow-text-of="edg_4bfe46bbb77accf6">
-        <text class="_arrowText_e97cec" x="851" y="86.20299145299145" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="851" y="79.05299145299146" font-size="11" data-side="above">
           <tspan>NaOH</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="851" y="93.35299145299146" font-size="11" data-side="below">
+          <tspan>basic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_6f2e3faedc755975">
-        <text class="_arrowText_e97cec" x="398" y="166.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="398" y="159.6" font-size="11" data-side="above">
           <tspan>Lindlar's catalyst</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="398" y="173.9" font-size="11" data-side="below">
+          <tspan>H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_7cd7b1252e0235d2">
-        <text class="_arrowText_e97cec" x="412" y="103.72391304347826" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="412" y="96.57391304347827" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">O</tspan>
         </text>
+        <text class="_arrowText_e97cec" x="412" y="110.87391304347827" font-size="11" data-side="below">
+          <tspan>warm</tspan>
+        </text>
       </g>
       <g data-arrow-text-of="edg_82c2e4140c8148ff">
-        <text class="_arrowText_e97cec" x="739.84375" y="120.21666666666667" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="739.84375" y="113.06666666666668" font-size="11" data-side="above">
           <tspan>Acidified potassium dichromate</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="739.84375" y="127.36666666666667" font-size="11" data-side="below">
+          <tspan>reflux, acidic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_8ad76a96dd03ff47">
-        <text class="_arrowText_e97cec" x="844" y="54.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="844" y="47.6" font-size="11" data-side="above">
           <tspan>acidified K₂Cr₂O₇</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="844" y="61.9" font-size="11" data-side="below">
+          <tspan>acidic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_90472bc0bf31a157">
-        <text class="_arrowText_e97cec" x="628" y="182.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="628" y="175.6" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">SO</tspan>
           <tspan class="_script_e97cec" dy="2.75">4</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="628" y="189.9" font-size="11" data-side="below">
+          <tspan>413 K</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_914300ba806c20c5">
@@ -445,33 +480,45 @@
         </text>
       </g>
       <g data-arrow-text-of="edg_a00793d88d8e9add">
-        <text class="_arrowText_e97cec" x="745" y="182.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="745" y="175.6" font-size="11" data-side="above">
           <tspan>aq. KOH</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="745" y="189.9" font-size="11" data-side="below">
+          <tspan>basic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_a42c3acbd915486a">
-        <text class="_arrowText_e97cec" x="628" y="134.84411764705882" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="628" y="127.69411764705883" font-size="11" data-side="above">
           <tspan>I</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">, NaOH</tspan>
         </text>
+        <text class="_arrowText_e97cec" x="628" y="141.99411764705883" font-size="11" data-side="below">
+          <tspan>warm, basic medium</tspan>
+        </text>
       </g>
       <g data-arrow-text-of="edg_a84f517db32c8b54">
-        <text class="_arrowText_e97cec" x="175" y="150.75" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="175" y="143.6" font-size="11" data-side="above">
           <tspan>AlCl</tspan>
           <tspan class="_script_e97cec" dy="2.75">3</tspan>
         </text>
+        <text class="_arrowText_e97cec" x="175" y="157.9" font-size="11" data-side="below">
+          <tspan>anhydrous</tspan>
+        </text>
       </g>
       <g data-arrow-text-of="edg_cb2550c19b809402">
-        <text class="_arrowText_e97cec" x="1093.5625" y="88.5448717948718" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="1093.5625" y="81.3948717948718" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">SO</tspan>
           <tspan class="_script_e97cec" dy="2.75">4</tspan>
         </text>
+        <text class="_arrowText_e97cec" x="1093.5625" y="95.6948717948718" font-size="11" data-side="below">
+          <tspan>heat, acidic medium</tspan>
+        </text>
       </g>
       <g data-arrow-text-of="edg_d84c3dfd1ce69b46">
-        <text class="_arrowText_e97cec" x="1093.5625" y="88.5448717948718" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="1093.5625" y="81.3948717948718" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">O, H</tspan>
@@ -479,12 +526,18 @@
           <tspan dy="-2.75">O</tspan>
           <tspan class="_script_e97cec" dy="-4.4">+</tspan>
         </text>
+        <text class="_arrowText_e97cec" x="1093.5625" y="95.6948717948718" font-size="11" data-side="below">
+          <tspan>heat, acidic medium</tspan>
+        </text>
       </g>
       <g data-arrow-text-of="edg_fd425dfbd902c1cc">
-        <text class="_arrowText_e97cec" x="743" y="151.03444444444443" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="743" y="143.88444444444443" font-size="11" data-side="above">
           <tspan>I</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">, NaOH</tspan>
+        </text>
+        <text class="_arrowText_e97cec" x="743" y="158.18444444444444" font-size="11" data-side="below">
+          <tspan>warm, basic medium</tspan>
         </text>
       </g>
     </g>
