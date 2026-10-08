@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
-import type { CanonicalState, ChemicalClass, ReactionScheme, ViewPreset } from '@/core/schema';
+import { emptyRecordTables, type CanonicalState, type ChemicalClass, type ReactionScheme, type ViewPreset } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { envelope, mustCommit } from '@/test-support/command-kit';
 import { navigatorRig, type NavigatorRig } from '@/test-support/navigator-kit';
@@ -225,6 +225,51 @@ describe('failures and the skeleton', () => {
   it('with no exam version, no record is dimmed or claimed (scopeOf answers unmapped)', async () => {
     const { model } = await started();
     expect(model.getState().scene?.nodes.every((n) => !n.state.dimmed)).toBe(true);
+    model.stop();
+  });
+});
+
+describe('the expansion state and the selection (step 5.5a part 2)', () => {
+  it('removes an expansion entry that names no admitted hub, logs it, and builds the projection again without it', async () => {
+    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    const rig = navigatorRig(store);
+    rig.ui.expansion.setState({ expansion: { expanded: [{ nodeId: 'cls_alcohols', direction: 'both' }, { nodeId: 'not-a-hub', direction: 'both' }], collapsedEdgeIds: [] } });
+    const model = createNavigatorModel(rig.ports);
+    model.start();
+    await settle();
+    expect(rig.ui.expansion.getState().expansion.expanded).toEqual([{ nodeId: 'cls_alcohols', direction: 'both' }]);
+    expect(rig.logs.filter((line) => line.type === 'expansion_pruned')).toHaveLength(1);
+    expect(model.getState().error).toBeNull();
+    // one run only: the removal did not start a second layout
+    expect(rig.layout.requests).toHaveLength(1);
+    model.stop();
+  });
+
+  it('keeps every entry while the store holds no record: an empty store admits no hub and must not wipe what was saved', async () => {
+    const store = createCanonicalStore({ initial: { ...demoState(), records: emptyRecordTables() }, validateInitial: false });
+    const rig = navigatorRig(store);
+    const saved = { expanded: [{ nodeId: 'cls_alcohols', direction: 'both' as const }], collapsedEdgeIds: [] };
+    rig.ui.expansion.setState({ expansion: saved });
+    const model = createNavigatorModel(rig.ports);
+    model.start();
+    await settle();
+    expect(rig.ui.expansion.getState().expansion).toBe(saved);
+    expect(rig.logs.some((line) => line.type === 'expansion_pruned')).toBe(false);
+    model.stop();
+  });
+
+  it('clears a selection that is not in the new Scene and logs it; keeps one that is', async () => {
+    const { model, rig } = await started();
+    const hub = model.getState().hubIds[0] as string;
+    rig.ui.selection.getState().select({ kind: 'node', id: hub });
+    rig.ui.expansion.getState().toggle(model.getState().hubIds[1] as string);
+    await settle();
+    expect(rig.ui.selection.getState().selected).toEqual({ kind: 'node', id: hub });
+    rig.ui.selection.getState().select({ kind: 'edge', id: 'gone' });
+    rig.ui.expansion.getState().toggle(model.getState().hubIds[2] as string);
+    await settle();
+    expect(rig.ui.selection.getState().selected).toBeNull();
+    expect(rig.logs.filter((line) => line.type === 'selection_cleared')).toHaveLength(1);
     model.stop();
   });
 });

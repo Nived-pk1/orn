@@ -64,7 +64,7 @@ export function stubDialog(): void {
   };
 }
 
-export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppStatus>; panels?: Partial<PanelsPort> } = {}): FakeApp {
+export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppStatus>; panels?: Partial<PanelsPort>; navigator?: Parameters<typeof navigatorRig>[1] } = {}): FakeApp {
   const status = createStatusStore(() => undefined);
   status.update({ ...WRITER_STATUS, ...options.status });
   const store = createCanonicalStore({ initial: options.state ?? emptyStoreState(), revision: 0, validateInitial: false });
@@ -74,7 +74,7 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
   const retryEngine = vi.fn(() => Promise.resolve({ ok: true }));
   const loadDemo = vi.fn((): Promise<DemoLoad> => Promise.resolve({ ok: true, blob: new Blob(['{}']), fileName: 'demo.orn.json' }));
   const reload = vi.fn();
-  const navigator = navigatorRig(store);
+  const navigator = navigatorRig(store, options.navigator);
   const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine } as unknown as WindowServices;
   const panelSaves: Record<string, unknown>[] = [];
   const panels = createPanelsStore(

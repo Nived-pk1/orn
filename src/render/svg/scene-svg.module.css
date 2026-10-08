@@ -15,6 +15,21 @@
   stroke-linejoin: round;
 }
 
+/* The invisible hit path of an edge: no ink, but it takes pointer events on its (wider) stroke. */
+.edgeHit {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-opacity: 0;
+  pointer-events: stroke;
+}
+
+/* Text, badges and the selection overlay never take pointer events: a click on them reaches the node or edge below. */
+.root [data-layer='labels'],
+.root [data-layer='badges'],
+.root [data-layer='overlay'] {
+  pointer-events: none;
+}
+
 .edgeHeavy {
   stroke: var(--color-ink);
 }

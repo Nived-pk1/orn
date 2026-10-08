@@ -5,8 +5,9 @@
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type BrowserContext, type Page } from '@playwright/test';
-import { serializeDocument } from '@/core/dataset';
+import { documentToState, serializeDocument, stateToDocument } from '@/core/dataset';
 import { generateTier, type GeneratorShape, type GeneratorTier } from '@/test-support/generator';
+import { withNavigatorAnchors } from '@/test-support/perf-kit';
 
 /** The origin `vite preview` serves (playwright.config.ts). */
 export const ORIGIN = 'http://127.0.0.1:4173';
@@ -86,6 +87,16 @@ export function generatedFile(tier: GeneratorTier, shape: GeneratorShape, seed =
   const result = serializeDocument(generateTier(tier, shape, seed));
   if (!result.ok) throw new Error(`the generator's ${tier}/${shape} document does not serialise`);
   return { name: `generated-${tier}-${shape}.orn.json`, mimeType: 'application/json', buffer: Buffer.from(result.text, 'utf8') };
+}
+
+/** The same, with 60 navigator anchors on the classes (the generator makes none), so the overview has hubs. */
+export function generatedFileWithAnchors(tier: GeneratorTier, shape: GeneratorShape, seed = 1): { name: string; mimeType: string; buffer: Buffer } {
+  const doc = generateTier(tier, shape, seed);
+  const parsed = documentToState(doc);
+  if (!parsed.ok) throw new Error(`the generator's ${tier}/${shape} document has duplicate IDs`);
+  const result = serializeDocument(stateToDocument(withNavigatorAnchors(parsed.state), { exportedAt: doc.exportedAt, exportScope: doc.exportScope, generator: doc.generator }));
+  if (!result.ok) throw new Error(`the anchored ${tier}/${shape} document does not serialise`);
+  return { name: `generated-${tier}-${shape}-anchored.orn.json`, mimeType: 'application/json', buffer: Buffer.from(result.text, 'utf8') };
 }
 
 /** Choose a file through the real "Import a file" button and file chooser. */

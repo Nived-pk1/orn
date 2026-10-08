@@ -37,3 +37,5 @@ export type {
   ViewportsState,
   ViewportsStore,
 } from './navigator-stores';
+export { createNavigatorUi, MAX_SAVED_EXPANDED, NAVIGATOR_UI_KEY, parseNavigatorUi } from './navigator-persist';
+export type { NavigatorUi, NavigatorUiPort, NavigatorUiStatus, ParsedNavigatorUi } from './navigator-persist';

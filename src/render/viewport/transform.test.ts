@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SCALE_MAX, SCALE_MIN } from './contracts';
-import { clampScale, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout } from './transform';
+import { clampScale, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout, keepScreenPoint, toScreen } from './transform';
 
 const size = { width: 1000, height: 600 };
 
@@ -36,5 +36,19 @@ describe('viewport arithmetic', () => {
   it('answers identity for a screen too small for the padding and writes a transform attribute', () => {
     expect(fitRect({ x0: 0, y0: 0, x1: 10, y1: 10 }, { width: 10, height: 10 })).toEqual(IDENTITY);
     expect(toTransformAttribute({ x: 1, y: 2, scale: 3 })).toBe('translate(1 2) scale(3)');
+  });
+});
+
+describe('keeping a world point on the screen (step 5.5a: a toggled hub stays where it was)', () => {
+  it('puts the world point at the screen point at the given scale, and toScreen is its inverse', () => {
+    const world = { x: 300, y: 120 };
+    const screen = { x: 410, y: 222 };
+    const view = keepScreenPoint(0.8, world, screen);
+    expect(view.scale).toBe(0.8);
+    expect(toScreen(view, world)).toEqual(screen);
+  });
+
+  it('clamps the scale like every other command', () => {
+    expect(keepScreenPoint(100, { x: 0, y: 0 }, { x: 5, y: 5 }).scale).toBe(SCALE_MAX);
   });
 });

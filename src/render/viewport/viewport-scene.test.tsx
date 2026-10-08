@@ -49,6 +49,65 @@ function mount(extra: Partial<Parameters<typeof ViewportScene>[0]> = {}) {
   return { view, world, svg, commits, renders: () => renders, controller: () => controller as unknown as ViewportController };
 }
 
+describe('the saved view and the delegated clicks (step 5.5a)', () => {
+  it('shows a saved viewport instead of fitting the scene', () => {
+    const { world } = mount({ initialViewport: { x: 12, y: 34, scale: 0.5 } });
+    expect(world.getAttribute('transform')).toBe('translate(12 34) scale(0.5)');
+  });
+
+  it('reports the viewport once the view has been still, never per frame', () => {
+    vi.useFakeTimers();
+    try {
+      const settled: { x: number; y: number; scale: number }[] = [];
+      const { svg, controller } = mount({ onSettled: (view) => void settled.push(view) });
+      vi.advanceTimersByTime(1000);
+      settled.length = 0;
+      for (let frame = 0; frame < 6; frame++) {
+        for (let i = 0; i < 5; i++) fireEvent.wheel(svg, { deltaY: -1, clientX: 300 + i, clientY: 200 });
+        act(() => frames.run());
+        vi.advanceTimersByTime(100);
+      }
+      expect(settled).toHaveLength(0);
+      vi.advanceTimersByTime(400);
+      expect(settled).toHaveLength(1);
+      expect(settled[0]).toEqual(controller().current());
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reports a move that is still pending when the drawing goes away', () => {
+    vi.useFakeTimers();
+    try {
+      const settled: unknown[] = [];
+      const { view, controller } = mount({ onSettled: (v) => void settled.push(v) });
+      vi.advanceTimersByTime(1000);
+      settled.length = 0;
+      act(() => controller().zoomIn());
+      act(() => void vi.advanceTimersByTime(50));
+      view.unmount();
+      expect(settled).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('gives a click on a node or arrow to the one listener on the svg, and null for empty canvas', () => {
+    const hits: unknown[] = [];
+    const { svg } = mount({ onSceneClick: (hit) => void hits.push(hit) });
+    const node = svg.querySelector('[data-node-id]') as Element;
+    const edge = svg.querySelector('[data-edge-id] path') as Element;
+    fireEvent.click(node.querySelector('rect') ?? node);
+    fireEvent.click(edge);
+    fireEvent.click(svg);
+    expect(hits).toEqual([
+      { kind: 'node', id: node.getAttribute('data-node-id') },
+      { kind: 'edge', id: (edge.closest('[data-edge-id]') as Element).getAttribute('data-edge-id') },
+      null,
+    ]);
+  });
+});
+
 describe('ViewportScene', () => {
   it('fits the scene on mount: one transform on the world group, a level in the store', () => {
     const { world, svg } = mount();

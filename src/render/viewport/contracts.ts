@@ -31,6 +31,8 @@ export const LOD_HYSTERESIS = 0.05;
 /** The still time before depictions are asked for, and the bound on requests in flight (4: the chem worker takes 16 calls, the rest is for checks; PROGRESS Q7). */
 export const DEPICTION_STILL_MS = 250;
 export const DEPICTION_MAX_PENDING = 4;
+/** The still time before a viewport is reported for saving (step 5.5a): a gesture saves once, never per frame. */
+export const VIEWPORT_SETTLE_MS = 400;
 
 /** What the controller keeps current; readers subscribe to the store, React reads `lod` only. */
 export interface ViewportState {

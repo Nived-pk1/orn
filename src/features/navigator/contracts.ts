@@ -8,7 +8,8 @@ import type { ChangeSet } from '@/core/dataset/contracts';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState } from '@/core/schema';
 import type { TextMeasurer } from '@/render/scene';
-import type { NavigatorUiStores } from '@/ui/state';
+import type { StoreApi } from 'zustand/vanilla';
+import type { NavigatorUiStatus, NavigatorUiStores } from '@/ui/state';
 import type { LayoutService } from '@/workers/layout';
 
 export interface NavigatorMeasurer {
@@ -27,6 +28,8 @@ export interface NavigatorPorts {
   readonly measurer: NavigatorMeasurer;
   readonly timers: { after(ms: number, run: () => void): () => void };
   readonly ui: NavigatorUiStores;
+  /** What keeping the UI state is doing (saved, read-only, session-only, failed) and what was reset at start. */
+  readonly uiStatus: StoreApi<NavigatorUiStatus>;
   /** One line to the app's event log (nothing silent). */
   readonly log: (type: string, message: string) => void;
 }

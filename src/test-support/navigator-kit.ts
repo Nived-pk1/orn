@@ -8,7 +8,7 @@ import { createDerivedIndexes } from '@/app/services/derived-indexes';
 import { layoutFallback } from '@/layout';
 import type { LayoutRequest } from '@/layout/contracts';
 import type { NavigatorPorts } from '@/features/navigator';
-import { createNavigatorUiStores, type NavigatorUiStores } from '@/ui/state';
+import { createNavigatorUi, type NavigatorUi, type NavigatorUiPort, type NavigatorUiStores } from '@/ui/state';
 import type { LayoutOutcome, LayoutService } from '@/workers/layout';
 import { fakeMeasurer } from './scene-kit';
 
@@ -74,18 +74,29 @@ export interface NavigatorRig {
   readonly layout: FakeLayout;
   readonly timers: ManualTimers;
   readonly ui: NavigatorUiStores;
+  /** The persistence wrapper of the UI stores (saves go to `uiSaves`). */
+  readonly uiPersistence: NavigatorUi;
+  /** The values written through the UI port, in order. */
+  readonly uiSaves: Readonly<Record<string, unknown>>[];
   readonly logs: { type: string; message: string }[];
   /** How many times `indexes.current()` was asked for. */
   readonly indexAsks: () => number;
 }
 
 /** Ports over a real store, with the fakes above; the indexes are the app's own `DerivedIndexes` service over that store. */
-export function navigatorRig(store: StoreHandle, options: { measurerReady?: Promise<void> } = {}): NavigatorRig {
+export function navigatorRig(store: StoreHandle, options: { measurerReady?: Promise<void>; uiPort?: Partial<NavigatorUiPort> } = {}): NavigatorRig {
   const derived = createDerivedIndexes({ store, clock: { nowMs: () => 0 } });
   const layout = fakeLayout();
   const timers = manualTimers();
-  const ui = createNavigatorUiStores();
   const logs: { type: string; message: string }[] = [];
+  const log = (type: string, message: string): void => void logs.push({ type, message });
+  const uiSaves: Record<string, unknown>[] = [];
+  const uiPersistence = createNavigatorUi(
+    { stored: undefined, mode: () => 'writable', save: (value) => (uiSaves.push({ ...value }), Promise.resolve()), ...options.uiPort },
+    timers,
+    log,
+  );
+  const ui = uiPersistence.stores;
   let asks = 0;
   const ports: NavigatorPorts = {
     store,
@@ -94,7 +105,8 @@ export function navigatorRig(store: StoreHandle, options: { measurerReady?: Prom
     measurer: { measure: fakeMeasurer, ready: () => options.measurerReady ?? Promise.resolve() },
     timers,
     ui,
-    log: (type, message) => logs.push({ type, message }),
+    uiStatus: uiPersistence.status,
+    log,
   };
-  return { ports, layout, timers, ui, logs, indexAsks: () => asks };
+  return { ports, layout, timers, ui, uiPersistence, uiSaves, logs, indexAsks: () => asks };
 }

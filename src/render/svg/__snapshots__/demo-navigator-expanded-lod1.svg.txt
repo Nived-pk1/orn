@@ -57,266 +57,332 @@
       <g data-edge-id="bnd_521894134d0e99fa" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Propene to 2-Bromopropane, 2 reactions">
         <title>Propene to 2-Bromopropane, 2 reactions</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M107.29 912 L278.71 1008" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M107.29 912 L278.71 1008" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="bnd_8ea9a18bce391554" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanol to Ethanal, 2 reactions">
         <title>Ethanol to Ethanal, 2 reactions</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M772 657.74 L108 620.26" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M772 657.74 L108 620.26" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="bnd_992aaa6a696a4453" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanal to 3-Hydroxybutanal, 2 reactions">
         <title>Ethanal to 3-Hydroxybutanal, 2 reactions</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M108 597.52 L275.03 512" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M108 597.52 L275.03 512" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="bnd_d4fc6738e8346989" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Propene to 1-Bromopropane, 2 reactions">
         <title>Propene to 1-Bromopropane, 2 reactions</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M108 901.52 L266 947.02" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M108 901.52 L266 947.02" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_00f1f9f52589cb8a" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Haloarenes is a member of Chlorobenzene">
         <title>Haloarenes is a member of Chlorobenzene</title>
         <path class="_edge_e97cec" d="M628 503.26 L752 521.28" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M628 503.26 L752 521.28" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_067b0c7c50bf104b" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alcohols is a member of 2-Methylpropan-2-ol">
         <title>Alcohols is a member of 2-Methylpropan-2-ol</title>
         <path class="_edge_e97cec" d="M386 814.33 L1412 638.29" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M386 814.33 L1412 638.29" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_0787f50eb5bf25ff" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethene to Ethane-1,2-diol, 1 reaction">
         <title>Ethene to Ethane-1,2-diol, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M1070 588.59 L1196 571.57" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M1070 588.59 L1196 571.57" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_0a57575a961eb653" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Benzene to Acetophenone, 1 reaction">
         <title>Benzene to Acetophenone, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M96.06 528 L289.94 376" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M96.06 528 L289.94 376" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_0e06be94c3daf4af" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Arenes is a member of Benzene">
         <title>Arenes is a member of Benzene</title>
         <path class="_edge_e97cec" d="M88.99 528 L298.92 308" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M88.99 528 L298.92 308" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_140cfbfa53a40aef" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Ketones is a member of Propanone">
         <title>Ketones is a member of Propanone</title>
         <path class="_edge_e97cec" d="M108 812.27 L518 712.59" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M108 812.27 L518 712.59" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_25886925af9e55e8" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alkenes is a member of But-2-ene">
         <title>Alkenes is a member of But-2-ene</title>
         <path class="_edge_e97cec" d="M356.34 1144 L1217.15 650" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M356.34 1144 L1217.15 650" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_274daca1a9e88b5a" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Propanone to 2-Methylpropan-2-ol, 1 reaction">
         <title>Propanone to 2-Methylpropan-2-ol, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M108 822.64 L250 824.91" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M108 822.64 L250 824.91" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_27eed6a75262050c" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethyl ethanoate to Ethanoic acid, 1 reaction">
         <title>Ethyl ethanoate to Ethanoic acid, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M550.76 610 L345.24 444" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M550.76 610 L345.24 444" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_3161d5da443486e5" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Benzaldehyde to Benzyl alcohol, 1 reaction">
         <title>Benzaldehyde to Benzyl alcohol, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M84.77 460 L301.23 176" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M84.77 460 L301.23 176" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_333886d9c968a8f2" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Carboxylic acids is a member of Ethanoic acid">
         <title>Carboxylic acids is a member of Ethanoic acid</title>
         <path class="_edge_e97cec" d="M334.82 444 L562.71 742" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M334.82 444 L562.71 742" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_3358e25bd646d49e" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alcohols is a member of Benzyl alcohol">
         <title>Alcohols is a member of Benzyl alcohol</title>
         <path class="_edge_e97cec" d="M370 175.36 L1423.31 608" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M370 175.36 L1423.31 608" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_397ac1f68235073d" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Aldehydes is a member of 3-Hydroxybutanal">
         <title>Aldehydes is a member of 3-Hydroxybutanal</title>
         <path class="_edge_e97cec" d="M335.02 512 L562.52 806" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M335.02 512 L562.52 806" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_3aef52c12a19885c" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Unclassified is a member of Sodium ethanoate">
         <title>Unclassified is a member of Sodium ethanoate</title>
         <path class="_edge_e97cec" d="M376 885.55 L1188 767.32" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M376 885.55 L1188 767.32" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_3c17a3ad60a86606" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanol to Diethyl ether, 1 reaction">
         <title>Ethanol to Diethyl ether, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M847.79 638 L994.21 548" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M847.79 638 L994.21 548" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_3dd315731665b21a" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Primary alcohols to Aldehydes, 1 reaction">
         <title>Primary alcohols to Aldehydes, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M81.32 304 L558.97 806" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M81.32 304 L558.97 806" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_459fd1e6abbda309" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanol to Sodium methanoate, 1 reaction">
         <title>Ethanol to Sodium methanoate, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M852 672.84 L968 710.09" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M852 672.84 L968 710.09" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_4698b16627b294c5" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="But-2-yne to (Z)-But-2-ene, 1 reaction">
         <title>But-2-yne to (Z)-But-2-ene, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M108 686.64 L268 689.2" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M108 686.64 L268 689.2" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_4add2eec14799357" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Aniline to Benzenediazonium chloride, 1 reaction">
         <title>Aniline to Benzenediazonium chloride, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M88.83 328 L297.17 108" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M88.83 328 L297.17 108" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_6187e8a29a719ed7" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Benzaldehyde to Sodium benzoate, 1 reaction">
         <title>Benzaldehyde to Sodium benzoate, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M89.15 460 L296.85 244" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M89.15 460 L296.85 244" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_62c6da558044e0f8" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alkynes is a member of But-2-yne">
         <title>Alkynes is a member of But-2-yne</title>
         <path class="_edge_e97cec" d="M108 676.08 L258 638.88" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M108 676.08 L258 638.88" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_64aa5dd0245d66a5" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Haloalkanes is a member of (R)-2-Bromobutane">
         <title>Haloalkanes is a member of (R)-2-Bromobutane</title>
         <path class="_edge_e97cec" d="M130 944.18 L1192 707.38" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M130 944.18 L1192 707.38" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_659d6729c5937d5a" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Esters is a member of Ethyl ethanoate">
         <title>Esters is a member of Ethyl ethanoate</title>
         <path class="_edge_e97cec" d="M632.77 654 L762.21 706" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M632.77 654 L762.21 706" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_7947530424b12847" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanol to Ethanoic acid, 1 reaction">
         <title>Ethanol to Ethanoic acid, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M772 640.73 L363.66 444" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M772 640.73 L363.66 444" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_7a48bb685aeaab93" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Cyclohexanone oxime to ε-Caprolactam, 1 reaction">
         <title>Cyclohexanone oxime to ε-Caprolactam, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M136 755.09 L268 757.2" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M136 755.09 L268 757.2" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_7ccc753690708625" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Phenols is a member of Phenol">
         <title>Phenols is a member of Phenol</title>
         <path class="_edge_e97cec" d="M618 569.13 L752 586.31" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M618 569.13 L752 586.31" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_7e457669455b0c4a" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Haloalkanes is a member of 2-Bromopropane">
         <title>Haloalkanes is a member of 2-Bromopropane</title>
         <path class="_edge_e97cec" d="M370 1011.29 L1196.4 714" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M370 1011.29 L1196.4 714" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_7f3b6e5ae350132d" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Ethers is a member of Diethyl ether">
         <title>Ethers is a member of Diethyl ether</title>
         <path class="_edge_e97cec" d="M1080 519.69 L1192 505.57" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M1080 519.69 L1192 505.57" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_80844a5b07b52ff6" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Diazonium salts is a member of Benzenediazonium chloride">
         <title>Diazonium salts is a member of Benzenediazonium chloride</title>
         <path class="_edge_e97cec" d="M334.63 108 L562.88 410" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M334.63 108 L562.88 410" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_8522f105198168ec" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alcohols is a member of (S)-Butan-2-ol">
         <title>Alcohols is a member of (S)-Butan-2-ol</title>
         <path class="_edge_e97cec" d="M359.89 1212 L1433.91 648" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M359.89 1212 L1433.91 648" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_8cc2b790d9aedddd" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethene to Ethanol, 1 reaction">
         <title>Ethene to Ethanol, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M990 606.11 L852 647.89" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M990 606.11 L852 647.89" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_924139877bd9a400" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alkenes is a member of Ethene">
         <title>Alkenes is a member of Ethene</title>
         <path class="_edge_e97cec" d="M1070 600.49 L1192 620.27" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M1070 600.49 L1192 620.27" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_9d5a837525c1e9b8" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="(R)-2-Bromobutane to (S)-Butan-2-ol, 1 reaction">
         <title>(R)-2-Bromobutane to (S)-Butan-2-ol, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M87.93 980 L298.07 1212" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M87.93 980 L298.07 1212" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_9e53ac693a3c2b1a" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanoic acid to Ethyl ethanoate, 1 reaction">
         <title>Ethanoic acid to Ethyl ethanoate, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M345.24 444 L550.76 610" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M345.24 444 L550.76 610" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_a0f4a2c52716fd22" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alcohols is a member of Ethanol">
         <title>Alcohols is a member of Ethanol</title>
         <path class="_edge_e97cec" d="M852 658.06 L1412 630.91" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M852 658.06 L1412 630.91" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_a863db826237fa39" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Unclassified is a member of Sodium benzoate">
         <title>Unclassified is a member of Sodium benzoate</title>
         <path class="_edge_e97cec" d="M356.34 244 L1217.15 738" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M356.34 244 L1217.15 738" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_ab72ffcded4b5906" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Aldehydes is a member of Benzaldehyde">
         <title>Aldehydes is a member of Benzaldehyde</title>
         <path class="_edge_e97cec" d="M100.62 504 L548.35 806" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M100.62 504 L548.35 806" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_ad1b182b8e506fbe" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alkenes is a member of Propene">
         <title>Alkenes is a member of Propene</title>
         <path class="_edge_e97cec" d="M108 881.22 L1192 643.18" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M108 881.22 L1192 643.18" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_b2877f6d8db27fd2" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alcohols is a member of Propan-2-ol">
         <title>Alcohols is a member of Propan-2-ol</title>
         <path class="_edge_e97cec" d="M362 560.67 L1412 624.36" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M362 560.67 L1412 624.36" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_b56a8aefd27e1560" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Ketones is a member of Acetophenone">
         <title>Ketones is a member of Acetophenone</title>
         <path class="_edge_e97cec" d="M334.63 376 L562.88 678" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M334.63 376 L562.88 678" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_bc32fa621c6afc17" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alkenes is a member of But-1-ene">
         <title>Alkenes is a member of But-1-ene</title>
         <path class="_edge_e97cec" d="M358 1077.96 L1212.09 650" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M358 1077.96 L1212.09 650" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_bd59aedc08de202d" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanol to Ethene, 1 reaction">
         <title>Ethanol to Ethene, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M852 647.89 L990 606.11" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M852 647.89 L990 606.11" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_bff60815a8ca5a2a" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Unclassified is a member of Cyclohexanone oxime">
         <title>Unclassified is a member of Cyclohexanone oxime</title>
         <path class="_edge_e97cec" d="M136 754.23 L1188 757.78" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M136 754.23 L1188 757.78" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_c15506890aa1d2d4" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alkenes is a member of (Z)-But-2-ene">
         <title>Alkenes is a member of (Z)-But-2-ene</title>
         <path class="_edge_e97cec" d="M368 686.79 L1192 633.85" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M368 686.79 L1192 633.85" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_c60529a08790a3f5" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Benzenediazonium chloride to Phenol, 1 reaction">
         <title>Benzenediazonium chloride to Phenol, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M329.97 108 L566.03 542" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M329.97 108 L566.03 542" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_c778ce22ce16a351" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Benzenediazonium chloride to Chlorobenzene, 1 reaction">
         <title>Benzenediazonium chloride to Chlorobenzene, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M331.95 108 L564.05 474" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M331.95 108 L564.05 474" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_c7da4dc5f76976ee" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Haloalkanes is a member of Iodoform">
         <title>Haloalkanes is a member of Iodoform</title>
         <path class="_edge_e97cec" d="M1070 667.77 L1192 685.35" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M1070 667.77 L1192 685.35" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_c916749a432ff9e1" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Unclassified is a member of Sodium methanoate">
         <title>Unclassified is a member of Sodium methanoate</title>
         <path class="_edge_e97cec" d="M1092 737.82 L1188 749.93" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M1092 737.82 L1188 749.93" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_c9798c6786566ff8" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alcohols is a member of Ethane-1,2-diol">
         <title>Alcohols is a member of Ethane-1,2-diol</title>
         <path class="_edge_e97cec" d="M1308 580.29 L1412 610.55" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M1308 580.29 L1412 610.55" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_cafbb62caa899ca3" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Amines is a member of Aniline">
         <title>Amines is a member of Aniline</title>
         <path class="_edge_e97cec" d="M84.67 328 L302.85 40" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M84.67 328 L302.85 40" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_d33b02e02535e79d" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Alcohols is a member of Primary alcohols">
         <title>Alcohols is a member of Primary alcohols</title>
         <path class="_edge_e97cec" d="M126 303.96 L1412 613.56" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M126 303.96 L1412 613.56" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_d5fa78f8346d8707" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Haloalkanes is a member of 1-Bromopropane">
         <title>Haloalkanes is a member of 1-Bromopropane</title>
         <path class="_edge_e97cec" d="M370 947.08 L1192 711.22" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M370 947.08 L1192 711.22" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_d939367e69fdcc25" data-semantic="transforms_to" data-stroke="dotted" data-weight="normal" role="graphics-symbol" aria-label="(R)-2-Bromobutane to But-1-ene, 1 reaction">
         <title>(R)-2-Bromobutane to But-1-ene, 1 reaction</title>
         <path class="_edge_e97cec _edgeDotted_e97cec" d="M107.29 980 L278.71 1076" stroke-width="1.5" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M107.29 980 L278.71 1076" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_db612053093e6b0e" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Propanone to Iodoform, 1 reaction">
         <title>Propanone to Iodoform, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M108 815.35 L990 668.65" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M108 815.35 L990 668.65" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_e222754ece0b4145" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanal to Ethanoic acid, 1 reaction">
         <title>Ethanal to Ethanoic acid, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M96.06 596 L289.94 444" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M96.06 596 L289.94 444" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_e237eb7c041c91d9" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanol to Iodoform, 1 reaction">
         <title>Ethanol to Iodoform, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M852 660.37 L990 661.63" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M852 660.37 L990 661.63" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_e5c96c03e50cd360" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Unclassified is a member of ε-Caprolactam">
         <title>Unclassified is a member of ε-Caprolactam</title>
         <path class="_edge_e97cec" d="M368 758 L1188 758" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M368 758 L1188 758" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_f42207594a90d550" data-semantic="membership" data-stroke="solid" data-weight="light" role="graphics-symbol" aria-label="Aldehydes is a member of Ethanal">
         <title>Aldehydes is a member of Ethanal</title>
         <path class="_edge_e97cec" d="M108 634.31 L528.96 806" stroke-width="1"></path>
+        <path class="_edgeHit_e97cec" d="M108 634.31 L528.96 806" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_f519f070a00a090b" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethyl ethanoate to Ethanol, 1 reaction">
         <title>Ethyl ethanoate to Ethanol, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M634 638.7 L772 655.21" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M634 638.7 L772 655.21" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_f815d4ec0c2cbec9" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Propanone to Sodium ethanoate, 1 reaction">
         <title>Propanone to Sodium ethanoate, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M108 833.52 L260 877.3" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M108 833.52 L260 877.3" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_fa2d12bbf63dcecc" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="(R)-2-Bromobutane to But-2-ene, 1 reaction">
         <title>(R)-2-Bromobutane to But-2-ene, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M94.44 980 L291.56 1144" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M94.44 980 L291.56 1144" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_ff6d2d897eb9c4ae" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanal to Propan-2-ol, 1 reaction">
         <title>Ethanal to Propan-2-ol, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M108 608.4 L274 568.56" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M108 608.4 L274 568.56" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
     </g>
     <g data-layer="nodes">

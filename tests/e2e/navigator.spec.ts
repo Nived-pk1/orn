@@ -7,9 +7,13 @@
 import { expect, test, type Page } from '@playwright/test';
 import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection } from '@/core/graph';
 import { indexEngine } from '@/core/indexes';
+import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/pipeline';
+import { documentToState } from '@/core/dataset';
 import { drawnPaths } from '@/render/scene';
+import { generateTier } from '@/test-support/generator';
+import { withNavigatorAnchors } from '@/test-support/perf-kit';
 import { demoState } from '@/test-support/app-boot-kit';
-import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
+import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, watch } from './kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
@@ -19,7 +23,7 @@ function expectedCounts(): { nodes: number; paths: number } {
   const state = demoState();
   const projection = navigatorProjection.build(
     { state, indexes: indexEngine.build(state, 1), scopeOf: () => 'unmapped' },
-    { view: 'navigator', focus: [], expansion: { expanded: [], collapsedEdgeIds: [] }, filters: { scopes: [], topicIds: [], reagentFamilies: [] }, limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: 400, maxEdges: 800 } },
+    { view: 'navigator', focus: [], expansion: { expanded: [], collapsedEdgeIds: [] }, filters: { scopes: [], topicIds: [], reagentFamilies: [] }, limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES } },
   );
   return { nodes: projection.nodes.length, paths: drawnPaths(projection).length };
 }
@@ -161,5 +165,134 @@ test.describe('pan and zoom', () => {
     // zooming about the pointer keeps the world point under it: (p - t) / s is the same before and after
     expect((px - after.x) / after.scale).toBeCloseTo((px - before.x) / before.scale, 1);
     expect((py - after.y) / after.scale).toBeCloseTo((py - before.y) / before.scale, 1);
+  });
+});
+
+const inspector = (page: Page) => page.getByRole('complementary', { name: 'Inspector' });
+const hubGroup = (page: Page, id: string) => page.locator(`svg [data-node-id="${id}"]`);
+const nodeCount = (page: Page): Promise<number> => page.locator('svg [data-node-id]').count();
+
+async function centreOf(page: Page, id: string): Promise<{ x: number; y: number }> {
+  const box = await hubGroup(page, id).boundingBox();
+  if (box === null) throw new Error(`no box for ${id}`);
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+test.describe('selection and expansion', () => {
+  test('a click selects a hub and the inspector names it; a click on empty canvas, not a drag, clears it', async ({ page }) => {
+    const seen = await watch(page);
+    await openNavigator(page);
+    await hubGroup(page, 'cls_aldehydes').click();
+    await expect(inspector(page).getByText(/^Selected: Aldehydes, class hub/)).toBeVisible();
+    // a drag that starts on empty canvas is a pan, not a click: the selection stays
+    const box = await drawing(page).boundingBox();
+    if (box === null) throw new Error('the drawing has no box');
+    await page.mouse.move(box.x + box.width - 20, box.y + box.height - 20);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width - 80, box.y + box.height - 60, { steps: 6 });
+    await page.mouse.up();
+    await expect(inspector(page).getByText(/^Selected: Aldehydes, class hub/)).toBeVisible();
+    // a click on empty canvas (the corner of the drawing) clears it
+    await page.mouse.click(box.x + 6, box.y + box.height - 6);
+    await expect(inspector(page).getByText('Nothing is selected.')).toBeVisible();
+    await expectClean(seen);
+  });
+
+  test('a double click expands a hub and a second collapses it; the hub stays at the same screen point', async ({ page }) => {
+    const seen = await watch(page);
+    await openNavigator(page);
+    const before = await nodeCount(page);
+    const at = await centreOf(page, 'cls_aldehydes');
+    await hubGroup(page, 'cls_aldehydes').dblclick();
+    await expect(async () => expect(await nodeCount(page)).toBeGreaterThan(before)).toPass();
+    await page.waitForTimeout(250);
+    const moved = await centreOf(page, 'cls_aldehydes');
+    expect(Math.abs(moved.x - at.x)).toBeLessThan(3);
+    expect(Math.abs(moved.y - at.y)).toBeLessThan(3);
+    await hubGroup(page, 'cls_aldehydes').dblclick();
+    await expect(async () => expect(await nodeCount(page)).toBe(before)).toPass();
+    await expectClean(seen);
+  });
+
+  test('the toolbar expands and collapses the selected hub, and says why when it cannot', async ({ page }) => {
+    await openNavigator(page);
+    const expand = page.getByRole('button', { name: 'Expand' });
+    const collapse = page.getByRole('button', { name: 'Collapse' });
+    await expect(expand).toHaveAccessibleDescription('select a hub first');
+    const before = await nodeCount(page);
+    await hubGroup(page, 'cls_alkenes').click();
+    await expect(collapse).toHaveAccessibleDescription('this hub is not expanded');
+    await expand.click();
+    await expect(async () => expect(await nodeCount(page)).toBeGreaterThan(before)).toPass();
+    await expect(expand).toHaveAccessibleDescription('this hub is already expanded');
+    await collapse.click();
+    await expect(async () => expect(await nodeCount(page)).toBe(before)).toPass();
+  });
+
+  test('the selection, the expansion and the viewport survive a reload', async ({ page }) => {
+    const seen = await watch(page);
+    await openNavigator(page);
+    await hubGroup(page, 'cls_aldehydes').dblclick();
+    await hubGroup(page, 'cls_aldehydes').click();
+    await page.getByRole('button', { name: 'Zoom in' }).click();
+    await page.waitForTimeout(1500); // the viewport is still (400 ms), then the debounce (300 ms) and the write
+    const grown = await nodeCount(page);
+    const view = await transformOf(page);
+    await page.reload();
+    await expect(drawing(page)).toBeVisible();
+    await expect(async () => expect(await nodeCount(page)).toBe(grown)).toPass();
+    await expect(inspector(page).getByText(/^Selected: Aldehydes, class hub/)).toBeVisible();
+    await page.waitForTimeout(300);
+    const again = await transformOf(page);
+    expect(again.scale).toBeCloseTo(view.scale, 3);
+    expect(again.x).toBeCloseTo(view.x, 0);
+    expect(again.y).toBeCloseTo(view.y, 0);
+    await expectClean(seen);
+  });
+
+  test('axe: nothing serious with a hub expanded and selected', async ({ page }) => {
+    const seen = await watch(page);
+    await openNavigator(page);
+    await hubGroup(page, 'cls_aldehydes').dblclick();
+    await hubGroup(page, 'cls_aldehydes').click();
+    await zoomInTo(page, 2);
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+});
+
+test.describe('ADV-012 part 1: a hub with 1,000 reactions', () => {
+  test('the initial-tier hub_explosion file with anchors stays inside the render budget and its pair shows its full total', async ({ page }) => {
+    test.setTimeout(240_000);
+    const seen = await watch(page);
+    const parsed = documentToState(generateTier('initial', 'hub_explosion', 1));
+    if (!parsed.ok) throw new Error('the generator document has duplicate IDs');
+    const state = withNavigatorAnchors(parsed.state);
+    const projection = navigatorProjection.build(
+      { state, indexes: indexEngine.build(state, 1), scopeOf: () => 'unmapped' },
+      { view: 'navigator', focus: [], expansion: { expanded: [], collapsedEdgeIds: [] }, filters: { scopes: [], topicIds: [], reagentFamilies: [] }, limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES } },
+    );
+    const biggest = [...projection.bundles].sort((a, b) => b.total - a.total || (a.id < b.id ? -1 : 1))[0];
+    if (biggest === undefined) throw new Error('the generated overview has no pair');
+    expect(biggest.total, 'the file really has a pair of many reactions').toBeGreaterThan(100);
+
+    await openApp(page);
+    await chooseFile(page, generatedFileWithAnchors('initial', 'hub_explosion'));
+    await expect(page.getByRole('heading', { name: 'Import summary' })).toBeVisible({ timeout: 90_000 });
+    await page.getByRole('button', { name: 'Confirm' }).click();
+    await expect(page.getByText(/^Imported \d+ records from generated-initial-hub_explosion-anchored\.orn\.json\./)).toBeVisible({ timeout: 90_000 });
+    await expect(drawing(page)).toBeVisible({ timeout: 60_000 });
+    const checkBudget = async (): Promise<void> => {
+      expect(await nodeCount(page)).toBeLessThanOrEqual(400);
+      expect(await page.locator('svg [data-edge-id]').count()).toBeLessThanOrEqual(800);
+    };
+    await checkBudget();
+    await expect(page.locator(`svg [data-edge-id][aria-label*="${biggest.total} reactions"]`).first()).toBeAttached();
+    // expanding the busiest hub stays inside the budget too
+    await hubGroup(page, biggest.from).dblclick();
+    await page.waitForTimeout(1500);
+    await checkBudget();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await expectClean(seen);
   });
 });

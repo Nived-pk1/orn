@@ -6,18 +6,19 @@
 import type { AppServices } from '@/app/services';
 import type { TextMeasurer } from '@/app/text-measurer';
 import type { NavigatorPorts } from '@/features/navigator';
-import type { NavigatorUiStores } from '@/ui/state';
+import type { NavigatorUi } from '@/ui/state';
 
 export type NavigatorPortServices = Pick<AppServices, 'store' | 'indexes' | 'layout' | 'logApp'>;
 
-export function createNavigatorPorts(services: NavigatorPortServices, measurer: TextMeasurer, timers: NavigatorPorts['timers'], ui: NavigatorUiStores): NavigatorPorts {
+export function createNavigatorPorts(services: NavigatorPortServices, measurer: TextMeasurer, timers: NavigatorPorts['timers'], ui: Pick<NavigatorUi, 'stores' | 'status'>): NavigatorPorts {
   return {
     store: services.store,
     indexes: { current: () => services.indexes.current() },
     layout: services.layout,
     measurer: { measure: measurer.measure, ready: measurer.ready },
     timers,
-    ui,
+    ui: ui.stores,
+    uiStatus: ui.status,
     log: (type, message) => services.logApp(type, message),
   };
 }

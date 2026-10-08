@@ -7,7 +7,7 @@ import { memo } from 'react';
 import type { LodLevel, Scene, SceneEdge } from '@/render/scene';
 import type { DefIds } from './defs';
 import type { LayerName } from './contracts';
-import { pathData, STROKE_DASH, visibleAt, WEIGHT_WIDTH } from './geometry';
+import { EDGE_HIT_WIDTH, pathData, STROKE_DASH, visibleAt, WEIGHT_WIDTH } from './geometry';
 import styles from './scene-svg.module.css';
 import { useCommitProbe } from './use-commit-probe';
 
@@ -26,6 +26,7 @@ function EdgeGroup(props: { readonly edge: SceneEdge; readonly ids: DefIds }) {
         {...(dash === undefined ? {} : { strokeDasharray: dash })}
         {...(marker === undefined ? {} : { markerEnd: marker })}
       />
+      <path className={styles.edgeHit} d={pathData(edge.points)} strokeWidth={EDGE_HIT_WIDTH} data-hit="true" aria-hidden="true" />
     </g>
   );
 }

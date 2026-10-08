@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-07",
+  "lastUpdated": "2026-10-08",
   "currentPhase": 5,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -201,6 +201,7 @@
     "navigatorOverviewBench": "step 5.4c: tests/perf/navigator-overview.bench.ts run once alone (bench:baseline not run), vitest bench project main, mean / p99 ms: design dense overview 7.37 / 12.31 (before the per-pair table 11.73 / 23.28), one hub expanded 11.26 / 15.29, every hub expanded 18.91 / 25.01 (informal 16: MISSED); design hub_explosion overview 0.10 / 0.21, one hub expanded 5.81 / 9.46, every hub expanded 6.11 / 8.90; stress overview (400 anchors) 11.49 / 15.79 (informal 32); sameProjection at 400 nodes / 800 edges: equal 0.67 / 1.18 (informal 2), differing in the last edge 0.0104 / 0.0123. A filtered overview still scans (about 12 / 23)."
   },
   "openItems": [
+    "Step 5.5a part 2: NAVIGATOR_MAX_EDGES = 120 (design dense ELK mean at 800 / 400 / 240 / 120 = 3,325 / 990 / 377 / 86 ms). OPEN (REVIEW REQUIRED 2): the first layout differs from a layout of the same graph with previous positions (5 of 16 demo hubs move sideways, 11 vertically); expanding a hub that adds members changes the layer of 2-12 other hubs for 4 of 15 hubs (tests/integration/navigator-expansion-layout.test.ts). Part 3 (depictions, taller box, conditions) is not started.",
     "DECIDED (5.5a interim review, reviewer, 2026-10-08): every file of the real-threads Vitest project has one per-test limit of 60 s (vitest.config.ts REAL_THREAD_TEST_TIMEOUT_MS; before it compute-import-threads.test.ts ran on the 5 s default and timed out on battery). A resource limit of a test that starts a real thread, not a product limit (the 2 s call limit and the 20 s warm-up are unchanged). The rule never raise a timeout to make a run pass stays for everything else (TEST_STRATEGY section 1).",
     "WATCH (step 5.4c, REVIEW REQUIRED 7): every hub expanded at design dense is 25.01 ms p99 in the bench harness (12.05 in plain Node) against an informal 16 ms; the members of all hubs are tallied for the truncation although the node budget stops after about 13. Remedy not built: tally lazily per hub and count only distinct members for the rest. Decide at 5.5a from the real expansion pattern.",
     "Step 5.4c REVIEW REQUIRED 1-3, 8, 9 (PROGRESS.md \"Phase 5, step 5.4c\"): GraphNode.hiddenMembers added (additive); membership and overflow edges count against maxEdges and an expansion that does not fit stops the prefix of hubs; a stale expansion entry is ignored without a notice; a FILTERED navigator overview is not accelerated by the per-pair table (decide at 5.5a if the scope filter becomes the default); the readsKinds list is proved only in one direction and is generous.",

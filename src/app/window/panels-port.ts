@@ -9,9 +9,10 @@ import { PANELS_KEY, type PanelsPort } from '@/ui/state';
 
 export type PanelsPortServices = Pick<AppServices, 'bootReport' | 'persistence' | 'status'>;
 
-export function createPanelsPort(services: PanelsPortServices): PanelsPort {
+/** One `uiState` entry as a port (step 5.5a part 2: the panels and the navigator state each have one). */
+export function createUiEntryPort(services: PanelsPortServices, key: string): PanelsPort {
   return {
-    stored: services.bootReport?.uiState[PANELS_KEY],
+    stored: services.bootReport?.uiState[key],
     mode() {
       if (services.persistence === undefined) return 'session_only';
       const mode = services.status.get().mode;
@@ -20,7 +21,9 @@ export function createPanelsPort(services: PanelsPortServices): PanelsPort {
     },
     async save(value) {
       if (services.persistence === undefined) throw new Error('nothing is stored in this session');
-      await services.persistence.setUiState(PANELS_KEY, value as unknown as JsonValue);
+      await services.persistence.setUiState(key, value as unknown as JsonValue);
     },
   };
 }
+
+export const createPanelsPort = (services: PanelsPortServices): PanelsPort => createUiEntryPort(services, PANELS_KEY);

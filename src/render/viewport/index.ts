@@ -9,5 +9,5 @@ export { buildGridIndex, GRID_CELL, MAX_CELLS_PER_ITEM } from './grid-index';
 export type { GridIndex, GridQuery } from './grid-index';
 export { depictionCandidates, visibleIn } from './cull';
 export { lodWithHysteresis, overBudget, rawLod, resolveLod } from './lod';
-export { clampScale, fitRect, fitScene, focusRect, growRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout } from './transform';
+export { clampScale, fitRect, fitScene, focusRect, growRect, IDENTITY, toTransformAttribute, worldRect, keepScreenPoint, toScreen, zoomAbout } from './transform';
 export * from './contracts';

@@ -26,6 +26,12 @@ export interface DepictionSource {
   readonly subscribe: (key: string, listener: () => void) => () => void;
 }
 
+/** The node or edge under a pointer event. */
+export interface SceneHit {
+  readonly kind: 'node' | 'edge';
+  readonly id: string;
+}
+
 export interface SceneSvgProps {
   readonly scene: Scene;
   readonly lod: LodLevel;
@@ -42,6 +48,13 @@ export interface SceneSvgProps {
   readonly svgRef?: Ref<SVGSVGElement>;
   /** True when gestures move the drawing (step 5.4b): the browser must not scroll or zoom the page on them. */
   readonly interactive?: boolean;
+  /**
+   * ONE delegated click listener on the root `<svg>` (no handler per node): the hit under a click, or null for empty canvas. A click that
+   * ended a drag never arrives (d3-zoom suppresses it). Keep it stable.
+   */
+  readonly onSceneClick?: (hit: SceneHit | null) => void;
+  /** The same for a double click. */
+  readonly onSceneDoubleClick?: (hit: SceneHit | null) => void;
   /** Called after a layer commits (not when a memoised layer is skipped): the render counters of the tests. Keep it stable. */
   readonly onLayerCommit?: (layer: LayerName) => void;
 }

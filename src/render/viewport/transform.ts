@@ -39,6 +39,15 @@ export const fitScene = (bounds: Size, size: Size): Viewport => fitRect({ x0: 0,
 
 export const focusRect = (box: Rect, size: Size): Viewport => fitRect(box, size, FOCUS_MAX_SCALE);
 
+/** The viewport at `scale` that puts the world point `world` at the screen point `screen` (a toggled hub stays where it was). */
+export const keepScreenPoint = (scale: number, world: { readonly x: number; readonly y: number }, screen: { readonly x: number; readonly y: number }): Viewport => {
+  const s = clampScale(scale);
+  return { scale: s, x: screen.x - world.x * s, y: screen.y - world.y * s };
+};
+
+/** Where a world point is on the screen under a viewport. */
+export const toScreen = (view: Viewport, world: { readonly x: number; readonly y: number }): { readonly x: number; readonly y: number } => ({ x: world.x * view.scale + view.x, y: world.y * view.scale + view.y });
+
 export const sameViewport = (a: Viewport, b: Viewport): boolean => a.x === b.x && a.y === b.y && a.scale === b.scale;
 
 export const toTransformAttribute = (view: Viewport): string => `translate(${view.x} ${view.y}) scale(${view.scale})`;

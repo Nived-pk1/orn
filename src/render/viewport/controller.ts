@@ -32,6 +32,8 @@ export interface ViewportController {
   readonly zoomIn: () => void;
   readonly zoomOut: () => void;
   readonly fit: () => void;
+  /** Sets the viewport (a command, like zoom in): restoring a saved view, or keeping a toggled hub where it was. */
+  readonly setViewport: (view: Viewport) => void;
   /** Centres and zooms on the nodes with these ids; false when none of them is in the scene (nothing moves). */
   readonly focus: (ids: Iterable<string>) => boolean;
   readonly current: () => Viewport;
@@ -98,6 +100,7 @@ export function createViewportController(deps: ControllerDeps): ViewportControll
     zoomIn: () => command(zoomAbout(view, ZOOM_STEP, size.width / 2, size.height / 2)),
     zoomOut: () => command(zoomAbout(view, 1 / ZOOM_STEP, size.width / 2, size.height / 2)),
     fit: () => command(fitScene(scene.bounds, size)),
+    setViewport: (next) => command(next),
     focus(ids) {
       const wanted = new Set(ids);
       const boxes = nodeBoxes(scene).filter((_, at) => wanted.has((scene.nodes[at] as { id: string }).id));

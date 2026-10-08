@@ -8,11 +8,11 @@ import { App } from './App';
 import { createBrowserEnv } from './env';
 import { installLifecycle } from './lifecycle';
 import { createAppServices } from './services';
-import { createNavigatorUiStores, createPanelsStore } from '@/ui/state';
+import { createNavigatorUi, createPanelsStore, NAVIGATOR_UI_KEY } from '@/ui/state';
 import { createTextMeasurer } from './text-measurer';
 import type { DemoLoad } from './window/context';
 import { createNavigatorPorts } from './window/navigator-port';
-import { createPanelsPort } from './window/panels-port';
+import { createPanelsPort, createUiEntryPort } from './window/panels-port';
 
 /** The bundled demo file, served from this origin (the import pipeline reads it like any file the user picks). */
 async function loadDemo(): Promise<DemoLoad> {
@@ -37,8 +37,11 @@ async function start(): Promise<void> {
     timers: env.timers,
     log: (type, message) => services.logApp(type, message),
   });
-  const navigator = createNavigatorPorts(services, measurer, env.timers, createNavigatorUiStores());
+  const navigatorUi = createNavigatorUi(createUiEntryPort(services, NAVIGATOR_UI_KEY), env.timers, (type, message) => services.logApp(type, message));
+  const navigator = createNavigatorPorts(services, measurer, env.timers, navigatorUi);
   installLifecycle(services, window);
+  // A move made less than the debounce ago is written when the page goes away (best effort; the write is asynchronous).
+  window.addEventListener('pagehide', () => void navigatorUi.flush());
   createRoot(rootElement).render(
     <StrictMode>
       <App value={{ services, panels, navigator, loadDemo, reload: () => window.location.reload() }} />

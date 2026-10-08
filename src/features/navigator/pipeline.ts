@@ -8,11 +8,14 @@
  *  - Memos key on object identity; no content hash. A superseded run is never shown (a token, and the service cancels the call).
  *  - A failure value is an error state with its code. While a new layout is computed the previous Scene stays on screen; the skeleton
  *    shows only when there is no Scene yet and `SKELETON_DELAY_MS` have passed.
+ *  - Expansion entries that name no admitted hub are removed from the UI state (and logged), only after a projection built from a
+ *    loaded state; a selection that is not in a new Scene is cleared (and logged).
  * An indexes handle is asked for at every build and never kept.
  */
 import { DEFAULT_TRAVERSAL_LIMITS, createScopeOf, navigatorProjection, sameProjection } from '@/core/graph';
 import type { Projection, ProjectionRequest } from '@/core/graph';
 import type { ChangeSet } from '@/core/dataset/contracts';
+import { RECORD_KINDS, type CanonicalState } from '@/core/schema';
 import type { LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
 import { buildLayoutRequest, buildScene, nodeSizes } from '@/render/scene';
 import type { NodeSizes, Scene } from '@/render/scene';
@@ -24,8 +27,11 @@ import { createScenePorts } from './scene-ports';
 export const SKELETON_DELAY_MS = 300;
 /** The service's view key: one navigator drawing, so a newer request replaces the older one. */
 export const LAYOUT_VIEW = 'navigator';
-/** Drawn hub pairs the navigator asks for by default (review decision 6 (1); set by the measurement of step 5.5a item l). */
-export const NAVIGATOR_MAX_EDGES = 800;
+/**
+ * Drawn hub pairs the navigator asks for by default (review decision 6 (1)). Measured in step 5.5a part 2 (item l): ELK mean at design
+ * dense, 60 anchored hubs, unexpanded: 3,325 ms at 800, 990 ms at 400, 377 ms at 240, 86 ms at 120; the largest under 300 ms is 120.
+ */
+export const NAVIGATOR_MAX_EDGES = 120;
 export const NAVIGATOR_MAX_NODES = 400;
 
 export interface NavigatorState {
@@ -56,6 +62,14 @@ export interface NavigatorModel {
   stats(): PipelineStats;
 }
 
+const hubIdsOf = (projection: Projection): string[] => projection.nodes.filter((node) => node.role === 'anchor' || node.role === 'unclassified').map((node) => node.id);
+
+/** True when the state has at least one record (a `for...in` that stops at the first). */
+function hasRecords(state: CanonicalState): boolean {
+  for (const kind of RECORD_KINDS) for (const _id in state.records[kind]) return true;
+  return false;
+}
+
 const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [] };
 
 export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
@@ -66,6 +80,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
   let token = 0;
   let scheduled = false;
   let dirtyProjection = true;
+  let pruning = false;
   let epoch = 0;
   let projection: Projection | null = null;
   let sizes: { readonly of: Projection; readonly epoch: number; readonly value: NodeSizes } | null = null;
@@ -90,12 +105,28 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
     limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES },
   });
 
-  function buildProjection(): Projection {
+  function buildOnce(): Projection {
     const exam = ports.ui.exam.getState().active;
     const indexes = ports.indexes.current();
     const scopeOf = exam === null ? () => 'unmapped' as const : createScopeOf(indexes, exam.examId, exam.examVersionId);
     const built = navigatorProjection.build({ state: ports.store.getState(), indexes, scopeOf }, requestOf());
     counts.projections += 1;
+    return built;
+  }
+
+  function buildProjection(): Projection {
+    let built = buildOnce();
+    // An expansion entry that names no admitted hub is dropped (core stays silent on it), but only when the projection comes from a
+    // loaded state: an empty store admits no hub and must not wipe what was saved.
+    if (hasRecords(ports.store.getState())) {
+      pruning = true;
+      const removed = ports.ui.expansion.getState().prune(new Set(hubIdsOf(built)));
+      pruning = false;
+      if (removed.length > 0) {
+        ports.log('expansion_pruned', `removed ${removed.length} expansion ${removed.length === 1 ? 'entry' : 'entries'} that name no hub of the drawing: ${removed.slice(0, 5).join(', ')}${removed.length > 5 ? ', ...' : ''}`);
+        built = buildOnce();
+      }
+    }
     return projection !== null && sameProjection(projection, built) ? projection : built;
   }
 
@@ -145,7 +176,12 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
       if (!scene.ok) return fail(scene.code, scene.message);
       stopTimer?.();
       stopTimer = undefined;
-      const hubIds = current.nodes.filter((node) => node.role === 'anchor' || node.role === 'unclassified').map((node) => node.id);
+      const hubIds = hubIdsOf(current);
+      const selected = ports.ui.selection.getState().selected;
+      if (selected !== null && !(selected.kind === 'node' ? scene.scene.nodes.some((n) => n.id === selected.id) : scene.scene.edges.some((e) => e.id === selected.id))) {
+        ports.ui.selection.getState().select(null);
+        ports.log('selection_cleared', `the selected ${selected.kind} ${selected.id} is not in the drawing any more`);
+      }
       set({ scene: scene.scene, error: null, skeleton: false, working: false, hubIds });
     } catch (error) {
       if (mine !== token) return;
@@ -172,6 +208,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
     schedule();
   };
   const onRequest = (): void => {
+    if (pruning) return;
     dirtyProjection = true;
     schedule();
   };
