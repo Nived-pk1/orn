@@ -3566,3 +3566,12 @@ Changed tests: the two SVG snapshot files (the edge hit path is new in each edge
 `npm run check` as ONE command: before part 2 305 files, 4,528 tests; after 309 files, 4,577 tests (+4 files, +49 tests; Vitest 213 s), green. Chromium e2e 38 passed, 1 skipped (old `test.fixme`).
 REVIEW REQUIRED. (1) `NAVIGATOR_MAX_EDGES` is 120 by the rule (the rule picks 120 although 240 is 377 ms: close to the line). (2) The layout is not stable under the first interaction (above); a fix is a layout-worker or request-mapping change and was NOT made (layer hints for hubs were excluded by the 5.4b review decision 3). (3) `NavigatorPorts.uiStatus` added (the status of the saved view). (4) Settling a viewport saves the fitted view too, so a window resize before any gesture is not saved but the first fit is. (5) A toggle's viewport shift applies at the next Scene; if the toggle yields no new Scene the shift is applied at the following one.
 Amendments (additive, no schema change): `SceneSvgProps.onSceneClick` / `onSceneDoubleClick` and `SceneHit`; `ViewportSceneProps.initialViewport` / `onSettled` / click props; `ViewportController.setViewport`; `keepScreenPoint`, `toScreen`; `NavigatorPorts.uiStatus`.
+
+### Step 5.5a parts 1-2 review (reviewer, 2026-10-08)
+
+Verdict: ACCEPTED. Session start: `git status` clean, HEAD 64089da.
+1. Parts 1 and 2 are approved as built, with their additive amendments (onSceneClick / onSceneDoubleClick, SceneHit, initialViewport, onSettled, setViewport, keepScreenPoint, toScreen, NavigatorPorts.uiStatus), the 60 s limit of the real-threads project in vitest.config.ts, and the changed snapshots.
+2. REVIEW REQUIRED 1 (NAVIGATOR_MAX_EDGES = 120 by the rule): approved. Initial dense at 120 measured 378 ms mean: Gate E watch item (openItem).
+3. REVIEW REQUIRED 2 (the first layout moves on the first interaction): fixed in Part B item b.
+4. REVIEW REQUIRED 4 and 5: accepted.
+5. The readability fact sheet is accepted. The user's look: the overview is hard to read (labels overlap, every arrow dotted, diagonal lines through text, long reagent names). The decisions are items a to g of Part B part 1. They replace, for the navigator, the 5.4a arrow-text decision (2) and the "dotted everywhere" reading of GRAPH_SEMANTICS §3 / §4. Dated lines: ARCHITECTURE_DECISIONS (ADR-007, item c), GRAPH_SEMANTICS §3 and §4 (items d, e), UI_ARCHITECTURE §6 (items a, b, f, g).

@@ -145,6 +145,7 @@ Pointer state machine on the canvas: `idle → pressed → (moved > 4 px) pannin
 
 Touch: one-finger pan, pinch zoom, tap select, double-tap expand, long-press (500 ms) context menu. Focus history (Alt+←/→) is UI state and survives view switches.
 - *2026-10-07 (step 5.4a, additive):* `SceneNode.box` (`BoxKind`: hub, species, reagent, member, overflow, unclassified) is added, because a member of a hub and a species outside one share a glyph but not a box, and the renderer needs the box for fonts and shape. `src/render/svg` draws the Scene in five memoised layers (edges, nodes, labels, badges, overlay) inside ONE root `<svg>` and ONE world `<g>`; selection and focus are props drawn by the overlay only; a depiction is only an `<image href>` served by a bounded LRU manager (500 keys) that is injected with its fetch, URL and timer functions.
+- *2026-10-08 (step 5.5a review, items a, b, f, g).* (a) A layout edge may carry ONE label size and the result gives the label position; the Scene's `labelAt` comes from it (the fallback layout has no labels and keeps the route midpoint, said in its notice). (b) A layout that answered a request with no previous positions is followed once by a second request with that result as previous; only the second answer is drawn. (f) Arrow text and count badges have a paper-coloured outline under the glyphs (CSS class, no style attribute). (g) Until the inspector exists (5.6a) the inspector pane starts closed by default (a saved choice wins); the line naming the selection sits next to the canvas toolbar.
 
 ## 11. Accessibility
 
