@@ -10,7 +10,7 @@ import { memo } from 'react';
 import type { LodLevel, Scene, SceneEdge, SceneNode } from '@/render/scene';
 import type { DefIds } from './defs';
 import type { DepictionSource, LayerName } from './contracts';
-import { ARROW_TEXT_LIFT, ARROW_TEXT_SIZE, textSlots, visibleAt } from './geometry';
+import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, textSlots, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
 import { Runs } from './text';
 import { useCommitProbe } from './use-commit-probe';
@@ -41,18 +41,19 @@ function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; re
 function ArrowText(props: { readonly edge: SceneEdge }) {
   const { edge } = props;
   if (edge.above === undefined && edge.below === undefined) return null;
+  // The lines (above, then below) are centred on `labelAt`, the centre of the box the layout reserved for them.
+  const lines = [
+    ...(edge.above === undefined ? [] : [{ side: 'above', runs: edge.above }]),
+    ...(edge.below === undefined ? [] : [{ side: 'below', runs: edge.below }]),
+  ];
+  const top = edge.labelAt.y - (lines.length * ARROW_LINE_HEIGHT) / 2;
   return (
     <g data-arrow-text-of={edge.id}>
-      {edge.above === undefined ? null : (
-        <text className={styles.arrowText} x={edge.labelAt.x} y={edge.labelAt.y - ARROW_TEXT_LIFT} fontSize={ARROW_TEXT_SIZE} data-side="above">
-          <Runs runs={edge.above} size={ARROW_TEXT_SIZE} />
+      {lines.map((line, i) => (
+        <text key={line.side} className={styles.arrowText} x={edge.labelAt.x} y={top + i * ARROW_LINE_HEIGHT + ARROW_TEXT_SIZE * 0.9} fontSize={ARROW_TEXT_SIZE} data-side={line.side}>
+          <Runs runs={line.runs} size={ARROW_TEXT_SIZE} />
         </text>
-      )}
-      {edge.below === undefined ? null : (
-        <text className={styles.arrowText} x={edge.labelAt.x} y={edge.labelAt.y + ARROW_TEXT_LIFT + ARROW_TEXT_SIZE} fontSize={ARROW_TEXT_SIZE} data-side="below">
-          <Runs runs={edge.below} size={ARROW_TEXT_SIZE} />
-        </text>
-      )}
+      ))}
     </g>
   );
 }

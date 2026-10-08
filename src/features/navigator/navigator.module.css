@@ -42,3 +42,11 @@
   padding: var(--space-2) var(--space-3);
   color: var(--color-ink-2);
 }
+
+.selection {
+  flex: 1;
+  min-width: 12rem;
+  margin: 0;
+  text-align: right;
+  color: var(--color-ink-2);
+}

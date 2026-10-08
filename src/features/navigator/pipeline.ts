@@ -17,8 +17,8 @@ import type { Projection, ProjectionRequest } from '@/core/graph';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import { RECORD_KINDS, type CanonicalState } from '@/core/schema';
 import type { LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
-import { buildLayoutRequest, buildScene, nodeSizes } from '@/render/scene';
-import type { NodeSizes, Scene } from '@/render/scene';
+import { buildLayoutRequest, buildScene, labelSizes, nodeSizes } from '@/render/scene';
+import type { LabelSizes, NodeSizes, Scene } from '@/render/scene';
 import type { NavigatorError, NavigatorPorts } from './contracts';
 import { touchOf } from './reads';
 import { sameRequest } from './same-request';
@@ -83,7 +83,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
   let pruning = false;
   let epoch = 0;
   let projection: Projection | null = null;
-  let sizes: { readonly of: Projection; readonly epoch: number; readonly value: NodeSizes } | null = null;
+  let sizes: { readonly of: Projection; readonly epoch: number; readonly value: NodeSizes; readonly labels: LabelSizes } | null = null;
   let last: { readonly request: LayoutRequest; readonly result: LayoutResult } | null = null;
   let stopTimer: (() => void) | undefined;
   let offs: (() => void)[] = [];
@@ -149,11 +149,11 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
       const current = projection;
       const scenePorts = createScenePorts(ports.store.getState());
       if (sizes === null || sizes.of !== current || sizes.epoch !== epoch) {
-        sizes = { of: current, epoch, value: nodeSizes(current, scenePorts, ports.measurer.measure) };
+        sizes = { of: current, epoch, value: nodeSizes(current, scenePorts, ports.measurer.measure), labels: labelSizes(current, scenePorts, ports.measurer.measure) };
         counts.sizes += 1;
       }
       const previous: Record<string, Point> = last === null ? {} : { ...last.result.positions };
-      const built = buildLayoutRequest(current, sizes.value, { previous });
+      const built = buildLayoutRequest(current, sizes.value, { previous, labelSizes: sizes.labels });
       counts.requests += 1;
       if (!built.ok) return fail(built.code, built.message);
       let result: LayoutResult;
@@ -169,9 +169,26 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
         }
         result = outcome.result;
         last = { request: built.request, result };
+        if (built.request.previous === undefined) {
+          // A layout computed without previous positions differs from one that is given its own result as previous (ELK's interactive
+          // crossing minimisation), so the first interaction would move the view. Ask once more with the result as previous and show
+          // only that answer (step 5.5a, item b). Bounded: once per request, and the second request has previous positions.
+          const again = buildLayoutRequest(current, sizes.value, { previous: result.positions, labelSizes: sizes.labels });
+          counts.requests += 1;
+          if (!again.ok) return fail(again.code, again.message);
+          counts.layoutCalls += 1;
+          const second = await ports.layout.layout(LAYOUT_VIEW, again.request);
+          if (mine !== token) return;
+          if (!second.ok) {
+            if (second.code === 'CANCELLED') return;
+            return fail(second.code, second.message);
+          }
+          result = second.result;
+          last = { request: again.request, result };
+        }
       }
       if (mine !== token) return;
-      const scene = buildScene(current, result, { sizes: sizes.value }, scenePorts);
+      const scene = buildScene(current, result, { sizes: sizes.value, labelSizes: sizes.labels }, scenePorts);
       counts.scenes += 1;
       if (!scene.ok) return fail(scene.code, scene.message);
       stopTimer?.();

@@ -12,8 +12,11 @@ export interface LoopGeometry {
   readonly labelAt: Point;
 }
 
+/** Air between the far side of the loop and its label. */
+const LOOP_LABEL_GAP = 2;
+
 /** `box` is the node's top-left corner and size. The path goes out at 30% of the height and back in at 70%. */
-export function loopGeometry(box: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }): LoopGeometry {
+export function loopGeometry(box: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }, label?: { readonly width: number; readonly height: number }): LoopGeometry {
   const right = box.x + box.width;
   const top = box.y + box.height * 0.3;
   const bottom = box.y + box.height * 0.7;
@@ -25,6 +28,7 @@ export function loopGeometry(box: { readonly x: number; readonly y: number; read
       { x: far, y: bottom },
       { x: right, y: bottom },
     ],
-    labelAt: { x: far, y: box.y + box.height / 2 },
+    // With a label box (its width and height) the label sits to the right of the loop and stays at or below y = 0 (inside the bounds).
+    labelAt: label === undefined ? { x: far, y: box.y + box.height / 2 } : { x: far + LOOP_LABEL_GAP + label.width / 2, y: Math.max(label.height / 2, box.y + box.height / 2) },
   };
 }

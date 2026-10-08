@@ -7,6 +7,7 @@
 import type { Projection } from '@/core/graph/contracts';
 import { MAX_LAYOUT_EDGES, MAX_LAYOUT_NODES, type LayoutAlgorithm, type LayoutDirection, type LayoutEdgeInput, type LayoutNodeInput, type LayoutRequest, type Point } from '@/layout/contracts';
 import type { NodeSizes } from './contracts';
+import type { LabelSizes } from './label-sizes';
 import { drawnPaths } from './paths';
 
 export const LAYOUT_SEED = 1;
@@ -19,6 +20,8 @@ export interface LayoutRequestOptions {
   readonly spacing?: LayoutRequest['spacing'];
   /** Positions of the last layout; only those of nodes still in the projection are sent (ordering hints, never pins). */
   readonly previous?: Readonly<Record<string, Point>>;
+  /** Room for the text on each drawn path (`labelSizes`); a path without an entry asks for none. */
+  readonly labelSizes?: LabelSizes;
   /** Default: derived from the projection key, so the same inputs give the same request. */
   readonly requestId?: string;
 }
@@ -45,7 +48,10 @@ export function buildLayoutRequest(projection: Projection, sizes: NodeSizes, opt
   for (let i = 1; i < nodes.length; i += 1) {
     if ((nodes[i - 1] as LayoutNodeInput).id === (nodes[i] as LayoutNodeInput).id) return { ok: false, code: 'DUPLICATE_ID', message: `node "${(nodes[i] as LayoutNodeInput).id}" appears twice` };
   }
-  const edges: LayoutEdgeInput[] = paths.map((path) => ({ id: path.id, from: path.from, to: path.to }));
+  const edges: LayoutEdgeInput[] = paths.map((path) => {
+    const label = options.labelSizes?.get(path.id);
+    return { id: path.id, from: path.from, to: path.to, ...(label === undefined ? {} : { label: { width: label.width, height: label.height } }) };
+  });
   const present = new Set(nodes.map((node) => node.id));
   const previous: Record<string, Point> = {};
   for (const id of Object.keys(options.previous ?? {}).sort(compare)) {

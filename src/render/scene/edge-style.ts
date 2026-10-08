@@ -1,7 +1,7 @@
 /**
  * Edge styling (docs/GRAPH_SEMANTICS.md §4; step 5.3). Selectivity of a produces edge: exclusive and major solid heavy, minor
  * dashed, trace dotted light, mixture_component and unspecified solid normal. An inferred edge (class membership, never
- * stated) is dotted whatever its selectivity. A bundle is dotted only when EVERY drawn edge of it is inferred and takes the
+ * stated) is dotted whatever its selectivity, except a hub-to-hub arrow (see `styleOf`). A bundle is dotted only when EVERY drawn edge of it is inferred and takes the
  * weight (and, if not dotted, the stroke) of its best-ranked edge. Membership and overflow edges have their own light style.
  * Tables, no branching on names or IDs.
  */
@@ -41,6 +41,8 @@ export interface EdgeStyle {
   readonly arrowHead: SceneEdge['arrowHead'];
   /** The edge whose semantic and arrowhead the path takes: the best-ranked one. */
   readonly semantic: EdgeSemantic;
+  /** True for an inferred hub-to-hub arrow: not dotted (every roll-up is inferred), but its name says so. */
+  readonly viaMembership: boolean;
 }
 
 /** The best-ranked edge of a non-empty list: lowest rank, then lowest ID. */
@@ -55,11 +57,16 @@ export function bestEdge(edges: readonly GraphEdge[]): GraphEdge {
 }
 
 /** The style of one path from the edges it draws (a single edge, or a bundle's materialised edges). */
-export function styleOf(edges: readonly GraphEdge[]): EdgeStyle {
+/**
+ * `hubToHub`: both ends are hub nodes. Then every arrow is a roll-up and `inferred` says nothing, so the stroke follows the
+ * selectivity only (GRAPH_SEMANTICS §3 and §4, dated 2026-10-08); the name says "through class membership" instead.
+ */
+export function styleOf(edges: readonly GraphEdge[], hubToHub = false): EdgeStyle {
   const best = bestEdge(edges);
-  if (best.semantic === 'membership') return { stroke: 'solid', weight: 'light', arrowHead: 'none', semantic: 'membership' };
-  if (best.semantic === 'overflow') return { stroke: 'dashed', weight: 'light', arrowHead: 'none', semantic: 'overflow' };
+  if (best.semantic === 'membership') return { stroke: 'solid', weight: 'light', arrowHead: 'none', semantic: 'membership', viaMembership: false };
+  if (best.semantic === 'overflow') return { stroke: 'dashed', weight: 'light', arrowHead: 'none', semantic: 'overflow', viaMembership: false };
   const selectivity = selectivityOf(best);
   const allInferred = edges.every((edge) => edge.inferred);
-  return { stroke: allInferred ? 'dotted' : STROKE_OF[selectivity], weight: WEIGHT_OF[selectivity], arrowHead: ARROW_HEAD[best.semantic], semantic: best.semantic };
+  const dotted = allInferred && !hubToHub;
+  return { stroke: dotted ? 'dotted' : STROKE_OF[selectivity], weight: WEIGHT_OF[selectivity], arrowHead: ARROW_HEAD[best.semantic], semantic: best.semantic, viaMembership: hubToHub && allInferred };
 }

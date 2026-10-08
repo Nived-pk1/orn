@@ -79,10 +79,10 @@ export function nodeAria(node: GraphNode, content: NodeContent, counts: NodeCoun
   return parts.join(', ');
 }
 
-export function edgeAria(path: DrawnPath, semantic: SceneEdge['semantic'], fromName: string, toName: string, drawn: number): string {
+export function edgeAria(path: DrawnPath, semantic: SceneEdge['semantic'], fromName: string, toName: string, drawn: number, viaMembership = false): string {
   if (semantic === 'membership') return `${toName} is a member of ${fromName}`;
   if (semantic === 'overflow') return `${toName} stands for hidden members of ${fromName}`;
   const what = path.loop ? `${fromName} back to itself` : `${fromName} to ${toName}`;
   const count = path.bundled || path.total > 1 ? `${plural(path.total, 'reaction')}${drawn < path.total ? `, ${drawn} drawn` : ''}` : '1 reaction';
-  return `${what}, ${count}`;
+  return `${what}, ${count}${viaMembership ? ', through class membership' : ''}`;
 }

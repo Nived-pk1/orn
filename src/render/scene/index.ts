@@ -5,5 +5,7 @@ export { buildLayoutRequest, directionOfView, DEFAULT_SPACING, LAYOUT_SEED } fro
 export type { LayoutRequestOptions, LayoutRequestResult } from './layout-request';
 export { formulaRuns, partsToRuns, plainRuns, richToRuns } from './formatted-text';
 export { nodeSizes, BOXES, GRID, roundUpToGrid } from './sizes';
+export { labelSizes, arrowLines, linesOfPath, ARROW_TEXT_SIZE, ARROW_LINE_HEIGHT, BADGE_SIZE, LABEL_MARGIN, countWidth } from './label-sizes';
+export type { LabelSize, LabelSizes } from './label-sizes';
 export { drawnPaths } from './paths';
 export type { DrawnPath } from './paths';

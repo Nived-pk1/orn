@@ -23,7 +23,7 @@ export function SceneSvg(props: SceneSvgProps) {
   const click = onSceneClick === undefined ? undefined : (event: MouseEvent): void => onSceneClick(hitOf(event.target));
   const doubleClick = onSceneDoubleClick === undefined ? undefined : (event: MouseEvent): void => onSceneDoubleClick(hitOf(event.target));
   return (
-    <svg ref={props.svgRef} onClick={click} onDoubleClick={doubleClick} className={props.interactive === true ? `${styles.root} ${styles.interactive}` : styles.root} role="group" aria-label={props.ariaLabel} data-lod={lod} xmlns="http://www.w3.org/2000/svg">
+    <svg ref={props.svgRef} onClick={click} onDoubleClick={doubleClick} className={props.interactive === true ? `${styles.root} ${styles.interactive}` : styles.root} role="group" aria-label={props.ariaLabel} data-lod={lod} data-scene-width={scene.bounds.width} data-scene-height={scene.bounds.height} xmlns="http://www.w3.org/2000/svg">
       <SceneDefs scene={scene} ids={ids} />
       <g ref={worldRef} data-world="true">
         <EdgesLayer scene={scene} lod={lod} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />

@@ -19,6 +19,7 @@ export function sameRequest(a: LayoutRequest, b: LayoutRequest): boolean {
     const x = a.edges[i];
     const y = b.edges[i];
     if (x === undefined || y === undefined || x.id !== y.id || x.from !== y.from || x.to !== y.to || x.priority !== y.priority) return false;
+    if (x.label?.width !== y.label?.width || x.label?.height !== y.label?.height) return false;
   }
   return true;
 }

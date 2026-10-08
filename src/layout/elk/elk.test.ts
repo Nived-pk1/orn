@@ -32,13 +32,26 @@ describe('mapRequest', () => {
     expect(input.notes).toEqual([]);
   });
 
-  it('layered: polyline edge routing and thoroughness 3 (step 4.4 review, ADR-007)', () => {
+  it('layered: orthogonal edge routing (step 5.5a review, item c) and thoroughness 3 (ADR-007)', () => {
     const options = mapRequest(request({ nodes: ['a', 'b'], edges: [['a', 'b']] })).graph.layoutOptions;
-    expect(options['elk.edgeRouting']).toBe('POLYLINE');
+    expect(options['elk.edgeRouting']).toBe('ORTHOGONAL');
+    // No label asked for: no label options, no edge-label spacing.
+    expect(options['elk.layered.edgeLabels.centerLabelPlacementStrategy']).toBeUndefined();
     expect(options['elk.layered.thoroughness']).toBe('3');
     const radial = mapRequest(request({ nodes: ['a', 'b'], edges: [['a', 'b']], algorithm: 'radial' })).graph.layoutOptions;
     expect(radial['elk.edgeRouting']).toBeUndefined();
     expect(radial['elk.layered.thoroughness']).toBeUndefined();
+  });
+
+  it('a label asked for becomes ONE ELK edge label with the centre options and a stated spacing (step 5.5a, item a)', () => {
+    const labelled = request({ nodes: ['a', 'b'], edges: [{ id: 'e1', from: 'a', to: 'b', label: { width: 90, height: 28 } }, { id: 'e2', from: 'a', to: 'b' }] });
+    const input = mapRequest(labelled);
+    expect(input.graph.edges[0]?.labels).toEqual([{ id: 'e1#label', text: '#', width: 90, height: 28, layoutOptions: { 'elk.edgeLabels.placement': 'CENTER', 'elk.edgeLabels.inline': 'false' } }]);
+    expect(input.graph.edges[1]?.labels).toBeUndefined();
+    expect(input.graph.layoutOptions['elk.layered.edgeLabels.centerLabelPlacementStrategy']).toBe('MEDIAN_LAYER');
+    expect(input.graph.layoutOptions['elk.spacing.edgeLabel']).toBe('4');
+    const radial = mapRequest({ ...labelled, algorithm: 'radial' });
+    expect(radial.notes).toContain('edge labels of 1 edge(s) are ignored by the radial layout');
   });
 
   it('the seed given to ELK is never 0 (ELK reads 0 as "from the clock") and stays within a Java int', () => {

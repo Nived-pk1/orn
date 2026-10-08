@@ -5,15 +5,13 @@
  * words), so the layer is hidden from assistive technology.
  */
 import { memo } from 'react';
-import type { LodLevel, Scene, SceneBadge, SceneEdge, SceneNode } from '@/render/scene';
+import { countWidth, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
 import type { LayerName } from './contracts';
 import { BADGE_GAP, BADGE_MARK, BADGE_SIZE, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
 import { useCommitProbe } from './use-commit-probe';
 
 const SHAPE_CLASS: Readonly<Partial<Record<SceneBadge['kind'], string>>> = { review: styles.badgeShapeReview, warning: styles.badgeShapeWarning, error: styles.badgeShapeError };
-
-const countWidth = (count: number): number => BADGE_SIZE + Math.max(0, String(count).length - 1) * 6;
 
 function Shape(props: { readonly shape: (typeof BADGE_MARK)[SceneBadge['kind']]['shape']; readonly width: number; readonly className: string }) {
   const { shape, width, className } = props;

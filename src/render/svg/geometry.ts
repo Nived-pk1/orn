@@ -4,7 +4,10 @@
  * weight, never colour alone; UI_ARCHITECTURE §3) and a test can read them from the DOM.
  */
 import type { LodLevel, SceneBadge, SceneEdge, SceneNode } from '@/render/scene';
-import { BOXES } from '@/render/scene';
+import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE, BOXES } from '@/render/scene';
+
+// The arrow-text and badge sizes belong to the Scene (the layout reserves room for them); the renderer draws in that room.
+export { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE };
 
 /** Dash pattern by stroke. Solid has none. Patterns differ in length so they differ at any width. */
 export const STROKE_DASH: Readonly<Record<SceneEdge['stroke'], string | undefined>> = { solid: undefined, dashed: '8 5', dotted: '1.5 4.5' };
@@ -17,12 +20,9 @@ export const WEIGHT_WIDTH: Readonly<Record<SceneEdge['weight'], number>> = { hea
 export const BOX_DASH = { unclassified: '2 3', overflow: '6 4' } as const;
 export const ARROW_SIZE = 10;
 export const HUB_RULE_WIDTH = 4;
-export const BADGE_SIZE = 14;
 export const BADGE_GAP = 3;
 export const SELECTION_PAD = 3;
 export const FOCUS_PAD = 6;
-export const ARROW_TEXT_SIZE = 11;
-export const ARROW_TEXT_LIFT = 5;
 
 /** The path data of a polyline. Numbers are written as numbers (never a string from the data). */
 export function pathData(points: readonly { readonly x: number; readonly y: number }[]): string {

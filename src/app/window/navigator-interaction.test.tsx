@@ -16,7 +16,8 @@ afterEach(cleanup);
 const drawing = (): Promise<HTMLElement> => screen.findByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ });
 const hub = (name: string): HTMLElement => screen.getByRole('graphics-symbol', { name: new RegExp(`^${name}, class hub`) });
 const symbols = (): number => screen.getAllByRole('graphics-symbol').length;
-const inspector = (): HTMLElement => screen.getByRole('region', { name: 'Inspector empty state' });
+// The line naming the selection sits next to the canvas toolbar (step 5.5a review, item g).
+const inspector = (): HTMLElement => screen.getByRole('toolbar', { name: 'Canvas tools' });
 const button = (name: string): HTMLElement => screen.getByRole('button', { name });
 const reasonOf = (name: string): string | null => {
   const id = button(name).getAttribute('aria-describedby');
@@ -40,8 +41,8 @@ describe('selection', () => {
 
   it('a click on an arrow selects the arrow', async () => {
     await opened();
-    fireEvent.click(screen.getByRole('graphics-symbol', { name: 'Alcohols to Aldehydes, 3 reactions' }));
-    expect(within(inspector()).getByText('Selected: Alcohols to Aldehydes, 3 reactions.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 3 reactions/ }));
+    expect(within(inspector()).getByText(/^Selected: Alcohols to Aldehydes, 3 reactions/)).toBeTruthy();
   });
 
   it('a click on empty canvas clears the selection', async () => {
@@ -60,7 +61,7 @@ describe('selection', () => {
 
   it('an arrow has an invisible hit path wider than its stroke', async () => {
     await opened();
-    const edge = screen.getByRole('graphics-symbol', { name: 'Alcohols to Aldehydes, 3 reactions' });
+    const edge = screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 3 reactions/ });
     const [line, hit] = Array.from(edge.querySelectorAll('path'));
     expect(Number(hit?.getAttribute('stroke-width'))).toBeGreaterThan(Number(line?.getAttribute('stroke-width')));
     expect(hit?.getAttribute('aria-hidden')).toBe('true');

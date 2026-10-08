@@ -27,8 +27,21 @@ export interface ElkEdge {
   sources: string[];
   targets: string[];
   layoutOptions?: Record<string, string>;
+  /** In the request one label with its size; in ELK's answer it also has its position. */
+  labels?: ElkLabel[];
   /** Only in ELK's answer. */
   sections?: readonly ElkSection[];
+}
+
+export interface ElkLabel {
+  id: string;
+  text?: string;
+  width: number;
+  height: number;
+  layoutOptions?: Record<string, string>;
+  /** Only in ELK's answer: the top-left corner. */
+  x?: number;
+  y?: number;
 }
 
 export interface ElkGraph {

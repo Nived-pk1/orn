@@ -12,6 +12,7 @@ import { keepScreenPoint, toScreen, ViewportScene, type ViewportController, type
 import type { Scene, SceneNode } from '@/render/scene';
 import { Button, Skeleton } from '@/ui/primitives';
 import { useNavigator, useNavigatorState } from './navigator-context';
+import { NavigatorSelection } from './navigator-selection';
 import styles from './navigator.module.css';
 
 const NO_IDS: ReadonlySet<string> = new Set();
@@ -105,6 +106,7 @@ export function NavigatorCanvas() {
         <Button onClick={() => selectedHub !== undefined && toggle(selectedHub)} {...(scene === null ? nothing : collapseReason === undefined ? {} : { unavailable: collapseReason })}>
           Collapse
         </Button>
+        <NavigatorSelection />
       </div>
       <div className={styles.drawing} aria-busy={state.working}>
         {state.error !== null ? (

@@ -50,6 +50,9 @@ export function checkRequest(request: LayoutRequest): RequestProblem | undefined
     if (last !== undefined && !(last < edge.id)) return bad(`edges must be sorted by id, without duplicates: "${edge.id}" follows "${last}"`);
     last = edge.id;
     if (!ids.has(edge.from) || !ids.has(edge.to)) return bad(`edge "${edge.id}" names a node that is not in the request`);
+    if (edge.label !== undefined && (!finite(edge.label.width, 1, MAX_COORDINATE) || !finite(edge.label.height, 1, MAX_COORDINATE))) {
+      return bad(`edge "${edge.id}": label needs a finite width and height of at least 1`);
+    }
     if (edge.priority !== undefined && !integer(edge.priority, 0, MAX_HINT)) return bad(`edge "${edge.id}": priority must be an integer from 0 to ${MAX_HINT}`);
   }
   if (request.previous !== undefined) {

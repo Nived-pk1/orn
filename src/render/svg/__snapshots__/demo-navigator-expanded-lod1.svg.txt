@@ -1,4 +1,4 @@
-<svg class="_root_e97cec" role="group" aria-label="Navigator: demo, hubs expanded" data-lod="1" xmlns="http://www.w3.org/2000/svg">
+<svg class="_root_e97cec" role="group" aria-label="Navigator: demo, hubs expanded" data-lod="1" data-scene-width="1532" data-scene-height="1256" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="orn-ID-arrow-filled" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
       <path class="_markerFilled_e97cec" d="M0 0 L10 5 L0 10 Z"></path>

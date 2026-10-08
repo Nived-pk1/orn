@@ -101,6 +101,8 @@ test.describe('the demo navigator', () => {
 
   test('the inspector says in words what arrives later', async ({ page }) => {
     await openNavigator(page);
+    // closed by default (step 5.5a review, item g); open it to read
+    await page.getByRole('button', { name: 'Show inspector' }).click();
     const inspector = page.getByRole('complementary', { name: 'Inspector' });
     await expect(inspector.getByText(/inspector arrives in step 5\.6a and search in step 5\.8/)).toBeVisible();
   });
@@ -163,12 +165,15 @@ test.describe('pan and zoom', () => {
     const after = await transformOf(page);
     expect(after.scale).toBeGreaterThan(before.scale);
     // zooming about the pointer keeps the world point under it: (p - t) / s is the same before and after
-    expect((px - after.x) / after.scale).toBeCloseTo((px - before.x) / before.scale, 1);
-    expect((py - after.y) / after.scale).toBeCloseTo((py - before.y) / before.scale, 1);
+    // Compared on the SCREEN (world difference times the scale, within 0.05 px): the world drawing is larger now (room for the arrow text), so
+    // the fitted scale is smaller and a fixed world tolerance became stricter in pixels than it was.
+    expect(Math.abs((px - after.x) / after.scale - (px - before.x) / before.scale) * after.scale).toBeLessThan(0.05);
+    expect(Math.abs((py - after.y) / after.scale - (py - before.y) / before.scale) * after.scale).toBeLessThan(0.05);
   });
 });
 
-const inspector = (page: Page) => page.getByRole('complementary', { name: 'Inspector' });
+// The line naming the selection sits next to the canvas toolbar (step 5.5a review, item g).
+const inspector = (page: Page) => page.getByRole('toolbar', { name: 'Canvas tools' });
 const hubGroup = (page: Page, id: string) => page.locator(`svg [data-node-id="${id}"]`);
 const nodeCount = (page: Page): Promise<number> => page.locator('svg [data-node-id]').count();
 

@@ -1,4 +1,4 @@
-<svg class="_root_e97cec" role="group" aria-label="Navigator: demo overview" data-lod="2" xmlns="http://www.w3.org/2000/svg">
+<svg class="_root_e97cec" role="group" aria-label="Navigator: demo overview" data-lod="2" data-scene-width="1264" data-scene-height="232" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="orn-ID-arrow-filled" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
       <path class="_markerFilled_e97cec" d="M0 0 L10 5 L0 10 Z"></path>
@@ -21,99 +21,99 @@
   </defs>
   <g data-world="true">
     <g data-layer="edges">
-      <g data-edge-id="bnd_324d46034ec02b80" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alkenes to Haloalkanes, 4 reactions">
-        <title>Alkenes to Haloalkanes, 4 reactions</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M796 132.41 L910 163.59" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="bnd_324d46034ec02b80" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alkenes to Haloalkanes, 4 reactions, through class membership">
+        <title>Alkenes to Haloalkanes, 4 reactions, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M796 132.41 L910 163.59" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M796 132.41 L910 163.59" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_5b25a181afc93270" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Aldehydes, 3 reactions">
-        <title>Alcohols to Aldehydes, 3 reactions</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M553.75 160 L702.25 72" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="bnd_5b25a181afc93270" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Aldehydes, 3 reactions, through class membership">
+        <title>Alcohols to Aldehydes, 3 reactions, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M553.75 160 L702.25 72" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M553.75 160 L702.25 72" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_a08c9dcf0ab7e7a8" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Haloalkanes to Alkenes, 2 reactions">
-        <title>Haloalkanes to Alkenes, 2 reactions</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M910 163.59 L796 132.41" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="bnd_a08c9dcf0ab7e7a8" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Haloalkanes to Alkenes, 2 reactions, through class membership">
+        <title>Haloalkanes to Alkenes, 2 reactions, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M910 163.59 L796 132.41" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M910 163.59 L796 132.41" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_c4d43e6b9551c256" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alkenes to Alcohols, 2 reactions">
-        <title>Alkenes to Alcohols, 2 reactions</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M676 133.78 L580 162.22" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="bnd_c4d43e6b9551c256" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alkenes to Alcohols, 2 reactions, through class membership">
+        <title>Alkenes to Alcohols, 2 reactions, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M676 133.78 L580 162.22" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M676 133.78 L580 162.22" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_cb00d015a2f16f5e" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes back to itself, 2 reactions">
-        <title>Aldehydes back to itself, 2 reactions</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M796 44 L824 44 L824 60 L796 60" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="bnd_cb00d015a2f16f5e" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes back to itself, 2 reactions, through class membership">
+        <title>Aldehydes back to itself, 2 reactions, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M796 44 L824 44 L824 60 L796 60" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M796 44 L824 44 L824 60 L796 60" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_fed74b5163e7e8c0" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Alcohols, 2 reactions">
-        <title>Aldehydes to Alcohols, 2 reactions</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M702.25 72 L553.75 160" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="bnd_fed74b5163e7e8c0" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Alcohols, 2 reactions, through class membership">
+        <title>Aldehydes to Alcohols, 2 reactions, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M702.25 72 L553.75 160" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M702.25 72 L553.75 160" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_1a1946269d939e45" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Esters to Alcohols, 1 reaction">
-        <title>Esters to Alcohols, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M1144 121.61 L580 174.39" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_1a1946269d939e45" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Esters to Alcohols, 1 reaction, through class membership">
+        <title>Esters to Alcohols, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M1144 121.61 L580 174.39" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M1144 121.61 L580 174.39" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_1c182e6b0d66f2d2" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Alcohols, 1 reaction">
-        <title>Ketones to Alcohols, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M350 156.35 L460 171.65" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_1c182e6b0d66f2d2" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Alcohols, 1 reaction, through class membership">
+        <title>Ketones to Alcohols, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M350 156.35 L460 171.65" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M350 156.35 L460 171.65" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_259afb9089da1c8f" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Haloalkanes, 1 reaction">
-        <title>Ketones to Haloalkanes, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M350 150.82 L910 177.18" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_259afb9089da1c8f" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Haloalkanes, 1 reaction, through class membership">
+        <title>Ketones to Haloalkanes, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M350 150.82 L910 177.18" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M350 150.82 L910 177.18" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_34c28eb87d128965" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Haloalkanes, 1 reaction">
-        <title>Alcohols to Haloalkanes, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M580 180 L910 180" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_34c28eb87d128965" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Haloalkanes, 1 reaction, through class membership">
+        <title>Alcohols to Haloalkanes, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M580 180 L910 180" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M580 180 L910 180" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_35346729a67ed440" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Amines to Diazonium salts, 1 reaction">
-        <title>Amines to Diazonium salts, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M120 84 L216 84" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_35346729a67ed440" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Amines to Diazonium salts, 1 reaction, through class membership">
+        <title>Amines to Diazonium salts, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M120 84 L216 84" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M120 84 L216 84" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_385c3a964b49c487" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Alkenes, 1 reaction">
-        <title>Alcohols to Alkenes, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M580 162.22 L676 133.78" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_385c3a964b49c487" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Alkenes, 1 reaction, through class membership">
+        <title>Alcohols to Alkenes, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M580 162.22 L676 133.78" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M580 162.22 L676 133.78" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_39cef07c4a0169b5" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Diazonium salts to Haloarenes, 1 reaction">
-        <title>Diazonium salts to Haloarenes, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M364 73.7 L460 60.35" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_39cef07c4a0169b5" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Diazonium salts to Haloarenes, 1 reaction, through class membership">
+        <title>Diazonium salts to Haloarenes, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M364 73.7 L460 60.35" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M364 73.7 L460 60.35" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_4bfe46bbb77accf6" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Unclassified, 1 reaction">
-        <title>Aldehydes to Unclassified, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M796 68.41 L906 98.5" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_4bfe46bbb77accf6" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Unclassified, 1 reaction, through class membership">
+        <title>Aldehydes to Unclassified, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M796 68.41 L906 98.5" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M796 68.41 L906 98.5" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_6f2e3faedc755975" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alkynes to Alkenes, 1 reaction">
-        <title>Alkynes to Alkenes, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M120 203.48 L676 124.52" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_6f2e3faedc755975" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alkynes to Alkenes, 1 reaction, through class membership">
+        <title>Alkynes to Alkenes, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M120 203.48 L676 124.52" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M120 203.48 L676 124.52" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_7cd7b1252e0235d2" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Diazonium salts to Phenols, 1 reaction">
-        <title>Diazonium salts to Phenols, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M364 94.3 L460 107.65" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_7cd7b1252e0235d2" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Diazonium salts to Phenols, 1 reaction, through class membership">
+        <title>Diazonium salts to Phenols, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M364 94.3 L460 107.65" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M364 94.3 L460 107.65" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_82c2e4140c8148ff" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Carboxylic acids, 1 reaction">
-        <title>Alcohols to Carboxylic acids, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M580 162.93 L899.69 72" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_82c2e4140c8148ff" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Carboxylic acids, 1 reaction, through class membership">
+        <title>Alcohols to Carboxylic acids, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M580 162.93 L899.69 72" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M580 162.93 L899.69 72" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_8ad76a96dd03ff47" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Carboxylic acids, 1 reaction">
-        <title>Aldehydes to Carboxylic acids, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M796 52 L892 52" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_8ad76a96dd03ff47" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Carboxylic acids, 1 reaction, through class membership">
+        <title>Aldehydes to Carboxylic acids, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M796 52 L892 52" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M796 52 L892 52" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_90472bc0bf31a157" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Ethers, 1 reaction">
-        <title>Alcohols to Ethers, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M580 180 L676 180" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_90472bc0bf31a157" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Ethers, 1 reaction, through class membership">
+        <title>Alcohols to Ethers, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M580 180 L676 180" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M580 180 L676 180" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_914300ba806c20c5" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Unclassified back to itself, 1 reaction">
@@ -121,34 +121,34 @@
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M1034 108 L1062 108 L1062 124 L1034 124" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M1034 108 L1062 108 L1062 124 L1034 124" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_a00793d88d8e9add" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Haloalkanes to Alcohols, 1 reaction">
-        <title>Haloalkanes to Alcohols, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M910 180 L580 180" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_a00793d88d8e9add" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Haloalkanes to Alcohols, 1 reaction, through class membership">
+        <title>Haloalkanes to Alcohols, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M910 180 L580 180" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M910 180 L580 180" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_a42c3acbd915486a" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Unclassified, 1 reaction">
-        <title>Ketones to Unclassified, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M350 145.18 L906 119.01" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_a42c3acbd915486a" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Unclassified, 1 reaction, through class membership">
+        <title>Ketones to Unclassified, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M350 145.18 L906 119.01" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M350 145.18 L906 119.01" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_a84f517db32c8b54" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Arenes to Ketones, 1 reaction">
-        <title>Arenes to Ketones, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M120 148 L230 148" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_a84f517db32c8b54" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Arenes to Ketones, 1 reaction, through class membership">
+        <title>Arenes to Ketones, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M120 148 L230 148" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M120 148 L230 148" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_cb2550c19b809402" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Carboxylic acids to Esters, 1 reaction">
-        <title>Carboxylic acids to Esters, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M1043.13 72 L1144 99.59" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_cb2550c19b809402" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Carboxylic acids to Esters, 1 reaction, through class membership">
+        <title>Carboxylic acids to Esters, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M1043.13 72 L1144 99.59" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M1043.13 72 L1144 99.59" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_d84c3dfd1ce69b46" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Esters to Carboxylic acids, 1 reaction">
-        <title>Esters to Carboxylic acids, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M1144 99.59 L1043.13 72" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_d84c3dfd1ce69b46" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Esters to Carboxylic acids, 1 reaction, through class membership">
+        <title>Esters to Carboxylic acids, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M1144 99.59 L1043.13 72" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M1144 99.59 L1043.13 72" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="edg_fd425dfbd902c1cc" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Unclassified, 1 reaction">
-        <title>Alcohols to Unclassified, 1 reaction</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M580 171.47 L906 125.1" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
+      <g data-edge-id="edg_fd425dfbd902c1cc" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Unclassified, 1 reaction, through class membership">
+        <title>Alcohols to Unclassified, 1 reaction, through class membership</title>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M580 171.47 L906 125.1" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M580 171.47 L906 125.1" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
     </g>
@@ -347,116 +347,144 @@
         </g>
       </g>
       <g data-arrow-text-of="edg_1a1946269d939e45">
-        <text class="_arrowText_e97cec" x="862" y="143" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="862" y="150.75" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
-          <tspan dy="-2.75">O, Acid (H⁺)</tspan>
+          <tspan dy="-2.75">O, H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">3</tspan>
+          <tspan dy="-2.75">O</tspan>
+          <tspan class="_script_e97cec" dy="-4.4">+</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_1c182e6b0d66f2d2">
-        <text class="_arrowText_e97cec" x="405" y="159" font-size="11" data-side="above">
-          <tspan>1. C</tspan>
-          <tspan class="_script_e97cec" dy="2.75">4</tspan>
-          <tspan dy="-2.75">H</tspan>
-          <tspan class="_script_e97cec" dy="2.75">10</tspan>
-          <tspan dy="-2.75">O</tspan>
+        <text class="_arrowText_e97cec" x="405" y="159.6" font-size="11" data-side="above">
+          <tspan>1. Diethyl ether</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="405" y="180" font-size="11" data-side="below">
-          <tspan>2. Acid (H⁺)</tspan>
+        <text class="_arrowText_e97cec" x="405" y="173.9" font-size="11" data-side="below">
+          <tspan>2. H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">3</tspan>
+          <tspan dy="-2.75">O</tspan>
+          <tspan class="_script_e97cec" dy="-4.4">+</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_259afb9089da1c8f">
-        <text class="_arrowText_e97cec" x="630" y="159" font-size="11" data-side="above">
-          <tspan>Iodine, Sodium hydroxide</tspan>
+        <text class="_arrowText_e97cec" x="630" y="166.75" font-size="11" data-side="above">
+          <tspan>I</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">, NaOH</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_34c28eb87d128965">
-        <text class="_arrowText_e97cec" x="745" y="175" font-size="11" data-side="above">
-          <tspan>Iodine, Sodium hydroxide</tspan>
+        <text class="_arrowText_e97cec" x="745" y="182.75" font-size="11" data-side="above">
+          <tspan>I</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">, NaOH</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_35346729a67ed440">
-        <text class="_arrowText_e97cec" x="168" y="79" font-size="11" data-side="above">
-          <tspan>Sodium nitrite, Hydrochloric acid</tspan>
+        <text class="_arrowText_e97cec" x="168" y="86.75" font-size="11" data-side="above">
+          <tspan>NaNO</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">, HCl</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_385c3a964b49c487">
-        <text class="_arrowText_e97cec" x="628" y="143" font-size="11" data-side="above">
-          <tspan>Sulfuric acid</tspan>
+        <text class="_arrowText_e97cec" x="628" y="150.75" font-size="11" data-side="above">
+          <tspan>H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">SO</tspan>
+          <tspan class="_script_e97cec" dy="2.75">4</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_39cef07c4a0169b5">
-        <text class="_arrowText_e97cec" x="412" y="62.02608695652174" font-size="11" data-side="above">
-          <tspan>Copper(I) chloride, Hydrochloric acid</tspan>
+        <text class="_arrowText_e97cec" x="412" y="69.77608695652174" font-size="11" data-side="above">
+          <tspan>CuCl, HCl</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_4bfe46bbb77accf6">
-        <text class="_arrowText_e97cec" x="851" y="78.45299145299145" font-size="11" data-side="above">
-          <tspan>Sodium hydroxide</tspan>
+        <text class="_arrowText_e97cec" x="851" y="86.20299145299145" font-size="11" data-side="above">
+          <tspan>NaOH</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_6f2e3faedc755975">
-        <text class="_arrowText_e97cec" x="398" y="159" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="398" y="166.75" font-size="11" data-side="above">
           <tspan>Lindlar's catalyst</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_7cd7b1252e0235d2">
-        <text class="_arrowText_e97cec" x="412" y="95.97391304347826" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="412" y="103.72391304347826" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">O</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_82c2e4140c8148ff">
-        <text class="_arrowText_e97cec" x="739.84375" y="112.46666666666667" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="739.84375" y="120.21666666666667" font-size="11" data-side="above">
           <tspan>Acidified potassium dichromate</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_8ad76a96dd03ff47">
-        <text class="_arrowText_e97cec" x="844" y="47" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="844" y="54.75" font-size="11" data-side="above">
           <tspan>acidified K₂Cr₂O₇</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_90472bc0bf31a157">
-        <text class="_arrowText_e97cec" x="628" y="175" font-size="11" data-side="above">
-          <tspan>Sulfuric acid</tspan>
+        <text class="_arrowText_e97cec" x="628" y="182.75" font-size="11" data-side="above">
+          <tspan>H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">SO</tspan>
+          <tspan class="_script_e97cec" dy="2.75">4</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_914300ba806c20c5">
-        <text class="_arrowText_e97cec" x="1062" y="111" font-size="11" data-side="above">
-          <tspan>Sulfuric acid</tspan>
+        <text class="_arrowText_e97cec" x="1084" y="118.75" font-size="11" data-side="above">
+          <tspan>H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">SO</tspan>
+          <tspan class="_script_e97cec" dy="2.75">4</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_a00793d88d8e9add">
-        <text class="_arrowText_e97cec" x="745" y="175" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="745" y="182.75" font-size="11" data-side="above">
           <tspan>aq. KOH</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_a42c3acbd915486a">
-        <text class="_arrowText_e97cec" x="628" y="127.09411764705882" font-size="11" data-side="above">
-          <tspan>Iodine, Sodium hydroxide</tspan>
+        <text class="_arrowText_e97cec" x="628" y="134.84411764705882" font-size="11" data-side="above">
+          <tspan>I</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">, NaOH</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_a84f517db32c8b54">
-        <text class="_arrowText_e97cec" x="175" y="143" font-size="11" data-side="above">
-          <tspan>Aluminium chloride</tspan>
+        <text class="_arrowText_e97cec" x="175" y="150.75" font-size="11" data-side="above">
+          <tspan>AlCl</tspan>
+          <tspan class="_script_e97cec" dy="2.75">3</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_cb2550c19b809402">
-        <text class="_arrowText_e97cec" x="1093.5625" y="80.7948717948718" font-size="11" data-side="above">
-          <tspan>Sulfuric acid</tspan>
+        <text class="_arrowText_e97cec" x="1093.5625" y="88.5448717948718" font-size="11" data-side="above">
+          <tspan>H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">SO</tspan>
+          <tspan class="_script_e97cec" dy="2.75">4</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_d84c3dfd1ce69b46">
-        <text class="_arrowText_e97cec" x="1093.5625" y="80.7948717948718" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="1093.5625" y="88.5448717948718" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
-          <tspan dy="-2.75">O, Acid (H⁺)</tspan>
+          <tspan dy="-2.75">O, H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">3</tspan>
+          <tspan dy="-2.75">O</tspan>
+          <tspan class="_script_e97cec" dy="-4.4">+</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_fd425dfbd902c1cc">
-        <text class="_arrowText_e97cec" x="743" y="143.28444444444443" font-size="11" data-side="above">
-          <tspan>Iodine, Sodium hydroxide</tspan>
+        <text class="_arrowText_e97cec" x="743" y="151.03444444444443" font-size="11" data-side="above">
+          <tspan>I</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">, NaOH</tspan>
         </text>
       </g>
     </g>
@@ -481,7 +509,7 @@
         <rect class="_badgeShape_e97cec" x="0.5" y="0.5" width="13" height="13" rx="6.5"></rect>
         <text class="_count_e97cec" x="7" y="10.5">2</text>
       </g>
-      <g transform="translate(817 45)" data-count-of="bnd_cb00d015a2f16f5e">
+      <g transform="translate(831 45)" data-count-of="bnd_cb00d015a2f16f5e">
         <title>2 reactions</title>
         <rect class="_badgeShape_e97cec" x="0.5" y="0.5" width="13" height="13" rx="6.5"></rect>
         <text class="_count_e97cec" x="7" y="10.5">2</text>

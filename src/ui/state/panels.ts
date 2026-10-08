@@ -21,7 +21,8 @@ export interface PanelValues {
   readonly startEmptyDismissed: boolean;
 }
 
-export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: true, startEmptyDismissed: false });
+/** The inspector starts closed until it has something to show (step 5.6a); a saved choice wins (step 5.5a review, item g). */
+export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: false });
 
 /** What the store says about keeping its values (shown in the status bar; nothing here is silent). */
 export type PanelPersistence =

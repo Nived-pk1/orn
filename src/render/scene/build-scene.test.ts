@@ -15,6 +15,8 @@ const names: Readonly<Record<string, { name: string; formula?: string }>> = {
 };
 const ports: ScenePorts = { ...nobodyPorts, describe: (ref) => names[ref.id] };
 const hubs = [node('cls_a'), node('cls_b'), node('cls_c')];
+const member = node('spc_m', { kind: 'species', record: { kind: 'species', id: 'spc_m' }, role: 'member' });
+const unclassified = node('virtual:unclassified', { kind: 'virtual', role: 'unclassified' });
 const edgeOf = (scene: Scene, id: string) => scene.edges.find((e) => e.id === id);
 
 describe('edge styling (GRAPH_SEMANTICS §4)', () => {
@@ -36,9 +38,31 @@ describe('edge styling (GRAPH_SEMANTICS §4)', () => {
     expect(drawn?.semantic).toBe('transforms_to');
   });
 
-  it.each(selectivities)('an inferred %s edge is dotted and keeps the weight of its selectivity', (selectivity) => {
-    const { scene } = pipe(projectionOf({ nodes: hubs, edges: [edge('e1', 'cls_a', 'cls_b', { selectivity, inferred: true })] }), ports);
+  it.each(selectivities)('an inferred %s edge with a member end is dotted and keeps the weight of its selectivity', (selectivity) => {
+    const { scene } = pipe(projectionOf({ nodes: [...hubs, member], edges: [edge('e1', 'cls_a', 'spc_m', { selectivity, inferred: true })] }), ports);
     expect([edgeOf(scene, 'e1')?.stroke, edgeOf(scene, 'e1')?.weight]).toEqual(['dotted', expected[selectivity][1]]);
+    expect(edgeOf(scene, 'e1')?.ariaLabel).not.toContain('through class membership');
+  });
+
+  // Step 5.5a review, item d: both ends are hubs, so "inferred" is true of every arrow and says nothing.
+  const hubPairs = [
+    ['two anchored hubs', 'cls_a', 'cls_b'],
+    ['an anchored hub and Unclassified', 'cls_a', 'virtual:unclassified'],
+    ['Unclassified and an anchored hub', 'virtual:unclassified', 'cls_b'],
+    ['a hub and itself', 'cls_a', 'cls_a'],
+  ] as const;
+  for (const [name, from, to] of hubPairs) {
+    it.each(selectivities)(`an inferred %s arrow between ${name} follows its selectivity only and says "through class membership"`, (selectivity) => {
+      const { scene } = pipe(projectionOf({ nodes: [...hubs, unclassified], edges: [edge('e1', from, to, { selectivity, inferred: true })] }), ports);
+      expect([edgeOf(scene, 'e1')?.stroke, edgeOf(scene, 'e1')?.weight]).toEqual(expected[selectivity]);
+      expect(edgeOf(scene, 'e1')?.ariaLabel).toContain('through class membership');
+    });
+  }
+
+  it('a stated hub-to-hub arrow does not mention class membership; an inferred arrow from a member to a hub is dotted', () => {
+    const { scene } = pipe(projectionOf({ nodes: [...hubs, member], edges: [edge('e1', 'cls_a', 'cls_b'), edge('e2', 'spc_m', 'cls_b', { inferred: true })] }), ports);
+    expect(edgeOf(scene, 'e1')?.ariaLabel).not.toContain('through class membership');
+    expect(edgeOf(scene, 'e2')?.stroke).toBe('dotted');
   });
 
   it('an edge without a selectivity is drawn as unspecified', () => {
@@ -71,10 +95,15 @@ describe('bundles (ADV-002, ADV-007)', () => {
     expect(scene.edges[0]?.ariaLabel).toContain('752 reactions, 2 drawn');
   });
 
-  it('is dotted only when every drawn edge is inferred', () => {
-    expect(two({ inferred: true }, { inferred: true }).edges[0]?.stroke).toBe('dotted');
-    expect(two({ inferred: true }, { inferred: false }).edges[0]?.stroke).toBe('solid');
-    expect(two({ inferred: false }, { inferred: false }).edges[0]?.stroke).toBe('solid');
+  it('is dotted only when every drawn edge is inferred (a member end; between hubs it is not dotted at all)', () => {
+    const toMember = (a: Partial<GraphEdge>, b: Partial<GraphEdge>) =>
+      pipe(projectionOf({ nodes: [...hubs, member], edges: [edge('e1', 'cls_a', 'spc_m', a), edge('e2', 'cls_a', 'spc_m', b)], bundles: [bundle('bnd_am', 'cls_a', 'spc_m', ['e1', 'e2'])] }), ports).scene;
+    expect(toMember({ inferred: true }, { inferred: true }).edges[0]?.stroke).toBe('dotted');
+    expect(toMember({ inferred: true }, { inferred: false }).edges[0]?.stroke).toBe('solid');
+    expect(toMember({ inferred: false }, { inferred: false }).edges[0]?.stroke).toBe('solid');
+    expect(two({ inferred: true }, { inferred: true }).edges[0]?.stroke).toBe('solid');
+    expect(two({ inferred: true }, { inferred: true }).edges[0]?.ariaLabel).toContain('through class membership');
+    expect(two({ inferred: true }, { inferred: false }).edges[0]?.ariaLabel).not.toContain('through class membership');
   });
 
   it('takes the weight of its best-ranked edge: a major beats a minor, a minor beats a trace', () => {

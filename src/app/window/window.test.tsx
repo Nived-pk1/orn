@@ -277,16 +277,24 @@ describe('the shell frame around the window', () => {
     expect(screen.getByRole('button', { name: 'File' })).toBeTruthy();
   });
 
+  it('the inspector starts closed (step 5.5a review, item g); a saved choice to open it wins', () => {
+    renderWithApp(app());
+    expect(screen.queryByRole('complementary', { name: 'Inspector' })).toBeNull();
+    cleanup();
+    renderWithApp(app({ panels: { stored: { inspectorOpen: true } } }));
+    expect(screen.getByRole('complementary', { name: 'Inspector' })).toBeTruthy();
+  });
+
   it('the inspector shows an empty state, the status line sits in the status bar, banners in the banner region', () => {
-    renderWithApp(app({ status: { singleTab: true } }));
-    expect(within(screen.getByRole('complementary', { name: 'Inspector' })).getByText('Nothing is selected.')).toBeTruthy();
+    renderWithApp(app({ status: { singleTab: true }, panels: { stored: { inspectorOpen: true } } }));
+    expect(within(screen.getByRole('complementary', { name: 'Inspector' })).getByRole('region', { name: 'Inspector empty state' })).toBeTruthy();
     expect(within(screen.getByRole('contentinfo')).getByRole('region', { name: 'Status' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Notices' }).textContent).toContain('no tab locks');
     expect(screen.getByRole('main').textContent).not.toContain('no tab locks');
   });
 
   it('a panel change reaches the panels store; a read-only tab says its layout is not saved', () => {
-    const a = app({ status: { mode: 'follower' }, panels: { mode: () => 'read_only' } });
+    const a = app({ status: { mode: 'follower' }, panels: { mode: () => 'read_only', stored: { inspectorOpen: true } } });
     renderWithApp(a);
     expect(within(screen.getByRole('region', { name: 'Panel layout' })).getByText('Panel layout is not saved: this tab is read-only.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Hide inspector' }));

@@ -7,8 +7,10 @@
  * not participants. A reactant nobody draws as a node (water, `entity_display`) is written on the arrow
  * (ADV-027). Order: stage order (array order is stage order), then the participant order of the record.
  * Decided by the 5.4a review (2026-10-07): that reactant goes ABOVE the arrow, first within its stage (it is a
- * reagent in the arrow's eyes). OPEN CHOICES, decided provisionally (docs/PROGRESS.md): a species is written
- * by its formula, anything else by its name; a stage number ("1.") is a separator part when the scheme says `showStageNumbers`; conditions (temperature, time) are
+ * reagent in the arrow's eyes). Names (step 5.5a review, item e; replaces the 5.4a provisional choice): `originalText` wins; a
+ * SOLVENT is written by its name; any other species, and a reagent backed by ONE species, by its formula when it has at most
+ * `MAX_FORMULA_CHARS` characters, else by its name; a reagent without a species by its name. A length rule, never a name rule.
+ * A stage number ("1.") is a separator part when the scheme says `showStageNumbers`; conditions (temperature, time) are
  * not produced, their placement and format are not in the docs.
  */
 import type { ConditionVariantId, ParticipantId, Reaction, ReactionScheme, RecordRef, SubstanceRef } from '../schema';
@@ -32,11 +34,17 @@ export interface ArrowTextContext {
   readonly conditionVariantIds: readonly ConditionVariantId[];
   /** The participant this arrow carries (left out of the text). */
   readonly carriedParticipantId?: ParticipantId;
-  /** Display name and formula of a record as plain text; undefined: the record is gone (its ID is written). */
+  /**
+   * Display name and formula of a record as plain text; undefined: the record is gone (its ID is written). For a REAGENT the
+   * formula is present exactly when the reagent is backed by ONE species (that species' formula); a reagent's own display text is not it.
+   */
   readonly describe: (ref: RecordRef) => { readonly name: string; readonly formula?: string } | undefined;
   /** False for a record whose `entity_display` says it is never a node. */
   readonly shownAsNode: (ref: RecordRef) => boolean;
 }
+
+/** A formula longer than this (in characters) is not written on an arrow: the name is (item e). */
+export const MAX_FORMULA_CHARS = 7;
 
 /** At most this many parts a side; the rest is one `more` part with its count. */
 export const MAX_ARROW_PARTS = 3;
@@ -74,11 +82,12 @@ function appliesTo(reaction: Reaction, participantId: string, variantIds: readon
   return listing.length === 0 || listing.some((v) => variantIds.includes(v.id));
 }
 
-function partOf(ref: SubstanceRef, original: string | undefined, context: ArrowTextContext): ArrowTextPart {
+function partOf(ref: SubstanceRef, role: Reaction['participants'][number]['role'], original: string | undefined, context: ArrowTextContext): ArrowTextPart {
   if (original !== undefined && original !== '') return { text: original, kind: 'name' };
   const described = context.describe(ref);
   if (described === undefined) return { text: ref.id, kind: 'name' };
-  if (ref.kind === 'species' && described.formula !== undefined && described.formula !== '') return { text: described.formula, kind: 'formula' };
+  const formula = described.formula;
+  if (role !== 'solvent' && (ref.kind === 'species' || ref.kind === 'reagent') && formula !== undefined && formula !== '' && [...formula].length <= MAX_FORMULA_CHARS) return { text: formula, kind: 'formula' };
   return { text: described.name === '' ? ref.id : described.name, kind: 'name' };
 }
 
@@ -132,7 +141,7 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
       rank = 0;
     }
     if (side === undefined) continue;
-    placed.push({ side, stage: stageOf(p.id), rank, part: partOf(p.ref, p.originalText, context) });
+    placed.push({ side, stage: stageOf(p.id), rank, part: partOf(p.ref, p.role, p.originalText, context) });
   }
   // Stable sort: stage order, an undrawn reactant first, then the order of the record.
   const ordered = placed.map((item, index) => ({ item, index })).sort((a, b) => a.item.stage - b.item.stage || a.item.rank - b.item.rank || a.index - b.index);

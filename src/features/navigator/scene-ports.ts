@@ -32,6 +32,15 @@ export function createScenePorts(state: CanonicalState): ScenePorts {
     const described: Described = { name: nameOf(record), ...(formula === undefined ? {} : { formula }), ...(charge === undefined ? {} : { charge }) };
     return described;
   };
+  // For arrow text a reagent has a formula only when it is exactly one species (its `speciesId`): that species' formula.
+  const describeForArrow: ScenePorts['describe'] = (ref) => {
+    if (ref.kind !== 'reagent') return describe(ref);
+    const reagent = recordOf(ref);
+    const speciesId = text(reagent?.speciesId);
+    const species = speciesId === undefined ? undefined : recordOf({ kind: 'species', id: speciesId } as RecordRef);
+    const formula = species === undefined ? undefined : formulaOf(species);
+    return reagent === undefined ? undefined : { name: nameOf(reagent), ...(formula === undefined ? {} : { formula }) };
+  };
   let schemes: Map<string, ReactionScheme[]> | undefined;
   const schemesOf = (reactionId: string): readonly ReactionScheme[] => {
     if (schemes === undefined) {
@@ -63,7 +72,7 @@ export function createScenePorts(state: CanonicalState): ScenePorts {
         schemes: schemesOf(reaction.id),
         conditionVariantIds: edge.conditionVariantIds,
         ...(edge.participantId === undefined ? {} : { carriedParticipantId: edge.participantId }),
-        describe,
+        describe: describeForArrow,
         shownAsNode,
       });
     },

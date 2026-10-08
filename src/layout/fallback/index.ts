@@ -20,6 +20,7 @@ export function fallbackNotes(request: LayoutRequest): string[] {
   const pinned = request.nodes.filter((node) => node.pinned !== undefined).length;
   if (pinned > 0) notes.push(`pinned positions of ${pinned} node(s) are not honoured by the fallback layout`);
   if (request.previous !== undefined && Object.keys(request.previous).length > 0) notes.push('previous positions are not used by the fallback layout');
+  if (request.edges.some((edge) => edge.label !== undefined)) notes.push('edge labels are not placed by the fallback layout (degraded mode): arrow text sits on the middle of each route');
   if (request.edges.some((edge) => edge.priority !== undefined)) notes.push('edge priority is not used by the fallback layout');
   return notes;
 }

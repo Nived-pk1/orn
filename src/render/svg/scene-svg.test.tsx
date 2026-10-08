@@ -8,7 +8,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BOXES, type Scene, type SceneNode } from '@/render/scene';
 import { demoNavigatorScene, draw, edge, node, sceneOf, withEdge, withNode } from '@/test-support/svg-kit';
 import { nobodyPorts, pipe, projectionOf } from '@/test-support/scene-kit';
-import { STROKE_DASH, WEIGHT_WIDTH } from './geometry';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { ARROW_LINE_HEIGHT, STROKE_DASH, WEIGHT_WIDTH } from './geometry';
 
 afterEach(cleanup);
 
@@ -138,7 +140,8 @@ describe('edges: stroke, weight and arrowheads', () => {
     ['mixture component', styled({ selectivity: 'mixture_component' }), 'solid', 'normal'],
     ['minor', styled({ selectivity: 'minor' }), 'dashed', 'normal'],
     ['trace', styled({ selectivity: 'trace' }), 'dotted', 'light'],
-    ['inferred major', styled({ selectivity: 'major', inferred: true }), 'dotted', 'heavy'],
+    ['inferred major, to a member', sceneOf([node('cls_a'), node('cls_b', { kind: 'species', role: 'member' })], [edge('e1', 'cls_a', 'cls_b', { selectivity: 'major', inferred: true })]), 'dotted', 'heavy'],
+    ['inferred major between hubs (item d: not dotted)', styled({ selectivity: 'major', inferred: true }), 'solid', 'heavy'],
     ['membership', styled({ semantic: 'membership', selectivity: undefined }), 'solid', 'light'],
     ['overflow', styled({ semantic: 'overflow', selectivity: undefined }), 'dashed', 'light'],
   ];
@@ -252,6 +255,39 @@ describe('text', () => {
     expect(Number(above.getAttribute('y'))).toBeLessThan(at.y);
     expect(Number(below.getAttribute('y'))).toBeGreaterThan(at.y);
     expect(all(below, 'tspan')).toHaveLength(3);
+  });
+});
+
+describe('arrow text in the box the layout reserved (step 5.5a, items a and f)', () => {
+  const lines = (above: boolean, below: boolean): { container: HTMLElement; at: { x: number; y: number }; ys: number[] } => {
+    const base = sceneOf([node('cls_a'), node('cls_b')], [edge('e1', 'cls_a', 'cls_b')]);
+    const scene = withEdge(base, 'e1', { ...(above ? { above: [{ text: 'NaOH' }] } : {}), ...(below ? { below: [{ text: 'heat' }] } : {}) });
+    const { container } = draw(scene, { lod: 2 });
+    const ys = all(container, '[data-arrow-text-of="e1"] text').map((t) => Number(t.getAttribute('y')));
+    return { container, at: scene.edges[0]?.labelAt as { x: number; y: number }, ys };
+  };
+
+  it('the lines are stacked in the order above, below and centred on the label point', () => {
+    const two = lines(true, true);
+    expect(two.ys).toHaveLength(2);
+    expect((two.ys[0] as number)).toBeLessThan(two.ys[1] as number);
+    // the midpoint of the two baselines is within one line of the label point (the block is centred)
+    expect(Math.abs(((two.ys[0] as number) + (two.ys[1] as number)) / 2 - two.at.y)).toBeLessThan(ARROW_LINE_HEIGHT);
+    const one = lines(true, false);
+    expect(one.ys).toHaveLength(1);
+    expect(Math.abs((one.ys[0] as number) - one.at.y)).toBeLessThan(ARROW_LINE_HEIGHT);
+  });
+
+  it('arrow text and the bundle count have a paper-coloured outline drawn under the glyphs, from the stylesheet and the tokens', () => {
+    const css = readFileSync(resolve(__dirname, 'scene-svg.module.css'), 'utf8');
+    for (const selector of ['.arrowText', '.count']) {
+      const start = css.indexOf(`${selector} {`);
+      const block = start < 0 ? "" : css.slice(start, css.indexOf("}", start));
+      expect(block, selector).toContain('paint-order: stroke');
+      expect(block, selector).toContain('stroke: var(--color-paper)');
+    }
+    const { container } = draw(demoNavigatorScene(false), { lod: 2 });
+    expect(all(container, '[data-arrow-text-of] text[style], [data-count-of] text[style]')).toEqual([]);
   });
 });
 

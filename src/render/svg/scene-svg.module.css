@@ -127,6 +127,11 @@
 .arrowText {
   fill: var(--color-ink-2);
   text-anchor: middle;
+  /* A paper-coloured outline under the glyphs, so a line behind the text never cuts a letter (step 5.5a, item f). */
+  stroke: var(--color-paper);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
 }
 
 /* Badges */
@@ -157,6 +162,10 @@
 
 .count {
   fill: var(--color-ink);
+  stroke: var(--color-paper);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
   text-anchor: middle;

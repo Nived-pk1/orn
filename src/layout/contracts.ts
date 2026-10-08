@@ -26,6 +26,11 @@ export interface LayoutEdgeInput {
   readonly from: string;
   readonly to: string;
   readonly priority?: number;
+  /**
+   * The size of the text this edge carries (step 5.5a, item a; additive). ELK reserves room for it (an edge label at the middle
+   * layer) and the result gives its position in `labelPositions`. An engine that cannot place labels ignores it and says so in `notes`.
+   */
+  readonly label?: { readonly width: number; readonly height: number };
 }
 
 /** Requests over these are refused as a value (step 4.4): ELK and the fallback are bounded, and the render budget is 400 / 800. */
@@ -71,6 +76,8 @@ export interface LayoutResult {
   /** Top-left corner of each node box. */
   readonly positions: Readonly<Record<string, Point>>;
   readonly edgeRoutes: Readonly<Record<string, readonly Point[]>>;
+  /** Top-left corner of the label box of each edge that asked for one (step 5.5a, item a; additive). Absent: no engine placed labels. */
+  readonly labelPositions?: Readonly<Record<string, Point>>;
   readonly bounds: { readonly width: number; readonly height: number };
   readonly durationMs: number;
   /**

@@ -20,7 +20,7 @@ describe('the window with records', () => {
   });
 
   it('says in words that the inspector arrives in step 5.6a and search in 5.8, and where the record counts are', async () => {
-    renderWithApp(fakeApp({ state: demoState() }));
+    renderWithApp(fakeApp({ state: demoState(), panels: { stored: { inspectorOpen: true } } }));
     await screen.findByRole('group', { name: /^Navigator:/ });
     const inspector = screen.getByRole('region', { name: 'Inspector empty state' });
     expect(within(inspector).getByText(/inspector arrives in step 5\.6a and search in step 5\.8/)).toBeTruthy();

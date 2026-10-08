@@ -4,6 +4,7 @@ import { emptyRecordTables, type CanonicalState, type ChemicalClass, type Reacti
 import { demoState } from '@/test-support/app-boot-kit';
 import { envelope, mustCommit } from '@/test-support/command-kit';
 import { navigatorRig, type NavigatorRig } from '@/test-support/navigator-kit';
+import { layoutCacheKey } from '@/layout';
 import { createNavigatorModel, SKELETON_DELAY_MS, type NavigatorModel } from './pipeline';
 
 // What jsdom and Node lack and these tests stub: no layout worker (a fake service over the pure fallback layout), no fonts or canvas
@@ -40,8 +41,9 @@ describe('the pipeline on the demo dataset', () => {
     expect(state.scene?.nodes).toHaveLength(16);
     expect(state.scene?.edges.length).toBeGreaterThan(0);
     expect(state.hubIds).toHaveLength(16);
-    expect(model.stats()).toMatchObject({ projections: 1, sizes: 1, layoutCalls: 1, scenes: 1 });
-    expect(rig.layout.requests).toHaveLength(1);
+    // The first view asks twice (item b): once without previous positions, once with that result as previous; only the second is drawn.
+    expect(model.stats()).toMatchObject({ projections: 1, sizes: 1, layoutCalls: 2, scenes: 1 });
+    expect(rig.layout.requests).toHaveLength(2);
     model.stop();
   });
 
@@ -60,9 +62,78 @@ describe('the pipeline on the demo dataset', () => {
     expect(rig.layout.requests[0]?.previous).toBeUndefined();
     rig.ui.expansion.getState().toggle('cls_alcohols');
     await settle();
+    expect(rig.layout.requests).toHaveLength(3);
+    const third = rig.layout.requests[2];
+    expect(Object.keys(third?.previous ?? {}).length).toBe(16);
+    model.stop();
+  });
+});
+
+describe('a stable first view (step 5.5a, item b)', () => {
+  it('shows only the second answer: the first result is the previous positions of the second request', async () => {
+    const { model, rig } = await started();
+    const [first, second] = rig.layout.requests;
+    expect(first?.previous).toBeUndefined();
+    expect(Object.keys(second?.previous ?? {})).toEqual(Object.keys(second?.previous ?? {}).slice().sort());
+    expect(second?.previous).toBeDefined();
+    // Same graph, same hints: the two requests differ only in `previous` (and nothing else is asked).
+    expect({ ...second, previous: undefined, requestId: '' }).toEqual({ ...first, previous: undefined, requestId: '' });
+    // The Scene stands on the second answer: its positions are the second result's, not the first's.
+    const drawn = model.getState().scene;
+    expect(drawn?.layoutKey).toBe(layoutCacheKey(second as NonNullable<typeof second>));
+    expect(drawn?.layoutKey).not.toBe(layoutCacheKey(first as NonNullable<typeof first>));
+    model.stop();
+  });
+
+  it('is bounded: two layouts per first view, and a rebuild with previous positions asks once', async () => {
+    const { model, rig } = await started();
     expect(rig.layout.requests).toHaveLength(2);
-    const second = rig.layout.requests[1];
-    expect(Object.keys(second?.previous ?? {}).length).toBe(16);
+    rig.ui.expansion.getState().toggle('cls_alcohols');
+    await settle();
+    expect(rig.layout.requests).toHaveLength(3);
+    rig.ui.expansion.getState().toggle('cls_alcohols');
+    await settle();
+    expect(rig.layout.requests).toHaveLength(4);
+    model.stop();
+  });
+
+  it('a failure of the second layout is an error state, and the first answer is never drawn', async () => {
+    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    const rig = navigatorRig(store);
+    let calls = 0;
+    const real = rig.layout.layout.bind(rig.layout);
+    rig.layout.layout = async (view, request) => {
+      calls += 1;
+      return calls === 2 ? { ok: false, code: 'UNAVAILABLE', message: 'second layout failed' } : real(view, request);
+    };
+    const model = createNavigatorModel(rig.ports);
+    model.start();
+    await settle();
+    expect(model.getState().scene).toBeNull();
+    expect(model.getState().error?.message).toBe('second layout failed');
+    model.stop();
+  });
+
+  it('a request superseded during the second layout is never drawn', async () => {
+    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    const rig = navigatorRig(store);
+    let release: () => void = () => undefined;
+    const real = rig.layout.layout.bind(rig.layout);
+    let calls = 0;
+    rig.layout.layout = async (view, request) => {
+      calls += 1;
+      if (calls === 2) await new Promise<void>((resolve) => (release = resolve));
+      return real(view, request);
+    };
+    const model = createNavigatorModel(rig.ports);
+    model.start();
+    await settle();
+    rig.ui.expansion.getState().toggle('cls_alcohols');
+    await settle();
+    release();
+    await settle();
+    // the Scene on screen answers the expanded view, never the first one
+    expect(model.getState().scene?.nodes.some((n) => n.box === 'member')).toBe(true);
     model.stop();
   });
 });
@@ -77,7 +148,7 @@ describe('what an edit rebuilds (counters)', () => {
     await settle();
     expect(model.stats()).toEqual(before);
     expect(model.getState().scene).toBe(scene);
-    expect(rig.layout.requests).toHaveLength(1);
+    expect(rig.layout.requests).toHaveLength(2);
     model.stop();
   });
 
@@ -91,14 +162,14 @@ describe('what an edit rebuilds (counters)', () => {
     // the projection did not change (same object kept), the sizes were recomputed
     expect(model.stats().sizes).toBe(2);
     expect(model.stats().scenes).toBe(2);
-    expect(rig.layout.requests.length).toBeLessThanOrEqual(2);
+    expect(rig.layout.requests.length).toBeLessThanOrEqual(3);
     model.stop();
   });
 
   it('a scheme placement edit changes the arrow text, and does not rebuild the projection', async () => {
     const { model, store } = await started();
     const edge = model.getState().scene?.edges.find((e) => e.id !== '' && e.above !== undefined && (e.below ?? []).length > 0 && e.from === 'cls_ketones' && e.to === 'cls_alcohols');
-    expect(edge?.below?.map((run) => run.text).join('')).toContain('Acid');
+    expect(edge?.below?.map((run) => run.text).join('')).toContain('H3O+');
     const before = model.stats();
     const scheme = Object.values(store.getState().records.reaction_scheme)[0] as ReactionScheme;
     const moved = scheme.placements.map((p) => (p.position === 'below_arrow' ? { ...p, position: 'above_arrow' as const } : p));
@@ -114,11 +185,13 @@ describe('what an edit rebuilds (counters)', () => {
 
   it('an identical layout request reuses the last result', async () => {
     const { model, store, rig } = await started();
-    const scheme = Object.values(store.getState().records.reaction_scheme)[0] as ReactionScheme;
-    mustCommit(store.dispatch(envelope('touch scheme', { type: 'record.update', record: { ...scheme, showStageNumbers: !scheme.showStageNumbers } })));
+    // A rename to a name of the same width (the fake measurer counts characters): the box sizes, the label sizes and so the request stay the same.
+    const hub = store.getState().records.class['cls_alcohols' as keyof CanonicalState['records']['class']] as ChemicalClass;
+    const same = (hub.names.display ?? hub.names.canonical).toUpperCase();
+    mustCommit(store.dispatch(envelope('rename hub', { type: 'record.update', record: { ...hub, names: { ...hub.names, display: same } } })));
     await settle();
-    expect(rig.layout.requests).toHaveLength(1);
-    expect(model.stats().layoutCalls).toBe(1);
+    expect(rig.layout.requests).toHaveLength(2);
+    expect(model.stats().layoutCalls).toBe(2);
     expect(model.stats().scenes).toBe(2);
     model.stop();
   });
@@ -240,8 +313,8 @@ describe('the expansion state and the selection (step 5.5a part 2)', () => {
     expect(rig.ui.expansion.getState().expansion.expanded).toEqual([{ nodeId: 'cls_alcohols', direction: 'both' }]);
     expect(rig.logs.filter((line) => line.type === 'expansion_pruned')).toHaveLength(1);
     expect(model.getState().error).toBeNull();
-    // one run only: the removal did not start a second layout
-    expect(rig.layout.requests).toHaveLength(1);
+    // one run only: the removal did not start a second layout (the two requests are the first view's, item b)
+    expect(rig.layout.requests).toHaveLength(2);
     model.stop();
   });
 

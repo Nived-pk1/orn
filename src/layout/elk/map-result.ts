@@ -7,6 +7,7 @@
 import type { LayoutRequest, LayoutResult, Point } from '../contracts';
 import { boundsOf, straightRoute, type Box } from '../geometry';
 import { layoutCacheKey } from '../cache-key';
+import { labelIdOf } from './map-request';
 import { spread, spreadFactor } from './spread';
 import type { ElkGraph, ElkSection } from './types';
 
@@ -48,7 +49,22 @@ export function mapResult(request: LayoutRequest, answer: ElkGraph, notes: reado
       if (!respread) straight += 1;
     }
   }
+  const labelPositions: Record<string, Point> = {};
+  const labelSize = new Map(request.edges.flatMap((edge) => (edge.label === undefined ? [] : [[edge.id, edge.label] as const])));
+  if (request.algorithm === 'layered') {
+    for (const edge of request.edges) {
+      const wanted = labelSize.get(edge.id);
+      const label = routed.get(edge.id)?.labels?.find((l) => l.id === labelIdOf(edge.id));
+      if (wanted === undefined) continue;
+      if (label === undefined || !Number.isFinite(label.x) || !Number.isFinite(label.y)) throw new Error(`ELK did not place the label of edge "${edge.id}"`);
+      labelPositions[edge.id] = { x: clean(label.x as number), y: clean(label.y as number) };
+    }
+  }
   const reach: Box[] = [...boxes.values()];
+  for (const [id, at] of Object.entries(labelPositions)) {
+    const size = labelSize.get(id) as { width: number; height: number };
+    reach.push({ x: at.x, y: at.y, width: size.width, height: size.height });
+  }
   for (const route of Object.values(edgeRoutes)) for (const p of route) reach.push({ x: p.x, y: p.y, width: 0, height: 0 });
   if (request.algorithm !== 'radial' && straight > 0) extra.push(`${straight} edge(s) had no route from ELK and are drawn straight`);
   return {
@@ -57,6 +73,7 @@ export function mapResult(request: LayoutRequest, answer: ElkGraph, notes: reado
     notes: [...notes, ...extra].sort(),
     positions,
     edgeRoutes,
+    ...(Object.keys(labelPositions).length === 0 ? {} : { labelPositions }),
     bounds: boundsOf(reach),
     durationMs,
     cacheKey: layoutCacheKey(request),

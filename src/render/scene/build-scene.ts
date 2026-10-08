@@ -10,6 +10,7 @@ import { countsByNode, edgeAria, nodeAria } from './aria';
 import type { FormattedText, LodLevel, NodeSizes, Scene, SceneBadge, SceneEdge, SceneNode, ScenePorts } from './contracts';
 import { styleOf } from './edge-style';
 import { partsToRuns } from './formatted-text';
+import type { LabelSize, LabelSizes } from './label-sizes';
 import { loopGeometry } from './loops';
 import { contentOf, type NodeContent } from './node-content';
 import { drawnPaths, type DrawnPath } from './paths';
@@ -17,6 +18,8 @@ import { drawnPaths, type DrawnPath } from './paths';
 export interface SceneOptions {
   /** The sizes the layout request was built from (`nodeSizes`); the layout result holds corners only. */
   readonly sizes: NodeSizes;
+  /** The label sizes the layout request was built from (`labelSizes`); they widen the bounds. Without them a label has no extent. */
+  readonly labelSizes?: LabelSizes;
 }
 
 export type SceneResult =
@@ -75,6 +78,11 @@ function arrowText(path: DrawnPath, ports: ScenePorts): { above?: FormattedText;
   return { ...(above.length === 0 ? {} : { above }), ...(below.length === 0 ? {} : { below }) };
 }
 
+/** The centre of the label box the layout placed (its top-left corner and the size asked for). */
+function labelCentre(at: Point | undefined, size: LabelSize | undefined): Point | undefined {
+  return at === undefined || size === undefined ? undefined : { x: at.x + size.width / 2, y: at.y + size.height / 2 };
+}
+
 export function buildScene(projection: Projection, layout: LayoutResult, options: SceneOptions, ports: ScenePorts): SceneResult {
   const paths = drawnPaths(projection);
   const counts = countsByNode(paths);
@@ -109,12 +117,17 @@ export function buildScene(projection: Projection, layout: LayoutResult, options
     });
   }
   const boxes = new Map(nodes.map((node) => [node.id, node]));
+  const isHub = (id: string): boolean => {
+    const box = contents.get(id)?.box;
+    return box === 'hub' || box === 'unclassified';
+  };
   const edges: SceneEdge[] = [];
   let width = layout.bounds.width;
   let height = layout.bounds.height;
   for (const path of paths) {
     const owner = boxes.get(path.from);
-    const loop = path.loop && owner !== undefined ? loopGeometry(owner) : undefined;
+    const labelSize = options.labelSizes?.get(path.id);
+    const loop = path.loop && owner !== undefined ? loopGeometry(owner, labelSize) : undefined;
     const points = loop?.points ?? (path.loop ? undefined : layout.edgeRoutes[path.id]);
     if (points === undefined || points.length === 0) {
       if (!path.loop || owner !== undefined) missing.push(path.id);
@@ -124,7 +137,12 @@ export function buildScene(projection: Projection, layout: LayoutResult, options
       width = Math.max(width, p.x);
       height = Math.max(height, p.y);
     }
-    const style = styleOf(path.edges);
+    const style = styleOf(path.edges, isHub(path.from) && isHub(path.to));
+    const labelAt = loop?.labelAt ?? labelCentre(layout.labelPositions?.[path.id], labelSize) ?? midpoint(points);
+    if (labelSize !== undefined) {
+      width = Math.max(width, labelAt.x + labelSize.width / 2);
+      height = Math.max(height, labelAt.y + labelSize.height / 2);
+    }
     const structural = style.semantic === 'membership' || style.semantic === 'overflow';
     edges.push({
       id: path.id,
@@ -135,11 +153,11 @@ export function buildScene(projection: Projection, layout: LayoutResult, options
       stroke: style.stroke,
       weight: style.weight,
       arrowHead: style.arrowHead,
-      labelAt: loop?.labelAt ?? midpoint(points),
+      labelAt,
       ...arrowText(path, ports),
       ...(path.bundled ? { bundleSize: path.total } : {}),
       minLod: structural ? 1 : 0,
-      ariaLabel: edgeAria(path, style.semantic, contents.get(path.from)?.name ?? path.from, contents.get(path.to)?.name ?? path.to, path.edges.length),
+      ariaLabel: edgeAria(path, style.semantic, contents.get(path.from)?.name ?? path.from, contents.get(path.to)?.name ?? path.to, path.edges.length, style.viaMembership),
     });
   }
   if (unsized.length > 0) return { ok: false, code: 'MISSING_SIZE', missing: unsized, message: `${unsized.length} nodes have no size, first "${unsized[0]}"` };

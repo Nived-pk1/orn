@@ -118,7 +118,8 @@ test.describe('the shell and the design system', () => {
 
   test('hit targets are at least 24 px', async ({ page }) => {
     await openApp(page);
-    for (const name of ['Load demo dataset', 'Import a file', 'Start empty', 'File', 'Hide inspector']) {
+    // The inspector starts closed (step 5.5a review, item g), so its button reads "Show inspector" at every size.
+    for (const name of ['Load demo dataset', 'Import a file', 'Start empty', 'File', 'Show inspector']) {
       const size = await page.getByRole('button', { name, exact: true }).boundingBox();
       expect(size?.height ?? 0, `${name} height`).toBeGreaterThanOrEqual(24);
       expect(size?.width ?? 0, `${name} width`).toBeGreaterThanOrEqual(24);
@@ -151,6 +152,7 @@ test.describe('panels survive a reload', () => {
     const seen = await watch(page);
     await page.setViewportSize({ width: 1400, height: 900 });
     await openApp(page);
+    await page.getByRole('button', { name: 'Show inspector' }).click();
     const handle = page.getByRole('separator', { name: 'Resize inspector' });
     await expect(handle).toHaveAttribute('aria-valuenow', '400');
     await handle.focus();
@@ -188,6 +190,7 @@ test.describe('the three breakpoints', () => {
   test('1280 px and wider: three panes, the inspector is a pane with a resize handle', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await openApp(page);
+    await page.getByRole('button', { name: 'Show inspector' }).click();
     const rail = await box(page, 'nav[aria-label="Modes"]');
     const canvas = await box(page, 'main');
     const inspector = await box(page, 'aside');
@@ -260,6 +263,9 @@ test.describe('a damaged uiState entry', () => {
     await page.reload();
     await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
     await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
+    // the damaged open state is reset to its default: closed
+    await expect(page.getByRole('separator', { name: 'Resize inspector' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Show inspector' }).click();
     await expect(page.getByRole('separator', { name: 'Resize inspector' })).toHaveAttribute('aria-valuenow', '400');
     await expect(page.getByRole('region', { name: 'Panel layout' })).toContainText('damaged and was reset (inspectorWidth, inspectorOpen)');
     await expectClean(seen);

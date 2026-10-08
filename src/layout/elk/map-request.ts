@@ -25,6 +25,12 @@ import type { LayoutRequest } from '../contracts';
 import { radialPlan, type RadialPlan } from './radial-tree';
 import type { ElkChild, ElkEdge, ElkGraph } from './types';
 
+/** The gap ELK keeps between an edge label and the edge and nodes around it (step 5.5a, item a). */
+export const EDGE_LABEL_SPACING = 4;
+/** ELK ignores a label whose text is empty (measured on 0.12.0: it gets no room and no position); the text itself is never drawn from it. */
+const LABEL_TEXT = '#';
+export const labelIdOf = (edgeId: string): string => `${edgeId}#label`;
+
 export interface ElkInput {
   readonly graph: ElkGraph;
   readonly notes: string[];
@@ -89,6 +95,8 @@ function notesFor(request: LayoutRequest, usesPrevious: boolean): string[] {
     if (algorithm !== 'layered') notes.push(`previous positions are ignored by the ${algorithm} layout`);
     else if (!usesPrevious) notes.push('previous positions name no node of the request, so they were not used');
   }
+  const labelled = request.edges.filter((edge) => edge.label !== undefined).length;
+  if (labelled > 0 && algorithm !== 'layered') notes.push(`edge labels of ${labelled} edge(s) are ignored by the ${algorithm} layout`);
   if (algorithm !== 'layered' && request.edges.some((edge) => edge.priority !== undefined)) notes.push(`edge priority is ignored by the ${algorithm} layout`);
   return notes;
 }
@@ -119,8 +127,12 @@ export function mapRequest(request: LayoutRequest): ElkInput {
 
   if (algorithm === 'layered') {
     options['elk.direction'] = request.direction;
-    options['elk.edgeRouting'] = 'POLYLINE';
+    options['elk.edgeRouting'] = 'ORTHOGONAL';
     options['elk.layered.thoroughness'] = '3';
+    if (request.edges.some((edge) => edge.label !== undefined)) {
+      options['elk.layered.edgeLabels.centerLabelPlacementStrategy'] = 'MEDIAN_LAYER';
+      options['elk.spacing.edgeLabel'] = String(EDGE_LABEL_SPACING);
+    }
     options['elk.layered.spacing.nodeNodeBetweenLayers'] = String(spacing.layer);
     options['elk.layered.spacing.edgeNodeBetweenLayers'] = String(spacing.edge);
     options['elk.layered.spacing.edgeEdgeBetweenLayers'] = String(spacing.edge);
@@ -145,6 +157,11 @@ export function mapRequest(request: LayoutRequest): ElkInput {
       children.sort((a, b) => (hint.get(a.id) as number) - (hint.get(b.id) as number) || (a.id < b.id ? -1 : 1));
     }
     request.edges.forEach((edge, i) => {
+      if (edge.label !== undefined) {
+        (edges[i] as ElkEdge).labels = [
+          { id: labelIdOf(edge.id), text: LABEL_TEXT, width: edge.label.width, height: edge.label.height, layoutOptions: { 'elk.edgeLabels.placement': 'CENTER', 'elk.edgeLabels.inline': 'false' } },
+        ];
+      }
       if (edge.priority !== undefined) (edges[i] as ElkEdge).layoutOptions = { 'elk.layered.priority.direction': String(edge.priority) };
     });
   } else if (algorithm === 'radial') {

@@ -8,7 +8,6 @@ import { useCallback, useMemo, useState } from "react";
 import {
   NavigatorCanvas,
   NavigatorProvider,
-  NavigatorSelection,
   NavigatorStatus,
 } from "@/features/navigator";
 import {
@@ -105,7 +104,6 @@ function Canvas(props: {
 function InspectorEmpty() {
   return (
     <section aria-label="Inspector empty state">
-      <NavigatorSelection />
       <p>
         What you select in the navigator will be described here. The inspector
         arrives in step 5.6a and search in step 5.8.

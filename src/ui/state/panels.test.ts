@@ -105,7 +105,7 @@ describe('the panels store', () => {
     const p = port();
     const timers = manualTimers();
     const store = createPanelsStore(p, timers);
-    store.getState().setInspectorOpen(true);
+    store.getState().setInspectorOpen(false);
     store.getState().setInspectorWidth(INSPECTOR_DEFAULT);
     timers.advance(10_000);
     expect(p.saved).toEqual([]);
@@ -160,10 +160,10 @@ describe('the panels store', () => {
     const fail = vi.fn().mockRejectedValueOnce(new Error('quota')).mockResolvedValue(undefined);
     const timers = manualTimers();
     const store = createPanelsStore(port({ save: fail }), timers);
-    store.getState().setInspectorOpen(false);
+    store.getState().setInspectorOpen(true);
     timers.advance(SAVE_DEBOUNCE_MS);
     await vi.waitFor(() => expect(store.getState().persistence).toEqual({ kind: 'save_failed', message: 'quota' }));
-    store.getState().setInspectorOpen(true);
+    store.getState().setInspectorOpen(false);
     timers.advance(SAVE_DEBOUNCE_MS);
     await vi.waitFor(() => expect(store.getState().persistence).toEqual({ kind: 'saved' }));
   });

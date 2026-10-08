@@ -7,7 +7,7 @@ import type { EdgeBundle, GraphEdge, GraphNode, Projection } from '@/core/graph/
 import type { AnyRecord, CanonicalState, Reaction, RecordRef } from '@/core/schema';
 import { layoutFallback } from '@/layout';
 import type { LayoutResult } from '@/layout/contracts';
-import { buildLayoutRequest, buildScene, nodeSizes, type LayoutRequestOptions, type NodeSizes, type Scene, type ScenePorts, type TextMeasurer } from '@/render/scene';
+import { buildLayoutRequest, buildScene, labelSizes, nodeSizes, type LabelSizes, type LayoutRequestOptions, type NodeSizes, type Scene, type ScenePorts, type TextMeasurer } from '@/render/scene';
 import type { LayoutRequest } from '@/layout/contracts';
 
 /** Width by characters, height by size: no fonts, no DOM. */
@@ -32,6 +32,16 @@ export function portsOf(state: CanonicalState, depictions = false): ScenePorts {
     const charge = record.charge as number | undefined;
     return { name: nameOf(record), ...(formula === undefined ? {} : { formula }), ...(charge === undefined ? {} : { charge }) };
   };
+  // As in the app's scene ports: a reagent has a formula for arrow text only when it is exactly one species.
+  const describeForArrow: ScenePorts['describe'] = (ref) => {
+    if (ref.kind !== 'reagent') return describe(ref);
+    const reagent = recordOf(state, ref);
+    if (reagent === undefined) return undefined;
+    const speciesId = reagent.speciesId as string | undefined;
+    const species = speciesId === undefined ? undefined : recordOf(state, { kind: 'species', id: speciesId } as RecordRef);
+    const formula = (species?.formula ?? species?.formulaText) as string | undefined;
+    return { name: nameOf(reagent), ...(formula === undefined ? {} : { formula }) };
+  };
   const hidden = new Set(Object.values(state.records.entity_display).filter((d) => d.showAsNode === 'never').map((d) => `${d.target.kind}:${d.target.id}`));
   return {
     describe,
@@ -44,7 +54,7 @@ export function portsOf(state: CanonicalState, depictions = false): ScenePorts {
         schemes: Object.values(state.records.reaction_scheme).filter((scheme) => scheme.reactionId === reaction.id),
         conditionVariantIds: edge.conditionVariantIds,
         ...(edge.participantId === undefined ? {} : { carriedParticipantId: edge.participantId }),
-        describe,
+        describe: describeForArrow,
         shownAsNode: (ref) => !hidden.has(`${ref.kind}:${ref.id}`),
       });
     },
@@ -93,6 +103,7 @@ export function projectionOf(parts: { nodes: readonly GraphNode[]; edges?: reado
 
 export interface Piped {
   readonly sizes: NodeSizes;
+  readonly labels: LabelSizes;
   readonly request: LayoutRequest;
   readonly layout: LayoutResult;
   readonly scene: Scene;
@@ -101,12 +112,13 @@ export interface Piped {
 /** projection -> sizes -> request -> the pure fallback layout -> scene; throws on a refused step (a test bug or a real one). */
 export function pipe(projection: Projection, ports: ScenePorts, options: LayoutRequestOptions = {}): Piped {
   const sizes = nodeSizes(projection, ports, fakeMeasurer);
-  const built = buildLayoutRequest(projection, sizes, options);
+  const labels = labelSizes(projection, ports, fakeMeasurer);
+  const built = buildLayoutRequest(projection, sizes, { labelSizes: labels, ...options });
   if (!built.ok) throw new Error(`layout request refused: ${built.code} ${built.message}`);
   const layout = layoutFallback(built.request, 'engine_unavailable', () => 0);
-  const scene = buildScene(projection, layout, { sizes }, ports);
+  const scene = buildScene(projection, layout, { sizes, labelSizes: options.labelSizes ?? labels }, ports);
   if (!scene.ok) throw new Error(`scene refused: ${scene.code} ${scene.message}`);
-  return { sizes, request: built.request, layout, scene: scene.scene };
+  return { sizes, labels, request: built.request, layout, scene: scene.scene };
 }
 
 export const recordsOf = (state: CanonicalState, kind: AnyRecord['kind']): readonly AnyRecord[] => Object.values(state.records[kind] as Record<string, AnyRecord>);
