@@ -39,6 +39,14 @@ export type NodeGlyph =
 /** The box a node is drawn in (note E6; step 5.3 item c): decides its font, padding and glyph shape. Added in step 5.4a. */
 export type BoxKind = 'hub' | 'species' | 'reagent' | 'member' | 'overflow' | 'unclassified';
 
+/**
+ * The structure area of a species or member box that has a depiction key (step 5.5a part 2, item j; 5.4b review decision 6 (2)): above
+ * the name line, fixed at size time at every LOD. The depiction is requested at this size.
+ */
+export const STRUCTURE_AREA = { width: 128, height: 80 } as const;
+/** Space between the structure area and the name line. */
+export const STRUCTURE_GAP = 4;
+
 export interface SceneBadge {
   readonly kind: 'caveat' | 'mechanism' | 'review' | 'warning' | 'error' | 'outside_scope' | 'hidden_neighbours';
   readonly count?: number;

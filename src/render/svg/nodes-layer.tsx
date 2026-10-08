@@ -7,7 +7,7 @@
 import { memo } from 'react';
 import type { LodLevel, Scene, SceneNode } from '@/render/scene';
 import type { DepictionSource, DepictionStatus, LayerName } from './contracts';
-import { BOX_DASH, HUB_RULE_WIDTH, visibleAt } from './geometry';
+import { BOX_DASH, HUB_RULE_WIDTH, structureArea, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
 import { plainText } from './text';
 import { useCommitProbe } from './use-commit-probe';
@@ -45,6 +45,12 @@ function Shape(props: { readonly node: SceneNode }) {
   }
 }
 
+/** The structure fills the structure area of the box (its aspect ratio kept); the name stays on the line below. */
+function StructureImage(props: { readonly node: SceneNode; readonly url: string }) {
+  const area = structureArea(props.node);
+  return <image className={styles.depiction} href={props.url} x={area.x} y={area.y} width={area.width} height={area.height} preserveAspectRatio="xMidYMid meet" />;
+}
+
 function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; readonly source: DepictionSource | undefined }) {
   const { node, lod } = props;
   const status = useDepiction(props.source, wantedDepiction(node, lod));
@@ -61,7 +67,7 @@ function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; re
     >
       <title>{full}</title>
       <Shape node={node} />
-      {status.state === 'ready' ? <image className={styles.depiction} href={status.url} x={4} y={4} width={Math.max(0, node.width - 8)} height={Math.max(0, node.height - 8)} preserveAspectRatio="xMidYMid meet" /> : null}
+      {status.state === 'ready' && node.depictionKey !== undefined ? <StructureImage node={node} url={status.url} /> : null}
     </g>
   );
 }

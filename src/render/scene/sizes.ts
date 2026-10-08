@@ -5,7 +5,7 @@
  * the full text stays in the Scene label and the aria label).
  */
 import type { Projection } from '@/core/graph/contracts';
-import type { NodeSize, NodeSizes, ScenePorts, TextMeasurer, TextStyle } from './contracts';
+import { STRUCTURE_AREA, STRUCTURE_GAP, type NodeSize, type NodeSizes, type ScenePorts, type TextMeasurer, type TextStyle } from './contracts';
 import { contentOf, type BoxKind } from './node-content';
 
 export const GRID = 4;
@@ -44,8 +44,13 @@ export function nodeSizes(projection: Projection, ports: ScenePorts, measure: Te
     const label = measure(content.label, spec.label);
     const sublabel = content.sublabel === undefined ? undefined : measure(content.sublabel, spec.sublabel);
     const text = Math.max(safe(label.width), sublabel === undefined ? 0 : safe(sublabel.width));
-    const width = Math.min(spec.maxWidth, Math.max(spec.minWidth, text + 2 * spec.padX));
-    const height = safe(label.height) + (sublabel === undefined ? 0 : spec.gap + safe(sublabel.height)) + 2 * spec.padY;
+    // A node with a depiction key has a structure area above its name line, at every LOD; the formula line gives way to it.
+    const structure = content.depictionKey !== undefined;
+    const minWidth = structure ? Math.max(spec.minWidth, STRUCTURE_AREA.width + 2 * spec.padX) : spec.minWidth;
+    const width = Math.min(spec.maxWidth, Math.max(minWidth, text + 2 * spec.padX));
+    const height = structure
+      ? STRUCTURE_AREA.height + STRUCTURE_GAP + safe(label.height) + 2 * spec.padY
+      : safe(label.height) + (sublabel === undefined ? 0 : spec.gap + safe(sublabel.height)) + 2 * spec.padY;
     sizes.set(node.id, { width: roundUpToGrid(width), height: roundUpToGrid(height) });
   }
   return sizes;

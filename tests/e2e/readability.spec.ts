@@ -35,6 +35,50 @@ async function shot(page: Page, name: string): Promise<string> {
   return path;
 }
 
+const hub = (page: Page, id: string) => page.locator(`svg [data-node-id="${id}"]`);
+
+test.describe('structures (step 5.5a part 2, item k)', () => {
+  test('a hub expanded: no overlap at LOD 2; at LOD 3 a member shows its structure as a blob image, with no CSP violation', async ({ page }) => {
+    test.setTimeout(90_000);
+    const seen = await watch(page);
+    await openDemo(page);
+    const before = await page.locator('svg [data-node-id]').count();
+    await hub(page, 'cls_alcohols').dblclick();
+    await expect(async () => expect(await page.locator('svg [data-node-id]').count()).toBeGreaterThan(before)).toPass();
+    await page.waitForTimeout(400);
+    await zoomInTo(page, 2);
+    const problems = problemsOf(await measure(page));
+    mkdirSync(SHOTS, { recursive: true });
+    writeFileSync(resolve(SHOTS, 'readability-expanded-lod2.json'), JSON.stringify(problems, null, 1));
+    test.info().annotations.push({ type: 'expanded LOD 2: text rectangles / a line crosses', description: `${problems.labels} / ${problems.linesCrossingText}` });
+    expect(problems.labels, 'text rectangles were measured').toBeGreaterThan(5);
+    expect(problems.labelOverLabel).toEqual([]);
+    expect(problems.labelOverNode).toEqual([]);
+    expect(problems.outside).toEqual([]);
+    // fit, so the member is on the screen, then zoom in on the member Ethanol with the wheel until LOD 3
+    await page.getByRole('button', { name: 'Fit' }).click();
+    await page.waitForTimeout(400);
+    const box = await hub(page, 'spc_ethanol').boundingBox();
+    if (box === null) throw new Error('the member Ethanol is not drawn');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    for (let i = 0; i < 40 && Number(await drawing(page).getAttribute('data-lod')) < 3; i += 1) {
+      await page.mouse.wheel(0, -400);
+      await page.waitForTimeout(120);
+    }
+    const world = await page.evaluate(() => document.querySelector('[data-world]')?.getAttribute('transform'));
+    expect(Number(await drawing(page).getAttribute('data-lod')), `world transform ${world}`).toBe(3);
+    const image = hub(page, 'spc_ethanol').locator('image');
+    await expect(image).toHaveAttribute('href', /^blob:/, { timeout: 30_000 });
+    await expect(page.locator('svg image[href^="blob:"]').first()).toBeAttached();
+    // the name stays at LOD 3 beside the structure
+    await expect(page.locator('svg [data-label-of="spc_ethanol"] text')).toHaveCount(1);
+    await page.waitForTimeout(300);
+    const path = await shot(page, 'expanded-alcohols-lod3-1280x800.png');
+    test.info().annotations.push({ type: 'screenshot', description: path });
+    await expectClean(seen);
+  });
+});
+
 test.describe('the demo overview is readable', () => {
   test('at LOD 2 no arrow text overlaps another one or a node, or leaves the bounds', async ({ page }) => {
     const seen = await watch(page);

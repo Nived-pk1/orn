@@ -5,8 +5,9 @@
  */
 import { act, cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { Scene, SceneNode } from '@/render/scene';
+import { BOXES, STRUCTURE_AREA, type Scene, type SceneNode } from '@/render/scene';
 import { createDepictionManager, type DepictionAnswer } from '@/render/svg';
+import { structureArea, textSlots } from './geometry';
 import { demoNavigatorScene, draw, stubSource } from '@/test-support/svg-kit';
 
 afterEach(cleanup);
@@ -99,7 +100,7 @@ describe('depictions (SECURITY §2: only ever an image)', () => {
     expect(withKeys.length).toBeGreaterThan(0);
   });
 
-  it('a ready depiction at LOD 3 is one <image href> in the node and the name gives way to it', () => {
+  it('a ready depiction at LOD 3 is one <image href> in the structure area of the node; the name stays and the formula gives way', () => {
     const source = stubSource({ [target.depictionKey as string]: { state: 'ready', url: 'blob:test/1' } });
     const { container } = draw(scene, { lod: 3, depictions: source });
     const images = all(container, 'image');
@@ -108,7 +109,14 @@ describe('depictions (SECURITY §2: only ever an image)', () => {
     expect(images[0]?.closest('[data-node-id]')?.getAttribute('data-node-id')).toBe(target.id);
     expect([...(images[0] as Element).attributes].map((attr) => attr.name).sort()).toEqual(['class', 'height', 'href', 'preserveAspectRatio', 'width', 'x', 'y']);
     expect(images[0]?.children).toHaveLength(0);
-    expect(container.querySelector(`[data-label-of="${target.id}"]`)).toBeNull();
+    // The structure fills the structure area (centred, below the top padding); the name stays on the line below; the formula is not drawn.
+    const area = structureArea(target);
+    expect(images[0]?.getAttribute('x')).toBe(String(area.x));
+    expect(images[0]?.getAttribute('y')).toBe(String(area.y));
+    expect(images[0]?.getAttribute('width')).toBe(String(STRUCTURE_AREA.width));
+    expect(images[0]?.getAttribute('height')).toBe(String(STRUCTURE_AREA.height));
+    expect(labelOf(container, target.id)).toBe(target.label.map((run) => run.text).join(''));
+    expect(all(container.querySelector(`[data-label-of="${target.id}"]`) as Element, 'text')).toHaveLength(1);
     expect(all(container, 'svg')).toHaveLength(1);
     // The accessible name and the title still say what it is.
     expect(container.querySelector(`[data-node-id="${target.id}"]`)?.getAttribute('aria-label')).toBe(target.ariaLabel);
@@ -146,7 +154,7 @@ describe('depictions (SECURITY §2: only ever an image)', () => {
     view.drain();
     act(() => source.set(target.depictionKey as string, { state: 'ready', url: 'blob:test/9' }));
     expect(all(view.container, 'image')).toHaveLength(1);
-    expect(view.container.querySelector(`[data-label-of="${target.id}"]`)).toBeNull();
+    expect(all(view.container.querySelector(`[data-label-of="${target.id}"]`) as Element, 'text')).toHaveLength(1);
     // A status change of one node is not a layer commit of the whole drawing.
     expect(view.drain()).toEqual([]);
   });
@@ -188,5 +196,42 @@ describe('depictions (SECURITY §2: only ever an image)', () => {
     for (const tag of ['script', 'foreignObject', 'div']) expect(container.querySelector(tag), tag).toBeNull();
     expect(all(container, 'svg')).toHaveLength(1);
     manager.dispose();
+  });
+});
+
+describe('the structure area (step 5.5a part 2, item j)', () => {
+  it('every node with a depiction key has the area above its name line, at every LOD; a node without one has none', () => {
+    for (const node of withKeys) {
+      expect(node.height).toBeGreaterThanOrEqual(STRUCTURE_AREA.height + 2 * BOXES[node.box].padY);
+      expect(node.width).toBeGreaterThanOrEqual(STRUCTURE_AREA.width + 2 * BOXES[node.box].padX);
+      expect(['species', 'member']).toContain(node.box);
+    }
+    const without = scene.nodes.filter((n) => n.depictionKey === undefined && (n.box === 'species' || n.box === 'member'));
+    for (const node of without) expect(node.height).toBeLessThan(STRUCTURE_AREA.height);
+  });
+
+  it('the name is at the bottom line at every LOD; the formula is centred in the area and only while no structure is drawn', () => {
+    for (const lod of [1, 2, 3] as const) {
+      const { container } = draw(scene, { lod, depictions: stubSource({ [target.depictionKey as string]: { state: 'unavailable', reason: 'timeout' } }) });
+      const texts = all(container.querySelector(`[data-label-of="${target.id}"]`) as Element, 'text');
+      const [name, formula] = texts as [Element, Element | undefined];
+      const slots = textSlots(target);
+      expect(Number(name.getAttribute('y'))).toBeCloseTo(slots.labelY, 5);
+      expect(Number(name.getAttribute('y'))).toBeGreaterThan(structureArea(target).y + STRUCTURE_AREA.height);
+      if (target.sublabel !== undefined) {
+        expect(formula, `LOD ${lod}`).toBeDefined();
+        expect(Number(formula?.getAttribute('x'))).toBe(target.width / 2);
+        expect(formula?.getAttribute('class')).toContain('areaText');
+        expect(Number(formula?.getAttribute('y'))).toBeLessThan(Number(name.getAttribute('y')));
+      }
+      cleanup();
+    }
+  });
+
+  it('a species whose structure cannot be drawn shows its name (and formula) in the same box, never an error', () => {
+    const { container } = draw(scene, { lod: 3, depictions: stubSource({ [target.depictionKey as string]: { state: 'unavailable', reason: 'invalid' } }) });
+    expect(labelOf(container, target.id)).toContain(target.label.map((run) => run.text).join(''));
+    expect(all(container, 'image')).toHaveLength(0);
+    expect(container.querySelector(`[data-node-id="${target.id}"] rect`)?.getAttribute('height')).toBe(String(target.height));
   });
 });

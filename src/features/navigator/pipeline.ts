@@ -20,6 +20,8 @@ import type { LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
 import { buildLayoutRequest, buildScene, labelSizes, nodeSizes } from '@/render/scene';
 import type { LabelSizes, NodeSizes, Scene } from '@/render/scene';
 import type { NavigatorError, NavigatorPorts } from './contracts';
+import { depictionBindingOf } from './depictions';
+import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from './limits';
 import { touchOf } from './reads';
 import { sameRequest } from './same-request';
 import { createScenePorts } from './scene-ports';
@@ -27,12 +29,7 @@ import { createScenePorts } from './scene-ports';
 export const SKELETON_DELAY_MS = 300;
 /** The service's view key: one navigator drawing, so a newer request replaces the older one. */
 export const LAYOUT_VIEW = 'navigator';
-/**
- * Drawn hub pairs the navigator asks for by default (review decision 6 (1)). Measured in step 5.5a part 2 (item l): ELK mean at design
- * dense, 60 anchored hubs, unexpanded: 3,325 ms at 800, 990 ms at 400, 377 ms at 240, 86 ms at 120; the largest under 300 ms is 120.
- */
-export const NAVIGATOR_MAX_EDGES = 120;
-export const NAVIGATOR_MAX_NODES = 400;
+export { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from './limits';
 
 export interface NavigatorState {
   readonly scene: Scene | null;
@@ -73,6 +70,7 @@ function hasRecords(state: CanonicalState): boolean {
 const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [] };
 
 export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
+  const binding = depictionBindingOf(ports);
   let state = INITIAL;
   const listeners = new Set<() => void>();
   let running = false;
@@ -147,7 +145,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
     try {
       if (rebuild || projection === null) projection = buildProjection();
       const current = projection;
-      const scenePorts = createScenePorts(ports.store.getState());
+      const scenePorts = createScenePorts(ports.store.getState(), binding?.keyOf);
       if (sizes === null || sizes.of !== current || sizes.epoch !== epoch) {
         sizes = { of: current, epoch, value: nodeSizes(current, scenePorts, ports.measurer.measure), labels: labelSizes(current, scenePorts, ports.measurer.measure) };
         counts.sizes += 1;

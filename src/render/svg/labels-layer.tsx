@@ -20,7 +20,9 @@ import { showsDepiction, wantedDepiction } from './nodes-layer';
 function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; readonly source: DepictionSource | undefined; readonly ids: DefIds }) {
   const { node } = props;
   const status = useDepiction(props.source, wantedDepiction(node, props.lod));
-  if (showsDepiction(status)) return null;
+  // A node with a structure area keeps its name when the structure is drawn (the formula gives way); any other node shows nothing then.
+  const drawn = showsDepiction(status);
+  if (drawn && node.depictionKey === undefined) return null;
   const slots = textSlots(node);
   return (
     <g transform={`translate(${node.x} ${node.y})`} data-label-of={node.id}>
@@ -28,8 +30,13 @@ function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; re
         <text className={`${styles.label}${node.box === 'hub' || node.box === 'unclassified' ? ` ${styles.strong}` : ''}`} x={slots.x} y={slots.labelY} fontSize={slots.labelSize}>
           <Runs runs={node.label} size={slots.labelSize} />
         </text>
-        {node.sublabel === undefined ? null : (
-          <text className={`${styles.label} ${styles.sublabel}`} x={slots.x} y={slots.sublabelY} fontSize={slots.sublabelSize}>
+        {node.sublabel === undefined || drawn ? null : (
+          <text
+            className={`${styles.label} ${styles.sublabel}${slots.sublabelCentreX === undefined ? '' : ` ${styles.areaText}`}`}
+            x={slots.sublabelCentreX ?? slots.x}
+            y={slots.sublabelY}
+            fontSize={slots.sublabelSize}
+          >
             <Runs runs={node.sublabel} size={slots.sublabelSize} />
           </text>
         )}

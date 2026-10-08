@@ -7,7 +7,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection } from '@/core/graph';
 import { indexEngine } from '@/core/indexes';
-import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/pipeline';
+import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/limits';
 import { documentToState } from '@/core/dataset';
 import { drawnPaths } from '@/render/scene';
 import { generateTier } from '@/test-support/generator';

@@ -11,6 +11,7 @@ import type { LayerName, SceneHit } from '@/render/svg';
 import { keepScreenPoint, toScreen, ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
 import type { Scene, SceneNode } from '@/render/scene';
 import { Button, Skeleton } from '@/ui/primitives';
+import { depictionBindingOf } from './depictions';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorSelection } from './navigator-selection';
 import styles from './navigator.module.css';
@@ -51,6 +52,7 @@ export function NavigatorCanvas() {
   controllerRef.current = controller;
   const selectedIds = useMemo(() => (selected === null ? NO_IDS : new Set([selected.id])), [selected]);
   const initialViewport = useMemo<Viewport | undefined>(() => ports.ui.viewports.getState().views[VIEW], [ports]);
+  const depictions = useMemo(() => depictionBindingOf(ports)?.manager, [ports]);
   const hubs = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
   const isHub = useCallback((id: string): boolean => state.hubIds.includes(id), [state.hubIds]);
 
@@ -122,6 +124,7 @@ export function NavigatorCanvas() {
             selectedIds={selectedIds}
             ariaLabel={`Navigator: ${hubs} ${hubs === 1 ? 'hub' : 'hubs'}, ${scene.edges.length} ${scene.edges.length === 1 ? 'arrow' : 'arrows'}`}
             onController={setController}
+            {...(depictions === undefined ? {} : { depictions })}
             onLayerCommit={onLayerCommit}
             onSceneClick={onSceneClick}
             onSceneDoubleClick={onSceneDoubleClick}

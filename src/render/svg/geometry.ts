@@ -4,7 +4,7 @@
  * weight, never colour alone; UI_ARCHITECTURE §3) and a test can read them from the DOM.
  */
 import type { LodLevel, SceneBadge, SceneEdge, SceneNode } from '@/render/scene';
-import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE, BOXES } from '@/render/scene';
+import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE, BOXES, STRUCTURE_AREA } from '@/render/scene';
 
 // The arrow-text and badge sizes belong to the Scene (the layout reserves room for them); the renderer draws in that room.
 export { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE };
@@ -34,13 +34,40 @@ export const round = (value: number): number => Math.round(value * 100) / 100;
 /** An element is drawn only at or above its `minLod` (LOD is an input: UI_ARCHITECTURE §6). */
 export const visibleAt = (element: { readonly minLod: LodLevel }, lod: LodLevel): boolean => element.minLod <= lod;
 
+/** The structure area of a node that has a depiction key, inside its box: centred, below the top padding (step 5.5a part 2, item j). */
+export function structureArea(node: SceneNode): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } {
+  return { x: (node.width - STRUCTURE_AREA.width) / 2, y: BOXES[node.box].padY, width: STRUCTURE_AREA.width, height: STRUCTURE_AREA.height };
+}
+
+export interface TextSlots {
+  readonly x: number;
+  readonly labelY: number;
+  readonly sublabelY: number;
+  readonly labelSize: number;
+  readonly sublabelSize: number;
+  /** A node with a structure area: its formula is centred in the area (drawn only while no structure is) and `x` is the name's. */
+  readonly sublabelCentreX?: number;
+}
+
 /** Where the text of a node starts, from its box: left padding, and the baselines of the label and the sublabel. */
-export function textSlots(node: SceneNode): { readonly x: number; readonly labelY: number; readonly sublabelY: number; readonly labelSize: number; readonly sublabelSize: number } {
+export function textSlots(node: SceneNode): TextSlots {
   const spec = BOXES[node.box];
   const labelSize = spec.label.size;
   const sublabelSize = spec.sublabel.size;
   const labelHeight = labelSize * 1.3;
   const inset = node.box === 'hub' ? HUB_RULE_WIDTH : 0;
+  if (node.depictionKey !== undefined) {
+    // The name sits on the bottom line, the same at every LOD; the formula takes the middle of the structure area.
+    const area = structureArea(node);
+    return {
+      x: spec.padX,
+      labelY: node.height - spec.padY - labelHeight + labelSize * 0.9,
+      sublabelY: area.y + area.height / 2 + sublabelSize * 0.35,
+      sublabelCentreX: node.width / 2,
+      labelSize,
+      sublabelSize,
+    };
+  }
   return {
     x: spec.padX + inset,
     labelY: spec.padY + labelSize * 0.9,

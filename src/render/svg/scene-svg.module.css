@@ -198,3 +198,8 @@
   touch-action: none;
   cursor: grab;
 }
+
+/* The formula of a node with a structure area is centred in the area (drawn only while no structure is). */
+.areaText {
+  text-anchor: middle;
+}
