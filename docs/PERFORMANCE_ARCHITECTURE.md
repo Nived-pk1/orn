@@ -155,6 +155,8 @@ one run and 107–129 ms in another, "full-suite contention" named but not fixed
   other heavy applications open, isolation and worker settings as above. Still a developer workstation, not
   a dedicated CI runner class — `bench:compare`'s 20% regression threshold (below) is sized for that, not
   for a tighter CI-grade comparison.
+  *2026-10-07 (reviewer and user): power is no longer a precondition; `runner` records the power state as it
+  was; numbers taken in different power states are not compared with each other.*
 - `npm run bench:compare` (`scripts/bench-compare.mjs`) runs the suite once and fails when any entry's p99
   regresses > 20% against `baseline.json`'s median p99, on the same runner-class assumption above. Run at
   gates, not in `npm run check` — a single run against a workstation baseline is still noisy enough that

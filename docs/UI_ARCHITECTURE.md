@@ -88,6 +88,7 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 - **Viewport**: d3-zoom writes a single `transform` on the root `<g>` imperatively (ref + requestAnimationFrame). Pan and zoom never re-render React (60 fps budget).
 - **LOD**: `LOD_THRESHOLDS` decide what each element shows (0 glyphs, 1 labels, 2 badges + condition text, 3 structures). Above `RENDER_BUDGET` visible elements, LOD is capped at 1 automatically (v6's "simplify mode" without a toggle).
 - **Culling**: a uniform-grid spatial index over Scene bounds returns visible IDs for the viewport; only those mount.
+- *2026-10-07 (step 5.4b review):* Phase 5 mounts the whole bounded Scene (at most 400 nodes / 800 edges). The grid index feeds the LOD budget and the depiction candidates. Mounting only the visible ids is the remedy if the 5.10b frame-rate measurement misses.
 - **Depictions**: requested lazily from the chem worker for visible species at LOD 3, cached in `derivedCache`, shown via `<image href>` (SECURITY.md §2).
 - *2026-10-02 (Phase 5 contract decisions):* Phase 5 keeps depictions in a memory LRU only; the persistent depiction cache in `derivedCache` is Phase 9.
 - **Layout stability**: previous positions are sent as ordering hints; expansion adds nodes without reshuffling the rest; transitions animate 200 ms (none with reduced motion). Layout requests are cancelled when superseded.
