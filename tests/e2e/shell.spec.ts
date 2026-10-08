@@ -5,19 +5,8 @@
  * dialog's focus trap, inert background and Esc are the browser's own here (jsdom cannot show them). The Skeleton has no real screen
  * to appear on yet (the services are built before React renders), so only its component test exercises it.
  */
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { chooseFile, expectClean, generatedFile, loadDemo, openApp, watch } from './kit';
-
-async function axeProblems(page: Page): Promise<string[]> {
-  const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
-  const lesser = result.violations.filter((v) => v.impact !== 'serious' && v.impact !== 'critical');
-  console.log(`axe: ${result.passes.length} rules passed, ${result.violations.length - lesser.length} serious or critical, ${lesser.length} lesser${lesser.map((v) => ` [${v.impact} ${v.id}]`).join('')}`);
-  expect(result.passes.length, 'axe must have run its rules').toBeGreaterThan(20);
-  return result.violations
-    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(' ')).join('; ')})`);
-}
+import { axeProblems, chooseFile, expectClean, generatedFile, loadDemo, openApp, showDataset, watch } from './kit';
 
 const box = async (page: Page, selector: string) => {
   const found = await page.locator(selector).first().boundingBox();
@@ -32,7 +21,7 @@ test.describe('the shell and the design system', () => {
     await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
     expect(await axeProblems(page)).toEqual([]);
     await loadDemo(page);
-    await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(page);
     await expect(page.getByText(/^Findings: E \d+/)).toBeVisible();
     expect(await axeProblems(page)).toEqual([]);
     await expectClean(seen);
@@ -174,11 +163,11 @@ test.describe('panels survive a reload', () => {
     await page.keyboard.press('ArrowLeft');
     await expect(handle).toHaveAttribute('aria-valuenow', '376');
     await page.getByRole('button', { name: 'Start empty' }).click();
-    await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(page);
     await page.waitForTimeout(800); // the debounce (300 ms) and the write
 
     await page.reload();
-    await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(page);
     await expect(page.getByRole('region', { name: 'First run' })).toHaveCount(0);
     await expect(page.getByRole('separator', { name: 'Resize inspector' })).toHaveAttribute('aria-valuenow', '376');
     const wide = await box(page, 'aside');
@@ -188,7 +177,7 @@ test.describe('panels survive a reload', () => {
     await expect(page.getByRole('complementary', { name: 'Inspector' })).toHaveCount(0);
     await page.waitForTimeout(800);
     await page.reload();
-    await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(page);
     await expect(page.getByRole('complementary', { name: 'Inspector' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Show inspector' })).toBeVisible();
     await expectClean(seen);

@@ -9,7 +9,7 @@
  * listeners installed by `installLifecycle`.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { expectClean, loadDemo, openApp, watch } from './kit';
+import { expectClean, loadDemo, openApp, showDataset, watch } from './kit';
 
 const CRASH_LINE = /The last session may not have closed cleanly \(a crash is suspected\)/;
 
@@ -51,7 +51,7 @@ test.describe('the page lifecycle in Chromium', () => {
     const after = await context.newPage();
     const seen = await watch(after);
     await openApp(after);
-    await expect(after.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(after);
     await expect(after.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
     await expect(after.getByText(CRASH_LINE)).toHaveCount(0);
     await expectClean(seen);
@@ -62,7 +62,7 @@ test.describe('the page lifecycle in Chromium', () => {
     await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false })));
     await expect.poll(() => marker(page), { timeout: 15_000 }).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/));
     await page.reload();
-    await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(page);
     await expect(page.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
     await expect(page.getByText(CRASH_LINE)).toHaveCount(0);
   });
@@ -75,7 +75,7 @@ test.describe('the page lifecycle in Chromium', () => {
   test.fixme('an ordinary reload is not reported as a crash', async ({ page }) => {
     await loaded(page);
     await page.reload();
-    await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(page);
     await expect(page.getByText(CRASH_LINE)).toHaveCount(0);
   });
 

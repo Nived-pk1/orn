@@ -3,6 +3,7 @@
  * specs: console errors, uncaught page errors, `securitypolicyviolation` events, and any request that leaves the origin (E3, E10).
  * Data enters only through the real import (E15): the generator runs in Node and the file is uploaded.
  */
+import AxeBuilder from '@axe-core/playwright';
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 import { serializeDocument } from '@/core/dataset';
 import { generateTier, type GeneratorShape, type GeneratorTier } from '@/test-support/generator';
@@ -65,7 +66,14 @@ export async function loadDemo(page: Page): Promise<void> {
   await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
 }
 
+/** Step 5.5a: with records the canvas shows the navigator; the record counts of 5.1d live under the Dataset mode. */
+export async function showDataset(page: Page): Promise<void> {
+  await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Dataset' }).click();
+  await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+}
+
 export async function recordCount(page: Page, kind: string): Promise<number | undefined> {
+  await showDataset(page);
   const items = await page.getByRole('list', { name: 'Record counts' }).getByRole('listitem').allTextContents();
   const found = items.find((text) => text.startsWith(`${kind}: `));
   return found === undefined ? undefined : Number(found.slice(kind.length + 2));
@@ -88,4 +96,15 @@ export async function chooseFile(page: Page, file: { name: string; mimeType: str
 
 export async function secondTab(context: BrowserContext): Promise<Page> {
   return context.newPage();
+}
+
+/** axe at WCAG 2.2 AA; the serious and critical violations as text (the lesser ones are only counted in the log). */
+export async function axeProblems(page: Page): Promise<string[]> {
+  const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+  const lesser = result.violations.filter((v) => v.impact !== 'serious' && v.impact !== 'critical');
+  console.log(`axe: ${result.passes.length} rules passed, ${result.violations.length - lesser.length} serious or critical, ${lesser.length} lesser${lesser.map((v) => ` [${v.impact} ${v.id}]`).join('')}`);
+  expect(result.passes.length, 'axe must have run its rules').toBeGreaterThan(20);
+  return result.violations
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    .map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(' ')).join('; ')})`);
 }

@@ -29,6 +29,7 @@ const KIND_OF: Readonly<Record<string, NoticeKind>> = {
   worker_down_search: 'warning',
   engine_chem: 'warning',
   engine_layout: 'warning',
+  layout_notice: 'info',
   l4_unavailable: 'warning',
   search_down: 'warning',
   storage_refused: 'warning',
@@ -100,6 +101,7 @@ export function bannersOf(status: AppStatus): readonly Banner[] {
     banners.push({ id: `engine_${name}`, text, action: { label: 'Retry', kind: name === 'chem' ? 'retry_chem' : 'retry_layout' } });
   }
   const chemBannerShown = banners.some((b) => b.id === 'engine_chem' || b.id === 'worker_down_chem');
+  if (status.layoutNotice !== null) banners.push({ id: 'layout_notice', text: `Layout note: ${status.layoutNotice}.` });
   if (status.l4.state === 'unavailable' && !chemBannerShown) {
     banners.push({ id: 'l4_unavailable', text: `Check unavailable: ${status.l4.message ?? 'structures are not being checked'}.` });
   }

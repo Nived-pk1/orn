@@ -8,8 +8,10 @@ import { App } from './App';
 import { createBrowserEnv } from './env';
 import { installLifecycle } from './lifecycle';
 import { createAppServices } from './services';
-import { createPanelsStore } from '@/ui/state';
+import { createNavigatorUiStores, createPanelsStore } from '@/ui/state';
+import { createTextMeasurer } from './text-measurer';
 import type { DemoLoad } from './window/context';
+import { createNavigatorPorts } from './window/navigator-port';
 import { createPanelsPort } from './window/panels-port';
 
 /** The bundled demo file, served from this origin (the import pipeline reads it like any file the user picks). */
@@ -29,10 +31,17 @@ async function start(): Promise<void> {
   const env = createBrowserEnv();
   const services = await createAppServices(env);
   const panels = createPanelsStore(createPanelsPort(services), env.timers);
+  const measurer = createTextMeasurer({
+    fonts: document.fonts,
+    context: () => document.createElement('canvas').getContext('2d') ?? undefined,
+    timers: env.timers,
+    log: (type, message) => services.logApp(type, message),
+  });
+  const navigator = createNavigatorPorts(services, measurer, env.timers, createNavigatorUiStores());
   installLifecycle(services, window);
   createRoot(rootElement).render(
     <StrictMode>
-      <App value={{ services, panels, loadDemo, reload: () => window.location.reload() }} />
+      <App value={{ services, panels, navigator, loadDemo, reload: () => window.location.reload() }} />
     </StrictMode>,
   );
 }

@@ -4,7 +4,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { chooseFile, expectClean, findingsText, generatedFile, loadDemo, openApp, recordCount, watch } from './kit';
+import { chooseFile, expectClean, findingsText, generatedFile, loadDemo, openApp, recordCount, showDataset, watch } from './kit';
 
 test.describe('the app in Chromium', () => {
   test('a reload keeps the data; zero violations, zero console errors, nothing leaves the origin', async ({ page }) => {
@@ -16,7 +16,7 @@ test.describe('the app in Chromium', () => {
     await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
 
     await page.reload();
-    await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(page);
     expect(await recordCount(page, 'reaction')).toBe(27);
     expect(await recordCount(page, 'species')).toBe(66);
     await expect(page.getByRole('region', { name: 'First run' })).toHaveCount(0);
@@ -91,7 +91,7 @@ test.describe('the app in Chromium', () => {
     await expect(page.getByText(/^Findings in the result: E 0 /)).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByText(/^Imported \d+ records from generated-initial-dense\.orn\.json\./)).toBeVisible({ timeout: 90_000 });
-    await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+    await showDataset(page);
     expect(await recordCount(page, 'reaction')).toBeGreaterThan(100);
     await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
     await expectClean(seen);

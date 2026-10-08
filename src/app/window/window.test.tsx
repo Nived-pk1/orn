@@ -232,10 +232,11 @@ describe('Import a file', () => {
 });
 
 describe('a dataset with data', () => {
-  it('shows the record counts per kind and no first-run buttons; the result of an import stays visible', async () => {
+  it('shows the record counts per kind (under Dataset) and no first-run buttons; the result of an import stays visible', async () => {
     const a = app({ state: tierState('tiny', 'dense') });
     renderWithApp(a);
     expect(screen.queryByRole('region', { name: 'First run' })).toBeNull();
+    fireEvent.click(button('Dataset')); // step 5.5a: with records the canvas shows the navigator; the counts moved to the Dataset mode
     const counts = within(screen.getByRole('list', { name: 'Record counts' })).getAllByRole('listitem');
     expect(counts.length).toBeGreaterThan(0);
     expect(counts.every((li) => /^[a-z ]+: \d+$/.test(li.textContent ?? ''))).toBe(true);
@@ -250,13 +251,14 @@ describe('a dataset with data', () => {
       expect(replaced.ok).toBe(true);
     });
     expect(screen.queryByRole('region', { name: 'First run' })).toBeNull();
+    fireEvent.click(button('Dataset'));
     expect(screen.getByRole('region', { name: 'Dataset' })).toBeTruthy();
     expect(screen.getByText('Imported 5 records from demo.orn.json.')).toBeTruthy();
   });
 });
 
 describe('the shell frame around the window', () => {
-  it('Navigator is the only enabled mode; the others are listed with the phase that brings them', () => {
+  it('Navigator and Dataset are the enabled modes; the others are listed with the phase that brings them', () => {
     renderWithApp(app());
     const rail = within(screen.getByRole('navigation', { name: 'Modes' }));
     expect(rail.getByRole('button', { name: 'Navigator' }).getAttribute('aria-current')).toBe('page');

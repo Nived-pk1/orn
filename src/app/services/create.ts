@@ -156,6 +156,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     store,
     status,
     log,
+    logApp: (type, message) => log.add({ source: 'app', event: { type, message } }),
     indexes,
     bootReport: report,
     persistence: adapter,

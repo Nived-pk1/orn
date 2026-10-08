@@ -18,6 +18,8 @@ function testWorkers(): number {
  * project, after the rest of the suite, so they never compete with it for the CPU (a resource arrangement, not an assertion change;
  * docs/TEST_STRATEGY.md §1).
  */
+/** One per-test limit for the whole real-threads project (resource limit, not a product limit): on battery a thread start can take over 5 s (docs/TEST_STRATEGY.md �1). */
+const REAL_THREAD_TEST_TIMEOUT_MS = 60_000;
 const REAL_THREAD_FILES = ['tests/integration/*-threads.test.ts', 'tests/integration/worker-crash-recovery.test.ts'];
 const ALL_TESTS = ['src/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx}'];
 // tests/timing holds the wall-clock budget assertions: `npm run test:timing` only (docs/TEST_STRATEGY.md §1).
@@ -36,7 +38,7 @@ export default mergeConfig(
       cache: false,
       projects: [
         { extends: true, test: { name: 'main', include: ALL_TESTS, exclude: [...EXCLUDED, ...REAL_THREAD_FILES] } },
-        { extends: true, test: { name: 'real-threads', include: REAL_THREAD_FILES, exclude: EXCLUDED, fileParallelism: false, maxWorkers: 1, sequence: { groupOrder: 1 } } },
+        { extends: true, test: { name: 'real-threads', include: REAL_THREAD_FILES, exclude: EXCLUDED, fileParallelism: false, maxWorkers: 1, testTimeout: REAL_THREAD_TEST_TIMEOUT_MS, sequence: { groupOrder: 1 } } },
       ],
       // Targets: src/core >= 90% lines, >= 85% branches; src/persistence, src/io, src/workers, src/chem, src/layout, src/search >= 80% lines (services, TEST_STRATEGY §1; the last three from step 4.6), src/app/services >= 80% lines (step 5.1a).
       // Enforced by npm run test:coverage only, not by npm run check.

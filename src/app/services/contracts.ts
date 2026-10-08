@@ -61,6 +61,8 @@ export interface AppServices {
   readonly status: StatusStore;
   /** The bounded in-memory event log (`EVENT_LOG_LIMIT`). */
   readonly log: EventLog;
+  /** Adds one line to the event log as source "app" (step 5.5a, additive): how the UI leaves a trace; nothing is silent. */
+  logApp(type: string, message: string): void;
   /** Full indexes at the store's revision, built lazily; callers never keep a handle (see the module header). */
   readonly indexes: DerivedIndexes;
   /** What boot found; undefined in a session-only tab. */

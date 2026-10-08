@@ -13,6 +13,7 @@ import { createIdFactory } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
 import { Window } from '@/app/window/window';
 import { createPanelsStore, type PanelsPort, type PanelsStore } from '@/ui/state';
+import { navigatorRig, type NavigatorRig } from './navigator-kit';
 import type { ReactNode } from 'react';
 
 export const WRITER_STATUS: Partial<AppStatus> = {
@@ -42,6 +43,7 @@ export interface FakeApp {
   readonly reload: Mock;
   readonly panels: PanelsStore;
   readonly panelSaves: Record<string, unknown>[];
+  readonly navigator: NavigatorRig;
   readonly value: AppContextValue;
 }
 
@@ -72,13 +74,14 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
   const retryEngine = vi.fn(() => Promise.resolve({ ok: true }));
   const loadDemo = vi.fn((): Promise<DemoLoad> => Promise.resolve({ ok: true, blob: new Blob(['{}']), fileName: 'demo.orn.json' }));
   const reload = vi.fn();
+  const navigator = navigatorRig(store);
   const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine } as unknown as WindowServices;
   const panelSaves: Record<string, unknown>[] = [];
   const panels = createPanelsStore(
     { stored: undefined, mode: () => 'writable', save: (value) => (panelSaves.push({ ...value }), Promise.resolve()), ...options.panels },
     { after: () => () => undefined },
   );
-  return { status, store, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, value: { services, panels, loadDemo, reload } };
+  return { status, store, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, value: { services, panels, navigator: navigator.ports, loadDemo, reload } };
 }
 
 export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {

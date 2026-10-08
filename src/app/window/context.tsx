@@ -4,6 +4,7 @@
  */
 import { createContext, useContext, type ReactNode } from 'react';
 import type { AppServices } from '@/app/services';
+import type { NavigatorPorts } from '@/features/navigator';
 import type { PanelsStore } from '@/ui/state';
 
 /** What the window needs from the services (so a test can fake only these). */
@@ -17,6 +18,8 @@ export interface AppContextValue {
   loadDemo(): Promise<DemoLoad>;
   /** The panels store (inspector width and open state, "Start empty" dismissed), persisted in `uiState`. */
   readonly panels: PanelsStore;
+  /** What the navigator needs (step 5.5a): the store, indexes, layout service, text measurer, UI stores and timers. */
+  readonly navigator: NavigatorPorts;
   /** Reloads the page (`location.reload()` in the browser). */
   reload(): void;
 }

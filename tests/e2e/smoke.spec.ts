@@ -6,14 +6,17 @@
  */
 import { readdirSync } from 'node:fs';
 import { expect, test } from './fixtures';
-import { expectClean, findingsText, loadDemo, openApp, recordCount, watch } from './kit';
+import { expectClean, findingsText, loadDemo, openApp, recordCount, showDataset, watch } from './kit';
 
 test('the app boots and loads the demo; its counts are shown', async ({ page }) => {
   const seen = await watch(page);
   await openApp(page);
   await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
   await loadDemo(page);
-  await expect(page.getByRole('region', { name: 'Dataset' })).toBeVisible();
+  // step 5.5a: after the demo loads the navigator shows its hubs (Chromium, Firefox, WebKit)
+  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+  await expect(page.locator('svg [data-node-id]')).toHaveCount(16);
+  await showDataset(page);
   expect(await recordCount(page, 'reaction')).toBe(27);
   expect(await recordCount(page, 'species')).toBe(66);
   await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
