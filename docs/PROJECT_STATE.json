@@ -73,11 +73,12 @@
     "5.3",
     "5.4a",
     "5.4b",
-    "5.5a"
+    "5.5a",
+    "5.5b"
   ],
   "nextPhase": 5,
-  "nextStep": "5.5b",
-  "nextStepTitle": "Phase 5, step 5.5b - Family page (full row: docs/IMPLEMENTATION_PLAN.md section 2; ADR-037). Redesign decided 2026-10-09: the navigator is overview, family page, reaction detail; 5.5c is the overview arrangement and family colours; the old 5.5b is now 5.5d.",
+  "nextStep": "5.5c",
+  "nextStepTitle": "Phase 5, step 5.5c - Overview arrangement and family colours (full row: docs/IMPLEMENTATION_PLAN.md section 2; ADR-037). Step 5.5b (family page) is done: familyStudy in core, VirtualList, the family page, a calm overview, rounded corners. Then 5.5d (navigator completeness).",
   "canonicalSchemaVersion": 1,
   "gates": {
     "A": {
@@ -203,6 +204,9 @@
     "navigatorEndToEndSuite": "step 5.5a: pipeline with a fake layout service and with the real layout worker code in process (expansion, first shown layout stable), labels and orthogonal routing over real ELK, label sizes, depiction binding and box sizes, condition text (66), e2e in Chromium: demo hubs and arrows, selection and expansion, reload, axe, ADV-012 part 1, readability (zero overlaps at LOD 2, with conditions, with a hub expanded), a blob image at LOD 3 with zero CSP violations"
   },
   "openItems": [
+    "NEW (step 5.5b): familyStudy on the largest hub of design hub_explosion (10,000 cards) takes about 0.3 s mean (0.5 s max) on the main thread when the page opens; dense 0.16 s. Gate E watch; the cards are virtualised, the value is computed once per revision.",
+    "NEW (step 5.5b): on the calm overview (no arrow text) the first shown layout is no longer a fixed point of 'ask again with it as previous'; it settles in 3 asks. Only a later relayout (a dataset edit) can shift hubs. Gate E watch.",
+    "NEW (step 5.5b): initial JS 357.78 kB gzip (400 kB target); the family page and the virtual list are in the entry chunk.",
     "NEW (step 5.5a close): structures that FAILED (timeout, invalid, refused, unavailable) stay names after Retry on the chem engine: the depiction manager keeps `unavailable` and nothing asks again until the key leaves its 500-key cache or the page reloads (a timeout is deliberately never retried). Proposal for 5.5b, not built: a successful chem Retry clears the unavailable entries of the manager so the viewport queue asks again.",
     "NEW (step 5.5a close, REVIEW REQUIRED 1, 3): the arrow text is stacked in the label box next to the line (above lines, then below lines on one side of the arrow) because ELK places the label beside the edge; the fitted demo overview is 2,018 x 1,782 and at 1280 x 720 its scale (0.33) is under the LOD 1 threshold 0.35, so the fitted view shows hubs only until the user zooms in. The user's look decides sizes, spacing and thresholds (LOD thresholds are tuned in Phase 9).",
     "NEW (step 5.5a close): ELK layered bench (alone, worker code in Node): 400 nodes / 465 edges mean 153 ms p99 174; 400 nodes / 486 edges 154 / 176; design dense navigator 60 nodes / 800 edges 1,100 / 1,170 (informal; orthogonal routing; the bench requests carry no labels).",

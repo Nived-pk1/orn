@@ -3653,3 +3653,7 @@ Session start: `git status` clean, HEAD e6ce02e (the Part A commit).
 6. Screenshots (1280 x 800, `screenshots/`, git-ignored): `overview-1280x800.png`, `family-alcohols-top-1280x800.png`, `family-alcohols-preparation-1280x800.png`.
 7. `npm run check` as ONE command: before this part 316 files, 4,747 tests; after 320 files, 4,781 tests, green.
 
+### Phase 5, step 5.5b, part 3 - close (2026-10-09)
+
+Plan row 5.5b done; nextStep 5.5c (overview arrangement and family colours). `npm run build:smoke` green (the tanstack list is in the entry chunk; no eval / new Function outside the rdkit glue). Initial JS 357.78 kB gzip (353.25 at the close of 5.5a; the 400 kB target stands, Gate E watch). e2e: Chromium full run 46 passed, 1 skipped (the 5.1d fixme) with 3 `family.spec.ts` tests failing on test-side mistakes (a strip button scrolled out of the list, an arrow click, a wrong list locator), then `family.spec.ts` alone 7 passed; three-engine smoke 15 passed (Chromium 5, Firefox 5, WebKit 5, each with the new family-page test). Because the full Chromium run was not repeated after the three test fixes, Chromium counts are 46 + 3 fixed = 49 passed, 1 skipped by composition, not by one run.
+Open items carried (never deleted): the Gate E watch items of 5.5a; NEW: familyStudy on a family of 10,000 reactions blocks the main thread about 0.3 s on open (bench in part 1), a layout re-ask on the calm overview settles in 3 asks (part 2 item 4).
