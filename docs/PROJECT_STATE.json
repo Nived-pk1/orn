@@ -74,12 +74,13 @@
     "5.4a",
     "5.4b",
     "5.5a",
-    "5.5b"
+    "5.5b",
+    "5.5c"
   ],
   "nextPhase": 5,
-  "nextStep": "5.5c",
-  "nextStepTitle": "Phase 5, step 5.5c - Overview arrangement and family colours (full row: docs/IMPLEMENTATION_PLAN.md section 2; ADR-037). Step 5.5b (family page) is done: familyStudy in core, VirtualList, the family page, a calm overview, rounded corners. Then 5.5d (navigator completeness).",
-  "canonicalSchemaVersion": 1,
+  "nextStep": "5.5d",
+  "nextStepTitle": "Phase 5, step 5.5d - Navigator completeness (full row: docs/IMPLEMENTATION_PLAN.md section 2; ADR-037). Step 5.5c (overview arrangement and family colours) is done: schema version 2, the grid layout in the layout worker, tone tokens, legend, tinted hub cards, the family page in its family's tone. Then 5.6a.",
+  "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
       "phase": 1,
@@ -123,7 +124,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command at the close of step 5.5a (Vitest 4.1.11: 314 files, 4,734 tests; before the closing session, HEAD 64089da, 309 files, 4,577 tests; per part: readability 311 / 4,643, structures 313 / 4,668, conditions 314 / 4,734); build:smoke green, initial JS 353.25 kB gzip; Chromium e2e and the three-engine smoke green (PROGRESS.md \"Phase 5, step 5.5a, closing session\"); earlier: step 5.4a 293 files, 4,454 tests",
+    "npmRunCheck": "passed as ONE command at the close of step 5.5c (Vitest 4.1.11: 326 files, 4,872 tests; before the session 320 files, 4,781 tests, HEAD fafcb54; per part: review follow-ups 320 / 4,782, arrangement data 321 / 4,798, arranged overview 326 / 4,872); build:smoke green, initial JS 368.41 kB gzip; the full e2e as one run: Chromium 55 passed 1 skipped, Firefox 5, WebKit 5 (PROGRESS.md \"Phase 5, step 5.5c, part 3\"); earlier: step 5.5a 314 files, 4,734 tests",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -345,6 +346,7 @@
     "CLOSED (step 5.5a part 2): a species or member node with a depiction key has a 128 x 80 structure area above its name line at every LOD (box about 120 px high). Was: Step 5.4a REVIEW REQUIRED 1 (PROGRESS.md \"Phase 5, step 5.4a\"): a node box does not grow for a structure (sizes come from name and formula), so a depiction at LOD 3 is drawn small inside the same box; 5.5a decides with a real look whether LOD 3 species get a taller box. Real text metrics, hit areas and the keyboard model are 5.5a and 5.7; axe runs when a screen uses the renderer.",
     "Gate E watch (step 5.4b review, 2026-10-07): Phase 5 mounts the whole bounded Scene (at most 400 nodes / 800 edges); the grid index feeds the LOD budget and the depiction candidates. If the 5.10b frame-rate measurement misses, mount only the visible ids (UI_ARCHITECTURE §6).",
     "CARRIED (step 5.5a close): the user looks at the arrow text after 5.5a; the words the conditions decision does not name are written as the schema's words and listed in PROGRESS (REVIEW REQUIRED 5); solventCharacter is still not on the arrow. Was: Arrow text (step 5.4b review, 2026-10-07): solventCharacter on the arrow and the length of one arrow-text part are looked at again after the user's look at 5.5a.",
-    "Watch (step 5.5b review, 2026-10-09): familyStudy on a family of 10,000 reactions blocks the main thread about 0.3 s on open; the ELK overview settled within 4 asks (step 5.5c replaces ELK for an arranged overview; ELK stays for an overview without cells)."
+    "Watch (step 5.5b review, 2026-10-09): familyStudy on a family of 10,000 reactions blocks the main thread about 0.3 s on open; the ELK overview settled within 4 asks (step 5.5c replaces ELK for an arranged overview; ELK stays for an overview without cells).",
+    "Carried (step 5.5c close): the arranged overview's drawing is wide (1,428 x 840 on the demo); with more than 5 columns the fitted scale falls toward the LOD 1 threshold (5.5d may need a smaller-grid hint). PRS-004 stacks boxes that share a cell (warned, not repaired). Initial JS 368.41 kB gzip (400 kB target stands, Gate E watch). The arrangement of the demo and the gaps (2 x and 1.5 x spacing.layer) are REVIEW REQUIRED for the user."
   ]
 }
