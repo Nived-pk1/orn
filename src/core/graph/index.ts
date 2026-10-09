@@ -30,3 +30,5 @@ export type {
   TraversedEdge,
   VisitedNode,
 } from './traversal';
+export { familyStudy, UNCLASSIFIED_NAME } from './family';
+export type { FamilyCard, FamilyCardOutcome, FamilyElsewhere, FamilyGroup, FamilyPartner, FamilyProduct, FamilyReactionType, FamilySection, FamilySectionKind, FamilyStudy, SelectivityWord } from './family';

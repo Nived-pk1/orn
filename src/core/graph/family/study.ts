@@ -1,0 +1,195 @@
+/**
+ * familyStudy (step 5.5b; ADR-037; docs/GRAPH_SEMANTICS.md §3, §8): the value behind the navigator's family page, built from the
+ * navigator roll-up index (the candidates from and to the hub; no scan of every reaction).
+ *
+ * Two sections. "Reactions of <family>": candidates whose carried substrate resolves to the hub, grouped by the family of the main
+ * product. "Preparation of <family>": candidates whose main product resolves to the hub, grouped by the family of the carried
+ * substrate. A reaction of a family into itself is in both sections, in the group of its own family. Unclassified is a family like the
+ * others. Groups are ordered by the anchor's `order`, then name, Unclassified last; cards in a group by folded reaction name, then ID
+ * (display order only). One card per (reaction, group); outcomes of the same reaction that land in other groups of the section are
+ * counted on the card with where they go. Work is proportional to the hub's candidates (and the schemes referring to those reactions).
+ */
+import type { NavigatorCandidate } from '../../indexes/contracts';
+import type { Reaction, ReactionScheme, RecordRef } from '../../schema';
+import { fold } from '../../text';
+import { arrowTextOf } from '../arrow-text';
+import type { ProjectionContext } from '../contracts';
+import { UNCLASSIFIED_HUB_ID } from '../navigator/hubs';
+import { createDescriber } from './describe';
+import type {
+  FamilyCard,
+  FamilyCardOutcome,
+  FamilyElsewhere,
+  FamilyGroup,
+  FamilyPartner,
+  FamilyProduct,
+  FamilyReactionType,
+  FamilySection,
+  FamilySectionKind,
+  FamilyStudy,
+  SelectivityWord,
+} from './types';
+
+export const UNCLASSIFIED_NAME = 'Unclassified';
+
+const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+const SELECTIVITY_WORD: Readonly<Record<string, SelectivityWord>> = {
+  exclusive: 'exclusive',
+  major: 'major',
+  minor: 'minor',
+  trace: 'trace',
+  mixture_component: 'mixture component',
+};
+
+interface HubInfo {
+  readonly name: string;
+  readonly order: number;
+}
+
+interface GatheredOutcome {
+  readonly variantIds: NavigatorCandidate['conditionVariantIds'];
+  readonly products: NavigatorCandidate[];
+}
+
+/** One reaction's candidates in one group of a section, outcome by outcome. */
+interface Gathered {
+  readonly substrate: RecordRef;
+  readonly participantId: NavigatorCandidate['participantId'];
+  readonly outcomes: Map<string, GatheredOutcome>;
+}
+
+function hubInfoOf(ctx: ProjectionContext, hubs: readonly RecordRef[]): Map<string, HubInfo> {
+  const describer = createDescriber(ctx.state);
+  const orderOf = new Map<string, number>();
+  for (const anchor of ctx.indexes.anchors()) if (!orderOf.has(anchor.target.id)) orderOf.set(anchor.target.id, anchor.order);
+  const info = new Map<string, HubInfo>();
+  for (const hub of hubs) info.set(hub.id, { name: describer.describe(hub)?.name ?? hub.id, order: orderOf.get(hub.id) ?? 0 });
+  info.set(UNCLASSIFIED_HUB_ID, { name: UNCLASSIFIED_NAME, order: Number.POSITIVE_INFINITY });
+  return info;
+}
+
+type Ranked = { readonly hubId: string; readonly info: HubInfo };
+
+function compareGroups(a: Ranked, b: Ranked): number {
+  const aLast = a.hubId === UNCLASSIFIED_HUB_ID;
+  const bLast = b.hubId === UNCLASSIFIED_HUB_ID;
+  if (aLast !== bLast) return aLast ? 1 : -1;
+  return a.info.order - b.info.order || compare(fold(a.info.name), fold(b.info.name)) || compare(a.hubId, b.hubId);
+}
+
+export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy | null {
+  const rollup = ctx.indexes.navigatorRollup();
+  if (hubId !== UNCLASSIFIED_HUB_ID && !rollup.hubs.some((hub) => hub.id === hubId)) return null;
+  const infos = hubInfoOf(ctx, rollup.hubs);
+  const hubInfo = (id: string): HubInfo => infos.get(id) ?? { name: id, order: 0 };
+  const ranked = (id: string): Ranked => ({ hubId: id, info: hubInfo(id) });
+  const describer = createDescriber(ctx.state);
+  const hubRef = rollup.hubs.find((hub) => hub.id === hubId) ?? null;
+  const shownAsNode = (ref: RecordRef): boolean => ctx.indexes.displayOf(ref)?.showAsNode !== 'never';
+  const schemesCache = new Map<string, readonly ReactionScheme[]>();
+  const schemesOf = (reactionId: string): readonly ReactionScheme[] => {
+    let found = schemesCache.get(reactionId);
+    if (found === undefined) {
+      const ids = new Set(ctx.indexes.referrersOf(reactionId).filter((r) => r.owner.kind === 'reaction_scheme').map((r) => r.owner.id));
+      found = [...ids].map((id) => ctx.state.records.reaction_scheme[id]).filter((s): s is ReactionScheme => s !== undefined);
+      schemesCache.set(reactionId, found);
+    }
+    return found;
+  };
+
+  const seenReactions = new Map<string, Reaction>();
+
+  const buildSection = (kind: FamilySectionKind): FamilySection => {
+    const candidates = kind === 'reactions_of' ? rollup.candidatesFrom(hubId) : rollup.candidatesTo(hubId);
+    const groupOf = (c: NavigatorCandidate): string => (kind === 'reactions_of' ? c.toHub : c.fromHub);
+    const groups = new Map<string, Map<string, Gathered>>();
+    // reaction -> group -> outcome IDs (for "elsewhere")
+    const landing = new Map<string, Map<string, Set<string>>>();
+    for (const c of candidates) {
+      const reaction = ctx.state.records.reaction[c.reactionId];
+      if (reaction === undefined) continue;
+      seenReactions.set(reaction.id, reaction);
+      const group = groupOf(c);
+      let reactions = groups.get(group);
+      if (reactions === undefined) groups.set(group, (reactions = new Map()));
+      let gathered = reactions.get(c.reactionId);
+      if (gathered === undefined) reactions.set(c.reactionId, (gathered = { substrate: c.substrate, participantId: c.participantId, outcomes: new Map() }));
+      let outcome = gathered.outcomes.get(c.outcomeId);
+      if (outcome === undefined) gathered.outcomes.set(c.outcomeId, (outcome = { variantIds: c.conditionVariantIds, products: [] }));
+      outcome.products.push(c);
+      let byGroup = landing.get(c.reactionId);
+      if (byGroup === undefined) landing.set(c.reactionId, (byGroup = new Map()));
+      let outcomes = byGroup.get(group);
+      if (outcomes === undefined) byGroup.set(group, (outcomes = new Set()));
+      outcomes.add(c.outcomeId);
+    }
+    const built: FamilyGroup[] = [];
+    for (const [group, reactions] of [...groups].sort((a, b) => compareGroups(ranked(a[0]), ranked(b[0])))) {
+      const cards: FamilyCard[] = [];
+      for (const [reactionId, gathered] of reactions) {
+        const reaction = seenReactions.get(reactionId) as Reaction;
+        const outcomes: FamilyCardOutcome[] = [...gathered.outcomes]
+          .sort((a, b) => compare(a[0], b[0]))
+          .map(([outcomeId, o]) => {
+            const products: FamilyProduct[] = o.products
+              .slice()
+              .sort((a, b) => compare(a.productId, b.productId))
+              .map((p) => ({ productId: p.productId, ref: p.product, selectivity: SELECTIVITY_WORD[p.selectivity] ?? null }));
+            const arrowText = arrowTextOf(reaction, {
+              schemes: schemesOf(reaction.id),
+              conditionVariantIds: o.variantIds,
+              carriedParticipantId: gathered.participantId,
+              describe: describer.describeForArrow,
+              shownAsNode,
+            });
+            return { outcomeId: outcomeId as FamilyCardOutcome['outcomeId'], conditionVariantIds: o.variantIds, products, arrowText };
+          });
+        const elsewhere: FamilyElsewhere[] = [...(landing.get(reactionId) ?? [])]
+          .filter(([other]) => other !== group)
+          .map(([other, ids]) => ({ hubId: other, name: hubInfo(other).name, outcomeCount: ids.size }))
+          .sort((a, b) => compareGroups(ranked(a.hubId), ranked(b.hubId)));
+        cards.push({
+          key: `${kind}:${group}:${reactionId}`,
+          reactionId: reaction.id,
+          name: reaction.name,
+          namedReactions: reaction.namedReactionIds.map((id) => ({ id, name: ctx.state.records.named_reaction[id]?.name ?? id })),
+          reviewStatus: reaction.review.status,
+          caveatCount: ctx.indexes.caveatsFor({ kind: 'reaction', id: reaction.id } as RecordRef).length,
+          substrate: gathered.substrate,
+          outcomes,
+          elsewhere,
+        });
+      }
+      cards.sort((a, b) => compare(fold(a.name), fold(b.name)) || compare(a.reactionId, b.reactionId));
+      built.push({ hubId: group, name: hubInfo(group).name, cards });
+    }
+    return { kind, reactionCount: landing.size, groups: built };
+  };
+
+  const reactionsOf = buildSection('reactions_of');
+  const preparationOf = buildSection('preparation_of');
+
+  const partners = (section: FamilySection): FamilyPartner[] => section.groups.map((g) => ({ hubId: g.hubId, name: g.name, reactionCount: g.cards.length }));
+  const typeCounts = new Map<string, number>();
+  for (const reaction of seenReactions.values()) {
+    for (const id of new Set(reaction.reactionTypes.map((t) => t.conceptId as string))) typeCounts.set(id, (typeCounts.get(id) ?? 0) + 1);
+  }
+  const reactionTypes: FamilyReactionType[] = [...typeCounts]
+    .map(([conceptId, count]) => ({ conceptId, name: ctx.state.records.concept[conceptId]?.name ?? conceptId, count }))
+    .sort((a, b) => b.count - a.count || compare(fold(a.name), fold(b.name)) || compare(a.conceptId, b.conceptId));
+
+  const described = hubRef === null ? undefined : describer.describe(hubRef);
+  return {
+    hubId,
+    hub: hubRef,
+    name: hubInfo(hubId).name,
+    ...(described?.formula === undefined ? {} : { formula: described.formula }),
+    counts: { reactionsOf: reactionsOf.reactionCount, preparationOf: preparationOf.reactionCount, total: seenReactions.size },
+    reactionTypes,
+    madeFrom: partners(preparationOf),
+    turnsInto: partners(reactionsOf),
+    reactionsOf,
+    preparationOf,
+  };
+}
