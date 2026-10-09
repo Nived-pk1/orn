@@ -36,13 +36,32 @@ export const VIEW_KEYS = [
 ] as const;
 export type ViewKey = (typeof VIEW_KEYS)[number];
 
-/** Marks a class/species/concept as a navigator hub. Being a hub never changes chemical identity. */
+/** The soft colours a family group can have (schema version 2, step 5.5c; ADR-037). A name, never a colour value: the tokens own the colours. */
+export const ANCHOR_TONES = ['blue', 'green', 'amber', 'violet', 'teal', 'rose', 'slate'] as const;
+export type AnchorTone = (typeof ANCHOR_TONES)[number];
+
+/** A grid cell of the arranged overview: small integers, column then row, from 0. */
+export const GRID_CELL_MAX = 63;
+export const GridCellSchema = z.strictObject({
+  column: z.number().int().min(0).max(GRID_CELL_MAX),
+  row: z.number().int().min(0).max(GRID_CELL_MAX),
+});
+export type GridCell = z.infer<typeof GridCellSchema>;
+
+/**
+ * Marks a class/species/concept as a navigator hub. Being a hub never changes chemical identity. `cell`, `group` and `tone` (schema
+ * version 2, step 5.5c) are the curated arrangement of the overview: where the hub sits on the grid, the family group it belongs to
+ * ("Oxygen compounds") and that group's soft colour. All three are optional presentation values; none is chemistry.
+ */
 export const NavigatorAnchorSchema = z.strictObject({
   id: NavigatorAnchorIdSchema,
   kind: z.literal('navigator_anchor'),
   target: RecordRefSchema,
   label: LabelTextSchema.optional(),
   order: FiniteNumberSchema,
+  cell: GridCellSchema.optional(),
+  group: LabelTextSchema.optional(),
+  tone: z.enum(ANCHOR_TONES).optional(),
   ...presentationMetaShape,
 });
 export type NavigatorAnchor = z.infer<typeof NavigatorAnchorSchema>;

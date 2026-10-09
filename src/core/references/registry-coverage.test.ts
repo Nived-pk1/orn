@@ -22,7 +22,7 @@ import { createReferenceEngine } from './engine';
 import { formatPath, matchPath, parsePath, type PathToken } from './paths';
 
 const fixture = JSON.parse(
-  readFileSync(new URL('../../../data/fixtures/schema/v1/maximal-valid.orn.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../../data/fixtures/schema/v2/maximal-valid.orn.json', import.meta.url), 'utf8'),
 ) as { records: Record<RecordKind, AnyRecord[]> };
 
 const engine = createReferenceEngine();

@@ -12,7 +12,7 @@ import { documentToState } from './document';
 beforeAll(() => enablePatches());
 
 const doc = JSON.parse(
-  readFileSync(new URL('../../../data/fixtures/schema/v1/minimal-valid.orn.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../../data/fixtures/schema/v2/minimal-valid.orn.json', import.meta.url), 'utf8'),
 ) as DatasetDocument;
 const base = ((): CanonicalState => {
   const result = documentToState(doc);

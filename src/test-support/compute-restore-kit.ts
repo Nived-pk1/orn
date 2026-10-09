@@ -10,7 +10,7 @@ import type { StoreHandle } from '@/core/commands';
 import type { MigrationRunner } from '@/core/migrations/contracts';
 import { documentToState } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
-import { DatasetDocumentSchema } from '@/core/schema';
+import { CURRENT_SCHEMA_VERSION, DatasetDocumentSchema } from '@/core/schema';
 import type { RestoreSnapshotResult, SnapshotSummary } from '@/persistence/contracts';
 import { restoreSnapshot } from '@/persistence/restore';
 import { createComputeRestore, type ComputeRestore, type RestoreSnapshotsPort } from '@/workers/compute/restore-flow';
@@ -104,10 +104,10 @@ export async function twinRestore(state: CanonicalState, runner: MigrationRunner
 }
 
 /** Stores hand-made bytes as a snapshot row, the way an older or damaged one would sit in IndexedDB. */
-export async function putRow(t: TestAdapter, id: string, bytes: Uint8Array, schemaVersion = 1): Promise<void> {
+export async function putRow(t: TestAdapter, id: string, bytes: Uint8Array, schemaVersion = CURRENT_SCHEMA_VERSION): Promise<void> {
   await t.db.snapshots.put({ id, createdAt: '2026-09-28T09:00:00.000Z', reason: 'manual', revision: 1, schemaVersion, byteSize: bytes.length, blob: new Blob([bytes as Uint8Array<ArrayBuffer>]) });
 }
-export const putDoc = (t: TestAdapter, id: string, doc: unknown, schemaVersion = 1): Promise<void> => putRow(t, id, zlibSync(strToU8(JSON.stringify(doc))), schemaVersion);
+export const putDoc = (t: TestAdapter, id: string, doc: unknown, schemaVersion = CURRENT_SCHEMA_VERSION): Promise<void> => putRow(t, id, zlibSync(strToU8(JSON.stringify(doc))), schemaVersion);
 
 /** A stored snapshot's document as a plain object a test can damage. */
 export async function docOf(t: TestAdapter, summary: SnapshotSummary): Promise<{ schemaVersion: number; meta: Record<string, unknown>; records: Record<string, unknown[]> } & Record<string, unknown>> {

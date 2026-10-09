@@ -13,7 +13,7 @@ import { withVersionOffset } from '@/test-support/version-offset';
 import { IMPORT_LIMITS } from './contracts';
 import { parseDatasetEnvelope } from './import-envelope';
 
-const fixture = JSON.parse(readFileSync(new URL('../../data/fixtures/schema/v1/minimal-valid.orn.json', import.meta.url), 'utf8')) as DatasetDocument;
+const fixture = JSON.parse(readFileSync(new URL('../../data/fixtures/schema/v2/minimal-valid.orn.json', import.meta.url), 'utf8')) as DatasetDocument;
 const validSpecies = fixture.records.species;
 
 function envelopeWith(records: Record<string, unknown[]>, schemaVersion = CURRENT_SCHEMA_VERSION) {

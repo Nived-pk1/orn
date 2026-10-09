@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import maximal from '../../../data/fixtures/schema/v1/maximal-valid.orn.json';
-import minimal from '../../../data/fixtures/schema/v1/minimal-valid.orn.json';
+import expectedMaximal from '../../../data/fixtures/schema/v2/expected/maximal-from-v1.orn.json';
+import expectedMinimal from '../../../data/fixtures/schema/v2/expected/minimal-from-v1.orn.json';
+import maximalV2 from '../../../data/fixtures/schema/v2/maximal-valid.orn.json';
+import minimalV2 from '../../../data/fixtures/schema/v2/minimal-valid.orn.json';
+import maximalV1 from '../../../data/fixtures/schema/v1/maximal-valid.orn.json';
+import minimalV1 from '../../../data/fixtures/schema/v1/minimal-valid.orn.json';
 import { CURRENT_SCHEMA_VERSION } from '../schema';
 import type { MigratableDocument, SchemaMigration } from './contracts';
 import { createMigrationRunner, migrationRunner } from './runner';
@@ -27,23 +31,37 @@ function step(from: number): SchemaMigration {
   };
 }
 
-describe('application runner (no steps yet)', () => {
-  it('has no registered steps while the schema is at version 1', () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe(1);
-    expect(MIGRATIONS).toEqual([]);
+describe('application runner (1 to 2 registered)', () => {
+  it('registers exactly the step 1 to 2 while the schema is at version 2', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe(2);
+    expect(MIGRATIONS.map((m) => [m.from, m.to])).toEqual([[1, 2]]);
     expect(migrationRunner.target).toBe(CURRENT_SCHEMA_VERSION);
   });
 
   it.each([
-    ['minimal', minimal],
-    ['maximal', maximal],
-  ])('returns the %s v1 fixture unchanged (same object, no reports)', (_name, fixture) => {
+    ['minimal', minimalV1, expectedMinimal],
+    ['maximal', maximalV1, expectedMaximal],
+  ])('migrates the frozen %s v1 fixture to the committed v2 output, changing nothing but the version', (_name, fixture, expected) => {
     const input = fixture as unknown as MigratableDocument;
     const before = JSON.stringify(input);
     const result = migrationRunner.run(input);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.doc).toEqual(expected);
+    expect({ ...result.doc, schemaVersion: 1 }).toEqual(input);
+    expect(result.steps).toHaveLength(1);
+    expect(result.steps[0]).toMatchObject({ from: 1, to: 2, changedRecordIds: [], notes: [] });
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it.each([
+    ['minimal', minimalV2],
+    ['maximal', maximalV2],
+  ])('returns the %s v2 fixture unchanged (same object, no reports)', (_name, fixture) => {
+    const input = fixture as unknown as MigratableDocument;
+    const result = migrationRunner.run(input);
     expect(result).toEqual({ ok: true, doc: input, steps: [] });
     expect(result.ok && result.doc).toBe(input);
-    expect(JSON.stringify(input)).toBe(before);
   });
 
   it('rejects a newer version with NEWER_VERSION', () => {

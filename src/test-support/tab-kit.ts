@@ -6,7 +6,7 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import type { PrecomputedFindings } from '@/core/commands';
-import type { CanonicalState } from '@/core/schema';
+import { CURRENT_SCHEMA_VERSION, type CanonicalState } from '@/core/schema';
 import type { ChangeChannel, OpenResult, WriterLock } from '@/persistence/contracts';
 import { createFollower, type Follower, type FollowerEvent } from '@/persistence/follower';
 import { attachWriteQueue, type WriteWiring } from '@/persistence/write-wiring';
@@ -54,7 +54,7 @@ export async function openTab(env: TabEnv, options: Partial<Omit<DexieAdapterOpt
   const writable = opened.mode === 'read_write';
   const follower = writable || opened.readOnlyReason !== 'other_tab_is_writer'
     ? undefined
-    : createFollower({ adapter: t.adapter, ...(channel !== undefined ? { channel } : {}), lock, revision: opened.state === null ? null : opened.revision, schemaVersion: 1, ...(extras.validate === undefined ? {} : { validate: extras.validate }) });
+    : createFollower({ adapter: t.adapter, ...(channel !== undefined ? { channel } : {}), lock, revision: opened.state === null ? null : opened.revision, schemaVersion: CURRENT_SCHEMA_VERSION, ...(extras.validate === undefined ? {} : { validate: extras.validate }) });
   follower?.subscribe((event) => events.push(event));
 
   const buildStore = (state: CanonicalState, revision: number, precomputed?: PrecomputedFindings): StoreHandle =>

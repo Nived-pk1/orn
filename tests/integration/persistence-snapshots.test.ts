@@ -2,6 +2,7 @@
  * Snapshots on fake-indexeddb (step 3.2): create, list, read, delete, retention, ordering in the write queue,
  * damage reported as values, and the quota sequence's stage 2 (ADV-040 snapshot stage).
  */
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import { strToU8, zlibSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { documentToState } from '@/core/dataset';
@@ -32,7 +33,7 @@ describe('snapshots: create, list, read, delete', () => {
   it('a snapshot reads back as a document that rebuilds the state it was made from (round trip)', async () => {
     const t = await seeded();
     const summary = await make(t, 'manual', 'my note');
-    expect(summary).toMatchObject({ reason: 'manual', revision: 1, schemaVersion: 1, note: 'my note' });
+    expect(summary).toMatchObject({ reason: 'manual', revision: 1, schemaVersion: CURRENT_SCHEMA_VERSION, note: 'my note' });
     expect(summary.id).toMatch(/^snp_[0-9a-z]{26}$/);
     const read = await t.adapter.readSnapshot(summary.id);
     if (!read.ok) throw new Error(read.message);

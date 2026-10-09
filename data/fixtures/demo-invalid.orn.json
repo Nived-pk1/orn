@@ -1,6 +1,6 @@
 {
   "format": "orn.dataset",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "exportedAt": "2026-09-26T00:00:00.000Z",
   "exportScope": "full",
   "generator": {
@@ -11854,6 +11854,12 @@
           "id": "cls_alcohols"
         },
         "order": 7,
+        "cell": {
+          "column": 1,
+          "row": 1
+        },
+        "group": "Oxygen compounds",
+        "tone": "green",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11868,6 +11874,12 @@
           "id": "cls_aldehydes"
         },
         "order": 10,
+        "cell": {
+          "column": 1,
+          "row": 2
+        },
+        "group": "Oxygen compounds",
+        "tone": "green",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11882,6 +11894,12 @@
           "id": "cls_alkanes"
         },
         "order": 1,
+        "cell": {
+          "column": 0,
+          "row": 0
+        },
+        "group": "Hydrocarbons",
+        "tone": "blue",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11896,6 +11914,12 @@
           "id": "cls_alkenes"
         },
         "order": 2,
+        "cell": {
+          "column": 1,
+          "row": 0
+        },
+        "group": "Hydrocarbons",
+        "tone": "blue",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11910,6 +11934,12 @@
           "id": "cls_alkynes"
         },
         "order": 3,
+        "cell": {
+          "column": 2,
+          "row": 0
+        },
+        "group": "Hydrocarbons",
+        "tone": "blue",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11924,6 +11954,12 @@
           "id": "cls_amines"
         },
         "order": 14,
+        "cell": {
+          "column": 3,
+          "row": 3
+        },
+        "group": "Nitrogen compounds",
+        "tone": "violet",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11938,6 +11974,12 @@
           "id": "cls_arenes"
         },
         "order": 4,
+        "cell": {
+          "column": 4,
+          "row": 0
+        },
+        "group": "Hydrocarbons",
+        "tone": "blue",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11952,6 +11994,12 @@
           "id": "cls_carboxylic-acids"
         },
         "order": 12,
+        "cell": {
+          "column": 1,
+          "row": 3
+        },
+        "group": "Oxygen compounds",
+        "tone": "green",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11966,6 +12014,12 @@
           "id": "cls_diazonium-salts"
         },
         "order": 15,
+        "cell": {
+          "column": 4,
+          "row": 3
+        },
+        "group": "Nitrogen compounds",
+        "tone": "violet",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11980,6 +12034,12 @@
           "id": "cls_esters"
         },
         "order": 13,
+        "cell": {
+          "column": 2,
+          "row": 3
+        },
+        "group": "Oxygen compounds",
+        "tone": "green",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -11994,6 +12054,12 @@
           "id": "cls_ethers"
         },
         "order": 9,
+        "cell": {
+          "column": 2,
+          "row": 1
+        },
+        "group": "Oxygen compounds",
+        "tone": "green",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -12008,6 +12074,12 @@
           "id": "cls_haloalkanes"
         },
         "order": 5,
+        "cell": {
+          "column": 0,
+          "row": 1
+        },
+        "group": "Halogen compounds",
+        "tone": "amber",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -12022,6 +12094,12 @@
           "id": "cls_haloarenes"
         },
         "order": 6,
+        "cell": {
+          "column": 3,
+          "row": 2
+        },
+        "group": "Halogen compounds",
+        "tone": "amber",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -12036,6 +12114,12 @@
           "id": "cls_ketones"
         },
         "order": 11,
+        "cell": {
+          "column": 2,
+          "row": 2
+        },
+        "group": "Oxygen compounds",
+        "tone": "green",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",
@@ -12050,6 +12134,12 @@
           "id": "cls_phenols"
         },
         "order": 8,
+        "cell": {
+          "column": 4,
+          "row": 2
+        },
+        "group": "Oxygen compounds",
+        "tone": "green",
         "provenance": {
           "origin": "seed",
           "createdAt": "2026-09-26T00:00:00.000Z",

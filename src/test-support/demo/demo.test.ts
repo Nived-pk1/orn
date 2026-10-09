@@ -71,6 +71,18 @@ describe('demo dataset covers the specification (TEST_STRATEGY.md §3)', () => {
   const { records } = demo;
   const reactions = records.reaction;
 
+  it('arranges every hub: a cell of its own, a group and the one tone of that group (step 5.5c)', () => {
+    const anchors = records.navigator_anchor;
+    expect(anchors.every((a) => a.cell !== undefined && a.group !== undefined && a.tone !== undefined)).toBe(true);
+    expect(new Set(anchors.map((a) => `${a.cell?.column},${a.cell?.row}`)).size).toBe(anchors.length);
+    const tones: Record<string, string[]> = {};
+    for (const a of anchors) {
+      const list = (tones[a.group as string] ??= []);
+      if (!list.includes(a.tone as string)) list.push(a.tone as string);
+    }
+    expect(tones).toEqual({ Hydrocarbons: ['blue'], 'Halogen compounds': ['amber'], 'Oxygen compounds': ['green'], 'Nitrogen compounds': ['violet'] });
+  });
+
   it('anchors every hub class and gives hubs a formula but never a structure', () => {
     expect(records.navigator_anchor.map((a) => a.target.id).sort()).toEqual(HUB_CLASSES.map((b) => `cls_${b}`).sort());
     for (const c of records.class) {

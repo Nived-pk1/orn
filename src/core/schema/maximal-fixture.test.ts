@@ -11,7 +11,7 @@ import { coverageExpectations, coverageObservations, walkValue } from '../../tes
 import { SHARED_SCHEMAS } from '../../test-support/schema-shapes';
 import { DatasetDocumentSchema, RECORD_KINDS, RECORD_SCHEMAS } from './index';
 
-const fixturePath = new URL('../../../data/fixtures/schema/v1/maximal-valid.orn.json', import.meta.url);
+const fixturePath = new URL('../../../data/fixtures/schema/v2/maximal-valid.orn.json', import.meta.url);
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as {
   records: Record<string, { id: string }[]>;
 };

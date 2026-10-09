@@ -5,7 +5,8 @@
  */
 import { describe, expect, it } from 'vitest';
 import { hash64 } from '@/core/hash';
-import type { Reaction } from '@/core/schema';
+import { stateToDocument } from '@/core/dataset';
+import { CURRENT_SCHEMA_VERSION, DatasetDocumentSchema, type Reaction } from '@/core/schema';
 import { makeStore } from '@/test-support/command-kit';
 import { parsedFrom, parseBytes, testSession } from '@/test-support/import-kit';
 import { legacyBytes, legacyPreview, stateOfKind } from '@/test-support/legacy-import-kit';
@@ -141,6 +142,19 @@ describe('the report shows what only the whole import knows', () => {
     expect(report?.collisions[0]?.originals).toHaveLength(2);
     expect(report?.collisions[0]?.namespace).toContain('compound');
     expect(report?.collisions[0]?.resolved.map((r) => r.original).sort()).toEqual(report?.collisions[0]?.originals);
+  });
+});
+
+describe('the legacy importer writes the current schema (version 2, step 5.5c)', () => {
+  it('the imported dataset exports as a current-version document that passes the strict schema, and has no arrangement (legacy has none)', async () => {
+    const run = await legacyPreview(legacyBytes(V6), 'empty');
+    const plan = planOf(run.outcome);
+    expect((await run.session.apply(plan.preview.batchId, plan)).ok).toBe(true);
+    const doc = stateToDocument(run.store.getState(), { exportedAt: '2026-10-09T00:00:00.000Z', exportScope: 'full', generator: { app: 'test', version: '0' } });
+    expect(doc.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(CURRENT_SCHEMA_VERSION).toBe(2);
+    expect(DatasetDocumentSchema.safeParse(doc).success).toBe(true);
+    expect(doc.records.navigator_anchor.every((anchor) => anchor.cell === undefined && anchor.group === undefined && anchor.tone === undefined)).toBe(true);
   });
 });
 

@@ -8,6 +8,8 @@
  * and error codes are the real ones; only the numbers in its human-readable `message` are the shifted ones.
  */
 import { createMigrationRunner } from '@/core/migrations';
+import { MIGRATIONS } from '@/core/migrations/steps';
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import type { MigratableDocument, MigrationRunner, MigrationStepReport, SchemaMigration } from '@/core/migrations/contracts';
 
 export function withVersionOffset(steps: readonly SchemaMigration[], offset = 1, target = 1): MigrationRunner {
@@ -35,3 +37,13 @@ export function withVersionOffset(steps: readonly SchemaMigration[], offset = 1,
     },
   };
 }
+
+/**
+ * `withVersionOffset` for the flows that end at the CURRENT schema (boot, restore, follower): the made-up steps (version 0 shown as
+ * "1 older than the first real version") followed by the real steps from version 1 up to `CURRENT_SCHEMA_VERSION`, so a migrated
+ * document is a current one. Since the first real bump (1 to 2, step 5.5c) the synthetic chain is one step longer than it was.
+ */
+export function withVersionOffsetToCurrent(steps: readonly SchemaMigration[]): MigrationRunner {
+  return withVersionOffset([...steps, ...MIGRATIONS.filter((step) => step.from >= 1)], 1, CURRENT_SCHEMA_VERSION);
+}
+

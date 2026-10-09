@@ -4,6 +4,7 @@
  * The failures that the Phase 3 restore already has are compared with the in-process restore (same code, same message); the
  * worker-specific ones (the store refuses the findings, a throw, a crash of the worker, a cancelled sync) are checked directly.
  */
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import { strToU8, zlibSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import type { StoreHandle } from '@/core/commands';
@@ -78,7 +79,7 @@ describe('restore through the worker: the Phase 3 refusals, same code and messag
     });
     expect(worker).toMatchObject({ ok: false, code: 'CORRUPT' });
     await expectUntouched(rig, before, 'not JSON');
-    for (const [id, doc, version] of [['snp_shape', { format: 'other' }, 1], ['snp_version', { format: 'orn.dataset', schemaVersion: 2, records: {} }, 1]] as const) {
+    for (const [id, doc, version] of [['snp_shape', { format: 'other' }, CURRENT_SCHEMA_VERSION], ['snp_version', { format: 'orn.dataset', schemaVersion: CURRENT_SCHEMA_VERSION, records: {} }, CURRENT_SCHEMA_VERSION - 1]] as const) {
       const r = await sameRefusal(async (t) => (await putDoc(t, id, doc, version), id));
       expect(r.worker).toMatchObject({ ok: false, code: 'CORRUPT' });
       await expectUntouched(r.rig, r.before, id);
@@ -131,10 +132,10 @@ describe('restore through the worker: the Phase 3 refusals, same code and messag
   it('a newer schema version, through the real runner (MIGRATION_FAILED NEWER_VERSION)', async () => {
     const { worker, rig, before } = await sameRefusal(async (t) => {
       const source = await t.adapter.createSnapshot('manual', base, 1);
-      await putDoc(t, 'snp_new', { ...(await docOf(t, source)), schemaVersion: 2 }, 2);
+      await putDoc(t, 'snp_new', { ...(await docOf(t, source)), schemaVersion: CURRENT_SCHEMA_VERSION + 1 }, CURRENT_SCHEMA_VERSION + 1);
       return 'snp_new';
     }, createMigrationRunner());
-    expect(worker).toMatchObject({ ok: false, code: 'MIGRATION_FAILED', migration: { code: 'NEWER_VERSION', atVersion: 2 } });
+    expect(worker).toMatchObject({ ok: false, code: 'MIGRATION_FAILED', migration: { code: 'NEWER_VERSION', atVersion: CURRENT_SCHEMA_VERSION + 1 } });
     await expectUntouched(rig, before, 'NEWER_VERSION');
   });
 

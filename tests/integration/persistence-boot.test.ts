@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { coreIndexEngine } from '@/core/indexes/engine';
-import type { AnyRecord, CanonicalState } from '@/core/schema';
+import { CURRENT_SCHEMA_VERSION, type AnyRecord, type CanonicalState } from '@/core/schema';
 import { validator } from '@/core/validation';
 import { quarantineIdOf, quarantineRow } from '@/persistence/boot-load';
 import { createOrnDb } from '@/persistence/db';
@@ -47,7 +47,7 @@ describe('boot: a current database', () => {
   it('loads the saved state and revision, reports what it found, and marks the session running and checked', async () => {
     const t = await savedDatabase(base, {}, 3);
     const { result, writes } = await boot(t);
-    expect(result).toMatchObject({ mode: 'read_write', revision: 3, storedSchemaVersion: 1, quarantinedCount: 0 });
+    expect(result).toMatchObject({ mode: 'read_write', revision: 3, storedSchemaVersion: CURRENT_SCHEMA_VERSION, quarantinedCount: 0 });
     expect(result.state).toEqual(base);
     const report = result.bootReport;
     expect(report).toMatchObject({ migrationSteps: [], crashSuspected: false, editorSessionIds: [], uiState: {}, uiStateReset: [], newlyQuarantined: 0 });

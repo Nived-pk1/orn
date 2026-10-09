@@ -20,7 +20,7 @@ import { loadState, reopen, savedDatabase, type TestAdapter } from '@/test-suppo
 import { expectReplicaEqualsStore, sortedFindings } from '@/test-support/replica-kit';
 import { loadFixtureState, must } from '@/test-support/state-fixture';
 import { SYNTHETIC_STEPS, SYNTHETIC_SYSTEM } from '@/test-support/synthetic-migration';
-import { withVersionOffset } from '@/test-support/version-offset';
+import { withVersionOffsetToCurrent } from '@/test-support/version-offset';
 import { createReplicaSync } from '@/workers/compute/sync';
 
 afterEach(() => vi.restoreAllMocks());
@@ -28,7 +28,7 @@ afterEach(() => vi.restoreAllMocks());
 const base = loadFixtureState('maximal-valid');
 const small = loadFixtureState('minimal-valid');
 const speciesId = Object.keys(small.records.species).sort()[0] as string;
-const RUNNER = withVersionOffset(SYNTHETIC_STEPS);
+const RUNNER = withVersionOffsetToCurrent(SYNTHETIC_STEPS);
 const demo = (() => {
   const parsed = documentToState(buildDemoDocument());
   if (!parsed.ok) throw new Error('setup');
@@ -123,7 +123,7 @@ describe('a migrated boot through the port keeps its ERROR gate', () => {
   });
 
   it('migrated data with an L2 error (a dangling reference) is refused although the worker validated it: rows put back, nothing accepted', async () => {
-    const failing: MigrationRunner = withVersionOffset([
+    const failing: MigrationRunner = withVersionOffsetToCurrent([
       {
         from: 0,
         to: 1,

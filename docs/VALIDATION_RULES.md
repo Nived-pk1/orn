@@ -121,6 +121,8 @@ Rules are **lifecycle-aware**: some rules are WARNING for `draft` and ERROR for 
 | PRS-001 | More than one `entity_display` for a target (lowest ID wins) | WARNING |
 | PRS-002 | Duplicate navigator anchors for a target | WARNING |
 | PRS-003 | Duplicate participant placements in one reaction scheme | WARNING |
+| PRS-004 | Two navigator anchors on the same grid cell (`cell`; the lowest ID wins, the others are flagged; the boxes are stacked in the cell) | WARNING |
+| PRS-005 | One anchor `group` drawn in two different `tone`s (the tone of the lowest ID wins) | WARNING |
 | AST-001 | Asset attached to nothing | INFO |
 | AST-002 | Asset blob missing from storage | WARNING |
 | AST-003 | Asset bytes do not match `sha256` (import) | ERROR (asset quarantined, not the whole import) |

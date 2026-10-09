@@ -10,7 +10,7 @@ import type { CanonicalState, DatasetDocument, RecordKind } from '@/core/schema'
 enablePatches();
 
 export function loadFixtureState(name: 'minimal-valid' | 'maximal-valid'): CanonicalState {
-  const url = new URL(`../../data/fixtures/schema/v1/${name}.orn.json`, import.meta.url);
+  const url = new URL(`../../data/fixtures/schema/v2/${name}.orn.json`, import.meta.url);
   const result = documentToState(JSON.parse(readFileSync(url, 'utf8')) as DatasetDocument);
   if (!result.ok) throw new Error(`fixture ${name} has duplicate IDs`);
   return result.state;

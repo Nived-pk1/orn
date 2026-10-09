@@ -14,7 +14,7 @@ import {
 } from './index';
 
 const fixture = JSON.parse(
-  readFileSync(new URL('../../../data/fixtures/schema/v1/minimal-valid.orn.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../../data/fixtures/schema/v2/minimal-valid.orn.json', import.meta.url), 'utf8'),
 ) as { records: { species: Record<string, unknown>[] } };
 
 describe('canonical schema smoke test', () => {

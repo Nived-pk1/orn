@@ -11,11 +11,11 @@ import { describe, expect, it } from 'vitest';
 import type { MigratableDocument } from '@/core/migrations/contracts';
 import { DatasetDocumentSchema } from '@/core/schema';
 import { canonicalJson, reverseKeys, SYNTHETIC_STEPS, SYNTHETIC_SYSTEM } from '@/test-support/synthetic-migration';
-import { withVersionOffset } from '@/test-support/version-offset';
+import { withVersionOffset, withVersionOffsetToCurrent } from '@/test-support/version-offset';
 
 const read = (path: string): string => readFileSync(new URL(`../fixtures/migrations/${path}`, import.meta.url), 'utf8');
 const v0 = JSON.parse(read('synthetic-v0.orn.json')) as MigratableDocument;
-const minimal = JSON.parse(readFileSync(new URL('../../data/fixtures/schema/v1/minimal-valid.orn.json', import.meta.url), 'utf8')) as MigratableDocument;
+const minimal = JSON.parse(readFileSync(new URL('../../data/fixtures/schema/v2/minimal-valid.orn.json', import.meta.url), 'utf8')) as MigratableDocument;
 const runner = withVersionOffset(SYNTHETIC_STEPS);
 
 function migrate(doc: MigratableDocument): MigratableDocument {
@@ -70,12 +70,50 @@ describe('P-03 (framework form): synthetic migration over a frozen synthetic fix
   });
 
   it('the result passes the strict schema and equals the current minimal fixture apart from the moved field', () => {
-    const migrated = migrate(v0);
+    // v0 -> v1 (synthetic) -> v2 (the real step): a current document, and the strict schema accepts it
+    const result = withVersionOffsetToCurrent(SYNTHETIC_STEPS).run(v0);
+    if (!result.ok) throw new Error(result.message);
+    const migrated = result.doc;
+    expect(result.steps.map((s) => [s.from, s.to])).toEqual([[0, 1], [1, 2]]);
     expect(DatasetDocumentSchema.safeParse(migrated).success).toBe(true);
     const species = (migrated.records['species'] as { provenance: { legacy?: { system: string } } }[])[0];
     expect(species?.provenance.legacy?.system).toBe(SYNTHETIC_SYSTEM);
     const withoutTrace = structuredClone(migrated) as MigratableDocument & { records: { species: { provenance: { legacy?: unknown } }[] } };
     delete (withoutTrace.records.species[0] as { provenance: { legacy?: unknown } }).provenance.legacy;
     expect(canonicalJson(withoutTrace)).toBe(canonicalJson(minimal));
+  });
+});
+
+describe('P-03 (real form, first bump 1 to 2, step 5.5c): the frozen v1 fixtures migrate to the committed v2 outputs', () => {
+  const fixture = (path: string): string => readFileSync(new URL(`../../data/fixtures/schema/${path}.orn.json`, import.meta.url), 'utf8');
+  const CASES = [['minimal', 'minimal-valid'], ['maximal', 'maximal-valid']] as const;
+
+  it.each(CASES)('%s: the output is byte-equal to the committed expected file, and passes the strict schema', async (short, name) => {
+    const { migrationRunner } = await import('@/core/migrations');
+    const input = JSON.parse(fixture(`v1/${name}`)) as MigratableDocument;
+    const result = migrationRunner.run(input);
+    if (!result.ok) throw new Error(result.message);
+    expect(canonicalJson(result.doc)).toBe(canonicalJson(JSON.parse(fixture(`v2/expected/${short}-from-v1`))));
+    expect(DatasetDocumentSchema.safeParse(result.doc).success).toBe(true);
+  });
+
+  it.each(CASES)('%s: the same bytes for a different input key order, the input is never mutated, and nothing is dropped (INV-23)', async (_short, name) => {
+    const { migrationRunner } = await import('@/core/migrations');
+    const input = JSON.parse(fixture(`v1/${name}`)) as MigratableDocument;
+    const before = canonicalJson(input);
+    const first = migrationRunner.run(input);
+    const second = migrationRunner.run(reverseKeys(input) as MigratableDocument);
+    if (!first.ok || !second.ok) throw new Error('migration failed');
+    expect(canonicalJson(second.doc)).toBe(canonicalJson(first.doc));
+    expect(canonicalJson(input)).toBe(before);
+    const lost = leaves(input).filter((leaf) => !leaf.startsWith('schemaVersion = ') && !new Set(leaves(first.doc)).has(leaf));
+    expect(lost).toEqual([]);
+    expect(first.steps).toEqual([expect.objectContaining({ from: 1, to: 2, changedRecordIds: [] })]);
+  });
+
+  it('a version 2 file written by this app is not migrated again (the chain starts at the file\'s own version)', async () => {
+    const { migrationRunner } = await import('@/core/migrations');
+    const v2 = JSON.parse(fixture('v2/maximal-valid')) as MigratableDocument;
+    expect(migrationRunner.run(v2)).toMatchObject({ ok: true, steps: [] });
   });
 });

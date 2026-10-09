@@ -283,8 +283,8 @@ describe('promotion (fakes)', () => {
 
   it('a lockless tab that needs a migration opens read-only without data and loads when the writer has migrated', async () => {
     const { SYNTHETIC_STEPS } = await import('@/test-support/synthetic-migration');
-    const { withVersionOffset } = await import('@/test-support/version-offset');
-    const runner = withVersionOffset(SYNTHETIC_STEPS);
+    const { withVersionOffsetToCurrent } = await import('@/test-support/version-offset');
+    const runner = withVersionOffsetToCurrent(SYNTHETIC_STEPS);
     const rig = await fakeRig();
     const setup = await openTab({ ...rig.env, newLock: () => stubLock('acquired') });
     await setup.t.db.meta.put({ key: 'schemaVersion', value: 0 });

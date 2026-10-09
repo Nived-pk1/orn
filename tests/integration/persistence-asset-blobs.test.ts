@@ -5,7 +5,7 @@
  */
 import { produce } from 'immer';
 import { describe, expect, it } from 'vitest';
-import type { AnyRecord, CanonicalState } from '@/core/schema';
+import { CURRENT_SCHEMA_VERSION, type AnyRecord, type CanonicalState } from '@/core/schema';
 import { DB_STORES, DB_VERSION } from '@/persistence/contracts';
 import { DB_STORES_V1, DB_VERSION_STEPS, type DbVersionStep } from '@/persistence/db';
 import { freshAdapter, freshDb, hashedBlob, loadState, quotaError, seedChangeSet, type TestDb } from '@/test-support/persistence-kit';
@@ -38,7 +38,7 @@ async function version1Database(state: CanonicalState, oldRows: readonly OldRow[
   await v1.db.table('records').bulkPut(Object.values(state.records).flatMap((table) => Object.values(table as Record<string, unknown>)));
   await v1.db.table('meta').bulkPut([
     { key: 'revision', value: 1 },
-    { key: 'schemaVersion', value: 1 },
+    { key: 'schemaVersion', value: CURRENT_SCHEMA_VERSION },
     { key: 'datasetMeta', value: state.meta },
   ]);
   await v1.db.table('assetBlobs').bulkPut([...oldRows]);

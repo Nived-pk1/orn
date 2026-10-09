@@ -6,7 +6,8 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { DatasetDocumentSchema, REFERENCE_SPECS, type RecordKind } from './index';
+import { upgradeFrozenFixture } from '../../test-support/fixture-upgrade';
+import { CURRENT_SCHEMA_VERSION, DatasetDocumentSchema, REFERENCE_SPECS, type RecordKind } from './index';
 
 const DIR = new URL('../../../data/fixtures/schema/v1/invalid/', import.meta.url);
 
@@ -24,7 +25,12 @@ interface ManifestCase {
 }
 
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', DIR), 'utf8')) as { cases: ManifestCase[] };
-const load = (file: string): unknown => JSON.parse(readFileSync(new URL(file, DIR), 'utf8'));
+/** The frozen version 1 file, brought to the current version by the real migration step (it changes nothing but the number). */
+const load = (file: string): unknown => {
+  const raw = upgradeFrozenFixture(JSON.parse(readFileSync(new URL(file, DIR), 'utf8'))) as { schemaVersion?: unknown };
+  // "newer than this app" is relative to the app: a frozen number cannot stay newer, so this file is always one version ahead
+  return file === 'l1-newer-schema-version.json' ? { ...raw, schemaVersion: CURRENT_SCHEMA_VERSION + 1 } : raw;
+};
 const l1Cases = manifest.cases.filter((c) => c.level === 'L1');
 const l2Cases = manifest.cases.filter((c) => c.level === 'L2');
 

@@ -3,6 +3,7 @@
  * (write-path part), the one-transaction asset write, the meta markers and the DB upgrade scaffold.
  * Real IndexedDB timing and the real-browser halves of ADV-038 belong to Gate E.
  */
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import { describe, expect, it } from 'vitest';
 import { serializeDocument, stateToDocument } from '@/core/dataset';
 import type { ChangeSet } from '@/core/dataset/contracts';
@@ -64,7 +65,7 @@ describe('INV-20 persistence is atomic: one transaction per write, covering reco
 
   it('writes the revision, the schema version and the dataset meta; the meta is rewritten only when it changed', async () => {
     const t = await seeded();
-    expect(await loadState(t.adapter)).toMatchObject({ revision: 1, schemaVersion: 1 });
+    expect(await loadState(t.adapter)).toMatchObject({ revision: 1, schemaVersion: CURRENT_SCHEMA_VERSION });
     const metaKeys = () => t.mutations.filter((m) => m.store === 'meta').flatMap((m) => (m.values as { key: string }[]).map((v) => v.key));
     expect(metaKeys()).toEqual(['revision', 'schemaVersion', 'datasetMeta']);
 

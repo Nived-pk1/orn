@@ -3,13 +3,13 @@
  */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { RECORD_KINDS, type CanonicalState, type DatasetDocument, type RecordKind } from '../schema';
+import { CURRENT_SCHEMA_VERSION, RECORD_KINDS, type CanonicalState, type DatasetDocument, type RecordKind } from '../schema';
 import { documentToState, stateToDocument, type ExportOptions } from './document';
 import { deserializeDocument, serializeDocument } from './serialize';
 
 const FIXTURES = ['minimal-valid', 'maximal-valid'] as const;
 const read = (name: string): string =>
-  readFileSync(new URL(`../../../data/fixtures/schema/v1/${name}.orn.json`, import.meta.url), 'utf8');
+  readFileSync(new URL(`../../../data/fixtures/schema/v2/${name}.orn.json`, import.meta.url), 'utf8');
 
 function load(name: string): DatasetDocument {
   const result = deserializeDocument(read(name));
@@ -137,7 +137,7 @@ describe('stateToDocument', () => {
   it('uses the supplied export options and the current schema version', () => {
     const doc = load('minimal-valid');
     const out = stateToDocument(toState(doc), { exportedAt: '2030-01-02T03:04:05.006Z', exportScope: 'chemistry', generator: { app: 'x', version: '9' } });
-    expect(out).toMatchObject({ exportedAt: '2030-01-02T03:04:05.006Z', exportScope: 'chemistry', schemaVersion: 1, format: 'orn.dataset' });
+    expect(out).toMatchObject({ exportedAt: '2030-01-02T03:04:05.006Z', exportScope: 'chemistry', schemaVersion: CURRENT_SCHEMA_VERSION, format: 'orn.dataset' });
     expect(out.generator).toEqual({ app: 'x', version: '9' });
   });
 });

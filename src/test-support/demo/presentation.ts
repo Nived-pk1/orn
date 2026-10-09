@@ -6,12 +6,35 @@ import { partId, pdtId, rxnId } from './reaction-kit';
 
 const anchorId = (body: string) => ident<NavigatorAnchor['id']>('anc', body);
 
+/**
+ * The curated arrangement of the demo overview (step 5.5c; presentation records only): a grid cell (column, row), the family group and
+ * its tone for each of the 15 hubs. Reviewed by the user.
+ */
+const ARRANGEMENT: Readonly<Record<(typeof HUB_CLASSES)[number], Pick<NavigatorAnchor, 'cell' | 'group' | 'tone'>>> = {
+  alkanes: { cell: { column: 0, row: 0 }, group: 'Hydrocarbons', tone: 'blue' },
+  alkenes: { cell: { column: 1, row: 0 }, group: 'Hydrocarbons', tone: 'blue' },
+  alkynes: { cell: { column: 2, row: 0 }, group: 'Hydrocarbons', tone: 'blue' },
+  arenes: { cell: { column: 4, row: 0 }, group: 'Hydrocarbons', tone: 'blue' },
+  haloalkanes: { cell: { column: 0, row: 1 }, group: 'Halogen compounds', tone: 'amber' },
+  haloarenes: { cell: { column: 3, row: 2 }, group: 'Halogen compounds', tone: 'amber' },
+  alcohols: { cell: { column: 1, row: 1 }, group: 'Oxygen compounds', tone: 'green' },
+  ethers: { cell: { column: 2, row: 1 }, group: 'Oxygen compounds', tone: 'green' },
+  aldehydes: { cell: { column: 1, row: 2 }, group: 'Oxygen compounds', tone: 'green' },
+  ketones: { cell: { column: 2, row: 2 }, group: 'Oxygen compounds', tone: 'green' },
+  phenols: { cell: { column: 4, row: 2 }, group: 'Oxygen compounds', tone: 'green' },
+  'carboxylic-acids': { cell: { column: 1, row: 3 }, group: 'Oxygen compounds', tone: 'green' },
+  esters: { cell: { column: 2, row: 3 }, group: 'Oxygen compounds', tone: 'green' },
+  amines: { cell: { column: 3, row: 3 }, group: 'Nitrogen compounds', tone: 'violet' },
+  'diazonium-salts': { cell: { column: 4, row: 3 }, group: 'Nitrogen compounds', tone: 'violet' },
+};
+
 export function demoAnchors(): NavigatorAnchor[] {
   return HUB_CLASSES.map((body, i) => ({
     id: anchorId(body),
     kind: 'navigator_anchor',
     target: rec('class', body, 'cls'),
     order: i + 1,
+    ...ARRANGEMENT[body],
     ...presentationMeta,
   }));
 }

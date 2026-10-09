@@ -15,7 +15,7 @@ import { AnyRecordSchema, DatasetDocumentSchema, RECORD_KINDS, RECORD_SCHEMAS, t
 vi.setConfig({ testTimeout: 30_000 });
 
 const fixture = JSON.parse(
-  readFileSync(new URL('../../../data/fixtures/schema/v1/maximal-valid.orn.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../../data/fixtures/schema/v2/maximal-valid.orn.json', import.meta.url), 'utf8'),
 ) as { records: Record<RecordKind, Record<string, unknown>[]>; embeddedAssets: unknown[] } & Record<string, unknown>;
 
 function failuresOf(schema: z.ZodType, mutations: readonly Mutation[]): string[] {

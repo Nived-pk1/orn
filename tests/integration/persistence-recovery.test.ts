@@ -4,6 +4,7 @@
  * through the write queue's ordering (SONNET_HANDOFF §18.8).
  */
 import { describe, expect, it } from 'vitest';
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import type { EditorSession } from '@/core/commands/contracts';
 import type { AnyRecord, CanonicalState } from '@/core/schema';
 import type { QuarantineRow } from '@/persistence/contracts';
@@ -43,7 +44,7 @@ describe('replaceAll: one transaction over records + meta, in the queue’s orde
     expect(t.log.writes().slice(before)).toEqual([{ stores: ['records', 'meta'], mode: 'readwrite' }]);
     const stored = await loadState(t.adapter);
     expect(stored.state).toEqual(state);
-    expect(stored).toMatchObject({ revision: 9, schemaVersion: 1 });
+    expect(stored).toMatchObject({ revision: 9, schemaVersion: CURRENT_SCHEMA_VERSION });
     expect(await t.db.records.get(second)).toBeUndefined();
     expect(await (await t.adapter.getAssetBlob(assetId))?.text()).toBe('keep me');
     expect((await t.adapter.listSnapshots()).map((s) => s.id)).toEqual([snapshot.id]);

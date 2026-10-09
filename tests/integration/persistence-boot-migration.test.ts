@@ -1,9 +1,10 @@
 /**
  * Boot with a database that is not at the current schema version (step 3.3): ADV-041 (disk part), ADV-045
  * (migration part), the migration failure paths and their rollback. An "older" database is a synthetic version 0
- * (test-support `SYNTHETIC_STEPS` through `withVersionOffset`, Q10); the real runner is used wherever the question
+ * (test-support `SYNTHETIC_STEPS` through `withVersionOffsetToCurrent`, Q10); the real runner is used wherever the question
  * is which stored versions are refused outright. Real IndexedDB is fake-indexeddb.
  */
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import { produce } from 'immer';
 import { describe, expect, it } from 'vitest';
 import { createCanonicalStore } from '@/core/commands';
@@ -15,11 +16,13 @@ import { writeRawDocument } from '@/persistence/replace';
 import { loadState, reopen, savedDatabase, stubLock, type TestAdapter } from '@/test-support/persistence-kit';
 import { must, loadFixtureState } from '@/test-support/state-fixture';
 import { SYNTHETIC_STEPS, SYNTHETIC_SYSTEM } from '@/test-support/synthetic-migration';
-import { withVersionOffset } from '@/test-support/version-offset';
+import { withVersionOffsetToCurrent } from '@/test-support/version-offset';
 
 const base = loadFixtureState('minimal-valid');
+/** A schema version one past the app's (the newer-version refusals). */
+const NEWER = CURRENT_SCHEMA_VERSION + 1;
 const speciesId = Object.keys(base.records.species).sort()[0] as string;
-const RUNNER = withVersionOffset(SYNTHETIC_STEPS);
+const RUNNER = withVersionOffsetToCurrent(SYNTHETIC_STEPS);
 
 /** The state the synthetic steps must produce from `downgrade`d rows. */
 const migrated: CanonicalState = produce(base, (draft) => {
@@ -56,16 +59,16 @@ describe('ADV-041 newer schema version on disk (disk part): read-only with an ex
   it('opens read-only with no state, says why, writes nothing, keeps writes refused, and releases the lock', async () => {
     const lock = stubLock();
     const t = await savedDatabase(base, { lock });
-    await t.db.meta.put({ key: 'schemaVersion', value: 2 });
+    await t.db.meta.put({ key: 'schemaVersion', value: NEWER });
     const mark = t.mutations.length;
     const result = opened(await t.adapter.open());
-    expect(result).toMatchObject({ mode: 'read_only', readOnlyReason: 'newer_schema', state: null, storedSchemaVersion: 2, revision: 1 });
-    expect(result.detail).toMatch(/newer version.*schema version 2.*up to 1.*read-only/);
+    expect(result).toMatchObject({ mode: 'read_only', readOnlyReason: 'newer_schema', state: null, storedSchemaVersion: NEWER, revision: 1 });
+    expect(result.detail).toMatch(new RegExp(`newer version.*schema version ${NEWER}.*up to ${CURRENT_SCHEMA_VERSION}.*read-only`));
     noSnapshotsOrWrites(t, mark);
     expect(t.adapter.getStatus().state).toBe('read_only');
     expect(lock.calls).toEqual(['acquire', 'release']);
     expect(await rawSnapshot(t)).toEqual([]);
-    expect(((await t.adapter.readCommitted()).meta.schemaVersion)).toBe(2);
+    expect(((await t.adapter.readCommitted()).meta.schemaVersion)).toBe(NEWER);
   });
 
   it.each([
@@ -107,12 +110,12 @@ describe('ADV-045 redo after migration (migration part): the migrated data start
     const result = opened(await t.adapter.open());
     expect(result).toMatchObject({ mode: 'read_write', revision: 5, storedSchemaVersion: 0, quarantinedCount: 0 });
     expect(result.state).toEqual(migrated);
-    expect(result.bootReport?.migrationSteps).toEqual([expect.objectContaining({ from: 0, to: 1, changedRecordIds: [speciesId] })]);
+    expect(result.bootReport?.migrationSteps).toEqual([expect.objectContaining({ from: 0, to: 1, changedRecordIds: [speciesId] }), expect.objectContaining({ from: 1, to: 2, changedRecordIds: [] })]);
     expect(result.bootReport?.findings.filter((f) => f.severity === 'error')).toEqual([]);
 
     const stored = await loadState(t.adapter);
     expect(stored.state).toEqual(migrated);
-    expect(stored).toMatchObject({ revision: 5, schemaVersion: 1 });
+    expect(stored).toMatchObject({ revision: 5, schemaVersion: CURRENT_SCHEMA_VERSION });
 
     const snapshots = await t.adapter.listSnapshots();
     expect(snapshots).toEqual([expect.objectContaining({ reason: 'pre_migration', schemaVersion: 0, revision: 4 })]);
@@ -181,7 +184,7 @@ describe('ADV-045 redo after migration (migration part): the migrated data start
     const again = reopen(t, { runner: RUNNER });
     const result = opened(await again.adapter.open());
     expect(result.bootReport?.migrationSteps).toEqual([]);
-    expect(result.storedSchemaVersion).toBe(1);
+    expect(result.storedSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(await again.adapter.listSnapshots()).toHaveLength(1);
   });
 
@@ -195,7 +198,7 @@ describe('ADV-045 redo after migration (migration part): the migrated data start
 });
 
 describe('a migration that fails ends read-only with the stored data exactly as it was, and says why', () => {
-  const failingStep = (migrate: SchemaMigration['migrate']): MigrationRunner => withVersionOffset([{ from: 0, to: 1, description: 'failing', migrate }]);
+  const failingStep = (migrate: SchemaMigration['migrate']): MigrationRunner => withVersionOffsetToCurrent([{ from: 0, to: 1, description: 'failing', migrate }]);
 
   /** Runs boot against a failing runner and returns what a user needs: the result, the rows before and after. */
   async function failed(runner: MigrationRunner, prepare?: (t: TestAdapter) => void) {

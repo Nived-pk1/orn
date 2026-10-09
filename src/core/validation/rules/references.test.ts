@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { documentToState } from '../../dataset';
 import { coreIndexEngine } from '../../indexes/engine';
 import { RECORD_KINDS, type AnyRecord, type CanonicalState, type DatasetDocument, type RecordKind } from '../../schema';
+import { upgradeFrozenFixture } from '../../../test-support/fixture-upgrade';
 import { commit, loadFixtureState, must, remove } from '../../../test-support/state-fixture';
 import type { Finding, RuleContext } from '../contracts';
 import { runRules } from '../runner';
@@ -37,7 +38,7 @@ function findingsFor(state: CanonicalState, only?: { kind: RecordKind; id: strin
 }
 
 function stateOfFixture(file: string): CanonicalState {
-  const result = documentToState(JSON.parse(readFileSync(new URL(file, DIR), 'utf8')) as DatasetDocument);
+  const result = documentToState(upgradeFrozenFixture(JSON.parse(readFileSync(new URL(file, DIR), 'utf8'))) as DatasetDocument);
   if (!result.ok) throw new Error(`${file} has duplicate record IDs`);
   return result.state;
 }

@@ -9,6 +9,13 @@ Package section **#27 Migration from v6**, plus schema-version migrations (#10 u
 - Every version keeps a frozen fixture set in `data/fixtures/schema/v<N>/` (at minimum `minimal-valid.orn.json` and a maximal fixture that uses every field). Fixtures of old versions are never edited.
 - An app that finds a newer version on disk or in a file opens read-only / refuses the import with an explanation; it never guesses.
 
+### Version history
+
+| Version | Step | Change |
+|---|---|---|
+| 1 | 1.2 | the first schema |
+| 2 | 5.5c | `navigator_anchor` gains the optional `cell`, `group`, `tone`; the step 1 to 2 changes only the version number. Frozen fixtures: `data/fixtures/schema/v1/` (never edited), `data/fixtures/schema/v2/` (`minimal-valid`, `maximal-valid`) and `v2/expected/*-from-v1` (the committed output of migrating the v1 files). |
+
 ## 2. Migration framework
 
 - One pure, deterministic `SchemaMigration` per step (`from → from + 1`) in `src/core/migrations/steps/`. The runner applies steps in order on the **tolerant envelope** (records as unknown), then the result is parsed with the current strict schemas. `run` returns a value, never throws for document problems: `{ ok: true, doc, steps }` or `{ ok: false, code, message, atVersion }` with code `INVALID_VERSION`, `NEWER_VERSION`, `MISSING_STEP`, `STEP_FAILED` or `STEP_CONTRACT`; it verifies each step's output version and report, and returns no partial result.

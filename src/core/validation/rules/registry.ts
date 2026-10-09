@@ -4,6 +4,7 @@
  */
 import type { ValidationRule } from '../contracts';
 import { assertUniqueRuleIds } from '../runner';
+import { ARRANGEMENT_RULES } from './arrangement';
 import { CONDITION_RULES } from './conditions';
 import { CURRICULUM_RULES } from './curriculum';
 import { MECHANISM_RULES } from './mechanisms';
@@ -25,6 +26,7 @@ export const L3_RULES: readonly ValidationRule[] = [
   ...RELATIONSHIP_RULES,
   ...ROUTE_RULES,
   ...CURRICULUM_RULES,
+  ...ARRANGEMENT_RULES,
 ];
 
 export const RULES: readonly ValidationRule[] = [...L2_RULES, ...L3_RULES];

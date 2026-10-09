@@ -6,6 +6,7 @@
  * second whole-state transfer, the pre_restore retry, structuredClone of every result. Failure points are in
  * compute-restore-failures.test.ts; a real thread is in compute-restore-threads.test.ts.
  */
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import { describe, expect, it } from 'vitest';
 import type { MigrationRunner } from '@/core/migrations/contracts';
 import { createMigrationRunner } from '@/core/migrations';
@@ -157,13 +158,13 @@ describe('ADV-045 migration part through the worker: an older snapshot is migrat
     const twin = await twinRestore(base, createMigrationRunner());
     const put = async (t: typeof rig.t) => {
       const source = await t.adapter.createSnapshot('manual', base, 1);
-      await putDoc(t, 'snp_new', { ...(await docOf(t, source)), schemaVersion: 2 }, 2);
+      await putDoc(t, 'snp_new', { ...(await docOf(t, source)), schemaVersion: CURRENT_SCHEMA_VERSION + 1 }, CURRENT_SCHEMA_VERSION + 1);
     };
     await put(rig.t);
     await put(twin.t);
     const worker = await rig.flow.restore('snp_new');
     const inProcess = await twin.restore('snp_new');
-    expect(worker).toMatchObject({ ok: false, code: 'MIGRATION_FAILED', migration: { code: 'NEWER_VERSION', atVersion: 2 } });
+    expect(worker).toMatchObject({ ok: false, code: 'MIGRATION_FAILED', migration: { code: 'NEWER_VERSION', atVersion: CURRENT_SCHEMA_VERSION + 1 } });
     expect(worker).toEqual(inProcess);
     expect(rig.store.getState()).toBe(base);
   });

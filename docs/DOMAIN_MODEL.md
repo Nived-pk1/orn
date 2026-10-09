@@ -219,7 +219,7 @@ Topics are a version-independent tree; exam versions declare topic coverage per 
 
 ## 10. Presentation
 
-Hubs (`navigator_anchor`), reaction drawing choices (`reaction_scheme`), saved views (`view_preset`) and per-record display (`entity_display`: water shown on arrows, never as a node) are layer-5 records. They reference chemistry; chemistry never references them; deleting all of them leaves chemistry valid and unchanged (INV-14).
+Hubs (`navigator_anchor`), reaction drawing choices (`reaction_scheme`), saved views (`view_preset`) and per-record display (`entity_display`: water shown on arrows, never as a node) are layer-5 records. They reference chemistry; chemistry never references them; deleting all of them leaves chemistry valid and unchanged (INV-14). Since schema version 2 (step 5.5c, ADR-037) a `navigator_anchor` may carry the curated arrangement of the overview: `cell` (`column`, `row`: integers 0-63), `group` (a short label, e.g. "Oxygen compounds") and `tone` (`blue`, `green`, `amber`, `violet`, `teal`, `rose`, `slate`). All three are optional; an overview where every hub has a cell is drawn on a grid, otherwise by the layered layout. Two hubs on one cell, or one group in two tones, are WARNINGs (PRS-004, PRS-005).
 
 ## 11. Assets
 

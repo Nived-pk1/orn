@@ -22,7 +22,7 @@ import type { RecordByKind } from './records';
 import { RelationshipSchema } from './relationship';
 import { ChemicalClassSchema, ReagentSchema, SpeciesSchema } from './substances';
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 export const DATASET_FORMAT = 'orn.dataset';
 export const PACKAGE_FORMAT = 'orn.package';
 

@@ -3,6 +3,7 @@
  * fail without changing anything. The store is wired to the adapter like the app will: each ChangeSet, `replace`
  * ones included, goes through `writeChanges`.
  */
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import { strToU8, zlibSync } from 'fflate';
 import { produce } from 'immer';
 import { describe, expect, it } from 'vitest';
@@ -38,10 +39,10 @@ function edit(store: StoreHandle): void {
 }
 
 /** Stores hand-made bytes as a snapshot row, the way an older or damaged one would sit in IndexedDB. */
-async function putRow(t: TestAdapter, id: string, bytes: Uint8Array, schemaVersion = 1): Promise<void> {
+async function putRow(t: TestAdapter, id: string, bytes: Uint8Array, schemaVersion = CURRENT_SCHEMA_VERSION): Promise<void> {
   await t.db.snapshots.put({ id, createdAt: '2026-09-28T09:00:00.000Z', reason: 'manual', revision: 1, schemaVersion, byteSize: bytes.length, blob: new Blob([bytes as Uint8Array<ArrayBuffer>]) });
 }
-const putDoc = (t: TestAdapter, id: string, doc: unknown, schemaVersion = 1) => putRow(t, id, zlibSync(strToU8(JSON.stringify(doc))), schemaVersion);
+const putDoc = (t: TestAdapter, id: string, doc: unknown, schemaVersion = CURRENT_SCHEMA_VERSION) => putRow(t, id, zlibSync(strToU8(JSON.stringify(doc))), schemaVersion);
 
 /** A snapshot's document as stored, decoded to a plain object a test can damage. */
 async function docOf(t: TestAdapter, summary: SnapshotSummary): Promise<MigratableDocument & { meta: Record<string, unknown>; records: Record<string, unknown[]> }> {
@@ -169,10 +170,10 @@ describe('restore that fails changes nothing and says why', () => {
   it('a snapshot from a newer schema version, through the real runner', async () => {
     const { t, store } = await wired();
     const source = await t.adapter.createSnapshot('manual', store.getState(), store.getRevision());
-    await putDoc(t, 'snp_new', { ...(await docOf(t, source)), schemaVersion: 2 }, 2);
+    await putDoc(t, 'snp_new', { ...(await docOf(t, source)), schemaVersion: CURRENT_SCHEMA_VERSION + 1 }, CURRENT_SCHEMA_VERSION + 1);
     const before = await capture(store, t);
     const result = await restoreSnapshot({ id: 'snp_new', snapshots: t.adapter, runner: createMigrationRunner(), store });
-    expect(result).toMatchObject({ ok: false, code: 'MIGRATION_FAILED', migration: { code: 'NEWER_VERSION', atVersion: 2 } });
+    expect(result).toMatchObject({ ok: false, code: 'MIGRATION_FAILED', migration: { code: 'NEWER_VERSION', atVersion: CURRENT_SCHEMA_VERSION + 1 } });
     await expectUntouched(store, t, before);
   });
 

@@ -4,6 +4,7 @@
  * (docs/TEST_STRATEGY.md §4). The in-memory variant is state-document.test.ts. Runs on fake-indexeddb;
  * the seed is saved as one `replace` ChangeSet, exactly the production path (INV-20).
  */
+import { CURRENT_SCHEMA_VERSION } from '@/core/schema';
 import fc from 'fast-check';
 import { describe, expect, it, vi } from 'vitest';
 import { documentToState } from '@/core/dataset';
@@ -28,7 +29,7 @@ async function saveAndReload(state: CanonicalState, revision = 1): Promise<{ loa
 async function expectRoundTrip(state: CanonicalState): Promise<void> {
   const { loaded } = await saveAndReload(state);
   expect(loaded.state).toEqual(state);
-  expect(loaded).toMatchObject({ revision: 1, schemaVersion: 1 });
+  expect(loaded).toMatchObject({ revision: 1, schemaVersion: CURRENT_SCHEMA_VERSION });
 }
 
 describe('P-01 save → load (IndexedDB variant)', () => {
