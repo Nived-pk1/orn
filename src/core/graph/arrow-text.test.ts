@@ -50,7 +50,7 @@ describe('the demo reactions', () => {
     ['rxn_ethanol-to-ethanal-pcc', 'prt_ethanol-to-ethanal-pcc-1', 'PCC above, the solvent below', ['name:PCC'], ['name:Dichloromethane', 'condition:anhydrous']],
     ['rxn_ethene-hydration', 'prt_ethene-hydration-1', 'water is never a node: above, first; then the catalyst', ['formula:H2O', 'name:H₃PO₄ catalyst'], ['condition:573 K', 'condition:60–70 atm', 'condition:acidic medium']],
     ['rxn_ethene-hydration', 'prt_ethene-hydration-2', 'carrying water: the ethene is a node, so it is left out', ['name:H₃PO₄ catalyst'], ['condition:573 K', 'condition:60–70 atm', 'condition:acidic medium']],
-    ['rxn_propene-hbr-peroxide', 'prt_propene-hbr-peroxide-1', 'reagent and initiator above', ['formula:HBr', 'name:Benzoyl peroxide'], ['condition:hv', 'condition:peroxide present']],
+    ['rxn_propene-hbr-peroxide', 'prt_propene-hbr-peroxide-1', 'reagent and initiator above', ['formula:HBr', 'name:Benzoyl peroxide'], ['condition:hν', 'condition:peroxide present']],
     ['rxn_methylmgbr-ethanal', 'prt_methylmgbr-ethanal-2', 'two stages, no scheme: the work-up above, the solvent below', ['formula:H3O+'], ['name:Diethyl ether', 'condition:anhydrous', 'condition:acidic medium']],
     ['rxn_methylmgbr-propanone', 'prt_methylmgbr-propanone-2', 'two stages with a scheme: placements and stage numbers', ['separator:1.', 'name:Diethyl ether'], ['separator:1.', 'condition:anhydrous', 'separator:2.', 'formula:H3O+', 'condition:acidic medium']],
     ['rxn_haloform-ethanol', 'prt_haloform-ethanol-1', 'two reagents above, in the order of the record', ['formula:I2', 'formula:NaOH'], ['condition:warm', 'condition:basic medium']],

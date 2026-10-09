@@ -18,12 +18,12 @@ describe('one row per field and wording rule', () => {
   const rows: readonly (readonly [string, ConditionParameters, readonly string[]])[] = [
     // temperature
     ['temperature value, kelvin', of({ temperature: { kind: 'value', value: 413, unit: 'K' } }), ['condition:413 K']],
-    ['temperature value, celsius (the schema word C)', of({ temperature: C(25) }), ['condition:25 C']],
-    ['temperature value, negative: U+2212', of({ temperature: C(-10) }), [`condition:${MINUS}10 C`]],
-    ['temperature value, decimal', of({ temperature: C(37.5) }), ['condition:37.5 C']],
-    ['temperature range: en dash', of({ temperature: { kind: 'range', min: 0, max: 5, unit: 'C' } }), ['condition:0–5 C']],
-    ['temperature range with a negative bound: "a to b"', of({ temperature: { kind: 'range', min: -10, max: 5, unit: 'C' } }), [`condition:${MINUS}10 to 5 C`]],
-    ['temperature range, both bounds negative', of({ temperature: { kind: 'range', min: -20, max: -5, unit: 'C' } }), [`condition:${MINUS}20 to ${MINUS}5 C`]],
+    ['temperature value, celsius (the schema word C, written °C)', of({ temperature: C(25) }), ['condition:25 °C']],
+    ['temperature value, negative: U+2212', of({ temperature: C(-10) }), [`condition:${MINUS}10 °C`]],
+    ['temperature value, decimal', of({ temperature: C(37.5) }), ['condition:37.5 °C']],
+    ['temperature range: en dash', of({ temperature: { kind: 'range', min: 0, max: 5, unit: 'C' } }), ['condition:0–5 °C']],
+    ['temperature range with a negative bound: "a to b"', of({ temperature: { kind: 'range', min: -10, max: 5, unit: 'C' } }), [`condition:${MINUS}10 to 5 °C`]],
+    ['temperature range, both bounds negative', of({ temperature: { kind: 'range', min: -20, max: -5, unit: 'C' } }), [`condition:${MINUS}20 to ${MINUS}5 °C`]],
     ['temperature qualitative: low temperature', of({ temperature: { kind: 'qualitative', value: 'low_temperature' } }), ['condition:low temperature']],
     ['temperature qualitative: cold', of({ temperature: { kind: 'qualitative', value: 'cold' } }), ['condition:cold']],
     ['temperature qualitative: room temperature', of({ temperature: { kind: 'qualitative', value: 'room_temperature' } }), ['condition:room temperature']],
@@ -36,15 +36,15 @@ describe('one row per field and wording rule', () => {
     ['pressure range', of({ pressure: { kind: 'range', min: 60, max: 70, unit: 'atm' } }), ['condition:60–70 atm']],
     ['pressure unit kPa', of({ pressure: { kind: 'value', value: 101.3, unit: 'kPa' } }), ['condition:101.3 kPa']],
     ['pressure unit mmHg', of({ pressure: { kind: 'value', value: 760, unit: 'mmHg' } }), ['condition:760 mmHg']],
-    ['pressure qualitative: reduced', of({ pressure: { kind: 'qualitative', value: 'reduced' } }), ['condition:reduced']],
-    ['pressure qualitative: atmospheric', of({ pressure: { kind: 'qualitative', value: 'atmospheric' } }), ['condition:atmospheric']],
-    ['pressure qualitative: high', of({ pressure: { kind: 'qualitative', value: 'high' } }), ['condition:high']],
+    ['pressure qualitative: reduced', of({ pressure: { kind: 'qualitative', value: 'reduced' } }), ['condition:reduced pressure']],
+    ['pressure qualitative: atmospheric', of({ pressure: { kind: 'qualitative', value: 'atmospheric' } }), ['condition:atmospheric pressure']],
+    ['pressure qualitative: high', of({ pressure: { kind: 'qualitative', value: 'high' } }), ['condition:high pressure']],
     // light
-    ['light: hv', of({ light: 'hv' }), ['condition:hv']],
-    ['light: uv', of({ light: 'uv' }), ['condition:uv']],
-    ['light: visible', of({ light: 'visible' }), ['condition:visible']],
+    ['light: hv', of({ light: 'hv' }), ['condition:hν']],
+    ['light: uv', of({ light: 'uv' }), ['condition:UV']],
+    ['light: visible', of({ light: 'visible' }), ['condition:visible light']],
     ['light: sunlight', of({ light: 'sunlight' }), ['condition:sunlight']],
-    ['light: diffuse', of({ light: 'diffuse' }), ['condition:diffuse']],
+    ['light: diffuse', of({ light: 'diffuse' }), ['condition:diffuse light']],
     ['light: dark', of({ light: 'dark' }), ['condition:dark']],
     // medium: written, the enum word and " medium"
     ['medium: acidic', of({ medium: 'acidic' }), ['condition:acidic medium']],
@@ -62,7 +62,7 @@ describe('one row per field and wording rule', () => {
     ['activation: a list, in record order', of({ activation: ['ultrasound', 'electrolysis', 'radiation'] }), ['condition:ultrasound', 'condition:electrolysis', 'condition:radiation']],
     // atmosphere: air is written; a gas is a formula part
     ['atmosphere: air is written', of({ atmosphere: 'air' }), ['condition:air']],
-    ['atmosphere: inert is the schema word', of({ atmosphere: 'inert' }), ['condition:inert']],
+    ['atmosphere: inert is written inert atmosphere', of({ atmosphere: 'inert' }), ['condition:inert atmosphere']],
     ['atmosphere: nitrogen is a formula part', of({ atmosphere: 'nitrogen' }), ['formula:N2']],
     ['atmosphere: argon is a formula part', of({ atmosphere: 'argon' }), ['formula:Ar']],
     ['atmosphere: oxygen is a formula part', of({ atmosphere: 'oxygen' }), ['formula:O2']],
@@ -74,7 +74,7 @@ describe('one row per field and wording rule', () => {
     ['other: each qualifier as written', of({ other: ['sealed tube', 'peroxide present'] }), ['condition:sealed tube', 'condition:peroxide present']],
     // not on the arrow
     ['solventCharacter is not on the arrow', of({ solventCharacter: ['aqueous', 'neat'] }), []],
-    ['parsedFields is not on the arrow', of({ parsedFields: ['temperature'], temperature: C(25) }), ['condition:25 C']],
+    ['parsedFields is not on the arrow', of({ parsedFields: ['temperature'], temperature: C(25) }), ['condition:25 °C']],
   ];
   it.each(rows)('%s', (_name, parameters, expected) => {
     expect(shown(parameters)).toEqual(expected);
@@ -99,12 +99,12 @@ describe('order and free text', () => {
       other: ['sealed tube'],
       text: 'restated',
     });
-    expect(shown(all)).toEqual(['condition:25 C', 'condition:1 atm', 'condition:uv', 'condition:acidic medium', 'condition:2 h', 'condition:microwave', 'formula:Ar', 'condition:anhydrous', 'condition:sealed tube']);
+    expect(shown(all)).toEqual(['condition:25 °C', 'condition:1 atm', 'condition:UV', 'condition:acidic medium', 'condition:2 h', 'condition:microwave', 'formula:Ar', 'condition:anhydrous', 'condition:sealed tube']);
   });
 
   it('free text only when the stage gave no structured part (it restates them)', () => {
     expect(shown(of({ text: 'room temperature, overnight' }))).toEqual(['condition:room temperature, overnight']);
-    expect(shown(of({ text: 'restated', temperature: C(25) }))).toEqual(['condition:25 C']);
+    expect(shown(of({ text: 'restated', temperature: C(25) }))).toEqual(['condition:25 °C']);
     expect(shown(of({ text: 'restated', anhydrous: false }))).toEqual(['condition:restated']);
   });
 
@@ -177,8 +177,8 @@ describe('on the arrow: the demo, the variant rule, the cap and the single `more
       const reaction: Reaction = { ...base, stages: [s1, s2].map((s) => ({ ...s, parameters: NONE })), conditionVariants: [variant(stageId)] };
       return parts(arrowTextOf(reaction, context(reaction, ['cvr_test'])).below).filter((p) => p.includes('78'));
     };
-    expect(run(undefined)).toEqual([`condition:${MINUS}78 C`]);
-    expect(run(s2.id)).toEqual([`condition:${MINUS}78 C`]);
+    expect(run(undefined)).toEqual([`condition:${MINUS}78 °C`]);
+    expect(run(s2.id)).toEqual([`condition:${MINUS}78 °C`]);
     expect(run('stg_nobody' as StageId)).toEqual([]);
   });
 
@@ -202,12 +202,12 @@ describe('on the arrow: the demo, the variant rule, the cap and the single `more
     it('conditions are on the below side only, after the participants of the same stage, on the same line', () => {
       const text = arrowTextOf(reactionOf([participant(1, 'reagent'), participant(2, 'solvent')], [stage(1, [1, 2], of({ temperature: C(25), anhydrous: true }))]), ctx);
       expect(parts(text.above)).toEqual(['name:name-rgt_x1']);
-      expect(parts(text.below)).toEqual(['name:name-rgt_x2', 'condition:25 C', 'condition:anhydrous']);
+      expect(parts(text.below)).toEqual(['name:name-rgt_x2', 'condition:25 °C', 'condition:anhydrous']);
     });
 
     it(`at most ${MAX_CONDITION_PARTS} condition parts a side, and the rest is ONE \`more\` part`, () => {
       const text = arrowTextOf(reactionOf([participant(1, 'solvent')], [stage(1, [1], many)]), ctx);
-      expect(parts(text.below)).toEqual(['name:name-rgt_x1', 'condition:25 C', 'condition:1 bar', 'condition:uv', 'more:+2 more']);
+      expect(parts(text.below)).toEqual(['name:name-rgt_x1', 'condition:25 °C', 'condition:1 bar', 'condition:UV', 'more:+2 more']);
       expect(text.below.filter((p) => p.kind === 'more')).toHaveLength(1);
     });
 

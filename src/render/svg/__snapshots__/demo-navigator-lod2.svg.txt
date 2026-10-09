@@ -398,7 +398,7 @@
           <tspan dy="-2.75">, HCl</tspan>
         </text>
         <text class="_arrowText_e97cec" x="168" y="93.9" font-size="11" data-side="below">
-          <tspan>0–5 C, acidic medium</tspan>
+          <tspan>0–5 °C, acidic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_385c3a964b49c487">

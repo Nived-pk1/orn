@@ -29,7 +29,7 @@ Breakpoints: ≥ 1280 px three panes (inspector 360–520 px, resizable); 900–
 
 ## 3. Visual language
 
-A textbook-and-journal aesthetic, not a dashboard. No gradients, glass effects, glow, emoji icons, or decorative illustration; square-ish corners (2–4 px); colour used sparingly and never as the only carrier of meaning.
+A textbook-and-journal aesthetic, not a dashboard. No gradients, glass effects, glow, emoji icons, or decorative illustration; square-ish corners (2–4 px; *2026-10-09, ADR-037: replaced by rounded corners, 8 px for cards and panels and 6 px for controls*); colour used sparingly and never as the only carrier of meaning.
 
 | Token | Value | Use |
 |---|---|---|
@@ -65,7 +65,7 @@ Zustand stores are small and sliced (selection, viewport, panels, filters, palet
 
 | Mode | Purpose |
 |---|---|
-| Navigator | Hub map (v6 experience): classes as hubs, reactions as labelled arrows, Unclassified hub, Unanchored list |
+| Navigator | *2026-10-09 (ADR-037): three levels of detail.* (1) Overview map: families as hubs and plain arrows with their count, no arrow text, no expansion; (2) family page: one family as a readable page, a card per reaction with structures, reagents and conditions; (3) reaction detail: the inspector (steps 5.6a, 5.6b). Unclassified is a family; the Unanchored list stays |
 | Reactions | Reaction-centric bipartite explorer around a focus |
 | Precursors | "How can I make X?": backward exploration + route search panel |
 | Reagents | Reagent → profiles → reactions; filter by family |

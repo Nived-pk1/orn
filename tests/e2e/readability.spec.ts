@@ -97,7 +97,7 @@ test.describe('the demo overview is readable', () => {
     await expectClean(seen);
   });
 
-  test('a single-edge arrow with a condition shows it at LOD 2 (Amines to Diazonium salts: 0–5 C; Alcohols to Ethers: 413 K), and nothing overlaps', async ({ page }) => {
+  test('a single-edge arrow with a condition shows it at LOD 2 (Amines to Diazonium salts: 0–5 °C; Alcohols to Ethers: 413 K), and nothing overlaps', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
     await zoomInTo(page, 2);
@@ -108,7 +108,7 @@ test.describe('the demo overview is readable', () => {
       expect(await edge.getAttribute('aria-label'), 'a single edge, not a bundle').toMatch(/, 1 reaction/);
       return (await page.locator(`svg [data-arrow-text-of="${id}"]`).textContent()) ?? '';
     };
-    expect(await textOf('Amines to Diazonium salts')).toContain('0–5 C');
+    expect(await textOf('Amines to Diazonium salts')).toContain('0–5 °C');
     expect(await textOf('Alcohols to Ethers')).toContain('413 K');
     const problems = problemsOf(await measure(page));
     expect(problems.labelOverLabel).toEqual([]);
