@@ -64,6 +64,16 @@ describe('the shell frame', () => {
     expect(within(screen.getByRole('contentinfo')).getByText('the status')).toBeTruthy();
   });
 
+  it('the title is the h1, unless the screen says its own content carries it', () => {
+    viewport(1400);
+    const { unmount } = renderShell();
+    expect(screen.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeTruthy();
+    unmount();
+    render(<Shell title="Organic Reaction Navigator" titleHeading={false} topBar={null} modes={MODES} activeMode="navigator" onModeChange={vi.fn()} banners={null} canvas={<h1>Alcohols</h1>} inspectorTitle="Inspector" inspector={null} pane={pane()} statusBar={null} />);
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Alcohols']);
+    expect(screen.getByText('Organic Reaction Navigator')).toBeTruthy();
+  });
+
   it('knows nothing about the app: it renders what it is given and nothing else', () => {
     const { container } = renderShell();
     expect(container.textContent).not.toMatch(/Saved|Findings|Starting up/);

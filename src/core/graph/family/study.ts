@@ -10,7 +10,7 @@
  * counted on the card with where they go. Work is proportional to the hub's candidates (and the schemes referring to those reactions).
  */
 import type { NavigatorCandidate } from '../../indexes/contracts';
-import type { Reaction, ReactionScheme, RecordRef } from '../../schema';
+import type { ConditionVariantId, ParticipantId, Reaction, ReactionScheme, RecordRef } from '../../schema';
 import { fold } from '../../text';
 import { arrowTextOf } from '../arrow-text';
 import type { ProjectionContext } from '../contracts';
@@ -104,8 +104,9 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
     const candidates = kind === 'reactions_of' ? rollup.candidatesFrom(hubId) : rollup.candidatesTo(hubId);
     const groupOf = (c: NavigatorCandidate): string => (kind === 'reactions_of' ? c.toHub : c.fromHub);
     const groups = new Map<string, Map<string, Gathered>>();
-    // reaction -> group -> outcome IDs (for "elsewhere")
-    const landing = new Map<string, Map<string, Set<string>>>();
+    // reaction -> group -> outcome ID -> its variants and carried participant (for "elsewhere")
+    type Landed = { readonly variantIds: readonly ConditionVariantId[]; readonly participantId: ParticipantId };
+    const landing = new Map<string, Map<string, Map<string, Landed>>>();
     for (const c of candidates) {
       const reaction = ctx.state.records.reaction[c.reactionId];
       if (reaction === undefined) continue;
@@ -121,14 +122,30 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
       let byGroup = landing.get(c.reactionId);
       if (byGroup === undefined) landing.set(c.reactionId, (byGroup = new Map()));
       let outcomes = byGroup.get(group);
-      if (outcomes === undefined) byGroup.set(group, (outcomes = new Set()));
-      outcomes.add(c.outcomeId);
+      if (outcomes === undefined) byGroup.set(group, (outcomes = new Map()));
+      if (!outcomes.has(c.outcomeId)) outcomes.set(c.outcomeId, { variantIds: c.conditionVariantIds, participantId: c.participantId });
     }
     const built: FamilyGroup[] = [];
     for (const [group, reactions] of [...groups].sort((a, b) => compareGroups(ranked(a[0]), ranked(b[0])))) {
       const cards: FamilyCard[] = [];
       for (const [reactionId, gathered] of reactions) {
         const reaction = seenReactions.get(reactionId) as Reaction;
+        // The condition words of the outcomes that land in another group (distinct, in outcome ID order): "443 K".
+        const conditionTextOf = (r: Reaction, landed: ReadonlyMap<string, Landed>): string => {
+          const texts: string[] = [];
+          for (const [, l] of [...landed].sort((a, b) => compare(a[0], b[0]))) {
+            const parts = arrowTextOf(r, {
+              schemes: schemesOf(r.id),
+              conditionVariantIds: l.variantIds,
+              carriedParticipantId: l.participantId,
+              describe: describer.describeForArrow,
+              shownAsNode,
+            }).below.filter((part) => part.kind === 'condition');
+            const text = parts.map((part) => part.text).join(', ');
+            if (text !== '' && !texts.includes(text)) texts.push(text);
+          }
+          return texts.join('; ');
+        };
         const outcomes: FamilyCardOutcome[] = [...gathered.outcomes]
           .sort((a, b) => compare(a[0], b[0]))
           .map(([outcomeId, o]) => {
@@ -147,7 +164,7 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
           });
         const elsewhere: FamilyElsewhere[] = [...(landing.get(reactionId) ?? [])]
           .filter(([other]) => other !== group)
-          .map(([other, ids]) => ({ hubId: other, name: hubInfo(other).name, outcomeCount: ids.size }))
+          .map(([other, landed]) => ({ hubId: other, name: hubInfo(other).name, outcomeCount: landed.size, conditionText: conditionTextOf(reaction, landed) }))
           .sort((a, b) => compareGroups(ranked(a.hubId), ranked(b.hubId)));
         cards.push({
           key: `${kind}:${group}:${reactionId}`,

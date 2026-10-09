@@ -30,6 +30,13 @@ export function useNavigator(): NavigatorContextValue {
   return value;
 }
 
+/** True while the family page is open (the page carries the screen's h1). */
+export function useFamilyPageOpen(): boolean {
+  const { ports } = useNavigator();
+  const store = ports.ui.family;
+  return useSyncExternalStore(store.subscribe, () => store.getState().open !== null, () => false);
+}
+
 export function useNavigatorState(): NavigatorState {
   const { model } = useNavigator();
   return useSyncExternalStore(model.subscribe, model.getState, model.getState);

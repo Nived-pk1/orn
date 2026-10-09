@@ -32,7 +32,9 @@
 }
 
 .title {
+  margin: 0;
   font-size: var(--text-16);
+  font-weight: 700;
   white-space: nowrap;
 }
 

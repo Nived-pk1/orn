@@ -39,8 +39,8 @@ describe('familyStudy on the demo', () => {
     expect(ethers.reactionId).toBe(alkenes.reactionId);
     expect(below(ethers)).toEqual([['413 K']]);
     expect(below(alkenes)).toEqual([['443 K']]);
-    expect(ethers.elsewhere).toEqual([{ hubId: 'cls_alkenes', name: 'Alkenes', outcomeCount: 1 }]);
-    expect(alkenes.elsewhere).toEqual([{ hubId: 'cls_ethers', name: 'Ethers', outcomeCount: 1 }]);
+    expect(ethers.elsewhere).toEqual([{ hubId: 'cls_alkenes', name: 'Alkenes', outcomeCount: 1, conditionText: '443 K' }]);
+    expect(alkenes.elsewhere).toEqual([{ hubId: 'cls_ethers', name: 'Ethers', outcomeCount: 1, conditionText: '413 K' }]);
     expect(ethers.key).not.toBe(alkenes.key);
   });
 
@@ -142,7 +142,7 @@ describe('familyStudy on small states', () => {
     const s = familyStudy(ctx, 'cls_hub-a') as FamilyStudy;
     const toB = s.reactionsOf.groups.find((g) => g.hubId === 'cls_hub-b');
     expect(toB?.cards.map((c) => c.name)).toEqual(['Alpha', 'alpha', 'bravo']);
-    expect(toB?.cards[2]?.elsewhere).toEqual([{ hubId: 'cls_hub-a', name: 'hub-a', outcomeCount: 2 }]);
+    expect(toB?.cards[2]?.elsewhere).toEqual([{ hubId: 'cls_hub-a', name: 'hub-a', outcomeCount: 2, conditionText: '' }]);
     expect(s.counts).toEqual({ reactionsOf: 3, preparationOf: 1, total: 3 });
   });
 });

@@ -29,6 +29,8 @@ export interface FamilyElsewhere {
   readonly hubId: string;
   readonly name: string;
   readonly outcomeCount: number;
+  /** The condition words of those outcomes ("443 K"; several: joined with "; "); empty when they state none. */
+  readonly conditionText: string;
 }
 
 export interface FamilyCard {

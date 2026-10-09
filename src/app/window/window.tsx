@@ -9,6 +9,7 @@ import {
   NavigatorView,
   NavigatorProvider,
   NavigatorStatus,
+  useFamilyPageOpen,
 } from "@/features/navigator";
 import {
   RECORD_KINDS,
@@ -17,7 +18,7 @@ import {
 } from "@/core/schema";
 import { useStoreSelector } from "@/ui/hooks";
 import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
-import { Shell, type InspectorPane } from "@/ui/shell";
+import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from "@/ui/state";
 import { useApp } from "./context";
 import { FirstRun } from "./first-run";
@@ -116,6 +117,13 @@ function InspectorEmpty() {
   );
 }
 
+/** The shell; its title gives up the h1 while the family page (which has its own) is on the canvas. */
+function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
+  const { familyVisible, ...shell } = props;
+  const familyOpen = useFamilyPageOpen();
+  return <Shell {...shell} titleHeading={!(familyVisible && familyOpen)} />;
+}
+
 export function Window() {
   const { panels, services, navigator } = useApp();
   const counts = useStoreSelector(services.store, countsOf);
@@ -136,7 +144,8 @@ export function Window() {
   return (
     <ToastProvider>
       <NavigatorProvider ports={navigator} active={totalOf(counts) > 0}>
-        <Shell
+        <TitledShell
+          familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
           title="Organic Reaction Navigator"
           topBar={<TopBar />}
           modes={MODES}

@@ -40,6 +40,8 @@ describe('the family page', () => {
   it('shows the header, the strip and both sections with their groups', async () => {
     await openFamily('cls_alcohols');
     expect(screen.getByRole('heading', { level: 1, name: /Alcohols/ }).textContent).toContain('R–OH');
+    // one h1 per screen: the family name; the shell's title is a plain line here
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByText(/13 reactions in all: 6 reactions of Alcohols and 7 reactions that make it/)).toBeTruthy();
     expect(within(screen.getByRole('list', { name: 'Reaction types in this family' })).getByText(/Oxidation/)).toBeTruthy();
     expect(screen.getByText('Made from')).toBeTruthy();
@@ -98,9 +100,9 @@ describe('the family page', () => {
     expect(ethers).toBeDefined();
     expect(alkenes).toBeDefined();
     expect(within(ethers).queryByText('443 K')).toBeNull();
-    expect(within(ethers).getByRole('button', { name: '+1 outcome: Alkenes' })).toBeTruthy();
-    expect(within(alkenes).getByRole('button', { name: '+1 outcome: Ethers' })).toBeTruthy();
-    expect(() => fireEvent.click(within(ethers).getByRole('button', { name: '+1 outcome: Alkenes' }))).not.toThrow();
+    expect(within(ethers).getByRole('button', { name: 'Also gives -> Alkenes (443 K)' })).toBeTruthy();
+    expect(within(alkenes).getByRole('button', { name: 'Also gives -> Ethers (413 K)' })).toBeTruthy();
+    expect(() => fireEvent.click(within(ethers).getByRole('button', { name: 'Also gives -> Alkenes (443 K)' }))).not.toThrow();
   });
 
   it('the strip buttons and the links bring the reader to a group without leaving the page', async () => {

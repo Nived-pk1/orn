@@ -1,7 +1,7 @@
 /**
  * One card of the family page (step 5.5b; ADR-037): a reaction in one group, drawn as a textbook scheme. Per outcome one row:
  * substrate -> arrow -> products, the arrow text above and below the arrow, each product's selectivity word under it. Outcomes of the
- * same reaction that land in other groups are counted and linked ("+1 outcome: Alkenes"); nothing is hidden. The card shows what the
+ * same reaction that land in other groups are counted and linked ("Also gives -> Alkenes (443 K)"); nothing is hidden. The card shows what the
  * study says and decides nothing. The name is a button (the keyboard way to select the reaction); a click anywhere on the card
  * selects it too.
  */
@@ -93,7 +93,7 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
             <Fragment key={place.hubId}>
               {index > 0 ? ' ' : null}
               <button type="button" className={styles.link} onClick={(event) => (event.stopPropagation(), onGoToGroup(place.hubId, card.reactionId))}>
-                +{plural(place.outcomeCount, 'outcome', 'outcomes')}: {place.name}
+                {`Also gives -> ${place.name}${place.conditionText === '' ? '' : ` (${place.conditionText})`}`}
               </button>
             </Fragment>
           ))}

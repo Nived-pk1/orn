@@ -24,6 +24,8 @@ export interface InspectorPane {
 
 export interface ShellProps {
   readonly title: string;
+  /** False: the title is a plain line, not the page's h1 (a screen whose own content carries the h1, as the family page does). */
+  readonly titleHeading?: boolean;
   /** Controls at the right of the top bar (menus, undo and redo, search ...). */
   readonly topBar: ReactNode;
   readonly modes: readonly ModeItem[];
@@ -59,7 +61,7 @@ export function Shell(props: ShellProps) {
       style={{ ['--inspector-width' as string]: `${pane.width}px` }}
     >
       <header className={styles.topBar}>
-        <h1 className={styles.title}>{props.title}</h1>
+        {props.titleHeading === false ? <p className={styles.title}>{props.title}</p> : <h1 className={styles.title}>{props.title}</h1>}
         <div className={styles.topControls}>{props.topBar}</div>
         <IconButton
           label={inspectorOpen ? 'Hide inspector' : 'Show inspector'}
