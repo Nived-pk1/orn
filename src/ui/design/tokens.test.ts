@@ -3,7 +3,7 @@
  * `tokens.css` itself (WCAG 2.2 relative luminance) and meets AA (4.5:1 for text, 3:1 for the focus ring and control borders); the
  * focus ring is 2 px; hit targets are 24 px and 44 px on touch; reduced motion zeroes the durations.
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const CSS = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8');
@@ -113,3 +113,28 @@ describe('focus ring, hit targets and motion tokens', () => {
     expect(sizes).toEqual([[12, 12], [13, 13], [14, 14], [16, 16], [20, 20], [24, 24]]);
   });
 });
+
+describe('rounded corners (ADR-037, 2026-10-09)', () => {
+  it('cards and panels are 8 px, controls 6 px', () => {
+    expect(CSS).toMatch(/--radius-card:\s*8px;/);
+    expect(CSS).toMatch(/--radius-control:\s*6px;/);
+  });
+
+  it('every radius a stylesheet uses is a defined token, and the old 4 px token is gone', () => {
+    expect(CSS).not.toMatch(/--radius-2:/);
+    const defined = new Set([...CSS.matchAll(/--(radius-[a-z0-9-]+):/g)].map((m) => m[1]));
+    const roots = ['../primitives', '../../features', '../../app'];
+    const used = new Set<string>();
+    const visit = (dir: URL): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const child = new URL(entry.name + (entry.isDirectory() ? '/' : ''), dir);
+        if (entry.isDirectory()) visit(child);
+        else if (entry.name.endsWith('.css')) for (const m of readFileSync(child, 'utf8').matchAll(/var\(--(radius-[a-z0-9-]+)\)/g)) used.add(m[1] as string);
+      }
+    };
+    for (const root of roots) visit(new URL(root + '/', import.meta.url));
+    expect(used.size).toBeGreaterThan(0);
+    for (const name of used) expect(defined.has(name), name).toBe(true);
+  });
+});
+

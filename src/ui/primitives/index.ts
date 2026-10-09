@@ -16,3 +16,5 @@ export { MAX_TOASTS, ToastProvider, useToasts } from './toast';
 export type { ToastInput, Toasts } from './toast';
 export { Tooltip } from './tooltip';
 export { VisuallyHidden } from './visually-hidden';
+export { VirtualList } from './virtual-list';
+export type { VirtualListHandle, VirtualListProps } from './virtual-list';

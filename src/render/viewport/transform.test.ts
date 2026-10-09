@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SCALE_MAX, SCALE_MIN } from './contracts';
+import { LOD_THRESHOLDS } from '@/render/scene';
+import { FIT_PADDING, SCALE_MAX, SCALE_MIN } from './contracts';
 import { clampScale, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout, keepScreenPoint, toScreen } from './transform';
 
 const size = { width: 1000, height: 600 };
@@ -23,6 +24,21 @@ describe('viewport arithmetic', () => {
     expect(rect.x1).toBeGreaterThanOrEqual(2000);
     expect(rect.y0).toBeLessThanOrEqual(0);
     expect(rect.y1).toBeGreaterThanOrEqual(1000);
+  });
+
+  it('fits a drawing too large for the LOD 1 threshold at that threshold, from its top-left corner (ADR-037)', () => {
+    const huge = fitScene({ width: 10_000, height: 8_000 }, size);
+    expect(huge.scale).toBe(LOD_THRESHOLDS[1]);
+    expect(huge).toEqual({ scale: LOD_THRESHOLDS[1], x: FIT_PADDING, y: FIT_PADDING });
+    // The top-left of the drawing is on screen and the rest is reachable by panning.
+    expect(worldRect(huge, size).x0).toBeLessThan(0);
+    expect(worldRect(huge, size).x1).toBeLessThan(10_000);
+  });
+
+  it('a drawing that fits above the threshold is fitted whole and centred as before', () => {
+    const view = fitScene({ width: 800, height: 400 }, size);
+    expect(view.scale).toBeGreaterThanOrEqual(LOD_THRESHOLDS[1]);
+    expect(worldRect(view, size).x1).toBeGreaterThanOrEqual(800);
   });
 
   it('never zooms a small box past the cap, and focus stops at 1.5', () => {

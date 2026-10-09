@@ -116,6 +116,50 @@ export function createViewportsStore(initial: ViewportsState['views'] = {}): Vie
   }));
 }
 
+/** Where the family page should bring the reader once it is open: a group of one section (a selected arrow opens its source family at the target's group). */
+export interface FamilyTarget {
+  readonly section: 'reactions_of' | 'preparation_of';
+  readonly hubId: string;
+}
+
+/**
+ * The family page (step 5.5b; ADR-037): which family is open, or none (the overview). Only `open` is saved; `target` is a one-off
+ * request the page consumes. None of it is canonical data (INV-10): IDs only.
+ */
+export interface FamilyState {
+  readonly open: string | null;
+  readonly target: FamilyTarget | null;
+  /** The reaction selected on the page (a click on a card); kept while the page is closed, not saved. */
+  readonly reaction: string | null;
+  openFamily(hubId: string, target?: FamilyTarget): void;
+  selectReaction(reactionId: string | null): void;
+  /** Back to the overview. */
+  closeFamily(): void;
+  /** The page has brought the reader to the target. */
+  clearTarget(): void;
+}
+export type FamilyStore = StoreApi<FamilyState>;
+
+export function createFamilyStore(initial: string | null = null): FamilyStore {
+  return createStore<FamilyState>((set, get) => ({
+    open: initial,
+    target: null,
+    reaction: null,
+    openFamily(hubId, target) {
+      set({ open: hubId, target: target ?? null });
+    },
+    selectReaction(reactionId) {
+      if (get().reaction !== reactionId) set({ reaction: reactionId });
+    },
+    closeFamily() {
+      if (get().open !== null || get().target !== null) set({ open: null, target: null });
+    },
+    clearTarget() {
+      if (get().target !== null) set({ target: null });
+    },
+  }));
+}
+
 /** All the navigator's UI stores, as `src/app` creates and hands them to the feature. */
 export interface NavigatorUiStores {
   readonly selection: SelectionStore;
@@ -123,6 +167,7 @@ export interface NavigatorUiStores {
   readonly filters: FiltersStore;
   readonly exam: ActiveExamStore;
   readonly viewports: ViewportsStore;
+  readonly family: FamilyStore;
 }
 
 export const createNavigatorUiStores = (): NavigatorUiStores => ({
@@ -131,4 +176,5 @@ export const createNavigatorUiStores = (): NavigatorUiStores => ({
   filters: createFiltersStore(),
   exam: createActiveExamStore(),
   viewports: createViewportsStore(),
+  family: createFamilyStore(),
 });

@@ -177,13 +177,7 @@ const inspector = (page: Page) => page.getByRole('toolbar', { name: 'Canvas tool
 const hubGroup = (page: Page, id: string) => page.locator(`svg [data-node-id="${id}"]`);
 const nodeCount = (page: Page): Promise<number> => page.locator('svg [data-node-id]').count();
 
-async function centreOf(page: Page, id: string): Promise<{ x: number; y: number }> {
-  const box = await hubGroup(page, id).boundingBox();
-  if (box === null) throw new Error(`no box for ${id}`);
-  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-}
-
-test.describe('selection and expansion', () => {
+test.describe('selection and opening a family', () => {
   test('a click selects a hub and the inspector names it; a click on empty canvas, not a drag, clears it', async ({ page }) => {
     const seen = await watch(page);
     await openNavigator(page);
@@ -203,66 +197,58 @@ test.describe('selection and expansion', () => {
     await expectClean(seen);
   });
 
-  test('a double click expands a hub and a second collapses it; the hub stays at the same screen point', async ({ page }) => {
+  test('the overview does not expand: no Expand or Collapse, and a double click opens the family page without adding a node', async ({ page }) => {
     const seen = await watch(page);
     await openNavigator(page);
-    // The fitted overview is LOD 0 at 1280 x 720 now (the drawing is larger, with room for the arrow text), and LOD 0 draws hubs only:
-    // members are not in the DOM, so zoom in until they would be before counting nodes.
-    await zoomInTo(page, 1);
+    await expect(page.getByRole('button', { name: 'Expand' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Collapse' })).toHaveCount(0);
     const before = await nodeCount(page);
-    const at = await centreOf(page, 'cls_aldehydes');
+    expect(before).toBe(16);
     await hubGroup(page, 'cls_aldehydes').dblclick();
-    await expect(async () => expect(await nodeCount(page)).toBeGreaterThan(before)).toPass();
-    await page.waitForTimeout(250);
-    const moved = await centreOf(page, 'cls_aldehydes');
-    expect(Math.abs(moved.x - at.x)).toBeLessThan(3);
-    expect(Math.abs(moved.y - at.y)).toBeLessThan(3);
-    await hubGroup(page, 'cls_aldehydes').dblclick();
-    await expect(async () => expect(await nodeCount(page)).toBe(before)).toPass();
+    await expect(page.getByRole('region', { name: 'Family page: Aldehydes' })).toBeVisible();
+    await page.getByRole('button', { name: 'Overview' }).click();
+    await expect(drawing(page)).toBeVisible();
+    expect(await nodeCount(page)).toBe(before);
     await expectClean(seen);
   });
 
-  test('the toolbar expands and collapses the selected hub, and says why when it cannot', async ({ page }) => {
+  test('the toolbar opens the selected family, and says why when it cannot', async ({ page }) => {
     await openNavigator(page);
-    const expand = page.getByRole('button', { name: 'Expand' });
-    const collapse = page.getByRole('button', { name: 'Collapse' });
-    await expect(expand).toHaveAccessibleDescription('select a hub first');
-    await zoomInTo(page, 1); // LOD 0 draws hubs only (see the double click test)
-    const before = await nodeCount(page);
+    const open = page.getByRole('button', { name: 'Open family' });
+    await expect(open).toHaveAccessibleDescription('select a family first');
     await hubGroup(page, 'cls_alkenes').click();
-    await expect(collapse).toHaveAccessibleDescription('this hub is not expanded');
-    await expand.click();
-    await expect(async () => expect(await nodeCount(page)).toBeGreaterThan(before)).toPass();
-    await expect(expand).toHaveAccessibleDescription('this hub is already expanded');
-    await collapse.click();
-    await expect(async () => expect(await nodeCount(page)).toBe(before)).toPass();
+    await expect(open).not.toHaveAttribute('aria-disabled', 'true');
+    await open.click();
+    await expect(page.getByRole('region', { name: 'Family page: Alkenes' })).toBeVisible();
   });
 
-  test('the selection, the expansion and the viewport survive a reload', async ({ page }) => {
+  test('the selection, the open family and the viewport survive a reload', async ({ page }) => {
     const seen = await watch(page);
     await openNavigator(page);
-    await hubGroup(page, 'cls_aldehydes').dblclick();
     await hubGroup(page, 'cls_aldehydes').click();
     await page.getByRole('button', { name: 'Zoom in' }).click();
     await page.waitForTimeout(1500); // the viewport is still (400 ms), then the debounce (300 ms) and the write
-    const grown = await nodeCount(page);
     const view = await transformOf(page);
     await page.reload();
     await expect(drawing(page)).toBeVisible();
-    await expect(async () => expect(await nodeCount(page)).toBe(grown)).toPass();
     await expect(inspector(page).getByText(/^Selected: Aldehydes, class hub/)).toBeVisible();
     await page.waitForTimeout(300);
     const again = await transformOf(page);
     expect(again.scale).toBeCloseTo(view.scale, 3);
     expect(again.x).toBeCloseTo(view.x, 0);
     expect(again.y).toBeCloseTo(view.y, 0);
+    // an open family page comes back too
+    await page.getByRole('button', { name: 'Open family' }).click();
+    await expect(page.getByRole('region', { name: 'Family page: Aldehydes' })).toBeVisible();
+    await page.waitForTimeout(800);
+    await page.reload();
+    await expect(page.getByRole('region', { name: 'Family page: Aldehydes' })).toBeVisible();
     await expectClean(seen);
   });
 
-  test('axe: nothing serious with a hub expanded and selected', async ({ page }) => {
+  test('axe: nothing serious with a hub selected', async ({ page }) => {
     const seen = await watch(page);
     await openNavigator(page);
-    await hubGroup(page, 'cls_aldehydes').dblclick();
     await hubGroup(page, 'cls_aldehydes').click();
     await zoomInTo(page, 2);
     expect(await axeProblems(page)).toEqual([]);
@@ -297,10 +283,6 @@ test.describe('ADV-012 part 1: a hub with 1,000 reactions', () => {
     };
     await checkBudget();
     await expect(page.locator(`svg [data-edge-id][aria-label*="${biggest.total} reactions"]`).first()).toBeAttached();
-    // expanding the busiest hub stays inside the budget too
-    await hubGroup(page, biggest.from).dblclick();
-    await page.waitForTimeout(1500);
-    await checkBudget();
     await expect(page.getByRole('alert')).toHaveCount(0);
     await expectClean(seen);
   });

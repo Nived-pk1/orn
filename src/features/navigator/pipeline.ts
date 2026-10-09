@@ -2,20 +2,19 @@
  * The navigator pipeline (step 5.5a, items d and e): projection -> node sizes -> layout request -> layout service -> Scene. A plain
  * model with no React and no DOM; the screen subscribes to its state. Rules:
  *  - The projection is rebuilt only when a ChangeSet touches a kind in `PROJECTION_KINDS` (always on replace and remote), or the
- *    expansion, the filters or the exam version change; the PREVIOUS Projection object is kept when `sameProjection` holds.
+ *    filters or the exam version change; the PREVIOUS Projection object is kept when `sameProjection` holds.
  *  - A ChangeSet touching a kind in `SCENE_KINDS` (what the Scene ports read) recomputes sizes and the layout request; an unchanged
  *    request reuses the last layout result; the Scene is rebuilt. A ChangeSet touching neither rebuilds nothing.
  *  - Memos key on object identity; no content hash. A superseded run is never shown (a token, and the service cancels the call).
  *  - A failure value is an error state with its code. While a new layout is computed the previous Scene stays on screen; the skeleton
  *    shows only when there is no Scene yet and `SKELETON_DELAY_MS` have passed.
- *  - Expansion entries that name no admitted hub are removed from the UI state (and logged), only after a projection built from a
- *    loaded state; a selection that is not in a new Scene is cleared (and logged).
+ *  - The overview does not expand (ADR-037, step 5.5b): the request always carries no expansion, whatever the expansion store holds
+ *    (the store stays for later views). A selection that is not in a new Scene is cleared (and logged).
  * An indexes handle is asked for at every build and never kept.
  */
 import { DEFAULT_TRAVERSAL_LIMITS, createScopeOf, navigatorProjection, sameProjection } from '@/core/graph';
 import type { Projection, ProjectionRequest } from '@/core/graph';
 import type { ChangeSet } from '@/core/dataset/contracts';
-import { RECORD_KINDS, type CanonicalState } from '@/core/schema';
 import type { LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
 import { buildLayoutRequest, buildScene, labelSizes, nodeSizes } from '@/render/scene';
 import type { LabelSizes, NodeSizes, Scene } from '@/render/scene';
@@ -61,11 +60,7 @@ export interface NavigatorModel {
 
 const hubIdsOf = (projection: Projection): string[] => projection.nodes.filter((node) => node.role === 'anchor' || node.role === 'unclassified').map((node) => node.id);
 
-/** True when the state has at least one record (a `for...in` that stops at the first). */
-function hasRecords(state: CanonicalState): boolean {
-  for (const kind of RECORD_KINDS) for (const _id in state.records[kind]) return true;
-  return false;
-}
+const NO_EXPANSION: ProjectionRequest['expansion'] = { expanded: [], collapsedEdgeIds: [] };
 
 const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [] };
 
@@ -78,7 +73,6 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
   let token = 0;
   let scheduled = false;
   let dirtyProjection = true;
-  let pruning = false;
   let epoch = 0;
   let projection: Projection | null = null;
   let sizes: { readonly of: Projection; readonly epoch: number; readonly value: NodeSizes; readonly labels: LabelSizes } | null = null;
@@ -98,7 +92,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
   const requestOf = (): ProjectionRequest => ({
     view: 'navigator',
     focus: [],
-    expansion: ports.ui.expansion.getState().expansion,
+    expansion: NO_EXPANSION,
     filters: ports.ui.filters.getState().filters,
     limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES },
   });
@@ -113,18 +107,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
   }
 
   function buildProjection(): Projection {
-    let built = buildOnce();
-    // An expansion entry that names no admitted hub is dropped (core stays silent on it), but only when the projection comes from a
-    // loaded state: an empty store admits no hub and must not wipe what was saved.
-    if (hasRecords(ports.store.getState())) {
-      pruning = true;
-      const removed = ports.ui.expansion.getState().prune(new Set(hubIdsOf(built)));
-      pruning = false;
-      if (removed.length > 0) {
-        ports.log('expansion_pruned', `removed ${removed.length} expansion ${removed.length === 1 ? 'entry' : 'entries'} that name no hub of the drawing: ${removed.slice(0, 5).join(', ')}${removed.length > 5 ? ', ...' : ''}`);
-        built = buildOnce();
-      }
-    }
+    const built = buildOnce();
     return projection !== null && sameProjection(projection, built) ? projection : built;
   }
 
@@ -223,7 +206,6 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
     schedule();
   };
   const onRequest = (): void => {
-    if (pruning) return;
     dirtyProjection = true;
     schedule();
   };
@@ -237,7 +219,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
     start() {
       if (running) return;
       running = true;
-      offs = [ports.store.subscribe(onChange), ports.ui.expansion.subscribe(onRequest), ports.ui.filters.subscribe(onRequest), ports.ui.exam.subscribe(onRequest)];
+      offs = [ports.store.subscribe(onChange), ports.ui.filters.subscribe(onRequest), ports.ui.exam.subscribe(onRequest)];
       dirtyProjection = true;
       if (state.scene === null) startSkeletonTimer();
       void ports.measurer.ready().then(() => {

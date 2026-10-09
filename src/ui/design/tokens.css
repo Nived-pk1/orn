@@ -32,7 +32,9 @@
   --space-4: 16px;
   --space-6: 24px;
   --radius-1: 2px;
-  --radius-2: 4px;
+  /* Rounded corners (ADR-037, 2026-10-09): 8 px for cards and panels, 6 px for controls; 2 px stays for small bars. */
+  --radius-card: 8px;
+  --radius-control: 6px;
 
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;

@@ -1,4 +1,6 @@
-export { NavigatorCanvas, toggleReason } from './navigator-canvas';
+export { NavigatorCanvas, openFamilyReason } from './navigator-canvas';
+export { NavigatorView } from './navigator-view';
+export { FamilyPage } from './family-page';
 export { NavigatorSelection } from './navigator-selection';
 export { navigatorNoticesOf, NavigatorStatus, truncationLineOf } from './navigator-status';
 export { NavigatorProvider, useNavigator, useNavigatorState } from './navigator-context';

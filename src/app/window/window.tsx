@@ -6,7 +6,7 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import {
-  NavigatorCanvas,
+  NavigatorView,
   NavigatorProvider,
   NavigatorStatus,
 } from "@/features/navigator";
@@ -92,7 +92,7 @@ function Canvas(props: {
       {empty && !startedEmpty ? (
         <FirstRun flow={flow} onStartEmpty={onStartEmpty} />
       ) : showsNavigator ? (
-        <NavigatorCanvas />
+        <NavigatorView />
       ) : (
         <DatasetView counts={props.counts} empty={empty} />
       )}

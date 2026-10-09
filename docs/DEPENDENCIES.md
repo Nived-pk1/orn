@@ -22,6 +22,7 @@ Phase 10's documentation sweep keeps this list current. Each new dependency is r
 | react-dom | 19.3.0 | MIT | (before 4.x) | UI |
 | zod | 4.6.5 | MIT | (before 4.x) | Schemas (jitless in workers, ADR-035) |
 | zustand | 5.0.15 | MIT | step 5.2 | UI stores (`src/ui/state`); no middleware, no `localStorage` |
+| @tanstack/react-virtual | 3.14.13 | MIT | step 5.5b | VirtualList primitive (`src/ui/primitives`): the family page's cards. Pulls `@tanstack/virtual-core` 3.17.11 (MIT; locked by the lockfile, not a direct pin). Scanned: no `eval(`, `new Function`, `Function(`; it positions items through style props (CSSOM, allowed by the CSP) |
 
 ## Dev dependencies (not shipped)
 

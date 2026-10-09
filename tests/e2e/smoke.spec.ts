@@ -1,5 +1,6 @@
 /**
- * The smoke (step 5.1d, note E10): it runs in Chromium, Firefox and WebKit. 1: the app boots and loads the demo. 2: the chem
+ * The smoke (step 5.1d, note E10): it runs in Chromium, Firefox and WebKit. 1: the app boots and loads the demo (step 5.5b: and a family
+ * page opens). 2: the chem
  * worker starts and parses (the demo's invalid structure arrives as a CHEM-001 warning in the counts). 3: the status shows the compute,
  * chem and search workers as ok. 4: the BUILT layout worker loads ELK, answers `warmUp` and lays out a small graph with engine 'elk'
  * (5.1d review follow-up a: ELK did not load in the production worker).
@@ -20,6 +21,20 @@ test('the app boots and loads the demo; its counts are shown', async ({ page }) 
   expect(await recordCount(page, 'reaction')).toBe(27);
   expect(await recordCount(page, 'species')).toBe(66);
   await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
+  await expectClean(seen);
+});
+
+test('the family page of a demo family opens (step 5.5b): a double click on Alcohols shows its sections and cards', async ({ page }) => {
+  const seen = await watch(page);
+  await openApp(page);
+  await loadDemo(page);
+  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+  await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
+  await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Reactions of Alcohols' })).toBeVisible();
+  await expect(page.getByRole('article').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Overview' }).click();
+  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
   await expectClean(seen);
 });
 

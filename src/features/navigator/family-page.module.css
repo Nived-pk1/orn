@@ -1,0 +1,354 @@
+/* The family page (step 5.5b; ADR-037): textbook calm. Colour is paper, ink and rule; the accent marks selection and focus only.
+   Tints are mixed from tokens (no colour literal outside tokens.css). Rounded corners: 8 px cards, 6 px controls. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--color-paper);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-surface);
+}
+
+.toolbar button {
+  min-height: var(--hit-min);
+}
+
+.selection {
+  flex: 1;
+  min-width: 12rem;
+  margin: 0;
+  text-align: right;
+  color: var(--color-ink-2);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+}
+
+.item {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.missing {
+  margin: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-card);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
+/* Header */
+
+.header {
+  padding-top: var(--space-6);
+}
+
+.familyName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--text-24);
+  font-weight: 600;
+}
+
+.familyFormula {
+  color: var(--color-ink-2);
+  font-size: var(--text-16);
+  font-weight: 400;
+}
+
+.counts {
+  margin: var(--space-2) 0 var(--space-3);
+  color: var(--color-ink-2);
+}
+
+.types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: var(--text-13);
+}
+
+.reviewChip {
+  border-color: var(--color-review);
+  color: var(--color-review);
+}
+
+.count {
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.partnersTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-13);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.partnerList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.partner,
+.link {
+  min-height: var(--hit-min);
+  padding: 2px var(--space-3);
+  border: 1px solid var(--color-ink-2);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.link {
+  border-color: var(--color-rule);
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.partner:hover,
+.link:hover {
+  background: var(--color-hover);
+}
+
+/* Sections and groups */
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-top: var(--space-6);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--text-20);
+  font-weight: 600;
+}
+
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: var(--text-16);
+  font-weight: 600;
+}
+
+.empty {
+  margin: 0;
+  padding-top: var(--space-3);
+  color: var(--color-ink-2);
+}
+
+/* Cards */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+}
+
+.card[data-selected] {
+  border: 2px solid var(--color-accent);
+  padding: calc(var(--space-4) - 1px);
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cardTitle {
+  margin: 0 var(--space-2) 0 0;
+  font-size: var(--text-16);
+  font-weight: 600;
+}
+
+.cardTitle button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.scheme {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.substance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 8rem;
+  margin: 0;
+}
+
+.structure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  overflow: hidden;
+}
+
+.structure img {
+  display: block;
+}
+
+.structureName {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  text-align: center;
+}
+
+.formula {
+  font-size: var(--text-16);
+}
+
+.noStructure,
+.loadingMark {
+  color: var(--color-ink-2);
+  font-size: var(--text-12);
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: var(--text-13);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.selectivity {
+  color: var(--color-ink-2);
+  font-style: italic;
+}
+
+.arrow {
+  display: flex;
+  flex: 1 1 8rem;
+  flex-direction: column;
+  align-items: center;
+  min-width: 7rem;
+  max-width: 16rem;
+  font-size: var(--text-13);
+}
+
+.arrowAbove,
+.arrowBelow {
+  min-height: 1.2em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.arrowBelow {
+  color: var(--color-ink-2);
+}
+
+.arrowLine {
+  width: 100%;
+  max-width: 96px;
+  height: 10px;
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+}
+
+.products {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.plus {
+  color: var(--color-ink-2);
+  font-size: var(--text-20);
+}
+
+.elsewhere {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-13);
+}

@@ -1,6 +1,7 @@
 /**
- * Readability of the navigator (step 5.5a, items h and m; part 2 adds the structures), Chromium against the PRODUCTION build with real
- * fonts: at LOD 2 no arrow-text rectangle overlaps another one or a node box, or leaves the Scene bounds. How many text rectangles a
+ * Readability of the navigator overview (step 5.5a, items h and m; calmed in 5.5b, ADR-037: no arrow text, no expansion, so the structures
+ * and conditions moved to the family page, tests/e2e/family.spec.ts), Chromium against the PRODUCTION build with real fonts: at LOD 2 no
+ * count chip overlaps another one or a node box, or leaves the Scene bounds. How many text rectangles a
  * line crosses is reported (an annotation), not asserted. Screenshots of the fitted overview go to `screenshots/` (git-ignored).
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -35,52 +36,8 @@ async function shot(page: Page, name: string): Promise<string> {
   return path;
 }
 
-const hub = (page: Page, id: string) => page.locator(`svg [data-node-id="${id}"]`);
-
-test.describe('structures (step 5.5a part 2, item k)', () => {
-  test('a hub expanded: no overlap at LOD 2; at LOD 3 a member shows its structure as a blob image, with no CSP violation', async ({ page }) => {
-    test.setTimeout(90_000);
-    const seen = await watch(page);
-    await openDemo(page);
-    const before = await page.locator('svg [data-node-id]').count();
-    await hub(page, 'cls_alcohols').dblclick();
-    await expect(async () => expect(await page.locator('svg [data-node-id]').count()).toBeGreaterThan(before)).toPass();
-    await page.waitForTimeout(400);
-    await zoomInTo(page, 2);
-    const problems = problemsOf(await measure(page));
-    mkdirSync(SHOTS, { recursive: true });
-    writeFileSync(resolve(SHOTS, 'readability-expanded-lod2.json'), JSON.stringify(problems, null, 1));
-    test.info().annotations.push({ type: 'expanded LOD 2: text rectangles / a line crosses', description: `${problems.labels} / ${problems.linesCrossingText}` });
-    expect(problems.labels, 'text rectangles were measured').toBeGreaterThan(5);
-    expect(problems.labelOverLabel).toEqual([]);
-    expect(problems.labelOverNode).toEqual([]);
-    expect(problems.outside).toEqual([]);
-    // fit, so the member is on the screen, then zoom in on the member Ethanol with the wheel until LOD 3
-    await page.getByRole('button', { name: 'Fit' }).click();
-    await page.waitForTimeout(400);
-    const box = await hub(page, 'spc_ethanol').boundingBox();
-    if (box === null) throw new Error('the member Ethanol is not drawn');
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    for (let i = 0; i < 40 && Number(await drawing(page).getAttribute('data-lod')) < 3; i += 1) {
-      await page.mouse.wheel(0, -400);
-      await page.waitForTimeout(120);
-    }
-    const world = await page.evaluate(() => document.querySelector('[data-world]')?.getAttribute('transform'));
-    expect(Number(await drawing(page).getAttribute('data-lod')), `world transform ${world}`).toBe(3);
-    const image = hub(page, 'spc_ethanol').locator('image');
-    await expect(image).toHaveAttribute('href', /^blob:/, { timeout: 30_000 });
-    await expect(page.locator('svg image[href^="blob:"]').first()).toBeAttached();
-    // the name stays at LOD 3 beside the structure
-    await expect(page.locator('svg [data-label-of="spc_ethanol"] text')).toHaveCount(1);
-    await page.waitForTimeout(300);
-    const path = await shot(page, 'expanded-alcohols-lod3-1280x800.png');
-    test.info().annotations.push({ type: 'screenshot', description: path });
-    await expectClean(seen);
-  });
-});
-
 test.describe('the demo overview is readable', () => {
-  test('at LOD 2 no arrow text overlaps another one or a node, or leaves the bounds', async ({ page }) => {
+  test('at LOD 2 no count chip overlaps another one or a node, or leaves the bounds', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
     await zoomInTo(page, 2);
@@ -97,24 +54,12 @@ test.describe('the demo overview is readable', () => {
     await expectClean(seen);
   });
 
-  test('a single-edge arrow with a condition shows it at LOD 2 (Amines to Diazonium salts: 0–5 °C; Alcohols to Ethers: 413 K), and nothing overlaps', async ({ page }) => {
+  test('the overview is calm: no arrow text at any LOD, only the count chips (ADR-037)', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
     await zoomInTo(page, 2);
-    const textOf = async (name: string): Promise<string> => {
-      const edge = page.locator(`svg [data-edge-id][aria-label^="${name}"]`).first();
-      const id = await edge.getAttribute('data-edge-id');
-      expect(id, name).not.toBeNull();
-      expect(await edge.getAttribute('aria-label'), 'a single edge, not a bundle').toMatch(/, 1 reaction/);
-      return (await page.locator(`svg [data-arrow-text-of="${id}"]`).textContent()) ?? '';
-    };
-    expect(await textOf('Amines to Diazonium salts')).toContain('0–5 °C');
-    expect(await textOf('Alcohols to Ethers')).toContain('413 K');
-    const problems = problemsOf(await measure(page));
-    expect(problems.labelOverLabel).toEqual([]);
-    expect(problems.labelOverNode).toEqual([]);
-    expect(problems.outside).toEqual([]);
-    writeFileSync(resolve(SHOTS, 'readability-overview-lod2-with-conditions.json'), JSON.stringify(problems, null, 1));
+    await expect(page.locator('svg [data-arrow-text-of]')).toHaveCount(0);
+    await expect(page.locator('svg [data-count-of]').first()).toBeAttached();
     await expectClean(seen);
   });
 

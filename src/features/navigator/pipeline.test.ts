@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
-import { emptyRecordTables, type CanonicalState, type ChemicalClass, type ReactionScheme, type ViewPreset } from '@/core/schema';
+import { type CanonicalState, type ChemicalClass, type ReactionScheme, type ViewPreset } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { envelope, mustCommit } from '@/test-support/command-kit';
 import { navigatorRig, type NavigatorRig } from '@/test-support/navigator-kit';
@@ -29,6 +29,11 @@ async function started(state: CanonicalState = demoState(), options: { measurerR
   await settle();
   return { store, rig, model };
 }
+
+// The request changes through the filters (the overview does not expand, ADR-037): a text filter narrows the drawing, '' widens it again.
+const filterBy = (rig: NavigatorRig, text: string): void =>
+  rig.ui.filters.getState().setFilters({ scopes: [], topicIds: [], reagentFamilies: [], ...(text === '' ? {} : { text }) });
+const NARROW = 'ethanol';
 
 const labelOf = (model: NavigatorModel, id: string): string =>
   (model.getState().scene?.nodes.find((n) => n.id === id)?.label ?? []).map((run) => run.text).join('');
@@ -60,11 +65,19 @@ describe('the pipeline on the demo dataset', () => {
   it('sends the previous positions of the nodes still present when it asks again', async () => {
     const { model, rig } = await started();
     expect(rig.layout.requests[0]?.previous).toBeUndefined();
-    rig.ui.expansion.getState().toggle('cls_alcohols');
+    const firstIds = new Set(rig.layout.requests[0]?.nodes.map((n) => n.id));
+    filterBy(rig, NARROW);
     await settle();
     expect(rig.layout.requests).toHaveLength(3);
     const third = rig.layout.requests[2];
-    expect(Object.keys(third?.previous ?? {}).length).toBe(16);
+    const previous = Object.keys(third?.previous ?? {});
+    expect(previous.length).toBeGreaterThan(0);
+    // only nodes that are still in the request, and only ones that were drawn before
+    const present = new Set(third?.nodes.map((n) => n.id));
+    for (const id of previous) {
+      expect(present.has(id)).toBe(true);
+      expect(firstIds.has(id)).toBe(true);
+    }
     model.stop();
   });
 });
@@ -88,10 +101,10 @@ describe('a stable first view (step 5.5a, item b)', () => {
   it('is bounded: two layouts per first view, and a rebuild with previous positions asks once', async () => {
     const { model, rig } = await started();
     expect(rig.layout.requests).toHaveLength(2);
-    rig.ui.expansion.getState().toggle('cls_alcohols');
+    filterBy(rig, NARROW);
     await settle();
     expect(rig.layout.requests).toHaveLength(3);
-    rig.ui.expansion.getState().toggle('cls_alcohols');
+    filterBy(rig, '');
     await settle();
     expect(rig.layout.requests).toHaveLength(4);
     model.stop();
@@ -128,12 +141,16 @@ describe('a stable first view (step 5.5a, item b)', () => {
     const model = createNavigatorModel(rig.ports);
     model.start();
     await settle();
-    rig.ui.expansion.getState().toggle('cls_alcohols');
+    filterBy(rig, NARROW);
     await settle();
     release();
     await settle();
-    // the Scene on screen answers the expanded view, never the first one
-    expect(model.getState().scene?.nodes.some((n) => n.box === 'member')).toBe(true);
+    // the Scene on screen answers the narrowed view (fewer arrows), never the first one
+    const all = rig.layout.requests[0]?.edges.length ?? 0;
+    const narrowed = rig.layout.requests.filter((r) => r.edges.length < all);
+    expect(narrowed.length).toBeGreaterThan(0);
+    const drawn = model.getState().scene;
+    expect(narrowed.map((r) => layoutCacheKey(r))).toContain(drawn?.layoutKey);
     model.stop();
   });
 });
@@ -166,19 +183,19 @@ describe('what an edit rebuilds (counters)', () => {
     model.stop();
   });
 
-  it('a scheme placement edit changes the arrow text, and does not rebuild the projection', async () => {
+  it('the overview is calm: no arrow text, whatever the schemes say; a scheme edit rebuilds the Scene but not the projection', async () => {
     const { model, store } = await started();
-    const edge = model.getState().scene?.edges.find((e) => e.id !== '' && e.above !== undefined && (e.below ?? []).length > 0 && e.from === 'cls_ketones' && e.to === 'cls_alcohols');
-    expect(edge?.below?.map((run) => run.text).join('')).toContain('H3O+');
+    const arrows = model.getState().scene?.edges.filter((e) => e.semantic === 'transforms_to') ?? [];
+    expect(arrows.length).toBeGreaterThan(0);
+    expect(arrows.every((e) => e.above === undefined && e.below === undefined)).toBe(true);
     const before = model.stats();
     const scheme = Object.values(store.getState().records.reaction_scheme)[0] as ReactionScheme;
     const moved = scheme.placements.map((p) => (p.position === 'below_arrow' ? { ...p, position: 'above_arrow' as const } : p));
     expect(moved).not.toEqual(scheme.placements);
     mustCommit(store.dispatch(envelope('move reagents', { type: 'record.update', record: { ...scheme, placements: moved } })));
     await settle();
-    const after = model.getState().scene?.edges.find((e) => e.from === 'cls_ketones' && e.to === 'cls_alcohols');
-    // the participants left the below side; the conditions of the stages stay there (step 5.5a part 3, item l)
-    expect(after?.below?.map((run) => run.text).join('') ?? '').toBe('1. anhydrous, 2. acidic medium');
+    const after = model.getState().scene?.edges.filter((e) => e.semantic === 'transforms_to') ?? [];
+    expect(after.every((e) => e.above === undefined && e.below === undefined)).toBe(true);
     expect(model.stats().projections).toBe(before.projections);
     expect(model.stats().scenes).toBe(before.scenes + 1);
     model.stop();
@@ -231,13 +248,16 @@ describe('a superseded result is never shown', () => {
     await settle();
     expect(model.getState().scene).toBeNull();
     // a second request while the first is held
-    rig.ui.expansion.getState().toggle('cls_alcohols');
+    filterBy(rig, NARROW);
     await settle();
     expect(rig.layout.requests).toHaveLength(2);
     release();
     await settle();
     const scene = model.getState().scene;
-    expect(scene?.nodes.length).toBeGreaterThan(16); // the expanded hub's members: the SECOND request's Scene, not the first's
+    // the narrowed drawing: the SECOND request's Scene, not the first's
+    const all = rig.layout.requests.map((r) => r.edges.length);
+    const narrowed = rig.layout.requests.filter((r) => r.edges.length < Math.max(...all));
+    expect(narrowed.map((r) => layoutCacheKey(r))).toContain(scene?.layoutKey);
     expect(model.stats().scenes).toBe(1);
     model.stop();
   });
@@ -283,7 +303,7 @@ describe('failures and the skeleton', () => {
     const first = model.getState().scene;
     let release: () => void = () => undefined;
     rig.layout.hold = new Promise<void>((resolve) => (release = resolve));
-    rig.ui.expansion.getState().toggle('cls_alcohols');
+    filterBy(rig, NARROW);
     await settle();
     rig.timers.advance(SKELETON_DELAY_MS * 3);
     expect(model.getState().scene).toBe(first);
@@ -303,32 +323,24 @@ describe('failures and the skeleton', () => {
   });
 });
 
-describe('the expansion state and the selection (step 5.5a part 2)', () => {
-  it('removes an expansion entry that names no admitted hub, logs it, and builds the projection again without it', async () => {
+describe('the overview does not expand, and the selection (step 5.5a part 2; ADR-037)', () => {
+  it('ignores what the expansion store holds: hubs only, no member, nothing removed or logged', async () => {
     const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
     const rig = navigatorRig(store);
-    rig.ui.expansion.setState({ expansion: { expanded: [{ nodeId: 'cls_alcohols', direction: 'both' }, { nodeId: 'not-a-hub', direction: 'both' }], collapsedEdgeIds: [] } });
+    const held = { expanded: [{ nodeId: 'cls_alcohols', direction: 'both' as const }, { nodeId: 'not-a-hub', direction: 'both' as const }], collapsedEdgeIds: [] };
+    rig.ui.expansion.setState({ expansion: held });
     const model = createNavigatorModel(rig.ports);
     model.start();
     await settle();
-    expect(rig.ui.expansion.getState().expansion.expanded).toEqual([{ nodeId: 'cls_alcohols', direction: 'both' }]);
-    expect(rig.logs.filter((line) => line.type === 'expansion_pruned')).toHaveLength(1);
-    expect(model.getState().error).toBeNull();
-    // one run only: the removal did not start a second layout (the two requests are the first view's, item b)
-    expect(rig.layout.requests).toHaveLength(2);
-    model.stop();
-  });
-
-  it('keeps every entry while the store holds no record: an empty store admits no hub and must not wipe what was saved', async () => {
-    const store = createCanonicalStore({ initial: { ...demoState(), records: emptyRecordTables() }, validateInitial: false });
-    const rig = navigatorRig(store);
-    const saved = { expanded: [{ nodeId: 'cls_alcohols', direction: 'both' as const }], collapsedEdgeIds: [] };
-    rig.ui.expansion.setState({ expansion: saved });
-    const model = createNavigatorModel(rig.ports);
-    model.start();
+    expect(model.getState().scene?.nodes).toHaveLength(16);
+    expect(model.getState().scene?.nodes.some((n) => n.box === 'member')).toBe(false);
+    expect(rig.ui.expansion.getState().expansion).toBe(held);
+    expect(rig.logs).toEqual([]);
+    // a later change of the store asks for nothing
+    const calls = rig.layout.requests.length;
+    rig.ui.expansion.getState().toggle('cls_aldehydes');
     await settle();
-    expect(rig.ui.expansion.getState().expansion).toBe(saved);
-    expect(rig.logs.some((line) => line.type === 'expansion_pruned')).toBe(false);
+    expect(rig.layout.requests).toHaveLength(calls);
     model.stop();
   });
 
@@ -336,11 +348,11 @@ describe('the expansion state and the selection (step 5.5a part 2)', () => {
     const { model, rig } = await started();
     const hub = model.getState().hubIds[0] as string;
     rig.ui.selection.getState().select({ kind: 'node', id: hub });
-    rig.ui.expansion.getState().toggle(model.getState().hubIds[1] as string);
+    filterBy(rig, ''); // a new, equal filters object: the request is asked again, the drawing is the same
     await settle();
     expect(rig.ui.selection.getState().selected).toEqual({ kind: 'node', id: hub });
     rig.ui.selection.getState().select({ kind: 'edge', id: 'gone' });
-    rig.ui.expansion.getState().toggle(model.getState().hubIds[2] as string);
+    filterBy(rig, '');
     await settle();
     expect(rig.ui.selection.getState().selected).toBeNull();
     expect(rig.logs.filter((line) => line.type === 'selection_cleared')).toHaveLength(1);

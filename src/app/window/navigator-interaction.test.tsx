@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 /**
- * Selection, expansion and the saved view (step 5.5a part 2), at component level with roles and names (note E13): a click selects the
- * node under it and an empty canvas clears; a double click on a hub or the Expand / Collapse buttons toggle it, and the buttons say why
- * when they cannot; the inspector names the selection in a text line; the selection, expansion and zoom are saved through the port
- * (debounced), come back on a new window, and a read-only tab keeps them without writing. jsdom has no layout: what the browser does
+ * Selection, opening a family and the saved view (step 5.5a part 2, changed in 5.5b: the overview no longer expands, ADR-037), at
+ * component level with roles and names (note E13): a click selects the node under it and an empty canvas clears; a double click on a
+ * hub or the Open family button opens its page, and the button says why when it cannot; the inspector names the selection in a text
+ * line; the selection, the open family and zoom are saved through the port (debounced), come back on a new window, and a read-only tab
+ * keeps them without writing. A saved expansion is ignored and removed once. jsdom has no layout: what the browser does
  * with the drawing is proved by tests/e2e/navigator.spec.ts.
  */
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -68,83 +69,73 @@ describe('selection', () => {
   });
 });
 
-describe('expansion', () => {
-  it('Expand and Collapse say why they cannot act', async () => {
+describe('the overview does not expand; a family opens as a page', () => {
+  it('has no Expand and no Collapse button', async () => {
     await opened();
-    expect(button('Expand').getAttribute('aria-disabled')).toBe('true');
-    expect(reasonOf('Expand')).toBe('select a hub first');
-    expect(reasonOf('Collapse')).toBe('select a hub first');
-    fireEvent.click(hub('Aldehydes'));
-    expect(button('Expand').getAttribute('aria-disabled')).toBeNull();
-    expect(reasonOf('Collapse')).toBe('this hub is not expanded');
+    expect(screen.queryByRole('button', { name: 'Expand' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Collapse' })).toBeNull();
   });
 
-  it('a double click on a hub expands it, a second one collapses it', async () => {
+  it('Open family says why it cannot act, and acts on a selected family', async () => {
+    const app = await opened();
+    expect(button('Open family').getAttribute('aria-disabled')).toBe('true');
+    expect(reasonOf('Open family')).toBe('select a family first');
+    fireEvent.click(hub('Aldehydes'));
+    expect(button('Open family').getAttribute('aria-disabled')).toBeNull();
+    fireEvent.click(button('Open family'));
+    expect(app.navigator.ui.family.getState().open).toBe('cls_aldehydes');
+  });
+
+  it('a selected arrow: Open family says to use Open, and Open opens the source family at the target group', async () => {
+    const app = await opened();
+    fireEvent.click(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 3 reactions/ }));
+    expect(reasonOf('Open family')).toBe('an arrow is selected: use Open, or select a family');
+    fireEvent.click(button('Open'));
+    expect(app.navigator.ui.family.getState().open).toBe('cls_alcohols');
+    expect(app.navigator.ui.family.getState().target).toEqual({ section: 'reactions_of', hubId: 'cls_aldehydes' });
+  });
+
+  it('a double click on a hub opens its page and adds no node to the drawing', async () => {
     const app = await opened();
     const before = symbols();
     fireEvent.doubleClick(hub('Aldehydes'));
-    await waitFor(() => expect(symbols()).toBeGreaterThan(before));
-    expect(app.navigator.ui.expansion.getState().isExpanded('cls_aldehydes')).toBe(true);
-    fireEvent.doubleClick(hub('Aldehydes'));
-    await waitFor(() => expect(symbols()).toBe(before));
+    expect(app.navigator.ui.family.getState().open).toBe('cls_aldehydes');
     expect(app.navigator.ui.expansion.getState().isExpanded('cls_aldehydes')).toBe(false);
+    expect(before).toBeGreaterThan(0);
   });
 
-  it('the toolbar expands and collapses the selected hub', async () => {
+  it('a selection that is not a family says so', async () => {
     await opened();
-    const before = symbols();
-    fireEvent.click(hub('Aldehydes'));
-    fireEvent.click(button('Expand'));
-    await waitFor(() => expect(symbols()).toBeGreaterThan(before));
-    expect(reasonOf('Expand')).toBe('this hub is already expanded');
-    fireEvent.click(button('Collapse'));
-    await waitFor(() => expect(symbols()).toBe(before));
-  });
-
-  it('a selected member is not a hub: both buttons say so', async () => {
-    await opened();
-    fireEvent.doubleClick(hub('Aldehydes'));
-    const member = await screen.findByRole('graphics-symbol', { name: /^Ethanal, species, member of a hub/ });
-    fireEvent.click(member);
-    expect(reasonOf('Expand')).toBe('the selection is not a hub');
-    expect(reasonOf('Collapse')).toBe('the selection is not a hub');
-  });
-
-  it('a selection that leaves the drawing is cleared, and the app log says so', async () => {
-    const app = await opened();
-    fireEvent.doubleClick(hub('Aldehydes'));
-    fireEvent.click(await screen.findByRole('graphics-symbol', { name: /^Ethanal, species, member of a hub/ }));
-    fireEvent.doubleClick(hub('Aldehydes'));
-    await waitFor(() => expect(within(inspector()).getByText('Nothing is selected.')).toBeTruthy());
-    expect(app.navigator.logs.some((line) => line.type === 'selection_cleared')).toBe(true);
+    fireEvent.click(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 3 reactions/ }));
+    expect(button('Open family').getAttribute('aria-disabled')).toBe('true');
   });
 });
 
 describe('the saved view', () => {
-  it('saves the selection and the expansion once, after the debounce', async () => {
+  it('saves the selection and the open family once, after the debounce', async () => {
     const app = await opened();
     fireEvent.click(hub('Aldehydes'));
-    fireEvent.doubleClick(hub('Aldehydes'));
+    fireEvent.click(button('Open family'));
     expect(app.navigator.uiSaves).toHaveLength(0);
     act(() => app.navigator.timers.advance(299));
     expect(app.navigator.uiSaves).toHaveLength(0);
     act(() => app.navigator.timers.advance(1));
     await waitFor(() => expect(app.navigator.uiSaves).toHaveLength(1));
-    expect(saved(app)).toMatchObject({ selected: { kind: 'node', id: 'cls_aldehydes' }, expanded: [{ nodeId: 'cls_aldehydes', direction: 'both' }] });
+    expect(saved(app)).toMatchObject({ selected: { kind: 'node', id: 'cls_aldehydes' }, openFamily: 'cls_aldehydes', expanded: [] });
   });
 
-  it('comes back in a new window: the hub is selected and expanded', async () => {
+  it('comes back in a new window: the hub is selected and its family page is open', async () => {
     const first = await opened();
     fireEvent.click(hub('Aldehydes'));
-    fireEvent.doubleClick(hub('Aldehydes'));
+    fireEvent.click(button('Open family'));
     act(() => first.navigator.timers.advance(300));
     await waitFor(() => expect(first.navigator.uiSaves).toHaveLength(1));
-    const grown = symbols();
     cleanup();
-    const second = await opened(fakeApp({ state: demoState(), navigator: { uiPort: { stored: saved(first) } } }));
-    await waitFor(() => expect(symbols()).toBe(grown));
-    expect(within(inspector()).getByText(/^Selected: Aldehydes, class hub/)).toBeTruthy();
-    expect(second.navigator.ui.expansion.getState().isExpanded('cls_aldehydes')).toBe(true);
+    const second = fakeApp({ state: demoState(), navigator: { uiPort: { stored: saved(first) } } });
+    renderWithApp(second);
+    expect(await screen.findByRole('region', { name: /^Family page/ })).toBeTruthy();
+    expect(second.navigator.ui.family.getState().open).toBe('cls_aldehydes');
+    expect(second.navigator.ui.selection.getState().selected).toEqual({ kind: 'node', id: 'cls_aldehydes' });
   });
 
   it('a read-only tab keeps its values and writes nothing, and says so', async () => {
@@ -171,11 +162,14 @@ describe('the saved view', () => {
     expect(app.navigator.logs.some((line) => line.type === 'ui_state_reset')).toBe(true);
   });
 
-  it('an expansion entry that names no hub is removed, logged, and the removal is saved', async () => {
+  it('a saved expansion is ignored, removed once, logged, and the removal is saved', async () => {
     const app = await opened(fakeApp({ state: demoState(), navigator: { uiPort: { stored: { expanded: [{ nodeId: 'cls_aldehydes', direction: 'both' }, { nodeId: 'gone', direction: 'both' }] } } } }));
-    await waitFor(() => expect(app.navigator.ui.expansion.getState().expansion.expanded).toEqual([{ nodeId: 'cls_aldehydes', direction: 'both' }]));
-    expect(app.navigator.logs.find((line) => line.type === 'expansion_pruned')?.message).toContain('gone');
+    expect(app.navigator.ui.expansion.getState().expansion.expanded).toEqual([]);
+    expect(app.navigator.logs.filter((line) => line.type === 'ui_state_expansion_removed')).toHaveLength(1);
+    expect(app.navigator.logs.find((line) => line.type === 'ui_state_expansion_removed')?.message).toContain('2 entries');
     act(() => app.navigator.timers.advance(300));
-    await waitFor(() => expect(saved(app)?.expanded).toEqual([{ nodeId: 'cls_aldehydes', direction: 'both' }]));
+    await waitFor(() => expect(saved(app)?.expanded).toEqual([]));
+    // the drawing has hubs only
+    expect(screen.queryAllByRole('graphics-symbol', { name: /member of a hub/ })).toHaveLength(0);
   });
 });

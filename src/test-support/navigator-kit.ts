@@ -7,7 +7,7 @@ import type { StoreHandle } from '@/core/commands';
 import { createDerivedIndexes } from '@/app/services/derived-indexes';
 import { layoutFallback } from '@/layout';
 import type { LayoutRequest } from '@/layout/contracts';
-import type { NavigatorPorts } from '@/features/navigator';
+import type { NavigatorDepictions, NavigatorPorts } from '@/features/navigator';
 import { createNavigatorUi, type NavigatorUi, type NavigatorUiPort, type NavigatorUiStores } from '@/ui/state';
 import type { LayoutOutcome, LayoutService } from '@/workers/layout';
 import { fakeMeasurer } from './scene-kit';
@@ -69,6 +69,42 @@ export function manualTimers(): ManualTimers {
   };
 }
 
+/** A depiction port that answers a tiny SVG at once and records what was asked for and what was cancelled (step 5.5b). */
+export interface FakeDepictions extends NavigatorDepictions {
+  readonly asked: string[];
+  readonly cancelled: string[];
+  readonly urls: string[];
+  /** Keys answered with a failure (`unavailable`) instead of an SVG. */
+  readonly failing: Set<string>;
+}
+
+export function fakeDepictions(): FakeDepictions {
+  const asked: string[] = [];
+  const cancelled: string[] = [];
+  const urls: string[] = [];
+  const failing = new Set<string>();
+  const keyOf: NavigatorDepictions['keyOf'] = (structure, size) => `${structure.format}:${structure.value}@${size.width}x${size.height}`;
+  return {
+    asked,
+    cancelled,
+    urls,
+    failing,
+    keyOf,
+    depict: (structure, size) => {
+      const key = keyOf(structure, size);
+      asked.push(key);
+      return Promise.resolve(failing.has(key) ? { ok: false, reason: 'unavailable', message: 'no structure' } : { ok: true, svg: '<svg xmlns="http://www.w3.org/2000/svg"/>' });
+    },
+    cancel: (key) => void cancelled.push(key),
+    createUrl: () => {
+      const url = `blob:fake-${urls.length}`;
+      urls.push(url);
+      return url;
+    },
+    revokeUrl: () => undefined,
+  };
+}
+
 export interface NavigatorRig {
   readonly ports: NavigatorPorts;
   readonly layout: FakeLayout;
@@ -81,10 +117,12 @@ export interface NavigatorRig {
   readonly logs: { type: string; message: string }[];
   /** How many times `indexes.current()` was asked for. */
   readonly indexAsks: () => number;
+  /** The depiction port, when the rig was made with `depictions: true`. */
+  readonly depictions: FakeDepictions | undefined;
 }
 
 /** Ports over a real store, with the fakes above; the indexes are the app's own `DerivedIndexes` service over that store. */
-export function navigatorRig(store: StoreHandle, options: { measurerReady?: Promise<void>; uiPort?: Partial<NavigatorUiPort> } = {}): NavigatorRig {
+export function navigatorRig(store: StoreHandle, options: { measurerReady?: Promise<void>; uiPort?: Partial<NavigatorUiPort>; depictions?: boolean } = {}): NavigatorRig {
   const derived = createDerivedIndexes({ store, clock: { nowMs: () => 0 } });
   const layout = fakeLayout();
   const timers = manualTimers();
@@ -98,6 +136,7 @@ export function navigatorRig(store: StoreHandle, options: { measurerReady?: Prom
   );
   const ui = uiPersistence.stores;
   let asks = 0;
+  const depictions = options.depictions === true ? fakeDepictions() : undefined;
   const ports: NavigatorPorts = {
     store,
     indexes: { current: () => ((asks += 1), derived.current()) },
@@ -107,6 +146,7 @@ export function navigatorRig(store: StoreHandle, options: { measurerReady?: Prom
     ui,
     uiStatus: uiPersistence.status,
     log,
+    ...(depictions === undefined ? {} : { depictions }),
   };
-  return { ports, layout, timers, ui, uiPersistence, uiSaves, logs, indexAsks: () => asks };
+  return { ports, layout, timers, ui, uiPersistence, uiSaves, logs, indexAsks: () => asks, depictions };
 }

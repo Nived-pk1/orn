@@ -1,6 +1,6 @@
 /**
- * The navigator's saved UI state (step 5.5a part 2; PERSISTENCE §12): selection, expansion and the viewport per view, ONE `uiState`
- * entry `navigator`, written through a port that `src/app` provides (as the panels store does). Filters and the active exam version are
+ * The navigator's saved UI state (step 5.5a part 2; PERSISTENCE §12): selection, the viewport per view and (step 5.5b) the open family,
+ * ONE `uiState` entry `navigator`. A saved expansion is read, IGNORED and removed once (ADR-037: the overview no longer expands), written through a port that `src/app` provides (as the panels store does). Filters and the active exam version are
  * NOT saved: they stay in memory with their defaults until step 5.8 gives them a control.
  *  - Reading is tolerant: each part is checked by itself, an unusable part falls back to its default and is named in `resetFields`
  *    (never fatal, never silent); fields this version does not know are kept and written back.
@@ -14,6 +14,7 @@ import { VIEW_KEYS, type ViewKey } from '@/core/schema';
 import {
   createActiveExamStore,
   createExpansionStore,
+  createFamilyStore,
   createFiltersStore,
   createSelectionStore,
   createViewportsStore,
@@ -29,7 +30,7 @@ export const NAVIGATOR_UI_KEY = 'navigator';
 export const MAX_SAVED_EXPANDED = 1_000;
 const MAX_ID_LENGTH = 512;
 const MAX_COORDINATE = 1e7;
-const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports']);
+const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily']);
 
 /** The same shape as the panels port: the stored entry, whether this tab writes, and the write. */
 export type NavigatorUiPort = PanelsPort;
@@ -38,6 +39,8 @@ export interface ParsedNavigatorUi {
   readonly selected: Selected | null;
   readonly expansion: ExpansionState;
   readonly views: Readonly<Partial<Record<ViewKey, SavedViewport>>>;
+  /** The family page that was open (a hub ID), or null: the overview. */
+  readonly openFamily: string | null;
   /** Parts that were present but unusable (reset to their defaults). A missing part is not damage. */
   readonly damaged: readonly string[];
   readonly extra: Readonly<Record<string, unknown>>;
@@ -60,7 +63,7 @@ function parseExpanded(value: unknown): ExpansionState['expanded'] | undefined {
 }
 
 export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
-  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, damaged: [], extra: {} };
+  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, damaged: [], extra: {} };
   if (raw === undefined) return empty;
   if (!isRecord(raw)) return { ...empty, damaged: ['navigator'] };
   const damaged: string[] = [];
@@ -82,6 +85,11 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     if (Array.isArray(c) && c.length <= MAX_SAVED_EXPANDED && c.every(isId)) collapsedEdgeIds = c as string[];
     else damaged.push('collapsedEdgeIds');
   }
+  let openFamily: string | null = null;
+  if (raw.openFamily !== undefined && raw.openFamily !== null) {
+    if (isId(raw.openFamily)) openFamily = raw.openFamily;
+    else damaged.push('openFamily');
+  }
   const views: Partial<Record<ViewKey, SavedViewport>> = {};
   const v = raw.viewports;
   if (v !== undefined) {
@@ -94,7 +102,7 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     } else damaged.push('viewports');
   }
   const extra = Object.fromEntries(Object.entries(raw).filter(([key]) => !KNOWN.has(key)));
-  return { selected, expansion: { expanded, collapsedEdgeIds }, views, damaged, extra };
+  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, damaged, extra };
 }
 
 export interface NavigatorUiStatus {
@@ -117,15 +125,19 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
   const mode = port.mode();
   const stores: NavigatorUiStores = {
     selection: createSelectionStore(parsed.selected),
-    expansion: createExpansionStore(parsed.expansion),
+    // ADR-037: the overview does not expand; a saved expansion is ignored (and written back empty below).
+    expansion: createExpansionStore(),
     filters: createFiltersStore(),
     exam: createActiveExamStore(),
     viewports: createViewportsStore(parsed.views),
+    family: createFamilyStore(parsed.openFamily),
   };
   const status = createStore<NavigatorUiStatus>(() => ({
     persistence: mode === 'read_only' ? { kind: 'read_only' } : mode === 'session_only' ? { kind: 'session_only' } : { kind: 'saved' },
     resetFields: parsed.damaged,
   }));
+  const removedExpansion = parsed.expansion.expanded.length + parsed.expansion.collapsedEdgeIds.length;
+  if (removedExpansion > 0) log('ui_state_expansion_removed', `the saved expansion (${removedExpansion} ${removedExpansion === 1 ? 'entry' : 'entries'}) was removed: the overview no longer expands hubs`);
   if (parsed.damaged.length > 0) log('ui_state_reset', `the saved navigator state was damaged and was reset: ${parsed.damaged.join(', ')}`);
   let cancel: (() => void) | undefined;
   let pending = false;
@@ -138,8 +150,9 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { selected } = stores.selection.getState();
     const { expansion } = stores.expansion.getState();
     const { views } = stores.viewports.getState();
+    const { open } = stores.family.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -163,7 +176,9 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     });
   }
 
-  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule)];
+  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule)];
+  // The removed expansion is written back empty, once.
+  if (removedExpansion > 0) schedule();
   return {
     stores,
     status,

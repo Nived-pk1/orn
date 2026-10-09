@@ -1,15 +1,15 @@
 /**
- * The navigator on screen (step 5.5a): a toolbar (Zoom in, Zoom out, Fit, Expand, Collapse) over the interactive drawing. It renders
- * what the model says: the Scene; a plain error with its code; a skeleton only when there is no Scene yet and 300 ms have passed.
- * ONE delegated click listener lives on the drawing's svg: a click selects the node or edge under it, empty canvas clears; a double click
- * on a hub expands or collapses it. After a toggle the viewport is shifted so the hub stays at the same screen point (no refit).
+ * The navigator overview on screen (step 5.5a, calmed in 5.5b; ADR-037): a toolbar (Zoom in, Zoom out, Fit, Open family, and Open for a
+ * selected arrow) over the interactive drawing. It renders what the model says: the Scene; a plain error with its code; a skeleton only
+ * when there is no Scene yet and 300 ms have passed. ONE delegated click listener lives on the drawing's svg: a click selects the node
+ * or edge under it, empty canvas clears; a double click on a family opens its page. The overview does not expand hubs.
  * The layer commit count is written to a data attribute by hand (no React state) so a test can prove pan and zoom render nothing.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
-import { keepScreenPoint, toScreen, ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
-import type { Scene, SceneNode } from '@/render/scene';
+import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
+import type { Scene } from '@/render/scene';
 import { Button, Skeleton } from '@/ui/primitives';
 import { depictionBindingOf } from './depictions';
 import { useNavigator, useNavigatorState } from './navigator-context';
@@ -20,14 +20,11 @@ const NO_IDS: ReadonlySet<string> = new Set();
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
 
-const centreOf = (node: SceneNode): { readonly x: number; readonly y: number } => ({ x: node.x + node.width / 2, y: node.y + node.height / 2 });
-
-/** Why Expand or Collapse cannot act now, or undefined when it can. */
-export function toggleReason(action: 'expand' | 'collapse', selectedHub: string | undefined, expanded: boolean, selected: boolean): string | undefined {
-  if (!selected) return 'select a hub first';
-  if (selectedHub === undefined) return 'the selection is not a hub';
-  if (action === 'expand' && expanded) return 'this hub is already expanded';
-  if (action === 'collapse' && !expanded) return 'this hub is not expanded';
+/** Why Open family cannot act now, or undefined when it can. */
+export function openFamilyReason(selected: { readonly kind: 'node' | 'edge' } | null, isFamily: boolean): string | undefined {
+  if (selected === null) return 'select a family first';
+  if (selected.kind === 'edge') return 'an arrow is selected: use Open, or select a family';
+  if (!isFamily) return 'the selection is not a family';
   return undefined;
 }
 
@@ -35,11 +32,9 @@ export function NavigatorCanvas() {
   const { ports } = useNavigator();
   const state = useNavigatorState();
   const selected = useStore(ports.ui.selection, (s) => s.selected);
-  const expandedIds = useStore(ports.ui.expansion, (s) => s.expansion.expanded);
   const [controller, setController] = useState<ViewportController | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const commits = useRef(0);
-  const anchor = useRef<{ readonly id: string; readonly screen: { readonly x: number; readonly y: number } } | null>(null);
   // Written imperatively: a layer that commits bumps a data attribute, React state is not involved.
   const onLayerCommit = useCallback((_layer: LayerName): void => {
     commits.current += 1;
@@ -55,40 +50,22 @@ export function NavigatorCanvas() {
   const depictions = useMemo(() => depictionBindingOf(ports)?.manager, [ports]);
   const hubs = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
   const isHub = useCallback((id: string): boolean => state.hubIds.includes(id), [state.hubIds]);
-
-  const toggle = useCallback(
-    (id: string): void => {
-      const current = sceneRef.current;
-      const node = current?.nodes.find((n) => n.id === id);
-      const view = controllerRef.current?.current();
-      anchor.current = node === undefined || view === undefined ? null : { id, screen: toScreen(view, centreOf(node)) };
-      ports.ui.expansion.getState().toggle(id);
-    },
-    [ports],
-  );
-
-  // The toggled hub stays at the same screen point: shift the viewport once the new Scene is in (no refit).
-  useEffect(() => {
-    const pending = anchor.current;
-    if (pending === null || scene === null || controller === null) return;
-    const node = scene.nodes.find((n) => n.id === pending.id);
-    anchor.current = null;
-    if (node !== undefined) controller.setViewport(keepScreenPoint(controller.current().scale, centreOf(node), pending.screen));
-  }, [scene, controller]);
+  const openFamily = useCallback((hubId: string): void => ports.ui.family.getState().openFamily(hubId), [ports]);
 
   const onSceneClick = useCallback((hit: SceneHit | null): void => ports.ui.selection.getState().select(hit), [ports]);
   const onSceneDoubleClick = useCallback(
     (hit: SceneHit | null): void => {
-      if (hit !== null && hit.kind === 'node' && isHub(hit.id)) toggle(hit.id);
+      if (hit !== null && hit.kind === 'node' && isHub(hit.id)) openFamily(hit.id);
     },
-    [isHub, toggle],
+    [isHub, openFamily],
   );
   const onSettled = useCallback((view: Viewport): void => ports.ui.viewports.getState().setViewport(VIEW, view), [ports]);
 
   const selectedHub = selected !== null && selected.kind === 'node' && isHub(selected.id) ? selected.id : undefined;
-  const isExpanded = selectedHub !== undefined && expandedIds.some((entry) => entry.nodeId === selectedHub);
-  const expandReason = toggleReason('expand', selectedHub, isExpanded, selected !== null);
-  const collapseReason = toggleReason('collapse', selectedHub, isExpanded, selected !== null);
+  const openReason = openFamilyReason(selected, selectedHub !== undefined);
+  // An arrow opens its source family at the target's group (reactions of the source, the group "To <target>").
+  const selectedArrow = selected !== null && selected.kind === 'edge' && scene !== null ? scene.edges.find((edge) => edge.id === selected.id) : undefined;
+  const arrowOpens = selectedArrow !== undefined && isHub(selectedArrow.from) && isHub(selectedArrow.to) ? selectedArrow : undefined;
   const nothing = scene === null ? { unavailable: NOTHING_DRAWN } : {};
   return (
     <div className={styles.canvas} ref={root} data-layer-commits="0">
@@ -102,12 +79,17 @@ export function NavigatorCanvas() {
         <Button onClick={() => controller?.fit()} {...nothing}>
           Fit
         </Button>
-        <Button onClick={() => selectedHub !== undefined && toggle(selectedHub)} {...(scene === null ? nothing : expandReason === undefined ? {} : { unavailable: expandReason })}>
-          Expand
+        <Button onClick={() => selectedHub !== undefined && openFamily(selectedHub)} {...(scene === null ? nothing : openReason === undefined ? {} : { unavailable: openReason })}>
+          Open family
         </Button>
-        <Button onClick={() => selectedHub !== undefined && toggle(selectedHub)} {...(scene === null ? nothing : collapseReason === undefined ? {} : { unavailable: collapseReason })}>
-          Collapse
-        </Button>
+        {selectedArrow === undefined ? null : (
+          <Button
+            onClick={() => arrowOpens !== undefined && ports.ui.family.getState().openFamily(arrowOpens.from, { section: 'reactions_of', hubId: arrowOpens.to })}
+            {...(arrowOpens === undefined ? { unavailable: 'the arrow does not run between two families' } : {})}
+          >
+            Open
+          </Button>
+        )}
         <NavigatorSelection />
       </div>
       <div className={styles.drawing} aria-busy={state.working}>

@@ -14,6 +14,7 @@ export { usePanels } from './use-panels';
 export {
   createActiveExamStore,
   createExpansionStore,
+  createFamilyStore,
   createFiltersStore,
   createNavigatorUiStores,
   createSelectionStore,
@@ -27,6 +28,9 @@ export type {
   ActiveExamStore,
   ExpansionStore,
   ExpansionStoreState,
+  FamilyState,
+  FamilyStore,
+  FamilyTarget,
   FiltersState,
   FiltersStore,
   NavigatorUiStores,

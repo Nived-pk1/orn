@@ -1,17 +1,12 @@
 /**
- * Expansion against the REAL layout worker code in process (step 5.5a: part 2 item k, re-measured after part 1 item b): the demo's
- * navigator is laid out by ELK (the layout worker handlers over the ELK engine), each hub is expanded in turn from a fresh model, and
- * the other hubs are compared with the FIRST SHOWN layout: a hub's layer is its rank among the distinct x positions of the hubs, its
- * order is its rank by y inside its layer.
+ * The layout of the demo overview against the REAL layout worker code in process (step 5.5a part 2 item k, changed in 5.5b).
  *
  * What is measured, said as it is: the first shown layout is already the second answer (the pipeline asks once more with the first
- * result as previous positions), so the first interaction does not move the view, and a layout of the same graph given the shown one
- * as previous is the same layout. Expanding a hub that adds members can still change the layer of other hubs, and a collapse restores
- * every layer and the node count but not always the order inside a layer. Asserted: an expansion that adds no node changes no other
- * hub; a collapse restores every hub's layer and the node count; at least 4 of the 16 expansions leave every other hub's layer alone
- * (6 measured; 11 of 15 before edge labels and orthogonal routing).
+ * result as previous positions). With arrow text (before 5.5b) a layout of the same graph given the shown one as previous was the same
+ * layout; on the calm overview (no arrow text, ADR-037) it settles within a few asks. The 5.5a test that expanded each hub in turn and
+ * compared layers is REMOVED with the expansion it measured: the overview no longer expands, the 5.5a carry item (b) "expansion
+ * stability" is closed (docs/PROGRESS.md, "Step 5.5a review and navigator redesign").
  */
-import { writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createCanonicalStore } from '@/core/commands';
 import { createNavigatorModel, type NavigatorModel } from '@/features/navigator/pipeline';
@@ -33,26 +28,7 @@ async function idle(model: NavigatorModel): Promise<void> {
   for (let i = 0; i < 600 && model.getState().working; i += 1) await new Promise<void>((resolve) => setTimeout(resolve, 50));
 }
 
-interface Frame {
-  readonly positions: ReadonlyMap<string, string>;
-  readonly layerOf: ReadonlyMap<string, number>;
-  readonly orderOf: ReadonlyMap<string, number>;
-  readonly size: number;
-}
-
-function frameOf(scene: Scene, hubs: readonly string[]): Frame {
-  const at = new Map(scene.nodes.map((n) => [n.id, n]));
-  const xs = [...new Set(hubs.map((h) => Math.round(at.get(h)?.x ?? 0)))].sort((a, b) => a - b);
-  const layerOf = new Map(hubs.map((h) => [h, xs.indexOf(Math.round(at.get(h)?.x ?? 0))] as const));
-  const orderOf = new Map<string, number>();
-  for (let layer = 0; layer < xs.length; layer += 1) {
-    const inLayer = hubs.filter((h) => layerOf.get(h) === layer).sort((a, b) => (at.get(a)?.y ?? 0) - (at.get(b)?.y ?? 0));
-    inLayer.forEach((h, i) => orderOf.set(h, i));
-  }
-  return { positions: new Map(scene.nodes.map((n) => [n.id, `${n.x},${n.y}`] as const)), layerOf, orderOf, size: scene.nodes.length };
-}
-
-describe('expanding each hub of the demo, real ELK in process', () => {
+describe('the demo overview, real ELK in process', () => {
   async function fresh() {
     const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
     const rig = navigatorRig(store);
@@ -63,58 +39,25 @@ describe('expanding each hub of the demo, real ELK in process', () => {
     const model = createNavigatorModel(rig.ports);
     model.start();
     await idle(model);
-    const toggle = async (id: string): Promise<void> => {
-      rig.ui.expansion.getState().toggle(id);
-      await idle(model);
-    };
-    return { model, toggle, rig };
+    return { model, rig };
   }
 
-  it('the first shown layout is stable: the layout of the same graph given it as previous is the same', async () => {
+  it('the layout settles: asking again with the shown positions as previous reaches a fixed layout within 4 asks', async () => {
+    // Changed 2026-10-09 (step 5.5b, ADR-037): the overview has no arrow text, so only the count chips are labels, and the first shown
+    // layout (the second answer) is no longer a fixed point of "ask again with it as previous" (it was with labels). Nothing asks again
+    // on the overview now (no expansion); this bounds what a later relayout (an edit of the dataset) can do: it settles in a few asks.
     const { model, rig } = await fresh();
     expect(rig.layout.requests).toHaveLength(2);
     const shown = model.getState().scene as Scene;
-    const again = await handlers.layout({ ...(rig.layout.requests[1] as never as LayoutRequest), previous: Object.fromEntries(shown.nodes.map((n) => [n.id, { x: n.x, y: n.y }])) }, ctx);
-    for (const n of shown.nodes) expect(again.positions[n.id], n.id).toEqual({ x: n.x, y: n.y });
+    let previous: Record<string, { x: number; y: number }> = Object.fromEntries(shown.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    let settledAt = -1;
+    for (let ask = 1; ask <= 4 && settledAt < 0; ask += 1) {
+      const answer = await handlers.layout({ ...(rig.layout.requests[1] as never as LayoutRequest), previous }, ctx);
+      const moved = shown.nodes.filter((n) => JSON.stringify(answer.positions[n.id]) !== JSON.stringify(previous[n.id])).length;
+      if (moved === 0) settledAt = ask;
+      previous = answer.positions as Record<string, { x: number; y: number }>;
+    }
+    expect(settledAt).toBeGreaterThan(0);
     model.stop();
   }, 60_000);
-
-  it('an expansion that adds no node moves no other hub; a collapse restores every layer; some expansions leave every layer alone', async () => {
-    const report: string[] = [];
-    let leavingLayersAlone = 0;
-    let addedNothing = 0;
-    let collapsedBack = 0;
-    const hubs = (await fresh().then(async (f) => (f.model.stop(), f.model.getState().hubIds))) as readonly string[];
-    expect(hubs).toHaveLength(16);
-    for (const hub of hubs) {
-      const { model, toggle } = await fresh();
-      const base = frameOf(model.getState().scene as Scene, hubs);
-      await toggle(hub);
-      const after = frameOf(model.getState().scene as Scene, hubs);
-      const others = hubs.filter((h) => h !== hub);
-      const layerChanged = others.filter((h) => after.layerOf.get(h) !== base.layerOf.get(h)).length;
-      const orderChanged = others.filter((h) => after.layerOf.get(h) === base.layerOf.get(h) && after.orderOf.get(h) !== base.orderOf.get(h)).length;
-      if (layerChanged === 0) leavingLayersAlone += 1;
-      if (after.size === base.size) {
-        addedNothing += 1;
-        expect({ hub, layerChanged, orderChanged }).toEqual({ hub, layerChanged: 0, orderChanged: 0 });
-      }
-      await toggle(hub);
-      const back = frameOf(model.getState().scene as Scene, hubs);
-      expect({ hub, size: back.size }).toEqual({ hub, size: base.size });
-      if ([...back.layerOf].every(([id, layer]) => base.layerOf.get(id) === layer)) collapsedBack += 1;
-      const ordersBack = hubs.filter((h) => back.orderOf.get(h) !== base.orderOf.get(h)).length;
-      report.push(`${hub}: adds ${after.size - base.size} nodes, layer of ${layerChanged} other hubs, order of ${orderChanged}; after collapse ${ordersBack} hubs in another place`);
-      model.stop();
-    }
-    if (process.env.ORN_REPORT !== undefined) writeFileSync(process.env.ORN_REPORT, report.join(String.fromCharCode(10)));
-    expect(addedNothing).toBeGreaterThan(0);
-    // Measured 6 of 16 with edge labels and orthogonal routing (part 2 of the earlier session measured 11 of 15 without labels): the
-    // label layers change the layering. A guard against it getting worse, not a goal (PROGRESS, REVIEW REQUIRED).
-    expect(leavingLayersAlone).toBeGreaterThanOrEqual(4);
-    // Changed 2026-10-09 (condition wording, step 5.5a review follow-up a: wider edge labels): a collapse restored every layer for all 16
-    // hubs before; now Alcohols comes back with other layers. The overview no longer expands (ADR-037), so this is a guard against it
-    // getting worse, not a goal.
-    expect(collapsedBack).toBeGreaterThanOrEqual(12);
-  }, 240_000);
 });

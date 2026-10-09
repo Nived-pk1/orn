@@ -100,7 +100,45 @@ describe('createNavigatorUi', () => {
       expanded: [{ nodeId: 'a', direction: 'both' }],
       collapsedEdgeIds: [],
       viewports: { navigator: { x: 1, y: 2, scale: 3 } },
+      openFamily: null,
     });
+  });
+
+  it('writes the open family; closing it writes null (step 5.5b)', async () => {
+    const t = timers();
+    const { value, saves } = port();
+    const ui = createNavigatorUi(value, t);
+    ui.stores.family.getState().openFamily('cls_alcohols', { section: 'reactions_of', hubId: 'cls_ethers' });
+    await ui.flush();
+    expect(saves.at(-1)).toMatchObject({ openFamily: 'cls_alcohols' });
+    expect(JSON.stringify(saves.at(-1))).not.toContain('cls_ethers');
+    ui.stores.family.getState().closeFamily();
+    await ui.flush();
+    expect(saves.at(-1)).toMatchObject({ openFamily: null });
+  });
+
+  it('reads the open family back; an unusable one is damaged, not fatal', () => {
+    expect(createNavigatorUi(port({ stored: { openFamily: 'cls_alcohols' } }).value, timers()).stores.family.getState().open).toBe('cls_alcohols');
+    expect(parseNavigatorUi({ openFamily: 7 })).toMatchObject({ openFamily: null, damaged: ['openFamily'] });
+    expect(parseNavigatorUi({ openFamily: '' })).toMatchObject({ openFamily: null, damaged: ['openFamily'] });
+    expect(parseNavigatorUi({ openFamily: null })).toMatchObject({ openFamily: null, damaged: [] });
+  });
+
+  it('a saved expansion is ignored, removed once, logged, and written back empty (ADR-037)', async () => {
+    const logs: { type: string; message: string }[] = [];
+    const t = timers();
+    const { value, saves } = port({ stored: { selected: null, expanded: [{ nodeId: 'a', direction: 'both' }], collapsedEdgeIds: ['e'], openFamily: null } });
+    const ui = createNavigatorUi(value, t, (type, message) => void logs.push({ type, message }));
+    expect(ui.stores.expansion.getState().expansion).toEqual({ expanded: [], collapsedEdgeIds: [] });
+    expect(logs.filter((l) => l.type === 'ui_state_expansion_removed')).toHaveLength(1);
+    expect(t.waiting()).toBe(true);
+    t.fire();
+    await Promise.resolve();
+    expect(saves[0]).toMatchObject({ expanded: [], collapsedEdgeIds: [] });
+    // nothing saved to remove: no log, no write
+    const again = createNavigatorUi(port({ stored: { expanded: [] } }).value, timers(), (type) => void logs.push({ type, message: '' }));
+    expect(again.stores.expansion.getState().expansion.expanded).toEqual([]);
+    expect(logs.filter((l) => l.type === 'ui_state_expansion_removed')).toHaveLength(1);
   });
 
   it('a change that sets the same value schedules no write', () => {
