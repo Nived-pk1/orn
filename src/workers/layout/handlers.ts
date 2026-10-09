@@ -8,6 +8,7 @@
  */
 import { LayoutEngineUnavailable } from '@/layout/errors';
 import { layoutFallback } from '@/layout/fallback';
+import { layoutGrid } from '@/layout/grid';
 import { checkRequest } from '@/layout/validate';
 import type { LayoutEngine, LayoutRequest, LayoutResult } from '@/layout/contracts';
 import type { FallbackReason } from '@/layout/contracts';
@@ -28,6 +29,10 @@ export function createLayoutHandlers(engine: LayoutEngine, clock: () => number):
     const result = layoutFallback(request, reason, () => clock() - began);
     return extra.length === 0 ? result : { ...result, notes: [...result.notes, ...extra].sort() };
   };
+  const grid = (request: LayoutRequest): LayoutResult => {
+    const began = clock();
+    return layoutGrid(request, () => clock() - began);
+  };
   return {
     async warmUp() {
       const began = clock();
@@ -40,6 +45,7 @@ export function createLayoutHandlers(engine: LayoutEngine, clock: () => number):
     },
     async layout(params, ctx) {
       const request = checked(params);
+      if (request.algorithm === 'grid') return grid(request);
       try {
         return await engine.layout(request, ctx.signal);
       } catch (error) {
@@ -50,7 +56,9 @@ export function createLayoutHandlers(engine: LayoutEngine, clock: () => number):
     },
     async layoutFallback(params) {
       if (typeof params !== 'object' || params === null || !REASONS.includes(params.reason)) throw new RpcHostError('BAD_REQUEST', 'reason must be timeout, elk_error or engine_unavailable');
-      return fallback(checked(params.request), params.reason);
+      const request = checked(params.request);
+      // a grid request never needs ELK: whatever the reason, the answer is the grid layout
+      return request.algorithm === 'grid' ? grid(request) : fallback(request, params.reason);
     },
   };
 }

@@ -5,5 +5,6 @@ export type { RequestProblem } from './validate';
 export { layoutCacheKey } from './cache-key';
 export { LruCache } from './lru';
 export { createFallbackEngine, layoutFallback, SWEEPS } from './fallback';
+export { layoutGrid } from './grid';
 export { createElkEngine, loadElk } from './elk';
 export type { ElkEngineOptions, ElkLike, ElkGraph } from './elk';

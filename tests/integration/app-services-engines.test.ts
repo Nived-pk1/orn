@@ -227,6 +227,21 @@ describe('engine state and retryEngine (decision 3 of the step 5.0 review: only 
     expect(services.status.get().engines.layout.state).toBe('ready');
   });
 
+  it('the grid layout (step 5.5c) is a layout of its own: no notice when it has no notes, the notes when it has some, never "fallback layout"', async () => {
+    const { services } = await boot();
+    const cells = (nodes: readonly string[]) => nodes.map((id, index) => ({ id, width: 80, height: 40, cell: { column: index, row: 0 } }));
+    const clean = { ...request({ nodes: ['a', 'b'], edges: [['a', 'b']] }), algorithm: 'grid' as const };
+    const gridClean = { ...clean, nodes: cells(['a', 'b']) };
+    expect(await services.layout.layout('g', gridClean)).toMatchObject({ ok: true, result: { engine: 'grid' } });
+    expect(services.status.get().layoutNotice).toBeNull();
+    expect(services.log.get().filter((e) => e.source === 'app' && e.event.type === 'layout_notice')).toHaveLength(0);
+    const shared = { ...clean, nodes: [{ id: 'a', width: 80, height: 40, cell: { column: 0, row: 0 } }, { id: 'b', width: 80, height: 40, cell: { column: 0, row: 0 } }] };
+    expect(await services.layout.layout('g', shared)).toMatchObject({ ok: true, result: { engine: 'grid' } });
+    const notice = services.status.get().layoutNotice;
+    expect(notice).toContain('cell holds more than one box');
+    expect(notice).not.toContain('fallback');
+  });
+
   it('layout notes (stress over the limit) are reported once; a cached repeat is not reported again', async () => {
     const { services } = await boot();
     const many = request({ nodes: Array.from({ length: 45 }, (_, i) => `n${String(i).padStart(2, '0')}`), algorithm: 'stress' });

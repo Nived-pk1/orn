@@ -6,8 +6,9 @@
  */
 import { memo } from 'react';
 import type { LodLevel, Scene, SceneNode } from '@/render/scene';
+import type { DefIds } from './defs';
 import type { DepictionSource, DepictionStatus, LayerName } from './contracts';
-import { BOX_DASH, HUB_RULE_WIDTH, structureArea, visibleAt } from './geometry';
+import { BOX_DASH, HUB_RADIUS, HUB_RULE_WIDTH, structureArea, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
 import { plainText } from './text';
 import { useCommitProbe } from './use-commit-probe';
@@ -19,17 +20,18 @@ export const wantedDepiction = (node: SceneNode, lod: LodLevel): string | undefi
 /** True when the structure is drawn in place of the name and formula. */
 export const showsDepiction = (status: DepictionStatus): boolean => status.state === 'ready';
 
-function Shape(props: { readonly node: SceneNode }) {
+function Shape(props: { readonly node: SceneNode; readonly ids: DefIds }) {
   const { node } = props;
   const { width, height } = node;
   const strength = node.emphasis === 'target' ? styles.target : node.state.onPath ? styles.onPath : undefined;
   const join = (...names: (string | undefined)[]): string => names.filter((name): name is string => name !== undefined).join(' ');
   switch (node.box) {
     case 'hub':
+      // The rule is clipped to the rounded card (a shared clip path of the card's size, see defs.tsx), so its outer corners follow the card's.
       return (
         <>
-          <rect className={styles.hubBlock} width={width} height={height} />
-          <rect className={styles.hubRule} width={HUB_RULE_WIDTH} height={height} />
+          <rect className={styles.hubBlock} data-tone={node.tone} width={width} height={height} rx={HUB_RADIUS} />
+          <rect className={styles.hubRule} data-tone={node.tone} width={HUB_RULE_WIDTH} height={height} clipPath={`url(#${props.ids.hubClip(width, height)})`} />
         </>
       );
     case 'unclassified':
@@ -51,7 +53,7 @@ function StructureImage(props: { readonly node: SceneNode; readonly url: string 
   return <image className={styles.depiction} href={props.url} x={area.x} y={area.y} width={area.width} height={area.height} preserveAspectRatio="xMidYMid meet" />;
 }
 
-function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; readonly source: DepictionSource | undefined }) {
+function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; readonly source: DepictionSource | undefined; readonly ids: DefIds }) {
   const { node, lod } = props;
   const status = useDepiction(props.source, wantedDepiction(node, lod));
   const full = [plainText(node.label), node.sublabel === undefined ? '' : plainText(node.sublabel)].filter((text) => text !== '').join(' · ');
@@ -65,19 +67,19 @@ function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; re
       role="graphics-symbol"
       aria-label={node.ariaLabel}
     >
-      <title>{full}</title>
-      <Shape node={node} />
+      <title>{node.group === undefined ? full : `${full} · ${node.group}`}</title>
+      <Shape node={node} ids={props.ids} />
       {status.state === 'ready' && node.depictionKey !== undefined ? <StructureImage node={node} url={status.url} /> : null}
     </g>
   );
 }
 
-export const NodesLayer = memo(function NodesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly onCommit?: (layer: LayerName) => void }) {
+export const NodesLayer = memo(function NodesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('nodes', props.onCommit);
   return (
     <g data-layer="nodes">
       {props.scene.nodes.filter((node) => visibleAt(node, props.lod)).map((node) => (
-        <NodeGroup key={node.id} node={node} lod={props.lod} source={props.depictions} />
+        <NodeGroup key={node.id} node={node} lod={props.lod} source={props.depictions} ids={props.ids} />
       ))}
     </g>
   );

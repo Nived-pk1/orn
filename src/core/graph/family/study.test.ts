@@ -33,6 +33,15 @@ describe('familyStudy on the demo', () => {
     expect(counts).toEqual([...counts].sort((a, b) => b - a));
   });
 
+  it('the family carries its group and tone (step 5.5c); Unclassified has none', () => {
+    expect(alcohols).toMatchObject({ group: 'Oxygen compounds', tone: 'green' });
+    expect(study('cls_amines')).toMatchObject({ group: 'Nitrogen compounds', tone: 'violet' });
+    const unclassified = familyStudy(demo, UNCLASSIFIED_HUB_ID);
+    expect(unclassified?.group).toBeUndefined();
+    expect(unclassified?.tone).toBeUndefined();
+    expect('tone' in (unclassified ?? {})).toBe(false);
+  });
+
   it('Alcohols: the 413 K variant is in the Ethers group, the 443 K variant in the Alkenes group, each card counting the other', () => {
     const ethers = cardOf(alcohols, 'reactionsOf', 'Ethers', 'Ethanol + conc. H₂SO₄');
     const alkenes = cardOf(alcohols, 'reactionsOf', 'Alkenes', 'Ethanol + conc. H₂SO₄');

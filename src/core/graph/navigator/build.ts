@@ -29,7 +29,7 @@ import type { EdgeBundle, GraphEdge, GraphNode, Projection, ProjectionContext, P
 import { projectionKey, sortEdges, sortNodes, sortedUnique } from '../kit';
 import { arrowOf, movesArrows, NO_EXPANSION, planExpansion } from './expansion';
 import { UNCLASSIFIED_HUB_ID } from './hubs';
-import { expansionParts, hubNode, toEdge, unclassifiedNode, VIEW } from './nodes';
+import { arrangementsOf, expansionParts, hubNode, toEdge, unclassifiedNode, VIEW } from './nodes';
 import { byAdmission, groupPairs, materialise, type Pair } from './pairs';
 import { isUnfiltered, reactionFilter } from './select';
 import { READS_KINDS } from './reads';
@@ -131,7 +131,8 @@ function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
     }
   }
 
-  const nodes: GraphNode[] = realHubs.filter((ref) => admittedHubs.has(ref.id)).map((ref) => hubNode(ctx, ref, hidden.get(ref.id)));
+  const arrangements = arrangementsOf(ctx);
+  const nodes: GraphNode[] = realHubs.filter((ref) => admittedHubs.has(ref.id)).map((ref) => hubNode(ctx, ref, hidden.get(ref.id), arrangements.get(ref.id)));
   if (admittedHubs.has(UNCLASSIFIED_HUB_ID)) nodes.push(unclassifiedNode(hidden.get(UNCLASSIFIED_HUB_ID)));
   for (const expansion of plan.hubs.values()) {
     const parts = expansionParts(ctx, expansion, (id) => hidden.get(id));

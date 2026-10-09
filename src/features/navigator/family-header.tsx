@@ -1,11 +1,12 @@
 /**
  * The top of the family page (step 5.5b; ADR-037): the family's name and generic formula, the counts, the reaction types as text chips,
  * and the "Made from" / "Turns into" strip: the partner families as buttons with their counts; a button brings the reader to its group.
+ * The family's tone (step 5.5c) tints the header and rules the buttons; its group is written above the name, so colour is never the only carrier.
  */
 import type { FamilyPartner, FamilyStudy } from '@/core/graph';
 import { VisuallyHidden } from '@/ui/primitives';
 import { FormulaText } from './family-text';
-import styles from './family-page.module.css';
+import styles from './family-header.module.css';
 
 const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
 
@@ -40,7 +41,8 @@ export interface FamilyHeaderProps {
 export function FamilyHeader({ study, onGoToMadeFrom, onGoToTurnsInto }: FamilyHeaderProps) {
   const { counts } = study;
   return (
-    <div className={styles.header}>
+    <div className={styles.header} data-tone={study.tone}>
+      {study.group === undefined ? null : <p className={styles.group}>{study.group}</p>}
       <h1 className={styles.familyName}>
         {study.name}
         {study.formula === undefined ? null : (

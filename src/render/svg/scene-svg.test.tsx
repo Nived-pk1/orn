@@ -316,13 +316,14 @@ describe('a label longer than its box', () => {
     expect(nodeEl(container, 'spc_long').getAttribute('aria-label')).toContain(longName);
   });
 
-  it('uses one clip path per distinct box size, not one per node', () => {
+  it('uses one clip path per distinct box size, not one per node (and one rounded one per distinct hub size)', () => {
     const demo = demoNavigatorScene(true);
     const { container } = draw(demo, { lod: 1 });
     const sizes = new Set(demo.nodes.map((n) => `${n.width}x${n.height}`));
-    expect(all(container, 'clipPath')).toHaveLength(sizes.size);
+    const hubSizes = new Set(demo.nodes.filter((n) => n.box === 'hub').map((n) => `${n.width}x${n.height}`));
+    expect(all(container, 'clipPath')).toHaveLength(sizes.size + hubSizes.size);
     expect(sizes.size).toBeLessThan(demo.nodes.length);
-    expect(new Set(all(container, 'clipPath').map((c) => c.id)).size).toBe(sizes.size);
+    expect(new Set(all(container, 'clipPath').map((c) => c.id)).size).toBe(sizes.size + hubSizes.size);
   });
 });
 

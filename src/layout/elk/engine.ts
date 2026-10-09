@@ -7,7 +7,7 @@
 import type { LayoutEngine } from '../contracts';
 import { LayoutEngineUnavailable } from '../errors';
 import type { ElkLike } from './types';
-import { mapRequest } from './map-request';
+import { mapRequest, type ElkRequest } from './map-request';
 import { mapResult } from './map-result';
 
 export interface ElkEngineOptions {
@@ -29,7 +29,9 @@ export function createElkEngine(options: ElkEngineOptions): LayoutEngine {
     async layout(request, signal) {
       if (signal.aborted) throw aborted();
       const began = options.clock();
-      const input = mapRequest(request);
+      // `grid` is the grid layout's (the worker answers it before ELK); a stray one is laid out layered and says so
+      const asked: ElkRequest = request.algorithm === 'grid' ? { ...request, algorithm: 'layered' } : (request as ElkRequest);
+      const input = mapRequest(asked);
       const elk = await Promise.resolve(options.make()).catch((error: unknown) => {
         throw new LayoutEngineUnavailable(error instanceof Error ? error.message : String(error));
       });
@@ -37,7 +39,8 @@ export function createElkEngine(options: ElkEngineOptions): LayoutEngine {
       if (signal.aborted) throw aborted();
       const dropped = input.virtualIds;
       const kept = dropped.size === 0 ? answer : { ...answer, children: answer.children.filter((child) => !dropped.has(child.id)), edges: answer.edges.filter((edge) => !dropped.has(edge.id)) };
-      return mapResult(request, kept, input.notes, options.clock() - began);
+      const notes = request.algorithm === 'grid' ? [...input.notes, 'grid is not an ELK algorithm: laid out layered'] : input.notes;
+      return mapResult(asked, kept, notes, options.clock() - began);
     },
   };
 }

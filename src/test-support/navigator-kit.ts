@@ -5,7 +5,7 @@
  */
 import type { StoreHandle } from '@/core/commands';
 import { createDerivedIndexes } from '@/app/services/derived-indexes';
-import { layoutFallback } from '@/layout';
+import { layoutFallback, layoutGrid } from '@/layout';
 import type { LayoutRequest } from '@/layout/contracts';
 import type { NavigatorDepictions, NavigatorPorts } from '@/features/navigator';
 import { createNavigatorUi, type NavigatorUi, type NavigatorUiPort, type NavigatorUiStores } from '@/ui/state';
@@ -31,7 +31,8 @@ export function fakeLayout(): FakeLayout {
       const held = fake.hold;
       if (held !== undefined) await held;
       if (fake.failure !== undefined) return fake.failure;
-      return { ok: true, result: layoutFallback(request, 'engine_unavailable', () => 0), cached: false };
+      // the pure layouts the worker would answer with: the grid for a grid request, the fallback for the rest
+      return { ok: true, result: request.algorithm === 'grid' ? layoutGrid(request, () => 0) : layoutFallback(request, 'engine_unavailable', () => 0), cached: false };
     },
   };
   return fake;

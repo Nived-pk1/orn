@@ -11,6 +11,7 @@ import { flagsOf, projectionKey, sortEdges, sortNodes, sortedUnique } from '@/co
 import { DEFAULT_DEGREE_CAP } from '@/core/graph/contracts';
 import type { EdgeBundle, GraphEdge, GraphNode, Projection, ProjectionContext, ProjectionRequest, Truncation } from '@/core/graph/contracts';
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph/navigator/hubs';
+import { arrangementsOf } from '@/core/graph/navigator/nodes';
 import { mainProducts, primarySubstrate, reactionFilter } from '@/core/graph/navigator/select';
 import { hashParts } from '@/core/hash';
 import { HubResolver, hubTargets, type HubBasis } from '@/core/indexes/navigator-rollup';
@@ -216,9 +217,11 @@ export function navigatorReferenceBuild(ctx: ProjectionContext, request: Project
     if (p.arrows.length >= 2) bundles.push({ id: `bnd_${hashParts(['bundle', p.from, p.to])}`, from: p.from, to: p.to, edgeIds: ids.sort(), total: p.arrows.length });
   }
 
+  // The arrangement (step 5.5c) is presentation, not hub resolution: the reference takes it from the same pure reading of the anchors.
+  const arrangements = arrangementsOf(ctx);
   const nodes: GraphNode[] = realHubs
     .filter((ref) => hubIds.has(ref.id))
-    .map((ref): GraphNode => ({ id: ref.id, kind: KIND_OF[ref.kind] ?? 'virtual', record: ref, role: 'anchor', depth: 0, hidden: hidden.get(ref.id) ?? { outgoing: 0, incoming: 0 }, flags: flagsOf(ctx, ref) }));
+    .map((ref): GraphNode => ({ id: ref.id, kind: KIND_OF[ref.kind] ?? 'virtual', record: ref, role: 'anchor', depth: 0, hidden: hidden.get(ref.id) ?? { outgoing: 0, incoming: 0 }, flags: flagsOf(ctx, ref), ...(arrangements.has(ref.id) ? { arrangement: arrangements.get(ref.id) } : {}) }));
   if (hubIds.has(UNCLASSIFIED_HUB_ID)) {
     nodes.push({ id: UNCLASSIFIED_HUB_ID, kind: 'virtual', role: 'unclassified', depth: 0, hidden: hidden.get(UNCLASSIFIED_HUB_ID) ?? { outgoing: 0, incoming: 0 }, flags: ['unanchored'] });
   }

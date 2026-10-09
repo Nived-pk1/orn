@@ -15,6 +15,7 @@ import { fold } from '../../text';
 import { arrowTextOf } from '../arrow-text';
 import type { ProjectionContext } from '../contracts';
 import { UNCLASSIFIED_HUB_ID } from '../navigator/hubs';
+import { arrangementsOf } from '../navigator/nodes';
 import { createDescriber } from './describe';
 import type {
   FamilyCard,
@@ -197,11 +198,14 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
     .sort((a, b) => b.count - a.count || compare(fold(a.name), fold(b.name)) || compare(a.conceptId, b.conceptId));
 
   const described = hubRef === null ? undefined : describer.describe(hubRef);
+  const arrangement = hubRef === null ? undefined : arrangementsOf(ctx).get(hubRef.id);
   return {
     hubId,
     hub: hubRef,
     name: hubInfo(hubId).name,
     ...(described?.formula === undefined ? {} : { formula: described.formula }),
+    ...(arrangement?.group === undefined ? {} : { group: arrangement.group }),
+    ...(arrangement?.tone === undefined ? {} : { tone: arrangement.tone }),
     counts: { reactionsOf: reactionsOf.reactionCount, preparationOf: preparationOf.reactionCount, total: seenReactions.size },
     reactionTypes,
     madeFrom: partners(preparationOf),

@@ -106,7 +106,8 @@ describe('P-03 (real form, first bump 1 to 2, step 5.5c): the frozen v1 fixtures
     if (!first.ok || !second.ok) throw new Error('migration failed');
     expect(canonicalJson(second.doc)).toBe(canonicalJson(first.doc));
     expect(canonicalJson(input)).toBe(before);
-    const lost = leaves(input).filter((leaf) => !leaf.startsWith('schemaVersion = ') && !new Set(leaves(first.doc)).has(leaf));
+    const kept = new Set(leaves(first.doc));
+    const lost = leaves(input).filter((leaf) => !leaf.startsWith('schemaVersion = ') && !kept.has(leaf));
     expect(lost).toEqual([]);
     expect(first.steps).toEqual([expect.objectContaining({ from: 1, to: 2, changedRecordIds: [] })]);
   });

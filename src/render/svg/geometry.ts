@@ -20,6 +20,8 @@ export const WEIGHT_WIDTH: Readonly<Record<SceneEdge['weight'], number>> = { hea
 export const BOX_DASH = { unclassified: '2 3', overflow: '6 4' } as const;
 export const ARROW_SIZE = 10;
 export const HUB_RULE_WIDTH = 4;
+/** The corner radius of a hub card (an `rx` attribute): the `--radius-card` token, 8 px (tokens.css; a test keeps them equal). */
+export const HUB_RADIUS = 8;
 export const BADGE_GAP = 3;
 export const SELECTION_PAD = 3;
 export const FOCUS_PAD = 6;

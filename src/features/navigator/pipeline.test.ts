@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import { type CanonicalState, type ChemicalClass, type ReactionScheme, type ViewPreset } from '@/core/schema';
-import { demoState } from '@/test-support/app-boot-kit';
+import { unarrangedDemoState } from '@/test-support/app-boot-kit';
 import { envelope, mustCommit } from '@/test-support/command-kit';
 import { navigatorRig, type NavigatorRig } from '@/test-support/navigator-kit';
 import { layoutCacheKey } from '@/layout';
@@ -15,13 +15,17 @@ const settle = async (): Promise<void> => {
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
 };
 
+// The demo WITHOUT its arrangement: the overview takes the layered path, which these tests (ELK's stable first view, previous positions)
+// are about. The arranged demo is in pipeline-arranged.test.ts.
+const layeredDemo = unarrangedDemoState;
+
 interface Setup {
   readonly store: StoreHandle;
   readonly rig: NavigatorRig;
   readonly model: NavigatorModel;
 }
 
-async function started(state: CanonicalState = demoState(), options: { measurerReady?: Promise<void> } = {}): Promise<Setup> {
+async function started(state: CanonicalState = layeredDemo(), options: { measurerReady?: Promise<void> } = {}): Promise<Setup> {
   const store = createCanonicalStore({ initial: state, validateInitial: false });
   const rig = navigatorRig(store, options);
   const model = createNavigatorModel(rig.ports);
@@ -46,6 +50,7 @@ describe('the pipeline on the demo dataset', () => {
     expect(state.scene?.nodes).toHaveLength(16);
     expect(state.scene?.edges.length).toBeGreaterThan(0);
     expect(state.hubIds).toHaveLength(16);
+    expect(state.layout).not.toBe('grid');
     // The first view asks twice (item b): once without previous positions, once with that result as previous; only the second is drawn.
     expect(model.stats()).toMatchObject({ projections: 1, sizes: 1, layoutCalls: 2, scenes: 1 });
     expect(rig.layout.requests).toHaveLength(2);
@@ -111,7 +116,7 @@ describe('a stable first view (step 5.5a, item b)', () => {
   });
 
   it('a failure of the second layout is an error state, and the first answer is never drawn', async () => {
-    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    const store = createCanonicalStore({ initial: layeredDemo(), validateInitial: false });
     const rig = navigatorRig(store);
     let calls = 0;
     const real = rig.layout.layout.bind(rig.layout);
@@ -128,7 +133,7 @@ describe('a stable first view (step 5.5a, item b)', () => {
   });
 
   it('a request superseded during the second layout is never drawn', async () => {
-    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    const store = createCanonicalStore({ initial: layeredDemo(), validateInitial: false });
     const rig = navigatorRig(store);
     let release: () => void = () => undefined;
     const real = rig.layout.layout.bind(rig.layout);
@@ -217,7 +222,7 @@ describe('what an edit rebuilds (counters)', () => {
   it('a replace rebuilds everything', async () => {
     const { model, store } = await started();
     const before = model.stats();
-    mustCommit(store.replaceState(demoState(), 'import'));
+    mustCommit(store.replaceState(layeredDemo(), 'import'));
     await settle();
     expect(model.stats().projections).toBe(before.projections + 1);
     expect(model.stats().scenes).toBe(before.scenes + 1);
@@ -240,7 +245,7 @@ describe('what an edit rebuilds (counters)', () => {
 describe('a superseded result is never shown', () => {
   it('a slow first layout is replaced by the second one', async () => {
     let release: () => void = () => undefined;
-    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    const store = createCanonicalStore({ initial: layeredDemo(), validateInitial: false });
     const rig = navigatorRig(store);
     rig.layout.hold = new Promise<void>((resolve) => (release = resolve));
     const model = createNavigatorModel(rig.ports);
@@ -265,7 +270,7 @@ describe('a superseded result is never shown', () => {
 
 describe('failures and the skeleton', () => {
   it('a layout failure is an error state with its code, not a blank canvas', async () => {
-    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    const store = createCanonicalStore({ initial: layeredDemo(), validateInitial: false });
     const rig = navigatorRig(store);
     rig.layout.failure = { ok: false, code: 'UNAVAILABLE', message: 'no worker' };
     const model = createNavigatorModel(rig.ports);
@@ -285,7 +290,7 @@ describe('failures and the skeleton', () => {
 
   it('the Skeleton shows only with no Scene and after 300 ms', async () => {
     let ready: () => void = () => undefined;
-    const { model, rig } = await started(demoState(), { measurerReady: new Promise<void>((resolve) => (ready = resolve)) });
+    const { model, rig } = await started(layeredDemo(), { measurerReady: new Promise<void>((resolve) => (ready = resolve)) });
     expect(model.getState().skeleton).toBe(false);
     rig.timers.advance(SKELETON_DELAY_MS - 1);
     expect(model.getState().skeleton).toBe(false);
@@ -325,7 +330,7 @@ describe('failures and the skeleton', () => {
 
 describe('the overview does not expand, and the selection (step 5.5a part 2; ADR-037)', () => {
   it('ignores what the expansion store holds: hubs only, no member, nothing removed or logged', async () => {
-    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    const store = createCanonicalStore({ initial: layeredDemo(), validateInitial: false });
     const rig = navigatorRig(store);
     const held = { expanded: [{ nodeId: 'cls_alcohols', direction: 'both' as const }, { nodeId: 'not-a-hub', direction: 'both' as const }], collapsedEdgeIds: [] };
     rig.ui.expansion.setState({ expansion: held });

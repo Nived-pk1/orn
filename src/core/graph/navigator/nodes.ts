@@ -3,8 +3,8 @@
  * nodes, the edge of an arrow, and the structural membership and overflow edges. Pure constructors.
  */
 import type { NavigatorCandidate } from '../../indexes/contracts';
-import type { RecordRef } from '../../schema';
-import type { GraphEdge, GraphNode, ProjectionContext } from '../contracts';
+import type { NavigatorAnchor, RecordRef } from '../../schema';
+import type { GraphEdge, GraphNode, NodeArrangement, ProjectionContext } from '../contracts';
 import { graphEdgeId } from '../ids';
 import { flagsOf } from '../kit';
 import { UNCLASSIFIED_HUB_ID } from './hubs';
@@ -58,8 +58,39 @@ function structuralEdge(semantic: 'membership' | 'overflow', from: string, to: s
 type Hidden = { readonly outgoing: number; readonly incoming: number };
 const NONE: Hidden = { outgoing: 0, incoming: 0 };
 
-export function hubNode(ctx: ProjectionContext, ref: RecordRef, hidden: Hidden | undefined): GraphNode {
-  return { id: ref.id, kind: NODE_KIND[ref.kind] ?? 'virtual', record: ref, role: 'anchor', depth: 0, hidden: hidden ?? NONE, flags: flagsOf(ctx, ref) };
+/**
+ * The arrangement of each anchored record, by target ID: from the anchor with the lowest `order` (then the lowest ID) of that target.
+ * A target whose anchor has none of cell, group and tone has no entry.
+ */
+export function arrangementsOf(ctx: ProjectionContext): ReadonlyMap<string, NodeArrangement> {
+  const best = new Map<string, NavigatorAnchor>();
+  for (const anchor of ctx.indexes.anchors()) {
+    const held = best.get(anchor.target.id);
+    if (held === undefined || anchor.order < held.order || (anchor.order === held.order && anchor.id < held.id)) best.set(anchor.target.id, anchor);
+  }
+  const found = new Map<string, NodeArrangement>();
+  for (const [target, anchor] of best) {
+    if (anchor.cell === undefined && anchor.group === undefined && anchor.tone === undefined) continue;
+    found.set(target, {
+      ...(anchor.cell === undefined ? {} : { cell: { column: anchor.cell.column, row: anchor.cell.row } }),
+      ...(anchor.group === undefined ? {} : { group: anchor.group }),
+      ...(anchor.tone === undefined ? {} : { tone: anchor.tone }),
+    });
+  }
+  return found;
+}
+
+export function hubNode(ctx: ProjectionContext, ref: RecordRef, hidden: Hidden | undefined, arrangement?: NodeArrangement): GraphNode {
+  return {
+    id: ref.id,
+    kind: NODE_KIND[ref.kind] ?? 'virtual',
+    record: ref,
+    role: 'anchor',
+    depth: 0,
+    hidden: hidden ?? NONE,
+    flags: flagsOf(ctx, ref),
+    ...(arrangement === undefined ? {} : { arrangement }),
+  };
 }
 
 export function unclassifiedNode(hidden: Hidden | undefined): GraphNode {

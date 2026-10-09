@@ -18,7 +18,7 @@ export interface Measured {
   readonly nodes: Rect[];
   readonly bounds: { readonly width: number; readonly height: number };
   /** Segments of every drawn route, with the id of its edge. */
-  readonly segments: { readonly id: string; readonly x1: number; readonly y1: number; readonly x2: number; readonly y2: number }[];
+  readonly segments: { readonly id: string; readonly from: string; readonly to: string; readonly x1: number; readonly y1: number; readonly x2: number; readonly y2: number }[];
 }
 
 export async function measure(page: Page): Promise<Measured> {
@@ -54,7 +54,7 @@ export async function measure(page: Page): Promise<Measured> {
       for (let i = 1; i < points.length; i += 1) {
         const a = points[i - 1] as { x: number; y: number };
         const b = points[i] as { x: number; y: number };
-        segments.push({ id: group.getAttribute('data-edge-id') ?? '', x1: a.x, y1: a.y, x2: b.x, y2: b.y });
+        segments.push({ id: group.getAttribute('data-edge-id') ?? '', from: group.getAttribute('data-from') ?? '', to: group.getAttribute('data-to') ?? '', x1: a.x, y1: a.y, x2: b.x, y2: b.y });
       }
     }
     return { labels, nodes, bounds: { width: Number(svg?.getAttribute('data-scene-width') ?? 0), height: Number(svg?.getAttribute('data-scene-height') ?? 0) }, segments };
@@ -108,4 +108,47 @@ export function problemsOf(m: Measured): Problems {
   const crossed = new Set<string>();
   for (const l of m.labels) for (const s of m.segments) if (crosses(s, l)) crossed.add(l.id);
   return { labelOverLabel, labelOverNode, outside, linesCrossingText: crossed.size, labels: m.labels.length };
+}
+
+/**
+ * Lines that pass through a node box that is neither of their ends (step 5.5c). A box is shrunk by 1 px first: a line that ends on the
+ * border of its own boxes, or grazes another's, does not count.
+ */
+export function linesThroughBoxes(m: Measured): string[] {
+  const found = new Set<string>();
+  for (const segment of m.segments) {
+    for (const node of m.nodes) {
+      if (node.id === segment.from || node.id === segment.to) continue;
+      const shrunk = { ...node, x: node.x + 1, y: node.y + 1, width: node.width - 2, height: node.height - 2 };
+      if (crosses(segment, shrunk)) found.add(`${segment.id} through ${node.id}`);
+    }
+  }
+  return [...found];
+}
+
+/**
+ * The count chips that are not at the middle of their line (step 5.5c: they slid along it). A chip's centre is compared with the point
+ * half way along the length of its edge's drawn route; more than 1 px away means it slid (or the layout kept it elsewhere).
+ */
+export function chipsOffMiddle(m: Measured): string[] {
+  const off: string[] = [];
+  for (const chip of m.labels.filter((l) => l.id.endsWith('#count'))) {
+    const id = chip.id.slice(0, -'#count'.length);
+    const parts = m.segments.filter((s) => s.id === id);
+    if (parts.length === 0) continue;
+    const total = parts.reduce((sum, s) => sum + Math.hypot(s.x2 - s.x1, s.y2 - s.y1), 0);
+    let left = total / 2;
+    let middle = { x: parts[0]?.x1 ?? 0, y: parts[0]?.y1 ?? 0 };
+    for (const s of parts) {
+      const length = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+      if (length >= left && length > 0) {
+        middle = { x: s.x1 + ((s.x2 - s.x1) * left) / length, y: s.y1 + ((s.y2 - s.y1) * left) / length };
+        break;
+      }
+      left -= length;
+    }
+    // the measured chip is one px larger than its box (see `measure`), so its centre is off by half a px
+    if (Math.hypot(chip.x + chip.width / 2 - middle.x, chip.y + chip.height / 2 - middle.y) > 1.5) off.push(id);
+  }
+  return off;
 }

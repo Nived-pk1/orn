@@ -5,7 +5,7 @@
  */
 import type { ArrowText } from '@/core/graph/arrow-text';
 import type { EdgeSemantic, GraphEdge, Truncation } from '@/core/graph/contracts';
-import type { RecordRef } from '@/core/schema';
+import type { AnchorTone, RecordRef } from '@/core/schema';
 import type { Point } from '@/layout/contracts';
 
 /** 0 overview (glyphs only) · 1 labels · 2 labels + badges + condition text · 3 full (structures). */
@@ -66,6 +66,9 @@ export interface SceneNode {
   /** Key into the depiction cache (structure drawing), when the node shows a structure. */
   readonly depictionKey?: string;
   readonly badges: readonly SceneBadge[];
+  /** A hub's family group and its tone, from its anchor (step 5.5c). The tone colours the card; the group is also in the accessible name and the title, so colour is never the only carrier. */
+  readonly group?: string;
+  readonly tone?: AnchorTone;
   readonly emphasis: 'normal' | 'anchor' | 'target';
   /** Selection and the focus ring are drawn by the overlay from UI state, not stored here (step 5.3, decision Q5). */
   readonly state: { readonly dimmed: boolean; readonly onPath: boolean };

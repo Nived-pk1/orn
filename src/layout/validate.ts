@@ -8,11 +8,12 @@ import { MAX_LAYOUT_EDGES, MAX_LAYOUT_NODES, type LayoutRequest } from './contra
 
 export type RequestProblem = { readonly code: 'BAD_REQUEST' | 'TOO_LARGE'; readonly message: string };
 
-const ALGORITHMS: readonly string[] = ['layered', 'radial', 'stress'];
+const ALGORITHMS: readonly string[] = ['layered', 'radial', 'stress', 'grid'];
 const DIRECTIONS: readonly string[] = ['RIGHT', 'LEFT', 'DOWN', 'UP'];
 /** Sizes and coordinates above this are not a drawing; it also keeps every sum finite. */
 const MAX_COORDINATE = 1_000_000;
 const MAX_HINT = 10_000;
+const MAX_CELL = 63;
 
 const finite = (value: unknown, min: number, max: number): value is number => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
 const integer = (value: unknown, min: number, max: number): value is number => finite(value, min, max) && Number.isInteger(value);
@@ -42,6 +43,7 @@ export function checkRequest(request: LayoutRequest): RequestProblem | undefined
     if (!finite(node.width, 1, MAX_COORDINATE) || !finite(node.height, 1, MAX_COORDINATE)) return bad(`node "${node.id}" needs a finite width and height of at least 1`);
     if (node.layerHint !== undefined && !integer(node.layerHint, 0, MAX_HINT)) return bad(`node "${node.id}": layerHint must be an integer from 0 to ${MAX_HINT}`);
     if (node.orderHint !== undefined && !finite(node.orderHint, -MAX_COORDINATE, MAX_COORDINATE)) return bad(`node "${node.id}": orderHint must be a finite number`);
+    if (node.cell !== undefined && !(integer(node.cell.column, 0, MAX_CELL) && integer(node.cell.row, 0, MAX_CELL))) return bad(`node "${node.id}": cell needs a column and a row that are integers from 0 to ${MAX_CELL}`);
     if (node.pinned !== undefined && !point(node.pinned)) return bad(`node "${node.id}": pinned must be a finite point`);
   }
   last = undefined;

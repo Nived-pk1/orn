@@ -1,0 +1,172 @@
+/* The top of the family page (step 5.5b, tones step 5.5c; ADR-037): header, tone, counts, reaction types and the partner strip. */
+
+.muted {
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
+.header {
+  padding-top: var(--space-6);
+}
+
+/* The family's tone (ADR-037, step 5.5c): local variables from the tokens; a header without a tone stays as before. */
+.header[data-tone='blue'] {
+  --tone-tint: var(--color-tone-blue-tint);
+  --tone-border: var(--color-tone-blue-border);
+  --tone-ink: var(--color-tone-blue-ink);
+}
+
+.header[data-tone='green'] {
+  --tone-tint: var(--color-tone-green-tint);
+  --tone-border: var(--color-tone-green-border);
+  --tone-ink: var(--color-tone-green-ink);
+}
+
+.header[data-tone='amber'] {
+  --tone-tint: var(--color-tone-amber-tint);
+  --tone-border: var(--color-tone-amber-border);
+  --tone-ink: var(--color-tone-amber-ink);
+}
+
+.header[data-tone='violet'] {
+  --tone-tint: var(--color-tone-violet-tint);
+  --tone-border: var(--color-tone-violet-border);
+  --tone-ink: var(--color-tone-violet-ink);
+}
+
+.header[data-tone='teal'] {
+  --tone-tint: var(--color-tone-teal-tint);
+  --tone-border: var(--color-tone-teal-border);
+  --tone-ink: var(--color-tone-teal-ink);
+}
+
+.header[data-tone='rose'] {
+  --tone-tint: var(--color-tone-rose-tint);
+  --tone-border: var(--color-tone-rose-border);
+  --tone-ink: var(--color-tone-rose-ink);
+}
+
+.header[data-tone='slate'] {
+  --tone-tint: var(--color-tone-slate-tint);
+  --tone-border: var(--color-tone-slate-border);
+  --tone-ink: var(--color-tone-slate-ink);
+}
+
+.header[data-tone] {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid var(--tone-border);
+  border-left: 4px solid var(--tone-ink);
+  border-radius: var(--radius-card);
+  background: var(--tone-tint);
+}
+
+.group {
+  margin: 0 0 var(--space-1);
+  color: var(--tone-ink);
+  font-size: var(--text-13);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.header[data-tone] .partner {
+  border-color: var(--tone-ink);
+}
+
+.header[data-tone] .partner .count {
+  color: var(--tone-ink);
+}
+
+.header[data-tone] .partnersTitle {
+  color: var(--tone-ink);
+}
+
+.familyName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--text-24);
+  font-weight: 600;
+}
+
+.familyFormula {
+  color: var(--color-ink-2);
+  font-size: var(--text-16);
+  font-weight: 400;
+}
+
+.counts {
+  margin: var(--space-2) 0 var(--space-3);
+  color: var(--color-ink-2);
+}
+
+.types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: var(--text-13);
+}
+
+.count {
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.partnersTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-13);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.partnerList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.partner {
+  min-height: var(--hit-min);
+  padding: 2px var(--space-3);
+  border: 1px solid var(--color-ink-2);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.partner:hover {
+  background: var(--color-hover);
+}

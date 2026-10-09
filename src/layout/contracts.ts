@@ -3,7 +3,11 @@
  * Layout runs in the layout worker (ELK), is deterministic for identical input (sorted nodes/edges,
  * fixed seed) and cancellable. A fallback in-house layered layout is used if ELK fails or times out.
  */
-export type LayoutAlgorithm = 'layered' | 'radial' | 'stress';
+/**
+ * `grid` (step 5.5c; additive): the boxes sit on the grid cells the request names (`LayoutNodeInput.cell`); no ELK. It runs in the
+ * layout worker with the others (`src/layout/grid`).
+ */
+export type LayoutAlgorithm = 'layered' | 'radial' | 'stress' | 'grid';
 export type LayoutDirection = 'RIGHT' | 'LEFT' | 'DOWN' | 'UP';
 
 export interface Point {
@@ -19,6 +23,8 @@ export interface LayoutNodeInput {
   readonly layerHint?: number;
   readonly orderHint?: number;
   readonly pinned?: Point;
+  /** The grid cell of the box (step 5.5c; additive): column and row, small integers from 0. Used by the `grid` algorithm, ignored by the others. */
+  readonly cell?: { readonly column: number; readonly row: number };
 }
 
 export interface LayoutEdgeInput {
@@ -64,7 +70,7 @@ export type FallbackReason = 'timeout' | 'elk_error' | 'engine_unavailable';
 
 export interface LayoutResult {
   readonly requestId: string;
-  readonly engine: 'elk' | 'fallback';
+  readonly engine: 'elk' | 'fallback' | 'grid';
   /** Set exactly when `engine` is `'fallback'`. */
   readonly fallbackReason?: FallbackReason;
   /**

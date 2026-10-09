@@ -2,6 +2,7 @@
  * Shared helpers of the app-services tests (step 5.1a): a booter that remembers what it started so `afterEach` can dispose it,
  * the demo and a small fixture as states, a one-line edit and tampering with a stored database. Test-only.
  */
+import { produce } from 'immer';
 import { createAppServices, type AppEnv, type AppServices } from '@/app/services';
 import { documentToState } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
@@ -16,6 +17,18 @@ export const demoState = (): CanonicalState => {
   if (!parsed.ok) throw new Error('demo dataset has duplicate IDs');
   return parsed.state;
 };
+/**
+ * The demo without its arrangement (the anchors lose cell, group and tone): the overview of a file with no cells, which takes the
+ * layered (ELK) path. The arranged demo (`demoState`) takes the grid path (step 5.5c).
+ */
+export const unarrangedDemoState = (): CanonicalState =>
+  produce(demoState(), (draft) => {
+    for (const anchor of Object.values(draft.records.navigator_anchor)) {
+      delete anchor.cell;
+      delete anchor.group;
+      delete anchor.tone;
+    }
+  });
 export const smallState = (): CanonicalState => loadFixtureState('minimal-valid');
 
 export interface Booter {

@@ -63,8 +63,10 @@ export function createLayoutPart(options: PartOptions): EnginePart<LayoutService
         if (outcome.code === 'UNAVAILABLE') notice(`layout of "${view}": ${outcome.message}`);
       } else if (!outcome.cached) {
         const { engine: used, fallbackReason, notes } = outcome.result;
-        if (used !== 'elk' || notes.length > 0) {
-          const head = used === 'elk' ? 'layout' : `fallback layout (${fallbackReason ?? 'no reason given'})`;
+        // `grid` (step 5.5c) is a layout of its own, not a degraded one: it is only reported when it has notes
+        const own = used === 'elk' || used === 'grid';
+        if (!own || notes.length > 0) {
+          const head = own ? 'layout' : `fallback layout (${fallbackReason ?? 'no reason given'})`;
           notice(`${head} of "${view}"${notes.length === 0 ? '' : `: ${notes.join('; ')}`}`);
         }
       }

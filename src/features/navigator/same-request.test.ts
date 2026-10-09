@@ -28,4 +28,11 @@ describe('sameRequest', () => {
   it('sees a hint', () => {
     expect(sameRequest(base, { ...base, nodes: [{ id: 'a', width: 8, height: 8, layerHint: 1 }, second] })).toBe(false);
   });
+  it('sees a grid cell (step 5.5c)', () => {
+    const at = (column: number, row: number): LayoutRequest => ({ ...base, algorithm: 'grid', nodes: [{ id: 'a', width: 8, height: 8, cell: { column, row } }, second] });
+    expect(sameRequest(at(0, 0), at(0, 0))).toBe(true);
+    expect(sameRequest(at(0, 0), at(1, 0))).toBe(false);
+    expect(sameRequest(at(0, 0), at(0, 1))).toBe(false);
+    expect(sameRequest(base, at(0, 0))).toBe(false);
+  });
 });

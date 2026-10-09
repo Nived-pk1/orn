@@ -55,6 +55,23 @@ describe('the family page', () => {
     expect(screen.getByRole('list', { name: 'Reactions of and preparation of Alcohols' })).toBeTruthy();
   });
 
+  it('the header takes the tone of the family and writes its group; the partner buttons carry the same tone (step 5.5c)', async () => {
+    await openFamily('cls_alcohols');
+    const header = screen.getByRole('heading', { level: 1 }).closest('[data-tone]') as HTMLElement;
+    expect(header.getAttribute('data-tone')).toBe('green');
+    expect(within(header).getByText('Oxygen compounds')).toBeTruthy();
+    // the strip is inside the toned header, so its buttons draw with the tone's variables
+    expect(within(header).getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ })).toBeTruthy();
+    expect(within(header).getByRole('button', { name: /^Ethers/ })).toBeTruthy();
+  });
+
+  it('a family without an arrangement (Unclassified) has a plain header: no tone and no group line', async () => {
+    await openFamily('virtual:unclassified:hub', undefined, false);
+    const h1 = await screen.findByRole('heading', { level: 1 });
+    expect(h1.closest('[data-tone]')).toBeNull();
+    expect(document.querySelector('[data-tone]')).toBeNull();
+  });
+
   it('says in words that a section is empty', async () => {
     await openFamily('cls_alkanes');
     expect(screen.getByText('No reactions start from Alkanes in this dataset.')).toBeTruthy();

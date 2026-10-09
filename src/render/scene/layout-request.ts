@@ -3,8 +3,10 @@
  * one layout node per projection node; one layout edge per drawn path (a bundle's id, or the single edge's own id; membership
  * and overflow edges are paths too); self-loops are left OUT (decision Q4: the scene draws them beside their node); both lists
  * sorted by id; a fixed seed. The caps of the layout contract are answered as a value, never by cutting the graph.
+ * The navigator overview is laid out on the GRID (step 5.5c) when every anchored hub it shows has a cell (`isArranged`); the cells go
+ * into the request and no previous positions are sent (the grid has no use for them). Otherwise, and for every other view, as before.
  */
-import type { Projection } from '@/core/graph/contracts';
+import type { GraphNode, Projection } from '@/core/graph/contracts';
 import { MAX_LAYOUT_EDGES, MAX_LAYOUT_NODES, type LayoutAlgorithm, type LayoutDirection, type LayoutEdgeInput, type LayoutNodeInput, type LayoutRequest, type Point } from '@/layout/contracts';
 import type { NodeSizes } from './contracts';
 import type { LabelSizes } from './label-sizes';
@@ -32,17 +34,29 @@ export type LayoutRequestResult =
 
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
+/**
+ * True when the projection is the navigator overview of anchored hubs and every one of them has a grid cell: the arrangement is
+ * complete, so the grid layout can place it. The Unclassified hub has no anchor and goes below the grid. Any other node (a member,
+ * an overflow node, a focus) or one hub without a cell means the layered layout, as before.
+ */
+export function isArranged(projection: Projection): boolean {
+  if (projection.view !== 'navigator') return false;
+  const hubs = projection.nodes.filter((node: GraphNode) => node.role === 'anchor');
+  return hubs.length > 0 && hubs.every((node) => node.arrangement?.cell !== undefined) && projection.nodes.every((node) => node.role === 'anchor' || node.role === 'unclassified');
+}
+
 export const directionOfView = (view: Projection['view']): LayoutDirection => (view === 'precursor_explorer' ? 'LEFT' : 'RIGHT');
 
 export function buildLayoutRequest(projection: Projection, sizes: NodeSizes, options: LayoutRequestOptions = {}): LayoutRequestResult {
   const paths = drawnPaths(projection).filter((path) => !path.loop);
   if (projection.nodes.length > MAX_LAYOUT_NODES) return { ok: false, code: 'TOO_LARGE', message: `${projection.nodes.length} nodes; layout is limited to ${MAX_LAYOUT_NODES}` };
   if (paths.length > MAX_LAYOUT_EDGES) return { ok: false, code: 'TOO_LARGE', message: `${paths.length} drawn paths; layout is limited to ${MAX_LAYOUT_EDGES}` };
+  const arranged = options.algorithm === undefined ? isArranged(projection) : options.algorithm === 'grid';
   const nodes: LayoutNodeInput[] = [];
   for (const node of projection.nodes) {
     const size = sizes.get(node.id);
     if (size === undefined) return { ok: false, code: 'MISSING_SIZE', message: `node "${node.id}" has no size` };
-    nodes.push({ id: node.id, width: size.width, height: size.height });
+    nodes.push({ id: node.id, width: size.width, height: size.height, ...(arranged && node.arrangement?.cell !== undefined ? { cell: { column: node.arrangement.cell.column, row: node.arrangement.cell.row } } : {}) });
   }
   nodes.sort((a, b) => compare(a.id, b.id));
   for (let i = 1; i < nodes.length; i += 1) {
@@ -62,12 +76,12 @@ export function buildLayoutRequest(projection: Projection, sizes: NodeSizes, opt
     ok: true,
     request: {
       requestId: options.requestId ?? `layout:${projection.key}`,
-      algorithm: options.algorithm ?? 'layered',
+      algorithm: options.algorithm ?? (arranged ? 'grid' : 'layered'),
       direction: options.direction ?? directionOfView(projection.view),
       nodes,
       edges,
       spacing: options.spacing ?? DEFAULT_SPACING,
-      ...(Object.keys(previous).length === 0 ? {} : { previous }),
+      ...(Object.keys(previous).length === 0 || arranged ? {} : { previous }),
       seed: LAYOUT_SEED,
     },
   };

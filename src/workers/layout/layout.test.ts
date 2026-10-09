@@ -300,3 +300,47 @@ describe('the service: stress over the node cap', () => {
     expect(elk.graphs[0]?.layoutOptions['elk.algorithm']).toBe('org.eclipse.elk.radial');
   });
 });
+
+describe('the grid layout (step 5.5c): answered in the worker, never by ELK', () => {
+  const gridRequest = (requestId = 'grid'): LayoutRequest => {
+    const base = small(requestId);
+    return { ...base, algorithm: 'grid', nodes: base.nodes.map((node, index) => ({ ...node, cell: { column: index, row: 0 } })) };
+  };
+
+  it('layout answers the grid result (engine grid, no reason) and ELK is not called, not even to load', async () => {
+    const { client, elk } = rig();
+    const answer = await client.layout(gridRequest());
+    if (!answer.ok) throw new Error(answer.error.message);
+    expect(answer.value).toMatchObject({ engine: 'grid', requestId: 'grid' });
+    expect(answer.value.fallbackReason).toBeUndefined();
+    expect(Object.keys(answer.value.positions)).toEqual(['a', 'b', 'c']);
+    expect(elk.graphs).toEqual([]);
+    expect(layoutProblems(gridRequest(), answer.value)).toEqual([]);
+  });
+
+  it('layoutFallback answers the grid too, whatever the reason: a grid request never needs ELK', async () => {
+    const { client } = rig();
+    const answer = await client.layoutFallback({ request: gridRequest(), reason: 'timeout' });
+    if (!answer.ok) throw new Error(answer.error.message);
+    expect(answer.value.engine).toBe('grid');
+  });
+
+  it('a cell outside 0..63 is BAD_REQUEST', async () => {
+    const { client } = rig();
+    const base = gridRequest();
+    expect(await client.layout({ ...base, nodes: [{ ...(base.nodes[0] as LayoutRequest['nodes'][number]), cell: { column: 64, row: 0 } }] })).toMatchObject({ ok: false, error: { code: 'BAD_REQUEST' } });
+  });
+
+  it('the service does not wait for ELK to warm up for a grid request, and caches the answer', async () => {
+    const { service, elk } = rig();
+    const first = await service.layout('v', gridRequest('one'));
+    const second = await service.layout('v', gridRequest('two'));
+    if (!first.ok || !second.ok) throw new Error('layout failed');
+    expect(first.result.engine).toBe('grid');
+    expect(first.cached).toBe(false);
+    expect(second.cached).toBe(true);
+    expect(second.result.requestId).toBe('two');
+    expect(elk.graphs).toEqual([]);
+    expect(service.stats()).toMatchObject({ cacheHits: 1, elk: 0 });
+  });
+});

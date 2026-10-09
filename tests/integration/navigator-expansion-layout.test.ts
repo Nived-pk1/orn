@@ -13,7 +13,7 @@ import { createNavigatorModel, type NavigatorModel } from '@/features/navigator/
 import { createElkEngine, loadElk } from '@/layout';
 import type { LayoutRequest } from '@/layout/contracts';
 import type { Scene } from '@/render/scene';
-import { demoState } from '@/test-support/app-boot-kit';
+import { unarrangedDemoState } from '@/test-support/app-boot-kit';
 import { navigatorRig } from '@/test-support/navigator-kit';
 import { createLayoutHandlers } from '@/workers/layout/handlers';
 
@@ -30,7 +30,8 @@ async function idle(model: NavigatorModel): Promise<void> {
 
 describe('the demo overview, real ELK in process', () => {
   async function fresh() {
-    const store = createCanonicalStore({ initial: demoState(), validateInitial: false });
+    // an overview with no cells (the arranged demo is drawn by the grid layout, not by ELK: step 5.5c)
+    const store = createCanonicalStore({ initial: unarrangedDemoState(), validateInitial: false });
     const rig = navigatorRig(store);
     (rig.ports.layout as { layout: unknown }).layout = async (_view: string, request: never) => {
       rig.layout.requests.push(request);

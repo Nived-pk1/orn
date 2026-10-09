@@ -5,8 +5,10 @@
  * Edges are never deduplicated by endpoints (INV-26); parallel edges are bundled visually only.
  */
 import type {
+  AnchorTone,
   CanonicalState,
   ConditionVariantId,
+  GridCell,
   OutcomeId,
   ParticipantId,
   ProductId,
@@ -43,6 +45,17 @@ export type NodeFlag =
   | 'unanchored'
   | 'no_structure';
 
+/**
+ * The curated arrangement of a navigator hub (step 5.5c; additive): what its anchor says about where it sits on the overview grid,
+ * which family group it belongs to and that group's tone. Copied from the anchor (the lowest `order`, then ID, when a target has
+ * several), never stored: a projection is derived data.
+ */
+export interface NodeArrangement {
+  readonly cell?: GridCell;
+  readonly group?: string;
+  readonly tone?: AnchorTone;
+}
+
 export interface GraphNode {
   /** Record ID, or "virtual:<purpose>:<key>" (e.g. the Unclassified hub, "+12 more" overflow). */
   readonly id: string;
@@ -56,6 +69,8 @@ export interface GraphNode {
   /** Navigator overflow nodes only (step 5.4c): how many hub members the node stands for; `hidden` counts their arrows. */
   readonly hiddenMembers?: number;
   readonly flags: readonly NodeFlag[];
+  /** Navigator hubs only: the arrangement of the hub's anchor, when it has one (step 5.5c). */
+  readonly arrangement?: NodeArrangement;
 }
 
 export type EdgeSemantic =

@@ -3,7 +3,7 @@
  * selected arrow) over the interactive drawing. It renders what the model says: the Scene; a plain error with its code; a skeleton only
  * when there is no Scene yet and 300 ms have passed. ONE delegated click listener lives on the drawing's svg: a click selects the node
  * or edge under it, empty canvas clears; a double click on a family opens its page. The overview does not expand hubs.
- * The layer commit count is written to a data attribute by hand (no React state) so a test can prove pan and zoom render nothing.
+ * The legend of the family groups (step 5.5c) sits under the toolbar. The layer commit count is written to a data attribute by hand (no React state) so a test can prove pan and zoom render nothing.
  */
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
@@ -12,7 +12,9 @@ import { ViewportScene, type ViewportController, type Viewport } from '@/render/
 import type { Scene } from '@/render/scene';
 import { Button, Skeleton } from '@/ui/primitives';
 import { depictionBindingOf } from './depictions';
+import { legendOf } from './legend';
 import { useNavigator, useNavigatorState } from './navigator-context';
+import { NavigatorLegend } from './navigator-legend';
 import { NavigatorSelection } from './navigator-selection';
 import styles from './navigator.module.css';
 
@@ -66,9 +68,10 @@ export function NavigatorCanvas() {
   // An arrow opens its source family at the target's group (reactions of the source, the group "To <target>").
   const selectedArrow = selected !== null && selected.kind === 'edge' && scene !== null ? scene.edges.find((edge) => edge.id === selected.id) : undefined;
   const arrowOpens = selectedArrow !== undefined && isHub(selectedArrow.from) && isHub(selectedArrow.to) ? selectedArrow : undefined;
+  const legend = useMemo(() => legendOf(scene), [scene]);
   const nothing = scene === null ? { unavailable: NOTHING_DRAWN } : {};
   return (
-    <div className={styles.canvas} ref={root} data-layer-commits="0">
+    <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
       <div className={styles.toolbar} role="toolbar" aria-label="Canvas tools">
         <Button onClick={() => controller?.zoomIn()} {...nothing}>
           Zoom in
@@ -92,6 +95,7 @@ export function NavigatorCanvas() {
         )}
         <NavigatorSelection />
       </div>
+      <NavigatorLegend items={legend} />
       <div className={styles.drawing} aria-busy={state.working}>
         {state.error !== null ? (
           <div className={styles.error} role="alert">

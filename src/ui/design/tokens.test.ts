@@ -5,6 +5,7 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { ANCHOR_TONES } from '@/core/schema';
 
 const CSS = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8');
 
@@ -138,3 +139,33 @@ describe('rounded corners (ADR-037, 2026-10-09)', () => {
   });
 });
 
+
+describe('family tones (ADR-037, step 5.5c): tint, border and ink for each tone', () => {
+  const TONES = ['blue', 'green', 'amber', 'violet', 'teal', 'rose', 'slate'] as const;
+  const part = (tone: string, what: 'tint' | 'border' | 'ink'): string => token(`color-tone-${tone}-${what}`);
+
+  it('the tones are exactly the schema\'s (a tone the schema allows has colours, and no colour is left over)', () => {
+    expect([...ANCHOR_TONES]).toEqual([...TONES]);
+    const defined = [...TOKENS.keys()].filter((name) => name.startsWith('color-tone-')).sort();
+    expect(defined).toEqual(TONES.flatMap((tone) => (['tint', 'border', 'ink'] as const).map((what) => `color-tone-${tone}-${what}`)).sort());
+  });
+
+  it.each(TONES)('%s: the ink and the ordinary text colour meet 4.5:1 on the tint, and the ink on the page and the surface', (tone) => {
+    const tint = part(tone, 'tint');
+    expect(contrast(part(tone, 'ink'), tint)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(token('color-ink'), tint)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(token('color-ink-2'), tint)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(part(tone, 'ink'), token('color-paper'))).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(part(tone, 'ink'), token('color-surface'))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(TONES)('%s: the left rule (ink) is a shape against the tint and the page (3:1), and the border is darker than the tint', (tone) => {
+    expect(contrast(part(tone, 'ink'), part(tone, 'tint'))).toBeGreaterThanOrEqual(3);
+    expect(contrast(part(tone, 'ink'), token('color-paper'))).toBeGreaterThanOrEqual(3);
+    expect(luminance(part(tone, 'border'))).toBeLessThan(luminance(part(tone, 'tint')));
+  });
+
+  it('no two tones share a tint, a border or an ink', () => {
+    for (const what of ['tint', 'border', 'ink'] as const) expect(new Set(TONES.map((tone) => part(tone, what))).size).toBe(TONES.length);
+  });
+});

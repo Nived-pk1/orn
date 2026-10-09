@@ -2,7 +2,7 @@
  * The family study (step 5.5b; ADR-037): the value behind the navigator's family page. Plain data, derived from the navigator roll-up
  * index and never stored. A card holds record refs and text parts only: no markup, no copy of a record.
  */
-import type { ConditionVariantId, NamedReactionId, OutcomeId, ProductId, ReactionId, RecordRef, Review } from '../../schema';
+import type { AnchorTone, ConditionVariantId, NamedReactionId, OutcomeId, ProductId, ReactionId, RecordRef, Review } from '../../schema';
 import type { ArrowText } from '../arrow-text';
 
 export type FamilySectionKind = 'reactions_of' | 'preparation_of';
@@ -79,6 +79,9 @@ export interface FamilyStudy {
   readonly hub: RecordRef | null;
   readonly name: string;
   readonly formula?: string;
+  /** The family group and tone of the hub's anchor (step 5.5c); absent for Unclassified and for a hub without them. */
+  readonly group?: string;
+  readonly tone?: AnchorTone;
   readonly counts: { readonly reactionsOf: number; readonly preparationOf: number; readonly total: number };
   readonly reactionTypes: readonly FamilyReactionType[];
   /** Families this one is made from (preparation groups) and turns into (reaction groups), with reaction counts. */

@@ -39,6 +39,8 @@ export interface NavigatorState {
   readonly working: boolean;
   /** The admitted hubs (real hubs and Unclassified) of the current projection, sorted. */
   readonly hubIds: readonly string[];
+  /** Which layout drew the current Scene (step 5.5c): `grid` for an arranged overview, `elk` or `fallback` otherwise; null before the first Scene. */
+  readonly layout: LayoutResult['engine'] | null;
 }
 
 export interface PipelineStats {
@@ -62,7 +64,7 @@ const hubIdsOf = (projection: Projection): string[] => projection.nodes.filter((
 
 const NO_EXPANSION: ProjectionRequest['expansion'] = { expanded: [], collapsedEdgeIds: [] };
 
-const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [] };
+const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [], layout: null };
 
 export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
   const binding = depictionBindingOf(ports);
@@ -150,7 +152,8 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
         }
         result = outcome.result;
         last = { request: built.request, result };
-        if (built.request.previous === undefined) {
+        // (the grid layout takes no previous positions and is already a fixed point: it is asked once)
+        if (built.request.previous === undefined && built.request.algorithm !== 'grid') {
           // A layout computed without previous positions differs from one that is given its own result as previous (ELK's interactive
           // crossing minimisation), so the first interaction would move the view. Ask once more with the result as previous and show
           // only that answer (step 5.5a, item b). Bounded: once per request, and the second request has previous positions.
@@ -180,7 +183,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
         ports.ui.selection.getState().select(null);
         ports.log('selection_cleared', `the selected ${selected.kind} ${selected.id} is not in the drawing any more`);
       }
-      set({ scene: scene.scene, error: null, skeleton: false, working: false, hubIds });
+      set({ scene: scene.scene, error: null, skeleton: false, working: false, hubIds, layout: result.engine });
     } catch (error) {
       if (mine !== token) return;
       const message = error instanceof Error ? error.message : String(error);

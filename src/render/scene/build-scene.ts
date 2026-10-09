@@ -110,6 +110,8 @@ export function buildScene(projection: Projection, layout: LayoutResult, options
       ...(content.sublabel === undefined ? {} : { sublabel: content.sublabel }),
       ...(content.depictionKey === undefined ? {} : { depictionKey: content.depictionKey }),
       badges: badgesOf(node),
+      ...(node.arrangement?.group === undefined ? {} : { group: node.arrangement.group }),
+      ...(node.arrangement?.tone === undefined ? {} : { tone: node.arrangement.tone }),
       emphasis: EMPHASIS[node.role],
       state: { dimmed: node.flags.includes('outside_scope'), onPath: false },
       minLod: minLodOf(content),

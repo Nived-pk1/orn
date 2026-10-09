@@ -14,6 +14,30 @@
   --color-error: #b42318;
   --color-review: #7a3fb0;
   --color-on-accent: var(--color-paper);
+
+  /* Family tones (ADR-037, step 5.5c): a soft tint, a border and an ink for each. Text on a tint is ink (or --color-ink) and meets
+     WCAG 2.2 AA (tokens.test.ts computes it). Colour only helps recognition: a family's group is always written too. */
+  --color-tone-blue-tint: #e8eefc;
+  --color-tone-blue-border: #9db3ee;
+  --color-tone-blue-ink: #1d3a9c;
+  --color-tone-green-tint: #e6f4ea;
+  --color-tone-green-border: #8fcba0;
+  --color-tone-green-ink: #17612f;
+  --color-tone-amber-tint: #fdf1dc;
+  --color-tone-amber-border: #e4b867;
+  --color-tone-amber-ink: #7a4a05;
+  --color-tone-violet-tint: #f0e9fa;
+  --color-tone-violet-border: #bda3e3;
+  --color-tone-violet-ink: #5a2d8f;
+  --color-tone-teal-tint: #e0f4f4;
+  --color-tone-teal-border: #86cccc;
+  --color-tone-teal-ink: #0d5e5e;
+  --color-tone-rose-tint: #fbe9ee;
+  --color-tone-rose-border: #eaa0b4;
+  --color-tone-rose-ink: #9a1f45;
+  --color-tone-slate-tint: #eceff2;
+  --color-tone-slate-border: #b0b9c2;
+  --color-tone-slate-ink: #3d4650;
   --color-hover: color-mix(in srgb, var(--color-ink) 6%, var(--color-paper));
   --color-scrim: color-mix(in srgb, var(--color-ink) 40%, transparent);
 

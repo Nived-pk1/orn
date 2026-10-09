@@ -90,7 +90,8 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
     running.set(view, mine);
     const options_: RpcCallOptions = { signal: mine.controller.signal, ...(call?.timeoutMs === undefined ? {} : { timeoutMs: call.timeoutMs }) };
     try {
-      const warm = await options.gate.ready(client, LAYOUT_SPECS);
+      // the grid layout does not use ELK, so it does not wait for ELK to load
+      const warm = request.algorithm === 'grid' ? ({ ok: true } as const) : await options.gate.ready(client, LAYOUT_SPECS);
       if (mine.controller.signal.aborted) return cancelled;
       const first: RpcResult<LayoutResult> = warm.ok
         ? await callWithRetry(client, LAYOUT_SPECS, 'layout', request, options_)
@@ -100,7 +101,7 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
         const result = first.value;
         if (result.engine === 'elk') elk += 1;
         else if (result.fallbackReason !== undefined) fallback[result.fallbackReason] += 1;
-        if (result.engine === 'elk' || result.fallbackReason === 'elk_error') cache.set(key, result);
+        if (result.engine === 'elk' || result.engine === 'grid' || result.fallbackReason === 'elk_error') cache.set(key, result);
         return { ok: true, result, cached: false };
       }
       if (first.error.code === 'CANCELLED') return cancelled;

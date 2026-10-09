@@ -63,6 +63,7 @@ export function countsByNode(paths: readonly DrawnPath[]): ReadonlyMap<string, N
 
 export function nodeAria(node: GraphNode, content: NodeContent, counts: NodeCounts | undefined): string {
   const parts = [content.name, GLYPH_WORD[content.glyph]];
+  if (node.arrangement?.group !== undefined) parts.push(node.arrangement.group);
   if (node.role === 'member') parts.push('member of a hub');
   if (node.role === 'overflow') {
     parts.push(plural(node.hidden.outgoing + node.hidden.incoming, 'arrow'));

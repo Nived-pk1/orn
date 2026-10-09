@@ -27,7 +27,7 @@ export function SceneSvg(props: SceneSvgProps) {
       <SceneDefs scene={scene} ids={ids} />
       <g ref={worldRef} data-world="true">
         <EdgesLayer scene={scene} lod={lod} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
-        <NodesLayer scene={scene} lod={lod} depictions={depictions} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
+        <NodesLayer scene={scene} lod={lod} depictions={depictions} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
         <LabelsLayer scene={scene} lod={lod} depictions={depictions} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
         <BadgesLayer scene={scene} lod={lod} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
         <OverlayLayer scene={scene} lod={lod} selectedIds={selectedIds} focusedId={focusedId} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />

@@ -21,7 +21,7 @@
  * desired edge length, both with the largest node dimension added: ELK measures them between centres) and edge gap. Radial and
  * stress ignore node sizes, so `map-result` spreads overlapping results (`spread.ts`).
  */
-import type { LayoutRequest } from '../contracts';
+import type { LayoutAlgorithm, LayoutRequest } from '../contracts';
 import { radialPlan, type RadialPlan } from './radial-tree';
 import type { ElkChild, ElkEdge, ElkGraph } from './types';
 
@@ -38,6 +38,9 @@ export interface ElkInput {
   readonly virtualIds: ReadonlySet<string>;
   readonly plan: RadialPlan | undefined;
 }
+
+/** A request ELK can lay out: every algorithm but `grid` (that one is the grid layout's, not ELK's). */
+export type ElkRequest = Omit<LayoutRequest, 'algorithm'> & { readonly algorithm: Exclude<LayoutAlgorithm, 'grid'> };
 
 const ALGORITHM = { layered: 'layered', radial: 'org.eclipse.elk.radial', stress: 'org.eclipse.elk.stress' } as const;
 const NO_PADDING = '[top=0,left=0,bottom=0,right=0]';
@@ -79,7 +82,7 @@ function previousPositions(request: LayoutRequest): Map<string, { x: number; y: 
   return filled;
 }
 
-function notesFor(request: LayoutRequest, usesPrevious: boolean): string[] {
+function notesFor(request: ElkRequest, usesPrevious: boolean): string[] {
   const { algorithm } = request;
   const notes: string[] = [];
   const count = (test: (node: LayoutRequest['nodes'][number]) => boolean): number => request.nodes.filter(test).length;
@@ -108,7 +111,9 @@ function notesFor(request: LayoutRequest, usesPrevious: boolean): string[] {
  */
 export const elkSeed = (seed: number): number => 1 + (seed % 2_147_483_646);
 
-export function mapRequest(request: LayoutRequest): ElkInput {
+export function mapRequest(asked: LayoutRequest): ElkInput {
+  // the engine lays a stray `grid` request out layered (and says so); here it is only the type that is narrowed
+  const request = (asked.algorithm === 'grid' ? { ...asked, algorithm: 'layered' } : asked) as ElkRequest;
   const { algorithm, spacing } = request;
   const options: Record<string, string> = {
     'elk.algorithm': ALGORITHM[algorithm],

@@ -307,3 +307,32 @@ describe('determinism', () => {
     expect(scene.edges.map((e) => e.id)).toEqual(['e1', 'e2', 'e3']);
   });
 });
+
+describe('the family group and tone of a hub (step 5.5c)', () => {
+  const grouped = [
+    node('cls_a', { arrangement: { cell: { column: 0, row: 0 }, group: 'Hydrocarbons', tone: 'blue' } }),
+    node('cls_b', { arrangement: { group: 'Oxygen compounds' } }),
+    node('cls_c'),
+  ];
+
+  it('a hub carries the group and tone of its arrangement, and the group is in its accessible name', () => {
+    const { scene } = pipe(projectionOf({ nodes: grouped, edges: [edge('e1', 'cls_a', 'cls_b')] }), ports);
+    const byId = (id: string) => scene.nodes.find((n) => n.id === id);
+    expect(byId('cls_a')).toMatchObject({ group: 'Hydrocarbons', tone: 'blue' });
+    expect(byId('cls_a')?.ariaLabel).toBe('Alkenes, class hub, Hydrocarbons, 1 reaction out');
+    expect(byId('cls_b')?.group).toBe('Oxygen compounds');
+    expect(byId('cls_b')?.tone).toBeUndefined();
+    expect(byId('cls_b')?.ariaLabel).toBe('Alcohols, class hub, Oxygen compounds, 1 reaction in');
+  });
+
+  it('a hub without an arrangement, and the Unclassified hub, have neither (and their names do not change)', () => {
+    const { scene } = pipe(projectionOf({ nodes: [...grouped, unclassified], edges: [] }), ports);
+    for (const id of ['cls_c', 'virtual:unclassified']) {
+      const found = scene.nodes.find((n) => n.id === id);
+      expect(found?.group).toBeUndefined();
+      expect(found?.tone).toBeUndefined();
+      expect('group' in (found ?? {})).toBe(false);
+    }
+    expect(scene.nodes.find((n) => n.id === 'cls_c')?.ariaLabel).toBe('Haloalkanes, class hub');
+  });
+});

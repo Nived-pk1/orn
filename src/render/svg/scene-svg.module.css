@@ -66,6 +66,77 @@
   stroke: none;
 }
 
+/* A hub card with a tone (ADR-037, step 5.5c): the tone's tint and border, and a left rule in its ink. No tone: the neutral card above. */
+.hubBlock[data-tone='blue'] {
+  fill: var(--color-tone-blue-tint);
+  stroke: var(--color-tone-blue-border);
+  stroke-width: 1;
+}
+
+.hubRule[data-tone='blue'] {
+  fill: var(--color-tone-blue-ink);
+}
+
+.hubBlock[data-tone='green'] {
+  fill: var(--color-tone-green-tint);
+  stroke: var(--color-tone-green-border);
+  stroke-width: 1;
+}
+
+.hubRule[data-tone='green'] {
+  fill: var(--color-tone-green-ink);
+}
+
+.hubBlock[data-tone='amber'] {
+  fill: var(--color-tone-amber-tint);
+  stroke: var(--color-tone-amber-border);
+  stroke-width: 1;
+}
+
+.hubRule[data-tone='amber'] {
+  fill: var(--color-tone-amber-ink);
+}
+
+.hubBlock[data-tone='violet'] {
+  fill: var(--color-tone-violet-tint);
+  stroke: var(--color-tone-violet-border);
+  stroke-width: 1;
+}
+
+.hubRule[data-tone='violet'] {
+  fill: var(--color-tone-violet-ink);
+}
+
+.hubBlock[data-tone='teal'] {
+  fill: var(--color-tone-teal-tint);
+  stroke: var(--color-tone-teal-border);
+  stroke-width: 1;
+}
+
+.hubRule[data-tone='teal'] {
+  fill: var(--color-tone-teal-ink);
+}
+
+.hubBlock[data-tone='rose'] {
+  fill: var(--color-tone-rose-tint);
+  stroke: var(--color-tone-rose-border);
+  stroke-width: 1;
+}
+
+.hubRule[data-tone='rose'] {
+  fill: var(--color-tone-rose-ink);
+}
+
+.hubBlock[data-tone='slate'] {
+  fill: var(--color-tone-slate-tint);
+  stroke: var(--color-tone-slate-border);
+  stroke-width: 1;
+}
+
+.hubRule[data-tone='slate'] {
+  fill: var(--color-tone-slate-ink);
+}
+
 .chip {
   fill: var(--color-surface);
   stroke: var(--color-ink-2);

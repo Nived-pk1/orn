@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_TRAVERSAL_LIMITS, graphEdgeId, type Projection, type ProjectionRequest } from '..';
-import type { AnyRecord, CanonicalState, RecordRef } from '../../schema';
+import type { AnyRecord, CanonicalState, NavigatorAnchor, RecordRef } from '../../schema';
 import { anchorOn, chemClass, cl, contextOf, neverAsNode, reaction, reagent, requestOf, rg, sp, species, stateOf, type ScopeOf } from '@/test-support/graph-state';
 import { reversedState } from '@/test-support/projection-harness';
 import { navigatorProjection, UNCLASSIFIED_HUB_ID } from '.';
@@ -355,5 +355,39 @@ describe('filters, limits and edge data', () => {
 
   it('the same request on reordered records is byte-identical', () => {
     expect(JSON.stringify(nav(reversedState(two)))).toBe(JSON.stringify(nav(two)));
+  });
+});
+
+describe('the arrangement of a hub (step 5.5c)', () => {
+  const arranged = (over: Partial<NavigatorAnchor>, body = 'hub-a'): NavigatorAnchor => ({ ...anchorOn(rec(cl(body)), body), ...over });
+  const build = (...records: AnyRecord[]): Projection =>
+    nav(stateOf(hubA, hubB, inA('sp-a'), inB('sp-b'), rx({ slug: 'r1', reactants: [sp('sp-a')], products: [sp('sp-b')] }), ...records));
+  const node = (p: Projection, id: string) => p.nodes.find((n) => n.id === id);
+
+  it('a hub carries the cell, group and tone of its anchor, a copy and not the record', () => {
+    const anchor = arranged({ cell: { column: 2, row: 1 }, group: 'Oxygen compounds', tone: 'green' });
+    const p = build(anchor, anchorOn(rec(cl('hub-b')), 'hub-b'));
+    expect(node(p, 'cls_hub-a')?.arrangement).toEqual({ cell: { column: 2, row: 1 }, group: 'Oxygen compounds', tone: 'green' });
+    expect(node(p, 'cls_hub-a')?.arrangement?.cell).not.toBe(anchor.cell);
+  });
+
+  it('an anchor with only some of the three gives only those; with none, the node has no arrangement', () => {
+    const p = build(arranged({ tone: 'blue' }), anchorOn(rec(cl('hub-b')), 'hub-b'));
+    expect(node(p, 'cls_hub-a')?.arrangement).toEqual({ tone: 'blue' });
+    expect(node(p, 'cls_hub-b')?.arrangement).toBeUndefined();
+    expect('arrangement' in (node(p, 'cls_hub-b') ?? {})).toBe(false);
+  });
+
+  it('with two anchors on a target the lowest order wins, then the lowest ID', () => {
+    const first = { ...arranged({ cell: { column: 1, row: 1 } }), id: 'anc_z' as NavigatorAnchor['id'], order: 1 };
+    const second = { ...arranged({ cell: { column: 9, row: 9 } }), id: 'anc_a' as NavigatorAnchor['id'], order: 2 };
+    const tie = { ...arranged({ cell: { column: 5, row: 5 } }), id: 'anc_b' as NavigatorAnchor['id'], order: 1 };
+    expect(node(build(first, second, anchorOn(rec(cl('hub-b')), 'hub-b')), 'cls_hub-a')?.arrangement?.cell).toEqual({ column: 1, row: 1 });
+    expect(node(build(first, tie, anchorOn(rec(cl('hub-b')), 'hub-b')), 'cls_hub-a')?.arrangement?.cell).toEqual({ column: 5, row: 5 });
+  });
+
+  it('the Unclassified hub and members have none', () => {
+    const p = build(arranged({ cell: { column: 0, row: 0 } }), anchorOn(rec(cl('hub-b')), 'hub-b'));
+    expect(p.nodes.filter((n) => n.role !== 'anchor').every((n) => n.arrangement === undefined)).toBe(true);
   });
 });

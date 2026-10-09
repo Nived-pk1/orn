@@ -5,7 +5,7 @@
 import { arrowTextOf } from '@/core/graph/arrow-text';
 import type { EdgeBundle, GraphEdge, GraphNode, Projection } from '@/core/graph/contracts';
 import type { AnyRecord, CanonicalState, Reaction, RecordRef } from '@/core/schema';
-import { layoutFallback } from '@/layout';
+import { layoutFallback, layoutGrid } from '@/layout';
 import type { LayoutResult } from '@/layout/contracts';
 import { buildLayoutRequest, buildScene, labelSizes, nodeSizes, type LabelSizes, type LayoutRequestOptions, type NodeSizes, type Scene, type ScenePorts, type TextMeasurer } from '@/render/scene';
 import type { LayoutRequest } from '@/layout/contracts';
@@ -109,13 +109,13 @@ export interface Piped {
   readonly scene: Scene;
 }
 
-/** projection -> sizes -> request -> the pure fallback layout -> scene; throws on a refused step (a test bug or a real one). */
+/** projection -> sizes -> request -> the pure layout (the grid for an arranged overview, else the fallback) -> scene; throws on a refused step (a test bug or a real one). */
 export function pipe(projection: Projection, ports: ScenePorts, options: LayoutRequestOptions = {}): Piped {
   const sizes = nodeSizes(projection, ports, fakeMeasurer);
   const labels = labelSizes(projection, ports, fakeMeasurer);
   const built = buildLayoutRequest(projection, sizes, { labelSizes: labels, ...options });
   if (!built.ok) throw new Error(`layout request refused: ${built.code} ${built.message}`);
-  const layout = layoutFallback(built.request, 'engine_unavailable', () => 0);
+  const layout = built.request.algorithm === 'grid' ? layoutGrid(built.request, () => 0) : layoutFallback(built.request, 'engine_unavailable', () => 0);
   const scene = buildScene(projection, layout, { sizes, labelSizes: options.labelSizes ?? labels }, ports);
   if (!scene.ok) throw new Error(`scene refused: ${scene.code} ${scene.message}`);
   return { sizes, labels, request: built.request, layout, scene: scene.scene };
