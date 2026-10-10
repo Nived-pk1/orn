@@ -157,9 +157,13 @@ test.describe('pan and zoom', () => {
     const before = await transformOf(page);
     const box = await drawing(page).boundingBox();
     if (box === null) throw new Error('the drawing has no box');
-    const px = 300;
-    const py = 200;
-    await page.mouse.move(box.x + px, box.y + py);
+    // The pointer goes to whole page pixels (the browser rounds a mouse position), and the invariant is read from where it really is:
+    // the drawing's own top is not on a whole pixel (step 5.5d: the legend has a second row), so the nominal offset was up to half a pixel off.
+    const pointerX = Math.round(box.x + 300);
+    const pointerY = Math.round(box.y + 200);
+    const px = pointerX - box.x;
+    const py = pointerY - box.y;
+    await page.mouse.move(pointerX, pointerY);
     await page.mouse.wheel(0, -60);
     await page.waitForTimeout(150);
     const after = await transformOf(page);

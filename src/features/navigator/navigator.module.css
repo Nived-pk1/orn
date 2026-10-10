@@ -159,4 +159,9 @@
   margin: 0;
   text-align: right;
   color: var(--color-ink-2);
+  /* One line, whatever the selection says: a text that wrapped made the toolbar taller on a click and moved the drawing under the pointer
+     (step 5.5d: the Unanchored button narrowed the line). The whole text is the title and the accessible text. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

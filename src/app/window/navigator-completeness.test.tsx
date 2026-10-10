@@ -54,7 +54,8 @@ describe('the Unanchored panel', () => {
     fireEvent.click(first);
     const picked = first.getAttribute('data-reaction-id') as string;
     expect(app.navigator.ports.ui.family.getState().reaction).toBe(picked);
-    expect(within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByText(/^Selected: reaction /)).toBeTruthy();
+    const line = within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByText(/^Selected: reaction /);
+    expect(line.getAttribute('title')).toBe(line.textContent); // the line is one line on screen (it may be cut with an ellipsis): its title carries all of it
     expect(first.getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(within(panel).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('region', { name: 'Unanchored reactions' })).toBeNull();

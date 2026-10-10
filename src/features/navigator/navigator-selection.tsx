@@ -9,8 +9,13 @@ export function NavigatorSelection() {
   const reaction = useStore(ports.ui.family, (s) => s.reaction);
   const { scene } = useNavigatorState();
   // a reaction picked in the Unanchored panel (or on a family page) is the selection when nothing on the map is
-  if (selected === null && reaction !== null) return <p className={styles.selection}>{`Selected: reaction ${ports.store.getState().records.reaction[reaction]?.name ?? reaction}.`}</p>;
-  if (selected === null) return <p className={styles.selection}>Nothing is selected.</p>;
+  const line = (text: string) => (
+    <p className={styles.selection} title={text}>
+      {text}
+    </p>
+  );
+  if (selected === null && reaction !== null) return line(`Selected: reaction ${ports.store.getState().records.reaction[reaction]?.name ?? reaction}.`);
+  if (selected === null) return line('Nothing is selected.');
   const found = scene === null ? undefined : selected.kind === 'node' ? scene.nodes.find((n) => n.id === selected.id) : scene.edges.find((e) => e.id === selected.id);
-  return <p className={styles.selection}>{found === undefined ? `Selected: a ${selected.kind} that is not drawn now.` : `Selected: ${found.ariaLabel}.`}</p>;
+  return line(found === undefined ? `Selected: a ${selected.kind} that is not drawn now.` : `Selected: ${found.ariaLabel}.`);
 }
