@@ -37,6 +37,8 @@ export interface SceneSvgProps {
   readonly lod: LodLevel;
   /** Node IDs and edge IDs drawn as selected. Drawn by the overlay only. */
   readonly selectedIds: ReadonlySet<string>;
+  /** The arrow under the pointer (step 5.5d, item b), drawn like a selected arrow by the overlay only. */
+  readonly hoveredId?: string;
   /** The node or edge that has the keyboard focus (the ring is drawn by the overlay only). */
   readonly focusedId?: string;
   readonly depictions?: DepictionSource;
@@ -53,6 +55,11 @@ export interface SceneSvgProps {
    * ended a drag never arrives (d3-zoom suppresses it). Keep it stable.
    */
   readonly onSceneClick?: (hit: SceneHit | null) => void;
+  /**
+   * The arrow (edge hit) under the pointer, or null: called when the arrow changes (not on every move), never while a button is held
+   * (a drag is a pan). Keep it stable.
+   */
+  readonly onSceneHover?: (hit: SceneHit | null) => void;
   /** The same for a double click. */
   readonly onSceneDoubleClick?: (hit: SceneHit | null) => void;
   /** Called after a layer commits (not when a memoised layer is skipped): the render counters of the tests. Keep it stable. */

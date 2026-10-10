@@ -11,6 +11,8 @@ import styles from './scene-svg.module.css';
 export interface DefIds {
   readonly filled: string;
   readonly open: string;
+  /** The accent arrowhead of a hovered or selected arrow (step 5.5d). */
+  readonly accent: string;
   readonly clip: (width: number, height: number) => string;
   /** The rounded clip of a hub card of that size (step 5.5c): the tone's left rule is cut to the card's rounded corners. */
   readonly hubClip: (width: number, height: number) => string;
@@ -22,6 +24,7 @@ const token = (value: number): string => String(value).replace(/[^0-9a-z]/gi, '_
 export const defIds = (prefix: string): DefIds => ({
   filled: `${prefix}-arrow-filled`,
   open: `${prefix}-arrow-open`,
+  accent: `${prefix}-arrow-accent`,
   clip: (width, height) => `${prefix}-clip-${token(width)}x${token(height)}`,
   hubClip: (width, height) => `${prefix}-hub-${token(width)}x${token(height)}`,
 });
@@ -40,6 +43,9 @@ export const SceneDefs = memo(function SceneDefs(props: { readonly scene: Scene;
     <defs>
       <marker id={ids.filled} markerUnits="userSpaceOnUse" markerWidth={ARROW_SIZE} markerHeight={ARROW_SIZE} refX={ARROW_SIZE} refY={half} orient="auto">
         <path className={styles.markerFilled} d={`M0 0 L${ARROW_SIZE} ${half} L0 ${ARROW_SIZE} Z`} />
+      </marker>
+      <marker id={ids.accent} markerUnits="userSpaceOnUse" markerWidth={ARROW_SIZE} markerHeight={ARROW_SIZE} refX={ARROW_SIZE} refY={half} orient="auto">
+        <path className={styles.markerAccent} d={`M0 0 L${ARROW_SIZE} ${half} L0 ${ARROW_SIZE} Z`} />
       </marker>
       <marker id={ids.open} markerUnits="userSpaceOnUse" markerWidth={ARROW_SIZE} markerHeight={ARROW_SIZE} refX={ARROW_SIZE - 1} refY={half} orient="auto">
         <path className={styles.markerOpen} d={`M0 0 L${ARROW_SIZE - 1} ${half} L0 ${ARROW_SIZE}`} />

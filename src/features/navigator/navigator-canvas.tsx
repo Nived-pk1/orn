@@ -12,7 +12,7 @@ import { ViewportScene, type ViewportController, type Viewport } from '@/render/
 import type { Scene } from '@/render/scene';
 import { Button, Skeleton } from '@/ui/primitives';
 import { depictionBindingOf } from './depictions';
-import { legendOf } from './legend';
+import { keyOf, legendOf } from './legend';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorLegend } from './navigator-legend';
 import { NavigatorSelection } from './navigator-selection';
@@ -35,6 +35,7 @@ export function NavigatorCanvas() {
   const state = useNavigatorState();
   const selected = useStore(ports.ui.selection, (s) => s.selected);
   const [controller, setController] = useState<ViewportController | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
   const root = useRef<HTMLDivElement>(null);
   const commits = useRef(0);
   // Written imperatively: a layer that commits bumps a data attribute, React state is not involved.
@@ -61,6 +62,7 @@ export function NavigatorCanvas() {
     },
     [isHub, openFamily],
   );
+  const onSceneHover = useCallback((hit: SceneHit | null): void => setHoveredId(hit === null ? undefined : hit.id), []);
   const onSettled = useCallback((view: Viewport): void => ports.ui.viewports.getState().setViewport(VIEW, view), [ports]);
 
   const selectedHub = selected !== null && selected.kind === 'node' && isHub(selected.id) ? selected.id : undefined;
@@ -69,6 +71,7 @@ export function NavigatorCanvas() {
   const selectedArrow = selected !== null && selected.kind === 'edge' && scene !== null ? scene.edges.find((edge) => edge.id === selected.id) : undefined;
   const arrowOpens = selectedArrow !== undefined && isHub(selectedArrow.from) && isHub(selectedArrow.to) ? selectedArrow : undefined;
   const legend = useMemo(() => legendOf(scene), [scene]);
+  const legendKeys = useMemo(() => keyOf(scene), [scene]);
   const nothing = scene === null ? { unavailable: NOTHING_DRAWN } : {};
   return (
     <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
@@ -95,7 +98,7 @@ export function NavigatorCanvas() {
         )}
         <NavigatorSelection />
       </div>
-      <NavigatorLegend items={legend} />
+      <NavigatorLegend items={legend} keys={legendKeys} />
       <div className={styles.drawing} aria-busy={state.working}>
         {state.error !== null ? (
           <div className={styles.error} role="alert">
@@ -108,12 +111,14 @@ export function NavigatorCanvas() {
           <ViewportScene
             scene={scene}
             selectedIds={selectedIds}
+            {...(hoveredId === undefined ? {} : { hoveredId })}
             ariaLabel={`Navigator: ${hubs} ${hubs === 1 ? 'hub' : 'hubs'}, ${scene.edges.length} ${scene.edges.length === 1 ? 'arrow' : 'arrows'}`}
             onController={setController}
             {...(depictions === undefined ? {} : { depictions })}
             onLayerCommit={onLayerCommit}
             onSceneClick={onSceneClick}
             onSceneDoubleClick={onSceneDoubleClick}
+            onSceneHover={onSceneHover}
             onSettled={onSettled}
             {...(initialViewport === undefined ? {} : { initialViewport })}
           />

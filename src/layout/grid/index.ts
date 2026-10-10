@@ -10,9 +10,11 @@ import { layoutCacheKey } from '../cache-key';
 import { arrange } from './arrange';
 import { placeChips } from './chips';
 import type { Rect } from './geometry';
-import { ARC_OFFSETS, parallelOffsets, routeEdge } from './route';
+import { assignPorts, PORT_GAP } from './ports';
+import { ARC_OFFSETS, routeEdge } from './route';
 
-export { ARC_OFFSETS, ARC_SAMPLES, CLEARANCE, PARALLEL_GAP } from './route';
+export { ARC_OFFSETS, ARC_SAMPLES, CLEARANCE } from './route';
+export { CORNER_CLEAR, PORT_GAP } from './ports';
 export { CHIP_MARGIN, SLIDES } from './chips';
 
 const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
@@ -29,11 +31,11 @@ function ignoredHints(request: LayoutRequest): string[] {
 
 export function layoutGrid(request: LayoutRequest, durationMs: () => number): LayoutResult {
   const { boxes, sharedCells } = arrange(request);
-  const offsets = parallelOffsets(request.edges);
+  const ports = assignPorts(request.edges, boxes);
   const routes = new Map<string, readonly Point[]>();
   let blocked = 0;
   for (const edge of request.edges) {
-    const routed = routeEdge(edge, boxes, offsets.get(edge.id) ?? 0);
+    const routed = routeEdge(edge, boxes, ports.ends.get(edge.id));
     if (routed === undefined) continue;
     routes.set(edge.id, routed.route);
     if (routed.kind === 'blocked') blocked += 1;
@@ -73,6 +75,7 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number): La
     ...ignoredHints(request),
     ...(blocked === 0 ? [] : [`${count(blocked, 'arrow crosses', 'arrows cross')} a box: no arc of ${ARC_OFFSETS[0]} to ${ARC_OFFSETS[ARC_OFFSETS.length - 1]} px clears the boxes, so the line stays straight`]),
     ...(chips.kept === 0 ? [] : [`${count(chips.kept, 'count chip overlaps', 'count chips overlap')} a box or another chip: no place along its line is free`]),
+    ...(ports.crowded === 0 ? [] : [`${count(ports.crowded, 'side holds', 'sides hold')} more arrows than fit ${PORT_GAP} px apart clear of the corners: the arrows keep ${PORT_GAP} px apart and reach into the corner`]),
     ...(sharedCells === 0 ? [] : [`${count(sharedCells, 'cell holds', 'cells hold')} more than one box: the boxes are stacked in the cell`]),
   ];
   return {

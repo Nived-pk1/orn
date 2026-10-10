@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import type { ArrowText } from '@/core/graph/arrow-text';
 import type { LayoutResult } from '@/layout/contracts';
 import { bundle, edge, fakeMeasurer, node, nobodyPorts, pipe, projectionOf } from '@/test-support/scene-kit';
-import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE, buildLayoutRequest, buildScene, countWidth, labelSizes, LABEL_MARGIN, nodeSizes, roundUpToGrid, type ScenePorts } from '.';
+import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, buildLayoutRequest, buildScene, CHIP_HEIGHT, chipWidth, labelSizes, LABEL_MARGIN, nodeSizes, roundUpToGrid, type ScenePorts } from '.';
 
 const hubs = [node('cls_a'), node('cls_b'), node('cls_c')];
 const member = node('spc_m', { kind: 'species', record: { kind: 'species', id: 'spc_m' }, role: 'member' });
@@ -29,8 +29,8 @@ describe('labelSizes', () => {
   it('a bundle: its count badge plus the margin, whatever the LOD (the size does not depend on it)', () => {
     const projection = projectionOf({ nodes: hubs, edges: [edge('e1', 'cls_a', 'cls_b'), edge('e2', 'cls_a', 'cls_b')], bundles: [bundle('bnd_ab', 'cls_a', 'cls_b', ['e1', 'e2'], 752)] });
     const sizes = labelSizes(projection, nobodyPorts, fakeMeasurer);
-    expect(sizes.get('bnd_ab')).toEqual({ width: roundUpToGrid(countWidth(752) + LABEL_MARGIN.x), height: roundUpToGrid(BADGE_SIZE + LABEL_MARGIN.y) });
-    expect(countWidth(752)).toBeGreaterThan(countWidth(7));
+    expect(sizes.get('bnd_ab')).toEqual({ width: roundUpToGrid(chipWidth(752) + LABEL_MARGIN.x), height: roundUpToGrid(CHIP_HEIGHT) });
+    expect(chipWidth(752)).toBeGreaterThan(chipWidth(7));
   });
 
   it('an edge with no text, a membership edge and an overflow edge ask for no room', () => {

@@ -30,3 +30,22 @@ export function legendOf(scene: Scene | null): readonly LegendItem[] {
     .sort((a, b) => a[1].y - b[1].y || a[1].x - b[1].x || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
     .map(([group, entry]) => ({ group, tone: entry.tone, hubs: entry.hubs }));
 }
+
+/** What the drawing needs explained besides its family groups (step 5.5d, item d). Each is true only when the Scene draws it. */
+export interface LegendKey {
+  /** A count chip sits on an arrow. */
+  readonly chip: boolean;
+  /** A loop leaves and re-enters one family. */
+  readonly loop: boolean;
+  /** The Unclassified box is drawn. */
+  readonly unclassified: boolean;
+}
+
+export function keyOf(scene: Scene | null): LegendKey {
+  if (scene === null) return { chip: false, loop: false, unclassified: false };
+  return {
+    chip: scene.edges.some((edge) => edge.bundleSize !== undefined && edge.from !== edge.to),
+    loop: scene.edges.some((edge) => edge.from === edge.to && edge.bundleSize !== undefined),
+    unclassified: scene.nodes.some((node) => node.box === 'unclassified'),
+  };
+}

@@ -19,6 +19,7 @@ export interface ViewportSceneProps {
   readonly scene: Scene;
   readonly selectedIds: ReadonlySet<string>;
   readonly focusedId?: string;
+  readonly hoveredId?: string;
   readonly depictions?: DepictionSource;
   readonly ariaLabel: string;
   /** Receives the commands (zoom in / out, fit, focus) once the viewport exists; null when it goes away. Keep it stable. */
@@ -31,6 +32,8 @@ export interface ViewportSceneProps {
   /** The delegated click and double click on the drawing (see `SceneSvgProps`). Keep them stable. */
   readonly onSceneClick?: (hit: SceneHit | null) => void;
   readonly onSceneDoubleClick?: (hit: SceneHit | null) => void;
+  /** The arrow under the pointer (see `SceneSvgProps.onSceneHover`). Keep it stable. */
+  readonly onSceneHover?: (hit: SceneHit | null) => void;
 }
 
 /** What the layers get: the same statuses, but `request` does nothing (the queue decides what is asked for). */
@@ -123,12 +126,14 @@ export function ViewportScene(props: ViewportSceneProps) {
       lod={lod}
       selectedIds={props.selectedIds}
       focusedId={props.focusedId}
+      hoveredId={props.hoveredId}
       depictions={layerSource}
       ariaLabel={props.ariaLabel}
       svgRef={svgRef}
       worldRef={worldRef}
       interactive
       {...(props.onSceneClick === undefined ? {} : { onSceneClick: props.onSceneClick })}
+      {...(props.onSceneHover === undefined ? {} : { onSceneHover: props.onSceneHover })}
       {...(props.onSceneDoubleClick === undefined ? {} : { onSceneDoubleClick: props.onSceneDoubleClick })}
       {...(props.onLayerCommit === undefined ? {} : { onLayerCommit: props.onLayerCommit })}
     />

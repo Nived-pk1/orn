@@ -83,7 +83,9 @@ export function nodeAria(node: GraphNode, content: NodeContent, counts: NodeCoun
 export function edgeAria(path: DrawnPath, semantic: SceneEdge['semantic'], fromName: string, toName: string, drawn: number, viaMembership = false): string {
   if (semantic === 'membership') return `${toName} is a member of ${fromName}`;
   if (semantic === 'overflow') return `${toName} stands for hidden members of ${fromName}`;
-  const what = path.loop ? `${fromName} back to itself` : `${fromName} to ${toName}`;
   const count = path.bundled || path.total > 1 ? `${plural(path.total, 'reaction')}${drawn < path.total ? `, ${drawn} drawn` : ''}` : '1 reaction';
-  return `${what}, ${count}${viaMembership ? ', through class membership' : ''}`;
+  const through = viaMembership ? ', through class membership' : '';
+  // a loop says what it means in words (step 5.5d, item c): the reactions whose two sides are in the same family
+  if (path.loop) return `${plural(path.total, 'reaction')} ${path.total === 1 ? 'that stays' : 'that stay'} within ${fromName}${drawn < path.total ? `, ${drawn} drawn` : ''}${through}`;
+  return `${fromName} to ${toName}, ${count}${through}`;
 }

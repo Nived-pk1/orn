@@ -7,6 +7,7 @@ import type { GraphEdge } from '@/core/graph/contracts';
 import type { LayoutResult } from '@/layout/contracts';
 import { bundle, edge, fakeMeasurer, node, nobodyPorts, pipe, projectionOf } from '@/test-support/scene-kit';
 import { buildScene, midpoint, nodeSizes, type Scene, type ScenePorts } from '.';
+import { LOOP_INSET } from './loops';
 
 const names: Readonly<Record<string, { name: string; formula?: string }>> = {
   cls_a: { name: 'Alkenes', formula: 'CnH2n' },
@@ -129,10 +130,16 @@ describe('self-loops (ADV-005, decision Q4)', () => {
     const owner = scene.nodes.find((n) => n.id === 'cls_a');
     expect(loop).toMatchObject({ from: 'cls_a', to: 'cls_a', bundleSize: 9 });
     expect(loop?.points.length).toBeGreaterThanOrEqual(3);
+    // step 5.5d: the loop is at the top-right corner: it leaves the top edge and enters the right edge, near the corner
+    const right = (owner?.x ?? 0) + (owner?.width ?? 0);
+    const first = loop?.points[0];
+    const last = loop?.points[(loop?.points.length ?? 1) - 1];
+    expect(first).toEqual({ x: right - LOOP_INSET, y: owner?.y });
+    expect(last).toEqual({ x: right, y: (owner?.y ?? 0) + LOOP_INSET });
     for (const p of loop?.points ?? []) {
-      expect(p.x).toBeGreaterThanOrEqual((owner?.x ?? 0) + (owner?.width ?? 0));
-      expect(p.y).toBeGreaterThanOrEqual(owner?.y ?? 0);
-      expect(p.y).toBeLessThanOrEqual((owner?.y ?? 0) + (owner?.height ?? 0));
+      expect(p.x).toBeGreaterThanOrEqual(right - LOOP_INSET);
+      expect(p.y).toBeLessThanOrEqual((owner?.y ?? 0) + LOOP_INSET);
+      expect(p.y).toBeGreaterThanOrEqual(0);
     }
     expect(loop?.arrowHead).toBe('filled');
   });
@@ -142,12 +149,12 @@ describe('self-loops (ADV-005, decision Q4)', () => {
     expect(scene.bounds.width).toBeGreaterThanOrEqual(Math.max(...(loop?.points ?? []).map((p) => p.x)));
   });
 
-  it('a single loop edge is a scene edge with from === to and no bundle size', () => {
+  it('a single loop edge is a scene edge with from === to and a chip of 1 (step 5.5d: every loop has its chip)', () => {
     const single = pipe(projectionOf({ nodes: hubs, edges: [edge('e1', 'cls_b', 'cls_b')] }), ports).scene;
     expect(single.edges).toHaveLength(1);
     expect(single.edges[0]).toMatchObject({ from: 'cls_b', to: 'cls_b' });
-    expect(single.edges[0]?.bundleSize).toBeUndefined();
-    expect(single.edges[0]?.ariaLabel).toBe('Alcohols back to itself, 1 reaction');
+    expect(single.edges[0]?.bundleSize).toBe(1);
+    expect(single.edges[0]?.ariaLabel).toBe('1 reaction that stays within Alcohols');
   });
 
   it('say so in the aria label of the node', () => {
@@ -242,7 +249,7 @@ describe('a hostile name stays text, character for character (ADV-033 scene part
     expect(scene.nodes[0]?.label).toEqual([{ text: hostile }]);
     expect(scene.nodes[0]?.sublabel?.map((r) => r.text).join('')).toBe(hostile);
     expect(scene.nodes[0]?.ariaLabel.startsWith(`${hostile}, class hub`)).toBe(true);
-    expect(scene.edges[0]?.ariaLabel).toBe(`${hostile} back to itself, 1 reaction`);
+    expect(scene.edges[0]?.ariaLabel).toBe(`1 reaction that stays within ${hostile}`);
   });
 });
 

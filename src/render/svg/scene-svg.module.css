@@ -11,7 +11,7 @@
 /* Edges: the dash pattern and the width are attributes (geometry.ts); the colour is here. */
 .edge {
   fill: none;
-  stroke: var(--color-ink-2);
+  stroke: var(--color-ink);
   stroke-linejoin: round;
 }
 
@@ -39,14 +39,20 @@
 }
 
 .markerFilled {
-  fill: var(--color-ink-2);
+  fill: var(--color-ink);
   stroke: none;
 }
 
 .markerOpen {
   fill: none;
-  stroke: var(--color-ink-2);
+  stroke: var(--color-ink);
   stroke-width: 1.5;
+}
+
+/* The arrowhead of a hovered or selected arrow (overlay layer): filled, in the accent. */
+.markerAccent {
+  fill: var(--color-accent);
+  stroke: none;
 }
 
 /* Node glyphs */
@@ -233,11 +239,7 @@
 
 .count {
   fill: var(--color-ink);
-  stroke: var(--color-paper);
-  stroke-width: 3px;
-  stroke-linejoin: round;
-  paint-order: stroke;
-  font-size: 10px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   text-anchor: middle;
 }
@@ -249,12 +251,25 @@
   stroke-width: 2;
 }
 
-.selectedEdge {
+.chipPill {
+  fill: var(--color-paper);
+  stroke: var(--color-ink-2);
+  stroke-width: 1;
+}
+
+/* A hovered or selected arrow (step 5.5d, item b): heavier, in the accent, with its two families outlined. */
+.selectedEdge,
+.hoverEdge {
   fill: none;
   stroke: var(--color-accent);
-  stroke-width: 5;
-  stroke-opacity: 0.35;
+  stroke-width: 4;
   stroke-linejoin: round;
+}
+
+.endBox {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
 }
 
 .focus {

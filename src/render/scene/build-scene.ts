@@ -11,7 +11,7 @@ import type { FormattedText, LodLevel, NodeSizes, Scene, SceneBadge, SceneEdge, 
 import { styleOf } from './edge-style';
 import { partsToRuns } from './formatted-text';
 import type { LabelSize, LabelSizes } from './label-sizes';
-import { loopGeometry } from './loops';
+import { loopGeometry, LOOP_RISE } from './loops';
 import { contentOf, type NodeContent } from './node-content';
 import { drawnPaths, type DrawnPath } from './paths';
 
@@ -71,7 +71,7 @@ export function midpoint(points: readonly Point[]): Point {
 
 function arrowText(path: DrawnPath, ports: ScenePorts): { above?: FormattedText; below?: FormattedText } {
   const edge = path.edges[0] as DrawnPath['edges'][number];
-  if (path.bundled || edge.semantic === 'membership' || edge.semantic === 'overflow') return {};
+  if (path.bundled || path.loop || edge.semantic === 'membership' || edge.semantic === 'overflow') return {};
   const text = ports.arrowTextOf(edge);
   const above = text === undefined ? [] : partsToRuns(text.above);
   const below = text === undefined ? [] : partsToRuns(text.below);
@@ -83,8 +83,29 @@ function labelCentre(at: Point | undefined, size: LabelSize | undefined): Point 
   return at === undefined || size === undefined ? undefined : { x: at.x + size.width / 2, y: at.y + size.height / 2 };
 }
 
-export function buildScene(projection: Projection, layout: LayoutResult, options: SceneOptions, ports: ScenePorts): SceneResult {
+/**
+ * A loop reaches `LOOP_RISE` px above its node: when the layout puts a node with a loop closer than that to y = 0, everything the
+ * layout drew moves down by the difference, so that every coordinate of the Scene stays at least 0 (the layout answer is not changed).
+ */
+function lifted(layout: LayoutResult, owners: readonly string[]): LayoutResult {
+  let top = Infinity;
+  for (const id of owners) top = Math.min(top, layout.positions[id]?.y ?? Infinity);
+  const lift = top === Infinity ? 0 : Math.max(0, LOOP_RISE - top);
+  if (lift === 0) return layout;
+  const down = (p: Point): Point => ({ x: p.x, y: p.y + lift });
+  const map = <T>(record: Readonly<Record<string, T>>, f: (value: T) => T): Record<string, T> => Object.fromEntries(Object.entries(record).map(([key, value]) => [key, f(value)]));
+  return {
+    ...layout,
+    positions: map(layout.positions, down),
+    edgeRoutes: map(layout.edgeRoutes, (route) => route.map(down)),
+    ...(layout.labelPositions === undefined ? {} : { labelPositions: map(layout.labelPositions, down) }),
+    bounds: { width: layout.bounds.width, height: layout.bounds.height + lift },
+  };
+}
+
+export function buildScene(projection: Projection, layoutResult: LayoutResult, options: SceneOptions, ports: ScenePorts): SceneResult {
   const paths = drawnPaths(projection);
+  const layout = lifted(layoutResult, paths.filter((path) => path.loop).map((path) => path.from));
   const counts = countsByNode(paths);
   const contents = new Map<string, NodeContent>();
   const nodes: SceneNode[] = [];
@@ -157,7 +178,7 @@ export function buildScene(projection: Projection, layout: LayoutResult, options
       arrowHead: style.arrowHead,
       labelAt,
       ...arrowText(path, ports),
-      ...(path.bundled ? { bundleSize: path.total } : {}),
+      ...(path.bundled || (path.loop && !structural) ? { bundleSize: path.total } : {}),
       minLod: structural ? 1 : 0,
       ariaLabel: edgeAria(path, style.semantic, contents.get(path.from)?.name ?? path.from, contents.get(path.to)?.name ?? path.to, path.edges.length, style.viaMembership),
     });

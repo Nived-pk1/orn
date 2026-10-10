@@ -11,10 +11,10 @@ export { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE };
 
 /** Dash pattern by stroke. Solid has none. Patterns differ in length so they differ at any width. */
 export const STROKE_DASH: Readonly<Record<SceneEdge['stroke'], string | undefined>> = { solid: undefined, dashed: '8 5', dotted: '1.5 4.5' };
-/** Width by weight (user units): heavy 3, normal 1.5, light 1. */
+/** Width by weight (user units): heavy 3, normal 2, light 1.25 (step 5.5d: the ordinary line is 2 px, heavier stays heavier). */
 /** The invisible hit path of an edge is this wide (px, world units), wider than any stroke; step 5.7 settles sizes against UI_ARCHITECTURE §11. */
 export const EDGE_HIT_WIDTH = 12;
-export const WEIGHT_WIDTH: Readonly<Record<SceneEdge['weight'], number>> = { heavy: 3, normal: 1.5, light: 1 };
+export const WEIGHT_WIDTH: Readonly<Record<SceneEdge['weight'], number>> = { heavy: 3, normal: 2, light: 1.25 };
 
 /** Dash patterns of the boxes that stand for something that is not a record: the Unclassified hub and "+N more". */
 export const BOX_DASH = { unclassified: '2 3', overflow: '6 4' } as const;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LayoutEdgeInput, LayoutNodeInput, LayoutRequest, LayoutResult, Point } from '../contracts';
 import { checkRequest } from '../validate';
-import { layoutGrid, ARC_OFFSETS, PARALLEL_GAP } from './index';
+import { layoutGrid, ARC_OFFSETS, PORT_GAP } from './index';
 import { clipBetween, pointAt, polylineHits, sampleQuadratic, segmentHits } from './geometry';
 import { SLIDES } from './chips';
 import { layoutCacheKey } from '../cache-key';
@@ -113,14 +113,14 @@ describe('edges', () => {
     expect(route[1]).toEqual({ x: b.x, y: b.y + b.height / 2 });
   });
 
-  it('an arrow and its reverse are two parallel lines PARALLEL_GAP apart', () => {
+  it('an arrow and its reverse are two parallel lines PORT_GAP apart', () => {
     const r = request([node('a', { column: 0, row: 0 }), node('b', { column: 1, row: 0 })], [edge('e1', 'a', 'b'), edge('e2', 'b', 'a')]);
     const out = run(r);
     const one = out.edgeRoutes['e1'] as Point[];
     const two = out.edgeRoutes['e2'] as Point[];
     expect(one).toHaveLength(2);
     expect(two).toHaveLength(2);
-    expect(Math.abs((one[0] as Point).y - (two[0] as Point).y)).toBeCloseTo(PARALLEL_GAP, 6);
+    expect(Math.abs((one[0] as Point).y - (two[0] as Point).y)).toBeCloseTo(PORT_GAP, 6);
     expect((one[0] as Point).x).toBeCloseTo((two[1] as Point).x, 6);
     // the forward line runs left to right, the reverse one right to left
     expect((one[1] as Point).x).toBeGreaterThan((one[0] as Point).x);

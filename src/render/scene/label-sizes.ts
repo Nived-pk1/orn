@@ -23,6 +23,11 @@ export const BADGE_SIZE = 14;
 /** Margin added around the measured text: the paper-coloured outline (item f) and a little air. */
 export const LABEL_MARGIN = { x: 10, y: 6 } as const;
 
+/** A count chip on an arrow (step 5.5d, item c): a pill with 12 px text, `CHIP_HEIGHT` tall, `chipWidth(count)` wide. */
+export const CHIP_TEXT_SIZE = 12;
+export const CHIP_HEIGHT = 20;
+export const chipWidth = (count: number): number => 12 + 8 * String(count).length;
+
 export const countWidth = (count: number): number => BADGE_SIZE + Math.max(0, String(count).length - 1) * 6;
 
 const STYLE: TextStyle = { size: ARROW_TEXT_SIZE, weight: 'regular', mono: false };
@@ -35,7 +40,7 @@ export function arrowLines(above: FormattedText | undefined, below: FormattedTex
 
 export function linesOfPath(path: DrawnPath, ports: ScenePorts): readonly FormattedText[] {
   const edge = path.edges[0] as DrawnPath['edges'][number];
-  if (path.bundled || edge.semantic === 'membership' || edge.semantic === 'overflow') return [];
+  if (path.bundled || path.loop || edge.semantic === 'membership' || edge.semantic === 'overflow') return [];
   const text = ports.arrowTextOf(edge);
   return text === undefined ? [] : arrowLines(partsToRuns(text.above), partsToRuns(text.below));
 }
@@ -45,17 +50,15 @@ export function labelSizes(projection: Projection, ports: ScenePorts, measure: T
   for (const path of drawnPaths(projection)) {
     const edge = path.edges[0] as DrawnPath['edges'][number];
     if (edge.semantic === 'membership' || edge.semantic === 'overflow') continue;
-    let width: number;
-    let height: number;
-    if (path.bundled) {
-      width = countWidth(path.total);
-      height = BADGE_SIZE;
-    } else {
-      const lines = linesOfPath(path, ports);
-      if (lines.length === 0) continue;
-      width = Math.max(...lines.map((line) => safe(measure(line, STYLE).width)));
-      height = lines.length * ARROW_LINE_HEIGHT;
+    if (path.bundled || path.loop) {
+      // a chip is its own box: the pill is `CHIP_HEIGHT` tall and the room reserved for it is as tall (no vertical margin; it would add 8 px to every layer gap)
+      sizes.set(path.id, { width: roundUpToGrid(chipWidth(path.total) + LABEL_MARGIN.x), height: roundUpToGrid(CHIP_HEIGHT) });
+      continue;
     }
+    const lines = linesOfPath(path, ports);
+    if (lines.length === 0) continue;
+    const width = Math.max(...lines.map((line) => safe(measure(line, STYLE).width)));
+    const height = lines.length * ARROW_LINE_HEIGHT;
     sizes.set(path.id, { width: roundUpToGrid(width + LABEL_MARGIN.x), height: roundUpToGrid(height + LABEL_MARGIN.y) });
   }
   return sizes;

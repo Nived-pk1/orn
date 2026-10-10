@@ -178,7 +178,7 @@ describe('edges: stroke, weight and arrowheads', () => {
       return { ref, defs: all(container, 'marker') };
     };
     const reaction = marker(styled({ semantic: 'transforms_to' }));
-    expect(reaction.defs).toHaveLength(2);
+    expect(reaction.defs).toHaveLength(3); // filled, open and the accent head of an emphasised arrow (step 5.5d)
     const id = /^url\(#(.+)\)$/.exec(reaction.ref ?? '')?.[1] as string;
     expect(reaction.defs.find((m) => m.id === id)?.querySelector('path')?.getAttribute('class')).toContain('markerFilled');
     const open = marker(styled({ semantic: 'uses_reagent' }));
@@ -193,16 +193,7 @@ describe('edges: stroke, weight and arrowheads', () => {
     const { container } = draw(loop);
     expect(loop.edges[0]?.from).toBe(loop.edges[0]?.to);
     expect(all(container, '[data-edge-id]')).toHaveLength(1);
-    expect((edgeEl(container, 'e1').querySelector('path') as Element).getAttribute('d')).toMatch(/^M[\d. -]+( L[\d. -]+){3}$/);
-  });
-
-  it('shows the count of a bundle (the TOTAL) from LOD 2 on', () => {
-    const bundled = withEdge(styled({}), 'e1', { bundleSize: 752 });
-    const lod1 = draw(bundled, { lod: 1 });
-    expect(lod1.container.querySelector('[data-count-of]')).toBeNull();
-    cleanup();
-    const lod2 = draw(bundled, { lod: 2 });
-    expect((lod2.container.querySelector('[data-count-of="e1"] text') as Element).textContent).toBe('752');
+    expect((edgeEl(container, 'e1').querySelector('path') as Element).getAttribute('d')).toMatch(/^M[\d. -]+( L[\d. -]+){3,}$/); // step 5.5d: the loop is a sampled curve
   });
 });
 
@@ -278,14 +269,17 @@ describe('arrow text in the box the layout reserved (step 5.5a, items a and f)',
     expect(Math.abs((one.ys[0] as number) - one.at.y)).toBeLessThan(ARROW_LINE_HEIGHT);
   });
 
-  it('arrow text and the bundle count have a paper-coloured outline drawn under the glyphs, from the stylesheet and the tokens', () => {
+  it('arrow text has a paper-coloured outline drawn under the glyphs, and the count chip a paper pill, from the stylesheet and the tokens', () => {
     const css = readFileSync(resolve(__dirname, 'scene-svg.module.css'), 'utf8');
-    for (const selector of ['.arrowText', '.count']) {
-      const start = css.indexOf(`${selector} {`);
-      const block = start < 0 ? "" : css.slice(start, css.indexOf("}", start));
-      expect(block, selector).toContain('paint-order: stroke');
-      expect(block, selector).toContain('stroke: var(--color-paper)');
-    }
+    const start = css.indexOf('.arrowText {');
+    const block = start < 0 ? '' : css.slice(start, css.indexOf('}', start));
+    expect(block).toContain('paint-order: stroke');
+    expect(block).toContain('stroke: var(--color-paper)');
+    // the count sits on a pill with a paper fill and a border (step 5.5d), 12 px text
+    const chip = css.slice(css.indexOf('.chipPill {'), css.indexOf('}', css.indexOf('.chipPill {')));
+    expect(chip).toContain('fill: var(--color-paper)');
+    expect(chip).toContain('stroke: var(--color-ink-2)');
+    expect(css.slice(css.indexOf('.count {'), css.indexOf('}', css.indexOf('.count {')))).toContain('font-size: 12px');
     const { container } = draw(demoNavigatorScene(false), { lod: 2 });
     expect(all(container, '[data-arrow-text-of] text[style], [data-count-of] text[style]')).toEqual([]);
   });
@@ -360,7 +354,8 @@ describe('level of detail', () => {
       expect(all(container, '[data-edge-id]')).toHaveLength(visible(of, 1).edges);
       expect(all(container, '[data-label-of]')).toHaveLength(visible(of, 1).nodes);
       expect(all(container, '[data-arrow-text-of]')).toHaveLength(0);
-      expect(all(container, '[data-badges-of], [data-count-of]')).toHaveLength(0);
+      expect(all(container, '[data-badges-of]')).toHaveLength(0);
+      expect(all(container, '[data-count-of]')).toHaveLength(of.edges.filter((e) => e.bundleSize !== undefined && e.minLod <= 1).length); // chips from LOD 1 (step 5.5d)
       cleanup();
     }
   });

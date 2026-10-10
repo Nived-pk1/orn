@@ -1,12 +1,12 @@
 /**
  * Count chips of the grid layout (step 5.5c). A chip sits at the middle of its line. When it would overlap a box or a chip placed
- * before it, it slides along the line to the first free place of `SLIDES` (fractions of the line's length). None free: the chip stays
+ * before it, it slides along the line to the first free place of `SLIDES` (the middle, then alternately each side of it, step 5.5d: nine places) (fractions of the line's length). None free: the chip stays
  * at the middle and is counted. Edges are taken in id order, so the result does not depend on anything but the request.
  */
 import type { LayoutEdgeInput, Point } from '../contracts';
 import { overlaps, pointAt, type Rect } from './geometry';
 
-export const SLIDES: readonly number[] = [0.5, 0.4, 0.6, 0.3, 0.7];
+export const SLIDES: readonly number[] = [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8, 0.15, 0.85];
 /** Air kept between a chip and whatever it must not overlap. */
 export const CHIP_MARGIN = 2;
 
