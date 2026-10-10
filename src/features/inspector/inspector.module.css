@@ -1,0 +1,28 @@
+.root { display: flex; flex-direction: column; gap: var(--space-3); color: var(--color-ink); font-size: var(--text-14); }
+.header { display: flex; flex-direction: column; gap: var(--space-2); }
+.nav { display: flex; gap: var(--space-2); align-items: center; }
+.nav button, .actions button { min-height: var(--hit-min); padding: 0 var(--space-3); border: 1px solid var(--color-rule); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-ink); }
+.nav button:disabled { color: var(--color-ink-2); }
+.title { margin: 0; font-size: var(--text-20); overflow-wrap: anywhere; }
+.kind { color: var(--color-ink-2); font-size: var(--text-13); }
+.badges { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.badges li { border: 1px solid var(--color-rule); border-radius: var(--radius-control); padding: 0 var(--space-2); font-size: var(--text-13); }
+.badges li[data-severity='error'] { border-color: var(--color-error); }
+.badges li[data-severity='review_required'] { border-color: var(--color-review); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.status { margin: 0; color: var(--color-ink-2); font-size: var(--text-13); }
+.level { border-top: 1px solid var(--color-rule); padding-top: var(--space-2); }
+.levelHeading { margin: 0; font-size: var(--text-16); }
+.levelHeading button { min-height: var(--hit-min); width: 100%; text-align: left; border: 0; background: transparent; color: var(--color-ink); font: inherit; cursor: pointer; }
+.levelBody { padding: var(--space-2) 0; }
+.facts { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.fact dt { color: var(--color-ink-2); font-size: var(--text-12); }
+.fact dd { margin: 0; overflow-wrap: anywhere; }
+.subheading { margin: var(--space-3) 0 var(--space-1); font-size: var(--text-14); }
+.muted { color: var(--color-ink-2); }
+.missing { color: var(--color-error); }
+.recordLink { color: var(--color-accent); text-decoration: underline; }
+.rich p { margin: 0 0 var(--space-2); }
+.findings { margin: 0; padding-left: var(--space-4); }
+.raw { max-height: 320px; overflow: auto; background: var(--color-surface); border: 1px solid var(--color-rule); padding: var(--space-2); font-size: var(--text-12); white-space: pre-wrap; overflow-wrap: anywhere; }
+.structure { width: 100%; max-width: 256px; }

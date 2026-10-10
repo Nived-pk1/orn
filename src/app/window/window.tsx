@@ -1,15 +1,17 @@
 /**
  * The window (steps 5.1d, 5.2): the shell frame of UI_ARCHITECTURE §2 filled with what exists. Status line -> status bar; banners and
  * the start-up report -> the banner region; the first-run screen and the record counts -> the canvas; the import summary is a Dialog
- * and its result a Toast (import-panel.tsx); the inspector shows an empty state until step 5.6. Composition only: the frame is
+ * and its result a Toast (import-panel.tsx); the inspector shows the record in focus (step 5.6a). Composition only: the frame is
  * `src/ui/shell` and knows nothing of `AppStatus`; chemistry never lives here.
  */
 import { useCallback, useMemo, useState } from "react";
+import { Inspector, type InspectorHost } from "@/features/inspector";
 import {
   NavigatorView,
   NavigatorProvider,
   NavigatorStatus,
   useFamilyPageOpen,
+  useNavigator,
 } from "@/features/navigator";
 import {
   RECORD_KINDS,
@@ -105,19 +107,26 @@ function Canvas(props: {
   );
 }
 
-function InspectorEmpty() {
-  return (
-    <section aria-label="Inspector empty state">
-      <p>
-        What you select in the navigator will be described here. The inspector
-        arrives in step 5.6a and search in step 5.8.
-      </p>
-      <p>
-        The record counts of the dataset are under Dataset in the mode list on
-        the left.
-      </p>
-    </section>
+/** The inspector with what only the window knows: the arrows on the canvas, whether the navigator is shown, how to open the pane. */
+function InspectorPanel(props: {
+  readonly navigatorShown: boolean;
+  readonly openPane: () => void;
+}) {
+  const { inspector } = useApp();
+  const { model } = useNavigator();
+  const { navigatorShown, openPane } = props;
+  const host = useMemo<InspectorHost>(
+    () => ({
+      openPane,
+      navigatorShown,
+      edgeEnds: (edgeId) => {
+        const edge = model.getState().scene?.edges.find((e) => e.id === edgeId);
+        return edge === undefined ? undefined : { from: edge.from, to: edge.to };
+      },
+    }),
+    [model, navigatorShown, openPane],
   );
+  return <Inspector ports={inspector} host={host} />;
 }
 
 /** The shell; its title gives up the h1 while the family page (which has its own) is on the canvas. */
@@ -133,6 +142,12 @@ export function Window() {
   const width = usePanels(panels, (s) => s.inspectorWidth);
   const open = usePanels(panels, (s) => s.inspectorOpen);
   const [mode, setMode] = useState(NAVIGATOR_MODE);
+  const [openRequest, setOpenRequest] = useState(0);
+  // A pick on the canvas shows the record: the wide pane opens (its state is saved); the drawer or sheet is asked through the shell.
+  const openPane = useCallback(() => {
+    panels.getState().setInspectorOpen(true);
+    setOpenRequest((n) => n + 1);
+  }, [panels]);
   const pane = useMemo<InspectorPane>(
     () => ({
       width,
@@ -166,8 +181,16 @@ export function Window() {
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"
-          inspector={<InspectorEmpty />}
+          inspector={
+            <ErrorBoundary label="The inspector">
+              <InspectorPanel
+                navigatorShown={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
+                openPane={openPane}
+              />
+            </ErrorBoundary>
+          }
           pane={pane}
+          openRequest={openRequest}
           statusBar={
             <ErrorBoundary label="The status panel">
               <StatusLine />

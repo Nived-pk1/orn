@@ -11,7 +11,7 @@ describe('the navigator UI stores', () => {
     expect(stores.viewports.getState().views).toEqual({});
   });
 
-  it('selection does not notify when nothing changes', () => {
+  it('selection notifies a repeated pick (the inspector opens on a click on what is already selected) but not a repeated clear', () => {
     const store = createSelectionStore();
     let calls = 0;
     store.subscribe(() => (calls += 1));
@@ -19,7 +19,7 @@ describe('the navigator UI stores', () => {
     store.getState().select({ kind: 'node', id: 'a' });
     store.getState().select({ kind: 'edge', id: 'a' });
     store.getState().select(null);
-    expect(calls).toBe(3);
+    expect(calls).toBe(4);
   });
 
   it('toggle expands both ways, then collapses; prune removes the entries of unknown nodes and says which', () => {

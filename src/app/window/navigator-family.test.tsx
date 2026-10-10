@@ -154,7 +154,7 @@ describe('the family page', () => {
     renderWithApp(app);
     const aldehydes = await screen.findByRole('graphics-symbol', { name: /^Aldehydes, class hub/ });
     fireEvent.click(aldehydes);
-    fireEvent.click(screen.getByRole('button', { name: 'Open family' }));
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name: 'Open family' }));
     await screen.findByRole('region', { name: /^Family page/ });
     act(() => app.navigator.timers.advance(0));
     await screen.findByRole('heading', { level: 2, name: /^Reactions of / });

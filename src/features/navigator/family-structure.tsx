@@ -6,9 +6,9 @@
  */
 import type { RecordRef } from '@/core/schema';
 import { STRUCTURE_AREA } from '@/render/scene';
+import { useRetryingDepiction } from '@/render/svg';
 import { useFamilyEnv } from './family-env';
 import { FormulaText } from './family-text';
-import { useDepiction } from './use-depiction';
 import styles from './family-page.module.css';
 
 export function Structure(props: { readonly substance: RecordRef; readonly caption?: string }) {
@@ -16,7 +16,7 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
   const described = env.describe(props.substance);
   const name = described?.name ?? props.substance.id;
   const key = env.keyOf(props.substance);
-  const status = useDepiction(env.manager, key, env.timers);
+  const status = useRetryingDepiction(env.manager, key, env.timers);
   const boxStyle = { width: STRUCTURE_AREA.width, height: STRUCTURE_AREA.height };
   const url = key !== undefined && status.state === 'ready' ? status.url : undefined;
   const unavailable = key !== undefined && status.state === 'unavailable';

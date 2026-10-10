@@ -19,11 +19,11 @@ describe('the window with records', () => {
     expect(screen.queryByRole('region', { name: 'First run' })).toBeNull();
   });
 
-  it('says in words that the inspector arrives in step 5.6a and search in 5.8, and where the record counts are', async () => {
+  it('the inspector says what to pick and where the record counts are', async () => {
     renderWithApp(fakeApp({ state: demoState(), panels: { stored: { inspectorOpen: true } } }));
     await screen.findByRole('group', { name: /^Navigator:/ });
     const inspector = screen.getByRole('region', { name: 'Inspector empty state' });
-    expect(within(inspector).getByText(/inspector arrives in step 5\.6a and search in step 5\.8/)).toBeTruthy();
+    expect(within(inspector).getByText(/Select a family, an arrow or a reaction card/)).toBeTruthy();
     expect(within(inspector).getByText(/record counts of the dataset are under Dataset/)).toBeTruthy();
   });
 

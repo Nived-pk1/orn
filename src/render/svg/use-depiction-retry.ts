@@ -1,12 +1,17 @@
 /**
- * A structure for a mounted card (step 5.5b; docs/PERFORMANCE_ARCHITECTURE.md §6, §8). The page asks the depiction manager for a key
+ * (Moved from the navigator in step 5.6a so that the inspector shares it.) A structure for a mounted card (step 5.5b; docs/PERFORMANCE_ARCHITECTURE.md §6, §8). The page asks the depiction manager for a key
  * only while a card that shows it is mounted, and cancels it when the last such card goes (several cards may show the same species:
  * a count per manager and key). A key that comes back idle (the service was busy, or another card's cancel dropped it) is asked for
  * again a bounded number of times, a little later each time; after that the card shows the name. `BUSY` never reaches the user.
  */
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import type { DepictionManager, DepictionStatus } from '@/render/svg';
-import type { NavigatorPorts } from './contracts';
+import type { DepictionStatus } from './contracts';
+import type { DepictionManager } from './depictions';
+
+/** The timers the hook needs: a delayed call that answers its own cancel. */
+export interface DepictionTimers {
+  after(ms: number, run: () => void): () => void;
+}
 
 export const MAX_DEPICTION_RETRIES = 3;
 export const RETRY_DELAY_MS = 250;
@@ -31,7 +36,7 @@ function release(manager: DepictionManager, key: string): number {
   return Math.max(left, 0);
 }
 
-export function useDepiction(manager: DepictionManager | undefined, key: string | undefined, timers: NavigatorPorts['timers']): DepictionStatus {
+export function useRetryingDepiction(manager: DepictionManager | undefined, key: string | undefined, timers: DepictionTimers): DepictionStatus {
   const subscribe = useCallback((listener: () => void) => (manager === undefined || key === undefined ? NO_UNSUBSCRIBE : manager.subscribe(key, listener)), [manager, key]);
   const snapshot = useCallback(() => (manager === undefined || key === undefined ? IDLE : manager.snapshot(key)), [manager, key]);
   const status = useSyncExternalStore(subscribe, snapshot, snapshot);

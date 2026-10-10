@@ -19,7 +19,8 @@ const hub = (name: string): HTMLElement => screen.getByRole('graphics-symbol', {
 const symbols = (): number => screen.getAllByRole('graphics-symbol').length;
 // The line naming the selection sits next to the canvas toolbar (step 5.5a review, item g).
 const inspector = (): HTMLElement => screen.getByRole('toolbar', { name: 'Canvas tools' });
-const button = (name: string): HTMLElement => screen.getByRole('button', { name });
+// the toolbar's buttons (the inspector, once a record is picked, has an Open family button of its own)
+const button = (name: string): HTMLElement => within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name });
 const reasonOf = (name: string): string | null => {
   const id = button(name).getAttribute('aria-describedby');
   return id === null ? null : (document.getElementById(id)?.textContent ?? null);

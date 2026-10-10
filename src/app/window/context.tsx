@@ -4,6 +4,7 @@
  */
 import { createContext, useContext, type ReactNode } from 'react';
 import type { AppServices } from '@/app/services';
+import type { InspectorPorts } from '@/features/inspector';
 import type { NavigatorPorts } from '@/features/navigator';
 import type { PanelsStore } from '@/ui/state';
 
@@ -20,6 +21,8 @@ export interface AppContextValue {
   readonly panels: PanelsStore;
   /** What the navigator needs (step 5.5a): the store, indexes, layout service, text measurer, UI stores and timers. */
   readonly navigator: NavigatorPorts;
+  /** What the inspector needs (step 5.6a): the store, findings, L4 checks, depictions and the UI stores. */
+  readonly inspector: InspectorPorts;
   /** Reloads the page (`location.reload()` in the browser). */
   reload(): void;
 }

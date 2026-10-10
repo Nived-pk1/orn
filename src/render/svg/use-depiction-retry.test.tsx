@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer } from '@/render/svg';
+import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer } from './depictions';
 import { manualTimers } from '@/test-support/navigator-kit';
-import { MAX_DEPICTION_RETRIES, RETRY_DELAY_MS, useDepiction } from './use-depiction';
+import { MAX_DEPICTION_RETRIES, RETRY_DELAY_MS, useRetryingDepiction as useDepiction } from './use-depiction-retry';
 
 afterEach(cleanup);
 

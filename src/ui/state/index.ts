@@ -1,6 +1,7 @@
 export {
   clampWidth,
   createPanelsStore,
+  INSPECTOR_LEVELS,
   INSPECTOR_DEFAULT,
   INSPECTOR_MAX,
   INSPECTOR_MIN,
@@ -9,7 +10,7 @@ export {
   parsePanels,
   SAVE_DEBOUNCE_MS,
 } from './panels';
-export type { PanelPersistence, PanelsPort, PanelsState, PanelsStore, PanelsTimers, PanelValues, ParsedPanels } from './panels';
+export type { InspectorLevel, PanelPersistence, PanelsPort, PanelsState, PanelsStore, PanelsTimers, PanelValues, ParsedPanels } from './panels';
 export { usePanels } from './use-panels';
 export {
   createActiveExamStore,
@@ -43,3 +44,5 @@ export type {
 } from './navigator-stores';
 export { createNavigatorUi, MAX_SAVED_EXPANDED, NAVIGATOR_UI_KEY, parseNavigatorUi } from './navigator-persist';
 export type { NavigatorUi, NavigatorUiPort, NavigatorUiStatus, ParsedNavigatorUi } from './navigator-persist';
+export { canBack, canForward, createInspectorStore, currentOf, MAX_HISTORY } from './inspector-store';
+export type { InspectorState, InspectorStore } from './inspector-store';

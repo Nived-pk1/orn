@@ -5,7 +5,7 @@
  * overlay drawer; below 900 px one pane, the inspector a bottom sheet and the mode rail a bottom bar. The CSS decides the layout; the
  * breakpoint is read here only to know which open state a toggle changes (the persisted pane or the session's drawer).
  */
-import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { IconButton, openLayers } from '@/ui/primitives';
 import { ModeRail, type ModeItem } from './mode-rail';
 import { ResizeHandle } from './resize-handle';
@@ -36,6 +36,8 @@ export interface ShellProps {
   readonly inspectorTitle: string;
   readonly inspector: ReactNode;
   readonly pane: InspectorPane;
+  /** A number that goes up each time something asks for the inspector below the wide breakpoint (the drawer or sheet opens). */
+  readonly openRequest?: number;
   readonly statusBar: ReactNode;
 }
 
@@ -45,6 +47,13 @@ export function Shell(props: ShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const frame = useRef<HTMLDivElement>(null);
   const wide = breakpoint === 'wide';
+  const requested = props.openRequest ?? 0;
+  const seen = useRef(requested);
+  useEffect(() => {
+    if (seen.current === requested) return;
+    seen.current = requested;
+    setDrawerOpen(true);
+  }, [requested]);
   const inspectorOpen = wide ? pane.open : drawerOpen;
   const toggle = (): void => (wide ? pane.onOpen(!pane.open) : setDrawerOpen((open) => !open));
   const edge = useCallback(() => frame.current?.getBoundingClientRect().right ?? null, []);

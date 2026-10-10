@@ -1,5 +1,5 @@
 /**
- * The panels store (step 5.2, UI_ARCHITECTURE §4, PERSISTENCE §12): the inspector's width and open state, "Start empty dismissed" and (step 5.5d) the dismissed storage warning.
+ * The panels store (step 5.2, UI_ARCHITECTURE §4, PERSISTENCE §12): the inspector's width, open state and (step 5.6a) deepest level opened, "Start empty dismissed" and (step 5.5d) the dismissed storage warning.
  * A small Zustand store, persisted in `uiState` key `panels` through a PORT that `src/app` provides (src/ui imports neither
  * `src/app` nor `src/persistence`). Reading is TOLERANT: each field is checked by itself, a bad field falls back to its default and
  * the damage is reported in `resetFields` (never fatal, never silent); unknown fields are kept and written back. Writing is
@@ -21,10 +21,15 @@ export interface PanelValues {
   readonly startEmptyDismissed: boolean;
   /** The warning "the browser did not grant persistent storage" was dismissed (step 5.5d, item k); the status bar keeps a short line, so it is never silent. */
   readonly storageNoticeDismissed: boolean;
+  /** The deepest inspector level (2 to 5) the user has opened; the default for the next record (UI_ARCHITECTURE §9). L1 is always shown, L2 is open the first time. */
+  readonly inspectorLevel: InspectorLevel;
 }
 
+export const INSPECTOR_LEVELS = [2, 3, 4, 5] as const;
+export type InspectorLevel = (typeof INSPECTOR_LEVELS)[number];
+
 /** The inspector starts closed until it has something to show (step 5.6a); a saved choice wins (step 5.5a review, item g). */
-export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false });
+export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2 });
 
 /** What the store says about keeping its values (shown in the status bar; nothing here is silent). */
 export type PanelPersistence =
@@ -54,6 +59,8 @@ export interface PanelsState extends PanelValues {
   setInspectorOpen(open: boolean): void;
   dismissStartEmpty(): void;
   dismissStorageNotice(): void;
+  /** Opening a level deeper than the saved one saves it; opening or closing a shallower one changes nothing. */
+  openInspectorLevel(level: InspectorLevel): void;
 }
 
 export type PanelsStore = StoreApi<PanelsState>;
@@ -68,7 +75,7 @@ export interface ParsedPanels {
   readonly extra: Readonly<Record<string, unknown>>;
 }
 
-const KNOWN = new Set(['inspectorWidth', 'inspectorOpen', 'startEmptyDismissed', 'storageNoticeDismissed']);
+const KNOWN = new Set(['inspectorWidth', 'inspectorOpen', 'startEmptyDismissed', 'storageNoticeDismissed', 'inspectorLevel']);
 
 export function parsePanels(raw: unknown): ParsedPanels {
   if (raw === undefined) return { values: PANEL_DEFAULTS, damaged: [], extra: {} };
@@ -91,8 +98,13 @@ export function parsePanels(raw: unknown): ParsedPanels {
   const inspectorOpen = bool('inspectorOpen');
   const startEmptyDismissed = bool('startEmptyDismissed');
   const storageNoticeDismissed = bool('storageNoticeDismissed');
+  let inspectorLevel: InspectorLevel = PANEL_DEFAULTS.inspectorLevel;
+  if (record.inspectorLevel !== undefined) {
+    if ((INSPECTOR_LEVELS as readonly unknown[]).includes(record.inspectorLevel)) inspectorLevel = record.inspectorLevel as InspectorLevel;
+    else damaged.push('inspectorLevel');
+  }
   const extra = Object.fromEntries(Object.entries(record).filter(([key]) => !KNOWN.has(key)));
-  return { values: { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed }, damaged, extra };
+  return { values: { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel }, damaged, extra };
 }
 
 export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): PanelsStore {
@@ -118,6 +130,9 @@ export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): Panel
       setInspectorOpen: (open) => change({ inspectorOpen: open }),
       dismissStartEmpty: () => change({ startEmptyDismissed: true }),
       dismissStorageNotice: () => change({ storageNoticeDismissed: true }),
+      openInspectorLevel: (level) => {
+        if (level > get().inspectorLevel) change({ inspectorLevel: level });
+      },
     };
   });
 
@@ -140,9 +155,9 @@ export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): Panel
   async function flushNow(): Promise<void> {
     if (!pending) return;
     pending = false;
-    const { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed } = store.getState();
+    const { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel } = store.getState();
     try {
-      await port.save({ ...parsed.extra, inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed });
+      await port.save({ ...parsed.extra, inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel });
       if (store.getState().persistence.kind !== 'saved') store.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       store.setState({ persistence: { kind: 'save_failed', message: error instanceof Error ? error.message : String(error) } });

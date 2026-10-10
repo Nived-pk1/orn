@@ -42,8 +42,8 @@ describe('createPanelsPort', () => {
 
   it('saves into uiState under the key "panels"', async () => {
     const s = services();
-    await createPanelsPort(s.value).save({ inspectorWidth: 450, inspectorOpen: true, startEmptyDismissed: false, storageNoticeDismissed: false });
-    expect(s.setUiState).toHaveBeenCalledWith('panels', { inspectorWidth: 450, inspectorOpen: true, startEmptyDismissed: false, storageNoticeDismissed: false });
+    await createPanelsPort(s.value).save({ inspectorWidth: 450, inspectorOpen: true, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2 });
+    expect(s.setUiState).toHaveBeenCalledWith('panels', { inspectorWidth: 450, inspectorOpen: true, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2 });
   });
 
   it('a save with no persistence rejects (the store turns that into a status)', async () => {
@@ -59,7 +59,7 @@ describe('createPanelsPort', () => {
     store.getState().setInspectorWidth(480);
     expect(run).toBeDefined();
     run?.();
-    await vi.waitFor(() => expect(s.setUiState).toHaveBeenCalledWith('panels', { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false }));
+    await vi.waitFor(() => expect(s.setUiState).toHaveBeenCalledWith('panels', { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2 }));
     expect(SAVE_DEBOUNCE_MS).toBeGreaterThan(0);
   });
 });

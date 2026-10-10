@@ -16,6 +16,8 @@ export interface Selected {
 
 export interface SelectionState {
   readonly selected: Selected | null;
+  /** Counts every non-null `select` call, also one that changes nothing (step 5.6a): the inspector opens on a click even for what was already selected. Never saved. */
+  readonly picks: number;
   select(next: Selected | null): void;
 }
 export type SelectionStore = StoreApi<SelectionState>;
@@ -25,8 +27,10 @@ const sameSelected = (a: Selected | null, b: Selected | null): boolean => a === 
 export function createSelectionStore(initial: Selected | null = null): SelectionStore {
   return createStore<SelectionState>((set, get) => ({
     selected: initial,
+    picks: 0,
     select(next) {
-      if (!sameSelected(get().selected, next)) set({ selected: next });
+      const picks = next === null ? get().picks : get().picks + 1;
+      if (!sameSelected(get().selected, next) || picks !== get().picks) set({ selected: next, picks });
     },
   }));
 }
@@ -131,6 +135,8 @@ export interface FamilyState {
   readonly target: FamilyTarget | null;
   /** The reaction selected on the page (a click on a card); kept while the page is closed, not saved. */
   readonly reaction: string | null;
+  /** Counts every `selectReaction` call with a reaction, also a repeat (step 5.6a). Never saved. */
+  readonly picks: number;
   openFamily(hubId: string, target?: FamilyTarget): void;
   selectReaction(reactionId: string | null): void;
   /** Back to the overview. */
@@ -145,11 +151,13 @@ export function createFamilyStore(initial: string | null = null): FamilyStore {
     open: initial,
     target: null,
     reaction: null,
+    picks: 0,
     openFamily(hubId, target) {
       set({ open: hubId, target: target ?? null });
     },
     selectReaction(reactionId) {
-      if (get().reaction !== reactionId) set({ reaction: reactionId });
+      const picks = reactionId === null ? get().picks : get().picks + 1;
+      if (get().reaction !== reactionId || picks !== get().picks) set({ reaction: reactionId, picks });
     },
     closeFamily() {
       if (get().open !== null || get().target !== null) set({ open: null, target: null });

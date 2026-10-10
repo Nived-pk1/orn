@@ -8,9 +8,10 @@ import { App } from './App';
 import { createBrowserEnv } from './env';
 import { installLifecycle } from './lifecycle';
 import { createAppServices } from './services';
-import { createNavigatorUi, createPanelsStore, NAVIGATOR_UI_KEY } from '@/ui/state';
+import { createInspectorStore, createNavigatorUi, createPanelsStore, NAVIGATOR_UI_KEY } from '@/ui/state';
 import { createTextMeasurer } from './text-measurer';
 import type { DemoLoad } from './window/context';
+import { createInspectorPorts } from './window/inspector-port';
 import { createNavigatorPorts } from './window/navigator-port';
 import { createPanelsPort, createUiEntryPort } from './window/panels-port';
 
@@ -39,12 +40,13 @@ async function start(): Promise<void> {
   });
   const navigatorUi = createNavigatorUi(createUiEntryPort(services, NAVIGATOR_UI_KEY), env.timers, (type, message) => services.logApp(type, message));
   const navigator = createNavigatorPorts(services, measurer, env.timers, navigatorUi);
+  const inspector = createInspectorPorts(services, navigator, createInspectorStore(), panels);
   installLifecycle(services, window);
   // A move made less than the debounce ago is written when the page goes away (best effort; the write is asynchronous).
   window.addEventListener('pagehide', () => void navigatorUi.flush());
   createRoot(rootElement).render(
     <StrictMode>
-      <App value={{ services, panels, navigator, loadDemo, reload: () => window.location.reload() }} />
+      <App value={{ services, panels, navigator, inspector, loadDemo, reload: () => window.location.reload() }} />
     </StrictMode>,
   );
 }

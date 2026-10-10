@@ -12,7 +12,8 @@ import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import { createIdFactory } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
 import { Window } from '@/app/window/window';
-import { createPanelsStore, type PanelsPort, type PanelsStore } from '@/ui/state';
+import { createInspectorStore, createPanelsStore, type InspectorStore, type PanelsPort, type PanelsStore } from '@/ui/state';
+import type { InspectorPorts } from '@/features/inspector';
 import { navigatorRig, type NavigatorRig } from './navigator-kit';
 import type { ReactNode } from 'react';
 
@@ -44,6 +45,8 @@ export interface FakeApp {
   readonly panels: PanelsStore;
   readonly panelSaves: Record<string, unknown>[];
   readonly navigator: NavigatorRig;
+  readonly inspectorStore: InspectorStore;
+  readonly inspector: InspectorPorts;
   readonly value: AppContextValue;
 }
 
@@ -81,7 +84,17 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
     { stored: undefined, mode: () => 'writable', save: (value) => (panelSaves.push({ ...value }), Promise.resolve()), ...options.panels },
     { after: () => () => undefined },
   );
-  return { status, store, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, value: { services, panels, navigator: navigator.ports, loadDemo, reload } };
+  const inspectorStore = createInspectorStore();
+  const inspector: InspectorPorts = {
+    store,
+    indexes: navigator.ports.indexes,
+    findings: store.findings,
+    l4: { statusOf: () => ({ state: 'none' }), derivedFormulaOf: () => undefined, subscribe: () => () => undefined, subscribeFormulas: () => () => undefined },
+    timers: navigator.ports.timers,
+    ui: { inspector: inspectorStore, selection: navigator.ports.ui.selection, family: navigator.ports.ui.family, panels },
+    log: () => undefined,
+  };
+  return { status, store, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigator.ports, inspector, loadDemo, reload } };
 }
 
 export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {
