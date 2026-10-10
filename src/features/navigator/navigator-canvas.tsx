@@ -10,12 +10,14 @@ import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
 import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
 import type { Scene } from '@/render/scene';
-import { Button, Skeleton } from '@/ui/primitives';
+import { Banner, Button, Skeleton } from '@/ui/primitives';
 import { depictionBindingOf } from './depictions';
 import { keyOf, legendOf } from './legend';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorLegend } from './navigator-legend';
 import { NavigatorSelection } from './navigator-selection';
+import { emptinessOf, truncationNoticeOf } from './notices';
+import { UnanchoredPanel } from './unanchored-panel';
 import styles from './navigator.module.css';
 
 const NO_IDS: ReadonlySet<string> = new Set();
@@ -36,6 +38,7 @@ export function NavigatorCanvas() {
   const selected = useStore(ports.ui.selection, (s) => s.selected);
   const [controller, setController] = useState<ViewportController | null>(null);
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
+  const [unanchoredOpen, setUnanchoredOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const commits = useRef(0);
   // Written imperatively: a layer that commits bumps a data attribute, React state is not involved.
@@ -73,6 +76,11 @@ export function NavigatorCanvas() {
   const legend = useMemo(() => legendOf(scene), [scene]);
   const legendKeys = useMemo(() => keyOf(scene), [scene]);
   const nothing = scene === null ? { unavailable: NOTHING_DRAWN } : {};
+  const cut = truncationNoticeOf(scene?.truncation ?? null);
+  const families = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub').length;
+  const empty = scene === null ? null : emptinessOf(state.reactions, families);
+  const unanchored = state.unanchored;
+  const unanchoredReason = scene === null ? NOTHING_DRAWN : unanchored.length === 0 ? 'every reaction is in a family' : undefined;
   return (
     <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
       <div className={styles.toolbar} role="toolbar" aria-label="Canvas tools">
@@ -96,8 +104,22 @@ export function NavigatorCanvas() {
             Open
           </Button>
         )}
+        <Button onClick={() => setUnanchoredOpen((open) => !open)} aria-expanded={unanchoredOpen && unanchoredReason === undefined} {...(unanchoredReason === undefined ? {} : { unavailable: unanchoredReason })}>
+          Unanchored reactions ({unanchored.length})
+        </Button>
         <NavigatorSelection />
       </div>
+      {cut === null ? null : (
+        <Banner kind="warning">
+          {cut.cut} {cut.more}
+        </Banner>
+      )}
+      {empty === null ? null : (
+        <Banner kind="info">
+          <strong>{empty.title}</strong> {empty.body}
+        </Banner>
+      )}
+      {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
       <NavigatorLegend items={legend} keys={legendKeys} />
       <div className={styles.drawing} aria-busy={state.working}>
         {state.error !== null ? (

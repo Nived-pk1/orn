@@ -65,6 +65,8 @@ export interface FamilyPartner {
   readonly hubId: string;
   readonly name: string;
   readonly reactionCount: number;
+  /** The partner's own tone (step 5.5d, item e; additive): the strip's button takes it. Absent: the partner has none (the neutral button). */
+  readonly tone?: AnchorTone;
 }
 
 export interface FamilyReactionType {

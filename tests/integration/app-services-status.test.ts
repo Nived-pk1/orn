@@ -262,6 +262,8 @@ describe('AppStatus: the engine fields (step 5.1b)', () => {
   it('a layout fallback: `engines`, `workers` and `layoutNotice`', async () => {
     const { services, kit } = await bootEngines();
     kit.layout.elk.makeFailure = new Error('elk chunk missing');
+    // step 5.5d: a layout call now first asks the store (an IndexedDB round trip), so the search boot's own status step may fall inside it; let it happen first
+    await vi.waitFor(() => expect(services.status.get().search.state).not.toBe('absent'));
     const seen = watch(services);
     await services.layout.layout('v', request({ nodes: ['a', 'b'], edges: [['a', 'b']] }));
     expect([...flat(seen.steps)].sort()).toEqual(['engines', 'layoutNotice', 'workers']);

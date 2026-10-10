@@ -188,7 +188,12 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
   const reactionsOf = buildSection('reactions_of');
   const preparationOf = buildSection('preparation_of');
 
-  const partners = (section: FamilySection): FamilyPartner[] => section.groups.map((g) => ({ hubId: g.hubId, name: g.name, reactionCount: g.cards.length }));
+  const arrangements = arrangementsOf(ctx);
+  const partners = (section: FamilySection): FamilyPartner[] =>
+    section.groups.map((g) => {
+      const tone = arrangements.get(g.hubId)?.tone;
+      return { hubId: g.hubId, name: g.name, reactionCount: g.cards.length, ...(tone === undefined ? {} : { tone }) };
+    });
   const typeCounts = new Map<string, number>();
   for (const reaction of seenReactions.values()) {
     for (const id of new Set(reaction.reactionTypes.map((t) => t.conceptId as string))) typeCounts.set(id, (typeCounts.get(id) ?? 0) + 1);
@@ -198,7 +203,7 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
     .sort((a, b) => b.count - a.count || compare(fold(a.name), fold(b.name)) || compare(a.conceptId, b.conceptId));
 
   const described = hubRef === null ? undefined : describer.describe(hubRef);
-  const arrangement = hubRef === null ? undefined : arrangementsOf(ctx).get(hubRef.id);
+  const arrangement = hubRef === null ? undefined : arrangements.get(hubRef.id);
   return {
     hubId,
     hub: hubRef,

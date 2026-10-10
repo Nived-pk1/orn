@@ -27,8 +27,13 @@ export function groupTitleOf(section: FamilySectionKind, partner: string): strin
   return section === 'reactions_of' ? `To ${partner}` : `From ${partner}`;
 }
 
+/** A family no reaction touches (step 5.5d, item j): what it means and what to do, in words (the page-level empty state). */
+export const noReactionsTextOf = (family: string): string =>
+  `${family} has no reactions in this dataset: none starts from it and none makes it. A reaction is listed here when its substrate or its product belongs to the family, so import reactions that involve its members, or check that the compounds you expect are members of it`;
+
 export function familyItems(study: FamilyStudy): FamilyItem[] {
   const items: FamilyItem[] = [{ kind: 'header', key: 'header', study }];
+  if (study.counts.total === 0) items.push({ kind: 'empty', key: 'empty:family', text: noReactionsTextOf(study.name) });
   for (const section of [study.reactionsOf, study.preparationOf]) {
     items.push({ kind: 'section', key: `section:${section.kind}`, section: section.kind, title: titleOf(section.kind, study.name), reactionCount: section.reactionCount });
     if (section.groups.length === 0) {

@@ -5,7 +5,7 @@
 import type { AppStatus, BootNotices, EngineName, WorkerName } from '@/app/services';
 import type { NoticeKind } from '@/ui/primitives';
 
-export type BannerAction = 'reload' | 'save_everything' | 'retry_replica' | 'retry_chem' | 'retry_layout';
+export type BannerAction = 'reload' | 'save_everything' | 'retry_replica' | 'retry_chem' | 'retry_layout' | 'dismiss_storage';
 
 export interface Banner {
   readonly id: string;
@@ -46,7 +46,13 @@ const suffix = (detail: string | null): string => (detail === null || detail ===
 const WORKER_WORDS: Record<WorkerName, string> = { chem: 'structure-check', layout: 'layout', search: 'search' };
 const ENGINE_NOUN: Record<EngineName, string> = { chem: 'structure checker', layout: 'layout engine' };
 
-export function bannersOf(status: AppStatus): readonly Banner[] {
+/** What the banners need besides the status: the choices the user saved (step 5.5d, item k). */
+export interface BannerChoices {
+  /** The storage warning was dismissed: its banner is not shown; the status line keeps `Storage: not persistent`. */
+  readonly storageNoticeDismissed?: boolean;
+}
+
+export function bannersOf(status: AppStatus, choices: BannerChoices = {}): readonly Banner[] {
   const banners: Banner[] = [];
   const reload = { label: 'Reload', kind: 'reload' } as const;
 
@@ -114,8 +120,8 @@ export function bannersOf(status: AppStatus): readonly Banner[] {
   if (status.storage.persistence === 'asking') {
     banners.push({ id: 'storage_asking', text: 'Waiting for the browser to answer the request for persistent storage. Your data is saved; you can keep working.' });
   }
-  if (status.storage.persistence === 'refused') {
-    banners.push({ id: 'storage_refused', text: status.storage.message === null ? 'The browser did not grant persistent storage. It may delete this data when disk space runs low.' : `${status.storage.message.charAt(0).toUpperCase()}${status.storage.message.slice(1)}.` });
+  if (status.storage.persistence === 'refused' && choices.storageNoticeDismissed !== true) {
+    banners.push({ id: 'storage_refused', action: { label: 'Dismiss', kind: 'dismiss_storage' }, text: status.storage.message === null ? 'The browser did not grant persistent storage. It may delete this data when disk space runs low.' : `${status.storage.message.charAt(0).toUpperCase()}${status.storage.message.slice(1)}.` });
   }
   return banners;
 }
@@ -160,6 +166,12 @@ export function workersTextOf(status: AppStatus): string {
   };
   return `Workers: compute ${replica}, chem ${worker('chem')}, layout ${worker('layout')}, search ${worker('search')}`;
 }
+
+/** The short status-line word for storage that is not persistent (step 5.5d, item k): shown even when the warning was dismissed, so it is never silent. */
+export const storageTextOf = (status: AppStatus): string | null => (status.storage.persistence === 'refused' ? 'Storage: not persistent' : null);
+
+/** The status-line word for a layout that could not be saved to the cache (step 5.5d, item h); the layout itself is fine. */
+export const layoutCacheTextOf = (status: AppStatus): string | null => (status.layoutCache.state === 'refused' ? `Layout cache: not saved (${status.layoutCache.message ?? 'refused'})` : null);
 
 export function operationTextOf(status: AppStatus): string | null {
   const op = status.operation;

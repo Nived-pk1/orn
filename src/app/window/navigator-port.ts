@@ -8,7 +8,7 @@ import type { TextMeasurer } from '@/app/text-measurer';
 import type { NavigatorPorts } from '@/features/navigator';
 import type { NavigatorUi } from '@/ui/state';
 
-export type NavigatorPortServices = Pick<AppServices, 'store' | 'indexes' | 'layout' | 'logApp' | 'depictions'>;
+export type NavigatorPortServices = Pick<AppServices, 'store' | 'indexes' | 'layout' | 'logApp' | 'depictions' | 'status'>;
 
 export function createNavigatorPorts(services: NavigatorPortServices, measurer: TextMeasurer, timers: NavigatorPorts['timers'], ui: Pick<NavigatorUi, 'stores' | 'status'>): NavigatorPorts {
   return {
@@ -21,6 +21,18 @@ export function createNavigatorPorts(services: NavigatorPortServices, measurer: 
       keyOf: (structure, size) => depictionKeyOf(structure, { width: size.width, height: size.height, showAtomMaps: false }),
       depict: (structure, size) => services.depictions.depict(structure, { width: size.width, height: size.height, showAtomMaps: false }),
       cancel: (key) => services.depictions.cancel(key),
+      // the chemistry engine came back after it was unavailable (a successful Retry): the feature forgets the structures that failed
+      recovered(listener) {
+        let failed = services.status.get().engines.chem.state === 'unavailable';
+        return services.status.subscribe((status) => {
+          const state = status.engines.chem.state;
+          if (state === 'unavailable') failed = true;
+          else if (state === 'ready' && failed) {
+            failed = false;
+            listener();
+          }
+        });
+      },
       // Object URLs are a browser API: made and revoked here, never in the feature. The SVG is sanitised text from the chem service.
       createUrl: (svg) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })),
       revokeUrl: (url) => URL.revokeObjectURL(url),

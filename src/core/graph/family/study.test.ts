@@ -21,6 +21,15 @@ const below = (card: FamilyCard): string[][] => card.outcomes.map((o) => o.arrow
 describe('familyStudy on the demo', () => {
   const alcohols = study('cls_alcohols');
 
+  it('a partner carries its own tone, not the tone of this family; a partner without one carries none (step 5.5d, item e)', () => {
+    const tones = (partners: FamilyStudy['madeFrom']): [string, string | undefined][] => partners.map((p) => [p.name, p.tone]);
+    expect(alcohols.tone).toBe('green');
+    expect(tones(alcohols.madeFrom)).toEqual(expect.arrayContaining([['Alkenes', 'blue'], ['Haloalkanes', 'amber'], ['Aldehydes', 'green']]));
+    expect(tones(alcohols.turnsInto)).toEqual(expect.arrayContaining([['Aldehydes', 'green']]));
+    const unclassified = tones(study('cls_ketones').turnsInto).find(([name]) => name === UNCLASSIFIED_NAME);
+    expect(unclassified).toEqual([UNCLASSIFIED_NAME, undefined]);
+  });
+
   it('answers null for a record that is not a hub, and a value for Unclassified', () => {
     expect(familyStudy(demo, 'cls_nowhere')).toBeNull();
     expect(familyStudy(demo, UNCLASSIFIED_HUB_ID)?.name).toBe(UNCLASSIFIED_NAME);

@@ -35,7 +35,7 @@ describe('parsePanels (tolerant)', () => {
 
   it('a good entry is taken as it is; a missing field is not damage', () => {
     expect(parsePanels({ inspectorWidth: 480, inspectorOpen: false })).toEqual({
-      values: { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false },
+      values: { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false },
       damaged: [],
       extra: {},
     });
@@ -58,7 +58,7 @@ describe('parsePanels (tolerant)', () => {
     ['infinite', Number.POSITIVE_INFINITY],
   ])('an inspectorWidth that is %s is reset and reported, the other fields are kept', (_name, width) => {
     const parsed = parsePanels({ inspectorWidth: width, inspectorOpen: false, startEmptyDismissed: true });
-    expect(parsed.values).toEqual({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: true });
+    expect(parsed.values).toEqual({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: true, storageNoticeDismissed: false });
     expect(parsed.damaged).toEqual(['inspectorWidth']);
   });
 
@@ -98,7 +98,7 @@ describe('the panels store', () => {
     expect(p.saved).toEqual([]);
     timers.advance(1);
     await Promise.resolve();
-    expect(p.saved).toEqual([{ inspectorWidth: 430, inspectorOpen: false, startEmptyDismissed: false }]);
+    expect(p.saved).toEqual([{ inspectorWidth: 430, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false }]);
   });
 
   it('a change to the same value schedules nothing', () => {
@@ -118,7 +118,22 @@ describe('the panels store', () => {
     store.getState().dismissStartEmpty();
     timers.advance(SAVE_DEBOUNCE_MS);
     await Promise.resolve();
-    expect(p.saved[0]).toEqual({ later: 7, inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: true, startEmptyDismissed: true });
+    expect(p.saved[0]).toEqual({ later: 7, inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: true, startEmptyDismissed: true, storageNoticeDismissed: false });
+  });
+
+  it('the dismissed storage warning is saved, read back, and a damaged value is reset and reported (step 5.5d, item k)', async () => {
+    const p = port();
+    const timers = manualTimers();
+    const store = createPanelsStore(p, timers);
+    expect(store.getState().storageNoticeDismissed).toBe(false);
+    store.getState().dismissStorageNotice();
+    timers.advance(SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    expect(p.saved[0]).toMatchObject({ storageNoticeDismissed: true });
+    expect(parsePanels(p.saved[0]).values.storageNoticeDismissed).toBe(true);
+    const bad = parsePanels({ storageNoticeDismissed: 'yes' });
+    expect(bad.values.storageNoticeDismissed).toBe(false);
+    expect(bad.damaged).toEqual(['storageNoticeDismissed']);
   });
 
   it('a read-only tab keeps its values for the session, writes nothing and says so', () => {

@@ -295,3 +295,36 @@ describe('cancel and busy (step 5.4b)', () => {
     expect(manager.snapshot('a')).toEqual({ state: 'loading' });
   });
 });
+
+describe('forgetUnavailable (step 5.5d, item i)', () => {
+  it('forgets only the unavailable keys, tells their listeners, and answers how many', async () => {
+    const h = harness();
+    const manager = createDepictionManager(h.deps);
+    for (const key of ['bad1', 'bad2', 'good', 'busy']) manager.request(key);
+    h.answers.get('bad1')?.({ ok: false, reason: 'unavailable' });
+    h.answers.get('bad2')?.({ ok: false, reason: 'invalid' });
+    h.answers.get('good')?.({ ok: true, svg: '<svg/>' });
+    await Promise.resolve();
+    await Promise.resolve();
+    const told: string[] = [];
+    manager.subscribe('bad1', () => told.push('bad1'));
+    manager.subscribe('good', () => told.push('good'));
+    expect(manager.forgetUnavailable()).toBe(2);
+    expect(told).toEqual(['bad1']);
+    expect(manager.snapshot('bad1')).toEqual({ state: 'idle' });
+    expect(manager.snapshot('bad2')).toEqual({ state: 'idle' });
+    expect(manager.snapshot('good').state).toBe('ready');
+    expect(manager.snapshot('busy').state).toBe('loading');
+    expect(manager.size()).toBe(2);
+    // a forgotten key is fetched again
+    manager.request('bad1');
+    expect(h.fetched.filter((k) => k === 'bad1')).toHaveLength(2);
+    expect(manager.forgetUnavailable()).toBe(0);
+  });
+
+  it('does nothing after dispose', () => {
+    const manager = createDepictionManager(harness().deps);
+    manager.dispose();
+    expect(manager.forgetUnavailable()).toBe(0);
+  });
+});

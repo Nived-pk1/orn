@@ -1,5 +1,5 @@
 /**
- * The panels store (step 5.2, UI_ARCHITECTURE §4, PERSISTENCE §12): the inspector's width and open state and "Start empty dismissed".
+ * The panels store (step 5.2, UI_ARCHITECTURE §4, PERSISTENCE §12): the inspector's width and open state, "Start empty dismissed" and (step 5.5d) the dismissed storage warning.
  * A small Zustand store, persisted in `uiState` key `panels` through a PORT that `src/app` provides (src/ui imports neither
  * `src/app` nor `src/persistence`). Reading is TOLERANT: each field is checked by itself, a bad field falls back to its default and
  * the damage is reported in `resetFields` (never fatal, never silent); unknown fields are kept and written back. Writing is
@@ -19,10 +19,12 @@ export interface PanelValues {
   readonly inspectorOpen: boolean;
   /** "Start empty" was chosen: the first-run screen is not shown again for this dataset (E-notes: kept in `uiState`, 5.1d review item 6). */
   readonly startEmptyDismissed: boolean;
+  /** The warning "the browser did not grant persistent storage" was dismissed (step 5.5d, item k); the status bar keeps a short line, so it is never silent. */
+  readonly storageNoticeDismissed: boolean;
 }
 
 /** The inspector starts closed until it has something to show (step 5.6a); a saved choice wins (step 5.5a review, item g). */
-export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: false });
+export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false });
 
 /** What the store says about keeping its values (shown in the status bar; nothing here is silent). */
 export type PanelPersistence =
@@ -51,6 +53,7 @@ export interface PanelsState extends PanelValues {
   setInspectorWidth(width: number): void;
   setInspectorOpen(open: boolean): void;
   dismissStartEmpty(): void;
+  dismissStorageNotice(): void;
 }
 
 export type PanelsStore = StoreApi<PanelsState>;
@@ -65,7 +68,7 @@ export interface ParsedPanels {
   readonly extra: Readonly<Record<string, unknown>>;
 }
 
-const KNOWN = new Set(['inspectorWidth', 'inspectorOpen', 'startEmptyDismissed']);
+const KNOWN = new Set(['inspectorWidth', 'inspectorOpen', 'startEmptyDismissed', 'storageNoticeDismissed']);
 
 export function parsePanels(raw: unknown): ParsedPanels {
   if (raw === undefined) return { values: PANEL_DEFAULTS, damaged: [], extra: {} };
@@ -78,7 +81,7 @@ export function parsePanels(raw: unknown): ParsedPanels {
     if (typeof width === 'number' && Number.isFinite(width) && width >= INSPECTOR_MIN && width <= INSPECTOR_MAX) inspectorWidth = Math.round(width);
     else damaged.push('inspectorWidth');
   }
-  const bool = (name: 'inspectorOpen' | 'startEmptyDismissed'): boolean => {
+  const bool = (name: 'inspectorOpen' | 'startEmptyDismissed' | 'storageNoticeDismissed'): boolean => {
     const value = record[name];
     if (value === undefined) return PANEL_DEFAULTS[name];
     if (typeof value === 'boolean') return value;
@@ -87,8 +90,9 @@ export function parsePanels(raw: unknown): ParsedPanels {
   };
   const inspectorOpen = bool('inspectorOpen');
   const startEmptyDismissed = bool('startEmptyDismissed');
+  const storageNoticeDismissed = bool('storageNoticeDismissed');
   const extra = Object.fromEntries(Object.entries(record).filter(([key]) => !KNOWN.has(key)));
-  return { values: { inspectorWidth, inspectorOpen, startEmptyDismissed }, damaged, extra };
+  return { values: { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed }, damaged, extra };
 }
 
 export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): PanelsStore {
@@ -113,6 +117,7 @@ export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): Panel
       setInspectorWidth: (width) => change({ inspectorWidth: clampWidth(width) }),
       setInspectorOpen: (open) => change({ inspectorOpen: open }),
       dismissStartEmpty: () => change({ startEmptyDismissed: true }),
+      dismissStorageNotice: () => change({ storageNoticeDismissed: true }),
     };
   });
 
@@ -135,9 +140,9 @@ export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): Panel
   async function flushNow(): Promise<void> {
     if (!pending) return;
     pending = false;
-    const { inspectorWidth, inspectorOpen, startEmptyDismissed } = store.getState();
+    const { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed } = store.getState();
     try {
-      await port.save({ ...parsed.extra, inspectorWidth, inspectorOpen, startEmptyDismissed });
+      await port.save({ ...parsed.extra, inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed });
       if (store.getState().persistence.kind !== 'saved') store.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       store.setState({ persistence: { kind: 'save_failed', message: error instanceof Error ? error.message : String(error) } });

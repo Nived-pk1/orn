@@ -71,12 +71,49 @@
   text-transform: uppercase;
 }
 
-.header[data-tone] .partner {
-  border-color: var(--tone-ink);
+/* A partner button takes the PARTNER family's tone (step 5.5d, item e; it was this family's): its tint, its ink for the border and the count. */
+.partner[data-tone='blue'] {
+  --partner-tint: var(--color-tone-blue-tint);
+  --partner-ink: var(--color-tone-blue-ink);
 }
 
-.header[data-tone] .partner .count {
-  color: var(--tone-ink);
+.partner[data-tone='green'] {
+  --partner-tint: var(--color-tone-green-tint);
+  --partner-ink: var(--color-tone-green-ink);
+}
+
+.partner[data-tone='amber'] {
+  --partner-tint: var(--color-tone-amber-tint);
+  --partner-ink: var(--color-tone-amber-ink);
+}
+
+.partner[data-tone='violet'] {
+  --partner-tint: var(--color-tone-violet-tint);
+  --partner-ink: var(--color-tone-violet-ink);
+}
+
+.partner[data-tone='teal'] {
+  --partner-tint: var(--color-tone-teal-tint);
+  --partner-ink: var(--color-tone-teal-ink);
+}
+
+.partner[data-tone='rose'] {
+  --partner-tint: var(--color-tone-rose-tint);
+  --partner-ink: var(--color-tone-rose-ink);
+}
+
+.partner[data-tone='slate'] {
+  --partner-tint: var(--color-tone-slate-tint);
+  --partner-ink: var(--color-tone-slate-ink);
+}
+
+.partner[data-tone] {
+  border-color: var(--partner-ink);
+  background: var(--partner-tint);
+}
+
+.partner[data-tone] .count {
+  color: var(--partner-ink);
 }
 
 .header[data-tone] .partnersTitle {

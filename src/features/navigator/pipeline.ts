@@ -41,6 +41,10 @@ export interface NavigatorState {
   readonly hubIds: readonly string[];
   /** Which layout drew the current Scene (step 5.5c): `grid` for an arranged overview, `elk` or `fallback` otherwise; null before the first Scene. */
   readonly layout: LayoutResult['engine'] | null;
+  /** The reactions no family holds (the projection's `unanchoredReactionIds`, sorted: step 5.5d, item f). All of them are here, none cut. */
+  readonly unanchored: readonly string[];
+  /** How many reactions the dataset holds (the empty states, step 5.5d item j). */
+  readonly reactions: number;
 }
 
 export interface PipelineStats {
@@ -64,7 +68,7 @@ const hubIdsOf = (projection: Projection): string[] => projection.nodes.filter((
 
 const NO_EXPANSION: ProjectionRequest['expansion'] = { expanded: [], collapsedEdgeIds: [] };
 
-const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [], layout: null };
+const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [], layout: null, unanchored: [], reactions: 0 };
 
 export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
   const binding = depictionBindingOf(ports);
@@ -183,7 +187,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
         ports.ui.selection.getState().select(null);
         ports.log('selection_cleared', `the selected ${selected.kind} ${selected.id} is not in the drawing any more`);
       }
-      set({ scene: scene.scene, error: null, skeleton: false, working: false, hubIds, layout: result.engine });
+      set({ scene: scene.scene, error: null, skeleton: false, working: false, hubIds, layout: result.engine, unanchored: current.unanchoredReactionIds, reactions: Object.keys(ports.store.getState().records.reaction).length });
     } catch (error) {
       if (mine !== token) return;
       const message = error instanceof Error ? error.message : String(error);

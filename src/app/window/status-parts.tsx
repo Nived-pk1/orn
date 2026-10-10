@@ -4,7 +4,8 @@
  */
 import { useCounts, useSubscribable } from '@/ui/hooks';
 import { Banner, Button } from '@/ui/primitives';
-import { bannersOf, bannerKindOf, bootLinesOf, operationTextOf, saveTextOf, workersTextOf, type BannerAction } from './banners';
+import { usePanels } from '@/ui/state';
+import { bannersOf, bannerKindOf, bootLinesOf, layoutCacheTextOf, operationTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
 import styles from './status-parts.module.css';
 
@@ -13,6 +14,8 @@ export function StatusLine() {
   const status = useSubscribable(services.status);
   const counts = useCounts(services.store.findings);
   const operation = operationTextOf(status);
+  const storage = storageTextOf(status);
+  const layoutCache = layoutCacheTextOf(status);
   const readOnly = status.mode === 'follower' || status.mode === 'read_only';
   return (
     <section aria-label="Status">
@@ -25,6 +28,8 @@ export function StatusLine() {
         {status.stage === 'booting' ? <li>Starting up</li> : null}
         {readOnly ? <li>Read-only</li> : null}
         {status.singleTab ? <li>Single tab only</li> : null}
+        {storage === null ? null : <li>{storage}</li>}
+        {layoutCache === null ? null : <li>{layoutCache}</li>}
         {operation === null ? null : <li>{operation}</li>}
       </ul>
     </section>
@@ -32,13 +37,15 @@ export function StatusLine() {
 }
 
 export function Banners() {
-  const { services, reload } = useApp();
+  const { services, reload, panels } = useApp();
   const status = useSubscribable(services.status);
-  const banners = bannersOf(status);
+  const storageNoticeDismissed = usePanels(panels, (s) => s.storageNoticeDismissed);
+  const banners = bannersOf(status, { storageNoticeDismissed });
   if (banners.length === 0) return null;
   const run = (kind: BannerAction): void => {
     if (kind === 'reload') reload();
     else if (kind === 'save_everything') void services.saveEverythingNow();
+    else if (kind === 'dismiss_storage') panels.getState().dismissStorageNotice();
     else if (kind === 'retry_replica') void services.retryReplica();
     else void services.retryEngine(kind === 'retry_chem' ? 'chem' : 'layout');
   };

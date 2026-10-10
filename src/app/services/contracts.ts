@@ -36,7 +36,11 @@ export interface AppEnv {
   /** Written into snapshots and exports (`DexieAdapterOptions.generator`). */
   readonly generator: { readonly app: string; readonly version: string };
   /** `navigator.storage`: asked once for persistent storage after the first successful import in a writer tab (step 5.1c). Absent: AppStatus.storage stays unknown, with the reason. */
-  readonly storage?: { persist(): Promise<boolean> };
+  readonly storage?: {
+    persist(): Promise<boolean>;
+    /** Step 5.5d: asked at boot, without a prompt, when the dataset already has data (the answer is `refused` with its words when it is false). */
+    persisted?(): Promise<boolean>;
+  };
 }
 
 export type SaveEverythingResult =

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { familyStudy, type FamilyStudy } from '@/core/graph';
 import { demoState } from '@/test-support/app-boot-kit';
 import { contextOf } from '@/test-support/graph-state';
-import { cardKey, emptyTextOf, estimateOf, familyItems, groupKey, groupTitleOf, indexOfKey, titleOf } from './family-items';
+import { cardKey, emptyTextOf, estimateOf, familyItems, groupKey, groupTitleOf, indexOfKey, noReactionsTextOf, titleOf } from './family-items';
 
 const ctx = contextOf(demoState());
 const study = (hub: string): FamilyStudy => familyStudy(ctx, hub) as FamilyStudy;
@@ -39,10 +39,19 @@ describe('familyItems', () => {
   it('an empty section is a sentence in words, not a blank', () => {
     const empty = familyItems(study('cls_alkanes'));
     expect(empty.filter((i) => i.kind === 'empty').map((i) => (i.kind === 'empty' ? i.text : ''))).toEqual([
+      noReactionsTextOf('Alkanes'), // a family no reaction touches also says so as a whole (step 5.5d, item j)
       'No reactions start from Alkanes in this dataset',
       'No reactions make Alkanes in this dataset',
     ]);
     expect(empty.some((i) => i.kind === 'group')).toBe(false);
+  });
+
+  it('a family with no reactions says what it means and what to do; one with reactions says none of it', () => {
+    const first = familyItems(study('cls_alkanes'))[1];
+    expect(first).toMatchObject({ kind: 'empty', key: 'empty:family' });
+    expect(noReactionsTextOf('Alkanes')).toMatch(/^Alkanes has no reactions in this dataset: none starts from it and none makes it\./);
+    expect(noReactionsTextOf('Alkanes')).toMatch(/import reactions/);
+    expect(familyItems(study('cls_alcohols')).some((i) => i.key === 'empty:family')).toBe(false);
   });
 
   it('titles are plain words', () => {

@@ -29,6 +29,11 @@ export interface NavigatorDepictions {
   keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number }): string;
   depict(structure: StructureRep, size: { readonly width: number; readonly height: number }): Promise<NavigatorDepictionAnswer>;
   cancel(key: string): void;
+  /**
+   * Calls the listener each time the chemistry engine has been retried successfully after it was unavailable (step 5.5d, item i);
+   * answers the unsubscribe. Absent: nothing is forgotten (an unavailable structure stays a name until the page is reloaded).
+   */
+  recovered?(listener: () => void): () => void;
   /** SVG text to an object URL, and its revoking. */
   createUrl(svg: string): string;
   revokeUrl(url: string): void;

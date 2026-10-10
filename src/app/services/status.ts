@@ -66,6 +66,14 @@ export interface SearchView {
   readonly cache: { readonly state: 'none' | 'saved' | 'refused'; readonly revision: number | null; readonly message: string | null };
 }
 
+/** The layout cache in `derivedCache` (step 5.5d, item h): the last write (a refused one is a status, never an error) and the layouts read back instead of asked for. */
+export interface LayoutCacheView {
+  readonly state: 'none' | 'saved' | 'refused';
+  readonly message: string | null;
+  /** Layouts read from the store since the app started (no worker call was made for them). */
+  readonly fromStore: number;
+}
+
 /** What boot found, for the one-line notices of step 5.1d (nothing silent, CLAUDE.md §1.5). */
 export interface BootNotices {
   readonly crashSuspected: boolean;
@@ -122,6 +130,7 @@ export interface AppStatus {
   readonly search: SearchView;
   /** The last layout notice: a fallback layout (with its reason) or a note the layout service made; null when there was none. */
   readonly layoutNotice: string | null;
+  readonly layoutCache: LayoutCacheView;
   /** The whole-state operation that is running (import preview or apply, restore, export); null when none. */
   readonly operation: OperationView | null;
   readonly storage: StorageView;
@@ -150,6 +159,7 @@ export const INITIAL_STATUS: AppStatus = Object.freeze({
   l4: Object.freeze({ state: 'idle', notChecked: 0, queued: 0, message: null }),
   search: Object.freeze({ state: 'absent', indexRevision: null, loadedFrom: 'none', reason: 'not started', cache: Object.freeze({ state: 'none', revision: null, message: null }) }),
   layoutNotice: null,
+  layoutCache: Object.freeze({ state: 'none', message: null, fromStore: 0 }),
   operation: null,
   storage: Object.freeze({ persistence: 'unknown', message: null }),
 });

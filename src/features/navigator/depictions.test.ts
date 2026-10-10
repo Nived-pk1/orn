@@ -138,6 +138,28 @@ describe('the depiction binding', () => {
     expect(binding.manager.snapshot(key).state).toBe('unavailable');
   });
 
+  it('after a successful retry of the chem engine (port.recovered) every unavailable structure is forgotten and asked again when shown; ready ones stay (step 5.5d, item i)', async () => {
+    const r = rig();
+    let recovered: (() => void) | undefined;
+    const port: NavigatorDepictions = { ...r.port, recovered: (listener) => ((recovered = listener), () => undefined) };
+    r.answer = (s) => Promise.resolve(s.value === structure(2).value ? failure('unavailable') : good);
+    const binding = createDepictionBinding(port, manualTimers());
+    const bad = binding.keyOf(structure(2));
+    const fine = binding.keyOf(structure(3));
+    for (const key of [bad, fine]) binding.manager.request(key);
+    await settle();
+    expect(binding.manager.snapshot(bad).state).toBe('unavailable');
+    expect(binding.manager.snapshot(fine).state).toBe('ready');
+    r.answer = () => Promise.resolve(good); // the engine is back
+    recovered?.();
+    expect(binding.manager.snapshot(bad)).toEqual({ state: 'idle' });
+    expect(binding.manager.snapshot(fine).state).toBe('ready');
+    binding.manager.request(bad); // it is shown again
+    await settle();
+    expect(binding.manager.snapshot(bad).state).toBe('ready');
+    expect(r.calls.filter((c) => c.structure.value === structure(2).value)).toHaveLength(2);
+  });
+
   it('the lookup from key to structure is bounded; a key that left it is answered BUSY and never cached', async () => {
     const r = rig();
     const binding = createDepictionBinding(r.port, manualTimers());

@@ -40,6 +40,11 @@ export interface DepictionManager extends DepictionSource {
   readonly size: () => number;
   readonly capacity: number;
   readonly cancel: (key: string) => void;
+  /**
+   * Forgets every key whose status is `unavailable` (step 5.5d, item i: after the chemistry engine was retried successfully): the key is
+   * idle again and is asked for when it is next shown. Listeners are told. Answers how many keys were forgotten.
+   */
+  readonly forgetUnavailable: () => number;
   readonly dispose: () => void;
 }
 
@@ -133,6 +138,16 @@ export function createDepictionManager(deps: DepictionDeps): DepictionManager {
         () => settle(key, entry, () => ({ state: 'unavailable', reason: 'fetch_failed' })),
       );
       notify(key);
+    },
+    forgetUnavailable() {
+      if (disposed) return 0;
+      const forgotten: string[] = [];
+      for (const [key, entry] of entries) if (entry.status.state === 'unavailable') forgotten.push(key);
+      for (const key of forgotten) {
+        entries.delete(key);
+        notify(key);
+      }
+      return forgotten.length;
     },
     cancel(key) {
       const entry = entries.get(key);

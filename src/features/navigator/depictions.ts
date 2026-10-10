@@ -5,7 +5,8 @@
  * refreshed on every use, the oldest dropped). Object URLs are made and revoked through the port, never here.
  * Answers of the service: `queue_full` and `cancelled` are the manager's BUSY answer (not cached; the viewport queue asks again a
  * bounded number of times); `timeout`, `invalid`, `refused`, `bad_options` and `unavailable` are `unavailable` and cached by the
- * manager (a timeout is NOT retried: a hung structure must not restart the chem worker again and again).
+ * manager (a timeout is NOT retried: a hung structure must not restart the chem worker again and again). After the engine has been retried
+ * successfully (`port.recovered`, step 5.5d) the manager forgets the unavailable keys, so they are asked for again when next shown.
  */
 import type { StructureRep } from '@/core/schema';
 import { STRUCTURE_AREA } from '@/render/scene';
@@ -48,6 +49,8 @@ export function createDepictionBinding(port: NavigatorDepictions, timers: Naviga
     clearTimer: (handle) => (handle as () => void)(),
   });
   const cancel = manager.cancel;
+  // after a successful retry of the chemistry engine every structure that was unavailable is asked for again when it is next shown
+  port.recovered?.(() => manager.forgetUnavailable());
   return {
     keyOf(structure) {
       const key = port.keyOf(structure, STRUCTURE_AREA);

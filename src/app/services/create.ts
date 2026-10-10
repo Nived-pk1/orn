@@ -28,6 +28,7 @@ import { createFlows } from './flows';
 import { createAssetStage } from './flow-ports';
 import { createL4Part } from './l4-part';
 import { createSearchPart } from './search-part';
+import { checkStorageAtBoot } from './storage-check';
 import { createReplicaPart } from './replica';
 import { createEventLog, createStatusStore } from './status';
 import { createWriterPart } from './writer';
@@ -46,6 +47,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   const storage = await openStorage(env, { ids, validate: replica.validate, onEvent: (event) => log.add({ source: 'persistence', event }) });
   for (const note of storage.notes) log.add({ source: 'app', event: { type: 'storage_note', message: note } });
   const { adapter, opened } = storage;
+  layoutPart.attachCache(adapter);
   const decision = decideMode(opened);
   const report = opened.mode === 'unavailable' ? undefined : opened.bootReport;
 
@@ -84,6 +86,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   if (decision.mode === 'session_only') log.add({ source: 'app', event: { type: 'session_only', message: `nothing is saved in this session (${decision.reason ?? 'unknown'}): ${decision.detail ?? ''}` } });
   else if (decision.mode === 'read_only') log.add({ source: 'app', event: { type: 'read_only', message: `this tab is read-only (${decision.reason ?? 'unknown'}): ${decision.detail ?? ''}` } });
 
+  checkStorageAtBoot({ env, status, log, hasData, writer: decision.mode === 'writer' });
   replica.start(store);
   const indexes = createDerivedIndexes({ store, clock: env.clock });
   const assetStage = createAssetStage();

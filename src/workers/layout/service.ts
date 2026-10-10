@@ -2,7 +2,8 @@
  * The main thread's side of the layout worker (step 4.4, ports only: an `RpcClient<LayoutWorkerApi>`, nothing else). One call per
  * view: `layout(view, request)`.
  *   - A request the caps or the shape rule refuse is a VALUE (`TOO_LARGE`, `BAD_REQUEST`), never sent.
- *   - Results are cached by `cacheKey` (LRU, `LAYOUT_CACHE_SIZE` entries, memory only; persisting the cache is Phase 5). Only
+ *   - Results are cached by `cacheKey` (LRU, `LAYOUT_CACHE_SIZE` entries in memory, and, through the optional `persist` port, in
+ *     `derivedCache` so a reload finds them: step 5.5d; a stored layout is checked against the request before it is used). Only
  *     answers that are a pure function of the request are cached: ELK's, and the fallback's after an ELK error. A fallback that
  *     came from a timeout or an unavailable worker is not (the next request tries ELK again).
  *   - A newer request for the same view supersedes the older: the older call is cancelled and answers `CANCELLED`, its result is
@@ -42,11 +43,25 @@ export interface LayoutServiceStats {
   readonly fallback: Readonly<Record<FallbackReason, number>>;
   readonly superseded: number;
   readonly unavailable: number;
+  /** Answers read from the persisted cache, and answers the store refused (step 5.5d). */
+  readonly persisted?: { readonly hits: number; readonly rejected: number; readonly refused: number };
 }
 
 export interface LayoutService {
   layout(view: string, request: LayoutRequest, options?: Pick<RpcCallOptions, 'timeoutMs'>): Promise<LayoutOutcome>;
   stats(): LayoutServiceStats;
+}
+
+/** A layout the store could not take: a status for the caller, never an error (the cache is disposable). */
+export type LayoutPutOutcome = { readonly ok: true } | { readonly ok: false; readonly message: string };
+
+/**
+ * Where layouts survive a reload (step 5.5d, item h; additive). The service asks `get` after a memory miss and tells `put` about every
+ * answer it caches. Both are best effort: `get` answers undefined on a miss or a failure, `put` answers a value.
+ */
+export interface LayoutPersistPort {
+  get(key: string): Promise<LayoutResult | undefined>;
+  put(key: string, result: LayoutResult): Promise<LayoutPutOutcome>;
 }
 
 export interface LayoutServiceOptions {
@@ -55,6 +70,16 @@ export interface LayoutServiceOptions {
   readonly gate: WarmUpGate<LayoutWorkerApi>;
   /** Default `LAYOUT_CACHE_SIZE`. */
   readonly cacheSize?: number;
+  /** Absent: the cache is memory only. */
+  readonly persist?: LayoutPersistPort;
+}
+
+/** A stored result is used only if it carries this request's key and a position for every node and a route for every edge between two nodes. */
+function answers(result: LayoutResult, request: LayoutRequest, key: string): boolean {
+  if (result.cacheKey !== key || typeof result.positions !== 'object' || result.positions === null) return false;
+  if (!request.nodes.every((node) => result.positions[node.id] !== undefined)) return false;
+  const routes = result.edgeRoutes as Record<string, unknown> | undefined;
+  return routes !== undefined && request.edges.every((edge) => edge.from === edge.to || routes[edge.id] !== undefined);
 }
 
 const describe = (error: RpcError): string => `${error.code}: ${error.message}`;
@@ -67,6 +92,7 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
   let elk = 0;
   let superseded = 0;
   let unavailable = 0;
+  const persisted = { hits: 0, rejected: 0, refused: 0 };
   const fallback: Record<FallbackReason, number> = { timeout: 0, elk_error: 0, engine_unavailable: 0 };
 
   const cancelled: LayoutOutcome = { ok: false, code: 'CANCELLED', message: 'a newer layout request for this view replaced this one' };
@@ -88,6 +114,14 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
     }
     const mine = { controller: new AbortController() };
     running.set(view, mine);
+    const stored = options.persist === undefined ? undefined : await fromStore(key, request);
+    if (mine.controller.signal.aborted) return cancelled;
+    if (stored !== undefined) {
+      cache.set(key, stored);
+      persisted.hits += 1;
+      if (running.get(view) === mine) running.delete(view);
+      return { ok: true, result: { ...stored, requestId: request.requestId }, cached: true };
+    }
     const options_: RpcCallOptions = { signal: mine.controller.signal, ...(call?.timeoutMs === undefined ? {} : { timeoutMs: call.timeoutMs }) };
     try {
       // the grid layout does not use ELK, so it does not wait for ELK to load
@@ -101,7 +135,10 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
         const result = first.value;
         if (result.engine === 'elk') elk += 1;
         else if (result.fallbackReason !== undefined) fallback[result.fallbackReason] += 1;
-        if (result.engine === 'elk' || result.engine === 'grid' || result.fallbackReason === 'elk_error') cache.set(key, result);
+        if (result.engine === 'elk' || result.engine === 'grid' || result.fallbackReason === 'elk_error') {
+          cache.set(key, result);
+          void toStore(key, result);
+        }
         return { ok: true, result, cached: false };
       }
       if (first.error.code === 'CANCELLED') return cancelled;
@@ -122,6 +159,33 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
     }
   }
 
+  /** A stored layout of this request, or undefined: a miss, a failure, or a row that does not answer the request (counted, never used). */
+  async function fromStore(key: string, request: LayoutRequest): Promise<LayoutResult | undefined> {
+    if (options.persist === undefined) return undefined;
+    let row: LayoutResult | undefined;
+    try {
+      row = await options.persist.get(key);
+    } catch {
+      return undefined;
+    }
+    if (row === undefined) return undefined;
+    if (!answers(row, request, key)) {
+      persisted.rejected += 1;
+      return undefined;
+    }
+    return row;
+  }
+
+  async function toStore(key: string, result: LayoutResult): Promise<void> {
+    if (options.persist === undefined) return;
+    try {
+      const put = await options.persist.put(key, result);
+      if (!put.ok) persisted.refused += 1;
+    } catch {
+      persisted.refused += 1;
+    }
+  }
+
   /** Stress over `MAX_STRESS_NODES` nodes is laid out with ELK layered; the result says so (never silent), cached or not. */
   async function layout(view: string, request: LayoutRequest, call?: Pick<RpcCallOptions, 'timeoutMs'>): Promise<LayoutOutcome> {
     if (request.algorithm !== 'stress' || request.nodes.length <= MAX_STRESS_NODES) return run(view, request, call);
@@ -133,6 +197,6 @@ export function createLayoutService(options: LayoutServiceOptions): LayoutServic
 
   return {
     layout,
-    stats: () => ({ cacheHits: hits, cacheSize: cache.size, elk, fallback: { ...fallback }, superseded, unavailable }),
+    stats: () => ({ cacheHits: hits, cacheSize: cache.size, elk, fallback: { ...fallback }, superseded, unavailable, persisted: { ...persisted } }),
   };
 }

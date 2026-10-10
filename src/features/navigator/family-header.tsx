@@ -1,7 +1,7 @@
 /**
  * The top of the family page (step 5.5b; ADR-037): the family's name and generic formula, the counts, the reaction types as text chips,
  * and the "Made from" / "Turns into" strip: the partner families as buttons with their counts; a button brings the reader to its group.
- * The family's tone (step 5.5c) tints the header and rules the buttons; its group is written above the name, so colour is never the only carrier.
+ * The family's tone (step 5.5c) tints the header; each partner button takes the PARTNER's own tone (step 5.5d); the group is written above the name, so colour is never the only carrier.
  */
 import type { FamilyPartner, FamilyStudy } from '@/core/graph';
 import { VisuallyHidden } from '@/ui/primitives';
@@ -20,7 +20,7 @@ function Partners(props: { readonly title: string; readonly empty: string; reado
         <ul className={styles.partnerList}>
           {props.partners.map((partner) => (
             <li key={partner.hubId}>
-              <button type="button" className={styles.partner} onClick={() => props.onGo(partner.hubId)}>
+              <button type="button" className={styles.partner} data-tone={partner.tone} onClick={() => props.onGo(partner.hubId)}>
                 {partner.name} <span className={styles.count}>{partner.reactionCount}</span>
                 <VisuallyHidden>{partner.reactionCount === 1 ? ' reaction' : ' reactions'}</VisuallyHidden>
               </button>

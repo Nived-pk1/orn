@@ -55,21 +55,24 @@ describe('the family page', () => {
     expect(screen.getByRole('list', { name: 'Reactions of and preparation of Alcohols' })).toBeTruthy();
   });
 
-  it('the header takes the tone of the family and writes its group; the partner buttons carry the same tone (step 5.5c)', async () => {
+  it('the header takes the tone of the family and writes its group; each partner button carries the tone of the PARTNER (step 5.5d, item e)', async () => {
     await openFamily('cls_alcohols');
     const header = screen.getByRole('heading', { level: 1 }).closest('[data-tone]') as HTMLElement;
     expect(header.getAttribute('data-tone')).toBe('green');
     expect(within(header).getByText('Oxygen compounds')).toBeTruthy();
-    // the strip is inside the toned header, so its buttons draw with the tone's variables
-    expect(within(header).getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ })).toBeTruthy();
-    expect(within(header).getByRole('button', { name: /^Ethers/ })).toBeTruthy();
+    // Aldehydes and Ethers are Oxygen compounds too (green); Made-from Alkenes is a Hydrocarbon (blue): the button wears Alkenes' tone, not Alcohols'
+    expect(within(header).getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).getAttribute('data-tone')).toBe('green');
+    expect(within(header).getByRole('button', { name: /^Ethers/ }).getAttribute('data-tone')).toBe('green');
+    for (const button of within(header).getAllByRole('button', { name: /^Alkenes/ })) expect(button.getAttribute('data-tone')).toBe('blue');
+    for (const button of within(header).getAllByRole('button', { name: /^Haloalkanes/ })) expect(button.getAttribute('data-tone')).toBe('amber');
   });
 
   it('a family without an arrangement (Unclassified) has a plain header: no tone and no group line', async () => {
     await openFamily('virtual:unclassified:hub', undefined, false);
     const h1 = await screen.findByRole('heading', { level: 1 });
     expect(h1.closest('[data-tone]')).toBeNull();
-    expect(document.querySelector('[data-tone]')).toBeNull();
+    expect(document.querySelector('div[data-tone]')).toBeNull(); // no tinted header; its partner buttons still wear their own families' tones
+    expect(document.querySelector('button[data-tone]')).not.toBeNull();
   });
 
   it('says in words that a section is empty', async () => {
