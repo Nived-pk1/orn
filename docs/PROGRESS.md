@@ -3744,3 +3744,10 @@ REVIEW REQUIRED for the reviewer and the user. (1) DEPARTURE from the prompt (it
 Open items carried (never deleted): all of 5.5b's and 5.5c's; NEW: a chip may touch another label box in an ELK layout (see 3); a map with many arrows into one box may need more than 56 px of side (the grid layout counts it in its notes: none on the demo); the Unanchored list is a plain list (no search or filter until 5.8).
 Background commands started and stopped: the `npm run check` runs and the e2e runs were foreground or finished; no preview server or monitor is left running (the Playwright web server is started and stopped by each run).
 `npm run check` as ONE command at the close: 336 files, 4,937 tests, green (before the session 326 files, 4,872 tests).
+
+### Step 5.5d review (reviewer, 2026-10-10) and follow-ups (Part A of the 5.6a session)
+
+Verdict: step 5.5d ACCEPTED. Session start: `git status` clean, HEAD 4981637.
+1. Approved as built: the arrow ends, weights, hover, chips, loops, legend, the Unanchored panel, the truncation notice, the layout cache, the Retry of structures, the empty states, the dismissible storage warning, the amendments and the changed tests.
+2. REVIEW REQUIRED 1 to 9: accepted (1: the boot check of `persisted()` stays as built).
+3. Finding from the user's own browser: their saved data is the demo imported BEFORE step 5.5c, so its anchors have no cells and the overview falls back to the ELK drawing, a tangle of orthogonal lines. Any dataset without cells (a v6 import, a generated file) gets that tangle. Part B of this session fixes both (automatic arrangement; "Replace with the demo dataset").
