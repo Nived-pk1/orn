@@ -15,8 +15,8 @@ const settle = async (): Promise<void> => {
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
 };
 
-// The demo WITHOUT its arrangement: the overview takes the layered path, which these tests (ELK's stable first view, previous positions)
-// are about. The arranged demo is in pipeline-arranged.test.ts.
+// The demo WITHOUT its arrangement, laid out layered (`layoutAlgorithm`): the overview itself is always a grid now, but the pipeline's
+// layered path (ELK's stable first view, previous positions) stays tested. The grid overview is in pipeline-arranged.test.ts.
 const layeredDemo = unarrangedDemoState;
 
 interface Setup {
@@ -28,7 +28,7 @@ interface Setup {
 async function started(state: CanonicalState = layeredDemo(), options: { measurerReady?: Promise<void> } = {}): Promise<Setup> {
   const store = createCanonicalStore({ initial: state, validateInitial: false });
   const rig = navigatorRig(store, options);
-  const model = createNavigatorModel(rig.ports);
+  const model = createNavigatorModel(rig.ports, { layoutAlgorithm: 'layered' });
   model.start();
   await settle();
   return { store, rig, model };
@@ -124,7 +124,7 @@ describe('a stable first view (step 5.5a, item b)', () => {
       calls += 1;
       return calls === 2 ? { ok: false, code: 'UNAVAILABLE', message: 'second layout failed' } : real(view, request);
     };
-    const model = createNavigatorModel(rig.ports);
+    const model = createNavigatorModel(rig.ports, { layoutAlgorithm: 'layered' });
     model.start();
     await settle();
     expect(model.getState().scene).toBeNull();
@@ -143,7 +143,7 @@ describe('a stable first view (step 5.5a, item b)', () => {
       if (calls === 2) await new Promise<void>((resolve) => (release = resolve));
       return real(view, request);
     };
-    const model = createNavigatorModel(rig.ports);
+    const model = createNavigatorModel(rig.ports, { layoutAlgorithm: 'layered' });
     model.start();
     await settle();
     filterBy(rig, NARROW);
@@ -248,7 +248,7 @@ describe('a superseded result is never shown', () => {
     const store = createCanonicalStore({ initial: layeredDemo(), validateInitial: false });
     const rig = navigatorRig(store);
     rig.layout.hold = new Promise<void>((resolve) => (release = resolve));
-    const model = createNavigatorModel(rig.ports);
+    const model = createNavigatorModel(rig.ports, { layoutAlgorithm: 'layered' });
     model.start();
     await settle();
     expect(model.getState().scene).toBeNull();
@@ -273,7 +273,7 @@ describe('failures and the skeleton', () => {
     const store = createCanonicalStore({ initial: layeredDemo(), validateInitial: false });
     const rig = navigatorRig(store);
     rig.layout.failure = { ok: false, code: 'UNAVAILABLE', message: 'no worker' };
-    const model = createNavigatorModel(rig.ports);
+    const model = createNavigatorModel(rig.ports, { layoutAlgorithm: 'layered' });
     model.start();
     await settle();
     expect(model.getState().error).toEqual({ code: 'UNAVAILABLE', message: 'no worker' });
@@ -334,7 +334,7 @@ describe('the overview does not expand, and the selection (step 5.5a part 2; ADR
     const rig = navigatorRig(store);
     const held = { expanded: [{ nodeId: 'cls_alcohols', direction: 'both' as const }, { nodeId: 'not-a-hub', direction: 'both' as const }], collapsedEdgeIds: [] };
     rig.ui.expansion.setState({ expansion: held });
-    const model = createNavigatorModel(rig.ports);
+    const model = createNavigatorModel(rig.ports, { layoutAlgorithm: 'layered' });
     model.start();
     await settle();
     expect(model.getState().scene?.nodes).toHaveLength(16);

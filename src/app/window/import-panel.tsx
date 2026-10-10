@@ -72,7 +72,7 @@ function ImportResult(props: { readonly view: Extract<ImportView, { phase: 'done
   useEffect(() => {
     if (shown.current === view) return;
     shown.current = view;
-    const clean = view.notes.length === 0 && view.text.startsWith('Imported');
+    const clean = view.notes.length === 0 && /^Import(ed| undone:)/.test(view.text);
     toasts.push({ kind: clean ? 'info' : 'warning', text: [view.text, ...view.notes].join(' '), ...(clean ? { autoDismissMs: RESULT_TOAST_MS } : {}) });
     flow.dismiss();
   }, [view, flow, toasts]);

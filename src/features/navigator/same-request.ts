@@ -14,7 +14,7 @@ export function sameRequest(a: LayoutRequest, b: LayoutRequest): boolean {
     const y = b.nodes[i];
     if (x === undefined || y === undefined || x.id !== y.id || x.width !== y.width || x.height !== y.height) return false;
     if (x.layerHint !== y.layerHint || x.orderHint !== y.orderHint || x.pinned?.x !== y.pinned?.x || x.pinned?.y !== y.pinned?.y) return false;
-    if (x.cell?.column !== y.cell?.column || x.cell?.row !== y.cell?.row) return false;
+    if (x.cell?.column !== y.cell?.column || x.cell?.row !== y.cell?.row || x.autoCell !== y.autoCell) return false;
   }
   for (let i = 0; i < a.edges.length; i += 1) {
     const x = a.edges[i];

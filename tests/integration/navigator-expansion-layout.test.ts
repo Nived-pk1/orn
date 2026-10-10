@@ -37,7 +37,7 @@ describe('the demo overview, real ELK in process', () => {
       rig.layout.requests.push(request);
       return { ok: true, result: await handlers.layout(request, ctx), cached: false };
     };
-    const model = createNavigatorModel(rig.ports);
+    const model = createNavigatorModel(rig.ports, { layoutAlgorithm: 'layered' });
     model.start();
     await idle(model);
     return { model, rig };

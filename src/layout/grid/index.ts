@@ -29,7 +29,14 @@ function ignoredHints(request: LayoutRequest): string[] {
   return names.length === 0 ? [] : [`the grid layout does not use ${names.join(', ')}`];
 }
 
-export function layoutGrid(request: LayoutRequest, durationMs: () => number): LayoutResult {
+export interface GridOptions {
+  /** Notes of the caller (the automatic arrangement), added to the layout's own. */
+  readonly notes?: readonly string[];
+  /** The key of the request the caller was asked (the cells were filled in after it). */
+  readonly cacheKey?: string;
+}
+
+export function layoutGrid(request: LayoutRequest, durationMs: () => number, options: GridOptions = {}): LayoutResult {
   const { boxes, sharedCells } = arrange(request);
   const ports = assignPorts(request.edges, boxes);
   const routes = new Map<string, readonly Point[]>();
@@ -72,6 +79,7 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number): La
   const labelPositions: Record<string, Point> = {};
   for (const [id, at] of Object.entries(chips.positions)) labelPositions[id] = shift(at);
   const notes = [
+    ...(options.notes ?? []),
     ...ignoredHints(request),
     ...(blocked === 0 ? [] : [`${count(blocked, 'arrow crosses', 'arrows cross')} a box: no arc of ${ARC_OFFSETS[0]} to ${ARC_OFFSETS[ARC_OFFSETS.length - 1]} px clears the boxes, so the line stays straight`]),
     ...(chips.kept === 0 ? [] : [`${count(chips.kept, 'count chip overlaps', 'count chips overlap')} a box or another chip: no place along its line is free`]),
@@ -87,6 +95,6 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number): La
     labelPositions,
     bounds: { width: maxX - minX, height: maxY - minY },
     durationMs: durationMs(),
-    cacheKey: layoutCacheKey(request),
+    cacheKey: options.cacheKey ?? layoutCacheKey(request),
   };
 }

@@ -3,7 +3,7 @@
  * one layout node per projection node; one layout edge per drawn path (a bundle's id, or the single edge's own id; membership
  * and overflow edges are paths too); self-loops are left OUT (decision Q4: the scene draws them beside their node); both lists
  * sorted by id; a fixed seed. The caps of the layout contract are answered as a value, never by cutting the graph.
- * The navigator overview is laid out on the GRID (step 5.5c) when every anchored hub it shows has a cell (`isArranged`); the cells go
+ * The navigator overview is laid out on the GRID (step 5.5c; hubs without a cell are automatic, see `isArranged`); the cells go
  * into the request and no previous positions are sent (the grid has no use for them). Otherwise, and for every other view, as before.
  */
 import type { GraphNode, Projection } from '@/core/graph/contracts';
@@ -35,14 +35,14 @@ export type LayoutRequestResult =
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
- * True when the projection is the navigator overview of anchored hubs and every one of them has a grid cell: the arrangement is
- * complete, so the grid layout can place it. The Unclassified hub has no anchor and goes below the grid. Any other node (a member,
- * an overflow node, a focus) or one hub without a cell means the layered layout, as before.
+ * True when the projection is the navigator overview of anchored hubs (and the Unclassified hub): the grid layout draws it. A hub
+ * with an authored cell keeps it; a hub without one is sent as `autoCell` and the layout worker gives it an automatic cell (derived,
+ * never written back). The Unclassified hub has no anchor and goes below the grid. Any other node (a member, an overflow node, a
+ * focus) means the layered layout, as before.
  */
 export function isArranged(projection: Projection): boolean {
   if (projection.view !== 'navigator') return false;
-  const hubs = projection.nodes.filter((node: GraphNode) => node.role === 'anchor');
-  return hubs.length > 0 && hubs.every((node) => node.arrangement?.cell !== undefined) && projection.nodes.every((node) => node.role === 'anchor' || node.role === 'unclassified');
+  return projection.nodes.some((node: GraphNode) => node.role === 'anchor') && projection.nodes.every((node) => node.role === 'anchor' || node.role === 'unclassified');
 }
 
 export const directionOfView = (view: Projection['view']): LayoutDirection => (view === 'precursor_explorer' ? 'LEFT' : 'RIGHT');
@@ -56,7 +56,7 @@ export function buildLayoutRequest(projection: Projection, sizes: NodeSizes, opt
   for (const node of projection.nodes) {
     const size = sizes.get(node.id);
     if (size === undefined) return { ok: false, code: 'MISSING_SIZE', message: `node "${node.id}" has no size` };
-    nodes.push({ id: node.id, width: size.width, height: size.height, ...(arranged && node.arrangement?.cell !== undefined ? { cell: { column: node.arrangement.cell.column, row: node.arrangement.cell.row } } : {}) });
+    nodes.push({ id: node.id, width: size.width, height: size.height, ...(arranged && node.arrangement?.cell !== undefined ? { cell: { column: node.arrangement.cell.column, row: node.arrangement.cell.row } } : arranged && node.role === 'anchor' ? { autoCell: true as const } : {}) });
   }
   nodes.sort((a, b) => compare(a.id, b.id));
   for (let i = 1; i < nodes.length; i += 1) {

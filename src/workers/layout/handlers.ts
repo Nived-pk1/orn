@@ -9,6 +9,8 @@
 import { LayoutEngineUnavailable } from '@/layout/errors';
 import { layoutFallback } from '@/layout/fallback';
 import { layoutGrid } from '@/layout/grid';
+import { autoNodesOf, layeredRequestOf, snapToCells } from '@/layout/grid/auto';
+import { layoutCacheKey } from '@/layout/cache-key';
 import { checkRequest } from '@/layout/validate';
 import type { LayoutEngine, LayoutRequest, LayoutResult } from '@/layout/contracts';
 import type { FallbackReason } from '@/layout/contracts';
@@ -29,9 +31,26 @@ export function createLayoutHandlers(engine: LayoutEngine, clock: () => number):
     const result = layoutFallback(request, reason, () => clock() - began);
     return extra.length === 0 ? result : { ...result, notes: [...result.notes, ...extra].sort() };
   };
-  const grid = (request: LayoutRequest): LayoutResult => {
+  /**
+   * The grid layout. Hubs without an authored cell (`autoCell`) first get one from the layered drawing of the hubs (ELK, or the
+   * fallback when ELK cannot answer), snapped to the grid; the cells are for this drawing only and are noted in the result.
+   */
+  const grid = async (request: LayoutRequest, layered?: (sub: LayoutRequest) => Promise<LayoutResult>): Promise<LayoutResult> => {
     const began = clock();
-    return layoutGrid(request, () => clock() - began);
+    if (autoNodesOf(request).length === 0) return layoutGrid(request, () => clock() - began);
+    const sub = layeredRequestOf(request);
+    const extra: string[] = [];
+    let drawn: LayoutResult;
+    try {
+      drawn = layered === undefined ? fallback(sub, 'engine_unavailable') : await layered(sub);
+    } catch (error) {
+      if (layered === undefined || (error instanceof Error && error.name === 'AbortError')) throw error;
+      drawn = fallback(sub, error instanceof LayoutEngineUnavailable ? 'engine_unavailable' : 'elk_error');
+      extra.push(`ELK failed for the automatic arrangement (${messageOf(error).slice(0, 200)}); the fallback layout was used`);
+    }
+    const snapped = snapToCells(request, drawn.positions);
+    const note = `automatic arrangement: ${snapped.assigned} ${snapped.assigned === 1 ? 'box has' : 'boxes have'} no cell in the data and ${snapped.assigned === 1 ? 'was' : 'were'} placed from a layered drawing (column = layer, row = rank)${snapped.moved === 0 ? '' : `; ${snapped.moved} moved to the next free row`}`;
+    return layoutGrid(snapped.request, () => clock() - began, { notes: [note, ...extra], cacheKey: layoutCacheKey(request) });
   };
   return {
     async warmUp() {
@@ -45,7 +64,7 @@ export function createLayoutHandlers(engine: LayoutEngine, clock: () => number):
     },
     async layout(params, ctx) {
       const request = checked(params);
-      if (request.algorithm === 'grid') return grid(request);
+      if (request.algorithm === 'grid') return grid(request, (sub) => engine.layout(sub, ctx.signal));
       try {
         return await engine.layout(request, ctx.signal);
       } catch (error) {

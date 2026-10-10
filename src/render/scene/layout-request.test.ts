@@ -60,7 +60,8 @@ describe('buildLayoutRequest', () => {
   const nodes = [node('cls_b'), node('cls_a'), node('cls_c')];
   const edges = [edge('e3', 'cls_a', 'cls_b'), edge('e1', 'cls_a', 'cls_b', { selectivity: 'minor' }), edge('e2', 'cls_b', 'cls_c'), edge('e9', 'cls_c', 'cls_c')];
   const projection = projectionOf({ nodes, edges, bundles: [bundle('bnd_ab', 'cls_a', 'cls_b', ['e1', 'e3'], 5), bundle('bnd_cc', 'cls_c', 'cls_c', ['e9'], 3)] });
-  const built = buildLayoutRequest(projection, sizesFor(['cls_a', 'cls_b', 'cls_c']));
+  // a plain anchored overview is a grid now; these tests are about the request itself, so they ask for the layered one
+  const built = buildLayoutRequest(projection, sizesFor(['cls_a', 'cls_b', 'cls_c']), { algorithm: 'layered' });
 
   it('has one node per projection node, one edge per drawn path, loops left out, both sorted by id', () => {
     if (!built.ok) throw new Error('refused');
@@ -81,7 +82,7 @@ describe('buildLayoutRequest', () => {
   });
 
   it('is the same for the same inputs, and its default requestId comes from the projection key', () => {
-    expect(buildLayoutRequest(projection, sizesFor(['cls_a', 'cls_b', 'cls_c']))).toEqual(built);
+    expect(buildLayoutRequest(projection, sizesFor(['cls_a', 'cls_b', 'cls_c']), { algorithm: 'layered' })).toEqual(built);
     if (!built.ok) throw new Error('refused');
     expect(built.request.requestId).toBe(`layout:${projection.key}`);
   });
@@ -97,7 +98,7 @@ describe('buildLayoutRequest', () => {
 
   it('passes the previous positions of the nodes still present, as hints', () => {
     const previous = { cls_a: { x: 1, y: 2 }, cls_gone: { x: 9, y: 9 } };
-    const result = buildLayoutRequest(projection, sizesFor(['cls_a', 'cls_b', 'cls_c']), { previous });
+    const result = buildLayoutRequest(projection, sizesFor(['cls_a', 'cls_b', 'cls_c']), { previous, algorithm: 'layered' });
     if (!result.ok) throw new Error('refused');
     expect(result.request.previous).toEqual({ cls_a: { x: 1, y: 2 } });
     expect(checkRequest(result.request)).toBeUndefined();
@@ -127,7 +128,7 @@ describe('buildLayoutRequest', () => {
   });
 });
 
-describe('the arranged overview (step 5.5c): grid when every anchored hub has a cell', () => {
+describe('the arranged overview (step 5.5c; automatic cells since 5.5d): always the grid', () => {
   const cell = (column: number, row: number) => ({ arrangement: { cell: { column, row } } });
   const arranged = () =>
     projectionOf({
@@ -145,14 +146,15 @@ describe('the arranged overview (step 5.5c): grid when every anchored hub has a 
     expect(checkRequest(result.request)).toBeUndefined();
   });
 
-  it('one anchored hub without a cell means the layered layout, as before, and no cell is sent', () => {
-    const projection = projectionOf({ nodes: [node('cls_a', cell(0, 0)), node('cls_b'), node('cls_c', { arrangement: { tone: 'blue' } })], edges: [] });
-    const result = buildLayoutRequest(projection, sizesFor(['cls_a', 'cls_b', 'cls_c']), { previous: { cls_a: { x: 1, y: 2 } } });
+  it('a hub without a cell is sent as autoCell (the worker gives it a cell); the others keep theirs; still the grid', () => {
+    const projection = projectionOf({ nodes: [node('cls_a', cell(0, 0)), node('cls_b'), node('cls_c', { arrangement: { tone: 'blue' } }), node('virtual:unclassified', { kind: 'virtual', record: undefined, role: 'unclassified' })], edges: [] });
+    const result = buildLayoutRequest(projection, sizesFor(['cls_a', 'cls_b', 'cls_c', 'virtual:unclassified']), { previous: { cls_a: { x: 1, y: 2 } } });
     if (!result.ok) throw new Error(result.message);
-    expect(result.request.algorithm).toBe('layered');
-    expect(result.request.nodes.every((n) => n.cell === undefined)).toBe(true);
-    expect(result.request.previous).toEqual({ cls_a: { x: 1, y: 2 } });
-    expect(isArranged(projection)).toBe(false);
+    expect(result.request.algorithm).toBe('grid');
+    expect(result.request.nodes.map((n) => [n.id, n.cell, n.autoCell])).toEqual([['cls_a', { column: 0, row: 0 }, undefined], ['cls_b', undefined, true], ['cls_c', undefined, true], ['virtual:unclassified', undefined, undefined]]);
+    expect(result.request.previous).toBeUndefined();
+    expect(checkRequest(result.request)).toBeUndefined();
+    expect(isArranged(projection)).toBe(true);
   });
 
   it('a member or an overflow node, other views, and a projection with no anchored hub are not arranged', () => {

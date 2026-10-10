@@ -85,7 +85,7 @@ describe('the persisted layout cache', () => {
     const key = layoutCacheKey(small());
     const row = rows.get(key) as LayoutResult;
     const broken: [string, LayoutResult][] = [
-      ['another key', { ...row, cacheKey: 'layout/3:other' }],
+      ['another key', { ...row, cacheKey: 'layout/4:other' }],
       ['a node without a position', { ...row, positions: { a: row.positions['a'] as never } }],
       ['an edge without a route', { ...row, edgeRoutes: {} }],
     ];

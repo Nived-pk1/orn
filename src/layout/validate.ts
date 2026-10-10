@@ -44,6 +44,7 @@ export function checkRequest(request: LayoutRequest): RequestProblem | undefined
     if (node.layerHint !== undefined && !integer(node.layerHint, 0, MAX_HINT)) return bad(`node "${node.id}": layerHint must be an integer from 0 to ${MAX_HINT}`);
     if (node.orderHint !== undefined && !finite(node.orderHint, -MAX_COORDINATE, MAX_COORDINATE)) return bad(`node "${node.id}": orderHint must be a finite number`);
     if (node.cell !== undefined && !(integer(node.cell.column, 0, MAX_CELL) && integer(node.cell.row, 0, MAX_CELL))) return bad(`node "${node.id}": cell needs a column and a row that are integers from 0 to ${MAX_CELL}`);
+    if (node.autoCell !== undefined && node.autoCell !== true) return bad(`node "${node.id}": autoCell must be true when present`);
     if (node.pinned !== undefined && !point(node.pinned)) return bad(`node "${node.id}": pinned must be a finite point`);
   }
   last = undefined;

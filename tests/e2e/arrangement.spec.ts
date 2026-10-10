@@ -2,13 +2,13 @@
  * The arranged overview and the family colours (step 5.5c; ADR-037), Chromium against the PRODUCTION build with real fonts and the
  * real layout worker, the demo in 1280 x 800: the overview is the grid layout; zero lines through a box, zero count chips over another
  * chip or a box, every hub inside the fitted view at LOD 1 or more; the legend lists the four groups; the family page of Alcohols takes
- * its tone; axe and zero CSP violations; a generated file with no cells still gets the ELK overview. Screenshots go to `screenshots/`
+ * its tone; axe and zero CSP violations; a generated file with no cells gets the automatic arrangement (grid). Screenshots go to `screenshots/`
  * (git-ignored) and the numbers of the demo (arcs, boxes) to `screenshots/arrangement-numbers.json`.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, watch } from './kit';
+import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, showDataset, watch } from './kit';
 import { chipsOffMiddle, linesThroughBoxes, measure, problemsOf } from './readability';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -133,16 +133,54 @@ test.describe('the family page takes the tone of its family', () => {
   });
 });
 
-test.describe('an overview without cells keeps the ELK layout', () => {
-  test('a generated file with anchors but no cells is drawn by ELK, with no legend', async ({ page }) => {
+test.describe('an overview without cells gets an automatic arrangement', () => {
+  test('a generated file with anchors but no cells is drawn on the grid: zero lines through a box, and the arrangement is said in words', async ({ page }) => {
+    const seen = await watch(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openApp(page);
+    await chooseFile(page, generatedFileWithAnchors('tiny', 'chain'));
+    await expect(page.getByRole('heading', { name: 'Import summary' })).toBeVisible({ timeout: 90_000 });
+    await page.getByRole('button', { name: 'Confirm' }).click();
+    await expect(drawing(page)).toBeVisible({ timeout: 60_000 });
+    await expect(page.locator('[data-layout-engine]')).toHaveAttribute('data-layout-engine', 'grid');
+    await expect(page.getByText(/automatic arrangement: \d+ boxes? (has|have) no cell in the data/)).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Family groups' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Fit' }).click();
+    await page.waitForTimeout(500);
+    const measured = await measure(page);
+    expect(linesThroughBoxes(measured), 'lines through a box').toEqual([]);
+    expect(problemsOf(measured).labelOverNode, 'chip over a box').toEqual([]);
+    const path = await shot(page, 'overview-automatic-1280x800.png');
+    test.info().annotations.push({ type: 'screenshot', description: path });
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+
+  test('Dataset: Replace with the demo dataset asks first, replaces the data, and Undo import brings the previous data back', async ({ page }) => {
     const seen = await watch(page);
     await openApp(page);
     await chooseFile(page, generatedFileWithAnchors('tiny', 'chain'));
     await expect(page.getByRole('heading', { name: 'Import summary' })).toBeVisible({ timeout: 90_000 });
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(drawing(page)).toBeVisible({ timeout: 60_000 });
-    await expect(page.locator('[data-layout-engine]')).toHaveAttribute('data-layout-engine', /^(elk|fallback)$/);
-    await expect(page.getByRole('list', { name: 'Family groups' })).toHaveCount(0);
+    await showDataset(page);
+    const before = await page.getByRole('list', { name: 'Record counts' }).innerText();
+    await page.getByRole('button', { name: 'Replace with the demo dataset' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Replace with the demo dataset' });
+    await expect(dialog.getByText(/The current data is replaced.*Undo import brings the current data back/)).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog).toBeHidden();
+    expect(await axeProblems(page)).toEqual([]);
+    expect(await page.getByRole('list', { name: 'Record counts' }).innerText()).toBe(before);
+    await page.getByRole('button', { name: 'Replace with the demo dataset' }).click();
+    await page.getByRole('dialog', { name: 'Replace with the demo dataset' }).getByRole('button', { name: 'Replace' }).click();
+    await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible({ timeout: 60_000 });
+    const demo = await page.getByRole('list', { name: 'Record counts' }).innerText();
+    expect(demo).not.toBe(before);
+    await page.getByRole('button', { name: 'Undo import' }).click();
+    await expect(page.getByText('Import undone: the data from before it is back.')).toBeVisible({ timeout: 60_000 });
+    await expect.poll(() => page.getByRole('list', { name: 'Record counts' }).innerText()).toBe(before);
+    expect(await axeProblems(page)).toEqual([]);
     await expectClean(seen);
   });
 });

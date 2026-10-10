@@ -25,6 +25,8 @@ export interface LayoutNodeInput {
   readonly pinned?: Point;
   /** The grid cell of the box (step 5.5c; additive): column and row, small integers from 0. Used by the `grid` algorithm, ignored by the others. */
   readonly cell?: { readonly column: number; readonly row: number };
+  /** This box has no authored cell and asks the grid layout for an automatic one (step 5.5d follow-up; additive). Ignored when `cell` is set and by the other algorithms. */
+  readonly autoCell?: true;
 }
 
 export interface LayoutEdgeInput {

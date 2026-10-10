@@ -34,6 +34,8 @@ export interface ImportFlow {
   readonly busy: boolean;
   loadDemo(): void;
   chooseFile(file: File): void;
+  /** Restores the `pre_import` snapshot of the newest import (Dataset mode). */
+  undoImport(): void;
   confirm(): void;
   cancel(): void;
   /** Takes the offer of the current message (merge, or the in-page path). */
@@ -115,6 +117,13 @@ export function useImportFlow(): ImportFlow {
       });
     },
     chooseFile: (file) => start({ blob: file, fileName: file.name, auto: false }),
+    undoImport() {
+      setView({ phase: 'working', text: 'Undoing the import', cancellable: false });
+      void services.flows.undo().then((answer) => {
+        if (!answer.ok) setView({ phase: 'message', text: describeFailure('The import was not undone', answer.code, answer.message) });
+        else setView({ phase: 'done', text: answer.saved || answer.sessionOnly ? 'Import undone: the data from before it is back.' : 'Import undone, but not saved yet. The status line shows the save state.', notes: [...answer.notes] });
+      });
+    },
     confirm() {
       if (view.phase !== 'summary' || !view.plan.preview.canConfirm) return;
       void applyPlan(view.plan, { blob: new Blob(), fileName: view.fileName, auto: false }, view.inProcess);

@@ -15,7 +15,7 @@
 import { DEFAULT_TRAVERSAL_LIMITS, createScopeOf, navigatorProjection, sameProjection } from '@/core/graph';
 import type { Projection, ProjectionRequest } from '@/core/graph';
 import type { ChangeSet } from '@/core/dataset/contracts';
-import type { LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
+import type { LayoutAlgorithm, LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
 import { buildLayoutRequest, buildScene, labelSizes, nodeSizes } from '@/render/scene';
 import type { LabelSizes, NodeSizes, Scene } from '@/render/scene';
 import type { NavigatorError, NavigatorPorts } from './contracts';
@@ -70,7 +70,12 @@ const NO_EXPANSION: ProjectionRequest['expansion'] = { expanded: [], collapsedEd
 
 const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [], layout: null, unanchored: [], reactions: 0 };
 
-export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
+/** `layoutAlgorithm` forces the layout of the overview (the tests that are about the layered path use it); the app leaves it unset. */
+export interface NavigatorModelOptions {
+  readonly layoutAlgorithm?: LayoutAlgorithm;
+}
+
+export function createNavigatorModel(ports: NavigatorPorts, modelOptions: NavigatorModelOptions = {}): NavigatorModel {
   const binding = depictionBindingOf(ports);
   let state = INITIAL;
   const listeners = new Set<() => void>();
@@ -140,7 +145,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
         counts.sizes += 1;
       }
       const previous: Record<string, Point> = last === null ? {} : { ...last.result.positions };
-      const built = buildLayoutRequest(current, sizes.value, { previous, labelSizes: sizes.labels });
+      const built = buildLayoutRequest(current, sizes.value, { previous, labelSizes: sizes.labels, ...(modelOptions.layoutAlgorithm === undefined ? {} : { algorithm: modelOptions.layoutAlgorithm }) });
       counts.requests += 1;
       if (!built.ok) return fail(built.code, built.message);
       let result: LayoutResult;
@@ -161,7 +166,7 @@ export function createNavigatorModel(ports: NavigatorPorts): NavigatorModel {
           // A layout computed without previous positions differs from one that is given its own result as previous (ELK's interactive
           // crossing minimisation), so the first interaction would move the view. Ask once more with the result as previous and show
           // only that answer (step 5.5a, item b). Bounded: once per request, and the second request has previous positions.
-          const again = buildLayoutRequest(current, sizes.value, { previous: result.positions, labelSizes: sizes.labels });
+          const again = buildLayoutRequest(current, sizes.value, { previous: result.positions, labelSizes: sizes.labels, ...(modelOptions.layoutAlgorithm === undefined ? {} : { algorithm: modelOptions.layoutAlgorithm }) });
           counts.requests += 1;
           if (!again.ok) return fail(again.code, again.message);
           counts.layoutCalls += 1;

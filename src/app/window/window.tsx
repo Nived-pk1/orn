@@ -21,6 +21,7 @@ import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
 import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from "@/ui/state";
 import { useApp } from "./context";
+import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
 import { ImportPanel } from "./import-panel";
 import { MODES, NAVIGATOR_MODE } from "./modes";
@@ -28,7 +29,7 @@ import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { TopBar } from "./top-bar";
 import styles from "./window.module.css";
-import { useImportFlow } from "./use-import-flow";
+import { useImportFlow, type ImportFlow } from "./use-import-flow";
 
 const countsOf = (
   state: CanonicalState,
@@ -59,11 +60,13 @@ function RecordCounts(props: {
 function DatasetView(props: {
   readonly counts: Readonly<Record<RecordKind, number>>;
   readonly empty: boolean;
+  readonly flow: ImportFlow;
 }) {
   return (
     <section aria-label="Dataset">
       <h2>Dataset</h2>
       <RecordCounts counts={props.counts} />
+      <DatasetActions flow={props.flow} />
       {props.empty ? (
         <p>
           Started empty. Nothing can be added in this version; authoring comes
@@ -95,7 +98,7 @@ function Canvas(props: {
       ) : showsNavigator ? (
         <NavigatorView />
       ) : (
-        <DatasetView counts={props.counts} empty={empty} />
+        <DatasetView counts={props.counts} empty={empty} flow={flow} />
       )}
       <ImportPanel flow={flow} />
     </div>
