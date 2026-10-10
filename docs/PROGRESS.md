@@ -3699,3 +3699,11 @@ REVIEW REQUIRED for the reviewer and the user. (1) THE ARRANGEMENT (cells, group
 Open items carried (never deleted): all of 5.5b's; NEW: the arranged overview's drawing is wide (1,428 x 840 on the demo, fitted at LOD 1 or more in 1280 x 800); with more columns the fitted scale falls toward the LOD 1 threshold (5.5d may need a smaller-grid hint); PRS-004 stacks boxes that share a cell (the data is warned about, not repaired).
 Background commands started and stopped: the e2e runs and `npm run check` runs were foreground or finished; no preview server or monitor is left running.
 `npm run check` as ONE command at the close: 326 files, 4,872 tests, green (this part changes docs only; the same totals as part 2).
+
+### Step 5.5c review (reviewer, 2026-10-10)
+
+Verdict: step 5.5c ACCEPTED. Session start: `git status` clean, HEAD c5083d1.
+1. Approved as built: schema version 2 (optional cell, group, tone on navigator_anchor) with its 1 -> 2 migration and frozen v1 fixtures, PRS-004 and PRS-005, the grid layout in the layout worker, the arcs and chip slides, the tone tokens, the legend row, the amendments and the changed tests. The user is happy with the arrangement and spacing.
+2. REVIEW REQUIRED 1, 2, 4, 5: accepted. 3: the "Made from" / "Turns into" buttons take the PARTNER's tone (step 5.5d item e). 6: initial JS 368.41 kB of 400: Gate E watch (lazy loading is decided there).
+3. The user's look at the arrows: the ends crowd together and land unevenly on a box (e.g. Haloalkanes and Alkenes), an arrow and its reverse are too close, lines and arrowheads are faint, and the count chips and self-loops are not understood. These become items a to d of step 5.5d.
+4. Plan row changes: 5.5d no longer holds the 200 ms layout transitions (moved to Phase 8: the overview no longer expands, a layout changes only with the data) or outside-scope dimming (moved to 5.8: it needs the exam-scope selector to be seen). CLOSED: "selecting a bundle lists its reactions" (the arrow's Open goes to the family page, 5.5b); the arrow-text words item (5.5b follow-up a); the fitted-size item (5.5b and 5.5c). Items a to f join the row (a to d: arrows; e to l below as the session prompt lists them).
