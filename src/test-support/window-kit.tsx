@@ -78,7 +78,8 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
   const loadDemo = vi.fn((): Promise<DemoLoad> => Promise.resolve({ ok: true, blob: new Blob(['{}']), fileName: 'demo.orn.json' }));
   const reload = vi.fn();
   const navigator = navigatorRig(store, options.navigator);
-  const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine } as unknown as WindowServices;
+  const search = { search: vi.fn(() => Promise.resolve({ ok: false, code: 'NOT_READY', message: 'the search index is not loaded' })), superseded: () => 0 };
+  const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine, search } as unknown as WindowServices;
   const panelSaves: Record<string, unknown>[] = [];
   const panels = createPanelsStore(
     { stored: undefined, mode: () => 'writable', save: (value) => (panelSaves.push({ ...value }), Promise.resolve()), ...options.panels },

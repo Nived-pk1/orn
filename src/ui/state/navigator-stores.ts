@@ -1,12 +1,12 @@
 /**
  * The navigator's UI stores (step 5.5a; UI_ARCHITECTURE §4): selection, expansion, filters, the active exam version and the viewport
  * per view. Small vanilla Zustand stores, in the pattern of the panels store. None of them holds canonical data (INV-10): they hold
- * IDs and numbers. Persistence is a separate wrapper (`persist.ts`) so the stores stay pure and testable without a port. Filters and
- * the active exam version are in-memory only until the step that gives them a control (5.8).
+ * IDs and numbers. Persistence is a separate wrapper (`persist.ts`) so the stores stay pure and testable without a port. The active exam version and the recent searches are saved (step 5.8); filters are in memory only.
  */
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { ExpansionState } from '@/core/graph/contracts';
 import type { ExamId, ExamVersionId, ViewFilters, ViewKey } from '@/core/schema';
+import { createRecentStore, createViewCommandsStore, type RecentStore, type ViewCommandsStore } from './search-stores';
 
 /** What is selected: one node or one edge of the drawing (step 5.5a; multi-selection is step 5.7). */
 export interface Selected {
@@ -205,6 +205,10 @@ export interface NavigatorUiStores {
   readonly viewports: ViewportsStore;
   readonly family: FamilyStore;
   readonly overview: OverviewStore;
+  /** The palette's recent searches (step 5.8; saved). */
+  readonly recent: RecentStore;
+  /** What the map offers the palette (step 5.8; never saved). */
+  readonly viewCommands: ViewCommandsStore;
 }
 
 export const createNavigatorUiStores = (): NavigatorUiStores => ({
@@ -215,4 +219,6 @@ export const createNavigatorUiStores = (): NavigatorUiStores => ({
   viewports: createViewportsStore(),
   family: createFamilyStore(),
   overview: createOverviewStore(),
+  recent: createRecentStore(),
+  viewCommands: createViewCommandsStore(),
 });

@@ -4,8 +4,9 @@
  * and its result a Toast (import-panel.tsx); the inspector shows the record in focus (step 5.6a). Composition only: the frame is
  * `src/ui/shell` and knows nothing of `AppStatus`; chemistry never lives here.
  */
-import { useCallback, useMemo, useState } from "react";
-import { Inspector, type InspectorHost } from "@/features/inspector";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Inspector, placeOf, type InspectorHost } from "@/features/inspector";
+import { Palette } from "@/features/search";
 import {
   NavigatorView,
   NavigatorProvider,
@@ -18,12 +19,15 @@ import {
   type CanonicalState,
   type RecordKind,
 } from "@/core/schema";
-import { useStoreSelector } from "@/ui/hooks";
+import { useStoreSelector, useSubscribable } from "@/ui/hooks";
 import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
 import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from "@/ui/state";
 import { useApp } from "./context";
-import { DatasetActions } from "./dataset-actions";
+import { DatasetActions, ReplaceDialog } from "./dataset-actions";
+import { examOptions } from "./exam-scope";
+import { buildCommands, type CommandDeps } from "./palette-commands";
+import { createSearchPorts } from "./search-port";
 import { FirstRun } from "./first-run";
 import { ImportPanel } from "./import-panel";
 import { MODES, NAVIGATOR_MODE } from "./modes";
@@ -63,12 +67,13 @@ function DatasetView(props: {
   readonly counts: Readonly<Record<RecordKind, number>>;
   readonly empty: boolean;
   readonly flow: ImportFlow;
+  readonly onAskReplace: () => void;
 }) {
   return (
     <section aria-label="Dataset">
       <h2>Dataset</h2>
       <RecordCounts counts={props.counts} />
-      <DatasetActions flow={props.flow} />
+      <DatasetActions flow={props.flow} onAskReplace={props.onAskReplace} />
       {props.empty ? (
         <p>
           Started empty. Nothing can be added in this version; authoring comes
@@ -82,9 +87,11 @@ function DatasetView(props: {
 function Canvas(props: {
   readonly mode: string;
   readonly counts: Readonly<Record<RecordKind, number>>;
+  readonly flow: ImportFlow;
+  readonly onAskReplace: () => void;
 }) {
   const { panels } = useApp();
-  const flow = useImportFlow();
+  const { flow } = props;
   const startedEmpty = usePanels(panels, (s) => s.startEmptyDismissed);
   const onStartEmpty = useCallback(
     () => panels.getState().dismissStartEmpty(),
@@ -100,7 +107,7 @@ function Canvas(props: {
       ) : showsNavigator ? (
         <NavigatorView />
       ) : (
-        <DatasetView counts={props.counts} empty={empty} flow={flow} />
+        <DatasetView counts={props.counts} empty={empty} flow={flow} onAskReplace={props.onAskReplace} />
       )}
       <ImportPanel flow={flow} />
     </div>
@@ -137,7 +144,11 @@ function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
 }
 
 export function Window() {
-  const { panels, services, navigator } = useApp();
+  const { panels, services, navigator, inspector: inspectorPorts } = useApp();
+  const flow = useImportFlow();
+  const status = useSubscribable(services.status);
+  const [asking, setAsking] = useState(false);
+  const [searching, setSearching] = useState(false);
   const counts = useStoreSelector(services.store, countsOf);
   const width = usePanels(panels, (s) => s.inspectorWidth);
   const open = usePanels(panels, (s) => s.inspectorOpen);
@@ -148,6 +159,50 @@ export function Window() {
     panels.getState().setInspectorOpen(true);
     setOpenRequest((n) => n + 1);
   }, [panels]);
+  const hasData = totalOf(counts) > 0;
+  // The palette's commands read the window as it is when the list is asked for (a ref, so the palette's port never changes).
+  const commandDeps = useRef<CommandDeps | null>(null);
+  commandDeps.current = {
+    mode,
+    setMode,
+    hasData,
+    writerMode: status.mode,
+    writerReason: status.reason,
+    busy: flow.busy,
+    askReplace: () => setAsking(true),
+    undoImport: flow.undoImport,
+    ui: navigator.ui,
+    exams: examOptions(services.store.getState()),
+  };
+  const searchPorts = useMemo(
+    () =>
+      createSearchPorts({
+        search: services.search.search,
+        store: services.store,
+        indexes: navigator.indexes,
+        l4: inspectorPorts.l4,
+        navigator,
+        commands: () => (commandDeps.current === null ? [] : buildCommands({ ...commandDeps.current, exams: examOptions(services.store.getState()) })),
+        show(ref, title) {
+          setMode(NAVIGATOR_MODE);
+          inspectorPorts.ui.inspector.getState().open(ref);
+          openPane();
+          // a family is focused on the map, a reaction opens its family page at its card; anything else has its places in the inspector
+          placeOf(ref, title, navigator.indexes.current(), { selection: navigator.ui.selection, family: navigator.ui.family }, true).actions[0]?.run();
+        },
+      }),
+    [services, navigator, inspectorPorts, openPane],
+  );
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent): void => {
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearching(true);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
   const pane = useMemo<InspectorPane>(
     () => ({
       width,
@@ -165,7 +220,7 @@ export function Window() {
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
           title="Organic Reaction Navigator"
-          topBar={<TopBar />}
+          topBar={<TopBar onSearch={() => setSearching(true)} />}
           modes={MODES}
           activeMode={mode}
           onModeChange={setMode}
@@ -177,7 +232,7 @@ export function Window() {
           }
           canvas={
             <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} counts={counts} />
+              <Canvas mode={mode} counts={counts} flow={flow} onAskReplace={() => setAsking(true)} />
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"
@@ -199,6 +254,8 @@ export function Window() {
             </ErrorBoundary>
           }
         />
+        <ReplaceDialog open={asking} onClose={() => setAsking(false)} flow={flow} />
+        <Palette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
       </NavigatorProvider>
     </ToastProvider>
   );

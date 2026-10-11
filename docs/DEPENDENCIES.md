@@ -30,6 +30,7 @@ Exact pins, added in the step that first uses them (note E12); `npm audit` 0 vul
 
 | Package | Version | Licence | Added | Notes |
 |---|---|---|---|---|
+| cmdk | 1.1.1 | MIT | step 5.8 | The palette's list, keyboard and roles inside our native Dialog (it filters nothing: our search worker ranks). CSP spike: zero `securitypolicyviolation` events and no injected `<style>` in Chromium, Firefox and WebKit. Brings @radix-ui/react-dialog, -id, -primitive, -compose-refs as its own dependencies (its `Command.Dialog` is not used) |
 | @types/d3-selection | 3.0.12 | MIT | step 5.4b | Types of d3-selection |
 | @types/d3-zoom | 3.0.9 | MIT | step 5.4b | Types of d3-zoom |
 | @testing-library/react | 16.3.3 | MIT | step 5.1d | Component tests (jsdom), roles and names (note E13) |

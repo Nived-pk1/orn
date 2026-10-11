@@ -8,9 +8,10 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-libra
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { firePointer, tap } from '@/test-support/pointer-kit';
-import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
+import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 
 beforeAll(() => {
+  stubDialog(); // Ctrl+K belongs to the window now (the palette); the canvas still leaves it alone
   globalThis.ResizeObserver ??= class {
     observe(): void {}
     unobserve(): void {}
@@ -158,7 +159,7 @@ describe('the keyboard map (item f)', () => {
     const before = activeNode(svg);
     press(svg, 'ArrowLeft', { altKey: true }); // the inspector history's key: the canvas does not move
     expect(activeNode(svg)).toBe(before);
-    expect(press(svg, 'k', { ctrlKey: true })).toBe(true);
+    expect(press(svg, 'k', { ctrlKey: true })).toBe(false); // the window's palette takes it (step 5.8); the canvas does not
     expect(press(svg, 'c')).toBe(true);
   });
 

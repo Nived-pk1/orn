@@ -106,6 +106,20 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const empty = scene === null ? null : emptinessOf(state.reactions, families);
   const unanchored = state.unanchored;
   const unanchoredReason = scene === null ? NOTHING_DRAWN : unanchored.length === 0 ? 'every reaction is in a family' : undefined;
+  // The palette's commands (step 5.8) run on the map while it is mounted; each says why it cannot run.
+  const noScene = scene === null;
+  useEffect(
+    () =>
+      ports.ui.viewCommands.getState().register({
+        zoomIn: () => controller?.zoomIn(),
+        zoomOut: () => controller?.zoomOut(),
+        fit: () => controller?.fit(),
+        openUnanchored: () => setUnanchoredOpen(true),
+        ...(unanchoredReason === undefined ? {} : { unanchoredReason }),
+        ...(listing ? { zoomReason: 'the List view has no zoom' } : noScene ? { zoomReason: NOTHING_DRAWN } : {}),
+      }),
+    [ports, controller, unanchoredReason, listing, noScene],
+  );
   return (
     <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
       <div className={styles.toolbar} role="toolbar" aria-label="Canvas tools">

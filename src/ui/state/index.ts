@@ -12,6 +12,8 @@ export {
 } from './panels';
 export type { InspectorLevel, PanelPersistence, PanelsPort, PanelsState, PanelsStore, PanelsTimers, PanelValues, ParsedPanels } from './panels';
 export { usePanels } from './use-panels';
+export { createRecentStore, createViewCommandsStore, MAX_RECENT_LENGTH, MAX_RECENT_SEARCHES } from './search-stores';
+export type { RecentState, RecentStore, ViewCommands, ViewCommandsState, ViewCommandsStore } from './search-stores';
 export {
   createActiveExamStore,
   createExpansionStore,

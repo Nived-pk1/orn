@@ -19,6 +19,8 @@ export interface DialogProps {
   /** Buttons at the foot (the caller's actions). */
   readonly footer?: ReactNode;
   readonly dismissOnBackdrop?: boolean;
+  /** A CSS selector inside the dialog whose element takes the focus when it opens (default: the browser's first focusable element, the close button). */
+  readonly initialFocus?: string;
 }
 
 const ACTIVATORS = 'button, [role="button"], [role="menuitem"], a[href], input, select, textarea, [tabindex]';
@@ -46,7 +48,7 @@ function openerNow(): HTMLElement | null {
 }
 
 export function Dialog(props: DialogProps) {
-  const { open, onClose, title, children, footer, dismissOnBackdrop = false } = props;
+  const { open, onClose, title, children, footer, dismissOnBackdrop = false, initialFocus } = props;
   const element = useRef<HTMLDialogElement | null>(null);
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -70,6 +72,7 @@ export function Dialog(props: DialogProps) {
     }
     opener.current = openerNow();
     if (!node.open) node.showModal();
+    if (initialFocus !== undefined) node.querySelector<HTMLElement>(initialFocus)?.focus();
     const release = pushLayer(layerId);
     return () => {
       release();
@@ -78,7 +81,7 @@ export function Dialog(props: DialogProps) {
       opener.current = null;
       if (back !== null && back.isConnected) back.focus();
     };
-  }, [open, layerId]);
+  }, [open, layerId, initialFocus]);
 
   // Esc: the browser's own close is always cancelled; the caller's state decides, and only the topmost layer asks.
   const onCancel = (event: SyntheticEvent<HTMLDialogElement>): void => {

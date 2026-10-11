@@ -1,0 +1,99 @@
+/**
+ * The palette's command registry (step 5.8): `src/app` fills it with ONLY what exists now. A command that cannot run now is listed with
+ * its reason, never hidden and never a silent no-op. Everything a command does is a call on a UI store, the map's registered view
+ * commands, or the import flow that the buttons of the Dataset screen use.
+ */
+import type { PaletteCommand } from '@/features/search';
+import type { NavigatorUiStores } from '@/ui/state';
+import { unavailableReason } from './dataset-actions';
+import { ALL_LABEL, type ExamOptions } from './exam-scope';
+import { NAVIGATOR_MODE } from './modes';
+
+export interface CommandDeps {
+  readonly mode: string;
+  setMode(mode: string): void;
+  readonly hasData: boolean;
+  readonly writerMode: string | null;
+  readonly writerReason: string | null;
+  readonly busy: boolean;
+  askReplace(): void;
+  undoImport(): void;
+  readonly ui: NavigatorUiStores;
+  readonly exams: ExamOptions;
+}
+
+/** Why the map's commands (fit, zoom, the Unanchored panel) cannot run now. */
+function mapReason(deps: CommandDeps): string | undefined {
+  if (!deps.hasData) return 'there is no data';
+  if (deps.mode !== NAVIGATOR_MODE) return 'the Navigator is not shown';
+  if (deps.ui.family.getState().open !== null) return 'a family page is open; Overview shows the map';
+  if (deps.ui.viewCommands.getState().commands === null) return 'the map is not shown';
+  return undefined;
+}
+
+export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
+  const { ui } = deps;
+  const navigatorShown = deps.hasData && deps.mode === NAVIGATOR_MODE;
+  const navigatorReason = !deps.hasData ? 'there is no data' : deps.mode !== NAVIGATOR_MODE ? 'the Navigator is not shown' : undefined;
+  const view = ui.viewCommands.getState().commands;
+  const onMap = mapReason(deps);
+  const zoomReason = onMap ?? view?.zoomReason;
+  const importReason = unavailableReason(deps.writerMode, deps.writerReason) ?? (deps.busy ? 'another operation is running' : undefined);
+  const listing = ui.overview.getState().mode === 'list';
+  const familyOpen = ui.family.getState().open !== null;
+  const withReason = (command: Omit<PaletteCommand, 'unavailable'>, reason: string | undefined): PaletteCommand =>
+    reason === undefined ? command : { ...command, unavailable: reason };
+
+  const scope = ui.exam.getState().active;
+  const scopeCommands: PaletteCommand[] = [
+    withReason(
+      { id: 'scope:all', title: `Choose the exam scope: ${ALL_LABEL}`, keywords: ['exam', 'scope', 'syllabus'], run: () => ui.exam.getState().setActive(null) },
+      scope === null ? 'it is already chosen' : undefined,
+    ),
+    ...deps.exams.options.map((option) =>
+      withReason(
+        {
+          id: `scope:${option.examVersionId}`,
+          title: `Choose the exam scope: ${option.label}`,
+          keywords: ['exam', 'scope', 'syllabus'],
+          run: () => ui.exam.getState().setActive({ examId: option.examId, examVersionId: option.examVersionId }),
+        },
+        scope?.examVersionId === option.examVersionId ? 'it is already chosen' : undefined,
+      ),
+    ),
+  ];
+
+  return [
+    withReason({ id: 'replace-demo', title: 'Replace with the demo dataset', keywords: ['load', 'import', 'demo'], run: deps.askReplace }, importReason),
+    withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, importReason),
+    withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
+    withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),
+    withReason({ id: 'zoom-out', title: 'Zoom out', keywords: ['map', 'view'], run: () => view?.zoomOut() }, zoomReason),
+    withReason(
+      {
+        id: 'overview-mode',
+        title: listing ? 'Show the map' : 'Show the List view',
+        keywords: ['map', 'list', 'view', 'overview'],
+        run: () => {
+          ui.family.getState().closeFamily();
+          ui.overview.getState().setMode(listing ? 'map' : 'list');
+        },
+      },
+      navigatorReason,
+    ),
+    withReason(
+      {
+        id: 'overview',
+        title: 'Overview',
+        keywords: ['back', 'families', 'map'],
+        run: () => {
+          deps.setMode(NAVIGATOR_MODE);
+          ui.family.getState().closeFamily();
+        },
+      },
+      !deps.hasData ? 'there is no data' : navigatorShown && !familyOpen ? 'the overview is already shown' : undefined,
+    ),
+    withReason({ id: 'unanchored', title: 'Open the Unanchored reactions', keywords: ['unclassified', 'reactions', 'panel'], run: () => view?.openUnanchored() }, onMap ?? view?.unanchoredReason),
+    ...scopeCommands,
+  ];
+}

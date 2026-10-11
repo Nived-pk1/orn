@@ -3,7 +3,6 @@
  * pipeline (note E7) after a confirm that says the data is replaced and Undo import brings it back (the `pre_import` snapshot);
  * "Undo import" restores that snapshot. Read-only, follower and session-only tabs get the buttons `unavailable` with the reason.
  */
-import { useState } from 'react';
 import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import { useApp } from './context';
@@ -16,40 +15,46 @@ export function unavailableReason(mode: string | null, reason: string | null): s
   return reason ?? (mode === 'follower' ? 'another tab is the writer' : 'this tab is read-only');
 }
 
-export function DatasetActions(props: { readonly flow: ImportFlow }) {
+/** The confirm step of "Replace with the demo dataset": rendered once by the window, so the palette command and the button share it. */
+export function ReplaceDialog(props: { readonly open: boolean; readonly onClose: () => void; readonly flow: ImportFlow }) {
+  const { flow, onClose } = props;
+  return (
+    <Dialog
+      open={props.open}
+      onClose={onClose}
+      title="Replace with the demo dataset"
+      footer={
+        <>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              onClose();
+              flow.loadDemo();
+            }}
+          >
+            Replace
+          </Button>
+        </>
+      }
+    >
+      <p>The current data is replaced by the bundled demo dataset. Undo import brings the current data back (a snapshot is taken first).</p>
+    </Dialog>
+  );
+}
+
+export function DatasetActions(props: { readonly flow: ImportFlow; readonly onAskReplace: () => void }) {
   const { services } = useApp();
   const status = useSubscribable(services.status);
   const { flow } = props;
-  const [asking, setAsking] = useState(false);
   const blocked = unavailableReason(status.mode, status.reason) ?? (flow.busy ? 'another operation is running' : undefined);
   return (
     <section aria-label="Replace the data">
       <h3>Replace the data</h3>
       <p>
-        <Button {...(blocked === undefined ? { onClick: () => setAsking(true) } : { unavailable: blocked })}>Replace with the demo dataset</Button>{' '}
+        <Button {...(blocked === undefined ? { onClick: props.onAskReplace } : { unavailable: blocked })}>Replace with the demo dataset</Button>{' '}
         <Button {...(blocked === undefined ? { onClick: flow.undoImport } : { unavailable: blocked })}>Undo import</Button>
       </p>
-      <Dialog
-        open={asking}
-        onClose={() => setAsking(false)}
-        title="Replace with the demo dataset"
-        footer={
-          <>
-            <Button onClick={() => setAsking(false)}>Cancel</Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                setAsking(false);
-                flow.loadDemo();
-              }}
-            >
-              Replace
-            </Button>
-          </>
-        }
-      >
-        <p>The current data is replaced by the bundled demo dataset. Undo import brings the current data back (a snapshot is taken first).</p>
-      </Dialog>
     </section>
   );
 }

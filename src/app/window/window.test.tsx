@@ -271,7 +271,9 @@ describe('the shell frame around the window', () => {
 
   it('the top bar lists what does not exist yet as unavailable, with the step that brings it', () => {
     renderWithApp(app());
-    for (const [name, step] of [['Search', 'step 5.8'], ['Undo', 'step 5.9a'], ['Redo', 'step 5.9a']] as const) {
+    // Search exists since step 5.8 (it opens the palette)
+    expect(screen.getByRole('button', { name: 'Search' }).getAttribute('aria-disabled')).toBeNull();
+    for (const [name, step] of [['Undo', 'step 5.9a'], ['Redo', 'step 5.9a']] as const) {
       expect(screen.getByRole('button', { name, description: new RegExp(step) }).getAttribute('aria-disabled')).toBe('true');
     }
     expect(screen.getByRole('button', { name: 'File' })).toBeTruthy();

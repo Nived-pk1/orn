@@ -11,11 +11,11 @@ const FILE_ITEMS = [
   { id: 'undo_import', label: 'Undo import', unavailable: 'step 5.9a' },
 ] as const;
 
-export function TopBar() {
+export function TopBar(props: { readonly onSearch: () => void }) {
   return (
     <>
       <Menu label="File" items={FILE_ITEMS} />
-      <IconButton label="Search" icon="search" unavailable="step 5.8 (Ctrl K)" />
+      <IconButton label="Search" icon="search" onClick={props.onSearch} aria-keyshortcuts="Control+K Meta+K" />
       <IconButton label="Undo" icon="undo" unavailable="step 5.9a" />
       <IconButton label="Redo" icon="redo" unavailable="step 5.9a" />
     </>
