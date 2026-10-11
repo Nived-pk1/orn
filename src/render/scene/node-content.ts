@@ -18,6 +18,8 @@ export interface NodeContent {
   readonly label: FormattedText;
   readonly sublabel?: FormattedText;
   readonly depictionKey?: string;
+  /** Set for a family outside the chosen exam scope (step 5.8): the words, e.g. "outside JEE Main". */
+  readonly outsideNote?: string;
 }
 
 export const UNCLASSIFIED_LABEL = 'Unclassified';
@@ -63,12 +65,17 @@ export function contentOf(node: GraphNode, ports: ScenePorts): NodeContent {
   const name = described?.name ?? node.id;
   const formula = described?.formula;
   const depictionKey = node.record !== undefined && node.record.kind === 'species' ? ports.depictionKeyOf(node.record) : undefined;
+  const outsideNote = node.role === 'anchor' && node.flags.includes('outside_scope') ? ports.outsideNote : undefined;
+  const formulaLine = formula === undefined || formula === '' ? undefined : formulaRuns(formula, described?.charge);
+  // the words of an outside family end its sublabel (after the formula, when there is one): dimming is never the only carrier
+  const sublabel = outsideNote === undefined ? formulaLine : formulaLine === undefined ? plainRuns(outsideNote) : [...formulaLine, ...plainRuns(` · ${outsideNote}`)];
   return {
     glyph,
     box,
     name,
     label: plainRuns(name),
-    ...(formula === undefined || formula === '' ? {} : { sublabel: formulaRuns(formula, described?.charge) }),
+    ...(sublabel === undefined ? {} : { sublabel }),
     ...(depictionKey === undefined ? {} : { depictionKey }),
+    ...(outsideNote === undefined ? {} : { outsideNote }),
   };
 }

@@ -220,7 +220,13 @@ export function Window() {
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
           title="Organic Reaction Navigator"
-          topBar={<TopBar onSearch={() => setSearching(true)} />}
+          topBar={
+            <TopBar
+              onSearch={() => setSearching(true)}
+              history={services.store}
+              exam={{ exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log }}
+            />
+          }
           modes={MODES}
           activeMode={mode}
           onModeChange={setMode}

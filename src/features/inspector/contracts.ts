@@ -8,7 +8,7 @@ import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
 import type { Finding } from '@/core/validation';
 import type { DepictionPort } from '@/render/svg';
-import type { FamilyStore, InspectorStore, PanelsStore, SelectionStore } from '@/ui/state';
+import type { ActiveExamStore, FamilyStore, InspectorStore, PanelsStore, SelectionStore } from '@/ui/state';
 import type { SubjectStatus } from '@/workers/chem';
 
 /** What an asset's bytes are, as an image address the page may use: a blob URL the caller must give back through `revoke`. */
@@ -45,6 +45,8 @@ export interface InspectorPorts {
     readonly selection: SelectionStore;
     readonly family: FamilyStore;
     readonly panels: PanelsStore;
+    /** The chosen exam scope (step 5.8, additive): the curriculum section marks the chosen version. Absent: none is chosen. */
+    readonly exam?: ActiveExamStore;
   };
   /** One line to the app's event log (nothing silent). */
   readonly log: (type: string, message: string) => void;

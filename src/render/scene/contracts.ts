@@ -140,4 +140,10 @@ export interface ScenePorts {
   readonly depictionKeyOf: (ref: RecordRef) => string | undefined;
   /** The parts over and under one arrow (`arrowTextOf` of core/graph, step 5.3 follow-up a). Undefined: none. */
   readonly arrowTextOf: (edge: GraphEdge) => ArrowText | undefined;
+  /**
+   * Step 5.8 (additive): the words for a family that is outside the chosen exam scope, e.g. "outside JEE Main". Absent: no exam scope is
+   * chosen. A hub with the `outside_scope` flag shows them as the end of its sublabel and in its accessible name, so dimming is never the
+   * only carrier.
+   */
+  readonly outsideNote?: string;
 }

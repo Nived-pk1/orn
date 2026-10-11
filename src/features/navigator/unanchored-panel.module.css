@@ -70,3 +70,16 @@
   font-family: var(--font-mono);
   font-size: var(--text-13);
 }
+
+/* Outside the chosen exam scope: the words are written (never colour or fading alone); the row's name fades, the words do not. */
+.outside {
+  padding: 0 var(--space-2);
+  border: 1px dashed var(--color-ink-2);
+  border-radius: var(--radius-control);
+  font-size: var(--text-13);
+  font-weight: 600;
+}
+
+.row[data-outside] .name {
+  opacity: 0.6;
+}

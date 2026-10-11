@@ -8,6 +8,7 @@ import { useStore } from 'zustand';
 import { Button, VirtualList } from '@/ui/primitives';
 import { useNavigator } from './navigator-context';
 import { unanchoredItems, type UnanchoredItem } from './unanchored';
+import { useScope } from './use-scope';
 import styles from './unanchored-panel.module.css';
 
 const keyOf = (item: UnanchoredItem): string => item.id;
@@ -20,15 +21,17 @@ export function UnanchoredPanel(props: { readonly ids: readonly string[]; readon
     const reactions = ports.store.getState().records.reaction;
     return unanchoredItems(props.ids, (id) => reactions[id]?.name);
   }, [ports, props.ids]);
+  const scope = useScope(ports, props.ids);
   const select = useCallback((id: string): void => ports.ui.family.getState().selectReaction(id), [ports]);
   const renderItem = useCallback(
     (item: UnanchoredItem) => (
-      <button type="button" className={styles.row} aria-pressed={selected === item.id} onClick={() => select(item.id)} data-reaction-id={item.id}>
+      <button type="button" className={styles.row} aria-pressed={selected === item.id} onClick={() => select(item.id)} data-reaction-id={item.id} data-outside={scope.note !== undefined && scope.isOutside(item.id) ? '' : undefined}>
         <span className={styles.name}>{item.name}</span>
+        {scope.note !== undefined && scope.isOutside(item.id) ? <span className={styles.outside}>{scope.note}</span> : null}
         <span className={styles.id}>{item.id}</span>
       </button>
     ),
-    [select, selected],
+    [select, selected, scope],
   );
   return (
     <section className={styles.panel} aria-label="Unanchored reactions" data-unanchored-panel="">

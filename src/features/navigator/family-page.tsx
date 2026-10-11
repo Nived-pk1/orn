@@ -15,6 +15,7 @@ import { FamilyHeader } from './family-header';
 import { cardKey, estimateOf, familyItems, groupKey, indexOfKey, type FamilyItem } from './family-items';
 import { useNavigator } from './navigator-context';
 import { createScenePorts } from './scene-ports';
+import { useScope } from './use-scope';
 import { useFamilyStudy } from './use-family-study';
 import styles from './family-page.module.css';
 
@@ -25,6 +26,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const { ports } = useNavigator();
   const { hubId } = props;
   const study = useFamilyStudy(ports, hubId);
+  const scope = useScope(ports, study);
   const target = useStore(ports.ui.family, (s) => s.target);
   const selectedReaction = useStore(ports.ui.family, (s) => s.reaction);
   const list = useRef<VirtualListHandle>(null);
@@ -85,10 +87,10 @@ export function FamilyPage(props: { readonly hubId: string }) {
             </div>
           );
         case 'card':
-          return <FamilyCardView card={item.card} selected={selectedReaction === item.card.reactionId} onSelect={selectReaction} onGoToGroup={goToGroup(item)} />;
+          return <FamilyCardView card={item.card} selected={selectedReaction === item.card.reactionId} onSelect={selectReaction} onGoToGroup={goToGroup(item)} {...(scope.note !== undefined && scope.isOutside(item.card.reactionId) ? { outside: scope.note } : {})} />;
       }
     },
-    [goTo, goToGroup, selectReaction, selectedReaction],
+    [goTo, goToGroup, selectReaction, selectedReaction, scope],
   );
   const renderItem = useCallback((item: FamilyItem) => <div className={styles.item}>{renderBody(item)}</div>, [renderBody]);
 

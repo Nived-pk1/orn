@@ -42,12 +42,17 @@ function withRealSearch(app: FakeApp, state: CanonicalState, derived: Readonly<R
   return documents;
 }
 
+/** The palette's input: the exam-scope select is a combobox too, so look inside the dialog. */
+async function paletteInput(): Promise<HTMLElement> {
+  const dialog = await screen.findByRole('dialog', { name: 'Search' });
+  return within(dialog).getByRole('combobox');
+}
+
 async function open(app: FakeApp) {
   renderWithApp(app);
   await screen.findByRole('group', { name: /^Navigator:/ });
   fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
-  const input = await screen.findByRole('combobox');
-  return input;
+  return paletteInput();
 }
 /** Types into the palette and lets the debounce (the rig's fake timers) and the answer through. */
 async function type(app: FakeApp, input: HTMLElement, text: string): Promise<void> {
@@ -66,7 +71,7 @@ describe('Ctrl K and the Search button', () => {
     expect(document.activeElement).toBe(input);
     fireEvent.keyDown(input, { key: 'Escape' });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    expect(await screen.findByRole('combobox')).toBeTruthy();
+    expect(await paletteInput()).toBeTruthy();
   });
 });
 
@@ -125,7 +130,7 @@ describe('a record is found by every alias and placed (ADV-058, UI part)', () =>
     const reaction = Object.values(state.records.reaction)[0] as { id: string; name: string };
     const again = await screen.findByRole('button', { name: 'Search' });
     fireEvent.click(again);
-    const input2 = await screen.findByRole('combobox');
+    const input2 = await paletteInput();
     await type(app, input2, `r: ${reaction.name}`);
     const option = await screen.findByRole('option', { name: new RegExp(reaction.name.slice(0, 12)) });
     fireEvent.keyDown(input2, { key: 'Enter' });
@@ -185,7 +190,7 @@ describe('commands', () => {
     withRealSearch(app, demoState());
     const input = await open(app);
     await type(app, input, '> exam main');
-    const option = screen.getAllByRole('option')[0] as HTMLElement;
+    const option = within(screen.getByRole('dialog', { name: 'Search' })).getAllByRole('option')[0] as HTMLElement;
     expect(option.textContent).toContain('JEE Main, provisional, not verified');
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(app.navigator.ports.ui.exam.getState().active).toEqual({ examId: 'exm_jee-main', examVersionId: 'exv_jee-main-2026' });

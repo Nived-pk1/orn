@@ -18,6 +18,7 @@ import { depictionBindingOf } from './depictions';
 import { ListView } from './list-view';
 import { keyOf, legendOf } from './legend';
 import { useCanvasInput } from './use-canvas-input';
+import { outsideNoteOf } from './scope-lens';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorLegend } from './navigator-legend';
 import { NavigatorSelection } from './navigator-selection';
@@ -98,6 +99,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   // An arrow opens its source family at the target's group (reactions of the source, the group "To <target>").
   const selectedArrow = selected !== null && selected.kind === 'edge' && scene !== null ? scene.edges.find((edge) => edge.id === selected.id) : undefined;
   const arrowOpens = selectedArrow !== undefined && isHub(selectedArrow.from) && isHub(selectedArrow.to) ? selectedArrow : undefined;
+  const activeExam = useStore(ports.ui.exam, (s) => s.active);
+  const outsideNote = useMemo(() => (scene === null || !scene.nodes.some((node) => node.state.dimmed) ? undefined : outsideNoteOf(ports.store.getState(), activeExam)), [scene, ports, activeExam]);
   const legend = useMemo(() => legendOf(scene), [scene]);
   const legendKeys = useMemo(() => keyOf(scene), [scene]);
   const nothing = scene === null ? { unavailable: NOTHING_DRAWN } : {};
@@ -168,7 +171,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         </Banner>
       )}
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
-      {listing ? null : <NavigatorLegend items={legend} keys={legendKeys} />}
+      {listing ? null : <NavigatorLegend items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} />}
       <div className={styles.drawing} aria-busy={state.working}>
         {state.error !== null ? (
           <div className={styles.error} role="alert">

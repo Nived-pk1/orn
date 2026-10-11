@@ -2,6 +2,29 @@
   padding: var(--space-4);
 }
 
+.examScope {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.examScope select {
+  min-height: var(--hit-min);
+  max-width: 22rem;
+  border: 1px solid var(--color-ink-2);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.examLabel,
+.examNote {
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
 .canvasFull {
   height: 100%;
   min-height: 0;

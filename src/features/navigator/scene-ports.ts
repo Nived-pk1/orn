@@ -20,7 +20,7 @@ function formulaOf(record: Loose): string | undefined {
   return text(record.formula) ?? text(record.formulaText) ?? text(generic?.formulaText) ?? text(generic?.generalFormula);
 }
 
-export function createScenePorts(state: CanonicalState, depictionKeyOfStructure?: (structure: StructureRep) => string): ScenePorts {
+export function createScenePorts(state: CanonicalState, depictionKeyOfStructure?: (structure: StructureRep) => string, outsideNote?: string): ScenePorts {
   const recordOf = (ref: RecordRef): Loose | undefined => (state.records[ref.kind] as Readonly<Record<string, Loose>>)[ref.id];
   const describe: ScenePorts['describe'] = (ref) => {
     const record = recordOf(ref);
@@ -40,5 +40,6 @@ export function createScenePorts(state: CanonicalState, depictionKeyOfStructure?
     },
     // The overview is calm (ADR-037): no arrow text; the family page writes it, from core (`familyStudy`).
     arrowTextOf: () => undefined,
+    ...(outsideNote === undefined ? {} : { outsideNote }),
   };
 }

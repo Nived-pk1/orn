@@ -81,7 +81,7 @@ describe('createNavigatorUi', () => {
     expect(logs).toEqual(['ui_state_reset']);
   });
 
-  it('writes once after the debounce, with unknown fields kept, and never writes filters or the exam version', async () => {
+  it('writes once after the debounce, with unknown fields kept, and never writes filters', async () => {
     const t = timers();
     const { value, saves } = port({ stored: { future: 1 } });
     const ui = createNavigatorUi(value, t);
@@ -103,7 +103,30 @@ describe('createNavigatorUi', () => {
       openFamily: null,
       overviewMode: 'map',
       recentSearches: [],
+      activeExam: null,
     });
+  });
+
+  it('saves the chosen exam version and the recent searches, and reads them back (step 5.8)', async () => {
+    const t = timers();
+    const first = port();
+    const ui = createNavigatorUi(first.value, t);
+    ui.stores.exam.getState().setActive({ examId: 'exm_a' as never, examVersionId: 'exv_a' as never });
+    ui.stores.recent.getState().add('ethanol');
+    ui.stores.recent.getState().add('wolff');
+    await ui.flush();
+    const saved = first.saves.at(-1);
+    expect(saved).toMatchObject({ activeExam: { examId: 'exm_a', examVersionId: 'exv_a' }, recentSearches: ['wolff', 'ethanol'] });
+    const again = createNavigatorUi(port({ stored: saved }).value, t);
+    expect(again.stores.exam.getState().active).toEqual({ examId: 'exm_a', examVersionId: 'exv_a' });
+    expect(again.stores.recent.getState().items).toEqual(['wolff', 'ethanol']);
+  });
+
+  it('a damaged exam choice or recent list is reset to its default and named', () => {
+    const ui = createNavigatorUi(port({ stored: { activeExam: { examId: 3 }, recentSearches: ['ok', 7] } }).value, timers());
+    expect(ui.stores.exam.getState().active).toBeNull();
+    expect(ui.stores.recent.getState().items).toEqual([]);
+    expect(ui.status.getState().resetFields).toEqual(['recentSearches', 'activeExam']);
   });
 
   it('writes the open family; closing it writes null (step 5.5b)', async () => {

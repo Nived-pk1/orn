@@ -62,13 +62,15 @@ export interface FamilyCardProps {
   readonly onSelect: (reactionId: string) => void;
   /** Bring the reader to the same reaction's card in another group. */
   readonly onGoToGroup: (hubId: string, reactionId: string) => void;
+  /** Set when the reaction is outside the chosen exam scope: the words ("outside JEE Main"). The scheme is dimmed, the words are not. */
+  readonly outside?: string;
 }
 
-export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup }: FamilyCardProps) {
+export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside }: FamilyCardProps) {
   const titleId = useId();
   const review = REVIEW_MARK[card.reviewStatus];
   return (
-    <article className={styles.card} aria-labelledby={titleId} data-reaction-id={card.reactionId} data-selected={selected ? '' : undefined} onClick={() => onSelect(card.reactionId)}>
+    <article className={styles.card} aria-labelledby={titleId} data-reaction-id={card.reactionId} data-selected={selected ? '' : undefined} data-outside={outside === undefined ? undefined : ''} onClick={() => onSelect(card.reactionId)}>
       <header className={styles.cardHeader}>
         <h4 id={titleId} className={styles.cardTitle}>
           <button type="button" aria-pressed={selected} onClick={(event) => (event.stopPropagation(), onSelect(card.reactionId))}>
@@ -76,6 +78,7 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
           </button>
         </h4>
         {selected ? <span className={styles.chip}>Selected</span> : null}
+        {outside === undefined ? null : <span className={`${styles.chip} ${styles.outsideChip}`}>{outside}</span>}
         {card.namedReactions.map((named) => (
           <span key={named.id} className={styles.chip}>
             {named.name}
@@ -84,9 +87,11 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
         {review === undefined ? null : <span className={`${styles.chip} ${styles.reviewChip}`}>{review}</span>}
         {card.caveatCount === 0 ? null : <span className={styles.chip}>{plural(card.caveatCount, 'caveat', 'caveats')}</span>}
       </header>
-      {card.outcomes.map((outcome) => (
-        <OutcomeRow key={outcome.outcomeId} card={card} outcome={outcome} />
-      ))}
+      <div className={outside === undefined ? undefined : styles.dimmedScheme}>
+        {card.outcomes.map((outcome) => (
+          <OutcomeRow key={outcome.outcomeId} card={card} outcome={outcome} />
+        ))}
+      </div>
       {card.elsewhere.length === 0 ? null : (
         <p className={styles.elsewhere}>
           {card.elsewhere.map((place, index) => (

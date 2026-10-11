@@ -38,9 +38,20 @@ function UnclassifiedSample() {
   );
 }
 
-export function NavigatorLegend(props: { readonly items: readonly LegendItem[]; readonly keys?: LegendKey }) {
+function OutsideSample() {
+  return (
+    <svg className={styles.sample} width="28" height="20" viewBox="0 0 28 20" aria-hidden="true" data-sample="outside">
+      <rect x="0.5" y="2.5" width="27" height="15" rx="3" className={styles.sampleBox} opacity="0.5" />
+      <text x="14" y="14" textAnchor="middle" className={styles.sampleText}>
+        –
+      </text>
+    </svg>
+  );
+}
+
+export function NavigatorLegend(props: { readonly items: readonly LegendItem[]; readonly keys?: LegendKey; readonly outsideNote?: string }) {
   const keys = props.keys ?? NO_KEY;
-  const explained = keys.chip || keys.loop || keys.unclassified;
+  const explained = keys.chip || keys.loop || keys.unclassified || props.outsideNote !== undefined;
   if (props.items.length === 0 && !explained) return null;
   return (
     <div className={styles.legend}>
@@ -66,6 +77,12 @@ export function NavigatorLegend(props: { readonly items: readonly LegendItem[]; 
             <li className={styles.legendItem} data-key="loop">
               <LoopSample />
               reactions within the same family
+            </li>
+          )}
+          {props.outsideNote === undefined ? null : (
+            <li className={styles.legendItem} data-key="outside">
+              <OutsideSample />
+              {props.outsideNote}: faded and marked in words, every reaction of the family is outside the chosen exam scope (nothing is hidden)
             </li>
           )}
           {!keys.unclassified ? null : (

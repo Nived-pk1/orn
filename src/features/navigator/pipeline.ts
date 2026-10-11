@@ -12,7 +12,7 @@
  *    (the store stays for later views). A selection that is not in a new Scene is cleared (and logged).
  * An indexes handle is asked for at every build and never kept.
  */
-import { DEFAULT_TRAVERSAL_LIMITS, createScopeOf, navigatorProjection, sameProjection } from '@/core/graph';
+import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection, sameProjection } from '@/core/graph';
 import type { Projection, ProjectionRequest } from '@/core/graph';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { LayoutAlgorithm, LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
@@ -24,6 +24,7 @@ import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from './limits';
 import { touchOf } from './reads';
 import { sameRequest } from './same-request';
 import { createScenePorts } from './scene-ports';
+import { outsideNoteOf, scopeLens } from './scope-lens';
 
 export const SKELETON_DELAY_MS = 300;
 /** The service's view key: one navigator drawing, so a newer request replaces the older one. */
@@ -86,7 +87,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
   let dirtyProjection = true;
   let epoch = 0;
   let projection: Projection | null = null;
-  let sizes: { readonly of: Projection; readonly epoch: number; readonly value: NodeSizes; readonly labels: LabelSizes } | null = null;
+  let sizes: { readonly of: Projection; readonly epoch: number; readonly note: string | undefined; readonly value: NodeSizes; readonly labels: LabelSizes } | null = null;
   let last: { readonly request: LayoutRequest; readonly result: LayoutResult } | null = null;
   let stopTimer: (() => void) | undefined;
   let offs: (() => void)[] = [];
@@ -111,7 +112,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
   function buildOnce(): Projection {
     const exam = ports.ui.exam.getState().active;
     const indexes = ports.indexes.current();
-    const scopeOf = exam === null ? () => 'unmapped' as const : createScopeOf(indexes, exam.examId, exam.examVersionId);
+    const scopeOf = scopeLens(indexes, exam);
     const built = navigatorProjection.build({ state: ports.store.getState(), indexes, scopeOf }, requestOf());
     counts.projections += 1;
     return built;
@@ -139,9 +140,10 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
     try {
       if (rebuild || projection === null) projection = buildProjection();
       const current = projection;
-      const scenePorts = createScenePorts(ports.store.getState(), binding?.keyOf);
-      if (sizes === null || sizes.of !== current || sizes.epoch !== epoch) {
-        sizes = { of: current, epoch, value: nodeSizes(current, scenePorts, ports.measurer.measure), labels: labelSizes(current, scenePorts, ports.measurer.measure) };
+      const note = outsideNoteOf(ports.store.getState(), ports.ui.exam.getState().active);
+      const scenePorts = createScenePorts(ports.store.getState(), binding?.keyOf, note);
+      if (sizes === null || sizes.of !== current || sizes.epoch !== epoch || sizes.note !== note) {
+        sizes = { of: current, epoch, note, value: nodeSizes(current, scenePorts, ports.measurer.measure), labels: labelSizes(current, scenePorts, ports.measurer.measure) };
         counts.sizes += 1;
       }
       const previous: Record<string, Point> = last === null ? {} : { ...last.result.positions };

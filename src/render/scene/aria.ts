@@ -76,7 +76,7 @@ export function nodeAria(node: GraphNode, content: NodeContent, counts: NodeCoun
   }
   const hidden = node.hidden.outgoing + node.hidden.incoming;
   if (hidden > 0) parts.push(`${plural(hidden, 'hidden neighbour')}`);
-  for (const flag of node.flags) parts.push(FLAG_WORD[flag]);
+  for (const flag of node.flags) parts.push(flag === 'outside_scope' && content.outsideNote !== undefined ? content.outsideNote : FLAG_WORD[flag]);
   return parts.join(', ');
 }
 

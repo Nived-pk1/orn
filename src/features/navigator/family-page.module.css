@@ -135,6 +135,23 @@
   background: var(--color-paper);
 }
 
+.card[data-outside] {
+  border-style: dashed;
+}
+
+/* Dimmed, not hidden: the scheme fades; the name and the words "outside <exam>" in the header keep full contrast. */
+.dimmedScheme {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  opacity: 0.55;
+}
+
+.outsideChip {
+  border-style: dashed;
+  font-weight: 600;
+}
+
 .card[data-selected] {
   border: 2px solid var(--color-accent);
   padding: calc(var(--space-4) - 1px);

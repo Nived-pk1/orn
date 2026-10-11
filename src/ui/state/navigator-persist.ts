@@ -1,7 +1,7 @@
 /**
  * The navigator's saved UI state (step 5.5a part 2; PERSISTENCE §12): selection, the viewport per view and (step 5.5b) the open family,
- * ONE `uiState` entry `navigator`. A saved expansion is read, IGNORED and removed once (ADR-037: the overview no longer expands), written through a port that `src/app` provides (as the panels store does). Filters and the active exam version are
- * NOT saved: they stay in memory with their defaults until step 5.8 gives them a control.
+ * ONE `uiState` entry `navigator`. A saved expansion is read, IGNORED and removed once (ADR-037: the overview no longer expands), written through a port that `src/app` provides (as the panels store does). Filters are NOT saved (they stay in memory
+ * with their defaults); the active exam version (step 5.8) and the recent searches are.
  *  - Reading is tolerant: each part is checked by itself, an unusable part falls back to its default and is named in `resetFields`
  *    (never fatal, never silent); fields this version does not know are kept and written back.
  *  - Writing is debounced. The viewport store is fed only after the view has been still (the canvas does that), so a gesture is one write.
@@ -10,7 +10,7 @@
  */
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { ExpansionState } from '@/core/graph/contracts';
-import { VIEW_KEYS, type ViewKey } from '@/core/schema';
+import { VIEW_KEYS, type ExamId, type ExamVersionId, type ViewKey } from '@/core/schema';
 import {
   createActiveExamStore,
   createExpansionStore,
@@ -21,6 +21,7 @@ import {
   createViewportsStore,
   NO_EXPANSION_STATE,
   OVERVIEW_MODES,
+  type ActiveExam,
   type NavigatorUiStores,
   type OverviewMode,
   type SavedViewport,
@@ -34,7 +35,7 @@ export const NAVIGATOR_UI_KEY = 'navigator';
 export const MAX_SAVED_EXPANDED = 1_000;
 const MAX_ID_LENGTH = 512;
 const MAX_COORDINATE = 1e7;
-const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'recentSearches']);
+const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'recentSearches', 'activeExam']);
 
 /** The same shape as the panels port: the stored entry, whether this tab writes, and the write. */
 export type NavigatorUiPort = PanelsPort;
@@ -49,6 +50,8 @@ export interface ParsedNavigatorUi {
   readonly overviewMode: OverviewMode;
   /** The palette's recent searches, newest first (step 5.8). */
   readonly recent: readonly string[];
+  /** The chosen exam version (step 5.8), or null: no exam scope. Not judged against the data here: the selector does that. */
+  readonly exam: ActiveExam | null;
   /** Parts that were present but unusable (reset to their defaults). A missing part is not damage. */
   readonly damaged: readonly string[];
   readonly extra: Readonly<Record<string, unknown>>;
@@ -71,7 +74,7 @@ function parseExpanded(value: unknown): ExpansionState['expanded'] | undefined {
 }
 
 export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
-  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', recent: [], damaged: [], extra: {} };
+  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', recent: [], exam: null, damaged: [], extra: {} };
   if (raw === undefined) return empty;
   if (!isRecord(raw)) return { ...empty, damaged: ['navigator'] };
   const damaged: string[] = [];
@@ -109,6 +112,12 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     if (Array.isArray(r) && r.length <= MAX_RECENT_SEARCHES && r.every((item) => typeof item === 'string' && item !== '' && item.length <= MAX_RECENT_LENGTH)) recent = r as string[];
     else damaged.push('recentSearches');
   }
+  let exam: ActiveExam | null = null;
+  const e = raw.activeExam;
+  if (e !== undefined && e !== null) {
+    if (isRecord(e) && isId(e.examId) && isId(e.examVersionId)) exam = { examId: e.examId as ExamId, examVersionId: e.examVersionId as ExamVersionId };
+    else damaged.push('activeExam');
+  }
   const views: Partial<Record<ViewKey, SavedViewport>> = {};
   const v = raw.viewports;
   if (v !== undefined) {
@@ -121,7 +130,7 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     } else damaged.push('viewports');
   }
   const extra = Object.fromEntries(Object.entries(raw).filter(([key]) => !KNOWN.has(key)));
-  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, recent, damaged, extra };
+  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, recent, exam, damaged, extra };
 }
 
 export interface NavigatorUiStatus {
@@ -147,7 +156,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     // ADR-037: the overview does not expand; a saved expansion is ignored (and written back empty below).
     expansion: createExpansionStore(),
     filters: createFiltersStore(),
-    exam: createActiveExamStore(),
+    exam: createActiveExamStore(parsed.exam),
     viewports: createViewportsStore(parsed.views),
     family: createFamilyStore(parsed.openFamily),
     overview: createOverviewStore(parsed.overviewMode),
@@ -175,8 +184,9 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { open } = stores.family.getState();
     const { mode: overviewMode } = stores.overview.getState();
     const { items: recentSearches } = stores.recent.getState();
+    const { active: activeExam } = stores.exam.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, recentSearches });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, recentSearches, activeExam });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -200,7 +210,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     });
   }
 
-  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.recent.subscribe(schedule)];
+  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.recent.subscribe(schedule), stores.exam.subscribe(schedule)];
   // The removed expansion is written back empty, once.
   if (removedExpansion > 0) schedule();
   return {

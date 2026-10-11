@@ -5,6 +5,8 @@
  * is `createScopeOf`'s answer, the reason comes from `explainScope`; both are derived and never stored.
  */
 import { useMemo } from 'react';
+import { useStore } from 'zustand';
+import { createActiveExamStore } from '@/ui/state';
 import { explainScope, referencing, type ScopeExplanation } from '@/core/graph';
 import type { Exam, ExamVersion, RecordRef, TopicMapping } from '@/core/schema';
 import { useInspectorEnv } from './env';
@@ -14,6 +16,7 @@ import styles from './inspector.module.css';
 
 /** Most exam versions explained for one record (a dataset has a handful; this keeps the render bounded). */
 const MAX_VERSIONS = 50;
+const NO_EXAM = createActiveExamStore();
 
 export const SCOPE_WORDS: Readonly<Record<ScopeExplanation['scope'], string>> = {
   official: 'official: in the syllabus',
@@ -74,6 +77,7 @@ export function CurriculumFacts(props: { readonly target: RecordRef }) {
     return { mappings, versions: shown, omitted: versions.length - shown.length, explained: shown.map((version) => explainScope(indexes, target, version)) };
   }, [env, target]);
   const exams = env.state.records.exam as Readonly<Record<string, Exam>>;
+  const chosen = useStore(env.ports.ui.exam ?? NO_EXAM, (s) => s.active);
   return (
     <section aria-label="Curriculum">
       <h4>Curriculum</h4>
@@ -95,11 +99,11 @@ export function CurriculumFacts(props: { readonly target: RecordRef }) {
           {data.versions.map((version, index) => {
             const why = data.explained[index] as ScopeExplanation;
             return (
-              <li key={version.id} data-scope={why.scope}>
+              <li key={version.id} data-scope={why.scope} data-chosen={chosen?.examVersionId === version.id ? '' : undefined}>
                 <strong>
                   {exams[version.examId]?.name ?? version.examId}, <RecordLink kind="exam_version" id={version.id} label={version.label} />
                 </strong>{' '}
-                ({statusWords(version.status)}): {SCOPE_WORDS[why.scope]}. Why: <Reason why={why} />.
+                ({statusWords(version.status)}){chosen?.examVersionId === version.id ? ', the chosen exam scope' : ''}: {SCOPE_WORDS[why.scope]}. Why: <Reason why={why} />.
               </li>
             );
           })}

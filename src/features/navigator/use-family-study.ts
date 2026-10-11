@@ -5,21 +5,24 @@
  * `undefined`: not computed yet; `null`: the ID names no family in this dataset.
  */
 import { useEffect, useState } from 'react';
+import { useStore } from 'zustand';
 import { familyStudy, type FamilyStudy } from '@/core/graph';
 import type { NavigatorPorts } from './contracts';
 import { touchOf } from './reads';
+import { scopeLens } from './scope-lens';
 
 export function useFamilyStudy(ports: NavigatorPorts, hubId: string): FamilyStudy | null | undefined {
   const [version, setVersion] = useState(0);
+  const active = useStore(ports.ui.exam, (s) => s.active);
   const [value, setValue] = useState<{ readonly hubId: string; readonly study: FamilyStudy | null } | undefined>(undefined);
   useEffect(() => ports.store.subscribe((changes) => touchOf(changes) !== 'none' && setVersion((v) => v + 1)), [ports]);
   useEffect(
     () =>
       ports.timers.after(0, () => {
-        const study = familyStudy({ state: ports.store.getState(), indexes: ports.indexes.current(), scopeOf: () => 'unmapped' }, hubId);
+        const study = familyStudy({ state: ports.store.getState(), indexes: ports.indexes.current(), scopeOf: scopeLens(ports.indexes.current(), ports.ui.exam.getState().active) }, hubId);
         setValue({ hubId, study });
       }),
-    [ports, hubId, version],
+    [ports, hubId, version, active],
   );
   return value === undefined || value.hubId !== hubId ? undefined : value.study;
 }

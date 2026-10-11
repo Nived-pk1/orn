@@ -4,9 +4,10 @@
  */
 import type { NavigatorCandidate } from '../../indexes/contracts';
 import type { NavigatorAnchor, RecordRef } from '../../schema';
-import type { GraphEdge, GraphNode, NodeArrangement, ProjectionContext } from '../contracts';
+import type { GraphEdge, GraphNode, NodeArrangement, NodeFlag, ProjectionContext } from '../contracts';
 import { graphEdgeId } from '../ids';
 import { flagsOf } from '../kit';
+import { familyOutside } from './family-scope';
 import { UNCLASSIFIED_HUB_ID } from './hubs';
 import type { HubExpansion } from './expansion';
 
@@ -88,9 +89,16 @@ export function hubNode(ctx: ProjectionContext, ref: RecordRef, hidden: Hidden |
     role: 'anchor',
     depth: 0,
     hidden: hidden ?? NONE,
-    flags: flagsOf(ctx, ref),
+    flags: familyFlags(ctx, ref),
     ...(arrangement === undefined ? {} : { arrangement }),
   };
+}
+
+/** A family's flags: the record's own, except that "outside the exam scope" is the FAMILY's (all its reactions are outside, step 5.8). */
+function familyFlags(ctx: ProjectionContext, ref: RecordRef): NodeFlag[] {
+  const flags: NodeFlag[] = flagsOf(ctx, ref).filter((flag) => flag !== 'outside_scope');
+  if (familyOutside(ctx, ref.id)) flags.push('outside_scope');
+  return flags;
 }
 
 export function unclassifiedNode(hidden: Hidden | undefined): GraphNode {

@@ -106,3 +106,17 @@ test('the built layout worker loads ELK: warmUp answers ok and a small layout an
   expect(answers.again.result?.engine).toBe('elk');
   await expectClean(seen);
 });
+
+test('Ctrl K finds "ethanol" (step 5.8): the palette opens and lists records', async ({ page }) => {
+  const seen = await watch(page);
+  await openApp(page);
+  await loadDemo(page);
+  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+  await page.keyboard.press('Control+K');
+  const palette = page.getByRole('dialog', { name: 'Search' });
+  await expect(palette).toBeVisible();
+  await palette.getByRole('combobox').fill('ethanol');
+  await expect(palette.getByRole('option').first()).toBeVisible();
+  await expect(palette.getByRole('status')).toHaveText(/^\d+ results?/);
+  await expectClean(seen);
+});

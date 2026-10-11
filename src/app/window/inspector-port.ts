@@ -31,7 +31,7 @@ export function createInspectorPorts(services: InspectorPortServices, navigator:
       revoke: (url) => URL.revokeObjectURL(url),
     },
     timers: navigator.timers,
-    ui: { inspector, selection: navigator.ui.selection, family: navigator.ui.family, panels },
+    ui: { inspector, selection: navigator.ui.selection, family: navigator.ui.family, panels, exam: navigator.ui.exam },
     log: (type, message) => services.logApp(type, message),
   };
 }
