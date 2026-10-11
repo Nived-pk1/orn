@@ -170,6 +170,12 @@
   font-size: var(--text-13);
 }
 
+/* the bar scrolls sideways when the window is narrow, so the keyboard must be able to reach it */
+.statusBar:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
 @media (max-width: 1279px) {
   .shell,
   .shell[data-inspector='closed'] {

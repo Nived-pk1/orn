@@ -1,6 +1,6 @@
 /**
- * Related reactions on the demo dataset (step 5.6b, item c): a table of what the demo gives. The demo has no mechanism records, so
- * "shares a mechanism" is empty everywhere; the diethyl ether made at 413 K is consumed by no reaction of the demo.
+ * Related reactions on the demo dataset (step 5.6b, item c): a table of what the demo gives. Each mechanism of the demo is used by ONE
+ * reaction, so "shares a mechanism" is empty everywhere; the diethyl ether made at 413 K is consumed by no reaction of the demo.
  */
 import { describe, expect, it } from 'vitest';
 import { relatedReactionsOf, type RelatedGroup } from '@/core/graph';
@@ -49,12 +49,20 @@ describe('related reactions of the demo', () => {
     expect(groupsOf('rxn_ethanal-aldol').same_reagent_family?.total).toBeGreaterThan(12);
   });
 
-  it('shares a mechanism is empty on the demo (no mechanism records)', () => {
+  it('shares a mechanism is empty on the demo (each of its mechanisms is used by one reaction)', () => {
     for (const id of Object.keys(state.records.reaction)) expect(groupsOf(id).shares_mechanism?.total).toBe(0);
   });
 
   it('a group of more than 12 is complete in `items` (the view cuts the preview, not the data)', () => {
     const group = groupsOf('rxn_ethanal-aldol').same_reagent_family as RelatedGroup;
     expect(group.items.length).toBe(group.total);
+  });
+
+  it('two reactions that name the same mechanism share it (made here: the demo has none)', () => {
+    const reactions = state.records.reaction as Record<string, Reaction>;
+    const other = { ...(reactions['rxn_ethene-hydration'] as Reaction), mechanismIds: ['mec_aldol-ethanal'] } as Reaction;
+    const changed = { ...state, records: { ...state.records, reaction: { ...reactions, [other.id]: other } } } as typeof state;
+    const group = relatedReactionsOf(contextOf(changed).indexes, reactions['rxn_ethanal-aldol'] as Reaction).find((g) => g.key === 'shares_mechanism');
+    expect(group?.items.map((i) => i.reactionId)).toEqual(['rxn_ethene-hydration']);
   });
 });

@@ -36,6 +36,15 @@ export const NoteFact = (props: { readonly label: string; readonly source: strin
     </Facts>
   );
 
+/** A labelled note INSIDE a fact's value (a `dd` cannot hold another `dt`): the label, then the rich text, as a block. */
+export const InlineNote = (props: { readonly label: string; readonly source: string | undefined }): ReactNode =>
+  props.source === undefined || props.source === '' ? null : (
+    <div>
+      <span>{props.label}: </span>
+      <RichText source={props.source} />
+    </div>
+  );
+
 export const words = (value: unknown): string => String(value).replaceAll('_', ' ');
 
 export function CitationsAndTags(props: {

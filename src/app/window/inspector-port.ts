@@ -7,7 +7,7 @@ import type { InspectorPorts } from '@/features/inspector';
 import type { NavigatorPorts } from '@/features/navigator';
 import type { InspectorStore, PanelsStore } from '@/ui/state';
 
-export type InspectorPortServices = Pick<AppServices, 'store' | 'indexes' | 'l4' | 'logApp'>;
+export type InspectorPortServices = Pick<AppServices, 'store' | 'indexes' | 'l4' | 'logApp' | 'persistence'>;
 
 export function createInspectorPorts(services: InspectorPortServices, navigator: Pick<NavigatorPorts, 'depictions' | 'timers' | 'ui'>, inspector: InspectorStore, panels: PanelsStore): InspectorPorts {
   return {
@@ -16,6 +16,20 @@ export function createInspectorPorts(services: InspectorPortServices, navigator:
     findings: services.store.findings,
     l4: services.l4,
     depictions: navigator.depictions,
+    assets: {
+      async open(assetId, mediaType) {
+        if (services.persistence === undefined) return { ok: false, reason: 'unavailable', message: 'This tab keeps nothing on disk, so no image bytes are available.' };
+        try {
+          const blob = await services.persistence.getAssetBlob(assetId);
+          if (blob === undefined) return { ok: false, reason: 'missing', message: 'The bytes of this image are not stored (finding AST-002).' };
+          // the declared media type decides how the browser reads the bytes; an SVG is only ever an image, never markup
+          return { ok: true, url: URL.createObjectURL(new Blob([blob], { type: mediaType })) };
+        } catch (error) {
+          return { ok: false, reason: 'unavailable', message: `The bytes could not be read: ${error instanceof Error ? error.message : String(error)}` };
+        }
+      },
+      revoke: (url) => URL.revokeObjectURL(url),
+    },
     timers: navigator.timers,
     ui: { inspector, selection: navigator.ui.selection, family: navigator.ui.family, panels },
     log: (type, message) => services.logApp(type, message),

@@ -11,6 +11,9 @@ import type { DepictionPort } from '@/render/svg';
 import type { FamilyStore, InspectorStore, PanelsStore, SelectionStore } from '@/ui/state';
 import type { SubjectStatus } from '@/workers/chem';
 
+/** What an asset's bytes are, as an image address the page may use: a blob URL the caller must give back through `revoke`. */
+export type AssetImage = { readonly ok: true; readonly url: string } | { readonly ok: false; readonly reason: 'missing' | 'unavailable'; readonly message: string };
+
 export interface InspectorPorts {
   readonly store: {
     getState(): CanonicalState;
@@ -31,6 +34,11 @@ export interface InspectorPorts {
   };
   /** Absent: no structure is drawn (a species shows its formula). */
   readonly depictions?: DepictionPort;
+  /** Asset bytes (step 5.6b, additive). Absent: images are not shown and the view says so. The URL is made and revoked here, never by the view. */
+  readonly assets?: {
+    open(assetId: string, mediaType: string): Promise<AssetImage>;
+    revoke(url: string): void;
+  };
   readonly timers: { after(ms: number, run: () => void): () => void };
   readonly ui: {
     readonly inspector: InspectorStore;

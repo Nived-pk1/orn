@@ -2,7 +2,8 @@
  * Species, class and reagent in the inspector (step 5.6a). L2: what it is; L3: its detail (properties, composition, profiles);
  * L4: notes, citations and tags. Every field that is shown is shown as stored; the raw record at L5 has the rest. No chemistry here.
  */
-import type { ChemicalClass, Reagent, Species } from '@/core/schema';
+import type { ReadonlyIndexes } from '@/core/indexes/contracts';
+import type { ChemicalClass, Reagent, RecordRef, Species } from '@/core/schema';
 import type { Finding } from '@/core/validation';
 import { useMemo } from 'react';
 import { Connections } from './connections';
@@ -13,7 +14,7 @@ import { nameOfRecord } from './model/describe';
 import { parameterPhrases } from './model/conditions';
 import { RecordList } from './record-list';
 import { RecordLink } from './rich-text';
-import { CitationsAndTags, LinkFact, NoteFact, TextFact, words } from './view-parts';
+import { CitationsAndTags, InlineNote, LinkFact, NoteFact, TextFact, words } from './view-parts';
 import styles from './inspector.module.css';
 
 export function SpeciesLevels(props: { readonly record: Species; readonly findings: readonly Finding[] }) {
@@ -46,11 +47,12 @@ export function SpeciesLevels(props: { readonly record: Species; readonly findin
           {record.properties.map((property, index) => (
             <Facts key={index} label={property.label ?? words(property.key)}>
               {property.value}
-              <NoteFact label="Note" source={property.note} />
+              <InlineNote label="Note" source={property.note} />
             </Facts>
           ))}
           <NoteFact label="Acid-base notes" source={record.acidBaseNotes} />
         </FactList>
+        <SpeciesReactions record={record} />
       </LevelSection>
       <LevelSection level={4} title="Notes and sources">
         <FactList label="Species notes">
@@ -64,23 +66,50 @@ export function SpeciesLevels(props: { readonly record: Species; readonly findin
   );
 }
 
-/** The members of a class and the reactions that start from or make it: long lists, so virtualised. */
+/** Most members of a class whose reactions are gathered for the list (a class of tens of thousands says so instead of scanning them all). */
+const MAX_MEMBERS_SCANNED = 20_000;
+
+/** The reactions that take a substance as a participant or make it as a product, sorted by ID, each once. */
+const reactionsOfSubstances = (indexes: ReadonlyIndexes, refs: readonly RecordRef[]): { kind: 'reaction'; id: string }[] => {
+  const ids = new Set<string>();
+  for (const ref of refs) {
+    for (const p of indexes.participationsOf(ref)) ids.add(p.reactionId);
+    for (const p of indexes.productionsOf(ref)) ids.add(p.reactionId);
+  }
+  return [...ids].sort().map((id) => ({ kind: 'reaction', id }));
+};
+
+/** The reactions that use a species: long lists are virtualised. */
+function SpeciesReactions(props: { readonly record: Species }) {
+  const env = useInspectorEnv();
+  const reactions = useMemo(() => reactionsOfSubstances(env.ports.indexes.current(), [{ kind: 'species', id: props.record.id } as RecordRef]), [env, props.record.id]);
+  return (
+    <>
+      <h4 className={styles.subheading}>Reactions that use it ({reactions.length})</h4>
+      {reactions.length === 0 ? <p className={styles.muted}>No reaction takes it as a participant or makes it.</p> : <RecordList label="Reactions of this species" items={reactions} />}
+    </>
+  );
+}
+
+/** The members of a class and the reactions that use the class or any member: long lists, so virtualised. */
 function ClassLists(props: { readonly record: ChemicalClass }) {
   const env = useInspectorEnv();
   const { record } = props;
   const lists = useMemo(() => {
     const indexes = env.ports.indexes.current();
-    const me = { kind: 'class', id: record.id } as const;
-    const members = indexes.speciesInClass(record.id, { transitive: false });
-    const reactions = [...new Set([...indexes.participationsOf(me).map((p) => p.reactionId), ...indexes.productionsOf(me).map((p) => p.reactionId)])].sort();
-    return { members, reactions: reactions.map((id) => ({ kind: 'reaction', id })) };
+    const direct = indexes.speciesInClass(record.id, { transitive: false });
+    const everyMember = indexes.speciesInClass(record.id, { transitive: true });
+    const scanned = everyMember.slice(0, MAX_MEMBERS_SCANNED);
+    const reactions = reactionsOfSubstances(indexes, [{ kind: 'class', id: record.id } as RecordRef, ...scanned]);
+    return { members: direct, reactions, cut: everyMember.length - scanned.length };
   }, [env, record.id]);
   return (
     <>
       <h4 className={styles.subheading}>Members ({lists.members.length})</h4>
       {lists.members.length === 0 ? <p className={styles.muted}>No species is listed as a member.</p> : <RecordList label="Members" items={lists.members} />}
-      <h4 className={styles.subheading}>Reactions that use this class ({lists.reactions.length})</h4>
-      {lists.reactions.length === 0 ? <p className={styles.muted}>No reaction names this class as a participant or a product.</p> : <RecordList label="Reactions of this class" items={lists.reactions} />}
+      <h4 className={styles.subheading}>Reactions that use this class or its members ({lists.reactions.length})</h4>
+      {lists.reactions.length === 0 ? <p className={styles.muted}>No reaction names this class or a member as a participant or a product.</p> : <RecordList label="Reactions of this class" items={lists.reactions} />}
+      {lists.cut > 0 ? <p className={styles.muted}>{lists.cut} members were not scanned for reactions (the first {MAX_MEMBERS_SCANNED} were).</p> : null}
     </>
   );
 }
@@ -150,7 +179,7 @@ export function ReagentLevels(props: { readonly record: Reagent; readonly findin
             <Facts key={profile.id} label={`Profile: ${profile.label}`}>
               {parameterPhrases(profile.parameters).join('; ')}
               {profile.aliases.length === 0 ? '' : ` (also: ${profile.aliases.join(', ')})`}
-              <NoteFact label="Behaviour" source={profile.behaviour} />
+              <InlineNote label="Behaviour" source={profile.behaviour} />
             </Facts>
           ))}
         </FactList>

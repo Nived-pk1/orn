@@ -90,7 +90,7 @@ export function Shell(props: ShellProps) {
         </div>
         <div className={styles.inspectorBody}>{props.inspector}</div>
       </aside>
-      <footer className={styles.statusBar}>{props.statusBar}</footer>
+      <footer className={styles.statusBar} tabIndex={0}>{props.statusBar}</footer>
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { FactList, Facts, LevelSection } from './levels';
 import { parameterPhrases } from './model/conditions';
 import { RelatedReactions } from './related';
 import { RecordLink } from './rich-text';
-import { CitationsAndTags, LinkFact, Links, NoteFact, TextFact, words } from './view-parts';
+import { CitationsAndTags, InlineNote, LinkFact, Links, NoteFact, TextFact, words } from './view-parts';
 
 type Participant = Reaction['participants'][number];
 
@@ -74,7 +74,7 @@ function OutcomeDetail(props: { readonly outcome: Outcome }) {
             .filter((x) => x !== undefined)
             .map((x) => `, ${String(x)}`)
             .join('')}
-          <NoteFact label="Note" source={product.note} />
+          <InlineNote label="Note" source={product.note} />
         </Facts>
       ))}
     </FactList>
@@ -173,7 +173,7 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
                   <RecordLink kind={item.ref.kind} id={item.ref.id} />
                 </>
               )}
-              <NoteFact label="Note" source={item.note} />
+              <InlineNote label="Note" source={item.note} />
             </Facts>
           ))}
           {record.mappedReaction === undefined ? null : <Facts label={`Mapped reaction (${words(record.mappedReaction.format)})`}>{record.mappedReaction.value}</Facts>}
