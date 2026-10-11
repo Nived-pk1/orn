@@ -43,14 +43,24 @@ export function bindPointer(element: Element, handlers: PointerHandlers, timers:
   let state: PointerState = INITIAL_POINTER_STATE;
   /** A hold opened the menu: the browser's own click after the release is suppressed (it would move the focus and dismiss the menu). */
   let holdOpened = false;
+  let late = 0;
   const cancels = new Map<number, () => void>();
 
   const run = (effect: PointerEffect): void => {
     switch (effect.type) {
       case 'click':
         return handlers.onClick?.(effect.hit);
-      case 'doubleClick':
-        return handlers.onDoubleClick?.(effect.hit);
+      case 'doubleClick': {
+        // Handed over after the browser has finished delivering this gesture's own mouseup / click / dblclick: opening a page removes
+        // the drawing, and WebKit loses the mouseup of a press whose target went away mid-gesture (the next click is then dead).
+        const hit = effect.hit;
+        const token = (late += 1);
+        cancels.set(-token, timers.after(0, () => {
+          cancels.delete(-token);
+          handlers.onDoubleClick?.(hit);
+        }));
+        return;
+      }
       case 'confirm':
         return handlers.onConfirm?.(effect.hit);
       case 'contextMenu':

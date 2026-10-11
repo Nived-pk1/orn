@@ -5,7 +5,7 @@
  * keys are `canvas-keys.ts`, the nearest-family and reading-order functions are `render/scene/navigation.ts`, the menu is
  * `canvas-menu.ts`. Every outcome is a store command (selection, family) or a viewport command; nothing here is chemistry.
  */
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FocusEvent, KeyboardEvent } from 'react';
 import { firstFamily, lastFamily, neighbourInDirection, stepInReadingOrder, type Scene } from '@/render/scene';
 import type { SceneHit, SceneSvgProps } from '@/render/svg';
@@ -48,15 +48,6 @@ interface FocusState {
   readonly inside: boolean;
 }
 
-/** Keyboard focus rather than a mouse press: `:focus-visible` says so; a browser without it counts as keyboard. */
-const keyboardFocus = (element: Element): boolean => {
-  try {
-    return element.matches(':focus-visible');
-  } catch {
-    return true;
-  }
-};
-
 /** The id when it is a family of the Scene (what the keyboard moves between). */
 const familyId = (id: string | undefined, scene: Scene | null): string | undefined =>
   id !== undefined && scene !== null && scene.nodes.some((node) => node.id === id && (node.box === 'hub' || node.box === 'unclassified')) ? id : undefined;
@@ -69,6 +60,19 @@ export function useCanvasInput(args: Args): CanvasInput {
   live.current = { scene, isHub, controller, svg, announce, focus };
   const last = useRef<string | undefined>(args.returnTo);
   const armed = useRef<string | undefined>(undefined);
+  // Was the last thing a press on the drawing (a mouse or finger focus) rather than a key or a program? A press names no family and draws no ring.
+  const pressed = useRef(false);
+  useEffect(() => {
+    if (svg === null) return undefined;
+    const press = (): void => void (pressed.current = true);
+    const key = (): void => void (pressed.current = false);
+    svg.addEventListener('pointerdown', press, true);
+    svg.addEventListener('keydown', key, true);
+    return () => {
+      svg.removeEventListener('pointerdown', press, true);
+      svg.removeEventListener('keydown', key, true);
+    };
+  }, [svg]);
 
   const openPage = useCallback(
     (id: string): void => {
@@ -205,7 +209,9 @@ export function useCanvasInput(args: Args): CanvasInput {
     const current = live.current.scene;
     const id = familyId(last.current, current) ?? (current === null ? undefined : firstFamily(current));
     last.current = id;
-    setFocus({ id, ring: keyboardFocus(event.currentTarget), inside: true });
+    // a press that focused the drawing (a mouse click or drag) names no family and mutates nothing; a key or a program does
+    const keyboard = !pressed.current;
+    setFocus({ id, ring: keyboard, inside: keyboard });
   };
   const onBlur = (event: FocusEvent<SVGSVGElement>): void => {
     if (event.target !== event.currentTarget) return;

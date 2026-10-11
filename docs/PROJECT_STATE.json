@@ -81,8 +81,8 @@
     "5.6b"
   ],
   "nextPhase": 5,
-  "nextStep": "5.7",
-  "nextStepTitle": "Phase 5, step 5.7 - Interaction (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.6b (inspector part 2: all 22 kinds, related reactions, curriculum at L4, asset image, long lists, drawer and sheet) is done; 5.6a is reviewed and accepted; 5.6b awaits the human review.",
+  "nextStep": "5.8",
+  "nextStepTitle": "Phase 5, step 5.8 - Palette and search (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.7 (interaction: pointer machine, keyboard map, context menu, live region, touch, List view, keyboard-only walk) is done and awaits the human review; 5.6b is accepted.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -208,6 +208,10 @@
     "navigatorEndToEndSuite": "step 5.5a: pipeline with a fake layout service and with the real layout worker code in process (expansion, first shown layout stable), labels and orthogonal routing over real ELK, label sizes, depiction binding and box sizes, condition text (66), e2e in Chromium: demo hubs and arrows, selection and expansion, reload, axe, ADV-012 part 1, readability (zero overlaps at LOD 2, with conditions, with a hub expanded), a blob image at LOD 3 with zero CSP violations"
   },
   "openItems": [
+    "NEW (step 5.7 close): initial JS 354.29 kB gzip (347.02 after the lazy loading of the 5.7 session's Part A2, +7.3 kB for the pointer, keyboard, menu, List and table code); target 400 kB, build:smoke now fails over it. Lazy chunks: views-other, import-inprocess, export-inprocess, import-legacy.",
+    "NEW (step 5.7): family boxes on the map are not widened to 44 px for fingers (only the arrows' hit path is); a family at a far zoom can be smaller. Multi-selection and the marquee moved to Phase 6 (row 6.1). E is an alias of O; C is unbound.",
+    "NEW (step 5.7): a failed lazy chunk reuses the codes LEGACY_INVALID, WORKER_DOWN and REJECTED with a message in words; a browser may cache a failed module fetch, so Retry can fail until the page is reloaded. src/io/index.ts no longer re-exports the values of legacy-v6.",
+
     "NEW (step 5.6b close): initial JS 391.38 kB gzip, OVER the 390 kB line of the prompt (381.10 after 5.6a Part A; 372.55 at the 5.5d close; the 400 kB target stands). The 22 inspector views are in the entry chunk; lazy loading of the inspector kinds is a Gate E decision.",
     "NEW (step 5.6b): the status bar is now a tab stop (axe scrollable-region-focusable at 600 px); a clipped status bar could instead wrap or be shortened. Related reactions group 'Same reagent family' is wide (an acid or a base relates many reactions); only a bounded list is shown (12 + a virtual list).",
     "NEW (step 5.5b): familyStudy on the largest hub of design hub_explosion (10,000 cards) takes about 0.3 s mean (0.5 s max) on the main thread when the page opens; dense 0.16 s. Gate E watch; the cards are virtualised, the value is computed once per revision.",

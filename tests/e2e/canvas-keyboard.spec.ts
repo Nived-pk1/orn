@@ -37,8 +37,13 @@ const commits = (page: Page): Promise<{ nodes: number; edges: number; labels: nu
   });
 
 async function focusFamily(page: Page, id: string): Promise<void> {
-  await drawing(page).focus();
-  for (let i = 0; i < 40 && (await activeFamily(page)) !== id; i += 1) await page.keyboard.press('Tab');
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  // Tab forward from where the focus lands; if the end of the reading order is reached first (Tab leaves the canvas), come back the other way
+  for (const key of ['Tab', 'Shift+Tab']) {
+    await drawing(page).focus();
+    for (let i = 0; i < 40 && (await drawing(page).evaluate((el) => el === document.activeElement)) && (await activeFamily(page)) !== id; i += 1) await page.keyboard.press(key);
+    if ((await activeFamily(page)) === id) break;
+  }
   expect(await activeFamily(page)).toBe(id);
 }
 

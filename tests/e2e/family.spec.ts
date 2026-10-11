@@ -121,7 +121,12 @@ test.describe('the family page of the demo', () => {
   test('a selected arrow opens its source family at the target group', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
-    await page.locator('svg [data-edge-id][aria-label^="Alcohols to Aldehydes"]').first().locator('path').last().dispatchEvent('click');
+    await page.locator('svg [data-edge-id][aria-label^="Alcohols to Aldehydes"]').first().locator('path').last().evaluate((path) => {
+      // a real press (pointerdown on the arrow, pointerup on the page): the map classifies pointer events and has no click handler
+      const init = { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', button: 0, clientX: 5, clientY: 5 };
+      path.dispatchEvent(new PointerEvent('pointerdown', init));
+      document.dispatchEvent(new PointerEvent('pointerup', init));
+    });
     await page.getByRole('button', { name: 'Open', exact: true }).click();
     await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
     await expect(page.getByRole('heading', { level: 3, name: 'To Aldehydes' })).toBeVisible();

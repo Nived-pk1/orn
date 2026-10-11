@@ -101,6 +101,7 @@ describe('the overview does not expand; a family opens as a page', () => {
     const app = await opened();
     const before = symbols();
     doubleTap(hub('Aldehydes'));
+    act(() => app.navigator.timers.advance(0)); // the page is opened after the browser has finished the gesture
     expect(app.navigator.ui.family.getState().open).toBe('cls_aldehydes');
     expect(app.navigator.ui.expansion.getState().isExpanded('cls_aldehydes')).toBe(false);
     expect(before).toBeGreaterThan(0);
