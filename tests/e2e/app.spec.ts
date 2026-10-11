@@ -88,7 +88,7 @@ test.describe('the app in Chromium', () => {
     await chooseFile(page, generatedFile('initial', 'dense'));
     await expect(page.getByRole('heading', { name: 'Import summary' })).toBeVisible({ timeout: 90_000 });
     await expect(page.getByRole('list', { name: 'Records per kind' })).toBeVisible();
-    await expect(page.getByText(/^Findings in the result: E 0 /)).toBeVisible();
+    await expect(page.getByText(/^0 errors, \d+ warnings, /).first()).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByText(/^Imported \d+ records from generated-initial-dense\.orn\.json\./)).toBeVisible({ timeout: 90_000 });
     await showDataset(page);

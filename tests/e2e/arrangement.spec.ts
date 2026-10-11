@@ -177,7 +177,7 @@ test.describe('an overview without cells gets an automatic arrangement', () => {
     await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible({ timeout: 60_000 });
     const demo = await page.getByRole('list', { name: 'Record counts' }).innerText();
     expect(demo).not.toBe(before);
-    await page.getByRole('button', { name: 'Undo import' }).click();
+    await page.getByRole('region', { name: 'Replace the data' }).getByRole('button', { name: 'Undo import' }).click();
     await expect(page.getByText('Import undone: the data from before it is back.')).toBeVisible({ timeout: 60_000 });
     await expect.poll(() => page.getByRole('list', { name: 'Record counts' }).innerText()).toBe(before);
     expect(await axeProblems(page)).toEqual([]);

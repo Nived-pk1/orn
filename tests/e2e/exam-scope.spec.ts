@@ -64,7 +64,7 @@ test.describe('the exam scope', () => {
   test('the palette can choose the exam scope, and Undo / Redo say why they cannot act', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
-    await expect(page.getByRole('button', { name: 'Undo' })).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toHaveAttribute('aria-disabled', 'true');
     await expect(page.getByRole('button', { name: 'Redo' })).toHaveAttribute('aria-disabled', 'true');
     await page.keyboard.press('Control+K');
     const dialog = page.getByRole('dialog', { name: 'Search' });

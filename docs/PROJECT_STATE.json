@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-11",
+  "lastUpdated": "2026-10-12",
   "currentPhase": 5,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -80,11 +80,12 @@
     "5.6a",
     "5.6b",
     "5.7",
-    "5.8"
+    "5.8",
+    "5.9a"
   ],
   "nextPhase": 5,
-  "nextStep": "5.9a",
-  "nextStepTitle": "Phase 5, step 5.9a - Import UI (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.8 (palette, search, commands, exam scope with outside-scope dimming, undo / redo bound to the store) is done and awaits the human review; 5.7 is accepted (2026-10-11).",
+  "nextStep": "5.9b",
+  "nextStepTitle": "Phase 5, step 5.9b - Export UI (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.9a (the import screen: file pick and drop, caps and refusals in words, preview with conflicts, legacy report and decisions, apply with stages and Cancel, Undo import, legacy re-import reuses the earlier clock) is done and awaits the human review; 5.8 is accepted (2026-10-12).",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -129,7 +130,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command at the close of step 5.8 (Vitest 4.1.11: 370 files, 5,298 tests; before the session 362 files, 5,234 tests, HEAD 23c4243; after the 5.7 review 363 / 5,239, after part 1 367 / 5,279, after part 2 370 / 5,298); build:smoke green, initial JS 367.89 kB gzip (cmdk and its Radix pieces about 5.8 kB of it); the full e2e as one run (npx playwright test, all three projects, 3.6 min): 101 passed, 1 skipped (the 5.1d fixme), 0 failed: Chromium 89 and the skipped, Firefox 6, WebKit 6 (PROGRESS.md \"Phase 5, step 5.8, part 3\"); earlier: passed as ONE command at the close of step 5.5d (Vitest 4.1.11: 336 files, 4,937 tests; before the session 326 files, 4,872 tests, HEAD c5083d1; per part: arrows 328 / 4,894, completeness 336 / 4,937); build:smoke green, initial JS 372.55 kB gzip; the full e2e as one run: 72 passed 1 skipped (Chromium 62 and the skipped, Firefox 5, WebKit 5) (PROGRESS.md \"Phase 5, step 5.5d, part 3\"); earlier: step 5.5c 326 files, 4,872 tests",
+    "npmRunCheck": "passed as ONE command at the close of step 5.9a (Vitest 4.1.11: 376 files, 5,373 tests; before the session 370 files, 5,298 tests, HEAD 117a6d5; after part 1 376 / 5,373, after part 2 376 / 5,373); build:smoke green, initial JS 372.76 kB gzip (import-screen lazy chunk 4.89 kB gzip)",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -213,7 +214,6 @@
     "NEW (step 5.7 close): initial JS 354.29 kB gzip (347.02 after the lazy loading of the 5.7 session's Part A2, +7.3 kB for the pointer, keyboard, menu, List and table code); target 400 kB, build:smoke now fails over it. Lazy chunks: views-other, import-inprocess, export-inprocess, import-legacy.",
     "NEW (step 5.7): family boxes on the map are not widened to 44 px for fingers (only the arrows' hit path is); a family at a far zoom can be smaller. Multi-selection and the marquee moved to Phase 6 (row 6.1). E is an alias of O; C is unbound.",
     "NEW (step 5.7): a failed lazy chunk reuses the codes LEGACY_INVALID, WORKER_DOWN and REJECTED with a message in words; a browser may cache a failed module fetch, so Retry can fail until the page is reloaded. src/io/index.ts no longer re-exports the values of legacy-v6.",
-
     "NEW (step 5.6b close): initial JS 391.38 kB gzip, OVER the 390 kB line of the prompt (381.10 after 5.6a Part A; 372.55 at the 5.5d close; the 400 kB target stands). The 22 inspector views are in the entry chunk; lazy loading of the inspector kinds is a Gate E decision.",
     "NEW (step 5.6b): the status bar is now a tab stop (axe scrollable-region-focusable at 600 px); a clipped status bar could instead wrap or be shortened. Related reactions group 'Same reagent family' is wide (an acid or a base relates many reactions); only a bounded list is shown (12 + a virtual list).",
     "NEW (step 5.5b): familyStudy on the largest hub of design hub_explosion (10,000 cards) takes about 0.3 s mean (0.5 s max) on the main thread when the page opens; dense 0.16 s. Gate E watch; the cards are virtualised, the value is computed once per revision.",
@@ -366,6 +366,10 @@
     "NEW (step 5.8, REVIEW REQUIRED): the exam-scope selector starts at All (no exam scope), not at the latest official or provisional version JEE_ONTOLOGY section 3 describes; a family is outside the exam scope when it has reactions and all of them are (the family's own record is not used), recorded in GRAPH_SEMANTICS and ADR-037. The demo has no all-outside family under either version (JEE Main: 26 official, 1 outside = Beckmann, unanchored; Advanced: 26 official, 1 enrichment).",
     "NEW (step 5.8): the palette orders its groups by the best hit (a query that fits several reaction names lists Reactions before Species); \"Choose the exam scope\" is one command per choice; Alt+Enter (reaction explorer) is not bound (Phase 7); the palette is not lazily loaded.",
     "NEW (step 5.7 review, ADR-038 \"Mechanism pictures\"): Phase 6 row 6.5 attaches the user's own mechanism images to a mechanism or a step (asset records, <img> with a blob URL only), shown first in the mechanism view; a new Phase 8 step \"Arrow-pushing diagrams\" draws each mechanism step from the structured data (static drawings; arrow-pushing moves from ARCHITECTURALLY SUPPORTED to REQUIRED; animation stays FUTURE). Phase 8 also: family boxes at least 44 px on coarse pointers (the 5.7 review).",
-    "NEW (step 5.8): Undo and Redo are bound to the store and unavailable with reasons; Phase 5 has no editing, so they stay unavailable until Phase 6 (tested with a stub store that has history). The Replace-with-the-demo confirm dialog now lives in the window (the palette command and the Dataset button share it)."
+    "NEW (step 5.8): Undo and Redo are bound to the store and unavailable with reasons; Phase 5 has no editing, so they stay unavailable until Phase 6 (tested with a stub store that has history). The Replace-with-the-demo confirm dialog now lives in the window (the palette command and the Dataset button share it).",
+    "NEW (step 5.9a): Gate E watch item, the import's main-thread blocks (Chromium trace, 16.9 MB design-tier dense file): the preview has a 3,707 ms task starting 711 ms after the file is chosen whose cause is not established, and the apply has a 2,644 ms microtask block (1,091 ms in one function of the main bundle: merged state, snapshot and replaceState on main). Nothing fixed; see docs/PROGRESS.md 'Phase 5, step 5.9a, part 2', item j. The palette not being lazy (5.8 review item 6) stays a watch item with the initial JS (372.76 kB gzip).",
+    "NEW (step 5.9a): a file with no usable dataset information (every older-app file) is previewed as a merge by itself, with a note; a replace_all of such a file is not offered. Say if a different behaviour is wanted.",
+    "NEW (step 5.9a): Undo import is reachable in a session-only tab from the toast and the File menu's Undo import is unavailable there (the Dataset button and palette keep the 5.5d rule). The flows support it (snapshots in memory); say whether the buttons should follow.",
+    "NEW (step 5.9a): additive contract changes: Dialog.size, ToastInput.action, VirtualList.focusable, Flows.lastImport, ImportPreviewAnswer.earlierImport. No schema change."
   ]
 }
