@@ -171,7 +171,7 @@ The contracts fit scan of this plan (Q1-Q14) and the open points it found are in
 | 6.2 | Species, class, reagent editors; structure panel (live parse/depiction); duplicate check |
 | 6.3 | Reaction editor: identity, participants, stages |
 | 6.4 | Condition variants and outcomes editors |
-| 6.5 | Mechanism editor (variants, steps, species, bond changes, electron movements as structured rows) |
+| 6.5 | Mechanism editor (variants, steps, species, bond changes, electron movements as structured rows) | *2026-10-11 (step 5.7 review, ADR-038).* Also attach the user's OWN mechanism images to a mechanism or to one of its steps: asset records through the existing asset pipeline, shown as `<img>` with a blob URL only (ADR-038). The mechanism view shows attached images FIRST, above the step rows. |
 | 6.6 | Caveats, relationships, curriculum mappings, citations editors |
 | 6.7 | Quick-entry parser and pickers with "create new" |
 | 6.8 | Delete/merge flows with impact dialogs; review queue |
@@ -184,6 +184,8 @@ Reaction explorer, precursor explorer with route-search panel, reagent explorer,
 
 Also here (moved from 5.5d by the 5.5c review): 200 ms layout transitions (none with reduced motion); the overview no longer expands, so a layout changes only with the data.
 SVG/PNG export from Scene, print stylesheet, empty states, visual QA pass against UI_ARCHITECTURE.md §3, accessibility fixes.
+
+*2026-10-11 (step 5.7 review, ADR-038).* **Step 8.x - Arrow-pushing diagrams.** The app draws each mechanism step itself from the structured data (atom-mapped step structures, bonds formed and broken, electron movements): the structures through the chem worker, the curved arrows from the electron movements, one consistent style, step by step. A step without atom maps shows its rows and says why. Static drawings only; animation stays FUTURE. Tests: a pure arrow-geometry function (property tests over the electron-movement sites), a component test per step kind, the "no atom maps" words, axe, and a screenshot for the demo's mechanisms. Uses the existing chem worker and the Scene's SVG conventions (no `innerHTML`; structure SVG through the existing depiction path).
 
 ### Phase 9 — Performance hardening, PWA, diagnostics
 Stress-tier profiling and fixes, service worker (app-shell cache), Diagnostics pages (findings, quarantine, snapshots, storage, performance).

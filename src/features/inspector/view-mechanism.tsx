@@ -1,8 +1,7 @@
 /**
  * A mechanism in the inspector (step 5.6b, item d). L2: summary and its variants (how many steps, when each applies); L3: each variant
  * with its steps as ordered rows (step kinds, species, bonds formed and broken as atom-map pairs, electron movements, rate-determining,
- * reversible, stereochemical event, description) and the outcomes and reactions that use that variant. Arrow-pushing pictures are
- * FUTURE: these are rows only. A link from an outcome opens the mechanism AT its variant: that variant is open and brought into view.
+ * reversible, stereochemical event, description) and the outcomes and reactions that use that variant. Arrow-pushing drawings arrive in Phase 8 (ADR-038); these are rows only. A link from an outcome opens the mechanism AT its variant: that variant is open and brought into view.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
@@ -151,7 +150,7 @@ export function MechanismLevels(props: { readonly record: Mechanism }) {
         if (outcome.mechanism?.mechanismId !== record.id) continue;
         any = true;
         const key = outcome.mechanism.variantId ?? '';
-        byVariant.set(key, [...(byVariant.get(key) ?? []), { kind: 'reaction', id, outcome: outcome.label ?? outcome.id }]);
+        byVariant.set(key, [...(byVariant.get(key) ?? []), { kind: 'reaction', id, outcome: outcome.label ?? 'unnamed' }]);
       }
       if (!any) unspecified.push({ kind: 'reaction', id, outcome: undefined });
     }

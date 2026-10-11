@@ -117,7 +117,7 @@ describe('the maximal fixture: knowledge kinds', () => {
     const variantId = reaction?.outcomes.find((o) => o.mechanism?.variantId !== undefined)?.mechanism?.variantId as string;
     const rig = show(state, { kind: 'reaction', id: (reaction as Reaction).id } as RecordRef);
     openEverything();
-    const link = document.querySelector('[data-record-id^="mec_"]') as HTMLElement;
+    const link = [...document.querySelectorAll('[aria-label^="Outcome"] [data-record-id^="mec_"]')].find((el) => el.parentElement?.textContent?.includes('at its variant')) as HTMLElement;
     fireEvent.click(link);
     const entry = rig.inspector.getState().history.at(-1);
     expect(entry?.kind).toBe('mechanism');

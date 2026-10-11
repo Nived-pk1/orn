@@ -6,6 +6,7 @@
 import type { Outcome, Reaction } from '@/core/schema';
 import type { Finding } from '@/core/validation';
 import { Connections } from './connections';
+import { useInspectorEnv } from './env';
 import { LABELS } from './labels';
 import { FactList, Facts, LevelSection } from './levels';
 import { parameterPhrases } from './model/conditions';
@@ -28,6 +29,65 @@ const quantityText = (p: Participant): string =>
     .filter((part) => part !== undefined)
     .join(', ');
 
+/** A participant shown by the name of its record, with the wording as entered when there is one; never by participant ID. */
+function ParticipantName(props: { readonly participant: Participant }) {
+  const { participant } = props;
+  return (
+    <>
+      <RecordLink kind={participant.ref.kind} id={participant.ref.id} />
+      {participant.originalText === undefined || participant.originalText === '' ? '' : ` (written "${participant.originalText}")`}
+    </>
+  );
+}
+
+/** Participants of a stage or variant, by name; an ID that is not a participant of this reaction is said so in words. */
+function ParticipantsByName(props: { readonly record: Reaction; readonly ids: readonly string[]; readonly label: string }) {
+  if (props.ids.length === 0) return null;
+  return (
+    <Facts label={props.label}>
+      {props.ids.map((id, index) => {
+        const participant = props.record.participants.find((p) => p.id === id);
+        return (
+          <span key={`${id}:${index}`}>
+            {index > 0 ? '; ' : ''}
+            {participant === undefined ? 'a participant that is not in this reaction' : <ParticipantName participant={participant} />}
+          </span>
+        );
+      })}
+    </Facts>
+  );
+}
+
+/** The mechanism place of a reaction: its mechanism records, or words saying there is none (and the classes, when it has some). */
+function MechanismFact(props: { readonly record: Reaction }) {
+  const env = useInspectorEnv();
+  const { record } = props;
+  if (record.mechanismIds.length > 0) return <LinkFact label="Mechanism" refs={record.mechanismIds.map((id) => ({ kind: 'mechanism', id }))} />;
+  const names = record.mechanismClasses.map((c) => env.name({ kind: 'concept', id: c.conceptId } as Parameters<typeof env.name>[0]));
+  return (
+    <Facts label="Mechanism">
+      {names.length === 0 ? (
+        'No mechanism recorded for this reaction'
+      ) : (
+        <>
+          Mechanism class: <Links refs={record.mechanismClasses.map((c) => ({ kind: 'concept', id: c.conceptId }))} /> (no step-by-step mechanism recorded)
+        </>
+      )}
+    </Facts>
+  );
+}
+
+const Empty = (props: { readonly children: string }) => <p>{props.children}</p>;
+
+/** The label of a stage or variant by ID, for a reader; never the ID itself. */
+const stageLabel = (record: Reaction, id: string | undefined): string | undefined => {
+  if (id === undefined) return undefined;
+  const index = record.stages.findIndex((s) => s.id === id);
+  if (index < 0) return 'a stage that is not in this reaction';
+  return record.stages[index]?.label ?? `Stage ${index + 1}`;
+};
+const variantLabel = (record: Reaction, id: string): string => record.conditionVariants.find((v) => v.id === id)?.label ?? 'a variant that is not in this reaction';
+
 function OutcomeSummary(props: { readonly outcome: Outcome }) {
   const { outcome } = props;
   return (
@@ -45,10 +105,10 @@ function OutcomeSummary(props: { readonly outcome: Outcome }) {
   );
 }
 
-function OutcomeDetail(props: { readonly outcome: Outcome }) {
-  const { outcome } = props;
+function OutcomeDetail(props: { readonly outcome: Outcome; readonly record: Reaction }) {
+  const { outcome, record } = props;
   return (
-    <FactList label={`Outcome ${outcome.label ?? outcome.id}`}>
+    <FactList label={`Outcome ${outcome.label ?? ''}`.trim()}>
       <Facts label="Selectivity">{words(outcome.selectivity)}</Facts>
       <TextFact label="Isomer group" value={outcome.isomerGroup} />
       <TextFact label="Regiochemistry" value={outcome.regiochemistry} />
@@ -65,7 +125,7 @@ function OutcomeDetail(props: { readonly outcome: Outcome }) {
       )}
       <NoteFact label="Why" source={outcome.rationale} />
       <LinkFact label="Concepts" refs={outcome.conceptIds.map((id) => ({ kind: 'concept', id }))} />
-      <TextFact label="Condition variants" value={outcome.conditionVariantIds.join(', ')} />
+      <TextFact label="Condition variants" value={outcome.conditionVariantIds.map((id) => variantLabel(record, id)).join(', ')} />
       <NoteFact label="Note" source={outcome.note} />
       {outcome.products.map((product) => (
         <Facts key={product.id} label={`Product (${words(product.role)})`}>
@@ -100,6 +160,7 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
           <NoteFact label="Reversibility note" source={record.reversibility.note} />
           <LinkFact label="Named reactions" refs={record.namedReactionIds.map((id) => ({ kind: 'named_reaction', id }))} />
           <LinkFact label="Transformations" refs={record.transformationIds.map((id) => ({ kind: 'transformation', id }))} />
+          <MechanismFact record={record} />
           {record.reactionTypes.length === 0 ? null : (
             <Facts label="Reaction types">
               <Links refs={record.reactionTypes.map((c) => ({ kind: 'concept', id: c.conceptId }))} />
@@ -107,16 +168,18 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
           )}
         </FactList>
         <h4>Participants</h4>
+        {record.participants.length === 0 ? <Empty>No participants</Empty> : null}
         <ul aria-label="Participants">
           {record.participants.map((participant) => (
             <li key={participant.id}>
-              <RecordLink kind={participant.ref.kind} id={participant.ref.id} /> ({words(participant.role)}
+              <ParticipantName participant={participant} /> ({words(participant.role)}
               {participant.isPrimarySubstrate === true ? ', primary substrate' : ''}
               {quantityText(participant) === '' ? '' : `; ${quantityText(participant)}`})
             </li>
           ))}
         </ul>
         <h4>Outcomes</h4>
+        {record.outcomes.length === 0 ? <Empty>No outcomes</Empty> : null}
         <ul aria-label="Outcomes">
           {record.outcomes.map((outcome) => (
             <OutcomeSummary key={outcome.id} outcome={outcome} />
@@ -125,25 +188,28 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
       </LevelSection>
       <LevelSection level={3} title="Stages, conditions and outcomes in full">
         <h4>Stages</h4>
-        {record.stages.map((stage) => (
-          <FactList key={stage.id} label={`Stage ${stage.label ?? stage.id}`}>
+        {record.stages.length === 0 ? <Empty>No stages</Empty> : null}
+        {record.stages.map((stage, index) => (
+          <FactList key={stage.id} label={`Stage ${stage.label ?? index + 1}`}>
             <Facts label={`${stage.label ?? 'Stage'} (${words(stage.kind)})`}>{parameterPhrases(stage.parameters).join('; ') || 'no conditions written'}</Facts>
             <TextFact label="As written" value={stage.originalText} />
-            <TextFact label="Participants" value={stage.participantIds.join(', ')} />
+            <ParticipantsByName record={record} ids={stage.participantIds} label="Participants" />
           </FactList>
         ))}
         <h4>Condition variants</h4>
+        {record.conditionVariants.length === 0 ? <Empty>No condition variants</Empty> : null}
         {record.conditionVariants.map((variant) => (
           <FactList key={variant.id} label={`Variant ${variant.label}`}>
             <Facts label={variant.label}>{parameterPhrases(variant.parameters).join('; ') || 'no conditions written'}</Facts>
-            <TextFact label="Stage" value={variant.stageId} />
-            <TextFact label="Participants" value={variant.participantIds.join(', ')} />
+            <TextFact label="Stage" value={stageLabel(record, variant.stageId)} />
+            <ParticipantsByName record={record} ids={variant.participantIds} label="Participants" />
             <NoteFact label="Note" source={variant.note} />
           </FactList>
         ))}
         <h4>Outcomes in full</h4>
+        {record.outcomes.length === 0 ? <Empty>No outcomes</Empty> : null}
         {record.outcomes.map((outcome) => (
-          <OutcomeDetail key={outcome.id} outcome={outcome} />
+          <OutcomeDetail key={outcome.id} outcome={outcome} record={record} />
         ))}
         <RelatedReactions reaction={record} />
       </LevelSection>
@@ -166,7 +232,7 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
           )}
           {record.intermediates.map((item) => (
             <Facts key={item.id} label={`Intermediate (${words(item.intermediateKind)})`}>
-              {item.label ?? item.id}
+              {item.label ?? 'Unnamed intermediate'}
               {item.ref === undefined ? null : (
                 <>
                   {' '}
