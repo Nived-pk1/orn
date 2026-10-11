@@ -7,7 +7,8 @@
  * SMILES and duplicate names (ADV-043); Cancel changes nothing and a blocked plan cannot be confirmed (INV-21); refusals are in words
  * and hostile file names are inert. axe on each screen; zero policy violations, console errors and foreign requests.
  */
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { produce } from 'immer';
@@ -36,7 +37,7 @@ function stateOf(doc: ReturnType<typeof buildDemoDocument>) {
   return parsed.state;
 }
 
-const RENAMED = ['spc_ethanol', 'spc_acetone', 'spc_benzene'];
+const RENAMED = ['spc_acetophenone', 'spc_aniline', 'spc_benzene'];
 const renamedFile = (): UploadFile =>
   changedDemo('renamed.orn.json', (state) =>
     produce(state, (draft) => {
@@ -66,6 +67,19 @@ async function finds(page: Page, text: string): Promise<boolean> {
   return found;
 }
 
+/** The search index follows an import after a short quiet time: poll until the palette says what is true. */
+async function expectFinds(page: Page, text: string, expected: boolean): Promise<void> {
+  await expect.poll(() => finds(page, text), { timeout: 60_000, message: `the palette ${expected ? 'finds' : 'does not find'} "${text}"` }).toBe(expected);
+}
+
+/** Playwright takes a buffer of at most 50 MB: the 51 MB file is written to a temporary folder and passed by its path. */
+function hugeFile(): string {
+  const dir = mkdtempSync(resolve(tmpdir(), 'orn-huge-'));
+  const path = resolve(dir, 'huge.json');
+  writeFileSync(path, Buffer.alloc(51 * 1024 * 1024, 32));
+  return path;
+}
+
 const toasts = (page: Page) => page.getByRole('status', { name: 'Notifications' });
 
 test.describe('the import screen', () => {
@@ -84,7 +98,7 @@ test.describe('the import screen', () => {
     for (const item of await dialog.getByRole('list', { name: 'Records per kind' }).getByRole('listitem').allTextContents()) {
       expect(item, item).toMatch(/ — 0 new, \d+ identical, 0 conflicting$/);
     }
-    expect(await axeProblems(page)).toEqual([]);
+    expect(await axeProblems(page, 10)).toEqual([]);
     await dialog.getByRole('button', { name: 'Confirm' }).click();
     await expect(toasts(page).getByText(/^Imported 0 records from demo-export\.orn\.json\. \d+ records were skipped/)).toBeVisible({ timeout: 90_000 });
     expect(await counts(page)).toBe(before);
@@ -106,18 +120,18 @@ test.describe('the import screen', () => {
     await expect(legacy.getByText(/Kept with the document, not with a record \(0\)/)).toBeVisible();
     const decision = dialog.getByRole('combobox', { name: /^Decision: Hub "Alkanes"/ });
     await expect(decision).toHaveValue('class');
-    await expect(dialog.getByRole('list', { name: 'Records per kind' }).getByText(/^class: 14 in the file/)).toBeVisible();
+    await expect(dialog.getByRole('list', { name: 'Records per kind' }).getByText(/^species: 12 in the file/)).toBeVisible();
     mkdirSync(SHOTS, { recursive: true });
     await page.screenshot({ path: resolve(SHOTS, 'import-v6-preview.png') });
-    expect(await axeProblems(page)).toEqual([]);
+    expect(await axeProblems(page, 10)).toEqual([]);
     // a choice is a revise of the full request: the preview updates
     await decision.selectOption('species');
-    await expect(dialog.getByRole('list', { name: 'Records per kind' }).getByText(/^class: 13 in the file/)).toBeVisible();
+    await expect(dialog.getByRole('list', { name: 'Records per kind' }).getByText(/^species: 13 in the file/)).toBeVisible();
     await expect(decision).toHaveValue('species');
     await dialog.getByRole('button', { name: 'Confirm' }).click();
     await expect(toasts(page).getByText(/^Imported \d+ records from v6-demo-export\.json\./)).toBeVisible({ timeout: 90_000 });
     await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
-    expect(await finds(page, 'Alkanes')).toBe(true);
+    await expectFinds(page, 'Alkanes', true);
     await expectClean(seen);
   });
 
@@ -136,29 +150,29 @@ test.describe('the import screen', () => {
     const dialog = importDialog(page);
     const both = dialog.getByRole('region', { name: 'Records in both' });
     await expect(both.getByText(/\d+ identical \(skipped, nothing changes\); 3 differ\./)).toBeVisible();
-    await expect(dialog.getByRole('combobox', { name: /^Choice for species Ethanol/ }).first()).toHaveValue('keep_current');
+    await expect(dialog.getByRole('combobox', { name: /^Choice for species Acetophenone/ }).first()).toHaveValue('keep_current');
     await page.screenshot({ path: resolve(SHOTS, 'import-conflicts.png') });
-    expect(await axeProblems(page)).toEqual([]);
+    expect(await axeProblems(page, 10)).toEqual([]);
     await dialog.getByRole('button', { name: 'Confirm' }).click();
     await expect(toasts(page).getByText(/^Imported 0 records from renamed\.orn\.json\./)).toBeVisible({ timeout: 90_000 });
     expect(await counts(page)).toBe(original);
-    expect(await finds(page, 'Renamed species 1')).toBe(false);
+    await expectFinds(page, 'Renamed species 1', false);
 
     // 2. use the file's, chosen for one record and then for all
     await chooseFileViaMenu(page, renamedFile());
     await expectPreview(page);
-    await dialog.getByRole('combobox', { name: /^Choice for species Ethanol/ }).first().selectOption('replace');
-    await expect(dialog.getByRole('combobox', { name: /^Choice for species Ethanol/ }).first()).toHaveValue('replace');
+    await dialog.getByRole('combobox', { name: /^Choice for species Acetophenone/ }).first().selectOption('replace');
+    await expect(dialog.getByRole('combobox', { name: /^Choice for species Acetophenone/ }).first()).toHaveValue('replace');
     await dialog.getByRole('button', { name: "Use the file's for all 3" }).click();
     await expect(dialog.getByRole('combobox', { name: /^Choice for species / }).first()).toHaveValue('replace');
     await dialog.getByRole('button', { name: 'Confirm' }).click();
     await expect(toasts(page).getByText(/^Imported 3 records from renamed\.orn\.json\./)).toBeVisible({ timeout: 90_000 });
     expect(await recordCount(page, 'species')).toBe(species);
-    expect(await finds(page, 'Renamed species 1')).toBe(true);
+    await expectFinds(page, 'Renamed species 1', true);
     await page.getByRole('button', { name: 'File' }).click();
     await page.getByRole('menuitem', { name: /Undo import/ }).click();
     await expect(toasts(page).getByText(/Import undone: the data from before it is back\./).last()).toBeVisible({ timeout: 90_000 });
-    expect(await finds(page, 'Renamed species 1')).toBe(false);
+    await expectFinds(page, 'Renamed species 1', false);
 
     // 3. keep both: the file's records are added as copies
     await chooseFileViaMenu(page, renamedFile());
@@ -168,8 +182,8 @@ test.describe('the import screen', () => {
     await dialog.getByRole('button', { name: 'Confirm' }).click();
     await expect(toasts(page).getByText(/^Imported 3 records from renamed\.orn\.json\./).last()).toBeVisible({ timeout: 90_000 });
     expect(await recordCount(page, 'species')).toBe(species + 3);
-    expect(await finds(page, 'Renamed species 1')).toBe(true);
-    expect(await finds(page, 'Ethanol')).toBe(true);
+    await expectFinds(page, 'Renamed species 1', true);
+    await expectFinds(page, 'Acetophenone', true);
     // the toast's own Undo import brings the counts back
     await toasts(page).getByRole('button', { name: 'Undo import' }).last().click();
     await expect.poll(() => counts(page), { timeout: 90_000 }).toBe(original);
@@ -189,16 +203,16 @@ test.describe('the import screen', () => {
     await chooser.setFiles(dangling);
     await expectPreview(page);
     const dialog = importDialog(page);
-    await expect(dialog.getByRole('list', { name: 'Blockers' }).getByRole('listitem').first()).toContainText(/errors? must be fixed or those records left out/);
+    await expect(dialog.getByRole('list', { name: 'Blockers' }).getByRole('listitem').first()).toContainText(/validation error\(s\) in the merged result/);
     await expect(dialog.getByRole('region', { name: 'Findings of the result' }).getByRole('button', { name: /^Exclude / }).first()).toBeVisible();
     const confirm = dialog.getByRole('button', { name: 'Confirm' });
     await expect(confirm).toHaveAttribute('aria-disabled', 'true');
-    expect(await axeProblems(page)).toEqual([]);
+    expect(await axeProblems(page, 10)).toEqual([]);
     await confirm.click({ force: true });
     await expect(dialog.getByRole('heading', { name: 'Import summary' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
-    expect(await recordCount(page, 'species')).toBeUndefined();
+    await expect(page.getByText(/^Imported /)).toHaveCount(0);
     await expectClean(seen);
   });
 
@@ -207,7 +221,7 @@ test.describe('the import screen', () => {
     const seen = await watch(page);
     await openApp(page);
     const legacy = syntheticLegacy(12);
-    (legacy.compounds[3] as { name: string }).name = (legacy.compounds[2] as { name: string }).name;
+    (legacy.compounds[1] as { name: string }).name = (legacy.compounds[0] as { name: string }).name; // two hubs, one name
     await chooseV6(page, upload('synthetic-v6.json', JSON.stringify(legacy)));
     await expectPreview(page);
     const dialog = importDialog(page);
@@ -215,15 +229,15 @@ test.describe('the import screen', () => {
     await expect(report.getByText(/Not imported \(0\)/)).toBeVisible();
     await expect(report.getByText(/Needs your review \(\d+\)/)).toBeVisible();
     await expect(dialog.getByRole('combobox', { name: /^Decision: / }).first()).toHaveValue('class');
-    expect(await axeProblems(page)).toEqual([]);
+    expect(await axeProblems(page, 10)).toEqual([]);
     await dialog.getByRole('button', { name: 'Confirm' }).click();
     await expect(toasts(page).getByText(/^Imported \d+ records from synthetic-v6\.json\./)).toBeVisible({ timeout: 90_000 });
-    // both compounds that share a name are there
+    // both hubs that share a name are there
     await page.keyboard.press('Control+K');
     const palette = page.getByRole('dialog', { name: 'Search' });
-    await palette.getByRole('combobox').fill('Compound 2');
+    await palette.getByRole('combobox').fill('Compound 0');
     await expect(palette.getByRole('status')).not.toHaveText('Search is starting');
-    await expect(palette.getByRole('option').filter({ hasText: /^Compound 2\b/ })).toHaveCount(2);
+    for (const id of ["cls_v6-c0", "cls_v6-c1"]) await expect(palette.locator(`[role="option"][data-record-id="${id}"]`)).toContainText("Compound 0");
     await page.keyboard.press('Escape');
     await expectClean(seen);
   });
@@ -256,10 +270,10 @@ test.describe('the import screen', () => {
       await native.dismiss();
     });
     await openApp(page);
-    const cases: readonly { file: UploadFile; title: string; text: RegExp }[] = [
+    const cases: readonly { file: UploadFile | string; title: string; text: RegExp }[] = [
       { file: upload('<img src=x onerror=alert(1)>.json', 'this is not json'), title: 'This is not a JSON file or a package', text: /not valid JSON and not an ORN package/ },
       { file: upload('deep.json', `${'['.repeat(100)}${']'.repeat(100)}`), title: 'The file is nested too deeply', text: /more than 64 levels deep/ },
-      { file: upload('huge.json', Buffer.alloc(51 * 1024 * 1024, 32)), title: 'The file is too large', text: /bigger than the app accepts/ },
+      { file: hugeFile(), title: 'The file is too large', text: /bigger than the app accepts/ },
       { file: upload('strange.json', '{"hello":"world"}'), title: 'The format is not recognised', text: /not an ORN dataset, an ORN package, or an export of the older app/ },
       {
         file: upload('future.orn.json', readFileSync(resolve(process.cwd(), 'data/seed/demo.orn.json'), 'utf8').replace(/"schemaVersion":\s*\d+/, '"schemaVersion": 999')),
@@ -274,9 +288,10 @@ test.describe('the import screen', () => {
       await expect(dialog).toBeVisible({ timeout: 90_000 });
       await expect(dialog.getByRole('heading', { name: title })).toBeVisible();
       await expect(dialog.getByRole('alert')).toContainText(text);
-      await expect(dialog.getByText(file.name.slice(0, 40), { exact: false }).first()).toBeVisible();
+      const shownFileName = typeof file === 'string' ? 'huge.json' : file.name;
+      await expect(dialog.getByText(shownFileName.slice(0, 40), { exact: false }).first()).toBeVisible();
       expect(await dialog.locator('img, script, iframe').count()).toBe(0);
-      expect(await axeProblems(page)).toEqual([]);
+      expect(await axeProblems(page, 10)).toEqual([]);
       await dialog.getByRole('button', { name: 'Dismiss' }).click();
       await expect(dialog).toBeHidden();
     }

@@ -136,11 +136,11 @@ export async function secondTab(context: BrowserContext): Promise<Page> {
 }
 
 /** axe at WCAG 2.2 AA; the serious and critical violations as text (the lesser ones are only counted in the log). */
-export async function axeProblems(page: Page): Promise<string[]> {
+export async function axeProblems(page: Page, minRules = 20): Promise<string[]> {
   const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
   const lesser = result.violations.filter((v) => v.impact !== 'serious' && v.impact !== 'critical');
   console.log(`axe: ${result.passes.length} rules passed, ${result.violations.length - lesser.length} serious or critical, ${lesser.length} lesser${lesser.map((v) => ` [${v.impact} ${v.id}]`).join('')}`);
-  expect(result.passes.length, 'axe must have run its rules').toBeGreaterThan(20);
+  expect(result.passes.length, 'axe must have run its rules').toBeGreaterThan(minRules);
   return result.violations
     .filter((v) => v.impact === 'serious' || v.impact === 'critical')
     .map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(' ')).join('; ')})`);

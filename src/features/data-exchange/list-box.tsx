@@ -28,6 +28,7 @@ export function ListBox<T>(props: {
         estimateSize={() => row}
         renderItem={props.render}
         initialRect={{ width: 800, height }}
+        focusable
       />
     </div>
   );

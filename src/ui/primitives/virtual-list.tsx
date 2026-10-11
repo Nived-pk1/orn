@@ -20,6 +20,8 @@ export interface VirtualListProps<T> {
   readonly overscan?: number;
   /** The scroll area's size before it is measured (tests and the first paint). */
   readonly initialRect?: { readonly width: number; readonly height: number };
+  /** The scroll area takes a tab stop (a long list whose rows hold nothing focusable must still be reachable by keyboard: axe scrollable-region-focusable). */
+  readonly focusable?: boolean;
 }
 
 const DEFAULT_OVERSCAN = 4;
@@ -45,7 +47,7 @@ function VirtualListInner<T>(props: VirtualListProps<T>, ref: Ref<VirtualListHan
   });
   useImperativeHandle(ref, () => ({ scrollToIndex: (index) => virtualizer.scrollToIndex(index, { align: 'start' }) }), [virtualizer]);
   return (
-    <div className={styles.scroller} ref={scroller} data-virtual-list="">
+    <div className={styles.scroller} ref={scroller} data-virtual-list="" {...(props.focusable === true ? { tabIndex: 0, role: 'group', 'aria-label': `${label} (scrollable)` } : {})}>
       <ul className={styles.list} aria-label={label} style={{ height: virtualizer.getTotalSize() }}>
         {virtualizer.getVirtualItems().map((row) => (
           <li
