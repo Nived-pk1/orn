@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-10",
+  "lastUpdated": "2026-10-11",
   "currentPhase": 5,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -76,11 +76,12 @@
     "5.5a",
     "5.5b",
     "5.5c",
-    "5.5d"
+    "5.5d",
+    "5.6a"
   ],
   "nextPhase": 5,
-  "nextStep": "5.6a",
-  "nextStepTitle": "Phase 5, step 5.6a - Inspector (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.5d (navigator completeness) is done: clearer arrows (ends on the facing side, 12 px apart, 2 px ink lines, accent hover with the two families outlined, readable count chips, loops with arrowheads, legend), the Unanchored panel, truncation and empty-state notices, partner tones, the layout cache in derivedCache, structures after Retry, the dismissible storage warning.",
+  "nextStep": "5.6b",
+  "nextStepTitle": "Phase 5, step 5.6b - Inspector, part 2 (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.6a (inspector frame, levels L1-L5, history, species/class/reagent/reaction views) is done; it awaits the human review.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
