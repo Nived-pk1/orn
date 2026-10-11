@@ -37,6 +37,7 @@ Package sections **#9 JEE Ontology** and **#10 Syllabus Versioning**. Schema: `s
 - Adding a year: duplicate the previous `exam_version` (new ID, new units/coverage IDs) → edit coverage → cite the syllabus document → set `official` when verified. The Syllabus view offers a **derived diff** between two versions: topics added, removed, changed coverage, and the count of records whose derived scope changes.
 - Superseded versions stay; `effectiveTo` closes them. The exam-scope selector (top bar) chooses the active version; default is the latest `official`, else the latest `provisional` with a visible "provisional" label.
 - Records never change when a syllabus changes; only derived scope does.
+- 2026-10-12 (5.8 review): the selector starts at "All (no exam scope)" on a first run and then keeps the user's choice. Which exam a student sits is theirs to choose; the app does not guess. This replaces the default above (latest `official`, else latest `provisional`) for the first run; the "provisional" label rule still applies to any version shown.
 
 ## 4. Derived exam scope
 
@@ -46,6 +47,8 @@ For record R and active version V of exam E, `scopeOf(R)` returns `official | pr
 2. **Mapped coverage**: collect the topics R maps to, plus their ancestors. If any has coverage `included` or `partial` in V → `official` (`enrichment` if every such mapping has role `enrichment`); `partial` adds a "partial" marker. If mapped topics exist but none is covered and at least one is `excluded` or absent → `outside`.
 3. **Prerequisite**: an unmapped or outside concept that is a prerequisite (`prerequisiteConceptIds`, `prerequisite_of`) of an `official` record, one hop only → `prerequisite`.
 4. Otherwise `unmapped`.
+
+Family scope rule (2026-10-12, 5.8 review; approved): a family (hub) is outside the active version when it has at least one reaction (leaving or arriving) and every one of them is `outside`. The family's own record is not used, and a family without reactions is never outside. Such a family is faded and marked in words, never hidden.
 
 Scope filters in every view: *Official*, *Official + prerequisites*, *All* (outside-scope records dimmed, not hidden, with a scope badge). Filters never hide unanchored or unmapped content from the Diagnostics counts.
 

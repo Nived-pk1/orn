@@ -3900,3 +3900,8 @@ FOUND BY THE FULL E2E after part 2 and fixed (three Chromium failures, all cause
 CSP check per engine (part 1, before any palette code): Chromium 153, Firefox 155 and WebKit 26.6 (Playwright 1.63.0): zero `securitypolicyviolation` events, no `<style>` injected by cmdk. Background processes of the session (the spike's preview servers, Playwright web servers) are stopped.
 REVIEW REQUIRED, all of the session: part 1 items 1 to 6 and part 2 items 1 to 6 above; the three e2e fixes above (changed existing tests); the Dialog's additive `initialFocus`; the window now owns the Replace dialog and the import flow (`ReplaceDialog`, `useImportFlow` in `Window`).
 Screenshots (1280 x 800): `screenshots/palette-results.png`, `screenshots/overview-scope-main.png`.
+
+### Step 5.8 review (reviewer, 2026-10-12)
+
+ACCEPTED. Approved as built: follow-up a of the 5.7 review (names instead of IDs, empty sections in words, the mechanism place), ADR-038, cmdk (zero CSP violations in three engines), the palette, the commands, the exam-scope selector and dimming, undo and redo, the amendments, the 600 px fix and the changed tests.
+REVIEW REQUIRED 1 (selector default): decided. The selector starts at "All (no exam scope)" on a first run and then keeps the user's choice; JEE_ONTOLOGY §3 has a dated line (which exam a student sits is theirs to choose; the app does not guess). 2 (family scope rule): approved; recorded in JEE_ONTOLOGY §4. 3 to 9: accepted. 6 (the palette is not lazy) stays a Gate E watch item with the initial JS (367.89 kB).
