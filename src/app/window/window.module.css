@@ -5,12 +5,13 @@
 .examScope {
   display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
+  min-width: 0;
   gap: var(--space-2);
 }
 
 .examScope select {
   min-height: var(--hit-min);
+  min-width: 0;
   max-width: 22rem;
   border: 1px solid var(--color-ink-2);
   border-radius: var(--radius-control);
@@ -19,10 +20,25 @@
   font: inherit;
 }
 
-.examLabel,
-.examNote {
+.examLabel {
   color: var(--color-ink-2);
   font-size: var(--text-14);
+}
+
+/* Narrow top bar: the label is still the select's name (read aloud) but no longer takes room, and the select shrinks. */
+@media (max-width: 899px) {
+  .examLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .examScope select {
+    max-width: 8.5rem;
+  }
 }
 
 .canvasFull {

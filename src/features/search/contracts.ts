@@ -70,4 +70,7 @@ export const KIND_TITLES: Readonly<Partial<Record<RecordKind, string>>> = {
   reference: 'References',
 };
 
+/** One record's kind in words ("Named reaction"), for a row; the group header uses the plural `kindTitle`. */
+export const kindName = (kind: RecordKind): string => `${kind.charAt(0).toUpperCase()}${kind.slice(1).replaceAll('_', ' ')}`;
+
 export const kindTitle = (kind: RecordKind): string => KIND_TITLES[kind] ?? `${kind.charAt(0).toUpperCase()}${kind.slice(1).replaceAll('_', ' ')}`;

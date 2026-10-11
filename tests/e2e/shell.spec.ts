@@ -47,8 +47,8 @@ test.describe('the shell and the design system', () => {
     await openApp(page);
 
     // IconButton + Tooltip: keyboard focus shows the tooltip with the reason; Esc hides it.
-    await page.getByRole('button', { name: 'Search' }).focus();
-    await expect(page.getByRole('tooltip')).toContainText('step 5.8');
+    await page.getByRole('button', { name: 'Undo' }).focus();
+    await expect(page.getByRole('tooltip')).toContainText('Nothing to undo');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('tooltip')).toHaveCount(0);
 

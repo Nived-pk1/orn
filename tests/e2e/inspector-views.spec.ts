@@ -61,7 +61,8 @@ test.describe('the inspector, remaining kinds', () => {
     await stored.getByRole('link', { name: /Aldol reaction of ethanal/ }).click();
     await expect(record(page)).toHaveAttribute('data-record-id', 'rxn_ethanal-aldol');
     await openLevel(page, 3);
-    const mechanismLink = record(page).locator('a[data-record-id^="mec_"]').first();
+    // the outcome's own link opens the mechanism at its variant (the reaction's mechanism line, in L2, names the mechanism without one)
+    const mechanismLink = record(page).locator('[aria-label^="Outcome"] a[data-record-id^="mec_"]').first();
     await mechanismLink.click();
     await expect(record(page)).toHaveAttribute('data-record-id', 'mec_aldol-ethanal');
     const focused = record(page).locator('[data-variant-id][data-focused]');

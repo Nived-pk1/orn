@@ -10,7 +10,7 @@ import { Command } from 'cmdk';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useStore } from 'zustand';
 import { Dialog } from '@/ui/primitives';
-import { kindTitle, type PaletteCommand, type SearchPorts } from './contracts';
+import { kindName, kindTitle, type PaletteCommand, type SearchPorts } from './contracts';
 import { createPaletteModel } from './palette-model';
 import { HEADER_ROW_HEIGHT, LIST_HEIGHT, nextHit, scrollToShow, windowOf, type PaletteRow } from './rows';
 import { matchWords } from './words';
@@ -169,7 +169,7 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
                 >
                   <span className={styles.title}>
                     {row.hit.title}
-                    <span className={styles.why}> · {kindTitle(row.kind)}</span>
+                    <span className={styles.why}> · {kindName(row.kind)}</span>
                   </span>
                   <span className={styles.why}>{matchWords(row.hit, ports.factsOf(row.hit.ref))}</span>
                 </Command.Item>

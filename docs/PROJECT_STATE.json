@@ -78,11 +78,13 @@
     "5.5c",
     "5.5d",
     "5.6a",
-    "5.6b"
+    "5.6b",
+    "5.7",
+    "5.8"
   ],
   "nextPhase": 5,
-  "nextStep": "5.8",
-  "nextStepTitle": "Phase 5, step 5.8 - Palette and search (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.7 (interaction: pointer machine, keyboard map, context menu, live region, touch, List view, keyboard-only walk) is done and awaits the human review; 5.6b is accepted.",
+  "nextStep": "5.9a",
+  "nextStepTitle": "Phase 5, step 5.9a - Import UI (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.8 (palette, search, commands, exam scope with outside-scope dimming, undo / redo bound to the store) is done and awaits the human review; 5.7 is accepted (2026-10-11).",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -127,7 +129,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command at the close of step 5.5d (Vitest 4.1.11: 336 files, 4,937 tests; before the session 326 files, 4,872 tests, HEAD c5083d1; per part: arrows 328 / 4,894, completeness 336 / 4,937); build:smoke green, initial JS 372.55 kB gzip; the full e2e as one run: 72 passed 1 skipped (Chromium 62 and the skipped, Firefox 5, WebKit 5) (PROGRESS.md \"Phase 5, step 5.5d, part 3\"); earlier: step 5.5c 326 files, 4,872 tests",
+    "npmRunCheck": "passed as ONE command at the close of step 5.8 (Vitest 4.1.11: 370 files, 5,298 tests; before the session 362 files, 5,234 tests, HEAD 23c4243; after the 5.7 review 363 / 5,239, after part 1 367 / 5,279, after part 2 370 / 5,298); build:smoke green, initial JS 367.89 kB gzip (cmdk and its Radix pieces about 5.8 kB of it); the full e2e as one run (npx playwright test, all three projects, 3.6 min): 101 passed, 1 skipped (the 5.1d fixme), 0 failed: Chromium 89 and the skipped, Firefox 6, WebKit 6 (PROGRESS.md \"Phase 5, step 5.8, part 3\"); earlier: passed as ONE command at the close of step 5.5d (Vitest 4.1.11: 336 files, 4,937 tests; before the session 326 files, 4,872 tests, HEAD c5083d1; per part: arrows 328 / 4,894, completeness 336 / 4,937); build:smoke green, initial JS 372.55 kB gzip; the full e2e as one run: 72 passed 1 skipped (Chromium 62 and the skipped, Firefox 5, WebKit 5) (PROGRESS.md \"Phase 5, step 5.5d, part 3\"); earlier: step 5.5c 326 files, 4,872 tests",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -359,6 +361,11 @@
     "Carried (step 5.5c close): the arranged overview's drawing is wide (1,428 x 840 on the demo); with more than 5 columns the fitted scale falls toward the LOD 1 threshold (5.5d may need a smaller-grid hint). PRS-004 stacks boxes that share a cell (warned, not repaired). Initial JS 368.41 kB gzip (400 kB target stands, Gate E watch). The arrangement of the demo and the gaps (2 x and 1.5 x spacing.layer) are REVIEW REQUIRED for the user.",
     "NEW (step 5.5d): initial JS 372.55 kB gzip (400 kB target); lazy loading is decided at Gate E.",
     "NEW (step 5.5d): the chip room the layout reserves is the chip's own size (20 px high); on the ELK overview of a file without cells a chip may touch another label box (28 px made the real-ELK overview stop settling).",
-    "NEW (step 5.5d): the storage warning is also asked at boot with persisted() (REVIEW REQUIRED 1 of the 5.5d close); the Unanchored list is a plain list until 5.8."
+    "NEW (step 5.5d): the storage warning is also asked at boot with persisted() (REVIEW REQUIRED 1 of the 5.5d close); the Unanchored list is a plain list until 5.8.",
+    "NEW (step 5.8 close): initial JS 367.89 kB gzip (354.29 at the start of the session, +13.6 kB: the palette, cmdk and its Radix pieces about 5.8 kB, the exam scope, the top bar); target 400 kB, build:smoke fails over it. The palette could be loaded lazily (a Gate E decision).",
+    "NEW (step 5.8, REVIEW REQUIRED): the exam-scope selector starts at All (no exam scope), not at the latest official or provisional version JEE_ONTOLOGY section 3 describes; a family is outside the exam scope when it has reactions and all of them are (the family's own record is not used), recorded in GRAPH_SEMANTICS and ADR-037. The demo has no all-outside family under either version (JEE Main: 26 official, 1 outside = Beckmann, unanchored; Advanced: 26 official, 1 enrichment).",
+    "NEW (step 5.8): the palette orders its groups by the best hit (a query that fits several reaction names lists Reactions before Species); \"Choose the exam scope\" is one command per choice; Alt+Enter (reaction explorer) is not bound (Phase 7); the palette is not lazily loaded.",
+    "NEW (step 5.7 review, ADR-038 \"Mechanism pictures\"): Phase 6 row 6.5 attaches the user's own mechanism images to a mechanism or a step (asset records, <img> with a blob URL only), shown first in the mechanism view; a new Phase 8 step \"Arrow-pushing diagrams\" draws each mechanism step from the structured data (static drawings; arrow-pushing moves from ARCHITECTURALLY SUPPORTED to REQUIRED; animation stays FUTURE). Phase 8 also: family boxes at least 44 px on coarse pointers (the 5.7 review).",
+    "NEW (step 5.8): Undo and Redo are bound to the store and unavailable with reasons; Phase 5 has no editing, so they stay unavailable until Phase 6 (tested with a stub store that has history). The Replace-with-the-demo confirm dialog now lives in the window (the palette command and the Dataset button share it)."
   ]
 }
