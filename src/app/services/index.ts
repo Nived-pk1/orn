@@ -30,12 +30,14 @@ export { L4_QUIET_MS, SEARCH_CACHE_QUIET_MS, SEARCH_QUIET_MS } from './timing';
 export { MEMORY_SNAPSHOT_LIMIT } from './memory-store';
 export type {
   Durability,
+  EarlierImport,
   ExportAnswer,
   FlowOptions,
   FlowRefusal,
   Flows,
   ImportApplyAnswer,
   ImportPreviewAnswer,
+  LastImport,
   RestoreAnswer,
   UndoRefusal,
 } from './flow-types';

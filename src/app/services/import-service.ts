@@ -15,19 +15,21 @@ import { durabilityOf, guardStore } from './flow-ports';
 import { cancelledRefusal, isRoute, readOnlyRefusal, routeOf } from './flow-route';
 import { loadChunk } from './lazy-chunk';
 import type { InProcessImport } from './import-inprocess';
-import type { FlowOptions, ImportApplyAnswer, ImportFlows, ImportPreviewAnswer } from './flow-types';
+import type { EarlierImport, FlowOptions, ImportApplyAnswer, ImportFlows, ImportPreviewAnswer } from './flow-types';
 
 type Path = 'worker' | 'in_process';
 /** What the report records about the batch's source (decision g). */
 interface BatchMeta {
   readonly sourceSha256: string | undefined;
   readonly clockNowIso: string;
+  /** The stored batch of the same file, when there is one (its clock was reused). */
+  readonly earlier?: EarlierImport;
 }
 
 const UNKNOWN = 'no such pending import: it was cancelled, replaced by a newer preview, already applied, or lost with a restarted worker';
 const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
-export type ImportService = Omit<ImportFlows, 'undo'>;
+export type ImportService = Omit<ImportFlows, 'undo' | 'lastImport'>;
 
 export function createImportService(deps: FlowDeps): ImportService {
   const { store, gate, log, router, ids } = deps;
@@ -36,8 +38,11 @@ export function createImportService(deps: FlowDeps): ImportService {
   const metas = new Map<string, BatchMeta>();
   let activeOp: Operation | undefined;
   let workerNow = '';
+  /** The clock a re-import of the same file reuses (step 5.9a, PERSISTENCE section 6); undefined: the injected clock. Set only while a gated call runs. */
+  let clockOverride: string | undefined;
+  const clockNow = (): string => clockOverride ?? ids.now();
 
-  const idData = (): IdData => ({ nowIso: ids.now(), seed: Math.floor(deps.env.random.next() * 0x1_0000_0000) });
+  const idData = (): IdData => ({ nowIso: clockNow(), seed: Math.floor(deps.env.random.next() * 0x1_0000_0000) });
 
   /** The report gets the source's SHA-256 and the clock time used when it is stored. */
   const withMeta = (report: ImportBatchReport, meta: BatchMeta | undefined): ImportBatchReport =>
@@ -91,7 +96,7 @@ export function createImportService(deps: FlowDeps): ImportService {
         assetStage: deps.assetStage.port,
         ids: {
           now: () => {
-            workerNow = ids.now();
+            workerNow = clockNow();
             return workerNow;
           },
         },
@@ -120,6 +125,26 @@ export function createImportService(deps: FlowDeps): ImportService {
     return { ok: false, code: 'WORKER_DOWN', message: `the compute worker could not answer (${result.error.code}: ${result.error.message}); nothing was imported`, inProcessAvailable: true };
   };
 
+  /** The newest stored batch of the same file (same SHA-256) that recorded the clock it used; the files before 5.1c have none. */
+  const earlierBatchOf = async (sha: string | undefined): Promise<{ readonly earlier: EarlierImport; readonly clockNowIso: string } | undefined> => {
+    if (sha === undefined) return undefined;
+    for (const row of await deps.durable.listImportBatches()) {
+      const report = row.report;
+      if (typeof report !== 'object' || report === null || Array.isArray(report)) continue;
+      const found = report as Record<string, unknown>;
+      if (found.sourceSha256 !== sha || typeof found.clockNowIso !== 'string') continue;
+      return {
+        clockNowIso: found.clockNowIso,
+        earlier: {
+          batchId: row.id,
+          appliedAt: typeof found.appliedAt === 'string' ? found.appliedAt : row.createdAt,
+          fileName: typeof found.fileName === 'string' ? found.fileName : 'an earlier file',
+        },
+      };
+    }
+    return undefined;
+  };
+
   /** A new pending batch replaces the old one: its path and meta go with it. */
   const remember = (batchId: string, path: Path, meta: BatchMeta): void => {
     paths.clear();
@@ -146,7 +171,9 @@ export function createImportService(deps: FlowDeps): ImportService {
       const route = routeOf(deps.replica, options);
       if (!isRoute(route)) return route;
       return gatedPreview('previewing the file', options, async (task) => {
-        const sha = hashOf(source);
+        const sourceSha256 = await hashOf(source);
+        const before = await earlierBatchOf(sourceSha256);
+        clockOverride = before?.clockNowIso;
         let answer: ImportPreviewAnswer;
         let nowIso: string;
         if (route.kind === 'worker') {
@@ -167,8 +194,11 @@ export function createImportService(deps: FlowDeps): ImportService {
             answer = outcome.ok ? { ok: true, plan: outcome.plan, inProcess: true } : outcome;
           }
         }
-        if (answer.ok) remember(answer.plan.preview.batchId, route.kind === 'worker' ? 'worker' : 'in_process', { sourceSha256: await sha, clockNowIso: nowIso });
-        return answer;
+        clockOverride = undefined;
+        if (!answer.ok) return answer;
+        const earlier = before?.earlier;
+        remember(answer.plan.preview.batchId, route.kind === 'worker' ? 'worker' : 'in_process', { sourceSha256, clockNowIso: nowIso, ...(earlier === undefined ? {} : { earlier }) });
+        return earlier === undefined ? answer : { ...answer, earlierImport: earlier };
       });
     },
 
@@ -180,8 +210,9 @@ export function createImportService(deps: FlowDeps): ImportService {
       if (path === undefined) return { ok: false, code: 'UNKNOWN_BATCH', message: UNKNOWN };
       const route = routeOf(deps.replica, path === 'in_process' ? { inProcess: true } : undefined);
       if (!isRoute(route)) return route;
-      const sourceSha256 = metas.get(batchId)?.sourceSha256;
+      const meta = metas.get(batchId);
       return gatedPreview('revising the plan', options, async (task) => {
+        clockOverride = meta?.clockNowIso; // the plan is revised with the clock of its preview, so the records do not change under the user
         let answer: ImportPreviewAnswer;
         let nowIso: string;
         if (route.kind === 'worker') {
@@ -197,8 +228,11 @@ export function createImportService(deps: FlowDeps): ImportService {
           const outcome = await loaded.value.session.revise(batchId, request, task);
           answer = outcome.ok ? { ok: true, plan: outcome.plan, inProcess: true } : outcome;
         }
-        if (answer.ok) remember(answer.plan.preview.batchId, route.kind === 'worker' ? 'worker' : 'in_process', { sourceSha256, clockNowIso: nowIso });
-        return answer;
+        clockOverride = undefined;
+        if (!answer.ok) return answer;
+        const earlier = meta?.earlier;
+        remember(answer.plan.preview.batchId, route.kind === 'worker' ? 'worker' : 'in_process', { sourceSha256: meta?.sourceSha256, clockNowIso: nowIso, ...(earlier === undefined ? {} : { earlier }) });
+        return earlier === undefined ? answer : { ...answer, earlierImport: earlier };
       });
     },
 

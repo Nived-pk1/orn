@@ -1,17 +1,25 @@
 /**
  * The top bar's controls (UI_ARCHITECTURE §2): what exists is enabled; what does not exist yet is listed, disabled, with the step that
- * brings it (note E8). The file menu's import and export are the full import and export screens (5.9a, 5.9b): until then the
- * first-run screen is the only way in. Step 5.8 adds Search (the palette), the exam-scope selector and Undo / Redo bound to the store.
+ * brings it (note E8). The file menu's import is the import screen (5.9a); export is 5.9b. Step 5.8 adds Search (the palette), the exam-scope selector and Undo / Redo bound to the store.
  */
 import { useSyncExternalStore } from 'react';
-import { IconButton, Menu, useToasts } from '@/ui/primitives';
+import { IconButton, Menu, useToasts, type MenuItem } from '@/ui/primitives';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 
-const FILE_ITEMS = [
-  { id: 'import', label: 'Import a file', unavailable: 'step 5.9a (use the first-run screen until then)' },
+/** What the File menu needs of the window (step 5.9a): why an import cannot start, and the two actions. */
+export interface FileBinding {
+  /** Why "Import a file..." cannot run now (a read-only tab, another operation); undefined: it can. */
+  readonly reason: string | undefined;
+  readonly undoReason: string | undefined;
+  readonly onImport: () => void;
+  readonly onUndo: () => void;
+}
+
+const fileItems = (file: FileBinding): readonly MenuItem[] => [
+  { id: 'import', label: 'Import a file...', ...(file.reason === undefined ? { onSelect: file.onImport } : { unavailable: file.reason }) },
   { id: 'export', label: 'Export', unavailable: 'step 5.9b' },
-  { id: 'undo_import', label: 'Undo import', unavailable: 'step 5.9a' },
-] as const;
+  { id: 'undo_import', label: 'Undo import', ...(file.undoReason === undefined ? { onSelect: file.onUndo } : { unavailable: file.undoReason }) },
+];
 
 /** What Undo and Redo need of the store (the canonical store fits; a test passes a stub that has history). */
 export interface HistoryBinding {
@@ -55,10 +63,10 @@ function History(props: { readonly store: HistoryBinding }) {
   );
 }
 
-export function TopBar(props: { readonly onSearch: () => void; readonly history: HistoryBinding; readonly exam: ExamScopeBinding }) {
+export function TopBar(props: { readonly onSearch: () => void; readonly history: HistoryBinding; readonly exam: ExamScopeBinding; readonly file: FileBinding }) {
   return (
     <>
-      <Menu label="File" items={FILE_ITEMS} />
+      <Menu label="File" items={fileItems(props.file)} />
       <IconButton label="Search" icon="search" onClick={props.onSearch} aria-keyshortcuts="Control+K Meta+K" />
       <ExamScopeSelector binding={props.exam} />
       <History store={props.history} />

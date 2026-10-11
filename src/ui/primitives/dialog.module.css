@@ -8,6 +8,10 @@
   color: var(--color-ink);
 }
 
+.wide {
+  width: min(960px, calc(100vw - 2 * var(--space-4)));
+}
+
 .dialog::backdrop {
   background: var(--color-scrim);
 }

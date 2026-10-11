@@ -6,7 +6,7 @@
 import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import { useApp } from './context';
-import type { ImportFlow } from './use-import-flow';
+import type { ImportActions } from './use-import-actions';
 
 export function unavailableReason(mode: string | null, reason: string | null): string | undefined {
   if (mode === 'writer') return undefined;
@@ -16,8 +16,8 @@ export function unavailableReason(mode: string | null, reason: string | null): s
 }
 
 /** The confirm step of "Replace with the demo dataset": rendered once by the window, so the palette command and the button share it. */
-export function ReplaceDialog(props: { readonly open: boolean; readonly onClose: () => void; readonly flow: ImportFlow }) {
-  const { flow, onClose } = props;
+export function ReplaceDialog(props: { readonly open: boolean; readonly onClose: () => void; readonly imports: ImportActions }) {
+  const { imports, onClose } = props;
   return (
     <Dialog
       open={props.open}
@@ -30,7 +30,7 @@ export function ReplaceDialog(props: { readonly open: boolean; readonly onClose:
             variant="primary"
             onClick={() => {
               onClose();
-              flow.loadDemo();
+              imports.loadDemo();
             }}
           >
             Replace
@@ -43,17 +43,17 @@ export function ReplaceDialog(props: { readonly open: boolean; readonly onClose:
   );
 }
 
-export function DatasetActions(props: { readonly flow: ImportFlow; readonly onAskReplace: () => void }) {
+export function DatasetActions(props: { readonly imports: ImportActions; readonly onAskReplace: () => void }) {
   const { services } = useApp();
   const status = useSubscribable(services.status);
-  const { flow } = props;
-  const blocked = unavailableReason(status.mode, status.reason) ?? (flow.busy ? 'another operation is running' : undefined);
+  const { imports } = props;
+  const blocked = unavailableReason(status.mode, status.reason) ?? (imports.busy ? 'another operation is running' : undefined);
   return (
     <section aria-label="Replace the data">
       <h3>Replace the data</h3>
       <p>
         <Button {...(blocked === undefined ? { onClick: props.onAskReplace } : { unavailable: blocked })}>Replace with the demo dataset</Button>{' '}
-        <Button {...(blocked === undefined ? { onClick: flow.undoImport } : { unavailable: blocked })}>Undo import</Button>
+        <Button {...(blocked === undefined ? { onClick: imports.undoImport } : { unavailable: blocked })}>Undo import</Button>
       </p>
     </section>
   );

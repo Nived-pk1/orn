@@ -10,11 +10,12 @@ import type { FlowDeps } from './flow-deps';
 import { isRefusal, type Operation } from './flow-gate';
 import { durabilityOf, guardStore } from './flow-ports';
 import { cancelledRefusal, isRoute, readOnlyRefusal, routeOf } from './flow-route';
-import type { FlowOptions, RestoreAnswer, UndoRefusal } from './flow-types';
+import type { FlowOptions, LastImport, RestoreAnswer, UndoRefusal } from './flow-types';
 
 export interface RestoreService {
   restore(snapshotId: string, options?: FlowOptions): Promise<RestoreAnswer>;
   undo(options?: FlowOptions): Promise<RestoreAnswer | UndoRefusal>;
+  lastImport(): Promise<LastImport | undefined>;
 }
 
 export function createRestoreService(deps: FlowDeps): RestoreService {
@@ -71,6 +72,20 @@ export function createRestoreService(deps: FlowDeps): RestoreService {
 
   return {
     restore,
+    async lastImport() {
+      const newest = (await deps.durable.listImportBatches())[0];
+      if (newest === undefined) return undefined;
+      const report = (typeof newest.report === 'object' && newest.report !== null && !Array.isArray(newest.report) ? newest.report : {}) as Record<string, unknown>;
+      const text = (value: unknown, fallback: string): string => (typeof value === 'string' ? value : fallback);
+      return {
+        batchId: newest.id,
+        fileName: text(report.fileName, 'an earlier file'),
+        appliedAt: text(report.appliedAt, newest.createdAt),
+        format: text(report.format, 'unknown'),
+        mode: text(report.mode, 'unknown'),
+        undoable: typeof report.snapshotId === 'string',
+      };
+    },
     async undo(options) {
       const refused = readOnlyRefusal(store, 'undoing an import');
       if (refused !== undefined) return refused;

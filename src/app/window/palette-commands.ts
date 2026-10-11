@@ -15,9 +15,11 @@ export interface CommandDeps {
   readonly hasData: boolean;
   readonly writerMode: string | null;
   readonly writerReason: string | null;
-  readonly busy: boolean;
+  /** Why an import cannot start now (undefined: it can). */
+  readonly importReason: string | undefined;
   askReplace(): void;
   undoImport(): void;
+  pickFile(): void;
   readonly ui: NavigatorUiStores;
   readonly exams: ExamOptions;
 }
@@ -38,7 +40,8 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
   const view = ui.viewCommands.getState().commands;
   const onMap = mapReason(deps);
   const zoomReason = onMap ?? view?.zoomReason;
-  const importReason = unavailableReason(deps.writerMode, deps.writerReason) ?? (deps.busy ? 'another operation is running' : undefined);
+  const importReason = deps.importReason;
+  const undoReason = unavailableReason(deps.writerMode, deps.writerReason) ?? importReason;
   const listing = ui.overview.getState().mode === 'list';
   const familyOpen = ui.family.getState().open !== null;
   const withReason = (command: Omit<PaletteCommand, 'unavailable'>, reason: string | undefined): PaletteCommand =>
@@ -64,8 +67,9 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
   ];
 
   return [
+    withReason({ id: 'import-file', title: 'Import a file...', keywords: ['import', 'open', 'file', 'v6', 'load', 'package'], run: deps.pickFile }, importReason),
     withReason({ id: 'replace-demo', title: 'Replace with the demo dataset', keywords: ['load', 'import', 'demo'], run: deps.askReplace }, importReason),
-    withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, importReason),
+    withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, undoReason),
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),
     withReason({ id: 'zoom-out', title: 'Zoom out', keywords: ['map', 'view'], run: () => view?.zoomOut() }, zoomReason),

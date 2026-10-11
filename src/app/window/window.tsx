@@ -24,18 +24,17 @@ import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
 import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from "@/ui/state";
 import { useApp } from "./context";
-import { DatasetActions, ReplaceDialog } from "./dataset-actions";
+import { DatasetActions, ReplaceDialog, unavailableReason } from "./dataset-actions";
 import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
 import { FirstRun } from "./first-run";
-import { ImportPanel } from "./import-panel";
 import { MODES, NAVIGATOR_MODE } from "./modes";
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { TopBar } from "./top-bar";
 import styles from "./window.module.css";
-import { useImportFlow, type ImportFlow } from "./use-import-flow";
+import { useImportActions, type ImportActions } from "./use-import-actions";
 
 const countsOf = (
   state: CanonicalState,
@@ -66,14 +65,14 @@ function RecordCounts(props: {
 function DatasetView(props: {
   readonly counts: Readonly<Record<RecordKind, number>>;
   readonly empty: boolean;
-  readonly flow: ImportFlow;
+  readonly imports: ImportActions;
   readonly onAskReplace: () => void;
 }) {
   return (
     <section aria-label="Dataset">
       <h2>Dataset</h2>
       <RecordCounts counts={props.counts} />
-      <DatasetActions flow={props.flow} onAskReplace={props.onAskReplace} />
+      <DatasetActions imports={props.imports} onAskReplace={props.onAskReplace} />
       {props.empty ? (
         <p>
           Started empty. Nothing can be added in this version; authoring comes
@@ -87,11 +86,11 @@ function DatasetView(props: {
 function Canvas(props: {
   readonly mode: string;
   readonly counts: Readonly<Record<RecordKind, number>>;
-  readonly flow: ImportFlow;
+  readonly imports: ImportActions;
   readonly onAskReplace: () => void;
 }) {
   const { panels } = useApp();
-  const { flow } = props;
+  const { imports } = props;
   const startedEmpty = usePanels(panels, (s) => s.startEmptyDismissed);
   const onStartEmpty = useCallback(
     () => panels.getState().dismissStartEmpty(),
@@ -99,17 +98,15 @@ function Canvas(props: {
   );
   const empty = totalOf(props.counts) === 0;
   const showsNavigator = !empty && props.mode === NAVIGATOR_MODE;
-  // The import flow outlives the first-run screen: its dialog, banner and toast show after the data has arrived.
   return (
     <div className={showsNavigator ? styles.canvasFull : styles.canvas}>
       {empty && !startedEmpty ? (
-        <FirstRun flow={flow} onStartEmpty={onStartEmpty} />
+        <FirstRun imports={imports} onStartEmpty={onStartEmpty} />
       ) : showsNavigator ? (
         <NavigatorView />
       ) : (
-        <DatasetView counts={props.counts} empty={empty} flow={flow} onAskReplace={props.onAskReplace} />
+        <DatasetView counts={props.counts} empty={empty} imports={imports} onAskReplace={props.onAskReplace} />
       )}
-      <ImportPanel flow={flow} />
     </div>
   );
 }
@@ -145,7 +142,7 @@ function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
 
 export function Window() {
   const { panels, services, navigator, inspector: inspectorPorts } = useApp();
-  const flow = useImportFlow();
+  const { actions: imports, element: importElement } = useImportActions();
   const status = useSubscribable(services.status);
   const [asking, setAsking] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -168,9 +165,10 @@ export function Window() {
     hasData,
     writerMode: status.mode,
     writerReason: status.reason,
-    busy: flow.busy,
+    importReason: imports.reason,
     askReplace: () => setAsking(true),
-    undoImport: flow.undoImport,
+    undoImport: imports.undoImport,
+    pickFile: imports.pick,
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),
   };
@@ -224,6 +222,7 @@ export function Window() {
             <TopBar
               onSearch={() => setSearching(true)}
               history={services.store}
+              file={{ reason: imports.reason, undoReason: unavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport }}
               exam={{ exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log }}
             />
           }
@@ -238,7 +237,7 @@ export function Window() {
           }
           canvas={
             <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} counts={counts} flow={flow} onAskReplace={() => setAsking(true)} />
+              <Canvas mode={mode} counts={counts} imports={imports} onAskReplace={() => setAsking(true)} />
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"
@@ -260,7 +259,8 @@ export function Window() {
             </ErrorBoundary>
           }
         />
-        <ReplaceDialog open={asking} onClose={() => setAsking(false)} flow={flow} />
+        <ReplaceDialog open={asking} onClose={() => setAsking(false)} imports={imports} />
+        {importElement}
         <Palette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
       </NavigatorProvider>
     </ToastProvider>

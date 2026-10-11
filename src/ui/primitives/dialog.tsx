@@ -21,6 +21,8 @@ export interface DialogProps {
   readonly dismissOnBackdrop?: boolean;
   /** A CSS selector inside the dialog whose element takes the focus when it opens (default: the browser's first focusable element, the close button). */
   readonly initialFocus?: string;
+  /** `wide`: for a dialog that holds lists and choices (the import screen); the default is the narrow one. */
+  readonly size?: 'default' | 'wide';
 }
 
 const ACTIVATORS = 'button, [role="button"], [role="menuitem"], a[href], input, select, textarea, [tabindex]';
@@ -48,7 +50,7 @@ function openerNow(): HTMLElement | null {
 }
 
 export function Dialog(props: DialogProps) {
-  const { open, onClose, title, children, footer, dismissOnBackdrop = false, initialFocus } = props;
+  const { open, onClose, title, children, footer, dismissOnBackdrop = false, initialFocus, size = 'default' } = props;
   const element = useRef<HTMLDialogElement | null>(null);
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -93,7 +95,7 @@ export function Dialog(props: DialogProps) {
   };
 
   return (
-    <dialog ref={attach} className={styles.dialog} aria-labelledby={titleId} onCancel={onCancel} onClick={onBackdrop}>
+    <dialog ref={attach} className={size === 'wide' ? `${styles.dialog} ${styles.wide}` : styles.dialog} aria-labelledby={titleId} onCancel={onCancel} onClick={onBackdrop}>
       {open ? (
         <PortalContainerContext.Provider value={container}>
           <div className={styles.frame}>

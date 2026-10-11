@@ -49,9 +49,9 @@ describe('Replace with the demo dataset (Dataset mode)', () => {
     renderWithApp(a);
     const region = openDataset();
     fireEvent.click(within(region).getByRole('button', { name: 'Undo import' }));
-    await screen.findByText('Import undone: the data from before it is back.');
+    await screen.findByText(/^Import undone: the data from before it is back\. That was the import of earlier\.orn\.json; the dataset holds \d+ records again\./);
     fireEvent.click(within(screen.getByRole('region', { name: 'Replace the data' })).getByRole('button', { name: 'Undo import' }));
-    await screen.findByText('The import was not undone (UNKNOWN_BATCH): there is no import to undo');
+    await screen.findByText('Undo import: there is no import to undo.');
   });
 
   it('read-only, follower and session-only tabs get both buttons unavailable, with the reason', () => {

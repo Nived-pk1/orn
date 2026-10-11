@@ -43,7 +43,28 @@ export interface Durability {
   readonly notes: readonly string[];
 }
 
-export type ImportPreviewAnswer = { readonly ok: true; readonly plan: ImportPlan; readonly inProcess: boolean } | WorkerImportFailure | FlowRefusal;
+/** Step 5.9a (additive): the earlier import of the SAME file (its SHA-256 matched a stored batch report); the earlier clock was reused. */
+export interface EarlierImport {
+  readonly batchId: string;
+  readonly appliedAt: string;
+  readonly fileName: string;
+}
+
+export type ImportPreviewAnswer =
+  | { readonly ok: true; readonly plan: ImportPlan; readonly inProcess: boolean; readonly earlierImport?: EarlierImport }
+  | WorkerImportFailure
+  | FlowRefusal;
+
+/** Step 5.9a (additive): the newest import batch, as far as "Undo import" needs to say what it undoes. */
+export interface LastImport {
+  readonly batchId: string;
+  readonly fileName: string;
+  readonly appliedAt: string;
+  readonly format: string;
+  readonly mode: string;
+  /** False when the batch records no `pre_import` snapshot (an older report): Undo import answers `UNKNOWN_BATCH`. */
+  readonly undoable: boolean;
+}
 
 export type ImportApplyAnswer = (Extract<ImportApplyResult, { ok: true }> & Durability) | Extract<ImportApplyResult, { ok: false }> | FlowRefusal;
 
@@ -65,6 +86,8 @@ export interface ImportFlows {
   apply(batchId: string, plan: ImportPlan, options?: FlowOptions): Promise<ImportApplyAnswer>;
   /** Restores the `pre_import` snapshot of the newest import batch through the restore flow. `UNKNOWN_BATCH` when there is none. */
   undo(options?: FlowOptions): Promise<RestoreAnswer | UndoRefusal>;
+  /** The newest import batch (undefined: none), for the words of Undo import. */
+  lastImport(): Promise<LastImport | undefined>;
 }
 
 export interface UndoRefusal {

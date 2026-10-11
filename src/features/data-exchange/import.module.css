@@ -1,0 +1,131 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.file {
+  margin: 0;
+  font-size: var(--text-16);
+  overflow-wrap: anywhere;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.section h3 {
+  margin: 0;
+  font-size: var(--text-14);
+}
+
+.section p,
+.section ul {
+  margin: 0;
+}
+
+.muted {
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
+.counts {
+  padding-left: var(--space-4);
+  font-size: var(--text-14);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.listBox {
+  height: var(--import-list-height, 200px);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-rule);
+  font-size: var(--text-14);
+}
+
+.rowText {
+  flex: 1 1 16rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.select {
+  min-height: var(--hit-min);
+  max-width: 100%;
+  border: 1px solid var(--color-ink-2);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.warning {
+  color: var(--color-warning);
+}
+
+.review {
+  color: var(--color-review);
+}
+
+.word {
+  font-weight: 600;
+}
+
+.progress {
+  margin: 0;
+  font-size: var(--text-16);
+}
+
+.note {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-control);
+  font-size: var(--text-14);
+}
+
+.dropHint {
+  position: fixed;
+  inset: var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-accent);
+  border-radius: var(--radius-card);
+  background: var(--color-scrim);
+  color: var(--color-paper);
+  font-size: var(--text-20);
+  pointer-events: none;
+}

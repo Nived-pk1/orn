@@ -16,6 +16,8 @@ export interface ToastInput {
   readonly kind?: NoticeKind;
   readonly text: string;
   readonly autoDismissMs?: number;
+  /** One action of the toast (step 5.9a: "Undo import"); choosing it also dismisses the toast. */
+  readonly action?: { readonly label: string; readonly onAction: () => void };
 }
 
 export interface Toasts {
@@ -63,7 +65,25 @@ export function ToastProvider(props: { readonly children: ReactNode }) {
       <div className={styles.region} role="status" aria-live="polite" aria-relevant="additions text" aria-label="Notifications">
         {items.map((item) => (
           <div key={item.id} className={styles.toast}>
-            <Banner kind={item.kind ?? 'info'} actions={<Button variant="quiet" onClick={() => dismiss(item.id)}>Dismiss</Button>}>
+            <Banner
+              kind={item.kind ?? 'info'}
+              actions={
+                <>
+                  {item.action === undefined ? null : (
+                    <Button
+                      variant="quiet"
+                      onClick={() => {
+                        dismiss(item.id);
+                        item.action?.onAction();
+                      }}
+                    >
+                      {item.action.label}
+                    </Button>
+                  )}
+                  <Button variant="quiet" onClick={() => dismiss(item.id)}>Dismiss</Button>
+                </>
+              }
+            >
               {item.text}
             </Banner>
             {item.autoDismissMs === undefined ? null : <AutoDismiss ms={item.autoDismissMs} onDone={() => dismiss(item.id)} />}

@@ -1,15 +1,13 @@
 /** The first-run screen (UI_ARCHITECTURE §12): shown while the store holds zero records and "Start empty" was not chosen. */
-import { useRef } from 'react';
 import { useSubscribable } from '@/ui/hooks';
 import { Button, Skeleton } from '@/ui/primitives';
 import { useApp } from './context';
-import type { ImportFlow } from './use-import-flow';
+import type { ImportActions } from './use-import-actions';
 
-export function FirstRun(props: { readonly flow: ImportFlow; readonly onStartEmpty: () => void }) {
+export function FirstRun(props: { readonly imports: ImportActions; readonly onStartEmpty: () => void }) {
   const { services } = useApp();
   const status = useSubscribable(services.status);
-  const { flow } = props;
-  const picker = useRef<HTMLInputElement>(null);
+  const { imports } = props;
   const writable = status.mode === 'writer' || status.mode === 'session_only';
   const waiting = status.stage === 'booting' || status.mode === null;
   return (
@@ -23,28 +21,20 @@ export function FirstRun(props: { readonly flow: ImportFlow; readonly onStartEmp
       ) : (
         <>
           <p>
-            <Button variant="primary" disabled={flow.busy} onClick={flow.loadDemo}>
+            <Button variant="primary" disabled={imports.busy} onClick={imports.loadDemo}>
               Load demo dataset
             </Button>{' '}
-            <Button disabled={flow.busy} onClick={() => picker.current?.click()}>
+            <Button disabled={imports.busy} onClick={imports.pick}>
               Import a file
             </Button>{' '}
-            <Button disabled={flow.busy} onClick={props.onStartEmpty}>
+            <Button disabled={imports.busy} onClick={imports.pick}>
+              Import v6 export
+            </Button>{' '}
+            <Button disabled={imports.busy} onClick={props.onStartEmpty}>
               Start empty
             </Button>
           </p>
-          <input
-            ref={picker}
-            type="file"
-            hidden
-            aria-label="Choose a file to import"
-            accept=".json,.orn,.ornpkg,.zip,application/json"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              event.currentTarget.value = '';
-              if (file !== undefined) flow.chooseFile(file);
-            }}
-          />
+          <p>You can also drop a file anywhere on this window. The older app&apos;s export (v6) is read by the same screen, which shows what it found before anything changes.</p>
         </>
       )}
     </section>

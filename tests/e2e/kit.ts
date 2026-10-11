@@ -105,6 +105,32 @@ export async function chooseFile(page: Page, file: { name: string; mimeType: str
   await chooser.setFiles(file);
 }
 
+export interface UploadFile {
+  readonly name: string;
+  readonly mimeType: string;
+  readonly buffer: Buffer;
+}
+
+/** Step 5.9a: the file chooser behind the File menu's "Import a file...", for a dataset that already holds records. */
+export async function chooseFileViaMenu(page: Page, file: UploadFile): Promise<void> {
+  await page.getByRole('button', { name: 'File' }).click();
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('menuitem', { name: /Import a file\.\.\./ }).click()]);
+  await chooser.setFiles(file);
+}
+
+/** Step 5.9a: the first-run screen's "Import v6 export" (the same screen as "Import a file"). */
+export async function chooseV6(page: Page, file: UploadFile): Promise<void> {
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Import v6 export' }).click()]);
+  await chooser.setFiles(file);
+}
+
+export const importDialog = (page: Page) => page.getByRole('dialog', { name: 'Import summary' });
+
+/** Step 5.9a: the preview of the import screen is open; the heading is the dialog's title. */
+export async function expectPreview(page: Page, timeout = 90_000): Promise<void> {
+  await expect(page.getByRole('heading', { name: 'Import summary' })).toBeVisible({ timeout });
+}
+
 export async function secondTab(context: BrowserContext): Promise<Page> {
   return context.newPage();
 }

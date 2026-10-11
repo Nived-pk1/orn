@@ -2,10 +2,14 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { tierState } from '@/test-support/perf-kit';
+import { fakeLayout } from '@/test-support/inspector-kit';
 import { fakeApp, planOf, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 
 // jsdom has no showModal() / close() on <dialog>; the browser behaviour is proved by the e2e (tests/e2e/shell.spec.ts).
-beforeAll(stubDialog);
+beforeAll(() => {
+  stubDialog();
+  fakeLayout();
+});
 afterEach(cleanup);
 
 const APPLIED = { ok: true, revision: 1, snapshotId: 's', report: {}, reportSaved: true, saved: true, sessionOnly: false, save: null, inProcess: false, notes: [] };
@@ -53,7 +57,8 @@ describe('first run (the store holds zero records)', () => {
     expect(fileName).toBe('demo.orn.json');
     expect(request).toEqual({ mode: 'replace_all' });
     expect(options.inProcess).toBe(false);
-    expect(a.flows.apply).toHaveBeenCalledWith('batch-1', expect.objectContaining({ mode: 'replace_all' }), { inProcess: false });
+    expect(options.signal).toBeInstanceOf(AbortSignal);
+    expect(a.flows.apply).toHaveBeenCalledWith('batch-1', expect.objectContaining({ mode: 'replace_all' }), expect.objectContaining({ inProcess: false }));
   });
 
   it('a demo plan that cannot be confirmed shows its blockers and is not applied', async () => {
@@ -64,7 +69,7 @@ describe('first run (the store holds zero records)', () => {
     await screen.findByRole('heading', { name: 'Import summary' });
     expect(within(screen.getByRole('list', { name: 'Blockers' })).getByText('REF-001 on spc_x')).toBeTruthy();
     expect(button('Confirm').getAttribute('aria-disabled')).toBe('true');
-    expect(screen.getByRole('button', { name: 'Confirm', description: 'this file cannot be imported as it is' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Confirm', description: 'REF-001 on spc_x' })).toBeTruthy();
     fireEvent.click(button('Confirm'));
     expect(a.flows.apply).not.toHaveBeenCalled();
   });
@@ -91,7 +96,7 @@ describe('first run (the store holds zero records)', () => {
 });
 
 describe('Import a file', () => {
-  it('shows a plain summary (counts per kind, findings, decisions at their defaults), then Confirm applies', async () => {
+  it('shows the preview in words (counts per kind, findings, decisions at their defaults), then Confirm applies', async () => {
     const a = app();
     a.flows.preview.mockResolvedValue({
       ok: true,
@@ -105,15 +110,15 @@ describe('Import a file', () => {
     expect(a.flows.preview.mock.calls[0]?.[1]).toBe('mine.orn.json');
     expect(a.flows.preview.mock.calls[0]?.[2]).toEqual({ mode: 'replace_all' });
     const kinds = within(screen.getByRole('list', { name: 'Records per kind' }));
-    expect(kinds.getByText('species: 3 incoming (3 new, 0 identical, 0 conflicting)')).toBeTruthy();
-    expect(kinds.getByText('reaction: 2 incoming (2 new, 0 identical, 0 conflicting)')).toBeTruthy();
-    expect(screen.getByText('Findings in the result: E 0 / W 1 / I 0 / Review 0.')).toBeTruthy();
-    expect(within(screen.getByRole('list', { name: 'Decisions' })).getByText('Which hub class? a')).toBeTruthy();
-    expect(screen.getByText('Migrations applied to the file: v1-to-v2.')).toBeTruthy();
+    expect(kinds.getByText('species: 3 in the file — 3 new, 0 identical, 0 conflicting')).toBeTruthy();
+    expect(kinds.getByText('reaction: 2 in the file — 2 new, 0 identical, 0 conflicting')).toBeTruthy();
+    expect(screen.getByText(/0 errors, 1 warnings, 0 notes, 0 to review \(1 in all\)/)).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Decision: Which hub class?' })).toHaveProperty('value', 'a');
+    expect(screen.getByText(/The file was brought up to date first: v1-to-v2\./)).toBeTruthy();
     expect(a.flows.apply).not.toHaveBeenCalled();
     fireEvent.click(button('Confirm'));
     await screen.findByText('Imported 5 records from mine.orn.json.');
-    expect(a.flows.apply).toHaveBeenCalledWith('batch-1', expect.objectContaining({ mode: 'replace_all' }), { inProcess: false });
+    expect(a.flows.apply).toHaveBeenCalledWith('batch-1', expect.objectContaining({ mode: 'replace_all' }), expect.objectContaining({ inProcess: false }));
   });
 
   it('Cancel discards the pending batch and applies nothing', async () => {
@@ -127,7 +132,7 @@ describe('Import a file', () => {
     expect(screen.queryByRole('heading', { name: 'Import summary' })).toBeNull();
   });
 
-  it('blockers disable Confirm', async () => {
+  it('blockers disable Confirm and are listed', async () => {
     const a = app();
     a.flows.preview.mockResolvedValue({ ok: true, inProcess: false, plan: planOf({ canConfirm: false, blockers: ['an ERROR in the merged result'] }) });
     renderWithApp(a);
@@ -136,43 +141,44 @@ describe('Import a file', () => {
     expect(button('Confirm').getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(button('Confirm'));
     expect(a.flows.apply).not.toHaveBeenCalled();
-    expect(screen.getByText('an ERROR in the merged result')).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Blockers' })).getByText('an ERROR in the merged result')).toBeTruthy();
   });
 
-  it('INVALID_META is said in words and merge is offered', async () => {
+  it('a file with no usable dataset information is shown as a merge, and the preview says so', async () => {
     const a = app();
     a.flows.preview.mockResolvedValueOnce({ ok: false, code: 'INVALID_META', message: 'datasetId is empty' });
+    a.flows.preview.mockResolvedValueOnce({ ok: true, plan: planOf({}, { mode: 'merge' }), inProcess: false });
     renderWithApp(a);
     choose('x.orn.json');
-    await screen.findByText(/dataset information was refused \(datasetId is empty\)/);
-    fireEvent.click(button('Merge instead'));
     await screen.findByRole('heading', { name: 'Import summary' });
     expect(a.flows.preview.mock.calls[1]?.[2]).toEqual({ mode: 'merge' });
+    expect(screen.getByText(/no usable dataset information \(datasetId is empty\).*shown as a merge/)).toBeTruthy();
   });
 
-  it('a worker that is down offers the in-page path, and the second ask uses it', async () => {
+  it('a worker that is down offers the in-page path (never taken silently), and the second ask uses it', async () => {
     const a = app();
     a.flows.preview.mockResolvedValueOnce({ ok: false, code: 'WORKER_DOWN', message: 'no compute worker', inProcessAvailable: true });
     a.flows.preview.mockResolvedValueOnce({ ok: true, plan: planOf(), inProcess: true });
     renderWithApp(a);
     choose('x.orn.json');
-    await screen.findByText(/background worker is down \(no compute worker\)/);
-    fireEvent.click(button('Run on this page'));
+    await screen.findByText(/worker that reads files stopped \(no compute worker\)/);
+    expect(a.flows.preview).toHaveBeenCalledTimes(1);
+    fireEvent.click(button('Read it on this page'));
     await screen.findByRole('heading', { name: 'Import summary' });
     expect(a.flows.preview.mock.calls[1]?.[3]).toMatchObject({ inProcess: true });
     fireEvent.click(button('Confirm'));
     await waitFor(() => expect(a.flows.apply).toHaveBeenCalled());
-    expect(a.flows.apply.mock.calls[0]?.[2]).toEqual({ inProcess: true });
+    expect(a.flows.apply.mock.calls[0]?.[2]).toMatchObject({ inProcess: true });
   });
 
-  it('refusals are plain text with their code; Dismiss clears them', async () => {
+  it('refusals are plain text; Dismiss clears them', async () => {
     const a = app();
     a.flows.preview.mockResolvedValueOnce({ ok: false, code: 'NEWER_SCHEMA', message: 'schema 9 is newer' });
     renderWithApp(a);
     choose('x.orn.json');
-    await screen.findByText('The file was not imported (NEWER_SCHEMA): schema 9 is newer');
+    await screen.findByText(/saved by a newer version of the app/);
     fireEvent.click(button('Dismiss'));
-    expect(screen.queryByText(/NEWER_SCHEMA/)).toBeNull();
+    expect(screen.queryByText(/newer version of the app/)).toBeNull();
   });
 
   it('an apply that is refused says so; an apply that is not saved yet says "not saved"', async () => {
@@ -182,7 +188,7 @@ describe('Import a file', () => {
     choose('x.orn.json');
     await screen.findByRole('heading', { name: 'Import summary' });
     fireEvent.click(button('Confirm'));
-    await screen.findByText('The import was not applied (STALE_REVISION): the data changed');
+    expect((await screen.findByRole('alert')).textContent).toMatch(/Your data changed since the preview/);
     cleanup();
     const b = app();
     b.flows.apply.mockResolvedValueOnce({ ...APPLIED, saved: false, save: null, notes: ['a note'], reportSaved: false, reportError: 'quota' });
@@ -196,14 +202,14 @@ describe('Import a file', () => {
     expect(toast.textContent).toContain('The import report could not be stored (quota).');
   });
 
-  it('a session-only import says nothing is saved', async () => {
+  it('a session-only import says applied, not saved: nothing is stored in this tab', async () => {
     const a = app({ status: { mode: 'session_only', save: null } });
     a.flows.apply.mockResolvedValueOnce({ ...APPLIED, saved: false, sessionOnly: true });
     renderWithApp(a);
     choose('x.orn.json');
     await screen.findByRole('heading', { name: 'Import summary' });
     fireEvent.click(button('Confirm'));
-    await screen.findByText('Imported 5 records from x.orn.json. Nothing is saved in this session.');
+    await screen.findByText(/Applied 5 records from x\.orn\.json, not saved: nothing is stored in this tab\./);
   });
 
   it('Cancel while the file is being read aborts the preview', async () => {
@@ -215,9 +221,9 @@ describe('Import a file', () => {
     });
     renderWithApp(a);
     choose('big.orn.json');
-    await screen.findByText('Reading big.orn.json…');
+    await screen.findByText('big.orn.json');
     fireEvent.click(button('Cancel'));
-    await waitFor(() => expect(screen.queryByText(/Reading big/)).toBeNull());
+    await waitFor(() => expect(screen.queryByText('big.orn.json')).toBeNull());
     expect(signal?.aborted).toBe(true);
   });
 
@@ -227,7 +233,7 @@ describe('Import a file', () => {
     choose('<img src=x onerror=alert(1)>.json');
     await screen.findByRole('heading', { name: 'Import summary' });
     expect(document.querySelector('img')).toBeNull();
-    expect(screen.getByRole('heading', { name: '<img src=x onerror=alert(1)>.json' })).toBeTruthy();
+    expect(screen.getByText('<img src=x onerror=alert(1)>.json')).toBeTruthy();
   });
 });
 
