@@ -41,6 +41,8 @@ const kindOf = (type: string): PointerKind => (type === 'touch' || type === 'pen
 
 export function bindPointer(element: Element, handlers: PointerHandlers, timers: PointerTimers = windowTimers): () => void {
   let state: PointerState = INITIAL_POINTER_STATE;
+  /** A hold opened the menu: the browser's own click after the release is suppressed (it would move the focus and dismiss the menu). */
+  let holdOpened = false;
   const cancels = new Map<number, () => void>();
 
   const run = (effect: PointerEffect): void => {
@@ -52,6 +54,7 @@ export function bindPointer(element: Element, handlers: PointerHandlers, timers:
       case 'confirm':
         return handlers.onConfirm?.(effect.hit);
       case 'contextMenu':
+        holdOpened = state.phase === 'held';
         return handlers.onContextMenu?.(effect.hit, { x: effect.x, y: effect.y });
       case 'startTimer': {
         const token = effect.token;
@@ -78,6 +81,7 @@ export function bindPointer(element: Element, handlers: PointerHandlers, timers:
 
   const down = (event: Event): void => {
     const e = event as PointerEvent;
+    holdOpened = false;
     feed({ type: 'down', id: e.pointerId, kind: kindOf(e.pointerType), x: e.clientX, y: e.clientY, button: e.button, hit: hitOf(e.target) });
   };
   const move = (event: Event): void => {
@@ -95,15 +99,31 @@ export function bindPointer(element: Element, handlers: PointerHandlers, timers:
     feed({ type: 'context', x: e.clientX, y: e.clientY, hit: hitOf(e.target) });
   };
 
+  // After a hold the browser still sends touchend and then the compatibility mousedown / mouseup / click at the finger. The mousedown
+  // would move the focus onto the drawing and dismiss the menu that just opened, so while `holdOpened` they are cancelled (the flag
+  // is cleared by the next pointerdown).
+  const endTouch = (event: Event): void => {
+    if (holdOpened && event.cancelable) event.preventDefault();
+  };
+  const compat = (event: Event): void => {
+    if (holdOpened && event.cancelable) event.preventDefault();
+  };
+
   const doc = element.ownerDocument;
   element.addEventListener('pointerdown', down);
   element.addEventListener('contextmenu', context);
+  element.addEventListener('touchend', endTouch, { passive: false });
+  element.addEventListener('mousedown', compat);
+  element.addEventListener('click', compat);
   doc.addEventListener('pointermove', move);
   doc.addEventListener('pointerup', up);
   doc.addEventListener('pointercancel', cancel);
   return () => {
     element.removeEventListener('pointerdown', down);
     element.removeEventListener('contextmenu', context);
+    element.removeEventListener('touchend', endTouch);
+    element.removeEventListener('mousedown', compat);
+    element.removeEventListener('click', compat);
     doc.removeEventListener('pointermove', move);
     doc.removeEventListener('pointerup', up);
     doc.removeEventListener('pointercancel', cancel);

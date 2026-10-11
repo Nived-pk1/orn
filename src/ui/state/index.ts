@@ -18,10 +18,12 @@ export {
   createFamilyStore,
   createFiltersStore,
   createNavigatorUiStores,
+  createOverviewStore,
   createSelectionStore,
   createViewportsStore,
   DEFAULT_FILTERS,
   NO_EXPANSION_STATE,
+  OVERVIEW_MODES,
 } from './navigator-stores';
 export type {
   ActiveExam,
@@ -35,6 +37,9 @@ export type {
   FiltersState,
   FiltersStore,
   NavigatorUiStores,
+  OverviewMode,
+  OverviewState,
+  OverviewStore,
   SavedViewport,
   Selected,
   SelectionState,

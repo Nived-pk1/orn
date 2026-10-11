@@ -101,6 +101,7 @@ describe('createNavigatorUi', () => {
       collapsedEdgeIds: [],
       viewports: { navigator: { x: 1, y: 2, scale: 3 } },
       openFamily: null,
+      overviewMode: 'map',
     });
   });
 

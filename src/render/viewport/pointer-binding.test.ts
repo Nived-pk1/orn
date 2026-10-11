@@ -93,6 +93,21 @@ describe('the pointer binding, with a fake clock', () => {
     expect(log).toEqual(['menu b 30,40']);
   });
 
+  it('after a hold the browsers own touchend, mousedown and click are cancelled (they would dismiss the menu); the next press clears that', () => {
+    fire(node('b'), 'pointerdown', { kind: 'touch' });
+    timers.advance(500);
+    fire(document, 'pointerup', { kind: 'touch' });
+    for (const type of ['touchend', 'mousedown', 'click']) {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      node('b').dispatchEvent(event);
+      expect(event.defaultPrevented, type).toBe(true);
+    }
+    fire(node('a'), 'pointerdown');
+    const later = new Event('mousedown', { bubbles: true, cancelable: true });
+    node('a').dispatchEvent(later);
+    expect(later.defaultPrevented).toBe(false);
+  });
+
   it('a drag over 4 px pans: no click, no menu, and the timer is gone', () => {
     fire(node('a'), 'pointerdown');
     fire(document, 'pointermove', { x: 20 });

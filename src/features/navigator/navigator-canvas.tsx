@@ -4,16 +4,18 @@
  * when there is no Scene yet and 300 ms have passed. The pointer state machine (step 5.7) classifies presses on the drawing: a click selects
  * the node or edge under it (empty canvas clears) and, once its 300 ms window has passed, shows it in the inspector; a double click on a
  * family opens its page; a long press or right click opens the context menu. The keyboard map and the menu are `use-canvas-input.ts`.
- * The overview does not expand hubs.
+ * The overview does not expand hubs. A List toggle (step 5.7) shows the same projection as two accessible tables instead of the map;
+ * the choice is saved in `uiState`.
  * The legend of the family groups (step 5.5c) sits under the toolbar. The layer commit count is written to a data attribute by hand (no React state) so a test can prove pan and zoom render nothing.
  */
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
 import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
 import type { Scene } from '@/render/scene';
 import { Banner, Button, ContextMenu, Skeleton } from '@/ui/primitives';
 import { depictionBindingOf } from './depictions';
+import { ListView } from './list-view';
 import { keyOf, legendOf } from './legend';
 import { useCanvasInput } from './use-canvas-input';
 import { useNavigator, useNavigatorState } from './navigator-context';
@@ -35,11 +37,13 @@ export function openFamilyReason(selected: { readonly kind: 'node' | 'edge' } | 
   return undefined;
 }
 
-export function NavigatorCanvas() {
+export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const { ports, announcer } = useNavigator();
   const announce = announcer.say;
   const state = useNavigatorState();
   const selected = useStore(ports.ui.selection, (s) => s.selected);
+  const mode = useStore(ports.ui.overview, (s) => s.mode);
+  const listing = mode === 'list';
   const [controller, setController] = useState<ViewportController | null>(null);
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
   const [unanchoredOpen, setUnanchoredOpen] = useState(false);
@@ -66,7 +70,16 @@ export function NavigatorCanvas() {
   const isHub = useCallback((id: string): boolean => state.hubIds.includes(id), [state.hubIds]);
   const openFamily = useCallback((hubId: string): void => ports.ui.family.getState().openFamily(hubId), [ports]);
   const [svg, setSvg] = useState<SVGSVGElement | null>(null);
-  const input = useCanvasInput({ ui: ports.ui, scene, isHub, controller, svg, announce });
+  const input = useCanvasInput({ ui: ports.ui, scene, isHub, controller, svg, announce, ...(props.returnTo === undefined ? {} : { returnTo: props.returnTo }) });
+  // Back from a family page the focus returns to the overview: the drawing (on the family just left), or the list's tab stop.
+  const returning = useRef(props.returnTo !== undefined);
+  useEffect(() => {
+    if (!returning.current) return;
+    const target = listing ? root.current?.querySelector<HTMLElement>('[data-view="list"] [role="row"][tabindex="0"]') : svg;
+    if (target === null || target === undefined) return;
+    returning.current = false;
+    target.focus({ preventScroll: true });
+  });
   const onSceneHover = useCallback((hit: SceneHit | null): void => setHoveredId(hit === null ? undefined : hit.id), []);
   // The zoom level is said once the view has been still (never per wheel frame), and not for the first view (a fit or a restore).
   const said = useRef<number | undefined>(initialViewport === undefined ? undefined : Math.round(initialViewport.scale * 100));
@@ -96,13 +109,22 @@ export function NavigatorCanvas() {
   return (
     <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
       <div className={styles.toolbar} role="toolbar" aria-label="Canvas tools">
-        <Button onClick={() => controller?.zoomIn()} {...nothing}>
+        <Button
+          aria-pressed={listing}
+          onClick={() => {
+            ports.ui.overview.getState().setMode(listing ? 'map' : 'list');
+            announce(listing ? 'Showing the map' : 'Showing the list of families and arrows');
+          }}
+        >
+          List
+        </Button>
+        <Button onClick={() => controller?.zoomIn()} {...(listing ? { unavailable: 'the List view has no zoom' } : nothing)}>
           Zoom in
         </Button>
-        <Button onClick={() => controller?.zoomOut()} {...nothing}>
+        <Button onClick={() => controller?.zoomOut()} {...(listing ? { unavailable: 'the List view has no zoom' } : nothing)}>
           Zoom out
         </Button>
-        <Button onClick={() => controller?.fit()} {...nothing}>
+        <Button onClick={() => controller?.fit()} {...(listing ? { unavailable: 'the List view has no zoom' } : nothing)}>
           Fit
         </Button>
         <Button onClick={() => selectedHub !== undefined && openFamily(selectedHub)} {...(scene === null ? nothing : openReason === undefined ? {} : { unavailable: openReason })}>
@@ -132,7 +154,7 @@ export function NavigatorCanvas() {
         </Banner>
       )}
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
-      <NavigatorLegend items={legend} keys={legendKeys} />
+      {listing ? null : <NavigatorLegend items={legend} keys={legendKeys} />}
       <div className={styles.drawing} aria-busy={state.working}>
         {state.error !== null ? (
           <div className={styles.error} role="alert">
@@ -141,6 +163,8 @@ export function NavigatorCanvas() {
           </div>
         ) : scene === null ? (
           state.skeleton ? <Skeleton label="Loading the navigator" /> : null
+        ) : listing ? (
+          <ListView scene={scene} ui={ports.ui} isHub={isHub} />
         ) : (
           <ViewportScene
             scene={scene}

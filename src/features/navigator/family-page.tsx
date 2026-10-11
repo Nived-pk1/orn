@@ -3,6 +3,7 @@
  * was (the viewport and the selection live in UI stores the page does not touch). The header (name, counts, types, partner strip) and
  * the two sections are items of ONE virtualised list; a card is a reaction in one group. Depictions are requested only for mounted
  * cards (`useDepiction`). A click on a card selects the reaction (the inspector, step 5.6a, will show its detail).
+ * Keyboard focus (step 5.7): the map that had it is gone, so the page takes it on its Overview button, which is also the way back.
  */
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useStore } from 'zustand';
@@ -27,6 +28,12 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const target = useStore(ports.ui.family, (s) => s.target);
   const selectedReaction = useStore(ports.ui.family, (s) => s.reaction);
   const list = useRef<VirtualListHandle>(null);
+  const page = useRef<HTMLElement>(null);
+  // Opening the page removes the map and the focus with it (the body has it): the Overview button takes it. A focus that is somewhere else stays.
+  useEffect(() => {
+    const active = document.activeElement;
+    if (active === null || active === document.body) page.current?.querySelector<HTMLElement>('[role="toolbar"] button')?.focus({ preventScroll: true });
+  }, [hubId]);
   const binding = depictionBindingOf(ports);
   const items = useMemo(() => (study === undefined || study === null ? [] : familyItems(study)), [study]);
   // The names and keys a card reads come from the snapshot the study was computed from.
@@ -89,7 +96,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const reactionName = study === undefined || study === null || selectedReaction === null ? undefined : (ports.store.getState().records.reaction[selectedReaction]?.name ?? selectedReaction);
   const title = study === undefined || study === null ? 'Family' : study.name;
   return (
-    <section className={styles.page} aria-label={`Family page: ${title}`} data-family-page="" data-family-id={hubId}>
+    <section ref={page} className={styles.page} aria-label={`Family page: ${title}`} data-family-page="" data-family-id={hubId}>
       <div className={styles.toolbar} role="toolbar" aria-label="Family page tools">
         <Button onClick={close}>Overview</Button>
         <p className={styles.selection}>{reactionName === undefined ? 'Nothing is selected.' : `Selected: reaction ${reactionName}.`}</p>

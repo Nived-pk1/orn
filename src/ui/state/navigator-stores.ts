@@ -177,6 +177,25 @@ export function createFamilyStore(initial: string | null = null): FamilyStore {
   }));
 }
 
+/** How the overview is shown (step 5.7, item j): the map, or the List view of the same projection. Saved in `uiState`. */
+export type OverviewMode = 'map' | 'list';
+export const OVERVIEW_MODES: readonly OverviewMode[] = ['map', 'list'];
+
+export interface OverviewState {
+  readonly mode: OverviewMode;
+  setMode(mode: OverviewMode): void;
+}
+export type OverviewStore = StoreApi<OverviewState>;
+
+export function createOverviewStore(initial: OverviewMode = 'map'): OverviewStore {
+  return createStore<OverviewState>((set, get) => ({
+    mode: initial,
+    setMode(mode) {
+      if (get().mode !== mode) set({ mode });
+    },
+  }));
+}
+
 /** All the navigator's UI stores, as `src/app` creates and hands them to the feature. */
 export interface NavigatorUiStores {
   readonly selection: SelectionStore;
@@ -185,6 +204,7 @@ export interface NavigatorUiStores {
   readonly exam: ActiveExamStore;
   readonly viewports: ViewportsStore;
   readonly family: FamilyStore;
+  readonly overview: OverviewStore;
 }
 
 export const createNavigatorUiStores = (): NavigatorUiStores => ({
@@ -194,4 +214,5 @@ export const createNavigatorUiStores = (): NavigatorUiStores => ({
   exam: createActiveExamStore(),
   viewports: createViewportsStore(),
   family: createFamilyStore(),
+  overview: createOverviewStore(),
 });

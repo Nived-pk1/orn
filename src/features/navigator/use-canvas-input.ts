@@ -38,6 +38,8 @@ interface Args {
   readonly controller: ViewportController | null;
   readonly svg: SVGSVGElement | null;
   readonly announce: (message: string) => void;
+  /** The family whose page was just closed: where the keyboard focus lands when the drawing takes it. */
+  readonly returnTo?: string;
 }
 
 interface FocusState {
@@ -65,7 +67,7 @@ export function useCanvasInput(args: Args): CanvasInput {
   const [menu, setMenu] = useState<OpenMenu | null>(null);
   const live = useRef({ scene, isHub, controller, svg, announce, focus });
   live.current = { scene, isHub, controller, svg, announce, focus };
-  const last = useRef<string | undefined>(undefined);
+  const last = useRef<string | undefined>(args.returnTo);
   const armed = useRef<string | undefined>(undefined);
 
   const openPage = useCallback(

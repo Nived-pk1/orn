@@ -165,3 +165,33 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The List view (step 5.7, item j): the families and the arrows of the same projection as two tables, one above the other. */
+.listView {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  height: 100%;
+  min-height: 0;
+  padding: var(--space-3);
+  box-sizing: border-box;
+}
+
+.listSection {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: var(--space-1);
+}
+
+.listHeading {
+  margin: 0;
+  font-size: var(--text-14);
+  font-weight: 600;
+}
+
+.listNote {
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-13);
+}

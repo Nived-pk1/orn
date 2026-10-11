@@ -21,3 +21,5 @@ export { Tooltip } from './tooltip';
 export { VisuallyHidden } from './visually-hidden';
 export { VirtualList } from './virtual-list';
 export type { VirtualListHandle, VirtualListProps } from './virtual-list';
+export { VirtualTable } from './virtual-table';
+export type { TableColumn, TableSort, VirtualTableProps } from './virtual-table';

@@ -23,6 +23,14 @@
   pointer-events: stroke;
 }
 
+/* A finger needs 44 px (step 5.7, item i): on a coarse pointer the hit path is 44 SCREEN pixels wide at any zoom (the stroke does not scale with the drawing). */
+@media (pointer: coarse) {
+  .edgeHit {
+    stroke-width: 44px;
+    vector-effect: non-scaling-stroke;
+  }
+}
+
 /* Text, badges and the selection overlay never take pointer events: a click on them reaches the node or edge below. */
 .root [data-layer='labels'],
 .root [data-layer='badges'],

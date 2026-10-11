@@ -4,7 +4,7 @@
  * viewport and the selection it left (both live in UI stores, not in the canvas). The screen's ONE polite live region is here
  * (step 5.7, item h), so what the canvas or the page says is heard whichever of them is mounted.
  */
-import { useSyncExternalStore } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useStore } from 'zustand';
 import { LiveRegion } from '@/ui/primitives';
 import { FamilyPage } from './family-page';
@@ -18,9 +18,15 @@ export function NavigatorView() {
   const { scene } = useNavigatorState();
   useAnnouncements(ports, announcer, scene);
   const said = useSyncExternalStore(announcer.subscribe, announcer.get, announcer.get);
+  // Coming back from a family page, the overview takes the keyboard focus on the family just left (a page that was closed by the keyboard).
+  const previous = useRef<string | null>(open);
+  const returnTo = open === null ? previous.current : null;
+  useEffect(() => {
+    previous.current = open;
+  }, [open]);
   return (
     <>
-      {open === null ? <NavigatorCanvas /> : <FamilyPage hubId={open} />}
+      {open === null ? <NavigatorCanvas {...(returnTo === null ? {} : { returnTo })} /> : <FamilyPage hubId={open} />}
       <LiveRegion message={said.message} serial={said.serial} label="Navigator announcements" />
     </>
   );

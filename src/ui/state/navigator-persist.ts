@@ -16,10 +16,13 @@ import {
   createExpansionStore,
   createFamilyStore,
   createFiltersStore,
+  createOverviewStore,
   createSelectionStore,
   createViewportsStore,
   NO_EXPANSION_STATE,
+  OVERVIEW_MODES,
   type NavigatorUiStores,
+  type OverviewMode,
   type SavedViewport,
   type Selected,
 } from './navigator-stores';
@@ -30,7 +33,7 @@ export const NAVIGATOR_UI_KEY = 'navigator';
 export const MAX_SAVED_EXPANDED = 1_000;
 const MAX_ID_LENGTH = 512;
 const MAX_COORDINATE = 1e7;
-const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily']);
+const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode']);
 
 /** The same shape as the panels port: the stored entry, whether this tab writes, and the write. */
 export type NavigatorUiPort = PanelsPort;
@@ -41,6 +44,8 @@ export interface ParsedNavigatorUi {
   readonly views: Readonly<Partial<Record<ViewKey, SavedViewport>>>;
   /** The family page that was open (a hub ID), or null: the overview. */
   readonly openFamily: string | null;
+  /** Map or List (step 5.7). */
+  readonly overviewMode: OverviewMode;
   /** Parts that were present but unusable (reset to their defaults). A missing part is not damage. */
   readonly damaged: readonly string[];
   readonly extra: Readonly<Record<string, unknown>>;
@@ -63,7 +68,7 @@ function parseExpanded(value: unknown): ExpansionState['expanded'] | undefined {
 }
 
 export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
-  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, damaged: [], extra: {} };
+  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', damaged: [], extra: {} };
   if (raw === undefined) return empty;
   if (!isRecord(raw)) return { ...empty, damaged: ['navigator'] };
   const damaged: string[] = [];
@@ -90,6 +95,11 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     if (isId(raw.openFamily)) openFamily = raw.openFamily;
     else damaged.push('openFamily');
   }
+  let overviewMode: OverviewMode = 'map';
+  if (raw.overviewMode !== undefined) {
+    if ((OVERVIEW_MODES as readonly unknown[]).includes(raw.overviewMode)) overviewMode = raw.overviewMode as OverviewMode;
+    else damaged.push('overviewMode');
+  }
   const views: Partial<Record<ViewKey, SavedViewport>> = {};
   const v = raw.viewports;
   if (v !== undefined) {
@@ -102,7 +112,7 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     } else damaged.push('viewports');
   }
   const extra = Object.fromEntries(Object.entries(raw).filter(([key]) => !KNOWN.has(key)));
-  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, damaged, extra };
+  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, damaged, extra };
 }
 
 export interface NavigatorUiStatus {
@@ -131,6 +141,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     exam: createActiveExamStore(),
     viewports: createViewportsStore(parsed.views),
     family: createFamilyStore(parsed.openFamily),
+    overview: createOverviewStore(parsed.overviewMode),
   };
   const status = createStore<NavigatorUiStatus>(() => ({
     persistence: mode === 'read_only' ? { kind: 'read_only' } : mode === 'session_only' ? { kind: 'session_only' } : { kind: 'saved' },
@@ -151,8 +162,9 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { expansion } = stores.expansion.getState();
     const { views } = stores.viewports.getState();
     const { open } = stores.family.getState();
+    const { mode: overviewMode } = stores.overview.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -176,7 +188,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     });
   }
 
-  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule)];
+  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule)];
   // The removed expansion is written back empty, once.
   if (removedExpansion > 0) schedule();
   return {

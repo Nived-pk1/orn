@@ -1,0 +1,78 @@
+.table {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: var(--text-14);
+}
+
+.head {
+  flex: none;
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-surface);
+  font-weight: 600;
+}
+
+.scroller {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.body {
+  position: relative;
+  width: 100%;
+}
+
+.row {
+  display: grid;
+  align-items: center;
+  width: 100%;
+  min-height: var(--hit-min);
+}
+
+.bodyRow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-bottom: 1px solid var(--color-rule);
+  cursor: pointer;
+}
+
+.bodyRow:hover {
+  background: var(--color-hover);
+}
+
+.bodyRow:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+
+.cell,
+.numeric {
+  padding: 0 var(--space-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sortButton {
+  min-height: var(--hit-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
