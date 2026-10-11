@@ -97,6 +97,7 @@ npm run lint                 # ESLint
 npm run lint:deps            # dependency-cruiser boundary rules
 npm run check:size           # ≤ 400 lines per source file
 npm run check:hardcode       # no dataset IDs/names in production code
+                             # exception: src/features/inspector/labels.ts (by path, that file only) skips the NAME comparison, so a UI label that is an ordinary word and a dataset name ("Stereochemistry") is allowed; IDs are still caught there
 npm run check:control-chars  # no raw control characters (NUL etc.) in docs, data, source
 npm run check:bench-budgets  # every bench() has a tests/perf/budgets.mjs entry and vice versa (static)
 npm test                     # all Vitest tests

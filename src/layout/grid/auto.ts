@@ -14,6 +14,9 @@ export interface AutoArrangement {
   readonly moved: number;
 }
 
+/** The most automatic rows one column holds before the arrangement continues in the next column to the right. */
+export const MAX_AUTO_ROWS = 8;
+
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 /** The nodes that ask for an automatic cell. */
@@ -54,16 +57,28 @@ export function snapToCells(request: LayoutRequest, layered: Readonly<Record<str
   for (const node of request.nodes) if (node.cell !== undefined) taken.add(`${node.cell.column}:${node.cell.row}`);
   const cells = new Map<string, { column: number; row: number }>();
   let moved = 0;
-  layers.forEach((layer, column) => {
+  let nextColumn = 0;
+  for (const layer of layers) {
     layer.sort((a, b) => a.y - b.y || compare(a.node.id, b.node.id));
-    layer.forEach((span, rank) => {
-      let row = rank;
-      while (taken.has(`${column}:${row}`)) row += 1;
-      if (row !== rank) moved += 1;
+    let column = nextColumn;
+    let row = 0;
+    for (const span of layer) {
+      // A column holds at most MAX_AUTO_ROWS automatic rows: the rest continue in the next column to the right, same order.
+      while (true) {
+        if (row >= MAX_AUTO_ROWS) {
+          column += 1;
+          row = 0;
+        }
+        if (!taken.has(`${column}:${row}`)) break;
+        row += 1;
+        moved += 1;
+      }
       taken.add(`${column}:${row}`);
       cells.set(span.node.id, { column, row });
-    });
-  });
+      row += 1;
+    }
+    nextColumn = column + 1;
+  }
   const nodes = request.nodes.map((node) => {
     const cell = cells.get(node.id);
     if (cell === undefined) return node;

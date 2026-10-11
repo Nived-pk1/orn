@@ -8,6 +8,12 @@ import { currentOf, type Selected } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { focusOfSelection } from './model/focus';
 
+/**
+ * A pick on the map opens the pane only after this long. Opening it narrows the canvas and moves the drawing, so a double click (which
+ * opens the family page) would otherwise have its second click land on something else. A family page opened in the meantime cancels it.
+ */
+export const DOUBLE_CLICK_GRACE_MS = 350;
+
 const typing = (target: EventTarget | null): boolean => target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
 
 export function useBridge(ports: InspectorPorts, host: InspectorHost): string | undefined {
@@ -18,6 +24,11 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
     const { inspector, selection, family } = ports.ui;
     let selectionPicks = selection.getState().picks;
     let familyPicks = family.getState().picks;
+    let cancelOpen: (() => void) | undefined;
+    const settle = (): void => {
+      cancelOpen?.();
+      cancelOpen = undefined;
+    };
     const offSelection = selection.subscribe((state) => {
       if (state.picks === selectionPicks) return;
       selectionPicks = state.picks;
@@ -28,7 +39,11 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
       // open first: moving the focus clears an old note, then this pick's own note is set (the last call wins)
       inspector.getState().open(focus.ref);
       setNote(focus.note);
-      hostRef.current.openPane();
+      settle();
+      cancelOpen = ports.timers.after(DOUBLE_CLICK_GRACE_MS, () => {
+        cancelOpen = undefined;
+        if (family.getState().open === null) hostRef.current.openPane();
+      });
     });
     const offFamily = family.subscribe((state) => {
       if (state.picks === familyPicks) return;
@@ -36,9 +51,11 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
       if (state.reaction === null) return;
       inspector.getState().open({ kind: 'reaction', id: state.reaction });
       setNote(undefined);
+      settle();
       hostRef.current.openPane();
     });
     return () => {
+      settle();
       offSelection();
       offFamily();
     };

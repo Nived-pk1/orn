@@ -99,12 +99,12 @@ test.describe('the demo navigator', () => {
     await expectClean(seen);
   });
 
-  test('the inspector says in words what arrives later', async ({ page }) => {
+  test('the inspector says in words what to pick', async ({ page }) => {
     await openNavigator(page);
     // closed by default (step 5.5a review, item g); open it to read
     await page.getByRole('button', { name: 'Show inspector' }).click();
     const inspector = page.getByRole('complementary', { name: 'Inspector' });
-    await expect(inspector.getByText(/inspector arrives in step 5\.6a and search in step 5\.8/)).toBeVisible();
+    await expect(inspector.getByText(/Select a family, an arrow or a reaction card/)).toBeVisible();
   });
 });
 

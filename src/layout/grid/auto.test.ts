@@ -69,4 +69,28 @@ describe('snapping the layered drawing to cells', () => {
     expect(layoutCacheKey(req([auto('a')]))).not.toBe(layoutCacheKey(req([plain('a')])));
     expect(checkRequest(req([{ ...plain('a'), autoCell: false as unknown as true }]))?.code).toBe('BAD_REQUEST');
   });
+
+  it('wraps: a column holds at most 8 automatic rows and the rest continue to the right, in order (30 unconnected hubs)', () => {
+    const ids = Array.from({ length: 30 }, (_, k) => `h${String(k).padStart(2, '0')}`);
+    const layered30: Record<string, Point> = Object.fromEntries(ids.map((id, k) => [id, { x: 0, y: k * 60 }]));
+    const out = snapToCells(req(ids.map(auto)), layered30);
+    const cells = out.request.nodes.map((n) => n.cell);
+    expect(cells.every((c) => c !== undefined)).toBe(true);
+    ids.forEach((id, k) => {
+      const cell = out.request.nodes.find((n) => n.id === id)?.cell;
+      expect(cell).toEqual({ column: Math.floor(k / 8), row: k % 8 });
+    });
+    expect(Math.max(...cells.map((c) => c?.row ?? 0))).toBe(7);
+    expect(new Set(cells.map((c) => `${c?.column}:${c?.row}`)).size).toBe(30);
+    const reversed = Object.fromEntries(Object.entries(layered30).reverse());
+    expect(snapToCells(req(ids.map(auto)), reversed)).toEqual(out);
+  });
+
+  it('the layer after a wrapped layer starts in the next free column', () => {
+    const ids = Array.from({ length: 10 }, (_, k) => `a${String(k).padStart(2, '0')}`);
+    const l: Record<string, Point> = Object.fromEntries(ids.map((id, k) => [id, { x: 0, y: k * 60 }]));
+    l['z'] = { x: 300, y: 0 };
+    const out = snapToCells(req([...ids.map(auto), auto('z')]), l);
+    expect(cellsOf(out.request)['z']).toBe('2,0');
+  });
 });

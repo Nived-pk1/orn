@@ -7,6 +7,8 @@
 // In src/core/schema only the NAME comparison is skipped: the schema defines the vocabulary (enum words such
 // as 'elimination'), so a dataset name that shares a word with it is not a hardcoded record name. Record IDs
 // carry a prefix and cannot collide with vocabulary, so the ID comparison stays on everywhere.
+// The UI labels of the inspector live in ONE file (LABELS_MODULE) where only the NAME comparison is skipped: a label such
+// as "Stereochemistry" is an ordinary word that is also a dataset name. IDs are never labels, so the ID comparison stays on there.
 // Accepted blind spots: literals built by concatenation or template interpolation, names shorter than
 // MIN_NAME_LENGTH, and IDs held in JSON/asset files loaded at run time.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -15,6 +17,7 @@ import { extname, join, relative, sep } from 'node:path';
 const DATA_ROOTS = ['data/seed', 'data/fixtures'];
 const MIN_NAME_LENGTH = 5;
 const SCHEMA_VOCABULARY = join('src', 'core', 'schema') + sep;
+const LABELS_MODULE = join('src', 'features', 'inspector', 'labels.ts');
 
 function* walk(dir, exts) {
   let entries;
@@ -51,7 +54,7 @@ const literal = /(['"`])((?:\\.|(?!\1).)*)\1/g;
 let failures = 0;
 for (const file of walk('src', new Set(['.ts', '.tsx']))) {
   if (/\.(test|bench)\.tsx?$/.test(file) || file.startsWith(join('src', 'test-support'))) continue;
-  const inSchema = file.startsWith(SCHEMA_VOCABULARY);
+  const inSchema = file.startsWith(SCHEMA_VOCABULARY) || file === LABELS_MODULE;
   const lines = readFileSync(file, 'utf8').split('\n');
   lines.forEach((line, index) => {
     const trimmed = line.trim();

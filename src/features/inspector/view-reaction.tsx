@@ -3,6 +3,7 @@
  * L3: stages, condition variants and each outcome in full; L4: notes, intermediates, links and sources. Selectivity is shown on the
  * outcome only, as stored. Every field is written as stored; the raw record at L5 carries the rest.
  */
+import { LABELS } from './labels';
 import type { Outcome, Reaction } from '@/core/schema';
 import type { Finding } from '@/core/validation';
 import { FactList, Facts, LevelSection } from './levels';
@@ -50,7 +51,7 @@ function OutcomeDetail(props: { readonly outcome: Outcome }) {
       <TextFact label="Isomer group" value={outcome.isomerGroup} />
       <TextFact label="Regiochemistry" value={outcome.regiochemistry} />
       {outcome.stereochemistry === undefined ? null : (
-        <Facts label="Stereo outcome">{[words(outcome.stereochemistry.outcome), ...outcome.stereochemistry.descriptors].join(', ')}</Facts>
+        <Facts label={LABELS.stereochemistry}>{[words(outcome.stereochemistry.outcome), ...outcome.stereochemistry.descriptors].join(', ')}</Facts>
       )}
       <NoteFact label="Stereochemistry note" source={outcome.stereochemistry?.note} />
       <TextFact label="Yield" value={outcome.yieldText} />
