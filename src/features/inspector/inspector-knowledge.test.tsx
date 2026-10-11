@@ -76,6 +76,32 @@ describe('the maximal fixture: knowledge kinds', () => {
     expect(screen.getByRole('list', { name: 'Steps of Single-electron transfer' })).toBeTruthy();
   });
 
+  it('a structure inside a mechanism step is asked at 120 x 80 px at most, and the picture is capped by CSS', async () => {
+    const asked: Array<{ width: number; height: number }> = [];
+    const depictions = {
+      keyOf: (_s: unknown, size: { width: number; height: number }) => `k${size.width}x${size.height}`,
+      depict: (_s: unknown, size: { width: number; height: number }) => {
+        asked.push(size);
+        return Promise.resolve({ ok: true as const, svg: '<svg xmlns="http://www.w3.org/2000/svg"/>' });
+      },
+      cancel: () => undefined,
+      createUrl: () => 'blob:step',
+      revokeUrl: () => undefined,
+    } as never;
+    const rig = inspectorRig(state, { depictions });
+    render(<Inspector ports={rig.ports} host={rig.host} />);
+    act(() => rig.inspector.getState().open({ kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef));
+    openEverything();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(asked.length).toBeGreaterThan(0);
+    for (const size of asked) {
+      expect(size.width).toBeLessThanOrEqual(120);
+      expect(size.height).toBeLessThanOrEqual(80);
+    }
+  });
+
   it('opened at a variant, that variant is open and marked', () => {
     show(state, { kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef, 'mvr_max-grignard-set');
     const block = document.querySelector('[data-variant-id="mvr_max-grignard-set"]') as HTMLElement;

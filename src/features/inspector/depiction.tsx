@@ -10,14 +10,17 @@ import { useInspectorEnv } from './env';
 import styles from './inspector.module.css';
 
 export const INSPECTOR_STRUCTURE = { width: 256, height: 160 } as const;
+/** A structure inside a mechanism step: at most 120 x 80 px (review of step 5.6b). */
+export const STEP_STRUCTURE = { width: 120, height: 80 } as const;
 
-export function Depiction(props: { readonly structure: StructureRep | undefined; readonly name: string; readonly fallback?: string }) {
+export function Depiction(props: { readonly structure: StructureRep | undefined; readonly name: string; readonly fallback?: string; readonly compact?: boolean }) {
   const { ports } = useInspectorEnv();
-  const binding = useMemo(() => (ports.depictions === undefined ? undefined : createDepictionBinding(ports.depictions, ports.timers, INSPECTOR_STRUCTURE)), [ports]);
+  const compact = props.compact === true;
+  const binding = useMemo(() => (ports.depictions === undefined ? undefined : createDepictionBinding(ports.depictions, ports.timers, compact ? STEP_STRUCTURE : INSPECTOR_STRUCTURE)), [ports, compact]);
   const key = props.structure === undefined ? undefined : binding?.keyOf(props.structure);
   const status = useRetryingDepiction(binding?.manager, key, ports.timers);
   if (props.structure === undefined) return null;
-  if (status.state === 'ready') return <img className={styles.structure} src={status.url} alt={`Structure of ${props.name}`} />;
+  if (status.state === 'ready') return <img className={compact ? styles.stepStructure : styles.structure} src={status.url} alt={`Structure of ${props.name}`} />;
   const why = status.state === 'unavailable' ? 'The structure could not be drawn.' : binding === undefined ? 'No structure is drawn here.' : 'Drawing the structure.';
   return (
     <p className={styles.muted} role="status">

@@ -42,7 +42,7 @@ function StepSpecies(props: { readonly species: Step['species'][number] }) {
       {species.ref === undefined ? null : <RecordLink kind={species.ref.kind} id={species.ref.id} />}
       {species.ref !== undefined && label !== '' ? ', ' : ''}
       {label === '' ? null : label}
-      {species.structure === undefined ? null : <Depiction structure={species.structure} name={species.label ?? words(species.role)} fallback={species.structure.value} />}
+      {species.structure === undefined ? null : <Depiction compact structure={species.structure} name={species.label ?? words(species.role)} fallback={species.structure.value} />}
     </li>
   );
 }
