@@ -12,6 +12,10 @@ export { conditionPartsOf, MAX_TEXT_CHARS, MINUS, overrideParameters } from './c
 export type { ConditionPart } from './condition-text';
 export type { ArrowText, ArrowTextContext, ArrowTextPart, ArrowTextPartKind } from './arrow-text';
 export { createScopeOf } from './scope';
+export { explainScope } from './scope-explain';
+export type { ScopeExplanation } from './scope-explain';
+export { relatedReactionsOf, RELATED_GROUP_KEYS, MAX_GROUP_ITEMS, MAX_CLASSES_FOLLOWED } from './related';
+export type { RelatedGroup, RelatedGroupKey, RelatedItem } from './related';
 export type { ScopeOf } from './scope';
 export { navigatorProjection, UNCLASSIFIED_HUB_ID } from './navigator';
 export { reactionExplorerProjection } from './reaction-explorer';

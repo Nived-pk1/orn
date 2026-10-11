@@ -51,4 +51,15 @@ describe('the inspector store', () => {
     expect(currentOf(store.getState())).toBeNull();
     expect(store.getState().index).toBe(-1);
   });
+
+  it('a place inside the record (a variant) is part of the entry: the same record at another place is a new entry, the same place changes nothing', () => {
+    const store = createInspectorStore();
+    store.getState().open(ref('mec_a'));
+    store.getState().open(ref('mec_a'), 'mvr_1');
+    store.getState().open(ref('mec_a'), 'mvr_1');
+    expect(store.getState().history).toEqual([{ kind: 'species', id: 'mec_a' }, { kind: 'species', id: 'mec_a', at: 'mvr_1' }]);
+    expect(currentOf(store.getState())?.at).toBe('mvr_1');
+    store.getState().back();
+    expect(currentOf(store.getState())?.at).toBeUndefined();
+  });
 });

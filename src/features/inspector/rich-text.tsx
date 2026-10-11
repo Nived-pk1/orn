@@ -12,7 +12,8 @@ import { parseRichText } from '@/core/text';
 import { useInspectorEnv } from './env';
 import styles from './inspector.module.css';
 
-export function RecordLink(props: { readonly kind: string; readonly id: string; readonly label?: string }) {
+/** `at` is a place inside the record (a mechanism variant's ID) that the record's view brings to the front. */
+export function RecordLink(props: { readonly kind: string; readonly id: string; readonly label?: string; readonly at?: string }) {
   const env = useInspectorEnv();
   const ref = { kind: props.kind, id: props.id } as Parameters<typeof env.open>[0];
   if (!env.exists(ref)) {
@@ -30,7 +31,7 @@ export function RecordLink(props: { readonly kind: string; readonly id: string; 
       data-record-id={props.id}
       onClick={(event) => {
         event.preventDefault();
-        env.open(ref);
+        env.open(ref, props.at);
       }}
     >
       {label}

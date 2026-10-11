@@ -39,8 +39,8 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   const index = useStore(inspector, (s) => s.index);
   const current = currentOf({ history, index });
   const open = useCallback(
-    (ref: RecordRef) => {
-      inspector.getState().open(ref);
+    (ref: RecordRef, at?: string) => {
+      inspector.getState().open(ref, at);
       host.openPane();
     },
     [inspector, host],

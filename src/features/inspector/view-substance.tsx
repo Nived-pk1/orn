@@ -4,13 +4,17 @@
  */
 import type { ChemicalClass, Reagent, Species } from '@/core/schema';
 import type { Finding } from '@/core/validation';
+import { useMemo } from 'react';
+import { Connections } from './connections';
 import { Depiction } from './depiction';
 import { useInspectorEnv } from './env';
 import { FactList, Facts, LevelSection } from './levels';
 import { nameOfRecord } from './model/describe';
 import { parameterPhrases } from './model/conditions';
+import { RecordList } from './record-list';
 import { RecordLink } from './rich-text';
 import { CitationsAndTags, LinkFact, NoteFact, TextFact, words } from './view-parts';
+import styles from './inspector.module.css';
 
 export function SpeciesLevels(props: { readonly record: Species; readonly findings: readonly Finding[] }) {
   const { record } = props;
@@ -54,7 +58,29 @@ export function SpeciesLevels(props: { readonly record: Species; readonly findin
           <NoteFact label="Notes" source={record.notes} />
           <CitationsAndTags citations={record.citations} tags={record.tags} />
         </FactList>
+        <Connections target={{ kind: 'species', id: record.id }} />
       </LevelSection>
+    </>
+  );
+}
+
+/** The members of a class and the reactions that start from or make it: long lists, so virtualised. */
+function ClassLists(props: { readonly record: ChemicalClass }) {
+  const env = useInspectorEnv();
+  const { record } = props;
+  const lists = useMemo(() => {
+    const indexes = env.ports.indexes.current();
+    const me = { kind: 'class', id: record.id } as const;
+    const members = indexes.speciesInClass(record.id, { transitive: false });
+    const reactions = [...new Set([...indexes.participationsOf(me).map((p) => p.reactionId), ...indexes.productionsOf(me).map((p) => p.reactionId)])].sort();
+    return { members, reactions: reactions.map((id) => ({ kind: 'reaction', id })) };
+  }, [env, record.id]);
+  return (
+    <>
+      <h4 className={styles.subheading}>Members ({lists.members.length})</h4>
+      {lists.members.length === 0 ? <p className={styles.muted}>No species is listed as a member.</p> : <RecordList label="Members" items={lists.members} />}
+      <h4 className={styles.subheading}>Reactions that use this class ({lists.reactions.length})</h4>
+      {lists.reactions.length === 0 ? <p className={styles.muted}>No reaction names this class as a participant or a product.</p> : <RecordList label="Reactions of this class" items={lists.reactions} />}
     </>
   );
 }
@@ -81,6 +107,7 @@ export function ClassLevels(props: { readonly record: ChemicalClass; readonly fi
           <NoteFact label="R-group note" source={record.generic?.rGroupNote} />
           <TextFact label="Also called" value={record.names.aliases.join(', ')} />
         </FactList>
+        <ClassLists record={record} />
       </LevelSection>
       <LevelSection level={4} title="Notes and sources">
         <FactList label="Class notes">
@@ -88,6 +115,7 @@ export function ClassLevels(props: { readonly record: ChemicalClass; readonly fi
           <NoteFact label="Notes" source={record.notes} />
           <CitationsAndTags citations={record.citations} tags={record.tags} />
         </FactList>
+        <Connections target={{ kind: 'class', id: record.id }} />
       </LevelSection>
     </>
   );
@@ -133,6 +161,7 @@ export function ReagentLevels(props: { readonly record: Reagent; readonly findin
           <NoteFact label="Notes" source={record.notes} />
           <CitationsAndTags citations={record.citations} tags={record.tags} />
         </FactList>
+        <Connections target={{ kind: 'reagent', id: record.id }} />
       </LevelSection>
     </>
   );

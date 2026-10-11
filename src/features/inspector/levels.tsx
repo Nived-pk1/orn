@@ -10,12 +10,12 @@ import type { InspectorLevel } from '@/ui/state';
 import { useInspectorEnv } from './env';
 import styles from './inspector.module.css';
 
-export function LevelSection(props: { readonly level: InspectorLevel; readonly title: string; readonly children: ReactNode }) {
+export function LevelSection(props: { readonly level: InspectorLevel; readonly title: string; readonly children: ReactNode; readonly forceOpen?: boolean }) {
   const env = useInspectorEnv();
   const { panels } = env.ports.ui;
   const deepest = useStore(panels, (s) => s.inspectorLevel);
   // The default comes from the saved level at the moment a record is shown (the parent keys this tree by record).
-  const [open, setOpen] = useState(props.level <= deepest);
+  const [open, setOpen] = useState(props.forceOpen === true || props.level <= deepest);
   const headingId = useId();
   const bodyId = useId();
   return (

@@ -25,7 +25,7 @@ const PRECEDENCE: Readonly<Record<ExamScope, number>> = { official: 0, prerequis
 const bestOf = (scopes: readonly ExamScope[]): ExamScope => [...scopes].sort((a, b) => PRECEDENCE[a] - PRECEDENCE[b])[0] as ExamScope;
 
 /** §4.1: explicit `exam_relevance` override. Version-specific entries win over version-agnostic ones. */
-function explicitOverride(indexes: ReadonlyIndexes, ref: RecordRef, examId: ExamId, examVersionId: ExamVersionId): ExamScope | undefined {
+export function explicitOverride(indexes: ReadonlyIndexes, ref: RecordRef, examId: ExamId, examVersionId: ExamVersionId): ExamScope | undefined {
   const relevances = referencing(indexes, ref, 'target', 'exam_relevance')
     .map((owner) => indexes.get(owner.id))
     .filter((r): r is ExamRelevance => r?.kind === 'exam_relevance' && r.examId === examId);
@@ -43,7 +43,7 @@ function coverageMap(examVersion: ExamVersion): Map<string, string> {
 }
 
 /** §4.2: topics `ref` maps to, plus their ancestors, checked against `examVersion`'s coverage. */
-function mappedScope(indexes: ReadonlyIndexes, examVersion: ExamVersion, ref: RecordRef): ExamScope | undefined {
+export function mappedScope(indexes: ReadonlyIndexes, examVersion: ExamVersion, ref: RecordRef): ExamScope | undefined {
   const mappings = referencing(indexes, ref, 'target', 'topic_mapping')
     .map((owner) => indexes.get(owner.id))
     .filter((m): m is TopicMapping => m?.kind === 'topic_mapping');

@@ -12,7 +12,7 @@ export interface InspectorEnv {
   readonly host: InspectorHost;
   readonly state: CanonicalState;
   /** Focuses a record (pushed on the history; the pane opens). */
-  open(ref: RecordRef): void;
+  open(ref: RecordRef, at?: string): void;
   exists(ref: RecordRef): boolean;
   name(ref: RecordRef): string;
 }
@@ -25,6 +25,6 @@ export function useInspectorEnv(): InspectorEnv {
   return env;
 }
 
-export function makeEnv(ports: InspectorPorts, host: InspectorHost, state: CanonicalState, open: (ref: RecordRef) => void): InspectorEnv {
+export function makeEnv(ports: InspectorPorts, host: InspectorHost, state: CanonicalState, open: (ref: RecordRef, at?: string) => void): InspectorEnv {
   return { ports, host, state, open, exists: (ref) => recordOf(state, ref) !== undefined, name: (ref) => nameOf(state, ref) };
 }

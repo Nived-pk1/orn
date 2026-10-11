@@ -99,6 +99,8 @@ Derived (computed from data; storing them is forbidden by INV-11 and by the abse
 
 `follows` (curated teaching order) and `feeds_into` (chemical connectivity) are different relations and may both exist.
 
+*Related reactions in the inspector (2026-10-11, step 5.6b; `relatedReactionsOf`, `src/core/graph/related`).* A reaction's L3 shows its stored relationships and then these derived groups, one each, in this order: Leads on to, Comes from (`feeds_into`: stated by the exact species, inferred through a class of it and then marked with that class), Same transformation, Same named family (the reaction's named reactions and their ancestors, with descendants), Shares a mechanism (a mechanism named by the reaction or by one of its outcomes), Same reagent family. A BY-PRODUCT (a product with role `byproduct`) never counts as what a reaction makes, for the same reason as below. `shares_participant` is NOT shown: water, an acid or a solvent takes part in so many reactions that the list would relate almost everything to everything and say nothing; it stays a derived relation of the graph engine, not a view. A group is cut at 5,000 entries (the view says so and shows the whole size) and the view shows 12 and then "+N more" (a virtualised list). Nothing is stored (INV-11).
+
 ## 7. Projection registry
 
 Views are `ProjectionDefinition`s registered by `ViewKey`. Adding a view adds a definition; it never edits another projection.

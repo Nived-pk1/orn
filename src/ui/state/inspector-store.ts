@@ -9,13 +9,16 @@ import type { RecordRef } from '@/core/schema';
 
 export const MAX_HISTORY = 100;
 
+/** A history entry: a record and, optionally, a place inside it (a mechanism's variant ID; step 5.6b). */
+export type InspectorEntry = RecordRef & { readonly at?: string };
+
 export interface InspectorState {
   /** Oldest first. */
-  readonly history: readonly RecordRef[];
+  readonly history: readonly InspectorEntry[];
   /** Index of the shown record in `history`; -1 when nothing was opened. */
   readonly index: number;
-  /** Shows `ref` (pushed on the history). */
-  open(ref: RecordRef): void;
+  /** Shows `ref` (pushed on the history), at `at` inside it when given. */
+  open(ref: RecordRef, at?: string): void;
   back(): boolean;
   forward(): boolean;
   /** Forgets every entry (the record is gone, or a replace of the dataset). */
@@ -23,20 +26,21 @@ export interface InspectorState {
 }
 export type InspectorStore = StoreApi<InspectorState>;
 
-export const currentOf = (state: Pick<InspectorState, 'history' | 'index'>): RecordRef | null => state.history[state.index] ?? null;
+export const currentOf = (state: Pick<InspectorState, 'history' | 'index'>): InspectorEntry | null => state.history[state.index] ?? null;
 export const canBack = (state: Pick<InspectorState, 'index'>): boolean => state.index > 0;
 export const canForward = (state: Pick<InspectorState, 'history' | 'index'>): boolean => state.index >= 0 && state.index < state.history.length - 1;
 
-const same = (a: RecordRef | null, b: RecordRef): boolean => a !== null && a.kind === b.kind && a.id === b.id;
+const same = (a: InspectorEntry | null, b: RecordRef, at: string | undefined): boolean => a !== null && a.kind === b.kind && a.id === b.id && a.at === at;
 
 export function createInspectorStore(): InspectorStore {
   return createStore<InspectorState>((set, get) => ({
     history: [],
     index: -1,
-    open(ref) {
+    open(ref, at) {
       const state = get();
-      if (same(currentOf(state), ref)) return;
-      const kept = [...state.history.slice(0, state.index + 1), { kind: ref.kind, id: ref.id }];
+      if (same(currentOf(state), ref, at)) return;
+      const entry = (at === undefined ? { kind: ref.kind, id: ref.id } : { kind: ref.kind, id: ref.id, at }) as InspectorEntry;
+      const kept = [...state.history.slice(0, state.index + 1), entry];
       const history = kept.length > MAX_HISTORY ? kept.slice(kept.length - MAX_HISTORY) : kept;
       set({ history, index: history.length - 1 });
     },

@@ -3,11 +3,13 @@
  * L3: stages, condition variants and each outcome in full; L4: notes, intermediates, links and sources. Selectivity is shown on the
  * outcome only, as stored. Every field is written as stored; the raw record at L5 carries the rest.
  */
-import { LABELS } from './labels';
 import type { Outcome, Reaction } from '@/core/schema';
 import type { Finding } from '@/core/validation';
+import { Connections } from './connections';
+import { LABELS } from './labels';
 import { FactList, Facts, LevelSection } from './levels';
 import { parameterPhrases } from './model/conditions';
+import { RelatedReactions } from './related';
 import { RecordLink } from './rich-text';
 import { CitationsAndTags, LinkFact, Links, NoteFact, TextFact, words } from './view-parts';
 
@@ -57,8 +59,8 @@ function OutcomeDetail(props: { readonly outcome: Outcome }) {
       <TextFact label="Yield" value={outcome.yieldText} />
       {outcome.mechanism === undefined ? null : (
         <Facts label="Mechanism">
-          <RecordLink kind="mechanism" id={outcome.mechanism.mechanismId} />
-          {outcome.mechanism.variantId === undefined ? '' : `, variant ${outcome.mechanism.variantId}`}
+          <RecordLink kind="mechanism" id={outcome.mechanism.mechanismId} {...(outcome.mechanism.variantId === undefined ? {} : { at: outcome.mechanism.variantId })} />
+          {outcome.mechanism.variantId === undefined ? '' : ', at its variant'}
         </Facts>
       )}
       <NoteFact label="Why" source={outcome.rationale} />
@@ -143,6 +145,7 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
         {record.outcomes.map((outcome) => (
           <OutcomeDetail key={outcome.id} outcome={outcome} />
         ))}
+        <RelatedReactions reaction={record} />
       </LevelSection>
       <LevelSection level={4} title="Notes, links and sources">
         <FactList label="Reaction notes">
@@ -176,6 +179,7 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
           {record.mappedReaction === undefined ? null : <Facts label={`Mapped reaction (${words(record.mappedReaction.format)})`}>{record.mappedReaction.value}</Facts>}
           <CitationsAndTags citations={record.citations} tags={record.tags} />
         </FactList>
+        <Connections target={{ kind: 'reaction', id: record.id }} relationships={false} />
       </LevelSection>
     </>
   );

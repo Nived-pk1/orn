@@ -45,4 +45,4 @@ export type {
 export { createNavigatorUi, MAX_SAVED_EXPANDED, NAVIGATOR_UI_KEY, parseNavigatorUi } from './navigator-persist';
 export type { NavigatorUi, NavigatorUiPort, NavigatorUiStatus, ParsedNavigatorUi } from './navigator-persist';
 export { canBack, canForward, createInspectorStore, currentOf, MAX_HISTORY } from './inspector-store';
-export type { InspectorState, InspectorStore } from './inspector-store';
+export type { InspectorEntry, InspectorState, InspectorStore } from './inspector-store';
