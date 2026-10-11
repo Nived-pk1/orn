@@ -4,6 +4,7 @@
  * but RDKit's glue chunk, the glue chunk mentioned by a chunk that is not the chem worker, RDKit merged into one of our chunks.
  */
 import { spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -18,12 +19,16 @@ const DEMO = readFileSync(fileURLToPath(new URL('../../data/seed/demo.orn.json',
 const dirs: string[] = [];
 
 const page = (policy = POLICY): string =>
-  `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${policy.replaceAll("'", '&#39;')}"><script type="module" crossorigin src="/assets/index-x.js"></script></head><body></body></html>`;
+  `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${policy.replaceAll("'", '&#39;')}"><script type="module" crossorigin src="/assets/index-x1.js"></script></head><body></body></html>`;
 
 type Files = Record<string, string | Buffer | null>;
 const good = (): Files => ({
   'index.html': page(),
   'assets/index-x1.js': 'console.log("app")',
+  'assets/views-other-v1.js': 'export const views = 1',
+  'assets/import-inprocess-i1.js': 'export const inprocess = 1',
+  'assets/export-inprocess-e1.js': 'export const exports = 1',
+  'assets/import-legacy-l1.js': 'export const legacy = 1',
   'assets/worker-chem-c1.js': `import("./rdkit-glue-g1.js"); const wasm = "${WASM_NAME}";`,
   'assets/worker-layout-l1.js': 'export const layout = 1',
   'assets/worker-search-s1.js': 'export const search = 1',
@@ -62,6 +67,31 @@ describe('scripts/check-build.mjs', () => {
     expect(out).toContain(`wasm: assets/${WASM_NAME}`);
     expect(out).toContain('rdkit glue: assets/rdkit-glue-g1.js');
     expect(out).toContain('demo dataset: assets/demo.orn-d1.json');
+  });
+
+  it('lists the lazy chunks and the initial JS (step 5.7)', () => {
+    const { status, out } = run({});
+    expect(status).toBe(0);
+    for (const name of ['views-other', 'import-inprocess', 'export-inprocess', 'import-legacy']) expect(out).toContain(`lazy chunk: ${name}`);
+    expect(out).toContain('initial JS: assets/index-x1.js');
+  });
+
+  it('fails when a lazy chunk is missing, is loaded by the page, or the initial JS is over 400 kB gzip', () => {
+    const missing = run({ 'assets/views-other-v1.js': null });
+    expect(missing.status).toBe(1);
+    expect(missing.out).toContain('FAIL assets/views-other-<hash>.js: the lazy chunk is missing');
+    const eager = run({ 'index.html': page().replace('</head>', '<link rel="modulepreload" href="/assets/import-legacy-l1.js"></head>') });
+    expect(eager.status).toBe(1);
+    expect(eager.out).toContain('FAIL import-legacy: is loaded by index.html, so it is not lazy');
+    const heavy = run({ 'assets/index-x1.js': randomBytes(410_000).toString('latin1') });
+    expect(heavy.status).toBe(1);
+    expect(heavy.out).toContain('over the 400 kB budget');
+  });
+
+  it('fails on eval( in a lazy chunk (the scan covers every chunk)', () => {
+    const { status, out } = run({ 'assets/import-inprocess-i1.js': 'eval("1")' });
+    expect(status).toBe(1);
+    expect(out).toContain('assets/import-inprocess-i1.js');
   });
 
   it('fails when the demo dataset is missing, duplicated or not the repo file (step 5.1d)', () => {

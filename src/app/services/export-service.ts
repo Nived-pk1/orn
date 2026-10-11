@@ -4,12 +4,13 @@
  * (`createComputeExport`, asset bytes read here through `getAssetBlob`) or the Phase 3 builders on this thread. One operation at a
  * time; a cancel returns `CANCELLED` with no bytes.
  */
-import { buildOrnJsonExport, buildOrnPackageExport, type AssetBytesProvider, type ExportBuildResult, type ExportOptions } from '@/io';
+import type { AssetBytesProvider, ExportBuildResult, ExportOptions } from '@/io';
 import { createComputeExport, type ComputeExport, type ReplicaSync } from '@/workers/compute';
 import type { ExportFormat } from '@/workers/rpc/contracts';
 import type { FlowDeps } from './flow-deps';
 import { isRefusal } from './flow-gate';
 import { cancelledRefusal, isRoute, routeOf } from './flow-route';
+import { loadChunk } from './lazy-chunk';
 import type { ExportAnswer, Flows } from './flow-types';
 
 export type ExportService = Pick<Flows, 'export'>;
@@ -49,6 +50,9 @@ export function createExportService(deps: FlowDeps): ExportService {
         }
         const revision = store.getRevision();
         const exportDeps = { exportedAt: ids.now(), generator: deps.env.generator, assetBytes };
+        const chunk = await loadChunk(() => import('./export-inprocess'), 'The export code for this thread');
+        if (!chunk.ok) return { ok: false, code: 'REJECTED', message: chunk.message };
+        const { buildOrnJsonExport, buildOrnPackageExport } = chunk.value;
         const built: ExportBuildResult =
           format === 'orn.json'
             ? await buildOrnJsonExport(store.getState(), options, exportDeps, task)

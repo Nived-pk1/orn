@@ -7,7 +7,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createDerivedIndexes } from '@/app/services/derived-indexes';
 import { createCanonicalStore } from '@/core/commands';
 import { deserializeDocument, documentToState } from '@/core/dataset';
@@ -16,10 +16,14 @@ import { manualTimers } from '@/test-support/navigator-kit';
 import { createFamilyStore, createInspectorStore, createPanelsStore, createSelectionStore } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { Inspector } from './inspector';
+import { loadOtherViews } from './lazy-views';
 import { InspectorEnvContext, makeEnv } from './env';
 import { ExternalLink, RecordLink, RichText } from './rich-text';
 
 afterEach(cleanup);
+beforeAll(async () => {
+  await loadOtherViews();
+});
 
 const text = readFileSync(resolve(process.cwd(), 'data/fixtures/schema/v2/maximal-valid.orn.json'), 'utf8');
 const parsed = deserializeDocument(text);

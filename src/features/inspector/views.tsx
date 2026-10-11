@@ -3,15 +3,10 @@
  * readable view (`READABLE_KINDS`: the completeness test checks all 22); the raw record at L5 still carries every field, so nothing is
  * hidden. The view of a kind is wrapped in an element that says which kind it is (`data-view`).
  */
-import type { AnyRecord, Asset, Caveat, ChemicalClass, Concept, EntityDisplay, Exam, ExamRelevance, ExamVersion, Mechanism, NamedReaction, NavigatorAnchor, Reaction, ReactionScheme, Reagent, RecordKind, Reference, Relationship, Route, Species, Topic, TopicMapping, Transformation, ViewPreset } from '@/core/schema';
+import type { AnyRecord, ChemicalClass, Reaction, Reagent, RecordKind, Species } from '@/core/schema';
 import type { Finding } from '@/core/validation';
-import { ExamLevels, ExamRelevanceLevels, ExamVersionLevels, TopicMappingLevels } from './view-curriculum';
-import { AssetLevels } from './view-asset';
-import { CaveatLevels, ConceptLevels, NamedReactionLevels, TransformationLevels } from './view-knowledge';
-import { MechanismLevels } from './view-mechanism';
-import { ReferenceLevels, RelationshipLevels, RouteLevels, TopicLevels } from './view-organisation';
-import { EntityDisplayLevels, NavigatorAnchorLevels, ReactionSchemeLevels, ViewPresetLevels } from './view-presentation';
 import { ReactionLevels } from './view-reaction';
+import { LazyOtherView } from './lazy-views';
 import { ClassLevels, ReagentLevels, SpeciesLevels } from './view-substance';
 
 /** Every record kind that has its own readable view. */
@@ -31,42 +26,8 @@ function View(props: { readonly record: AnyRecord; readonly findings: readonly F
       return <ReagentLevels record={record as Reagent} findings={findings} />;
     case 'reaction':
       return <ReactionLevels record={record as Reaction} findings={findings} />;
-    case 'named_reaction':
-      return <NamedReactionLevels record={record as NamedReaction} />;
-    case 'concept':
-      return <ConceptLevels record={record as Concept} />;
-    case 'transformation':
-      return <TransformationLevels record={record as Transformation} />;
-    case 'caveat':
-      return <CaveatLevels record={record as Caveat} />;
-    case 'mechanism':
-      return <MechanismLevels record={record as Mechanism} />;
-    case 'route':
-      return <RouteLevels record={record as Route} />;
-    case 'topic':
-      return <TopicLevels record={record as Topic} />;
-    case 'relationship':
-      return <RelationshipLevels record={record as Relationship} />;
-    case 'reference':
-      return <ReferenceLevels record={record as Reference} />;
-    case 'exam':
-      return <ExamLevels record={record as Exam} />;
-    case 'exam_version':
-      return <ExamVersionLevels record={record as ExamVersion} />;
-    case 'topic_mapping':
-      return <TopicMappingLevels record={record as TopicMapping} />;
-    case 'exam_relevance':
-      return <ExamRelevanceLevels record={record as ExamRelevance} />;
-    case 'asset':
-      return <AssetLevels record={record as Asset} />;
-    case 'navigator_anchor':
-      return <NavigatorAnchorLevels record={record as NavigatorAnchor} />;
-    case 'reaction_scheme':
-      return <ReactionSchemeLevels record={record as ReactionScheme} />;
-    case 'view_preset':
-      return <ViewPresetLevels record={record as ViewPreset} />;
-    case 'entity_display':
-      return <EntityDisplayLevels record={record as EntityDisplay} />;
+    default:
+      return <LazyOtherView record={record} />;
   }
 }
 

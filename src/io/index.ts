@@ -1,5 +1,9 @@
 export * from './contracts';
-export { convertLegacy } from './import-legacy';
+import type { convertLegacy as convertLegacyValue } from './import-legacy';
+// The legacy importer is its own chunk (step 5.7, lazy loading): nothing here may import it statically, or it is bundled into the
+// initial chunk. `convertLegacy` keeps its signature and loads the chunk on first call; the other legacy-v6 functions are imported
+// from '@/io/legacy-v6' (their only users do) and only their types are re-exported here.
+export const convertLegacy: typeof convertLegacyValue = async (input) => (await import('./import-legacy')).convertLegacy(input);
 export type { LegacyConversion } from './import-legacy';
 export { selectScope } from './export-scope';
 export type { ScopeSelection } from './export-scope';
@@ -40,23 +44,6 @@ export type { PrepareApplyOutcome, PreparedApply } from './import-prepare';
 export { createImportSession } from './import-session';
 export type { ImportSession, ImportSessionDeps, PreviewInput } from './import-session';
 export type { AssetStagePort, ImportBatchRowLike, ImportBatchSink, ImportQuarantineRowLike, ImportStorePort, SnapshotPort } from './import-ports';
-export {
-  createDocumentIds,
-  createLegacyIdSpace,
-  createReportBuilder,
-  findDroppedLeaves,
-  legacyAssetId,
-  mapLegacyCompounds,
-  mapLegacyReactions,
-  mergeMappedRecords,
-  LEGACY_V5_SCHEMA_VERSION,
-  migrateLegacyReaction,
-  normalizeLegacyData,
-  parseConditionField,
-  parseLabel,
-  parseLegacyConditions,
-  splitLegacyReagent,
-} from './legacy-v6';
 export type {
   DroppedLeaf,
   HubDecision,

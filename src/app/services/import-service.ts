@@ -5,7 +5,7 @@
  * the caller asked for it. A batch lives on the path that made it. One operation at a time (`flow-gate.ts`); apply answers only
  * after `flush()` (`durabilityOf`); a cancel is honoured before the commit (`guardStore`) and changes nothing.
  */
-import { createImportSession, parseImportSource, type ImportApplyResult, type ImportBatchReport, type ImportPlan, type ImportSession, type TaskOptions } from '@/io';
+import type { ImportApplyResult, ImportBatchReport, ImportPlan, TaskOptions } from '@/io';
 import { sha256Hex } from '@/io/hash';
 import { createComputeImport, idFactoryFrom, type ComputeImport, type ReplicaSync } from '@/workers/compute';
 import type { IdData, RpcResult, WorkerImportOutcome } from '@/workers/rpc/contracts';
@@ -13,6 +13,8 @@ import type { FlowDeps } from './flow-deps';
 import { isRefusal, type Operation } from './flow-gate';
 import { durabilityOf, guardStore } from './flow-ports';
 import { cancelledRefusal, isRoute, readOnlyRefusal, routeOf } from './flow-route';
+import { loadChunk } from './lazy-chunk';
+import type { InProcessImport } from './import-inprocess';
 import type { FlowOptions, ImportApplyAnswer, ImportFlows, ImportPreviewAnswer } from './flow-types';
 
 type Path = 'worker' | 'in_process';
@@ -62,13 +64,21 @@ export function createImportService(deps: FlowDeps): ImportService {
 
   // The in-process session: the SAME Phase 3 code. Its IDs come from the factory of the call that is running (a new seed per call).
   let current = idFactoryFrom(idData());
-  const session: ImportSession = createImportSession({
-    store: router.port,
-    ids: { now: () => current.now(), newId: (prefix) => current.newId(prefix) },
-    snapshots,
-    batches,
-    assetStage: deps.assetStage.port,
-  });
+  // The pipeline is its own chunk, loaded when the first preview or revise runs on this thread; a chunk that fails to load is a refusal in words.
+  let inProcess: InProcessImport | undefined;
+  const inProcessImport = async (): Promise<{ readonly ok: true; readonly value: InProcessImport } | { readonly ok: false; readonly refusal: ImportPreviewAnswer }> => {
+    if (inProcess !== undefined) return { ok: true, value: inProcess };
+    const chunk = await loadChunk(() => import('./import-inprocess'), 'The import code for this thread');
+    if (!chunk.ok) return { ok: false, refusal: { ok: false, code: 'WORKER_DOWN', message: chunk.message } };
+    inProcess = chunk.value.createInProcessImport({
+      store: router.port,
+      ids: { now: () => current.now(), newId: (prefix) => current.newId(prefix) },
+      snapshots,
+      batches,
+      assetStage: deps.assetStage.port,
+    });
+    return { ok: true, value: inProcess };
+  };
 
   let worker: { readonly sync: ReplicaSync; readonly flow: ComputeImport } | undefined;
   const workerFlow = (sync: ReplicaSync): ComputeImport => {
@@ -147,6 +157,9 @@ export function createImportService(deps: FlowDeps): ImportService {
           const data = idData();
           nowIso = data.nowIso;
           current = idFactoryFrom(data);
+          const loaded = await inProcessImport();
+          if (!loaded.ok) return loaded.refusal;
+          const { session, parseImportSource } = loaded.value;
           const parsed = await parseImportSource({ fileName, bytes: source }, { runner: deps.env.migrationRunner }, task);
           if (!parsed.ok) answer = { ok: false, code: parsed.code, message: parsed.message, ...(parsed.detail === undefined ? {} : { detail: parsed.detail }) };
           else {
@@ -179,7 +192,9 @@ export function createImportService(deps: FlowDeps): ImportService {
           const data = idData();
           nowIso = data.nowIso;
           current = idFactoryFrom(data);
-          const outcome = await session.revise(batchId, request, task);
+          const loaded = await inProcessImport();
+          if (!loaded.ok) return loaded.refusal;
+          const outcome = await loaded.value.session.revise(batchId, request, task);
           answer = outcome.ok ? { ok: true, plan: outcome.plan, inProcess: true } : outcome;
         }
         if (answer.ok) remember(answer.plan.preview.batchId, route.kind === 'worker' ? 'worker' : 'in_process', { sourceSha256, clockNowIso: nowIso });
@@ -192,7 +207,7 @@ export function createImportService(deps: FlowDeps): ImportService {
       if (path === undefined) return { cancelled: false };
       paths.delete(batchId);
       metas.delete(batchId);
-      if (path === 'in_process') return { cancelled: session.cancel(batchId) };
+      if (path === 'in_process') return { cancelled: inProcess?.session.cancel(batchId) ?? false };
       const sync = deps.replica.sync();
       if (sync === undefined) return { cancelled: false };
       const answer = await workerFlow(sync).cancel(batchId);
@@ -218,7 +233,9 @@ export function createImportService(deps: FlowDeps): ImportService {
         if (route.kind === 'worker') result = await workerFlow(route.sync).apply(batchId, plan);
         else {
           current = idFactoryFrom(idData());
-          result = await session.apply(batchId, plan);
+          const loaded = await inProcessImport();
+          if (!loaded.ok) return { ok: false, code: 'WORKER_DOWN', message: loaded.refusal.ok ? '' : loaded.refusal.message };
+          result = await loaded.value.session.apply(batchId, plan);
         }
         if (!result.ok) return guard.cancelledAtCommit() ? cancelledRefusal() : result;
         const meta = metas.get(batchId);

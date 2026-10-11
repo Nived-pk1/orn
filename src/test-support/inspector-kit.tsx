@@ -5,6 +5,7 @@
 import { fireEvent } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { loadOtherViews } from '@/features/inspector/lazy-views';
 import { createDerivedIndexes } from '@/app/services/derived-indexes';
 import { createCanonicalStore } from '@/core/commands';
 import { deserializeDocument, documentToState } from '@/core/dataset';
@@ -65,4 +66,10 @@ export function openLevels(): void {
 export function fakeLayout(): void {
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => 30 });
   HTMLElement.prototype.getBoundingClientRect = () => ({ x: 0, y: 0, top: 0, left: 0, right: 320, bottom: 30, width: 320, height: 30, toJSON: () => ({}) });
+}
+
+/** Loads the chunk of the lazily loaded kind views, so a test that opens such a record finds its view at once (the app shows a skeleton first). */
+export async function preloadViews(): Promise<void> {
+  const answer = await loadOtherViews();
+  if (!answer.ok) throw new Error(answer.message);
 }

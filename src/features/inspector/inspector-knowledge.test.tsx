@@ -8,11 +8,12 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import type { Reaction, RecordRef } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
-import { fakeLayout, inspectorRig, maximalState, openEverything, openLevels } from '@/test-support/inspector-kit';
+import { fakeLayout, preloadViews, inspectorRig, maximalState, openEverything, openLevels } from '@/test-support/inspector-kit';
 import { Inspector } from './inspector';
 
 afterEach(cleanup);
 beforeAll(fakeLayout);
+beforeAll(preloadViews);
 
 function show(state: ReturnType<typeof demoState>, ref: RecordRef, at?: string) {
   const rig = inspectorRig(state);

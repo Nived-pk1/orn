@@ -9,13 +9,14 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { RECORD_KINDS, type AnyRecord, type CanonicalState, type RecordRef } from '@/core/schema';
-import { fakeLayout, inspectorRig, maximalState, openEverything, openLevels } from '@/test-support/inspector-kit';
+import { fakeLayout, preloadViews, inspectorRig, maximalState, openEverything, openLevels } from '@/test-support/inspector-kit';
 import type { AssetImage } from './contracts';
 import { Inspector } from './inspector';
 import { READABLE_KINDS } from './views';
 
 afterEach(cleanup);
 beforeAll(fakeLayout);
+beforeAll(preloadViews);
 
 const state = maximalState();
 

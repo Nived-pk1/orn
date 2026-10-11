@@ -15,6 +15,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 
 const WORKERS = ['chem', 'layout', 'search', 'compute'];
 const dist = process.argv[2] ?? 'dist';
@@ -127,6 +128,23 @@ const demoCopies = all.filter((path) => /^assets\/demo\.orn-[^/]+\.json$/.test(r
 if (demoCopies.length !== 1) fail('assets/demo.orn-<hash>.json', `expected exactly one copy of the demo dataset, found ${demoCopies.length}`);
 else if (!readFileSync(demoCopies[0]).equals(readFileSync(demoSource))) fail(rel(demoCopies[0]), 'differs from data/seed/demo.orn.json');
 else report.push(`demo dataset: ${rel(demoCopies[0])} (${kB(statSync(demoCopies[0]).size)}) is identical to data/seed/demo.orn.json`);
+
+// 6. lazy chunks (step 5.7): rarely used code is its own chunk, never part of the initial load, and (being JS chunks) scanned in 4
+const LAZY = ['views-other', 'import-inprocess', 'export-inprocess', 'import-legacy'];
+const INITIAL_JS_GZIP_BUDGET = 400 * 1000;
+const gz = (bytes) => `${(bytes / 1000).toFixed(2)} kB gzip`; // vite's unit (1 kB = 1000 bytes)
+const htmlText = existsSync(indexPath) ? readFileSync(indexPath, 'utf8') : '';
+const initial = [...htmlText.matchAll(/<(?:script|link)\s[^>]*(?:src|href)="\/?([^"]+\.js)"/gi)].map((m) => m[1]);
+for (const name of LAZY) {
+  const found = js.filter((path) => rel(path).startsWith(`assets/${name}-`));
+  if (found.length === 0) fail(`assets/${name}-<hash>.js`, 'the lazy chunk is missing (the code went back into another chunk)');
+  else if (found.some((path) => initial.includes(rel(path)))) fail(name, 'is loaded by index.html, so it is not lazy');
+  else report.push(`lazy chunk: ${name} (${found.map((path) => `${gz(gzipSync(readFileSync(path)).length)}`).join(', ')}), not in the initial load`);
+}
+const initialGzip = initial.reduce((sum, name) => sum + gzipSync(readFileSync(join(dist, name))).length, 0);
+if (initial.length === 0) fail('index.html', 'no initial JS found');
+else if (initialGzip > INITIAL_JS_GZIP_BUDGET) fail('index.html', `initial JS is ${gz(initialGzip)}, over the 400 kB budget`);
+else report.push(`initial JS: ${initial.join(', ')} (${gz(initialGzip)}, budget 400 kB)`);
 
 for (const line of report) console.log(`ok   ${line}`);
 if (failures.length > 0) {
