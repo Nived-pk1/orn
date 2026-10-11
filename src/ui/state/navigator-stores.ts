@@ -18,7 +18,14 @@ export interface SelectionState {
   readonly selected: Selected | null;
   /** Counts every non-null `select` call, also one that changes nothing (step 5.6a): the inspector opens on a click even for what was already selected. Never saved. */
   readonly picks: number;
+  /**
+   * Counts every `reveal()` (step 5.7): a request to show the selection in the inspector PANE now. A click on the map asks for it only
+   * when its 300 ms double-click window has passed (a double click opens the family page and never asks); Enter and a menu item ask
+   * at once. Never saved.
+   */
+  readonly reveals: number;
   select(next: Selected | null): void;
+  reveal(): void;
 }
 export type SelectionStore = StoreApi<SelectionState>;
 
@@ -28,6 +35,8 @@ export function createSelectionStore(initial: Selected | null = null): Selection
   return createStore<SelectionState>((set, get) => ({
     selected: initial,
     picks: 0,
+    reveals: 0,
+    reveal: () => set({ reveals: get().reveals + 1 }),
     select(next) {
       const picks = next === null ? get().picks : get().picks + 1;
       if (!sameSelected(get().selected, next) || picks !== get().picks) set({ selected: next, picks });

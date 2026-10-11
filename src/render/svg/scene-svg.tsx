@@ -36,8 +36,9 @@ export function SceneSvg(props: SceneSvgProps) {
     report(hit !== null && hit.kind === 'edge' ? hit.id : null);
   };
   const leave = onSceneHover === undefined ? undefined : (): void => report(null);
+  const { keyboard } = props;
   return (
-    <svg ref={props.svgRef} onClick={click} onPointerMove={move} onPointerLeave={leave} onDoubleClick={doubleClick} className={props.interactive === true ? `${styles.root} ${styles.interactive}` : styles.root} role="group" aria-label={props.ariaLabel} data-lod={lod} data-scene-width={scene.bounds.width} data-scene-height={scene.bounds.height} xmlns="http://www.w3.org/2000/svg">
+    <svg ref={props.svgRef} onClick={click} onPointerMove={move} onPointerLeave={leave} onDoubleClick={doubleClick} className={props.interactive === true ? `${styles.root} ${styles.interactive}` : styles.root} role="group" aria-label={props.ariaLabel} {...(keyboard === undefined ? {} : { tabIndex: 0, onKeyDown: keyboard.onKeyDown, onFocus: keyboard.onFocus, onBlur: keyboard.onBlur, ...(keyboard.activeId === undefined ? {} : { 'aria-activedescendant': ids.node(keyboard.activeId) }) })} data-lod={lod} data-scene-width={scene.bounds.width} data-scene-height={scene.bounds.height} xmlns="http://www.w3.org/2000/svg">
       <SceneDefs scene={scene} ids={ids} />
       <g ref={worldRef} data-world="true">
         <EdgesLayer scene={scene} lod={lod} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />

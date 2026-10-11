@@ -9,3 +9,5 @@ export { labelSizes, arrowLines, linesOfPath, ARROW_TEXT_SIZE, ARROW_LINE_HEIGHT
 export type { LabelSize, LabelSizes } from './label-sizes';
 export { drawnPaths } from './paths';
 export type { DrawnPath } from './paths';
+export { familiesOf, firstFamily, lastFamily, neighbourInDirection, readingOrder, stepInReadingOrder } from './navigation';
+export type { Direction } from './navigation';

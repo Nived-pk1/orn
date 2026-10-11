@@ -1,8 +1,10 @@
 /**
  * The navigator overview on screen (step 5.5a, calmed in 5.5b; ADR-037): a toolbar (Zoom in, Zoom out, Fit, Open family, and Open for a
  * selected arrow) over the interactive drawing. It renders what the model says: the Scene; a plain error with its code; a skeleton only
- * when there is no Scene yet and 300 ms have passed. ONE delegated click listener lives on the drawing's svg: a click selects the node
- * or edge under it, empty canvas clears; a double click on a family opens its page. The overview does not expand hubs.
+ * when there is no Scene yet and 300 ms have passed. The pointer state machine (step 5.7) classifies presses on the drawing: a click selects
+ * the node or edge under it (empty canvas clears) and, once its 300 ms window has passed, shows it in the inspector; a double click on a
+ * family opens its page; a long press or right click opens the context menu. The keyboard map and the menu are `use-canvas-input.ts`.
+ * The overview does not expand hubs.
  * The legend of the family groups (step 5.5c) sits under the toolbar. The layer commit count is written to a data attribute by hand (no React state) so a test can prove pan and zoom render nothing.
  */
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -10,9 +12,10 @@ import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
 import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
 import type { Scene } from '@/render/scene';
-import { Banner, Button, Skeleton } from '@/ui/primitives';
+import { Banner, Button, ContextMenu, Skeleton } from '@/ui/primitives';
 import { depictionBindingOf } from './depictions';
 import { keyOf, legendOf } from './legend';
+import { useCanvasInput } from './use-canvas-input';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorLegend } from './navigator-legend';
 import { NavigatorSelection } from './navigator-selection';
@@ -33,7 +36,8 @@ export function openFamilyReason(selected: { readonly kind: 'node' | 'edge' } | 
 }
 
 export function NavigatorCanvas() {
-  const { ports } = useNavigator();
+  const { ports, announcer } = useNavigator();
+  const announce = announcer.say;
   const state = useNavigatorState();
   const selected = useStore(ports.ui.selection, (s) => s.selected);
   const [controller, setController] = useState<ViewportController | null>(null);
@@ -42,9 +46,13 @@ export function NavigatorCanvas() {
   const root = useRef<HTMLDivElement>(null);
   const commits = useRef(0);
   // Written imperatively: a layer that commits bumps a data attribute, React state is not involved.
-  const onLayerCommit = useCallback((_layer: LayerName): void => {
+  // The count of each layer is written too (data-commits-nodes, ...): the evidence for the keyboard focus decision (step 5.7).
+  const perLayer = useRef<Partial<Record<LayerName, number>>>({});
+  const onLayerCommit = useCallback((layer: LayerName): void => {
     commits.current += 1;
+    perLayer.current[layer] = (perLayer.current[layer] ?? 0) + 1;
     root.current?.setAttribute('data-layer-commits', String(commits.current));
+    root.current?.setAttribute(`data-commits-${layer}`, String(perLayer.current[layer]));
   }, []);
   const { scene } = state;
   const sceneRef = useRef<Scene | null>(scene);
@@ -57,16 +65,20 @@ export function NavigatorCanvas() {
   const hubs = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
   const isHub = useCallback((id: string): boolean => state.hubIds.includes(id), [state.hubIds]);
   const openFamily = useCallback((hubId: string): void => ports.ui.family.getState().openFamily(hubId), [ports]);
-
-  const onSceneClick = useCallback((hit: SceneHit | null): void => ports.ui.selection.getState().select(hit), [ports]);
-  const onSceneDoubleClick = useCallback(
-    (hit: SceneHit | null): void => {
-      if (hit !== null && hit.kind === 'node' && isHub(hit.id)) openFamily(hit.id);
-    },
-    [isHub, openFamily],
-  );
+  const [svg, setSvg] = useState<SVGSVGElement | null>(null);
+  const input = useCanvasInput({ ui: ports.ui, scene, isHub, controller, svg, announce });
   const onSceneHover = useCallback((hit: SceneHit | null): void => setHoveredId(hit === null ? undefined : hit.id), []);
-  const onSettled = useCallback((view: Viewport): void => ports.ui.viewports.getState().setViewport(VIEW, view), [ports]);
+  // The zoom level is said once the view has been still (never per wheel frame), and not for the first view (a fit or a restore).
+  const said = useRef<number | undefined>(initialViewport === undefined ? undefined : Math.round(initialViewport.scale * 100));
+  const onSettled = useCallback(
+    (view: Viewport): void => {
+      ports.ui.viewports.getState().setViewport(VIEW, view);
+      const percent = Math.round(view.scale * 100);
+      if (said.current !== undefined && said.current !== percent) announce(`Zoom ${percent} percent`);
+      said.current = percent;
+    },
+    [ports, announce],
+  );
 
   const selectedHub = selected !== null && selected.kind === 'node' && isHub(selected.id) ? selected.id : undefined;
   const openReason = openFamilyReason(selected, selectedHub !== undefined);
@@ -138,14 +150,29 @@ export function NavigatorCanvas() {
             onController={setController}
             {...(depictions === undefined ? {} : { depictions })}
             onLayerCommit={onLayerCommit}
-            onSceneClick={onSceneClick}
-            onSceneDoubleClick={onSceneDoubleClick}
+            pointer={input.pointer}
+            pointerTimers={ports.timers}
+            keyboard={input.keyboard}
+            onSvg={setSvg}
+            {...(input.ringId === undefined ? {} : { focusedId: input.ringId })}
             onSceneHover={onSceneHover}
             onSettled={onSettled}
             {...(initialViewport === undefined ? {} : { initialViewport })}
           />
         )}
       </div>
+      <ContextMenu
+        at={input.menu?.at ?? null}
+        label={input.menu?.menu.label ?? 'Canvas'}
+        items={(input.menu?.menu.entries ?? []).map((entry) => ({
+          id: entry.id,
+          label: entry.label,
+          onSelect: () => input.run(entry.action),
+          ...(entry.unavailable === undefined ? {} : { unavailable: entry.unavailable }),
+        }))}
+        onClose={input.closeMenu}
+        onCloseFocus={input.closeMenuFocus}
+      />
     </div>
   );
 }

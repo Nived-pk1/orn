@@ -3,19 +3,22 @@
  * records and stopped when it has none. React reads the model's state through `useSyncExternalStore`; nothing else is React state.
  */
 import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
+import { createAnnouncer, type Announcer } from './announcer';
 import type { NavigatorPorts } from './contracts';
 import { createNavigatorModel, type NavigatorModel, type NavigatorState } from './pipeline';
 
 interface NavigatorContextValue {
   readonly model: NavigatorModel;
   readonly ports: NavigatorPorts;
+  /** The words for the screen's one live region (step 5.7). */
+  readonly announcer: Announcer;
 }
 
 const NavigatorContext = createContext<NavigatorContextValue | null>(null);
 
 export function NavigatorProvider(props: { readonly ports: NavigatorPorts; readonly active: boolean; readonly children: ReactNode }) {
   const { ports, active } = props;
-  const value = useMemo<NavigatorContextValue>(() => ({ model: createNavigatorModel(ports), ports }), [ports]);
+  const value = useMemo<NavigatorContextValue>(() => ({ model: createNavigatorModel(ports), ports, announcer: createAnnouncer() }), [ports]);
   useEffect(() => {
     if (!active) return undefined;
     value.model.start();

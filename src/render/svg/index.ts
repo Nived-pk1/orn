@@ -8,3 +8,5 @@ export type { DepictionBinding, DepictionPort } from './depiction-binding';
 export { LAYER_NAMES } from './contracts';
 export type { DepictionSource, DepictionStatus, LayerName, SceneHit, SceneSvgProps } from './contracts';
 export { STROKE_DASH, WEIGHT_WIDTH } from './geometry';
+export { hitOf } from './hit';
+export { plainText } from './text';

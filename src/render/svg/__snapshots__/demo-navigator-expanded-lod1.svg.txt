@@ -398,222 +398,222 @@
       </g>
     </g>
     <g data-layer="nodes">
-      <g transform="translate(1412 608)" data-node-id="cls_alcohols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alcohols, class hub, Oxygen compounds">
+      <g transform="translate(1412 608)" id="orn-ID-node-cls_alcohols" data-node-id="cls_alcohols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alcohols, class hub, Oxygen compounds">
         <title>Alcohols · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(10 276)" data-node-id="cls_alcohols-primary" data-glyph="class_hub" data-box="member" role="graphics-symbol" aria-label="Primary alcohols, class hub, member of a hub, 1 reaction out">
+      <g transform="translate(10 276)" id="orn-ID-node-cls_alcohols-primary" data-node-id="cls_alcohols-primary" data-glyph="class_hub" data-box="member" role="graphics-symbol" aria-label="Primary alcohols, class hub, member of a hub, 1 reaction out">
         <title>Primary alcohols</title>
         <rect class="_member_e97cec" width="116" height="28" rx="2"></rect>
       </g>
-      <g transform="translate(518 806)" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 1 reaction in">
+      <g transform="translate(518 806)" id="orn-ID-node-cls_aldehydes" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 1 reaction in">
         <title>Aldehydes · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(8 396)" data-node-id="cls_alkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkanes, class hub, Hydrocarbons">
+      <g transform="translate(8 396)" id="orn-ID-node-cls_alkanes" data-node-id="cls_alkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkanes, class hub, Hydrocarbons">
         <title>Alkanes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(1192 610)" data-node-id="cls_alkenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkenes, class hub, Hydrocarbons">
+      <g transform="translate(1192 610)" id="orn-ID-node-cls_alkenes" data-node-id="cls_alkenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkenes, class hub, Hydrocarbons">
         <title>Alkenes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(258 604)" data-node-id="cls_alkynes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkynes, class hub, Hydrocarbons">
+      <g transform="translate(258 604)" id="orn-ID-node-cls_alkynes" data-node-id="cls_alkynes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkynes, class hub, Hydrocarbons">
         <title>Alkynes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(258 0)" data-node-id="cls_amines" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Amines, class hub, Nitrogen compounds">
+      <g transform="translate(258 0)" id="orn-ID-node-cls_amines" data-node-id="cls_amines" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Amines, class hub, Nitrogen compounds">
         <title>Amines · Nitrogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="violet" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="violet" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(258 268)" data-node-id="cls_arenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Arenes, class hub, Hydrocarbons">
+      <g transform="translate(258 268)" id="orn-ID-node-cls_arenes" data-node-id="cls_arenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Arenes, class hub, Hydrocarbons">
         <title>Arenes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(500 742)" data-node-id="cls_carboxylic-acids" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Carboxylic acids, class hub, Oxygen compounds">
+      <g transform="translate(500 742)" id="orn-ID-node-cls_carboxylic-acids" data-node-id="cls_carboxylic-acids" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Carboxylic acids, class hub, Oxygen compounds">
         <title>Carboxylic acids · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="156" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-156x40)"></rect>
       </g>
-      <g transform="translate(504 410)" data-node-id="cls_diazonium-salts" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Diazonium salts, class hub, Nitrogen compounds">
+      <g transform="translate(504 410)" id="orn-ID-node-cls_diazonium-salts" data-node-id="cls_diazonium-salts" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Diazonium salts, class hub, Nitrogen compounds">
         <title>Diazonium salts · Nitrogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="violet" width="148" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="violet" width="4" height="40" clip-path="url(#orn-ID-hub-148x40)"></rect>
       </g>
-      <g transform="translate(752 706)" data-node-id="cls_esters" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Esters, class hub, Oxygen compounds">
+      <g transform="translate(752 706)" id="orn-ID-node-cls_esters" data-node-id="cls_esters" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Esters, class hub, Oxygen compounds">
         <title>Esters · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(1192 478)" data-node-id="cls_ethers" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ethers, class hub, Oxygen compounds">
+      <g transform="translate(1192 478)" id="orn-ID-node-cls_ethers" data-node-id="cls_ethers" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ethers, class hub, Oxygen compounds">
         <title>Ethers · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(1192 674)" data-node-id="cls_haloalkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloalkanes, class hub, Halogen compounds">
+      <g transform="translate(1192 674)" id="orn-ID-node-cls_haloalkanes" data-node-id="cls_haloalkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloalkanes, class hub, Halogen compounds">
         <title>Haloalkanes · Halogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="amber" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="amber" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(752 510)" data-node-id="cls_haloarenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloarenes, class hub, Halogen compounds">
+      <g transform="translate(752 510)" id="orn-ID-node-cls_haloarenes" data-node-id="cls_haloarenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloarenes, class hub, Halogen compounds">
         <title>Haloarenes · Halogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="amber" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="amber" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(518 678)" data-node-id="cls_ketones" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ketones, class hub, Oxygen compounds">
+      <g transform="translate(518 678)" id="orn-ID-node-cls_ketones" data-node-id="cls_ketones" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ketones, class hub, Oxygen compounds">
         <title>Ketones · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(752 574)" data-node-id="cls_phenols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Phenols, class hub, Oxygen compounds">
+      <g transform="translate(752 574)" id="orn-ID-node-cls_phenols" data-node-id="cls_phenols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Phenols, class hub, Oxygen compounds">
         <title>Phenols · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(266 940)" data-node-id="spc_1-bromopropane" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="1-Bromopropane, species, member of a hub, 2 reactions in">
+      <g transform="translate(266 940)" id="orn-ID-node-spc_1-bromopropane" data-node-id="spc_1-bromopropane" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="1-Bromopropane, species, member of a hub, 2 reactions in">
         <title>1-Bromopropane · C3H7Br</title>
         <rect class="_member_e97cec" width="104" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(266 1008)" data-node-id="spc_2-bromopropane" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="2-Bromopropane, species, member of a hub, 2 reactions in">
+      <g transform="translate(266 1008)" id="orn-ID-node-spc_2-bromopropane" data-node-id="spc_2-bromopropane" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="2-Bromopropane, species, member of a hub, 2 reactions in">
         <title>2-Bromopropane · C3H7Br</title>
         <rect class="_member_e97cec" width="104" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(260 468)" data-node-id="spc_3-hydroxybutanal" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="3-Hydroxybutanal, species, member of a hub, 2 reactions in">
+      <g transform="translate(260 468)" id="orn-ID-node-spc_3-hydroxybutanal" data-node-id="spc_3-hydroxybutanal" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="3-Hydroxybutanal, species, member of a hub, 2 reactions in">
         <title>3-Hydroxybutanal · C4H8O2</title>
         <rect class="_member_e97cec" width="116" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(272 332)" data-node-id="spc_acetophenone" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Acetophenone, species, member of a hub, 1 reaction in">
+      <g transform="translate(272 332)" id="orn-ID-node-spc_acetophenone" data-node-id="spc_acetophenone" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Acetophenone, species, member of a hub, 1 reaction in">
         <title>Acetophenone · C8H8O</title>
         <rect class="_member_e97cec" width="92" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 328)" data-node-id="spc_aniline" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Aniline, species, member of a hub, 1 reaction out">
+      <g transform="translate(28 328)" id="orn-ID-node-spc_aniline" data-node-id="spc_aniline" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Aniline, species, member of a hub, 1 reaction out">
         <title>Aniline · C6H5NH2</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(22 460)" data-node-id="spc_benzaldehyde" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzaldehyde, species, member of a hub, 2 reactions out">
+      <g transform="translate(22 460)" id="orn-ID-node-spc_benzaldehyde" data-node-id="spc_benzaldehyde" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzaldehyde, species, member of a hub, 2 reactions out">
         <title>Benzaldehyde · C6H5CHO</title>
         <rect class="_member_e97cec" width="92" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 528)" data-node-id="spc_benzene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzene, species, member of a hub, 1 reaction out">
+      <g transform="translate(28 528)" id="orn-ID-node-spc_benzene" data-node-id="spc_benzene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzene, species, member of a hub, 1 reaction out">
         <title>Benzene · C6H6</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(232 64)" data-node-id="spc_benzenediazonium-chloride" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzenediazonium chloride, species, member of a hub, 2 reactions out, 1 reaction in">
+      <g transform="translate(232 64)" id="orn-ID-node-spc_benzenediazonium-chloride" data-node-id="spc_benzenediazonium-chloride" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzenediazonium chloride, species, member of a hub, 2 reactions out, 1 reaction in">
         <title>Benzenediazonium chloride · C6H5N2Cl</title>
         <rect class="_member_e97cec" width="172" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(266 132)" data-node-id="spc_benzyl-alcohol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzyl alcohol, species, member of a hub, 1 reaction in">
+      <g transform="translate(266 132)" id="orn-ID-node-spc_benzyl-alcohol" data-node-id="spc_benzyl-alcohol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzyl alcohol, species, member of a hub, 1 reaction in">
         <title>Benzyl alcohol · C7H8O</title>
         <rect class="_member_e97cec" width="104" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(278 1076)" data-node-id="spc_but-1-ene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="But-1-ene, species, member of a hub, 1 reaction in">
+      <g transform="translate(278 1076)" id="orn-ID-node-spc_but-1-ene" data-node-id="spc_but-1-ene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="But-1-ene, species, member of a hub, 1 reaction in">
         <title>But-1-ene · C4H8</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(278 1144)" data-node-id="spc_but-2-ene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="But-2-ene, species, member of a hub, 1 reaction in">
+      <g transform="translate(278 1144)" id="orn-ID-node-spc_but-2-ene" data-node-id="spc_but-2-ene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="But-2-ene, species, member of a hub, 1 reaction in">
         <title>But-2-ene · C4H8</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 664)" data-node-id="spc_but-2-yne" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="But-2-yne, species, member of a hub, 1 reaction out">
+      <g transform="translate(28 664)" id="orn-ID-node-spc_but-2-yne" data-node-id="spc_but-2-yne" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="But-2-yne, species, member of a hub, 1 reaction out">
         <title>But-2-yne · C4H6</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(266 1212)" data-node-id="spc_butan-2-ol-s" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="(S)-Butan-2-ol, species, member of a hub, 1 reaction in">
+      <g transform="translate(266 1212)" id="orn-ID-node-spc_butan-2-ol-s" data-node-id="spc_butan-2-ol-s" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="(S)-Butan-2-ol, species, member of a hub, 1 reaction in">
         <title>(S)-Butan-2-ol · C4H10O</title>
         <rect class="_member_e97cec" width="104" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(268 736)" data-node-id="spc_caprolactam" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="ε-Caprolactam, species, member of a hub, 1 reaction in">
+      <g transform="translate(268 736)" id="orn-ID-node-spc_caprolactam" data-node-id="spc_caprolactam" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="ε-Caprolactam, species, member of a hub, 1 reaction in">
         <title>ε-Caprolactam · C6H11NO</title>
         <rect class="_member_e97cec" width="100" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(528 474)" data-node-id="spc_chlorobenzene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Chlorobenzene, species, member of a hub, 1 reaction in">
+      <g transform="translate(528 474)" id="orn-ID-node-spc_chlorobenzene" data-node-id="spc_chlorobenzene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Chlorobenzene, species, member of a hub, 1 reaction in">
         <title>Chlorobenzene · C6H5Cl</title>
         <rect class="_member_e97cec" width="100" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(268 668)" data-node-id="spc_cis-but-2-ene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="(Z)-But-2-ene, species, member of a hub, 1 reaction in">
+      <g transform="translate(268 668)" id="orn-ID-node-spc_cis-but-2-ene" data-node-id="spc_cis-but-2-ene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="(Z)-But-2-ene, species, member of a hub, 1 reaction in">
         <title>(Z)-But-2-ene · C4H8</title>
         <rect class="_member_e97cec" width="100" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(0 732)" data-node-id="spc_cyclohexanone-oxime" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Cyclohexanone oxime, species, member of a hub, 1 reaction out">
+      <g transform="translate(0 732)" id="orn-ID-node-spc_cyclohexanone-oxime" data-node-id="spc_cyclohexanone-oxime" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Cyclohexanone oxime, species, member of a hub, 1 reaction out">
         <title>Cyclohexanone oxime · C6H11NO</title>
         <rect class="_member_e97cec" width="136" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(980 504)" data-node-id="spc_diethyl-ether" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Diethyl ether, species, member of a hub, 1 reaction in">
+      <g transform="translate(980 504)" id="orn-ID-node-spc_diethyl-ether" data-node-id="spc_diethyl-ether" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Diethyl ether, species, member of a hub, 1 reaction in">
         <title>Diethyl ether · C4H10O</title>
         <rect class="_member_e97cec" width="100" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 596)" data-node-id="spc_ethanal" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanal, species, member of a hub, 4 reactions out, 2 reactions in">
+      <g transform="translate(28 596)" id="orn-ID-node-spc_ethanal" data-node-id="spc_ethanal" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanal, species, member of a hub, 4 reactions out, 2 reactions in">
         <title>Ethanal · CH3CHO</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(1196 542)" data-node-id="spc_ethane-1-2-diol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethane-1,2-diol, species, member of a hub, 1 reaction in">
+      <g transform="translate(1196 542)" id="orn-ID-node-spc_ethane-1-2-diol" data-node-id="spc_ethane-1-2-diol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethane-1,2-diol, species, member of a hub, 1 reaction in">
         <title>Ethane-1,2-diol · C2H6O2</title>
         <rect class="_member_e97cec" width="112" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(268 400)" data-node-id="spc_ethanoic-acid" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanoic acid, species, member of a hub, 1 reaction out, 3 reactions in">
+      <g transform="translate(268 400)" id="orn-ID-node-spc_ethanoic-acid" data-node-id="spc_ethanoic-acid" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanoic acid, species, member of a hub, 1 reaction out, 3 reactions in">
         <title>Ethanoic acid · CH3COOH</title>
         <rect class="_member_e97cec" width="100" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(772 638)" data-node-id="spc_ethanol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanol, species, member of a hub, 7 reactions out, 2 reactions in">
+      <g transform="translate(772 638)" id="orn-ID-node-spc_ethanol" data-node-id="spc_ethanol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanol, species, member of a hub, 7 reactions out, 2 reactions in">
         <title>Ethanol · C2H5OH</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(990 572)" data-node-id="spc_ethene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethene, species, member of a hub, 2 reactions out, 1 reaction in">
+      <g transform="translate(990 572)" id="orn-ID-node-spc_ethene" data-node-id="spc_ethene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethene, species, member of a hub, 2 reactions out, 1 reaction in">
         <title>Ethene · C2H4</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(522 610)" data-node-id="spc_ethyl-ethanoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethyl ethanoate, species, member of a hub, 2 reactions out, 1 reaction in">
+      <g transform="translate(522 610)" id="orn-ID-node-spc_ethyl-ethanoate" data-node-id="spc_ethyl-ethanoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethyl ethanoate, species, member of a hub, 2 reactions out, 1 reaction in">
         <title>Ethyl ethanoate · CH3COOC2H5</title>
         <rect class="_member_e97cec" width="112" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(990 640)" data-node-id="spc_iodoform" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Iodoform, species, member of a hub, 2 reactions in">
+      <g transform="translate(990 640)" id="orn-ID-node-spc_iodoform" data-node-id="spc_iodoform" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Iodoform, species, member of a hub, 2 reactions in">
         <title>Iodoform · CHI3</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(250 804)" data-node-id="spc_methylpropan-2-ol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="2-Methylpropan-2-ol, species, member of a hub, 1 reaction in">
+      <g transform="translate(250 804)" id="orn-ID-node-spc_methylpropan-2-ol" data-node-id="spc_methylpropan-2-ol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="2-Methylpropan-2-ol, species, member of a hub, 1 reaction in">
         <title>2-Methylpropan-2-ol · C4H10O</title>
         <rect class="_member_e97cec" width="136" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(538 542)" data-node-id="spc_phenol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Phenol, species, member of a hub, 1 reaction in">
+      <g transform="translate(538 542)" id="orn-ID-node-spc_phenol" data-node-id="spc_phenol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Phenol, species, member of a hub, 1 reaction in">
         <title>Phenol · C6H5OH</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(274 536)" data-node-id="spc_propan-2-ol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propan-2-ol, species, member of a hub, 1 reaction in">
+      <g transform="translate(274 536)" id="orn-ID-node-spc_propan-2-ol" data-node-id="spc_propan-2-ol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propan-2-ol, species, member of a hub, 1 reaction in">
         <title>Propan-2-ol · C3H8O</title>
         <rect class="_member_e97cec" width="88" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 800)" data-node-id="spc_propanone" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propanone, species, member of a hub, 3 reactions out">
+      <g transform="translate(28 800)" id="orn-ID-node-spc_propanone" data-node-id="spc_propanone" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propanone, species, member of a hub, 3 reactions out">
         <title>Propanone · C3H6O</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 868)" data-node-id="spc_propene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propene, species, member of a hub, 4 reactions out">
+      <g transform="translate(28 868)" id="orn-ID-node-spc_propene" data-node-id="spc_propene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propene, species, member of a hub, 4 reactions out">
         <title>Propene · C3H6</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(6 936)" data-node-id="spc_r-2-bromobutane" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="(R)-2-Bromobutane, species, member of a hub, 3 reactions out">
+      <g transform="translate(6 936)" id="orn-ID-node-spc_r-2-bromobutane" data-node-id="spc_r-2-bromobutane" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="(R)-2-Bromobutane, species, member of a hub, 3 reactions out">
         <title>(R)-2-Bromobutane · C4H9Br</title>
         <rect class="_member_e97cec" width="124" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(262 200)" data-node-id="spc_sodium-benzoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Sodium benzoate, species, member of a hub, 1 reaction in">
+      <g transform="translate(262 200)" id="orn-ID-node-spc_sodium-benzoate" data-node-id="spc_sodium-benzoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Sodium benzoate, species, member of a hub, 1 reaction in">
         <title>Sodium benzoate · C6H5COONa</title>
         <rect class="_member_e97cec" width="112" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(260 872)" data-node-id="spc_sodium-ethanoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Sodium ethanoate, species, member of a hub, 1 reaction in">
+      <g transform="translate(260 872)" id="orn-ID-node-spc_sodium-ethanoate" data-node-id="spc_sodium-ethanoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Sodium ethanoate, species, member of a hub, 1 reaction in">
         <title>Sodium ethanoate · CH3COONa</title>
         <rect class="_member_e97cec" width="116" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(968 708)" data-node-id="spc_sodium-methanoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Sodium methanoate, species, member of a hub, 1 reaction in">
+      <g transform="translate(968 708)" id="orn-ID-node-spc_sodium-methanoate" data-node-id="spc_sodium-methanoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Sodium methanoate, species, member of a hub, 1 reaction in">
         <title>Sodium methanoate · HCOONa</title>
         <rect class="_member_e97cec" width="124" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(1188 738)" data-node-id="virtual:unclassified:hub" data-glyph="unclassified" data-box="unclassified" role="graphics-symbol" aria-label="Unclassified, hub for everything without a hub, not under a hub">
+      <g transform="translate(1188 738)" id="orn-ID-node-virtual.3a.unclassified.3a.hub" data-node-id="virtual:unclassified:hub" data-glyph="unclassified" data-box="unclassified" role="graphics-symbol" aria-label="Unclassified, hub for everything without a hub, not under a hub">
         <title>Unclassified</title>
         <rect class="_unclassified_e97cec" width="128" height="40" rx="2" stroke-dasharray="2 3"></rect>
       </g>

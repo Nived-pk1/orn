@@ -8,6 +8,7 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
+import { tap } from '@/test-support/pointer-kit';
 import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
 
 afterEach(cleanup);
@@ -153,7 +154,7 @@ describe('the family page', () => {
     const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
     renderWithApp(app);
     const aldehydes = await screen.findByRole('graphics-symbol', { name: /^Aldehydes, class hub/ });
-    fireEvent.click(aldehydes);
+    tap(aldehydes);
     fireEvent.click(within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name: 'Open family' }));
     await screen.findByRole('region', { name: /^Family page/ });
     act(() => app.navigator.timers.advance(0));

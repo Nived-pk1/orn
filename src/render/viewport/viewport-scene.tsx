@@ -6,11 +6,13 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { LodLevel, Scene } from '@/render/scene';
 import { SceneSvg } from '@/render/svg';
-import type { DepictionSource, LayerName, SceneHit } from '@/render/svg';
+import type { DepictionSource, LayerName, SceneHit, SceneSvgProps } from '@/render/svg';
 import { VIEWPORT_SETTLE_MS, type Viewport } from './contracts';
 import { createViewportController } from './controller';
 import type { ViewportController } from './controller';
 import { createDepictionQueue } from './depiction-queue';
+import { bindPointer } from './pointer-binding';
+import type { PointerHandlers, PointerTimers } from './pointer-binding';
 import { createViewportStore } from './store';
 import { bindZoom } from './zoom-binding';
 import type { ZoomBinding } from './zoom-binding';
@@ -34,6 +36,18 @@ export interface ViewportSceneProps {
   readonly onSceneDoubleClick?: (hit: SceneHit | null) => void;
   /** The arrow under the pointer (see `SceneSvgProps.onSceneHover`). Keep it stable. */
   readonly onSceneHover?: (hit: SceneHit | null) => void;
+  /**
+   * The pointer state machine's outcomes (step 5.7): click, double click, confirmed click, context menu. When given, they replace
+   * the delegated `onSceneClick` / `onSceneDoubleClick` (the machine decides what a press was). Read at the time of each event, so
+   * the handlers may change between renders without rebinding.
+   */
+  readonly pointer?: PointerHandlers;
+  /** The clock of the machine's 500 ms and 300 ms (the app's injected timers; `window` by default). */
+  readonly pointerTimers?: PointerTimers;
+  /** Receives the root `<svg>` once it exists, and null when it goes away (focus, menu placement). Keep it stable. */
+  readonly onSvg?: (svg: SVGSVGElement | null) => void;
+  /** Keyboard focus on the drawing (see `SceneSvgProps.keyboard`). */
+  readonly keyboard?: SceneSvgProps['keyboard'];
 }
 
 /** What the layers get: the same statuses, but `request` does nothing (the queue decides what is asked for). */
@@ -48,6 +62,10 @@ export function ViewportScene(props: ViewportSceneProps) {
   const controllerRef = useRef<ViewportController | null>(null);
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
+  const pointerRef = useRef(props.pointer);
+  pointerRef.current = props.pointer;
+  const hasPointer = props.pointer !== undefined;
+  const { pointerTimers, onSvg } = props;
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -118,6 +136,27 @@ export function ViewportScene(props: ViewportSceneProps) {
     controllerRef.current?.setScene(scene);
   }, [scene]);
 
+  useEffect(() => {
+    onSvg?.(svgRef.current);
+    return () => onSvg?.(null);
+  }, [onSvg]);
+
+  // The pointer machine: one set of delegated listeners for the life of the drawing; the handlers are read when an event happens.
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (svg === null || !hasPointer) return undefined;
+    return bindPointer(
+      svg,
+      {
+        onClick: (hit) => pointerRef.current?.onClick?.(hit),
+        onDoubleClick: (hit) => pointerRef.current?.onDoubleClick?.(hit),
+        onConfirm: (hit) => pointerRef.current?.onConfirm?.(hit),
+        onContextMenu: (hit, point) => pointerRef.current?.onContextMenu?.(hit, point),
+      },
+      pointerTimers,
+    );
+  }, [hasPointer, pointerTimers]);
+
   const lod = useSyncExternalStore<LodLevel>(store.subscribe, () => store.get().lod, () => 0);
   const layerSource = useMemo(() => (depictions === undefined ? undefined : passive(depictions)), [depictions]);
   return (
@@ -132,6 +171,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       svgRef={svgRef}
       worldRef={worldRef}
       interactive
+      {...(props.keyboard === undefined ? {} : { keyboard: props.keyboard })}
       {...(props.onSceneClick === undefined ? {} : { onSceneClick: props.onSceneClick })}
       {...(props.onSceneHover === undefined ? {} : { onSceneHover: props.onSceneHover })}
       {...(props.onSceneDoubleClick === undefined ? {} : { onSceneDoubleClick: props.onSceneDoubleClick })}

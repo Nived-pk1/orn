@@ -2,7 +2,7 @@
  * The SVG renderer's inputs (step 5.4a; UI_ARCHITECTURE §6): a Scene, the LOD, selection and focus as props, and an optional
  * depiction source. No data access, no services, no chemistry: the renderer draws what the Scene says.
  */
-import type { Ref } from 'react';
+import type { FocusEvent, KeyboardEvent, Ref } from 'react';
 import type { LodLevel, Scene } from '@/render/scene';
 
 export const LAYER_NAMES = ['edges', 'nodes', 'labels', 'badges', 'overlay'] as const;
@@ -62,6 +62,17 @@ export interface SceneSvgProps {
   readonly onSceneHover?: (hit: SceneHit | null) => void;
   /** The same for a double click. */
   readonly onSceneDoubleClick?: (hit: SceneHit | null) => void;
+  /**
+   * Keyboard focus (step 5.7, item e). The drawing is ONE tab stop and keeps the DOM focus; the family that has "the focus" is named
+   * by `aria-activedescendant` on the drawing (its group's id), so moving it renders no node, edge, label or badge layer (the ring is
+   * the overlay's, from `focusedId`). `activeId` is a node id of the Scene, or undefined for none.
+   */
+  readonly keyboard?: {
+    readonly activeId: string | undefined;
+    readonly onKeyDown: (event: KeyboardEvent<SVGSVGElement>) => void;
+    readonly onFocus: (event: FocusEvent<SVGSVGElement>) => void;
+    readonly onBlur: (event: FocusEvent<SVGSVGElement>) => void;
+  };
   /** Called after a layer commits (not when a memoised layer is skipped): the render counters of the tests. Keep it stable. */
   readonly onLayerCommit?: (layer: LayerName) => void;
 }

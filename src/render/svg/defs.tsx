@@ -16,6 +16,8 @@ export interface DefIds {
   readonly clip: (width: number, height: number) => string;
   /** The rounded clip of a hub card of that size (step 5.5c): the tone's left rule is cut to the card's rounded corners. */
   readonly hubClip: (width: number, height: number) => string;
+  /** The DOM id of a node's group (step 5.7): what `aria-activedescendant` of the drawing names. Injective, no whitespace. */
+  readonly node: (nodeId: string) => string;
 }
 
 const token = (value: number): string => String(value).replace(/[^0-9a-z]/gi, '_');
@@ -27,6 +29,7 @@ export const defIds = (prefix: string): DefIds => ({
   accent: `${prefix}-arrow-accent`,
   clip: (width, height) => `${prefix}-clip-${token(width)}x${token(height)}`,
   hubClip: (width, height) => `${prefix}-hub-${token(width)}x${token(height)}`,
+  node: (nodeId) => `${prefix}-node-${nodeId.replace(/[^A-Za-z0-9_-]/g, (char) => `.${char.charCodeAt(0).toString(16)}.`)}`,
 });
 
 const half = ARROW_SIZE / 2;

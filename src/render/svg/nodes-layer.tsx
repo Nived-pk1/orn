@@ -61,6 +61,7 @@ function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; re
     <g
       transform={`translate(${node.x} ${node.y})`}
       className={node.state.dimmed ? styles.dimmed : undefined}
+      id={props.ids.node(node.id)}
       data-node-id={node.id}
       data-glyph={node.glyph}
       data-box={node.box}

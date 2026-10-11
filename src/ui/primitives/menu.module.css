@@ -52,3 +52,14 @@
   font-size: var(--text-12);
   color: var(--color-ink-2);
 }
+
+/* The point a context menu opens at: one pixel, fixed, placed with CSSOM; never in the tab order. */
+.anchor {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}

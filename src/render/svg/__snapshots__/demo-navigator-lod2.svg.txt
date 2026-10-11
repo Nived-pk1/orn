@@ -165,82 +165,82 @@
       </g>
     </g>
     <g data-layer="nodes">
-      <g transform="translate(338 184)" data-node-id="cls_alcohols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alcohols, class hub, Oxygen compounds, 8 reactions out, 7 reactions in">
+      <g transform="translate(338 184)" id="orn-ID-node-cls_alcohols" data-node-id="cls_alcohols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alcohols, class hub, Oxygen compounds, 8 reactions out, 7 reactions in">
         <title>Alcohols · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(338 368)" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 4 reactions out, 3 reactions in, 2 reactions from and back to itself">
+      <g transform="translate(338 368)" id="orn-ID-node-cls_aldehydes" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 4 reactions out, 3 reactions in, 2 reactions from and back to itself">
         <title>Aldehydes · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(4 0)" data-node-id="cls_alkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkanes, class hub, Hydrocarbons">
+      <g transform="translate(4 0)" id="orn-ID-node-cls_alkanes" data-node-id="cls_alkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkanes, class hub, Hydrocarbons">
         <title>Alkanes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(338 0)" data-node-id="cls_alkenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkenes, class hub, Hydrocarbons, 6 reactions out, 4 reactions in">
+      <g transform="translate(338 0)" id="orn-ID-node-cls_alkenes" data-node-id="cls_alkenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkenes, class hub, Hydrocarbons, 6 reactions out, 4 reactions in">
         <title>Alkenes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(668 0)" data-node-id="cls_alkynes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkynes, class hub, Hydrocarbons, 1 reaction out">
+      <g transform="translate(668 0)" id="orn-ID-node-cls_alkynes" data-node-id="cls_alkynes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkynes, class hub, Hydrocarbons, 1 reaction out">
         <title>Alkynes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(980 552)" data-node-id="cls_amines" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Amines, class hub, Nitrogen compounds, 1 reaction out">
+      <g transform="translate(980 552)" id="orn-ID-node-cls_amines" data-node-id="cls_amines" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Amines, class hub, Nitrogen compounds, 1 reaction out">
         <title>Amines · Nitrogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="violet" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="violet" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(1306 0)" data-node-id="cls_arenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Arenes, class hub, Hydrocarbons, 1 reaction out">
+      <g transform="translate(1306 0)" id="orn-ID-node-cls_arenes" data-node-id="cls_arenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Arenes, class hub, Hydrocarbons, 1 reaction out">
         <title>Arenes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(320 552)" data-node-id="cls_carboxylic-acids" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Carboxylic acids, class hub, Oxygen compounds, 1 reaction out, 3 reactions in">
+      <g transform="translate(320 552)" id="orn-ID-node-cls_carboxylic-acids" data-node-id="cls_carboxylic-acids" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Carboxylic acids, class hub, Oxygen compounds, 1 reaction out, 3 reactions in">
         <title>Carboxylic acids · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="156" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-156x40)"></rect>
       </g>
-      <g transform="translate(1292 552)" data-node-id="cls_diazonium-salts" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Diazonium salts, class hub, Nitrogen compounds, 2 reactions out, 1 reaction in">
+      <g transform="translate(1292 552)" id="orn-ID-node-cls_diazonium-salts" data-node-id="cls_diazonium-salts" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Diazonium salts, class hub, Nitrogen compounds, 2 reactions out, 1 reaction in">
         <title>Diazonium salts · Nitrogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="violet" width="148" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="violet" width="4" height="40" clip-path="url(#orn-ID-hub-148x40)"></rect>
       </g>
-      <g transform="translate(668 552)" data-node-id="cls_esters" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Esters, class hub, Oxygen compounds, 2 reactions out, 1 reaction in">
+      <g transform="translate(668 552)" id="orn-ID-node-cls_esters" data-node-id="cls_esters" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Esters, class hub, Oxygen compounds, 2 reactions out, 1 reaction in">
         <title>Esters · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(668 184)" data-node-id="cls_ethers" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ethers, class hub, Oxygen compounds, 1 reaction in">
+      <g transform="translate(668 184)" id="orn-ID-node-cls_ethers" data-node-id="cls_ethers" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ethers, class hub, Oxygen compounds, 1 reaction in">
         <title>Ethers · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(4 184)" data-node-id="cls_haloalkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloalkanes, class hub, Halogen compounds, 3 reactions out, 6 reactions in">
+      <g transform="translate(4 184)" id="orn-ID-node-cls_haloalkanes" data-node-id="cls_haloalkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloalkanes, class hub, Halogen compounds, 3 reactions out, 6 reactions in">
         <title>Haloalkanes · Halogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="amber" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="amber" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(980 368)" data-node-id="cls_haloarenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloarenes, class hub, Halogen compounds, 1 reaction in">
+      <g transform="translate(980 368)" id="orn-ID-node-cls_haloarenes" data-node-id="cls_haloarenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloarenes, class hub, Halogen compounds, 1 reaction in">
         <title>Haloarenes · Halogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="amber" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="amber" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(668 368)" data-node-id="cls_ketones" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ketones, class hub, Oxygen compounds, 3 reactions out, 1 reaction in">
+      <g transform="translate(668 368)" id="orn-ID-node-cls_ketones" data-node-id="cls_ketones" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ketones, class hub, Oxygen compounds, 3 reactions out, 1 reaction in">
         <title>Ketones · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(1306 368)" data-node-id="cls_phenols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Phenols, class hub, Oxygen compounds, 1 reaction in">
+      <g transform="translate(1306 368)" id="orn-ID-node-cls_phenols" data-node-id="cls_phenols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Phenols, class hub, Oxygen compounds, 1 reaction in">
         <title>Phenols · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(0 736)" data-node-id="virtual:unclassified:hub" data-glyph="unclassified" data-box="unclassified" role="graphics-symbol" aria-label="Unclassified, hub for everything without a hub, 3 reactions in, 1 reaction from and back to itself, not under a hub">
+      <g transform="translate(0 736)" id="orn-ID-node-virtual.3a.unclassified.3a.hub" data-node-id="virtual:unclassified:hub" data-glyph="unclassified" data-box="unclassified" role="graphics-symbol" aria-label="Unclassified, hub for everything without a hub, 3 reactions in, 1 reaction from and back to itself, not under a hub">
         <title>Unclassified</title>
         <rect class="_unclassified_e97cec" width="128" height="40" rx="2" stroke-dasharray="2 3"></rect>
       </g>
