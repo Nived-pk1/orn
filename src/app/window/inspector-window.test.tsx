@@ -54,4 +54,21 @@ describe('the inspector frame', () => {
     act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: 'rxn_gone' } as never));
     expect(within(pane()).getByText(/Missing record rxn_gone/)).toBeTruthy();
   });
+
+  it('a reaction shows its participants and outcomes at L2; a record link focuses that record and Back returns', () => {
+    const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
+    renderWithApp(app);
+    const reactionId = Object.keys(app.store.getState().records.reaction)[0] as string;
+    act(() => app.navigator.ui.family.getState().selectReaction(reactionId));
+    const view = within(pane());
+    expect(view.getByRole('list', { name: 'Participants' })).toBeTruthy();
+    const outcomes = view.getByRole('list', { name: 'Outcomes' });
+    expect(outcomes.textContent).toMatch(/\((exclusive|major|minor|trace|mixture component|unspecified)\)/);
+    const link = within(view.getByRole('list', { name: 'Participants' })).getAllByRole('link')[0] as HTMLElement;
+    const target = link.getAttribute('data-record-id');
+    fireEvent.click(link);
+    expect(app.inspectorStore.getState().history.at(-1)?.id).toBe(target);
+    fireEvent.click(view.getByRole('button', { name: 'Back' }));
+    expect(app.inspectorStore.getState().history[app.inspectorStore.getState().index]?.id).toBe(reactionId);
+  });
 });
