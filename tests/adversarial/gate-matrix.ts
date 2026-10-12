@@ -1,6 +1,7 @@
 /**
  * Reusable gate completeness check (docs/TEST_STRATEGY.md §5–§6). An ADV/INV/P ID counts as covered only when it
  * appears in a describe/it/test title (including it.each templates), never in a comment or elsewhere in the file.
+ * Step 5.10a: the titles of the Playwright specs (`tests/e2e/*.spec.ts`) count too: Gate E rows are proved in a browser.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -18,7 +19,7 @@ function testFiles(dir: string): string[] {
     if (name === 'node_modules' || name.startsWith('.')) continue;
     const path = join(dir, name);
     if (statSync(path).isDirectory()) found.push(...testFiles(path));
-    else if (/\.test\.tsx?$/.test(name)) found.push(path);
+    else if (/\.(?:test|spec)\.tsx?$/.test(name)) found.push(path);
   }
   return found;
 }

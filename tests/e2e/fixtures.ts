@@ -10,13 +10,14 @@ import { join } from 'node:path';
 import { test as base, type BrowserContext, type BrowserContextOptions } from '@playwright/test';
 
 export const test = base.extend<{ makeContext: (options?: BrowserContextOptions) => Promise<BrowserContext> }>({
-  context: async ({ playwright, browserName, browser, baseURL, viewport, userAgent, deviceScaleFactor, acceptDownloads }, provide) => {
+  context: async ({ playwright, browserName, browser, baseURL, viewport, userAgent, deviceScaleFactor, acceptDownloads, hasTouch }, provide) => {
     const options = {
       ...(baseURL === undefined ? {} : { baseURL }),
       viewport,
       ...(userAgent === undefined ? {} : { userAgent }),
       ...(deviceScaleFactor === undefined ? {} : { deviceScaleFactor }),
       acceptDownloads,
+      ...(hasTouch ? { hasTouch } : {}),
     };
     if (browserName !== 'webkit') {
       const ordinary = await browser.newContext(options);

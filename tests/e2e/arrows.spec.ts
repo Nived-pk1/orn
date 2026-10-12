@@ -151,6 +151,32 @@ test.describe('the arrows of the arranged demo overview', () => {
     await expect(page.locator('[data-overlay="end"]')).toHaveCount(0);
   });
 
+  test('ADV-005: reactions from a family into itself are a loop with an arrowhead, named "N reactions that stay within <family>", with its count chip; the legend explains it', async ({ page }) => {
+    const seen = await watch(page);
+    await openDemo(page);
+    const loops = await page.locator('svg g[data-edge-id]').evaluateAll((groups) =>
+      groups
+        .filter((g) => g.getAttribute('data-from') === g.getAttribute('data-to'))
+        .map((g) => ({
+          id: g.getAttribute('data-edge-id') ?? '',
+          label: g.getAttribute('aria-label') ?? '',
+          arrowhead: g.querySelector('path')?.getAttribute('marker-end') ?? '',
+          chip: document.querySelector(`[data-count-of="${g.getAttribute('data-edge-id')}"]`)?.getAttribute('aria-label') ?? '',
+        })),
+    );
+    expect(loops.length, 'the demo overview has at least one family with reactions into itself').toBeGreaterThan(0);
+    for (const loop of loops) {
+      expect(loop.label).toMatch(/^\d+ reactions? that stays? within \S/);
+      expect(loop.arrowhead, `an arrowhead on the loop ${loop.id}`).toMatch(/^url\(#/);
+      // the count chip beside the loop carries the number (its own name is "N reactions"; the loop's name says where they stay)
+      expect(loop.chip, `a count chip on the loop ${loop.id}`).toMatch(/^\d+ reactions?$/);
+    }
+    // the legend explains the loop, in words
+    const marks = page.getByRole('list', { name: 'What the marks mean' });
+    await expect(marks).toContainText('reactions within the same family');
+    await expectClean(seen);
+  });
+
   test('the legend explains the chip, the loop and Unclassified in words; axe; zero CSP violations; screenshot', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);

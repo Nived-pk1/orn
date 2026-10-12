@@ -31,7 +31,7 @@ export async function watch(page: Page, origin: string = ORIGIN): Promise<Watch>
   await page.addInitScript(() => {
     const seen: string[] = [];
     (window as unknown as { __ornViolations: string[] }).__ornViolations = seen;
-    document.addEventListener('securitypolicyviolation', (event) => seen.push(`${event.violatedDirective} ${event.blockedURI}`));
+    document.addEventListener('securitypolicyviolation', (event) => seen.push(`${event.violatedDirective} ${event.blockedURI}${event.sample === '' ? '' : ` [${event.sample.slice(0, 80)}]`}`));
   });
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
@@ -153,4 +153,29 @@ export async function axeProblems(page: Page, minRules = 20): Promise<string[]> 
   return result.violations
     .filter((v) => v.impact === 'serious' || v.impact === 'critical')
     .map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(' ')).join('; ')})`);
+}
+
+
+/**
+ * Step 5.10a (ADV-033): what a page that rendered hostile data as text still looks like. Nothing ran (`window.__pwn` stays unset), no
+ * element the app does not make (a script without `src`, iframe, object, embed, base), no `on*` attribute, no `javascript:` address, and
+ * every image is a `blob:` or `data:` URL (an SVG asset is only ever an `<img>`). Returns the problems as text.
+ */
+export async function inertProblems(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const problems: string[] = [];
+    if ((window as unknown as { __pwn?: unknown }).__pwn !== undefined) problems.push('hostile script ran (window.__pwn is set)');
+    for (const el of document.querySelectorAll('script:not([src]), iframe, object, embed, base, frame, applet')) problems.push(`unexpected element <${el.tagName.toLowerCase()}>`);
+    for (const el of document.querySelectorAll('*')) {
+      for (const name of el.getAttributeNames()) {
+        if (/^on/i.test(name)) problems.push(`<${el.tagName.toLowerCase()}> has ${name}`);
+        if (/^(href|src|xlink:href|action|formaction)$/i.test(name) && /^\s*javascript:/i.test(el.getAttribute(name) ?? '')) problems.push(`<${el.tagName.toLowerCase()}> ${name} is a javascript: address`);
+      }
+    }
+    for (const img of document.querySelectorAll('img')) {
+      const src = img.getAttribute('src') ?? '';
+      if (!/^(blob:|data:)/.test(src)) problems.push(`<img> from ${src.slice(0, 60)}`);
+    }
+    return problems;
+  });
 }
