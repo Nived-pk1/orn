@@ -1,6 +1,5 @@
 /**
- * The export screen (step 5.9b): ONE native Dialog that follows the model's phase: the options (format, what to include, images, file
- * name, each choice with a sentence), running (progress in words, Cancel), done (what was written and every gap), cancelled (no file,
+ * The export screen (step 5.9b): ONE native Dialog that follows the model's phase: the options (format, what to include, images, each choice with a sentence), running (progress in words, Cancel), done (what was written and every gap), cancelled (no file,
  * said so) and refused (the reason, and the offer to build on this page when the worker is down). It is its own chunk, loaded when the
  * first export opens (`lazy-export.tsx`).
  */
@@ -54,8 +53,6 @@ function Group<T extends string>(props: {
 
 function Options(props: { readonly model: ExportModel; readonly state: ExportState }) {
   const { model, state } = props;
-  const nameId = useId();
-  const finalName = fileNameOf(state.base, state.format);
   return (
     <div className={styles.body}>
       <p className={styles.muted}>
@@ -72,13 +69,21 @@ function Options(props: { readonly model: ExportModel; readonly state: ExportSta
         unavailable={(id) => imagesUnavailable(id, state.format)}
         note={imagesNote(state.imageInfo)}
       />
-      <div className={styles.section}>
-        <label htmlFor={nameId}>File name</label>
-        <input id={nameId} type="text" value={state.base} maxLength={120} onChange={(event) => model.setBase(event.target.value)} spellCheck={false} autoComplete="off" />
-        <p className={styles.muted}>
-          It will be saved as <span className={styles.word}>{finalName}</span> (made safe for a file system: letters, digits, dots, dashes and underscores). The extension {EXTENSION[state.format]} is added for you.
-        </p>
-      </div>
+    </div>
+  );
+}
+
+/** The file name lives in the fixed bottom bar, so the final name is visible however far the options are scrolled. */
+function FileName(props: { readonly model: ExportModel; readonly state: ExportState }) {
+  const { model, state } = props;
+  const nameId = useId();
+  return (
+    <div className={styles.footerName}>
+      <label htmlFor={nameId}>File name</label>
+      <input id={nameId} type="text" value={state.base} maxLength={120} onChange={(event) => model.setBase(event.target.value)} spellCheck={false} autoComplete="off" />
+      <p className={styles.muted}>
+        Saved as <span className={styles.word}>{fileNameOf(state.base, state.format)}</span> (made safe for a file system: letters, digits, dots, dashes and underscores; the extension {EXTENSION[state.format]} is added for you).
+      </p>
     </div>
   );
 }
@@ -128,6 +133,7 @@ export function ExportScreen(props: { readonly model: ExportModel }) {
     body = <Options model={model} state={state} />;
     footer = (
       <>
+        <FileName model={model} state={state} />
         <Button onClick={model.close}>Cancel</Button>
         <Button variant="primary" {...(state.blocked === undefined ? { onClick: () => model.start() } : { unavailable: state.blocked })}>
           Export

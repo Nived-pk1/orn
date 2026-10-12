@@ -378,6 +378,6 @@
     "NEW (step 5.9b): a failed save now shows a banner (save_failed) with \"Export now\"; before, only the status line said so. A revision gap keeps its own banner and button. Additive: Banner.also, AppContextValue.nowMs, ArrowTextContext.omitReactants, FamilyCardOutcome.equation. No schema change.",
     "NEW (step 5.9b): the 5.9a ADV-043 e2e (v6 hub names in the palette) was racy (it asked the palette once, before the search index had followed the import): it passed once and failed twice on the unchanged 5.9a HEAD. It now waits with the existing polling helper. shell.spec no longer expects Export to be listed as \"step 5.9b\".",
     "NEW (step 5.9b): \"Replace with the demo dataset\" stays unavailable in a session-only tab (only Undo import was changed by the 5.9a review, item 5). Say if replace should work there too.",
-    "NEW (step 5.9b): the export dialog's file-name field sits below the three option groups; at 1280 x 800 the dialog scrolls inside itself. Phase 8 polish may tighten it."
+    "CLOSED (5.9b review follow-up a, 2026-10-12): Was: the export dialog's file-name field sits below the three option groups; at 1280 x 800 the dialog scrolls inside itself. Phase 8 polish may tighten it. Now the file name sits in the dialog's fixed bottom bar, left of Cancel and Export, so the final name is always visible (screenshots/export-dialog-1280x800.png)."
   ]
 }

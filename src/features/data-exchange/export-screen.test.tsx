@@ -60,6 +60,21 @@ describe('the options', () => {
     expect(dialog().textContent).toContain('Organic-Reaction-Navigator-demo-2026-10-12.orn.json');
   });
 
+  it('the file name is in the fixed bottom bar, after the options and before Cancel and Export', () => {
+    show();
+    const name = within(dialog()).getByRole('textbox', { name: 'File name' });
+    const footer = dialog().querySelector('footer');
+    expect(footer?.contains(name)).toBe(true);
+    const order = Array.from(dialog().querySelectorAll('input[type="radio"], input[type="text"], button'));
+    const last = (el: Element) => order.indexOf(el);
+    const cancel = within(dialog()).getByRole('button', { name: 'Cancel' });
+    const exportButton = within(dialog()).getByRole('button', { name: /^Export$/ });
+    const lastRadio = Array.from(dialog().querySelectorAll('input[type="radio"]')).pop() as Element;
+    expect(last(lastRadio)).toBeLessThan(last(name));
+    expect(last(name)).toBeLessThan(last(cancel));
+    expect(last(cancel)).toBeLessThan(last(exportButton));
+  });
+
   it('an image choice that does not fit the format is disabled and says why; the image sizes are stated when known', () => {
     show(fakePorts({ images: { count: 3, bytes: 5 * 1024 * 1024 } }));
     expect((within(dialog()).getByRole('radio', { name: /In the package/ }) as HTMLInputElement).disabled).toBe(true);

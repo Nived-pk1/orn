@@ -129,3 +129,18 @@
   font-size: var(--text-20);
   pointer-events: none;
 }
+
+.footerName {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  text-align: left;
+}
+
+.footerName p {
+  margin: 0;
+  font-size: var(--text-14);
+  overflow-wrap: anywhere;
+}
