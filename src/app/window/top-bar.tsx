@@ -1,6 +1,6 @@
 /**
  * The top bar's controls (UI_ARCHITECTURE §2): what exists is enabled; what does not exist yet is listed, disabled, with the step that
- * brings it (note E8). The file menu's import is the import screen (5.9a); export is 5.9b. Step 5.8 adds Search (the palette), the exam-scope selector and Undo / Redo bound to the store.
+ * brings it (note E8). The file menu's import is the import screen (5.9a); export is 5.9b (File, Export...). Step 5.8 adds Search (the palette), the exam-scope selector and Undo / Redo bound to the store.
  */
 import { useSyncExternalStore } from 'react';
 import { IconButton, Menu, useToasts, type MenuItem } from '@/ui/primitives';
@@ -13,11 +13,13 @@ export interface FileBinding {
   readonly undoReason: string | undefined;
   readonly onImport: () => void;
   readonly onUndo: () => void;
+  /** Opens the export screen (works in every tab mode). */
+  readonly onExport: () => void;
 }
 
 const fileItems = (file: FileBinding): readonly MenuItem[] => [
   { id: 'import', label: 'Import a file...', ...(file.reason === undefined ? { onSelect: file.onImport } : { unavailable: file.reason }) },
-  { id: 'export', label: 'Export', unavailable: 'step 5.9b' },
+  { id: 'export', label: 'Export...', onSelect: file.onExport },
   { id: 'undo_import', label: 'Undo import', ...(file.undoReason === undefined ? { onSelect: file.onUndo } : { unavailable: file.undoReason }) },
 ];
 

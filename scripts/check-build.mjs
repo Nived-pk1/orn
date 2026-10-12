@@ -130,7 +130,7 @@ else if (!readFileSync(demoCopies[0]).equals(readFileSync(demoSource))) fail(rel
 else report.push(`demo dataset: ${rel(demoCopies[0])} (${kB(statSync(demoCopies[0]).size)}) is identical to data/seed/demo.orn.json`);
 
 // 6. lazy chunks (step 5.7): rarely used code is its own chunk, never part of the initial load, and (being JS chunks) scanned in 4
-const LAZY = ['views-other', 'import-inprocess', 'export-inprocess', 'import-legacy', 'import-screen'];
+const LAZY = ['views-other', 'import-inprocess', 'export-inprocess', 'import-legacy', 'import-screen', 'export-screen'];
 const INITIAL_JS_GZIP_BUDGET = 400 * 1000;
 const gz = (bytes) => `${(bytes / 1000).toFixed(2)} kB gzip`; // vite's unit (1 kB = 1000 bytes)
 const htmlText = existsSync(indexPath) ? readFileSync(indexPath, 'utf8') : '';

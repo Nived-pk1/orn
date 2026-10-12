@@ -30,6 +30,7 @@ const good = (): Files => ({
   'assets/export-inprocess-e1.js': 'export const exports = 1',
   'assets/import-legacy-l1.js': 'export const legacy = 1',
   'assets/import-screen-s1.js': 'export const screen = 1',
+  'assets/export-screen-s1.js': 'export const screen = 2',
   'assets/worker-chem-c1.js': `import("./rdkit-glue-g1.js"); const wasm = "${WASM_NAME}";`,
   'assets/worker-layout-l1.js': 'export const layout = 1',
   'assets/worker-search-s1.js': 'export const search = 1',
@@ -73,7 +74,7 @@ describe('scripts/check-build.mjs', () => {
   it('lists the lazy chunks and the initial JS (step 5.7)', () => {
     const { status, out } = run({});
     expect(status).toBe(0);
-    for (const name of ['views-other', 'import-inprocess', 'export-inprocess', 'import-legacy', 'import-screen']) expect(out).toContain(`lazy chunk: ${name}`);
+    for (const name of ['views-other', 'import-inprocess', 'export-inprocess', 'import-legacy', 'import-screen', 'export-screen']) expect(out).toContain(`lazy chunk: ${name}`);
     expect(out).toContain('initial JS: assets/index-x1.js');
   });
 

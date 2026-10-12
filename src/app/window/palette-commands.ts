@@ -20,6 +20,7 @@ export interface CommandDeps {
   askReplace(): void;
   undoImport(): void;
   pickFile(): void;
+  openExport(): void;
   readonly ui: NavigatorUiStores;
   readonly exams: ExamOptions;
 }
@@ -68,6 +69,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
 
   return [
     withReason({ id: 'import-file', title: 'Import a file...', keywords: ['import', 'open', 'file', 'v6', 'load', 'package'], run: deps.pickFile }, importReason),
+    { id: 'export', title: 'Export...', keywords: ['export', 'backup', 'save', 'download', 'share', 'package'], run: deps.openExport },
     withReason({ id: 'replace-demo', title: 'Replace with the demo dataset', keywords: ['load', 'import', 'demo'], run: deps.askReplace }, importReason),
     withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, undoReason),
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),

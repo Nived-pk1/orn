@@ -55,7 +55,7 @@ function show(history: HistoryBinding) {
   const exam = { exam: createActiveExamStore(), store: createCanonicalStore({ initial: emptyStoreState(), revision: 0, validateInitial: false }), hasData: false, log: () => undefined };
   render(
     <ToastProvider>
-      <TopBar onSearch={() => undefined} history={history} exam={exam} file={{ reason: undefined, undoReason: undefined, onImport: () => undefined, onUndo: () => undefined }} />
+      <TopBar onSearch={() => undefined} history={history} exam={exam} file={{ reason: undefined, undoReason: undefined, onImport: () => undefined, onUndo: () => undefined, onExport: () => undefined }} />
     </ToastProvider>,
   );
 }

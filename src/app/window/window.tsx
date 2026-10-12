@@ -34,6 +34,8 @@ import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { TopBar } from "./top-bar";
 import styles from "./window.module.css";
+import { ExportOpenContext } from "./export-context";
+import { useExportActions, type ExportActions } from "./use-export-actions";
 import { useImportActions, type ImportActions } from "./use-import-actions";
 
 const countsOf = (
@@ -66,13 +68,14 @@ function DatasetView(props: {
   readonly counts: Readonly<Record<RecordKind, number>>;
   readonly empty: boolean;
   readonly imports: ImportActions;
+  readonly exports: ExportActions;
   readonly onAskReplace: () => void;
 }) {
   return (
     <section aria-label="Dataset">
       <h2>Dataset</h2>
       <RecordCounts counts={props.counts} />
-      <DatasetActions imports={props.imports} onAskReplace={props.onAskReplace} />
+      <DatasetActions imports={props.imports} exports={props.exports} onAskReplace={props.onAskReplace} />
       {props.empty ? (
         <p>
           Started empty. Nothing can be added in this version; authoring comes
@@ -87,6 +90,7 @@ function Canvas(props: {
   readonly mode: string;
   readonly counts: Readonly<Record<RecordKind, number>>;
   readonly imports: ImportActions;
+  readonly exports: ExportActions;
   readonly onAskReplace: () => void;
 }) {
   const { panels } = useApp();
@@ -105,7 +109,7 @@ function Canvas(props: {
       ) : showsNavigator ? (
         <NavigatorView />
       ) : (
-        <DatasetView counts={props.counts} empty={empty} imports={imports} onAskReplace={props.onAskReplace} />
+        <DatasetView counts={props.counts} empty={empty} imports={imports} exports={props.exports} onAskReplace={props.onAskReplace} />
       )}
     </div>
   );
@@ -143,6 +147,7 @@ function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
 export function Window() {
   const { panels, services, navigator, inspector: inspectorPorts } = useApp();
   const { actions: imports, element: importElement } = useImportActions();
+  const { actions: exports, element: exportElement } = useExportActions();
   const status = useSubscribable(services.status);
   const [asking, setAsking] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -169,6 +174,7 @@ export function Window() {
     askReplace: () => setAsking(true),
     undoImport: imports.undoImport,
     pickFile: imports.pick,
+    openExport: exports.open,
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),
   };
@@ -214,6 +220,7 @@ export function Window() {
   );
   return (
     <ToastProvider>
+      <ExportOpenContext.Provider value={exports.open}>
       <NavigatorProvider ports={navigator} active={totalOf(counts) > 0}>
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
@@ -222,7 +229,7 @@ export function Window() {
             <TopBar
               onSearch={() => setSearching(true)}
               history={services.store}
-              file={{ reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport }}
+              file={{ reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open }}
               exam={{ exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log }}
             />
           }
@@ -237,7 +244,7 @@ export function Window() {
           }
           canvas={
             <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} counts={counts} imports={imports} onAskReplace={() => setAsking(true)} />
+              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} />
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"
@@ -261,8 +268,10 @@ export function Window() {
         />
         <ReplaceDialog open={asking} onClose={() => setAsking(false)} imports={imports} />
         {importElement}
+        {exportElement}
         <Palette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
       </NavigatorProvider>
+      </ExportOpenContext.Provider>
     </ToastProvider>
   );
 }

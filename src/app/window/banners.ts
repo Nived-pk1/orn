@@ -5,12 +5,14 @@
 import type { AppStatus, BootNotices, EngineName, WorkerName } from '@/app/services';
 import type { NoticeKind } from '@/ui/primitives';
 
-export type BannerAction = 'reload' | 'save_everything' | 'retry_replica' | 'retry_chem' | 'retry_layout' | 'dismiss_storage';
+export type BannerAction = 'reload' | 'save_everything' | 'retry_replica' | 'retry_chem' | 'retry_layout' | 'dismiss_storage' | 'export';
 
 export interface Banner {
   readonly id: string;
   readonly text: string;
   readonly action?: { readonly label: string; readonly kind: BannerAction };
+  /** A second button (step 5.9b: "Export a backup" beside "Dismiss"). */
+  readonly also?: { readonly label: string; readonly kind: BannerAction };
 }
 
 /** How a banner looks (a word, a rule weight; colour is never the only carrier): by the condition it reports. */
@@ -33,6 +35,7 @@ const KIND_OF: Readonly<Record<string, NoticeKind>> = {
   l4_unavailable: 'warning',
   search_down: 'warning',
   storage_refused: 'warning',
+  save_failed: 'error',
   revision_gap: 'error',
   reload_failure: 'error',
   l4_not_checked: 'review',
@@ -78,6 +81,13 @@ export function bannersOf(status: AppStatus, choices: BannerChoices = {}): reado
       action: { label: 'Save everything now', kind: 'save_everything' },
     });
   }
+  if (status.save?.state === 'failed' && status.save.failureReason !== 'revision_gap') {
+    banners.push({
+      id: 'save_failed',
+      text: `Saving failed${status.save.lastError === null ? '' : ` (${status.save.lastError})`}. Your changes are still on this page, but they are NOT saved: closing the tab would lose them. Export a copy now.`,
+      action: { label: 'Export now', kind: 'export' },
+    });
+  }
   if (status.replica.state === 'down') {
     banners.push({ id: 'replica_down', text: `The background copy used for checking data is down (${status.replica.reason}).`, action: { label: 'Retry', kind: 'retry_replica' } });
   }
@@ -121,7 +131,7 @@ export function bannersOf(status: AppStatus, choices: BannerChoices = {}): reado
     banners.push({ id: 'storage_asking', text: 'Waiting for the browser to answer the request for persistent storage. Your data is saved; you can keep working.' });
   }
   if (status.storage.persistence === 'refused' && choices.storageNoticeDismissed !== true) {
-    banners.push({ id: 'storage_refused', action: { label: 'Dismiss', kind: 'dismiss_storage' }, text: status.storage.message === null ? 'The browser did not grant persistent storage. It may delete this data when disk space runs low.' : `${status.storage.message.charAt(0).toUpperCase()}${status.storage.message.slice(1)}.` });
+    banners.push({ id: 'storage_refused', action: { label: 'Dismiss', kind: 'dismiss_storage' }, also: { label: 'Export a backup', kind: 'export' }, text: status.storage.message === null ? 'The browser did not grant persistent storage. It may delete this data when disk space runs low.' : `${status.storage.message.charAt(0).toUpperCase()}${status.storage.message.slice(1)}.` });
   }
   return banners;
 }

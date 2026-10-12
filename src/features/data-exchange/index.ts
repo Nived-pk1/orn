@@ -16,3 +16,9 @@ export type {
   PreviewAnswer,
   UndoAnswer,
 } from './contracts';
+export { createExportModel } from './export-model';
+export type { ExportModel, ExportPhase, ExportState } from './export-model';
+export { LazyExportScreen, loadExportScreen } from './lazy-export';
+export { downloadBlob } from './download';
+export type { ExportFailure, ExportFormatId, ExportPorts, ExportReply, ExportRunOptions, ImageInfo } from './export-contracts';
+export { defaultBase, fileNameOf, safeFileBase } from './export-words';

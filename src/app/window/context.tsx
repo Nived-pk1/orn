@@ -23,6 +23,8 @@ export interface AppContextValue {
   readonly navigator: NavigatorPorts;
   /** What the inspector needs (step 5.6a): the store, findings, L4 checks, depictions and the UI stores. */
   readonly inspector: InspectorPorts;
+  /** The injected clock in milliseconds (the export file name's date). Absent: 0, which a test never relies on. */
+  nowMs?(): number;
   /** Reloads the page (`location.reload()` in the browser). */
   reload(): void;
 }

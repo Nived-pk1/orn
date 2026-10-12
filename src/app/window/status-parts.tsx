@@ -7,6 +7,7 @@ import { Banner, Button } from '@/ui/primitives';
 import { usePanels } from '@/ui/state';
 import { bannersOf, bannerKindOf, bootLinesOf, layoutCacheTextOf, operationTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
+import { useExportOpen } from './export-context';
 import styles from './status-parts.module.css';
 
 export function StatusLine() {
@@ -40,10 +41,12 @@ export function Banners() {
   const { services, reload, panels } = useApp();
   const status = useSubscribable(services.status);
   const storageNoticeDismissed = usePanels(panels, (s) => s.storageNoticeDismissed);
+  const openExport = useExportOpen();
   const banners = bannersOf(status, { storageNoticeDismissed });
   if (banners.length === 0) return null;
   const run = (kind: BannerAction): void => {
     if (kind === 'reload') reload();
+    else if (kind === 'export') openExport?.();
     else if (kind === 'save_everything') void services.saveEverythingNow();
     else if (kind === 'dismiss_storage') panels.getState().dismissStorageNotice();
     else if (kind === 'retry_replica') void services.retryReplica();
@@ -56,7 +59,19 @@ export function Banners() {
           <li key={banner.id}>
             <Banner
               kind={bannerKindOf(banner.id)}
-              actions={banner.action === undefined ? undefined : <Button onClick={() => run(banner.action?.kind ?? 'reload')}>{banner.action.label}</Button>}
+              actions={
+                banner.action === undefined ? undefined : (
+                  <>
+                    {[banner.action, banner.also]
+                      .filter((action) => action !== undefined && (action.kind !== 'export' || openExport !== undefined))
+                      .map((action) => (
+                        <Button key={action?.kind} onClick={() => run(action?.kind ?? 'reload')}>
+                          {action?.label}
+                        </Button>
+                      ))}
+                  </>
+                )
+              }
             >
               {banner.text}
             </Banner>

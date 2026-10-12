@@ -7,6 +7,7 @@
 import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import { useApp } from './context';
+import type { ExportActions } from './use-export-actions';
 import type { ImportActions } from './use-import-actions';
 
 export function unavailableReason(mode: string | null, reason: string | null): string | undefined {
@@ -47,7 +48,7 @@ export function ReplaceDialog(props: { readonly open: boolean; readonly onClose:
   );
 }
 
-export function DatasetActions(props: { readonly imports: ImportActions; readonly onAskReplace: () => void }) {
+export function DatasetActions(props: { readonly imports: ImportActions; readonly exports: ExportActions; readonly onAskReplace: () => void }) {
   const { services } = useApp();
   const status = useSubscribable(services.status);
   const { imports } = props;
@@ -55,6 +56,13 @@ export function DatasetActions(props: { readonly imports: ImportActions; readonl
   const blocked = unavailableReason(status.mode, status.reason) ?? busy;
   const undoBlocked = undoUnavailableReason(status.mode, status.reason) ?? busy;
   return (
+    <>
+    <section aria-label="Back up the data">
+      <h3>Back up the data</h3>
+      <p>
+        <Button onClick={props.exports.open}>Export...</Button>
+      </p>
+    </section>
     <section aria-label="Replace the data">
       <h3>Replace the data</h3>
       <p>
@@ -62,5 +70,6 @@ export function DatasetActions(props: { readonly imports: ImportActions; readonl
         <Button {...(undoBlocked === undefined ? { onClick: imports.undoImport } : { unavailable: undoBlocked })}>Undo import</Button>
       </p>
     </section>
+    </>
   );
 }

@@ -46,7 +46,7 @@ async function start(): Promise<void> {
   window.addEventListener('pagehide', () => void navigatorUi.flush());
   createRoot(rootElement).render(
     <StrictMode>
-      <App value={{ services, panels, navigator, inspector, loadDemo, reload: () => window.location.reload() }} />
+      <App value={{ services, panels, navigator, inspector, loadDemo, nowMs: () => env.clock.nowMs(), reload: () => window.location.reload() }} />
     </StrictMode>,
   );
 }
