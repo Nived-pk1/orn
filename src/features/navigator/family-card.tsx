@@ -7,6 +7,7 @@
  */
 import { Fragment, memo, useId } from 'react';
 import type { FamilyCard, FamilyCardOutcome } from '@/core/graph';
+import { FullEquationView } from './family-equation';
 import { useFamilyEnv } from './family-env';
 import { Structure } from './family-structure';
 import { ArrowSide, sideText } from './family-text';
@@ -41,6 +42,7 @@ function OutcomeRow(props: { readonly card: FamilyCard; readonly outcome: Family
   const conditions = [sideText(outcome.arrowText.above), sideText(outcome.arrowText.below)].filter((text) => text !== '');
   const name = `${substrate} to ${products.join(' and ')}${conditions.length === 0 ? '' : `, ${conditions.join('; ')}`}`;
   return (
+    <>
     <div className={styles.scheme} role="group" aria-label={name} data-outcome-id={outcome.outcomeId}>
       <Structure substance={card.substrate} />
       <Arrow outcome={outcome} />
@@ -53,6 +55,8 @@ function OutcomeRow(props: { readonly card: FamilyCard; readonly outcome: Family
         ))}
       </div>
     </div>
+    {outcome.equation === undefined ? null : <FullEquationView equation={outcome.equation} />}
+    </>
   );
 }
 

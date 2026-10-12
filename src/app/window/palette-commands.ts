@@ -5,7 +5,7 @@
  */
 import type { PaletteCommand } from '@/features/search';
 import type { NavigatorUiStores } from '@/ui/state';
-import { unavailableReason } from './dataset-actions';
+import { undoUnavailableReason } from './dataset-actions';
 import { ALL_LABEL, type ExamOptions } from './exam-scope';
 import { NAVIGATOR_MODE } from './modes';
 
@@ -41,7 +41,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
   const onMap = mapReason(deps);
   const zoomReason = onMap ?? view?.zoomReason;
   const importReason = deps.importReason;
-  const undoReason = unavailableReason(deps.writerMode, deps.writerReason) ?? importReason;
+  const undoReason = undoUnavailableReason(deps.writerMode, deps.writerReason) ?? importReason;
   const listing = ui.overview.getState().mode === 'list';
   const familyOpen = ui.family.getState().open !== null;
   const withReason = (command: Omit<PaletteCommand, 'unavailable'>, reason: string | undefined): PaletteCommand =>

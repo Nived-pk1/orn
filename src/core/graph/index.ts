@@ -8,6 +8,8 @@ export type { BuildProjectionResult, ProjectionRegistry } from './registry';
 export { bundleEdges, drawnAsNode, flagsOf, projectionKey, referencing, sortEdges, sortNodes } from './kit';
 export { createDefaultProjectionRegistry, defaultProjectionDefinitions } from './defaults';
 export { arrowTextOf, MAX_ARROW_PARTS, MAX_CONDITION_PARTS } from './arrow-text';
+export { fullEquationOf, fullEquationsOfReaction } from './full-equation';
+export type { EquationTerm, FullEquation, ProductRoleWord } from './full-equation';
 export { conditionPartsOf, MAX_TEXT_CHARS, MINUS, overrideParameters } from './condition-text';
 export type { ConditionPart } from './condition-text';
 export type { ArrowText, ArrowTextContext, ArrowTextPart, ArrowTextPartKind } from './arrow-text';

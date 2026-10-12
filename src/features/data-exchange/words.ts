@@ -29,6 +29,10 @@ export const formatWords = (format: ImportFormat): string =>
 export const modeWords = (mode: 'replace_all' | 'merge'): string =>
   mode === 'merge' ? 'the file is added to what you have; where a record exists in both, you choose.' : 'replaces everything you have with the file; Undo import brings it back.';
 
+/** An engine message as a user may read it: one that names an internal (a mode, a field, a stored copy) is left out, never shown. */
+const INTERNAL = /replace_all|\bmerge\b|\bmeta\b|pre_import|snapshot|\bbatch\b|[a-z]+_[a-z]+|\b[a-z]+[A-Z]\w*\b/;
+export const plainEngineText = (text: string): string => (INTERNAL.test(text) ? '' : shownMessage(text));
+
 export interface Refusal {
   readonly title: string;
   readonly text: string;
@@ -42,7 +46,9 @@ const sizeOf = (detail: FlowFailure['detail']): string => {
 
 /** What the flows refused, in words. `fileName` is shown by the caller as text, not here. */
 export function refusalWords(failure: FlowFailure): Refusal {
-  const { code, message, detail } = failure;
+  const { code, detail } = failure;
+  const message = plainEngineText(failure.message);
+  const why = message === '' ? '' : ` (${message})`;
   const caps = `${mb(IMPORT_LIMITS.maxJsonBytes)} for a dataset file and ${mb(IMPORT_LIMITS.maxPackageBytes)} for a package`;
   switch (code) {
     case 'FILE_TOO_LARGE':
@@ -54,49 +60,49 @@ export function refusalWords(failure: FlowFailure): Refusal {
     case 'TOO_MANY_RECORDS':
       return { title: 'The file has too many records', text: `It lists more than ${num(IMPORT_LIMITS.maxRecords)} records, the most one import accepts. Split it and import the parts one at a time. Nothing was imported.` };
     case 'INVALID_JSON':
-      return { title: 'This is not a JSON file or a package', text: `The file is not valid JSON and not an ORN package (.ornpkg). Choose an ORN export, a package, or an export from the older app. Nothing was imported. (${message})` };
+      return { title: 'This is not a JSON file or a package', text: `The file is not valid JSON and not an ORN package (.ornpkg). Choose an ORN export, a package, or an export from the older app. Nothing was imported.${why}` };
     case 'INVALID_ENVELOPE':
-      return { title: 'The file is not shaped like an ORN file', text: `It is JSON, but it does not have the structure of an ORN dataset. Nothing was imported. (${message})` };
+      return { title: 'The file is not shaped like an ORN file', text: `It is JSON, but it does not have the structure of an ORN dataset. Nothing was imported.${why}` };
     case 'UNKNOWN_FORMAT':
-      return { title: 'The format is not recognised', text: `This is not an ORN dataset, an ORN package, or an export of the older app (v6 or v4). Nothing was imported. (${message})` };
+      return { title: 'The format is not recognised', text: `This is not an ORN dataset, an ORN package, or an export of the older app (v6 or v4). Nothing was imported.${why}` };
     case 'NEWER_SCHEMA':
-      return { title: 'Saved by a newer version of the app', text: `This file was saved by a newer version of the app, whose data format this version cannot read safely. Nothing was imported. Open the file in the newer version, or export it again from the version that made it. (${message})` };
+      return { title: 'Saved by a newer version of the app', text: `This file was saved by a newer version of the app, whose data format this version cannot read safely. Nothing was imported. Open the file in the newer version, or export it again from the version that made it.${why}` };
     case 'MIGRATION_FAILED':
-      return { title: 'The file could not be brought up to date', text: `The file is from an older data format and its update steps failed. Nothing was imported. (${message})` };
+      return { title: 'The file could not be brought up to date', text: `The file is from an older data format and its update steps failed. Nothing was imported.${why}` };
     case 'PACKAGE_INVALID':
-      return { title: 'The package is not valid', text: `The package could not be read as a whole (a missing or damaged part). Nothing was imported. (${message})` };
+      return { title: 'The package is not valid', text: `The package could not be read as a whole (a missing or damaged part). Nothing was imported.${why}` };
     case 'LEGACY_INVALID':
-      return { title: 'The older file could not be converted', text: `The file looks like an export of the older app, but it could not be converted. Nothing was imported. (${message})` };
+      return { title: 'The older file could not be converted', text: `The file looks like an export of the older app, but it could not be converted. Nothing was imported.${why}` };
     case 'UNKNOWN_BATCH':
       return { title: 'The preview was lost', text: 'The preview was lost (the app restarted its background worker or the preview was replaced). Preview the file again. Nothing was imported.' };
     case 'STALE_REVISION':
       return { title: 'Your data changed since the preview', text: 'Your data changed since the preview, so it can no longer be applied as shown. Preview the file again. Nothing was imported.' };
     case 'INVALID_REQUEST':
-      return { title: 'That choice cannot be used', text: `The last choice was refused, so the plan stays as it was. (${message})` };
+      return { title: 'That choice cannot be used', text: `The last choice was refused, so the plan stays as it was.${why}` };
     case 'INVALID_META':
-      return { title: "The file's dataset information was refused", text: `The dataset information in the file (title, version) was not accepted. (${message})` };
+      return { title: "The file's dataset information was refused", text: `The dataset information in the file (title, version) was not accepted.${why}` };
     case 'BLOCKED':
-      return { title: 'The import has errors', text: `The merged result has errors, so it cannot be applied. Fix them in the file or leave those records out. (${message})` };
+      return { title: 'The import has errors', text: `The merged result has errors, so it cannot be applied. Fix them in the file or leave those records out.${why}` };
     case 'PLAN_MISMATCH':
       return { title: 'The plan changed', text: 'What was confirmed is not what the preview now holds. Preview the file again. Nothing was imported.' };
     case 'READ_ONLY':
-      return { title: 'This tab is read-only', text: `This tab cannot change the data (${message}). Use the writer tab. Nothing was imported.` };
+      return { title: 'This tab is read-only', text: `This tab cannot change the data${why}. Use the writer tab. Nothing was imported.` };
     case 'BUSY':
-      return { title: 'Another operation is running', text: `Wait until it finishes, then try again (${message}). Nothing was imported.` };
+      return { title: 'Another operation is running', text: `Wait until it finishes, then try again${why}. Nothing was imported.` };
     case 'WORKER_DOWN':
-      return { title: 'The background worker is not available', text: `The worker that reads the file is down (${message}).` };
+      return { title: 'The background worker is not available', text: `The worker that reads the file is down${why}.` };
     case 'SNAPSHOT_FAILED':
       return /quota/i.test(message)
-        ? { title: 'There is no space for the safety copy', text: `The browser has no room left to save the snapshot that makes Undo import possible, so nothing was imported. Free up space or export a backup, then try again. (${message})` }
-        : { title: 'The safety copy could not be made', text: `The snapshot that makes Undo import possible could not be saved, so nothing was imported. (${message})` };
+        ? { title: 'There is no space for the safety copy', text: `The browser has no room left to save the safety copy that makes Undo import possible, so nothing was imported. Free up space or export a backup, then try again.${why}` }
+        : { title: 'The safety copy could not be made', text: `The safety copy that makes Undo import possible could not be saved, so nothing was imported.${why}` };
     case 'REJECTED':
       return /quota/i.test(message)
-        ? { title: 'There is no space to save', text: `The browser has no room left, so nothing was imported. Free up space or export a backup, then try again. (${message})` }
-        : { title: 'The import was refused', text: `The data store refused the import, so nothing was imported. (${message})` };
+        ? { title: 'There is no space to save', text: `The browser has no room left, so nothing was imported. Free up space or export a backup, then try again.${why}` }
+        : { title: 'The import was refused', text: `The data store refused the import, so nothing was imported.${why}` };
     case 'CANCELLED':
       return { title: 'Cancelled', text: 'Cancelled. Nothing was changed.' };
     default:
-      return { title: 'The import did not run', text: `${message} Nothing was imported. [${code}]` };
+      return { title: 'The import did not run', text: `${message === '' ? 'The import could not run.' : message} Nothing was imported. [${code}]` };
   }
 }
 

@@ -13,6 +13,7 @@ import type { NavigatorCandidate } from '../../indexes/contracts';
 import type { ConditionVariantId, ParticipantId, Reaction, ReactionScheme, RecordRef } from '../../schema';
 import { fold } from '../../text';
 import { arrowTextOf } from '../arrow-text';
+import { fullEquationOf } from '../full-equation';
 import type { ProjectionContext } from '../contracts';
 import { UNCLASSIFIED_HUB_ID } from '../navigator/hubs';
 import { arrangementsOf } from '../navigator/nodes';
@@ -161,7 +162,9 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
               describe: describer.describeForArrow,
               shownAsNode,
             });
-            return { outcomeId: outcomeId as FamilyCardOutcome['outcomeId'], conditionVariantIds: o.variantIds, products, arrowText };
+            const stored = reaction.outcomes.find((x) => x.id === outcomeId);
+            const equation = stored === undefined ? undefined : fullEquationOf(reaction, stored, { schemes: schemesOf(reaction.id), describe: describer.describeForArrow, shownAsNode });
+            return { outcomeId: outcomeId as FamilyCardOutcome['outcomeId'], conditionVariantIds: o.variantIds, products, arrowText, ...(equation === undefined ? {} : { equation }) };
           });
         const elsewhere: FamilyElsewhere[] = [...(landing.get(reactionId) ?? [])]
           .filter(([other]) => other !== group)

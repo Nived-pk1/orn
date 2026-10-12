@@ -293,3 +293,25 @@
   margin: 0;
   font-size: var(--text-13);
 }
+
+.equation {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+}
+.equation summary {
+  cursor: pointer;
+  color: var(--link, inherit);
+}
+.equationLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.3rem 0 0;
+}
+.equationArrow {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.8rem;
+}

@@ -3,7 +3,7 @@ import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { tierState } from '@/test-support/perf-kit';
 import { fakeApp, planOf, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
-import { unavailableReason } from './dataset-actions';
+import { undoUnavailableReason, unavailableReason } from './dataset-actions';
 
 beforeAll(stubDialog);
 afterEach(cleanup);
@@ -54,8 +54,8 @@ describe('Replace with the demo dataset (Dataset mode)', () => {
     await screen.findByText('Undo import: there is no import to undo.');
   });
 
-  it('read-only, follower and session-only tabs get both buttons unavailable, with the reason', () => {
-    for (const [mode, reason] of [['read_only', 'another version is open'], ['follower', null], ['session_only', null]] as const) {
+  it('read-only and follower tabs get both buttons unavailable, with the reason; a session-only tab can undo but not replace', () => {
+    for (const [mode, reason] of [['read_only', 'another version is open'], ['follower', null]] as const) {
       const a = withData({ status: { mode, reason } });
       renderWithApp(a);
       const region = openDataset();
@@ -68,6 +68,11 @@ describe('Replace with the demo dataset (Dataset mode)', () => {
       expect(a.flows.undo).not.toHaveBeenCalled();
       cleanup();
     }
+    const a = withData({ status: { mode: 'session_only', reason: null } });
+    renderWithApp(a);
+    const region = openDataset();
+    expect(within(region).getByRole('button', { name: 'Replace with the demo dataset' }).getAttribute('aria-disabled')).toBe('true');
+    expect(within(region).getByRole('button', { name: 'Undo import' }).getAttribute('aria-disabled')).toBeNull();
   });
 
   it('the reasons are words', () => {
@@ -76,5 +81,10 @@ describe('Replace with the demo dataset (Dataset mode)', () => {
     expect(unavailableReason('follower', null)).toMatch(/another tab/);
     expect(unavailableReason('session_only', null)).toMatch(/nothing is saved/);
     expect(unavailableReason(null, null)).toMatch(/starting/);
+    // Undo import works the same everywhere a tab can write: a session-only tab keeps its snapshots in memory (5.9a review, item 5).
+    expect(undoUnavailableReason('session_only', null)).toBeUndefined();
+    expect(undoUnavailableReason('writer', null)).toBeUndefined();
+    expect(undoUnavailableReason('follower', null)).toMatch(/another tab/);
+    expect(undoUnavailableReason('read_only', 'x')).toBe('x');
   });
 });

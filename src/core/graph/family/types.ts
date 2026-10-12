@@ -4,6 +4,7 @@
  */
 import type { AnchorTone, ConditionVariantId, NamedReactionId, OutcomeId, ProductId, ReactionId, RecordRef, Review } from '../../schema';
 import type { ArrowText } from '../arrow-text';
+import type { FullEquation } from '../full-equation';
 
 export type FamilySectionKind = 'reactions_of' | 'preparation_of';
 
@@ -22,6 +23,8 @@ export interface FamilyCardOutcome {
   readonly conditionVariantIds: readonly ConditionVariantId[];
   readonly products: readonly FamilyProduct[];
   readonly arrowText: ArrowText;
+  /** The whole outcome as an equation (every reactant, every product with its role): behind "Show full equation". */
+  readonly equation?: FullEquation;
 }
 
 /** Outcomes of the same reaction that land in OTHER groups of the same section: counted, with where they go, so nothing is hidden. */

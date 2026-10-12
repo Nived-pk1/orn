@@ -24,7 +24,7 @@ import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
 import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from "@/ui/state";
 import { useApp } from "./context";
-import { DatasetActions, ReplaceDialog, unavailableReason } from "./dataset-actions";
+import { DatasetActions, ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
 import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
@@ -222,7 +222,7 @@ export function Window() {
             <TopBar
               onSearch={() => setSearching(true)}
               history={services.store}
-              file={{ reason: imports.reason, undoReason: unavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport }}
+              file={{ reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport }}
               exam={{ exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log }}
             />
           }

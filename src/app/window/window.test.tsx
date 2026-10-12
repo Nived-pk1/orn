@@ -152,7 +152,8 @@ describe('Import a file', () => {
     choose('x.orn.json');
     await screen.findByRole('heading', { name: 'Import summary' });
     expect(a.flows.preview.mock.calls[1]?.[2]).toEqual({ mode: 'merge' });
-    expect(screen.getByText(/no usable dataset information \(datasetId is empty\).*shown as a merge/)).toBeTruthy();
+    expect(screen.getByText('This file has no dataset title or details, so it can only be added to what you have (merged). Nothing changes until you press Confirm.')).toBeTruthy();
+    expect(document.body.textContent ?? '').not.toMatch(/replace_all|dataset meta|datasetId/);
   });
 
   it('a worker that is down offers the in-page path (never taken silently), and the second ask uses it', async () => {

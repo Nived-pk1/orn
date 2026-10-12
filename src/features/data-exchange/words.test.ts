@@ -68,3 +68,20 @@ describe('text from a file is plain text', () => {
     expect(plainText('<img src=x onerror=alert(1)>', 50)).toBe('<img src=x onerror=alert(1)>');
   });
 });
+
+describe('no internal name is shown to a user (5.9a review, follow-up a)', () => {
+  const internal = /replace_all|\bmerge\b|dataset meta|pre_import|snapshot|batch|datasetId/i;
+  it('an engine message that names an internal is left out of every refusal; the sentence still stands', () => {
+    for (const code of ['INVALID_META', 'BLOCKED', 'SNAPSHOT_FAILED', 'REJECTED', 'INVALID_REQUEST', 'READ_ONLY', 'BUSY', 'WORKER_DOWN', 'SOMETHING_NEW']) {
+      for (const message of ["replace_all needs the file's dataset meta, and it is unusable (datasetId is empty)", 'the pre_import snapshot could not be written', 'unknown batch b1']) {
+        const r = refuse(code, message);
+        expect(`${r.title} ${r.text}`).not.toMatch(internal);
+        expect(r.text.length).toBeGreaterThan(10);
+      }
+    }
+  });
+
+  it('a plain message about the file is kept in brackets', () => {
+    expect(refuse('INVALID_JSON', 'Unexpected token } at position 4').text).toContain('(Unexpected token } at position 4)');
+  });
+});

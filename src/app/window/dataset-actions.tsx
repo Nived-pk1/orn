@@ -1,7 +1,8 @@
 /**
  * Dataset mode actions (5.5d follow-up): "Replace with the demo dataset" imports the bundled demo with replace_all through the normal
  * pipeline (note E7) after a confirm that says the data is replaced and Undo import brings it back (the `pre_import` snapshot);
- * "Undo import" restores that snapshot. Read-only, follower and session-only tabs get the buttons `unavailable` with the reason.
+ * "Undo import" restores that snapshot. Read-only and follower tabs get the buttons `unavailable` with the reason; a session-only tab
+ * cannot replace but CAN undo an import (its snapshots are kept in memory).
  */
 import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
@@ -14,6 +15,9 @@ export function unavailableReason(mode: string | null, reason: string | null): s
   if (mode === 'session_only') return 'nothing is saved in this session, so there is no snapshot to undo to';
   return reason ?? (mode === 'follower' ? 'another tab is the writer' : 'this tab is read-only');
 }
+
+/** Undo import in every tab that can write: a session-only tab keeps its snapshots in memory (at most 3, step 5.1c), so it can undo too (5.9a review, item 5). */
+export const undoUnavailableReason = (mode: string | null, reason: string | null): string | undefined => (mode === 'session_only' ? undefined : unavailableReason(mode, reason));
 
 /** The confirm step of "Replace with the demo dataset": rendered once by the window, so the palette command and the button share it. */
 export function ReplaceDialog(props: { readonly open: boolean; readonly onClose: () => void; readonly imports: ImportActions }) {
@@ -47,13 +51,15 @@ export function DatasetActions(props: { readonly imports: ImportActions; readonl
   const { services } = useApp();
   const status = useSubscribable(services.status);
   const { imports } = props;
-  const blocked = unavailableReason(status.mode, status.reason) ?? (imports.busy ? 'another operation is running' : undefined);
+  const busy = imports.busy ? 'another operation is running' : undefined;
+  const blocked = unavailableReason(status.mode, status.reason) ?? busy;
+  const undoBlocked = undoUnavailableReason(status.mode, status.reason) ?? busy;
   return (
     <section aria-label="Replace the data">
       <h3>Replace the data</h3>
       <p>
         <Button {...(blocked === undefined ? { onClick: props.onAskReplace } : { unavailable: blocked })}>Replace with the demo dataset</Button>{' '}
-        <Button {...(blocked === undefined ? { onClick: imports.undoImport } : { unavailable: blocked })}>Undo import</Button>
+        <Button {...(undoBlocked === undefined ? { onClick: imports.undoImport } : { unavailable: undoBlocked })}>Undo import</Button>
       </p>
     </section>
   );

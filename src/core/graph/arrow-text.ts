@@ -45,6 +45,8 @@ export interface ArrowTextContext {
   readonly describe: (ref: RecordRef) => { readonly name: string; readonly formula?: string } | undefined;
   /** False for a record whose `entity_display` says it is never a node. */
   readonly shownAsNode: (ref: RecordRef) => boolean;
+  /** True: a reactant is never written on the arrow (the full equation lists every reactant on the left, water included). */
+  readonly omitReactants?: boolean;
 }
 
 /** A formula longer than this (in characters) is not written on an arrow: the name is (item e). */
@@ -83,7 +85,7 @@ function schemeFor(reaction: Reaction, context: ArrowTextContext): ReactionSchem
 }
 
 /** A participant listed in some variant applies only under those variants (§6.3). */
-function appliesTo(reaction: Reaction, participantId: string, variantIds: readonly string[]): boolean {
+export function appliesTo(reaction: Reaction, participantId: string, variantIds: readonly string[]): boolean {
   const listing = reaction.conditionVariants.filter((v) => v.participantIds.includes(participantId as ParticipantId));
   return listing.length === 0 || listing.some((v) => variantIds.includes(v.id));
 }
@@ -155,6 +157,7 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
   const placed: Placed[] = [];
   for (const p of reaction.participants) {
     if (p.id === context.carriedParticipantId) continue;
+    if (context.omitReactants === true && p.role === 'reactant') continue;
     if (!appliesTo(reaction, p.id, context.conditionVariantIds)) continue;
     const position = placementOf.get(p.id) ?? ROLE_POSITION[p.role];
     if (position === 'hidden') continue;

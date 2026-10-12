@@ -31,6 +31,8 @@ Breakpoints: ≥ 1280 px three panes (inspector 360–520 px, resizable); 900–
 
 A textbook-and-journal aesthetic, not a dashboard. No gradients, glass effects, glow, emoji icons, or decorative illustration; square-ish corners (2–4 px; *2026-10-09, ADR-037: replaced by rounded corners, 8 px for cards and panels and 6 px for controls*); colour used sparingly and never as the only carrier of meaning.
 
+- *2026-10-12 (step 5.9a review, follow-up c; planned for Phase 8, not built).* **Structure display: Skeletal / Show all atoms.** A setting saved in `uiState` (default Skeletal). "Show all atoms" writes every C and H through the chem worker's drawing options (the depiction options already given to the worker; no chemistry in the UI). Rings stay rings: benzene is never drawn as a chain. The depiction key includes the mode, so the two drawings of one structure are two cache entries and a switch never shows the wrong one.
+
 | Token | Value | Use |
 |---|---|---|
 | paper | `#FCFCFB` | background |

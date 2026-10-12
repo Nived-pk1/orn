@@ -11,7 +11,11 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { ImportPlan, ImportPlanRequest } from '@/io';
 import type { DataExchangePorts, EarlierImportInfo, FlowFailure, PreviewAnswer } from './contracts';
 import { requestOf, totalsOf, type PlanChange } from './plan-request';
-import { appliedWords, cancellableStage, refusalWords, shownName, type Refusal } from './words';
+import { appliedWords, cancellableStage, refusalWords, shownName, type Refusal, plainEngineText } from './words';
+
+const workerWhy = (message: string): string => (plainEngineText(message) === '' ? '' : ` (${plainEngineText(message)})`);
+
+const undoNothing = (message: string): string => (plainEngineText(message) === '' ? 'Undo import: the newest import did not keep a safety copy, so it cannot be undone.' : `Undo import: ${plainEngineText(message)}.`);
 
 export type ImportPhase = 'closed' | 'reading' | 'refused' | 'preview' | 'applying' | 'undoing';
 
@@ -138,7 +142,7 @@ export function createImportModel(ports: DataExchangePorts): ImportModel {
     }
     if (answer.code === 'WORKER_DOWN' && answer.inProcessAvailable === true) {
       retry = { request: requestOf(plan), inProcess: true };
-      refuse(fileName, { title: 'The background worker is down', text: `The worker that applies the import stopped (${answer.message}). Nothing was imported. The file can be read again on this page, then you confirm again; the page may freeze while it runs.` }, 'in_process');
+      refuse(fileName, { title: 'The background worker is down', text: `The worker that applies the import stopped${workerWhy(answer.message)}. Nothing was imported. The file can be read again on this page, then you confirm again; the page may freeze while it runs.` }, 'in_process');
       return;
     }
     const lost = answer.code === 'UNKNOWN_BATCH' || answer.code === 'STALE_REVISION' || answer.code === 'PLAN_MISMATCH';
@@ -178,7 +182,7 @@ export function createImportModel(ports: DataExchangePorts): ImportModel {
           fileName: from.fileName,
           plan: merged.plan,
           inProcess: merged.inProcess,
-          note: `The file has no usable dataset information (${answer.message}), so it is shown as a merge: its records are added and this dataset keeps its own title.`,
+          note: 'This file has no dataset title or details, so it can only be added to what you have (merged). Nothing changes until you press Confirm.',
           ...(merged.earlierImport === undefined ? {} : { earlier: merged.earlierImport }),
         });
         return;
@@ -188,7 +192,7 @@ export function createImportModel(ports: DataExchangePorts): ImportModel {
     }
     if (answer.code === 'WORKER_DOWN' && answer.inProcessAvailable === true) {
       retry = { request, inProcess: true };
-      refuse(from.fileName, { title: 'The background worker is down', text: `The worker that reads files stopped (${answer.message}). Nothing was imported. The file can be read on this page instead; the page may freeze while it runs.` }, 'in_process');
+      refuse(from.fileName, { title: 'The background worker is down', text: `The worker that reads files stopped${workerWhy(answer.message)}. Nothing was imported. The file can be read on this page instead; the page may freeze while it runs.` }, 'in_process');
       return;
     }
     refuse(from.fileName, refusalWords(answer));
@@ -219,7 +223,7 @@ export function createImportModel(ports: DataExchangePorts): ImportModel {
     }
     if (answer.code === 'WORKER_DOWN' && answer.inProcessAvailable === true) {
       retry = { request, inProcess: true };
-      refuse(state.fileName, { title: 'The background worker is down', text: `The worker stopped (${answer.message}). Your choice was not applied and nothing was imported. The file can be read on this page instead; the page may freeze while it runs.` }, 'in_process');
+      refuse(state.fileName, { title: 'The background worker is down', text: `The worker stopped${workerWhy(answer.message)}. Your choice was not applied and nothing was imported. The file can be read on this page instead; the page may freeze while it runs.` }, 'in_process');
       return;
     }
     const lost = answer.code === 'UNKNOWN_BATCH' || answer.code === 'STALE_REVISION';
@@ -251,7 +255,7 @@ export function createImportModel(ports: DataExchangePorts): ImportModel {
     set({ phase: 'closed' });
     const name = shownName(last.fileName);
     if (!answer.ok) {
-      announce('warning', answer.code === 'UNKNOWN_BATCH' ? `Undo import: ${answer.message}.` : `The import of ${name} was not undone. ${refusalWords(answer).text}`);
+      announce('warning', answer.code === 'UNKNOWN_BATCH' ? undoNothing(answer.message) : `The import of ${name} was not undone. ${refusalWords(answer).text}`);
       return;
     }
     const count = ports.recordCount();
