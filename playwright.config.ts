@@ -25,7 +25,7 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', testMatch: ['**/smoke.spec.ts', '**/private-window.spec.ts'], use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', testMatch: ['**/smoke.spec.ts', '**/private-window.spec.ts'], use: { ...devices['Desktop Safari'] } },
+    { name: 'firefox', testMatch: ['**/smoke.spec.ts', '**/private-window.spec.ts', '**/csp.spec.ts'], use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', testMatch: ['**/smoke.spec.ts', '**/private-window.spec.ts', '**/csp.spec.ts'], use: { ...devices['Desktop Safari'] } },
   ],
 });

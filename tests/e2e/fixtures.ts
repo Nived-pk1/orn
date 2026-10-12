@@ -7,9 +7,9 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test as base } from '@playwright/test';
+import { test as base, type BrowserContext, type BrowserContextOptions } from '@playwright/test';
 
-export const test = base.extend({
+export const test = base.extend<{ makeContext: (options?: BrowserContextOptions) => Promise<BrowserContext> }>({
   context: async ({ playwright, browserName, browser, baseURL, viewport, userAgent, deviceScaleFactor, acceptDownloads }, provide) => {
     const options = {
       ...(baseURL === undefined ? {} : { baseURL }),
@@ -31,6 +31,25 @@ export const test = base.extend({
     } finally {
       await persistent.close();
       await rm(dir, { recursive: true, force: true }).catch(() => undefined);
+    }
+  },
+  /** Step 5.10a: more contexts that can keep data (a second profile, another origin): ordinary in Chromium and Firefox, persistent in WebKit. */
+  makeContext: async ({ playwright, browserName, browser }, provide) => {
+    const open: { context: BrowserContext; dir?: string }[] = [];
+    await provide(async (options: BrowserContextOptions = {}) => {
+      if (browserName !== 'webkit') {
+        const context = await browser.newContext(options);
+        open.push({ context });
+        return context;
+      }
+      const dir = await mkdtemp(join(tmpdir(), 'orn-webkit-'));
+      const context = await playwright.webkit.launchPersistentContext(dir, options);
+      open.push({ context, dir });
+      return context;
+    });
+    for (const { context, dir } of open) {
+      await context.close().catch(() => undefined);
+      if (dir !== undefined) await rm(dir, { recursive: true, force: true }).catch(() => undefined);
     }
   },
   page: async ({ context }, provide) => {

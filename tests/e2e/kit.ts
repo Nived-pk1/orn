@@ -23,7 +23,7 @@ export interface Watch {
 }
 
 /** Start watching a page BEFORE it navigates. */
-export async function watch(page: Page): Promise<Watch> {
+export async function watch(page: Page, origin: string = ORIGIN): Promise<Watch> {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   const foreignRequests: string[] = [];
@@ -44,7 +44,7 @@ export async function watch(page: Page): Promise<Watch> {
   page.on('request', (request) => {
     const url = new URL(request.url());
     if (['data:', 'blob:', 'about:'].includes(url.protocol)) return;
-    if (url.origin !== ORIGIN) foreignRequests.push(request.url());
+    if (url.origin !== origin) foreignRequests.push(request.url());
   });
   return {
     consoleErrors,

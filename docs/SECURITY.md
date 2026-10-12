@@ -43,6 +43,13 @@ Injected into production builds by `vite.config.ts`:
 
 `npm run build:smoke` (step 4.6, `scripts/check-build.mjs`) checks the built `index.html` against the policy above, exactly, and fails the build if `eval(`, `new Function` or `Function(` appears in any JS chunk other than RDKit's glue chunk (`rdkit-glue-<hash>.js`), which only the chem worker may load. It checks files, not browser behaviour: that is a Phase 5 (Gate E) e2e.
 
+**Proved in a browser (2026-10-12, step 5.10a, `tests/e2e/csp.spec.ts`, Chromium, Firefox and WebKit).** Against the production build with the `<meta>` policy: an injected inline script, an inline event handler and a script from a `blob:` URL do not run and raise `securitypolicyviolation`; the chem worker still starts, parses and draws a structure. (`eval` is not asked in a test: Playwright's own evaluate is exempt from the page policy in every engine; the build check covers it.) Served as a response HEADER by `tests/e2e/support/header-server.ts` (node:http, serving `dist/`): case A, the page policy on every response including the chem worker entry: the app works, the page policy is enforced, the compute, layout and search workers run, the chem worker runs but RDKit cannot start (its glue calls `new Function`), so the app says "Check unavailable" with Retry and never CHEM-001, in all three engines. Case B, the same, except the chem worker entry's response (`worker-chem-<hash>.js`) alone has `'unsafe-eval'` added to script-src: chem works, a structure is drawn and L4 runs, in all three engines. The page policy was never widened.
+
+What a host that sends a header policy must send, as plain lines:
+- the page policy of this section, as a header, on every response (document, scripts, workers, wasm, json, css, fonts);
+- on the chem worker entry's response alone (`/assets/worker-chem-<hash>.js`), the same policy with `'unsafe-eval'` added to script-src;
+- no `'unsafe-eval'` on any other response. No host configuration file is shipped.
+
 ## 5. Delivery
 
-Serve over `http(s)` (static hosting or `npm run preview`); `file://` is unsupported because module workers, WASM and IndexedDB origins require it. A PWA service worker (Phase 9) caches the app shell for offline use.
+Serve over `http(s)` (static hosting or `npm run preview`); `file://` is unsupported because module workers, WASM and IndexedDB origins require it. A PWA service worker (Phase 9) caches the app shell for offline use. A host that adds a header policy follows the plain lines at the end of §4 (2026-10-12): the page policy everywhere, the chem worker entry alone with `'unsafe-eval'` added.
