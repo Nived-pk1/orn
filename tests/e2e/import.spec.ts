@@ -232,7 +232,8 @@ test.describe('the import screen', () => {
     expect(await axeProblems(page, 10)).toEqual([]);
     await dialog.getByRole('button', { name: 'Confirm' }).click();
     await expect(toasts(page).getByText(/^Imported \d+ records from synthetic-v6\.json\./)).toBeVisible({ timeout: 90_000 });
-    // both hubs that share a name are there
+    // both hubs that share a name are there (the search index follows an import after a short quiet time: wait for it first)
+    await expectFinds(page, 'Compound 0', true);
     await page.keyboard.press('Control+K');
     const palette = page.getByRole('dialog', { name: 'Search' });
     await palette.getByRole('combobox').fill('Compound 0');

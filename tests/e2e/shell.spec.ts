@@ -58,7 +58,8 @@ test.describe('the shell and the design system', () => {
     await page.keyboard.press('Enter');
     const menu = page.getByRole('menu');
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: /Export/ })).toContainText('step 5.9b');
+    // step 5.9b: Export exists now, so it is listed enabled (it used to be listed with the step that brings it)
+    await expect(menu.getByRole('menuitem', { name: /Export\.\.\./ })).not.toHaveAttribute('aria-disabled', 'true');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Escape');
     await expect(menu).toHaveCount(0);

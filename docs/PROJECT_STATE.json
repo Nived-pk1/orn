@@ -81,11 +81,12 @@
     "5.6b",
     "5.7",
     "5.8",
-    "5.9a"
+    "5.9a",
+    "5.9b"
   ],
   "nextPhase": 5,
-  "nextStep": "5.9b",
-  "nextStepTitle": "Phase 5, step 5.9b - Export UI (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.9a (the import screen: file pick and drop, caps and refusals in words, preview with conflicts, legacy report and decisions, apply with stages and Cancel, Undo import, legacy re-import reuses the earlier clock) is done and awaits the human review; 5.8 is accepted (2026-10-12).",
+  "nextStep": "5.10a",
+  "nextStepTitle": "Phase 5, step 5.10a - Gate E e2e suite (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.9b (the export screen: five ways in, format / scope / images with sentences, a safe editable file name from the title and the injected date, progress and Cancel, the download from a Blob through an anchor, the result with counts and every gap, the in-page export offered when the worker is down) is done; 5.9a is accepted with its review follow-ups (2026-10-12).",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -130,7 +131,7 @@
     "fileSizeCheck": "passed",
     "hardcodeCheck": "passed (654 ids, 283 names; names skipped only in src/core/schema, IDs checked everywhere)",
     "npmInstall": "done in step 1.1 (Node 24.21.0, npm 11.19.0); package-lock.json committed; versions in PROGRESS.md",
-    "npmRunCheck": "passed as ONE command at the close of step 5.9a (Vitest 4.1.11: 376 files, 5,373 tests; before the session 370 files, 5,298 tests, HEAD 117a6d5; after part 1 376 / 5,373, after part 2 376 / 5,373); build:smoke green, initial JS 372.76 kB gzip (import-screen lazy chunk 4.89 kB gzip)",
+    "npmRunCheck": "passed as ONE command at the close of step 5.9b (Vitest 4.1.11: 384 files, 5,427 tests; after the 5.9a review follow-ups 379 / 5,383, before them 376 / 5,373; HEAD fa8ee43 at the start); build:smoke green, initial JS 376.76 kB gzip (372.76 at the close of 5.9a: +4.0 kB), export-screen lazy chunk 1.85 kB gzip",
     "schemaSuite": "steps 1.2/1.2a: maximal fixture, 46 invalid fixtures with manifest, schema-derived mutation suite over every kind, URL and base64 tightening",
     "referenceSuite": "step 1.4: path walker, engine and registry coverage over the maximal fixture (42 tests)",
     "datasetSuite": "step 1.5: ID factory (12), document/serialisation over both fixtures incl. byte-identical round trips (23), ChangeSet assembly and diff fallback (16)",
@@ -208,7 +209,8 @@
     "browserSuite": "step 5.1d: npm run e2e (production build, Playwright 1.63.0): 17 specs, 16 passed, 1 skipped (test.fixme: an ordinary reload is not reported as a crash). chromium: app 7, lifecycle 3 + 1 fixme, smoke 2; firefox 155.0: smoke 2; webkit 26.6 (persistent context): smoke 2. Browser measurements and the FindingStore.counts() figure: docs/PROGRESS.md step 5.1d item j (tests/measure). npm run check: 266 files, 4,037 tests (before the session 266 / 4,034; +3 persist() tests); build:smoke green.",
     "navigatorScaleSuite": "step 5.4c: navigator-pairs.test.ts (12), navigator-expansion.test.ts (16), same-projection.test.ts (6), tests/integration/navigator-scale.test.ts (6: the step 5.0 fact-sheet scenarios; largest bundle total 752 at design dense; hub_explosion ONE pair of 1,000 / 5,000, no truncation), tests/property/navigator-nothing-dropped.test.ts (drawn totals + hidden candidates = filtered candidates, within limits, also at ORN_PROPERTY_RUNS=200), tests/property/navigator-reads-kinds.test.ts (readsKinds proof over generated states and the maximal fixture), the differential test extended (10 requests per state incl. expansion, anchored states, the reference rewritten as an independent full scan), P-07 covers the per-pair table (navigatorRollupSnapshot.pairs), harness checks bundle-total and bundle-empty",
     "navigatorOverviewBench": "step 5.4c: tests/perf/navigator-overview.bench.ts run once alone (bench:baseline not run), vitest bench project main, mean / p99 ms: design dense overview 7.37 / 12.31 (before the per-pair table 11.73 / 23.28), one hub expanded 11.26 / 15.29, every hub expanded 18.91 / 25.01 (informal 16: MISSED); design hub_explosion overview 0.10 / 0.21, one hub expanded 5.81 / 9.46, every hub expanded 6.11 / 8.90; stress overview (400 anchors) 11.49 / 15.79 (informal 32); sameProjection at 400 nodes / 800 edges: equal 0.67 / 1.18 (informal 2), differing in the last edge 0.0104 / 0.0123. A filtered overview still scans (about 12 / 23).",
-    "navigatorEndToEndSuite": "step 5.5a: pipeline with a fake layout service and with the real layout worker code in process (expansion, first shown layout stable), labels and orthogonal routing over real ELK, label sizes, depiction binding and box sizes, condition text (66), e2e in Chromium: demo hubs and arrows, selection and expansion, reload, axe, ADV-012 part 1, readability (zero overlaps at LOD 2, with conditions, with a hub expanded), a blob image at LOD 3 with zero CSP violations"
+    "navigatorEndToEndSuite": "step 5.5a: pipeline with a fake layout service and with the real layout worker code in process (expansion, first shown layout stable), labels and orthogonal routing over real ELK, label sizes, depiction binding and box sizes, condition text (66), e2e in Chromium: demo hubs and arrows, selection and expansion, reload, axe, ADV-012 part 1, readability (zero overlaps at LOD 2, with conditions, with a hub expanded), a blob image at LOD 3 with zero CSP violations",
+    "exportEndToEnd": "step 5.9b, Chromium against the production build: P-02 in a real browser (the demo exported, imported into a fresh context through the import screen, exported again: SHA-256 equal), INV-19 (two exports of the same state identical), a package with a 1x1 PNG re-imports and exports again with its image byte for byte, Cancel gives no download, axe, zero policy violations; the three-engine smoke gains \"an export downloads a file\". Full run: 116 passed, 1 skipped (the 5.1d fixme), 0 failed (Chromium 102, Firefox 7, WebKit 7)"
   },
   "openItems": [
     "NEW (step 5.7 close): initial JS 354.29 kB gzip (347.02 after the lazy loading of the 5.7 session's Part A2, +7.3 kB for the pointer, keyboard, menu, List and table code); target 400 kB, build:smoke now fails over it. Lazy chunks: views-other, import-inprocess, export-inprocess, import-legacy.",
@@ -370,6 +372,12 @@
     "NEW (step 5.9a): Gate E watch item, the import's main-thread blocks (Chromium trace, 16.9 MB design-tier dense file): the preview has a 3,707 ms task starting 711 ms after the file is chosen whose cause is not established, and the apply has a 2,644 ms microtask block (1,091 ms in one function of the main bundle: merged state, snapshot and replaceState on main). Nothing fixed; see docs/PROGRESS.md 'Phase 5, step 5.9a, part 2', item j. The palette not being lazy (5.8 review item 6) stays a watch item with the initial JS (372.76 kB gzip).",
     "NEW (step 5.9a): a file with no usable dataset information (every older-app file) is previewed as a merge by itself, with a note; a replace_all of such a file is not offered. Say if a different behaviour is wanted.",
     "NEW (step 5.9a): Undo import is reachable in a session-only tab from the toast and the File menu's Undo import is unavailable there (the Dataset button and palette keep the 5.5d rule). The flows support it (snapshots in memory); say whether the buttons should follow.",
-    "NEW (step 5.9a): additive contract changes: Dialog.size, ToastInput.action, VirtualList.focusable, Flows.lastImport, ImportPreviewAnswer.earlierImport. No schema change."
+    "NEW (step 5.9a): additive contract changes: Dialog.size, ToastInput.action, VirtualList.focusable, Flows.lastImport, ImportPreviewAnswer.earlierImport. No schema change.",
+    "NEW (step 5.9b): the export file's exportedAt and the file name's date come from the injected clock, so two exports at different moments differ in exportedAt (INV-19 holds for the same state AND clock). The e2e fixes the browser clock (Playwright clock) to prove byte identity. Say if exportedAt should instead come from the dataset (it would then not change between exports).",
+    "NEW (step 5.9b): the file name is ASCII only (letters, digits, dot, dash, underscore); a title in another script (Hindi, say) becomes \"orn-dataset\" plus the date. Say if a wider safe set is wanted.",
+    "NEW (step 5.9b): a failed save now shows a banner (save_failed) with \"Export now\"; before, only the status line said so. A revision gap keeps its own banner and button. Additive: Banner.also, AppContextValue.nowMs, ArrowTextContext.omitReactants, FamilyCardOutcome.equation. No schema change.",
+    "NEW (step 5.9b): the 5.9a ADV-043 e2e (v6 hub names in the palette) was racy (it asked the palette once, before the search index had followed the import): it passed once and failed twice on the unchanged 5.9a HEAD. It now waits with the existing polling helper. shell.spec no longer expects Export to be listed as \"step 5.9b\".",
+    "NEW (step 5.9b): \"Replace with the demo dataset\" stays unavailable in a session-only tab (only Undo import was changed by the 5.9a review, item 5). Say if replace should work there too.",
+    "NEW (step 5.9b): the export dialog's file-name field sits below the three option groups; at 1280 x 800 the dialog scrolls inside itself. Phase 8 polish may tighten it."
   ]
 }

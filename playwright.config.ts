@@ -16,7 +16,7 @@ export default defineConfig({
   timeout: 120_000,
   expect: { timeout: 30_000 },
   reporter: [['list']],
-  use: { baseURL: `http://127.0.0.1:${PORT}`, trace: 'off', acceptDownloads: false },
+  use: { baseURL: `http://127.0.0.1:${PORT}`, trace: 'off', acceptDownloads: true },
   webServer: {
     command: `npx vite build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
     url: `http://127.0.0.1:${PORT}`,

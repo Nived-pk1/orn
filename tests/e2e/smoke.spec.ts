@@ -5,7 +5,7 @@
  * chem and search workers as ok. 4: the BUILT layout worker loads ELK, answers `warmUp` and lays out a small graph with engine 'elk'
  * (5.1d review follow-up a: ELK did not load in the production worker).
  */
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { expect, test } from './fixtures';
 import { expectClean, findingsText, loadDemo, openApp, recordCount, showDataset, watch } from './kit';
 
@@ -118,5 +118,25 @@ test('Ctrl K finds "ethanol" (step 5.8): the palette opens and lists records', a
   await palette.getByRole('combobox').fill('ethanol');
   await expect(palette.getByRole('option').first()).toBeVisible();
   await expect(palette.getByRole('status')).toHaveText(/^\d+ results?/);
+  await expectClean(seen);
+});
+
+test('an export downloads a file (step 5.9b): File, Export..., Export gives an .orn.json with the demo in it', async ({ page }) => {
+  const seen = await watch(page);
+  await openApp(page);
+  await loadDemo(page);
+  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('menuitem', { name: /Export\.\.\./ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Export your data' });
+  await expect(dialog.getByRole('group', { name: 'What to include' })).toBeVisible();
+  const [download] = await Promise.all([page.waitForEvent('download'), dialog.getByRole('button', { name: 'Export', exact: true }).click()]);
+  expect(download.suggestedFilename()).toMatch(/\.orn\.json$/);
+  const path = await download.path();
+  const text = readFileSync(path, 'utf8');
+  expect(text.endsWith('\n')).toBe(true);
+  const parsed = JSON.parse(text) as { format: string; records: { reaction: unknown[] } };
+  expect(parsed.format).toBe('orn.dataset');
+  expect(parsed.records.reaction).toHaveLength(27);
+  await expect(page.getByRole('dialog', { name: 'Export finished' })).toBeVisible();
   await expectClean(seen);
 });
