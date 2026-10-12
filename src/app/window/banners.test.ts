@@ -17,6 +17,7 @@ describe('bannersOf: one banner per AppStatus condition', () => {
     ['read-only follower', { mode: 'follower', reason: 'other_tab_is_writer' } as Partial<AppStatus>, 'follower', /another tab .* is the writer/],
     ['read-only for another reason', { mode: 'read_only', reason: 'newer_schema', detail: 'schema 9' } as Partial<AppStatus>, 'read_only', /read-only \(newer_schema\)\. schema 9/],
     ['single tab', { singleTab: true } as Partial<AppStatus>, 'single_tab', /no tab locks/],
+    ['session-only (a window that refuses Blobs)', { mode: 'session_only', reason: 'blob_storage_refused', detail: 'x' } as Partial<AppStatus>, 'session_only', /^This browser window cannot keep data \(it may be a private window\)\. The app works, but nothing is saved after you close it\. Export a backup to keep your work\.$/],
     ['session-only', { mode: 'session_only', reason: 'indexeddb_unavailable' } as Partial<AppStatus>, 'session_only', /Nothing is saved in this session \(indexeddb_unavailable\)/],
     ['replica down', { replica: { state: 'down', reason: 'worker gave up', revision: null } } as Partial<AppStatus>, 'replica_down', /background copy .* down \(worker gave up\)/],
     ['validation fallback', { validation: { where: 'main', reason: 'no worker' } } as Partial<AppStatus>, 'validation_fallback', /ran on this page .* \(no worker\)/],
@@ -30,6 +31,12 @@ describe('bannersOf: one banner per AppStatus condition', () => {
   ])('%s', (_name, patch, id, text) => {
     const found = bannersOf(status(patch)).find((b) => b.id === id);
     expect(found?.text).toMatch(text);
+  });
+
+  it('a window that refuses Blobs offers Export a backup', () => {
+    const banners = bannersOf(status({ mode: 'session_only', reason: 'blob_storage_refused', detail: 'x' }));
+    expect(banners).toHaveLength(1);
+    expect(banners[0]?.action).toEqual({ label: 'Export a backup', kind: 'export' });
   });
 
   it('a refused promotion says so, with Reload, and replaces the plain follower banner', () => {

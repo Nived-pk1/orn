@@ -16,6 +16,8 @@ export interface Watch {
   readonly consoleErrors: string[];
   readonly pageErrors: string[];
   readonly foreignRequests: string[];
+  /** Native dialogs (alert, confirm, prompt, beforeunload) the page raised: the app never raises one (step 5.10a). */
+  readonly nativeDialogs: string[];
   /** Policy violations seen by the document (`securitypolicyviolation`). */
   violations(): Promise<string[]>;
 }
@@ -25,6 +27,7 @@ export async function watch(page: Page): Promise<Watch> {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   const foreignRequests: string[] = [];
+  const nativeDialogs: string[] = [];
   await page.addInitScript(() => {
     const seen: string[] = [];
     (window as unknown as { __ornViolations: string[] }).__ornViolations = seen;
@@ -32,6 +35,10 @@ export async function watch(page: Page): Promise<Watch> {
   });
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('dialog', (dialog) => {
+    nativeDialogs.push(`${dialog.type()}: ${dialog.message()}`);
+    void dialog.dismiss().catch(() => undefined);
   });
   page.on('pageerror', (error) => pageErrors.push(String(error)));
   page.on('request', (request) => {
@@ -43,6 +50,7 @@ export async function watch(page: Page): Promise<Watch> {
     consoleErrors,
     pageErrors,
     foreignRequests,
+    nativeDialogs,
     violations: () => page.evaluate(() => [...((window as unknown as { __ornViolations?: string[] }).__ornViolations ?? [])]),
   };
 }
@@ -52,6 +60,7 @@ export async function expectClean(seen: Watch): Promise<void> {
   expect(seen.consoleErrors, 'console errors').toEqual([]);
   expect(seen.pageErrors, 'uncaught page errors').toEqual([]);
   expect(seen.foreignRequests, 'requests that left the origin').toEqual([]);
+  expect(seen.nativeDialogs, 'native dialogs').toEqual([]);
 }
 
 /** Open the app and wait until the services have booted (the status line says "Saved" or the like). */

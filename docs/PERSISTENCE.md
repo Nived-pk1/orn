@@ -53,6 +53,7 @@ dispatch(envelope) ─► commit (memory, revision n) ─► ChangeSet n
 `adapter.open()` runs it once and returns an `OpenResult` (`src/persistence/boot.ts`); its parts are pure or take the adapter's ports (`boot-load.ts`, `boot-migrate.ts`, `boot-checks.ts`). Boot takes an injected `WriterLock` (`createWebLocksWriterLock` in the app) and an injected `MigrationRunner`; the same sequence runs again as the writer when a follower is promoted (§10). Every branch that cannot make the data writable leaves the queue read-only and writes **nothing**.
 
 1. Open the database; run Dexie upgrades if `DB_VERSION` increased. IndexedDB missing, refused or out of quota → `mode: 'unavailable'` (session-only mode; `reason` and `detail` say why).
+   Right after the open, before anything is read or written (2026-10-12, step 5.10a, amendment): a **Blob probe** puts a 1-byte Blob into `snapshots` in a read-write transaction that is ABORTED on purpose, whatever the put does, so nothing is ever committed (`blob-probe.ts`). A refused put (a Safari private window, which Playwright's ordinary WebKit context imitates) → `mode: 'unavailable'`, `reason: 'blob_storage_refused'` (additive), session-only, with its own banner. The refusal shows on the put request itself, before commit (measured in three engines). No DB version bump, no browser sniffing.
 2. Acquire the writer lock `orn-writer`. Not granted → open **read-only**, load the state, write nothing (no quarantine rows, no markers), follow changes (§10). If the stored data then needs a migration, only the writer may run it: the tab opens read-only without data and loads when the writer's migration message arrives. `unsupported` (no Web Locks): the tab is the writer and `bootReport.singleTab` is set.
 3. Read records and meta in one transaction, then look at `meta.schemaVersion`:
    - newer than the runner's target → read-only, `readOnlyReason: 'newer_schema'`, `state: null`, `detail` explains ("Data was saved by a newer version"), the lock is released, nothing changed;
@@ -151,6 +152,7 @@ The tab holding the Web Lock `orn-writer` is the only writer (INV-28, ADR-005, A
 | Failure | Response |
 |---|---|
 | IndexedDB unavailable (private mode, blocked) | Session-only mode with a persistent banner; export available; nothing pretends to be saved |
+| IndexedDB opens but refuses to store a Blob (private window; 2026-10-12) | The boot probe answers `blob_storage_refused`: session-only, banner "This browser window cannot keep data..." with "Export a backup"; import, Undo import and export work in memory |
 | Write transaction fails | Retry with backoff → failed status + banner; memory kept; export offered |
 | Quota exceeded | §11 sequence |
 | Corrupt record at boot | Quarantined with issues; rest loads; Diagnostics lists it with export/repair options |

@@ -12,6 +12,7 @@ import type { JsonValue } from '@/core/schema';
 import { createAuxStores } from './aux-stores';
 import { sha256OfBlob } from './blob-hash';
 import { runBoot } from './boot';
+import { probeBlobStorage } from './blob-probe';
 import { changeMessageFor } from './change-message';
 import { interpretCommitted, type ChangedRows, type FollowerLoad } from './follower-read';
 import type { BootPorts, CommittedData, UiStateValidators } from './boot-ports';
@@ -227,6 +228,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     listUiStateRows: aux.listUiStateRows,
     deleteUiState: aux.deleteUiState,
     setReadOnly: (readOnly) => queue.setReadOnly(readOnly),
+    probeBlobStorage: () => probeBlobStorage(db),
   };
   let opened: Promise<OpenResult> | undefined;
 

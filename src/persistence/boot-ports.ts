@@ -51,4 +51,9 @@ export interface BootPorts {
   listUiStateRows(): Promise<readonly UiStateRow[]>;
   deleteUiState(keys: readonly string[]): Promise<void>;
   setReadOnly(readOnly: boolean): void;
+  /**
+   * Step 5.10a: stores a 1-byte Blob in an aborted transaction right after the database opens; `ok: false` makes boot answer
+   * `unavailable` with `blob_storage_refused`. Absent: no probe (test fakes of boot).
+   */
+  probeBlobStorage?(): Promise<{ readonly ok: true } | { readonly ok: false; readonly detail: string }>;
 }

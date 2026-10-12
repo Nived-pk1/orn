@@ -2,7 +2,7 @@
  * The `test` of the smoke spec. Chromium and Firefox use Playwright's ordinary context. WebKit uses a PERSISTENT context
  * (`launchPersistentContext`): Playwright's ordinary WebKit context keeps nothing on disk and behaves like a Safari private window,
  * where IndexedDB refuses to store a Blob (the `pre_import` snapshot, PERSISTENCE §6), so every import fails with SNAPSHOT_FAILED
- * (step 5.1d; an open item for step 5.10a decides what the product does in such a window).
+ * (step 5.1d). Since step 5.10a boot probes that and opens such a window session-only (tests/e2e/private-window.spec.ts).
  */
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';

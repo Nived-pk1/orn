@@ -24,6 +24,7 @@ describe('decideMode: OpenResult -> what the app is', () => {
     ['read-only without a reason', { mode: 'read_only', state: null, revision: 0, storedSchemaVersion: null, quarantinedCount: 0 }, { mode: 'read_only', reason: 'read_only' }],
     ['unavailable (blocked)', { mode: 'unavailable', reason: 'indexeddb_blocked', detail: 'blocked' }, { mode: 'session_only', reason: 'indexeddb_blocked' }],
     ['unavailable (private mode)', { mode: 'unavailable', reason: 'private_mode_quota', detail: 'quota 0' }, { mode: 'session_only', reason: 'private_mode_quota' }],
+    ['unavailable (Blob storage refused)', { mode: 'unavailable', reason: 'blob_storage_refused', detail: 'no blobs' }, { mode: 'session_only', reason: 'blob_storage_refused' }],
     ['unavailable (unknown)', { mode: 'unavailable', reason: 'unknown', detail: 'nope' }, { mode: 'session_only', reason: 'unknown' }],
   ];
   it.each(rows)('%s', (_name, opened, expected) => {

@@ -1,6 +1,6 @@
 /**
  * The boot sequence (docs/PERSISTENCE.md §4), in this order:
- *  1. open the database (IndexedDB unavailable → session-only, the result says why);
+ *  1. open the database (IndexedDB unavailable → session-only, the result says why), then probe that it stores a Blob (aborted write);
  *  2. take the writer lock (not granted → read-only, nothing is written; no Web Locks → single-tab writer, reported);
  *  3. read rows and meta in one transaction and look at `schemaVersion`: newer → read-only; older or refused by the
  *     runner → `boot-migrate.ts`; damaged meta → read-only `integrity_failure`;
@@ -45,6 +45,9 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     } catch (error) {
       return unavailable(error);
     }
+    // PERSISTENCE.md §4 step 1: a window that opens the database but refuses Blobs cannot take a snapshot, so it is session-only.
+    const probe = await ports.probeBlobStorage?.();
+    if (probe !== undefined && !probe.ok) return { mode: 'unavailable', reason: 'blob_storage_refused', detail: probe.detail };
   }
   const acquired = promotion ? 'acquired' : await ports.lock.acquire();
   const writer = acquired !== 'held_elsewhere';

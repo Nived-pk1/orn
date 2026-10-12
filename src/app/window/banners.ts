@@ -41,6 +41,8 @@ const KIND_OF: Readonly<Record<string, NoticeKind>> = {
   l4_not_checked: 'review',
 };
 
+export const BLOB_REFUSED_TEXT = 'This browser window cannot keep data (it may be a private window). The app works, but nothing is saved after you close it. Export a backup to keep your work.';
+
 /** A banner id this table does not know is shown as a warning, never hidden. */
 export const bannerKindOf = (id: string): NoticeKind => KIND_OF[id] ?? 'warning';
 
@@ -71,7 +73,10 @@ export function bannersOf(status: AppStatus, choices: BannerChoices = {}): reado
   if (status.singleTab) {
     banners.push({ id: 'single_tab', text: 'This browser has no tab locks, so the app cannot stop a second tab from writing. Keep it open in one tab only.' });
   }
-  if (status.mode === 'session_only') {
+  if (status.mode === 'session_only' && status.reason === 'blob_storage_refused') {
+    // Step 5.10a: the window opens the database but refuses to keep a Blob (a private window): the app works, nothing is kept.
+    banners.push({ id: 'session_only', text: BLOB_REFUSED_TEXT, action: { label: 'Export a backup', kind: 'export' } });
+  } else if (status.mode === 'session_only') {
     banners.push({ id: 'session_only', text: `Nothing is saved in this session (${status.reason ?? 'no reason given'}). Closing the tab loses everything.${suffix(status.detail)}` });
   }
   if (status.save?.failureReason === 'revision_gap') {

@@ -213,7 +213,7 @@ export type OpenResult =
       readonly quarantinedCount: number;
       readonly bootReport?: BootReport;
     }
-  | { readonly mode: 'unavailable'; readonly reason: 'indexeddb_blocked' | 'private_mode_quota' | 'unknown'; readonly detail: string };
+  | { readonly mode: 'unavailable'; readonly reason: 'indexeddb_blocked' | 'private_mode_quota' | 'blob_storage_refused' | 'unknown'; readonly detail: string };
 
 export interface SaveStatus {
   readonly state: 'saved' | 'saving' | 'retrying' | 'failed' | 'read_only';

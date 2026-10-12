@@ -17,6 +17,7 @@ import {
 } from '@/core/schema';
 import { createMigrationRunner } from '@/core/migrations';
 import { sha256OfBlob } from '@/persistence/blob-hash';
+import { BLOB_PROBE_ID } from '@/persistence/blob-probe';
 import { alwaysGrantedLock } from '@/persistence/lock';
 import { createDexieAdapter, type DexieAdapter, type DexieAdapterOptions } from '@/persistence/adapter';
 import { createOrnDb, type DbVersionStep, type OrnDb } from '@/persistence/db';
@@ -218,7 +219,11 @@ function injectFaults(db: OrnDb, mutations: TestDb['mutations']): Faults {
         return {
           ...table,
           mutate(request) {
-            mutations.push({ store: name, type: request.type, values: 'values' in request ? request.values : [] });
+            const values: readonly unknown[] = 'values' in request ? request.values : [];
+            // The Blob probe's put is never committed (its transaction is aborted on purpose): not a mutation of the data, and not subject to the faults injected into the data writes (a test that fails the snapshot store fails the snapshot, not the probe; the probe's own failure is tested by refusing its put).
+            const probe = name === 'snapshots' && values.length === 1 && (values[0] as { id?: unknown }).id === BLOB_PROBE_ID;
+            if (probe) return table.mutate(request);
+            mutations.push({ store: name, type: request.type, values });
             const error = failing.get(name);
             return error === undefined ? table.mutate(request) : Promise.reject(error());
           },
