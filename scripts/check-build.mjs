@@ -10,7 +10,10 @@
 //   4. no JS chunk except RDKit's own glue chunk contains `eval(`, `new Function` or `Function(` (ADR-035). RDKit's glue chunk is
 //      the one vite.config.ts names assets/rdkit-glue-<hash>.js: the chunk made only of @rdkit/rdkit modules. Anything else holding
 //      RDKit's code keeps another name and is scanned, so a build that merges RDKit into one of our chunks fails here. The glue
-//      may be mentioned only by the chem worker's entry (RDKit runs only inside the chem worker).
+//      may be mentioned only by the chem worker's entry (RDKit runs only inside the chem worker);
+//   7. no emitted chunk imports a worker ENTRY chunk, statically or dynamically (2026-10-13, 5.10a review: WebKit evaluates a
+//      worker entry a second time when a dynamic chunk imports shared code from it, and the second instance has no state);
+//   8. the build has no source maps (no *.map file, no sourceMappingURL comment).
 // Usage: node scripts/check-build.mjs [distDir = dist] [securityDoc = docs/SECURITY.md]
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
@@ -130,7 +133,9 @@ else if (!readFileSync(demoCopies[0]).equals(readFileSync(demoSource))) fail(rel
 else report.push(`demo dataset: ${rel(demoCopies[0])} (${kB(statSync(demoCopies[0]).size)}) is identical to data/seed/demo.orn.json`);
 
 // 6. lazy chunks (step 5.7): rarely used code is its own chunk, never part of the initial load, and (being JS chunks) scanned in 4
-const LAZY = ['views-other', 'import-inprocess', 'export-inprocess', 'import-legacy', 'import-screen', 'export-screen'];
+// 2026-10-13 (5.10a review): legacy converter is static in the compute worker; WebKit re-evaluated the worker entry when a
+// dynamic chunk imported shared code from it. There is no import-legacy chunk any more.
+const LAZY = ['views-other', 'import-inprocess', 'export-inprocess', 'import-screen', 'export-screen'];
 const INITIAL_JS_GZIP_BUDGET = 400 * 1000;
 const gz = (bytes) => `${(bytes / 1000).toFixed(2)} kB gzip`; // vite's unit (1 kB = 1000 bytes)
 const htmlText = existsSync(indexPath) ? readFileSync(indexPath, 'utf8') : '';
@@ -145,6 +150,23 @@ const initialGzip = initial.reduce((sum, name) => sum + gzipSync(readFileSync(jo
 if (initial.length === 0) fail('index.html', 'no initial JS found');
 else if (initialGzip > INITIAL_JS_GZIP_BUDGET) fail('index.html', `initial JS is ${gz(initialGzip)}, over the 400 kB budget`);
 else report.push(`initial JS: ${initial.join(', ')} (${gz(initialGzip)}, budget 400 kB)`);
+
+// 7. no chunk imports a worker entry chunk (a `new URL(..., import.meta.url)` that starts the worker is not an import)
+const entryNames = new Set([...entries.values()].map((path) => path.split(sep).pop()));
+const IMPORT_SPECIFIER = /(?:\bfrom|\bimport)\s*\(?\s*\s*["']([^"']+\.js)["']/g;
+for (const file of js) {
+  for (const match of readFileSync(file, 'utf8').matchAll(IMPORT_SPECIFIER)) {
+    const target = match[1].split('/').pop();
+    if (entryNames.has(target)) fail(rel(file), `imports the worker entry chunk ${target} (a worker entry must be imported by no chunk)`);
+  }
+}
+report.push(`no chunk imports a worker entry chunk (${entryNames.size} entries checked)`);
+
+// 8. no source maps
+const maps = all.filter((path) => path.endsWith('.map'));
+for (const path of maps) fail(rel(path), 'is a source map (the production build has none)');
+for (const file of js) if (/\/\/# sourceMappingURL=/.test(readFileSync(file, 'utf8'))) fail(rel(file), 'has a sourceMappingURL comment');
+report.push(`no source maps (${maps.length} *.map files)`);
 
 for (const line of report) console.log(`ok   ${line}`);
 if (failures.length > 0) {

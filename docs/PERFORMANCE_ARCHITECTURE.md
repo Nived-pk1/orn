@@ -86,6 +86,8 @@ Render budget 400 visible nodes / 800 visible edges; above it LOD is capped at 1
 Step 5.1b (app services): no engine thread is created at boot. Chem starts at the first L4 run (a 400 ms debounce after boot), layout at the first layout request, search when its boot decision reads the cache or loads (a 200 ms debounce); each then loads its engine lazily through the warm-up gate. A missing factory is a status.
 
 Code-split per view; RDKit WASM (~6 MB), ELK and Ketcher load lazily on first need; the navigator can render with names and formulas before RDKit is ready. Warm boot reuses the cached search index and layouts keyed by revision. Initial JS (excluding lazy chunks) target < 400 KB gzip.
+
+2026-10-13 (5.10a review): legacy converter is static in the compute worker; WebKit re-evaluated the worker entry when a dynamic chunk imported shared code from it. There is no `import-legacy` lazy chunk any more; `scripts/check-build.mjs` also fails a build in which any chunk imports a worker entry chunk, or which has a source map.
 Engines load on the first need through `warmUp` (step 5.0): the first chem or layout call of a session is held behind it, and a timeout of the load (20 s) is an ordinary worker timeout.
 
 ## 8. Memory

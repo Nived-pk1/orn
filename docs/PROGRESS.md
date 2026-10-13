@@ -4015,3 +4015,13 @@ Not done: the one full three-engine run, per-browser counts, the Part 4 close (p
 
 
 2026-10-13: C1 committed this tree as "phase-5.10a: cross-engine fixes (WebKit v6 import open)"; `npm run check` green (386 files, 5,440 tests).
+
+### Phase 5, step 5.10a, part C2 - legacy converter static in the compute worker (2026-10-13)
+
+a. Cause confirmed (temporary top-level counter in `src/workers/compute/entry.ts`, posted once as a message; a temporary spec imported the v6 fixture; both removed). Evaluations of the compute worker entry per engine: Chromium 1, Firefox 1, WebKit 2 (both from `worker-compute-<hash>.js`, `module code`, the same global scope). The chunk that imported the entry: `import-legacy-<hash>.js`, which began `import{...}from"./worker-compute-<hash>.js"` (the shared code it uses lives in the entry chunk).
+b. Done. 2026-10-13 (5.10a review): legacy converter is static in the compute worker; WebKit re-evaluated the worker entry when a dynamic chunk imported shared code from it. `import-session.ts` imports `convertLegacy` statically; the dynamic import, `loadLegacyImporter` and the `LEGACY_INVALID`-on-chunk-failure path are gone (that message existed only for a failed chunk load). `import-legacy` removed from the lazy list in `scripts/check-build.mjs`; dated lines in PERFORMANCE_ARCHITECTURE (§ code-split paragraph) and PROJECT_STATE (the 5.7 note). The in-process import chunk now carries the converter too (it is lazy as before).
+c. `scripts/check-build.mjs` rule 7: no emitted chunk may import a worker entry chunk, statically or dynamically (a `new URL(..., import.meta.url)` that starts the worker is not an import). Rule 8 (C3g): no `*.map` file and no `sourceMappingURL` comment. Fixtures that violate each are in `tests/integration/check-build.test.ts`.
+d. `createWorkerHealth` (`src/app/services/worker-health.ts`): a `dropped_response` that is unknown, cancelled or timed out (the RPC client already ignores it) is logged as "duplicate or late worker response (worker <name>, id <n>)"; no console output. Malformed ones are logged as before. Unit test `worker-health.test.ts`.
+e. Compute worker chunk: before 285,747 B raw (88.2 kB gzip); after 381,646 B raw (119.6 kB gzip) (+95.9 kB raw, +31.4 kB gzip = the old `import-legacy` chunk). It is not in index.html, so it does not count toward the initial-JS budget: initial JS 385.99 kB gzip (budget 400), unchanged. `import-inprocess` is now 31.03 kB gzip.
+f. Both v6 import specs green in Chromium, Firefox and WebKit.
+Changed tests: `src/io/import-lazy.test.ts` deleted (it tested the chunk-load failure and the dynamic import, both removed); `check-build.test.ts` (no `import-legacy` fixture; the "loaded by the page" case uses `import-screen`; +2 tests).

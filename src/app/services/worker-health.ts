@@ -34,6 +34,11 @@ export function createWorkerHealth(name: WorkerName, status: StatusWriter, log: 
       set({ state: 'ok', started: true, reason: 'running' });
     },
     onEvent(event) {
+      // A response whose call is no longer pending is ignored by the client (never an error); the log says so, with the worker's name.
+      if (event.type === 'dropped_response' && event.reason !== 'malformed') {
+        log.add({ source: 'app', event: { type: 'late_worker_response', message: `duplicate or late worker response (worker ${name}, id ${event.id})` } });
+        return;
+      }
       log.add({ source: 'worker', event });
       if (event.type === 'crash') set(event.willRestart ? { state: 'restarting', reason: event.message } : { state: 'down', reason: event.message });
       else if (event.type === 'restart') set({ state: 'restarting', reason: `restarted after a ${event.reason} (${event.restarts} in a row)` });

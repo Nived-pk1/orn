@@ -13,7 +13,7 @@
 import type { IdFactory } from '@/core/dataset';
 import type { CanonicalState } from '@/core/schema';
 import { canonicalJson } from './canonical-json';
-import type { convertLegacy as convertLegacyValue } from './import-legacy';
+import { convertLegacy } from './import-legacy';
 import type { ImportDecision, ImportParseResult, LegacyImportReport, ImportPlan, ImportPlanRequest, ImportPreviewOutcome, ImportApplyResult, TaskOptions } from './contracts';
 import { applyImport, type ApplyBatch, type ImportApplyDeps } from './import-apply';
 import { prepareImportApply, type PrepareApplyOutcome } from './import-prepare';
@@ -23,19 +23,6 @@ import { assemblePlan } from './import-preview';
 import type { AssetStagePort, ImportBatchSink, ImportStorePort, SnapshotPort } from './import-ports';
 import { resolveRequest } from './import-request';
 import { validateMerged } from './import-validate';
-
-type LegacyImporter = { readonly ok: true; readonly convertLegacy: typeof convertLegacyValue } | { readonly ok: false; readonly message: string };
-
-/** Loads the legacy v6 / v4 importer on first use; a failure to load is answered as a message (and tried again on the next call). */
-async function loadLegacyImporter(): Promise<LegacyImporter> {
-  try {
-    const module = await import('./import-legacy');
-    return { ok: true, convertLegacy: module.convertLegacy };
-  } catch (error) {
-    const why = error instanceof Error ? error.message : String(error);
-    return { ok: false, message: `The importer for older files could not be loaded (${why}). Check the connection and try again, or reload the page.` };
-  }
-}
 
 export interface ImportSessionDeps {
   /** A session that only previews needs `getState` and `getRevision`; `apply` needs the whole port. */
@@ -113,11 +100,9 @@ export function createImportSession(deps: ImportSessionDeps): ImportSession {
     let parsed = source;
     let legacy: { readonly report: LegacyImportReport; readonly decisions: readonly ImportDecision[] } | undefined;
     if (legacyFormat) {
-      // The legacy importer is its own chunk, loaded only when a legacy file is detected (step 5.7, lazy loading). A chunk that
-      // fails to load is a value with a message in words, never an exception.
-      const loaded = await loadLegacyImporter();
-      if (!loaded.ok) return { ok: false, code: 'LEGACY_INVALID', message: loaded.message };
-      const converted = await loaded.convertLegacy({ parsed: source, live, now: () => deps.ids.now(), request });
+      // Static import (2026-10-13, 5.10a review): a dynamic chunk that imports shared code from a worker entry makes WebKit
+      // evaluate the entry a second time, and the second instance has no replica.
+      const converted = await convertLegacy({ parsed: source, live, now: () => deps.ids.now(), request });
       if (!converted.ok) return { ok: false, code: converted.code, message: converted.message };
       if (isAborted(task.signal)) return aborted;
       parsed = converted.parsed;

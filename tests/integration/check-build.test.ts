@@ -28,7 +28,6 @@ const good = (): Files => ({
   'assets/views-other-v1.js': 'export const views = 1',
   'assets/import-inprocess-i1.js': 'export const inprocess = 1',
   'assets/export-inprocess-e1.js': 'export const exports = 1',
-  'assets/import-legacy-l1.js': 'export const legacy = 1',
   'assets/import-screen-s1.js': 'export const screen = 1',
   'assets/export-screen-s1.js': 'export const screen = 2',
   'assets/worker-chem-c1.js': `import("./rdkit-glue-g1.js"); const wasm = "${WASM_NAME}";`,
@@ -74,7 +73,7 @@ describe('scripts/check-build.mjs', () => {
   it('lists the lazy chunks and the initial JS (step 5.7)', () => {
     const { status, out } = run({});
     expect(status).toBe(0);
-    for (const name of ['views-other', 'import-inprocess', 'export-inprocess', 'import-legacy', 'import-screen', 'export-screen']) expect(out).toContain(`lazy chunk: ${name}`);
+    for (const name of ['views-other', 'import-inprocess', 'export-inprocess', 'import-screen', 'export-screen']) expect(out).toContain(`lazy chunk: ${name}`);
     expect(out).toContain('initial JS: assets/index-x1.js');
   });
 
@@ -82,9 +81,9 @@ describe('scripts/check-build.mjs', () => {
     const missing = run({ 'assets/views-other-v1.js': null });
     expect(missing.status).toBe(1);
     expect(missing.out).toContain('FAIL assets/views-other-<hash>.js: the lazy chunk is missing');
-    const eager = run({ 'index.html': page().replace('</head>', '<link rel="modulepreload" href="/assets/import-legacy-l1.js"></head>') });
+    const eager = run({ 'index.html': page().replace('</head>', '<link rel="modulepreload" href="/assets/import-screen-s1.js"></head>') });
     expect(eager.status).toBe(1);
-    expect(eager.out).toContain('FAIL import-legacy: is loaded by index.html, so it is not lazy');
+    expect(eager.out).toContain('FAIL import-screen: is loaded by index.html, so it is not lazy');
     const heavy = run({ 'assets/index-x1.js': randomBytes(410_000).toString('latin1') });
     expect(heavy.status).toBe(1);
     expect(heavy.out).toContain('over the 400 kB budget');
@@ -94,6 +93,26 @@ describe('scripts/check-build.mjs', () => {
     const { status, out } = run({ 'assets/import-inprocess-i1.js': 'eval("1")' });
     expect(status).toBe(1);
     expect(out).toContain('assets/import-inprocess-i1.js');
+  });
+
+  it('fails when any chunk imports a worker entry chunk, statically or dynamically (2026-10-13, 5.10a review)', () => {
+    const staticImport = run({ 'assets/import-inprocess-i1.js': 'import{a as x}from"./worker-compute-k1.js";export const y=x' });
+    expect(staticImport.status).toBe(1);
+    expect(staticImport.out).toContain('FAIL assets/import-inprocess-i1.js: imports the worker entry chunk worker-compute-k1.js');
+    const dynamicImport = run({ 'assets/views-other-v1.js': 'export const load=()=>import("./worker-layout-l1.js")' });
+    expect(dynamicImport.status).toBe(1);
+    expect(dynamicImport.out).toContain('FAIL assets/views-other-v1.js: imports the worker entry chunk worker-layout-l1.js');
+    const starting = run({ 'assets/index-x1.js': 'new Worker(new URL("/assets/worker-compute-k1.js",import.meta.url),{type:"module"})' });
+    expect(starting.status).toBe(0);
+  });
+
+  it('fails on a source map file or a sourceMappingURL comment (2026-10-13, 5.10a review)', () => {
+    const file = run({ 'assets/index-x1.js.map': '{}' });
+    expect(file.status).toBe(1);
+    expect(file.out).toContain('FAIL assets/index-x1.js.map: is a source map');
+    const comment = run({ 'assets/index-x1.js': 'console.log("app")\n//# sourceMappingURL=index-x1.js.map' });
+    expect(comment.status).toBe(1);
+    expect(comment.out).toContain('has a sourceMappingURL comment');
   });
 
   it('fails when the demo dataset is missing, duplicated or not the repo file (step 5.1d)', () => {

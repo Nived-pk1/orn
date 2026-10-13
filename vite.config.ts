@@ -54,5 +54,5 @@ export default defineConfig({
   plugins: [react(), contentSecurityPolicy()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   worker: { format: 'es', rollupOptions: { output: workerOutput } },
-  build: { target: 'es2022', sourcemap: true },
+  build: { target: 'es2022', sourcemap: false },
 });
