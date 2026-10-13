@@ -6,8 +6,9 @@
  * and the menu; zero policy violations; the List view's rows are windowed (a large file keeps the DOM small).
  */
 import { resolve } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
-import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, openApp, watch } from './kit';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
+import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, openApp, tabFromTop, watch } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -16,6 +17,7 @@ const record = (page: Page) => pane(page).getByRole('article', { name: 'Record' 
 
 interface Focus {
   readonly tag: string;
+  readonly role: string | null;
   readonly name: string;
   readonly canvas: boolean;
   readonly recordLink: boolean;
@@ -25,11 +27,12 @@ interface Focus {
 const focusOf = (page: Page): Promise<Focus> =>
   page.evaluate(() => {
     const el = document.activeElement as HTMLElement | null;
-    if (el === null) return { tag: 'none', name: '', canvas: false, recordLink: false, family: null };
+    if (el === null) return { tag: 'none', role: null, name: '', canvas: false, recordLink: false, family: null };
     const canvas = el.matches('svg[role="group"][aria-label^="Navigator"]');
     const active = canvas ? el.getAttribute('aria-activedescendant') : null;
     return {
       tag: el.tagName.toLowerCase(),
+      role: el.getAttribute('role'),
       name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 80),
       canvas,
       recordLink: el.matches('a[data-record-id]'),
@@ -79,6 +82,7 @@ test.describe('the keyboard-only walk', () => {
     await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
 
     // 2. the map takes the focus as one tab stop; the first family holds it
+    await tabFromTop(page);
     const map = await tabTo(page, 'the map', (f) => f.canvas);
     expect(map.family).not.toBeNull();
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeFocused();
@@ -146,8 +150,8 @@ test.describe('the keyboard-only walk', () => {
     await expect(page.getByRole('status', { name: 'Navigator announcements' })).toContainText('list of families and arrows');
     expect(await axeProblems(page)).toEqual([]); // axe on the list
 
-    // 9. in the list: Tab to the first family row, arrow down, Enter opens its page, the page's Overview button returns to the list
-    await tabTo(page, 'a family row', (f) => f.name.length > 0 && f.tag === 'div', 30);
+    // 9. in the list (Firefox also makes the table's scrolling box a tab stop, so a row is matched by its role): Tab to the first family row, arrow down, Enter opens its page, the page's Overview button returns to the list
+    await tabTo(page, 'a family row', (f) => f.name.length > 0 && f.role === 'row', 30);
     await page.keyboard.press('ArrowDown');
     await expectFocusVisible(page, 'the next list row');
     await page.keyboard.press('Enter');

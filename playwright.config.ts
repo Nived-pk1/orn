@@ -2,8 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * End-to-end tests (step 5.1d, notes E10, E15). They ALWAYS run against the PRODUCTION build served by `vite preview`: the
- * Content-Security-Policy exists only there. Not part of `npm run check`; run with `npm run e2e`. The full suite runs in Chromium; the
- * two-spec smoke (smoke.spec.ts) also runs in Firefox and WebKit until Gate E (step 5.10a); WebKit runs in a persistent context (tests/e2e/fixtures.ts says why).
+ * Content-Security-Policy exists only there. Not part of `npm run check`; run with `npm run e2e`. Since Gate E (step 5.10a) EVERY spec runs in
+ * Chromium, Firefox and WebKit (a test that an engine cannot run is skipped there with its reason in the spec); WebKit runs in a persistent
+ * context (tests/e2e/fixtures.ts says why).
  */
 const PORT = 4173;
 
@@ -25,7 +26,7 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', testMatch: ['**/smoke.spec.ts', '**/private-window.spec.ts', '**/csp.spec.ts', '**/axe-screens.spec.ts', '**/touch-walk.spec.ts', '**/hostile.spec.ts', '**/tabs.spec.ts', '**/durability.spec.ts'], use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', testMatch: ['**/smoke.spec.ts', '**/private-window.spec.ts', '**/csp.spec.ts', '**/axe-screens.spec.ts', '**/touch-walk.spec.ts', '**/hostile.spec.ts', '**/tabs.spec.ts', '**/durability.spec.ts'], use: { ...devices['Desktop Safari'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });

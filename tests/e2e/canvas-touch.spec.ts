@@ -3,10 +3,14 @@
  * taps open the family page, a one-finger drag pans, two fingers pinch-zoom, a 500 ms press opens the context menu, and on a coarse
  * pointer the hit path of an arrow is 44 screen pixels wide at any zoom. Zero policy violations, console errors and foreign requests.
  */
-import { devices, expect, test, type CDPSession, type Page } from '@playwright/test';
+import { devices, type CDPSession, type Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { expectClean, loadDemo, openApp, watch } from './kit';
 
 test.use({ ...devices['Pixel 5'], viewport: { width: 1280, height: 800 } });
+test.beforeEach(({ browserName }) => {
+  test.skip(browserName !== 'chromium', 'drags and pinches are sent with the DevTools protocol (Input.dispatchTouchEvent), which only Chromium has; taps run in touch-walk.spec.ts');
+});
 
 const drawing = (page: Page) => page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ });
 

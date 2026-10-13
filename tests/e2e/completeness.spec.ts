@@ -4,7 +4,8 @@
  * from `derivedCache` (no layout call reaches the worker); the dismissed storage warning stays dismissed after a reload and the status
  * line keeps "Storage: not persistent"; axe on the panel; zero CSP violations.
  */
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;

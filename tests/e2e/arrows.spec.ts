@@ -7,7 +7,8 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 import { linesThroughBoxes, measure, problemsOf, type Measured } from './readability';
 

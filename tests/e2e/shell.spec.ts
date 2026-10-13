@@ -5,7 +5,8 @@
  * dialog's focus trap, inert background and Esc are the browser's own here (jsdom cannot show them). The Skeleton has no real screen
  * to appear on yet (the services are built before React renders), so only its component test exercises it.
  */
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, generatedFile, loadDemo, openApp, showDataset, watch } from './kit';
 
 const box = async (page: Page, selector: string) => {

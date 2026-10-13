@@ -11,7 +11,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { unzipSync } from 'fflate';
 import { produce } from 'immer';
-import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import type { BrowserContext, BrowserContextOptions, Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { buildOrnPackageExport } from '@/io';
 import { loadFixtureState } from '@/test-support/state-fixture';
 import { axeProblems, expectClean, expectPreview, importDialog, loadDemo, openApp, watch, type UploadFile } from './kit';
@@ -26,8 +27,11 @@ interface Downloaded {
   readonly bytes: Buffer;
 }
 
-async function freshPage(browser: Browser): Promise<{ readonly context: BrowserContext; readonly page: Page }> {
-  const context = await browser.newContext({ acceptDownloads: true, baseURL: 'http://127.0.0.1:4173' });
+type MakeContext = (options?: BrowserContextOptions) => Promise<BrowserContext>;
+
+/** A fresh context that can keep data (the `makeContext` fixture: persistent in WebKit, see fixtures.ts). */
+async function freshPage(makeContext: MakeContext): Promise<{ readonly context: BrowserContext; readonly page: Page }> {
+  const context = await makeContext({ acceptDownloads: true, baseURL: 'http://127.0.0.1:4173' });
   await context.clock.setFixedTime(FIXED_TIME);
   return { context, page: await context.newPage() };
 }
@@ -71,8 +75,8 @@ const asUpload = (file: Downloaded, mimeType: string): UploadFile => ({ name: fi
 test.describe('export (step 5.9b)', () => {
   test.use({ acceptDownloads: true });
 
-  test('P-02 and INV-19 in a real browser: export, import into a fresh context, export again: byte-identical', async ({ browser }) => {
-    const a = await freshPage(browser);
+  test('P-02 and INV-19 in a real browser: export, import into a fresh context, export again: byte-identical', async ({ makeContext }) => {
+    const a = await freshPage(makeContext);
     const seenA = await watch(a.page);
     await openApp(a.page);
     await loadDemo(a.page);
@@ -86,7 +90,7 @@ test.describe('export (step 5.9b)', () => {
     await expectClean(seenA);
     await a.context.close();
 
-    const b = await freshPage(browser);
+    const b = await freshPage(makeContext);
     const seenB = await watch(b.page);
     await openApp(b.page);
     await importFirstRun(b.page, asUpload(first, 'application/json'));
@@ -101,7 +105,7 @@ test.describe('export (step 5.9b)', () => {
     await b.context.close();
   });
 
-  test('a package with an image re-imports with its image and exports it again, byte for byte', async ({ browser }) => {
+  test('a package with an image re-imports with its image and exports it again, byte for byte', async ({ makeContext }) => {
     // The fixture state holds one asset record; it is given a real 1x1 PNG (hash and size of its bytes), the package is made in Node
     // and uploaded through the real chooser.
     const imageBytes = new Uint8Array(Buffer.from(PNG_1X1, 'base64'));
@@ -120,7 +124,7 @@ test.describe('export (step 5.9b)', () => {
     if (!built.ok) throw new Error('the package does not build');
     const upload: UploadFile = { name: 'with-image.ornpkg', mimeType: 'application/zip', buffer: Buffer.from(built.result.bytes) };
 
-    const a = await freshPage(browser);
+    const a = await freshPage(makeContext);
     const seenA = await watch(a.page);
     await openApp(a.page);
     await importFirstRun(a.page, upload);
@@ -136,7 +140,7 @@ test.describe('export (step 5.9b)', () => {
     await expectClean(seenA);
     await a.context.close();
 
-    const b = await freshPage(browser);
+    const b = await freshPage(makeContext);
     const seenB = await watch(b.page);
     await openApp(b.page);
     await importFirstRun(b.page, asUpload(exported, 'application/zip'));
@@ -149,8 +153,8 @@ test.describe('export (step 5.9b)', () => {
     await b.context.close();
   });
 
-  test('Cancel gives no download and says so; the next export works', async ({ browser }) => {
-    const { context, page } = await freshPage(browser);
+  test('Cancel gives no download and says so; the next export works', async ({ makeContext }) => {
+    const { context, page } = await freshPage(makeContext);
     const seen = await watch(page);
     let downloads = 0;
     page.on('download', () => (downloads += 1));
@@ -186,8 +190,8 @@ test.describe('export (step 5.9b)', () => {
     await context.close();
   });
 
-  test('the dialog is keyboard complete, passes axe on the options and the result, and has a screenshot', async ({ browser }) => {
-    const { context, page } = await freshPage(browser);
+  test('the dialog is keyboard complete, passes axe on the options and the result, and has a screenshot', async ({ makeContext }) => {
+    const { context, page } = await freshPage(makeContext);
     const seen = await watch(page);
     await page.setViewportSize({ width: 1280, height: 800 });
     await openApp(page);

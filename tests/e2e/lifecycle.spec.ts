@@ -8,7 +8,8 @@
  * Playwright's Chromium disables the back/forward cache, so the two events are dispatched on the real window and reach the real
  * listeners installed by `installLifecycle`.
  */
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { expectClean, loadDemo, openApp, showDataset, watch } from './kit';
 
 const CRASH_LINE = /The last session may not have closed cleanly \(a crash is suspected\)/;
@@ -41,7 +42,8 @@ async function loaded(page: Page): Promise<void> {
 }
 
 test.describe('the page lifecycle in Chromium', () => {
-  test('a renderer that dies without pagehide leaves the marker running; with no editor session the next boot says nothing', async ({ context, page }) => {
+  test('a renderer that dies without pagehide leaves the marker running; with no editor session the next boot says nothing', async ({ context, page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'chrome://crash, which kills a renderer, exists only in Chromium; Playwright cannot kill a Firefox or WebKit content process');
     await loaded(page);
     expect(await marker(page)).toBeNull(); // boot marked the session as running
     const crashed = page.waitForEvent('crash');

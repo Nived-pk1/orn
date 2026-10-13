@@ -10,7 +10,8 @@
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { produce } from 'immer';
 import { documentToState, serializeDocument, stateToDocument } from '@/core/dataset';
 import { buildDemoDocument } from '@/test-support/demo';

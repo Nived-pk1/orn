@@ -6,8 +6,9 @@
  * live region; axe on the canvas and the open menu; zero policy violations, console errors and foreign requests.
  */
 import { resolve } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
-import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
+import { axeProblems, expectClean, loadDemo, openApp, tabFromTop, watch } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -54,6 +55,7 @@ test.describe('the overview map with the keyboard', () => {
     await openDemo(page);
     // the drawing is the only tab stop inside the map; no node or arrow is focusable by itself
     expect(await page.locator('svg [tabindex]').count()).toBe(0);
+    await tabFromTop(page);
     await page.keyboard.press('Tab');
     const stops: string[] = [];
     for (let i = 0; i < 40; i += 1) {

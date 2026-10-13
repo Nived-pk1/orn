@@ -27,6 +27,8 @@ export function RecordLink(props: { readonly kind: string; readonly id: string; 
   return (
     <a
       href={`#${props.id}`}
+      // WebKit's Tab skips a plain link unless the person has switched that on; an explicit tab stop makes the link reachable there too (step 5.10a)
+      tabIndex={0}
       className={styles.recordLink}
       data-record-id={props.id}
       onClick={(event) => {

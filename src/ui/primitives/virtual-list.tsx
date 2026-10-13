@@ -44,6 +44,9 @@ function VirtualListInner<T>(props: VirtualListProps<T>, ref: Ref<VirtualListHan
     getItemKey: (index) => itemKey(items[index] as T, index),
     overscan: props.overscan ?? DEFAULT_OVERSCAN,
     initialRect: props.initialRect ?? INITIAL_RECT,
+    // no synchronous re-render inside a resize callback: WebKit reports that as an uncaught "ResizeObserver loop completed with undelivered
+    // notifications" (found by the Gate E run, step 5.10a)
+    useFlushSync: false,
   });
   useImperativeHandle(ref, () => ({ scrollToIndex: (index) => virtualizer.scrollToIndex(index, { align: 'start' }) }), [virtualizer]);
   return (

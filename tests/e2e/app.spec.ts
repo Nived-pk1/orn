@@ -3,7 +3,7 @@
  * reload, a clean console, the page policy, no request off the origin, a second tab, a blocked RDKit WASM and an uploaded file.
  */
 import { readFileSync } from 'node:fs';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { chooseFile, expectClean, findingsText, generatedFile, loadDemo, openApp, recordCount, showDataset, watch } from './kit';
 
 test.describe('the app in Chromium', () => {

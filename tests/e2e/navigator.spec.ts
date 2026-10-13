@@ -4,7 +4,8 @@
  * transform; a toolbar command followed by a wheel gesture continues from the command's transform. Zero policy violations, console
  * errors and foreign requests everywhere (notes E3, E10, E13).
  */
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection } from '@/core/graph';
 import { indexEngine } from '@/core/indexes';
 import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/limits';

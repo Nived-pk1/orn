@@ -4,7 +4,8 @@
  * blob: URL); a record link focuses the linked record; Back and Alt+Left return; the deeper level stays open for the next record after
  * a reload; axe; zero policy violations, console errors and foreign requests.
  */
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 
 const pane = (page: Page) => page.getByRole('complementary', { name: 'Inspector' });
