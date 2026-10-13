@@ -4054,3 +4054,37 @@ ACCEPTED. Approved as built: C1 to C4, the cause measurement (WebKit evaluated t
 REVIEW REQUIRED answers: (1) focus goes to the page title h1 after the first-run screen, after any import ends: approved; UI_ARCHITECTURE §10 now names this target (dated line). (2) compute worker +31.4 kB gzip, converter always loaded: approved; 5.10b's cold-boot figures cover it. (3) onSettled `automatic`, no zoom announcement for an automatic fit, re-fit only while the view is the automatic one: approved.
 
 phase-4-close.md §9 item 8 (header CSP for workers) is answered by 5.10a Part 2; the Gate E packet says so and does not re-measure it.
+
+### Phase 5, step 5.10b, part 1 - browser measurements (2026-10-13)
+
+Production build (`vite build`, `vite preview` on 4173), headless, Windows 11, i7-13620H, 15.7 GB; the machine reported AC power when looked at once (not re-checked). Data: the design-tier dense file with the 60 navigator anchors (16.9 MB, `generatedFileWithAnchors`), entered through the real import. Harnesses (new, informal, nothing in the product changed): `tests/measure/gate-e-browser.measure.ts` (modes `gesture`, `boot <engine> [runs]`; env `ORN_TIER` = design | initial | demo) and `tests/measure/webkit-import-probe.measure.ts`. No budget, threshold, run count or timeout changed.
+
+a. Pan and zoom (Chromium 153, 1280 x 800, overview 60 nodes / 120 arrows, LOD 0, one run of 10 s each; FPS from in-page requestAnimationFrame intervals; React commits counted through a fake DevTools hook installed before load, which react-dom's production build calls, so no test build; positive control: a click on a hub = 4 commits):
+- Pan (mouse drag, circle r = 150 px, 574-582 moves): 59.4 fps and 59.9 fps in two runs; frame gap p99 16.8 ms; max 116.7 ms (run 1) and 33.3 ms (run 2); React commits during the gesture 0 (both); long tasks over 50 ms 0.
+- Wheel zoom inside one LOD band (205 events): 59.8 fps both runs; gap p99 16.8 ms; max 49.9 / 50.0 ms; commits 0 in run 2; run 1 counted 1 commit in its window (not reproduced; run 2 timestamps every commit and found none during or within 1.5 s after the gesture); long tasks 0.
+- Wheel zoom across LOD bands (216 events, data-lod 0 to 3): 59.9 / 59.8 fps; max gap 33.3 ms; commits 15 during the gesture (the LOD changes, each redraws the layers; not a per-event render) and 1 more 385 ms after the end (the settle); long tasks 0.
+- Verdict proposal: inside (60 fps, zero commits in a band, no long task). The 116.7 ms single frame gap of run 1 has no long task behind it and did not repeat: harness or compositor, not attributed.
+
+b. Boot to the overview drawn (first `svg [data-node-id]`, from navigation start), design tier, 5 runs each; COLD = a new browser process on a copy of a profile seeded by the import with the HTTP and code caches removed where they live inside the profile; WARM = the same copy launched again (so IndexedDB and the cached search index are present in both; the budget rows are 2.5 s / 1.5 s):
+| engine | cold overview (mean / max of 5) | warm overview | cold ready | loadReplica answered (cold / warm) |
+|---|---|---|---|---|
+| Chromium | 2,136 / 2,167 ms | 2,044 / 2,078 ms | 1,833 ms | 1,621 / 1,541 ms |
+| Firefox 3 | 3,476 / 3,592 ms | 3,193 / 3,330 ms | 2,888 ms | 2,637 / 2,380 ms |
+| WebKit | NOT MEASURED at the design tier (see d) | | | |
+- Chromium: cold inside 2.5 s; WARM 2,044 ms is OVER the 1.5 s row (the 5.1d figure of 1.6 s predates the layout, search and arrangement work). Firefox is over both rows. In Chromium the warm run saves only about 90 ms over cold: network and cache are not what the time is spent on. The compute worker answers `loadReplica` at about 1.5-1.6 s (the state is sent at about 0.6-0.7 s; the 31.4 kB gzip of the converter is inside these figures). React commits at boot: 13. Proposed remedy for the reviewer (not built): the overview does not need the replica; draw it before `loadReplica` answers, and look at what the 0.6-0.7 s before the send is spent on.
+- Long tasks at boot (Chromium, same six in every run, cold / warm): about 75 ms at 130-200 ms; about 70 ms at 330-470 ms; 267-328 ms at 400-540 ms; 172-185 ms at about 1.55-1.65 s; 173-210 ms at about 1.75-1.9 s; 74-93 ms at about 2.1-2.25 s. Total about 0.9 s, the same as the 903 ms of 5.1d. Firefox and WebKit have no Long Tasks API: not listed.
+
+c. Heap after boot (Chromium only, CDP `Performance.getMetrics`, page heap, the workers' heaps are not in it): JSHeapUsedSize 84-87 MB (56.1 MB after a forced GC), JSHeapTotalSize 133-138 MB, in 10 boots; budget 150 MB (Gate F row).
+
+d. Three engines side by side: Chromium and Firefox at the design tier (above). WebKit could NOT be seeded with the design-tier file or with the 3.5 MB `initial` dense file: the import preview is shown within about 16-20 s, then after Confirm the page stays on "Applying the records..." (the web process idle, about 500-970 MB) and "Imported" did not appear within 300 s (the seed's wait timed out); a probe that logs every 15 s showed the same state. Playwright's WebKit also stalls on a 17 MB buffer upload through the protocol, so the files were uploaded by path. The e2e suite imports smaller files in WebKit and passes (347 / 13 / 0), so this is a size-dependent behaviour not covered by it. NOT diagnosed, nothing fixed: REVIEW REQUIRED 1 (needs the reviewer: a real defect in the WebKit import apply path for large files, or a harness limit; to be looked at with a WebKit Web Inspector before Phase 6). For the three-engine comparison the bundled demo dataset (small) is used, 5 cold + 5 warm each:
+| engine (demo dataset) | cold overview | warm overview | loadReplica answered (cold / warm) |
+|---|---|---|---|
+| Chromium | 405 ms | 400 ms | 299 / 296 ms |
+| Firefox | 567 ms | 518 ms | 476 / 425 ms |
+| WebKit | 803 ms | 1,997 ms | 471 / 1,669 ms |
+- WebKit WARM is 2.5 times its cold boot (the state is sent to the worker at 1,436 ms instead of 306 ms, in all 5 runs): a WebKit-only delay of about 1.1 s between the page's start and the send when the profile already holds data. Not diagnosed. REVIEW REQUIRED 2.
+- A Chromium run at the `initial` tier (3.5 MB): cold overview 751 ms, warm 746 ms, 2-4 long tasks.
+
+Figures over budget: warm boot in Chromium (2,044 ms against 1.5 s); Firefox cold and warm against 2.5 / 1.5 s (3.5 s, 3.2 s; no row is stated per engine, the rows are Chromium trace rows). WebKit warm demo boot 2.0 s with a tiny store.
+
+Honest limits: headless, software rendering, one machine; FPS by requestAnimationFrame, not by compositor frames; scripted input (about 60 events per second); "warm" removes only what the profile keeps in files; the machine clock and the wall clock of long waits did not agree during the session, so only in-page timings are quoted.
