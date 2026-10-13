@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-12",
+  "lastUpdated": "2026-10-13",
   "currentPhase": 5,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -82,11 +82,12 @@
     "5.7",
     "5.8",
     "5.9a",
-    "5.9b"
+    "5.9b",
+    "5.10a"
   ],
   "nextPhase": 5,
-  "nextStep": "5.10a",
-  "nextStepTitle": "Phase 5, step 5.10a - Gate E e2e suite (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.9b (the export screen: five ways in, format / scope / images with sentences, a safe editable file name from the title and the injected date, progress and Cancel, the download from a Blob through an anchor, the result with counts and every gap, the in-page export offered when the worker is down) is done; 5.9a is accepted with its review follow-ups (2026-10-12).",
+  "nextStep": "5.10b",
+  "nextStepTitle": "Phase 5, step 5.10b - Gate E measurements and packet (full row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.10a (the Gate E e2e suite: every spec in Chromium, Firefox and WebKit, 347 passed / 13 skipped with reasons / 0 failed; the CSP proof in all three engines; the Blob probe for private windows; the legacy converter static in the compute worker; review fixes) is done 2026-10-13.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -267,7 +268,7 @@
     "CLOSED (step 5.1d): the revision_gap banner with 'Save everything now' is built. Was: PARTLY CLOSED in step 5.1a: AppServices.saveEverythingNow() calls replaceAll when failureReason is revision_gap and answers a value otherwise (AppStatus.save carries the reason). Open: the button and the banner. Revision-gap recovery API is built (step 3.3: replaceAll + SaveStatus.failureReason 'revision_gap'); the 'save everything now' button and reading the reason are Phase 5. -> step 5.1d",
     "CLOSED (step 3.12, Gate C sweep 2026-09-30): Timing decision (step 3.3 review, TEST_STRATEGY §1): tests that assert elapsed milliseconds live in tests/timing and run only through `npm run test:timing` at gates next to bench:baseline; they are not part of `npm run check` or `npm run test:coverage`. Property tests keep their assertions; tests/property/validation-scope.test.ts (P-11) has its per-test timeout raised to 120 s (a resource limit).",
     "Step 3.3: rows that fail L1 are MOVED to quarantine at boot (whole raw value); a Diagnostics repair/restore action for quarantined rows is Phase 9.",
-    "PARTLY CLOSED in step 5.1d: the read-only, single-tab and promotion banners are built and the second-tab e2e passes. Open: the other browser halves of ADV-039 (5.10a). Was: PARTLY CLOSED in step 5.1a: the store gets readOnly from the follower, attachWriteQueue runs after a writer boot and after the promoted event, never for a follower, and the follower events are AppStatus fields and log entries (loaded cannot occur: the services always attach a store). Open: the banners (5.1d) and the browser halves of ADV-039 (5.10a). Phase 5 wiring for multi-tab (step 3.4, no UI yet): store with readOnly: follower.isReadOnly + follower.attach; attachWriteQueue after a writer boot and after the promoted event; read-only and single-tab banners; handle loaded, promotion_failed, reload_failed, row_rejected. The Playwright halves of ADV-039 are Gate E. -> step 5.1d, 5.10a",
+    "CLOSED (step 5.10a, 2026-10-13): the browser halves of ADV-039 and INV-28 run in Chromium, Firefox and WebKit (tests/e2e/tabs.spec.ts). Was: PARTLY CLOSED in step 5.1d: the read-only, single-tab and promotion banners are built and the second-tab e2e passes. Open: the other browser halves of ADV-039 (5.10a). Was: PARTLY CLOSED in step 5.1a: the store gets readOnly from the follower, attachWriteQueue runs after a writer boot and after the promoted event, never for a follower, and the follower events are AppStatus fields and log entries (loaded cannot occur: the services always attach a store). Open: the banners (5.1d) and the browser halves of ADV-039 (5.10a). Phase 5 wiring for multi-tab (step 3.4, no UI yet): store with readOnly: follower.isReadOnly + follower.attach; attachWriteQueue after a writer boot and after the promoted event; read-only and single-tab banners; handle loaded, promotion_failed, reload_failed, row_rejected. The Playwright halves of ADV-039 are Gate E. -> step 5.1d, 5.10a",
     "CLOSED (step 5.1d): the promotion_refused banner with Reload is built. Was: DECIDED and built in step 5.1a (E11): a refused promotion stays read-only with its reason, does not ask for the lock again (a test counts the requests), and AppStatus says promotion refused. Open: the banner with Reload. A tab whose promotion was refused (newer schema, failed migration, damaged meta) does not ask for the lock again, so it is not promoted when the next writer closes. Decide in Phase 5 (retry, or reload to retry). -> step 5.1d",
     "Step 3.4 constants for reviewer confirmation: 2,000 changed IDs per change message, 512 characters per ID, follower backlog 100, 20 reported rejected rows per reload. The hub-edit applyRemote costs about 400 ms on the main thread (about the writer's own commit of it); the follower's reload is a full L1 + index build + validateAll (about 2 s at the design tier): Phase 4 moves both to the compute worker. -> step 4.2d",
     "CLOSED (step 3.12 (Gate C packet §8 exception 6), Gate C sweep 2026-09-30): Step 3.4 review, Part A(d) — Phase 9 exception candidate: writer-side commit of replaceReferences on the design-tier 1,000-reaction hub measured 699.7 ms mean / 717.0 ms p99 (5 samples, tests/perf/follower.bench.ts, run once alone); the matching follower applyRemote of the same edit was recorded at 394.9/439.7 ms in step 3.4 and read 636.1/667.8 ms mean/p99 in this same run (workstation noise per PERFORMANCE_ARCHITECTURE.md §9, no code changed). Both are structural edits on the main thread until Phase 4 (compute worker) and both blow through the 50 ms 'Commit on a record with ≥ 500 referrers' backstop row; confirm as a Phase 9 exception with numbers in the Gate C packet. Gate C (2026-09-30): writer replaceReferences on the 1,000-reaction hub 216 ms median p99 (runs 179/216/713), follower applyRemote 200 ms (185/200/513); both over the 50 ms backstop, structural, Phase 9 exceptions 6 and 7 with the Phase 4 compute worker as remedy. -> step 4.2d",
@@ -378,6 +379,7 @@
     "NEW (step 5.9b): a failed save now shows a banner (save_failed) with \"Export now\"; before, only the status line said so. A revision gap keeps its own banner and button. Additive: Banner.also, AppContextValue.nowMs, ArrowTextContext.omitReactants, FamilyCardOutcome.equation. No schema change.",
     "NEW (step 5.9b): the 5.9a ADV-043 e2e (v6 hub names in the palette) was racy (it asked the palette once, before the search index had followed the import): it passed once and failed twice on the unchanged 5.9a HEAD. It now waits with the existing polling helper. shell.spec no longer expects Export to be listed as \"step 5.9b\".",
     "NEW (step 5.9b): \"Replace with the demo dataset\" stays unavailable in a session-only tab (only Undo import was changed by the 5.9a review, item 5). Say if replace should work there too.",
-    "CLOSED (5.9b review follow-up a, 2026-10-12): Was: the export dialog's file-name field sits below the three option groups; at 1280 x 800 the dialog scrolls inside itself. Phase 8 polish may tighten it. Now the file name sits in the dialog's fixed bottom bar, left of Cancel and Export, so the final name is always visible (screenshots/export-dialog-1280x800.png)."
+    "CLOSED (5.9b review follow-up a, 2026-10-12): Was: the export dialog's file-name field sits below the three option groups; at 1280 x 800 the dialog scrolls inside itself. Phase 8 polish may tighten it. Now the file name sits in the dialog's fixed bottom bar, left of Cancel and Export, so the final name is always visible (screenshots/export-dialog-1280x800.png).",
+    "NEW (step 5.10a review, 2026-10-13): WebKit evaluates a worker ENTRY module a second time when a dynamic chunk imports shared code from it (the second instance has no state). Rule: no chunk may import a worker entry chunk (scripts/check-build.mjs rule 7); the legacy converter is static in the compute worker, whose chunk grew from 285.7 kB to 381.6 kB raw (88.2 to 119.6 kB gzip). The compute worker is not part of the initial-JS budget (initial JS 386.22 kB gzip, budget 400)."
   ]
 }
