@@ -32,9 +32,9 @@ interface Injected {
 }
 
 /**
- * Injects what a hostile record would hope to run (the app never renders data this way); nothing may run. `eval` is not asked directly:
- * Playwright's own evaluate is exempt from the page policy in every engine (measured: an eval inside it runs), so the test would prove
- * nothing; the build check refuses `eval(` / `new Function` outside RDKit's chunk, and a script from a blob: URL stands in for it here.
+ * Injects what a hostile record would hope to run (the app never renders data this way); nothing may run. `eval` is not asked inside
+ * Playwright's own evaluate (it is exempt from the page policy in every engine: an eval inside it runs); it is asked by a same-origin script
+ * the page loads (the next test). A script from a blob: URL is kept here as well.
  */
 async function injectHostile(page: Page): Promise<Injected> {
   return page.evaluate(
@@ -91,6 +91,34 @@ test.describe('the page policy (the <meta> tag of the production build)', () => 
     expect(seen.foreignRequests.filter((url) => !url.includes('invalid.invalid')), 'requests that left the origin').toEqual([]);
     expect(seen.nativeDialogs).toEqual([]);
   });
+
+  test('eval and new Function, asked by a script of the page itself, are refused and raise a script-src event with the blocked URI "eval" (page, not the chem worker)', async ({ page }) => {
+    const seen = await watch(page);
+    await openApp(page);
+    // a same-origin script (script-src 'self' lets it load); the policy then decides about the eval inside it
+    await page.route('**/zz-eval-probe.js', (route) =>
+      route.fulfill({
+        contentType: 'text/javascript',
+        body: [
+          'const out = {};',
+          'try { out.eval = String(eval("1")); } catch (e) { out.eval = e.name; }',
+          'try { out.fn = String(new Function("return 1")()); } catch (e) { out.fn = e.name; }',
+          'document.documentElement.setAttribute("data-eval-probe", JSON.stringify(out));',
+        ].join(' '),
+      }),
+    );
+    await page.addScriptTag({ url: '/zz-eval-probe.js' });
+    const outcome = JSON.parse((await page.locator('html').getAttribute('data-eval-probe')) ?? '{}') as { eval?: string; fn?: string };
+    expect(outcome, 'both refused with an EvalError').toEqual({ eval: 'EvalError', fn: 'EvalError' });
+    const violations = await seen.violations();
+    expect(
+      violations.some((v) => /^script-src(?!-)/.test(v) && /eval/.test(v)),
+      `a script-src violation with blockedURI "eval" in ${JSON.stringify(violations)}`,
+    ).toBe(true);
+    expect(seen.consoleErrors.filter((text) => !DELIBERATE.test(text)), 'other console errors').toEqual([]);
+    expect(seen.foreignRequests).toEqual([]);
+    expect(seen.nativeDialogs).toEqual([]);
+  });
 });
 
 for (const kind of ['same', 'chem-allowance'] as const) {
@@ -144,6 +172,12 @@ for (const kind of ['same', 'chem-allowance'] as const) {
       expect(await seen.violations(), 'the injected script raised the event').not.toEqual([]);
       expect(workers).toMatch(/compute ok/);
       expect(workers).toMatch(/search ok/);
+      // the status line and the banner come from the same chem-worker state: they agree
+      if (chemWorks) expect(workers, 'chem works: the status line says chem ok').toMatch(/chem ok/);
+      else {
+        expect(workers, 'the banner says "Check unavailable": the status line does not say chem ok').not.toMatch(/chem ok/);
+        expect(workers).toMatch(/chem unavailable/);
+      }
       if (kind === 'chem-allowance') expect(chemWorks, 'case B: chem works').toBe(true);
       else if (!chemWorks) expect(retry, 'case A: Check unavailable offers Retry').toBe(true);
       await expect(page.getByText(/CHEM-001/)).toHaveCount(0);

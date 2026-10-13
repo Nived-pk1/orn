@@ -312,3 +312,17 @@ describe('the shell frame around the window', () => {
     expect(screen.queryByRole('complementary', { name: 'Inspector' })).toBeNull();
   });
 });
+
+describe('focus when the first-run screen closes (UI_ARCHITECTURE §11)', () => {
+  it('Start empty moves the focus to the page title (the button that had it is gone)', async () => {
+    renderWithApp(app());
+    button('Start empty').focus();
+    fireEvent.click(button('Start empty'));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })));
+  });
+
+  it('does not take the focus when the first-run screen was never shown', () => {
+    renderWithApp(app({ status: { stage: 'booting', mode: null } }));
+    expect(document.activeElement).toBe(document.body);
+  });
+});

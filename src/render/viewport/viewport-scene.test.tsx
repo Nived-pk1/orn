@@ -187,3 +187,73 @@ describe('ViewportScene', () => {
     }
   });
 });
+
+describe('the automatic fit follows the drawing size until the view is touched (step 5.10a)', () => {
+  const rect = (height: number) => ({ x: 0, y: 0, left: 0, top: 0, right: 1000, bottom: height, width: 1000, height, toJSON: () => ({}) });
+  function observed(): { resize: (height: number) => void } {
+    let notify: (() => void) | undefined;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: () => void) {
+          notify = callback;
+        }
+        observe(): void {}
+        disconnect(): void {}
+      },
+    );
+    return {
+      resize(height) {
+        vi.mocked(SVGSVGElement.prototype.getBoundingClientRect).mockReturnValue(rect(height));
+        act(() => {
+          notify?.();
+          frames.run();
+        });
+      },
+    };
+  }
+
+  it('fits again when the size changes and nobody has moved the view', () => {
+    const size = observed();
+    const { world } = mount();
+    const first = world.getAttribute('transform');
+    size.resize(300);
+    expect(world.getAttribute('transform')).not.toBe(first);
+  });
+
+  it('says whether the settled view is still the automatic one', () => {
+    vi.useFakeTimers();
+    try {
+      const size = observed();
+      const flags: boolean[] = [];
+      const { controller } = mount({ onSettled: (_view, automatic) => void flags.push(automatic) });
+      vi.advanceTimersByTime(1000);
+      size.resize(300);
+      vi.advanceTimersByTime(1000);
+      act(() => {
+        controller().zoomIn();
+        frames.run();
+      });
+      vi.advanceTimersByTime(1000);
+      expect(flags).toEqual([true, true, false]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps the view of a person who zoomed, and a saved view', () => {
+    const size = observed();
+    const { world, controller } = mount();
+    act(() => {
+      controller().zoomIn();
+      frames.run();
+    });
+    const zoomed = world.getAttribute('transform');
+    size.resize(300);
+    expect(world.getAttribute('transform')).toBe(zoomed);
+    cleanup();
+    const saved = mount({ initialViewport: { x: 12, y: 34, scale: 0.5 } });
+    size.resize(200);
+    expect(saved.world.getAttribute('transform')).toBe('translate(12 34) scale(0.5)');
+  });
+});

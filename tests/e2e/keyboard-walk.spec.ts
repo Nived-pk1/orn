@@ -8,7 +8,7 @@
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, openApp, tabFromTop, watch } from './kit';
+import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, openApp, watch } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -82,7 +82,6 @@ test.describe('the keyboard-only walk', () => {
     await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
 
     // 2. the map takes the focus as one tab stop; the first family holds it
-    await tabFromTop(page);
     const map = await tabTo(page, 'the map', (f) => f.canvas);
     expect(map.family).not.toBeNull();
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeFocused();

@@ -48,6 +48,8 @@
 
 .rail {
   grid-area: rail;
+  /* the containing block of the visually hidden text inside the buttons: without it that text is placed against the page, escapes the bar's overflow and widens the document (found in step 5.10a, 600 px) */
+  position: relative;
   overflow-y: auto;
   border-right: 1px solid var(--color-rule);
   background: var(--color-surface);

@@ -177,6 +177,8 @@ export function workersTextOf(status: AppStatus): string {
   const replica = { in_sync: 'ok', reloading: 'reloading', down: 'down', absent: 'absent' }[status.replica.state];
   const worker = (name: WorkerName): string => {
     const view = status.workers[name];
+    // The same state as the banner: a running worker whose engine could not start is not "ok" (5.10a review, header-CSP case A).
+    if (view.state === 'ok' && name !== 'search' && status.engines[name].state === 'unavailable') return 'unavailable';
     return view.state === 'ok' ? (view.started ? 'ok' : 'not started') : view.state;
   };
   return `Workers: compute ${replica}, chem ${worker('chem')}, layout ${worker('layout')}, search ${worker('search')}`;

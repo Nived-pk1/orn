@@ -135,6 +135,12 @@ describe('workersTextOf', () => {
     expect(workersTextOf(healthy)).toBe('Workers: compute ok, chem ok, layout not started, search ok');
   });
 
+  it('a running worker whose engine could not start is "unavailable", as the banner says (5.10a review)', () => {
+    const engines = { ...INITIAL_STATUS.engines, chem: { ...INITIAL_STATUS.engines.chem, state: 'unavailable' as const, message: 'blocked' } };
+    const text = workersTextOf(status({ replica: { state: 'in_sync', reason: '', revision: 1 }, workers: { chem: worker('ok', true), layout: worker('ok', false), search: worker('ok', true) }, engines }));
+    expect(text).toBe('Workers: compute ok, chem unavailable, layout not started, search ok');
+  });
+
   it('says every other state in words', () => {
     const odd = status({
       replica: { state: 'down', reason: 'x', revision: null },

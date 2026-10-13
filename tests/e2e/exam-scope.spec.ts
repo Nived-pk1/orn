@@ -42,7 +42,6 @@ test.describe('the exam scope', () => {
     expect(await axeProblems(page)).toEqual([]);
     mkdirSync(SHOTS, { recursive: true });
     await panel.getByRole('button', { name: 'Close' }).click();
-    await page.screenshot({ path: resolve(SHOTS, 'overview-scope-main.png') });
 
     // the choice is saved in uiState and comes back after a reload
     await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
@@ -50,6 +49,8 @@ test.describe('the exam scope', () => {
     await page.reload();
     await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
     await expect(selector(page)).toHaveValue('exv_jee-main-2026');
+    // taken after the reload (the same overview, the scope restored): WebKit's screenshot makes the page report a style the inspector injects, and a reload would lose the kit's count of those
+    await page.screenshot({ path: resolve(SHOTS, 'overview-scope-main.png') });
 
     // the Unclassified family page: the Beckmann card is marked, no card is hidden
     await page.locator('svg [data-box="unclassified"]').dblclick();

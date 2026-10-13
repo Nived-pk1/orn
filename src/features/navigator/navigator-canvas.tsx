@@ -85,10 +85,11 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   // The zoom level is said once the view has been still (never per wheel frame), and not for the first view (a fit or a restore).
   const said = useRef<number | undefined>(initialViewport === undefined ? undefined : Math.round(initialViewport.scale * 100));
   const onSettled = useCallback(
-    (view: Viewport): void => {
+    (view: Viewport, automatic: boolean): void => {
       ports.ui.viewports.getState().setViewport(VIEW, view);
       const percent = Math.round(view.scale * 100);
-      if (said.current !== undefined && said.current !== percent) announce(`Zoom ${percent} percent`);
+      // an automatic fit (the first one, or the re-fit when the drawing's size settles) is not something the person did
+      if (!automatic && said.current !== undefined && said.current !== percent) announce(`Zoom ${percent} percent`);
       said.current = percent;
     },
     [ports, announce],

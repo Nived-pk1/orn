@@ -29,8 +29,8 @@ export interface ViewportSceneProps {
   readonly onLayerCommit?: (layer: LayerName) => void;
   /** Shown at the first layout instead of fitting the drawing (a saved view). Read once, when the drawing first has a size. */
   readonly initialViewport?: Viewport;
-  /** Called with the viewport once it has been still for `VIEWPORT_SETTLE_MS` (never per frame), and when the drawing goes away with a move pending. Keep it stable. */
-  readonly onSettled?: (view: Viewport) => void;
+  /** Called with the viewport once it has been still for `VIEWPORT_SETTLE_MS` (never per frame), and when the drawing goes away with a move pending; `automatic` is true while the view is still the one the automatic fit made. Keep it stable. */
+  readonly onSettled?: (view: Viewport, automatic: boolean) => void;
   /** The delegated click and double click on the drawing (see `SceneSvgProps`). Keep them stable. */
   readonly onSceneClick?: (hit: SceneHit | null) => void;
   readonly onSceneDoubleClick?: (hit: SceneHit | null) => void;
@@ -52,6 +52,8 @@ export interface ViewportSceneProps {
 
 /** What the layers get: the same statuses, but `request` does nothing (the queue decides what is asked for). */
 const passive = (source: DepictionSource): DepictionSource => ({ request: () => undefined, snapshot: source.snapshot, subscribe: source.subscribe });
+
+const sameView = (a: Viewport, b: Viewport): boolean => a.x === b.x && a.y === b.y && a.scale === b.scale;
 
 export function ViewportScene(props: ViewportSceneProps) {
   const { scene, depictions, onController, onSettled } = props;
@@ -88,13 +90,25 @@ export function ViewportScene(props: ViewportSceneProps) {
     controllerRef.current = controller;
     controller.setScene(sceneRef.current);
     let fitted = false;
+    // The view the automatic fit made. While the view is still exactly that (nobody panned, zoomed or fitted since), a change of the
+    // drawing's size fits again: the first size can be a transient one (the toolbar and legend above it settle after the drawing's
+    // first layout), and a view fitted to it would leave families outside the visible area (found in step 5.10a, WebKit).
+    let autoView: Viewport | undefined;
     const measure = (): void => {
       const box = svg.getBoundingClientRect();
       controller.setSize({ width: box.width, height: box.height });
-      if (!fitted && box.width > 0 && box.height > 0) {
+      if (box.width <= 0 || box.height <= 0) return;
+      if (!fitted) {
         fitted = true;
-        if (initialRef.current === undefined) controller.fit();
-        else controller.setViewport(initialRef.current);
+        if (initialRef.current === undefined) {
+          controller.fit();
+          autoView = controller.current();
+        } else controller.setViewport(initialRef.current);
+      } else if (autoView !== undefined) {
+        if (sameView(controller.current(), autoView)) {
+          controller.fit();
+          autoView = controller.current();
+        }
       }
     };
     measure();
@@ -109,7 +123,8 @@ export function ViewportScene(props: ViewportSceneProps) {
       still = undefined;
       if (!moved) return;
       moved = false;
-      onSettled?.(store.get().viewport);
+      const view = store.get().viewport;
+      onSettled?.(view, autoView !== undefined && sameView(view, autoView));
     };
     const off = onSettled === undefined ? undefined : store.subscribe(() => {
       const view = store.get().viewport;

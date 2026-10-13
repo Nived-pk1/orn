@@ -162,6 +162,24 @@ export function Window() {
     setOpenRequest((n) => n + 1);
   }, [panels]);
   const hasData = totalOf(counts) > 0;
+  // When the first-run screen closes (data arrived, or Start empty) the control that had the focus is gone: the focus goes to the page title,
+  // so the next Tab starts from the top in every engine (UI_ARCHITECTURE §11).
+  const startedEmpty = usePanels(panels, (s) => s.startEmptyDismissed);
+  // (only once start-up has settled: a returning user's data arriving after boot is not a first run closing)
+  const firstRunShown = status.stage !== 'booting' && status.mode !== null && !hasData && !startedEmpty;
+  const wasFirstRun = useRef(firstRunShown);
+  const [titleRequest, setTitleRequest] = useState(0);
+  const [titleWanted, setTitleWanted] = useState(false);
+  useEffect(() => {
+    if (wasFirstRun.current && !firstRunShown) setTitleWanted(true);
+    wasFirstRun.current = firstRunShown;
+  }, [firstRunShown]);
+  // ...but only once the import has finished: while its dialog is modal the page is inert and a focus call does nothing
+  useEffect(() => {
+    if (!titleWanted || imports.busy) return;
+    setTitleWanted(false);
+    setTitleRequest((n) => n + 1);
+  }, [titleWanted, imports.busy]);
   // The palette's commands read the window as it is when the list is asked for (a ref, so the palette's port never changes).
   const commandDeps = useRef<CommandDeps | null>(null);
   commandDeps.current = {
@@ -258,6 +276,7 @@ export function Window() {
           }
           pane={pane}
           openRequest={openRequest}
+          focusTitleRequest={titleRequest}
           statusBar={
             <ErrorBoundary label="The status panel">
               <StatusLine />

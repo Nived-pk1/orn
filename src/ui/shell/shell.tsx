@@ -38,6 +38,8 @@ export interface ShellProps {
   readonly pane: InspectorPane;
   /** A number that goes up each time something asks for the inspector below the wide breakpoint (the drawer or sheet opens). */
   readonly openRequest?: number;
+  /** A number that goes up when the page asks for the focus to go to its title (the first-run screen closed: the button that had it is gone). */
+  readonly focusTitleRequest?: number;
   readonly statusBar: ReactNode;
 }
 
@@ -54,6 +56,14 @@ export function Shell(props: ShellProps) {
     seen.current = requested;
     setDrawerOpen(true);
   }, [requested]);
+  const title = useRef<HTMLHeadingElement>(null);
+  const titleRequested = props.focusTitleRequest ?? 0;
+  const titleSeen = useRef(titleRequested);
+  useEffect(() => {
+    if (titleSeen.current === titleRequested) return;
+    titleSeen.current = titleRequested;
+    title.current?.focus();
+  }, [titleRequested]);
   const inspectorOpen = wide ? pane.open : drawerOpen;
   const toggle = (): void => (wide ? pane.onOpen(!pane.open) : setDrawerOpen((open) => !open));
   const edge = useCallback(() => frame.current?.getBoundingClientRect().right ?? null, []);
@@ -70,7 +80,7 @@ export function Shell(props: ShellProps) {
       style={{ ['--inspector-width' as string]: `${pane.width}px` }}
     >
       <header className={styles.topBar}>
-        {props.titleHeading === false ? <p className={styles.title}>{props.title}</p> : <h1 className={styles.title}>{props.title}</h1>}
+        {props.titleHeading === false ? <p className={styles.title}>{props.title}</p> : <h1 ref={title} tabIndex={-1} className={styles.title}>{props.title}</h1>}
         <div className={styles.topControls}>{props.topBar}</div>
         <IconButton
           label={inspectorOpen ? 'Hide inspector' : 'Show inspector'}

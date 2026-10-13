@@ -194,19 +194,3 @@ export async function inertProblems(page: Page): Promise<string[]> {
     return problems;
   });
 }
-
-/**
- * Step 5.10a: puts the sequential-focus starting point at the top of the page, so the next Tab reaches the first control. After the
- * first-run screen is replaced (its button had focus), Firefox keeps the starting point where that button was, which is after the
- * toasts, and Tab then stays on the last toast button; Chromium and WebKit restart from the top. A person using only the keyboard meets
- * the same in Firefox (a note for the reviewer); the keyboard specs begin from the top, as the other engines do on their own.
- */
-export async function tabFromTop(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const top = document.querySelector('h1') as HTMLElement | null;
-    if (top === null) return;
-    top.setAttribute('tabindex', '-1');
-    top.focus();
-    top.removeAttribute('tabindex');
-  });
-}
