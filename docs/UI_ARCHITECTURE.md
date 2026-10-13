@@ -161,3 +161,5 @@ Touch: one-finger pan, pinch zoom, tap select, double-tap expand, long-press (50
 ## 12. Empty, loading and error states
 
 First run offers "Load demo dataset", "Import v6 export" and "Start empty". Loading states are skeletons, never spinners over blank canvases longer than 300 ms. Truncated projections say what was cut and how to see more. Panels have error boundaries with "Reload panel" (PERSISTENCE.md §12).
+
+- *2026-10-13 (step 5.10a review, REVIEW REQUIRED 1).* After the first-run screen, and after any import ends, focus moves to the page title (the `h1`), not to a heading inside the main region. This is the one focus target for those two moments.

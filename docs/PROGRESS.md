@@ -4046,3 +4046,11 @@ a. ONE full run of every e2e (`npx playwright test`, production build): 347 pass
 - WebKit (3 more): durability ADV-038 renderer kill and lifecycle renderer death (Chromium only); private-window "ordinary context in Chromium and Firefox" (WebKit's ordinary window is session-only: the first case).
 b. Initial JS 386.22 kB gzip (budget 400). `npm run build:smoke` green (rules 7 and 8 included). `npm run check` 386 files, 5,448 tests, green. Screenshots of the step (git-ignored folder `screenshots/`): adv-033-family-page, canvas-menu, export-dialog, family-alcohols, family-alcohols-preparation, family-alcohols-top, import-conflicts, import-v6-preview, inspector-mechanism, inspector-related, list-view, map-focused-menu, overview, overview-arranged, overview-arrows, overview-automatic, overview-fitted, overview-scope-main, palette-results (all 1280 x 800 unless the name says otherwise).
 c. Plan row 5.10a marked DONE 2026-10-13; PROJECT_STATE nextStep 5.10b; openItems: the ADV-039 item marked CLOSED, one NEW item added, nothing deleted. REVIEW REQUIRED: (1) the focus target after the first-run screen is the page title (h1), not a main-region heading (C3c); (2) the compute worker is 95.9 kB larger raw (31.4 kB gzip) and loads the legacy converter whether or not a v6 file is ever imported; (3) the automatic fit now follows the drawing's size until the view is touched (C3a).
+
+### Step 5.10a review (reviewer, 2026-10-13)
+
+ACCEPTED. Approved as built: C1 to C4, the cause measurement (WebKit evaluated the compute entry twice), the static legacy converter, build rules 7 and 8, the late-response log line, the automatic re-fit, the 600 px fix, the CSP status line, the direct eval test, source maps off, the skips with their reasons, every changed test.
+
+REVIEW REQUIRED answers: (1) focus goes to the page title h1 after the first-run screen, after any import ends: approved; UI_ARCHITECTURE §10 now names this target (dated line). (2) compute worker +31.4 kB gzip, converter always loaded: approved; 5.10b's cold-boot figures cover it. (3) onSettled `automatic`, no zoom announcement for an automatic fit, re-fit only while the view is the automatic one: approved.
+
+phase-4-close.md §9 item 8 (header CSP for workers) is answered by 5.10a Part 2; the Gate E packet says so and does not re-measure it.
