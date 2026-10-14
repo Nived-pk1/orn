@@ -1,6 +1,7 @@
 /** The first-run screen (UI_ARCHITECTURE §12): shown while the store holds zero records and "Start empty" was not chosen. */
 import { useSubscribable } from '@/ui/hooks';
 import { Button, Skeleton } from '@/ui/primitives';
+import { useAboutOpen } from './about-preview';
 import { useApp } from './context';
 import type { ImportActions } from './use-import-actions';
 
@@ -8,11 +9,18 @@ export function FirstRun(props: { readonly imports: ImportActions; readonly onSt
   const { services } = useApp();
   const status = useSubscribable(services.status);
   const { imports } = props;
+  const about = useAboutOpen() ?? (() => undefined);
   const writable = status.mode === 'writer' || status.mode === 'session_only';
   const waiting = status.stage === 'booting' || status.mode === null;
   return (
     <section aria-label="First run">
       <h2>Get started</h2>
+      <p>
+        Preview - the chemistry is a demo and not yet checked.{' '}
+        <Button variant="quiet" onClick={about}>
+          About this preview
+        </Button>
+      </p>
       <p>This dataset has no records yet.</p>
       {waiting ? (
         <Skeleton label="Starting up" lines={2} />

@@ -34,6 +34,7 @@ import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { TopBar } from "./top-bar";
 import styles from "./window.module.css";
+import { AboutDialog, AboutOpenContext } from "./about-preview";
 import { ExportOpenContext } from "./export-context";
 import { useExportActions, type ExportActions } from "./use-export-actions";
 import { useImportActions, type ImportActions } from "./use-import-actions";
@@ -151,6 +152,7 @@ export function Window() {
   const status = useSubscribable(services.status);
   const [asking, setAsking] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [about, setAbout] = useState(false);
   const counts = useStoreSelector(services.store, countsOf);
   const width = usePanels(panels, (s) => s.inspectorWidth);
   const open = usePanels(panels, (s) => s.inspectorOpen);
@@ -239,6 +241,7 @@ export function Window() {
   return (
     <ToastProvider>
       <ExportOpenContext.Provider value={exports.open}>
+      <AboutOpenContext.Provider value={() => setAbout(true)}>
       <NavigatorProvider ports={navigator} active={totalOf(counts) > 0}>
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
@@ -247,7 +250,7 @@ export function Window() {
             <TopBar
               onSearch={() => setSearching(true)}
               history={services.store}
-              file={{ reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open }}
+              file={{ reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true) }}
               exam={{ exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log }}
             />
           }
@@ -288,8 +291,10 @@ export function Window() {
         <ReplaceDialog open={asking} onClose={() => setAsking(false)} imports={imports} />
         {importElement}
         {exportElement}
+        <AboutDialog open={about} onClose={() => setAbout(false)} />
         <Palette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
       </NavigatorProvider>
+      </AboutOpenContext.Provider>
       </ExportOpenContext.Provider>
     </ToastProvider>
   );

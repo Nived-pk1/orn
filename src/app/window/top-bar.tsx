@@ -15,12 +15,15 @@ export interface FileBinding {
   readonly onUndo: () => void;
   /** Opens the export screen (works in every tab mode). */
   readonly onExport: () => void;
+  /** Opens "About this preview". */
+  readonly onAbout: () => void;
 }
 
 const fileItems = (file: FileBinding): readonly MenuItem[] => [
   { id: 'import', label: 'Import a file...', ...(file.reason === undefined ? { onSelect: file.onImport } : { unavailable: file.reason }) },
   { id: 'export', label: 'Export...', onSelect: file.onExport },
   { id: 'undo_import', label: 'Undo import', ...(file.undoReason === undefined ? { onSelect: file.onUndo } : { unavailable: file.undoReason }) },
+  { id: 'about', label: 'About this preview', onSelect: file.onAbout },
 ];
 
 /** What Undo and Redo need of the store (the canonical store fits; a test passes a stub that has history). */

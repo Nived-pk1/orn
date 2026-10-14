@@ -127,6 +127,12 @@ async function walk(page: Page, device: string, pinch: boolean): Promise<void> {
   await openApp(page);
   await stop(page, device, 1, 'first-run');
 
+  await page.getByRole('button', { name: 'About this preview' }).tap();
+  await expect(page.getByRole('dialog', { name: 'About this preview' })).toContainText('has NOT been checked by an expert yet');
+  await stop(page, device, 1.5, 'about');
+  await page.getByRole('dialog', { name: 'About this preview' }).getByRole('button', { name: 'Close' }).first().tap();
+  await expect(page.getByRole('dialog', { name: 'About this preview' })).toBeHidden();
+
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
   await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
