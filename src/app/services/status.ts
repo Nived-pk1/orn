@@ -124,6 +124,8 @@ export interface AppStatus {
   /** Full reloads a follower has done. */
   readonly followerReloads: number;
   readonly notices: BootNotices | null;
+  /** Rows in the quarantine store now (step 5.11b): read at boot, and raised when an import sets rows aside. The status line says it on every boot while it is above 0; `notices.quarantinedRows` is only what THIS boot moved. */
+  readonly quarantinedCount: number;
   readonly workers: { readonly chem: WorkerView; readonly layout: WorkerView; readonly search: WorkerView };
   readonly engines: { readonly chem: EngineView; readonly layout: EngineView };
   readonly l4: L4View;
@@ -150,6 +152,7 @@ export const INITIAL_STATUS: AppStatus = Object.freeze({
   rejectedRows: 0,
   followerReloads: 0,
   notices: null,
+  quarantinedCount: 0,
   workers: Object.freeze({
     chem: Object.freeze({ state: 'absent', started: false, reason: 'not started' }),
     layout: Object.freeze({ state: 'absent', started: false, reason: 'not started' }),

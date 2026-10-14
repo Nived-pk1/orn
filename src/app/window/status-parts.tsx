@@ -5,7 +5,7 @@
 import { useCounts, useSubscribable } from '@/ui/hooks';
 import { Banner, Button } from '@/ui/primitives';
 import { usePanels } from '@/ui/state';
-import { bannersOf, bannerKindOf, bootLinesOf, layoutCacheTextOf, operationTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
+import { bannersOf, bannerKindOf, bootLinesOf, layoutCacheTextOf, operationTextOf, quarantineTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
 import { useExportOpen } from './export-context';
 import styles from './status-parts.module.css';
@@ -17,6 +17,7 @@ export function StatusLine() {
   const operation = operationTextOf(status);
   const storage = storageTextOf(status);
   const layoutCache = layoutCacheTextOf(status);
+  const setAside = quarantineTextOf(status);
   const readOnly = status.mode === 'follower' || status.mode === 'read_only';
   return (
     <section aria-label="Status">
@@ -31,6 +32,7 @@ export function StatusLine() {
         {status.singleTab ? <li>Single tab only</li> : null}
         {storage === null ? null : <li>{storage}</li>}
         {layoutCache === null ? null : <li>{layoutCache}</li>}
+        {setAside === null ? null : <li>{setAside}</li>}
         {operation === null ? null : <li>{operation}</li>}
       </ul>
     </section>

@@ -53,7 +53,12 @@ export function createImportService(deps: FlowDeps): ImportService {
       const plain = typeof row.report === 'object' && row.report !== null && !Array.isArray(row.report);
       return deps.durable.saveImportBatch(meta === undefined || !plain ? row : { ...row, report: withMeta(row.report as unknown as ImportBatchReport, meta) as unknown as typeof row.report });
     },
-    addQuarantine: (rows: Parameters<FlowDeps['durable']['addQuarantine']>[0]) => deps.durable.addQuarantine(rows),
+    async addQuarantine(rows: Parameters<FlowDeps['durable']['addQuarantine']>[0]) {
+      const added = await deps.durable.addQuarantine(rows);
+      // the status line says how many records are set aside (step 5.11b); the store answered with the rows it really added
+      if (added.length > 0) deps.status.update({ quarantinedCount: deps.status.get().quarantinedCount + added.length });
+      return added;
+    },
   };
   const snapshots = {
     createSnapshot(...args: Parameters<FlowDeps['durable']['createSnapshot']>) {

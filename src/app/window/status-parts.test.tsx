@@ -131,6 +131,27 @@ describe('the banners: every one is rendered from AppStatus values, and its butt
   });
 });
 
+describe('records set aside (5.11b)', () => {
+  it('says how many are stored while the count is above 0, singular for 1, nothing for 0, and follows the count', () => {
+    const app = fakeApp({ status: { save: save({}), quarantinedCount: 0 } });
+    renderWithApp(app, <StatusLine />);
+    const line = screen.getByRole('region', { name: 'Status' });
+    expect(within(line).queryByText(/set aside/)).toBeNull();
+    act(() => void app.status.update({ quarantinedCount: 1 }));
+    expect(within(line).getByText('1 record set aside')).toBeTruthy();
+    act(() => void app.status.update({ quarantinedCount: 4 }));
+    expect(within(line).getByText('4 records set aside')).toBeTruthy();
+    expect(within(line).queryByText('1 record set aside')).toBeNull();
+    act(() => void app.status.update({ quarantinedCount: 0 }));
+    expect(within(line).queryByText(/set aside/)).toBeNull();
+  });
+
+  it('does not depend on what this boot moved: no boot notice, and the line is still there', () => {
+    renderWithApp(fakeApp({ status: { quarantinedCount: 2, notices: { crashSuspected: false, editorSessions: 0, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } }), <StatusLine />);
+    expect(screen.getByText('2 records set aside')).toBeTruthy();
+  });
+});
+
 describe('the boot-report lines', () => {
   it('has one plain line for each notice', () => {
     renderWithApp(

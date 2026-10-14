@@ -190,6 +190,10 @@ export const storageTextOf = (status: AppStatus): string | null => (status.stora
 /** The status-line word for a layout that could not be saved to the cache (step 5.5d, item h); the layout itself is fine. */
 export const layoutCacheTextOf = (status: AppStatus): string | null => (status.layoutCache.state === 'refused' ? `Layout cache: not saved (${status.layoutCache.message ?? 'refused'})` : null);
 
+/** The status-line words for rows set aside (step 5.11b): every boot while the stored count is above 0; null for 0. */
+export const quarantineTextOf = (status: AppStatus): string | null =>
+  status.quarantinedCount > 0 ? `${status.quarantinedCount} ${status.quarantinedCount === 1 ? 'record' : 'records'} set aside` : null;
+
 export function operationTextOf(status: AppStatus): string | null {
   const op = status.operation;
   if (op === null) return null;
