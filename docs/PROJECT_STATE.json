@@ -84,11 +84,12 @@
     "5.9a",
     "5.9b",
     "5.10a",
-    "5.11a"
+    "5.11a",
+    "5.11b"
   ],
   "nextPhase": 5,
-  "nextStep": "5.11b",
-  "nextStepTitle": "Phase 5, step 5.11b - Long apply progress (\"Applying the records... N of M\"; row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.11a done 2026-10-14 (WebKit waits, boot A and E, INV-10/11/24 tests, zod look); Gate E stays conditional until 5.11b is green and the reviewer confirms.",
+  "nextStep": "Phase 5 close (reviewer)",
+  "nextStepTitle": "Phase 5 close (reviewer): confirm Gate E, then a separate session tags phase-5. Step 5.11b done 2026-10-14 (apply progress, \"N records set aside\", close checks; see docs/PROGRESS.md).",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -114,8 +115,8 @@
     "E": {
       "phase": 5,
       "title": "UI and rendering",
-      "status": "conditional",
-      "note": "closes after 5.11a and 5.11b",
+      "status": "conditions met, awaiting reviewer confirmation",
+      "note": "5.11a and 5.11b done 2026-10-14; the reviewer confirms, then a separate session tags phase-5. Not tagged, not marked passed.",
       "packet": "docs/reviews/gate-e-packet.md"
     },
     "D": {
