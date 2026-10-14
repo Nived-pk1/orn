@@ -145,7 +145,9 @@ test.describe('the arrows of the arranged demo overview', () => {
     await expect(page.locator('[data-overlay="end"]')).toHaveCount(2);
     const hover = page.locator('[data-overlay="hover"]');
     expect(Number(await hover.evaluate((el) => getComputedStyle(el).strokeWidth.replace('px', '')))).toBeGreaterThan(3);
-    // only the overlay layer committed: one commit
+    // only the overlay layer committed: one commit. The commit probe is a passive effect, which can run after the overlay is in the DOM
+    // (WebKit saw 0 here, step 5.11a): wait for the count to move, never sleep, then it must be exactly the one commit.
+    await expect.poll(async () => (await commits()) - before, { message: 'the overlay layer committed' }).toBeGreaterThan(0);
     expect((await commits()) - before).toBe(1);
     await page.mouse.move(2, 2);
     await expect(page.locator('[data-overlay="hover"]')).toHaveCount(0);

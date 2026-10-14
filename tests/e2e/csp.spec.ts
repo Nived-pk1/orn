@@ -107,7 +107,22 @@ test.describe('the page policy (the <meta> tag of the production build)', () => 
         ].join(' '),
       }),
     );
+    // The violation event is queued by the engine and can arrive after the script has finished (WebKit, step 5.11a): the listener is
+    // registered BEFORE the script runs and the event resolves the promise that is awaited below.
+    await page.evaluate(() => {
+      const w = window as unknown as { __evalViolation?: Promise<string> };
+      w.__evalViolation = new Promise<string>((resolve) => {
+        document.addEventListener('securitypolicyviolation', function onViolation(event) {
+          if (/^script-src(?!-)/.test(event.violatedDirective) && /eval/.test(event.blockedURI)) {
+            document.removeEventListener('securitypolicyviolation', onViolation);
+            resolve(`${event.violatedDirective} ${event.blockedURI}`);
+          }
+        });
+      });
+    });
     await page.addScriptTag({ url: '/zz-eval-probe.js' });
+    const evalViolation = await page.evaluate(() => (window as unknown as { __evalViolation: Promise<string> }).__evalViolation);
+    expect(evalViolation, 'the eval violation event').toMatch(/^script-src(?!-)/);
     const outcome = JSON.parse((await page.locator('html').getAttribute('data-eval-probe')) ?? '{}') as { eval?: string; fn?: string };
     expect(outcome, 'both refused with an EvalError').toEqual({ eval: 'EvalError', fn: 'EvalError' });
     const violations = await seen.violations();

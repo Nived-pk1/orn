@@ -4246,3 +4246,15 @@ PROJECT_STATE: gate E "packet ready, awaiting review"; nextStep stays 5.10b; ope
    (6) The Phase 9 exception list of packet section 11 is accepted as proposed: #1 and #7 withdrawn (inside), #3 closed in practice, #6 accepted, #12 per answer (1).
 4. Standing rules (dated 2026-10-14): bench:compare runs in every phase-closing step (TEST_STRATEGY section 6 general rule). Phase 6 editors are lazy chunks (React.lazy per editor); the measured lazy candidates of packet section 8.1 are done when the entry passes 395 kB gzip (note at the top of the Phase 6 section of the plan).
 5. Not before Phase 6: the real-Safari openItem (before release), the WebKit warm-boot trace (folded into the real-Safari check), chem restart under load (Phase 9).
+
+### Phase 5, step 5.11a, part 1 - WebKit waits (2026-10-14)
+
+Causes (found by reading the code; the failure was not reproduced before the fix, the packet saw it 1 time in 2 + 3 runs):
+- arrows.spec.ts:131 "expected 1 React commit, saw 0": the counter `data-layer-commits` is bumped by `useCommitProbe`, a passive `useEffect` (src/render/svg/use-commit-probe.ts). Passive effects run after paint, so the overlay can be in the DOM (what the test waited for with `toHaveCount`) before its commit is counted; the test read the counter at once and could see the old value. The probe is not wrong (it counts commits); the wait was.
+- csp.spec.ts:95 "no eval violation seen": the `securitypolicyviolation` event is queued by the engine as a task. `addScriptTag` resolves on the script's load, and the test read the collected list straight after it; in WebKit the event can be delivered after that read. The `watch` listener was registered early enough; the read was not awaited on the event.
+
+Changed tests (intent kept; no budget, threshold, run count or timeout changed):
+1. arrows.spec.ts "a hovered arrow is drawn by the overlay...": after the overlay is visible, `expect.poll` waits until the commit count has moved past its value before the hover, then the count must be exactly 1 (as written before). No sleep. Reason: the probe is a passive effect (above).
+2. csp.spec.ts "eval and new Function...": a listener is registered in the page BEFORE the probe script runs and resolves a promise at the first script-src violation whose blockedURI contains "eval"; the test awaits that promise (the event resolves it), then keeps its old assertions. Reason: the event arrives after the script's load (above).
+
+Proof: both specs with `--repeat-each=20` in WebKit: 40 passed (3.2 min); once in Chromium and once in Firefox: 4 passed.
