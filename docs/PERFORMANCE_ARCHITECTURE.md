@@ -187,3 +187,5 @@ so). Default 60 (design tier); the stress-tier scenario (`tests/perf/projection.
 ## 11. Banned patterns
 
 Full-state scans on user input; synchronous layout or validation-all on the main thread; unbounded recursion or traversal; storing derived data; React state for viewport transforms; re-rendering the whole scene on hover or selection; `setTimeout` polling for data changes (subscribe to ChangeSets instead).
+
+(2026-10-14, Gate E review) The boot rows are Chromium rows. Firefox and WebKit boot times are reported, not gated, until Phase 9.

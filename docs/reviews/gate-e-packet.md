@@ -396,3 +396,19 @@ Harness and spec changes in this session (nothing in `src/`; no budget, threshol
 - **Process.** The first `bench:compare` aborted on two stale harness files; I repaired them (tests/perf only) instead of stopping,
   because without them no Phase 4 or 5 baseline could exist. If the reviewer would rather have had those repairs in their own
   commit, they are in the same commit as the baseline (`1b5dea5`).
+
+## 17. Reviewer verdict
+
+Gate E review recorded (reviewer, 2026-10-14)
+
+1. Verdict: PASS WITH CONDITIONS. Every clause of the Gate E row has evidence (packet section 1). Gate E closes, and phase-5 is tagged, only after steps 5.11a and 5.11b are green and the reviewer confirms. PROJECT_STATE gate E: status "conditional", note "closes after 5.11a and 5.11b"; nextStep 5.11a. No tag.
+2. New rows in docs/IMPLEMENTATION_PLAN.md section 2 after 5.10b: 5.11a "Gate E follow-ups: WebKit flakes, boot A and E, INV-10/11/24 tests, zod JSON-schema look" and 5.11b "Long apply progress (Applying the records... N of M)".
+3. REVIEW REQUIRED answers (packet section 15):
+   (1) Boot: candidates A and E in 5.11a, then re-measure; if Chromium warm is still over 1.5 s it becomes Phase 9 exception #12 with candidate B as its remedy. No architecture change before Phase 6. The boot rows are Chromium rows; Firefox and WebKit boot are REPORTED, not gated, until Phase 9 (dated line in TEST_STRATEGY section 6 and PERFORMANCE_ARCHITECTURE).
+   (2) The two WebKit flakes (arrows.spec.ts:131, csp.spec.ts:95): fixed in 5.11a.
+   (3) The "proposed CLOSED" openItems of packet section 13 (70, 85, 101, 106, 109, 139, 144) are CLOSED; also CLOSED as accepted: 11, 13, 20, 24, 27, 36, 95, 96, 116, 126. Text kept, never deleted.
+   (4) INV-10/11/24 tests: yes, in 5.11a.
+   (5) A difference only in provenance (e.g. updatedAt) IS a conflict: PERSISTENCE section 8 defines identical as canonical deep equality, and the default resolution is non-destructive. No change.
+   (6) The Phase 9 exception list of packet section 11 is accepted as proposed: #1 and #7 withdrawn (inside), #3 closed in practice, #6 accepted, #12 per answer (1).
+4. Standing rules (dated 2026-10-14): bench:compare runs in every phase-closing step (TEST_STRATEGY section 6 general rule). Phase 6 editors are lazy chunks (React.lazy per editor); the measured lazy candidates of packet section 8.1 are done when the entry passes 395 kB gzip (note at the top of the Phase 6 section of the plan).
+5. Not before Phase 6: the real-Safari openItem (before release), the WebKit warm-boot trace (folded into the real-Safari check), chem restart under load (Phase 9).
