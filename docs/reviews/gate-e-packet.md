@@ -416,3 +416,9 @@ Gate E review recorded (reviewer, 2026-10-14)
 5. Not before Phase 6: the real-Safari openItem (before release), the WebKit warm-boot trace (folded into the real-Safari check), chem restart under load (Phase 9).
 
 6. Correction (2026-10-14, reviewer, step 5.11a): the Chromium boot figures of this packet (cold 2,136 / warm 2,044 ms; loadReplica 1,621 / 1,541 ms) were taken in a session of unknown machine speed (PROGRESS, 5.10b part 2 MACHINE NOTE). The 5.11a figures, taken after a speed check, supersede them: Chromium cold 1,411 ms, warm 1,329 ms, inside both rows; exception #12 is NOT added. The figures above are kept as taken.
+
+### Step 5.11b review and Gate E verdict (reviewer, 2026-10-14)
+
+1. 5.11b ACCEPTED: apply progress (32-row slices issued together in one transaction, progress per slice, the 2 s threshold, the rate limits, ARIA, the mid-way fault test), "N records set aside", Chromium apply +1.9%, every new test and Faults.failAfter.
+2. REVIEW REQUIRED answers. (1) WebKit keyboard-walk.spec.ts:73: fixed in Part 1 of the closing session. (2) bench:compare (71 and then 216 of 470 over +20% on unchanged code): read as machine noise; a quiet-machine bench:compare is the first action of step 6.1 (note in the 6.1 row); no baseline change. (3) No Cancel during a long apply: approved; openItem for Phase 6. (4) A promoted follower keeps its own boot's quarantine count and another tab's import is not followed: openItem "-> step 6.1" (multi-tab edits arrive there). (5) Amendments watchWriteProgress, createImportModel clock, AppStatus.quarantinedCount: approved.
+3. Gate E verdict: PASS. Every condition of the 2026-10-14 verdict is met (5.11a, 5.11b) except "0 failed" in the full run, which Part 3 of the closing session proves. If that full run has 0 failed, Gate E is passed and phase-5 is tagged at Part 3's commit; if not, stop before the tag and report.

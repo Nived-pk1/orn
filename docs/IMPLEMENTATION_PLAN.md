@@ -169,7 +169,7 @@ The contracts fit scan of this plan (Q1-Q14) and the open points it found are in
 ### Phase 6 — Authoring workbench → Gate D
 | Step | Work |
 |---|---|
-| 6.1 | Editor sessions (draft store, persistence, local undo, commit, conflicts) | **Moved from 5.7 (2026-10-11): multi-selection (Shift-click) and the marquee (Shift-drag) on the map, built with the first bulk action so that nothing is a silent no-op.**
+| 6.1 | Editor sessions (draft store, persistence, local undo, commit, conflicts) | **FIRST ACTION (reviewer, 2026-10-14): a bench:compare on a quiet machine (the 5.11b runs showed 71 and 216 of 470 entries over +20% on unchanged code, read as machine noise); no baseline change.** **Moved from 5.7 (2026-10-11): multi-selection (Shift-click) and the marquee (Shift-drag) on the map, built with the first bulk action so that nothing is a silent no-op.**
 | 6.2 | Species, class, reagent editors; structure panel (live parse/depiction); duplicate check |
 | 6.3 | Reaction editor: identity, participants, stages |
 | 6.4 | Condition variants and outcomes editors |
