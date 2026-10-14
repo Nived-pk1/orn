@@ -7,6 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
  * context (tests/e2e/fixtures.ts says why).
  */
 const PORT = 4173;
+/** Release preview: set ORN_BASE_URL to run the specs against a site that is already up (wrangler dev, the live site); no server is started then. */
+const REMOTE = process.env.ORN_BASE_URL;
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -17,8 +19,8 @@ export default defineConfig({
   timeout: 120_000,
   expect: { timeout: 30_000 },
   reporter: [['list']],
-  use: { baseURL: `http://127.0.0.1:${PORT}`, trace: 'off', acceptDownloads: true },
-  webServer: {
+  use: { baseURL: REMOTE ?? `http://127.0.0.1:${PORT}`, trace: 'off', acceptDownloads: true },
+  webServer: REMOTE !== undefined ? undefined : {
     command: `npx vite build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: false,

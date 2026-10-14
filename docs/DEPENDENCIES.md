@@ -38,3 +38,4 @@ Exact pins, added in the step that first uses them (note E12); `npm audit` 0 vul
 | jsdom | 30.1.1 | MIT | step 5.1d | Opt-in per test file with `// @vitest-environment jsdom` |
 | @axe-core/playwright | 4.13.0 | MPL-2.0 | step 5.2 | axe in the e2e of every UI step (note E13) |
 | @playwright/test | 1.63.0 | Apache-2.0 | step 5.1d | `npm run e2e` against the production build (note E10); browsers: chromium, firefox, webkit |
+| wrangler | 4.151.0 | MIT OR Apache-2.0 | release preview | `npx wrangler dev` / `deploy` / `delete` for the hosted preview (docs/RELEASE.md). Dev only, exact pin, never shipped; pulls in workerd and its own dependencies, all dev-only |

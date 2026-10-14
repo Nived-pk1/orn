@@ -27,7 +27,7 @@ const confinedSyntax = [
 const confinedProperties = [{ object: 'navigator', property: 'locks', message: confinedMsg }];
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'] },
+  { ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'playwright-report/**', 'test-results/**', '.wrangler/**'] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   {

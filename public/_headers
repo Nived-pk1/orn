@@ -1,0 +1,26 @@
+# Headers for Cloudflare Workers static assets (release preview, docs/SECURITY.md section 4 and 5, docs/RELEASE.md).
+# The page policy below is the one SECURITY section 4 gives, plus frame-ancestors (a header-only directive: it narrows, never widens).
+# scripts/check-build.mjs (rule 9) fails the build if it drifts from the page's <meta> policy.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; img-src 'self' blob: data:; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Robots-Tag: noindex, nofollow
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Cross-Origin-Opener-Policy: same-origin
+
+# The chem worker entry alone may use eval-like calls (RDKit's glue, ADR-035): the same policy with 'unsafe-eval' in script-src.
+# A request that matches /* and this rule inherits both policies; the first line removes the inherited one.
+/assets/worker-chem-*.js
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; worker-src 'self' blob:; img-src 'self' blob: data:; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache

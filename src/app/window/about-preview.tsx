@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 import { Button, Dialog } from '@/ui/primitives';
 
 /** Who holds the copyright: the only place the name is written. */
-const OWNER = 'YOUR NAME';
+const OWNER = 'Ponap';
 
 export const ABOUT_TEXT =
   'Preview version. The chemistry here is a small demo and has NOT been checked by an expert yet - please do not study from it. ' +

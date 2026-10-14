@@ -17,6 +17,20 @@ const WASM_NAME = 'RDKit_minimal-AbCd1234.wasm';
 const WASM = Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 1, 2, 3, 4]);
 const DEMO = readFileSync(fileURLToPath(new URL('../../data/seed/demo.orn.json', import.meta.url)));
 const dirs: string[] = [];
+const CHEM_POLICY = POLICY.replace("'wasm-unsafe-eval'", "'wasm-unsafe-eval' 'unsafe-eval'");
+
+/** public/_headers as the build ships it (release preview), built from the test policy. */
+const headers = (over: { page?: string; chem?: string; chemPath?: string; chemFirst?: string; robots?: string; extra?: string } = {}): string =>
+  [
+    '/*',
+    `  Content-Security-Policy: ${over.page ?? `${POLICY}; frame-ancestors 'none'`}`,
+    over.robots ?? '  X-Robots-Tag: noindex, nofollow',
+    '',
+    over.chemPath ?? '/assets/worker-chem-*.js',
+    over.chemFirst ?? '  ! Content-Security-Policy',
+    `  Content-Security-Policy: ${over.chem ?? `${CHEM_POLICY}; frame-ancestors 'none'`}`,
+    over.extra ?? '',
+  ].join('\n');
 
 const page = (policy = POLICY): string =>
   `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${policy.replaceAll("'", '&#39;')}"><script type="module" crossorigin src="/assets/index-x1.js"></script></head><body></body></html>`;
@@ -37,6 +51,8 @@ const good = (): Files => ({
   'assets/rdkit-glue-g1.js': 'var f = new Function("a", "return a"); eval("1");',
   [`assets/${WASM_NAME}`]: WASM,
   'assets/demo.orn-d1.json': DEMO,
+  _headers: headers(),
+  'robots.txt': 'User-agent: *\nDisallow: /\n',
 });
 
 function run(files: Files): { status: number | null; out: string } {
@@ -196,5 +212,61 @@ describe('scripts/check-build.mjs', () => {
     const { status, out } = run({ 'assets/worker-search-s1.js': 'import("./rdkit-glue-g1.js")' });
     expect(status).toBe(1);
     expect(out).toContain('FAIL assets/worker-search-s1.js: refers to RDKit');
+  });
+
+  it('hosting files (release preview, rule 9): a good _headers and robots.txt pass', () => {
+    const { status, out } = run({});
+    expect(status).toBe(0);
+    expect(out).toContain('hosting: _headers');
+    expect(out).toContain('hosting: robots.txt disallows everything');
+  });
+
+  it('rule 9 fails when _headers or robots.txt is missing', () => {
+    expect(run({ _headers: null }).out).toContain('FAIL _headers: missing');
+    expect(run({ 'robots.txt': null }).out).toContain('FAIL robots.txt: missing');
+  });
+
+  it('rule 9 fails when the /* policy is not the page policy plus frame-ancestors only', () => {
+    const widened = run({ _headers: headers({ page: `${POLICY}; frame-ancestors 'none'; img-src *` }) });
+    expect(widened.status).toBe(1);
+    expect(widened.out).toContain("FAIL _headers: the /* policy is not the page's <meta> policy plus frame-ancestors 'none'");
+    const noAncestors = run({ _headers: headers({ page: POLICY }) });
+    expect(noAncestors.out).toContain("the /* policy is not the page's <meta> policy");
+    const drifted = run({ 'index.html': page(POLICY.replace("object-src 'none'", "object-src 'self'")) });
+    expect(drifted.out).toContain("the /* policy is not the page's <meta> policy");
+  });
+
+  it('rule 9 fails without X-Robots-Tag noindex', () => {
+    const { status, out } = run({ _headers: headers({ robots: '  X-Robots-Tag: all' }) });
+    expect(status).toBe(1);
+    expect(out).toContain('the /* rule has no X-Robots-Tag: noindex');
+  });
+
+  it('rule 9 fails when the chem worker rule matches no file, another file too, or does not remove the inherited policy', () => {
+    const none = run({ _headers: headers({ chemPath: '/assets/worker-chem-zzz.js' }) });
+    expect(none.out).toContain('expected exactly one CSP rule matching the chem worker');
+    const wide = run({ _headers: headers({ chemPath: '/assets/worker-*.js' }) });
+    expect(wide.out).toContain('matches files other than the chem worker: /assets/worker-compute-k1.js');
+    const inherited = run({ _headers: headers({ chemFirst: '  X-Frame-Options: DENY' }) });
+    expect(inherited.out).toContain('must start with "! Content-Security-Policy"');
+  });
+
+  it('rule 9 fails when the chem worker policy differs from the page policy by more than unsafe-eval in script-src (ADR-035)', () => {
+    const more = run({ _headers: headers({ chem: `${CHEM_POLICY}; frame-ancestors 'none'; connect-src *` }) });
+    expect(more.out).toContain('differs from the page policy by more than');
+    const missing = run({ _headers: headers({ chem: `${POLICY}; frame-ancestors 'none'` }) });
+    expect(missing.out).toContain('differs from the page policy by more than');
+    const elsewhere = run({ _headers: headers({ chem: `${CHEM_POLICY.replace("object-src 'none'", "object-src 'none' 'unsafe-eval'")}; frame-ancestors 'none'` }) });
+    expect(elsewhere.out).toContain('differs from the page policy by more than');
+    const other = run({ _headers: headers({ extra: "/assets/index-*.js\n  Content-Security-Policy: default-src 'self' 'unsafe-eval'" }) });
+    expect(other.out).toContain("allows 'unsafe-eval'");
+  });
+
+  it('rule 9 fails when robots.txt does not disallow everything', () => {
+    for (const robots of ['User-agent: *\nAllow: /\n', 'User-agent: *\nDisallow: /private\n', 'User-agent: *\nDisallow: /\nAllow: /x\n']) {
+      const { status, out } = run({ 'robots.txt': robots });
+      expect(status).toBe(1);
+      expect(out).toContain('FAIL robots.txt: must be exactly');
+    }
   });
 });

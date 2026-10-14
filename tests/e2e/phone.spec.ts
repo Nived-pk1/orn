@@ -140,11 +140,19 @@ async function walk(page: Page, device: string, pinch: boolean): Promise<void> {
 
   // the import notice and the storage warning lie over the map; a visitor dismisses them before using it
   for (let n = 0; n < 4 && (await page.getByRole('button', { name: 'Dismiss' }).count()) > 0; n += 1) await page.getByRole('button', { name: 'Dismiss' }).first().tap();
+  // Reviewer decision 1 (2026-10-14): the first view is the Fit view. Fit would fall below the scale where names are drawn on a phone
+  // (case 2), so the first view is Fit's floor (LOD 1 threshold, from the top-left); the Fit button is on screen and changes nothing.
+  const firstScale = await scaleOf(page);
+  const fitButton = page.getByRole('button', { name: 'Fit' });
+  await expect(fitButton).toBeInViewport({ ratio: 1 });
+  await fitButton.tap();
+  await page.waitForTimeout(700);
+  expect(await scaleOf(page), 'Fit does not change the first view').toBeCloseTo(firstScale, 5);
   if (pinch) await panAndPinch(page);
   await stop(page, device, 3, 'overview-map');
 
   // a tap selects the family (the inspector sheet opens over the map); close it, then two taps open the family page
-  await page.getByRole('button', { name: 'Fit' }).tap(); // the first view is zoomed in; a visitor presses Fit to see the whole map
+  await page.getByRole('button', { name: 'Fit' }).tap(); // the pinch above zoomed in; Fit brings the map back
   await page.waitForTimeout(700);
   const first = await centreOf(page, 'cls_alcohols');
   await page.touchscreen.tap(first.x, first.y);
@@ -182,6 +190,7 @@ test.describe('phone: Pixel 7 (Chromium, Firefox at the same size)', () => {
   test.use({ ...PIXEL });
   test('first-run, demo, map, family, inspector open and closed, search', async ({ page, browserName }) => {
     test.skip(browserName === 'webkit', 'WebKit runs the iPhone 14 walk');
+    test.skip(browserName === 'firefox', 'Playwright has no mobile or touch emulation for Firefox');
     test.setTimeout(240_000);
     await walk(page, browserName === 'chromium' ? 'pixel7' : 'pixel7-firefox', browserName === 'chromium');
   });

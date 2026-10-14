@@ -14,7 +14,7 @@ afterEach(cleanup);
 const EXPECTED =
   'Preview version. The chemistry here is a small demo and has NOT been checked by an expert yet - please do not study from it. ' +
   'Everything you do stays on this device: nothing is sent anywhere, there are no accounts and no tracking. ' +
-  'Your data lives in this browser only; use File > Export to keep a copy. © 2026 YOUR NAME. All rights reserved.';
+  'Your data lives in this browser only; use File > Export to keep a copy. © 2026 Ponap. All rights reserved.';
 
 describe('About this preview', () => {
   it('carries exactly the agreed text', () => {

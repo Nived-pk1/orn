@@ -13,7 +13,11 @@
 //      may be mentioned only by the chem worker's entry (RDKit runs only inside the chem worker);
 //   7. no emitted chunk imports a worker ENTRY chunk, statically or dynamically (2026-10-13, 5.10a review: WebKit evaluates a
 //      worker entry a second time when a dynamic chunk imports shared code from it, and the second instance has no state);
-//   8. the build has no source maps (no *.map file, no sourceMappingURL comment).
+//   8. the build has no source maps (no *.map file, no sourceMappingURL comment);
+//   9. the hosting files (release preview; docs/SECURITY.md §4-§5, docs/RELEASE.md): dist/_headers exists; its /* rule carries the
+//      page's <meta> policy plus "frame-ancestors 'none'" and nothing else, and X-Robots-Tag noindex; one rule matches the emitted chem
+//      worker file and no other file, starts with "! Content-Security-Policy" and its policy is the page policy with 'unsafe-eval' added
+//      to script-src alone (ADR-035); no other rule allows 'unsafe-eval'; dist/robots.txt disallows everything.
 // Usage: node scripts/check-build.mjs [distDir = dist] [securityDoc = docs/SECURITY.md]
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
@@ -167,6 +171,102 @@ const maps = all.filter((path) => path.endsWith('.map'));
 for (const path of maps) fail(rel(path), 'is a source map (the production build has none)');
 for (const file of js) if (/\/\/# sourceMappingURL=/.test(readFileSync(file, 'utf8'))) fail(rel(file), 'has a sourceMappingURL comment');
 report.push(`no source maps (${maps.length} *.map files)`);
+
+// 9. the hosting files
+const headersPath = join(dist, '_headers');
+const metaPolicy = (() => {
+  const meta = /<meta\s[^>]*http-equiv="Content-Security-Policy"[^>]*>/i.exec(htmlText)?.[0];
+  const content = meta === undefined ? undefined : /\scontent="([^"]*)"/.exec(meta)?.[1];
+  return content === undefined ? undefined : decodeEntities(content);
+})();
+const directives = (policy) => new Map(policy.split(';').map((part) => part.trim()).filter((part) => part !== '').map((part) => {
+  const [name, ...tokens] = part.split(/\s+/);
+  return [name, tokens];
+}));
+function headerRules(text) {
+  const rules = [];
+  for (const raw of text.split(/\r?\n/)) {
+    if (raw.trim() === '' || raw.trim().startsWith('#')) continue;
+    if (/^\s/.test(raw)) rules.at(-1)?.lines.push(raw.trim());
+    else rules.push({ pattern: raw.trim(), lines: [] });
+  }
+  return rules;
+}
+// a header rule path: literal text and "*" (any run of characters); it is tested without a regular expression, so nothing needs escaping
+const globMatches = (pattern, url) => {
+  const parts = pattern.split('*');
+  if (parts.length === 1) return pattern === url;
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  if (!url.startsWith(first) || url.length < first.length + last.length || !url.endsWith(last)) return false;
+  let at = first.length;
+  const stop = url.length - last.length;
+  for (const part of parts.slice(1, -1)) {
+    const found = url.indexOf(part, at);
+    if (found < 0 || found + part.length > stop) return false;
+    at = found + part.length;
+  }
+  return true;
+};
+if (!existsSync(headersPath)) fail('_headers', `missing from ${dist} (public/_headers)`);
+else if (metaPolicy === undefined) fail('_headers', 'cannot be compared: index.html has no policy');
+else {
+  const rules = headerRules(readFileSync(headersPath, 'utf8'));
+  const cspLines = (rule) => rule.lines.filter((line) => /^Content-Security-Policy:/i.test(line)).map((line) => line.slice(line.indexOf(':') + 1).trim());
+  const every = rules.find((rule) => rule.pattern === '/*');
+  if (every === undefined) fail('_headers', 'has no /* rule');
+  else {
+    const policies = cspLines(every);
+    if (policies.length !== 1) fail('_headers', `the /* rule must have exactly one Content-Security-Policy, found ${policies.length}`);
+    else if (policies[0] !== `${metaPolicy}; frame-ancestors 'none'`) fail('_headers', `the /* policy is not the page's <meta> policy plus frame-ancestors 'none'.
+    header: ${policies[0]}
+    page:   ${metaPolicy}`);
+    if (!every.lines.some((line) => /^X-Robots-Tag:.*\bnoindex\b/i.test(line))) fail('_headers', 'the /* rule has no X-Robots-Tag: noindex');
+  }
+  const chemFile = entries.get('chem');
+  const chemUrl = chemFile === undefined ? undefined : `/${rel(chemFile)}`;
+  const urls = all.map((path) => `/${rel(path)}`);
+  const chemRules = rules.filter((rule) => rule.pattern !== '/*' && cspLines(rule).length > 0 && chemUrl !== undefined && globMatches(rule.pattern, chemUrl));
+  if (chemUrl !== undefined) {
+    const matching = chemRules.filter((rule) => globMatches(rule.pattern, chemUrl));
+    if (matching.length !== 1) fail('_headers', `expected exactly one CSP rule matching the chem worker ${chemUrl}, found ${matching.length}`);
+    for (const rule of chemRules) {
+      const hits = urls.filter((url) => globMatches(rule.pattern, url));
+      if (hits.some((url) => url !== chemUrl)) fail('_headers', `the rule ${rule.pattern} matches files other than the chem worker: ${hits.filter((url) => url !== chemUrl).join(', ')}`);
+    }
+    const rule = matching[0];
+    if (rule !== undefined) {
+      const first = rule.lines[0] ?? '';
+      if (!/^! Content-Security-Policy\s*$/i.test(first)) fail('_headers', `the chem worker rule must start with "! Content-Security-Policy" (found "${first}")`);
+      const [chemPolicy] = cspLines(rule);
+      if (cspLines(rule).length !== 1 || chemPolicy === undefined) fail('_headers', 'the chem worker rule must have exactly one Content-Security-Policy');
+      else {
+        const page = directives(`${metaPolicy}; frame-ancestors 'none'`);
+        const chem = directives(chemPolicy);
+        const same = [...page.keys()].length === [...chem.keys()].length && [...page].every(([name, tokens]) => {
+          const other = chem.get(name);
+          if (other === undefined) return false;
+          if (name === 'script-src') return other.length === tokens.length + 1 && other.includes("'unsafe-eval'") && tokens.every((token) => other.includes(token));
+          return other.length === tokens.length && tokens.every((token, at) => token === other[at]);
+        });
+        if (!same) fail('_headers', `the chem worker policy differs from the page policy by more than 'unsafe-eval' in script-src (ADR-035).
+    chem: ${chemPolicy}`);
+      }
+    }
+  }
+  for (const rule of rules) {
+    if (!chemRules.includes(rule) && rule.lines.some((line) => line.includes("'unsafe-eval'"))) fail('_headers', `the rule ${rule.pattern} allows 'unsafe-eval' (the chem worker rule alone may)`);
+  }
+  if (failures.every((line) => !line.startsWith('_headers'))) report.push('hosting: _headers has the page policy (+ frame-ancestors), noindex, and the chem worker rule alone with unsafe-eval (ADR-035)');
+}
+const robotsPath = join(dist, 'robots.txt');
+if (!existsSync(robotsPath)) fail('robots.txt', `missing from ${dist} (public/robots.txt)`);
+else {
+  const lines = readFileSync(robotsPath, 'utf8').split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== '' && !line.startsWith('#'));
+  const ok = lines.length === 2 && /^User-agent:\s*\*$/i.test(lines[0]) && /^Disallow:\s*\/$/i.test(lines[1]);
+  if (!ok) fail('robots.txt', 'must be exactly "User-agent: *" and "Disallow: /" (disallow everything)');
+  else report.push('hosting: robots.txt disallows everything');
+}
 
 for (const line of report) console.log(`ok   ${line}`);
 if (failures.length > 0) {

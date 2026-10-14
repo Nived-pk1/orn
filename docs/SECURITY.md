@@ -48,7 +48,7 @@ Injected into production builds by `vite.config.ts`:
 What a host that sends a header policy must send, as plain lines:
 - the page policy of this section, as a header, on every response (document, scripts, workers, wasm, json, css, fonts);
 - on the chem worker entry's response alone (`/assets/worker-chem-<hash>.js`), the same policy with `'unsafe-eval'` added to script-src;
-- no `'unsafe-eval'` on any other response. No host configuration file is shipped.
+- no `'unsafe-eval'` on any other response. Amended 2026-10-14 (release preview): the hosted preview ships `public/_headers` (Cloudflare Workers static assets), which does exactly this plus `frame-ancestors 'none'` and a few harmless headers; `scripts/check-build.mjs` rule 9 checks it against the page policy (docs/RELEASE.md).
 
 ## 5. Delivery
 

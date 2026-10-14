@@ -12,8 +12,8 @@ import { documentToState, serializeDocument, stateToDocument } from '@/core/data
 import { generateTier, type GeneratorShape, type GeneratorTier } from '@/test-support/generator';
 import { withNavigatorAnchors } from '@/test-support/perf-kit';
 
-/** The origin `vite preview` serves (playwright.config.ts). */
-export const ORIGIN = 'http://127.0.0.1:4173';
+/** The origin `vite preview` serves (playwright.config.ts), or the site ORN_BASE_URL names. */
+export const ORIGIN = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4173';
 
 export interface Watch {
   readonly consoleErrors: string[];

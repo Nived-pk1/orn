@@ -41,6 +41,18 @@ describe('viewport arithmetic', () => {
     expect(worldRect(view, size).x1).toBeGreaterThanOrEqual(800);
   });
 
+  it('phone first view (reviewer decision 1): the first view is Fit; where Fit would fall below the names scale it is the floor of Fit', () => {
+    const phone = { width: 412, height: 232 };
+    const demo = { width: 1428, height: 840 };
+    // case 2: whole-drawing fit on a phone is below the LOD 1 threshold, so the first view stays at the floor, top-left
+    expect(fitRect({ x0: 0, y0: 0, x1: demo.width, y1: demo.height }, phone).scale).toBeLessThan(LOD_THRESHOLDS[1]);
+    expect(fitScene(demo, phone)).toEqual({ scale: LOD_THRESHOLDS[1], x: FIT_PADDING, y: FIT_PADDING });
+    // case 1: a drawing that fits at or above the threshold is the whole drawing in view
+    const small = fitScene({ width: 600, height: 300 }, phone);
+    expect(small.scale).toBeGreaterThanOrEqual(LOD_THRESHOLDS[1]);
+    expect(worldRect(small, phone).x1).toBeGreaterThanOrEqual(600);
+  });
+
   it('never zooms a small box past the cap, and focus stops at 1.5', () => {
     const box = { x0: 100, y0: 100, x1: 140, y1: 120 };
     expect(fitRect(box, size).scale).toBe(SCALE_MAX);
