@@ -64,10 +64,15 @@ function Progress(props: { readonly state: ImportState }) {
             {undoCount}…
           </p>
         )}
-        {state.phase === 'applying' && state.long === true ? <p className={styles.progress}>Keep this tab open until it finishes.</p> : null}
         {state.phase === 'applying' && state.cancellable !== true && state.long !== true ? <p className={styles.muted}>This step can no longer be cancelled; it will finish and then say so.</p> : null}
       </div>
       {counting ? <ApplyBar done={state.progress.done} total={state.progress.total} /> : null}
+      {/* mounted empty from the start of the apply, so the sentence is announced once when the long wait begins */}
+      {state.phase === 'applying' ? (
+        <div className={styles.body} role="status">
+          {state.long === true ? <p className={styles.progress}>Keep this tab open until it finishes.</p> : null}
+        </div>
+      ) : null}
     </>
   );
 }
@@ -78,6 +83,8 @@ export function ImportScreen(props: { readonly model: ImportModel; readonly port
   const { phase, plan } = state;
   const reason = plan === undefined ? undefined : blockedReason(plan);
   const cancelReason = phase === 'applying' && !state.cancellable ? 'it is past the point where it can be stopped' : undefined;
+  // while the records are being applied past the commit the dialog cannot be dismissed: no Close button, Esc and the backdrop do nothing
+  const closable = !(phase === 'applying' && state.long === true && !state.cancellable);
   let footer = null;
   if (phase === 'applying' && state.long === true && !state.cancellable) {
     footer = null; // no Cancel during a long apply (decision of step 5.11b): the writes are one transaction past the commit
@@ -108,7 +115,7 @@ export function ImportScreen(props: { readonly model: ImportModel; readonly port
     );
   }
   return (
-    <Dialog open={phase !== 'closed'} onClose={model.cancel} title={TITLES[phase]} size="wide" footer={footer}>
+    <Dialog open={phase !== 'closed'} onClose={model.cancel} title={TITLES[phase]} size="wide" footer={footer} closable={closable}>
       {phase === 'reading' || phase === 'applying' || phase === 'undoing' ? <Progress state={state} /> : null}
       {phase === 'refused' && state.refusal !== undefined ? (
         <div className={styles.body}>

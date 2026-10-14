@@ -86,6 +86,37 @@ describe('Dialog', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('closable={false}: no Close button, Esc is cancelled and asks nothing, the backdrop does nothing (step 5.11c)', () => {
+    const onClose = vi.fn();
+    render(
+      <Dialog open onClose={onClose} title="Importing" dismissOnBackdrop closable={false}>
+        <p>Working.</p>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Importing' });
+    expect(within(dialog).queryByRole('button', { name: 'Close' })).toBeNull();
+    const event = new Event('cancel', { cancelable: true });
+    fireEvent(dialog, event);
+    expect(event.defaultPrevented).toBe(true);
+    fireEvent.click(dialog);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('a null footer draws no footer band; a footer draws one (step 5.11c)', () => {
+    const { rerender } = render(
+      <Dialog open onClose={vi.fn()} title="T" footer={null}>
+        <p>x</p>
+      </Dialog>,
+    );
+    expect(document.querySelector('footer')).toBeNull();
+    rerender(
+      <Dialog open onClose={vi.fn()} title="T" footer={<button type="button">Go</button>}>
+        <p>x</p>
+      </Dialog>,
+    );
+    expect(document.querySelector('footer')).not.toBeNull();
+  });
+
   it('Esc closes the topmost layer only: with two dialogs open, the first Esc closes the upper one', () => {
     function Two() {
       const [a, setA] = useState(true);

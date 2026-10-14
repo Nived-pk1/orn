@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Step 5.11b: the long-wait view of an apply: the bar, its ARIA values, the texts, nothing under 2 s, one announcement, no Cancel.
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { APPLIED_OK, fakePorts, plan } from '@/test-support/data-exchange-kit';
@@ -121,6 +121,28 @@ describe('the long apply view (5.11b)', () => {
     report('committing', 160);
     time.advance(250);
     expect(screen.getAllByRole('status').map((region) => region.textContent)).toEqual(announced);
+  });
+
+  it('the order is the count line, the bar, then the keep-open sentence; no Close button, no footer band, Esc does nothing (5.11c)', async () => {
+    const { model, time, report } = await applying();
+    report('committing', 96);
+    time.advance(2000);
+    const count = screen.getByText('Applying the records... 96 of 500');
+    const bar = screen.getByRole('progressbar');
+    const keep = screen.getByText('Keep this tab open until it finishes.');
+    expect(count.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(bar.compareDocumentPosition(keep) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const dialog = screen.getByRole('dialog');
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+    expect(dialog.querySelector('footer')).toBeNull();
+    fireEvent(dialog, new Event('cancel', { cancelable: true }));
+    expect(model.store.getState().phase).toBe('applying');
+  });
+
+  it('before the long wait the dialog is as before: Close and Cancel are there (5.11c)', async () => {
+    await applying();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy();
   });
 
   it('before the writer reports, a long wait keeps the stage line (and Cancel while it still changes nothing)', async () => {

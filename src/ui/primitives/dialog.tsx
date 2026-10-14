@@ -23,6 +23,8 @@ export interface DialogProps {
   readonly initialFocus?: string;
   /** `wide`: for a dialog that holds lists and choices (the import screen); the default is the narrow one. */
   readonly size?: 'default' | 'wide';
+  /** `false`: the dialog cannot be dismissed while the caller's work runs - no Close button, Esc and the backdrop do nothing (default true). */
+  readonly closable?: boolean;
 }
 
 const ACTIVATORS = 'button, [role="button"], [role="menuitem"], a[href], input, select, textarea, [tabindex]';
@@ -50,7 +52,7 @@ function openerNow(): HTMLElement | null {
 }
 
 export function Dialog(props: DialogProps) {
-  const { open, onClose, title, children, footer, dismissOnBackdrop = false, initialFocus, size = 'default' } = props;
+  const { open, onClose, title, children, footer, dismissOnBackdrop = false, initialFocus, size = 'default', closable = true } = props;
   const element = useRef<HTMLDialogElement | null>(null);
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -88,10 +90,10 @@ export function Dialog(props: DialogProps) {
   // Esc: the browser's own close is always cancelled; the caller's state decides, and only the topmost layer asks.
   const onCancel = (event: SyntheticEvent<HTMLDialogElement>): void => {
     event.preventDefault();
-    if (isTopLayer(layerId)) closeRef.current();
+    if (closable && isTopLayer(layerId)) closeRef.current();
   };
   const onBackdrop = (event: MouseEvent<HTMLDialogElement>): void => {
-    if (dismissOnBackdrop && event.target === event.currentTarget && isTopLayer(layerId)) closeRef.current();
+    if (closable && dismissOnBackdrop && event.target === event.currentTarget && isTopLayer(layerId)) closeRef.current();
   };
 
   return (
@@ -103,12 +105,14 @@ export function Dialog(props: DialogProps) {
               <h2 id={titleId} className={styles.title}>
                 {title}
               </h2>
-              <button type="button" className={styles.close} aria-label="Close" onClick={() => isTopLayer(layerId) && closeRef.current()}>
-                ×
-              </button>
+              {closable ? (
+                <button type="button" className={styles.close} aria-label="Close" onClick={() => isTopLayer(layerId) && closeRef.current()}>
+                  ×
+                </button>
+              ) : null}
             </header>
             <div className={styles.body}>{children}</div>
-            {footer === undefined ? null : <footer className={styles.footer}>{footer}</footer>}
+            {footer === undefined || footer === null ? null : <footer className={styles.footer}>{footer}</footer>}
           </div>
         </PortalContainerContext.Provider>
       ) : null}
