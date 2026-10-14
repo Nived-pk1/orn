@@ -3,6 +3,9 @@
  * specs: console errors, uncaught page errors, `securitypolicyviolation` events, and any request that leaves the origin (E3, E10).
  * Data enters only through the real import (E15): the generator runs in Node and the file is uploaded.
  */
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 import { documentToState, serializeDocument, stateToDocument } from '@/core/dataset';
@@ -123,29 +126,49 @@ export function generatedFileWithAnchors(tier: GeneratorTier, shape: GeneratorSh
   return { name: `generated-${tier}-${shape}-anchored.orn.json`, mimeType: 'application/json', buffer: Buffer.from(result.text, 'utf8') };
 }
 
-/** Choose a file through the real "Import a file" button and file chooser. */
-export async function chooseFile(page: Page, file: { name: string; mimeType: string; buffer: Buffer }): Promise<void> {
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Import a file' }).click()]);
-  await chooser.setFiles(file);
-}
-
 export interface UploadFile {
   readonly name: string;
   readonly mimeType: string;
   readonly buffer: Buffer;
 }
 
+/**
+ * Step 5.10b: a file over this size is uploaded BY PATH. `setInputFiles` with a buffer sends the bytes through the protocol as base64
+ * and rebuilds a `File` on the page's main thread (a 17 MB file blocks it for seconds, which showed up as a false long task); with a
+ * path the browser reads the file itself. Smaller files are uploaded as before.
+ */
+export const UPLOAD_BY_PATH_BYTES = 1_000_000;
+let uploadDir: string | undefined;
+function uploadable(file: UploadFile): string | UploadFile {
+  if (file.buffer.length <= UPLOAD_BY_PATH_BYTES) return file;
+  if (uploadDir === undefined) {
+    uploadDir = mkdtempSync(join(tmpdir(), 'orn-e2e-'));
+    process.once('exit', () => rmSync(uploadDir as string, { recursive: true, force: true }));
+  }
+  const dir = mkdtempSync(join(uploadDir, 'f-'));
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, file.name);
+  writeFileSync(path, file.buffer);
+  return path;
+}
+
+/** Choose a file through the real "Import a file" button and file chooser. */
+export async function chooseFile(page: Page, file: UploadFile): Promise<void> {
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Import a file' }).click()]);
+  await chooser.setFiles(uploadable(file));
+}
+
 /** Step 5.9a: the file chooser behind the File menu's "Import a file...", for a dataset that already holds records. */
 export async function chooseFileViaMenu(page: Page, file: UploadFile): Promise<void> {
   await page.getByRole('button', { name: 'File' }).click();
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('menuitem', { name: /Import a file\.\.\./ }).click()]);
-  await chooser.setFiles(file);
+  await chooser.setFiles(uploadable(file));
 }
 
 /** Step 5.9a: the first-run screen's "Import v6 export" (the same screen as "Import a file"). */
 export async function chooseV6(page: Page, file: UploadFile): Promise<void> {
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Import v6 export' }).click()]);
-  await chooser.setFiles(file);
+  await chooser.setFiles(uploadable(file));
 }
 
 export const importDialog = (page: Page) => page.getByRole('dialog', { name: 'Import summary' });

@@ -4186,3 +4186,41 @@ b. The bench-based rows of the Gate E watch list (phase-4-close §9), median of 
    Also: search full load on main 260 / 299 (4.5: 193 ms for the documents alone); import apply on main, `replaceState` with the worker findings 184 / 213; import preview conflicts (dense) 1,170 / 1,223 and (hub_explosion) 856 / 888 against the 5,000 row.
 
 Honest limits: Node, developer workstation, fake-indexeddb where storage is involved; the p99 of 10-12 samples is the maximum, so "p99" is really the worst sample; 221 of 235 entries are over the 25% spread rule, so differences under about +50% mean nothing on this machine.
+
+### Phase 5, step 5.10b, part 3b - the other gate checks (2026-10-14)
+
+No `src/` change. The machine ran at the same speed as for 3a (loop 600-608 ms).
+
+a. Gate checks.
+- `npm run test:timing`: 2 files, 10 tests passed.
+- Coverage (the `test:coverage` command with the `json-summary` reporter added; 386 files / 5,448 tests passed): total statements 96.47%, branches 90.75%, functions 97.62%, lines 98.05%. Per area (lines / branches): core 99.3 / 92.1 (floor 90 / 85); app/services 94.4 / 83.6 (floor 80); chem 98.7 / 91.4; io 97.1 / 90.5; layout 99.9 / 95.1; persistence 98.7 / 89.9; render/scene 99.0 / 93.3; render/svg 100 / 94.4; render/viewport 98.9 / 93.0; search 97.7 / 91.2; workers 97.3 / 88.5. UI has no line target (TEST_STRATEGY: component + e2e flows). Files under 80% lines: `workers/*/entry.ts` and `workers/*/host.ts` (0%: they run only inside a real worker, covered by the e2e smoke in three browsers), `chem/rdkit/wasm-url.ts` (0%, same), `app/services/replica.ts` 75.5%, `persistence/lock.ts` 75% (Web Locks; e2e tabs.spec), `workers/compute/snapshot-build.ts` 71.4%. All stated floors met.
+- Property suite at 200 runs (`ORN_PROPERTY_RUNS=200 npm run test:property`): 25 files, 221 tests passed (81 s). No failure, so no seed.
+- `npm audit`: found 0 vulnerabilities (no finding to list).
+- `build:smoke`: passed (CSP exact; four workers; WASM separate; no `eval` / `new Function` outside the RDKit glue; five lazy chunks outside the initial load; no chunk imports a worker entry; no source maps). Initial JS 386.22 kB gzip against 400 (room 13.78 kB).
+
+b. Initial JS 386.22 kB gzip. A temporary Vite config (scratchpad, not committed) printed `renderedLength` per module of the entry chunk. Sizes are PRE-minify; the kB column is that share of the real 386.1 kB, so react-dom's share is over-stated. Top 15 modules by rendered bytes: react-dom-client 644,593 (25.4%); dexie 97,094; zod core schemas 79,593; @tanstack/virtual-core 47,298; fflate 41,542; zod classic schemas 33,082; zod json-schema-processors 28,688; zod to-json-schema 28,552; zod core util 27,570; floating-ui core 27,062; immer 26,579; floating-ui dom 26,114; radix react-menu 23,482; radix react-tooltip 19,838; react 19,185. By group: react-dom 25.7%, zod 10.7%, dexie 3.9%, src/core/validation 3.6%, features/navigator 3.3%, app/services 3.0%, features/inspector 2.8%, core/schema 2.3%, app/window 2.0%, virtual-core 2.0%, core/graph 1.9%, fflate 1.6%, features/data-exchange 1.5%, io/legacy-v6 1.4% (35.7 kB rendered, still in the entry through shared helpers, not through `convertLegacy`), render/svg 1.3%. Zod's `json-schema-processors` + `to-json-schema` are about 57 kB rendered (about 8-9 kB gzip) and no file in `src` calls `toJSONSchema`: a tree-shaking question, NOT investigated.
+   Lazy candidates MEASURED by throwaway edits (built, then `git checkout src`; nothing kept):
+   1. The four inspector views still static (species, class, reagent, reaction) moved into the lazy `views-other` chunk: 386.22 -> 379.06 kB (-7.16 kB). The other 18 kinds are already lazy.
+   2. The palette (`Palette`, cmdk, Radix pieces) behind `React.lazy`, mounted only while open: 386.22 -> 377.19 kB (-9.03 kB) and a new 10.08 kB gzip chunk, loaded at the first open.
+   Together about -16 kB (not measured as a pair). NOT measured, estimates only: fflate and the export / import helpers (about 6 kB; shared with the in-process lazy chunks), the rest of `io/legacy-v6` in the entry (about 5-6 kB), zod's JSON-schema code (about 8 kB if it can be dropped). Nothing needs building for Gate E (13.8 kB of room).
+
+c. INV sweep for Phases 4 and 5: in the packet (docs/reviews/gate-e-packet.md).
+
+d. Reviewer decisions 2, 5 and 6.
+- Decision 2, `chooseFile` by path (`tests/e2e/kit.ts`): a new `uploadable(file)` helper; a file over 1,000,000 bytes is written to a temp directory (removed at process exit) and uploaded with `setFiles(path)`; smaller ones as before. It applies to `chooseFile`, `chooseFileViaMenu` and `chooseV6`. Specs that call these helpers (so they run through the new code): app, arrangement, axe-screens, durability, family, import, inspector-views, keyboard-walk, navigator, shell, tabs. Specs that upload a file over 1 MB (the 'initial' tier, 3.5 MB): app (one test), durability, family, inspector-views, keyboard-walk, navigator, tabs. Run after the change: tabs + durability + app in Chromium, 10 passed; tabs + app in Firefox and WebKit, 16 passed (4.3 min). The full e2e suite was NOT re-run in this part.
+- Decision 5, worker-side `loadReplica`: profiled in Node with the same calls as `replica.ts` (`tests/measure/load-replica-split.measure.ts`; 17,161 records; 7 runs). The browser call is one cold call, so the FIRST-run column is the one to compare with the browser's 888-903 ms:
+  | step | first run | median |
+  |---|---|---|
+  | receive: deserialise the request (7.0 MB) | 55 ms | 43 ms |
+  | `freeze(state, true)` (deep) | 34 | 29 |
+  | `indexEngine.build` | 282 | 236 |
+  | `validator.validateAll` | 448 | 375 |
+  | `commitFindings` | 21 | 19 |
+  | `recordCountsOf` | 1 | 1 |
+  | serialise the answer | 3 | 4 |
+  | sum | 844 | 706 |
+  The 844 ms cold sum agrees with the browser's 888-903 ms. Split of the cold call: validation 53%, index build 33%, receive 6.5%, freeze 4%, the rest 3%. Warm, the sum is 706 ms: the first-call JIT cost is about 140 ms. The zod parse is not in this call (it runs on the main thread before the send, 150-220 ms, part 2d). So the worker's 0.9 s is `validateAll` plus `indexEngine.build`. Limits: Node, not a browser worker; timers, not a CPU profile of the worker; 30-minute time-box kept.
+- Decision 6, a conflicting preview with EVERY ID conflicting with DIFFERENT content (`import-conflict.measure.ts` with `ORN_CHANGE=1`: the same generator file with one tag added to each of the 17,101 records). The preview itself shows "0 identical, 17101 differ" (1,400 species, 200 class, 400 reagent, 5,000 reaction, 5,000 relationship, 101 topic, 5,000 topic_mapping). Production build, Chromium, uploaded by path, design hub_explosion, 15.8 MB, 3 runs (and 1 more): file chosen to preview 927, 912, 951 ms (939 ms): INSIDE the 5,000 ms row, about 19%. In the same sessions the first import into an empty store took 890-922 ms to the preview and 1,601-1,629 ms from Confirm to "Imported". Main thread: one long task of 559-596 ms (the first import's apply, `replaceState`); `postMessage` of the whole state to the compute worker 35.6 ms; message handling 60 ms and 23-25 ms; no long task in the second preview. These figures are lower than the 1,516-1,527 ms of part 2b (identical content); the identical-content case was not re-run, and part 2b had an unknown machine speed.
+- A first try changed `provenance.updatedAt` on every record instead of `tags`; its summary was cut at 300 characters and said "0 would be written". I did not read what it said about conflicts for that file (so I do not know whether a timestamp-only change counts as a difference); the `tags` run is the one reported. REVIEW REQUIRED 1 (small): confirm the importer is meant to class a timestamp-only difference as it does.
+
+HARNESS CHANGES in this part (nothing in `src/`; no budget, threshold, run count or timeout changed): `tests/e2e/kit.ts` (decision 2); `tests/measure/import-conflict.measure.ts` (`ORN_CHANGE=1`; preview text length 300 -> 1,500); new `tests/measure/load-replica-split.measure.ts`.

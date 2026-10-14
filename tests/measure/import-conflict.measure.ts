@@ -2,6 +2,8 @@
  * Step 5.10b, Part 2b (informal; run alone; REPORTED, nothing decided): the Gate C watch (openItem 71) and phase-4-close §9 items
  * 1, 2 and 4 in a real browser with real IndexedDB, against the PRODUCTION build on port 4173.
  *   npx tsx tests/measure/import-conflict.measure.ts [tier] [shape]      (default: design hub_explosion)
+ * ORN_CHANGE=1 (decision 6 of the 2026-10-14 review): the second file has the SAME IDs but `tags` changed on EVERY record (a provenance timestamp is not content: the first try with it said "0 would be written"),
+ * so every ID conflicts with DIFFERENT content (the Gate C watch). Without it the second file is byte-identical ("0 would be written").
  * Step 1: the file is imported into an empty store (apply). Step 2: the SAME file is chosen again through the File menu, so every ID
  * conflicts; the time from the file chosen to the preview shown is the "Import 5k reactions (parse -> preview)" row's figure with
  * real conflicts. A Chromium trace (devtools.timeline) lists the main-thread message-handling events over 20 ms (the cost of receiving
@@ -12,7 +14,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Page } from '@playwright/test';
 import { chooseFile, chooseFileViaMenu, expectPreview, generatedFile, importDialog, openApp } from '../e2e/kit';
-import type { GeneratorShape, GeneratorTier } from '@/test-support/generator';
+import { serializeDocument } from '@/core/dataset';
+import { generateTier, type GeneratorShape, type GeneratorTier } from '@/test-support/generator';
 
 const ORIGIN = 'http://127.0.0.1:4173';
 
@@ -52,6 +55,23 @@ async function pick(page: Page, file: { name: string; mimeType: string; buffer: 
   }
 }
 
+/** The same IDs as `generatedFile`, with one field (`tags`, one added tag) changed on every record. */
+function changedFile(tier: GeneratorTier, shape: GeneratorShape): { name: string; mimeType: string; buffer: Buffer } {
+  const doc = generateTier(tier, shape, 1) as unknown as { records: Record<string, { tags?: string[] }[]> };
+  let changed = 0;
+  for (const rows of Object.values(doc.records)) {
+    for (const row of rows) {
+      if (!Array.isArray(row.tags)) continue;
+      row.tags = [...row.tags, 'changed'];
+      changed += 1;
+    }
+  }
+  console.log(`changed file: tags changed on ${changed} records`);
+  const result = serializeDocument(doc as never);
+  if (!result.ok) throw new Error('the changed document does not serialise');
+  return { name: `generated-${tier}-${shape}-changed.orn.json`, mimeType: 'application/json', buffer: Buffer.from(result.text, 'utf8') };
+}
+
 interface TraceEvent {
   readonly name: string;
   readonly ph: string;
@@ -88,12 +108,13 @@ async function main(): Promise<void> {
   console.log(`first import: Confirm to "Imported" ${a2 - a1} ms`);
   await page.waitForTimeout(3_000);
   await page.evaluate("performance.mark('t:second-start')");
+  const second = process.env.ORN_CHANGE === '1' ? changedFile(tier, shape) : file;
   const b0 = Date.now();
-  await pick(page, file, true, byPath);
+  await pick(page, second, true, byPath);
   await expectPreview(page, 600_000);
   const b1 = Date.now();
   console.log(`second import (same file, every ID conflicting): file chosen to preview ${b1 - b0} ms  <- the row is 5,000 ms`);
-  const summary = (await importDialog(page).innerText()).replace(/\s+/g, ' ').slice(0, 300);
+  const summary = (await importDialog(page).innerText()).replace(/\s+/g, ' ').slice(0, 1500);
   console.log(`preview says: ${summary}`);
   await page.evaluate("performance.mark('t:second-shown')");
   await page.waitForTimeout(1_000);
