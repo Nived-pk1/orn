@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-13",
+  "lastUpdated": "2026-10-14",
   "currentPhase": 5,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -299,7 +299,7 @@
     "Step 3.12: baseline.json runner text says no other heavy applications were open; Edge was open (idle) during the step 3.12 runs (packet header). 43 of 96 entries exceed 25% spread. Correction recorded at the Gate C review (PROGRESS.md): Edge was open and idle during the runs; baseline.json is not edited.",
     "check:bench-budgets: narrow tuple-loop title matches to entries of the same bench file if budgets.mjs can say which file an entry belongs to (Phase 9, or earlier if a bench is removed).",
     "CLOSED (step 4.1 review, 2026-09-30; swept at step 4.6). Step 4.1 review (2026-09-30): ACCEPTED. RpcClient values, ADR-034 default timeouts, no retry after TIMEOUT and maxRestarts approved; the onRestart hook now has restartHookTimeoutMs and the client emits gave_up (commit 'phase-4.1: review follow-ups').",
-    "PARTLY CLOSED in step 5.1d: the real-browser test is the e2e smoke (the four workers run through browserWorkerPort in Chromium, Firefox and WebKit). Open: the rpc bench baseline (5.10b). Was: Step 4.1: browserWorkerPort and workerScopePort are tested against stand-ins only; the real-browser test is Phase 5 (D7). tests/perf/rpc.bench.ts entries have no baseline until the Gate E baseline. -> step 5.1d, 5.10b",
+    "PARTLY CLOSED in step 5.1d: the real-browser test is the e2e smoke (the four workers run through browserWorkerPort in Chromium, Firefox and WebKit). The rpc bench baseline is in tests/perf/baseline.json (step 5.10b part 3a). Was: Step 4.1: browserWorkerPort and workerScopePort are tested against stand-ins only; the real-browser test is Phase 5 (D7). tests/perf/rpc.bench.ts entries have no baseline until the Gate E baseline. -> step 5.1d, 5.10b",
     "CLOSED (step 4.3b: Q10 (b) landed there; swept at step 4.6). Step 4.2a: the plan's 4.2a cell also names Q10 (b) (level-4 findings of a subject that no longer exists are cleared in the same commit step), but the Q10 scan and the step's specifics land it with 4.3b, when L4 findings exist; NOT built in 4.2a (nothing produces L4 findings yet). Confirmed by the reviewer (step 4.2a review, 2026-09-30): it stays with 4.3b (the 4.3b plan row names it).",
     "CLOSED (step 4.2b; swept at step 4.6). Step 4.2a: what no cheap check can prove is that the precomputed findings are COMPLETE (none missing); that rests on the worker's replica being exactly the state of that revision (4.2b) and is proved in tests by verifyPrecomputed only. CLOSED by step 4.2b for the replica: tests/property/replica.test.ts proves replica == store (state, revision, index answers, findings) after random command sequences with undo, redo and a replaceState, and that the replica's incremental findings equal validateAll on the hub shapes; the completeness of any FUTURE producer of findings stays the replica's. `applyRemote` is unchanged (only if adopted in 4.2d).",
     "CONFIRMED AS BUILT (Phase 4 tagging review, 2026-10-02, decision 5e): Phase 9 only. Step 4.2b: the replica keeps the FULL index engine (route search needs ReadonlyIndexes); a hub edit (replaceReferences, ~1,020 records) costs 448 ms mean in the worker (450-1,040 ms over two runs), about 300 ms of it the derived tables' apply (scratch breakdown, not committed). Reviewer to confirm, or ask for part-1 indexes with the full ones built lazily per revision for findRoutes.",

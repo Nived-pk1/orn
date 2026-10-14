@@ -4152,3 +4152,37 @@ Honest limits: one machine (CPU at full speed, reference loop 0.9 s), headless; 
 6. The conflicting hub_explosion preview: the Gate C watch means EVERY ID conflicting with DIFFERENT content. Measure that case (a generator variant that changes one field of every record, same IDs), by path, 3 runs, against the 5,000 ms row (Part 3b).
 
 Session start (2026-10-14): tree clean, HEAD 5102a1f. Speed check (3e8-iteration Node loop `s += i & 7`, 3 runs): 601, 603, 619 ms (median 603 ms; limit 1.3 s). Note: the loop body is not the one of the earlier sessions, so 0.6 s here is not directly the "about 0.9 s" of the prompt; the machine is not slow.
+
+### Phase 5, step 5.10b, part 3a - benches and baselines (2026-10-14)
+
+Speed checks (3e8-iteration loop, `s += i & 7`): session start 601 / 603 / 619 ms; before `bench:baseline` 605 / 600 / 608 ms. Machine not slow. No `src/` change; no budget, threshold, run count or timeout changed.
+
+HARNESS FIXES (tests/perf only; the bench runner could not run at all before them, both are stale harness, not product regressions):
+1. `tests/perf/compute-restore.bench.ts`: two hard-coded `schemaVersion: 1` replaced by `CURRENT_SCHEMA_VERSION` (2 since the schema bump). The worker answered CORRUPT "snapshot A says schema version 1 but its document says 2", so the bench setup threw and `bench:compare` aborted.
+2. `tests/perf/app-index-state.bench.ts` (step 5.1c review follow-up, "informal, no budget row") had no metadata, so `bench-report` aborted "no budget metadata for 12 benchmark(s)". Added six informal entries (`budgetMs: null`) to `tests/perf/budgets-app.mjs` and made the two `bench(name, ...)` calls `bench(\`${name}\`, ...)` so `check:bench-budgets` (static) sees them (209 benches, 235 entries). Behaviour of the benches is unchanged.
+
+a. `bench:compare` (single run, 470 entries incl. both Vitest projects, against the Gate C baseline of 96 entries): 24 flagged over +20% p99 (mostly the validateTouched / dispatch entries on the 1,000-referrer hubs, +25% to +87%; legacy 22-reaction demo +127%; legacy synthetic 5k +49%; parse (empty) +39%). Re-run rule: `bench:baseline` (3 fresh processes, median) was run next, and its medians against the OLD baseline: 1 entry over +20% in 96 comparable entries: `validateTouched: on the design-tier hub` (hub_explosion) 6.62 -> 10.83 ms p99 (budget 16 ms; spread 87%, so noisy). The other 23 flags were single-run noise. No budget is exceeded: of 235 entries, 68 have a budget, 0 fail, 152 have no budget (informal), 15 have an informal budget.
+   `bench:baseline` wrote 235 entries (96 old + the Phase 3 stage rows + every Phase 4 and Phase 5 bench); 221 are marked noisy by the 25% spread rule (the machine's p99 over 3 runs of 10-12 samples; the verdict uses the median of the three p99s).
+
+   Ten closest margins (median p99 of 3 / row; informal rows marked):
+   1. validateTouched, ADV-012 hub, review lifecycle changed: 43.5 / 50 ms (87%)
+   2. validateTouched, ADV-012 hub, no previous state: 40.2 / 50 (80%)
+   3. validateTouched, "like water" hub, review lifecycle changed: 38.5 / 50 (77%)
+   4. navigator overview, every hub expanded (informal 16 ms): 11.8 / 16 (74%)
+   5. commit, move class hub to another parent (~1,400 referrers): 36.3 / 50 (73%)
+   6. validateTouched, "like water" hub, no previous state: 34.9 / 50 (70%)
+   7. validateTouched on the design-tier hub: 10.8 / 16 (68%)
+   8. legacy import parse -> preview, synthetic 5,000 reactions: 3,270 / 5,000 (65%)
+   9. projection reaction_explorer focused on the hub: 9.9 / 16 (62%)
+   10. grid index build, 2,000 nodes / 4,000 edges (informal 16): 9.3 / 16 (58%)
+   Figures over budget: none. All rows 1-3, 5, 6 are the known Phase 9 exceptions' neighbours (structural, RVW-002 on ~1,000 referrers); the spreads of 70-94% mean these are not tight figures.
+
+b. The bench-based rows of the Gate E watch list (phase-4-close §9), median of 3 (mean / p99 ms, design dense unless noted):
+   1. Moving a whole state: serialise on send 57.0 / 147.7 (4.2 close: 57 / 190); deserialise a decoded state 98.2 / 125.6 (107 / 121); merged state back 82.1 / 140.2 (131 / 151); findings back 7.5 / 22.5. Browser figures of part 2 agree (send 49-57 ms).
+   2. Restore: in process 1,325 / 1,404 (was 1,360-1,382); through the worker end to end 3,262 / 3,362 (was about 3.3 s); `restoreSnapshot` whole 1,044 / 1,087; `replaceState` precomputed 203 / 251 against 525 / 536 in process; `loadReplica` round trip, hub_explosion 842 / 898 (browser 888-903).
+   5. Compute sync: ordinary edit 0.05 / 0.13; rename of the 1,000-referrer hub 0.05 / 0.13; a curriculum edit (500-document batches) 106 / 135; replica `applyChanges` hub edit 367 / 408 (the backlog bounds 100 ChangeSets / 2,000 records have no bench of their own; unchanged).
+   6. L4: 1,400 synthetic species through the L4 service 746 / 760 ms (was 3,206 / 3,266 in the 4.3b session: machine drift of the earlier session, not a code change that was identified); `checkSpecies` over the demo 5.7 / 7.4.
+   9. Snapshot: build 245 / 259 (worker `snapshotBuild` 269 / 304); restore without the store 223 / 241; restore in process 1,325 / 1,404 (was 1,621 at Gate C, 1,360 in 4.6); through the worker the main thread: receive 98 + `replaceState` precomputed 243 (= 341 ms; 4.2d: 358 ms).
+   Also: search full load on main 260 / 299 (4.5: 193 ms for the documents alone); import apply on main, `replaceState` with the worker findings 184 / 213; import preview conflicts (dense) 1,170 / 1,223 and (hub_explosion) 856 / 888 against the 5,000 row.
+
+Honest limits: Node, developer workstation, fake-indexeddb where storage is involved; the p99 of 10-12 samples is the maximum, so "p99" is really the worst sample; 221 of 235 entries are over the 25% spread rule, so differences under about +50% mean nothing on this machine.

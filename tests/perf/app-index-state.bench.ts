@@ -29,7 +29,7 @@ const forms = [
 describe('first DerivedIndexes build', () => {
   for (const [name, state] of forms) {
     const store = createCanonicalStore({ initial: state, revision: 0, validateInitial: false });
-    bench(name, () => {
+    bench(`${name}`, () => {
       const indexes = createDerivedIndexes({ store, clock });
       indexes.current();
       indexes.dispose();
@@ -39,7 +39,7 @@ describe('first DerivedIndexes build', () => {
 
 describe("the store's own index build (createCanonicalStore)", () => {
   for (const [name, state] of forms) {
-    bench(name, () => {
+    bench(`${name}`, () => {
       createCanonicalStore({ initial: state, revision: 0, validateInitial: false });
     }, SLOW_BENCH_OPTIONS);
   }

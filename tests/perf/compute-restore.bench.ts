@@ -19,7 +19,7 @@ import { deserialize, serialize } from 'node:v8';
 import { afterAll, bench, describe } from 'vitest';
 import { createCanonicalStore, type PrecomputedFindings } from '@/core/commands';
 import { migrationRunner } from '@/core/migrations';
-import { DatasetMetaSchema, type AnyRecord, type CanonicalState, type RecordKind, type RecordRef } from '@/core/schema';
+import { CURRENT_SCHEMA_VERSION, DatasetMetaSchema, type AnyRecord, type CanonicalState, type RecordKind, type RecordRef } from '@/core/schema';
 import { validator, type TouchedValidation, type Validator } from '@/core/validation';
 import { assembleState } from '@/persistence/boot-load';
 import type { PersistenceAdapter } from '@/persistence/contracts';
@@ -47,7 +47,7 @@ const bytesOf = (state: CanonicalState): Uint8Array => {
   return built.built.bytes;
 };
 const snapshotBytes: Record<string, Uint8Array> = { A: bytesOf(second), B: bytesOf(first) };
-const summaryOf = (id: string, revision = 1) => ({ id, createdAt: NOW, reason: 'manual' as const, revision, schemaVersion: 1, byteSize: snapshotBytes[id]?.length ?? 0 });
+const summaryOf = (id: string, revision = 1) => ({ id, createdAt: NOW, reason: 'manual' as const, revision, schemaVersion: CURRENT_SCHEMA_VERSION, byteSize: snapshotBytes[id]?.length ?? 0 });
 const ok = (result: { readonly ok: boolean }, what: string): void => {
   if (!result.ok) throw new Error(`bench: ${what} was refused: ${JSON.stringify(result)}`);
 };
@@ -107,7 +107,7 @@ describe('restore: what blocks the main thread (design tier, dense)', async () =
   afterAll(() => client.terminate());
   const loaded = await client.loadReplica({ state: first, revision: 0 }, { timeoutMs: 120_000 });
   if (!loaded.ok) throw new Error('bench setup: loadReplica failed');
-  const request = { bytes: snapshotBytes['A'] as Uint8Array, id: 'A', schemaVersion: 1, baseRevision: 0 };
+  const request = { bytes: snapshotBytes['A'] as Uint8Array, id: 'A', schemaVersion: CURRENT_SCHEMA_VERSION, baseRevision: 0 };
   const decoded = await client.snapshotDecode(request, { timeoutMs: 120_000 });
   if (!decoded.ok || !decoded.value.ok) throw new Error('bench setup: snapshotDecode failed');
   const answer = serialize(decoded.value);

@@ -29,4 +29,16 @@ export const APP_BUDGETS = {
     { operation: "import apply on main: first DerivedIndexes build", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c: informal; Gate E watch item (main-thread part of an import apply); Node; SLOW_BENCH_OPTIONS" },
   "import apply, the main-thread parts (design tier, dense, 5,000 reactions) > search full load on main: documents built, first DerivedIndexes build included (worker stubbed)":
     { operation: "import apply on main: search full load", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c: informal; Gate E watch item (main-thread part of an import apply); Node; SLOW_BENCH_OPTIONS" },
+  "first DerivedIndexes build > (i) the generator state":
+    { operation: "index state form: first DerivedIndexes build, generator state", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c review follow-up a (budget entry added in step 5.10b so the bench runs under bench:compare): informal; SLOW_BENCH_OPTIONS" },
+  "first DerivedIndexes build > (ii) a structuredClone of it":
+    { operation: "index state form: first DerivedIndexes build, structuredClone", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c review follow-up a (budget entry added in step 5.10b so the bench runs under bench:compare): informal; SLOW_BENCH_OPTIONS" },
+  "first DerivedIndexes build > (iii) the state after replaceState of a clone":
+    { operation: "index state form: first DerivedIndexes build, state after replaceState", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c review follow-up a (budget entry added in step 5.10b so the bench runs under bench:compare): informal; SLOW_BENCH_OPTIONS" },
+  "the store's own index build (createCanonicalStore) > (i) the generator state":
+    { operation: "index state form: store index build, generator state", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c review follow-up a (budget entry added in step 5.10b so the bench runs under bench:compare): informal; SLOW_BENCH_OPTIONS" },
+  "the store's own index build (createCanonicalStore) > (ii) a structuredClone of it":
+    { operation: "index state form: store index build, structuredClone", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c review follow-up a (budget entry added in step 5.10b so the bench runs under bench:compare): informal; SLOW_BENCH_OPTIONS" },
+  "the store's own index build (createCanonicalStore) > (iii) the state after replaceState of a clone":
+    { operation: "index state form: store index build, state after replaceState", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c review follow-up a (budget entry added in step 5.10b so the bench runs under bench:compare): informal; SLOW_BENCH_OPTIONS" },
 };
