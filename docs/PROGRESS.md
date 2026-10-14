@@ -4224,3 +4224,11 @@ d. Reviewer decisions 2, 5 and 6.
 - A first try changed `provenance.updatedAt` on every record instead of `tags`; its summary was cut at 300 characters and said "0 would be written". I did not read what it said about conflicts for that file (so I do not know whether a timestamp-only change counts as a difference); the `tags` run is the one reported. REVIEW REQUIRED 1 (small): confirm the importer is meant to class a timestamp-only difference as it does.
 
 HARNESS CHANGES in this part (nothing in `src/`; no budget, threshold, run count or timeout changed): `tests/e2e/kit.ts` (decision 2); `tests/measure/import-conflict.measure.ts` (`ORN_CHANGE=1`; preview text length 300 -> 1,500); new `tests/measure/load-replica-split.measure.ts`.
+
+### Phase 5, step 5.10b, part 4 - Gate E packet (2026-10-14)
+
+`docs/reviews/gate-e-packet.md` written in the Gate C format: the Gate E row clause by clause with evidence, every measurement of parts 1 to 3b, the boot phase breakdown and five boot remedy candidates (recommendation: A and E first, then B or C), the WebKit write finding with the reviewer's decisions, the proposed Phase 9 exception list, the items proposed before Phase 6, the openItems sweep, the INV sweep (gaps: INV-10, INV-11 UI half, INV-24 worker half name no Phase 4/5 test) and a self-review.
+
+New in this part: the full e2e suite in three browsers, 345 passed, 2 failed, 13 skipped (29.6 min). Both failures are WebKit (`arrows.spec.ts:131` expected 1 React commit saw 0; `csp.spec.ts:95` no script-src "eval" violation seen); in a 2-test re-run one of them failed once (not recorded which), then 3 of 3 repeats passed. Not explained, not touched (REVIEW REQUIRED 2).
+
+PROJECT_STATE: gate E "packet ready, awaiting review"; nextStep stays 5.10b; openItems 70, 85, 101, 106, 109, 139, 144 marked CLOSED "awaiting the Gate E verdict" (text kept). No verdict, no tag.
