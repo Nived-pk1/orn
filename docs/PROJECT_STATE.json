@@ -91,8 +91,8 @@
   "nextPhase": 7,
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-14T16:05Z",
-    "commit": "6d3f5ea"
+    "deployedAt": "2026-10-14T16:24Z",
+    "commit": "81bf4e8"
   },
   "nextStep": "6.1",
   "nextStepTitle": "Editor sessions (draft store, persistence, local undo, commit, conflicts); first action: a quiet-machine bench:compare. A release-preview step (hosting, reviewer's prompt) comes before 6.1.",
