@@ -117,7 +117,7 @@ Refined by Phase 4 note D2 (2026-09-30).
 - **D6 Phase 4 has no gate.** Step 4.6 closes it; the reviewer's acceptance is recorded in PROGRESS.md; a separate session tags `phase-4`. `bench:compare` (compare only) is allowed at 4.6.
 - **D7 Creating workers in the app**, status banners and every UI wiring are Phase 5.
 
-### Phase 5 — Shell, rendering, navigator, inspector → Gate E
+### Phase 5 — Shell, rendering, navigator, inspector → Gate E — DONE 2026-10-14 (Gate E passed; docs/reviews/phase-5-close.md)
 Dependencies are listed in the step that first uses them (each: exact pin, `docs/DEPENDENCIES.md`, `npm audit` 0, `build:smoke` green; note E12).
 | Step | Work | Must cover |
 |---|---|---|
@@ -167,6 +167,9 @@ Phase 5 note (step 4.4 review, decision 2): layout requests carry one edge per b
 The contracts fit scan of this plan (Q1-Q14) and the open points it found are in docs/PROGRESS.md, "Phase 5 plan review (reviewer, 2026-10-02)"; the decisions that settle them are in "Phase 5 contract decisions (reviewer, 2026-10-02)". Step numbers in the review entry are the OLD ones (old 5.1b = new 5.1b engines + 5.1c flows; old 5.1c = new 5.1d).
 
 ### Phase 6 — Authoring workbench → Gate D
+
+> A release-preview step (hosting, reviewer's prompt) comes before 6.1.
+
 | Step | Work |
 |---|---|
 | 6.1 | Editor sessions (draft store, persistence, local undo, commit, conflicts) | **FIRST ACTION (reviewer, 2026-10-14): a bench:compare on a quiet machine (the 5.11b runs showed 71 and 216 of 470 entries over +20% on unchanged code, read as machine noise); no baseline change.** **Moved from 5.7 (2026-10-11): multi-selection (Shift-click) and the marquee (Shift-drag) on the map, built with the first bulk action so that nothing is a silent no-op.**

@@ -2,14 +2,15 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-10-14",
-  "currentPhase": 5,
-  "currentPhaseStatus": "in_progress",
+  "currentPhase": 6,
+  "currentPhaseStatus": "not_started",
   "completedPhases": [
     0,
     1,
     2,
     3,
-    4
+    4,
+    5
   ],
   "completedSteps": [
     "0",
@@ -87,9 +88,9 @@
     "5.11a",
     "5.11b"
   ],
-  "nextPhase": 5,
-  "nextStep": "Phase 5 close (reviewer)",
-  "nextStepTitle": "Phase 5 close (reviewer): confirm Gate E, then a separate session tags phase-5. Step 5.11b done 2026-10-14 (apply progress, \"N records set aside\", close checks; see docs/PROGRESS.md).",
+  "nextPhase": 7,
+  "nextStep": "6.1",
+  "nextStepTitle": "Editor sessions (draft store, persistence, local undo, commit, conflicts); first action: a quiet-machine bench:compare. A release-preview step (hosting, reviewer's prompt) comes before 6.1.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -115,9 +116,10 @@
     "E": {
       "phase": 5,
       "title": "UI and rendering",
-      "status": "conditions met, awaiting reviewer confirmation",
-      "note": "5.11a and 5.11b done 2026-10-14; the reviewer confirms, then a separate session tags phase-5. Not tagged, not marked passed.",
-      "packet": "docs/reviews/gate-e-packet.md"
+      "status": "passed",
+      "note": "PASS with conditions met (5.11a, 5.11b, phase-5 close)",
+      "packet": "docs/reviews/gate-e-packet.md",
+      "date": "2026-10-14"
     },
     "D": {
       "phase": 6,
