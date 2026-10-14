@@ -5,7 +5,7 @@
  *  3. read rows and meta in one transaction and look at `schemaVersion`: newer → read-only; older or refused by the
  *     runner → `boot-migrate.ts`; damaged meta → read-only `integrity_failure`;
  *  4. per-record L1: invalid rows are MOVED to quarantine (issues and the full raw value, one transaction);
- *  5. indexes and L1–L3 findings; asset records without bytes (AST-002); uiState (tolerant); crash check;
+ *  5. indexes and L1–L3 findings (the quarantine count is read in parallel with them); asset records without bytes (AST-002); uiState (tolerant); crash check;
  *  6. markers: this session is running, integrity check done.
  * Every branch that cannot make the data writable leaves the queue read-only and writes NOTHING.
  */
@@ -107,6 +107,9 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
   let migrationSteps: BootReport['migrationSteps'] = [];
   let outRevision = revision;
   let newlyQuarantined = 0;
+  // The quarantine count is final once this boot has moved its bad rows; on the current-schema path it is read WHILE the validation
+  // port (the compute worker) works, so boot does not wait for it afterwards (step 5.11a, candidate A of the Gate E packet).
+  let quarantineCount: Promise<number> | undefined;
 
   if (stored !== target) {
     // Older, or not a version at all: the runner decides, in memory, before anything is written.
@@ -123,6 +126,8 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     const assembled = assembleState(rows, datasetMeta.data, now);
     state = assembled.state;
     if (writer && assembled.rejected.length > 0) newlyQuarantined = await ports.moveToQuarantine(assembled.rejected);
+    quarantineCount = quarantined();
+    quarantineCount.catch(() => undefined); // awaited below; a failure must not be reported twice if validation throws first
     // No index is built here when a validation port answers: the store builds them once, from the state it is given.
     const validated = await validateForBoot(ports, state, revision);
     precomputed = validated.precomputed;
@@ -154,7 +159,7 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     state,
     revision: outRevision,
     storedSchemaVersion: storedVersion,
-    quarantinedCount: await quarantined(),
+    quarantinedCount: await (quarantineCount ?? quarantined()),
     bootReport: { migrationSteps, findings, precomputed, validation, assetIdsWithoutBlob, unverifiedAssetBlobs, crashSuspected, editorSessionIds, uiState: ui.valid, uiStateReset: ui.reset, newlyQuarantined, singleTab },
   };
 }

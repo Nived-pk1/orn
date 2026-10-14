@@ -44,6 +44,8 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   const layoutPart = createLayoutPart({ factory: env.workers.layout, status, log });
   const depictions = createDepictionService(chemPart.service);
 
+  // The compute worker starts now, so that its start overlaps the IndexedDB read (step 5.11a, candidate E). It is sent nothing here.
+  replica.prewarm();
   const storage = await openStorage(env, { ids, validate: replica.validate, onEvent: (event) => log.add({ source: 'persistence', event }) });
   for (const note of storage.notes) log.add({ source: 'app', event: { type: 'storage_note', message: note } });
   const { adapter, opened } = storage;

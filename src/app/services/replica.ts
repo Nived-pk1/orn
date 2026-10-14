@@ -17,6 +17,8 @@ export type ValidatePort = (state: CanonicalState, revision: number) => Promise<
 export interface ReplicaPart {
   /** `BootPorts.validate` and `FollowerOptions.validate`: the boot replica until a retry, then the current sync's client. */
   readonly validate: ValidatePort;
+  /** Starts the boot replica's worker now (its start then overlaps the IndexedDB read); nothing is sent to it. Never throws. */
+  prewarm(): void;
   /** Creates the sync over the store (adopting the boot replica's client when it holds one). Never throws. */
   start(store: Pick<CanonicalStore, 'getState' | 'getRevision' | 'subscribe'>): void;
   sync(): ReplicaSync | undefined;
@@ -82,6 +84,10 @@ export function createReplicaPart(options: ReplicaPartOptions): ReplicaPart {
 
   return {
     validate: (state, revision) => (retried ? syncValidate(state, revision) : bootReplica.validate(state, revision)),
+
+    prewarm() {
+      if (!retried) bootReplica.prewarm();
+    },
 
     start(target) {
       store = target;

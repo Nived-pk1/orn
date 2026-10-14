@@ -30,7 +30,8 @@ export interface AdoptedClientHooks {
 /** A client whose worker already holds a replica at `revision`. */
 export interface ReplicaAdoption {
   readonly client: RpcClient<ComputeWorkerApi>;
-  readonly revision: number;
+  /** The revision the worker holds; null for a worker `prewarm` started that was never sent anything (the sync loads it). */
+  readonly revision: number | null;
   attach(hooks: AdoptedClientHooks): void;
 }
 
@@ -50,6 +51,11 @@ export interface BootReplica {
    * one, restarted since, or gave up): the sync then creates its own client, and this one is terminated.
    */
   adoption(): ReplicaAdoption | undefined;
+  /**
+   * Starts the worker now, without sending it anything, so its start overlaps the caller's other work (the IndexedDB read at boot,
+   * step 5.11a). Never throws: a start that fails is reported as a `validation_fallback` and the later `validate` fails the same way.
+   */
+  prewarm(): void;
   /** Terminates the worker if it was not handed to a sync. */
   stop(): void;
 }
@@ -61,6 +67,8 @@ export function createBootReplica(options: BootReplicaOptions): BootReplica {
   let loaded: number | undefined;
   let dead = false;
   let handedOver = false;
+  /** True once `validate` has been called: a worker that was asked and holds nothing is not handed on. */
+  let asked = false;
 
   const emit = (event: WorkerEvent): void => {
     try {
@@ -105,6 +113,7 @@ export function createBootReplica(options: BootReplicaOptions): BootReplica {
 
   return {
     async validate(state, revision) {
+      asked = true;
       if (dead) return fail('the compute worker is down for good');
       const answer = await clientOf().loadReplica({ state, revision });
       if (!answer.ok) return fail(`the compute worker could not validate (${answer.error.code}: ${answer.error.message})`);
@@ -115,17 +124,29 @@ export function createBootReplica(options: BootReplicaOptions): BootReplica {
       return answer.value;
     },
 
+    prewarm() {
+      if (dead || handedOver) return;
+      try {
+        clientOf();
+      } catch {
+        // clientOf already emitted the validation_fallback; validate meets the same dead worker
+      }
+    },
+
     adoption() {
       if (handedOver) return undefined;
       const held = client;
-      if (held === undefined || dead || loaded === undefined) {
+      // A worker `prewarm` started and boot never used (nothing stored, so nothing to validate) is handed on idle: the sync loads it,
+      // instead of this one being terminated and the sync starting a second thread.
+      const idle = held !== undefined && !dead && loaded === undefined && !asked;
+      if (held === undefined || dead || (loaded === undefined && !idle)) {
         held?.terminate();
         return undefined;
       }
       handedOver = true;
       return {
         client: held,
-        revision: loaded,
+        revision: loaded ?? null,
         attach(next) {
           hooks = next;
         },

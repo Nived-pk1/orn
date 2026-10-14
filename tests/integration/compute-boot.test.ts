@@ -280,3 +280,57 @@ describe('the replica sync starts from the replica boot loaded', () => {
     expect(rig.boot.adoption()).toBeUndefined();
   });
 });
+
+describe('prewarm starts the worker before the first call (step 5.11a, candidate E)', () => {
+  it('starts one worker, sends it nothing, and the later validate and the sync adoption use that same worker', async () => {
+    const rig = bootRig();
+    rig.boot.prewarm();
+    expect(rig.workers).toHaveLength(1);
+    expect(rig.calls).toEqual([]);
+    const result = opened(await (await savedDatabase(base, { validate: rig.boot.validate })).adapter.open());
+    expect(result.bootReport?.validation).toMatchObject({ where: 'worker' });
+    expect(rig.workers).toHaveLength(1);
+    expect(rig.calls).toEqual(['0:loadReplica']);
+    expect(rig.boot.adoption()).toMatchObject({ revision: 1 });
+    rig.boot.stop();
+  });
+
+  it('prewarm twice is one worker; a factory that throws does not make prewarm throw, and boot still falls back', async () => {
+    const twice = bootRig();
+    twice.boot.prewarm();
+    twice.boot.prewarm();
+    expect(twice.workers).toHaveLength(1);
+    twice.boot.stop();
+    const rig = bootRig({
+      factory: () => {
+        throw new Error('no Worker constructor');
+      },
+    });
+    expect(() => rig.boot.prewarm()).not.toThrow();
+    const result = opened(await (await savedDatabase(base, { validate: rig.boot.validate })).adapter.open());
+    expect(result.bootReport?.validation).toMatchObject({ where: 'main' });
+    expect(result.state).toEqual(base);
+  });
+});
+
+describe('an empty boot hands the prewarmed worker to the sync (one thread, not two)', () => {
+  it('adoption() of a worker that was prewarmed and never asked has revision null, and the sync loads it', async () => {
+    const rig = bootRig();
+    rig.boot.prewarm();
+    const adoption = rig.boot.adoption();
+    expect(adoption).toMatchObject({ revision: null });
+    const store = createCanonicalStore({ initial: small, revision: 1 });
+    const sync = createReplicaSync({ factory: rig.factory, store, ...(adoption === undefined ? {} : { adopt: adoption }) });
+    expect(await sync.settled()).toMatchObject({ state: 'in_sync', replicaRevision: 1, reloads: 1 });
+    expect(rig.workers).toHaveLength(1);
+    expect(rig.calls).toEqual(['0:loadReplica']);
+    sync.stop();
+  });
+
+  it('a prewarmed worker that boot asked and that holds nothing (a fallback) is not handed on', async () => {
+    const rig = bootRig({ wrap: (_, api, worker) => ({ ...api, loadReplica: async (p, c) => (worker.crash('exit'), api.loadReplica(p, c)) }), client: { maxRestarts: 0 } });
+    rig.boot.prewarm();
+    opened(await (await savedDatabase(base, { validate: rig.boot.validate })).adapter.open());
+    expect(rig.boot.adoption()).toBeUndefined();
+  });
+});

@@ -62,7 +62,8 @@ export interface ReplicaSyncOptions {
   /**
    * Boot validated in the worker (step 4.2d, `BootReplica.adoption()`): its client already holds a replica at `revision`, so the
    * sync starts from it without a second `loadReplica`. The store must be at that revision, else the sync reloads (and says so).
-   * `factory` and `client` are then not used to make a client.
+   * `factory` and `client` are then not used to make a client. A `revision` of null is a worker the boot only started early (nothing
+   * stored, so nothing was validated): the sync uses that worker and loads the replica itself.
    */
   readonly adopt?: ReplicaAdoption;
 }
@@ -291,7 +292,9 @@ export function createReplicaSync(options: ReplicaSyncOptions): ReplicaSync {
 
   if (options.adopt !== undefined) {
     const held = options.adopt.revision;
-    if (store.getRevision() === held) {
+    if (held === null) {
+      reason = 'started on the worker the boot started early; the replica is loaded next';
+    } else if (store.getRevision() === held) {
       replicaRevision = held;
       reloads = 1;
       needsReload = false;

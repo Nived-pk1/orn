@@ -69,6 +69,8 @@ dispatch(envelope) ─► commit (memory, revision n) ─► ChangeSet n
 
 `OpenResult` for a loaded database: `mode` (`read_write`, or `read_only` with `readOnlyReason` `other_tab_is_writer` / `newer_schema` / `integrity_failure` / `migration_failed` and a `detail`), `state` (null when nothing is stored or it could not be interpreted), `revision`, `storedSchemaVersion` (as found on disk, before any migration), `quarantinedCount` and the `bootReport` (migration step reports, findings, `assetIdsWithoutBlob`, `crashSuspected`, `editorSessionIds`, `uiState`, `uiStateReset`, `newlyQuarantined`, `singleTab`).
 
+**2026-10-14 (step 5.11a, amendment).** On the current-schema path the quarantine count is read right after this boot has moved its bad rows (step 4) and runs in parallel with the validation of step 5 (the compute worker when a port is injected); `open()` awaits an already-finished read. The order of the steps is unchanged for every write; only a read moved earlier. Reason: Gate E packet §5.2, candidate A. On the migration path the count is still read after the migration, which may quarantine.
+
 Cold boot budget: < 2.5 s at 2k species / 5k reactions (PERFORMANCE_ARCHITECTURE.md §2).
 
 ## 5. Assets

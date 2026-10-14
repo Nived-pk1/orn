@@ -189,3 +189,5 @@ so). Default 60 (design tier); the stress-tier scenario (`tests/perf/projection.
 Full-state scans on user input; synchronous layout or validation-all on the main thread; unbounded recursion or traversal; storing derived data; React state for viewport transforms; re-rendering the whole scene on hover or selection; `setTimeout` polling for data changes (subscribe to ChangeSets instead).
 
 (2026-10-14, Gate E review) The boot rows are Chromium rows. Firefox and WebKit boot times are reported, not gated, until Phase 9.
+
+(2026-10-14, step 5.11a) The compute worker is the one engine thread created at boot: `createAppServices` starts it before the IndexedDB open (nothing is sent), so its start overlaps the read. Chem, layout and search are still created at their first need.
