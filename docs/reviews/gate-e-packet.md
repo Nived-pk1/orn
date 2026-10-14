@@ -119,6 +119,8 @@ removed; WARM = the same copy again. Rows: 2.5 s cold, 1.5 s warm (TEST_STRATEGY
 The rows are Chromium trace rows; no per-engine row exists for Firefox. Warm in WebKit with a tiny store is 2.5 times its cold
 boot (a 1.1 s delay before the state is sent, in all 5 runs; not diagnosed).
 
+> Correction (2026-10-14, reviewer, step 5.11a): the Chromium boot figures of this packet (cold 2,136 / warm 2,044 ms; loadReplica 1,621 / 1,541 ms) were taken in a session of unknown machine speed (PROGRESS, 5.10b part 2 MACHINE NOTE). The 5.11a figures, taken after a speed check, supersede them: Chromium cold 1,411 ms, warm 1,329 ms, inside both rows; exception #12 is NOT added. The figures above are kept as taken.
+
 Heap after boot (Chromium only, CDP `Performance.getMetrics`, page heap; the workers' heaps are not in it): JSHeapUsedSize
 84-87 MB (56.1 MB after a forced GC), JSHeapTotalSize 133-138 MB, in 10 boots; budget 150 MB (Gate F row): inside.
 
@@ -412,3 +414,5 @@ Gate E review recorded (reviewer, 2026-10-14)
    (6) The Phase 9 exception list of packet section 11 is accepted as proposed: #1 and #7 withdrawn (inside), #3 closed in practice, #6 accepted, #12 per answer (1).
 4. Standing rules (dated 2026-10-14): bench:compare runs in every phase-closing step (TEST_STRATEGY section 6 general rule). Phase 6 editors are lazy chunks (React.lazy per editor); the measured lazy candidates of packet section 8.1 are done when the entry passes 395 kB gzip (note at the top of the Phase 6 section of the plan).
 5. Not before Phase 6: the real-Safari openItem (before release), the WebKit warm-boot trace (folded into the real-Safari check), chem restart under load (Phase 9).
+
+6. Correction (2026-10-14, reviewer, step 5.11a): the Chromium boot figures of this packet (cold 2,136 / warm 2,044 ms; loadReplica 1,621 / 1,541 ms) were taken in a session of unknown machine speed (PROGRESS, 5.10b part 2 MACHINE NOTE). The 5.11a figures, taken after a speed check, supersede them: Chromium cold 1,411 ms, warm 1,329 ms, inside both rows; exception #12 is NOT added. The figures above are kept as taken.
