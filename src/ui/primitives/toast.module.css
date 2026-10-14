@@ -16,3 +16,13 @@
   border-radius: var(--radius-card);
   background: var(--color-paper);
 }
+
+/* Release preview, phones: the bottom bar of modes is 56 px tall; a notice sits above it, not over it. */
+@media (max-width: 899px) {
+  .region {
+    right: var(--space-2);
+    bottom: calc(var(--status-bar-height) + 56px + var(--space-2));
+    left: var(--space-2);
+    width: auto;
+  }
+}

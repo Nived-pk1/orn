@@ -195,3 +195,27 @@
   color: var(--color-ink-2);
   font-size: var(--text-13);
 }
+
+/* Release preview, phones (< 900 px): the toolbar and the legend take less height, so the drawing keeps room. */
+@media (max-width: 899px) {
+  .toolbar {
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .selection {
+    flex-basis: 100%;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .legend {
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--text-12);
+  }
+
+  .legendList {
+    gap: var(--space-1) var(--space-3);
+  }
+}

@@ -205,13 +205,32 @@
   .shell,
   .shell[data-inspector='closed'] {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: var(--top-bar-height) auto minmax(0, 1fr) auto var(--status-bar-height);
+    grid-template-rows: auto auto minmax(0, 1fr) auto var(--status-bar-height);
     grid-template-areas:
       'top'
       'banners'
       'canvas'
       'rail'
       'status';
+  }
+
+  /* release preview: the top bar wraps (title on its own line, controls under it) instead of running past the window */
+  .topBar {
+    flex-wrap: wrap;
+    min-height: var(--top-bar-height);
+    padding-block: var(--space-1);
+    row-gap: 0;
+  }
+
+  .title {
+    flex: 1 1 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .topControls {
+    flex: 1 1 0;
+    flex-wrap: wrap;
   }
 
   .rail {
