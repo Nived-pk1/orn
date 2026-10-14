@@ -27,23 +27,48 @@ const TITLES: Readonly<Record<ImportState['phase'], string>> = {
   undoing: 'Undo import',
 };
 
+/** The long wait (step 5.11b): shown once an apply has run over 2 s and the writer has reported. Not a live region: it changes up to 4 times a second. */
+const showsCount = (state: ImportState): state is ImportState & { readonly progress: { readonly done: number; readonly total: number } } =>
+  state.phase === 'applying' && state.long === true && state.progress !== null && state.progress !== undefined && state.progress.total !== null;
+
+function ApplyBar(props: { readonly done: number; readonly total: number }) {
+  const { done, total } = props;
+  return (
+    <div className={styles.body}>
+      <p className={styles.progress}>
+        Applying the records... {done} of {total}
+      </p>
+      <div className={styles.bar} role="progressbar" aria-label="Applying the records" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}>
+        <div className={styles.barFill} style={{ width: `${total === 0 ? 100 : Math.min(100, (done / total) * 100)}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function Progress(props: { readonly state: ImportState }) {
   const { state } = props;
-  const count = state.progress === null || state.progress === undefined ? '' : ` (${state.progress.done}${state.progress.total === null ? '' : ` of ${state.progress.total}`})`;
   const verb = state.phase === 'reading' ? 'Reading' : state.phase === 'undoing' ? 'Undoing the import of' : 'Importing';
+  const counting = showsCount(state);
+  const undoCount = state.phase === 'undoing' && state.progress !== null && state.progress !== undefined ? ` (${state.progress.done}${state.progress.total === null ? '' : ` of ${state.progress.total}`})` : '';
+  // The live region holds the file, the stage and (once) the long-wait sentence; the moving count sits outside it, so a reader hears
+  // the start of the long wait and the end (the result toast), never every update.
   return (
-    <div className={styles.body} role="status">
-      <p className={styles.file}>
-        {verb} <span className={styles.word}>{shownName(state.fileName)}</span>
-      </p>
-      {state.phase === 'reading' ? null : (
-        <p className={styles.progress}>
-          {stageWords(state.stage)}
-          {count}…
+    <>
+      <div className={styles.body} role="status">
+        <p className={styles.file}>
+          {verb} <span className={styles.word}>{shownName(state.fileName)}</span>
         </p>
-      )}
-      {state.phase === 'applying' && state.cancellable !== true ? <p className={styles.muted}>This step can no longer be cancelled; it will finish and then say so.</p> : null}
-    </div>
+        {state.phase === 'reading' || counting ? null : (
+          <p className={styles.progress}>
+            {stageWords(state.stage)}
+            {undoCount}…
+          </p>
+        )}
+        {state.phase === 'applying' && state.long === true ? <p className={styles.progress}>Keep this tab open until it finishes.</p> : null}
+        {state.phase === 'applying' && state.cancellable !== true && state.long !== true ? <p className={styles.muted}>This step can no longer be cancelled; it will finish and then say so.</p> : null}
+      </div>
+      {counting ? <ApplyBar done={state.progress.done} total={state.progress.total} /> : null}
+    </>
   );
 }
 
@@ -54,7 +79,9 @@ export function ImportScreen(props: { readonly model: ImportModel; readonly port
   const reason = plan === undefined ? undefined : blockedReason(plan);
   const cancelReason = phase === 'applying' && !state.cancellable ? 'it is past the point where it can be stopped' : undefined;
   let footer = null;
-  if (phase === 'reading' || phase === 'applying') {
+  if (phase === 'applying' && state.long === true && !state.cancellable) {
+    footer = null; // no Cancel during a long apply (decision of step 5.11b): the writes are one transaction past the commit
+  } else if (phase === 'reading' || phase === 'applying') {
     footer = <Button {...(cancelReason === undefined ? { onClick: model.cancel } : { unavailable: cancelReason })}>Cancel</Button>;
   } else if (phase === 'refused') {
     footer = (

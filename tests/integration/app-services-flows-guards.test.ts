@@ -90,6 +90,24 @@ describe('one whole-state operation at a time', () => {
     expect(seen.indexOf('import_apply:committing')).toBeLessThan(seen.indexOf('import_apply:saving'));
   });
 
+  it('an apply reports how many records the writer has put (5.11b): done only rises, ends at the total, and the operation ends null', async () => {
+    const { services } = await writerWithDemo();
+    const progress: { done: number; total: number | null }[] = [];
+    services.status.subscribe((status) => {
+      if (status.operation?.kind === 'import_apply' && status.operation.progress != null) progress.push(status.operation.progress);
+    });
+    const applied = await importFile(services, await demoFile());
+    expect(applied).toMatchObject({ ok: true });
+    expect(progress.length).toBeGreaterThan(0);
+    const total = progress[0]?.total;
+    expect(total).toBeGreaterThan(0);
+    expect(progress.every((step) => step.total === total && step.done > 0 && step.done <= (total as number))).toBe(true);
+    const dones = progress.map((step) => step.done);
+    expect(dones).toEqual([...dones].sort((x, y) => x - y));
+    expect(dones[dones.length - 1]).toBe(total);
+    expect(services.status.get().operation).toBeNull();
+  });
+
   it('a preview reports progress', async () => {
     const { services } = await writerWithDemo();
     const progress: { done: number; total: number | null }[] = [];

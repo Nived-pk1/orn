@@ -204,11 +204,14 @@ function spyOnTransactions(db: OrnDb): TransactionLog {
 export interface Faults {
   /** Every mutation of `store` fails with `error()` until `clear()` (a full disk, a broken store). */
   fail(store: string, error: () => Error): void;
+  /** The first `successes` mutations of `store` succeed, every later one fails with `error()` (a fault in the middle of a transaction). */
+  failAfter(store: string, successes: number, error: () => Error): void;
   clear(): void;
 }
 
 function injectFaults(db: OrnDb, mutations: TestDb['mutations']): Faults {
   const failing = new Map<string, () => Error>();
+  const allowed = new Map<string, number>();
   db.use({
     stack: 'dbcore',
     name: 'fault-injector',
@@ -224,6 +227,11 @@ function injectFaults(db: OrnDb, mutations: TestDb['mutations']): Faults {
             const probe = name === 'snapshots' && values.length === 1 && (values[0] as { id?: unknown }).id === BLOB_PROBE_ID;
             if (probe) return table.mutate(request);
             mutations.push({ store: name, type: request.type, values });
+            const left = allowed.get(name);
+            if (left !== undefined && left > 0) {
+              allowed.set(name, left - 1);
+              return table.mutate(request);
+            }
             const error = failing.get(name);
             return error === undefined ? table.mutate(request) : Promise.reject(error());
           },
@@ -231,7 +239,17 @@ function injectFaults(db: OrnDb, mutations: TestDb['mutations']): Faults {
       },
     }),
   });
-  return { fail: (store, error) => void failing.set(store, error), clear: () => failing.clear() };
+  return {
+    fail: (store, error) => void failing.set(store, error),
+    failAfter(store, successes, error) {
+      failing.set(store, error);
+      allowed.set(store, successes);
+    },
+    clear() {
+      failing.clear();
+      allowed.clear();
+    },
+  };
 }
 
 /** A DOMException as the browser raises it when storage is full. */

@@ -17,7 +17,7 @@ import { changeMessageFor } from './change-message';
 import { interpretCommitted, type ChangedRows, type FollowerLoad } from './follower-read';
 import type { BootPorts, CommittedData, UiStateValidators } from './boot-ports';
 import type { PendingBatch } from './coalesce';
-import type { ChangeChannel, MetaKey, OpenResult, PersistenceAdapter, WriterLock } from './contracts';
+import type { ChangeChannel, MetaKey, OpenResult, PersistenceAdapter, WriteProgress, WriterLock } from './contracts';
 import { createDerivedCache } from './derived-cache';
 import type { AssetBlobRow, OrnDb } from './db';
 import { realScheduler, type PersistenceEventSink, type Scheduler } from './events';
@@ -25,6 +25,7 @@ import { writeAllRecords, writeRawDocument } from './replace';
 import { prepareTransactionRows } from './rows';
 import { createSnapshotStore } from './snapshot-store';
 import { createWriteQueue } from './write-queue';
+import { createProgressListeners, putInSlices } from './write-slices';
 
 export const DEFAULT_GENERATOR = { app: 'organic-reaction-navigator', version: '0.1.0' } as const;
 
@@ -74,6 +75,8 @@ export type { CommittedData };
 export interface DexieAdapter extends Omit<PersistenceAdapter, 'storageEstimate' | 'requestPersistentStorage'> {
   /** Attempts everything pending now and resolves when that write cycle ends; read `getStatus()` for the outcome. */
   flush(): Promise<void>;
+  /** Hears `{ written, total }` after each slice of the record puts of a write transaction (step 5.11b); the returned function stops listening. */
+  watchWriteProgress(listener: (progress: WriteProgress) => void): () => void;
   /** Bulk read used by boot (which validates each row) and by P-01. */
   readCommitted(): Promise<CommittedData>;
   /** Boot decides read-only after the adapter exists; promotion of a follower makes it writable (only `promote` does). */
@@ -102,6 +105,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
   let persistedMeta: object | undefined;
   /** The revision the database is at (what a message calls `fromRevision`); undefined until boot or the first write says. */
   let durableRevision: number | undefined = options.initialRevision;
+  const progress = createProgressListeners();
 
   /** Tells the other tabs; a failing channel is reported and never fails the write (they catch up at the next message). */
   function announce(fromRevision: number, revision: number, ids: Iterable<string> | 'all'): void {
@@ -120,7 +124,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     // do not hash to their key are refused, and nothing is written.
     await verifyBlobRows(blobRows);
     await db.transaction('rw', [db.records, db.meta, db.assetBlobs], async () => {
-      await db.records.bulkPut([...puts]);
+      await putInSlices(db.records, puts, progress.report);
       await db.records.bulkDelete([...deleteIds]);
       // Content-addressed: a row is only ever added. Bytes already stored under their hash are left as they are.
       const stored = await db.assetBlobs.bulkGet(blobRows.map((row) => row.sha256));
@@ -237,6 +241,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     writeChanges: (changes, next, blobs) => queue.enqueue(changes, next, blobs),
     replaceAll,
     flush: () => queue.flush(),
+    watchWriteProgress: (listener) => progress.add(listener),
     getStatus: () => queue.getStatus(),
     subscribeStatus: (listener) => queue.subscribe(listener),
     setReadOnly: (readOnly) => queue.setReadOnly(readOnly),

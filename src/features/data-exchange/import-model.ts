@@ -10,6 +10,7 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { ImportPlan, ImportPlanRequest } from '@/io';
 import type { DataExchangePorts, EarlierImportInfo, FlowFailure, PreviewAnswer } from './contracts';
+import { createApplyPace, realPaceClock, type PaceClock } from './apply-pace';
 import { requestOf, totalsOf, type PlanChange } from './plan-request';
 import { appliedWords, cancellableStage, refusalWords, shownName, type Refusal, plainEngineText } from './words';
 
@@ -46,6 +47,8 @@ export interface ImportState {
   /** `applying` / `undoing`: the stage in words, and whether Cancel still changes nothing. */
   readonly stage?: string;
   readonly progress?: { readonly done: number; readonly total: number | null } | null;
+  /** `applying`: the apply has run longer than 2 s (step 5.11b); only then is `progress` shown, and it is paced (apply-pace.ts). */
+  readonly long?: boolean;
   readonly cancellable: boolean;
   /** The last result, for the toast. */
   readonly notice?: ImportNotice;
@@ -81,8 +84,11 @@ interface Source {
 const CLOSED: ImportState = { phase: 'closed', fileName: '', inProcess: false, revising: false, cancellable: false };
 const isFailure = (answer: PreviewAnswer): answer is FlowFailure => !answer.ok;
 
-export function createImportModel(ports: DataExchangePorts): ImportModel {
+export function createImportModel(ports: DataExchangePorts, options?: { readonly clock?: PaceClock }): ImportModel {
   const store = createStore<ImportState>(() => CLOSED);
+  const pace = createApplyPace(options?.clock ?? realPaceClock, ({ long, progress }) => {
+    if (store.getState().phase === 'applying') store.setState({ long, progress });
+  });
   let source: Source | undefined;
   /** What the offer will run. */
   let retry: { readonly request: ImportPlanRequest; readonly inProcess: boolean } | undefined;
@@ -98,6 +104,7 @@ export function createImportModel(ports: DataExchangePorts): ImportModel {
     store.setState((current) => ({ ...current, notice: { serial, kind, text, offerUndo } }));
   };
   const stopWatching = (): void => {
+    pace.stop();
     unsubscribe?.();
     unsubscribe = undefined;
   };
@@ -108,7 +115,8 @@ export function createImportModel(ports: DataExchangePorts): ImportModel {
       if (operation === null) return;
       const state = store.getState();
       if (state.phase !== 'applying' && state.phase !== 'undoing') return;
-      store.setState({ stage: operation.stage, progress: operation.progress, cancellable: state.phase === 'applying' && cancellableStage(operation.stage) });
+      if (state.phase === 'applying') pace.feed(operation.progress);
+      store.setState({ stage: operation.stage, ...(state.phase === 'applying' ? {} : { progress: operation.progress }), cancellable: state.phase === 'applying' && cancellableStage(operation.stage) });
     };
     unsubscribe = ports.subscribeOperation(read);
     read();
@@ -122,11 +130,13 @@ export function createImportModel(ports: DataExchangePorts): ImportModel {
     const mine = ++token;
     controller = new AbortController();
     const { signal } = controller;
-    set({ phase: 'applying', fileName, plan, inProcess, stage: 'preparing', progress: null, cancellable: true });
+    set({ phase: 'applying', fileName, plan, inProcess, stage: 'preparing', progress: null, long: false, cancellable: true });
     watch();
+    pace.start();
     const answer = await ports.apply(plan.preview.batchId, plan, { signal, inProcess });
     if (mine !== token) return;
     controller = undefined;
+    pace.finish();
     stopWatching();
     if (answer.ok) {
       const totals = totalsOf(plan);

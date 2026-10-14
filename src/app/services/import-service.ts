@@ -261,6 +261,8 @@ export function createImportService(deps: FlowDeps): ImportService {
       const guard = guardStore(store, options?.signal, () => op.stage('committing'));
       router.use(guard);
       activeOp = op;
+      // The writer's slices (step 5.11b): how many record rows the one transaction has put so far, of all of them.
+      const stopWatching = deps.adapter?.watchWriteProgress(({ written, total }) => op.progress(written, total));
       let applied = false;
       try {
         let result: ImportApplyResult;
@@ -284,6 +286,7 @@ export function createImportService(deps: FlowDeps): ImportService {
         applied = true;
         return { ...result, report: withMeta(result.report, meta), ...durable, inProcess: route.kind === 'in_process', notes };
       } finally {
+        stopWatching?.();
         activeOp = undefined;
         router.clear();
         op.end();

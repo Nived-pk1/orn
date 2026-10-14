@@ -215,6 +215,12 @@ export type OpenResult =
     }
   | { readonly mode: 'unavailable'; readonly reason: 'indexeddb_blocked' | 'private_mode_quota' | 'blob_storage_refused' | 'unknown'; readonly detail: string };
 
+/** How far one write transaction has got (step 5.11b): record puts made so far, of all the transaction makes. Reported after each slice's writes succeed, before the transaction commits. */
+export interface WriteProgress {
+  readonly written: number;
+  readonly total: number;
+}
+
 export interface SaveStatus {
   readonly state: 'saved' | 'saving' | 'retrying' | 'failed' | 'read_only';
   readonly lastSavedRevision: number;
