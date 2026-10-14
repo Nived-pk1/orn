@@ -58,15 +58,17 @@ async function expectFocusVisible(page: Page, step: string): Promise<void> {
 
 /** Tab (never a click) until the focus satisfies the test; every stop on the way must be visible too. */
 async function tabTo(page: Page, step: string, matches: (focus: Focus) => boolean, max = 150): Promise<Focus> {
+  const trail: string[] = [];
   for (let i = 0; i < max; i += 1) {
     await page.keyboard.press('Tab');
     const focus = await focusOf(page);
+    trail.push(`${focus.tag}:${focus.name.slice(0, 30)}`);
     if (matches(focus)) {
       await expectFocusVisible(page, step);
       return focus;
     }
   }
-  throw new Error(`${step}: Tab never reached it in ${max} presses`);
+  throw new Error(`${step}: Tab never reached it in ${max} presses; the focus went through: ${trail.slice(0, 40).join(' | ')}`);
 }
 
 test.describe('the keyboard-only walk', () => {
@@ -111,6 +113,7 @@ test.describe('the keyboard-only walk', () => {
     // 5. a group button, then a reaction card: its detail opens in the inspector
     await tabTo(page, 'the Aldehydes group button', (f) => f.tag === 'button' && /^Aldehydes\s*3\s*reactions$/.test(f.name));
     await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { level: 3, name: 'To Aldehydes' }), 'the Aldehydes group was brought into view').toBeInViewport();
     await tabTo(page, 'the PCC card', (f) => f.tag === 'button' && f.name === 'Ethanol → ethanal (PCC)');
     await page.keyboard.press('Enter');
     await expect(record(page).getByRole('heading', { level: 3, name: 'Ethanol → ethanal (PCC)' })).toBeVisible();
