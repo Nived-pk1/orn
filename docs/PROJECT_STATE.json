@@ -83,11 +83,12 @@
     "5.8",
     "5.9a",
     "5.9b",
-    "5.10a"
+    "5.10a",
+    "5.11a"
   ],
   "nextPhase": 5,
-  "nextStep": "5.11a",
-  "nextStepTitle": "Phase 5, step 5.11a - Gate E follow-ups: WebKit flakes, boot A and E, INV-10/11/24 tests, zod JSON-schema look (row: docs/IMPLEMENTATION_PLAN.md section 2). Gate E verdict PASS WITH CONDITIONS recorded 2026-10-14; 5.11b follows.",
+  "nextStep": "5.11b",
+  "nextStepTitle": "Phase 5, step 5.11b - Long apply progress (\"Applying the records... N of M\"; row: docs/IMPLEMENTATION_PLAN.md section 2). Step 5.11a done 2026-10-14 (WebKit waits, boot A and E, INV-10/11/24 tests, zod look); Gate E stays conditional until 5.11b is green and the reviewer confirms.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
