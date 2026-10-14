@@ -136,12 +136,15 @@ async function walk(page: Page, device: string, pinch: boolean): Promise<void> {
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
   await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
+  // the first view draws the family names (the Fit floor is inside LOD 1, hysteresis included), not blank coloured boxes
+  await expect.poll(() => page.locator('svg[role="group"]').getAttribute('data-lod'), { message: 'LOD after the demo loads' }).not.toBe('0');
+  await expect(page.locator('svg[role="group"]').getByText('Alcohols', { exact: true }).first()).toBeVisible();
   await stop(page, device, 2, 'demo-loaded');
 
   // the import notice and the storage warning lie over the map; a visitor dismisses them before using it
   for (let n = 0; n < 4 && (await page.getByRole('button', { name: 'Dismiss' }).count()) > 0; n += 1) await page.getByRole('button', { name: 'Dismiss' }).first().tap();
   // Reviewer decision 1 (2026-10-14): the first view is the Fit view. Fit would fall below the scale where names are drawn on a phone
-  // (case 2), so the first view is Fit's floor (LOD 1 threshold, from the top-left); the Fit button is on screen and changes nothing.
+  // (case 2), so the first view is Fit's floor (FIT_FLOOR, inside LOD 1, from the top-left); the Fit button is on screen and changes nothing.
   const firstScale = await scaleOf(page);
   const fitButton = page.getByRole('button', { name: 'Fit' });
   await expect(fitButton).toBeInViewport({ ratio: 1 });

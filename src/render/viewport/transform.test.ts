@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { LOD_THRESHOLDS } from '@/render/scene';
-import { FIT_PADDING, SCALE_MAX, SCALE_MIN } from './contracts';
-import { clampScale, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout, keepScreenPoint, toScreen } from './transform';
+import { FIT_PADDING, LOD_HYSTERESIS, SCALE_MAX, SCALE_MIN } from './contracts';
+import { lodWithHysteresis } from './lod';
+import { clampScale, FIT_FLOOR, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout, keepScreenPoint, toScreen } from './transform';
 
 const size = { width: 1000, height: 600 };
 
@@ -28,8 +29,8 @@ describe('viewport arithmetic', () => {
 
   it('fits a drawing too large for the LOD 1 threshold at that threshold, from its top-left corner (ADR-037)', () => {
     const huge = fitScene({ width: 10_000, height: 8_000 }, size);
-    expect(huge.scale).toBe(LOD_THRESHOLDS[1]);
-    expect(huge).toEqual({ scale: LOD_THRESHOLDS[1], x: FIT_PADDING, y: FIT_PADDING });
+    expect(huge.scale).toBe(FIT_FLOOR);
+    expect(huge).toEqual({ scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_PADDING });
     // The top-left of the drawing is on screen and the rest is reachable by panning.
     expect(worldRect(huge, size).x0).toBeLessThan(0);
     expect(worldRect(huge, size).x1).toBeLessThan(10_000);
@@ -37,7 +38,7 @@ describe('viewport arithmetic', () => {
 
   it('a drawing that fits above the threshold is fitted whole and centred as before', () => {
     const view = fitScene({ width: 800, height: 400 }, size);
-    expect(view.scale).toBeGreaterThanOrEqual(LOD_THRESHOLDS[1]);
+    expect(view.scale).toBeGreaterThanOrEqual(FIT_FLOOR);
     expect(worldRect(view, size).x1).toBeGreaterThanOrEqual(800);
   });
 
@@ -45,12 +46,19 @@ describe('viewport arithmetic', () => {
     const phone = { width: 412, height: 232 };
     const demo = { width: 1428, height: 840 };
     // case 2: whole-drawing fit on a phone is below the LOD 1 threshold, so the first view stays at the floor, top-left
-    expect(fitRect({ x0: 0, y0: 0, x1: demo.width, y1: demo.height }, phone).scale).toBeLessThan(LOD_THRESHOLDS[1]);
-    expect(fitScene(demo, phone)).toEqual({ scale: LOD_THRESHOLDS[1], x: FIT_PADDING, y: FIT_PADDING });
+    expect(fitRect({ x0: 0, y0: 0, x1: demo.width, y1: demo.height }, phone).scale).toBeLessThan(FIT_FLOOR);
+    expect(fitScene(demo, phone)).toEqual({ scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_PADDING });
     // case 1: a drawing that fits at or above the threshold is the whole drawing in view
     const small = fitScene({ width: 600, height: 300 }, phone);
-    expect(small.scale).toBeGreaterThanOrEqual(LOD_THRESHOLDS[1]);
+    expect(small.scale).toBeGreaterThanOrEqual(FIT_FLOOR);
     expect(worldRect(small, phone).x1).toBeGreaterThanOrEqual(600);
+  });
+
+  it('the Fit floor is above the LOD 1 entry point including the hysteresis, so names are drawn from LOD 0 at the floor', () => {
+    expect(FIT_FLOOR).toBeGreaterThan(LOD_THRESHOLDS[1] * (1 + LOD_HYSTERESIS));
+    expect(lodWithHysteresis(FIT_FLOOR, 0)).toBeGreaterThanOrEqual(1);
+    expect(lodWithHysteresis(LOD_THRESHOLDS[1], 0)).toBe(0); // the bare threshold is not enough (the finding this floor fixes)
+    expect(lodWithHysteresis(fitScene({ width: 10_000, height: 8_000 }, size).scale, 0)).toBeGreaterThanOrEqual(1);
   });
 
   it('never zooms a small box past the cap, and focus stops at 1.5', () => {

@@ -1,5 +1,6 @@
 /** Pure viewport arithmetic (step 5.4b): clamp, zoom about a point, fit, focus, the world rectangle of the screen. */
 import type { Rect, Size, Viewport } from './contracts';
+import { LOD_HYSTERESIS } from './contracts';
 import { LOD_THRESHOLDS } from '@/render/scene';
 import { FIT_PADDING, FOCUS_MAX_SCALE, SCALE_MAX, SCALE_MIN } from './contracts';
 
@@ -36,15 +37,24 @@ export function fitRect(box: Rect, size: Size, maxScale: number = SCALE_MAX, pad
   return { scale, x: size.width / 2 - ((box.x0 + box.x1) / 2) * scale, y: size.height / 2 - ((box.y0 + box.y1) / 2) * scale };
 }
 
+/** Room above the LOD 1 entry point, so a fitted view is never on the edge of the level (release preview: names on the phone first view). */
+const FIT_FLOOR_MARGIN = 0.01;
+
 /**
- * The viewport that shows the whole drawing (`Fit`). Step 5.5b (ADR-037): the fitted scale is never below the LOD 1 threshold, so a
+ * The scale Fit and the first view never go below: the LOD 1 entry point INCLUDING the hysteresis (a view at the bare threshold stays at
+ * LOD 0 coming from LOD 0, see `lodWithHysteresis`) plus a small margin, so the names are drawn.
+ */
+export const FIT_FLOOR = LOD_THRESHOLDS[1] * (1 + LOD_HYSTERESIS) + FIT_FLOOR_MARGIN;
+
+/**
+ * The viewport that shows the whole drawing (`Fit`). Step 5.5b (ADR-037): the fitted scale is never below `FIT_FLOOR` (inside LOD 1 for good), so a
  * drawing is never fitted into names nobody can read; a drawing too large for that scale is shown from its top-left corner (inside
  * the padding) and stays pannable.
  */
 export function fitScene(bounds: Size, size: Size): Viewport {
   const fitted = fitRect({ x0: 0, y0: 0, x1: bounds.width, y1: bounds.height }, size);
-  if (fitted.scale >= LOD_THRESHOLDS[1]) return fitted;
-  return { scale: LOD_THRESHOLDS[1], x: FIT_PADDING, y: FIT_PADDING };
+  if (fitted.scale >= FIT_FLOOR) return fitted;
+  return { scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_PADDING };
 }
 
 export const focusRect = (box: Rect, size: Size): Viewport => fitRect(box, size, FOCUS_MAX_SCALE);
