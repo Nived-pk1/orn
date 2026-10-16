@@ -398,5 +398,15 @@
     "NEW (step 5.11b review, 2026-10-14) -> step 6.1: a promoted follower keeps its own boot's quarantine count and another tab's import is not followed; multi-tab edits arrive in step 6.1, which makes the status line follow them.",
     "NEW (closing session, 2026-10-14) -> Phase 8: Fit with a single node zooms far past 100% (the Unclassified box fills the canvas); fit should never zoom above 100%.",
     "NEW (release preview, 2026-10-14) -> Phase 8: on narrow screens, notices fold into one line that expands (reviewer decision 2)."
-  ]
+  ],
+  "phoneMode": {
+    "status": "in progress (2026-10-16)",
+    "partsDone": [
+      0,
+      1,
+      2
+    ],
+    "next": "part 3 bottom sheet, part 4 tabs and map controls, then deploy",
+    "decisions": "ADR-039; docs/UI_ARCHITECTURE.md section 13"
+  }
 }

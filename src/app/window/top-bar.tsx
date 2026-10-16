@@ -19,7 +19,7 @@ export interface FileBinding {
   readonly onAbout: () => void;
 }
 
-const fileItems = (file: FileBinding): readonly MenuItem[] => [
+export const fileItems = (file: FileBinding): readonly MenuItem[] => [
   { id: 'import', label: 'Import a file...', ...(file.reason === undefined ? { onSelect: file.onImport } : { unavailable: file.reason }) },
   { id: 'export', label: 'Export...', onSelect: file.onExport },
   { id: 'undo_import', label: 'Undo import', ...(file.undoReason === undefined ? { onSelect: file.onUndo } : { unavailable: file.undoReason }) },

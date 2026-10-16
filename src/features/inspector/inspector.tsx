@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
 import type { RecordRef } from '@/core/schema';
+import { useLayoutMode } from '@/ui/hooks';
 import { canBack, canForward, currentOf } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { InspectorEnvContext, makeEnv, useInspectorEnv, type InspectorEnv } from './env';
@@ -33,6 +34,7 @@ function useRevision(ports: InspectorPorts): number {
 export function Inspector(props: { readonly ports: InspectorPorts; readonly host: InspectorHost }) {
   const { ports, host } = props;
   const revision = useRevision(ports);
+  const phone = useLayoutMode() === 'phone';
   const note = useBridge(ports, host);
   const inspector = ports.ui.inspector;
   const history = useStore(inspector, (s) => s.history);
@@ -52,8 +54,12 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
     return (
       <section aria-label="Inspector empty state" className={styles.root}>
         <p>Select a family, an arrow or a reaction card to see the record here.</p>
-        <p className={styles.muted}>Alt+Left and Alt+Right move through the records you have looked at.</p>
-        <p className={styles.muted}>The record counts of the dataset are under Dataset in the mode list on the left.</p>
+        {phone ? null : (
+          <>
+            <p className={styles.muted}>Alt+Left and Alt+Right move through the records you have looked at.</p>
+            <p className={styles.muted}>The record counts of the dataset are under Dataset in the mode list on the left.</p>
+          </>
+        )}
       </section>
     );
   }

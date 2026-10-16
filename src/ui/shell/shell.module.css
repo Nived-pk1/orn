@@ -266,3 +266,57 @@
     box-shadow: 0 -2px 0 var(--color-rule);
   }
 }
+
+/*
+ * Phone layout (ADR-039, UI_ARCHITECTURE §13): keyed on data-layout, which comes from the ONE layout-mode value (useLayoutMode), so the
+ * queries live in one place. One slim top bar, the folded notices line, the canvas, the tab bar (part 4) and a one-line alert.
+ */
+.shell[data-layout='phone'],
+.shell[data-layout='phone'][data-inspector='closed'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'top'
+    'banners'
+    'canvas'
+    'tabs'
+    'status';
+}
+
+.shell[data-layout='phone'] .topBar {
+  flex-wrap: nowrap;
+  min-height: var(--top-bar-height);
+  padding-block: 0;
+}
+
+.shell[data-layout='phone'] .title {
+  flex: none;
+  white-space: nowrap;
+}
+
+.shell[data-layout='phone'] .topControls {
+  flex: 1 1 0;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.shell[data-layout='phone'] .inspector {
+  top: auto;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  max-height: 60vh;
+  border-left: 0;
+  border-top: 1px solid var(--color-ink-2);
+  box-shadow: 0 -2px 0 var(--color-rule);
+}
+
+.phoneAlert {
+  grid-area: status;
+  min-width: 0;
+}
+
+.phoneAlert:empty {
+  display: none;
+}

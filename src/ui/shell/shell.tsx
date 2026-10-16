@@ -6,6 +6,7 @@
  * breakpoint is read here only to know which open state a toggle changes (the persisted pane or the session's drawer).
  */
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useLayoutMode } from '@/ui/hooks';
 import { IconButton, openLayers } from '@/ui/primitives';
 import { ModeRail, type ModeItem } from './mode-rail';
 import { ResizeHandle } from './resize-handle';
@@ -41,10 +42,25 @@ export interface ShellProps {
   /** A number that goes up when the page asks for the focus to go to its title (the first-run screen closed: the button that had it is gone). */
   readonly focusTitleRequest?: number;
   readonly statusBar: ReactNode;
+  /** The phone layout's own regions (ADR-039): used instead of the top bar controls, the banners, the mode rail and the status bar when the layout mode is phone. */
+  readonly phone?: PhoneRegions;
+}
+
+export interface PhoneRegions {
+  /** Controls at the right of the slim top bar (search, More). */
+  readonly bar: ReactNode;
+  /** The folded notices line. */
+  readonly notices: ReactNode;
+  /** The one-line alert (empty when nothing needs the user). */
+  readonly alert: ReactNode;
+  /** The bottom tab bar (part 4). */
+  readonly tabs?: ReactNode;
 }
 
 export function Shell(props: ShellProps) {
   const breakpoint = useBreakpoint();
+  const layout = useLayoutMode();
+  const phone = layout === 'phone' && props.phone !== undefined ? props.phone : undefined;
   const { pane } = props;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const frame = useRef<HTMLDivElement>(null);
@@ -76,21 +92,32 @@ export function Shell(props: ShellProps) {
       ref={frame}
       className={styles.shell}
       data-breakpoint={breakpoint}
+      data-layout={phone === undefined ? 'desktop' : 'phone'}
       data-inspector={inspectorOpen ? 'open' : 'closed'}
       style={{ ['--inspector-width' as string]: `${pane.width}px` }}
     >
       <header className={styles.topBar}>
-        {props.titleHeading === false ? <p className={styles.title}>{props.title}</p> : <h1 ref={title} tabIndex={-1} className={styles.title}>{props.title}</h1>}
-        <div className={styles.topControls}>{props.topBar}</div>
-        <IconButton
-          label={inspectorOpen ? 'Hide inspector' : 'Show inspector'}
-          icon="inspector"
-          aria-pressed={inspectorOpen}
-          onClick={toggle}
-        />
+        {props.titleHeading === false ? (
+          <p className={styles.title}>{phone === undefined ? props.title : 'ORN'}</p>
+        ) : (
+          <h1 ref={title} tabIndex={-1} className={styles.title} {...(phone === undefined ? {} : { 'aria-label': props.title })}>{phone === undefined ? props.title : 'ORN'}</h1>
+        )}
+        {phone === undefined ? (
+          <>
+            <div className={styles.topControls}>{props.topBar}</div>
+            <IconButton
+              label={inspectorOpen ? 'Hide inspector' : 'Show inspector'}
+              icon="inspector"
+              aria-pressed={inspectorOpen}
+              onClick={toggle}
+            />
+          </>
+        ) : (
+          <div className={styles.topControls}>{phone.bar}</div>
+        )}
       </header>
-      <ModeRail modes={props.modes} active={props.activeMode} onChange={props.onModeChange} />
-      <div className={styles.banners}>{props.banners}</div>
+      {phone === undefined ? <ModeRail modes={props.modes} active={props.activeMode} onChange={props.onModeChange} /> : null}
+      <div className={styles.banners}>{phone === undefined ? props.banners : phone.notices}</div>
       <main className={styles.canvas}>{props.canvas}</main>
       {wide && pane.open ? <ResizeHandle width={pane.width} min={pane.min} max={pane.max} onWidth={pane.onWidth} edge={edge} /> : null}
       <aside className={styles.inspector} aria-label={props.inspectorTitle} hidden={!inspectorOpen} onKeyDown={escape}>
@@ -100,7 +127,8 @@ export function Shell(props: ShellProps) {
         </div>
         <div className={styles.inspectorBody}>{props.inspector}</div>
       </aside>
-      <footer className={styles.statusBar} tabIndex={0}>{props.statusBar}</footer>
+      {phone?.tabs ?? null}
+      {phone === undefined ? <footer className={styles.statusBar} tabIndex={0}>{props.statusBar}</footer> : <div className={styles.phoneAlert}>{phone.alert}</div>}
     </div>
   );
 }

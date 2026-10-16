@@ -32,6 +32,8 @@ import { FirstRun } from "./first-run";
 import { MODES, NAVIGATOR_MODE } from "./modes";
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
+import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
+import { RecordCounts } from "./record-counts";
 import { TopBar } from "./top-bar";
 import styles from "./window.module.css";
 import { AboutDialog, AboutOpenContext } from "./about-preview";
@@ -48,22 +50,6 @@ const countsOf = (
 
 const totalOf = (counts: Readonly<Record<RecordKind, number>>): number =>
   RECORD_KINDS.reduce((sum, kind) => sum + counts[kind], 0);
-
-function RecordCounts(props: {
-  readonly counts: Readonly<Record<RecordKind, number>>;
-}) {
-  const present = RECORD_KINDS.filter((kind) => props.counts[kind] > 0);
-  if (present.length === 0) return <p>The dataset is empty.</p>;
-  return (
-    <ul aria-label="Record counts">
-      {present.map((kind) => (
-        <li key={kind}>
-          {kind.replaceAll("_", " ")}: {props.counts[kind]}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 function DatasetView(props: {
   readonly counts: Readonly<Record<RecordKind, number>>;
@@ -153,6 +139,7 @@ export function Window() {
   const [asking, setAsking] = useState(false);
   const [searching, setSearching] = useState(false);
   const [about, setAbout] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const counts = useStoreSelector(services.store, countsOf);
   const width = usePanels(panels, (s) => s.inspectorWidth);
   const open = usePanels(panels, (s) => s.inspectorOpen);
@@ -227,6 +214,9 @@ export function Window() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
+  const file = { reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true) };
+  const exam = { exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log };
+  const openStatus = () => setStatusOpen(true);
   const pane = useMemo<InspectorPane>(
     () => ({
       width,
@@ -250,10 +240,15 @@ export function Window() {
             <TopBar
               onSearch={() => setSearching(true)}
               history={services.store}
-              file={{ reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true) }}
-              exam={{ exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log }}
+              file={file}
+              exam={exam}
             />
           }
+          phone={{
+            bar: <PhoneBar onSearch={() => setSearching(true)} file={file} exam={exam} counts={counts} onStatus={openStatus} />,
+            notices: <PhoneNotices />,
+            alert: <PhoneAlert onStatus={openStatus} />,
+          }}
           modes={MODES}
           activeMode={mode}
           onModeChange={setMode}
@@ -291,6 +286,7 @@ export function Window() {
         <ReplaceDialog open={asking} onClose={() => setAsking(false)} imports={imports} />
         {importElement}
         {exportElement}
+        <PhoneStatusDialog open={statusOpen} onClose={() => setStatusOpen(false)} />
         <AboutDialog open={about} onClose={() => setAbout(false)} />
         <Palette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
       </NavigatorProvider>
