@@ -134,7 +134,7 @@ test.describe('the shell and the design system', () => {
     await openApp(page);
     for (const name of ['Load demo dataset', 'Import a file', 'Start empty', 'File', 'Show inspector']) {
       const size = await page.getByRole('button', { name, exact: true }).boundingBox();
-      expect(size?.height ?? 0, `${name} height`).toBeGreaterThanOrEqual(44);
+      expect(size?.height ?? 0, `${name} height`).toBeGreaterThanOrEqual(44 - 0.01); // Firefox reports a 44 px box as 43.999996 at some fractional offsets (float32 of layout units); not a smaller target
     }
     await context.close();
   });
