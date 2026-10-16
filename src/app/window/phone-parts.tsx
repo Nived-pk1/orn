@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import type { RecordKind } from '@/core/schema';
 import { useSubscribable } from '@/ui/hooks';
-import { Button, Dialog, ErrorBoundary, IconButton } from '@/ui/primitives';
+import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView } from '@/ui/primitives';
 import { bannersOf, bootLinesOf } from './banners';
 import { useApp } from './context';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
@@ -78,7 +78,9 @@ export function PhoneNotices() {
   const status = useSubscribable(services.status);
   const storageNoticeDismissed = usePanels(panels, (s) => s.storageNoticeDismissed);
   const [open, setOpen] = useState(false);
-  const count = bannersOf(status, { storageNoticeDismissed }).length + bootLinesOf(status.notices).length;
+  // the toasts (the import notice, the storage warning...) are counted and listed here on a phone; none floats over the cards
+  const toastCount = useToastView()?.items.length ?? 0;
+  const count = bannersOf(status, { storageNoticeDismissed }).length + bootLinesOf(status.notices).length + toastCount;
   if (count === 0) return null;
   return (
     <div className={styles.notices}>
@@ -89,6 +91,7 @@ export function PhoneNotices() {
         <ErrorBoundary label="The notices panel">
           <Banners />
           <BootLines />
+          <ToastItems />
         </ErrorBoundary>
       ) : null}
     </div>

@@ -156,3 +156,56 @@ describe('PhoneSheet: a request to close', () => {
     expect(sheet().hidden).toBe(true);
   });
 });
+
+describe('PhoneSheet: the title, and the room it takes (phone mode B, part 2)', () => {
+  it("a tap on the record's name toggles peek and full, like the handle", () => {
+    render(<Harness />);
+    open();
+    fireEvent.click(screen.getByRole('heading', { name: 'Ethanol' }));
+    expect(sheet().getAttribute('data-sheet')).toBe('full');
+    fireEvent.click(screen.getByRole('heading', { name: 'Ethanol' }));
+    expect(sheet().getAttribute('data-sheet')).toBe('peek');
+    fireEvent.click(screen.getByRole('button', { name: 'Show the whole record' }));
+    expect(sheet().getAttribute('data-sheet')).toBe('full');
+  });
+
+  it('a tap elsewhere in the body changes nothing', () => {
+    render(<Harness />);
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Open family' }));
+    expect(sheet().getAttribute('data-sheet')).toBe('peek');
+  });
+
+  it('reports its height at peek (the page keeps that room), 0 when closed or full', () => {
+    const spaces: number[] = [];
+    const original = HTMLElement.prototype.getBoundingClientRect;
+    HTMLElement.prototype.getBoundingClientRect = () => ({ x: 0, y: 0, top: 0, left: 0, right: 390, bottom: 295, width: 390, height: 295, toJSON: () => ({}) });
+    try {
+      function Spaced() {
+        const [request, setRequest] = useState(0);
+        return (
+          <>
+            <button type="button" onClick={() => setRequest((n) => n + 1)}>
+              tapped item
+            </button>
+            <PhoneSheet title="Inspector" openRequest={request} onSpace={(px) => spaces.push(px)}>
+              <h3 id={SHEET_TITLE_ID}>Ethanol</h3>
+            </PhoneSheet>
+          </>
+        );
+      }
+      render(<Spaced />);
+      expect(spaces.at(-1)).toBe(0);
+      open();
+      expect(spaces.at(-1)).toBe(295);
+      fireEvent.click(screen.getByRole('button', { name: 'Show the whole record' }));
+      expect(spaces.at(-1)).toBe(0);
+      fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
+      expect(spaces.at(-1)).toBe(295);
+      fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }));
+      expect(spaces.at(-1)).toBe(0);
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = original;
+    }
+  });
+});

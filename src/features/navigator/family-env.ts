@@ -5,6 +5,7 @@
 import { createContext, useContext } from 'react';
 import type { RecordRef } from '@/core/schema';
 import type { DepictionManager } from '@/render/svg';
+import type { LayoutMode } from '@/ui/hooks';
 import type { NavigatorPorts } from './contracts';
 
 export interface FamilyEnv {
@@ -13,6 +14,8 @@ export interface FamilyEnv {
   readonly keyOf: (ref: RecordRef) => string | undefined;
   readonly manager: DepictionManager | undefined;
   readonly timers: NavigatorPorts['timers'];
+  /** The layout (the one `useLayoutMode` value, read by the page). Absent: desktop. A phone draws a reaction top to bottom. */
+  readonly layout?: LayoutMode;
 }
 
 export const FamilyEnvContext = createContext<FamilyEnv | null>(null);

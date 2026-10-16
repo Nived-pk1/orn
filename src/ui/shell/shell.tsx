@@ -66,6 +66,7 @@ export function Shell(props: ShellProps) {
   const phone = layout === 'phone' && props.phone !== undefined ? props.phone : undefined;
   const { pane } = props;
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sheetSpace, setSheetSpace] = useState(0);
   const frame = useRef<HTMLDivElement>(null);
   const wide = breakpoint === 'wide';
   const requested = props.openRequest ?? 0;
@@ -97,7 +98,7 @@ export function Shell(props: ShellProps) {
       data-breakpoint={breakpoint}
       data-layout={phone === undefined ? 'desktop' : 'phone'}
       data-inspector={inspectorOpen ? 'open' : 'closed'}
-      style={{ ['--inspector-width' as string]: `${pane.width}px` }}
+      style={{ ['--inspector-width' as string]: `${pane.width}px`, ['--sheet-space' as string]: `${sheetSpace}px` }}
     >
       <header className={styles.topBar}>
         {props.titleHeading === false ? (
@@ -132,7 +133,7 @@ export function Shell(props: ShellProps) {
           <div className={styles.inspectorBody}>{props.inspector}</div>
         </aside>
       ) : (
-        <PhoneSheet title={props.inspectorTitle} openRequest={requested} closeRequest={props.closeRequest ?? 0}>
+        <PhoneSheet title={props.inspectorTitle} openRequest={requested} closeRequest={props.closeRequest ?? 0} onSpace={setSheetSpace}>
           {props.inspector}
         </PhoneSheet>
       )}

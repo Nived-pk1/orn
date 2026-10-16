@@ -121,9 +121,9 @@ describe('the family page', () => {
     expect(ethers).toBeDefined();
     expect(alkenes).toBeDefined();
     expect(within(ethers).queryByText('443 K')).toBeNull();
-    expect(within(ethers).getByRole('button', { name: 'Also gives -> Alkenes (443 K)' })).toBeTruthy();
-    expect(within(alkenes).getByRole('button', { name: 'Also gives -> Ethers (413 K)' })).toBeTruthy();
-    expect(() => fireEvent.click(within(ethers).getByRole('button', { name: 'Also gives -> Alkenes (443 K)' }))).not.toThrow();
+    expect(within(ethers).getByRole('button', { name: 'Also gives → Alkenes (443 K)' })).toBeTruthy();
+    expect(within(alkenes).getByRole('button', { name: 'Also gives → Ethers (413 K)' })).toBeTruthy();
+    expect(() => fireEvent.click(within(ethers).getByRole('button', { name: 'Also gives → Alkenes (443 K)' }))).not.toThrow();
   });
 
   it('the strip buttons and the links bring the reader to a group without leaving the page', async () => {

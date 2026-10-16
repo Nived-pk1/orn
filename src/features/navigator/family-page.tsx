@@ -4,9 +4,13 @@
  * the two sections are items of ONE virtualised list; a card is a reaction in one group. Depictions are requested only for mounted
  * cards (`useDepiction`). A click on a card selects the reaction (the inspector, step 5.6a, will show its detail).
  * Keyboard focus (step 5.7): the map that had it is gone, so the page takes it on its Overview button, which is also the way back.
+ * Phone (ADR-039, phone mode B part 2): the full width in one column; "< Families" or "< Map" (where the visitor came from) instead of
+ * "Overview", and no "Selected: ..." line (the sheet says it); a group is a coloured bar on the left, not a nested panel; while the sheet is
+ * open the page keeps bottom space of the sheet's height (`--sheet-space`), and a tapped card is brought above the peek.
  */
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useStore } from 'zustand';
+import { useLayoutMode } from '@/ui/hooks';
 import { Button, Skeleton, VirtualList, type VirtualListHandle } from '@/ui/primitives';
 import { depictionBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
@@ -21,6 +25,8 @@ import styles from './family-page.module.css';
 
 const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
 const keyOf = (item: FamilyItem): string => item.key;
+/** How long after a tap the card is still brought into view when the room changes (the sheet comes up a few frames later). */
+const REVEAL_WINDOW_MS = 600;
 
 export function FamilyPage(props: { readonly hubId: string }) {
   const { ports } = useNavigator();
@@ -31,6 +37,10 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const selectedReaction = useStore(ports.ui.family, (s) => s.reaction);
   const list = useRef<VirtualListHandle>(null);
   const page = useRef<HTMLElement>(null);
+  const body = useRef<HTMLDivElement>(null);
+  const layout = useLayoutMode();
+  const phone = layout === 'phone';
+  const cameFrom = useStore(ports.ui.overview, (s) => s.phoneTab);
   // Opening the page removes the map and the focus with it (the body has it): the Overview button takes it. A focus that is somewhere else stays.
   useEffect(() => {
     const active = document.activeElement;
@@ -42,8 +52,31 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const env = useMemo<FamilyEnv | null>(() => {
     if (study === undefined || study === null) return null;
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
-    return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers };
-  }, [study, ports, binding]);
+    return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers, layout };
+  }, [study, ports, binding, layout]);
+  // the bar of a group takes the partner family's own tone (the page's tone when the partner has none)
+  const toneOf = useMemo(() => {
+    const tones = new Map<string, string>();
+    if (study !== undefined && study !== null) for (const partner of [...study.madeFrom, ...study.turnsInto]) if (partner.tone !== undefined) tones.set(partner.hubId, partner.tone);
+    return (hubId: string): string | undefined => tones.get(hubId) ?? (study === undefined || study === null ? undefined : study.tone);
+  }, [study]);
+
+  // A tapped card goes above the peek of the sheet: when the page's room changes (the sheet came up) or at once when it did not, the card of
+  // the last tap is brought into view; the bottom space (--sheet-space) makes the list end above the sheet.
+  const reveal = useRef<string | null>(null);
+  const revealCard = useCallback((): void => {
+    const id = reveal.current;
+    if (id === null) return;
+    const card = [...(body.current?.querySelectorAll<HTMLElement>('article[data-reaction-id]') ?? [])].find((el) => el.dataset.reactionId === id);
+    card?.scrollIntoView({ block: 'nearest' });
+  }, []);
+  useEffect(() => {
+    const element = body.current;
+    if (!phone || element === null || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(revealCard);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [phone, revealCard]);
 
   const goTo = useCallback(
     (key: string): void => {
@@ -59,7 +92,18 @@ export function FamilyPage(props: { readonly hubId: string }) {
     ports.ui.family.getState().clearTarget();
   }, [target, items, goTo, ports]);
 
-  const selectReaction = useCallback((reactionId: string): void => ports.ui.family.getState().selectReaction(reactionId), [ports]);
+  const selectReaction = useCallback(
+    (reactionId: string): void => {
+      ports.ui.family.getState().selectReaction(reactionId);
+      if (!phone) return;
+      reveal.current = reactionId;
+      ports.timers.after(REVEAL_WINDOW_MS, () => {
+        if (reveal.current === reactionId) reveal.current = null;
+      });
+      requestAnimationFrame(revealCard);
+    },
+    [ports, phone, revealCard],
+  );
   const goToGroup = useCallback(
     (item: Extract<FamilyItem, { kind: 'card' }>) => (otherHub: string, reactionId: string) => goTo(cardKey(item.section, otherHub, reactionId)),
     [goTo],
@@ -92,18 +136,30 @@ export function FamilyPage(props: { readonly hubId: string }) {
     },
     [goTo, goToGroup, selectReaction, selectedReaction, scope],
   );
-  const renderItem = useCallback((item: FamilyItem) => <div className={styles.item}>{renderBody(item)}</div>, [renderBody]);
+  const renderItem = useCallback(
+    (item: FamilyItem) => {
+      // on a phone the groups and their cards share a coloured bar on the left (the CSS draws it only there)
+      const barred = phone && (item.kind === 'group' || item.kind === 'card');
+      const bar = barred && (item.kind === 'group' || item.kind === 'card') ? toneOf(item.hubId) : undefined;
+      return (
+        <div className={styles.item} {...(barred ? { 'data-bar': '', ...(bar === undefined ? {} : { 'data-tone': bar }) } : {})}>
+          {renderBody(item)}
+        </div>
+      );
+    },
+    [renderBody, toneOf, phone],
+  );
 
   const close = useCallback((): void => ports.ui.family.getState().closeFamily(), [ports]);
   const reactionName = study === undefined || study === null || selectedReaction === null ? undefined : (ports.store.getState().records.reaction[selectedReaction]?.name ?? selectedReaction);
   const title = study === undefined || study === null ? 'Family' : study.name;
   return (
-    <section ref={page} className={styles.page} aria-label={`Family page: ${title}`} data-family-page="" data-family-id={hubId}>
+    <section ref={page} className={styles.page} aria-label={`Family page: ${title}`} data-family-page="" data-family-id={hubId} data-layout={layout}>
       <div className={styles.toolbar} role="toolbar" aria-label="Family page tools">
-        <Button onClick={close}>Overview</Button>
-        <p className={styles.selection}>{reactionName === undefined ? 'Nothing is selected.' : `Selected: reaction ${reactionName}.`}</p>
+        <Button onClick={close}>{phone ? `< ${cameFrom === 'map' ? 'Map' : 'Families'}` : 'Overview'}</Button>
+        {phone ? null : <p className={styles.selection}>{reactionName === undefined ? 'Nothing is selected.' : `Selected: reaction ${reactionName}.`}</p>}
       </div>
-      <div className={styles.body}>
+      <div ref={body} className={styles.body}>
         {study === undefined ? (
           <Skeleton label="Preparing the family page" />
         ) : study === null || env === null ? (

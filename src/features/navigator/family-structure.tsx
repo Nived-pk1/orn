@@ -9,7 +9,7 @@ import { STRUCTURE_AREA } from '@/render/scene';
 import { drawingFailed, useRetryingDepiction } from '@/render/svg';
 import { useFamilyEnv } from './family-env';
 import { FormulaText } from './family-text';
-import styles from './family-page.module.css';
+import scheme from './family-scheme.module.css';
 
 export function Structure(props: { readonly substance: RecordRef; readonly caption?: string }) {
   const env = useFamilyEnv();
@@ -17,31 +17,32 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
   const name = described?.name ?? props.substance.id;
   const key = env.keyOf(props.substance);
   const status = useRetryingDepiction(env.manager, key, env.timers);
-  const boxStyle = { width: STRUCTURE_AREA.width, height: STRUCTURE_AREA.height };
+  // a phone sizes the box in CSS (a share of the width, the same aspect); the desktop keeps its fixed pixels
+  const boxStyle = env.layout === 'phone' ? undefined : { width: STRUCTURE_AREA.width, height: STRUCTURE_AREA.height };
   const url = key !== undefined && status.state === 'ready' ? status.url : undefined;
   // a structure that failed only because the engine was not ready yet still reads "Drawing the structure…" (it is asked again when ready)
   const unavailable = key !== undefined && drawingFailed(status);
   return (
-    <figure className={styles.substance} data-substance-id={props.substance.id}>
-      <div className={styles.structure} style={boxStyle}>
+    <figure className={scheme.substance} data-substance-id={props.substance.id}>
+      <div className={scheme.structure} {...(boxStyle === undefined ? {} : { style: boxStyle })}>
         {url !== undefined ? (
           <img src={url} alt={`Structure of ${name}`} width={STRUCTURE_AREA.width} height={STRUCTURE_AREA.height} />
         ) : (
-          <span className={styles.structureName} {...(unavailable ? { title: 'The structure could not be drawn' } : {})}>
-            {key !== undefined && !unavailable ? <span className={styles.loadingMark}>Drawing the structure…</span> : null}
+          <span className={scheme.structureName} {...(unavailable ? { title: 'The structure could not be drawn' } : {})}>
+            {key !== undefined && !unavailable ? <span className={scheme.loadingMark}>Drawing the structure…</span> : null}
             {described?.formula === undefined ? (
-              <span className={styles.noStructure}>{key === undefined ? 'No structure' : unavailable ? 'Structure not available' : ''}</span>
+              <span className={scheme.noStructure}>{key === undefined ? 'No structure' : unavailable ? 'Structure not available' : ''}</span>
             ) : (
-              <span className={styles.formula}>
+              <span className={scheme.formula}>
                 <FormulaText formula={described.formula} />
               </span>
             )}
           </span>
         )}
       </div>
-      <figcaption className={styles.caption}>
+      <figcaption className={scheme.caption}>
         <span>{name}</span>
-        {props.caption === undefined ? null : <span className={styles.selectivity}>{props.caption}</span>}
+        {props.caption === undefined ? null : <span className={scheme.selectivity}>{props.caption}</span>}
       </figcaption>
     </figure>
   );

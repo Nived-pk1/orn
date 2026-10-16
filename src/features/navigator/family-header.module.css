@@ -207,3 +207,33 @@
 .partner:hover {
   background: var(--color-hover);
 }
+
+/* Phone (ADR-039; keyed on data-layout): a compact header, name, formula and counts, the chips wrap. */
+:global([data-layout='phone']) .header {
+  padding-top: var(--space-2);
+}
+
+:global([data-layout='phone']) .header[data-tone] {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+:global([data-layout='phone']) .familyName {
+  gap: var(--space-2);
+  font-size: var(--text-20);
+}
+
+:global([data-layout='phone']) .counts {
+  margin: var(--space-1) 0 var(--space-2);
+  font-size: var(--text-13);
+}
+
+:global([data-layout='phone']) .types {
+  margin-bottom: var(--space-2);
+}
+
+:global([data-layout='phone']) .strip {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}

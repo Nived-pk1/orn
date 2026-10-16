@@ -180,112 +180,6 @@
   cursor: pointer;
 }
 
-.scheme {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.substance {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  width: 8rem;
-  margin: 0;
-}
-
-.structure {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 100%;
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  background: var(--color-paper);
-  overflow: hidden;
-}
-
-.structure img {
-  display: block;
-}
-
-.structureName {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2);
-  text-align: center;
-}
-
-.formula {
-  font-size: var(--text-16);
-}
-
-.noStructure,
-.loadingMark {
-  color: var(--color-ink-2);
-  font-size: var(--text-12);
-}
-
-.caption {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: var(--text-13);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-.selectivity {
-  color: var(--color-ink-2);
-  font-style: italic;
-}
-
-.arrow {
-  display: flex;
-  flex: 1 1 8rem;
-  flex-direction: column;
-  align-items: center;
-  min-width: 7rem;
-  max-width: 16rem;
-  font-size: var(--text-13);
-}
-
-.arrowAbove,
-.arrowBelow {
-  min-height: 1.2em;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-.arrowBelow {
-  color: var(--color-ink-2);
-}
-
-.arrowLine {
-  width: 100%;
-  max-width: 96px;
-  height: 10px;
-  fill: none;
-  stroke: var(--color-ink);
-  stroke-width: 1.5;
-}
-
-.products {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.plus {
-  color: var(--color-ink-2);
-  font-size: var(--text-20);
-}
-
 .elsewhere {
   display: flex;
   flex-wrap: wrap;
@@ -314,4 +208,52 @@
   flex-direction: column;
   align-items: center;
   font-size: 0.8rem;
+}
+
+/* Phone (ADR-039; keyed on data-layout, the one layout value): the whole width in one column, groups as a coloured bar on the left (not a
+   nested panel), a reaction drawn top to bottom, room at the bottom for the sheet. */
+
+.item[data-tone='blue'] { --bar: var(--color-tone-blue-ink); }
+.item[data-tone='green'] { --bar: var(--color-tone-green-ink); }
+.item[data-tone='amber'] { --bar: var(--color-tone-amber-ink); }
+.item[data-tone='violet'] { --bar: var(--color-tone-violet-ink); }
+.item[data-tone='teal'] { --bar: var(--color-tone-teal-ink); }
+.item[data-tone='rose'] { --bar: var(--color-tone-rose-ink); }
+.item[data-tone='slate'] { --bar: var(--color-tone-slate-ink); }
+
+.page[data-layout='phone'] {
+  padding-bottom: var(--sheet-space, 0px);
+}
+
+.page[data-layout='phone'] .toolbar {
+  padding: var(--space-1) var(--space-2);
+}
+
+.page[data-layout='phone'] .item {
+  max-width: none;
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.page[data-layout='phone'] .item[data-bar] {
+  margin-left: var(--space-2);
+  padding-left: var(--space-2);
+  border-left: 4px solid var(--bar, var(--color-rule));
+}
+
+.page[data-layout='phone'] .sectionHead {
+  padding-top: var(--space-3);
+}
+
+.page[data-layout='phone'] .card {
+  padding: var(--space-3);
+}
+
+.page[data-layout='phone'] .card[data-selected] {
+  padding: calc(var(--space-3) - 1px);
+}
+
+.page[data-layout='phone'] .elsewhere .link {
+  width: 100%;
+  text-align: left;
 }

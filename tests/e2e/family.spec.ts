@@ -89,12 +89,12 @@ test.describe('the family page of the demo', () => {
     const ethers = all.filter({ has: page.locator('[data-arrow]', { hasText: '413 K' }) });
     await expect(ethers).toHaveCount(1);
     await expect(ethers.locator('[data-arrow]').getByText('443 K')).toHaveCount(0);
-    await expect(ethers.getByRole('button', { name: 'Also gives -> Alkenes (443 K)' })).toBeVisible();
-    await ethers.getByRole('button', { name: 'Also gives -> Alkenes (443 K)' }).click();
+    await expect(ethers.getByRole('button', { name: 'Also gives → Alkenes (443 K)' })).toBeVisible();
+    await ethers.getByRole('button', { name: 'Also gives → Alkenes (443 K)' }).click();
     const alkenes = all.filter({ has: page.locator('[data-arrow]', { hasText: '443 K' }) });
     await expect(alkenes).toBeVisible();
     await expect(alkenes.locator('[data-arrow]').getByText('413 K')).toHaveCount(0);
-    await alkenes.getByRole('button', { name: 'Also gives -> Ethers (413 K)' }).click();
+    await alkenes.getByRole('button', { name: 'Also gives → Ethers (413 K)' }).click();
     await expect(ethers).toBeVisible();
     await expectClean(seen);
   });

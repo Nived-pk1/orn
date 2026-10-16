@@ -20,7 +20,7 @@ import {
   type CanonicalState,
   type RecordKind,
 } from "@/core/schema";
-import { useStoreSelector, useSubscribable } from "@/ui/hooks";
+import { useLayoutMode, useStoreSelector, useSubscribable } from "@/ui/hooks";
 import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
 import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from "@/ui/state";
@@ -136,6 +136,7 @@ function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
 
 export function Window() {
   const { panels, services, navigator, inspector: inspectorPorts } = useApp();
+  const layout = useLayoutMode();
   const { actions: imports, element: importElement } = useImportActions();
   const { actions: exports, element: exportElement } = useExportActions();
   const status = useSubscribable(services.status);
@@ -234,7 +235,7 @@ export function Window() {
     [width, open, panels],
   );
   return (
-    <ToastProvider>
+    <ToastProvider folded={layout === 'phone'}>
       <ExportOpenContext.Provider value={exports.open}>
       <AboutOpenContext.Provider value={() => setAbout(true)}>
       <NavigatorProvider ports={navigator} active={totalOf(counts) > 0}>
