@@ -81,3 +81,60 @@ describe('useDepiction', () => {
     expect(r.calls).toHaveLength(1);
   });
 });
+
+describe('useDepiction when the engine is not ready yet (phone mode B, part 1)', () => {
+  function pendingRig(answer: () => Promise<DepictionAnswer>) {
+    const timers = manualTimers();
+    const calls: string[] = [];
+    let pending = true;
+    const manager = createDepictionManager({
+      fetchSvg: (key) => (calls.push(key), answer()),
+      createUrl: () => `blob:${calls.length}`,
+      revokeUrl: () => undefined,
+      setTimer: (cb, ms) => timers.after(ms, cb),
+      clearTimer: (h) => (h as () => void)(),
+      isPending: () => pending,
+    });
+    return { timers, calls, manager, ready: () => ((pending = false), manager.forgetNotReady()) };
+  }
+  const Card = (props: { readonly r: ReturnType<typeof pendingRig>; readonly id: string }) => {
+    const status = useDepiction(props.r.manager, 'key-a', props.r.timers);
+    return <p data-testid={props.id}>{status.state === 'ready' ? 'drawn' : status.state}</p>;
+  };
+
+  it('every card that shows a key that failed too early asks again once when the engine is ready, and then shows the drawing', async () => {
+    let fail = true;
+    const r = pendingRig(() => Promise.resolve(fail ? { ok: false, reason: 'unavailable' } : { ok: true, svg: '<svg/>' }));
+    render(
+      <>
+        <Card r={r} id="one" />
+        <Card r={r} id="two" />
+      </>,
+    );
+    expect((await screen.findByTestId('one')).textContent).toBe('unavailable');
+    expect(r.calls).toHaveLength(1);
+    fail = false;
+    await act(async () => void r.ready());
+    await act(async () => {
+      r.timers.advance(RETRY_DELAY_MS);
+      await Promise.resolve();
+    });
+    expect((await screen.findByTestId('one')).textContent).toBe('drawn');
+    expect(screen.getByTestId('two').textContent).toBe('drawn');
+    expect(r.calls).toHaveLength(2); // one more request, shared by both cards
+  });
+
+  it('a key that failed for another reason is not asked again when the engine becomes ready', async () => {
+    const r = pendingRig(() => Promise.resolve({ ok: false, reason: 'invalid' }));
+    r.ready(); // the engine is ready before the failure
+    render(<Card r={r} id="bad" />);
+    expect((await screen.findByTestId('bad')).textContent).toBe('unavailable');
+    await act(async () => {
+      r.ready();
+      r.timers.advance(10_000);
+      await Promise.resolve();
+    });
+    expect(screen.getByTestId('bad').textContent).toBe('unavailable');
+    expect(r.calls).toHaveLength(1);
+  });
+});

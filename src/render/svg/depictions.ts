@@ -11,6 +11,9 @@
  * - `cancel(key)` drops a key that is still loading (the viewport queue: it left the screen); it becomes idle and a late answer is ignored.
  * - An answer with reason `BUSY` (the chem service had no free worker) is not cached: the key becomes idle again and the viewport queue
  *   asks once more, so a busy service never reaches the user as "unavailable".
+ * - A failure that comes while the chem engine is NOT READY YET (`isPending()`: cold or loading, e.g. a slow phone still downloading the
+ *   wasm) is kept as `unavailable` with the reason `NOT_READY`; `forgetNotReady()` (called when the engine becomes ready) forgets exactly
+ *   those keys, so every card that shows one asks again. A failure for any other reason is not touched by that path.
  * - `dispose()` revokes every URL and drops every listener.
  */
 import type { DepictionSource, DepictionStatus } from './contracts';
@@ -20,6 +23,13 @@ export const DEPICTION_TIMEOUT_MS = 8000;
 
 /** The reason a failure value carries when the service was busy; never shown, never cached. */
 export const DEPICTION_BUSY = 'BUSY';
+/** The reason of an `unavailable` key that failed while the engine was not ready yet; see `forgetNotReady`. */
+export const DEPICTION_NOT_READY = 'not_ready';
+
+/** True when a drawing failed for good as far as the user is concerned: not while it only waits for the engine (`NOT_READY`, asked again when it is ready). */
+export function drawingFailed(status: DepictionStatus): boolean {
+  return status.state === 'unavailable' && status.reason !== DEPICTION_NOT_READY;
+}
 
 export type DepictionAnswer = { readonly ok: true; readonly svg: string } | { readonly ok: false; readonly reason: string };
 
@@ -31,6 +41,8 @@ export interface DepictionDeps {
   readonly revokeUrl: (url: string) => void;
   readonly setTimer: (callback: () => void, ms: number) => unknown;
   readonly clearTimer: (handle: unknown) => void;
+  /** True while the chem engine has not finished loading (and has not failed): a failure then is `NOT_READY`. Absent: never. */
+  readonly isPending?: () => boolean;
   readonly capacity?: number;
   readonly timeoutMs?: number;
 }
@@ -45,6 +57,8 @@ export interface DepictionManager extends DepictionSource {
    * idle again and is asked for when it is next shown. Listeners are told. Answers how many keys were forgotten.
    */
   readonly forgetUnavailable: () => number;
+  /** Forgets the keys that failed with `NOT_READY` (the engine is ready now); the others stay. Listeners are told. Answers how many. */
+  readonly forgetNotReady: () => number;
   readonly dispose: () => void;
 }
 
@@ -84,8 +98,11 @@ export function createDepictionManager(deps: DepictionDeps): DepictionManager {
     notify(key);
   };
 
+  /** The reason a failure is kept under: `NOT_READY` when the engine was still loading. */
+  const failure = (reason: string): DepictionStatus => ({ state: 'unavailable', reason: deps.isPending?.() === true ? DEPICTION_NOT_READY : reason });
+
   const fromAnswer = (answer: DepictionAnswer): DepictionStatus => {
-    if (!answer.ok) return { state: 'unavailable', reason: answer.reason };
+    if (!answer.ok) return failure(answer.reason);
     try {
       return { state: 'ready', url: deps.createUrl(answer.svg) };
     } catch {
@@ -124,18 +141,18 @@ export function createDepictionManager(deps: DepictionDeps): DepictionManager {
       }
       const entry: Entry = { status: LOADING };
       entries.set(key, entry);
-      entry.timer = deps.setTimer(() => settle(key, entry, () => ({ state: 'unavailable', reason: 'timeout' })), timeoutMs);
+      entry.timer = deps.setTimer(() => settle(key, entry, () => failure('timeout')), timeoutMs);
       evict();
       let pending: Promise<DepictionAnswer>;
       try {
         pending = deps.fetchSvg(key);
       } catch {
-        settle(key, entry, () => ({ state: 'unavailable', reason: 'fetch_failed' }));
+        settle(key, entry, () => failure('fetch_failed'));
         return;
       }
       pending.then(
         (answer) => (!answer.ok && answer.reason === DEPICTION_BUSY ? dropBusy(key, entry) : settle(key, entry, () => fromAnswer(answer))),
-        () => settle(key, entry, () => ({ state: 'unavailable', reason: 'fetch_failed' })),
+        () => settle(key, entry, () => failure('fetch_failed')),
       );
       notify(key);
     },
@@ -143,6 +160,16 @@ export function createDepictionManager(deps: DepictionDeps): DepictionManager {
       if (disposed) return 0;
       const forgotten: string[] = [];
       for (const [key, entry] of entries) if (entry.status.state === 'unavailable') forgotten.push(key);
+      for (const key of forgotten) {
+        entries.delete(key);
+        notify(key);
+      }
+      return forgotten.length;
+    },
+    forgetNotReady() {
+      if (disposed) return 0;
+      const forgotten: string[] = [];
+      for (const [key, entry] of entries) if (entry.status.state === 'unavailable' && entry.status.reason === DEPICTION_NOT_READY) forgotten.push(key);
       for (const key of forgotten) {
         entries.delete(key);
         notify(key);

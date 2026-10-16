@@ -225,3 +225,36 @@ describe('the depiction key of a Scene node (scene ports)', () => {
     expect(createScenePorts(state).depictionKeyOf({ kind: 'species', id: (withStructure[0] as { id: string }).id } as never)).toBeUndefined();
   });
 });
+
+describe('the engine was not ready yet (phone mode B, part 1)', () => {
+  function pendingRig() {
+    const r = rig();
+    let pending = true;
+    let ready: (() => void) | undefined;
+    const port: NavigatorDepictions = { ...r.port, enginePending: () => pending, engineReady: (listener) => ((ready = listener), () => undefined) };
+    return { r, port, becomeReady: () => ((pending = false), ready?.()) };
+  }
+
+  it('a structure that failed before the engine was ready is asked again when it is ready; one that failed afterwards is not', async () => {
+    const { r, port, becomeReady } = pendingRig();
+    const binding = createDepictionBinding(port, manualTimers());
+    const early = binding.keyOf(structure(2));
+    r.answer = () => Promise.resolve(failure('unavailable'));
+    binding.manager.request(early);
+    await settle();
+    expect(binding.manager.snapshot(early).state).toBe('unavailable');
+    r.answer = (s) => Promise.resolve(s.value === structure(4).value ? failure('invalid') : good);
+    becomeReady();
+    expect(binding.manager.snapshot(early)).toEqual({ state: 'idle' });
+    binding.manager.request(early);
+    await settle();
+    expect(binding.manager.snapshot(early).state).toBe('ready');
+    const bad = binding.keyOf(structure(4)); // the engine is ready now: an ordinary failure
+    binding.manager.request(bad);
+    await settle();
+    expect(binding.manager.snapshot(bad).state).toBe('unavailable');
+    becomeReady();
+    expect(binding.manager.snapshot(bad).state).toBe('unavailable');
+    expect(r.calls.filter((c) => c.structure.value === structure(4).value)).toHaveLength(1);
+  });
+});

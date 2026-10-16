@@ -33,6 +33,19 @@ export function createNavigatorPorts(services: NavigatorPortServices, measurer: 
           }
         });
       },
+      enginePending: () => {
+        const state = services.status.get().engines.chem.state;
+        return state === 'cold' || state === 'loading';
+      },
+      // every move to ready: a structure that failed only because the engine was still loading is asked for again
+      engineReady(listener) {
+        let ready = services.status.get().engines.chem.state === 'ready';
+        return services.status.subscribe((status) => {
+          const now = status.engines.chem.state === 'ready';
+          if (now && !ready) listener();
+          ready = now;
+        });
+      },
       // Object URLs are a browser API: made and revoked here, never in the feature. The SVG is sanitised text from the chem service.
       createUrl: (svg) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })),
       revokeUrl: (url) => URL.revokeObjectURL(url),

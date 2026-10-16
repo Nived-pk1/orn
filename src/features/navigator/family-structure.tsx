@@ -6,7 +6,7 @@
  */
 import type { RecordRef } from '@/core/schema';
 import { STRUCTURE_AREA } from '@/render/scene';
-import { useRetryingDepiction } from '@/render/svg';
+import { drawingFailed, useRetryingDepiction } from '@/render/svg';
 import { useFamilyEnv } from './family-env';
 import { FormulaText } from './family-text';
 import styles from './family-page.module.css';
@@ -19,7 +19,8 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
   const status = useRetryingDepiction(env.manager, key, env.timers);
   const boxStyle = { width: STRUCTURE_AREA.width, height: STRUCTURE_AREA.height };
   const url = key !== undefined && status.state === 'ready' ? status.url : undefined;
-  const unavailable = key !== undefined && status.state === 'unavailable';
+  // a structure that failed only because the engine was not ready yet still reads "Drawing the structure…" (it is asked again when ready)
+  const unavailable = key !== undefined && drawingFailed(status);
   return (
     <figure className={styles.substance} data-substance-id={props.substance.id}>
       <div className={styles.structure} style={boxStyle}>

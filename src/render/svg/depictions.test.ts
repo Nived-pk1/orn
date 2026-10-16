@@ -1,6 +1,6 @@
 /** The depiction manager (step 5.4a): statuses, the LRU bound, revokes, timeouts, late answers. All injected, no clock, no DOM. */
 import { describe, expect, it, vi } from 'vitest';
-import { createDepictionManager, DEPICTION_BUSY, DEPICTION_LRU_CAPACITY, type DepictionAnswer, type DepictionDeps } from './depictions';
+import { createDepictionManager, DEPICTION_BUSY, DEPICTION_LRU_CAPACITY, DEPICTION_NOT_READY, type DepictionAnswer, type DepictionDeps } from './depictions';
 
 interface Harness {
   readonly deps: DepictionDeps;
@@ -326,5 +326,53 @@ describe('forgetUnavailable (step 5.5d, item i)', () => {
     const manager = createDepictionManager(harness().deps);
     manager.dispose();
     expect(manager.forgetUnavailable()).toBe(0);
+  });
+});
+
+describe('forgetNotReady (phone mode B, part 1)', () => {
+  it('a failure while the engine is pending is kept as not_ready (also a timeout and a rejection); forgetNotReady forgets exactly those', async () => {
+    let pending = true;
+    const h = harness({ isPending: () => pending });
+    const manager = createDepictionManager(h.deps);
+    for (const key of ['answer', 'late', 'boom']) manager.request(key);
+    h.answers.get('answer')?.({ ok: false, reason: 'unavailable' });
+    h.rejects.get('boom')?.();
+    await flush();
+    [...h.timers.values()].forEach((t) => t.callback()); // 'late' times out; the others already settled
+    expect(manager.snapshot('answer')).toEqual({ state: 'unavailable', reason: DEPICTION_NOT_READY });
+    expect(manager.snapshot('late')).toEqual({ state: 'unavailable', reason: DEPICTION_NOT_READY });
+    expect(manager.snapshot('boom')).toEqual({ state: 'unavailable', reason: DEPICTION_NOT_READY });
+    pending = false;
+    const told: string[] = [];
+    manager.subscribe('answer', () => told.push('answer'));
+    expect(manager.forgetNotReady()).toBe(3);
+    expect(told).toEqual(['answer']);
+    expect(manager.snapshot('answer')).toEqual({ state: 'idle' });
+    manager.request('answer');
+    expect(h.fetched.filter((k) => k === 'answer')).toHaveLength(2);
+  });
+
+  it('a failure for any other reason (engine ready or failed) keeps its reason and is not forgotten; ready keys stay', async () => {
+    const h = harness({ isPending: () => false });
+    const manager = createDepictionManager(h.deps);
+    for (const key of ['bad', 'good']) manager.request(key);
+    h.answers.get('bad')?.({ ok: false, reason: 'invalid' });
+    h.answers.get('good')?.({ ok: true, svg: '<svg/>' });
+    await flush();
+    expect(manager.snapshot('bad')).toEqual({ state: 'unavailable', reason: 'invalid' });
+    expect(manager.forgetNotReady()).toBe(0);
+    expect(manager.snapshot('bad')).toEqual({ state: 'unavailable', reason: 'invalid' });
+    expect(manager.snapshot('good').state).toBe('ready');
+  });
+
+  it('an answer that is a drawing while the engine is pending stays a drawing; nothing after dispose', async () => {
+    const h = harness({ isPending: () => true });
+    const manager = createDepictionManager(h.deps);
+    manager.request('a');
+    h.answers.get('a')?.({ ok: true, svg: '<svg/>' });
+    await flush();
+    expect(manager.snapshot('a').state).toBe('ready');
+    manager.dispose();
+    expect(manager.forgetNotReady()).toBe(0);
   });
 });

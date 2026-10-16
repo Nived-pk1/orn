@@ -1,5 +1,5 @@
 export { SceneSvg } from './scene-svg';
-export { createDepictionManager, DEPICTION_BUSY, DEPICTION_LRU_CAPACITY, DEPICTION_TIMEOUT_MS } from './depictions';
+export { createDepictionManager, DEPICTION_BUSY, DEPICTION_LRU_CAPACITY, DEPICTION_NOT_READY, DEPICTION_TIMEOUT_MS, drawingFailed } from './depictions';
 export type { DepictionAnswer, DepictionDeps, DepictionManager } from './depictions';
 export { MAX_DEPICTION_RETRIES, RETRY_DELAY_MS, useRetryingDepiction } from './use-depiction-retry';
 export type { DepictionTimers } from './use-depiction-retry';

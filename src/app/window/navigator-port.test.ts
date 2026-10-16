@@ -44,3 +44,43 @@ describe('depictions.recovered', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('depictions.enginePending / engineReady (phone mode B, part 1)', () => {
+  function engineRig() {
+    const status = createStatusStore(() => undefined);
+    const services = { status, store: {}, indexes: {}, layout: {}, logApp: () => undefined, depictions: {} } as unknown as NavigatorPortServices;
+    const ports = createNavigatorPorts(services, { measure: () => ({ width: 1 }), ready: () => Promise.resolve() } as never, { after: () => () => undefined }, { stores: {}, status: {} } as never);
+    const chem = (state: AppStatus['engines']['chem']['state']): void => void status.update({ engines: { ...INITIAL_STATUS.engines, chem: { state, message: null } } });
+    return { depictions: ports.depictions, chem };
+  }
+
+  it('pending while cold or loading; not pending when ready or unavailable', () => {
+    const { depictions, chem } = engineRig();
+    expect(depictions?.enginePending?.()).toBe(true);
+    chem('loading');
+    expect(depictions?.enginePending?.()).toBe(true);
+    chem('ready');
+    expect(depictions?.enginePending?.()).toBe(false);
+    chem('unavailable');
+    expect(depictions?.enginePending?.()).toBe(false);
+  });
+
+  it('fires at every move to ready (the first load too), not on other changes, and stops after the unsubscribe', () => {
+    const { depictions, chem } = engineRig();
+    const listener = vi.fn();
+    const off = depictions?.engineReady?.(listener) ?? (() => undefined);
+    chem('loading');
+    expect(listener).not.toHaveBeenCalled();
+    chem('ready');
+    expect(listener).toHaveBeenCalledTimes(1);
+    chem('ready');
+    expect(listener).toHaveBeenCalledTimes(1);
+    chem('cold');
+    chem('ready');
+    expect(listener).toHaveBeenCalledTimes(2);
+    off();
+    chem('cold');
+    chem('ready');
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
+});

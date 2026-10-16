@@ -34,6 +34,10 @@ export interface NavigatorDepictions {
    * answers the unsubscribe. Absent: nothing is forgotten (an unavailable structure stays a name until the page is reloaded).
    */
   recovered?(listener: () => void): () => void;
+  /** True while the chemistry engine is still loading (cold or loading, not failed). Absent: never. */
+  enginePending?(): boolean;
+  /** Calls the listener each time the chemistry engine becomes ready (also the first time); answers the unsubscribe. */
+  engineReady?(listener: () => void): () => void;
   /** SVG text to an object URL, and its revoking. */
   createUrl(svg: string): string;
   revokeUrl(url: string): void;

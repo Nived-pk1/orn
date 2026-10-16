@@ -146,7 +146,8 @@ const INIT = `(() => {
     if (ms.a === undefined && [...document.querySelectorAll('h2')].some((h) => h.textContent === 'Get started')) ms.a = now;
     if (ms.chem === undefined && (document.querySelector('footer')?.textContent ?? '').includes('chem ok')) ms.chem = now;
     const svg = document.querySelector('svg[role="group"]');
-    if (ms.b0 !== undefined && ms.b === undefined && svg && svg.getAttribute('data-lod') !== '0' && svg.querySelector('[data-node-id]')) ms.b = now;
+    // the first view: the map's drawing (desktop, the Map tab) or, on a phone, the Families tab's cards
+    if (ms.b0 !== undefined && ms.b === undefined && ((svg && svg.getAttribute('data-lod') !== '0' && svg.querySelector('[data-node-id]')) || document.querySelector('[data-view="families"] [data-family-id]'))) ms.b = now;
     if (ms.c0 !== undefined && ms.p === undefined && document.querySelector('[aria-label="Family page: Alcohols"]')) ms.p = now;
     if (ms.c0 !== undefined && ms.c === undefined && [...document.querySelectorAll('img[alt^="Structure of"]')].some((i) => i.naturalWidth > 0)) ms.c = now;
   };
@@ -168,11 +169,16 @@ async function until(page: Page, field: 'a' | 'b' | 'c'): Promise<void> {
 }
 const CAP = Number(process.env.ORN_CAP ?? 60_000);
 
-/** Opens the Alcohols page by a double tap, opens the Aldehydes group and scrolls to the first card with a real structure; true when a structure is drawn within the cap. */
+/** The Families tab's card of Alcohols exists (the phone layout, from phone mode A on): one tap opens the page; else the map's hub is double tapped. */
+const alcoholsCard = (page: Page) => page.locator('button[data-family-id="cls_alcohols"]');
+
+/** Opens the Alcohols page by a tap on its Families card (phone) or a double tap on the map hub (before phone mode), opens the Aldehydes group and scrolls to the first card with a real structure; true when a structure is drawn within the cap. */
 async function openFamily(page: Page, cap: number, again = false): Promise<boolean> {
-  const centre = await settledCentre(page);
+  const cards = (await alcoholsCard(page).count()) > 0;
+  const centre = cards ? undefined : await settledCentre(page);
   if (!again) await mark(page, 'c0');
-  await page.mouse.dblclick(centre.x, centre.y);
+  if (centre === undefined) await alcoholsCard(page).tap();
+  else await page.mouse.dblclick(centre.x, centre.y);
   await page.getByRole('region', { name: 'Family page: Alcohols' }).waitFor();
   await page.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).tap(); // the reactions of a group (and their structures) show once a group is opened
   await page.getByRole('heading', { level: 4, name: 'Ethanol → ethanal (PCC)' }).scrollIntoViewIfNeeded(); // the first card with a real structure
@@ -220,7 +226,9 @@ async function visit(context: BrowserContext, cdp: Cdp, url: string): Promise<Vi
   if (first === undefined) {
     // the structures did not come: wait until the RDKit wasm is loaded, go back to the map and open the page again
     for (let i = 0; i < 1200 && ![...recorder.resources.values()].some((r) => r.url.endsWith('.wasm') && !Number.isNaN(r.endEpoch)); i += 1) await page.waitForTimeout(100);
-    await page.getByRole('button', { name: 'Overview' }).tap();
+    const home = page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Families' });
+    if ((await home.count()) > 0) await home.tap();
+    else await page.getByRole('button', { name: 'Overview' }).tap();
     await page.evaluate(() => { const ms = (window as unknown as { __ms: Record<string, number | undefined> }).__ms; delete ms.p; delete ms.c; ms.c0 = performance.now(); });
     second = (await openFamily(page, CAP, true)) ? await clock() : undefined;
   }
@@ -228,7 +236,9 @@ async function visit(context: BrowserContext, cdp: Cdp, url: string): Promise<Vi
   const resources = [...recorder.resources.values()].map((r) => ({ ...r, startEpoch: r.startEpoch - marks.origin, endEpoch: r.endEpoch - marks.origin }));
   const attaches = recorder.attaches.map((x) => ({ ...x, epoch: x.epoch - marks.origin }));
   await page.close();
-  return { chem: marks.chem ?? NaN, a: marks.a ?? NaN, p: first === undefined ? NaN : (first.p ?? NaN) - (first.c0 ?? 0), b: (marks.b ?? NaN) - (marks.b0 ?? 0), c: first === undefined ? NaN : (first.c ?? NaN) - (first.c0 ?? 0), c2: second === undefined ? NaN : (second.c ?? NaN) - (second.c0 ?? 0), marks, resources, attaches };
+  // a phone shows no status line, so "chem ok" is not on the page: the end of the RDKit wasm download stands in for it (engine ready is a moment later)
+  const wasm = resources.find((r) => r.url.endsWith('.wasm') && !Number.isNaN(r.endEpoch));
+  return { chem: marks.chem ?? wasm?.endEpoch ?? NaN, a: marks.a ?? NaN, p: first === undefined ? NaN : (first.p ?? NaN) - (first.c0 ?? 0), b: (marks.b ?? NaN) - (marks.b0 ?? 0), c: first === undefined ? NaN : (first.c ?? NaN) - (first.c0 ?? 0), c2: second === undefined ? NaN : (second.c ?? NaN) - (second.c0 ?? 0), marks, resources, attaches };
 }
 
 /** Empties IndexedDB of the origin and keeps the HTTP cache (a plain text page of the same origin does the deleting). */

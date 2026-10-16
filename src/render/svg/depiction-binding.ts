@@ -8,6 +8,9 @@
  * bounded number of times); `timeout`, `invalid`, `refused`, `bad_options` and `unavailable` are `unavailable` and cached by the
  * manager (a timeout is NOT retried: a hung structure must not restart the chem worker again and again). After the engine has been retried
  * successfully (`port.recovered`, step 5.5d) the manager forgets the unavailable keys, so they are asked for again when next shown.
+ * A failure while the engine is still loading (`port.enginePending`) is kept as `not_ready`; when the engine is ready (`port.engineReady`,
+ * listened to only after a request was made while it was loading) the manager forgets just those keys, so the cards that show them ask
+ * again (phone mode B, part 1: a slow phone opens a page before the wasm has arrived).
  */
 import type { StructureRep } from '@/core/schema';
 import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer, type DepictionManager } from './depictions';
@@ -21,6 +24,10 @@ export interface DepictionPort {
   depict(structure: StructureRep, size: Area): Promise<{ readonly ok: true; readonly svg: string } | { readonly ok: false; readonly reason: string; readonly message: string }>;
   cancel(key: string): void;
   recovered?(listener: () => void): () => void;
+  /** True while the chem engine is still loading (not ready, not failed). Absent: never. */
+  enginePending?(): boolean;
+  /** Calls the listener each time the chem engine becomes ready; answers the unsubscribe. */
+  engineReady?(listener: () => void): () => void;
   createUrl(svg: string): string;
   revokeUrl(url: string): void;
 }
@@ -45,7 +52,19 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
     lookup.set(key, structure);
     while (lookup.size > MAX_DEPICTION_LOOKUP) lookup.delete(lookup.keys().next().value as string);
   };
+  // Listening for "the engine is ready" costs a subscription, so it is made only while a request was asked before the engine was ready, and
+  // dropped when it fires (a binding that never asked early listens to nothing).
+  let stopListening: (() => void) | undefined;
+  const listenForReady = (): void => {
+    if (stopListening !== undefined || port.engineReady === undefined) return;
+    stopListening = port.engineReady(() => {
+      stopListening?.();
+      stopListening = undefined;
+      manager.forgetNotReady();
+    });
+  };
   const fetchSvg = async (key: string): Promise<DepictionAnswer> => {
+    if (port.enginePending?.() === true) listenForReady();
     const structure = lookup.get(key);
     // A key that left the lookup is not in the drawing any more: not an answer about the structure, so not cached.
     if (structure === undefined) return { ok: false, reason: DEPICTION_BUSY };
@@ -59,6 +78,7 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
     revokeUrl: (url) => port.revokeUrl(url),
     setTimer: (callback, ms) => timers.after(ms, callback),
     clearTimer: (handle) => (handle as () => void)(),
+    isPending: () => port.enginePending?.() === true,
   });
   const cancel = manager.cancel;
   // after a successful retry of the chemistry engine every structure that was unavailable is asked for again when it is next shown

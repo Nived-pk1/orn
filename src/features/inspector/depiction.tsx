@@ -5,7 +5,7 @@
  */
 import { useMemo } from 'react';
 import type { StructureRep } from '@/core/schema';
-import { createDepictionBinding, useRetryingDepiction } from '@/render/svg';
+import { createDepictionBinding, drawingFailed, useRetryingDepiction } from '@/render/svg';
 import { useInspectorEnv } from './env';
 import styles from './inspector.module.css';
 
@@ -21,7 +21,7 @@ export function Depiction(props: { readonly structure: StructureRep | undefined;
   const status = useRetryingDepiction(binding?.manager, key, ports.timers);
   if (props.structure === undefined) return null;
   if (status.state === 'ready') return <img className={compact ? styles.stepStructure : styles.structure} src={status.url} alt={`Structure of ${props.name}`} />;
-  const why = status.state === 'unavailable' ? 'The structure could not be drawn.' : binding === undefined ? 'No structure is drawn here.' : 'Drawing the structure.';
+  const why = drawingFailed(status) ? 'The structure could not be drawn.' : binding === undefined ? 'No structure is drawn here.' : 'Drawing the structure.';
   return (
     <p className={styles.muted} role="status">
       {why} {props.fallback ?? ''}
