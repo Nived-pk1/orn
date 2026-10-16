@@ -404,9 +404,10 @@
     "partsDone": [
       0,
       1,
-      2
+      2,
+      3
     ],
-    "next": "part 3 bottom sheet, part 4 tabs and map controls, then deploy",
+    "next": "part 4 tabs and map controls, e2e rewrite, then deploy",
     "decisions": "ADR-039; docs/UI_ARCHITECTURE.md section 13"
   }
 }

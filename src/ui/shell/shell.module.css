@@ -300,18 +300,6 @@
   justify-content: flex-end;
 }
 
-.shell[data-layout='phone'] .inspector {
-  top: auto;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: auto;
-  max-height: 60vh;
-  border-left: 0;
-  border-top: 1px solid var(--color-ink-2);
-  box-shadow: 0 -2px 0 var(--color-rule);
-}
-
 .phoneAlert {
   grid-area: status;
   min-width: 0;

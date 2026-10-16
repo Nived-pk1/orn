@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type Reac
 import { useLayoutMode } from '@/ui/hooks';
 import { IconButton, openLayers } from '@/ui/primitives';
 import { ModeRail, type ModeItem } from './mode-rail';
+import { PhoneSheet } from './phone-sheet';
 import { ResizeHandle } from './resize-handle';
 import styles from './shell.module.css';
 import { useBreakpoint } from './use-breakpoint';
@@ -120,13 +121,19 @@ export function Shell(props: ShellProps) {
       <div className={styles.banners}>{phone === undefined ? props.banners : phone.notices}</div>
       <main className={styles.canvas}>{props.canvas}</main>
       {wide && pane.open ? <ResizeHandle width={pane.width} min={pane.min} max={pane.max} onWidth={pane.onWidth} edge={edge} /> : null}
-      <aside className={styles.inspector} aria-label={props.inspectorTitle} hidden={!inspectorOpen} onKeyDown={escape}>
-        <div className={styles.inspectorHeader}>
-          <h2 className={styles.inspectorTitle}>{props.inspectorTitle}</h2>
-          {wide ? null : <IconButton label="Close inspector" icon="close" onClick={() => setDrawerOpen(false)} />}
-        </div>
-        <div className={styles.inspectorBody}>{props.inspector}</div>
-      </aside>
+      {phone === undefined ? (
+        <aside className={styles.inspector} aria-label={props.inspectorTitle} hidden={!inspectorOpen} onKeyDown={escape}>
+          <div className={styles.inspectorHeader}>
+            <h2 className={styles.inspectorTitle}>{props.inspectorTitle}</h2>
+            {wide ? null : <IconButton label="Close inspector" icon="close" onClick={() => setDrawerOpen(false)} />}
+          </div>
+          <div className={styles.inspectorBody}>{props.inspector}</div>
+        </aside>
+      ) : (
+        <PhoneSheet title={props.inspectorTitle} openRequest={requested}>
+          {props.inspector}
+        </PhoneSheet>
+      )}
       {phone?.tabs ?? null}
       {phone === undefined ? <footer className={styles.statusBar} tabIndex={0}>{props.statusBar}</footer> : <div className={styles.phoneAlert}>{phone.alert}</div>}
     </div>

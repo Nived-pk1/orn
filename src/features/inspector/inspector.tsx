@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
 import type { RecordRef } from '@/core/schema';
 import { useLayoutMode } from '@/ui/hooks';
+import { SHEET_TITLE_ID } from '@/ui/shell';
 import { canBack, canForward, currentOf } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { InspectorEnvContext, makeEnv, useInspectorEnv, type InspectorEnv } from './env';
@@ -67,7 +68,7 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   return (
     <InspectorEnvContext.Provider value={env}>
       <article className={styles.root} aria-label="Record" data-record-id={current.id}>
-        <div className={styles.nav} role="group" aria-label="History">
+        <div className={styles.nav} role="group" aria-label="History" data-sheet-full="">
           <button type="button" disabled={!canBack({ index })} onClick={() => inspector.getState().back()} aria-keyshortcuts="Alt+ArrowLeft">
             Back
           </button>
@@ -100,7 +101,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
   return (
     <>
       <header className={styles.header}>
-        <h3 className={styles.title}>{name}</h3>
+        <h3 className={styles.title} id={SHEET_TITLE_ID}>{name}</h3>
         <span className={styles.kind}>{kindWord(props.refOf.kind)}</span>
         {badges.length === 0 && l4 === undefined ? null : (
           <ul className={styles.badges} aria-label="Findings and checks">
@@ -127,10 +128,12 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
           </p>
         )}
       </header>
-      <KindLevels record={record} findings={findings} />
-      <LevelSection level={5} title="Provenance, findings and raw record">
-        <ProvenanceLevel record={record} findings={findings} />
-      </LevelSection>
+      <div data-sheet-full="">
+        <KindLevels record={record} findings={findings} />
+        <LevelSection level={5} title="Provenance, findings and raw record">
+          <ProvenanceLevel record={record} findings={findings} />
+        </LevelSection>
+      </div>
     </>
   );
 }

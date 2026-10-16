@@ -1,0 +1,74 @@
+/*
+ * The phone inspector sheet (ADR-039). Fixed to the bottom, above the tab bar's own space (the tab bar is part of the page flow: the sheet
+ * covers it only at full). PEEK is about 35% of the screen so the map above stays visible; FULL leaves the top bar. Non-modal: no scrim,
+ * nothing is made inert.
+ */
+.sheet {
+  position: fixed;
+  z-index: var(--z-drawer);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid var(--color-ink-2);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: var(--color-surface);
+  box-shadow: 0 -2px 0 var(--color-rule);
+  outline: none;
+}
+
+.sheet[hidden] {
+  display: none;
+}
+
+.sheet[data-sheet='peek'] {
+  height: 35vh;
+  height: 35dvh;
+}
+
+.sheet[data-sheet='full'] {
+  top: var(--top-bar-height);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  /* a swipe on the head is the sheet's, not the page's */
+  touch-action: none;
+}
+
+.handle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+}
+
+.grip {
+  display: block;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-ink-2);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+/* at peek the part marked data-sheet-full is not shown; the main actions are large buttons */
+.sheet[data-sheet='peek'] [data-sheet-full] {
+  display: none;
+}

@@ -89,6 +89,14 @@ export async function openApp(page: Page): Promise<void> {
   await expect(page.getByText('Starting up', { exact: true })).toHaveCount(0);
 }
 
+/** The phone layout has no status line on the page (ADR-039): the page is up when the title is there and start-up has finished. */
+export async function openPhoneApp(page: Page): Promise<void> {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
+  await expect(page.getByText('Starting up', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
+}
+
 export async function loadDemo(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Load demo dataset' }).click();
   await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
