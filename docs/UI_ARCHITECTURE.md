@@ -163,3 +163,14 @@ Touch: one-finger pan, pinch zoom, tap select, double-tap expand, long-press (50
 First run offers "Load demo dataset", "Import v6 export" and "Start empty". Loading states are skeletons, never spinners over blank canvases longer than 300 ms. Truncated projections say what was cut and how to see more. Panels have error boundaries with "Reload panel" (PERSISTENCE.md §12).
 
 - *2026-10-13 (step 5.10a review, REVIEW REQUIRED 1).* After the first-run screen, and after any import ends, focus moves to the page title (the `h1`), not to a heading inside the main region. This is the one focus target for those two moments.
+
+## 13. Phone layout
+
+*2026-10-16 (ADR-039, reviewer decisions).* Supersedes the < 900 px rules of §2 for phones only; the desktop and tablets (>= 700 px wide) render exactly as before.
+
+- **Mode**: one hook, `useLayoutMode()` -> `'desktop' | 'phone'`, from `matchMedia`: phone when `(max-width: 699px)`, or `(pointer: coarse) and (max-height: 499px)` (a phone in landscape). The CSS uses the same two queries.
+- **Shell**: one slim top bar (title "ORN", search button, "More" menu button). More holds File items, Exam scope, Dataset counts, About this preview, Status. No Undo / Redo (until Phase 6; revisit in 6.1), no mode list, no keyboard hints. The status line shows only a one-line alert when something needs the user (save failed, storage not persistent, worker down, records set aside, quarantine); a tap opens Status. Notices and banners fold into one line ("2 notices") that expands on tap.
+- **Home**: bottom tab bar "Families | Map | Search" (48 px, labelled icons, current tab marked), default Families, last tab remembered in `uiState`. Families = the List projection as cards grouped by family colour group (Hydrocarbons, Halogen compounds, Oxygen compounds, Nitrogen compounds, Unclassified, "Unanchored reactions (N)"): name, general formula, "N reactions"; a tap opens the family page. Search opens the existing palette full-screen.
+- **Map**: no toolbar row, no permanent legend; round floating Fit and Legend (i) buttons (Legend opens a sheet). Pinch zoom, minimum = `FIT_FLOOR`. One tap on a family selects it and opens the sheet at peek; double tap opens the family page; long press keeps the context menu; a tap on an arrow opens the sheet with its reactions.
+- **Inspector sheet**: a bottom sheet with peek (~35%: name, kind, key line, large main-action buttons such as "Open family", "Show on map"), full (all inspector content) and closed. Drag handle, swipe up / down, Close button, Escape closes; focus moves in on open and back to the tapped item on close; a non-modal region labelled by the record's name; the content above stays visible at peek. The same inspector content as the desktop.
+- **Next (not built here)**: the family page on phone (single column, vertical reaction scheme); load-time fixes.
