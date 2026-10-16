@@ -181,17 +181,27 @@ export function createFamilyStore(initial: string | null = null): FamilyStore {
 export type OverviewMode = 'map' | 'list';
 export const OVERVIEW_MODES: readonly OverviewMode[] = ['map', 'list'];
 
+/** The phone's home tab (ADR-039): the families as cards, or the map. (Search is an action, not a place, so it is not remembered.) Saved in `uiState` only when it is not the default. */
+export type PhoneTab = 'families' | 'map';
+export const PHONE_TABS: readonly PhoneTab[] = ['families', 'map'];
+
 export interface OverviewState {
   readonly mode: OverviewMode;
   setMode(mode: OverviewMode): void;
+  readonly phoneTab: PhoneTab;
+  setPhoneTab(tab: PhoneTab): void;
 }
 export type OverviewStore = StoreApi<OverviewState>;
 
-export function createOverviewStore(initial: OverviewMode = 'map'): OverviewStore {
+export function createOverviewStore(initial: OverviewMode = 'map', initialTab: PhoneTab = 'families'): OverviewStore {
   return createStore<OverviewState>((set, get) => ({
     mode: initial,
     setMode(mode) {
       if (get().mode !== mode) set({ mode });
+    },
+    phoneTab: initialTab,
+    setPhoneTab(tab) {
+      if (get().phoneTab !== tab) set({ phoneTab: tab });
     },
   }));
 }

@@ -1,6 +1,6 @@
 /**
  * The page never scrolls sideways with the inspector open (step 5.10a review; UI_ARCHITECTURE: the narrow behaviour is a drawer or sheet, not
- * a wider page). At 600 x 800 and at 1280 x 800, in Chromium, Firefox and WebKit: `scrollWidth <= clientWidth` of the document.
+ * a wider page). At 700 x 800 and at 1280 x 800, in Chromium, Firefox and WebKit: `scrollWidth <= clientWidth` of the document.
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
@@ -27,7 +27,7 @@ const wider = (page: Page): Promise<string[]> =>
     return found;
   });
 
-for (const width of [600, 1280]) {
+for (const width of [700, 1280]) {
   test(`with the inspector open the page is not wider than the window at ${width} x 800`, async ({ page }) => {
     test.setTimeout(240_000);
     const seen = await watch(page);

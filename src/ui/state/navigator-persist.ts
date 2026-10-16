@@ -21,9 +21,11 @@ import {
   createViewportsStore,
   NO_EXPANSION_STATE,
   OVERVIEW_MODES,
+  PHONE_TABS,
   type ActiveExam,
   type NavigatorUiStores,
   type OverviewMode,
+  type PhoneTab,
   type SavedViewport,
   type Selected,
 } from './navigator-stores';
@@ -35,7 +37,7 @@ export const NAVIGATOR_UI_KEY = 'navigator';
 export const MAX_SAVED_EXPANDED = 1_000;
 const MAX_ID_LENGTH = 512;
 const MAX_COORDINATE = 1e7;
-const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'recentSearches', 'activeExam']);
+const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'phoneTab', 'recentSearches', 'activeExam']);
 
 /** The same shape as the panels port: the stored entry, whether this tab writes, and the write. */
 export type NavigatorUiPort = PanelsPort;
@@ -48,6 +50,8 @@ export interface ParsedNavigatorUi {
   readonly openFamily: string | null;
   /** Map or List (step 5.7). */
   readonly overviewMode: OverviewMode;
+  /** The phone's home tab (ADR-039); absent in the file means the default, Families. */
+  readonly phoneTab: PhoneTab;
   /** The palette's recent searches, newest first (step 5.8). */
   readonly recent: readonly string[];
   /** The chosen exam version (step 5.8), or null: no exam scope. Not judged against the data here: the selector does that. */
@@ -74,7 +78,7 @@ function parseExpanded(value: unknown): ExpansionState['expanded'] | undefined {
 }
 
 export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
-  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', recent: [], exam: null, damaged: [], extra: {} };
+  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', phoneTab: 'families', recent: [], exam: null, damaged: [], extra: {} };
   if (raw === undefined) return empty;
   if (!isRecord(raw)) return { ...empty, damaged: ['navigator'] };
   const damaged: string[] = [];
@@ -106,6 +110,11 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     if ((OVERVIEW_MODES as readonly unknown[]).includes(raw.overviewMode)) overviewMode = raw.overviewMode as OverviewMode;
     else damaged.push('overviewMode');
   }
+  let phoneTab: PhoneTab = 'families';
+  if (raw.phoneTab !== undefined) {
+    if ((PHONE_TABS as readonly unknown[]).includes(raw.phoneTab)) phoneTab = raw.phoneTab as PhoneTab;
+    else damaged.push('phoneTab');
+  }
   let recent: string[] = [];
   const r = raw.recentSearches;
   if (r !== undefined) {
@@ -130,7 +139,7 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     } else damaged.push('viewports');
   }
   const extra = Object.fromEntries(Object.entries(raw).filter(([key]) => !KNOWN.has(key)));
-  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, recent, exam, damaged, extra };
+  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, phoneTab, recent, exam, damaged, extra };
 }
 
 export interface NavigatorUiStatus {
@@ -159,7 +168,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     exam: createActiveExamStore(parsed.exam),
     viewports: createViewportsStore(parsed.views),
     family: createFamilyStore(parsed.openFamily),
-    overview: createOverviewStore(parsed.overviewMode),
+    overview: createOverviewStore(parsed.overviewMode, parsed.phoneTab),
     recent: createRecentStore(parsed.recent),
     viewCommands: createViewCommandsStore(),
   };
@@ -182,11 +191,11 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { expansion } = stores.expansion.getState();
     const { views } = stores.viewports.getState();
     const { open } = stores.family.getState();
-    const { mode: overviewMode } = stores.overview.getState();
+    const { mode: overviewMode, phoneTab } = stores.overview.getState();
     const { items: recentSearches } = stores.recent.getState();
     const { active: activeExam } = stores.exam.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, recentSearches, activeExam });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === 'families' ? {} : { phoneTab }), recentSearches, activeExam });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

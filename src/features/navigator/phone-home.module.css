@@ -1,0 +1,134 @@
+/* The phone home (ADR-039): the Families tab, the bottom tab bar and the map's floating buttons. */
+.families {
+  height: 100%;
+  overflow: auto;
+  padding: var(--space-3) var(--space-4) var(--space-6);
+}
+
+.group {
+  margin-bottom: var(--space-4);
+}
+
+.groupTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-14);
+  font-weight: 700;
+  color: var(--color-ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'name count'
+    'formula count';
+  align-items: center;
+  column-gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tab-bar-height);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-left-width: 4px;
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+}
+
+.card[data-tone='blue'] { border-color: var(--color-tone-blue-border); border-left-color: var(--color-tone-blue-ink); background: var(--color-tone-blue-tint); }
+.card[data-tone='green'] { border-color: var(--color-tone-green-border); border-left-color: var(--color-tone-green-ink); background: var(--color-tone-green-tint); }
+.card[data-tone='amber'] { border-color: var(--color-tone-amber-border); border-left-color: var(--color-tone-amber-ink); background: var(--color-tone-amber-tint); }
+.card[data-tone='violet'] { border-color: var(--color-tone-violet-border); border-left-color: var(--color-tone-violet-ink); background: var(--color-tone-violet-tint); }
+.card[data-tone='teal'] { border-color: var(--color-tone-teal-border); border-left-color: var(--color-tone-teal-ink); background: var(--color-tone-teal-tint); }
+.card[data-tone='rose'] { border-color: var(--color-tone-rose-border); border-left-color: var(--color-tone-rose-ink); background: var(--color-tone-rose-tint); }
+.card[data-tone='slate'] { border-color: var(--color-tone-slate-border); border-left-color: var(--color-tone-slate-ink); background: var(--color-tone-slate-tint); }
+
+.cardName {
+  grid-area: name;
+  font-size: var(--text-16);
+  font-weight: 600;
+}
+
+.cardFormula {
+  grid-area: formula;
+  font-size: var(--text-13);
+  color: var(--color-ink-2);
+}
+
+.cardCount {
+  grid-area: count;
+  font-size: var(--text-13);
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.unanchored {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.tabs {
+  grid-area: tabs;
+  display: flex;
+  min-width: 0;
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-surface);
+}
+
+.tab {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--tab-bar-height);
+  padding: var(--space-1);
+  border: 0;
+  border-top: 3px solid transparent;
+  background: transparent;
+  color: var(--color-ink-2);
+  font: inherit;
+  font-size: var(--text-13);
+}
+
+.tab[aria-current='page'] {
+  border-top-color: var(--color-accent);
+  background: var(--color-hover);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.floating {
+  position: absolute;
+  z-index: 1;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.round {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--color-ink-2);
+  border-radius: 50%;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}

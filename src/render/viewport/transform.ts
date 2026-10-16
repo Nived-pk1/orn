@@ -6,7 +6,8 @@ import { FIT_PADDING, FOCUS_MAX_SCALE, SCALE_MAX, SCALE_MIN } from './contracts'
 
 export const IDENTITY: Viewport = { x: 0, y: 0, scale: 1 };
 
-export const clampScale = (scale: number): number => (Number.isFinite(scale) ? Math.min(SCALE_MAX, Math.max(SCALE_MIN, scale)) : 1);
+/** `min` is the smallest scale allowed (default `SCALE_MIN`; a phone passes `FIT_FLOOR`, so names never vanish). */
+export const clampScale = (scale: number, min: number = SCALE_MIN): number => (Number.isFinite(scale) ? Math.min(SCALE_MAX, Math.max(min, scale)) : 1);
 
 /** The part of the world the screen shows, in world units. */
 export function worldRect(view: Viewport, size: Size): Rect {

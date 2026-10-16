@@ -126,3 +126,33 @@ describe('PhoneSheet', () => {
     expect(sheet().getAttribute('data-sheet')).toBe('full');
   });
 });
+
+describe('PhoneSheet: a request to close', () => {
+  function Closing() {
+    const [open, setOpen] = useState(0);
+    const [close, setClose] = useState(0);
+    return (
+      <>
+        <button type="button" onClick={() => setOpen((n) => n + 1)}>
+          open it
+        </button>
+        <button type="button" onClick={() => setClose((n) => n + 1)}>
+          close it
+        </button>
+        <PhoneSheet title="Inspector" openRequest={open} closeRequest={close}>
+          <p>content</p>
+        </PhoneSheet>
+      </>
+    );
+  }
+
+  it('closes an open sheet when the close request goes up, and a closed one stays closed', () => {
+    render(<Closing />);
+    fireEvent.click(screen.getByRole('button', { name: 'close it' }));
+    expect(sheet().hidden).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'open it' }));
+    expect(sheet().getAttribute('data-sheet')).toBe('peek');
+    fireEvent.click(screen.getByRole('button', { name: 'close it' }));
+    expect(sheet().hidden).toBe(true);
+  });
+});

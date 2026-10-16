@@ -40,6 +40,8 @@ export interface ShellProps {
   readonly pane: InspectorPane;
   /** A number that goes up each time something asks for the inspector below the wide breakpoint (the drawer or sheet opens). */
   readonly openRequest?: number;
+  /** The same for closing the phone's sheet (a main action in it moved the page). */
+  readonly closeRequest?: number;
   /** A number that goes up when the page asks for the focus to go to its title (the first-run screen closed: the button that had it is gone). */
   readonly focusTitleRequest?: number;
   readonly statusBar: ReactNode;
@@ -130,7 +132,7 @@ export function Shell(props: ShellProps) {
           <div className={styles.inspectorBody}>{props.inspector}</div>
         </aside>
       ) : (
-        <PhoneSheet title={props.inspectorTitle} openRequest={requested}>
+        <PhoneSheet title={props.inspectorTitle} openRequest={requested} closeRequest={props.closeRequest ?? 0}>
           {props.inspector}
         </PhoneSheet>
       )}

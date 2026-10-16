@@ -31,6 +31,8 @@ export interface ViewportSceneProps {
   readonly initialViewport?: Viewport;
   /** Called with the viewport once it has been still for `VIEWPORT_SETTLE_MS` (never per frame), and when the drawing goes away with a move pending; `automatic` is true while the view is still the one the automatic fit made. Keep it stable. */
   readonly onSettled?: (view: Viewport, automatic: boolean) => void;
+  /** The smallest zoom a gesture or a command reaches (the phone's name floor). Default: the global minimum. */
+  readonly minScale?: number;
   /** The delegated click and double click on the drawing (see `SceneSvgProps`). Keep them stable. */
   readonly onSceneClick?: (hit: SceneHit | null) => void;
   readonly onSceneDoubleClick?: (hit: SceneHit | null) => void;
@@ -67,7 +69,7 @@ export function ViewportScene(props: ViewportSceneProps) {
   const pointerRef = useRef(props.pointer);
   pointerRef.current = props.pointer;
   const hasPointer = props.pointer !== undefined;
-  const { pointerTimers, onSvg } = props;
+  const { pointerTimers, onSvg, minScale } = props;
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -85,8 +87,9 @@ export function ViewportScene(props: ViewportSceneProps) {
       cancel: (handle) => window.cancelAnimationFrame(handle as number),
       onCommand: (view) => bound.binding?.adopt(view),
       onFrame: (candidates, lod) => queue?.update(candidates, lod),
+      ...(minScale === undefined ? {} : { minScale }),
     });
-    bound.binding = bindZoom(svg, controller.gesture);
+    bound.binding = bindZoom(svg, controller.gesture, minScale);
     controllerRef.current = controller;
     controller.setScene(sceneRef.current);
     let fitted = false;
@@ -145,7 +148,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       controller.dispose();
       controllerRef.current = null;
     };
-  }, [store, depictions, onController, onSettled]);
+  }, [store, depictions, onController, onSettled, minScale]);
 
   useEffect(() => {
     controllerRef.current?.setScene(scene);

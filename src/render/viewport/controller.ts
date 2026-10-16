@@ -22,6 +22,8 @@ export interface ControllerDeps {
   readonly onCommand?: (view: Viewport) => void;
   /** Called in each frame with the depiction candidates (empty below LOD 3). */
   readonly onFrame?: (candidates: readonly string[], lod: number) => void;
+  /** The smallest scale a gesture or a command may reach (default `SCALE_MIN`; the phone's is the name floor). */
+  readonly minScale?: number;
 }
 
 export interface ViewportController {
@@ -78,7 +80,7 @@ export function createViewportController(deps: ControllerDeps): ViewportControll
   };
 
   const command = (next: Viewport): void => {
-    view = { x: next.x, y: next.y, scale: clampScale(next.scale) };
+    view = { x: next.x, y: next.y, scale: clampScale(next.scale, deps.minScale) };
     deps.onCommand?.(view);
     request();
   };
@@ -94,7 +96,7 @@ export function createViewportController(deps: ControllerDeps): ViewportControll
       request();
     },
     gesture(next) {
-      view = { x: next.x, y: next.y, scale: clampScale(next.scale) };
+      view = { x: next.x, y: next.y, scale: clampScale(next.scale, deps.minScale) };
       request();
     },
     zoomIn: () => command(zoomAbout(view, ZOOM_STEP, size.width / 2, size.height / 2)),

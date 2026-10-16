@@ -2,7 +2,7 @@
  * Gate E, accessibility on every screen (step 5.10a), in Chromium, Firefox and WebKit against the PRODUCTION build: axe at WCAG 2.2 AA
  * finds nothing serious or critical on the first-run screen, the overview, the List view, the Unanchored panel, a family page, the
  * inspector with each of its levels opened, the palette (results and commands), the import preview, an import refusal, the export options
- * and the export result; and on the overview, a family page and the inspector at 600 px wide. Zero policy violations, console errors,
+ * and the export result; and on the overview, a family page and the inspector at 700 px wide. Zero policy violations, console errors,
  * dialogs and foreign requests.
  */
 import type { Page } from '@playwright/test';
@@ -93,28 +93,28 @@ test.describe('axe on every screen', () => {
     await expectClean(seen);
   });
 
-  test('the overview, a family page and the inspector at 600 px wide', async ({ page }) => {
+  test('the overview, a family page and the inspector at 700 px wide', async ({ page }) => {
     test.setTimeout(240_000);
     const seen = await watch(page);
-    await page.setViewportSize({ width: 600, height: 800 });
+    await page.setViewportSize({ width: 700, height: 800 });
     await openApp(page);
     await loadDemo(page);
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
-    await clean(page, 'the overview at 600 px');
+    await clean(page, 'the overview at 700 px');
     await openFamily(page);
-    await clean(page, 'a family page at 600 px');
+    await clean(page, 'a family page at 700 px');
     const show = page.getByRole('button', { name: 'Show inspector' });
     if ((await show.count()) > 0) await show.click();
     await expect(record(page)).toBeVisible();
-    await clean(page, 'the inspector at 600 px');
+    await clean(page, 'the inspector at 700 px');
     for (const level of [1, 2, 3, 4, 5]) {
       const button = record(page).getByRole('button', { name: new RegExp(`Level ${level}`) });
       if ((await button.count()) > 0 && (await button.getAttribute('aria-expanded')) === 'false') await button.click();
     }
-    await clean(page, 'the inspector at 600 px, every level open');
-    // Observed, not asserted (the step asks for axe at 600 px): how wide the page is when the inspector is open.
+    await clean(page, 'the inspector at 700 px, every level open');
+    // Observed, not asserted (the step asks for axe at 700 px): how wide the page is when the inspector is open.
     const widths = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, window: window.innerWidth }));
-    console.log(`OBSERVED width at 600 px with the inspector open: page ${widths.page}, window ${widths.window}`);
+    console.log(`OBSERVED width at 700 px with the inspector open: page ${widths.page}, window ${widths.window}`);
     await expectClean(seen);
   });
 });

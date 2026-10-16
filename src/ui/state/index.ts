@@ -26,6 +26,7 @@ export {
   DEFAULT_FILTERS,
   NO_EXPANSION_STATE,
   OVERVIEW_MODES,
+  PHONE_TABS,
 } from './navigator-stores';
 export type {
   ActiveExam,
@@ -40,6 +41,7 @@ export type {
   FiltersStore,
   NavigatorUiStores,
   OverviewMode,
+  PhoneTab,
   OverviewState,
   OverviewStore,
   SavedViewport,

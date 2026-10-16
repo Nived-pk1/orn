@@ -279,8 +279,8 @@
     'top'
     'banners'
     'canvas'
-    'tabs'
-    'status';
+    'status'
+    'tabs';
 }
 
 .shell[data-layout='phone'] .topBar {

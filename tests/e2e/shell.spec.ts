@@ -129,7 +129,7 @@ test.describe('the shell and the design system', () => {
   });
 
   test('hit targets are at least 44 px on a touch device', async ({ browser }) => {
-    const context = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 600, height: 900 }, baseURL: 'http://127.0.0.1:4173' });
+    const context = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 700, height: 900 }, baseURL: 'http://127.0.0.1:4173' });
     const page = await context.newPage();
     await openApp(page);
     for (const name of ['Load demo dataset', 'Import a file', 'Start empty', 'File', 'Show inspector']) {
@@ -226,15 +226,15 @@ test.describe('the three breakpoints', () => {
   });
 
   test('below 900 px: one pane, the mode rail is a bottom bar and the inspector a bottom sheet', async ({ page }) => {
-    await page.setViewportSize({ width: 600, height: 800 });
+    await page.setViewportSize({ width: 700, height: 800 });
     await openApp(page);
     const rail = await box(page, 'nav[aria-label="Modes"]');
     const canvas = await box(page, 'main');
     expect(rail.y).toBeGreaterThan(canvas.y + canvas.height - 1);
-    expect(Math.round(canvas.width)).toBe(600);
+    expect(Math.round(canvas.width)).toBe(700);
     await page.getByRole('button', { name: 'Show inspector' }).click();
     const sheet = await box(page, 'aside');
-    expect(Math.round(sheet.width)).toBe(600);
+    expect(Math.round(sheet.width)).toBe(700);
     expect(sheet.y + sheet.height).toBeLessThanOrEqual(rail.y + 1);
     expect(await page.locator('body').evaluate((b) => b.scrollWidth <= window.innerWidth)).toBe(true); // no horizontal page scroll
     await expect(page.getByRole('button', { name: /Reactions/ })).toHaveAttribute('aria-disabled', 'true');

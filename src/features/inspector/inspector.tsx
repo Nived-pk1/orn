@@ -15,6 +15,7 @@ import { InspectorEnvContext, makeEnv, useInspectorEnv, type InspectorEnv } from
 import { kindWord, nameOfRecord, recordOf } from './model/describe';
 import { l4Words, severityBadges } from './model/findings';
 import { placeOf } from './model/places';
+import { ArrowReactions } from './arrow-reactions';
 import { ProvenanceLevel } from './provenance';
 import { LevelSection } from './levels';
 import { useBridge } from './use-bridge';
@@ -90,6 +91,7 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
 
 function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | undefined }) {
   const { ports, host, state } = useInspectorEnv();
+  const phone = useLayoutMode() === 'phone';
   const record = recordOf(state, props.refOf);
   if (record === undefined) return null;
   const name = nameOfRecord(record);
@@ -116,7 +118,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
         {place.actions.length === 0 ? null : (
           <div className={styles.actions}>
             {place.actions.map((action) => (
-              <button key={action.label} type="button" onClick={action.run}>
+              <button key={action.label} type="button" onClick={() => { action.run(); if (phone) host.closePane?.(); }}>
                 {action.label}
               </button>
             ))}
@@ -127,6 +129,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
             {status}
           </p>
         )}
+        {props.note === undefined ? null : <ArrowReactions />}
       </header>
       <div data-sheet-full="">
         <KindLevels record={record} findings={findings} />

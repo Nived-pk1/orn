@@ -10,6 +10,7 @@ import { Palette } from "@/features/search";
 import {
   NavigatorView,
   NavigatorProvider,
+  PhoneTabs,
   NavigatorStatus,
   useFamilyPageOpen,
   useNavigator,
@@ -106,20 +107,22 @@ function Canvas(props: {
 function InspectorPanel(props: {
   readonly navigatorShown: boolean;
   readonly openPane: () => void;
+  readonly closePane: () => void;
 }) {
   const { inspector } = useApp();
   const { model } = useNavigator();
-  const { navigatorShown, openPane } = props;
+  const { navigatorShown, openPane, closePane } = props;
   const host = useMemo<InspectorHost>(
     () => ({
       openPane,
+      closePane,
       navigatorShown,
       edgeEnds: (edgeId) => {
         const edge = model.getState().scene?.edges.find((e) => e.id === edgeId);
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };
       },
     }),
-    [model, navigatorShown, openPane],
+    [model, navigatorShown, openPane, closePane],
   );
   return <Inspector ports={inspector} host={host} />;
 }
@@ -145,11 +148,13 @@ export function Window() {
   const open = usePanels(panels, (s) => s.inspectorOpen);
   const [mode, setMode] = useState(NAVIGATOR_MODE);
   const [openRequest, setOpenRequest] = useState(0);
+  const [closeRequest, setCloseRequest] = useState(0);
   // A pick on the canvas shows the record: the wide pane opens (its state is saved); the drawer or sheet is asked through the shell.
   const openPane = useCallback(() => {
     panels.getState().setInspectorOpen(true);
     setOpenRequest((n) => n + 1);
   }, [panels]);
+  const closePane = useCallback(() => setCloseRequest((n) => n + 1), []);
   const hasData = totalOf(counts) > 0;
   // When the first-run screen closes (data arrived, or Start empty) the control that had the focus is gone: the focus goes to the page title,
   // so the next Tab starts from the top in every engine (UI_ARCHITECTURE §11).
@@ -248,6 +253,7 @@ export function Window() {
             bar: <PhoneBar onSearch={() => setSearching(true)} file={file} exam={exam} counts={counts} onStatus={openStatus} />,
             notices: <PhoneNotices />,
             alert: <PhoneAlert onStatus={openStatus} />,
+            tabs: <PhoneTabs onSearch={() => setSearching(true)} searching={searching} />,
           }}
           modes={MODES}
           activeMode={mode}
@@ -269,11 +275,13 @@ export function Window() {
               <InspectorPanel
                 navigatorShown={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
                 openPane={openPane}
+                closePane={closePane}
               />
             </ErrorBoundary>
           }
           pane={pane}
           openRequest={openRequest}
+          closeRequest={closeRequest}
           focusTitleRequest={titleRequest}
           statusBar={
             <ErrorBoundary label="The status panel">

@@ -9,7 +9,7 @@ export { buildGridIndex, GRID_CELL, MAX_CELLS_PER_ITEM } from './grid-index';
 export type { GridIndex, GridQuery } from './grid-index';
 export { depictionCandidates, visibleIn } from './cull';
 export { lodWithHysteresis, overBudget, rawLod, resolveLod } from './lod';
-export { clampScale, fitRect, fitScene, focusRect, growRect, IDENTITY, toTransformAttribute, worldRect, keepScreenPoint, toScreen, zoomAbout } from './transform';
+export { clampScale, FIT_FLOOR, fitRect, fitScene, focusRect, growRect, IDENTITY, toTransformAttribute, worldRect, keepScreenPoint, toScreen, zoomAbout } from './transform';
 export { bindPointer, windowTimers } from './pointer-binding';
 export type { PointerHandlers, PointerPoint, PointerTimers } from './pointer-binding';
 export { DOUBLE_CLICK_MS, LONG_PRESS_MS, MOVE_SLOP_PX } from './pointer-machine';

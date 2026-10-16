@@ -9,6 +9,7 @@
 import { Command } from 'cmdk';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useStore } from 'zustand';
+import { useLayoutMode } from '@/ui/hooks';
 import { Dialog } from '@/ui/primitives';
 import { kindName, kindTitle, type PaletteCommand, type SearchPorts } from './contracts';
 import { createPaletteModel } from './palette-model';
@@ -193,8 +194,9 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
 }
 
 export function Palette(props: { readonly ports: SearchPorts; readonly open: boolean; readonly onClose: () => void }) {
+  const phone = useLayoutMode() === 'phone'; // ADR-039: the whole screen on a phone
   return (
-    <Dialog open={props.open} onClose={props.onClose} title="Search" dismissOnBackdrop initialFocus="[data-palette-input]">
+    <Dialog open={props.open} onClose={props.onClose} title="Search" dismissOnBackdrop initialFocus="[data-palette-input]" size={phone ? 'screen' : 'default'}>
       {props.open ? <PaletteBody ports={props.ports} onClose={props.onClose} /> : null}
     </Dialog>
   );

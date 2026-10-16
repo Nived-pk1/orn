@@ -16,7 +16,7 @@ export interface ZoomBinding {
   readonly destroy: () => void;
 }
 
-export function bindZoom(element: SVGSVGElement, onGesture: (view: Viewport) => void): ZoomBinding {
+export function bindZoom(element: SVGSVGElement, onGesture: (view: Viewport) => void, minScale: number = SCALE_MIN): ZoomBinding {
   let adopting = false;
   const selection = select<SVGSVGElement, unknown>(element);
   const behaviour: ZoomBehavior<SVGSVGElement, unknown> = zoom<SVGSVGElement, unknown>()
@@ -25,7 +25,7 @@ export function bindZoom(element: SVGSVGElement, onGesture: (view: Viewport) => 
       const box = element.getBoundingClientRect();
       return [[0, 0], [box.width, box.height]];
     })
-    .scaleExtent([SCALE_MIN, SCALE_MAX])
+    .scaleExtent([minScale, SCALE_MAX])
     .on('zoom', (event: { readonly transform: { readonly x: number; readonly y: number; readonly k: number } }) => {
       if (!adopting) onGesture({ x: event.transform.x, y: event.transform.y, scale: event.transform.k });
     });

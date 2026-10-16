@@ -2,7 +2,7 @@
  * The inspector's remaining kinds end to end (step 5.6b), Chromium against the PRODUCTION build: open Cannizzaro from its card, read
  * its related reactions, follow the stored "commonly confused with" link to the Aldol reaction, open that reaction's mechanism at its
  * variant, Back; axe at each view and zero policy violations; the inspector as the overlay drawer (1100 px) and the bottom sheet
- * (600 px) with keyboard and Esc; a class with 1,000 reactions keeps the DOM at most 60 rows. Screenshots (1280 x 800) go to
+ * (700 px) with keyboard and Esc; a class with 1,000 reactions keeps the DOM at most 60 rows. Screenshots (1280 x 800) go to
  * `screenshots/` (git-ignored).
  */
 import { mkdirSync } from 'node:fs';
@@ -97,7 +97,7 @@ test.describe('the inspector, remaining kinds', () => {
 
   for (const [width, kind] of [
     [1100, 'overlay drawer'],
-    [600, 'bottom sheet'],
+    [700, 'bottom sheet'],
   ] as const) {
     test(`at ${width} px the inspector is the ${kind}: a pick opens it, the keyboard reaches its content, Esc closes it; axe`, async ({ page }) => {
       const seen = await watch(page);

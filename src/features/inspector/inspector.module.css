@@ -34,3 +34,7 @@
 .assetImage { max-width: 100%; max-height: 320px; background: var(--color-surface); border: 1px solid var(--color-rule); }
 /* on the phone sheet at peek the main actions are large (ADR-039) */
 [data-sheet='peek'] .actions button { min-height: var(--tab-bar-height); flex: 1 1 40%; font-size: var(--text-16); }
+.arrowReactions { display: flex; flex-direction: column; gap: var(--space-2); }
+.arrowTitle { margin: 0; font-size: var(--text-14); }
+.arrowList { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.arrowList button { width: 100%; min-height: var(--hit-min); padding: 0 var(--space-3); border: 1px solid var(--color-rule); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-ink); text-align: left; }

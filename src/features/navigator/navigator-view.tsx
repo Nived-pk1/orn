@@ -6,7 +6,9 @@
  */
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useStore } from 'zustand';
+import { useLayoutMode } from '@/ui/hooks';
 import { LiveRegion } from '@/ui/primitives';
+import { FamiliesTab } from './families-tab';
 import { FamilyPage } from './family-page';
 import { NavigatorCanvas } from './navigator-canvas';
 import { useNavigator, useNavigatorState } from './navigator-context';
@@ -15,6 +17,8 @@ import { useAnnouncements } from './use-announcements';
 export function NavigatorView() {
   const { ports, announcer } = useNavigator();
   const open = useStore(ports.ui.family, (s) => s.open);
+  const phone = useLayoutMode() === 'phone';
+  const tab = useStore(ports.ui.overview, (s) => s.phoneTab);
   const { scene } = useNavigatorState();
   useAnnouncements(ports, announcer, scene);
   const said = useSyncExternalStore(announcer.subscribe, announcer.get, announcer.get);
@@ -26,7 +30,7 @@ export function NavigatorView() {
   }, [open]);
   return (
     <>
-      {open === null ? <NavigatorCanvas {...(returnTo === null ? {} : { returnTo })} /> : <FamilyPage hubId={open} />}
+      {open !== null ? <FamilyPage hubId={open} /> : phone && tab === 'families' ? <FamiliesTab /> : <NavigatorCanvas {...(returnTo === null ? {} : { returnTo })} />}
       <LiveRegion message={said.message} serial={said.serial} label="Navigator announcements" />
     </>
   );

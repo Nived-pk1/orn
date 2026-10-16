@@ -56,6 +56,8 @@ export interface InspectorPorts {
 export interface InspectorHost {
   /** Opens the inspector pane (or the drawer / sheet at the smaller breakpoints) if it is closed. */
   openPane(): void;
+  /** Closes the phone's sheet after a main action that moved the page (Open family); absent: nothing to close (the pane and drawer stay as the user left them). */
+  closePane?(): void;
   /** The two families an overview arrow joins; undefined when the arrow is not drawn now. */
   edgeEnds(edgeId: string): { readonly from: string; readonly to: string } | undefined;
   /** True while the navigator is the view on the canvas (a record can then have a place in it). */

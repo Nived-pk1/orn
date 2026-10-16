@@ -63,6 +63,8 @@ async function steps(page: Page, device: string): Promise<void> {
   const seen = await watch(page);
   await openPhoneApp(page);
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
+  await expect(page.getByRole('region', { name: 'Families' })).toBeVisible(); // the phone opens on the Families tab
+  await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Map' }).tap();
   await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
   await expect.poll(() => page.locator('svg[role="group"]').getAttribute('data-lod'), { message: 'LOD after the demo loads' }).not.toBe('0');
   await expect(sheet(page)).toBeHidden();

@@ -13,7 +13,9 @@ import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
 import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
 import type { Scene } from '@/render/scene';
+import { useLayoutMode } from '@/ui/hooks';
 import { Banner, Button, ContextMenu, Skeleton } from '@/ui/primitives';
+import { FIT_FLOOR } from '@/render/viewport';
 import { depictionBindingOf } from './depictions';
 import { ListView } from './list-view';
 import { keyOf, legendOf } from './legend';
@@ -22,6 +24,7 @@ import { outsideNoteOf } from './scope-lens';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorLegend } from './navigator-legend';
 import { NavigatorSelection } from './navigator-selection';
+import { PhoneMapControls } from './phone-map-controls';
 import { emptinessOf, truncationNoticeOf } from './notices';
 import { UnanchoredPanel } from './unanchored-panel';
 import styles from './navigator.module.css';
@@ -40,11 +43,12 @@ export function openFamilyReason(selected: { readonly kind: 'node' | 'edge' } | 
 
 export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const { ports, announcer } = useNavigator();
+  const phone = useLayoutMode() === 'phone';
   const announce = announcer.say;
   const state = useNavigatorState();
   const selected = useStore(ports.ui.selection, (s) => s.selected);
   const mode = useStore(ports.ui.overview, (s) => s.mode);
-  const listing = mode === 'list';
+  const listing = mode === 'list' && !phone; // the phone's list of families is its Families tab
   const [controller, setController] = useState<ViewportController | null>(null);
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
   const [unanchoredOpen, setUnanchoredOpen] = useState(false);
@@ -126,6 +130,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   );
   return (
     <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
+      {phone ? null : (
       <div className={styles.toolbar} role="toolbar" aria-label="Canvas tools">
         <Button
           aria-pressed={listing}
@@ -161,6 +166,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         </Button>
         <NavigatorSelection />
       </div>
+      )}
       {cut === null ? null : (
         <Banner kind="warning">
           {cut.cut} {cut.more}
@@ -172,8 +178,9 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         </Banner>
       )}
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
-      {listing ? null : <NavigatorLegend items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} />}
+      {listing || phone ? null : <NavigatorLegend items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} />}
       <div className={styles.drawing} aria-busy={state.working}>
+        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} /> : null}
         {state.error !== null ? (
           <div className={styles.error} role="alert">
             <p>The navigator could not be drawn ({state.error.code}).</p>
@@ -190,6 +197,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             {...(hoveredId === undefined ? {} : { hoveredId })}
             ariaLabel={`Navigator: ${hubs} ${hubs === 1 ? 'hub' : 'hubs'}, ${scene.edges.length} ${scene.edges.length === 1 ? 'arrow' : 'arrows'}`}
             onController={setController}
+            {...(phone ? { minScale: FIT_FLOOR } : {})}
             {...(depictions === undefined ? {} : { depictions })}
             onLayerCommit={onLayerCommit}
             pointer={input.pointer}

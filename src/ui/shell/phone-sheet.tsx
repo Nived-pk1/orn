@@ -25,10 +25,14 @@ export function PhoneSheet(props: {
   readonly title: string;
   /** A number that goes up each time something asks for the sheet (a tap on the map, a pick in a list): a closed sheet opens at peek. */
   readonly openRequest: number;
+  /** A number that goes up when something inside asks for the sheet to close (a main action that moves the page: Open family). */
+  readonly closeRequest?: number;
   readonly children: ReactNode;
   readonly onHeight?: (height: SheetHeight) => void;
 }) {
   const { openRequest, onHeight } = props;
+  const closeRequest = props.closeRequest ?? 0;
+  const closeSeen = useRef(closeRequest);
   const [height, setHeight] = useState<SheetHeight>('closed');
   const sheet = useRef<HTMLElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -47,6 +51,11 @@ export function PhoneSheet(props: {
     seen.current = openRequest;
     change(height === 'closed' ? 'peek' : height);
   }, [openRequest, height, change]);
+  useEffect(() => {
+    if (closeSeen.current === closeRequest) return;
+    closeSeen.current = closeRequest;
+    change('closed');
+  }, [closeRequest, change]);
   // focus: in when it opens, back to what had it when it closes
   useEffect(() => {
     const before = was.current;

@@ -22,7 +22,7 @@ export interface DialogProps {
   /** A CSS selector inside the dialog whose element takes the focus when it opens (default: the browser's first focusable element, the close button). */
   readonly initialFocus?: string;
   /** `wide`: for a dialog that holds lists and choices (the import screen); the default is the narrow one. */
-  readonly size?: 'default' | 'wide';
+  readonly size?: 'default' | 'wide' | 'screen';
   /** `false`: the dialog cannot be dismissed while the caller's work runs - no Close button, Esc and the backdrop do nothing (default true). */
   readonly closable?: boolean;
 }
@@ -97,7 +97,7 @@ export function Dialog(props: DialogProps) {
   };
 
   return (
-    <dialog ref={attach} className={size === 'wide' ? `${styles.dialog} ${styles.wide}` : styles.dialog} aria-labelledby={titleId} onCancel={onCancel} onClick={onBackdrop}>
+    <dialog ref={attach} className={size === 'default' ? styles.dialog : `${styles.dialog} ${styles[size]}`} aria-labelledby={titleId} onCancel={onCancel} onClick={onBackdrop}>
       {open ? (
         <PortalContainerContext.Provider value={container}>
           <div className={styles.frame}>

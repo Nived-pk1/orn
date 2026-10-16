@@ -1,5 +1,6 @@
 export { NavigatorCanvas, openFamilyReason } from './navigator-canvas';
 export { NavigatorView } from './navigator-view';
+export { PhoneTabs } from './phone-tabs';
 export { FamilyPage } from './family-page';
 export { NavigatorSelection } from './navigator-selection';
 export { navigatorNoticesOf, NavigatorStatus, truncationLineOf } from './navigator-status';
