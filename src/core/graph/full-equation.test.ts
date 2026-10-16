@@ -26,11 +26,11 @@ describe('fullEquationOf on the demo', () => {
     expect(plain(equation?.arrow.above ?? [])).toContain('NaOH');
   });
 
-  it('ethanol with conc. H2SO4: one equation per outcome, each with its own temperature and its byproduct (no word)', () => {
+  it('ethanol with conc. H2SO4: one equation per outcome, each with its own temperature and its byproduct (its role word, no selectivity word)', () => {
     const [ether, ethene] = equations('rxn_ethanol-conc-h2so4');
-    // the main product carries the outcome's word (as on the card); the byproduct water states none
-    expect(ether?.text).toBe('Ethanol → Diethyl ether (major) + Water');
-    expect(ethene?.text).toBe('Ethanol → Ethene (major) + Water');
+    // the main product carries the outcome's word (as on the card); the byproduct water states its role instead
+    expect(ether?.text).toBe('Ethanol → Diethyl ether (major) + Water (byproduct)');
+    expect(ethene?.text).toBe('Ethanol → Ethene (major) + Water (byproduct)');
     expect(plain(ether?.arrow.below ?? [])).toContain('413 K');
     expect(plain(ethene?.arrow.below ?? [])).toContain('443 K');
     expect(plain(ether?.arrow.below ?? [])).not.toContain('443 K');
@@ -96,8 +96,31 @@ describe('the same species is not written twice (phone mode B, part 3, item b)',
   });
 });
 
+describe('a product that is not a main product says its role (phone mode C, part 3)', () => {
+  it('every product of every demo reaction: a main product has the selectivity word only, a coproduct or byproduct has its role word and no selectivity word', () => {
+    const seen = new Set<string>();
+    for (const reaction of Object.values(demo.state.records.reaction)) {
+      for (const equation of equations(reaction.id)) {
+        const outcome = reaction.outcomes.find((o) => o.id === equation.outcomeId);
+        expect(outcome).toBeDefined();
+        (outcome?.products ?? []).forEach((product, index) => {
+          const term = equation.products[index];
+          if (product.role === 'main') {
+            expect(term?.text).not.toMatch(/\((coproduct|byproduct|main)\)/);
+          } else {
+            seen.add(product.role);
+            expect(term?.word).toBeNull();
+            expect(term?.text.endsWith(` (${product.role})`)).toBe(true);
+          }
+        });
+      }
+    }
+    expect([...seen].sort()).toEqual(['byproduct', 'coproduct']);
+  });
+});
+
 describe('the word of a product is the card\'s selectivity word (phone mode B, part 3, item c)', () => {
-  it('for every product of every card of the demo families, the equation uses the card\'s word, and no role word appears', () => {
+  it('for every product of every card of the demo families, the equation uses the card\'s word, and a main product shows no role word', () => {
     let compared = 0;
     for (const hub of ['cls_alcohols', 'cls_alkenes', 'cls_aldehydes', 'cls_haloalkanes']) {
       const study = familyStudy(demo, hub);
@@ -109,7 +132,7 @@ describe('the word of a product is the card\'s selectivity word (phone mode B, p
               const words = new Set(outcome.products.map((p) => p.selectivity));
               const inEquation = new Set((outcome.equation?.products ?? []).map((t) => t.word));
               for (const word of words) expect(inEquation.has(word), `${card.name}: ${String(word)}`).toBe(true);
-              for (const term of outcome.equation?.products ?? []) expect(term.text).not.toMatch(/\((main|coproduct|byproduct)\)/);
+              for (const term of outcome.equation?.products ?? []) expect(term.text).not.toMatch(/\(main\)/);
               compared += 1;
             }
           }

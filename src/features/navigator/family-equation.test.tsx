@@ -45,8 +45,8 @@ describe('FullEquationView', () => {
     openDisclosure();
     const line = screen.getByLabelText(/^Full equation:/).textContent ?? '';
     expect(line).toContain('Diethyl ether (major)');
-    expect(line).toMatch(/Water$/);
-    expect(line).not.toMatch(/byproduct|\(main\)/);
+    expect(line).toMatch(/Water \(byproduct\)$/);
+    expect(line).not.toMatch(/\(main\)/);
     expect(line).toContain('413 K');
   });
 });

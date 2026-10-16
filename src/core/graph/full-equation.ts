@@ -1,8 +1,8 @@
 /**
  * Full equation (step 5.9a review, follow-up b): one outcome of a reaction written out as an equation, as plain structured text.
  * Every reactant with its coefficient (a species nobody draws as a node, water for one, is listed like any other), every product of
- * the outcome with its selectivity word (the SAME word the card shows under a main product, `selectivity-word.ts`; none for a coproduct or
- * byproduct and none when unspecified), and the
+ * the outcome with its selectivity word (the SAME word the card shows under a main product, `selectivity-word.ts`; none when unspecified)
+ * or, for a product that is not a main product, its role word ("coproduct", "byproduct"), and the
  * reagents and conditions over the arrow as the card writes them (`arrowTextOf`, so the 7-character formula rule applies there) EXCEPT
  * that a species already written on the left is not repeated on the arrow (a reagent that is the same record as a reactant, a gas of the
  * atmosphere with a reactant's formula). Text only: no markup; the renderer sets formulas in their typography.
@@ -19,9 +19,11 @@ export interface EquationTerm {
   readonly coefficient: string | null;
   /** The name as written in the record (the wording as entered wins), or its ID when the record is gone. */
   readonly name: string;
-  /** Set on a product: the card's own selectivity word ("exclusive", "major", ...); null on a reactant and on a product with none. */
+  /** Set on a MAIN product: the card's own selectivity word ("exclusive", "major", ...); null on a reactant, on a coproduct or byproduct, and on a product with none. */
   readonly word: SelectivityWord | null;
-  /** The term as one plain line: "2 Benzaldehyde", "Ethanal (exclusive)". */
+  /** Set on a product that is not a main product: its role word; null otherwise. */
+  readonly role: ProductRoleWord | null;
+  /** The term as one plain line: "2 Benzaldehyde", "Ethanal (exclusive)", "Water (byproduct)". */
   readonly text: string;
 }
 
@@ -37,7 +39,10 @@ export interface FullEquation {
 
 const coefficientText = (value: number | undefined): string | null => (value === undefined || value === 1 ? null : String(value));
 
-const termText = (coefficient: string | null, name: string, word: SelectivityWord | null): string =>
+/** The words for a product that is not a main product (selectivity lives on the outcome and is worded on the main products only). */
+export type ProductRoleWord = 'coproduct' | 'byproduct';
+
+const termText = (coefficient: string | null, name: string, word: SelectivityWord | ProductRoleWord | null): string =>
   `${coefficient === null ? '' : `${coefficient} `}${name}${word === null ? '' : ` (${word})`}`;
 
 export function fullEquationOf(
@@ -60,19 +65,22 @@ export function fullEquationOf(
         coefficient,
         name,
         word: null,
+        role: null,
         text: termText(coefficient, name, null),
       };
     });
   const products: EquationTerm[] = outcome.products.map((p) => {
     const coefficient = coefficientText(p.coefficient);
     const name = nameOf(p.ref, p.originalText);
-    // selectivity lives on the outcome (INV-08); the card words the main products it draws, so a coproduct or byproduct (water) carries none
+    // selectivity lives on the outcome (INV-08); the card words the main products it draws, so a coproduct or byproduct says its role instead
     const word = p.role === 'main' ? selectivityWordOf(outcome.selectivity) : null;
+    const role = p.role === 'main' ? null : p.role;
     return {
       coefficient,
       name,
       word,
-      text: termText(coefficient, name, word),
+      role,
+      text: termText(coefficient, name, word ?? role),
     };
   });
   // what is written on the left is not written again on the arrow
