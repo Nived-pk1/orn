@@ -1,6 +1,6 @@
 /*
  * The phone inspector sheet (ADR-039). Fixed to the bottom, above the tab bar's own space (the tab bar is part of the page flow: the sheet
- * covers it only at full). PEEK is about 35% of the screen so the map above stays visible; FULL leaves the top bar. Non-modal: no scrim,
+ * covers it only at full). PEEK is as high as its own content, at most 35% of the screen, so the map above stays visible; FULL leaves the top bar. Non-modal: no scrim,
  * nothing is made inert.
  */
 .sheet {
@@ -24,8 +24,11 @@
 }
 
 .sheet[data-sheet='peek'] {
-  height: 35vh;
-  height: 35dvh;
+  /* the height of its own content, at most 35% of the screen; the floor covers the tab bar and the alert line under it */
+  height: auto;
+  max-height: 35vh;
+  max-height: 35dvh;
+  min-height: 7.5rem;
 }
 
 .sheet[data-sheet='full'] {
@@ -66,6 +69,11 @@
   min-height: 0;
   overflow: auto;
   padding: 0 var(--space-4) var(--space-4);
+}
+
+/* at peek the sheet is as high as its content: a smaller bottom margin leaves the page more room */
+.sheet[data-sheet='peek'] .body {
+  padding-bottom: var(--space-2);
 }
 
 /* at peek the part marked data-sheet-full is not shown; the main actions are large buttons */

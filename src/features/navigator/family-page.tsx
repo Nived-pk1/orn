@@ -61,22 +61,25 @@ export function FamilyPage(props: { readonly hubId: string }) {
     return (hubId: string): string | undefined => tones.get(hubId) ?? (study === undefined || study === null ? undefined : study.tone);
   }, [study]);
 
-  // A tapped card goes above the peek of the sheet: when the page's room changes (the sheet came up) or at once when it did not, the card of
-  // the last tap is brought into view; the bottom space (--sheet-space) makes the list end above the sheet.
+  // A tapped card's top is brought just under the bar (the area's top), so as much of it as possible is above the peek of the sheet; again when
+  // the room changes (the sheet came up). The bottom space (--sheet-space) lets the end of the list be scrolled above the sheet.
   const reveal = useRef<string | null>(null);
   const revealCard = useCallback((): void => {
     const id = reveal.current;
     if (id === null) return;
     const card = [...(body.current?.querySelectorAll<HTMLElement>('article[data-reaction-id]') ?? [])].find((el) => el.dataset.reactionId === id);
-    card?.scrollIntoView({ block: 'nearest' });
+    card?.scrollIntoView({ block: 'start' });
   }, []);
   useEffect(() => {
     const element = body.current;
     if (!phone || element === null || typeof ResizeObserver === 'undefined') return undefined;
     const observer = new ResizeObserver(revealCard);
     observer.observe(element);
+    // the room of the sheet is padding of the scroll area: a change of it (the sheet came up, its content changed) shows as a resize of the area
+    const scroller = element.querySelector('[data-virtual-list]');
+    if (scroller !== null) observer.observe(scroller);
     return () => observer.disconnect();
-  }, [phone, revealCard]);
+  }, [phone, revealCard, env]);
 
   const goTo = useCallback(
     (key: string): void => {
@@ -154,7 +157,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const reactionName = study === undefined || study === null || selectedReaction === null ? undefined : (ports.store.getState().records.reaction[selectedReaction]?.name ?? selectedReaction);
   const title = study === undefined || study === null ? 'Family' : study.name;
   return (
-    <section ref={page} className={styles.page} aria-label={`Family page: ${title}`} data-family-page="" data-family-id={hubId} data-layout={layout}>
+    <section ref={page} className={styles.page} aria-label={`Family page: ${title}`} data-family-page="" data-family-id={hubId} data-layout={layout} {...(phone ? { 'data-sheet-room': '' } : {})}>
       <div className={styles.toolbar} role="toolbar" aria-label="Family page tools">
         <Button onClick={close}>{phone ? `< ${cameFrom === 'map' ? 'Map' : 'Families'}` : 'Overview'}</Button>
         {phone ? null : <p className={styles.selection}>{reactionName === undefined ? 'Nothing is selected.' : `Selected: reaction ${reactionName}.`}</p>}

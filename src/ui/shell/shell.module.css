@@ -283,6 +283,12 @@
     'tabs';
 }
 
+/* While the sheet is at peek a page that keeps room for it (it carries [data-sheet-room]) runs down BEHIND the sheet to the bottom of the screen:
+   its scroll area spans the status and tab rows too (both are covered by the sheet), and the page adds the empty space after its last item. */
+.shell[data-layout='phone'][data-sheet-room] .canvas:has([data-sheet-room]) {
+  grid-row: 3 / -1;
+}
+
 .shell[data-layout='phone'] .topBar {
   flex-wrap: nowrap;
   min-height: var(--top-bar-height);

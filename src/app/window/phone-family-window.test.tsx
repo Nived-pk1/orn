@@ -106,6 +106,8 @@ describe('the family page on a phone', () => {
   it('the page says data-layout phone', async () => {
     await openFamily('cls_alcohols');
     expect(screen.getByRole('region', { name: /^Family page/ }).getAttribute('data-layout')).toBe('phone');
+    // it asks the shell to let its scroll area run behind the sheet (the CSS needs this mark)
+    expect(screen.getByRole('region', { name: /^Family page/ }).hasAttribute('data-sheet-room')).toBe(true);
   });
 });
 

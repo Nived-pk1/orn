@@ -83,11 +83,34 @@ async function walk(page: Page, device: string): Promise<void> {
   await card.screenshot({ path: `screenshots/phone4-${device}-pcc-card.png` });
   await shot(page, device, 2, 'scheme');
 
+  // a tapped card: its top just under the bar, as much of it as possible above the peek (the PCC card fits), the page runs behind the sheet
+  await card.getByRole('heading', { level: 4 }).getByRole('button').tap();
+  await expect(sheet(page)).toHaveAttribute('data-sheet', 'peek');
+  await page.waitForTimeout(1_000);
+  {
+    const peekBox = await box(sheet(page));
+    const area = await box(list(page));
+    const cardBox = await box(card);
+    const viewport = page.viewportSize()?.height ?? 0;
+    await page.screenshot({ path: `screenshots/phone4-${device}-peek-pcc-card.png` });
+    expect(Math.abs(cardBox.y - area.y), 'the tapped card sits just under the bar (the top of the scroll area)').toBeLessThanOrEqual(2);
+    // the card fits above the peek when the room allows it (a Pixel 7 does; an iPhone 14's room is shorter than the card): else its top is the area's top and the peek covers the rest
+    const room = peekBox.y - area.y;
+    if (device === 'pixel7') expect(cardBox.y + cardBox.height, 'the whole PCC card is above the peek on a Pixel 7').toBeLessThanOrEqual(peekBox.y + 1);
+    else if (cardBox.height <= room) expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(peekBox.y + 1);
+    else expect(cardBox.y, 'a card taller than the room: its top is at the top of the area').toBeLessThanOrEqual(area.y + 1);
+    expect(area.y + area.height, 'the scroll area runs down to the bottom of the screen, behind the sheet').toBeGreaterThanOrEqual(viewport - 1);
+    expect(peekBox.height, 'the peek is at most 35% of the screen').toBeLessThanOrEqual(viewport * 0.35 + 1);
+    const body = await sheet(page).locator('div').filter({ has: page.locator('#inspector-record-title') }).first().evaluate((el) => ({ client: el.clientHeight, scroll: el.scrollHeight }));
+    // the peek is as high as its content unless that is more than 35% of the screen (then its body scrolls)
+    expect(body.scroll <= body.client + 1 || peekBox.height >= viewport * 0.35 - 1, 'the peek height follows its content').toBe(true);
+  }
+
   // the sheet: a tapped card at the bottom of the list sits above the peek, the last card can be scrolled above it
   await list(page).evaluate((el) => el.scrollTo(0, el.scrollHeight));
   await page.waitForTimeout(600);
   // the card by its id: a locator of "the last article" would find another mounted card once the list moves
-  const lastId = await page.getByRole('article').last().getAttribute('data-reaction-id');
+  const lastId = await list(page).getByRole('article').last().getAttribute('data-reaction-id');
   const last = page.locator(`article[data-reaction-id="${lastId}"]`);
   await last.getByRole('heading', { level: 4 }).getByRole('button').tap();
   await expect(sheet(page)).toHaveAttribute('data-sheet', 'peek');
@@ -98,8 +121,12 @@ async function walk(page: Page, device: string): Promise<void> {
   const listBox = await box(list(page));
   expect(lastBox.y, 'the tapped card is brought into the room above the peek').toBeGreaterThanOrEqual(listBox.y - 1);
   expect(lastBox.y, 'its top is above the peek').toBeLessThan(peek.y);
-  expect(listBox.y + listBox.height, 'the list ends above the peek (the page keeps the room of the sheet)').toBeLessThanOrEqual(peek.y + 1);
+  // no blank band: the page's content reaches the sheet's top edge (the element just above the sheet belongs to the list), the area goes on behind it
+  expect(listBox.y + listBox.height, 'the page runs behind the sheet, no blank band over it').toBeGreaterThanOrEqual(peek.y - 8);
+  const above = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('[data-virtual-list]') !== null, { x: (await box(list(page))).x + 20, y: peek.y - 4 });
+  expect(above, 'the element just above the sheet is page content').toBe(true);
   await shot(page, device, 3, 'peek-last-card');
+  await page.screenshot({ path: `screenshots/phone4-${device}-peek-last-card.png` });
   // scrolling does not close the sheet, and the end of the list can still be brought above it
   await list(page).evaluate((el) => el.scrollTo(0, el.scrollHeight));
   await page.waitForTimeout(600);

@@ -98,6 +98,7 @@ export function Shell(props: ShellProps) {
       data-breakpoint={breakpoint}
       data-layout={phone === undefined ? 'desktop' : 'phone'}
       data-inspector={inspectorOpen ? 'open' : 'closed'}
+      {...(phone !== undefined && sheetSpace > 0 ? { 'data-sheet-room': '' } : {})}
       style={{ ['--inspector-width' as string]: `${pane.width}px`, ['--sheet-space' as string]: `${sheetSpace}px` }}
     >
       <header className={styles.topBar}>

@@ -215,8 +215,10 @@
 .item[data-tone='rose'] { --bar: var(--color-tone-rose-ink); }
 .item[data-tone='slate'] { --bar: var(--color-tone-slate-ink); }
 
-.page[data-layout='phone'] {
+/* The page's scroll area runs behind the sheet (the shell lets it, [data-sheet-room]); the room of the sheet is empty space after the last card. */
+.page[data-layout='phone'] [data-virtual-list] {
   padding-bottom: var(--sheet-space, 0px);
+  scroll-padding-top: 0;
 }
 
 .page[data-layout='phone'] .toolbar {
