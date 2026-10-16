@@ -1,0 +1,39 @@
+/* The drawn arrow of a full equation: its width is the longer of the two texts (the column sizes itself), never shorter than the minimum. */
+.arrow {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 3.5rem;
+  max-width: 18rem;
+  font-size: var(--text-13);
+  vertical-align: middle;
+}
+
+.text {
+  min-height: 1.2em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.below {
+  color: var(--color-ink-2);
+}
+
+.line {
+  display: flex;
+  align-items: center;
+}
+
+.shaft {
+  flex: 1;
+  height: 0;
+  border-top: 1.5px solid var(--color-ink);
+}
+
+.head {
+  flex: none;
+  margin-left: -1px;
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+}

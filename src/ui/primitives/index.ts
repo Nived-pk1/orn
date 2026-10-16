@@ -6,6 +6,7 @@ export { ContextMenu } from './context-menu';
 export type { ContextMenuProps } from './context-menu';
 export { Dialog } from './dialog';
 export type { DialogProps } from './dialog';
+export { EquationArrow } from './equation-arrow';
 export { ErrorBoundary } from './error-boundary';
 export type { ErrorBoundaryProps } from './error-boundary';
 export { Icon } from './icons';

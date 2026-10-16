@@ -8,8 +8,10 @@ import type { FullEquation } from '../full-equation';
 
 export type FamilySectionKind = 'reactions_of' | 'preparation_of';
 
-/** The selectivity word shown under a product; `unspecified` has none (the card then carries no word). */
-export type SelectivityWord = 'exclusive' | 'major' | 'minor' | 'trace' | 'mixture component';
+import type { SelectivityWord } from '../selectivity-word';
+
+/** The selectivity word shown under a product (the vocabulary of `../selectivity-word`); `unspecified` has none (the card then carries no word). */
+export type { SelectivityWord };
 
 export interface FamilyProduct {
   readonly productId: ProductId;

@@ -47,6 +47,21 @@ export interface ArrowTextContext {
   readonly shownAsNode: (ref: RecordRef) => boolean;
   /** True: a reactant is never written on the arrow (the full equation lists every reactant on the left, water included). */
   readonly omitReactants?: boolean;
+  /**
+   * The full equation writes every reactant on the left; a participant of another role that is the SAME record (kind and ID) is not
+   * repeated on the arrow. The card's own arrow passes nothing, so it is unchanged.
+   */
+  readonly omitRefs?: readonly RecordRef[];
+  /**
+   * Formulas of the reactants written on the left (`normalizeFormula` form not required): a gas of the atmosphere with the same
+   * formula is the same species and is not repeated under the arrow either. Only the condition parts are compared this way.
+   */
+  readonly omitFormulas?: readonly string[];
+}
+
+/** A formula for comparing: subscript digits as digits, no spaces. */
+export function normalizeFormula(formula: string): string {
+  return formula.replace(/[\u2080-\u2089]/g, (c) => String(c.charCodeAt(0) - 0x2080)).replace(/\s+/g, '');
 }
 
 /** A formula longer than this (in characters) is not written on an arrow: the name is (item e). */
@@ -158,6 +173,7 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
   for (const p of reaction.participants) {
     if (p.id === context.carriedParticipantId) continue;
     if (context.omitReactants === true && p.role === 'reactant') continue;
+    if (context.omitRefs?.some((ref) => ref.kind === p.ref.kind && ref.id === p.ref.id) === true) continue;
     if (!appliesTo(reaction, p.id, context.conditionVariantIds)) continue;
     const position = placementOf.get(p.id) ?? ROLE_POSITION[p.role];
     if (position === 'hidden') continue;
@@ -180,11 +196,15 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
     sides[side].push(entry);
   };
   // The conditions of a stage come after its participants on the below side: each stage's parts are pushed in turn.
+  const omitted = new Set((context.omitFormulas ?? []).map(normalizeFormula));
   const conditions = effectiveParameters(reaction, context.conditionVariantIds).map((parameters) => conditionPartsOf(parameters));
   const stageCount = reaction.stages.length;
   for (let stage = 0; stage <= stageCount; stage += 1) {
     for (const { item } of ordered) if (item.stage === stage) push(item.side, stage, { part: item.part, from: 'participant' });
-    for (const condition of conditions[stage] ?? []) push('below', stage, { part: { text: condition.text, kind: condition.kind }, from: 'condition' });
+    for (const condition of conditions[stage] ?? []) {
+      if (condition.kind === 'formula' && omitted.has(normalizeFormula(condition.text))) continue;
+      push('below', stage, { part: { text: condition.text, kind: condition.kind }, from: 'condition' });
+    }
   }
   return { above: cap(sides.above), below: cap(sides.below) };
 }

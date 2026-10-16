@@ -29,20 +29,13 @@ import type {
   FamilySection,
   FamilySectionKind,
   FamilyStudy,
-  SelectivityWord,
 } from './types';
+import { selectivityWordOf } from '../selectivity-word';
 
 export const UNCLASSIFIED_NAME = 'Unclassified';
 
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
-const SELECTIVITY_WORD: Readonly<Record<string, SelectivityWord>> = {
-  exclusive: 'exclusive',
-  major: 'major',
-  minor: 'minor',
-  trace: 'trace',
-  mixture_component: 'mixture component',
-};
 
 interface HubInfo {
   readonly name: string;
@@ -154,7 +147,7 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
             const products: FamilyProduct[] = o.products
               .slice()
               .sort((a, b) => compare(a.productId, b.productId))
-              .map((p) => ({ productId: p.productId, ref: p.product, selectivity: SELECTIVITY_WORD[p.selectivity] ?? null }));
+              .map((p) => ({ productId: p.productId, ref: p.product, selectivity: selectivityWordOf(p.selectivity) }));
             const arrowText = arrowTextOf(reaction, {
               schemes: schemesOf(reaction.id),
               conditionVariantIds: o.variantIds,
