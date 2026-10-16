@@ -23,15 +23,22 @@ const REVIEW_MARK: Readonly<Record<FamilyCard['reviewStatus'], string | undefine
 
 const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
 
-/** The phone's arrow: drawn downward (about 48 px), the reagents beside it, the conditions under the reagents. */
+/**
+ * The phone's arrow: a downward arrow CENTRED on the column (under the reactants), at least 48 px and as tall as the text beside it plus
+ * 16 px; the reagents sit to its right, left-aligned, the conditions under them, the text block vertically centred on the arrow.
+ */
 function DownArrow(props: { readonly outcome: FamilyCardOutcome }) {
   const { above, below } = props.outcome.arrowText;
   return (
     <div className={scheme.downArrow} data-arrow="" data-direction="down">
-      <svg className={scheme.downArrowLine} width="14" height="48" viewBox="0 0 14 48" aria-hidden="true" focusable="false">
-        <path d="M7 0 V43 M2 36 L7 44 L12 36" />
-      </svg>
-      <div className={scheme.downArrowText}>
+      <span aria-hidden="true" />
+      <div className={scheme.downArrowShaft} data-arrow-line="" aria-hidden="true">
+        <span className={scheme.downArrowStem} />
+        <svg className={scheme.downArrowHead} width="14" height="9" viewBox="0 0 14 9" focusable="false">
+          <path d="M2 1 L7 8 L12 1" />
+        </svg>
+      </div>
+      <div className={scheme.downArrowText} data-arrow-text="">
         <div className={scheme.arrowAbove}>{above.length === 0 ? null : <ArrowSide parts={above} />}</div>
         <div className={scheme.arrowBelow}>{below.length === 0 ? null : <ArrowSide parts={below} />}</div>
       </div>

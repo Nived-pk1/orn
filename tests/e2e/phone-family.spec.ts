@@ -25,6 +25,23 @@ async function shot(page: Page, device: string, n: number, name: string): Promis
   await page.screenshot({ path: `screenshots/phone3-${device}-${n}-${name}.png` });
 }
 
+/** The arrow is centred on the column, at least 48 px and as tall as its text + 16 px; the text is right of it, inside the card. */
+async function expectArrowLayout(card: ReturnType<Page['locator']>, viewport: number): Promise<void> {
+  const cardBox = await box(card);
+  for (const arrow of await card.locator('[data-arrow][data-direction="down"]').all()) {
+    const row = await box(arrow);
+    const shaft = await box(arrow.locator('[data-arrow-line]'));
+    const text = await box(arrow.locator('[data-arrow-text]'));
+    expect(shaft.height, 'the arrow is at least 48 px').toBeGreaterThanOrEqual(47.5);
+    expect(shaft.height, 'the arrow is as tall as its text block (text + 16 px of padding)').toBeGreaterThanOrEqual(text.height - 0.5);
+    expect(Math.abs(shaft.x + shaft.width / 2 - (row.x + row.width / 2)), 'the arrow is centred on the column').toBeLessThanOrEqual(1.5);
+    expect(text.x, 'the text is right of the arrow').toBeGreaterThanOrEqual(shaft.x + shaft.width - 0.5);
+    expect(text.x + text.width, 'nothing overflows the card').toBeLessThanOrEqual(Math.min(cardBox.x + cardBox.width, viewport) + 0.5);
+    const middle = shaft.y + shaft.height / 2;
+    expect(Math.abs(text.y + text.height / 2 - middle), 'the text is vertically centred on the arrow').toBeLessThanOrEqual(2);
+  }
+}
+
 async function walk(page: Page, device: string): Promise<void> {
   const seen = await watch(page);
   await openPhoneApp(page);
@@ -59,12 +76,11 @@ async function walk(page: Page, device: string): Promise<void> {
   const product = await box(figures.last());
   expect(reactant.y + reactant.height, 'the reactant is above the arrow').toBeLessThanOrEqual(down.y + 1);
   expect(down.y + down.height, 'the arrow is above the products').toBeLessThanOrEqual(product.y + 1);
-  const line = await box(arrow.locator('svg'));
-  expect(line.height, 'the arrow is about 48 px').toBeGreaterThanOrEqual(44);
-  expect(line.height).toBeLessThanOrEqual(52);
+  await expectArrowLayout(card, width);
   for (const figure of await figures.all()) expect((await box(figure)).width, 'a structure is at most 45% of the width').toBeLessThanOrEqual(width * 0.45 + 1);
   expect((await box(card)).width, 'the card uses the width').toBeGreaterThanOrEqual(width - 40);
   await card.scrollIntoViewIfNeeded();
+  await card.screenshot({ path: `screenshots/phone4-${device}-pcc-card.png` });
   await shot(page, device, 2, 'scheme');
 
   // the sheet: a tapped card at the bottom of the list sits above the peek, the last card can be scrolled above it
@@ -110,6 +126,15 @@ async function walk(page: Page, device: string): Promise<void> {
   await family.getByRole('button', { name: '< Families' }).tap();
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
   await shot(page, device, 4, 'back-to-families');
+
+  // the ester hydrolysis card (long reagent text): the same arrow rules
+  await page.getByRole('button', { name: /^Esters/ }).tap();
+  const esters = page.getByRole('region', { name: 'Family page: Esters' });
+  await expect(esters).toBeVisible();
+  const hydrolysis = esters.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: /hydrol|H₂O|water/i }) }).first();
+  await hydrolysis.scrollIntoViewIfNeeded();
+  await expectArrowLayout(hydrolysis, width);
+  await hydrolysis.screenshot({ path: `screenshots/phone4-${device}-ester-hydrolysis-card.png` });
   await expectClean(seen);
 }
 

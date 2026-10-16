@@ -139,20 +139,32 @@
   object-fit: contain;
 }
 
-/* The downward arrow: about 48 px tall, the reagents beside it, the conditions under the reagents. */
+/* The downward arrow: three columns, the arrow in the middle one (so it is centred on the column), the text to its right. The row is at
+   least 48 px and as tall as the text + 16 px (the text's vertical padding); the shaft stretches over the whole row. */
 .downArrow {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-self: center;
-  column-gap: var(--space-3);
-  max-width: 100%;
+  min-height: 48px;
   font-size: var(--text-13);
 }
 
-.downArrowLine {
+.downArrowShaft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
   width: 14px;
-  height: 48px;
+}
+
+.downArrowStem {
+  flex: 1 1 auto;
+  width: 1.5px;
+  background: var(--color-ink);
+}
+
+.downArrowHead {
+  flex: none;
   fill: none;
   stroke: var(--color-ink);
   stroke-width: 1.5;
@@ -163,5 +175,13 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  padding: 8px 0 8px var(--space-2);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.downArrowText .arrowAbove,
+.downArrowText .arrowBelow {
+  min-height: 0;
   text-align: left;
 }

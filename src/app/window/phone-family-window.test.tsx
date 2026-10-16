@@ -75,8 +75,14 @@ describe('the family page on a phone', () => {
     const [reactants, arrow, products] = [...scheme.children] as HTMLElement[];
     expect(reactants?.querySelector('figure')).not.toBeNull();
     expect(arrow?.matches('[data-arrow][data-direction="down"]')).toBe(true);
-    expect(arrow?.querySelector('svg')?.getAttribute('height')).toBe('48');
-    expect(arrow?.textContent).toContain('PCC');
+    // centred: a spacer, then the arrow, then the text to its right (the middle one of three columns); the text is not inside the arrow
+    const [spacer, shaft, text] = [...(arrow?.children ?? [])] as HTMLElement[];
+    expect(spacer?.textContent).toBe('');
+    expect(shaft?.matches('[data-arrow-line]')).toBe(true);
+    expect(shaft?.textContent).toBe('');
+    expect(text?.matches('[data-arrow-text]')).toBe(true);
+    expect(text?.textContent).toContain('PCC');
+    expect(arrow?.children.length).toBe(3);
     expect(products?.querySelector('figure')).not.toBeNull();
     // the structure boxes are sized by the CSS on a phone, not by fixed pixels
     expect(reactants?.querySelector<HTMLElement>('figure > div')?.getAttribute('style')).toBeNull();
