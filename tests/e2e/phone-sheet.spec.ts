@@ -77,8 +77,11 @@ async function steps(page: Page, device: string): Promise<void> {
   const viewport = page.viewportSize();
   const peek = await sheet(page).boundingBox();
   if (viewport === null || peek === null) throw new Error('no viewport');
-  expect(peek.height / viewport.height, 'peek is about 35% of the screen').toBeGreaterThan(0.3);
-  expect(peek.height / viewport.height).toBeLessThan(0.42);
+  // phone mode C part 2: the peek is as high as its own content, at most 35% of the screen (a short record takes less room)
+  expect(peek.height / viewport.height, 'peek is at most 35% of the screen').toBeLessThanOrEqual(0.35 + 0.002);
+  expect(peek.height, 'peek keeps its floor (head, name and the main action)').toBeGreaterThanOrEqual(120);
+  const content = await sheet(page).locator('div').filter({ has: page.locator('#inspector-record-title') }).first().evaluate((el) => ({ client: el.clientHeight, scroll: el.scrollHeight }));
+  expect(content.scroll <= content.client + 1 || peek.height / viewport.height >= 0.35 - 0.002, 'peek height follows its content unless capped').toBe(true);
   await expect(region.getByRole('button', { name: 'Open family' })).toBeVisible();
   const open = await region.getByRole('button', { name: 'Open family' }).boundingBox();
   expect(open?.height ?? 0, 'a large button').toBeGreaterThanOrEqual(44);

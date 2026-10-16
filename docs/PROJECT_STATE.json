@@ -91,9 +91,9 @@
   "nextPhase": 7,
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-16T13:10Z",
-    "commit": "7d33450",
-    "version": "39036747-64f2-42dd-ab1a-b3b453f0ed39"
+    "deployedAt": "2026-10-16T16:31Z",
+    "commit": "a847c24",
+    "version": "a5253990-50ca-4702-9c11-66c4f5687079"
   },
   "nextStep": "6.1",
   "nextStepTitle": "Editor sessions (draft store, persistence, local undo, commit, conflicts); first action: a quiet-machine bench:compare. A release-preview step (hosting, reviewer's prompt) comes before 6.1.",
@@ -402,7 +402,7 @@
     "NEW (release preview, 2026-10-14) -> Phase 8: on narrow screens, notices fold into one line that expands (reviewer decision 2)."
   ],
   "phoneMode": {
-    "status": "closed 2026-10-16: parts 0-4 done and deployed",
+    "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",
     "partsDone": [
       0,
       1,
@@ -421,6 +421,10 @@
     "partB": {
       "status": "closed 2026-10-16 (phone mode B): load fixes (the re-ask bug; the idle start of the chem worker was measured, made 'Load demo' slower and was dropped on the reviewer's decision), the phone family page, sheet refinements, folded toasts, three Show-full-equation fixes; deployed",
       "commits": { "loadFixes": "0a59760", "familyPage": "2edb2c6", "equation": "7d33450" }
+    },
+    "partC": {
+      "status": "closed 2026-10-16 (phone mode C): the vertical scheme's arrow, room behind the sheet and a content-height peek, equation role words, the WebKit canvas-keyboard flake (a product bug in the viewport's automatic-fit report), deployed",
+      "commits": { "reviewB": "cb1b838", "arrow": "6142f2f", "sheetRoom": "43aa050", "equationRoles": "62b158a", "canvasKeyboard": "e25f4e5", "complete": "a847c24" }
     },
     "next": "none; Phase 6 (6.1)",
     "decisions": "ADR-039; docs/UI_ARCHITECTURE.md section 13"
