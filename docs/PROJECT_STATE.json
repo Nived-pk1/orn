@@ -91,9 +91,9 @@
   "nextPhase": 7,
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-16T10:34Z",
-    "commit": "d60c0bd",
-    "version": "3a4a67de-29e1-4faa-8311-b221d91c8f40"
+    "deployedAt": "2026-10-16T13:10Z",
+    "commit": "7d33450",
+    "version": "39036747-64f2-42dd-ab1a-b3b453f0ed39"
   },
   "nextStep": "6.1",
   "nextStepTitle": "Editor sessions (draft store, persistence, local undo, commit, conflicts); first action: a quiet-machine bench:compare. A release-preview step (hosting, reviewer's prompt) comes before 6.1.",
@@ -415,9 +415,14 @@
       "measurement": "77f2d91",
       "shell": "4bb4090",
       "sheet": "4b9a260",
-      "tabs": "014fc79"
+      "tabs": "014fc79",
+      "reviewA": "8f37806"
     },
-    "next": "phone family page (single column, vertical scheme); load-time fixes (re-ask for structures when the engine is ready first)",
+    "partB": {
+      "status": "closed 2026-10-16 (phone mode B): load fixes (the re-ask bug; the idle start of the chem worker was measured, made 'Load demo' slower and was dropped on the reviewer's decision), the phone family page, sheet refinements, folded toasts, three Show-full-equation fixes; deployed",
+      "commits": { "loadFixes": "0a59760", "familyPage": "2edb2c6", "equation": "7d33450" }
+    },
+    "next": "none; Phase 6 (6.1)",
     "decisions": "ADR-039; docs/UI_ARCHITECTURE.md section 13"
   }
 }
