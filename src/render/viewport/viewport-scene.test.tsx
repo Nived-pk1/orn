@@ -190,7 +190,7 @@ describe('ViewportScene', () => {
 
 describe('the automatic fit follows the drawing size until the view is touched (step 5.10a)', () => {
   const rect = (height: number) => ({ x: 0, y: 0, left: 0, top: 0, right: 1000, bottom: height, width: 1000, height, toJSON: () => ({}) });
-  function observed(): { resize: (height: number) => void } {
+  function observed(): { resize: (height: number) => void; resizeHeight: (height: number, drawn: boolean) => void } {
     let notify: (() => void) | undefined;
     vi.stubGlobal(
       'ResizeObserver',
@@ -208,6 +208,14 @@ describe('the automatic fit follows the drawing size until the view is touched (
         act(() => {
           notify?.();
           frames.run();
+        });
+      },
+      /** The size changes; `drawn` false: the automatic fit is made but the frame that draws it has not run yet (the store holds the view of the last frame). Fake timers drive the frames. */
+      resizeHeight(height, drawn) {
+        vi.mocked(SVGSVGElement.prototype.getBoundingClientRect).mockReturnValue(rect(height));
+        act(() => {
+          notify?.();
+          if (drawn) vi.advanceTimersByTime(50);
         });
       },
     };
@@ -236,6 +244,22 @@ describe('the automatic fit follows the drawing size until the view is touched (
       });
       vi.advanceTimersByTime(1000);
       expect(flags).toEqual([true, true, false]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a drawing that goes away while an automatic fit is still waiting for its frame reports the view as automatic (WebKit canvas-keyboard flake)', () => {
+    vi.useFakeTimers();
+    try {
+      const size = observed();
+      const flags: boolean[] = [];
+      const { view } = mount({ onSettled: (_view, automatic) => void flags.push(automatic) });
+      vi.advanceTimersByTime(1000);
+      size.resizeHeight(560, true); // a fit that reached the store; its report waits for the view to be still
+      size.resizeHeight(530, false); // another automatic fit, not drawn yet: the controller is ahead of the store
+      view.unmount(); // the family page replaces the map: the pending report is flushed
+      expect(flags).toEqual([true, true]);
     } finally {
       vi.useRealTimers();
     }

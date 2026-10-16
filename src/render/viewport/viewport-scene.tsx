@@ -55,6 +55,9 @@ export interface ViewportSceneProps {
 /** What the layers get: the same statuses, but `request` does nothing (the queue decides what is asked for). */
 const passive = (source: DepictionSource): DepictionSource => ({ request: () => undefined, snapshot: source.snapshot, subscribe: source.subscribe });
 
+/** How many automatic fits are remembered (a drawing's size settles in a few steps; bounded). */
+const MAX_AUTO_VIEWS = 8;
+
 const sameView = (a: Viewport, b: Viewport): boolean => a.x === b.x && a.y === b.y && a.scale === b.scale;
 
 export function ViewportScene(props: ViewportSceneProps) {
@@ -97,6 +100,16 @@ export function ViewportScene(props: ViewportSceneProps) {
     // drawing's size fits again: the first size can be a transient one (the toolbar and legend above it settle after the drawing's
     // first layout), and a view fitted to it would leave families outside the visible area (found in step 5.10a, WebKit).
     let autoView: Viewport | undefined;
+    // Every view an automatic fit made (the newest ones). The controller is ahead of the store: a fit is commanded at once but drawn, and so
+    // stored, on the next frame, so a report of the stored view (above all the one flushed when the drawing goes away) can be of an earlier
+    // automatic fit than `autoView`; it is still automatic (found in the WebKit canvas-keyboard flake: the family page replacing the map
+    // announced "Zoom 61 percent" over "Opened the family page").
+    const autoViews: Viewport[] = [];
+    const markAutomatic = (): void => {
+      autoView = controller.current();
+      autoViews.push(autoView);
+      if (autoViews.length > MAX_AUTO_VIEWS) autoViews.shift();
+    };
     const measure = (): void => {
       const box = svg.getBoundingClientRect();
       controller.setSize({ width: box.width, height: box.height });
@@ -105,12 +118,12 @@ export function ViewportScene(props: ViewportSceneProps) {
         fitted = true;
         if (initialRef.current === undefined) {
           controller.fit();
-          autoView = controller.current();
+          markAutomatic();
         } else controller.setViewport(initialRef.current);
       } else if (autoView !== undefined) {
         if (sameView(controller.current(), autoView)) {
           controller.fit();
-          autoView = controller.current();
+          markAutomatic();
         }
       }
     };
@@ -127,7 +140,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       if (!moved) return;
       moved = false;
       const view = store.get().viewport;
-      onSettled?.(view, autoView !== undefined && sameView(view, autoView));
+      onSettled?.(view, autoViews.some((auto) => sameView(view, auto)));
     };
     const off = onSettled === undefined ? undefined : store.subscribe(() => {
       const view = store.get().viewport;
