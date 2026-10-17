@@ -281,7 +281,7 @@ describe('the shell frame around the window', () => {
     // Search exists since step 5.8 (it opens the palette); Undo and Redo reflect the store and say why they cannot act
     expect(screen.getByRole('button', { name: 'Search' }).getAttribute('aria-disabled')).toBeNull();
     for (const [name, reason] of [['Undo', 'Nothing to undo'], ['Redo', 'Nothing to redo']] as const) {
-      expect(screen.getByRole('button', { name, description: `${reason} (editing arrives in Phase 6)` }).getAttribute('aria-disabled')).toBe('true');
+      expect(screen.getByRole('button', { name, description: reason }).getAttribute('aria-disabled')).toBe('true');
     }
     expect(screen.getByRole('combobox', { name: /Exam scope/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'File' })).toBeTruthy();

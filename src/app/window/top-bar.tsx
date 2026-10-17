@@ -42,13 +42,11 @@ export interface HistoryBinding {
   historyLabels?(): { readonly undo: readonly string[]; readonly redo: readonly string[] };
 }
 
-const LATER = 'editing arrives in Phase 6';
-
 /** Why a history step cannot be taken, in words; undefined: it can. */
 export function historyReason(store: HistoryBinding, direction: 'undo' | 'redo'): string | undefined {
   if (store.isReadOnly()) return 'this tab is read-only';
-  if (direction === 'undo') return store.canUndo() ? undefined : `Nothing to undo (${LATER})`;
-  return store.canRedo() ? undefined : `Nothing to redo (${LATER})`;
+  if (direction === 'undo') return store.canUndo() ? undefined : 'Nothing to undo';
+  return store.canRedo() ? undefined : 'Nothing to redo';
 }
 
 /** One history step; a refusal is said in a toast with its code. */

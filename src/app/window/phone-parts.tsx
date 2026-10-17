@@ -83,18 +83,13 @@ function HistorySection(props: { readonly history: HistoryBinding }) {
   const toasts = useToasts();
   useSyncExternalStore((onChange) => history.subscribe(onChange), () => historySnapshot(history));
   const reasons = { undo: historyReason(history, 'undo'), redo: historyReason(history, 'redo') };
-  const shortReason = (direction: 'undo' | 'redo'): string | undefined => {
-    const reason = reasons[direction];
-    if (reason === undefined) return undefined;
-    return history.isReadOnly() ? reason : direction === 'undo' ? 'Nothing to undo' : 'Nothing to redo';
-  };
   return (
     <section aria-label="History" className={styles.section}>
       <h3>History</h3>
       <ul className={styles.list}>
         {(['undo', 'redo'] as const).map((direction) => (
           <li key={direction}>
-            <Button className={styles.wide} {...(reasons[direction] === undefined ? { onClick: () => stepHistory(history, direction, toasts) } : { unavailable: shortReason(direction) as string })}>
+            <Button className={styles.wide} {...(reasons[direction] === undefined ? { onClick: () => stepHistory(history, direction, toasts) } : { unavailable: reasons[direction] as string })}>
               {historyLabelOf(history, direction)}
             </Button>
           </li>

@@ -16,7 +16,7 @@ import { ConflictView, DeletedView } from './conflict-view';
 import { draftStatusText, editingUnavailableReason } from './draft-text';
 import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
-import { NamesSection } from './names-section';
+import { NamesSection, namesFieldLabel } from './names-section';
 import styles from './editor.module.css';
 
 export const LIVE_DEBOUNCE_MS = 300;
@@ -215,6 +215,7 @@ export function EditorHost(props: EditorHostProps) {
             comparisons={comparisons}
             choices={view.choices}
             saving={busy}
+            labelOf={namesFieldLabel}
             onChoose={(path: string, choice: ConflictChoice) => setView({ ...view, choices: { ...view.choices, [path]: choice } })}
             onSave={() => void save(view.choices)}
             onBack={() => setView({ kind: 'form' })}
@@ -223,7 +224,7 @@ export function EditorHost(props: EditorHostProps) {
           <DeletedView onBack={() => setView({ kind: 'form' })} onDiscard={() => setAsking(true)} />
         ) : (
           <div className={phone ? styles.bodyPhone : styles.body}>
-            <NamesSection draft={draft} onEdit={edit} invalid={invalid} {...(unavailable === undefined ? {} : { unavailable })} />
+            <NamesSection draft={draft} onEdit={edit} invalid={invalid} phone={phone} {...(unavailable === undefined ? {} : { unavailable })} />
             <div>
               {refusal?.message === null || refusal === null ? null : (
                 <p className={styles.notice} role="alert">

@@ -241,7 +241,7 @@ describe('a conflict (the record changed since the draft was started)', () => {
     expect(await screen.findByRole('heading', { name: 'This record was changed since you started' })).toBeTruthy();
     const table = screen.getByRole('table');
     const rows = within(table).getAllByRole('row').slice(1);
-    const canonical = rows.find((r) => r.textContent?.startsWith('names.canonical')) as HTMLElement;
+    const canonical = rows.find((r) => r.textContent?.startsWith('Canonical name')) as HTMLElement;
     expect(canonical.textContent).toContain('Mine');
     expect(canonical.textContent).toContain('Theirs');
     const notes = rows.find((r) => r.textContent?.startsWith('notes')) as HTMLElement;

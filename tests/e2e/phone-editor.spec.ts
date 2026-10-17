@@ -42,6 +42,17 @@ async function walk(page: Page, device: string): Promise<void> {
   expect(box?.height ?? 0, 'the editor fills the height of the screen').toBeGreaterThanOrEqual((viewport?.height ?? 0) * 0.9);
   await canonicalInput(page).fill('Ethanol phone');
   await expect(draftStatus(page)).toHaveText(/^(Saving draft\.\.\.|Draft saved )/);
+  // a list row: the text field takes the row; Up, Down and Remove sit in ONE row under it, each at least 44 px high
+  const rowField = dialog.locator('li input[data-field-path^="names.common"]').first();
+  await rowField.scrollIntoViewIfNeeded();
+  const text = await rowField.inputValue();
+  const fieldBox = await rowField.boundingBox();
+  const boxes = await Promise.all(['up', 'down'].map((d) => dialog.getByRole('button', { name: `Move ${text} ${d}` }).boundingBox()).concat(dialog.getByRole('button', { name: `Remove ${text}` }).boundingBox()));
+  expect(fieldBox, 'the common name field is drawn').not.toBeNull();
+  const tops = boxes.map((b) => Math.round(b?.y ?? -1));
+  expect(new Set(tops).size, 'Up, Down and Remove share one row').toBe(1);
+  expect(tops[0] ?? 0, 'the buttons sit under the field').toBeGreaterThanOrEqual((fieldBox?.y ?? 0) + (fieldBox?.height ?? 0) - 1);
+  for (const b of boxes) expect(b?.height ?? 0, 'a 44 px target').toBeGreaterThanOrEqual(43.5);
   await page.screenshot({ path: `${shotsDir()}/phone-editor-${device}.png` });
   await dialog.getByRole('button', { name: 'Save', exact: true }).tap();
   await expect(dialog).toBeHidden();

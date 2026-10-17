@@ -67,8 +67,8 @@ describe('Undo and Redo', () => {
     show(stub({ undo: 0, redo: 0 }));
     expect(button('Undo').getAttribute('aria-disabled')).toBe('true');
     expect(button('Redo').getAttribute('aria-disabled')).toBe('true');
-    expect(screen.getByText('Nothing to undo (editing arrives in Phase 6)')).toBeTruthy();
-    expect(screen.getByText('Nothing to redo (editing arrives in Phase 6)')).toBeTruthy();
+    expect(screen.getByText('Nothing to undo')).toBeTruthy();
+    expect(screen.getByText('Nothing to redo')).toBeTruthy();
   });
 
   it('with history they act on the store and follow it', () => {
@@ -117,7 +117,7 @@ describe('Undo and Redo', () => {
 
   it('the real store fits the binding: a new store has nothing to undo', () => {
     const real = createCanonicalStore({ initial: emptyStoreState(), revision: 0, validateInitial: false });
-    expect(historyReason(real, 'undo')).toBe('Nothing to undo (editing arrives in Phase 6)');
+    expect(historyReason(real, 'undo')).toBe('Nothing to undo');
     expect(vi.isMockFunction(real.undo)).toBe(false);
   });
 });

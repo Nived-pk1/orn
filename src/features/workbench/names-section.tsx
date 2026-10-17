@@ -28,6 +28,8 @@ export interface NamesSectionProps {
   readonly invalid?: ReadonlySet<string>;
   /** Why editing is unavailable (a read-only tab); absent: it is available. */
   readonly unavailable?: string;
+  /** A phone: the text field takes the whole row, Up, Down and Remove sit in one row under it, and the buttons are named by the text. */
+  readonly phone?: boolean;
 }
 
 const OPTIONAL: readonly { readonly field: OptionalNameField; readonly label: string }[] = [
@@ -40,6 +42,20 @@ const LISTS: readonly { readonly list: NameList; readonly title: string; readonl
   { list: 'common', title: 'Common names', one: 'Common name' },
   { list: 'aliases', title: 'Aliases', one: 'Alias' },
 ];
+
+/** The labels of the fields this section owns, by path (the conflict table shows them instead of raw paths). */
+const FIELD_LABELS: Readonly<Record<string, string>> = {
+  'names.canonical': 'Canonical name',
+  'names.display': 'Display name',
+  'names.iupac': 'IUPAC name',
+  'names.qualifier': 'Qualifier',
+  'names.common': 'Common names',
+  'names.aliases': 'Aliases',
+};
+
+export function namesFieldLabel(path: string): string | undefined {
+  return FIELD_LABELS[path];
+}
 
 export function NamesSection(props: NamesSectionProps) {
   const { onEdit, unavailable } = props;
@@ -88,9 +104,10 @@ export function NamesSection(props: NamesSectionProps) {
               {items.map((item, index) => {
                 const path = `names.${list}[${index}]`;
                 const number = index + 1;
+                const who = props.phone === true && item !== '' ? item : `${one.toLowerCase()} ${number}`;
                 return (
                   // the list has no identity of its own: a row is its position
-                  <li key={index} className={styles.row}>
+                  <li key={index} className={props.phone === true ? `${styles.row} ${styles.rowPhone}` : styles.row}>
                     <input
                       type="text"
                       value={item}
@@ -103,19 +120,19 @@ export function NamesSection(props: NamesSectionProps) {
                       onChange={(event) => onEdit(setListItem(list, index, event.target.value), path)}
                     />
                     <Button
-                      aria-label={`Move ${one.toLowerCase()} ${number} up`}
+                      aria-label={`Move ${who} up`}
                       {...(unavailable !== undefined ? { unavailable } : index === 0 ? { unavailable: 'it is the first' } : { onClick: () => onEdit(moveListItem(list, index, -1)) })}
                     >
                       Up
                     </Button>
                     <Button
-                      aria-label={`Move ${one.toLowerCase()} ${number} down`}
+                      aria-label={`Move ${who} down`}
                       {...(unavailable !== undefined ? { unavailable } : index === items.length - 1 ? { unavailable: 'it is the last' } : { onClick: () => onEdit(moveListItem(list, index, 1)) })}
                     >
                       Down
                     </Button>
                     <Button
-                      aria-label={`Remove ${one.toLowerCase()} ${number}`}
+                      aria-label={`Remove ${who}`}
                       {...(unavailable !== undefined ? { unavailable } : { onClick: () => onEdit(removeListItem(list, index)) })}
                     >
                       Remove

@@ -17,6 +17,11 @@ export function valueText(value: unknown): string {
   return text.length <= MAX_VALUE_CHARS ? text : `${text.slice(0, MAX_VALUE_CHARS)}... (cut: ${text.length} characters in all)`;
 }
 
+/** A path as words when no section labels it: "names.common[2]" is "names, common, 2". */
+export function fieldWords(path: string): string {
+  return path.split(/[^A-Za-z0-9]+/).filter((word) => word !== '').join(', ');
+}
+
 const WHAT: Readonly<Record<string, string>> = {
   theirsOnly: 'Kept as it is now (you did not change it)',
   mineOnly: 'Your draft is kept (nobody else changed it)',
@@ -29,7 +34,10 @@ export function ConflictView(props: {
   readonly onSave: () => void;
   readonly onBack: () => void;
   readonly saving: boolean;
+  /** The label the section that owns a field gives it; undefined: the path's words are shown. */
+  readonly labelOf?: (path: string) => string | undefined;
 }) {
+  const labelFor = (path: string): string => props.labelOf?.(path) ?? fieldWords(path);
   const rows = props.comparisons.filter((field) => field.status !== 'same');
   const open = rows.filter((field) => field.status === 'both' && props.choices[field.path] === undefined).length;
   return (
@@ -50,13 +58,13 @@ export function ConflictView(props: {
           <tbody>
             {rows.map((field) => (
               <tr key={field.path}>
-                <th scope="row">{field.path}</th>
+                <th scope="row">{labelFor(field.path)}</th>
                 <td>{valueText(field.base)}</td>
                 <td>{valueText(field.theirs)}</td>
                 <td>{valueText(field.mine)}</td>
                 <td>
                   {field.status === 'both' ? (
-                    <div className={styles.choices} role="group" aria-label={`Choice for ${field.path}`}>
+                    <div className={styles.choices} role="group" aria-label={`Choice for ${labelFor(field.path)}`}>
                       <Button className={props.choices[field.path] === 'mine' ? styles.chosen : ''} aria-pressed={props.choices[field.path] === 'mine'} onClick={() => props.onChoose(field.path, 'mine')}>
                         Keep mine
                       </Button>
