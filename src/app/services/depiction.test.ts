@@ -61,6 +61,11 @@ describe('the key', () => {
     expect(new Set(keys).size).toBe(3);
     expect(keys[0]).toBe(depictionKeyOf(smiles('CCO'), options));
   });
+
+  it('includes fixedScale: the drawing at one bond length is another request', () => {
+    expect(depictionKeyOf(smiles('CCO'), { ...options, fixedScale: true })).not.toBe(depictionKeyOf(smiles('CCO'), options));
+    expect(depictionKeyOf(smiles('CCO'), { ...options, fixedScale: false })).toBe(depictionKeyOf(smiles('CCO'), options));
+  });
 });
 
 describe('at most 4 calls in flight', () => {

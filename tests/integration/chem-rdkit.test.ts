@@ -123,6 +123,38 @@ describe('facts, checked by hand', () => {
     expect(await factsOf(value)).toMatchObject(expected);
   });
 
+  it.each([
+    ['CCO', 0],
+    ['C', 0],
+    ['O', 0],
+    ['[H][H]', 0],
+    ['[Pd]', 0],
+    ['c1ccccc1', 1],
+    ['C1CC1', 1],
+    ['OC1CCCCC1', 1],
+    ['c1ccc2ccccc2c1', 2], // naphthalene: two fused rings
+    ['C1CC2CCC1C2', 2], // norbornane: bicyclic
+    ['C12C3C4C1C5C2C3C45', 5], // cubane
+    ['C1CC1.C1CCC1', 2], // two separate rings (one structure, two components)
+    ['[Na+].[OH-]', 0],
+    ['O=C(OOC(=O)c1ccccc1)c1ccccc1', 2], // dibenzoyl peroxide
+  ])('ring count of %s is %i (the cyclomatic number, from RDKit\'s own atoms and bonds)', async (value, rings) => {
+    expect((await factsOf(value)).ringCount).toBe(rings);
+  });
+
+  it.each([
+    ['O', 0],
+    ['[H][H]', 0],
+    ['OS(=O)(=O)O', 0],
+    ['CO', 1],
+    ['CCO', 2],
+    ['[Na+].[OH-]', 0],
+    ['c1ccccc1', 6],
+    ['O=C=O', 1],
+  ])('carbon count of %s is %i (from the atoms of RDKit)', async (value, carbons) => {
+    expect((await factsOf(value)).carbonCount).toBe(carbons);
+  });
+
   it('stereo: centres and double bonds are counted as specified or not', async () => {
     expect(await factsOf('C[C@@H](Br)CC')).toMatchObject({ specifiedStereocentres: 1, unspecifiedStereocentres: 0, hasDoubleBondStereo: false });
     expect(await factsOf('CC(N)C(=O)O')).toMatchObject({ specifiedStereocentres: 0, unspecifiedStereocentres: 1 });

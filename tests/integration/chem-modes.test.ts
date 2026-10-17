@@ -5,7 +5,7 @@
  * the existing sanitiser (the toolkit sanitises every drawing it answers).
  */
 import { beforeAll, describe, expect, it } from 'vitest';
-import { createRdkitToolkit, loadRdkit, type DepictionOptions, type StructureToolkit } from '@/chem';
+import { createRdkitToolkit, FIXED_SCALE_BOND_UNITS, loadRdkit, type DepictionOptions, type StructureToolkit } from '@/chem';
 import type { StructureRep } from '@/core/schema';
 
 const smiles = (value: string): StructureRep => ({ format: 'smiles', value });
@@ -75,5 +75,50 @@ describe('the three modes of one structure', () => {
     const parsed = await toolkit.parse(structure);
     expect(parsed.ok && parsed.facts.formula).toBe('C2H6O'); // still the same molecule after the Full drawing added hydrogens to a copy
     expect(parsed.ok && parsed.facts.heavyAtomCount).toBe(3);
+  });
+});
+
+describe('the fixed scale (equation step, part 5): one bond length for every drawing', () => {
+  const fixed = async (value: string, mode: DepictionOptions['mode'] = 'skeletal') => {
+    const out = await toolkit.depict(smiles(value), { width: 300, height: 200, showAtomMaps: false, fixedScale: true, mode });
+    if (!out.ok) throw new Error(`${value}: ${out.reason} ${out.error}`);
+    return out.depiction;
+  };
+  /** The lengths of the bonds drawn between two atoms that carry no label (no end is cut short by a letter). */
+  const plainBonds = (svg: string): number[] =>
+    [...svg.matchAll(/<path class=["']bond-\d+ atom-\d+ atom-\d+["'] d=["']M ([\d.-]+),([\d.-]+) L ([\d.-]+),([\d.-]+)["']/g)].map((m) => Math.hypot(Number(m[3]) - Number(m[1]), Number(m[4]) - Number(m[2])));
+
+  it('a chain, a ring and a long chain are drawn with the same bond length (within 1%), whatever their size; the nominal bond is FIXED_SCALE_BOND_UNITS', async () => {
+    const lengths: number[] = [];
+    for (const value of ['CCC', 'C'.repeat(20), 'C1CCCCC1', 'Cc1ccccc1']) {
+      const drawing = await fixed(value);
+      const bonds = plainBonds(drawing.svg).sort((a, b) => a - b);
+      const median = bonds[Math.floor(bonds.length / 2)] as number;
+      lengths.push(median);
+      expect(Math.abs(median - FIXED_SCALE_BOND_UNITS) / FIXED_SCALE_BOND_UNITS, value).toBeLessThan(0.02);
+    }
+    expect((Math.max(...lengths) - Math.min(...lengths)) / (lengths[0] as number)).toBeLessThan(0.015);
+  });
+
+  it('the answer says the real size of the drawing (its viewBox), not the area that was asked for', async () => {
+    const small = await fixed('CCO');
+    const long = await fixed('C'.repeat(20));
+    expect(long.width).toBeGreaterThan(small.width * 5);
+    expect(small.svg).toContain(`viewBox="0 0 ${small.width} ${small.height}"`);
+    expect(long.svg).toContain(`viewBox="0 0 ${long.width} ${long.height}"`);
+  });
+
+  it('works with the structures modes too: Condensed and Full at the same scale, rings unchanged', async () => {
+    const [skeletal, condensed, full] = await Promise.all([fixed('CCBr', 'skeletal'), fixed('CCBr', 'condensed'), fixed('CCBr', 'full')]);
+    for (const drawing of [skeletal, condensed, full]) expect(drawing.width).toBeGreaterThan(0);
+    expect(condensed.svg).not.toBe(skeletal.svg);
+    expect(full.svg).not.toBe(skeletal.svg);
+    const benzene = await Promise.all([fixed('c1ccccc1', 'skeletal'), fixed('c1ccccc1', 'condensed')]);
+    expect(benzene[1].svg).toBe(benzene[0].svg);
+  });
+
+  it('a drawing that is not fixed keeps the size that was asked for', async () => {
+    const out = await toolkit.depict(smiles('CCO'), { width: 300, height: 200, showAtomMaps: false });
+    expect(out.ok && [out.depiction.width, out.depiction.height]).toEqual([300, 200]);
   });
 });

@@ -15,7 +15,7 @@ import { sanitizeSvg } from '../svg/sanitize';
 import { describe, isTrap } from './errors';
 import { factsOf } from './facts';
 import { depictionDetails } from '../depiction-options';
-import { drawMol } from './draw';
+import { drawMol, viewBoxSize } from './draw';
 import { mapsKeepingHydrogens } from './mapped-hydrogens';
 import { withHandle } from './scope';
 import type { RdkitLoad, RdkitModule } from './types';
@@ -162,7 +162,10 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
         const clean = sanitizeSvg(drawn.value.svg);
         if (!clean.ok) return { ok: false, reason: 'refused', error: `the drawing was refused: ${clean.message}` };
         const key = hashParts(['depict', structure.format, structure.value, JSON.stringify(details), TOOLKIT_NAME, module_.version()]);
-        return { ok: true, depiction: { key, svg: clean.svg, width: drawing.width, height: drawing.height } };
+        // a fixed-scale drawing has the size of the molecule, which RDKit wrote in the viewBox; any other has the size that was asked for
+        const size = details.fixedScale ? viewBoxSize(clean.svg) : { width: details.width, height: details.height };
+        if (size === undefined) return { ok: false, reason: 'refused', error: 'the drawing has no usable viewBox' };
+        return { ok: true, depiction: { key, svg: clean.svg, width: size.width, height: size.height } };
       } catch (error) {
         return crashed(error) ?? refused(error, at.stage);
       }

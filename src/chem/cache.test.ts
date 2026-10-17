@@ -99,6 +99,11 @@ describe('withChemCache', () => {
     for (const mode of [undefined, 'skeletal', 'condensed', 'full', 'condensed', 'full', undefined] as const) await toolkit.depict(smiles('CCO'), mode === undefined ? DRAW : { ...DRAW, mode });
     expect(seen).toEqual(['skeletal', 'condensed', 'full']); // each drawn once; every repeat was a hit
     expect(toolkit.stats()).toMatchObject({ depictions: 3, hits: 4, misses: 3 });
+    // a fixed-scale drawing is another drawing of the same structure: its own entry
+    await toolkit.depict(smiles('CCO'), { ...DRAW, fixedScale: true });
+    await toolkit.depict(smiles('CCO'), { ...DRAW, fixedScale: true });
+    expect(seen).toEqual(['skeletal', 'condensed', 'full', 'skeletal']);
+    expect(toolkit.stats().depictions).toBe(4);
   });
 
   it('`invalid` and `refused` answers are cached', async () => {
@@ -171,8 +176,14 @@ describe('withChemCache', () => {
 
 describe('depictionDetails', () => {
   it('normalises the highlights (sorted, unique) and keeps the option order fixed', () => {
-    expect(depictionDetails({ ...DRAW, highlightAtomMaps: [3, 1, 3] })).toEqual({ width: 200, height: 150, showAtomMaps: true, highlightAtomMaps: [1, 3], mode: 'skeletal' });
-    expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps', 'mode']);
+    expect(depictionDetails({ ...DRAW, highlightAtomMaps: [3, 1, 3] })).toEqual({ width: 200, height: 150, showAtomMaps: true, highlightAtomMaps: [1, 3], mode: 'skeletal', fixedScale: false });
+    expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps', 'mode', 'fixedScale']);
+  });
+
+  it('fixedScale defaults to false and must be true or false', () => {
+    expect(depictionDetails(DRAW).fixedScale).toBe(false);
+    expect(depictionDetails({ ...DRAW, fixedScale: true }).fixedScale).toBe(true);
+    expect(() => depictionDetails({ ...DRAW, fixedScale: 'yes' } as unknown as DepictionOptions)).toThrow(RangeError);
   });
 
   it('the structures mode defaults to skeletal and only the three modes are accepted', () => {

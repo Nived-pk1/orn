@@ -96,9 +96,11 @@ describe('the family page on a phone', () => {
       details.open = true;
       details.dispatchEvent(new Event('toggle'));
     });
-    const line = within(card).getByLabelText(/^Full equation:/).textContent ?? '';
+    const scheme = within(card).getByRole('group', { name: 'Full equation' });
+    const line = document.getElementById(scheme.getAttribute('aria-describedby') as string)?.textContent ?? '';
     expect(line).toContain('Benzyl alcohol + Sodium benzoate (both exclusive)');
     expect(line).not.toContain('Benzyl alcohol (exclusive)');
+    expect([...card.querySelectorAll('[data-equation-word]')].map((el) => el.textContent)).toEqual(['(both exclusive)']); // once
   });
 
   it('"Also gives →" is a button with the arrow character, never "->"', async () => {

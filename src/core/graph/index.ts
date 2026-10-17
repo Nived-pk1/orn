@@ -10,6 +10,8 @@ export { createDefaultProjectionRegistry, defaultProjectionDefinitions } from '.
 export { arrowTextOf, MAX_ARROW_PARTS, MAX_CONDITION_PARTS } from './arrow-text';
 export { fullEquationOf, fullEquationsOfReaction } from './full-equation';
 export type { EquationTerm, FullEquation, ProductRoleWord, SelectivityQuantifier } from './full-equation';
+export { MAX_FORMULA_HEAVY_ATOMS, needsFacts, termRepresentationOf } from './equation-term';
+export type { FactsInput, FormulaRepresentation, TermRepresentation, TermSubstance } from './equation-term';
 export { selectivityWordOf } from './selectivity-word';
 export { conditionPartsOf, MAX_TEXT_CHARS, MINUS, overrideParameters } from './condition-text';
 export type { ConditionPart } from './condition-text';

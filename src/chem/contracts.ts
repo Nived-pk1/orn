@@ -25,6 +25,10 @@ export interface StructureFacts {
   readonly formula?: string;
   readonly charge?: number;
   readonly heavyAtomCount?: number;
+  /** The number of rings (the smallest set of smallest rings has this many members): bonds - atoms + connected pieces, from RDKit's own atoms and bonds. */
+  readonly ringCount?: number;
+  /** The number of carbon atoms (atomic number 6, isotopes and charges included; a dummy atom is not carbon), from RDKit's own atoms. */
+  readonly carbonCount?: number;
   readonly specifiedStereocentres?: number;
   readonly unspecifiedStereocentres?: number;
   readonly hasDoubleBondStereo?: boolean;
@@ -62,6 +66,16 @@ export type ParseOutcome =
 export const STRUCTURE_MODES = ['skeletal', 'condensed', 'full'] as const;
 export type StructureMode = (typeof STRUCTURE_MODES)[number];
 
+/**
+ * The fixed scale (equation step, part 5): a drawing made with `fixedScale: true` has the same bond length whatever the molecule, so a
+ * methyl group is not blown up beside a long chain. RDKit draws it with `scalingFactor` `FIXED_SCALE_FACTOR` and the canvas fits the
+ * molecule; the bond is then `FIXED_SCALE_BOND_UNITS` SVG units long (measured: 146.0 to 147.8 over chains, rings and rings with side
+ * chains, a spread of 0.6% from RDKit rounding the canvas; docs/PROGRESS.md "Equation step, part 3"). A viewer scales the whole drawing by
+ * (the bond length it wants / `FIXED_SCALE_BOND_UNITS`).
+ */
+export const FIXED_SCALE_FACTOR = 100;
+export const FIXED_SCALE_BOND_UNITS = 147.5;
+
 export interface DepictionOptions {
   readonly width: number;
   readonly height: number;
@@ -69,6 +83,11 @@ export interface DepictionOptions {
   readonly highlightAtomMaps?: readonly number[];
   /** Absent: `skeletal`. */
   readonly mode?: StructureMode;
+  /**
+   * Absent or false: the drawing fits `width` x `height`. True: the drawing has the fixed bond length of `FIXED_SCALE_BOND_UNITS`; `width` and
+   * `height` are not used (they must still be valid) and the answer's `width` and `height` are the real size of the drawing.
+   */
+  readonly fixedScale?: boolean;
 }
 
 export interface Depiction {

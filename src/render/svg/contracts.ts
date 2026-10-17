@@ -12,7 +12,8 @@ export type LayerName = (typeof LAYER_NAMES)[number];
 export type DepictionStatus =
   | { readonly state: 'idle' }
   | { readonly state: 'loading' }
-  | { readonly state: 'ready'; readonly url: string }
+  /** `width` and `height`: the size of the drawing when the answer said it (a fixed-scale drawing; equation step, part 5). */
+  | { readonly state: 'ready'; readonly url: string; readonly width?: number; readonly height?: number }
   | { readonly state: 'unavailable'; readonly reason: string };
 
 /** What the layers need of a depiction manager (`createDepictionManager`); a test passes a stub. */

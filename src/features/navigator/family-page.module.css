@@ -209,13 +209,6 @@
   cursor: pointer;
   color: var(--link, inherit);
 }
-.equationLine {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.3rem 0 0;
-}
 
 /* Phone (ADR-039; keyed on data-layout, the one layout value): the whole width in one column, groups as a coloured bar on the left (not a
    nested panel), a reaction drawn top to bottom, room at the bottom for the sheet. */

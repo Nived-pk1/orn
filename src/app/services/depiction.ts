@@ -50,7 +50,7 @@ export interface DepictionService {
 /** The request's name: a stable hash of format, value and the options in their fixed order. */
 export function depictionKeyOf(structure: StructureRep, options: DepictionOptions): string {
   const details = depictionDetails(options);
-  return hashParts(['depiction', structure.format, structure.value, String(details.width), String(details.height), String(details.showAtomMaps), details.highlightAtomMaps.join(','), details.mode]);
+  return hashParts(['depiction', structure.format, structure.value, String(details.width), String(details.height), String(details.showAtomMaps), details.highlightAtomMaps.join(','), details.mode, String(details.fixedScale)]);
 }
 
 interface Entry {

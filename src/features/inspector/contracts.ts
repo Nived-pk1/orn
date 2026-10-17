@@ -7,6 +7,7 @@ import type { ChangeSet } from '@/core/dataset/contracts';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
 import type { Finding } from '@/core/validation';
+import type { StructureFactsPort } from '@/render/equation';
 import type { DepictionPort } from '@/render/svg';
 import type { ActiveExamStore, FamilyStore, InspectorStore, PanelsStore, SelectionStore } from '@/ui/state';
 import type { SubjectStatus } from '@/workers/chem';
@@ -34,6 +35,8 @@ export interface InspectorPorts {
   };
   /** Absent: no structure is drawn (a species shows its formula). */
   readonly depictions?: DepictionPort;
+  /** What the chem worker says about a structure (the textbook equation decides formula or drawing from it). Absent: the facts are unavailable. */
+  readonly facts?: StructureFactsPort;
   /** Asset bytes (step 5.6b, additive). Absent: images are not shown and the view says so. The URL is made and revoked here, never by the view. */
   readonly assets?: {
     open(assetId: string, mediaType: string): Promise<AssetImage>;

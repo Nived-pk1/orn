@@ -4,9 +4,10 @@
  */
 import { createContext, useContext } from 'react';
 import type { RecordRef } from '@/core/schema';
-import type { DepictionManager } from '@/render/svg';
+import type { StructureFactsPort } from '@/render/equation';
+import type { DepictionBinding, DepictionManager } from '@/render/svg';
 import type { LayoutMode } from '@/ui/hooks';
-import type { NavigatorPorts } from './contracts';
+import type { NavigatorPorts, NavigatorStructures } from './contracts';
 
 export interface FamilyEnv {
   readonly describe: (ref: RecordRef) => { readonly name: string; readonly formula?: string } | undefined;
@@ -16,6 +17,12 @@ export interface FamilyEnv {
   readonly timers: NavigatorPorts['timers'];
   /** The layout (the one `useLayoutMode` value, read by the page). Absent: desktop. A phone draws a reaction top to bottom. */
   readonly layout?: LayoutMode;
+  /** What the textbook equation needs (equation step, part 5): its drawings' binding, the chem facts and the Names setting. Absent: formulas and names only. */
+  readonly equation?: {
+    readonly binding: DepictionBinding | undefined;
+    readonly facts: StructureFactsPort | undefined;
+    readonly structures: NavigatorStructures | undefined;
+  };
 }
 
 export const FamilyEnvContext = createContext<FamilyEnv | null>(null);

@@ -7,6 +7,7 @@ import { depictionKeyOf, type AppServices } from '@/app/services';
 import type { StructureMode } from '@/chem/contracts';
 import type { TextMeasurer } from '@/app/text-measurer';
 import type { NavigatorPorts, NavigatorStructures } from '@/features/navigator';
+import type { StructureFactsPort } from '@/render/equation';
 import type { NavigatorUi } from '@/ui/state';
 
 export type NavigatorPortServices = Pick<AppServices, 'store' | 'indexes' | 'layout' | 'logApp' | 'depictions' | 'status'>;
@@ -21,6 +22,7 @@ export function createNavigatorPorts(
   timers: NavigatorPorts['timers'],
   ui: Pick<NavigatorUi, 'stores' | 'status'>,
   structures?: NavigatorStructures,
+  facts?: StructureFactsPort,
 ): NavigatorPorts {
   const modeOf = (): StructureMode => structures?.mode() ?? 'skeletal';
   return {
@@ -30,8 +32,8 @@ export function createNavigatorPorts(
     measurer: { measure: measurer.measure, ready: measurer.ready },
     timers,
     depictions: {
-      keyOf: (structure, size, mode) => depictionKeyOf(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal' }),
-      depict: (structure, size, mode) => services.depictions.depict(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal' }),
+      keyOf: (structure, size, mode) => depictionKeyOf(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal', ...(size.fixedScale === true ? { fixedScale: true } : {}) }),
+      depict: (structure, size, mode) => services.depictions.depict(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal', ...(size.fixedScale === true ? { fixedScale: true } : {}) }),
       cancel: (key) => services.depictions.cancel(key),
       mode: modeOf,
       onMode(listener) {
@@ -74,6 +76,7 @@ export function createNavigatorPorts(
       revokeUrl: (url) => URL.revokeObjectURL(url),
     },
     ...(structures === undefined ? {} : { structures }),
+    ...(facts === undefined ? {} : { facts }),
     ui: ui.stores,
     uiStatus: ui.status,
     log: (type, message) => services.logApp(type, message),

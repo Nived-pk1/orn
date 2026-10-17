@@ -17,12 +17,13 @@ import type { StructureRep } from '@/core/schema';
 import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer, type DepictionManager } from './depictions';
 import type { DepictionTimers } from './use-depiction-retry';
 
-type Area = { readonly width: number; readonly height: number };
+/** The area a drawing is asked at; `fixedScale`: the drawing has the fixed bond length of the chem module and `width` / `height` are not used (equation step, part 5). */
+type Area = { readonly width: number; readonly height: number; readonly fixedScale?: boolean };
 
 /** What the binding needs from the depiction service (the navigator's and the inspector's ports have exactly this). */
 export interface DepictionPort {
   keyOf(structure: StructureRep, size: Area, mode?: StructureMode): string;
-  depict(structure: StructureRep, size: Area, mode?: StructureMode): Promise<{ readonly ok: true; readonly svg: string } | { readonly ok: false; readonly reason: string; readonly message: string }>;
+  depict(structure: StructureRep, size: Area, mode?: StructureMode): Promise<{ readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number } | { readonly ok: false; readonly reason: string; readonly message: string }>;
   cancel(key: string): void;
   /** How structures are drawn now (equation step, part 4). Absent: Skeletal. A key is made in THIS mode and its fetch draws in the same one. */
   mode?(): StructureMode;
@@ -75,7 +76,7 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
     // A key that left the lookup is not in the drawing any more: not an answer about the structure, so not cached.
     if (known === undefined) return { ok: false, reason: DEPICTION_BUSY };
     const answer = await port.depict(known.structure, area, known.mode);
-    if (answer.ok) return { ok: true, svg: answer.svg };
+    if (answer.ok) return { ok: true, svg: answer.svg, ...(answer.width === undefined || answer.height === undefined ? {} : { width: answer.width, height: answer.height }) };
     return { ok: false, reason: BUSY_REASONS.has(answer.reason) ? DEPICTION_BUSY : answer.reason };
   };
   const manager = createDepictionManager({

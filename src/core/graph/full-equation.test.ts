@@ -196,3 +196,52 @@ describe('the word of a product is the card\'s selectivity word (phone mode B, p
     expect(equation.products[0]?.text).not.toContain('(');
   });
 });
+
+describe('what the textbook equation needs of a term (equation step, part 5)', () => {
+  it('every term names the record behind it (`ref`) and describes it (`substance`), on the left and on the right', () => {
+    for (const reaction of Object.values(demo.state.records.reaction)) {
+      for (const equation of equations(reaction.id)) {
+        for (const term of [...equation.reactants, ...equation.products]) {
+          expect(term.ref.id, `${reaction.id}: ${term.name}`).toBeTruthy();
+          expect(['species', 'class', 'reagent']).toContain(term.ref.kind);
+          expect(term.substance.name).toBeTruthy();
+          expect(term.substance.kind).toBe(demo.state.records[term.ref.kind][term.ref.id as never] === undefined ? 'missing' : term.ref.kind);
+        }
+      }
+    }
+  });
+
+  it('Cannizzaro: benzaldehyde is a species with a structure and its entered formula; the refs are the participants\' own', () => {
+    const [equation] = equations('rxn_benzaldehyde-cannizzaro');
+    const reaction = demo.state.records.reaction['rxn_benzaldehyde-cannizzaro' as ReactionId];
+    const reactant = reaction?.participants.find((p) => p.role === 'reactant');
+    expect(equation?.reactants[0]?.ref).toEqual(reactant?.ref);
+    expect(equation?.reactants[0]?.substance).toMatchObject({ kind: 'species', name: 'Benzaldehyde' });
+    expect(equation?.reactants[0]?.substance.structure).toBeDefined();
+    expect(equation?.products.map((t) => t.ref.id)).toEqual(reaction?.outcomes[0]?.products.map((p) => p.ref.id));
+  });
+
+  it('a species of the demo that has a structure and a formula carries both (the rule decides what to show)', () => {
+    const terms = Object.values(demo.state.records.reaction).flatMap((r) => equations(r.id).flatMap((e) => [...e.reactants, ...e.products]));
+    expect(terms.some((t) => t.substance.structure !== undefined && t.substance.formula !== undefined)).toBe(true);
+  });
+
+  it('`equilibrium` says whether the reaction is stored as an equilibrium (and only then)', () => {
+    let seen = 0;
+    for (const reaction of Object.values(demo.state.records.reaction)) {
+      for (const equation of equations(reaction.id)) {
+        expect(equation.equilibrium, reaction.id).toBe(reaction.reversibility.kind === 'equilibrium');
+        if (equation.equilibrium) seen += 1;
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  it('a record that is gone is a `missing` substance named by its ID', () => {
+    const reaction = demo.state.records.reaction['rxn_benzaldehyde-cannizzaro' as ReactionId];
+    if (reaction === undefined) throw new Error('missing fixture');
+    const gone = { ...demo.state, records: { ...demo.state.records, species: {} } };
+    const [equation] = fullEquationsOfReaction(gone, demo.indexes, reaction);
+    expect(equation?.reactants[0]?.substance).toEqual({ kind: 'missing', name: equation?.reactants[0]?.name });
+  });
+});

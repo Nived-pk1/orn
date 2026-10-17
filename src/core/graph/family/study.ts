@@ -156,7 +156,7 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
               shownAsNode,
             });
             const stored = reaction.outcomes.find((x) => x.id === outcomeId);
-            const equation = stored === undefined ? undefined : fullEquationOf(reaction, stored, { schemes: schemesOf(reaction.id), describe: describer.describeForArrow, shownAsNode });
+            const equation = stored === undefined ? undefined : fullEquationOf(reaction, stored, { schemes: schemesOf(reaction.id), describe: describer.describeForArrow, substanceOf: describer.substanceOf, shownAsNode });
             return { outcomeId: outcomeId as FamilyCardOutcome['outcomeId'], conditionVariantIds: o.variantIds, products, arrowText, ...(equation === undefined ? {} : { equation }) };
           });
         const elsewhere: FamilyElsewhere[] = [...(landing.get(reactionId) ?? [])]

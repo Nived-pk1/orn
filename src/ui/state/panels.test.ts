@@ -35,7 +35,7 @@ describe('parsePanels (tolerant)', () => {
 
   it('a good entry is taken as it is; a missing field is not damage', () => {
     expect(parsePanels({ inspectorWidth: 480, inspectorOpen: false })).toEqual({
-      values: { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal' },
+      values: { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal', equationNames: true },
       damaged: [],
       extra: {},
     });
@@ -58,7 +58,7 @@ describe('parsePanels (tolerant)', () => {
     ['infinite', Number.POSITIVE_INFINITY],
   ])('an inspectorWidth that is %s is reset and reported, the other fields are kept', (_name, width) => {
     const parsed = parsePanels({ inspectorWidth: width, inspectorOpen: false, startEmptyDismissed: true });
-    expect(parsed.values).toEqual({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: true, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal' });
+    expect(parsed.values).toEqual({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: true, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal', equationNames: true });
     expect(parsed.damaged).toEqual(['inspectorWidth']);
   });
 
@@ -163,6 +163,24 @@ describe('the panels store', () => {
     await Promise.resolve();
     expect(p.saved.at(-1)).not.toHaveProperty('structureMode');
     expect(parsePanels(p.saved.at(-1)).values.structureMode).toBe('skeletal');
+  });
+
+  it('the Names switch of the equation (equation step, part 5): on by default, a boolean, a bad value is reset and reported, off is saved and read back', async () => {
+    expect(parsePanels(undefined).values.equationNames).toBe(true);
+    expect(parsePanels({ equationNames: false })).toMatchObject({ values: { equationNames: false }, damaged: [] });
+    for (const bad of ['no', 0, null, [false]]) expect(parsePanels({ equationNames: bad })).toMatchObject({ values: { equationNames: true }, damaged: ['equationNames'] });
+    const p = port();
+    const timers = manualTimers();
+    const store = createPanelsStore(p, timers);
+    store.getState().setEquationNames(false);
+    timers.advance(SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    expect(p.saved[0]).toMatchObject({ equationNames: false });
+    expect(parsePanels(p.saved[0]).values.equationNames).toBe(false);
+    store.getState().setEquationNames(true);
+    timers.advance(SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    expect(p.saved.at(-1)).not.toHaveProperty('equationNames'); // the default is not written
   });
 
   it('setting the mode it already has changes and saves nothing', () => {

@@ -9,7 +9,8 @@
  * A reactant that applies only under other condition variants than the outcome's is left out, as on the arrow.
  */
 import type { ReadonlyIndexes } from '../indexes/contracts';
-import type { CanonicalState, ConditionVariantId, Outcome, ParticipantId, Reaction, ReactionScheme } from '../schema';
+import type { CanonicalState, ConditionVariantId, Outcome, ParticipantId, Reaction, ReactionScheme, RecordRef } from '../schema';
+import type { TermSubstance } from './equation-term';
 import { createDescriber } from './family/describe';
 import { selectivityWordOf, type SelectivityWord } from './selectivity-word';
 import { appliesTo, arrowTextOf, type ArrowText, type ArrowTextContext } from './arrow-text';
@@ -27,6 +28,10 @@ export interface EquationTerm {
   readonly role: ProductRoleWord | null;
   /** The term as one plain line: "2 Benzaldehyde", "Ethanal (exclusive)", "Water (byproduct)". */
   readonly text: string;
+  /** The record behind the term (equation step, part 5): the species, class or reagent the participant or product names. */
+  readonly ref: RecordRef;
+  /** What the textbook equation needs of that record: name, structure, entered formula, charge (`missing` when the record is gone). */
+  readonly substance: TermSubstance;
 }
 
 export interface FullEquation {
@@ -35,6 +40,8 @@ export interface FullEquation {
   readonly products: readonly EquationTerm[];
   /** Reagents, catalysts and conditions over and under the arrow, as on the card. */
   readonly arrow: ArrowText;
+  /** The reaction is stored as an equilibrium (`reversibility.kind` is `equilibrium`): the arrow is drawn as one (equation step, part 5). */
+  readonly equilibrium: boolean;
   /** The equation without the arrow text: "2 Benzaldehyde → Benzyl alcohol + Sodium benzoate". */
   readonly text: string;
 }
@@ -53,8 +60,9 @@ const termText = (coefficient: string | null, name: string, word: string | null)
 export function fullEquationOf(
   reaction: Reaction,
   outcome: Outcome,
-  context: Omit<ArrowTextContext, 'conditionVariantIds' | 'carriedParticipantId' | 'omitReactants'>,
+  context: Omit<ArrowTextContext, 'conditionVariantIds' | 'carriedParticipantId' | 'omitReactants'> & { readonly substanceOf?: (ref: RecordRef) => TermSubstance },
 ): FullEquation {
+  const substanceOf = (ref: RecordRef, name: string): TermSubstance => context.substanceOf?.(ref) ?? { kind: 'missing', name };
   const variantIds: readonly ConditionVariantId[] = outcome.conditionVariantIds;
   const nameOf = (ref: Parameters<ArrowTextContext['describe']>[0], written: string | undefined): string => {
     if (written !== undefined && written !== '') return written;
@@ -73,6 +81,8 @@ export function fullEquationOf(
         quantifier: null,
         role: null,
         text: termText(coefficient, name, null),
+        ref: p.ref,
+        substance: substanceOf(p.ref, name),
       };
     });
   const mainCount = outcome.products.filter((p) => p.role === 'main').length;
@@ -92,6 +102,8 @@ export function fullEquationOf(
       quantifier: said,
       role,
       text: termText(coefficient, name, word === null ? role : said === null ? word : `${said} ${word}`),
+      ref: p.ref,
+      substance: substanceOf(p.ref, name),
     };
   });
   // what is written on the left is not written again on the arrow
@@ -112,6 +124,7 @@ export function fullEquationOf(
     reactants,
     products,
     arrow,
+    equilibrium: reaction.reversibility.kind === 'equilibrium',
     text: `${side(reactants)} → ${side(products)}`,
   };
 }
@@ -130,6 +143,7 @@ export function fullEquationsOfReaction(state: CanonicalState, indexes: Readonly
     fullEquationOf(reaction, outcome, {
       schemes,
       describe: describer.describeForArrow,
+      substanceOf: describer.substanceOf,
       shownAsNode: (ref) => indexes.displayOf(ref)?.showAsNode !== 'never',
     }),
   );

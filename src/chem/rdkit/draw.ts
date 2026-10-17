@@ -5,12 +5,21 @@
  * that case: it is drawn again from the SMILES. Highlights are by atom map number (`highlightAtomMaps`), found from the
  * canonical SMILES and RDKit's `_smilesAtomOutputOrder`; a map number that is not in the structure highlights nothing.
  */
+import { FIXED_SCALE_FACTOR } from '../contracts';
 import type { DrawDetails } from '../depiction-options';
 import { isTrap } from './errors';
 import { condensedLabels, withExplicitHydrogens } from './modes';
 import { withHandle } from './scope';
 import { indexesOfMaps, outputOrder, smilesAtoms } from './smiles-atoms';
 import type { RdkitMol, RdkitModule } from './types';
+
+/** The size RDKit gave a drawing in its viewBox ("0 0 W H"); `undefined` when there is none or it is not two positive numbers. */
+export function viewBoxSize(svg: string): { readonly width: number; readonly height: number } | undefined {
+  const found = /viewBox=["']\s*0[\s,]+0[\s,]+([\d.]+)[\s,]+([\d.]+)\s*["']/.exec(svg);
+  const width = found === null ? Number.NaN : Number(found[1]);
+  const height = found === null ? Number.NaN : Number(found[2]);
+  return Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0 ? { width, height } : undefined;
+}
 
 export type DrawResult = { readonly ok: true; readonly svg: string } | { readonly ok: false; readonly error: string };
 
@@ -19,8 +28,9 @@ export type DrawResult = { readonly ok: true; readonly svg: string } | { readonl
  * Full draws a copy that has its hydrogens). `modes.ts` explains the two.
  */
 function svgOf(module: RdkitModule, mol: RdkitMol, details: DrawDetails, atoms: readonly number[]): DrawResult {
-  const { width, height } = details;
-  const base = atoms.length === 0 ? { width, height } : { width, height, atoms };
+  // a fixed scale: the canvas fits the molecule (-1 x -1) and `scalingFactor` gives every drawing the same bond length
+  const size = details.fixedScale ? { width: -1, height: -1, scalingFactor: FIXED_SCALE_FACTOR } : { width: details.width, height: details.height };
+  const base = atoms.length === 0 ? size : { ...size, atoms };
   if (details.mode === 'full') {
     const drawn = withExplicitHydrogens(module, mol, (withH) => withH.get_svg_with_highlights(JSON.stringify(base)));
     return drawn.opened ? { ok: true, svg: drawn.value } : { ok: false, error: 'the structure could not be drawn with all its hydrogens' };

@@ -31,7 +31,7 @@ export function drawingFailed(status: DepictionStatus): boolean {
   return status.state === 'unavailable' && status.reason !== DEPICTION_NOT_READY;
 }
 
-export type DepictionAnswer = { readonly ok: true; readonly svg: string } | { readonly ok: false; readonly reason: string };
+export type DepictionAnswer = { readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number } | { readonly ok: false; readonly reason: string };
 
 export interface DepictionDeps {
   /** The sanitised SVG text for a depiction key, or a failure value. */
@@ -104,7 +104,7 @@ export function createDepictionManager(deps: DepictionDeps): DepictionManager {
   const fromAnswer = (answer: DepictionAnswer): DepictionStatus => {
     if (!answer.ok) return failure(answer.reason);
     try {
-      return { state: 'ready', url: deps.createUrl(answer.svg) };
+      return { state: 'ready', url: deps.createUrl(answer.svg), ...(answer.width === undefined || answer.height === undefined ? {} : { width: answer.width, height: answer.height }) };
     } catch {
       return { state: 'unavailable', reason: 'url_failed' };
     }

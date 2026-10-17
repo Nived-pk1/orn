@@ -8,6 +8,7 @@ import type { StructureMode } from '@/chem/contracts';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, StructureRep } from '@/core/schema';
+import type { StructureFactsPort } from '@/render/equation';
 import type { TextMeasurer } from '@/render/scene';
 import type { StoreApi } from 'zustand/vanilla';
 import type { NavigatorUiStatus, NavigatorUiStores } from '@/ui/state';
@@ -21,14 +22,14 @@ export interface NavigatorMeasurer {
 
 /** What the depiction service answers, as far as the navigator uses it (the service's `DepictionResult` fits). */
 export type NavigatorDepictionAnswer =
-  | { readonly ok: true; readonly svg: string }
+  | { readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number }
   | { readonly ok: false; readonly reason: 'unavailable' | 'timeout' | 'invalid' | 'refused' | 'cancelled' | 'queue_full' | 'bad_options'; readonly message: string };
 
 /** Structures (item i): the request key, the service call, and the object URLs, which are a browser API and so made by the app. */
 export interface NavigatorDepictions {
   /** The request's name for a structure drawn at `size` (pure; the service's own key). */
-  keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number }, mode?: StructureMode): string;
-  depict(structure: StructureRep, size: { readonly width: number; readonly height: number }, mode?: StructureMode): Promise<NavigatorDepictionAnswer>;
+  keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean }, mode?: StructureMode): string;
+  depict(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean }, mode?: StructureMode): Promise<NavigatorDepictionAnswer>;
   cancel(key: string): void;
   /** How structures are drawn now (Skeletal, Condensed, Full; equation step, part 4). Absent: Skeletal. */
   mode?(): StructureMode;
@@ -48,10 +49,15 @@ export interface NavigatorDepictions {
   revokeUrl(url: string): void;
 }
 
-/** The "Structures" setting as the family page header shows it (equation step, part 4): the mode, a way to change it, and to follow it. */
+/**
+ * The display settings of structures (equation step, parts 4 and 5): how they are drawn (Skeletal, Condensed, Full), whether the textbook
+ * equation shows the name lines ("Names"), a way to change each and to follow them (`subscribe` fires for either).
+ */
 export interface NavigatorStructures {
   mode(): StructureMode;
   setMode(mode: StructureMode): void;
+  equationNames(): boolean;
+  setEquationNames(names: boolean): void;
   subscribe(listener: () => void): () => void;
 }
 
@@ -68,6 +74,8 @@ export interface NavigatorPorts {
   readonly depictions?: NavigatorDepictions;
   /** The Structures control of the family page header. Absent: the header shows none. */
   readonly structures?: NavigatorStructures;
+  /** What the chem worker says about a structure (the textbook equation decides formula or drawing from it). Absent: the facts are unavailable. */
+  readonly facts?: StructureFactsPort;
   readonly ui: NavigatorUiStores;
   /** What keeping the UI state is doing (saved, read-only, session-only, failed) and what was reset at start. */
   readonly uiStatus: StoreApi<NavigatorUiStatus>;

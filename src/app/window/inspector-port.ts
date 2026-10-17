@@ -9,13 +9,14 @@ import type { InspectorStore, PanelsStore } from '@/ui/state';
 
 export type InspectorPortServices = Pick<AppServices, 'store' | 'indexes' | 'l4' | 'logApp' | 'persistence'>;
 
-export function createInspectorPorts(services: InspectorPortServices, navigator: Pick<NavigatorPorts, 'depictions' | 'timers' | 'ui'>, inspector: InspectorStore, panels: PanelsStore): InspectorPorts {
+export function createInspectorPorts(services: InspectorPortServices, navigator: Pick<NavigatorPorts, 'depictions' | 'facts' | 'timers' | 'ui'>, inspector: InspectorStore, panels: PanelsStore): InspectorPorts {
   return {
     store: services.store,
     indexes: { current: () => services.indexes.current() },
     findings: services.store.findings,
     l4: services.l4,
     depictions: navigator.depictions,
+    ...(navigator.facts === undefined ? {} : { facts: navigator.facts }),
     assets: {
       async open(assetId, mediaType) {
         if (services.persistence === undefined) return { ok: false, reason: 'unavailable', message: 'This tab keeps nothing on disk, so no image bytes are available.' };

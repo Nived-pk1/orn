@@ -3,6 +3,7 @@
  * A node's depiction key is the service's own request key, so it is known before any answer; the lookup is bounded; object URLs are
  * made and revoked through the port, never here (details in the binding).
  */
+import { EQUATION_AREA } from '@/render/equation';
 import { STRUCTURE_AREA } from '@/render/scene';
 import { createDepictionBinding as bind, MAX_DEPICTION_LOOKUP, type DepictionBinding } from '@/render/svg';
 import type { NavigatorDepictions, NavigatorPorts } from './contracts';
@@ -20,5 +21,16 @@ export function depictionBindingOf(ports: NavigatorPorts): DepictionBinding | un
   if (known !== undefined) return known ?? undefined;
   const made = ports.depictions === undefined ? null : createDepictionBinding(ports.depictions, ports.timers);
   bindings.set(ports, made);
+  return made ?? undefined;
+}
+
+const equationBindings = new WeakMap<NavigatorPorts, DepictionBinding | null>();
+
+/** The binding of the textbook equation's drawings: the same port at the fixed scale (one bond length), made once per set of ports. */
+export function equationBindingOf(ports: NavigatorPorts): DepictionBinding | undefined {
+  const known = equationBindings.get(ports);
+  if (known !== undefined) return known ?? undefined;
+  const made = ports.depictions === undefined ? null : bind(ports.depictions, ports.timers, EQUATION_AREA);
+  equationBindings.set(ports, made);
   return made ?? undefined;
 }

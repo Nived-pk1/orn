@@ -99,7 +99,7 @@ describe('the Structures setting through the port (equation step, part 4)', () =
     } as unknown as NavigatorPortServices;
     let mode: 'skeletal' | 'condensed' | 'full' = 'skeletal';
     const listeners = new Set<() => void>();
-    const structures = { mode: () => mode, setMode: (m: typeof mode) => ((mode = m), [...listeners].forEach((l) => l())), subscribe: (l: () => void) => (listeners.add(l), () => void listeners.delete(l)) };
+    const structures = { mode: () => mode, setMode: (m: typeof mode) => ((mode = m), [...listeners].forEach((l) => l())), equationNames: () => true, setEquationNames: () => undefined, subscribe: (l: () => void) => (listeners.add(l), () => void listeners.delete(l)) };
     const ports = createNavigatorPorts(services, { measure: () => ({ width: 1 }), ready: () => Promise.resolve() } as never, { after: () => () => undefined }, { stores: {}, status: {} } as never, structures);
     return { ports, structures, listeners };
   }

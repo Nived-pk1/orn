@@ -107,7 +107,13 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
   };
   const navigatorPorts: NavigatorPorts = {
     ...navigator.ports,
-    structures: { mode: modeOf, setMode: (mode) => panels.getState().setStructureMode(mode), subscribe: onMode },
+    structures: {
+      mode: modeOf,
+      setMode: (mode) => panels.getState().setStructureMode(mode),
+      equationNames: () => panels.getState().equationNames,
+      setEquationNames: (names) => panels.getState().setEquationNames(names),
+      subscribe: (listener) => panels.subscribe(listener),
+    },
     ...(navigator.ports.depictions === undefined ? {} : { depictions: { ...navigator.ports.depictions, mode: modeOf, onMode } }),
   };
   const inspector: InspectorPorts = {

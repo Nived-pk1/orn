@@ -7,6 +7,11 @@
  *                    charge, no isotopes); undefined if an atom is a dummy or an unknown element.
  *   charge           sum of formal charges.
  *   heavyAtomCount   atoms other than hydrogen.
+ *   ringCount        bonds - atoms + connected pieces of RDKit's JSON (the cyclomatic number, which is the size of the smallest set of
+ *                    smallest rings): 0 for a chain, 1 for benzene, 2 for naphthalene; a JSON with no `bonds` has none; a bond that names
+ *                    an atom the molecule does not have leaves it undefined.
+ *   carbonCount      the atoms of atomic number 6 in RDKit's JSON (an atom with no `z` has the default element); undefined when RDKit gave
+ *                    no default element and an atom has no `z`.
  *   specified/unspecifiedStereocentres, hasDoubleBondStereo   from RDKit's stereo tags (`(?)` = not specified).
  *   aromatic         any aromatic atom after RDKit's own sanitisation.
  *   atomMaps         the map numbers in the canonical SMILES, ascending, repeats kept.
@@ -34,6 +39,46 @@ interface MolJson {
   readonly defaults: AtomDefaults | undefined;
   /** `undefined` when the representation extension is absent (RDKit did not say). */
   readonly aromaticAtoms: number | undefined;
+  /** `undefined` when a bond names an atom that is not there. */
+  readonly ringCount: number | undefined;
+  /** `undefined` when an atom has no `z` and RDKit gave no default. */
+  readonly carbonCount: number | undefined;
+}
+
+/** bonds - atoms + connected pieces (union-find over the atoms); `undefined` when a bond does not name two atoms of the molecule. */
+function ringCountOf(atomCount: number, bonds: unknown): number | undefined {
+  const list = Array.isArray(bonds) ? bonds : [];
+  const parent = Array.from({ length: atomCount }, (_, index) => index);
+  const find = (index: number): number => {
+    let root = index;
+    while (parent[root] !== root) root = parent[root] as number;
+    parent[index] = root;
+    return root;
+  };
+  let pieces = atomCount;
+  for (const bond of list) {
+    const ends: unknown = isRecord(bond) ? bond.atoms : undefined;
+    const a: unknown = Array.isArray(ends) ? ends[0] : undefined;
+    const b: unknown = Array.isArray(ends) ? ends[1] : undefined;
+    if (typeof a !== 'number' || typeof b !== 'number' || !Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a >= atomCount || b >= atomCount) return undefined;
+    const rootA = find(a);
+    const rootB = find(b);
+    if (rootA !== rootB) {
+      parent[rootA] = rootB;
+      pieces -= 1;
+    }
+  }
+  return list.length - atomCount + pieces;
+}
+
+function carbonCountOf(atoms: readonly Json[], defaultZ: number | undefined): number | undefined {
+  let carbons = 0;
+  for (const atom of atoms) {
+    const z = finite(atom.z) ?? defaultZ;
+    if (z === undefined) return undefined;
+    if (z === 6) carbons += 1;
+  }
+  return carbons;
 }
 
 function readMolJson(text: string): MolJson | undefined {
@@ -47,7 +92,8 @@ function readMolJson(text: string): MolJson | undefined {
   const chg = finite(raw?.chg);
   const extension = Array.isArray(molecule.extensions) ? molecule.extensions.find((e: unknown) => isRecord(e) && e.name === 'rdkitRepresentation') : undefined;
   const aromatic = isRecord(extension) ? (Array.isArray(extension.aromaticAtoms) ? extension.aromaticAtoms.length : 0) : undefined;
-  return { atoms: molecule.atoms.filter(isRecord), defaults: z === undefined || impHs === undefined || chg === undefined ? undefined : { z, impHs, chg }, aromaticAtoms: aromatic };
+  const atoms = molecule.atoms.filter(isRecord);
+  return { atoms, defaults: z === undefined || impHs === undefined || chg === undefined ? undefined : { z, impHs, chg }, aromaticAtoms: aromatic, ringCount: ringCountOf(atoms.length, molecule.bonds), carbonCount: carbonCountOf(atoms, z) };
 }
 
 function hillFormula(json: MolJson): string | undefined {
@@ -118,12 +164,16 @@ export function factsOf(mol: RdkitMol): StructureFacts {
   if (json !== undefined && formula === undefined) note('formula: an atom is a dummy or not an element in the table');
   if (json !== undefined && total === undefined) note('charge: RDKit gave no default atom values');
   if (json !== undefined && json.aromaticAtoms === undefined) note('aromatic: RDKit did not report its representation');
+  if (json !== undefined && json.carbonCount === undefined) note('carbonCount: an atom has no atomic number and RDKit gave no default');
+  if (json !== undefined && json.ringCount === undefined) note('ringCount: a bond of the molecule does not name two of its atoms');
 
   return {
     ...(smiles === undefined ? {} : { canonicalSmiles: smiles }),
     ...(formula === undefined ? {} : { formula }),
     ...(total === undefined ? {} : { charge: total }),
     ...(heavy === undefined ? {} : { heavyAtomCount: heavy }),
+    ...(json?.ringCount === undefined ? {} : { ringCount: json.ringCount }),
+    ...(json?.carbonCount === undefined ? {} : { carbonCount: json.carbonCount }),
     ...(stereo === undefined ? {} : { specifiedStereocentres: stereo.specified, unspecifiedStereocentres: stereo.unspecified, hasDoubleBondStereo: stereo.doubleBond, cipCounts: stereo.cip }),
     ...(json?.aromaticAtoms === undefined ? {} : { aromatic: json.aromaticAtoms > 0 }),
     atomMaps: atoms === undefined ? [] : atomMapsOf(atoms),

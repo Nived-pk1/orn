@@ -12,6 +12,7 @@ import { createInspectorStore, createNavigatorUi, createPanelsStore, NAVIGATOR_U
 import { createTextMeasurer } from './text-measurer';
 import type { DemoLoad } from './window/context';
 import { createInspectorPorts } from './window/inspector-port';
+import { createFactsPort } from './window/facts-port';
 import { createNavigatorPorts } from './window/navigator-port';
 import { createPanelsPort, createUiEntryPort } from './window/panels-port';
 
@@ -42,8 +43,10 @@ async function start(): Promise<void> {
   const navigator = createNavigatorPorts(services, measurer, env.timers, navigatorUi, {
     mode: () => panels.getState().structureMode,
     setMode: (mode) => panels.getState().setStructureMode(mode),
+    equationNames: () => panels.getState().equationNames,
+    setEquationNames: (names) => panels.getState().setEquationNames(names),
     subscribe: (listener) => panels.subscribe(listener),
-  });
+  }, createFactsPort(services.chem));
   const inspector = createInspectorPorts(services, navigator, createInspectorStore(), panels);
   installLifecycle(services, window, document);
   // A move made less than the debounce ago is written when the page goes away (best effort; the write is asynchronous).

@@ -376,3 +376,18 @@ describe('forgetNotReady (phone mode B, part 1)', () => {
     expect(manager.forgetNotReady()).toBe(0);
   });
 });
+
+describe('the size of a drawing (equation step, part 5)', () => {
+  it('a ready status carries the size the answer gave (a fixed-scale drawing has the size of its molecule); an answer without one has none', async () => {
+    const h = harness();
+    const manager = createDepictionManager(h.deps);
+    manager.request('a');
+    manager.request('b');
+    h.answers.get('a')?.({ ok: true, svg: '<svg/>', width: 66, height: 57 });
+    h.answers.get('b')?.({ ok: true, svg: '<svg/>' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(manager.snapshot('a')).toEqual({ state: 'ready', url: 'blob:test/0', width: 66, height: 57 });
+    expect(manager.snapshot('b')).toEqual({ state: 'ready', url: 'blob:test/1' });
+  });
+});

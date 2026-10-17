@@ -14,6 +14,7 @@ export interface DrawDetails {
   readonly showAtomMaps: boolean;
   readonly highlightAtomMaps: readonly number[];
   readonly mode: StructureMode;
+  readonly fixedScale: boolean;
 }
 
 const isSize = (value: unknown): boolean => typeof value === 'number' && Number.isInteger(value) && value >= MIN_DEPICTION_SIZE && value <= MAX_DEPICTION_SIZE;
@@ -30,5 +31,7 @@ export function depictionDetails(options: DepictionOptions): DrawDetails {
   }
   const mode = options.mode ?? 'skeletal';
   if (!(STRUCTURE_MODES as readonly unknown[]).includes(mode)) throw new RangeError(`depiction mode must be one of ${STRUCTURE_MODES.join(', ')}`);
-  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode };
+  const fixedScale = options.fixedScale ?? false;
+  if (typeof fixedScale !== 'boolean') throw new RangeError('depiction fixedScale must be true or false');
+  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale };
 }

@@ -13,7 +13,7 @@ import { useStore } from 'zustand';
 import { useStructureMode } from '@/render/svg';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, Skeleton, VirtualList, type VirtualListHandle } from '@/ui/primitives';
-import { depictionBindingOf } from './depictions';
+import { depictionBindingOf, equationBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
 import { FamilyHeader } from './family-header';
@@ -56,7 +56,14 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const env = useMemo<FamilyEnv | null>(() => {
     if (study === undefined || study === null) return null;
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
-    return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers, layout };
+    return {
+      describe: scene.describe,
+      keyOf: scene.depictionKeyOf,
+      manager: binding?.manager,
+      timers: ports.timers,
+      layout,
+      equation: { binding: equationBindingOf(ports), facts: ports.facts, structures: ports.structures },
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `structureMode` is read through the binding; it only has to make a new env
   }, [study, ports, binding, layout, structureMode]);
   // the bar of a group takes the partner family's own tone (the page's tone when the partner has none)

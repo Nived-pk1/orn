@@ -31,6 +31,48 @@ describe('elements', () => {
   });
 });
 
+describe('ring count (equation step, part 5)', () => {
+  const withBonds = (atoms: unknown[], bonds: [number, number][]): string =>
+    JSON.stringify({ rdkitjson: { version: 12 }, defaults: DEFAULTS, molecules: [{ atoms, bonds: bonds.map((atomsOf) => ({ atoms: atomsOf })), extensions: [{ name: 'rdkitRepresentation' }] }] });
+  const ringsOf = (atoms: unknown[], bonds: [number, number][]) => factsFor({ ...ETHANOL_SPEC, json: withBonds(atoms, bonds) }).ringCount;
+
+  it('is bonds - atoms + connected pieces: a chain 0, a ring 1, two fused rings 2, two separate rings 2', () => {
+    expect(ringsOf([{}, {}, {}], [[0, 1], [1, 2]])).toBe(0);
+    expect(ringsOf([{}, {}, {}], [[0, 1], [1, 2], [2, 0]])).toBe(1);
+    expect(ringsOf([{}, {}, {}, {}], [[0, 1], [1, 2], [2, 0], [2, 3], [3, 0]])).toBe(2); // two triangles sharing an edge
+    expect(ringsOf([{}, {}, {}, {}, {}, {}], [[0, 1], [1, 2], [2, 0], [3, 4], [4, 5], [5, 3]])).toBe(2);
+  });
+
+  it('a lone atom, and a molecule whose JSON has no bonds at all, have no rings (and no warning for it)', () => {
+    expect(ringsOf([{}], [])).toBe(0);
+    const none = factsFor({ ...ETHANOL_SPEC, json: JSON.stringify({ rdkitjson: { version: 12 }, defaults: DEFAULTS, molecules: [{ atoms: [{}], extensions: [{ name: 'rdkitRepresentation' }] }] }) });
+    expect(none.ringCount).toBe(0);
+    expect(none.warnings.join(' ')).not.toContain('ringCount');
+  });
+
+  it('a bond that names an atom the molecule does not have leaves the count undefined, with a warning, never a guess', () => {
+    const out = factsFor({ ...ETHANOL_SPEC, json: withBonds([{}, {}], [[0, 7]]) });
+    expect(out.ringCount).toBeUndefined();
+    expect(out.warnings.join(' ')).toContain('ringCount');
+  });
+});
+
+describe('carbon count (equation step, part 5)', () => {
+  const carbonsOf = (atoms: unknown[], defaults: unknown = DEFAULTS) => factsFor({ ...ETHANOL_SPEC, json: json(atoms, undefined, defaults) });
+
+  it('counts the atoms of atomic number 6, the default element included (isotopes and charges are still carbon)', () => {
+    expect(carbonsOf([{}, {}, { z: 8 }]).carbonCount).toBe(2);
+    expect(carbonsOf([{ z: 8 }, { z: 1 }]).carbonCount).toBe(0);
+    expect(carbonsOf([{ z: 6, chg: 1 }, { z: 6, isotope: 13 }, { z: 0 }]).carbonCount).toBe(2);
+  });
+
+  it('is undefined, with a warning, when RDKit gave no default atom values and an atom has no z (never a guess)', () => {
+    const out = carbonsOf([{}, { z: 8 }], {});
+    expect(out.carbonCount).toBeUndefined();
+    expect(out.warnings.join(' ')).toContain('carbonCount');
+  });
+});
+
 describe('Hill formula, charge, aromatic', () => {
   it('carbon first, hydrogen second, the rest alphabetical; counts of 1 are omitted; implicit hydrogens included', () => {
     const acid = factsFor({ ...ETHANOL_SPEC, json: json([{ impHs: 3 }, {}, { z: 8 }, { z: 8, impHs: 1 }]) });
