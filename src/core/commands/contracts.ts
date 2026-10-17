@@ -161,4 +161,6 @@ export interface EditorSession {
 export type DraftCommitOutcome =
   | { readonly ok: true; readonly changes: ChangeSet }
   | { readonly ok: false; readonly reason: 'invalid'; readonly findings: readonly Finding[] }
-  | { readonly ok: false; readonly reason: 'conflict'; readonly current: AnyRecord | null };
+  | { readonly ok: false; readonly reason: 'conflict'; readonly current: AnyRecord | null }
+  /** The store refused for a reason that is not about the draft (read-only tab, a delete restriction, ...): the draft is kept (ADR-040, additive). */
+  | { readonly ok: false; readonly reason: 'refused'; readonly error: CommandError };
