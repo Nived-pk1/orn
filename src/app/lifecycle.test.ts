@@ -53,3 +53,35 @@ describe('installLifecycle', () => {
     expect(unload.defaultPrevented).toBe(false);
   });
 });
+
+describe('installLifecycle: drafts when the page is hidden (ADR-040, best effort)', () => {
+  function visibilityRig() {
+    const flush = vi.fn(() => Promise.resolve());
+    const services = {
+      shutdown: vi.fn(() => Promise.resolve({ written: true as const, at: 't' })),
+      resume: vi.fn(() => Promise.resolve({ resumed: true as const })),
+      pendingWrites: vi.fn(() => false),
+      drafts: { flush },
+    };
+    const doc = Object.assign(new EventTarget(), { visibilityState: 'visible' as string });
+    const off = installLifecycle(services, new EventTarget(), doc);
+    return { flush, doc, off };
+  }
+
+  it('saves dirty drafts when the page becomes hidden, and only then', () => {
+    const { flush, doc } = visibilityRig();
+    doc.dispatchEvent(new Event('visibilitychange'));
+    expect(flush).not.toHaveBeenCalled();
+    doc.visibilityState = 'hidden';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    expect(flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('the returned function removes the listener', () => {
+    const { flush, doc, off } = visibilityRig();
+    off();
+    doc.visibilityState = 'hidden';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    expect(flush).not.toHaveBeenCalled();
+  });
+});

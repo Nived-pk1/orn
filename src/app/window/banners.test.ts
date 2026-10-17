@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_STATUS, type AppStatus } from '@/app/services';
-import { bannerKindOf, bannersOf, bootLinesOf, operationTextOf, saveTextOf, workersTextOf } from './banners';
+import { bannerKindOf, bannersOf, bootLinesOf, draftsLineOf, operationTextOf, saveTextOf, workersTextOf } from './banners';
 
 const status = (patch: Partial<AppStatus>): AppStatus => ({ ...INITIAL_STATUS, stage: 'ready', mode: 'writer', ...patch });
 const save = (patch: Partial<NonNullable<AppStatus['save']>>): NonNullable<AppStatus['save']> => ({
@@ -94,14 +94,22 @@ describe('bootLinesOf: one plain line each', () => {
     expect(bootLinesOf(none)).toEqual([]);
     expect(bootLinesOf(null)).toEqual([]);
   });
-  it('has a line for crashSuspected, quarantined rows, assets without bytes, unverified blobs, migration steps', () => {
+  it('has a line for quarantined rows, assets without bytes, unverified blobs, migration steps; a suspected crash adds none (a Diagnostics fact only, ADR-040)', () => {
     const lines = bootLinesOf({ crashSuspected: true, editorSessions: 1, quarantinedRows: 2, assetsWithoutBytes: 1, unverifiedAssetBlobs: 3, migrationSteps: 1 });
-    expect(lines).toHaveLength(5);
-    expect(lines[0]).toMatch(/crash is suspected/);
-    expect(lines[1]).toBe('2 stored rows failed validation and were set aside (quarantined).');
-    expect(lines[2]).toBe('1 asset record has no stored file.');
-    expect(lines[3]).toBe('3 stored files were not verified.');
-    expect(lines[4]).toBe('1 data migration step ran at start-up.');
+    expect(lines).toEqual([
+      '2 stored rows failed validation and were set aside (quarantined).',
+      '1 asset record has no stored file.',
+      '3 stored files were not verified.',
+      '1 data migration step ran at start-up.',
+    ]);
+    expect(bootLinesOf({ ...none, crashSuspected: true, editorSessions: 3 })).toEqual([]);
+  });
+
+  it('draftsLineOf: "N unfinished drafts", nothing for none or an unknown count', () => {
+    expect(draftsLineOf(1)).toBe('1 unfinished draft');
+    expect(draftsLineOf(3)).toBe('3 unfinished drafts');
+    expect(draftsLineOf(0)).toBeNull();
+    expect(draftsLineOf(null)).toBeNull();
   });
 });
 

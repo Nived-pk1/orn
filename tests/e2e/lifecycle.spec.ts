@@ -2,8 +2,8 @@
  * The page lifecycle in a real browser (step 5.1d): the clean-shutdown marker and what boot says about it. Chromium only.
  * The marker is the `lastCleanShutdownAt` row of the `meta` store: a time string is "closed cleanly", `null` is "running".
  * 1: a renderer that dies without `pagehide` leaves `null`; the next boot says NOTHING while there is no editor session to restore
- *    (5.1d review, follow-up b: the crash line is shown only when there is something to offer); a clean shutdown written while the
- *    page is alive is not reported either (an ordinary reload is a `test.fixme`, see below).
+ *    (ADR-040: the crash line is gone; drafts are offered because they are stored); a clean shutdown written while the
+ *    page is alive is not reported either, and neither is an ordinary reload (see below).
  * 2: `pageshow` with `persisted = true` (a page back from the back/forward cache) writes `null` again after `pagehide` wrote a time.
  * Playwright's Chromium disables the back/forward cache, so the two events are dispatched on the real window and reach the real
  * listeners installed by `installLifecycle`.
@@ -71,14 +71,15 @@ test.describe('the page lifecycle in Chromium', () => {
 
   // Found by the 5.1d browser run (docs/PROGRESS.md, step 5.1d, REVIEW REQUIRED 4): the marker write that `pagehide` starts does
   // not finish while the page is torn down, so an ordinary reload leaves the marker "running" (the same write finishes when the
-  // page stays alive: the test above). Decided in the 5.1d review (2026-10-03): no new marker mechanism now; the crash line is
-  // shown only with editor sessions to restore, so this test passes only because none exist. It stays a fixme until the openItem
-  // "Phase 6, step 6.1: draft recovery must not depend on an unload-time write" (docs/PROJECT_STATE.json) is done.
-  test.fixme('an ordinary reload is not reported as a crash', async ({ page }) => {
+  // page stays alive: the test above). Step 6.1a (ADR-040) made this a real test: nothing the user sees depends on the marker any
+  // more. Unfinished drafts are offered because they are stored, and the "crash is suspected" line is gone, so an ordinary reload
+  // with no drafts shows no start-up line at all.
+  test('an ordinary reload is not reported as a crash: with no drafts there is no start-up line', async ({ page }) => {
     await loaded(page);
     await page.reload();
     await showDataset(page);
     await expect(page.getByText(CRASH_LINE)).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
   });
 
   test('pageshow with persisted = true writes the running marker again after pagehide wrote a time', async ({ page }) => {

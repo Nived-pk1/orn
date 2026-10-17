@@ -3,8 +3,11 @@ import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest';
 import { INITIAL_STATUS, type AppStatus } from '@/app/services';
 import type { Finding, Severity } from '@/core/validation';
+import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp, WRITER_STATUS } from '@/test-support/window-kit';
 import { Banners, BootLines, StatusLine } from './status-parts';
+import { DraftsOpenContext } from './drafts-ui';
+import { vi } from 'vitest';
 
 afterEach(cleanup);
 
@@ -160,7 +163,6 @@ describe('the boot-report lines', () => {
     );
     const lines = within(screen.getByRole('region', { name: 'Start-up report' })).getAllByRole('listitem');
     expect(lines.map((l) => l.textContent)).toEqual([
-      'The last session may not have closed cleanly (a crash is suspected). Check your latest changes.',
       '1 stored row failed validation and was set aside (quarantined).',
       '2 asset records have no stored file.',
       '1 stored file was not verified.',
@@ -168,7 +170,7 @@ describe('the boot-report lines', () => {
     ]);
   });
 
-  it('shows no crash line when a crash is suspected but there is no editor session to restore (nothing to offer)', () => {
+  it('never shows a crash line: a suspected crash is a Diagnostics fact (ADR-040)', () => {
     renderWithApp(
       fakeApp({ status: { notices: { crashSuspected: true, editorSessions: 0, quarantinedRows: 1, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } }),
       <BootLines />,
@@ -186,5 +188,46 @@ describe('the boot-report lines', () => {
   it('renders nothing for a clean boot', () => {
     renderWithApp(fakeApp({ status: { notices: { crashSuspected: false, editorSessions: 0, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } }), <BootLines />);
     expect(screen.queryByRole('region', { name: 'Start-up report' })).toBeNull();
+  });
+});
+
+describe('the start-up line for unfinished drafts (ADR-040)', () => {
+  const draftIn = (app: ReturnType<typeof fakeApp>): void => {
+    const id = Object.keys(app.store.getState().records.species)[0] as string;
+    const opened = app.drafts.open({ kind: 'species', id });
+    if (!opened.ok) throw new Error(opened.message);
+    app.drafts.edit(opened.id, (d) => void ((d.names as { canonical: string }).canonical = 'Edited'));
+  };
+
+  it('says "1 unfinished draft" with a "Show drafts" button that opens the list', () => {
+    const app = fakeApp({ state: demoState() });
+    draftIn(app);
+    const open = vi.fn();
+    renderWithApp(app, (
+      <DraftsOpenContext.Provider value={open}>
+        <BootLines />
+      </DraftsOpenContext.Provider>
+    ));
+    const region = screen.getByRole('region', { name: 'Start-up report' });
+    expect(within(region).getByText(/^1 unfinished draft/).textContent).toContain('1 unfinished draft');
+    fireEvent.click(within(region).getByRole('button', { name: 'Show drafts' }));
+    expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it('says nothing without drafts, and no crash line even when a crash is suspected', () => {
+    const app = fakeApp({ status: { notices: { crashSuspected: true, editorSessions: 0, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } });
+    renderWithApp(app, <BootLines />);
+    expect(screen.queryByRole('region', { name: 'Start-up report' })).toBeNull();
+  });
+
+  it('counts a draft after it is made and stops when it is discarded', async () => {
+    const app = fakeApp({ state: demoState() });
+    renderWithApp(app, <BootLines />);
+    expect(screen.queryByRole('region', { name: 'Start-up report' })).toBeNull();
+    act(() => draftIn(app));
+    expect(screen.getByText(/1 unfinished draft/)).toBeTruthy();
+    const id = app.drafts.view().items[0]?.id as string;
+    await act(async () => app.drafts.discard(id));
+    expect(screen.queryByText(/unfinished draft/)).toBeNull();
   });
 });

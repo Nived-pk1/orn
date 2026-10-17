@@ -5,8 +5,9 @@
 import { useCounts, useSubscribable } from '@/ui/hooks';
 import { Banner, Button } from '@/ui/primitives';
 import { usePanels } from '@/ui/state';
-import { bannersOf, bannerKindOf, bootLinesOf, layoutCacheTextOf, operationTextOf, quarantineTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
+import { bannersOf, bannerKindOf, bootLinesOf, draftsLineOf, layoutCacheTextOf, operationTextOf, quarantineTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
+import { useDraftsOpen, useDraftsView } from './drafts-ui';
 import { useExportOpen } from './export-context';
 import styles from './status-parts.module.css';
 
@@ -88,10 +89,23 @@ export function BootLines() {
   const { services } = useApp();
   const status = useSubscribable(services.status);
   const lines = bootLinesOf(status.notices);
-  if (lines.length === 0) return null;
+  const draftsLine = draftsLineOf(useDraftsView().count);
+  const showDrafts = useDraftsOpen();
+  if (lines.length === 0 && draftsLine === null) return null;
   return (
     <section aria-label="Start-up report">
       <ul className={styles.report}>
+        {draftsLine === null ? null : (
+          <li>
+            {draftsLine}
+            {showDrafts === null ? null : (
+              <>
+                {' '}
+                <Button onClick={showDrafts}>Show drafts</Button>
+              </>
+            )}
+          </li>
+        )}
         {lines.map((line) => (
           <li key={line}>{line}</li>
         ))}

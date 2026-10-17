@@ -290,7 +290,7 @@ describe('boot: asset blobs (AST-002)', () => {
 });
 
 describe('boot: the crash check', () => {
-  it('a session that never recorded a clean shutdown is suspected, and its drafts are offered; a clean one is not', async () => {
+  it('a session that never recorded a clean shutdown is suspected; the drafts are offered either way (ADR-040: every stored session is an unfinished draft)', async () => {
     const first = await savedDatabase(base);
     await boot(first);
     await first.adapter.saveEditorSession({ id: 'ses_one', kind: 'species', target: null, baseRevision: 1, baseRecord: null, draft: { half: 'done' }, past: [], future: [], updatedAt: '2026-09-28T10:00:00.000Z' });
@@ -303,7 +303,7 @@ describe('boot: the crash check', () => {
     await afterCrash.adapter.setLastCleanShutdownAt('2026-09-28T12:00:00.000Z');
     const afterClean = reopen(afterCrash);
     const clean = (await boot(afterClean)).result;
-    expect(clean.bootReport).toMatchObject({ crashSuspected: false, editorSessionIds: [] });
+    expect(clean.bootReport).toMatchObject({ crashSuspected: false, editorSessionIds: ['ses_one', 'ses_two'] });
     expect(await afterClean.adapter.listEditorSessions()).toHaveLength(2);
   });
 

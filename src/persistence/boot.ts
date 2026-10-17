@@ -143,7 +143,8 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
 
   const marker = meta.lastCleanShutdownAt;
   const crashSuspected = marker !== undefined && typeof marker !== 'string';
-  const editorSessionIds = crashSuspected ? await ports.listEditorSessionIds() : [];
+  // Every stored session is an unfinished draft: Save and Discard delete the row, so nothing here depends on a crash being suspected (ADR-040).
+  const editorSessionIds = await ports.listEditorSessionIds();
 
   const ui = restoreUiState(await ports.listUiStateRows(), ports.uiStateValidators);
   if (writer) {

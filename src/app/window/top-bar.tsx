@@ -17,12 +17,15 @@ export interface FileBinding {
   readonly onExport: () => void;
   /** Opens "About this preview". */
   readonly onAbout: () => void;
+  /** The drafts list (ADR-040): the count the item says and how to open it. Absent: no item. */
+  readonly drafts?: { readonly count: number | null; readonly onOpen: () => void };
 }
 
 export const fileItems = (file: FileBinding): readonly MenuItem[] => [
   { id: 'import', label: 'Import a file...', ...(file.reason === undefined ? { onSelect: file.onImport } : { unavailable: file.reason }) },
   { id: 'export', label: 'Export...', onSelect: file.onExport },
   { id: 'undo_import', label: 'Undo import', ...(file.undoReason === undefined ? { onSelect: file.onUndo } : { unavailable: file.undoReason }) },
+  ...(file.drafts === undefined ? [] : [{ id: 'drafts', label: `Drafts (${file.drafts.count ?? 0})`, onSelect: file.drafts.onOpen }]),
   { id: 'about', label: 'About this preview', onSelect: file.onAbout },
 ];
 

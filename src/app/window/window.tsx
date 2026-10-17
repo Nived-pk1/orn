@@ -4,7 +4,7 @@
  * and its result a Toast (import-panel.tsx); the inspector shows the record in focus (step 5.6a). Composition only: the frame is
  * `src/ui/shell` and knows nothing of `AppStatus`; chemistry never lives here.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Inspector, placeOf, type InspectorHost } from "@/features/inspector";
 import { Palette } from "@/features/search";
 import {
@@ -33,6 +33,7 @@ import { FirstRun } from "./first-run";
 import { MODES, NAVIGATOR_MODE } from "./modes";
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
+import { DraftsOpenContext, useDraftsView } from "./drafts-ui";
 import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
 import { RecordCounts } from "./record-counts";
 import { TopBar } from "./top-bar";
@@ -41,6 +42,9 @@ import { AboutDialog, AboutOpenContext } from "./about-preview";
 import { ExportOpenContext } from "./export-context";
 import { useExportActions, type ExportActions } from "./use-export-actions";
 import { useImportActions, type ImportActions } from "./use-import-actions";
+
+// The editors and the drafts list are not in the entry chunk (ADR-040): they load when first asked for.
+const WorkbenchLayer = lazy(() => import("@/features/workbench/layer").then((m) => ({ default: m.DraftsDialog })));
 
 const countsOf = (
   state: CanonicalState,
@@ -144,6 +148,9 @@ export function Window() {
   const [searching, setSearching] = useState(false);
   const [about, setAbout] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [draftsOpen, setDraftsOpen] = useState(false);
+  const draftsCount = useDraftsView().count;
+  const openDrafts = useCallback(() => setDraftsOpen(true), []);
   const counts = useStoreSelector(services.store, countsOf);
   const width = usePanels(panels, (s) => s.inspectorWidth);
   const open = usePanels(panels, (s) => s.inspectorOpen);
@@ -220,7 +227,7 @@ export function Window() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
-  const file = { reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true) };
+  const file = { reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true), drafts: { count: draftsCount, onOpen: openDrafts } };
   const exam = { exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log };
   const openStatus = () => setStatusOpen(true);
   const pane = useMemo<InspectorPane>(
@@ -238,6 +245,7 @@ export function Window() {
     <ToastProvider folded={layout === 'phone'}>
       <ExportOpenContext.Provider value={exports.open}>
       <AboutOpenContext.Provider value={() => setAbout(true)}>
+      <DraftsOpenContext.Provider value={openDrafts}>
       <NavigatorProvider ports={navigator} active={totalOf(counts) > 0}>
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
@@ -297,8 +305,19 @@ export function Window() {
         {exportElement}
         <PhoneStatusDialog open={statusOpen} onClose={() => setStatusOpen(false)} />
         <AboutDialog open={about} onClose={() => setAbout(false)} />
+        {draftsOpen ? (
+          <Suspense fallback={null}>
+            <WorkbenchLayer
+              open={draftsOpen}
+              onClose={() => setDraftsOpen(false)}
+              port={services.drafts}
+              openUnavailable="the editor arrives in the next part of step 6.1a"
+            />
+          </Suspense>
+        ) : null}
         <Palette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
       </NavigatorProvider>
+      </DraftsOpenContext.Provider>
       </AboutOpenContext.Provider>
       </ExportOpenContext.Provider>
     </ToastProvider>

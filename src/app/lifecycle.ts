@@ -10,9 +10,16 @@ export interface LifecycleTarget {
   removeEventListener(type: string, listener: (event: Event) => void): void;
 }
 
-export type LifecycleServices = Pick<AppServices, 'shutdown' | 'resume' | 'pendingWrites'>;
+export type LifecycleServices = Pick<AppServices, 'shutdown' | 'resume' | 'pendingWrites'> & { readonly drafts?: Pick<AppServices['drafts'], 'flush'> };
 
-export function installLifecycle(services: LifecycleServices, target: LifecycleTarget): () => void {
+/** The page whose visibility is watched (the document); optional so a plain event target still works. */
+export interface VisibilitySource {
+  readonly visibilityState?: string;
+  addEventListener(type: string, listener: (event: Event) => void): void;
+  removeEventListener(type: string, listener: (event: Event) => void): void;
+}
+
+export function installLifecycle(services: LifecycleServices, target: LifecycleTarget, visibility?: VisibilitySource): () => void {
   const onPageHide = (): void => void services.shutdown();
   const onPageShow = (event: Event): void => {
     if ((event as Partial<PageTransitionEvent>).persisted === true) void services.resume();
@@ -22,10 +29,16 @@ export function installLifecycle(services: LifecycleServices, target: LifecycleT
     event.preventDefault();
     (event as { returnValue?: unknown }).returnValue = '';
   };
+  // Best effort: a phone may kill a background tab, so dirty drafts are saved when the page is hidden. Nothing depends on this write.
+  const onVisibility = (): void => {
+    if (visibility?.visibilityState === 'hidden') void services.drafts?.flush();
+  };
+  visibility?.addEventListener('visibilitychange', onVisibility);
   target.addEventListener('pagehide', onPageHide);
   target.addEventListener('pageshow', onPageShow);
   target.addEventListener('beforeunload', onBeforeUnload);
   return () => {
+    visibility?.removeEventListener('visibilitychange', onVisibility);
     target.removeEventListener('pagehide', onPageHide);
     target.removeEventListener('pageshow', onPageShow);
     target.removeEventListener('beforeunload', onBeforeUnload);

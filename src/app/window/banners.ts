@@ -145,14 +145,17 @@ export function bannersOf(status: AppStatus, choices: BannerChoices = {}): reado
 export function bootLinesOf(notices: BootNotices | null): readonly string[] {
   if (notices === null) return [];
   const lines: string[] = [];
-  // Only with something to offer: a suspected crash with no editor session to restore says nothing (an unload may fail to write the marker; the event log has it).
-  if (notices.crashSuspected && notices.editorSessions > 0) lines.push('The last session may not have closed cleanly (a crash is suspected). Check your latest changes.');
+  // `crashSuspected` is a Diagnostics fact only (ADR-040): an unload cannot be trusted to write the marker, so nothing the user sees depends on it.
+  // Unfinished drafts have their own line (`draftsLineOf`, from the session manager).
   if (notices.quarantinedRows > 0) lines.push(`${plural(notices.quarantinedRows, 'stored row', 'stored rows')} failed validation and ${notices.quarantinedRows === 1 ? 'was' : 'were'} set aside (quarantined).`);
   if (notices.assetsWithoutBytes > 0) lines.push(`${plural(notices.assetsWithoutBytes, 'asset record has', 'asset records have')} no stored file.`);
   if (notices.unverifiedAssetBlobs > 0) lines.push(`${plural(notices.unverifiedAssetBlobs, 'stored file was', 'stored files were')} not verified.`);
   if (notices.migrationSteps > 0) lines.push(`${plural(notices.migrationSteps, 'data migration step', 'data migration steps')} ran at start-up.`);
   return lines;
 }
+
+/** The start-up line for unfinished drafts: "N unfinished drafts" (with "Show drafts"); nothing when there are none or the count is not known yet. */
+export const draftsLineOf = (count: number | null): string | null => (count === null || count === 0 ? null : plural(count, 'unfinished draft', 'unfinished drafts'));
 
 /** The save state as the status line says it. "Applied, not saved" is never "done" (5.1c decision 5). */
 export function saveTextOf(status: AppStatus): string {

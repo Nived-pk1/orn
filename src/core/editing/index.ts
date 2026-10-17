@@ -4,3 +4,5 @@ export { compareForConflict, sameValue } from './conflict';
 export { commitDraft, mergeDraft } from './commit';
 export { canRedoDraft, canUndoDraft, editDraft, openSession, redoDraft, undoDraft } from './session';
 export type { DraftRecipe, DraftValue } from './session';
+export { parseStoredSession } from './stored';
+export type { StoredSessionParse } from './stored';

@@ -5,7 +5,8 @@
 import { render } from '@testing-library/react';
 import { vi, type Mock } from 'vitest';
 import { AppProvider, type AppContextValue, type DemoLoad, type WindowServices } from '@/app/window/context';
-import { createStatusStore, emptyState, type AppStatus } from '@/app/services';
+import { createEventLog, createStatusStore, emptyState, type AppStatus } from '@/app/services';
+import { createDraftManager, type DraftManager } from '@/app/services/drafts';
 import type { StatusWriter } from '@/app/services/status';
 import type { ImportPlan, ImportPreview } from '@/io';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
@@ -37,6 +38,7 @@ export interface FakeFlows {
 export interface FakeApp {
   readonly status: StatusWriter;
   readonly store: StoreHandle;
+  readonly drafts: DraftManager;
   readonly flows: FakeFlows;
   readonly saveEverythingNow: Mock;
   readonly retryReplica: Mock;
@@ -80,7 +82,9 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
   const reload = vi.fn();
   const navigator = navigatorRig(store, options.navigator);
   const search = { search: vi.fn(() => Promise.resolve({ ok: false, code: 'NOT_READY', message: 'the search index is not loaded' })), superseded: () => 0 };
-  const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine, search } as unknown as WindowServices;
+  const ids = createIdFactory({ nowMs: () => 1_790_000_000_000 }, { next: () => 0.5 });
+  const drafts = createDraftManager({ store, adapter: undefined, status, timers: { after: () => () => undefined }, ids, log: createEventLog(() => 0) });
+  const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine, search, drafts } as unknown as WindowServices;
   const panelSaves: Record<string, unknown>[] = [];
   const panels = createPanelsStore(
     { stored: undefined, mode: () => 'writable', save: (value) => (panelSaves.push({ ...value }), Promise.resolve()), ...options.panels },
@@ -96,7 +100,7 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
     ui: { inspector: inspectorStore, selection: navigator.ports.ui.selection, family: navigator.ports.ui.family, panels },
     log: () => undefined,
   };
-  return { status, store, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigator.ports, inspector, loadDemo, nowMs: () => 1_790_000_000_000, reload } };
+  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigator.ports, inspector, loadDemo, nowMs: () => 1_790_000_000_000, reload } };
 }
 
 export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {

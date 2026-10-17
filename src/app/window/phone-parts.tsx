@@ -7,8 +7,9 @@ import { useState } from 'react';
 import type { RecordKind } from '@/core/schema';
 import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView } from '@/ui/primitives';
-import { bannersOf, bootLinesOf } from './banners';
+import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
+import { useDraftsView } from './drafts-ui';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 import { alertOf } from './phone-alert';
 import { RecordCounts } from './record-counts';
@@ -80,7 +81,8 @@ export function PhoneNotices() {
   const [open, setOpen] = useState(false);
   // the toasts (the import notice, the storage warning...) are counted and listed here on a phone; none floats over the cards
   const toastCount = useToastView()?.items.length ?? 0;
-  const count = bannersOf(status, { storageNoticeDismissed }).length + bootLinesOf(status.notices).length + toastCount;
+  const draftsCount = draftsLineOf(useDraftsView().count) === null ? 0 : 1;
+  const count = bannersOf(status, { storageNoticeDismissed }).length + bootLinesOf(status.notices).length + draftsCount + toastCount;
   if (count === 0) return null;
   return (
     <div className={styles.notices}>

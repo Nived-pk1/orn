@@ -182,9 +182,9 @@ export interface BootReport {
   readonly assetIdsWithoutBlob: readonly string[];
   /** Version-1 blob rows the DB upgrade could not verify and kept aside (sorted by asset ID); empty unless an upgrade found some. */
   readonly unverifiedAssetBlobs: readonly UnverifiedAssetBlob[];
-  /** The previous session did not record a clean shutdown. */
+  /** The previous session did not record a clean shutdown. A Diagnostics fact only: nothing the user sees depends on it (ADR-040). */
   readonly crashSuspected: boolean;
-  /** Authoring drafts to offer for restore: only when a crash is suspected. */
+  /** Every stored authoring draft (editor session), crash or not: Save and Discard delete the row, so any row left at boot is unfinished (ADR-040). */
   readonly editorSessionIds: readonly string[];
   /** Valid UI state entries; invalid ones are reset (`uiStateReset`), never a reason not to boot. */
   readonly uiState: Readonly<Record<string, JsonValue>>;

@@ -22,6 +22,7 @@ import { decideMode, emptyState, noticesOf, openStorage } from './boot';
 import type { AppEnv, AppServices } from './contracts';
 import { createChemPart, createLayoutPart } from './chem-layout';
 import { createDepictionService } from './depiction';
+import { createDraftManager } from './drafts';
 import { createDerivedIndexes } from './derived-indexes';
 import { startFollower } from './follower';
 import { createFlows } from './flows';
@@ -129,12 +130,25 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   l4.checkAll();
   void search.started();
 
+  const drafts = createDraftManager({ store, adapter, status, timers: env.timers, ids, log });
+  // Every stored session is an unfinished draft (ADR-040): read them once the mode is known, and again when a follower is promoted.
+  void drafts.refresh();
+  let lastMode = status.get().mode;
+  const offMode = status.subscribe((next) => {
+    if (next.mode === lastMode) return;
+    lastMode = next.mode;
+    if (next.mode === 'writer') void drafts.refresh();
+  });
+
   const flows = createFlows({ store, adapter, assetStage, status, log, replica: { sync: () => replica.sync() }, env, ids });
 
   let disposing: Promise<void> | undefined;
   const dispose = (): Promise<void> => {
     disposing ??= (async () => {
       if (writer.pendingWrites()) log.add({ source: 'app', event: { type: 'disposed_with_pending_writes', message: 'the services were disposed while writes were pending' } });
+      offMode();
+      await Promise.allSettled([drafts.flush()]);
+      drafts.dispose();
       writer.stop();
       offFormulas();
       search.stop();
@@ -177,6 +191,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     searchSync: () => search.sync(),
     depictions,
     flows,
+    drafts,
     async retryEngine(name) {
       const result = await (name === 'chem' ? chemPart : layoutPart).retry();
       log.add({ source: 'app', event: { type: 'engine_retry', message: `retry of the ${name} engine: ${result.ok ? 'ready' : result.message}` } });
