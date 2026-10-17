@@ -6,7 +6,7 @@ import type { Finding, Severity } from '@/core/validation';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp, WRITER_STATUS } from '@/test-support/window-kit';
 import { Banners, BootLines, StatusLine } from './status-parts';
-import { DraftsOpenContext } from './drafts-ui';
+import { EditorsContext } from './drafts-ui';
 import { vi } from 'vitest';
 
 afterEach(cleanup);
@@ -204,9 +204,9 @@ describe('the start-up line for unfinished drafts (ADR-040)', () => {
     draftIn(app);
     const open = vi.fn();
     renderWithApp(app, (
-      <DraftsOpenContext.Provider value={open}>
+      <EditorsContext.Provider value={{ openDrafts: open, editNames: vi.fn(), editReason: undefined }}>
         <BootLines />
-      </DraftsOpenContext.Provider>
+      </EditorsContext.Provider>
     ));
     const region = screen.getByRole('region', { name: 'Start-up report' });
     expect(within(region).getByText(/^1 unfinished draft/).textContent).toContain('1 unfinished draft');

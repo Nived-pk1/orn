@@ -21,6 +21,8 @@ export interface CommandDeps {
   undoImport(): void;
   pickFile(): void;
   openExport(): void;
+  /** "Edit names of the selection" (ADR-040): why it cannot run now, and what it does. Absent: no such command. */
+  readonly editNames?: { readonly reason: string | undefined; run(): void } | undefined;
   readonly ui: NavigatorUiStores;
   readonly exams: ExamOptions;
 }
@@ -72,6 +74,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     { id: 'export', title: 'Export...', keywords: ['export', 'backup', 'save', 'download', 'share', 'package'], run: deps.openExport },
     withReason({ id: 'replace-demo', title: 'Replace with the demo dataset', keywords: ['load', 'import', 'demo'], run: deps.askReplace }, importReason),
     withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, undoReason),
+    ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit names of the selection', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),
     withReason({ id: 'zoom-out', title: 'Zoom out', keywords: ['map', 'view'], run: () => view?.zoomOut() }, zoomReason),

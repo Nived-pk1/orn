@@ -3,17 +3,17 @@
  * Exam scope, Dataset counts, About this preview, Status), the folded notices line and the one-line alert. Composition only; every word
  * of a notice still comes from `banners.ts`.
  */
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import type { RecordKind } from '@/core/schema';
 import { useSubscribable } from '@/ui/hooks';
-import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView } from '@/ui/primitives';
+import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView, useToasts } from '@/ui/primitives';
 import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
 import { useDraftsView } from './drafts-ui';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 import { alertOf } from './phone-alert';
 import { RecordCounts } from './record-counts';
-import { fileItems, type FileBinding } from './top-bar';
+import { fileItems, historyLabelOf, historyReason, historySnapshot, stepHistory, useFileWithDrafts, type FileBinding, type HistoryBinding } from './top-bar';
 import { NavigatorStatus } from '@/features/navigator';
 import { PanelsStatus } from './panels-status';
 import { BootLines, Banners, StatusLine } from './status-parts';
@@ -26,8 +26,11 @@ export function PhoneBar(props: {
   readonly exam: ExamScopeBinding;
   readonly counts: Readonly<Record<RecordKind, number>>;
   readonly onStatus: () => void;
+  /** The store's history: Undo and Redo are in More on a phone, never on the bar (authoring is desktop-first, ADR-039 addendum). */
+  readonly history?: HistoryBinding;
 }) {
   const [more, setMore] = useState(false);
+  const file = useFileWithDrafts(props.file);
   // a choice that opens another dialog closes this one first (two modal dialogs are never open together)
   const then = (run: () => void) => (): void => {
     setMore(false);
@@ -43,7 +46,7 @@ export function PhoneBar(props: {
         <section aria-label="File" className={styles.section}>
           <h3>File</h3>
           <ul className={styles.list}>
-            {fileItems(props.file).map((item) => (
+            {fileItems(file).map((item) => (
               <li key={item.id}>
                 <Button
                   className={styles.wide}
@@ -55,6 +58,7 @@ export function PhoneBar(props: {
             ))}
           </ul>
         </section>
+        {props.history === undefined ? null : <HistorySection history={props.history} />}
         <section aria-label="Exam scope" className={styles.section}>
           <h3>Exam scope</h3>
           <ExamScopeSelector binding={props.exam} />
@@ -70,6 +74,33 @@ export function PhoneBar(props: {
         </section>
       </Dialog>
     </>
+  );
+}
+
+/** More > History: "Undo <label>" and "Redo <label>", each unavailable with its reason when there is nothing to do or the tab is read-only. */
+function HistorySection(props: { readonly history: HistoryBinding }) {
+  const { history } = props;
+  const toasts = useToasts();
+  useSyncExternalStore((onChange) => history.subscribe(onChange), () => historySnapshot(history));
+  const reasons = { undo: historyReason(history, 'undo'), redo: historyReason(history, 'redo') };
+  const shortReason = (direction: 'undo' | 'redo'): string | undefined => {
+    const reason = reasons[direction];
+    if (reason === undefined) return undefined;
+    return history.isReadOnly() ? reason : direction === 'undo' ? 'Nothing to undo' : 'Nothing to redo';
+  };
+  return (
+    <section aria-label="History" className={styles.section}>
+      <h3>History</h3>
+      <ul className={styles.list}>
+        {(['undo', 'redo'] as const).map((direction) => (
+          <li key={direction}>
+            <Button className={styles.wide} {...(reasons[direction] === undefined ? { onClick: () => stepHistory(history, direction, toasts) } : { unavailable: shortReason(direction) as string })}>
+              {historyLabelOf(history, direction)}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

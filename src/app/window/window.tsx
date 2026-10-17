@@ -4,7 +4,7 @@
  * and its result a Toast (import-panel.tsx); the inspector shows the record in focus (step 5.6a). Composition only: the frame is
  * `src/ui/shell` and knows nothing of `AppStatus`; chemistry never lives here.
  */
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Inspector, placeOf, type InspectorHost } from "@/features/inspector";
 import { Palette } from "@/features/search";
 import {
@@ -33,7 +33,11 @@ import { FirstRun } from "./first-run";
 import { MODES, NAVIGATOR_MODE } from "./modes";
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
-import { DraftsOpenContext, useDraftsView } from "./drafts-ui";
+import { hasNames } from "@/core/editing";
+import { currentOf } from "@/ui/state";
+import { useEditors, type EditorsApi } from "./drafts-ui";
+import { EditorsProvider } from "./editors";
+import { HistoryKeys } from "./history-keys";
 import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
 import { RecordCounts } from "./record-counts";
 import { TopBar } from "./top-bar";
@@ -43,8 +47,14 @@ import { ExportOpenContext } from "./export-context";
 import { useExportActions, type ExportActions } from "./use-export-actions";
 import { useImportActions, type ImportActions } from "./use-import-actions";
 
-// The editors and the drafts list are not in the entry chunk (ADR-040): they load when first asked for.
-const WorkbenchLayer = lazy(() => import("@/features/workbench/layer").then((m) => ({ default: m.DraftsDialog })));
+/** The palette command "Edit names of the selection": the record in the inspector, when it has names (ADR-040). */
+function editNamesCommand(editors: EditorsApi | null, state: CanonicalState, inspector: Parameters<typeof currentOf>[0]): CommandDeps['editNames'] {
+  const ref = currentOf(inspector);
+  const record = ref === null ? undefined : (state.records[ref.kind] as Readonly<Record<string, { readonly kind: string }>>)[ref.id];
+  const reason =
+    editors === null ? 'editing is not available here' : editors.editReason ?? (ref === null || record === undefined || !hasNames(record) ? 'show a species, class or reagent in the inspector first: only records with names can be edited here' : undefined);
+  return { reason, run: () => (ref === null || editors === null ? undefined : editors.editNames(ref)) };
+}
 
 const countsOf = (
   state: CanonicalState,
@@ -114,6 +124,7 @@ function InspectorPanel(props: {
   readonly closePane: () => void;
 }) {
   const { inspector } = useApp();
+  const editors = useEditors();
   const { model } = useNavigator();
   const { navigatorShown, openPane, closePane } = props;
   const host = useMemo<InspectorHost>(
@@ -121,12 +132,13 @@ function InspectorPanel(props: {
       openPane,
       closePane,
       navigatorShown,
+      ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames } }),
       edgeEnds: (edgeId) => {
         const edge = model.getState().scene?.edges.find((e) => e.id === edgeId);
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };
       },
     }),
-    [model, navigatorShown, openPane, closePane],
+    [model, navigatorShown, openPane, closePane, editors],
   );
   return <Inspector ports={inspector} host={host} />;
 }
@@ -138,9 +150,21 @@ function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
   return <Shell {...shell} titleHeading={!(familyVisible && familyOpen)} />;
 }
 
+/** The window: the toast provider and the editors' entry points (ADR-040) around the content. */
 export function Window() {
-  const { panels, services, navigator, inspector: inspectorPorts } = useApp();
   const layout = useLayoutMode();
+  return (
+    <ToastProvider folded={layout === 'phone'}>
+      <EditorsProvider>
+        <WindowContent />
+      </EditorsProvider>
+    </ToastProvider>
+  );
+}
+
+function WindowContent() {
+  const { panels, services, navigator, inspector: inspectorPorts } = useApp();
+  const editors = useEditors();
   const { actions: imports, element: importElement } = useImportActions();
   const { actions: exports, element: exportElement } = useExportActions();
   const status = useSubscribable(services.status);
@@ -148,9 +172,6 @@ export function Window() {
   const [searching, setSearching] = useState(false);
   const [about, setAbout] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
-  const [draftsOpen, setDraftsOpen] = useState(false);
-  const draftsCount = useDraftsView().count;
-  const openDrafts = useCallback(() => setDraftsOpen(true), []);
   const counts = useStoreSelector(services.store, countsOf);
   const width = usePanels(panels, (s) => s.inspectorWidth);
   const open = usePanels(panels, (s) => s.inspectorOpen);
@@ -195,6 +216,7 @@ export function Window() {
     undoImport: imports.undoImport,
     pickFile: imports.pick,
     openExport: exports.open,
+    editNames: editNamesCommand(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()),
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),
   };
@@ -227,7 +249,7 @@ export function Window() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
-  const file = { reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true), drafts: { count: draftsCount, onOpen: openDrafts } };
+  const file = { reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true) };
   const exam = { exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log };
   const openStatus = () => setStatusOpen(true);
   const pane = useMemo<InspectorPane>(
@@ -242,10 +264,10 @@ export function Window() {
     [width, open, panels],
   );
   return (
-    <ToastProvider folded={layout === 'phone'}>
+    <>
+      <HistoryKeys history={services.store} />
       <ExportOpenContext.Provider value={exports.open}>
       <AboutOpenContext.Provider value={() => setAbout(true)}>
-      <DraftsOpenContext.Provider value={openDrafts}>
       <NavigatorProvider ports={navigator} active={totalOf(counts) > 0}>
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
@@ -259,7 +281,7 @@ export function Window() {
             />
           }
           phone={{
-            bar: <PhoneBar onSearch={() => setSearching(true)} file={file} exam={exam} counts={counts} onStatus={openStatus} />,
+            bar: <PhoneBar onSearch={() => setSearching(true)} file={file} exam={exam} counts={counts} onStatus={openStatus} history={services.store} />,
             notices: <PhoneNotices />,
             alert: <PhoneAlert onStatus={openStatus} />,
             tabs: <PhoneTabs onSearch={() => setSearching(true)} searching={searching} />,
@@ -305,21 +327,11 @@ export function Window() {
         {exportElement}
         <PhoneStatusDialog open={statusOpen} onClose={() => setStatusOpen(false)} />
         <AboutDialog open={about} onClose={() => setAbout(false)} />
-        {draftsOpen ? (
-          <Suspense fallback={null}>
-            <WorkbenchLayer
-              open={draftsOpen}
-              onClose={() => setDraftsOpen(false)}
-              port={services.drafts}
-              openUnavailable="the editor arrives in the next part of step 6.1a"
-            />
-          </Suspense>
-        ) : null}
+
         <Palette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
       </NavigatorProvider>
-      </DraftsOpenContext.Provider>
       </AboutOpenContext.Provider>
       </ExportOpenContext.Provider>
-    </ToastProvider>
+    </>
   );
 }

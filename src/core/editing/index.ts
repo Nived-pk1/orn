@@ -6,3 +6,4 @@ export { canRedoDraft, canUndoDraft, editDraft, openSession, redoDraft, undoDraf
 export type { DraftRecipe, DraftValue } from './session';
 export { parseStoredSession } from './stored';
 export type { StoredSessionParse } from './stored';
+export { NAMES_KINDS, hasNames, kindHasNames } from './names';

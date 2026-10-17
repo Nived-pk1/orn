@@ -77,8 +77,8 @@ export function createDraftManager(options: DraftManagerOptions): DraftManager {
 
   const keepingNow = (): DraftsView['keeping'] => {
     const mode = status.get().mode;
-    if (adapter === undefined) return 'memory';
-    return mode === 'writer' ? 'stored' : 'read_only';
+    if (mode === 'follower' || mode === 'read_only') return 'read_only';
+    return adapter === undefined ? 'memory' : 'stored';
   };
   const writable = (): boolean => {
     const mode = status.get().mode;

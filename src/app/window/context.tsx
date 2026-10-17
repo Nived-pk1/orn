@@ -35,6 +35,9 @@ export function AppProvider(props: { readonly value: AppContextValue; readonly c
   return <AppContext.Provider value={props.value}>{props.children}</AppContext.Provider>;
 }
 
+/** The app context, or null outside the provider (a part rendered alone, as the top bar is in its tests). */
+export const useAppOptional = (): AppContextValue | null => useContext(AppContext);
+
 export function useApp(): AppContextValue {
   const value = useContext(AppContext);
   if (value === null) throw new Error('useApp was called outside the AppProvider');

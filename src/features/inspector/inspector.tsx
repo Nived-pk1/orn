@@ -7,7 +7,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
 import type { RecordRef } from '@/core/schema';
+import { hasNames } from '@/core/editing';
 import { useLayoutMode } from '@/ui/hooks';
+import { Button } from '@/ui/primitives';
 import { SHEET_TITLE_ID } from '@/ui/shell';
 import { canBack, canForward, currentOf } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
@@ -114,6 +116,12 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
             ))}
             {l4 === undefined ? null : <li data-severity="l4">{l4}</li>}
           </ul>
+        )}
+        {host.editNames === undefined || !hasNames(record) ? null : (
+          // on a phone the button shows in the FULL sheet, not in the peek (authoring is desktop-first, ADR-039 addendum)
+          <div className={styles.actions} data-sheet-full="">
+            <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.open(props.refOf) } : { unavailable: host.editNames.unavailable })}>Edit names</Button>
+          </div>
         )}
         {place.actions.length === 0 ? null : (
           <div className={styles.actions}>

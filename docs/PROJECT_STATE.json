@@ -399,7 +399,9 @@
     "NEW (step 5.11b part 1, 2026-10-14): DONE for decision 4 of 2026-10-14 (the long-apply progress view, tested in WebKit with a 0.5 MB file). DECISION: no Cancel during a long apply (the writes are past the commit and are one transaction). Phase 6 to revisit: an Abort that rolls the one transaction back, if real Safari shows applies of minutes.",
     "NEW (step 5.11b review, 2026-10-14) -> step 6.1: a promoted follower keeps its own boot's quarantine count and another tab's import is not followed; multi-tab edits arrive in step 6.1, which makes the status line follow them.",
     "NEW (closing session, 2026-10-14) -> Phase 8: Fit with a single node zooms far past 100% (the Unclassified box fills the canvas); fit should never zoom above 100%.",
-    "NEW (release preview, 2026-10-14) -> Phase 8: on narrow screens, notices fold into one line that expands (reviewer decision 2)."
+    "NEW (release preview, 2026-10-14) -> Phase 8: on narrow screens, notices fold into one line that expands (reviewer decision 2).",
+    "NEW (step 6.1a part 4, 2026-10-17) -> 6.2/6.3: a dry-run validation port for the live panel. The editor's live panel runs L1 only (the strict parse, debounced 300 ms); L2-L3 run at Save in the store's gate. A dry run of L2-L3 against a draft is not built.",
+    "NEW (step 6.1a part 4, 2026-10-17): initial JS is 397.85 kB gzip after the names editor (budget 400 kB; over the 395 kB line the reviewer set). Only the Edit names button and its port, the start-up line, the Drafts menu item and the session manager are in the entry chunk; the editor and the drafts list are one lazy chunk (layer, 5.26 kB gzip). The next session does the measured lazy candidates of gate-e-packet section 8.1 first, before more entry-chunk code."
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",

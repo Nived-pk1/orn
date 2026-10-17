@@ -62,4 +62,6 @@ export interface InspectorHost {
   edgeEnds(edgeId: string): { readonly from: string; readonly to: string } | undefined;
   /** True while the navigator is the view on the canvas (a record can then have a place in it). */
   readonly navigatorShown: boolean;
+  /** Opens the names editor of a record (ADR-040, step 6.1a part 4). Absent: no "Edit names" button. `unavailable` is the reason it cannot be used now (a read-only tab). The inspector knows no editor: this is the whole port. */
+  readonly editNames?: { readonly unavailable: string | undefined; open(ref: RecordRef): void };
 }
