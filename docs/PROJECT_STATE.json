@@ -1,9 +1,9 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-16",
+  "lastUpdated": "2026-10-17",
   "currentPhase": 6,
-  "currentPhaseStatus": "not_started",
+  "currentPhaseStatus": "in_progress",
   "completedPhases": [
     0,
     1,
@@ -86,7 +86,8 @@
     "5.9b",
     "5.10a",
     "5.11a",
-    "5.11b"
+    "5.11b",
+    "6.1a"
   ],
   "nextPhase": 7,
   "releasePreview": {
@@ -95,7 +96,7 @@
     "commit": "3a98b31",
     "version": "a5253990-50ca-4702-9c11-66c4f5687079"
   },
-  "nextStep": "6.1",
+  "nextStep": "equation step, then 6.1b",
   "nextStepTitle": "Editor sessions (draft store, persistence, local undo, commit, conflicts); first action: a quiet-machine bench:compare. A release-preview step (hosting, reviewer's prompt) comes before 6.1.",
   "canonicalSchemaVersion": 2,
   "gates": {
@@ -228,7 +229,7 @@
   "openItems": [
     "NEW (phone mode A review, 2026-10-16, Phase 9): pre-built brotli for the RDKit wasm (1,703,694 B vs 2,318,206 B served, -614 kB) and index.js (327,005 B vs 397,007 B, -70 kB); first check whether Workers static assets serve pre-compressed files.",
     "NEW (step 5.7 close): initial JS 354.29 kB gzip (347.02 after the lazy loading of the 5.7 session's Part A2, +7.3 kB for the pointer, keyboard, menu, List and table code); target 400 kB, build:smoke now fails over it. Lazy chunks: views-other, import-inprocess, export-inprocess, import-legacy (import-legacy removed 2026-10-13, 5.10a review: legacy converter is static in the compute worker).",
-    "NEW (step 5.7): family boxes on the map are not widened to 44 px for fingers (only the arrows' hit path is); a family at a far zoom can be smaller. Multi-selection and the marquee moved to Phase 6 (row 6.1). E is an alias of O; C is unbound.",
+    "NEW (step 5.7): family boxes on the map are not widened to 44 px for fingers (only the arrows' hit path is); a family at a far zoom can be smaller. Multi-selection and the marquee moved to Phase 6 (row 6.8 since 2026-10-17: built with the first bulk actions, mark verified and delete). E is an alias of O; C is unbound.",
     "NEW (step 5.7): a failed lazy chunk reuses the codes LEGACY_INVALID, WORKER_DOWN and REJECTED with a message in words; a browser may cache a failed module fetch, so Retry can fail until the page is reloaded. src/io/index.ts no longer re-exports the values of legacy-v6.",
     "NEW (step 5.6b close): initial JS 391.38 kB gzip, OVER the 390 kB line of the prompt (381.10 after 5.6a Part A; 372.55 at the 5.5d close; the 400 kB target stands). The 22 inspector views are in the entry chunk; lazy loading of the inspector kinds is a Gate E decision.",
     "NEW (step 5.6b): the status bar is now a tab stop (axe scrollable-region-focusable at 600 px); a clipped status bar could instead wrap or be shortened. Related reactions group 'Same reagent family' is wide (an acid or a base relates many reactions); only a bounded list is shown (12 + a virtual list).",

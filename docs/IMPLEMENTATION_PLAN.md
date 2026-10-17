@@ -172,14 +172,14 @@ The contracts fit scan of this plan (Q1-Q14) and the open points it found are in
 
 | Step | Work |
 |---|---|
-| 6.1 | Editor sessions (draft store, persistence, local undo, commit, conflicts) | **FIRST ACTION (reviewer, 2026-10-14): a bench:compare on a quiet machine (the 5.11b runs showed 71 and 216 of 470 entries over +20% on unchanged code, read as machine noise); no baseline change.** **Moved from 5.7 (2026-10-11): multi-selection (Shift-click) and the marquee (Shift-drag) on the map, built with the first bulk action so that nothing is a silent no-op.**
+| 6.1 | Editor sessions (draft store, persistence, local undo, commit, conflicts) | **FIRST ACTION (reviewer, 2026-10-14): a bench:compare on a quiet machine (the 5.11b runs showed 71 and 216 of 470 entries over +20% on unchanged code, read as machine noise); no baseline change.** **6.1a DONE 2026-10-17 (editor sessions core, drafts kept and offered at every boot, the Names editor, the conflict view, global and phone history; docs/PROGRESS.md "Step 6.1a"). 6.1b (the rest of 6.1): (1) the follower's search sync analyses a remote ChangeSet like a commit (openItem 23); (2) a promoted follower's own boot quarantine count and another tab's import (openItem 171); (3) periodic snapshots through `snapshotBuild` (openItem 119); (4) the full three-engine e2e run of the whole suite. Multi-selection (Shift-click) and the marquee (Shift-drag) moved on to row 6.8 (reviewer, 2026-10-17: the first bulk actions, mark verified and delete, arrive in 6.8).**
 | 6.2 | Species, class, reagent editors; structure panel (live parse/depiction); duplicate check |
 | 6.3 | Reaction editor: identity, participants, stages |
 | 6.4 | Condition variants and outcomes editors |
 | 6.5 | Mechanism editor (variants, steps, species, bond changes, electron movements as structured rows) | *2026-10-11 (step 5.7 review, ADR-038).* Also attach the user's OWN mechanism images to a mechanism or to one of its steps: asset records through the existing asset pipeline, shown as `<img>` with a blob URL only (ADR-038). The mechanism view shows attached images FIRST, above the step rows. |
 | 6.6 | Caveats, relationships, curriculum mappings, citations editors |
 | 6.7 | Quick-entry parser and pickers with "create new" |
-| 6.8 | Delete/merge flows with impact dialogs; review queue |
+| 6.8 | Delete/merge flows with impact dialogs; review queue | **Moved from 6.1 (2026-10-17): multi-selection (Shift-click) and the marquee (Shift-drag) on the map, built with the first bulk actions (mark verified, delete) so that nothing is a silent no-op.**
 | 6.9 | Author every demo reaction from scratch in e2e; Gate D review |
 
 ### Phase 7 — Exploration views

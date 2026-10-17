@@ -40,7 +40,7 @@ test.describe('a conflict', () => {
     await editorDialog(page, 'Ethanol one').getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'This record was changed since you started' })).toBeVisible();
     const table = page.getByRole('table');
-    const row = table.getByRole('row').filter({ hasText: 'names.canonical' });
+    const row = table.getByRole('row').filter({ hasText: 'Canonical name' });
     await expect(row).toContainText('Ethanol one'); // when you started
     await expect(row).toContainText('Ethanol two'); // your draft
     const save = page.getByRole('button', { name: 'Save with these choices' });
