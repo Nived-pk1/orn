@@ -9,8 +9,10 @@ import { PHONE_QUERIES } from '@/ui/hooks';
 import { tierState } from '@/test-support/perf-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { fakeApp, renderWithApp, stubDialog } from '@/test-support/window-kit';
+import { prefetchPalette } from './lazy-palette';
 
-beforeAll(() => {
+beforeAll(async () => {
+  await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
   stubDialog();
   fakeLayout();
 });

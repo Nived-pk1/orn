@@ -12,10 +12,12 @@ import { tierState } from '@/test-support/perf-kit';
 import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { INITIAL_STATUS } from '@/app/services/status';
 import { bannersOf } from './banners';
+import { prefetchPalette } from './lazy-palette';
 
 const OK = { ok: true, result: { bytes: new TextEncoder().encode('{}\n'), counts: { species: 1 }, missingAssets: [], missingReferences: [] }, revision: 1, inProcess: false };
 
-beforeAll(() => {
+beforeAll(async () => {
+  await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

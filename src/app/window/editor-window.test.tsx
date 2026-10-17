@@ -12,8 +12,11 @@ import { demoState } from '@/test-support/app-boot-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { buildCommands, type CommandDeps } from './palette-commands';
+import { prefetchPalette } from './lazy-palette';
 
-beforeAll(() => {
+beforeAll(async () => {
+  await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
+  await import('@/features/workbench/layer'); // the editor and the drafts list are a lazy chunk (ADR-040): load it once so findBy* never races a slow machine
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

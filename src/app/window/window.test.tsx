@@ -4,9 +4,11 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { tierState } from '@/test-support/perf-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { fakeApp, planOf, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
+import { prefetchPalette } from './lazy-palette';
 
 // jsdom has no showModal() / close() on <dialog>; the browser behaviour is proved by the e2e (tests/e2e/shell.spec.ts).
-beforeAll(() => {
+beforeAll(async () => {
+  await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
   stubDialog();
   fakeLayout();
 });
