@@ -19,8 +19,10 @@ export interface EquationTerm {
   readonly coefficient: string | null;
   /** The name as written in the record (the wording as entered wins), or its ID when the record is gone. */
   readonly name: string;
-  /** Set on a MAIN product: the card's own selectivity word ("exclusive", "major", ...); null on a reactant, on a coproduct or byproduct, and on a product with none. */
+  /** Set on ONE main product, the last: the outcome's selectivity word ("exclusive", "major", ...), written once for the outcome (INV-08); null on every other term and when none is stored. */
   readonly word: SelectivityWord | null;
+  /** "both" (two main products) or "all" (three or more) on the term that carries `word` when the outcome has several main products; null otherwise. */
+  readonly quantifier: SelectivityQuantifier | null;
   /** Set on a product that is not a main product: its role word; null otherwise. */
   readonly role: ProductRoleWord | null;
   /** The term as one plain line: "2 Benzaldehyde", "Ethanal (exclusive)", "Water (byproduct)". */
@@ -42,7 +44,10 @@ const coefficientText = (value: number | undefined): string | null => (value ===
 /** The words for a product that is not a main product (selectivity lives on the outcome and is worded on the main products only). */
 export type ProductRoleWord = 'coproduct' | 'byproduct';
 
-const termText = (coefficient: string | null, name: string, word: SelectivityWord | ProductRoleWord | null): string =>
+/** Said before the selectivity word when an outcome has several main products: "(both exclusive)", "(all exclusive)". */
+export type SelectivityQuantifier = 'both' | 'all';
+
+const termText = (coefficient: string | null, name: string, word: string | null): string =>
   `${coefficient === null ? '' : `${coefficient} `}${name}${word === null ? '' : ` (${word})`}`;
 
 export function fullEquationOf(
@@ -65,22 +70,28 @@ export function fullEquationOf(
         coefficient,
         name,
         word: null,
+        quantifier: null,
         role: null,
         text: termText(coefficient, name, null),
       };
     });
-  const products: EquationTerm[] = outcome.products.map((p) => {
+  const mainCount = outcome.products.filter((p) => p.role === 'main').length;
+  const lastMain = outcome.products.map((p) => p.role).lastIndexOf('main');
+  const quantifier: SelectivityQuantifier | null = mainCount < 2 ? null : mainCount === 2 ? 'both' : 'all';
+  const products: EquationTerm[] = outcome.products.map((p, index) => {
     const coefficient = coefficientText(p.coefficient);
     const name = nameOf(p.ref, p.originalText);
-    // selectivity lives on the outcome (INV-08); the card words the main products it draws, so a coproduct or byproduct says its role instead
-    const word = p.role === 'main' ? selectivityWordOf(outcome.selectivity) : null;
+    // selectivity lives on the outcome (INV-08), so it is worded ONCE, after the last main product; a coproduct or byproduct says its role instead
+    const word = index === lastMain ? selectivityWordOf(outcome.selectivity) : null;
+    const said = word === null ? null : quantifier;
     const role = p.role === 'main' ? null : p.role;
     return {
       coefficient,
       name,
       word,
+      quantifier: said,
       role,
-      text: termText(coefficient, name, word ?? role),
+      text: termText(coefficient, name, word === null ? role : said === null ? word : `${said} ${word}`),
     };
   });
   // what is written on the left is not written again on the arrow

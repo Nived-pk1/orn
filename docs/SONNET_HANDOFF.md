@@ -66,7 +66,7 @@ Levels, fixtures, determinism rules, coverage targets: TEST_STRATEGY.md §1–§
 The current phase, completed steps, gate statuses and next step are recorded in `docs/PROJECT_STATE.json` (read it every session; it is the only place they are kept). Do not restate them here. History and decisions: `docs/PROGRESS.md`.
 
 ## 17. Next phase
-Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step. (When this was last updated: Phase 5 step 5.0 next; Phase 4 closed; Gates A, B, C passed.)
+Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its title and scope are in IMPLEMENTATION_PLAN.md §2. Do only that step.
 
 ## 18. Forbidden shortcuts
 1. Storing graphs, edges, layouts, derived relations, computed chemistry, scope or findings in records.
@@ -84,6 +84,7 @@ Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its t
 13. Adding dependencies not listed for the current phase without an ADR.
 14. Weakening a test or a rule to make CI pass.
 15. Building FUTURE capabilities (ARCHITECTURE.md §A) or ARCHITECTURALLY SUPPORTED ones before their phase.
+16. Never amend, squash or rewrite a commit; a fix is a new commit.
 
 ## 19. Exact commands
 ```bash

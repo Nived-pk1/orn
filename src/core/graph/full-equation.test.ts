@@ -18,11 +18,12 @@ describe('fullEquationOf on the demo', () => {
     const [equation] = equations('rxn_benzaldehyde-cannizzaro');
     expect(equation?.reactants.map((t) => t.text)).toEqual(['2 Benzaldehyde']);
     // the word is the card's selectivity word of the outcome, not a role word
-    expect(equation?.products.map((t) => [t.name, t.word])).toEqual([
-      ['Benzyl alcohol', 'exclusive'],
-      ['Sodium benzoate', 'exclusive'],
+    // the word is the outcome's, so it is written once, after the last main product (phone mode C review, item 5)
+    expect(equation?.products.map((t) => [t.name, t.word, t.quantifier])).toEqual([
+      ['Benzyl alcohol', null, null],
+      ['Sodium benzoate', 'exclusive', 'both'],
     ]);
-    expect(equation?.text).toBe('2 Benzaldehyde → Benzyl alcohol (exclusive) + Sodium benzoate (exclusive)');
+    expect(equation?.text).toBe('2 Benzaldehyde → Benzyl alcohol + Sodium benzoate (both exclusive)');
     expect(plain(equation?.arrow.above ?? [])).toContain('NaOH');
   });
 
@@ -116,6 +117,50 @@ describe('a product that is not a main product says its role (phone mode C, part
       }
     }
     expect([...seen].sort()).toEqual(['byproduct', 'coproduct']);
+  });
+});
+
+describe('an outcome with several main products words its selectivity once (phone mode C review, item 5)', () => {
+  it('every demo outcome with 2+ main products: exactly one term carries the word, it is the last main product, and the quantifier matches the count', () => {
+    let compared = 0;
+    for (const reaction of Object.values(demo.state.records.reaction)) {
+      for (const equation of equations(reaction.id)) {
+        const outcome = reaction.outcomes.find((o) => o.id === equation.outcomeId);
+        const mains = (outcome?.products ?? []).flatMap((p, i) => (p.role === 'main' ? [i] : []));
+        if (mains.length < 2) continue;
+        compared += 1;
+        const last = mains[mains.length - 1] as number;
+        const quantifier = mains.length === 2 ? 'both' : 'all';
+        equation.products.forEach((term, i) => {
+          if (!mains.includes(i)) {
+            expect(term.quantifier).toBeNull();
+            return;
+          }
+          if (i === last && term.word !== null) {
+            expect(term.quantifier).toBe(quantifier);
+            expect(term.text.endsWith(` (${quantifier} ${term.word})`)).toBe(true);
+          } else {
+            expect(term.word).toBeNull();
+            expect(term.quantifier).toBeNull();
+            expect(term.text).not.toContain('(');
+          }
+        });
+      }
+    }
+    expect(compared).toBeGreaterThan(0);
+  });
+
+  it('three main products: "all"; one main product keeps today\'s form; non-main products keep their role words after it', () => {
+    const reaction = demo.state.records.reaction['rxn_benzaldehyde-cannizzaro' as ReactionId];
+    if (reaction === undefined) throw new Error('no reaction');
+    const base = reaction.outcomes[0] as (typeof reaction.outcomes)[number];
+    const [first, second] = base.products as [(typeof base.products)[number], (typeof base.products)[number]];
+    const named = (p: typeof first, n: string): typeof first => ({ ...p, originalText: n });
+    const written = (products: typeof base.products): string =>
+      fullEquationOf(reaction, { ...base, products }, { schemes: [], describe: () => undefined, shownAsNode: () => true }).text.split(' → ')[1] ?? '';
+    expect(written([named(first, 'A'), named(second, 'B'), named(first, 'C')])).toBe('A + B + C (all exclusive)');
+    expect(written([named(first, 'A')])).toBe('A (exclusive)');
+    expect(written([named(first, 'A'), named(second, 'B'), { ...named(first, 'W'), role: 'byproduct' }])).toBe('A + B (both exclusive) + W (byproduct)');
   });
 });
 

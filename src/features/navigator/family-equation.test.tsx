@@ -33,7 +33,7 @@ describe('FullEquationView', () => {
     expect(screen.queryByLabelText(/^Full equation:/)).toBeNull();
     openDisclosure();
     expect(screen.getByLabelText(/^Full equation:/).textContent).toContain('2 Benzaldehyde');
-    expect(screen.getByLabelText(/^Full equation:/).textContent).toContain('Sodium benzoate (exclusive)');
+    expect(screen.getByLabelText(/^Full equation:/).textContent).toContain('Benzyl alcohol + Sodium benzoate (both exclusive)');
   });
 
   it('the 413 K reaction lists water without a word and keeps its temperature under the drawn arrow', () => {
@@ -92,6 +92,6 @@ describe('FullEquationView: the drawn arrow and the species written once (phone 
     if (equation === undefined || word === null || word === undefined) throw new Error('no word');
     render(<FullEquationView equation={equation} />);
     openDisclosure();
-    expect(screen.getByLabelText(/^Full equation:/).textContent).toContain(`(${word})`);
+    expect(screen.getByLabelText(/^Full equation:/).textContent).toContain(`(both ${word})`);
   });
 });

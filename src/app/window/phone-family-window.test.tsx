@@ -88,6 +88,19 @@ describe('the family page on a phone', () => {
     expect(reactants?.querySelector<HTMLElement>('figure > div')?.getAttribute('style')).toBeNull();
   });
 
+  it('the phone card writes the outcome selectivity once: "(both exclusive)" after the last of two main products', async () => {
+    await openFamily('cls_aldehydes');
+    const card = screen.getAllByRole('article').find((el) => el.querySelector('h4')?.textContent?.includes('Cannizzaro')) as HTMLElement;
+    const details = within(card).getByText('Show full equation').closest('details') as HTMLDetailsElement;
+    act(() => {
+      details.open = true;
+      details.dispatchEvent(new Event('toggle'));
+    });
+    const line = within(card).getByLabelText(/^Full equation:/).textContent ?? '';
+    expect(line).toContain('Benzyl alcohol + Sodium benzoate (both exclusive)');
+    expect(line).not.toContain('Benzyl alcohol (exclusive)');
+  });
+
   it('"Also gives →" is a button with the arrow character, never "->"', async () => {
     await openFamily('cls_alcohols');
     const both = screen.getAllByRole('article').filter((el) => el.querySelector('h4')?.textContent === 'Ethanol + conc. H₂SO₄');

@@ -46,6 +46,8 @@ describe('Show full equation in the inspector', () => {
     expect(summary.closest('details')?.open).toBe(false);
     openDisclosure();
     expect(screen.getByRole('list', { name: 'Full equation', hidden: true }).textContent).toContain('2 Benzaldehyde');
+    // two main products: the outcome's word is written once, after the last (phone mode C review, item 5)
+    expect(screen.getByRole('list', { name: 'Full equation', hidden: true }).textContent).toContain('Benzyl alcohol + Sodium benzoate (both exclusive)');
   });
 
   it('the 413 K reaction has one line per outcome, each with its own temperature', () => {
