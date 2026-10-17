@@ -4,13 +4,19 @@
  * Back and Forward and Alt+Arrow keys, a record that is gone is said to be missing, a record link to a missing record is plain text.
  */
 import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp } from '@/test-support/window-kit';
+import { loadOtherViews } from '@/features/inspector/lazy-views';
 
 afterEach(cleanup);
 
 const pane = (): HTMLElement => screen.getByRole('complementary', { name: 'Inspector' });
+
+// the kind views are a lazy chunk since step 6.1a: load it once so these tests render a view at once
+beforeAll(async () => {
+  await loadOtherViews();
+});
 
 describe('the inspector frame', () => {
   it('shows an empty state until something is picked', () => {

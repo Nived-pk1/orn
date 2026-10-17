@@ -12,8 +12,10 @@ import type { CanonicalState, RecordRef, Species } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { PALETTE_DEBOUNCE_MS } from '@/features/search';
+import { prefetchPalette } from './lazy-palette';
 
-beforeAll(() => {
+beforeAll(async () => {
+  await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
   stubDialog();
   globalThis.ResizeObserver ??= class {
     observe(): void {}

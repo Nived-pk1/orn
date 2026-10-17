@@ -2,7 +2,10 @@
  * The readable views of every kind except reaction, species, class and reagent (step 5.7, lazy loading). This module is its own chunk:
  * `views.tsx` loads it with a dynamic `import()` when such a record is first opened (`lazy-views.tsx`).
  */
-import type { AnyRecord, Asset, Caveat, Concept, EntityDisplay, Exam, ExamRelevance, ExamVersion, Mechanism, NamedReaction, NavigatorAnchor, ReactionScheme, Reference, Relationship, Route, Topic, TopicMapping, Transformation, ViewPreset } from '@/core/schema';
+import type { Finding } from '@/core/validation';
+import type { AnyRecord, Asset, ChemicalClass, Reaction, Reagent, Species, Caveat, Concept, EntityDisplay, Exam, ExamRelevance, ExamVersion, Mechanism, NamedReaction, NavigatorAnchor, ReactionScheme, Reference, Relationship, Route, Topic, TopicMapping, Transformation, ViewPreset } from '@/core/schema';
+import { ReactionLevels } from './view-reaction';
+import { ClassLevels, ReagentLevels, SpeciesLevels } from './view-substance';
 import { ExamLevels, ExamRelevanceLevels, ExamVersionLevels, TopicMappingLevels } from './view-curriculum';
 import { AssetLevels } from './view-asset';
 import { CaveatLevels, ConceptLevels, NamedReactionLevels, TransformationLevels } from './view-knowledge';
@@ -10,9 +13,17 @@ import { MechanismLevels } from './view-mechanism';
 import { ReferenceLevels, RelationshipLevels, RouteLevels, TopicLevels } from './view-organisation';
 import { EntityDisplayLevels, NavigatorAnchorLevels, ReactionSchemeLevels, ViewPresetLevels } from './view-presentation';
 
-export function OtherView(props: { readonly record: AnyRecord }) {
-  const { record } = props;
+export function OtherView(props: { readonly record: AnyRecord; readonly findings: readonly Finding[] }) {
+  const { record, findings } = props;
   switch (record.kind) {
+    case 'species':
+      return <SpeciesLevels record={record as Species} findings={findings} />;
+    case 'class':
+      return <ClassLevels record={record as ChemicalClass} findings={findings} />;
+    case 'reagent':
+      return <ReagentLevels record={record as Reagent} findings={findings} />;
+    case 'reaction':
+      return <ReactionLevels record={record as Reaction} findings={findings} />;
     case 'named_reaction':
       return <NamedReactionLevels record={record as NamedReaction} />;
     case 'concept':

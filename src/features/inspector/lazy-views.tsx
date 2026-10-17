@@ -1,8 +1,9 @@
 /**
- * The inspector's views for every kind except reaction, species, class and reagent are their own chunk (step 5.7, lazy loading;
- * `views-other.tsx`). The chunk is loaded when such a record is first opened. A load that fails is a value (`ViewsLoad`), shown
+ * The inspector's views for every kind are their own chunk (step 5.7, lazy loading; the four substance and reaction views joined in
+ * step 6.1a, `views-other.tsx`). The chunk is loaded when a record is first opened. A load that fails is a value (`ViewsLoad`), shown
  * in words with a Retry button, never a blank panel; a view that throws while rendering is caught by the panel's error boundary.
  */
+import type { Finding } from '@/core/validation';
 import { useCallback, useEffect, useState } from 'react';
 import type { AnyRecord } from '@/core/schema';
 import { ErrorBoundary, Skeleton } from '@/ui/primitives';
@@ -35,7 +36,7 @@ export function loadOtherViews(): Promise<ViewsLoad> {
   });
 }
 
-function Loader(props: { readonly record: AnyRecord }) {
+function Loader(props: { readonly record: AnyRecord; readonly findings: readonly Finding[] }) {
   const [answer, setAnswer] = useState<ViewsLoad | undefined>(loaded === undefined ? undefined : { ok: true, OtherView: loaded });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -63,13 +64,13 @@ function Loader(props: { readonly record: AnyRecord }) {
       </div>
     );
   }
-  return <answer.OtherView record={props.record} />;
+  return <answer.OtherView record={props.record} findings={props.findings} />;
 }
 
-export function LazyOtherView(props: { readonly record: AnyRecord }) {
+export function LazyOtherView(props: { readonly record: AnyRecord; readonly findings: readonly Finding[] }) {
   return (
     <ErrorBoundary label="This view">
-      <Loader record={props.record} />
+      <Loader record={props.record} findings={props.findings} />
     </ErrorBoundary>
   );
 }

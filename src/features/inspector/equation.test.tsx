@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** "Show full equation" at L1 of a reaction in the inspector (step 5.9a review, follow-up b). */
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createDerivedIndexes } from '@/app/services/derived-indexes';
 import { createCanonicalStore } from '@/core/commands';
 import { demoState } from '@/test-support/app-boot-kit';
@@ -9,6 +9,7 @@ import { manualTimers } from '@/test-support/navigator-kit';
 import { createFamilyStore, createInspectorStore, createPanelsStore, createSelectionStore } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { Inspector } from './inspector';
+import { loadOtherViews } from './lazy-views';
 
 afterEach(cleanup);
 
@@ -38,6 +39,11 @@ function show(reactionId: string): void {
   render(<Inspector ports={ports} host={host} />);
   act(() => inspector.getState().open({ kind: 'reaction', id: reactionId } as never));
 }
+
+// the kind views are a lazy chunk since step 6.1a: load it once so these tests render a view at once
+beforeAll(async () => {
+  await loadOtherViews();
+});
 
 describe('Show full equation in the inspector', () => {
   it('Cannizzaro: a closed disclosure whose line reads 2 Benzaldehyde to both products', () => {

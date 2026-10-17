@@ -6,7 +6,6 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Inspector, placeOf, type InspectorHost } from "@/features/inspector";
-import { Palette } from "@/features/search";
 import {
   NavigatorView,
   NavigatorProvider,
@@ -25,6 +24,7 @@ import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
 import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from "@/ui/state";
 import { useApp } from "./context";
+import { LazyPalette, prefetchPalette } from "./lazy-palette";
 import { DatasetActions, ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
 import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
@@ -170,6 +170,15 @@ function WindowContent() {
   const status = useSubscribable(services.status);
   const [asking, setAsking] = useState(false);
   const [searching, setSearching] = useState(false);
+  // the palette is a lazy chunk: fetch it once the first view is drawn and the browser is idle, so the first Ctrl/Cmd+K opens at once
+  useEffect(() => {
+    const idle = (window as { requestIdleCallback?: (run: () => void) => number }).requestIdleCallback;
+    const handle = idle === undefined ? window.setTimeout(() => void prefetchPalette(), 200) : idle(() => void prefetchPalette());
+    return () => {
+      if (idle === undefined) window.clearTimeout(handle);
+      else (window as { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback?.(handle);
+    };
+  }, []);
   const [about, setAbout] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const counts = useStoreSelector(services.store, countsOf);
@@ -328,7 +337,7 @@ function WindowContent() {
         <PhoneStatusDialog open={statusOpen} onClose={() => setStatusOpen(false)} />
         <AboutDialog open={about} onClose={() => setAbout(false)} />
 
-        <Palette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
+        <LazyPalette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
       </NavigatorProvider>
       </AboutOpenContext.Provider>
       </ExportOpenContext.Provider>

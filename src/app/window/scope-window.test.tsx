@@ -11,12 +11,14 @@ import { UNCLASSIFIED_HUB_ID } from '@/core/graph';
 import type { CanonicalState, ExamRelevance, Reaction } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
+import { loadOtherViews } from '@/features/inspector/lazy-views';
 
 afterEach(cleanup);
 
 // jsdom does no layout: the list's scroll area is made tall so every item of a page renders (as navigator-family.test.tsx does)
 const isScroller = (el: Element): boolean => el.hasAttribute('data-virtual-list');
-beforeAll(() => {
+beforeAll(async () => {
+  await loadOtherViews(); // the kind views are a lazy chunk since step 6.1a
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get(this: HTMLElement) { return isScroller(this) ? 20_000 : 40; } });
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 900 });
   HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {

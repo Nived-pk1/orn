@@ -10,10 +10,15 @@ import { fakeLayout, inspectorRig, openLevels } from '@/test-support/inspector-k
 import { tierState, withNavigatorAnchors } from '@/test-support/perf-kit';
 import { indexEngine } from '@/core/indexes';
 import { Inspector } from './inspector';
+import { loadOtherViews } from './lazy-views';
 
 vi.setConfig({ testTimeout: 120_000 });
 afterEach(cleanup);
 beforeAll(fakeLayout);
+// the kind views are a lazy chunk since step 6.1a: load it once so these tests render a view at once
+beforeAll(async () => {
+  await loadOtherViews();
+});
 
 describe('a class with 1,000 reactions', () => {
   const state = withNavigatorAnchors(tierState('initial', 'hub_explosion'));

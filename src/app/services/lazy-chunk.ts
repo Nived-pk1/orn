@@ -13,3 +13,27 @@ export async function loadChunk<T>(load: () => Promise<T>, what: string): Promis
     return { ok: false, message: `${what} could not be loaded (${why}). Check the connection and try again, or reload the page; nothing was changed.` };
   }
 }
+
+/** A chunk loaded on first ask, remembered once it has loaded; a failure is not remembered, so the next `get` tries again. */
+export interface ChunkCache<T> {
+  get(): Promise<ChunkLoad<T>>;
+  /** The loaded value, or undefined before it has loaded. */
+  peek(): T | undefined;
+}
+
+export function createChunkCache<T>(load: () => Promise<T>, what: string): ChunkCache<T> {
+  let loaded: { readonly value: T } | undefined;
+  let pending: Promise<ChunkLoad<T>> | undefined;
+  return {
+    peek: () => loaded?.value,
+    get() {
+      if (loaded !== undefined) return Promise.resolve({ ok: true, value: loaded.value });
+      pending ??= loadChunk(load, what).then((answer) => {
+        if (answer.ok) loaded = { value: answer.value };
+        else pending = undefined;
+        return answer;
+      });
+      return pending;
+    },
+  };
+}

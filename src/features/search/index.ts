@@ -1,4 +1,3 @@
-export { Palette } from './palette';
 export { createPaletteModel } from './palette-model';
 export type { PaletteModel, PaletteState, PaletteStatus } from './palette-model';
 export { filterCommands } from './commands';

@@ -10,10 +10,12 @@ import { tierState } from '@/test-support/perf-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { fakeApp, planOf, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { PALETTE_DEBOUNCE_MS } from '@/features/search';
+import { prefetchPalette } from './lazy-palette';
 
 const APPLIED = { ok: true, revision: 1, snapshotId: 's', report: {}, reportSaved: true, saved: true, sessionOnly: false, save: null, inProcess: false, notes: [] };
 
-beforeAll(() => {
+beforeAll(async () => {
+  await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

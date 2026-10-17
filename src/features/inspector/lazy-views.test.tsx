@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * The lazily loaded kind views (step 5.7): a skeleton while the chunk loads, the view when it has, and a message in words with Retry
- * when the chunk fails to load (never a blank panel); reaction, species, class and reagent need no chunk.
+ * when the chunk fails to load (never a blank panel). Since step 6.1a EVERY kind is in the chunk, reaction, species, class and reagent too.
  */
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -51,14 +51,12 @@ describe('lazy kind views', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('reaction, species, class and reagent need no chunk (they render at once)', async () => {
-    vi.doMock('./views-other', () => {
-      throw new Error('the lazy chunk must not be asked for');
-    });
+  it('reaction, species, class and reagent come through the chunk too: a skeleton, then the view', async () => {
     const state = demoState();
     const reaction = Object.values(state.records.reaction)[0] as { id: string };
     await open({ kind: 'reaction', id: reaction.id } as RecordRef, state);
-    expect(document.querySelector('[data-view="reaction"] section[data-level="2"]')).not.toBeNull();
+    expect(screen.getByRole('status', { name: 'Loading this view' })).toBeTruthy();
+    await vi.waitFor(() => expect(document.querySelector('[data-view="reaction"] section[data-level="2"]')).not.toBeNull());
     expect(screen.queryByRole('alert')).toBeNull();
   });
 });
