@@ -364,3 +364,29 @@ describe('the overview does not expand, and the selection (step 5.5a part 2; ADR
     model.stop();
   });
 });
+
+describe('the Structures setting (equation step, part 4)', () => {
+  it('a change of the mode rebuilds the scene (the nodes carry keys of the new mode) and reuses the layout', async () => {
+    const store = createCanonicalStore({ initial: layeredDemo(), validateInitial: false });
+    const rig = navigatorRig(store, { depictions: true });
+    let mode: 'skeletal' | 'condensed' = 'skeletal';
+    const listeners = new Set<() => void>();
+    const depictions = { ...(rig.depictions as NonNullable<typeof rig.depictions>), mode: () => mode, onMode: (l: () => void) => (listeners.add(l), () => void listeners.delete(l)) };
+    const model = createNavigatorModel({ ...rig.ports, depictions }, { layoutAlgorithm: 'layered' });
+    model.start();
+    await settle();
+    // (the demo's overview draws families, so no node has a structure key here: what is proved is the rebuild; the keys' mode is proved by the binding)
+    const keysOf = (): (string | undefined)[] => (model.getState().scene?.nodes ?? []).map((n) => n.depictionKey);
+    expect(keysOf().every((k) => k === undefined || !k.includes('#'))).toBe(true);
+    const calls = model.stats().layoutCalls;
+    const scenes = model.stats().scenes;
+    mode = 'condensed';
+    listeners.forEach((l) => l());
+    await settle();
+    expect(model.stats().scenes).toBe(scenes + 1);
+    expect(model.stats().layoutCalls).toBe(calls); // the same request: the layout is not asked again
+    expect(keysOf().filter((k) => k !== undefined).every((k) => (k as string).endsWith('#condensed'))).toBe(true);
+    model.stop();
+    expect(listeners.size).toBe(0); // stop unsubscribes
+  });
+});

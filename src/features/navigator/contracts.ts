@@ -4,6 +4,7 @@
  * `src/app/window` fills it from `AppServices`; the feature imports no `src/app` and the engines as types only (step 5.0 rules).
  * Step 5.5a part 2 adds the depiction functions (optional: without them no node has a structure).
  */
+import type { StructureMode } from '@/chem/contracts';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, StructureRep } from '@/core/schema';
@@ -26,9 +27,13 @@ export type NavigatorDepictionAnswer =
 /** Structures (item i): the request key, the service call, and the object URLs, which are a browser API and so made by the app. */
 export interface NavigatorDepictions {
   /** The request's name for a structure drawn at `size` (pure; the service's own key). */
-  keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number }): string;
-  depict(structure: StructureRep, size: { readonly width: number; readonly height: number }): Promise<NavigatorDepictionAnswer>;
+  keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number }, mode?: StructureMode): string;
+  depict(structure: StructureRep, size: { readonly width: number; readonly height: number }, mode?: StructureMode): Promise<NavigatorDepictionAnswer>;
   cancel(key: string): void;
+  /** How structures are drawn now (Skeletal, Condensed, Full; equation step, part 4). Absent: Skeletal. */
+  mode?(): StructureMode;
+  /** Calls the listener when the mode changes; answers the unsubscribe. */
+  onMode?(listener: () => void): () => void;
   /**
    * Calls the listener each time the chemistry engine has been retried successfully after it was unavailable (step 5.5d, item i);
    * answers the unsubscribe. Absent: nothing is forgotten (an unavailable structure stays a name until the page is reloaded).
@@ -43,6 +48,13 @@ export interface NavigatorDepictions {
   revokeUrl(url: string): void;
 }
 
+/** The "Structures" setting as the family page header shows it (equation step, part 4): the mode, a way to change it, and to follow it. */
+export interface NavigatorStructures {
+  mode(): StructureMode;
+  setMode(mode: StructureMode): void;
+  subscribe(listener: () => void): () => void;
+}
+
 export interface NavigatorPorts {
   readonly store: {
     getState(): CanonicalState;
@@ -54,6 +66,8 @@ export interface NavigatorPorts {
   readonly timers: { after(ms: number, run: () => void): () => void };
   /** Absent: no node has a depiction key and none is drawn. */
   readonly depictions?: NavigatorDepictions;
+  /** The Structures control of the family page header. Absent: the header shows none. */
+  readonly structures?: NavigatorStructures;
   readonly ui: NavigatorUiStores;
   /** What keeping the UI state is doing (saved, read-only, session-only, failed) and what was reset at start. */
   readonly uiStatus: StoreApi<NavigatorUiStatus>;

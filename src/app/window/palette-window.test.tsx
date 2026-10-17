@@ -198,3 +198,27 @@ describe('commands', () => {
     expect(app.navigator.ports.ui.exam.getState().active).toEqual({ examId: 'exm_jee-main', examVersionId: 'exv_jee-main-2026' });
   });
 });
+
+describe('the Structures commands (equation step, part 4)', () => {
+  it('"> structures" lists the three, the chosen one unavailable ("it is already chosen"); running one changes the setting', async () => {
+    const app = fakeApp({ state: demoState() });
+    withRealSearch(app, demoState());
+    const input = await open(app);
+    await type(app, input, '> structures');
+    const options = within(screen.getByRole('dialog', { name: 'Search' })).getAllByRole('option');
+    expect(options.map((o) => (o.textContent ?? '').replace(/Not available.*/, '').trim())).toEqual(['Structures: Skeletal', 'Structures: Condensed', 'Structures: Full']);
+    expect(options[0]?.textContent).toContain('Not available: it is already chosen');
+    expect(options[1]?.textContent).not.toContain('Not available');
+    fireEvent.click(options[1] as HTMLElement);
+    expect(app.panels.getState().structureMode).toBe('condensed');
+  });
+
+  it('"> structures full" runs Structures: Full', async () => {
+    const app = fakeApp({ state: demoState() });
+    withRealSearch(app, demoState());
+    const input = await open(app);
+    await type(app, input, '> structures full');
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(app.panels.getState().structureMode).toBe('full');
+  });
+});

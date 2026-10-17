@@ -82,6 +82,25 @@ describe('withChemCache', () => {
     expect(toolkit.stats().depictions).toBe(4);
   });
 
+  it('the structures mode is part of the cache key: three modes, three entries, and "skeletal" is the same entry as no mode', async () => {
+    const seen: string[] = [];
+    const inner: StructureToolkit = {
+      name: 'stub',
+      version: '1',
+      ready: async () => undefined,
+      parse: async () => ({ ok: true, facts: { atomMaps: [], warnings: [] } }),
+      depict: async (_structure, options) => {
+        seen.push(options.mode ?? 'skeletal');
+        return { ok: true, depiction: { key: 'k', svg: '<svg/>', width: 1, height: 1 } };
+      },
+      matchesSmarts: async () => ({ ok: true, matches: true }),
+    };
+    const toolkit = withChemCache(inner);
+    for (const mode of [undefined, 'skeletal', 'condensed', 'full', 'condensed', 'full', undefined] as const) await toolkit.depict(smiles('CCO'), mode === undefined ? DRAW : { ...DRAW, mode });
+    expect(seen).toEqual(['skeletal', 'condensed', 'full']); // each drawn once; every repeat was a hit
+    expect(toolkit.stats()).toMatchObject({ depictions: 3, hits: 4, misses: 3 });
+  });
+
   it('`invalid` and `refused` answers are cached', async () => {
     const { fake, toolkit } = counted({ CCO: { ...ETHANOL_SPEC, svg: 'not an svg' } });
     await toolkit.parse(smiles('C1CC'));
@@ -152,8 +171,14 @@ describe('withChemCache', () => {
 
 describe('depictionDetails', () => {
   it('normalises the highlights (sorted, unique) and keeps the option order fixed', () => {
-    expect(depictionDetails({ ...DRAW, highlightAtomMaps: [3, 1, 3] })).toEqual({ width: 200, height: 150, showAtomMaps: true, highlightAtomMaps: [1, 3] });
-    expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps']);
+    expect(depictionDetails({ ...DRAW, highlightAtomMaps: [3, 1, 3] })).toEqual({ width: 200, height: 150, showAtomMaps: true, highlightAtomMaps: [1, 3], mode: 'skeletal' });
+    expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps', 'mode']);
+  });
+
+  it('the structures mode defaults to skeletal and only the three modes are accepted', () => {
+    expect(depictionDetails(DRAW).mode).toBe('skeletal');
+    for (const mode of ['skeletal', 'condensed', 'full'] as const) expect(depictionDetails({ ...DRAW, mode }).mode).toBe(mode);
+    expect(() => depictionDetails({ ...DRAW, mode: 'kekule' } as unknown as DepictionOptions)).toThrow(RangeError);
   });
 
   it.each([

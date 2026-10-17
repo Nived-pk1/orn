@@ -8,6 +8,7 @@ export { NavigatorProvider, useFamilyPageOpen, useNavigator, useNavigatorState }
 export { createNavigatorModel, LAYOUT_VIEW, NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES, SKELETON_DELAY_MS } from './pipeline';
 export type { NavigatorModel, NavigatorState, PipelineStats } from './pipeline';
 export { PROJECTION_KINDS, SCENE_KINDS, touchOf } from './reads';
-export type { NavigatorDepictionAnswer, NavigatorDepictions, NavigatorError, NavigatorMeasurer, NavigatorPorts } from './contracts';
+export type { NavigatorDepictionAnswer, NavigatorDepictions, NavigatorError, NavigatorMeasurer, NavigatorPorts, NavigatorStructures } from './contracts';
+export { StructuresControl } from './structures-control';
 export { createDepictionBinding, MAX_DEPICTION_LOOKUP } from './depictions';
 export type { DepictionBinding } from './depictions';

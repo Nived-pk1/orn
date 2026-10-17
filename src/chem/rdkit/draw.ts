@@ -7,16 +7,31 @@
  */
 import type { DrawDetails } from '../depiction-options';
 import { isTrap } from './errors';
+import { condensedLabels, withExplicitHydrogens } from './modes';
 import { withHandle } from './scope';
 import { indexesOfMaps, outputOrder, smilesAtoms } from './smiles-atoms';
 import type { RdkitMol, RdkitModule } from './types';
 
 export type DrawResult = { readonly ok: true; readonly svg: string } | { readonly ok: false; readonly error: string };
 
-const svgOf = (mol: RdkitMol, width: number, height: number, atoms: readonly number[]): DrawResult => ({
-  ok: true,
-  svg: mol.get_svg_with_highlights(JSON.stringify(atoms.length === 0 ? { width, height } : { width, height, atoms })),
-});
+/**
+ * One drawing of `mol`, in the mode of `details` (the molecule is never changed: Condensed adds `atomLabels` to the drawing options,
+ * Full draws a copy that has its hydrogens). `modes.ts` explains the two.
+ */
+function svgOf(module: RdkitModule, mol: RdkitMol, details: DrawDetails, atoms: readonly number[]): DrawResult {
+  const { width, height } = details;
+  const base = atoms.length === 0 ? { width, height } : { width, height, atoms };
+  if (details.mode === 'full') {
+    const drawn = withExplicitHydrogens(module, mol, (withH) => withH.get_svg_with_highlights(JSON.stringify(base)));
+    return drawn.opened ? { ok: true, svg: drawn.value } : { ok: false, error: 'the structure could not be drawn with all its hydrogens' };
+  }
+  if (details.mode === 'condensed') {
+    const atomLabels = condensedLabels(module, mol);
+    if (atomLabels === undefined) return { ok: false, error: 'the structure could not be drawn with its carbons labelled' };
+    return { ok: true, svg: mol.get_svg_with_highlights(JSON.stringify({ ...base, atomLabels })) };
+  }
+  return { ok: true, svg: mol.get_svg_with_highlights(JSON.stringify(base)) };
+}
 
 function orderOf(mol: RdkitMol): readonly number[] | undefined {
   try {
@@ -30,21 +45,20 @@ function orderOf(mol: RdkitMol): readonly number[] | undefined {
 const NO_MAPS: DrawResult = { ok: false, error: 'the atom map numbers of the structure could not be located' };
 
 export function drawMol(module: RdkitModule, mol: RdkitMol, details: DrawDetails): DrawResult {
-  const { width, height } = details;
-  if (details.showAtomMaps && details.highlightAtomMaps.length === 0) return svgOf(mol, width, height, []);
+  if (details.showAtomMaps && details.highlightAtomMaps.length === 0) return svgOf(module, mol, details, []);
 
   const smiles = mol.get_smiles();
   const atoms = smilesAtoms(smiles);
   if (atoms === undefined) return NO_MAPS;
-  if (!atoms.some((atom) => atom.map !== undefined)) return svgOf(mol, width, height, []); // nothing to hide or to highlight
+  if (!atoms.some((atom) => atom.map !== undefined)) return svgOf(module, mol, details, []); // nothing to hide or to highlight
 
   if (details.showAtomMaps) {
     const indexes = indexesOfMaps(atoms, details.highlightAtomMaps, orderOf(mol));
-    return indexes === undefined ? NO_MAPS : svgOf(mol, width, height, indexes);
+    return indexes === undefined ? NO_MAPS : svgOf(module, mol, details, indexes);
   }
   const plain = withHandle(
     () => module.get_mol(smiles.replace(/:\d+\]/g, ']')),
-    (unmapped) => svgOf(unmapped, width, height, indexesOfMaps(atoms, details.highlightAtomMaps, undefined) ?? []),
+    (unmapped) => svgOf(module, unmapped, details, indexesOfMaps(atoms, details.highlightAtomMaps, undefined) ?? []),
   );
   return plain.opened ? plain.value : { ok: false, error: 'the structure could not be drawn without its atom map numbers' };
 }

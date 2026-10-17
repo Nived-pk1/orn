@@ -20,6 +20,10 @@ export interface RdkitMol extends RdkitHandle {
   get_svg_with_highlights(details: string): string;
   /** `{"atoms":[...],"bonds":[...]}` for the first match, `{}` when there is none. */
   get_substruct_match(query: RdkitMol): string;
+  /** A JSON array of every match (`{"atoms":[...],"bonds":[...]}` each), `{}` when there is none. Optional: only the structures modes use it. */
+  get_substruct_matches?(query: RdkitMol): string;
+  /** A molblock of a COPY with every hydrogen explicit (with 2D coordinates for the new ones). Optional: only the structures modes use it. */
+  add_hs?(): string;
 }
 
 export interface RdkitModule {

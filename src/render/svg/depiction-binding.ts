@@ -12,6 +12,7 @@
  * listened to only after a request was made while it was loading) the manager forgets just those keys, so the cards that show them ask
  * again (phone mode B, part 1: a slow phone opens a page before the wasm has arrived).
  */
+import type { StructureMode } from '@/chem/contracts';
 import type { StructureRep } from '@/core/schema';
 import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer, type DepictionManager } from './depictions';
 import type { DepictionTimers } from './use-depiction-retry';
@@ -20,9 +21,13 @@ type Area = { readonly width: number; readonly height: number };
 
 /** What the binding needs from the depiction service (the navigator's and the inspector's ports have exactly this). */
 export interface DepictionPort {
-  keyOf(structure: StructureRep, size: Area): string;
-  depict(structure: StructureRep, size: Area): Promise<{ readonly ok: true; readonly svg: string } | { readonly ok: false; readonly reason: string; readonly message: string }>;
+  keyOf(structure: StructureRep, size: Area, mode?: StructureMode): string;
+  depict(structure: StructureRep, size: Area, mode?: StructureMode): Promise<{ readonly ok: true; readonly svg: string } | { readonly ok: false; readonly reason: string; readonly message: string }>;
   cancel(key: string): void;
+  /** How structures are drawn now (equation step, part 4). Absent: Skeletal. A key is made in THIS mode and its fetch draws in the same one. */
+  mode?(): StructureMode;
+  /** Calls the listener when the mode changes; answers the unsubscribe. */
+  onMode?(listener: () => void): () => void;
   recovered?(listener: () => void): () => void;
   /** True while the chem engine is still loading (not ready, not failed). Absent: never. */
   enginePending?(): boolean;
@@ -46,10 +51,11 @@ export interface DepictionBinding {
 const BUSY_REASONS: ReadonlySet<string> = new Set(['queue_full', 'cancelled']);
 
 export function createDepictionBinding(port: DepictionPort, timers: DepictionTimers, area: Area): DepictionBinding {
-  const lookup = new Map<string, StructureRep>();
-  const remember = (key: string, structure: StructureRep): void => {
+  // the mode is kept with the structure: the key says which mode it was made in, and the fetch must draw in that one
+  const lookup = new Map<string, { readonly structure: StructureRep; readonly mode: StructureMode }>();
+  const remember = (key: string, structure: StructureRep, mode: StructureMode): void => {
     lookup.delete(key);
-    lookup.set(key, structure);
+    lookup.set(key, { structure, mode });
     while (lookup.size > MAX_DEPICTION_LOOKUP) lookup.delete(lookup.keys().next().value as string);
   };
   // Listening for "the engine is ready" costs a subscription, so it is made only while a request was asked before the engine was ready, and
@@ -65,10 +71,10 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
   };
   const fetchSvg = async (key: string): Promise<DepictionAnswer> => {
     if (port.enginePending?.() === true) listenForReady();
-    const structure = lookup.get(key);
+    const known = lookup.get(key);
     // A key that left the lookup is not in the drawing any more: not an answer about the structure, so not cached.
-    if (structure === undefined) return { ok: false, reason: DEPICTION_BUSY };
-    const answer = await port.depict(structure, area);
+    if (known === undefined) return { ok: false, reason: DEPICTION_BUSY };
+    const answer = await port.depict(known.structure, area, known.mode);
     if (answer.ok) return { ok: true, svg: answer.svg };
     return { ok: false, reason: BUSY_REASONS.has(answer.reason) ? DEPICTION_BUSY : answer.reason };
   };
@@ -85,8 +91,9 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
   port.recovered?.(() => manager.forgetUnavailable());
   return {
     keyOf(structure) {
-      const key = port.keyOf(structure, area);
-      remember(key, structure);
+      const mode = port.mode?.() ?? 'skeletal';
+      const key = port.keyOf(structure, area, mode);
+      remember(key, structure, mode);
       return key;
     },
     manager: { ...manager, cancel: (key) => (cancel(key), port.cancel(key)) },

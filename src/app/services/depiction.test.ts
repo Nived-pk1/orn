@@ -55,6 +55,12 @@ describe('the key', () => {
     expect(depictionKeyOf(smiles('CCO'), { ...options, highlightAtomMaps: [3, 1, 2, 1] })).toBe(depictionKeyOf(smiles('CCO'), { ...options, highlightAtomMaps: [1, 2, 3] }));
     expect(() => depictionKeyOf(smiles('CCO'), { ...options, width: 3 })).toThrow(RangeError);
   });
+
+  it('includes the structures mode: three modes, three keys, so a switch never shows the other mode\'s drawing; skeletal is the default', () => {
+    const keys = (['skeletal', 'condensed', 'full'] as const).map((mode) => depictionKeyOf(smiles('CCO'), { ...options, mode }));
+    expect(new Set(keys).size).toBe(3);
+    expect(keys[0]).toBe(depictionKeyOf(smiles('CCO'), options));
+  });
 });
 
 describe('at most 4 calls in flight', () => {

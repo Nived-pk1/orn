@@ -84,15 +84,16 @@ export function fakeDepictions(): FakeDepictions {
   const cancelled: string[] = [];
   const urls: string[] = [];
   const failing = new Set<string>();
-  const keyOf: NavigatorDepictions['keyOf'] = (structure, size) => `${structure.format}:${structure.value}@${size.width}x${size.height}`;
+  // a mode other than skeletal is part of the key (as in the real service), so every skeletal key is what it always was
+  const keyOf: NavigatorDepictions['keyOf'] = (structure, size, mode) => `${structure.format}:${structure.value}@${size.width}x${size.height}${mode === undefined || mode === 'skeletal' ? '' : `#${mode}`}`;
   return {
     asked,
     cancelled,
     urls,
     failing,
     keyOf,
-    depict: (structure, size) => {
-      const key = keyOf(structure, size);
+    depict: (structure, size, mode) => {
+      const key = keyOf(structure, size, mode);
       asked.push(key);
       return Promise.resolve(failing.has(key) ? { ok: false, reason: 'unavailable', message: 'no structure' } : { ok: true, svg: '<svg xmlns="http://www.w3.org/2000/svg"/>' });
     },

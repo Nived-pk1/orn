@@ -4,13 +4,25 @@
  * either: `current()` asks the service again at every call.
  */
 import { depictionKeyOf, type AppServices } from '@/app/services';
+import type { StructureMode } from '@/chem/contracts';
 import type { TextMeasurer } from '@/app/text-measurer';
-import type { NavigatorPorts } from '@/features/navigator';
+import type { NavigatorPorts, NavigatorStructures } from '@/features/navigator';
 import type { NavigatorUi } from '@/ui/state';
 
 export type NavigatorPortServices = Pick<AppServices, 'store' | 'indexes' | 'layout' | 'logApp' | 'depictions' | 'status'>;
 
-export function createNavigatorPorts(services: NavigatorPortServices, measurer: TextMeasurer, timers: NavigatorPorts['timers'], ui: Pick<NavigatorUi, 'stores' | 'status'>): NavigatorPorts {
+/**
+ * `structures` is the Structures setting (equation step, part 4: the panels store gives it). The depictions' keys and calls carry the mode
+ * they are asked in; `onMode` fires only when the mode itself changes (the panels store also changes for a drag of the inspector).
+ */
+export function createNavigatorPorts(
+  services: NavigatorPortServices,
+  measurer: TextMeasurer,
+  timers: NavigatorPorts['timers'],
+  ui: Pick<NavigatorUi, 'stores' | 'status'>,
+  structures?: NavigatorStructures,
+): NavigatorPorts {
+  const modeOf = (): StructureMode => structures?.mode() ?? 'skeletal';
   return {
     store: services.store,
     indexes: { current: () => services.indexes.current() },
@@ -18,9 +30,20 @@ export function createNavigatorPorts(services: NavigatorPortServices, measurer: 
     measurer: { measure: measurer.measure, ready: measurer.ready },
     timers,
     depictions: {
-      keyOf: (structure, size) => depictionKeyOf(structure, { width: size.width, height: size.height, showAtomMaps: false }),
-      depict: (structure, size) => services.depictions.depict(structure, { width: size.width, height: size.height, showAtomMaps: false }),
+      keyOf: (structure, size, mode) => depictionKeyOf(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal' }),
+      depict: (structure, size, mode) => services.depictions.depict(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal' }),
       cancel: (key) => services.depictions.cancel(key),
+      mode: modeOf,
+      onMode(listener) {
+        if (structures === undefined) return () => undefined;
+        let last = structures.mode();
+        return structures.subscribe(() => {
+          const now = structures.mode();
+          if (now === last) return;
+          last = now;
+          listener();
+        });
+      },
       // the chemistry engine came back after it was unavailable (a successful Retry): the feature forgets the structures that failed
       recovered(listener) {
         let failed = services.status.get().engines.chem.state === 'unavailable';
@@ -50,6 +73,7 @@ export function createNavigatorPorts(services: NavigatorPortServices, measurer: 
       createUrl: (svg) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })),
       revokeUrl: (url) => URL.revokeObjectURL(url),
     },
+    ...(structures === undefined ? {} : { structures }),
     ui: ui.stores,
     uiStatus: ui.status,
     log: (type, message) => services.logApp(type, message),

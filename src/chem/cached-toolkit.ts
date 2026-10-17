@@ -66,7 +66,7 @@ export function withChemCache(inner: StructureToolkit, capacity: number = CHEM_C
 
     async depict(structure: StructureRep, options: DepictionOptions): Promise<DepictOutcome> {
       const maps = [...new Set(options.highlightAtomMaps ?? [])].sort((a, b) => a - b);
-      const at = await keyed(['depict', structure.format, structure.value, JSON.stringify([options.width, options.height, options.showAtomMaps, maps])]);
+      const at = await keyed(['depict', structure.format, structure.value, JSON.stringify([options.width, options.height, options.showAtomMaps, maps, options.mode ?? 'skeletal'])]);
       const found = at === undefined ? undefined : depictions.get(at.key);
       if (at !== undefined && found?.input === at.input) {
         hits += 1;

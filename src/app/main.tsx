@@ -39,7 +39,11 @@ async function start(): Promise<void> {
     log: (type, message) => services.logApp(type, message),
   });
   const navigatorUi = createNavigatorUi(createUiEntryPort(services, NAVIGATOR_UI_KEY), env.timers, (type, message) => services.logApp(type, message));
-  const navigator = createNavigatorPorts(services, measurer, env.timers, navigatorUi);
+  const navigator = createNavigatorPorts(services, measurer, env.timers, navigatorUi, {
+    mode: () => panels.getState().structureMode,
+    setMode: (mode) => panels.getState().setStructureMode(mode),
+    subscribe: (listener) => panels.subscribe(listener),
+  });
   const inspector = createInspectorPorts(services, navigator, createInspectorStore(), panels);
   installLifecycle(services, window, document);
   // A move made less than the debounce ago is written when the page goes away (best effort; the write is asynchronous).

@@ -233,7 +233,8 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
     start() {
       if (running) return;
       running = true;
-      offs = [ports.store.subscribe(onChange), ports.ui.filters.subscribe(onRequest), ports.ui.exam.subscribe(onRequest)];
+      // a change of the Structures setting rebuilds the scene (the nodes' depiction keys carry the mode); the layout is the same request, so it is reused
+      offs = [ports.store.subscribe(onChange), ports.ui.filters.subscribe(onRequest), ports.ui.exam.subscribe(onRequest), ...(ports.depictions?.onMode === undefined ? [] : [ports.depictions.onMode(schedule)])];
       dirtyProjection = true;
       if (state.scene === null) startSkeletonTimer();
       void ports.measurer.ready().then(() => {

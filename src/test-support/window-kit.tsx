@@ -11,10 +11,12 @@ import type { StatusWriter } from '@/app/services/status';
 import type { ImportPlan, ImportPreview } from '@/io';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import { createIdFactory } from '@/core/dataset';
+import type { StructureMode } from '@/chem/contracts';
 import type { CanonicalState } from '@/core/schema';
 import { Window } from '@/app/window/window';
 import { createInspectorStore, createPanelsStore, type InspectorStore, type PanelsPort, type PanelsStore } from '@/ui/state';
 import type { InspectorPorts } from '@/features/inspector';
+import type { NavigatorPorts } from '@/features/navigator';
 import { navigatorRig, type NavigatorRig } from './navigator-kit';
 import type { ReactNode } from 'react';
 
@@ -91,6 +93,23 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
     { after: () => () => undefined },
   );
   const inspectorStore = createInspectorStore();
+  // the Structures setting lives in the panels store (equation step, part 4): the navigator's ports follow it as the app's do
+  const modeOf = (): StructureMode => panels.getState().structureMode;
+  const onMode = (listener: () => void): (() => void) => {
+    let last = modeOf();
+    return panels.subscribe(() => {
+      const now = modeOf();
+      if (now !== last) {
+        last = now;
+        listener();
+      }
+    });
+  };
+  const navigatorPorts: NavigatorPorts = {
+    ...navigator.ports,
+    structures: { mode: modeOf, setMode: (mode) => panels.getState().setStructureMode(mode), subscribe: onMode },
+    ...(navigator.ports.depictions === undefined ? {} : { depictions: { ...navigator.ports.depictions, mode: modeOf, onMode } }),
+  };
   const inspector: InspectorPorts = {
     store,
     indexes: navigator.ports.indexes,
@@ -100,7 +119,7 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
     ui: { inspector: inspectorStore, selection: navigator.ports.ui.selection, family: navigator.ports.ui.family, panels },
     log: () => undefined,
   };
-  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigator.ports, inspector, loadDemo, nowMs: () => 1_790_000_000_000, reload } };
+  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigatorPorts, inspector, loadDemo, nowMs: () => 1_790_000_000_000, reload } };
 }
 
 export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {

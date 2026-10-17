@@ -2,7 +2,7 @@
  * Validation of `DepictionOptions` (pure; used by the adapter and by the chem worker's host at the wire, where a bad value is
  * `BAD_REQUEST`). `DrawDetails` is what a depiction depends on, in a fixed order: it is also the options part of the cache key.
  */
-import type { DepictionOptions } from './contracts';
+import { STRUCTURE_MODES, type DepictionOptions, type StructureMode } from './contracts';
 
 export const MIN_DEPICTION_SIZE = 16;
 export const MAX_DEPICTION_SIZE = 4_096;
@@ -13,6 +13,7 @@ export interface DrawDetails {
   readonly height: number;
   readonly showAtomMaps: boolean;
   readonly highlightAtomMaps: readonly number[];
+  readonly mode: StructureMode;
 }
 
 const isSize = (value: unknown): boolean => typeof value === 'number' && Number.isInteger(value) && value >= MIN_DEPICTION_SIZE && value <= MAX_DEPICTION_SIZE;
@@ -27,5 +28,7 @@ export function depictionDetails(options: DepictionOptions): DrawDetails {
   if (!Array.isArray(maps) || maps.length > MAX_HIGHLIGHT_MAPS || !maps.every((map) => Number.isInteger(map) && map >= 0)) {
     throw new RangeError(`highlightAtomMaps must be at most ${MAX_HIGHLIGHT_MAPS} non-negative integers`);
   }
-  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b) };
+  const mode = options.mode ?? 'skeletal';
+  if (!(STRUCTURE_MODES as readonly unknown[]).includes(mode)) throw new RangeError(`depiction mode must be one of ${STRUCTURE_MODES.join(', ')}`);
+  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode };
 }

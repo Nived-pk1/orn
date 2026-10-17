@@ -35,7 +35,7 @@ describe('parsePanels (tolerant)', () => {
 
   it('a good entry is taken as it is; a missing field is not damage', () => {
     expect(parsePanels({ inspectorWidth: 480, inspectorOpen: false })).toEqual({
-      values: { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2 },
+      values: { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal' },
       damaged: [],
       extra: {},
     });
@@ -58,7 +58,7 @@ describe('parsePanels (tolerant)', () => {
     ['infinite', Number.POSITIVE_INFINITY],
   ])('an inspectorWidth that is %s is reset and reported, the other fields are kept', (_name, width) => {
     const parsed = parsePanels({ inspectorWidth: width, inspectorOpen: false, startEmptyDismissed: true });
-    expect(parsed.values).toEqual({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: true, storageNoticeDismissed: false, inspectorLevel: 2 });
+    expect(parsed.values).toEqual({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: true, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal' });
     expect(parsed.damaged).toEqual(['inspectorWidth']);
   });
 
@@ -134,6 +134,44 @@ describe('the panels store', () => {
     const bad = parsePanels({ storageNoticeDismissed: 'yes' });
     expect(bad.values.storageNoticeDismissed).toBe(false);
     expect(bad.damaged).toEqual(['storageNoticeDismissed']);
+  });
+
+  it('the structures mode (equation step, part 4): skeletal by default, a good value is taken, a bad one is reset and reported, never fatal', () => {
+    expect(parsePanels(undefined).values.structureMode).toBe('skeletal');
+    for (const mode of ['skeletal', 'condensed', 'full'] as const) expect(parsePanels({ structureMode: mode })).toMatchObject({ values: { structureMode: mode }, damaged: [] });
+    for (const bad of ['Condensed', 'kekule', 3, null, true, ['full']]) {
+      const parsed = parsePanels({ structureMode: bad, inspectorWidth: 480 });
+      expect(parsed.values.structureMode).toBe('skeletal');
+      expect(parsed.values.inspectorWidth).toBe(480); // the rest of the entry is kept
+      expect(parsed.damaged).toEqual(['structureMode']);
+    }
+  });
+
+  it('the structures mode is saved when it is not the default, read back, and a switch back to skeletal saves no stale value', async () => {
+    const p = port();
+    const timers = manualTimers();
+    const store = createPanelsStore(p, timers);
+    expect(store.getState().structureMode).toBe('skeletal');
+    store.getState().setStructureMode('condensed');
+    timers.advance(SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    expect(p.saved[0]).toMatchObject({ structureMode: 'condensed' });
+    expect(parsePanels(p.saved[0]).values.structureMode).toBe('condensed');
+    store.getState().setStructureMode('full');
+    store.getState().setStructureMode('skeletal');
+    timers.advance(SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    expect(p.saved.at(-1)).not.toHaveProperty('structureMode');
+    expect(parsePanels(p.saved.at(-1)).values.structureMode).toBe('skeletal');
+  });
+
+  it('setting the mode it already has changes and saves nothing', () => {
+    const p = port();
+    const timers = manualTimers();
+    const store = createPanelsStore(p, timers);
+    store.getState().setStructureMode('skeletal');
+    timers.advance(10_000);
+    expect(p.saved).toEqual([]);
   });
 
   it('a read-only tab keeps its values for the session, writes nothing and says so', () => {

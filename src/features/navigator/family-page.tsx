@@ -10,12 +10,14 @@
  */
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useStore } from 'zustand';
+import { useStructureMode } from '@/render/svg';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, Skeleton, VirtualList, type VirtualListHandle } from '@/ui/primitives';
 import { depictionBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
 import { FamilyHeader } from './family-header';
+import { StructuresControl } from './structures-control';
 import { cardKey, estimateOf, familyItems, groupKey, indexOfKey, type FamilyItem } from './family-items';
 import { useNavigator } from './navigator-context';
 import { createScenePorts } from './scene-ports';
@@ -47,13 +49,16 @@ export function FamilyPage(props: { readonly hubId: string }) {
     if (active === null || active === document.body) page.current?.querySelector<HTMLElement>('[role="toolbar"] button')?.focus({ preventScroll: true });
   }, [hubId]);
   const binding = depictionBindingOf(ports);
+  // a change of the Structures setting makes every key again, in the new mode (the binding reads the mode when it makes a key)
+  const structureMode = useStructureMode(ports.depictions);
   const items = useMemo(() => (study === undefined || study === null ? [] : familyItems(study)), [study]);
   // The names and keys a card reads come from the snapshot the study was computed from.
   const env = useMemo<FamilyEnv | null>(() => {
     if (study === undefined || study === null) return null;
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
     return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers, layout };
-  }, [study, ports, binding, layout]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `structureMode` is read through the binding; it only has to make a new env
+  }, [study, ports, binding, layout, structureMode]);
   // the bar of a group takes the partner family's own tone (the page's tone when the partner has none)
   const toneOf = useMemo(() => {
     const tones = new Map<string, string>();
@@ -161,6 +166,14 @@ export function FamilyPage(props: { readonly hubId: string }) {
       <div className={styles.toolbar} role="toolbar" aria-label="Family page tools">
         <Button onClick={close}>{phone ? `< ${cameFrom === 'map' ? 'Map' : 'Families'}` : 'Overview'}</Button>
         {phone ? null : <p className={styles.selection}>{reactionName === undefined ? 'Nothing is selected.' : `Selected: reaction ${reactionName}.`}</p>}
+        {ports.structures === undefined ? null : (
+          <div className={styles.structures}>
+            <span className={styles.structuresLabel} aria-hidden="true">
+              Structures
+            </span>
+            <StructuresControl structures={ports.structures} />
+          </div>
+        )}
       </div>
       <div ref={body} className={styles.body}>
         {study === undefined ? (

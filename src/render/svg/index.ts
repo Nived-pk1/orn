@@ -5,6 +5,7 @@ export { MAX_DEPICTION_RETRIES, RETRY_DELAY_MS, useRetryingDepiction } from './u
 export type { DepictionTimers } from './use-depiction-retry';
 export { createDepictionBinding, MAX_DEPICTION_LOOKUP } from './depiction-binding';
 export type { DepictionBinding, DepictionPort } from './depiction-binding';
+export { useStructureMode } from './use-structure-mode';
 export { LAYER_NAMES } from './contracts';
 export type { DepictionSource, DepictionStatus, LayerName, SceneHit, SceneSvgProps } from './contracts';
 export { STROKE_DASH, WEIGHT_WIDTH } from './geometry';

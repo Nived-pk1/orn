@@ -116,3 +116,17 @@ describe('the keyboard hints', () => {
     expect(screen.queryByText(/Alt\+Left/)).toBeNull();
   });
 });
+
+describe('Structures on the phone (equation step, part 4)', () => {
+  it('More has the Structures control (the same three choices) and choosing one changes the setting', () => {
+    const app = loaded();
+    renderWithApp(app);
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
+    const more = screen.getByRole('dialog', { name: 'More' });
+    const group = within(more).getByRole('radiogroup', { name: 'Structures' });
+    expect(within(group).getAllByRole('radio').map((r) => r.closest('label')?.textContent)).toEqual(['Skeletal', 'Condensed', 'Full']);
+    fireEvent.click(within(group).getByRole('radio', { name: 'Condensed' }));
+    expect(app.panels.getState().structureMode).toBe('condensed');
+    expect((within(more).getByRole('radio', { name: 'Condensed' }) as HTMLInputElement).checked).toBe(true);
+  });
+});

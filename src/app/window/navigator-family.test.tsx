@@ -174,3 +174,32 @@ describe('the family page', () => {
     expect(app.navigator.ui.family.getState().open).toBeNull();
   });
 });
+
+describe('the Structures control (equation step, part 4)', () => {
+  it('is in the header, follows the saved setting, and choosing Condensed asks for every drawing again in that mode', async () => {
+    const app = await openFamily('cls_alcohols');
+    const group = screen.getByRole('radiogroup', { name: 'Structures' });
+    expect(within(group).getAllByRole('radio').map((r) => r.closest('label')?.textContent)).toEqual(['Skeletal', 'Condensed', 'Full']);
+    expect((within(group).getByRole('radio', { name: 'Skeletal' }) as HTMLInputElement).checked).toBe(true);
+    const asked = app.navigator.depictions?.asked ?? [];
+    await waitFor(() => expect(asked.length).toBeGreaterThan(0));
+    expect(asked.every((key) => !key.includes('#'))).toBe(true); // skeletal keys carry no mode
+    fireEvent.click(within(group).getByRole('radio', { name: 'Condensed' }));
+    expect(app.panels.getState().structureMode).toBe('condensed');
+    expect((within(group).getByRole('radio', { name: 'Condensed' }) as HTMLInputElement).checked).toBe(true);
+    await waitFor(() => expect(asked.some((key) => key.endsWith('#condensed'))).toBe(true));
+    fireEvent.click(within(group).getByRole('radio', { name: 'Full' }));
+    await waitFor(() => expect(asked.some((key) => key.endsWith('#full'))).toBe(true));
+    // the cards are still there and still drawn
+    expect(screen.getAllByRole('img', { name: /^Structure of / }).length).toBeGreaterThan(0);
+  });
+
+  it('a setting saved as Full opens the family page in Full, and no skeletal drawing is asked for', async () => {
+    const app = fakeApp({ state: demoState(), navigator: { depictions: true }, panels: { stored: { structureMode: 'full' } } });
+    await openFamily('cls_alcohols', app);
+    const group = screen.getByRole('radiogroup', { name: 'Structures' });
+    expect((within(group).getByRole('radio', { name: 'Full' }) as HTMLInputElement).checked).toBe(true);
+    await waitFor(() => expect((app.navigator.depictions?.asked ?? []).length).toBeGreaterThan(0));
+    expect((app.navigator.depictions?.asked ?? []).every((key) => key.endsWith('#full'))).toBe(true);
+  });
+});

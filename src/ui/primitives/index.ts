@@ -15,6 +15,8 @@ export { isTopLayer, openLayers, pushLayer } from './layers';
 export { LiveRegion } from './live-region';
 export { Menu } from './menu';
 export type { MenuItem, MenuProps } from './menu';
+export { SegmentedControl } from './segmented-control';
+export type { SegmentedControlProps, SegmentedOption } from './segmented-control';
 export { Skeleton } from './skeleton';
 export { MAX_TOASTS, ToastItems, ToastProvider, useToastView, useToasts } from './toast';
 export type { ToastInput, ToastView, Toasts } from './toast';

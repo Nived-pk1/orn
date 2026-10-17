@@ -1,11 +1,15 @@
+// @vitest-environment jsdom
 /**
  * The navigator's structures (step 5.5a part 2, item i): keys, the bounded lookup, the answers of the service mapped to the manager's
  * statuses (BUSY or unavailable), object URLs only through the port, a timeout never retried, and what a user sees after the chem
  * engine is retried (the failure stays cached: said as it is, an openItem).
  */
+import { act, render } from '@testing-library/react';
+import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
+import type { StructureMode } from '@/chem/contracts';
 import type { StructureRep } from '@/core/schema';
-import { DEPICTION_BUSY } from '@/render/svg';
+import { DEPICTION_BUSY, useStructureMode } from '@/render/svg';
 import { createDepictionBinding, MAX_DEPICTION_LOOKUP } from './depictions';
 import type { NavigatorDepictionAnswer, NavigatorDepictions } from './contracts';
 import { createScenePorts } from './scene-ports';
@@ -256,5 +260,75 @@ describe('the engine was not ready yet (phone mode B, part 1)', () => {
     becomeReady();
     expect(binding.manager.snapshot(bad).state).toBe('unavailable');
     expect(r.calls.filter((c) => c.structure.value === structure(4).value)).toHaveLength(1);
+  });
+});
+
+describe('the structures mode (equation step, part 4)', () => {
+  function modeRig() {
+    const calls: { value: string; mode: string | undefined }[] = [];
+    const listeners = new Set<() => void>();
+    const state = { mode: 'skeletal' as StructureMode };
+    const port: NavigatorDepictions = {
+      keyOf: (s, size, mode) => `${s.value}@${size.width}x${size.height}:${mode ?? 'skeletal'}`,
+      depict: (s, _size, mode) => (calls.push({ value: s.value, mode }), Promise.resolve(good)),
+      cancel: () => undefined,
+      createUrl: () => 'blob:x',
+      revokeUrl: () => undefined,
+      mode: () => state.mode,
+      onMode: (listener) => (listeners.add(listener), () => void listeners.delete(listener)),
+    };
+    return { port, calls, state, change: (mode: StructureMode) => ((state.mode = mode), [...listeners].forEach((l) => l())), listeners };
+  }
+
+  it('a key is made with the mode in force, so a switch never shows the other mode\'s drawing: three modes, three keys', () => {
+    const r = modeRig();
+    const binding = createDepictionBinding(r.port, manualTimers());
+    const keys = (['skeletal', 'condensed', 'full'] as const).map((mode) => (r.change(mode), binding.keyOf(structure(2))));
+    expect(new Set(keys).size).toBe(3);
+    expect(keys.map((k) => k.split(':')[1])).toEqual(['skeletal', 'condensed', 'full']);
+  });
+
+  it('a fetch draws in the mode of ITS key, even when the mode changed between the key and the fetch', async () => {
+    const r = modeRig();
+    const binding = createDepictionBinding(r.port, manualTimers());
+    const before = binding.keyOf(structure(2));
+    r.change('condensed');
+    const after = binding.keyOf(structure(2));
+    binding.manager.request(before);
+    binding.manager.request(after);
+    await settle();
+    expect(r.calls).toEqual([
+      { value: structure(2).value, mode: 'skeletal' },
+      { value: structure(2).value, mode: 'condensed' },
+    ]);
+    expect(binding.manager.snapshot(before)).toEqual({ state: 'ready', url: 'blob:x' });
+    expect(binding.manager.snapshot(after)).toEqual({ state: 'ready', url: 'blob:x' });
+  });
+
+  it('a port without a mode draws skeletal, as before', async () => {
+    const r = rig();
+    const binding = createDepictionBinding(r.port, manualTimers());
+    expect(binding.keyOf(structure(1))).toBe(`${structure(1).value}@128x80`);
+  });
+
+  it('`useStructureMode` follows the port: a re-render when the mode changes, nothing for a port that has none', async () => {
+    const r = modeRig();
+    const seen: string[] = [];
+    function Probe() {
+      seen.push(useStructureMode(r.port));
+      return null;
+    }
+    const view = render(createElement(Probe));
+    act(() => r.change('full'));
+    expect(seen.at(-1)).toBe('full');
+    view.unmount();
+    expect(r.listeners.size).toBe(0); // unsubscribed
+    const none: string[] = [];
+    function Bare() {
+      none.push(useStructureMode(undefined));
+      return null;
+    }
+    render(createElement(Bare));
+    expect(none).toEqual(['skeletal']);
   });
 });

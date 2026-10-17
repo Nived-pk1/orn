@@ -14,7 +14,7 @@ import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector'
 import { alertOf } from './phone-alert';
 import { RecordCounts } from './record-counts';
 import { fileItems, historyLabelOf, historyReason, historySnapshot, stepHistory, useFileWithDrafts, type FileBinding, type HistoryBinding } from './top-bar';
-import { NavigatorStatus } from '@/features/navigator';
+import { NavigatorStatus, StructuresControl, type NavigatorStructures } from '@/features/navigator';
 import { PanelsStatus } from './panels-status';
 import { BootLines, Banners, StatusLine } from './status-parts';
 import { usePanels } from '@/ui/state';
@@ -28,6 +28,8 @@ export function PhoneBar(props: {
   readonly onStatus: () => void;
   /** The store's history: Undo and Redo are in More on a phone, never on the bar (authoring is desktop-first, ADR-039 addendum). */
   readonly history?: HistoryBinding;
+  /** The Structures setting (equation step, part 4): a control in More. Absent: none. */
+  readonly structures?: NavigatorStructures;
 }) {
   const [more, setMore] = useState(false);
   const file = useFileWithDrafts(props.file);
@@ -59,6 +61,12 @@ export function PhoneBar(props: {
           </ul>
         </section>
         {props.history === undefined ? null : <HistorySection history={props.history} />}
+        {props.structures === undefined ? null : (
+          <section aria-label="Structures" className={styles.section}>
+            <h3>Structures</h3>
+            <StructuresControl structures={props.structures} />
+          </section>
+        )}
         <section aria-label="Exam scope" className={styles.section}>
           <h3>Exam scope</h3>
           <ExamScopeSelector binding={props.exam} />

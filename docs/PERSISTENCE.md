@@ -173,4 +173,4 @@ The tab holding the Web Lock `orn-writer` is the only writer (INV-28, ADR-005, A
 
 ## 13. UI state
 
-Stored in `uiState` with tolerant schemas (invalid entries are reset, never block boot): selection, per-view viewport, expansion state, open panels and widths, inspector disclosure level, active exam and exam version, last view, recent searches. It is never exported with the dataset unless the user explicitly exports a "workspace" (FUTURE).
+Stored in `uiState` with tolerant schemas (invalid entries are reset, never block boot): selection, per-view viewport, expansion state, open panels and widths, inspector disclosure level, how structures are drawn (Skeletal, Condensed or Full; equation step, part 4), active exam and exam version, last view, recent searches. It is never exported with the dataset unless the user explicitly exports a "workspace" (FUTURE).

@@ -5,7 +5,7 @@
  */
 import { useMemo } from 'react';
 import type { StructureRep } from '@/core/schema';
-import { createDepictionBinding, drawingFailed, useRetryingDepiction } from '@/render/svg';
+import { createDepictionBinding, drawingFailed, useRetryingDepiction, useStructureMode } from '@/render/svg';
 import { useInspectorEnv } from './env';
 import styles from './inspector.module.css';
 
@@ -17,6 +17,7 @@ export function Depiction(props: { readonly structure: StructureRep | undefined;
   const { ports } = useInspectorEnv();
   const compact = props.compact === true;
   const binding = useMemo(() => (ports.depictions === undefined ? undefined : createDepictionBinding(ports.depictions, ports.timers, compact ? STEP_STRUCTURE : INSPECTOR_STRUCTURE)), [ports, compact]);
+  useStructureMode(ports.depictions); // a change of the Structures setting asks for the drawing again, in the new mode
   const key = props.structure === undefined ? undefined : binding?.keyOf(props.structure);
   const status = useRetryingDepiction(binding?.manager, key, ports.timers);
   if (props.structure === undefined) return null;

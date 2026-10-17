@@ -3,6 +3,7 @@
  * its reason, never hidden and never a silent no-op. Everything a command does is a call on a UI store, the map's registered view
  * commands, or the import flow that the buttons of the Dataset screen use.
  */
+import { STRUCTURE_MODES, type StructureMode } from '@/chem/contracts';
 import type { PaletteCommand } from '@/features/search';
 import type { NavigatorUiStores } from '@/ui/state';
 import { undoUnavailableReason } from './dataset-actions';
@@ -23,6 +24,8 @@ export interface CommandDeps {
   openExport(): void;
   /** "Edit names of the selection" (ADR-040): why it cannot run now, and what it does. Absent: no such command. */
   readonly editNames?: { readonly reason: string | undefined; run(): void } | undefined;
+  /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
+  readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
   readonly ui: NavigatorUiStores;
   readonly exams: ExamOptions;
 }
@@ -35,6 +38,8 @@ function mapReason(deps: CommandDeps): string | undefined {
   if (deps.ui.viewCommands.getState().commands === null) return 'the map is not shown';
   return undefined;
 }
+
+const MODE_WORDS: Readonly<Record<StructureMode, string>> = { skeletal: 'Skeletal', condensed: 'Condensed', full: 'Full' };
 
 export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
   const { ui } = deps;
@@ -69,12 +74,24 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     ),
   ];
 
+  const structures = deps.structures;
+  const structureCommands: PaletteCommand[] =
+    structures === undefined
+      ? []
+      : STRUCTURE_MODES.map((mode) =>
+          withReason(
+            { id: `structures:${mode}`, title: `Structures: ${MODE_WORDS[mode]}`, keywords: ['structures', 'draw', 'drawing', ...(mode === 'full' ? ['show all atoms', 'hydrogens'] : mode === 'condensed' ? ['chain'] : ['lines'])], run: () => structures.set(mode) },
+            structures.mode() === mode ? 'it is already chosen' : undefined,
+          ),
+        );
+
   return [
     withReason({ id: 'import-file', title: 'Import a file...', keywords: ['import', 'open', 'file', 'v6', 'load', 'package'], run: deps.pickFile }, importReason),
     { id: 'export', title: 'Export...', keywords: ['export', 'backup', 'save', 'download', 'share', 'package'], run: deps.openExport },
     withReason({ id: 'replace-demo', title: 'Replace with the demo dataset', keywords: ['load', 'import', 'demo'], run: deps.askReplace }, importReason),
     withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, undoReason),
     ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit names of the selection', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
+    ...structureCommands,
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),
     withReason({ id: 'zoom-out', title: 'Zoom out', keywords: ['map', 'view'], run: () => view?.zoomOut() }, zoomReason),

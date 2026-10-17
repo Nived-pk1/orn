@@ -54,11 +54,21 @@ export type ParseOutcome =
   | { readonly ok: false; readonly reason: 'invalid'; readonly problem: InvalidProblem; readonly error: string }
   | { readonly ok: false; readonly reason: Exclude<ToolkitFailureReason, 'invalid'>; readonly error: string };
 
+/**
+ * How a structure is drawn (equation step, part 4): `skeletal` (the default), `condensed` (every chain carbon labelled with its
+ * hydrogens: CH3, CH2, CH, C; rings stay rings) or `full` (every hydrogen drawn with its own bond). A drawing option only: the stored
+ * structure never changes, and the mode is part of every depiction key.
+ */
+export const STRUCTURE_MODES = ['skeletal', 'condensed', 'full'] as const;
+export type StructureMode = (typeof STRUCTURE_MODES)[number];
+
 export interface DepictionOptions {
   readonly width: number;
   readonly height: number;
   readonly showAtomMaps: boolean;
   readonly highlightAtomMaps?: readonly number[];
+  /** Absent: `skeletal`. */
+  readonly mode?: StructureMode;
 }
 
 export interface Depiction {

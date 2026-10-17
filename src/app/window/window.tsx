@@ -226,6 +226,7 @@ function WindowContent() {
     pickFile: imports.pick,
     openExport: exports.open,
     editNames: editNamesCommand(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()),
+    structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),
   };
@@ -290,7 +291,7 @@ function WindowContent() {
             />
           }
           phone={{
-            bar: <PhoneBar onSearch={() => setSearching(true)} file={file} exam={exam} counts={counts} onStatus={openStatus} history={services.store} />,
+            bar: <PhoneBar onSearch={() => setSearching(true)} structures={navigator.structures} file={file} exam={exam} counts={counts} onStatus={openStatus} history={services.store} />,
             notices: <PhoneNotices />,
             alert: <PhoneAlert onStatus={openStatus} />,
             tabs: <PhoneTabs onSearch={() => setSearching(true)} searching={searching} />,

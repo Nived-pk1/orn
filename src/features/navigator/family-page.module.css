@@ -23,6 +23,19 @@
   min-height: var(--hit-min);
 }
 
+/* the Structures control (equation step, part 4): always in view, at the right of the toolbar; on a narrow screen it wraps under the button */
+.structures {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.structuresLabel {
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
 .selection {
   flex: 1;
   min-width: 12rem;
