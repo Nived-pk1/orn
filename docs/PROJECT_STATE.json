@@ -87,7 +87,9 @@
     "5.10a",
     "5.11a",
     "5.11b",
-    "6.1a"
+    "6.1a",
+    "6.1b",
+    "6.1"
   ],
   "nextPhase": 7,
   "releasePreview": {
@@ -96,8 +98,8 @@
     "commit": "3a98b31",
     "version": "a5253990-50ca-4702-9c11-66c4f5687079"
   },
-  "nextStep": "6.1b",
-  "nextStepTitle": "Editor sessions (draft store, persistence, local undo, commit, conflicts); first action: a quiet-machine bench:compare. A release-preview step (hosting, reviewer's prompt) comes before 6.1.",
+  "nextStep": "6.2",
+  "nextStepTitle": "Species, class, reagent editors; structure panel (live parse/depiction); duplicate check",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
