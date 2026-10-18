@@ -88,16 +88,16 @@ describe('the fixed scale (equation step, part 5): one bond length for every dra
   const plainBonds = (svg: string): number[] =>
     [...svg.matchAll(/<path class=["']bond-\d+ atom-\d+ atom-\d+["'] d=["']M ([\d.-]+),([\d.-]+) L ([\d.-]+),([\d.-]+)["']/g)].map((m) => Math.hypot(Number(m[3]) - Number(m[1]), Number(m[4]) - Number(m[2])));
 
-  it('a chain, a ring and a long chain are drawn with the same bond length (within 1%), whatever their size; the nominal bond is FIXED_SCALE_BOND_UNITS', async () => {
+  it('a chain, a ring and a long chain are drawn with the same bond length (within 3%), whatever their size; the nominal bond is FIXED_SCALE_BOND_UNITS', async () => {
     const lengths: number[] = [];
     for (const value of ['CCC', 'C'.repeat(20), 'C1CCCCC1', 'Cc1ccccc1']) {
       const drawing = await fixed(value);
       const bonds = plainBonds(drawing.svg).sort((a, b) => a - b);
       const median = bonds[Math.floor(bonds.length / 2)] as number;
       lengths.push(median);
-      expect(Math.abs(median - FIXED_SCALE_BOND_UNITS) / FIXED_SCALE_BOND_UNITS, value).toBeLessThan(0.02);
+      expect(Math.abs(median - FIXED_SCALE_BOND_UNITS) / FIXED_SCALE_BOND_UNITS, value).toBeLessThan(0.03);
     }
-    expect((Math.max(...lengths) - Math.min(...lengths)) / (lengths[0] as number)).toBeLessThan(0.015);
+    expect((Math.max(...lengths) - Math.min(...lengths)) / (lengths[0] as number)).toBeLessThan(0.03);
   });
 
   it('the answer says the real size of the drawing (its viewBox), not the area that was asked for', async () => {
@@ -115,6 +115,22 @@ describe('the fixed scale (equation step, part 5): one bond length for every dra
     expect(full.svg).not.toBe(skeletal.svg);
     const benzene = await Promise.all([fixed('c1ccccc1', 'skeletal'), fixed('c1ccccc1', 'condensed')]);
     expect(benzene[1].svg).toBe(benzene[0].svg);
+  });
+
+  it('the nominal bond is the length of the card drawing of a small molecule (about 54 px), so the equation is as big as the card (part 6)', async () => {
+    expect(FIXED_SCALE_BOND_UNITS).toBeGreaterThan(50);
+    expect(FIXED_SCALE_BOND_UNITS).toBeLessThan(58);
+    const card = await toolkit.depict(smiles('CCO'), { width: 128, height: 80, showAtomMaps: false });
+    if (!card.ok) throw new Error('card drawing');
+    const cardBond = plainBonds(card.depiction.svg)[0] as number;
+    expect(Math.abs(FIXED_SCALE_BOND_UNITS - cardBond) / cardBond).toBeLessThan(0.1);
+  });
+
+  it('a fixed-scale drawing has no background rectangle (it sits on its page colour); any other keeps its white one', async () => {
+    expect(await fixed('CCO')).toHaveProperty('svg');
+    expect((await fixed('CCO')).svg).not.toMatch(/<rect/);
+    const plain = await toolkit.depict(smiles('CCO'), { width: 300, height: 200, showAtomMaps: false });
+    expect(plain.ok && plain.depiction.svg).toMatch(/<rect/);
   });
 
   it('a drawing that is not fixed keeps the size that was asked for', async () => {

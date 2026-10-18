@@ -6,7 +6,7 @@
  */
 import { useContext, useState, useSyncExternalStore } from 'react';
 import type { FullEquation } from '@/core/graph';
-import { EquationScheme } from '@/render/equation';
+import { EquationScheme, NamesSwitch } from '@/render/equation';
 import { FamilyEnvContext } from './family-env';
 import styles from './family-page.module.css';
 
@@ -20,6 +20,11 @@ export function FullEquationView(props: { readonly equation: FullEquation }) {
   return (
     <details className={styles.equation} onClick={(event) => event.stopPropagation()} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Show full equation</summary>
+      {open && structures !== undefined ? (
+        <div className={styles.equationNames} data-equation-names-line="">
+          <NamesSwitch names={names} onChange={structures.setEquationNames} />
+        </div>
+      ) : null}
       {open ? (
         <EquationScheme
           equation={props.equation}
@@ -27,7 +32,7 @@ export function FullEquationView(props: { readonly equation: FullEquation }) {
           timers={env?.timers ?? { after: () => () => undefined }}
           facts={env?.equation?.facts}
           names={names}
-          {...(structures === undefined ? {} : { onNamesChange: structures.setEquationNames })}
+          layout={env?.layout === 'phone' ? 'stacked' : 'row'}
         />
       ) : null}
     </details>

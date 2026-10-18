@@ -159,7 +159,7 @@ describe('FullEquationView with the page\'s ports: the Names switch, the facts a
     return { env, asked };
   }
 
-  it('the "Names" switch is in the equation\'s header, on by default; off hides the name lines only, and it follows the setting', async () => {
+  it('the "Names" switch is on the "Show full equation" line (right after the summary, outside the scheme), on by default; off hides the name lines only, and it follows the setting', async () => {
     const names = { value: true };
     const { env } = envWith(names);
     const equation = cardNamed('cls_aldehydes', 'Cannizzaro').outcomes[0]?.equation;
@@ -174,6 +174,10 @@ describe('FullEquationView with the page\'s ports: the Names switch, the facts a
     expect(document.querySelectorAll('[data-equation-name]').length).toBeGreaterThan(0);
     const box = screen.getByRole('checkbox', { name: 'Names' }) as HTMLInputElement;
     expect(box.checked).toBe(true);
+    const summary = screen.getByText('Show full equation');
+    expect(summary.nextElementSibling?.contains(box)).toBe(true); // the switch follows the summary directly: the same line
+    expect(summary.nextElementSibling?.hasAttribute('data-equation-names-line')).toBe(true);
+    expect(scheme().contains(box)).toBe(false); // and is not part of the scheme
     fireEvent.click(box);
     expect(names.value).toBe(false);
     expect(document.querySelectorAll('[data-equation-name]')).toHaveLength(0);
@@ -181,6 +185,28 @@ describe('FullEquationView with the page\'s ports: the Names switch, the facts a
     fireEvent.click(screen.getByRole('checkbox', { name: 'Names' }));
     expect(names.value).toBe(true);
     expect(document.querySelectorAll('[data-equation-name]').length).toBeGreaterThan(0);
+  });
+
+  it('on the phone the scheme is stacked (reactants, the down arrow, products); on the desktop it is one row', async () => {
+    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').outcomes[0]?.equation;
+    if (equation === undefined) throw new Error('no equation');
+    const { env } = envWith({ value: true });
+    render(
+      <FamilyEnvContext.Provider value={{ ...env, layout: 'phone' }}>
+        <FullEquationView equation={equation} />
+      </FamilyEnvContext.Provider>,
+    );
+    openDisclosure();
+    expect(scheme().getAttribute('data-layout')).toBe('stacked');
+    expect(document.querySelector('[data-equation-arrow]')?.getAttribute('data-direction')).toBe('down');
+    cleanup();
+    render(
+      <FamilyEnvContext.Provider value={env}>
+        <FullEquationView equation={equation} />
+      </FamilyEnvContext.Provider>,
+    );
+    openDisclosure();
+    expect(scheme().getAttribute('data-layout')).toBe('row');
   });
 
   it('a species with a structure is drawn at the fixed scale through the page\'s binding', async () => {

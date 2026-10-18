@@ -11,6 +11,7 @@ import { drawingFailed, useRetryingDepiction, type DepictionBinding, type Depict
 import { formulaRuns } from '@/render/scene';
 import { EQUATION_BOND_PX, MAX_DRAWING_HEIGHT, MAX_DRAWING_WIDTH, type StructureFactsPort } from './contracts';
 import { drawingSizeOf } from './drawing-size';
+import { wordOf } from './hang';
 import { Runs } from './runs';
 import { useFactsInput } from './use-facts';
 import styles from './equation-scheme.module.css';
@@ -57,9 +58,6 @@ function Drawing(props: { readonly structure: StructureRep; readonly name: strin
   return <Loading />;
 }
 
-const wordOf = (term: EquationTerm): string | null =>
-  term.word !== null ? `(${term.quantifier === null ? '' : `${term.quantifier} `}${term.word})` : term.role !== null ? `(${term.role})` : null;
-
 export function TermColumn(props: { readonly term: EquationTerm; readonly names: boolean; readonly ports: TermPorts }) {
   const { term, names, ports } = props;
   const { substance } = term;
@@ -67,6 +65,7 @@ export function TermColumn(props: { readonly term: EquationTerm; readonly names:
   const representation = termRepresentationOf(substance, facts);
   const word = wordOf(term);
   const label = term.coefficient === null ? term.name : `${term.coefficient} ${term.name}`;
+  const nameShown = names && representation.kind !== 'name';
   return (
     <div className={styles.term} data-equation-term="">
       {term.coefficient === null ? null : (
@@ -75,22 +74,26 @@ export function TermColumn(props: { readonly term: EquationTerm; readonly names:
         </span>
       )}
       <div className={styles.column} role="group" aria-label={label}>
-        <div className={styles.rep}>
+        <div className={styles.rep} data-equation-rep="">
           {representation.kind === 'formula' ? <FormulaView formula={representation} /> : null}
           {representation.kind === 'name' ? <NameOnly name={term.name} /> : null}
           {representation.kind === 'pending' ? <Loading /> : null}
           {representation.kind === 'drawing' ? <Drawing structure={representation.structure} name={term.name} fallback={representation.fallback} ports={ports} /> : null}
         </div>
-        {names && representation.kind !== 'name' ? (
-          <span className={styles.name} data-equation-name="">
-            {term.name}
-          </span>
+        {nameShown || word !== null ? (
+          <div className={styles.hang} data-equation-hang="">
+            {nameShown ? (
+              <span className={styles.name} data-equation-name="">
+                {term.name}
+              </span>
+            ) : null}
+            {word === null ? null : (
+              <span className={styles.word} data-equation-word="">
+                {word}
+              </span>
+            )}
+          </div>
         ) : null}
-        {word === null ? null : (
-          <span className={styles.word} data-equation-word="">
-            {word}
-          </span>
-        )}
       </div>
     </div>
   );

@@ -118,6 +118,7 @@ Real-thread test files (`tests/integration/*-threads.test.ts`, `worker-crash-rec
 If a real-thread test times out: delete `node_modules/.vite/vitest` and run `npm run check` ONCE more; if it times out again, STOP and report the failing tests and, for information only, the power state; never raise a timeout and never weaken a test.
 A change to `vitest.config.ts` or to a test script reports the file and test totals before and after (a double run was caught this way; Phase 4 tagging review, 2026-10-02).
 Single test file: `npx vitest run src/core/schema/schema.smoke.test.ts`. The app must be served over http(s); `file://` is unsupported.
+Speed check (reviewer decision, 2026-10-17): at the start of a session run a fixed 3e8-iteration Node loop (`s += i & 7`) three times and REPORT the median. The median STOPS the session only before a TIMING measurement (benchmarks, `bench:compare`, boot or fps figures) and only when it is over 1.3 s. Functional runs (`npm run check`, e2e, `build:smoke`, gzip sizes) go ahead on a slow machine. If an e2e test fails on a timeout on a slow machine, re-run that spec once alone and report both results; never raise a timeout.
 
 ## 20. Definition of done per phase
 Global DoD and per-phase DoD: IMPLEMENTATION_PLAN.md §1 and §3; gate criteria: TEST_STRATEGY.md §6. At a

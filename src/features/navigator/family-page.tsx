@@ -17,7 +17,7 @@ import { depictionBindingOf, equationBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
 import { FamilyHeader } from './family-header';
-import { StructuresControl } from './structures-control';
+import { StructuresControl, StructuresMenu } from './structures-control';
 import { cardKey, estimateOf, familyItems, groupKey, indexOfKey, type FamilyItem } from './family-items';
 import { useNavigator } from './navigator-context';
 import { createScenePorts } from './scene-ports';
@@ -175,10 +175,16 @@ export function FamilyPage(props: { readonly hubId: string }) {
         {phone ? null : <p className={styles.selection}>{reactionName === undefined ? 'Nothing is selected.' : `Selected: reaction ${reactionName}.`}</p>}
         {ports.structures === undefined ? null : (
           <div className={styles.structures}>
-            <span className={styles.structuresLabel} aria-hidden="true">
-              Structures
-            </span>
-            <StructuresControl structures={ports.structures} />
+            {phone ? (
+              <StructuresMenu structures={ports.structures} />
+            ) : (
+              <>
+                <span className={styles.structuresLabel} aria-hidden="true">
+                  Structures
+                </span>
+                <StructuresControl structures={ports.structures} />
+              </>
+            )}
           </div>
         )}
       </div>

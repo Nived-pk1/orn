@@ -81,3 +81,20 @@ describe('Menu', () => {
     await waitFor(() => expect(document.activeElement).toBe(second));
   });
 });
+
+describe('Menu with a chosen item (equation step, part 6)', () => {
+  it('shows the chosen item as a checked menuitemradio; choosing another runs its handler and closes the menu', () => {
+    const pick = vi.fn();
+    const pickers: MenuItem[] = [
+      { id: 'skeletal', label: 'Skeletal', onSelect: () => pick('skeletal') },
+      { id: 'condensed', label: 'Condensed', onSelect: () => pick('condensed') },
+    ];
+    render(<Menu label="File" items={pickers} chosen="skeletal" />);
+    open();
+    const radios = within(screen.getByRole('menu')).getAllByRole('menuitemradio');
+    expect(radios.map((r) => [r.textContent, r.getAttribute('aria-checked')])).toEqual([['Skeletal', 'true'], ['Condensed', 'false']]);
+    fireEvent.keyDown(radios[1] as HTMLElement, { key: 'Enter' });
+    expect(pick).toHaveBeenCalledWith('condensed');
+    expect(pick).toHaveBeenCalledTimes(1);
+  });
+});

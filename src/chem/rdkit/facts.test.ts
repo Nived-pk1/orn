@@ -31,32 +31,6 @@ describe('elements', () => {
   });
 });
 
-describe('ring count (equation step, part 5)', () => {
-  const withBonds = (atoms: unknown[], bonds: [number, number][]): string =>
-    JSON.stringify({ rdkitjson: { version: 12 }, defaults: DEFAULTS, molecules: [{ atoms, bonds: bonds.map((atomsOf) => ({ atoms: atomsOf })), extensions: [{ name: 'rdkitRepresentation' }] }] });
-  const ringsOf = (atoms: unknown[], bonds: [number, number][]) => factsFor({ ...ETHANOL_SPEC, json: withBonds(atoms, bonds) }).ringCount;
-
-  it('is bonds - atoms + connected pieces: a chain 0, a ring 1, two fused rings 2, two separate rings 2', () => {
-    expect(ringsOf([{}, {}, {}], [[0, 1], [1, 2]])).toBe(0);
-    expect(ringsOf([{}, {}, {}], [[0, 1], [1, 2], [2, 0]])).toBe(1);
-    expect(ringsOf([{}, {}, {}, {}], [[0, 1], [1, 2], [2, 0], [2, 3], [3, 0]])).toBe(2); // two triangles sharing an edge
-    expect(ringsOf([{}, {}, {}, {}, {}, {}], [[0, 1], [1, 2], [2, 0], [3, 4], [4, 5], [5, 3]])).toBe(2);
-  });
-
-  it('a lone atom, and a molecule whose JSON has no bonds at all, have no rings (and no warning for it)', () => {
-    expect(ringsOf([{}], [])).toBe(0);
-    const none = factsFor({ ...ETHANOL_SPEC, json: JSON.stringify({ rdkitjson: { version: 12 }, defaults: DEFAULTS, molecules: [{ atoms: [{}], extensions: [{ name: 'rdkitRepresentation' }] }] }) });
-    expect(none.ringCount).toBe(0);
-    expect(none.warnings.join(' ')).not.toContain('ringCount');
-  });
-
-  it('a bond that names an atom the molecule does not have leaves the count undefined, with a warning, never a guess', () => {
-    const out = factsFor({ ...ETHANOL_SPEC, json: withBonds([{}, {}], [[0, 7]]) });
-    expect(out.ringCount).toBeUndefined();
-    expect(out.warnings.join(' ')).toContain('ringCount');
-  });
-});
-
 describe('carbon count (equation step, part 5)', () => {
   const carbonsOf = (atoms: unknown[], defaults: unknown = DEFAULTS) => factsFor({ ...ETHANOL_SPEC, json: json(atoms, undefined, defaults) });
 

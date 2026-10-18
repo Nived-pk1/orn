@@ -25,8 +25,6 @@ export interface StructureFacts {
   readonly formula?: string;
   readonly charge?: number;
   readonly heavyAtomCount?: number;
-  /** The number of rings (the smallest set of smallest rings has this many members): bonds - atoms + connected pieces, from RDKit's own atoms and bonds. */
-  readonly ringCount?: number;
   /** The number of carbon atoms (atomic number 6, isotopes and charges included; a dummy atom is not carbon), from RDKit's own atoms. */
   readonly carbonCount?: number;
   readonly specifiedStereocentres?: number;
@@ -69,12 +67,13 @@ export type StructureMode = (typeof STRUCTURE_MODES)[number];
 /**
  * The fixed scale (equation step, part 5): a drawing made with `fixedScale: true` has the same bond length whatever the molecule, so a
  * methyl group is not blown up beside a long chain. RDKit draws it with `scalingFactor` `FIXED_SCALE_FACTOR` and the canvas fits the
- * molecule; the bond is then `FIXED_SCALE_BOND_UNITS` SVG units long (measured: 146.0 to 147.8 over chains, rings and rings with side
- * chains, a spread of 0.6% from RDKit rounding the canvas; docs/PROGRESS.md "Equation step, part 3"). A viewer scales the whole drawing by
- * (the bond length it wants / `FIXED_SCALE_BOND_UNITS`).
+ * molecule; the bond is then `FIXED_SCALE_BOND_UNITS` SVG units long (part 6: 37 gives 53.2 to 54.3 units, the bond of the card's own 128 x 80
+ * drawing of ethanol, so a viewer shows it 1:1 with the card's line width and label size; measured over chains and rings in docs/PROGRESS.md
+ * "Equation step, part 6"; part 5 used 100 and 147.5). A viewer scales the whole drawing by (the bond length it wants / `FIXED_SCALE_BOND_UNITS`).
+ * A fixed-scale drawing also has no background rectangle (`clearBackground: false`), so it sits on the colour of its page.
  */
-export const FIXED_SCALE_FACTOR = 100;
-export const FIXED_SCALE_BOND_UNITS = 147.5;
+export const FIXED_SCALE_FACTOR = 37;
+export const FIXED_SCALE_BOND_UNITS = 54;
 
 export interface DepictionOptions {
   readonly width: number;

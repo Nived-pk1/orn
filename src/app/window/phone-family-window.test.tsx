@@ -22,6 +22,9 @@ beforeAll(() => {
     disconnect(): void {}
   };
   (Element.prototype as unknown as { scrollIntoView?: () => void }).scrollIntoView ??= () => undefined;
+  const proto = Element.prototype as unknown as { hasPointerCapture?: () => boolean; releasePointerCapture?: () => void };
+  proto.hasPointerCapture ??= () => false;
+  proto.releasePointerCapture ??= () => undefined;
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get(this: HTMLElement) { return isScroller(this) ? 20_000 : 40; } });
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 390 });
   HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
@@ -123,6 +126,22 @@ describe('the family page on a phone', () => {
     expect(screen.getByRole('region', { name: /^Family page/ }).getAttribute('data-layout')).toBe('phone');
     // it asks the shell to let its scroll area run behind the sheet (the CSS needs this mark)
     expect(screen.getByRole('region', { name: /^Family page/ }).hasAttribute('data-sheet-room')).toBe(true);
+  });
+});
+
+describe('the family page toolbar on a phone (equation step, part 6)', () => {
+  it('is the back button and ONE compact "Structures: Skeletal" button that opens a menu of the three choices; no segmented control', async () => {
+    const app = await openFamily('cls_alcohols');
+    expect(within(toolbar()).queryByRole('radiogroup')).toBeNull();
+    const button = within(toolbar()).getByRole('button', { name: 'Structures: Skeletal' });
+    expect(within(toolbar()).getAllByRole('button').map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(['< Families', 'Structures: Skeletal']);
+    button.focus();
+    fireEvent.keyDown(button, { key: 'Enter' });
+    const radios = within(screen.getByRole('menu')).getAllByRole('menuitemradio');
+    expect(radios.map((r) => [r.textContent, r.getAttribute('aria-checked')])).toEqual([['Skeletal', 'true'], ['Condensed', 'false'], ['Full', 'false']]);
+    fireEvent.keyDown(radios[1] as HTMLElement, { key: 'Enter' });
+    expect(app.panels.getState().structureMode).toBe('condensed');
+    expect(within(toolbar()).getByRole('button', { name: 'Structures: Condensed' })).toBeTruthy();
   });
 });
 

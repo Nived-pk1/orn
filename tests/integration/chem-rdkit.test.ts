@@ -124,25 +124,6 @@ describe('facts, checked by hand', () => {
   });
 
   it.each([
-    ['CCO', 0],
-    ['C', 0],
-    ['O', 0],
-    ['[H][H]', 0],
-    ['[Pd]', 0],
-    ['c1ccccc1', 1],
-    ['C1CC1', 1],
-    ['OC1CCCCC1', 1],
-    ['c1ccc2ccccc2c1', 2], // naphthalene: two fused rings
-    ['C1CC2CCC1C2', 2], // norbornane: bicyclic
-    ['C12C3C4C1C5C2C3C45', 5], // cubane
-    ['C1CC1.C1CCC1', 2], // two separate rings (one structure, two components)
-    ['[Na+].[OH-]', 0],
-    ['O=C(OOC(=O)c1ccccc1)c1ccccc1', 2], // dibenzoyl peroxide
-  ])('ring count of %s is %i (the cyclomatic number, from RDKit\'s own atoms and bonds)', async (value, rings) => {
-    expect((await factsOf(value)).ringCount).toBe(rings);
-  });
-
-  it.each([
     ['O', 0],
     ['[H][H]', 0],
     ['OS(=O)(=O)O', 0],

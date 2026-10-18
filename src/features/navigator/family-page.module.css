@@ -202,12 +202,30 @@
 }
 
 .equation {
+  position: relative;
+  container-type: inline-size;
   margin-top: 0.4rem;
   font-size: 0.85rem;
 }
 .equation summary {
   cursor: pointer;
   color: var(--link, inherit);
+  line-height: 2rem;
+}
+
+/* the equation's "Names" switch (part 6): on the summary line, at its right; when the card is too narrow for both it sits directly under it */
+.equationNames {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+@container (max-width: 17rem) {
+  .equationNames {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+  }
 }
 
 /* Phone (ADR-039; keyed on data-layout, the one layout value): the whole width in one column, groups as a coloured bar on the left (not a
@@ -228,6 +246,7 @@
 }
 
 .page[data-layout='phone'] .toolbar {
+  flex-wrap: nowrap;
   padding: var(--space-1) var(--space-2);
 }
 

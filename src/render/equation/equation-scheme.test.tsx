@@ -4,6 +4,7 @@
  * the arrow, a coefficient at text size, the Names switch, the old sentence as the accessible description, a failed drawing falling back,
  * the equilibrium arrow. The decisions (formula or drawing) are `core/graph/equation-term.ts`; the facts and drawings are fakes here.
  */
+import { readFileSync } from 'node:fs';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { ArrowText, EquationTerm, FullEquation, TermSubstance } from '@/core/graph';
@@ -37,7 +38,7 @@ function rig(options: { facts?: Record<string, { heavyAtomCount?: number; carbon
     keyOf: (s, _size, mode) => `${s.value}#${mode ?? 'skeletal'}`,
     depict: (s) => {
       asked.push(s.value);
-      return Promise.resolve(options.failing?.has(s.value) === true ? { ok: false as const, reason: 'invalid', message: 'x' } : { ok: true as const, svg: '<svg/>', width: 148 * Math.max(1, s.value.length - 1), height: 100 });
+      return Promise.resolve(options.failing?.has(s.value) === true ? { ok: false as const, reason: 'invalid', message: 'x' } : { ok: true as const, svg: '<svg/>', width: 54 * Math.max(1, s.value.length - 1), height: 40 });
     },
     cancel: () => undefined,
     createUrl: (svg) => `blob:${svg.length}`,
@@ -61,8 +62,8 @@ const BUTENE = term('Butene', { structure: smiles('CC=CC'), formula: 'C4H8' });
 const HYDROGEN = term('Hydrogen', { structure: smiles('[H][H]'), formula: 'H2' });
 const FACTS = { O: { heavyAtomCount: 1, carbonCount: 0 }, '[H][H]': { heavyAtomCount: 0, carbonCount: 0 }, 'CC=CC': { heavyAtomCount: 4, carbonCount: 4 }, 'CC#CC': { heavyAtomCount: 4, carbonCount: 4 } };
 
-function show(eq: FullEquation, r = rig({ facts: FACTS }), props: { names?: boolean; onNamesChange?: (names: boolean) => void; label?: string } = {}) {
-  const view = render(<EquationScheme equation={eq} binding={r.binding} timers={r.timers} facts={r.facts} names={props.names ?? true} {...(props.onNamesChange === undefined ? {} : { onNamesChange: props.onNamesChange })} {...(props.label === undefined ? {} : { label: props.label })} />);
+function show(eq: FullEquation, r = rig({ facts: FACTS }), props: { names?: boolean; onNamesChange?: (names: boolean) => void; label?: string; layout?: 'row' | 'stacked' } = {}) {
+  const view = render(<EquationScheme equation={eq} binding={r.binding} timers={r.timers} facts={r.facts} names={props.names ?? true} {...(props.onNamesChange === undefined ? {} : { onNamesChange: props.onNamesChange })} {...(props.label === undefined ? {} : { label: props.label })} {...(props.layout === undefined ? {} : { layout: props.layout })} />);
   return { ...view, r };
 }
 
@@ -105,7 +106,7 @@ describe('the scheme', () => {
   });
 
   it('every drawing has the same bond length: the size follows the drawing\'s own width, never one box for all', async () => {
-    const eq = equation([term('Short', { structure: smiles('CC=C') }), term('Long', { structure: smiles('CC=CCCC') })], [term('Other')]);
+    const eq = equation([term('Short', { structure: smiles('CC=C') }), term('Long', { structure: smiles('CC=CC') })], [term('Other')]);
     show(eq);
     await settle();
     const [short, long] = (['Short', 'Long'] as const).map((name) => within(screen.getByRole('group', { name })).getByRole('img') as HTMLImageElement);
@@ -207,5 +208,104 @@ describe('the scheme', () => {
     show(equation([WATER], [BUTENE]), rig({ facts: FACTS }), { label: 'at 413 K' });
     await settle();
     expect(screen.getByRole('group', { name: 'at 413 K' })).toBeTruthy();
+  });
+});
+
+describe('the phone scheme: the same terms stacked (equation step, part 6)', () => {
+  const eq = (): FullEquation =>
+    equation([term('Alkyne', { structure: smiles('CC#CC'), formula: 'C4H6' }), HYDROGEN], [BUTENE], { arrow: { above: [formulaPart('Pd')], below: [plainPart('quinoline')] } });
+
+  it('reactants in one row, then the down arrow, then the products: three blocks in that order, each term once', async () => {
+    show(eq(), rig({ facts: FACTS }), { layout: 'stacked' });
+    await settle();
+    const scheme = screen.getByRole('group', { name: 'Full equation', description: eq().text });
+    expect(scheme.getAttribute('data-layout')).toBe('stacked');
+    const blocks = [...scheme.querySelectorAll('[data-equation-side], [data-equation-arrow]')].map((el) => el.getAttribute('data-equation-side') ?? 'arrow');
+    expect(blocks).toEqual(['reactants', 'arrow', 'products']);
+    const reactants = scheme.querySelector('[data-equation-side="reactants"]') as HTMLElement;
+    expect(within(reactants).getAllByRole('group', { name: /^(Alkyne|Hydrogen)$/ })).toHaveLength(2);
+    expect([...reactants.querySelectorAll('[data-equation-plus]')].map((el) => el.textContent)).toEqual(['+']);
+    expect(within(scheme.querySelector('[data-equation-side="products"]') as HTMLElement).getByRole('group', { name: 'Butene' })).toBeTruthy();
+    expect(scheme.querySelectorAll('[data-equation-term]')).toHaveLength(3);
+  });
+
+  it('the arrow points down, its line comes first and the reagents and conditions follow it (they sit to its right)', async () => {
+    show(eq(), rig({ facts: FACTS }), { layout: 'stacked' });
+    await settle();
+    const arrow = document.querySelector('[data-equation-arrow]') as HTMLElement;
+    expect(arrow.getAttribute('data-direction')).toBe('down');
+    const order = [...arrow.children].map((el) => (el.hasAttribute('data-equation-line') ? 'line' : el.hasAttribute('data-equation-text') ? 'text' : '?'));
+    expect(order).toEqual(['line', 'text']);
+    const text = arrow.querySelector('[data-equation-text]') as HTMLElement;
+    expect(text.querySelector('[data-equation-above]')?.textContent).toBe('Pd');
+    expect(text.querySelector('[data-equation-below]')?.textContent).toBe('quinoline');
+  });
+
+  it('drawings are at most 140 px wide (scaled down whole, the bond with them); the row layout keeps its 220 px', async () => {
+    const wide = equation([term('Long', { structure: smiles('CC=CCCCCCCC') })], [term('Other')]);
+    show(wide, rig(), { layout: 'stacked' });
+    await settle();
+    const image = screen.getByRole('img') as HTMLImageElement;
+    expect(Number(image.getAttribute('width'))).toBeLessThanOrEqual(140);
+    cleanup();
+    show(wide, rig());
+    await settle();
+    const row = screen.getByRole('img') as HTMLImageElement;
+    expect(Number(row.getAttribute('width'))).toBeGreaterThan(140);
+    expect(Number(row.getAttribute('width'))).toBeLessThanOrEqual(220);
+  });
+
+  it('names under the drawings follow the switch, and the description is the old sentence, as in the row layout', async () => {
+    const off = show(eq(), rig({ facts: FACTS }), { layout: 'stacked', names: false });
+    await settle();
+    expect(off.container.querySelectorAll('[data-equation-name]')).toHaveLength(0);
+    cleanup();
+    show(eq(), rig({ facts: FACTS }), { layout: 'stacked' });
+    await settle();
+    expect(document.querySelectorAll('[data-equation-name]')).toHaveLength(3);
+  });
+
+  it('an equilibrium reaction gets the vertical equilibrium arrow (two half arrows); every other one arrow', async () => {
+    show(equation([WATER], [BUTENE], { equilibrium: true }), rig({ facts: FACTS }), { layout: 'stacked' });
+    await settle();
+    const arrow = document.querySelector('[data-equation-arrow]') as HTMLElement;
+    expect(arrow.hasAttribute('data-equilibrium')).toBe(true);
+    expect(arrow.querySelectorAll('[data-equation-line] svg path')).toHaveLength(2);
+  });
+});
+
+const css = readFileSync('src/render/equation/equation-scheme.module.css', 'utf8');
+
+describe('the look (equation step, part 6): names directly under their drawings, no fixed row height', () => {
+  it('in every column the name and the word hang directly after the representation, in one wrapper that is out of the flow', async () => {
+    show(equation([term('Short', { structure: smiles('CC=C') }), term('Long', { structure: smiles('CC=CC') }), WATER], [term('Butene', { structure: smiles('CC=CC'), formula: 'C4H8' }, { word: 'major' })]));
+    await settle();
+    const columns = document.querySelectorAll('[data-equation-term] [role="group"]');
+    expect(columns.length).toBe(4);
+    for (const column of columns) {
+      const [rep, hang] = [...column.children];
+      expect(rep?.hasAttribute('data-equation-rep')).toBe(true);
+      expect(hang?.hasAttribute('data-equation-hang')).toBe(true);
+      expect(hang?.querySelector('[data-equation-name]')).not.toBeNull();
+    }
+    expect(columns[3]?.querySelector('[data-equation-hang] [data-equation-word]')?.textContent).toBe('(major)');
+  });
+
+  it('the scheme reserves the room the names need under its rows (--hang), and none when there is no name or word', async () => {
+    show(equation([term('Short', { structure: smiles('CC=C') })], [term('Water', { structure: smiles('O'), formula: 'H2O' }, { word: 'major' })]));
+    await settle();
+    const hang = (): number => Number.parseFloat(document.querySelector<HTMLElement>('[data-equation-scheme]')?.style.getPropertyValue('--hang') ?? 'NaN');
+    expect(hang()).toBeGreaterThan(0);
+    cleanup();
+    show(equation([term('Short', { structure: smiles('CC=C') })], [WATER]), rig({ facts: FACTS }), { names: false });
+    await settle();
+    expect(hang()).toBe(0);
+  });
+
+  it('the stylesheet gives no row, term, sign or arrow a fixed height (a row is as tall as its tallest drawing)', () => {
+    expect(css).not.toContain('--rep-h');
+    const blocks = css.split('}').map((chunk) => chunk.split('{'));
+    const fixed = blocks.filter(([selector, body]) => body !== undefined && /\.(rep|plus|arrowCell|arrow|coefficient|term|column|row)(\s|,|$)/.test((selector ?? '').trim()) && /(^|[\s;])(min-)?height:\s*\d/.test(body));
+    expect(fixed.map(([selector]) => (selector ?? '').trim())).toEqual([]);
   });
 });

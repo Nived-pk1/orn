@@ -22,6 +22,8 @@ export interface MenuProps {
   readonly label: string;
   readonly items: readonly MenuItem[];
   readonly trigger?: ReactNode;
+  /** The id of the item that is the current choice: the items are then a group of radio items (`menuitemradio`, `aria-checked`) and say which is chosen. */
+  readonly chosen?: string;
 }
 
 export function Menu(props: MenuProps) {
@@ -34,24 +36,42 @@ export function Menu(props: MenuProps) {
       </Dropdown.Trigger>
       <Dropdown.Portal {...(container === undefined ? {} : { container })}>
         <Dropdown.Content className={styles.content} sideOffset={4} align="start" collisionPadding={8}>
-          {props.items.map((item) => (
-            <Dropdown.Item
-              key={item.id}
-              className={styles.item}
-              // A Radix `disabled` item cannot be focused or announced with its reason; ours stays reachable and says why.
-              data-unavailable={item.unavailable === undefined ? undefined : ''}
-              aria-disabled={item.unavailable === undefined ? undefined : true}
-              onSelect={(event) => {
-                if (item.unavailable !== undefined) event.preventDefault();
-                else item.onSelect?.();
-              }}
-            >
-              <span>{item.label}</span>
-              {item.unavailable === undefined ? null : <span className={styles.reason}>{item.unavailable}</span>}
-            </Dropdown.Item>
-          ))}
+          {props.chosen === undefined ? (
+            props.items.map((item) => <Row key={item.id} item={item} />)
+          ) : (
+            <Dropdown.RadioGroup value={props.chosen}>
+              {props.items.map((item) => <Row key={item.id} item={item} radio />)}
+            </Dropdown.RadioGroup>
+          )}
         </Dropdown.Content>
       </Dropdown.Portal>
     </Dropdown.Root>
+  );
+}
+
+function Row(props: { readonly item: MenuItem; readonly radio?: boolean }) {
+  const { item } = props;
+  const common = {
+    className: styles.item,
+    // A Radix `disabled` item cannot be focused or announced with its reason; ours stays reachable and says why.
+    'data-unavailable': item.unavailable === undefined ? undefined : '',
+    'aria-disabled': item.unavailable === undefined ? undefined : true,
+    onSelect: (event: Event): void => {
+      if (item.unavailable !== undefined) event.preventDefault();
+      else item.onSelect?.();
+    },
+  };
+  const label = (
+    <>
+      <span>{item.label}</span>
+      {item.unavailable === undefined ? null : <span className={styles.reason}>{item.unavailable}</span>}
+    </>
+  );
+  return props.radio === true ? (
+    <Dropdown.RadioItem {...common} value={item.id}>
+      {label}
+    </Dropdown.RadioItem>
+  ) : (
+    <Dropdown.Item {...common}>{label}</Dropdown.Item>
   );
 }

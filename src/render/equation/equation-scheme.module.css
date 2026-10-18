@@ -1,16 +1,16 @@
 /*
- * The textbook equation (equation step, part 5): term + term -> term + term in one row that wraps. Every term is a column: the
- * representation on top in a row of ONE height (--rep-h), then the name (small, muted), then its word (italic). Because every
- * representation row has the same height and is centred, the "+" signs and the arrow, which have that height too, sit on the middle line
- * of the drawings.
+ * The textbook equation (equation step, part 5; look, part 6): term + term -> term + term in one row that wraps. Every term is a column: the
+ * representation, and hanging DIRECTLY under it the name (small, muted) and its word (italic). No row has a fixed height: the names are out
+ * of the flow (`.hang` is 0 high and overflows downward), so a row is as tall as its tallest drawing and the row centres the drawings, the
+ * "+" signs and the arrow on one middle line. The room the names need under the row is `--hang` (`hang.ts`), kept as padding and row gap.
  */
 .scheme {
-  --rep-h: 112px;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
   font-size: var(--text-14);
+  --hang: 0px;
 }
 
 .header {
@@ -22,30 +22,34 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: var(--hit-min);
+  min-height: 2rem;
   color: var(--color-ink-2);
   font-size: var(--text-13);
   cursor: pointer;
 }
 
+.names input {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+}
+
 .row {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   column-gap: var(--space-2);
-  row-gap: var(--space-4);
+  row-gap: calc(var(--hang) + var(--space-3));
+  padding-bottom: var(--hang);
 }
 
 .term {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-2);
 }
 
 .coefficient {
-  display: flex;
-  align-items: center;
-  height: var(--rep-h);
   font-size: var(--text-16);
 }
 
@@ -57,12 +61,19 @@
   text-align: center;
 }
 
+.hang {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 0;
+  overflow: visible;
+}
+
 .rep {
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 3rem;
-  height: var(--rep-h);
 }
 
 .rep img {
@@ -99,7 +110,6 @@
 .arrowCell {
   display: flex;
   align-items: center;
-  height: var(--rep-h);
 }
 
 .plus {
@@ -112,7 +122,6 @@
   display: grid;
   grid-template-rows: 1fr auto 1fr;
   align-items: center;
-  height: var(--rep-h);
   min-width: 64px;
   max-width: 15rem;
   width: max-content;
@@ -176,4 +185,77 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* the phone: reactants, the down arrow with its text to the right, products; nothing is wider than the card */
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.sideRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: var(--space-2);
+  row-gap: calc(var(--hang) + var(--space-3));
+  padding-bottom: var(--hang);
+  min-width: 0;
+}
+
+.downArrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 48px;
+  font-size: var(--text-13);
+}
+
+.downLine {
+  grid-column: 2;
+  display: flex;
+  align-self: stretch;
+  justify-content: center;
+  gap: 4px;
+}
+
+.downShaft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+  width: 14px;
+}
+
+.downStem {
+  flex: 1 1 auto;
+  width: 1.5px;
+  min-height: 32px;
+  background: var(--color-ink);
+}
+
+.downHead {
+  flex: none;
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+}
+
+.downText {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 0 8px var(--space-2);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.downBelow {
+  color: var(--color-ink-2);
 }

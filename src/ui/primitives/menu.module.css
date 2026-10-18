@@ -63,3 +63,18 @@
   background: transparent;
   pointer-events: none;
 }
+
+/* the chosen item of a menu of choices (Structures): bold and a tick, not colour alone */
+.item[role='menuitemradio'][aria-checked='true'] {
+  font-weight: 600;
+}
+
+.item[role='menuitemradio'][aria-checked='true']::after {
+  content: '¹3';
+  position: absolute;
+  right: var(--space-3);
+}
+
+.item[role='menuitemradio'] {
+  position: relative;
+}

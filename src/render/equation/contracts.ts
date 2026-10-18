@@ -17,9 +17,11 @@ export interface StructureFactsPort {
  */
 export const EQUATION_AREA = { width: 220, height: 220, fixedScale: true } as const;
 
-/** The length of one bond on the page, in px: a methyl group is not blown up beside a long chain. */
-export const EQUATION_BOND_PX = 32;
+/** The length of one bond on the page, in px: that of the card's own drawing of a small molecule (part 6), so a methyl group is not blown up beside a long chain and the equation is as big as the card. */
+export const EQUATION_BOND_PX = 54;
 /** A drawing wider than this is scaled down WHOLE (the bond length then shrinks with it, as the whole drawing does). */
 export const MAX_DRAWING_WIDTH = 220;
-/** The tallest a drawing is shown: the height of a representation row, so the symbols stay on the middle line of every term. */
-export const MAX_DRAWING_HEIGHT = 112;
+/** The widest a drawing is shown in the stacked (phone) layout: the card is one column. */
+export const STACKED_MAX_DRAWING_WIDTH = 140;
+/** The tallest a drawing is shown (scaled down whole beyond it); a row is as tall as its tallest drawing. */
+export const MAX_DRAWING_HEIGHT = 160;
