@@ -210,7 +210,9 @@
 .equation summary {
   cursor: pointer;
   color: var(--link, inherit);
-  line-height: 2rem;
+}
+.equation[open] summary {
+  line-height: 2rem; /* room for the Names switch on this line, only while it is shown */
 }
 
 /* the equation's "Names" switch (part 6): on the summary line, at its right; when the card is too narrow for both it sits directly under it */
