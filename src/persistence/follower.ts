@@ -57,7 +57,7 @@ export type FollowerEvent =
   | { readonly type: 'message_ignored'; readonly reason: 'malformed' | 'old' }
   | { readonly type: 'apply_refused'; readonly code: string; readonly message: string }
   /** Writable now. `bootReport` is what boot found as the writer (a crashed old writer, quarantined rows, migration steps). */
-  | { readonly type: 'promoted'; readonly state: CanonicalState | null; readonly revision: number; readonly bootReport: BootReport | undefined }
+  | { readonly type: 'promoted'; readonly state: CanonicalState | null; readonly revision: number; readonly bootReport: BootReport | undefined; readonly quarantinedCount: number }
   | { readonly type: 'promotion_failed'; readonly reason: string; readonly detail: string }
   | { readonly type: 'error'; readonly message: string };
 
@@ -266,7 +266,7 @@ export function createFollower(options: FollowerOptions): Follower {
         readOnly = false;
         revision = opened.revision;
         unsubscribeChannel?.();
-        emit({ type: 'promoted', state: null, revision: opened.revision, bootReport: opened.bootReport });
+        emit({ type: 'promoted', state: null, revision: opened.revision, bootReport: opened.bootReport, quarantinedCount: opened.quarantinedCount });
         return;
       }
       // Boot (the promotion's) validated the state through the same port, so its findings are the ones the store checks and adopts.
@@ -280,7 +280,7 @@ export function createFollower(options: FollowerOptions): Follower {
     readOnly = false;
     revision = opened.revision;
     unsubscribeChannel?.();
-    emit({ type: 'promoted', state: opened.state, revision: opened.revision, bootReport: opened.bootReport });
+    emit({ type: 'promoted', state: opened.state, revision: opened.revision, bootReport: opened.bootReport, quarantinedCount: opened.quarantinedCount });
   }
 
   void options.lock.whenAcquired().then(() => {

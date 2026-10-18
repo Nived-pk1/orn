@@ -178,7 +178,7 @@ describe('promotion', () => {
     r.grant();
     await new Promise((resolve) => setTimeout(resolve, 0));
     await r.follower.idle();
-    expect(r.events).toEqual([{ type: 'promoted', state: null, revision: 0, bootReport: undefined }]);
+    expect(r.events).toEqual([{ type: 'promoted', state: null, revision: 0, bootReport: undefined, quarantinedCount: 0 }]);
     expect(r.store?.reload).not.toHaveBeenCalled();
     expect(r.adapter.setReadOnly).not.toHaveBeenCalled();
     expect(r.lock.release).not.toHaveBeenCalled();
@@ -199,7 +199,7 @@ describe('promotion', () => {
     r.grant();
     await new Promise((resolve) => setTimeout(resolve, 0));
     await r.follower.idle();
-    expect(r.events).toEqual([{ type: 'promoted', state: null, revision: 0, bootReport: undefined }]);
+    expect(r.events).toEqual([{ type: 'promoted', state: null, revision: 0, bootReport: undefined, quarantinedCount: 0 }]);
     expect(r.follower.isReadOnly()).toBe(false);
   });
 

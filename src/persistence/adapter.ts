@@ -83,6 +83,8 @@ export interface DexieAdapter extends Omit<PersistenceAdapter, 'storageEstimate'
   setReadOnly(readOnly: boolean): void;
   /** FOLLOWER (ADR-033): the rows named by a change message, with the revision and meta, in ONE read transaction. */
   readChanged(ids: readonly string[]): Promise<ChangedRows>;
+  /** Rows in the quarantine store, counted (a read: a follower uses it to show what other tabs set aside, step 6.1b). */
+  countQuarantine(): Promise<number>;
   /** FOLLOWER (ADR-033): a full read, L1 per row (rejects are reported, never quarantined: a follower never writes). */
   loadForFollower(): Promise<FollowerLoad>;
   /**
@@ -279,6 +281,7 @@ export function createDexieAdapter(options: DexieAdapterOptions): DexieAdapter {
     setLastIntegrityCheckAt: (at) => aux.setMeta('lastIntegrityCheckAt', at),
     addQuarantine: aux.addQuarantine,
     listQuarantine: aux.listQuarantine,
+    countQuarantine: aux.countQuarantine,
     deleteQuarantine: aux.deleteQuarantine,
     saveImportBatch: aux.saveImportBatch,
     listImportBatches: aux.listImportBatches,

@@ -149,6 +149,15 @@ describe('records set aside (5.11b)', () => {
     expect(within(line).queryByText(/set aside/)).toBeNull();
   });
 
+  it('the line of a follower follows the count too (re-read from the database after a change from the writer)', () => {
+    const app = fakeApp({ status: { mode: 'follower', reason: 'other_tab_is_writer', save: save({ state: 'read_only' }), quarantinedCount: 0 } });
+    renderWithApp(app, <StatusLine />);
+    const line = screen.getByRole('region', { name: 'Status' });
+    expect(within(line).queryByText(/set aside/)).toBeNull();
+    act(() => void app.status.update({ quarantinedCount: 3 }));
+    expect(within(line).getByText('3 records set aside')).toBeTruthy();
+  });
+
   it('does not depend on what this boot moved: no boot notice, and the line is still there', () => {
     renderWithApp(fakeApp({ status: { quarantinedCount: 2, notices: { crashSuspected: false, editorSessions: 0, quarantinedRows: 0, assetsWithoutBytes: 0, unverifiedAssetBlobs: 0, migrationSteps: 0 } } }), <StatusLine />);
     expect(screen.getByText('2 records set aside')).toBeTruthy();

@@ -75,13 +75,30 @@ export function startFollower(options: FollowerPartOptions): Follower {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     validate: options.validate,
   });
+  // What other tabs set aside shows here too: the count is READ (never written) after each applied change and each full reload. A newer
+  // read supersedes an older one, and a promotion's own count (its boot) supersedes any read still on its way.
+  let counting = 0;
+  const recount = (): void => {
+    counting += 1;
+    const mine = counting;
+    options.adapter.countQuarantine().then(
+      (count) => {
+        if (mine === counting && status.get().mode !== 'writer') status.update({ quarantinedCount: count });
+      },
+      (error: unknown) => log.add({ source: 'app', event: { type: 'quarantine_count_failed', message: `the quarantine count could not be read (${error instanceof Error ? error.message : String(error)})` } }),
+    );
+  };
   follower.subscribe((event) => {
     log.add({ source: 'follower', event: summariseFollowerEvent(event) });
     switch (event.type) {
+      case 'applied':
+        recount();
+        break;
       case 'reloaded':
       case 'loaded':
         status.update({ followerReloads: status.get().followerReloads + 1, reloadFailure: null });
         options.onReload?.();
+        recount();
         break;
       case 'row_rejected':
         status.update({ rejectedRows: status.get().rejectedRows + 1 });
@@ -93,6 +110,7 @@ export function startFollower(options: FollowerPartOptions): Follower {
         status.update({ validation: { where: 'main', reason: event.reason } });
         break;
       case 'promoted': {
+        counting += 1; // a read still on its way is older than this boot's count
         writer.attach();
         const report = event.bootReport;
         status.update({
@@ -100,6 +118,7 @@ export function startFollower(options: FollowerPartOptions): Follower {
           reason: null,
           detail: null,
           promotion: 'promoted',
+          quarantinedCount: event.quarantinedCount,
           save: writer.currentSave(),
           ...(report === undefined ? {} : { notices: noticesOf(report), validation: report.validation, singleTab: report.singleTab }),
         });
