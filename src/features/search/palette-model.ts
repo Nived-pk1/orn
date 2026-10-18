@@ -4,6 +4,8 @@
  *  - a newer input supersedes the older: the older answer is dropped when it arrives, even when it succeeded (a token per input), and
  *    the service cancels the call on the same channel;
  *  - `NOT_READY` (the index is still loading) is "Search is starting", asked again every 500 ms up to 20 times; it is never an empty list;
+ *  - an answer from an index that is still catching up with a committed change is never shown as final (a rename would be missed): "Search is catching up", asked
+ *    again like NOT_READY; after the same bound the answer is shown with a warning; an index that failed to follow is said in words next to the answer;
  *  - every other failure is said in words with its code; an empty answer says "No results";
  *  - "> text" lists commands (synchronously; unavailable ones with their reason); empty text lists the recent searches.
  * Nothing here knows chemistry: the engine ranked the hits; the model groups and words them.
@@ -75,9 +77,23 @@ export function createPaletteModel(ports: SearchPorts): PaletteModel {
       .then((answer) => {
         if (mine !== token) return; // a newer input replaced this one: its answer is never shown
         if (answer.ok) {
+          const index = ports.indexState?.() ?? { state: 'current' };
+          if (index.state === 'catching_up' && attempt < STARTING_RETRY_MAX) {
+            patch({ status: 'starting', rows: [], message: 'Search is catching up with your latest change' });
+            cancel = ports.timers.after(STARTING_RETRY_MS, () => {
+              cancel = undefined;
+              if (mine === token) ask(mine, attempt + 1);
+            });
+            return;
+          }
           const rows = groupRows(answer.value);
+          let warning = '';
+          if (index.state === 'catching_up') {
+            warning = 'The results may not include your latest change.';
+            ports.log('search_index_behind', 'the search index had not followed the latest change after the palette waited for it');
+          } else if (index.state === 'failed') warning = `Search could not follow your latest change (${index.reason}); the results may be out of date.`;
           const note = cutNote(parsed);
-          patch({ status: 'results', rows, message: answer.value.length === 0 ? `${note}No results for “${parsed.text}”.` : note.trim() });
+          patch({ status: 'results', rows, message: answer.value.length === 0 ? `${note}No results for “${parsed.text}”.${warning === '' ? '' : ` ${warning}`}` : `${note}${warning}`.trim() });
           return;
         }
         if (answer.code === 'CANCELLED') return;

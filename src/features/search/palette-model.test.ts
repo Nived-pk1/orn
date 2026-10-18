@@ -8,7 +8,7 @@ import type { RecordRef } from '@/core/schema';
 import type { SearchHit, SearchQuery } from '@/search/contracts';
 import { manualTimers } from '@/test-support/navigator-kit';
 import { createRecentStore } from '@/ui/state';
-import { PALETTE_DEBOUNCE_MS, PALETTE_LIMIT, STARTING_RETRY_MAX, STARTING_RETRY_MS, type PaletteCommand, type PaletteSearchAnswer, type SearchPorts } from './contracts';
+import { PALETTE_DEBOUNCE_MS, PALETTE_LIMIT, STARTING_RETRY_MAX, STARTING_RETRY_MS, type IndexState, type PaletteCommand, type PaletteSearchAnswer, type SearchPorts } from './contracts';
 import { createPaletteModel } from './palette-model';
 
 const hit = (id: string, title = id, kind = 'species'): SearchHit => ({ ref: { kind, id } as RecordRef, score: 1, title, matchedField: 'name' });
@@ -19,6 +19,7 @@ interface Call {
 }
 
 function rig(options: { commands?: readonly PaletteCommand[]; exam?: string } = {}) {
+  const index: { state: IndexState } = { state: { state: 'current' } };
   const timers = manualTimers();
   const calls: Call[] = [];
   const opened: [RecordRef, string][] = [];
@@ -32,6 +33,7 @@ function rig(options: { commands?: readonly PaletteCommand[]; exam?: string } = 
     timers,
     recent,
     examVersionId: () => options.exam,
+    indexState: () => index.state,
     factsOf: () => ({}),
     open: (ref, title) => void opened.push([ref, title]),
     commands: () => options.commands ?? [],
@@ -41,7 +43,7 @@ function rig(options: { commands?: readonly PaletteCommand[]; exam?: string } = 
   const flush = async (): Promise<void> => {
     for (let i = 0; i < 5; i += 1) await Promise.resolve();
   };
-  return { model, timers, calls, opened, logs, recent, flush, state: () => model.store.getState() };
+  return { model, timers, calls, opened, logs, recent, flush, index, state: () => model.store.getState() };
 }
 
 describe('the grammar parser is wired', () => {
@@ -158,6 +160,53 @@ describe('what the answer says', () => {
     await r.flush();
     expect(r.state().status).toBe('results');
     expect(r.state().rows).toHaveLength(2);
+  });
+
+  it('an answer from an index that has not followed the store yet is not final: "catching up", asked again, then shown', async () => {
+    const r = rig();
+    r.index.state = { state: 'catching_up' };
+    r.model.setInput('renamed');
+    r.timers.advance(PALETTE_DEBOUNCE_MS);
+    r.calls[0]?.resolve({ ok: true, value: [] });
+    await r.flush();
+    expect(r.state().status).toBe('starting');
+    expect(r.state().message).toBe('Search is catching up with your latest change');
+    expect(r.state().message).not.toMatch(/no results/i);
+    r.index.state = { state: 'current' };
+    r.timers.advance(STARTING_RETRY_MS);
+    expect(r.calls).toHaveLength(2);
+    r.calls[1]?.resolve({ ok: true, value: [hit('spc_a', 'Ethanol renamed')] });
+    await r.flush();
+    expect(r.state().status).toBe('results');
+    expect(r.state().rows).toHaveLength(2);
+  });
+
+  it('an index that never catches up is asked a bounded number of times, then the answer is shown with a warning', async () => {
+    const r = rig();
+    r.index.state = { state: 'catching_up' };
+    r.model.setInput('renamed');
+    r.timers.advance(PALETTE_DEBOUNCE_MS);
+    for (let i = 0; i <= STARTING_RETRY_MAX; i += 1) {
+      r.calls[i]?.resolve({ ok: true, value: [] });
+      await r.flush();
+      r.timers.advance(STARTING_RETRY_MS);
+    }
+    expect(r.calls).toHaveLength(STARTING_RETRY_MAX + 1);
+    expect(r.state().status).toBe('results');
+    expect(r.state().message).toBe('No results for “renamed”. The results may not include your latest change.');
+    expect(r.logs).toContain('search_index_behind');
+  });
+
+  it('a failed index sync is said in words next to the answer (no retry loop)', async () => {
+    const r = rig();
+    r.index.state = { state: 'failed', reason: 'update failed: TIMEOUT' };
+    r.model.setInput('renamed');
+    r.timers.advance(PALETTE_DEBOUNCE_MS);
+    r.calls[0]?.resolve({ ok: true, value: [hit('spc_a', 'Ethanol')] });
+    await r.flush();
+    expect(r.calls).toHaveLength(1);
+    expect(r.state().status).toBe('results');
+    expect(r.state().message).toBe('Search could not follow your latest change (update failed: TIMEOUT); the results may be out of date.');
   });
 
   it('gives up after a bounded number of asks and says search did not start', async () => {

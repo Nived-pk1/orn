@@ -235,6 +235,7 @@ function WindowContent() {
       createSearchPorts({
         search: services.search.search,
         store: services.store,
+        syncStatus: () => services.searchSync?.()?.status(),
         indexes: navigator.indexes,
         l4: inspectorPorts.l4,
         navigator,

@@ -23,7 +23,8 @@ export async function openDemo(page: Page): Promise<void> {
 /** The index loads shortly after the data (search debounce): ask until the palette answers instead of "Search is starting". */
 export async function searchFor(page: Page, text: string): Promise<void> {
   await palette(page).getByRole('combobox').fill(text);
-  await expect(palette(page).getByRole('status')).not.toHaveText('Search is starting');
+  // neither "starting" (no index yet) nor "catching up" (the index has not followed a commit yet) is an answer
+  await expect(palette(page).getByRole('status')).not.toHaveText(/^Search is (starting|catching up with your latest change)$/);
 }
 
 /** Shows a species in the inspector: Ctrl K, its name, its result. */

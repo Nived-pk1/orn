@@ -31,12 +31,17 @@ export interface HitFacts {
   readonly derivedFormula?: string;
 }
 
+/** Whether the search index has followed the store: `catching_up` while a change waits to be sent to it, `failed` when it could not follow. */
+export type IndexState = { readonly state: 'current' } | { readonly state: 'catching_up' } | { readonly state: 'failed'; readonly reason: string };
+
 export interface SearchPorts {
   search(channel: string, query: SearchQuery): Promise<PaletteSearchAnswer>;
   readonly timers: { after(ms: number, run: () => void): () => void };
   readonly recent: RecentStore;
   /** The active exam version (for the ranking tie-break), or undefined: no exam scope. */
   examVersionId(): string | undefined;
+  /** Whether the index has followed the latest committed change. Absent: always current. An answer from an index that is catching up is never final. */
+  indexState?(): IndexState;
   factsOf(ref: RecordRef): HitFacts;
   /** Opens a result: shows it in the inspector and places it (a family on the map, a reaction on its family page). */
   open(ref: RecordRef, title: string): void;

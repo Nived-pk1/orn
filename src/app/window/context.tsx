@@ -9,7 +9,7 @@ import type { NavigatorPorts } from '@/features/navigator';
 import type { PanelsStore } from '@/ui/state';
 
 /** What the window needs from the services (so a test can fake only these). */
-export type WindowServices = Pick<AppServices, 'store' | 'status' | 'flows' | 'saveEverythingNow' | 'retryReplica' | 'retryEngine' | 'search' | 'drafts'>;
+export type WindowServices = Pick<AppServices, 'store' | 'status' | 'flows' | 'saveEverythingNow' | 'retryReplica' | 'retryEngine' | 'search' | 'drafts'> & Partial<Pick<AppServices, 'searchSync'>>;
 
 export type DemoLoad = { readonly ok: true; readonly blob: Blob; readonly fileName: string } | { readonly ok: false; readonly message: string };
 

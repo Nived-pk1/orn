@@ -5,4 +5,4 @@ export { matchWords } from './words';
 export { groupRows, windowOf, scrollToShow, nextHit, HIT_ROW_HEIGHT, HEADER_ROW_HEIGHT, LIST_HEIGHT } from './rows';
 export type { PaletteRow, RowWindow } from './rows';
 export { kindName, kindTitle, PALETTE_CHANNEL, PALETTE_DEBOUNCE_MS, PALETTE_LIMIT, STARTING_RETRY_MAX, STARTING_RETRY_MS } from './contracts';
-export type { HitFacts, PaletteCommand, PaletteSearchAnswer, SearchPorts } from './contracts';
+export type { HitFacts, IndexState, PaletteCommand, PaletteSearchAnswer, SearchPorts } from './contracts';

@@ -14,6 +14,14 @@ describe('the room for hanging names', () => {
     expect(hangOf([term('A name that is long enough to wrap onto a second line of its column')], true)).toBeGreaterThan(one);
   });
 
+  it('a 60-character name reserves at least the three lines it needs in a 14 rem column, and never less than a shorter name (measured in tests/e2e/equation-long-name.spec.ts)', () => {
+    const sixty = 'Ethanol, a two-carbon alcohol made by fermenting sugar: EtOH';
+    expect(sixty).toHaveLength(60);
+    expect(hangOf([term(sixty)], true)).toBe(3 * 19 + 4);
+    expect(hangOf([term(sixty)], true)).toBeGreaterThanOrEqual(hangOf([term(sixty.slice(0, 30))], true));
+    expect(hangOf([term(sixty, { word: 'exclusive' })], true)).toBeGreaterThan(hangOf([term(sixty)], true));
+  });
+
   it('with names off a word still needs its line', () => {
     expect(hangOf([term('Ethanal', { word: 'exclusive' })], false)).toBeGreaterThan(0);
   });
