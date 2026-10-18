@@ -5,7 +5,7 @@
 import { useCounts, useSubscribable } from '@/ui/hooks';
 import { Banner, Button } from '@/ui/primitives';
 import { usePanels } from '@/ui/state';
-import { bannersOf, bannerKindOf, bootLinesOf, draftsLineOf, layoutCacheTextOf, operationTextOf, quarantineTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
+import { bannersOf, bannerKindOf, bootLinesOf, draftsLineOf, layoutCacheTextOf, operationTextOf, periodicTextOf, quarantineTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
 import { useDraftsOpen, useDraftsView } from './drafts-ui';
 import { useExportOpen } from './export-context';
@@ -19,6 +19,7 @@ export function StatusLine() {
   const storage = storageTextOf(status);
   const layoutCache = layoutCacheTextOf(status);
   const setAside = quarantineTextOf(status);
+  const snapshots = periodicTextOf(status);
   const readOnly = status.mode === 'follower' || status.mode === 'read_only';
   return (
     <section aria-label="Status">
@@ -34,6 +35,7 @@ export function StatusLine() {
         {storage === null ? null : <li>{storage}</li>}
         {layoutCache === null ? null : <li>{layoutCache}</li>}
         {setAside === null ? null : <li>{setAside}</li>}
+        {snapshots === null ? null : <li>{snapshots}</li>}
         {operation === null ? null : <li>{operation}</li>}
       </ul>
     </section>

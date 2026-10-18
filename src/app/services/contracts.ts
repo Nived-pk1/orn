@@ -86,6 +86,8 @@ export interface AppServices {
   readonly search: Pick<SearchService, 'search' | 'superseded'>;
   /** The search sync, for tests and diagnostics; undefined when the environment has no search worker. */
   searchSync(): SearchSync | undefined;
+  /** Resolves when no automatic snapshot is being made (tests and diagnostics; the writer tab only, else at once). */
+  snapshotsIdle(): Promise<void>;
   /** Sanitised SVG text for a structure: at most 4 calls in flight, cancellable, memory LRU. No object URLs here. */
   readonly depictions: DepictionService;
   /**

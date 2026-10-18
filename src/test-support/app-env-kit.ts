@@ -122,6 +122,8 @@ export interface TestEnv {
   readonly calls: string[];
   /** Milliseconds the counting clock has handed out (it advances by 1 on every read). */
   readonly clockReads: () => number;
+  /** Moves the clock forward (a long gap between two edits). */
+  readonly advanceMs: (ms: number) => void;
 }
 
 export function testEnv(options: TestEnvOptions = {}): TestEnv {
@@ -156,7 +158,7 @@ export function testEnv(options: TestEnvOptions = {}): TestEnv {
     migrationRunner: options.runner ?? createMigrationRunner(),
     generator: { app: 'orn-test', version: '0.0.0' },
   };
-  return { env, world, scheduler, workers: memory.workers, replicas, calls, clockReads: () => ms - 1_790_000_000_000 };
+  return { env, world, scheduler, workers: memory.workers, replicas, calls, clockReads: () => ms - 1_790_000_000_000, advanceMs: (by) => void (ms += by) };
 }
 
 /** A world whose database already holds `state` at `revision` (what a returning user has), the handle used to seed it closed. */

@@ -41,4 +41,10 @@ export const APP_BUDGETS = {
     { operation: "index state form: store index build, structuredClone", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c review follow-up a (budget entry added in step 5.10b so the bench runs under bench:compare): informal; SLOW_BENCH_OPTIONS" },
   "the store's own index build (createCanonicalStore) > (iii) the state after replaceState of a clone":
     { operation: "index state form: store index build, state after replaceState", tier: 'design', shape: 'dense', budgetMs: null, note: "step 5.1c review follow-up a (budget entry added in step 5.10b so the bench runs under bench:compare): informal; SLOW_BENCH_OPTIONS" },
+  [`one automatic snapshot (design tier, dense): the build in the compute worker > end to end, wall clock: build in the worker thread, then store with pruning (fake-indexeddb)`]:
+    { operation: `step 6.1b: automatic snapshot, end to end (wall clock)`, tier: 'design', shape: 'dense', budgetMs: null, note: `informal; a real worker thread builds, fake-indexeddb stores; the awaits overlap the thread, so this is not the main thread's time; SLOW_BENCH_OPTIONS; run once alone; not bench:baseline` },
+  [`one automatic snapshot (design tier, dense): the build in the compute worker > main thread: receive the answer (v8.deserialize of the bytes: an upper bound, the real buffer is transferred)`]:
+    { operation: `step 6.1b: automatic snapshot, receive the answer`, tier: 'design', shape: 'dense', budgetMs: null, note: `informal; an upper bound (the real buffer is transferred, not copied); SLOW_BENCH_OPTIONS; run once alone; not bench:baseline` },
+  [`one automatic snapshot (design tier, dense): the build in the compute worker > main thread: store the bytes with pruning to five (storeSnapshotBytes on fake-indexeddb)`]:
+    { operation: `step 6.1b: automatic snapshot, store with pruning (main thread)`, tier: 'design', shape: 'dense', budgetMs: null, note: `informal; fake-indexeddb costs far more than a real IndexedDB; SLOW_BENCH_OPTIONS; run once alone; not bench:baseline` },
 };

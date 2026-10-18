@@ -197,6 +197,18 @@ export const layoutCacheTextOf = (status: AppStatus): string | null => (status.l
 export const quarantineTextOf = (status: AppStatus): string | null =>
   status.quarantinedCount > 0 ? `${status.quarantinedCount} ${status.quarantinedCount === 1 ? 'record' : 'records'} set aside` : null;
 
+/**
+ * The status-line words for the automatic snapshots (step 6.1b); null where this tab takes none. A failed attempt is said in words (no banner);
+ * the time is UTC, so the words do not depend on the machine's zone.
+ */
+export function periodicTextOf(status: AppStatus): string | null {
+  const view = status.periodicSnapshots;
+  if (view === null) return null;
+  if (view.failure !== null) return `Automatic snapshots: last attempt failed: ${view.failure}`;
+  if (view.lastAt === null) return 'Automatic snapshots: none yet';
+  return `Automatic snapshots: last at ${view.lastAt.slice(0, 16).replace('T', ' ')} UTC (${view.kept} kept)`;
+}
+
 export function operationTextOf(status: AppStatus): string | null {
   const op = status.operation;
   if (op === null) return null;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_STATUS, type AppStatus } from '@/app/services';
-import { bannerKindOf, bannersOf, bootLinesOf, draftsLineOf, operationTextOf, saveTextOf, workersTextOf } from './banners';
+import { bannerKindOf, bannersOf, bootLinesOf, draftsLineOf, operationTextOf, periodicTextOf, saveTextOf, workersTextOf } from './banners';
 
 const status = (patch: Partial<AppStatus>): AppStatus => ({ ...INITIAL_STATUS, stage: 'ready', mode: 'writer', ...patch });
 const save = (patch: Partial<NonNullable<AppStatus['save']>>): NonNullable<AppStatus['save']> => ({
@@ -190,5 +190,15 @@ describe('bannerKindOf', () => {
     expect(produced.length).toBeGreaterThanOrEqual(10);
     for (const id of produced) expect(['info', 'warning', 'error', 'review']).toContain(bannerKindOf(id));
     expect(bannerKindOf('some_future_banner')).toBe('warning');
+  });
+});
+
+describe('periodicTextOf (step 6.1b part 4)', () => {
+  const status = (periodicSnapshots: AppStatus['periodicSnapshots']): AppStatus => ({ ...INITIAL_STATUS, periodicSnapshots });
+  it('says nothing where the tab takes none; "none yet"; the last time (UTC) and how many are kept; a failure in words', () => {
+    expect(periodicTextOf(status(null))).toBeNull();
+    expect(periodicTextOf(status({ lastAt: null, kept: 0, failure: null }))).toBe('Automatic snapshots: none yet');
+    expect(periodicTextOf(status({ lastAt: '2026-10-18T10:35:12.000Z', kept: 5, failure: null }))).toBe('Automatic snapshots: last at 2026-10-18 10:35 UTC (5 kept)');
+    expect(periodicTextOf(status({ lastAt: '2026-10-18T10:35:12.000Z', kept: 2, failure: 'the compute worker is down (x)' }))).toBe('Automatic snapshots: last attempt failed: the compute worker is down (x)');
   });
 });

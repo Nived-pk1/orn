@@ -102,6 +102,15 @@ export interface StorageView {
   readonly message: string | null;
 }
 
+/** The automatic (periodic) snapshots of the writer tab (step 6.1b): when the newest was made, how many are kept, and why the last attempt failed. */
+export interface PeriodicSnapshotsView {
+  /** UTC ISO time of the newest periodic snapshot; null when there is none yet. */
+  readonly lastAt: string | null;
+  readonly kept: number;
+  /** Why the last attempt failed, in words; null when it did not (or none was made). Cleared by the next stored snapshot. */
+  readonly failure: string | null;
+}
+
 export interface AppStatus {
   readonly stage: 'booting' | 'ready' | 'disposed';
   /** null until boot has decided. */
@@ -126,6 +135,8 @@ export interface AppStatus {
   readonly notices: BootNotices | null;
   /** Rows in the quarantine store now (step 5.11b): read at boot, and raised when an import sets rows aside. The status line says it on every boot while it is above 0; `notices.quarantinedRows` is only what THIS boot moved. */
   readonly quarantinedCount: number;
+  /** null: this tab takes no automatic snapshots (read-only, follower, or nothing is saved in this session). */
+  readonly periodicSnapshots: PeriodicSnapshotsView | null;
   readonly workers: { readonly chem: WorkerView; readonly layout: WorkerView; readonly search: WorkerView };
   readonly engines: { readonly chem: EngineView; readonly layout: EngineView };
   readonly l4: L4View;
@@ -153,6 +164,7 @@ export const INITIAL_STATUS: AppStatus = Object.freeze({
   followerReloads: 0,
   notices: null,
   quarantinedCount: 0,
+  periodicSnapshots: null,
   workers: Object.freeze({
     chem: Object.freeze({ state: 'absent', started: false, reason: 'not started' }),
     layout: Object.freeze({ state: 'absent', started: false, reason: 'not started' }),

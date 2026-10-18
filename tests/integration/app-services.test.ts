@@ -37,7 +37,7 @@ describe('the services are plain TypeScript (E1)', () => {
     expect(Object.keys(services).sort()).toEqual(
       [
         'bootReport', 'chem', 'depictions', 'dispose', 'drafts', 'flows', 'indexes', 'l4', 'layout', 'log', 'logApp', 'pendingWrites', 'persistence', 'replicaSync', 'resume', 'retryEngine', 'retryReplica',
-        'saveEverythingNow', 'search', 'searchSync', 'shutdown', 'status', 'store',
+        'saveEverythingNow', 'search', 'searchSync', 'shutdown', 'snapshotsIdle', 'status', 'store',
       ].sort(),
     );
   });

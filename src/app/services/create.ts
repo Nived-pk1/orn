@@ -28,6 +28,7 @@ import { startFollower } from './follower';
 import { createFlows } from './flows';
 import { createAssetStage } from './flow-ports';
 import { createL4Part } from './l4-part';
+import { createPeriodicPart } from './periodic-part';
 import { createSearchPart } from './search-part';
 import { checkStorageAtBoot } from './storage-check';
 import { createReplicaPart } from './replica';
@@ -95,6 +96,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   const indexes = createDerivedIndexes({ store, clock: env.clock });
   const assetStage = createAssetStage();
   const writer = createWriterPart({ store, adapter, status, log, ids, blobsFor: assetStage.blobsFor });
+  const periodic = createPeriodicPart({ store, adapter, replica, status, log, ids, env });
   const l4 = createL4Part({ store, indexes, chem: chemPart.service, timers: env.timers, status, log });
   const search = createSearchPart({
     factory: env.workers.search,
@@ -149,6 +151,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
       offMode();
       await Promise.allSettled([drafts.flush()]);
       drafts.dispose();
+      periodic.stop();
       writer.stop();
       offFormulas();
       search.stop();
@@ -189,6 +192,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     layout: layoutPart.service,
     search: search.search,
     searchSync: () => search.sync(),
+    snapshotsIdle: () => periodic.whenIdle(),
     depictions,
     flows,
     drafts,
