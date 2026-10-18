@@ -127,10 +127,10 @@ describe('P-07 DerivedIndexes on a follower: after applyRemote spans, reloads an
           expect(result.ok).toBe(true);
           synced = writer.getRevision();
           pending.length = 0;
-          // A remote or reload ChangeSet is never applied one by one: it is ONE build at the next read.
+          // A reload is never applied one by one (ONE build at the next read); a mirrored span (applyRemote) is applied like a commit (step 6.1b).
           const before = derived.stats();
           expectEqualsBuild(derived, follower, universe, `follower after ${step.then} ${i}`);
-          expect(derived.stats().applies).toBe(before.applies);
+          if (step.then === 'reload') expect(derived.stats().applies).toBe(before.applies);
         }
         expectEqualsBuild(derived, follower, universe, 'follower final');
         // A boot from the stored state: a fresh store, a fresh service, same answers.

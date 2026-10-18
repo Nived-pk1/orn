@@ -5,8 +5,9 @@
  *
  *  - the first build is lazy (the first `current()`);
  *  - `store.subscribe` queues each ChangeSet with the state after it; a read applies the queue in order;
- *  - ONE build instead (never an apply) when the cause is `replace` or `remote`, when a revision does not follow the last one
- *    (a gap), or when the queue passes the replica sync's bounds (100 ChangeSets or 2,000 touched records);
+ *  - ONE build instead (never an apply) when the cause is `replace` or a follower's `reload` (`reloaded`), when a revision does not follow
+ *    the last one (a gap), or when the queue passes the replica sync's bounds (100 ChangeSets or 2,000 touched records). The `remote`
+ *    ChangeSet of `applyRemote` (one mirrored writer transaction, which may span several revisions) is applied like a commit (step 6.1b);
  *  - rejected commits are never announced by the store, so they cause no build and no apply (no rollback exists on this path).
  *
  * `current()` returns the handle of the store's revision. CALLERS NEVER KEEP A HANDLE: `IndexEngine.apply` updates one lineage
@@ -93,9 +94,9 @@ export function createDerivedIndexes(options: DerivedIndexesOptions): DerivedInd
   const unsubscribe = store.subscribe((changes) => {
     // Nothing is built yet: the first read builds from the state of the moment; nothing to queue.
     if (handle === undefined || mustBuild !== undefined) return;
-    if (changes.cause === 'replace' || changes.cause === 'remote') return drop(changes.cause);
+    if (changes.cause === 'replace' || changes.reloaded === true) return drop(changes.cause === 'replace' ? 'replace' : 'remote');
     if (changes.revision <= knownRevision()) return; // already inside what a read built from a newer state
-    if (changes.revision !== knownRevision() + 1) return drop('gap');
+    if (changes.cause !== 'remote' && changes.revision !== knownRevision() + 1) return drop('gap'); // only a mirrored transaction may skip revisions
     queue.push({ changes, next: store.getState() });
     queuedRecords += weightOf(changes);
     if (queue.length > maxBacklog || queuedRecords > maxBacklogRecords) drop('backlog');

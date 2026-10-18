@@ -87,7 +87,22 @@ describe('DerivedIndexes', () => {
     expect(derived.stats()).toMatchObject({ builds: 2, applies: 0, lastBuildReason: 'replace' });
   });
 
-  it('a remote span or reload is ONE build', () => {
+  it('a mirrored writer transaction (applyRemote), even over several revisions, is applied like a commit: no build', () => {
+    const writer = makeStore(base);
+    const follower = makeStore(base, { readOnly: () => true });
+    const derived = createDerivedIndexes({ store: follower, clock: counting() });
+    derived.current();
+    note(writer, 'one');
+    note(writer, 'two');
+    const id = Object.keys(writer.getState().records.species).sort()[0] as string;
+    const result = follower.applyRemote({ fromRevision: follower.getRevision(), revision: writer.getRevision(), upserts: [recordIn(writer.getState(), 'species', id)], deletedIds: [] });
+    expect(result.ok, JSON.stringify(result)).toBe(true);
+    expect(derived.stats().queued).toBe(1);
+    equalsBuild(follower, () => derived.current());
+    expect(derived.stats()).toMatchObject({ builds: 1, applies: 1 });
+  });
+
+  it('a reload is ONE build', () => {
     const follower = makeStore(base, { readOnly: () => true });
     const derived = createDerivedIndexes({ store: follower, clock: counting() });
     derived.current();

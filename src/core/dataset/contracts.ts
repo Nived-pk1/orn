@@ -17,6 +17,12 @@ export interface ChangeSet {
    * it (the follower is not the writer, INV-28), and indexes accept it as a forward span.
    */
   readonly cause: 'command' | 'undo' | 'redo' | 'replace' | 'remote';
+  /**
+   * Present (true) only on the `'remote'` ChangeSet of a follower's `reload` (a whole state adopted from storage, ADR-033 amended
+   * 2026-10-18): the lists are not a mirrored writer transaction, so derived consumers load again instead of analysing it. Absent on
+   * the ChangeSet of `applyRemote` (one mirrored transaction: analysed like a commit) and on every other cause.
+   */
+  readonly reloaded?: true;
   readonly created: readonly RecordRef[];
   readonly updated: readonly RecordRef[];
   readonly deleted: readonly RecordRef[];

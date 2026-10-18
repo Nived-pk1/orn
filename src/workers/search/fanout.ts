@@ -12,7 +12,7 @@
  *            `units` / `examId`, a topic deleted or with a new `parentId` (a new topic
  *            reaches nothing: whatever points at it is a change of its own). (An exam record itself is never read by
  *            `scopeOf`, only its id, so a change to it moves nothing; a mutation test showed that rule was dead.)
- * A `replace` (replaceState) or `remote` change is not analysed: the caller loads the whole index again.
+ * A `replace` (replaceState) or a follower's `reload` (`reloaded`) change is not analysed: the caller loads the whole index again.
  * Whatever is over-approximated here is harmless: the sync rebuilds a candidate and sends it only when its document differs from
  * the last one sent. Whatever is MISSED would be a stale document, which is why the property test compares the incremental index
  * with a full rebuild after random command sequences.
@@ -27,7 +27,7 @@ export interface Affected {
   readonly direct: readonly RecordRef[];
   /** Rebuild because something they read changed; the sync queues them 500 at a time. Sorted, no duplicates, none also in `direct`. */
   readonly behind: readonly RecordRef[];
-  /** The whole index must be loaded again (`replace`, `remote`). */
+  /** The whole index must be loaded again (`replace`, a follower's `reload`). */
   readonly reload: boolean;
 }
 
@@ -92,7 +92,8 @@ export function allRefs(state: CanonicalState, kinds: readonly RecordKind[] = SE
 }
 
 export function affectedBy(changes: ChangeSet, state: CanonicalState, indexes: Ids): Affected {
-  if (changes.cause === 'replace' || changes.cause === 'remote') return { direct: [], behind: [], reload: true };
+  // a `remote` ChangeSet of `applyRemote` (one mirrored writer transaction) is analysed like a commit; a `reload` is a whole state
+  if (changes.cause === 'replace' || changes.reloaded === true) return { direct: [], behind: [], reload: true };
   const all = [...changes.created, ...changes.updated, ...changes.deleted];
   const direct = new Map<string, RecordRef>();
   const behind = new Map<string, RecordRef>();

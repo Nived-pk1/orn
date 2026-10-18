@@ -309,15 +309,18 @@ export function createCanonicalStore(options: StoreOptions): StoreHandle {
       const nextIndexes = coreIndexEngine.build(replacement, adoptedRevision);
       const found = findingsOf(replacement, nextIndexes, precomputed);
       if ('code' in found) return failure(found);
-      const changes = assembleChangeSet({
-        revision: adoptedRevision,
-        label: 'Reload from storage',
-        cause: 'remote',
-        before: state,
-        after: replacement,
-        patches: replacementPatches(state, replacement),
-        inversePatches: replacementPatches(replacement, state),
-      });
+      const changes: ChangeSet = {
+        ...assembleChangeSet({
+          revision: adoptedRevision,
+          label: 'Reload from storage',
+          cause: 'remote',
+          before: state,
+          after: replacement,
+          patches: replacementPatches(state, replacement),
+          inversePatches: replacementPatches(replacement, state),
+        }),
+        reloaded: true,
+      };
       const oldRefs = allRefs(state);
       const newRefs = allRefs(replacement);
       const scope = [...oldRefs, ...newRefs];

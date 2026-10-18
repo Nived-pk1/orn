@@ -1,7 +1,7 @@
 /**
  * Which documents a change reaches (step 4.5, fanout.ts), on real ChangeSets from the store: an ordinary edit reaches only its own
  * record; a mapping, a reagent's families, a prerequisite, an exam version's coverage and the topic tree reach exactly the
- * documents that read them; `replace` and `remote` ask for a full load. The incremental = rebuild property
+ * documents that read them; `replace` and a follower's `reload` ask for a full load (a mirrored `remote` transaction is analysed like a commit). The incremental = rebuild property
  * (tests/property/search-incremental.test.ts) is the safety net for anything missed here.
  */
 import { describe, expect, it } from 'vitest';
@@ -111,12 +111,19 @@ describe('what a change reaches', () => {
     expect(reparent.affected.behind.length).toBeGreaterThan(20);
   });
 
-  it('replace and remote changes ask for a full load, and nothing else', () => {
+  it('a replace and a follower reload ask for a full load, and nothing else', () => {
     const { changes, state } = change((s) => as({ ...at(s, 'species', first(s, 'species')), notes: 'x' }));
     const indexes = indexEngine.build(state, 1);
-    for (const cause of ['replace', 'remote'] as const) {
-      expect(affectedBy({ ...changes, cause }, state, indexes)).toEqual({ direct: [], behind: [], reload: true });
-    }
+    expect(affectedBy({ ...changes, cause: 'replace' }, state, indexes)).toEqual({ direct: [], behind: [], reload: true });
+    expect(affectedBy({ ...changes, cause: 'remote', reloaded: true }, state, indexes)).toEqual({ direct: [], behind: [], reload: true });
+  });
+
+  it('a mirrored writer transaction (remote, not reloaded) is analysed like a commit: the same records as the commit itself', () => {
+    const { changes, state, affected } = change((s) => as({ ...at(s, 'species', first(s, 'species')), names: { canonical: 'Other', common: [], aliases: ['x'] } }));
+    const remote = affectedBy({ ...changes, cause: 'remote' }, state, indexEngine.build(state, 1));
+    expect(remote).toEqual(affected);
+    expect(remote.reload).toBe(false);
+    expect(remote.direct).toHaveLength(1);
   });
 
   it('the result is sorted, without duplicates, and nothing is both direct and behind', () => {

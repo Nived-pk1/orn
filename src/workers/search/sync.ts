@@ -10,7 +10,7 @@
  *     reactions, every concept, everything after an exam-version or topic-tree edit) are queued AT MOST `REFRESH_CAP` at a
  *     time; the rest wait in a backlog, in order, and are queued as the queue empties. Nothing is dropped; until a backlog
  *     record is refreshed, its document is the last one sent (`status().backlog` says how many wait).
- *   - `replace` and `remote` changes, a `REVISION_MISMATCH` (a restarted worker, a missed change) and any failure of the worker
+ *   - `replace` changes, a follower's `reload` (`reloaded`), a `REVISION_MISMATCH` (a restarted worker, a missed change) and any failure of the worker
  *     lead to ONE full load of the current state. The previous index keeps answering searches until the load lands.
  *   - `refresh(ids)` (step 5.1b, Q9): the formulas the L4 service derived for these species changed; their documents are rebuilt
  *     (and sent only if they differ), like any other derived-data change.
