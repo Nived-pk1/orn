@@ -271,3 +271,27 @@
   flex-direction: column;
   gap: var(--space-1);
 }
+
+.matches {
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.match {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.matchDrawing {
+  width: 128px;
+  height: auto;
+}

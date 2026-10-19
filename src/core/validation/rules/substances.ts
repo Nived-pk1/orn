@@ -16,7 +16,7 @@ type Named = Species | ChemicalClass;
 const fold_ = (text: string | undefined): string => (text === undefined ? '' : fold(text));
 
 /** Records of `kind` sharing this record's canonical name, unless a different qualifier tells them apart. */
-function twinsOf(record: Named, ctx: RuleContext, kind: RecordKind): AnyRecord[] {
+export function twinsOf(record: Named, ctx: RuleContext, kind: RecordKind): AnyRecord[] {
   const folded = fold_(record.names.canonical);
   const qualifier = fold_(record.names.qualifier);
   const others = existing(ctx, ctx.indexes.byFoldedName(kind, folded).filter((ref) => ref.id !== record.id));

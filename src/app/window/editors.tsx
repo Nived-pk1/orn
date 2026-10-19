@@ -64,7 +64,11 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       indexes: inspector.indexes.current,
       activeExam: () => inspector.ui.exam?.getState().active ?? null,
     });
-    return makeEditorPort(services, inspector.timers, inspector.depictions, classes);
+    const openRecord = (ref: RecordRef): void => {
+      inspector.ui.inspector.getState().open(ref);
+      inspector.ui.panels.getState().setInspectorOpen(true);
+    };
+    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), classes, openRecord });
   }, [services, inspector]);
   return (
     <EditorsContext.Provider value={api}>

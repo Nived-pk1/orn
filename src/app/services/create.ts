@@ -23,6 +23,7 @@ import type { AppEnv, AppServices } from './contracts';
 import { createChemPart, createLayoutPart } from './chem-layout';
 import { createDepictionService } from './depiction';
 import { createDraftChecks } from './draft-checks';
+import { createDuplicateCheck } from './duplicate-check';
 import { createDraftManager } from './drafts';
 import { createDerivedIndexes } from './derived-indexes';
 import { startFollower } from './follower';
@@ -198,6 +199,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     flows,
     drafts,
     draftChecks: createDraftChecks({ store, sync: () => replica.sync(), chem: chemPart.service }),
+    duplicateCheck: createDuplicateCheck({ state: store.getState, indexes: () => indexes.current(), chem: chemPart.service, l4: l4.service }),
     async retryEngine(name) {
       const result = await (name === 'chem' ? chemPart : layoutPart).retry();
       log.add({ source: 'app', event: { type: 'engine_retry', message: `retry of the ${name} engine: ${result.ok ? 'ready' : result.message}` } });

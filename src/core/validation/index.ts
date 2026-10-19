@@ -16,6 +16,7 @@ export { duplicateRecordFindings } from './l2';
 export { assertUniqueRuleIds, runRules } from './runner';
 export { RULE_SET, RULE_SET_ID, RULE_SET_LEVELS, computeRuleSetId, type RuleIdentity } from './rule-set';
 export { EXTERNAL_RULES } from './rules/external';
+export { twinsOf as sameNameRecords } from './rules/substances';
 export { REFERENCE_RULES } from './rules/references';
 export { L2_RULES, L3_RULES, RULES } from './rules/registry';
 export { createFindingStore } from './store';

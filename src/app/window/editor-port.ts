@@ -1,13 +1,14 @@
 /** The editor's port filled from the app's session manager and store (ADR-040). Pure wiring; no chemistry. */
+import type { RecordRef } from '@/core/schema';
 import type { ClassPickerPort, EditorPort, StructurePort } from '@/features/workbench';
 import type { WindowServices } from './context';
 
 export function makeEditorPort(
-  services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks' | 'chem'>>,
+  services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks' | 'chem' | 'duplicateCheck'>>,
   timers: EditorPort['timers'],
-  depictions?: StructurePort['depictions'],
-  classes?: ClassPickerPort,
+  extras: { readonly depictions?: StructurePort['depictions']; readonly classes?: ClassPickerPort; readonly openRecord?: (ref: RecordRef) => void } = {},
 ): EditorPort {
+  const { depictions, classes, openRecord } = extras;
   const { drafts, store } = services;
   return {
     entry: (id) => drafts.entry(id),
@@ -23,6 +24,7 @@ export function makeEditorPort(
     ...(services.draftChecks === undefined ? {} : { checks: services.draftChecks }),
     ...(services.chem === undefined ? {} : { structure: { parse: (structure) => (services.chem as NonNullable<typeof services.chem>).parse(structure), ...(depictions === undefined ? {} : { depictions }) } }),
     ...(classes === undefined ? {} : { classes }),
+    ...(services.duplicateCheck === undefined || openRecord === undefined ? {} : { duplicates: { check: services.duplicateCheck.check, openRecord } }),
     timers,
   };
 }

@@ -170,6 +170,7 @@ export function createL4Service(options: L4ServiceOptions): L4Service {
       return { queued: Math.max(pending, dirty.species.size + dirty.reaction.size + dirty.mechanism.size + backlog.size), notChecked };
     },
     derivedFormulaOf: (ref) => (ref.kind === 'species' ? ctx.formulaOf(ref.id) : undefined),
+    speciesWithCanonical: (canonical) => ctx.groups.membersOf(canonical),
     subscribeFormulas: ctx.subscribeFormulas,
     subscribe: ctx.subscribe,
     stats: ctx.stats,

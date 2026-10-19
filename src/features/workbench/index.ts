@@ -9,3 +9,4 @@ export type { EditorEntryView, EditorCommitResult, EditorPort } from './editor-c
 export type { ClassSuggestion, DraftChecksPort, DryRunAnswer, StructureChecksAnswer } from './check-contracts';
 export type { StructurePort } from './structure-contracts';
 export type { ClassChoice, ClassPickerPort } from './class-picker-contracts';
+export type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome, DuplicatePort } from './duplicate-contracts';

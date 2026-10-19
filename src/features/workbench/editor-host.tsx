@@ -13,6 +13,8 @@ import type { Finding } from '@/core/validation';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, Dialog, useToasts } from '@/ui/primitives';
 import { ConflictView, DeletedView } from './conflict-view';
+import { DuplicateDialog } from './duplicate-dialog';
+import type { DuplicateOutcome } from './duplicate-contracts';
 import { draftStatusText, editingUnavailableReason } from './draft-text';
 import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
@@ -87,6 +89,7 @@ export function EditorHost(props: EditorHostProps) {
   const [refusal, setRefusal] = useState<{ readonly findings: readonly Finding[]; readonly message: string | null } | null>(null);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateOutcome | null>(null);
   const root = useRef<HTMLDivElement | null>(null);
   const closing = useRef(false);
   const kind = entry?.session.kind ?? 'species';
@@ -139,10 +142,20 @@ export function EditorHost(props: EditorHostProps) {
     return typeof id === 'string' ? ({ kind: session.kind, id } as RecordRef) : null;
   };
 
-  const save = async (choices?: ConflictChoices): Promise<void> => {
+  const save = async (choices?: ConflictChoices, duplicatesAnswered = false): Promise<void> => {
     if (entry === undefined || busy) return;
     const target = refTarget();
     setBusy(true);
+    // after L1 passes and before the store's gate: does this repeat a record we already have? (advice; the gate still runs)
+    if (!duplicatesAnswered && choices === undefined && port.duplicates !== undefined && parseRecord(entry.session.kind, entry.session.draft).ok) {
+      const outcome = await port.duplicates.check(entry.session.kind, entry.session.draft);
+      if (outcome.matches.length > 0) {
+        setBusy(false);
+        setDuplicates(outcome);
+        return;
+      }
+      if (!outcome.structureChecked) toasts.push({ kind: 'warning', text: 'Structure duplicates could not be checked' });
+    }
     const result = await port.commit(sessionId, choices, SECTION_OF[session.kind] ?? 'names');
     setBusy(false);
     if (result.ok) {
@@ -164,6 +177,12 @@ export function EditorHost(props: EditorHostProps) {
       return;
     }
     setRefusal({ findings: [], message: result.error.code === 'EMPTY_COMMAND' ? 'Nothing to save: the draft is the same as the saved record.' : `The record was not saved (${result.error.code}): ${result.error.message}` });
+  };
+
+  const openExisting = (ref: RecordRef): void => {
+    setDuplicates(null);
+    close(); // the draft stays a draft
+    port.duplicates?.openRecord(ref);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -229,6 +248,7 @@ export function EditorHost(props: EditorHostProps) {
   );
 
   return (
+    <>
     <Dialog open={props.open} onClose={close} title={title} size={phone ? 'screen' : 'wide'} footer={footer}>
       {/* the key handler is the draft's own undo and redo; the dialog's focus stays inside it */}
       <div ref={root} onKeyDown={onKeyDown} data-testid="editor-root">
@@ -290,5 +310,19 @@ export function EditorHost(props: EditorHostProps) {
         )}
       </div>
     </Dialog>
+    {duplicates === null ? null : (
+      <DuplicateDialog
+        outcome={duplicates}
+        structure={port.structure}
+        timers={port.timers}
+        onOpenExisting={(match) => openExisting(match.ref)}
+        onKeepBoth={() => {
+          setDuplicates(null);
+          void save(undefined, true);
+        }}
+        onClose={() => setDuplicates(null)}
+      />
+    )}
+    </>
   );
 }

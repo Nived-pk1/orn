@@ -130,4 +130,48 @@ test.describe('the species editor', () => {
     await expect(pane(page)).toBeVisible();
     await expectClean(seen);
   });
+
+  test('the duplicate check: a second "Ethanol" with CCO shows the demo ethanol by name AND structure; Open the existing; then Keep both saves', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page);
+    await openDemo(page);
+    await startNewSpecies(page);
+    const dialog = newSpeciesDialog(page);
+    await dialog.getByLabel('Canonical name (required)').fill('Ethanol');
+    await structureField(page).fill('CCO');
+    await expect(dialog.getByRole('img', { name: 'Drawing of the entered structure' })).toBeVisible({ timeout: 60_000 });
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+
+    const dup = page.getByRole('dialog', { name: 'This may already exist' });
+    await expect(dup).toBeVisible({ timeout: 60_000 });
+    await expect(dup.getByText('Ethanol', { exact: true })).toBeVisible();
+    await expect(dup.getByText('Matched by the same name and the same structure.')).toBeVisible();
+    await expect(dup.getByRole('img', { name: 'Structure of Ethanol' })).toBeVisible({ timeout: 60_000 });
+    await expect(dup.getByRole('button', { name: 'Merge', description: 'Merging arrives in step 6.8' })).toHaveAttribute('aria-disabled', 'true');
+    await page.screenshot({ path: resolve(shotsDir(), 'duplicate-dialog-1280x800.png') });
+
+    // Open the existing: the draft stays a draft and the demo ethanol is shown
+    await dup.getByRole('button', { name: 'Open Ethanol' }).click();
+    await expect(dup).toBeHidden();
+    await expect(newSpeciesDialog(page)).toBeHidden();
+    await expect(record(page)).toHaveAttribute('data-record-id', 'spc_ethanol');
+    await expect(page.getByRole('list', { name: 'Drafts' })).toContainText('Ethanol');
+
+    // continue the draft, Save again, Keep both
+    await page.getByRole('button', { name: 'Continue Ethanol' }).click();
+    await expect(newSpeciesDialog(page)).toBeVisible();
+    await newSpeciesDialog(page).getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(dup).toBeVisible({ timeout: 60_000 });
+    await dup.getByRole('button', { name: 'Keep both' }).click();
+    await expect(dup).toBeHidden();
+    await expect(newSpeciesDialog(page)).toBeHidden();
+
+    // two species are named Ethanol now
+    await page.keyboard.press('Control+K');
+    await expect(palette(page)).toBeVisible();
+    await searchFor(page, 's: ethanol');
+    await expect(palette(page).getByRole('option', { name: /^Ethanol/ })).toHaveCount(2, { timeout: 60_000 });
+    await page.keyboard.press('Escape');
+    await expectClean(seen);
+  });
 });

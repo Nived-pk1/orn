@@ -82,6 +82,11 @@ export interface L4Service {
    * structure changed since, or the toolkit did not answer. Derived data, held in memory only (INV-11).
    */
   derivedFormulaOf(ref: RecordRef): string | undefined;
+  /**
+   * The ids of the species whose canonical structure (RDKit's canonical SMILES, atom maps kept) is `canonical`, as the checks know them now (step 6.2a,
+   * additive: the duplicate check on Save). Derived data in memory (INV-11); a species not checked yet is not listed. Sorted.
+   */
+  speciesWithCanonical(canonical: string): readonly string[];
   /** Called with the ids of the species whose derived formula was learned, changed or dropped. Returns the unsubscribe function. */
   subscribeFormulas(listener: (ids: readonly string[]) => void): () => void;
   /** Called when any status changed or work was queued. Returns the unsubscribe function. */

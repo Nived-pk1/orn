@@ -14,7 +14,7 @@ import type { MigrationRunner } from '@/core/migrations/contracts';
 import type { BootReport, BroadcastChannelFactory, DexieAdapter, LockManagerLike, OrnDbOptions, Scheduler } from '@/persistence';
 import type { ReplicaSync } from '@/workers/compute';
 import type { DepictionService } from './depiction';
-import type { DraftChecksPort } from '@/features/workbench';
+import type { DraftChecksPort, DuplicateCheckPort } from '@/features/workbench';
 import type { DraftManager } from './drafts';
 import type { DerivedIndexes } from './derived-indexes';
 import type { Flows } from './flow-types';
@@ -80,7 +80,7 @@ export interface AppServices {
   /** Structure parsing, depiction and the batch checks. Every call answers a value; "unavailable" and "timeout" are answers. */
   readonly chem: ChemService;
   /** The L4 checks: per-subject status, derived formulas, summary. Feed and control belong to the services (`retryEngine`). */
-  readonly l4: Pick<L4Service, 'statusOf' | 'subscribe' | 'subscribeFormulas' | 'derivedFormulaOf' | 'summary' | 'flush' | 'stats'>;
+  readonly l4: Pick<L4Service, 'statusOf' | 'subscribe' | 'subscribeFormulas' | 'derivedFormulaOf' | 'speciesWithCanonical' | 'summary' | 'flush' | 'stats'>;
   /** Layout over the layout worker, with the warm-up gate; a fallback layout or a note is reported in the log and `layoutNotice`. */
   readonly layout: LayoutService;
   /** Search queries (a newer query on the same channel supersedes the older). The index is kept by the services. */
@@ -103,6 +103,8 @@ export interface AppServices {
   readonly flows: Flows;
   /** The live panel's checks of a draft (step 6.2a): L1-L3 dry run in the compute worker, L4 of the structure in the chem worker. */
   readonly draftChecks: DraftChecksPort;
+  /** The duplicate check on Save of a species (step 6.2a part 5): by folded name and by canonical structure. */
+  readonly duplicateCheck: DuplicateCheckPort;
   /** The editor sessions (ADR-040): open drafts in memory, kept in storage by a 2 s throttle, offered again at the next boot. */
   readonly drafts: DraftManager;
   /** Synchronous: ChangeSets accepted but not yet durable, or a failing save (for `beforeunload`). */
