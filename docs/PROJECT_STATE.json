@@ -90,6 +90,8 @@
     "6.1a",
     "6.1b",
     "6.2a",
+    "6.2b",
+    "6.2",
     "6.1"
   ],
   "nextPhase": 7,
@@ -104,8 +106,8 @@
     "commit": "7e443f3",
     "version": "f4608a1f-1db6-4d3b-97d3-c1dd9c27659e"
   },
-  "nextStep": "6.2b",
-  "nextStepTitle": "Class and reagent editors (the species editor, structure panel, live validation and duplicate check are built in 6.2a; deploy at the end of 6.2b)",
+  "nextStep": "6.3",
+  "nextStepTitle": "Reaction editor: identity, participants, stages",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
