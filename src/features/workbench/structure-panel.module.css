@@ -1,0 +1,61 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.text {
+  min-height: var(--hit-min);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-13);
+  resize: vertical;
+  word-break: break-all;
+}
+
+.text[aria-invalid='true'] {
+  border-color: var(--color-error);
+  outline: 1px solid var(--color-error);
+}
+
+.refusal {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-13);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--text-13);
+  color: var(--color-ink-2);
+}
+
+.drawing {
+  max-width: 100%;
+  width: 256px;
+  height: auto;
+  align-self: flex-start;
+}
+
+.facts {
+  border-collapse: collapse;
+  font-size: var(--text-13);
+}
+
+.facts th,
+.facts td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-rule);
+}

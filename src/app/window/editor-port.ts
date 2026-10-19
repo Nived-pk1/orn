@@ -1,8 +1,12 @@
 /** The editor's port filled from the app's session manager and store (ADR-040). Pure wiring; no chemistry. */
-import type { EditorPort } from '@/features/workbench';
+import type { EditorPort, StructurePort } from '@/features/workbench';
 import type { WindowServices } from './context';
 
-export function makeEditorPort(services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks'>>, timers: EditorPort['timers']): EditorPort {
+export function makeEditorPort(
+  services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks' | 'chem'>>,
+  timers: EditorPort['timers'],
+  depictions?: StructurePort['depictions'],
+): EditorPort {
   const { drafts, store } = services;
   return {
     entry: (id) => drafts.entry(id),
@@ -16,6 +20,7 @@ export function makeEditorPort(services: Pick<WindowServices, 'drafts' | 'store'
     discard: (id) => drafts.discard(id),
     warningsOf: (ref) => store.findings.bySubject(ref).filter((finding) => finding.severity === 'warning').length,
     ...(services.draftChecks === undefined ? {} : { checks: services.draftChecks }),
+    ...(services.chem === undefined ? {} : { structure: { parse: (structure) => (services.chem as NonNullable<typeof services.chem>).parse(structure), ...(depictions === undefined ? {} : { depictions }) } }),
     timers,
   };
 }

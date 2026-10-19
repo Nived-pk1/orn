@@ -50,7 +50,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
     }),
     [reason, services, show],
   );
-  const port = useMemo<EditorPort>(() => makeEditorPort(services, inspector.timers), [services, inspector]);
+  const port = useMemo<EditorPort>(() => makeEditorPort(services, inspector.timers, inspector.depictions), [services, inspector]);
   return (
     <EditorsContext.Provider value={api}>
       {props.children}
