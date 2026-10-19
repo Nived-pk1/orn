@@ -4793,3 +4793,8 @@ Speed check 0.65 / 0.76 / 0.66 s (median 0.66 s). ONE run, production build, Chr
 ### Outcome groups step, part 4 - deployed (2026-10-19)
 
 `npx wrangler deploy` of commit 7e443f3 (nothing was asked): version f4608a1f-1db6-4d3b-97d3-c1dd9c27659e at https://reaction-navigator.organic-reaction-navigator.workers.dev. Against the live URL, Chromium and WebKit: smoke, csp, phone, phone-family, equation, phone-equation (and the other phone specs the pattern matches): 45 passed, 17 skipped (by-design), 0 failed. PROJECT_STATE releasePreview updated.
+
+### Outcome groups step review (reviewer, 2026-10-19)
+
+ACCEPTED. The user checked it on the live site ("yup fixed"). Approved as built, with every changed test: one scheme per group, regiochemistry words, the bordered full-equation panel, local snapshot time, the removal of `startPeriodicSnapshots`, the deploy f4608a1f and its separate record commit (right: never amend).
+REVIEW REQUIRED answers: (1) the two-temperature card exists only in a component test; the aldol card is the real example: accepted. (2) "In all variants" as the heading of the empty-set group: accepted. (3) The heading rule ("At " only before a measured value): accepted. (4) Regiochemistry only in groups of 2+: accepted. (5) The sentence with stored names: accepted. (6) The inspector also grouped: approved. (7) `FamilyCard.groups` and the stored outcome order: approved. (8) Names switch inside the panel: approved.
