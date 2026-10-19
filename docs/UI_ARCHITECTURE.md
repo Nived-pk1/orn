@@ -107,6 +107,7 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 - **Pickers** search by name, alias, formula and structure; they show kind, class and scope; "create new" opens a nested species/reagent editor session.
 - **Templates and duplication**: "New specific reaction from this generic one" pre-fills `instanceOfId` and participants; "Duplicate" regenerates all nested IDs through the reference engine.
 - **Review queue**: all REVIEW_REQUIRED findings grouped by reason, with bulk "mark verified" (an undoable command).
+- *Step 6.3a (ADR-040 addendum, 2026-10-19):* the reaction editor builds Identity, Participants, Stages and Review (D1-D4); the other sections above stay read-only summaries until 6.4 (conditions, variants, outcomes), 6.5 (mechanism links, classification) and 6.6 (the rest). "Duplicate" and "New specific reaction from this generic one" move to step 6.7 (D7).
 
 ## 8. Compound and structure authoring (#12)
 
