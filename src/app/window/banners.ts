@@ -4,6 +4,7 @@
  */
 import type { AppStatus, BootNotices, EngineName, WorkerName } from '@/app/services';
 import type { NoticeKind } from '@/ui/primitives';
+import type { TimeFormatter } from './local-time';
 
 export type BannerAction = 'reload' | 'save_everything' | 'retry_replica' | 'retry_chem' | 'retry_layout' | 'dismiss_storage' | 'export';
 
@@ -199,14 +200,14 @@ export const quarantineTextOf = (status: AppStatus): string | null =>
 
 /**
  * The status-line words for the automatic snapshots (step 6.1b); null where this tab takes none. A failed attempt is said in words (no banner);
- * the time is UTC, so the words do not depend on the machine's zone.
+ * the time is shown in the reader's zone through the injected formatter (`local-time.ts`).
  */
-export function periodicTextOf(status: AppStatus): string | null {
+export function periodicTextOf(status: AppStatus, formatTime: TimeFormatter): string | null {
   const view = status.periodicSnapshots;
   if (view === null) return null;
   if (view.failure !== null) return `Automatic snapshots: last attempt failed: ${view.failure}`;
   if (view.lastAt === null) return 'Automatic snapshots: none yet';
-  return `Automatic snapshots: last at ${view.lastAt.slice(0, 16).replace('T', ' ')} UTC (${view.kept} kept)`;
+  return `Automatic snapshots: last at ${formatTime(view.lastAt)} (${view.kept} kept)`;
 }
 
 export function operationTextOf(status: AppStatus): string | null {

@@ -7,6 +7,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { AppServices } from '@/app/services';
 import { periodicTextOf } from '@/app/window/banners';
+import { createLocalTimeFormatter } from '@/app/window/local-time';
 import { PERIODIC_ACTIVITY_MS, PERIODIC_REVISIONS } from '@/persistence';
 import { createBooter, demoState, editNote, renameDataset } from '@/test-support/app-boot-kit';
 import { testEnv, worldHolding, type TestEnv } from '@/test-support/app-env-kit';
@@ -174,7 +175,7 @@ describe('when the data moves on, or the build fails', () => {
     expect(await periodic(services)).toHaveLength(0);
     const view = services.status.get().periodicSnapshots;
     expect(view?.failure).toBe('the snapshot could not be built (a record does not serialise)');
-    expect(periodicTextOf(services.status.get())).toBe('Automatic snapshots: last attempt failed: the snapshot could not be built (a record does not serialise)');
+    expect(periodicTextOf(services.status.get(), createLocalTimeFormatter('UTC'))).toBe('Automatic snapshots: last attempt failed: the snapshot could not be built (a record does not serialise)');
     expect(services.log.get().some((entry) => entry.event.type === 'periodic_snapshot_failed')).toBe(true);
     fail = false;
     await edits(services, 1);

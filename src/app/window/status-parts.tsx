@@ -7,19 +7,22 @@ import { Banner, Button } from '@/ui/primitives';
 import { usePanels } from '@/ui/state';
 import { bannersOf, bannerKindOf, bootLinesOf, draftsLineOf, layoutCacheTextOf, operationTextOf, periodicTextOf, quarantineTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
+import { createLocalTimeFormatter } from './local-time';
 import { useDraftsOpen, useDraftsView } from './drafts-ui';
 import { useExportOpen } from './export-context';
 import styles from './status-parts.module.css';
 
+const localTime = createLocalTimeFormatter();
+
 export function StatusLine() {
-  const { services } = useApp();
+  const { services, formatTime } = useApp();
   const status = useSubscribable(services.status);
   const counts = useCounts(services.store.findings);
   const operation = operationTextOf(status);
   const storage = storageTextOf(status);
   const layoutCache = layoutCacheTextOf(status);
   const setAside = quarantineTextOf(status);
-  const snapshots = periodicTextOf(status);
+  const snapshots = periodicTextOf(status, formatTime ?? localTime);
   const readOnly = status.mode === 'follower' || status.mode === 'read_only';
   return (
     <section aria-label="Status">

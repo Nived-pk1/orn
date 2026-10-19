@@ -13,6 +13,7 @@ import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import { createIdFactory } from '@/core/dataset';
 import type { StructureMode } from '@/chem/contracts';
 import type { CanonicalState } from '@/core/schema';
+import { createLocalTimeFormatter } from '@/app/window/local-time';
 import { Window } from '@/app/window/window';
 import { createInspectorStore, createPanelsStore, type InspectorStore, type PanelsPort, type PanelsStore } from '@/ui/state';
 import type { InspectorPorts } from '@/features/inspector';
@@ -125,7 +126,7 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
     ui: { inspector: inspectorStore, selection: navigator.ports.ui.selection, family: navigator.ports.ui.family, panels },
     log: () => undefined,
   };
-  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigatorPorts, inspector, loadDemo, nowMs: () => 1_790_000_000_000, reload } };
+  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigatorPorts, inspector, loadDemo, nowMs: () => 1_790_000_000_000, formatTime: createLocalTimeFormatter('UTC'), reload } };
 }
 
 export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {

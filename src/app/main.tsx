@@ -13,6 +13,7 @@ import { createTextMeasurer } from './text-measurer';
 import type { DemoLoad } from './window/context';
 import { createInspectorPorts } from './window/inspector-port';
 import { createFactsPort } from './window/facts-port';
+import { createLocalTimeFormatter } from './window/local-time';
 import { createNavigatorPorts } from './window/navigator-port';
 import { createPanelsPort, createUiEntryPort } from './window/panels-port';
 
@@ -53,7 +54,7 @@ async function start(): Promise<void> {
   window.addEventListener('pagehide', () => void navigatorUi.flush());
   createRoot(rootElement).render(
     <StrictMode>
-      <App value={{ services, panels, navigator, inspector, loadDemo, nowMs: () => env.clock.nowMs(), reload: () => window.location.reload() }} />
+      <App value={{ services, panels, navigator, inspector, loadDemo, nowMs: () => env.clock.nowMs(), formatTime: createLocalTimeFormatter(), reload: () => window.location.reload() }} />
     </StrictMode>,
   );
 }

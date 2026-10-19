@@ -8,6 +8,7 @@ import { fakeApp, renderWithApp, WRITER_STATUS } from '@/test-support/window-kit
 import { Banners, BootLines, StatusLine } from './status-parts';
 import { EditorsContext } from './drafts-ui';
 import { vi } from 'vitest';
+import { createLocalTimeFormatter } from './local-time';
 
 afterEach(cleanup);
 
@@ -167,13 +168,14 @@ describe('records set aside (5.11b)', () => {
 describe('automatic snapshots (6.1b)', () => {
   it('the status line (and so the phone Status dialog) says none yet, the last one and how many are kept, or that the attempt failed; nothing where the tab takes none', () => {
     const app = fakeApp({ status: { save: save({}), periodicSnapshots: null } });
-    renderWithApp(app, <StatusLine />);
+    renderWithApp({ ...app, value: { ...app.value, formatTime: createLocalTimeFormatter('Asia/Kolkata') } }, <StatusLine />);
     const line = screen.getByRole('region', { name: 'Status' });
     expect(within(line).queryByText(/Automatic snapshots/)).toBeNull();
     act(() => void app.status.update({ periodicSnapshots: { lastAt: null, kept: 0, failure: null } }));
     expect(within(line).getByText('Automatic snapshots: none yet')).toBeTruthy();
     act(() => void app.status.update({ periodicSnapshots: { lastAt: '2026-10-18T10:35:12.000Z', kept: 3, failure: null } }));
-    expect(within(line).getByText('Automatic snapshots: last at 2026-10-18 10:35 UTC (3 kept)')).toBeTruthy();
+    // the reader's zone (India), not UTC: the formatter is injected, the zone pinned
+    expect(within(line).getByText('Automatic snapshots: last at 2026-10-18 16:05 GMT+5:30 (3 kept)')).toBeTruthy();
     act(() => void app.status.update({ periodicSnapshots: { lastAt: '2026-10-18T10:35:12.000Z', kept: 3, failure: 'the compute worker is not available' } }));
     expect(within(line).getByText('Automatic snapshots: last attempt failed: the compute worker is not available')).toBeTruthy();
     expect(screen.queryByRole('alert')).toBeNull();

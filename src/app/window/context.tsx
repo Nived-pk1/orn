@@ -7,6 +7,7 @@ import type { AppServices } from '@/app/services';
 import type { InspectorPorts } from '@/features/inspector';
 import type { NavigatorPorts } from '@/features/navigator';
 import type { PanelsStore } from '@/ui/state';
+import type { TimeFormatter } from './local-time';
 
 /** What the window needs from the services (so a test can fake only these). */
 export type WindowServices = Pick<AppServices, 'store' | 'status' | 'flows' | 'saveEverythingNow' | 'retryReplica' | 'retryEngine' | 'search' | 'drafts'> & Partial<Pick<AppServices, 'searchSync'>>;
@@ -25,6 +26,8 @@ export interface AppContextValue {
   readonly inspector: InspectorPorts;
   /** The injected clock in milliseconds (the export file name's date). Absent: 0, which a test never relies on. */
   nowMs?(): number;
+  /** Local time for the words people read (a stored UTC time shown in their zone). Absent: the machine's own zone. */
+  formatTime?: TimeFormatter;
   /** Reloads the page (`location.reload()` in the browser). */
   reload(): void;
 }
