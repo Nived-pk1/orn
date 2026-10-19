@@ -41,15 +41,15 @@ test('the family page of a demo family opens (step 5.5b): a double click on Alco
 test('the chem worker parses: the demo has one CHEM-001 warning in the counts', async ({ page }) => {
   await openApp(page);
   await loadDemo(page);
-  // L1-L3 findings of the demo: one planted RXN-002 warning (E 0 / W 1 / I 17 / Review 38). L4 (chem worker) adds one CHEM-001 warning for the invalid structure.
-  await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 17 / Review 38', { timeout: 60_000 });
+  // L1-L3 findings of the demo: one planted RXN-002 warning (E 0 / W 1 / I 17 / Review 38). L4 (chem worker) adds one CHEM-001 warning for the invalid structure and, since step 6.2a (the Alcohols SMARTS), two CHEM-007 info suggestions (I 19).
+  await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 19 / Review 38', { timeout: 60_000 });
   await expect(page.getByText(/Check unavailable/)).toHaveCount(0);
 });
 
 test('the status shows the compute, chem and search workers as ok after the demo loads', async ({ page }) => {
   await openApp(page);
   await loadDemo(page);
-  await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 17 / Review 38', { timeout: 60_000 });
+  await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 19 / Review 38', { timeout: 60_000 });
   await expect(page.getByText(/^Workers: compute ok, chem ok, layout (not started|ok), search ok$/)).toBeVisible();
 });
 

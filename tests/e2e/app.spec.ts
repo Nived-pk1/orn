@@ -12,7 +12,7 @@ test.describe('the app in Chromium', () => {
     await openApp(page);
     await loadDemo(page);
     expect(await recordCount(page, 'reaction')).toBe(27);
-    await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 17 / Review 38', { timeout: 60_000 });
+    await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 19 / Review 38', { timeout: 60_000 });
     await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
 
     await page.reload();
@@ -20,7 +20,7 @@ test.describe('the app in Chromium', () => {
     expect(await recordCount(page, 'reaction')).toBe(27);
     expect(await recordCount(page, 'species')).toBe(66);
     await expect(page.getByRole('region', { name: 'First run' })).toHaveCount(0);
-    await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 17 / Review 38', { timeout: 60_000 });
+    await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 19 / Review 38', { timeout: 60_000 });
     await expectClean(seen);
   });
 
