@@ -2434,7 +2434,7 @@
     {
       "id": "fnd_f889704fe88f8ae0",
       "level": 3,
-      "message": "Participant 2 repeats participant 1 (same class, same role). Use a coefficient instead.",
+      "message": "Participant 2 is listed twice as reactant in stage 1; use the coefficient instead.",
       "path": "participants[1].ref",
       "related": [
         {

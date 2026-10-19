@@ -66,7 +66,7 @@ Rules are **lifecycle-aware**: some rules are WARNING for `draft` and ERROR for 
 | RXN-018 | `equilibrium` without a `reverse_of` relationship or a note | INFO |
 | RXN-019 | Intermediate with none of ref, label, structure | ERROR |
 | RXN-020 | Condition variant referenced by no outcome (when ≥2 variants) | WARNING |
-| RXN-021 | Same substance twice with the same role (use a coefficient) | WARNING |
+| RXN-021 | Same substance twice with the same role in the same stage and variants (use a coefficient). Message (6.3a): "Participant N is listed twice as <role> in stage <n>; use the coefficient instead." (no " in stage <n>" when the reaction has no stages) | WARNING |
 | RXN-022 | Scope mismatch: generic reaction without class refs, or specific reaction with class refs | WARNING |
 | RXN-023 | `workup_reagent` outside a workup/quench stage when stages exist | WARNING |
 | RXN-024 | Coefficient on a catalyst or solvent | INFO |

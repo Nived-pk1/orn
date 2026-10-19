@@ -18,6 +18,12 @@ function usageKey(reaction: Reaction, index: number, stageIds: ReadonlyMap<strin
   return `${substanceKey(p.ref)}|${p.role}|${stages}|${variants}`;
 }
 
+/** " in stage <n>" (1-based, the first stage that lists the participant); empty when the reaction has no stages or none lists it. */
+function where(reaction: Reaction, participantId: string): string {
+  const index = reaction.stages.findIndex((stage) => stage.participantIds.includes(participantId as never));
+  return index < 0 ? '' : ` in stage ${index + 1}`;
+}
+
 export const REACTION_MORE_RULES: readonly ValidationRule[] = [
   rule({
     id: 'RXN-013',
@@ -160,7 +166,7 @@ export const REACTION_MORE_RULES: readonly ValidationRule[] = [
         }
         yield {
           path: at('participants', i, 'ref'),
-          message: `Participant ${i + 1} repeats participant ${earlier + 1} (same ${p.ref.kind}, same role). Use a coefficient instead.`,
+          message: `Participant ${i + 1} is listed twice as ${p.role.replace(/_/g, ' ')}${where(reaction, p.id)}; use the coefficient instead.`,
           related: [{ kind: p.ref.kind, id: p.ref.id }],
         };
       }

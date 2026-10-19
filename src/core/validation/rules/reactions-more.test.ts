@@ -153,11 +153,27 @@ describe('RXN-021 same substance and role twice', () => {
       must(r.stages[0]).participantIds.push('prt_again' as never);
     });
     expect(fire('RXN-021', twice)).toMatchObject([{ path: 'participants[4].ref', severity: 'warning' }]);
+    // step 6.3a decision 1: the message names the role and the stage (the rule, its key, severity and scope are unchanged)
+    expect(fire('RXN-021', twice)[0]?.message).toBe('Participant 5 is listed twice as reactant in stage 1; use the coefficient instead.');
     const otherStage = change((r) => {
       r.participants.push({ ...clone(must(r.participants[0])), id: 'prt_again' as never });
       must(r.stages[1]).participantIds.push('prt_again' as never);
     });
     expect(fire('RXN-021', otherStage)).toEqual([]);
+  });
+
+  it('names the role without a stage when the reaction has no stages, and says a role with spaces', () => {
+    const noStages = change((r) => {
+      r.stages = [];
+      r.participants.push({ ...clone(must(r.participants[0])), id: 'prt_again' as never });
+    });
+    expect(fire('RXN-021', noStages)[0]?.message).toBe('Participant 5 is listed twice as reactant; use the coefficient instead.');
+    const workup = change((r) => {
+      const first = { ...clone(must(r.participants[0])), role: 'workup_reagent' as const };
+      r.participants.push({ ...first, id: 'prt_w1' as never }, { ...first, id: 'prt_w2' as never });
+      must(r.stages[1]).participantIds.push('prt_w1' as never, 'prt_w2' as never);
+    });
+    expect(fire('RXN-021', workup)[0]?.message).toBe('Participant 6 is listed twice as workup reagent in stage 2; use the coefficient instead.');
   });
 });
 
