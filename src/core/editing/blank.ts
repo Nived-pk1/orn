@@ -1,24 +1,29 @@
 /**
- * The first draft of a NEW record (ADR-040 addendum, step 6.2a decision D3): every required field has its empty value, so the editor can
- * show every field from the start. Species only; any other kind starts as the smallest draft (`openSession`). Pure: the ID and both times
- * come from the `CommandContext`. The empty canonical name does not pass L1, which is right: Save is refused until a name is typed.
+ * The first draft of a NEW record (ADR-040 addendum, step 6.2a decision D3, extended in 6.2b decision D5): every required field has its
+ * empty value, so the editor can show every field from the start. Species and classes today; any other kind starts as the smallest draft
+ * (`openSession`). Pure: the ID and both times come from the `CommandContext`. The empty canonical name does not pass L1, which is right:
+ * Save is refused until a name is typed. A class has no empty `classKind` (the schema has no "unspecified" kind): the field is left ABSENT,
+ * the form shows "Choose a kind" and L1 refuses Save with the schema's words until one is chosen. No kind is invented.
  */
 import { RECORD_ID_PREFIX, type RecordKind } from '../schema';
 import type { CommandContext } from '../commands/contracts';
 
+const startNames = () => ({ canonical: '', common: [], aliases: [] });
+const startMeta = (now: string) => ({
+  tags: [],
+  citations: [],
+  provenance: { origin: 'user', createdAt: now, updatedAt: now },
+  review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] },
+});
+
 export function blankDraft(kind: RecordKind, ctx: CommandContext): Record<string, unknown> | undefined {
-  if (kind !== 'species') return undefined;
-  const now = ctx.now();
-  return {
-    kind: 'species',
-    id: ctx.newId(RECORD_ID_PREFIX.species),
-    names: { canonical: '', common: [], aliases: [] },
-    speciesKind: 'unspecified',
-    classIds: [],
-    properties: [],
-    tags: [],
-    citations: [],
-    provenance: { origin: 'user', createdAt: now, updatedAt: now },
-    review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] },
-  };
+  if (kind === 'species') {
+    const now = ctx.now();
+    return { kind: 'species', id: ctx.newId(RECORD_ID_PREFIX.species), names: startNames(), speciesKind: 'unspecified', classIds: [], properties: [], ...startMeta(now) };
+  }
+  if (kind === 'class') {
+    const now = ctx.now();
+    return { kind: 'class', id: ctx.newId(RECORD_ID_PREFIX.class), names: startNames(), parentIds: [], exampleSpeciesIds: [], ...startMeta(now) };
+  }
+  return undefined;
 }

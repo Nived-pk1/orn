@@ -173,6 +173,21 @@ describe('undoDraft and redoDraft', () => {
   });
 });
 
+describe('a blank class draft (step 6.2b, decision D5)', () => {
+  it('has every required field at its empty value except classKind, which is ABSENT; L1 refuses it until a name and a kind are given', async () => {
+    const { parseRecord } = await import('../validation');
+    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'class', blank: true });
+    if (!result.ok) throw new Error('no session');
+    const draft = result.session.draft as Record<string, unknown> & { id: string };
+    expect(draft).toMatchObject({ kind: 'class', parentIds: [], exampleSpeciesIds: [], tags: [], citations: [], names: { canonical: '', common: [], aliases: [] }, provenance: { origin: 'user' }, review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] } });
+    expect(draft.id).toMatch(/^cls_/);
+    expect(Object.hasOwn(draft, 'classKind')).toBe(false);
+    const parsed = parseRecord('class', draft);
+    expect(!parsed.ok && parsed.findings.map((f) => f.path).sort()).toEqual(['classKind', 'names.canonical']);
+    expect(parseRecord('class', { ...draft, classKind: 'compound_class', names: { canonical: 'Diols', common: [], aliases: [] } }).ok).toBe(true);
+  });
+});
+
 describe('a blank species draft (ADR-040 addendum, decision D3)', () => {
   it('has every required field at its empty value, the ID and times from the context, and fails L1 only for the empty name', async () => {
     const { parseRecord } = await import('../validation');

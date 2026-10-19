@@ -7,8 +7,8 @@
 import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from 'react';
 import type { RecordRef } from '@/core/schema';
 import type { EditorPort } from '@/features/workbench';
-import { createClassPicker } from './class-picker-port';
 import { makeEditorPort } from './editor-port';
+import { createRecordPicker } from './record-picker-port';
 import { useSubscribable } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
 import { useApp } from './context';
@@ -17,8 +17,8 @@ import { EditorsContext, type EditorsApi } from './drafts-ui';
 const DraftsDialog = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
 const EditorHost = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.EditorHost })));
 
-/** The kinds whose editor is the full one (the others edit names only until step 6.2b). */
-const FULL_EDITOR_KINDS: readonly string[] = ['species'];
+/** The kinds whose editor is the full one (the others edit names only: reagents arrive in step 6.2b part 3). */
+const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class'];
 
 /** Why editing cannot start in this tab now; undefined when it can (a session-only tab edits in memory and says so in the editor). */
 export function editReasonOf(mode: string | null): string | undefined {
@@ -51,6 +51,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       openDrafts: () => setDraftsOpen(true),
       editNames: (ref: RecordRef) => show(services.drafts.open(ref)),
       newSpecies: () => show(services.drafts.open({ kind: 'species', blank: true })),
+      newClass: () => show(services.drafts.open({ kind: 'class', blank: true })),
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
       fullEditorKinds: FULL_EDITOR_KINDS,
@@ -58,7 +59,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
     [reason, services, show],
   );
   const port = useMemo<EditorPort>(() => {
-    const classes = createClassPicker({
+    const records = createRecordPicker({
       search: services.search.search,
       state: services.store.getState,
       indexes: inspector.indexes.current,
@@ -68,7 +69,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       inspector.ui.inspector.getState().open(ref);
       inspector.ui.panels.getState().setInspectorOpen(true);
     };
-    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), classes, openRecord });
+    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord });
   }, [services, inspector]);
   return (
     <EditorsContext.Provider value={api}>

@@ -7,6 +7,6 @@ export type { DraftSaveView, DraftsListPort, DraftsViewModel, DraftListItemView,
 export { draftStatusText, draftsLabel, editingUnavailableReason, shortTime } from './draft-text';
 export type { EditorEntryView, EditorCommitResult, EditorPort } from './editor-contracts';
 export type { ClassSuggestion, DraftChecksPort, DryRunAnswer, StructureChecksAnswer } from './check-contracts';
-export type { StructurePort } from './structure-contracts';
-export type { ClassChoice, ClassPickerPort } from './class-picker-contracts';
+export type { SmartsCheck, StructurePort } from './structure-contracts';
+export type { PickKind, RecordChoice, RecordPickerPort } from './record-picker-contracts';
 export type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome, DuplicatePort } from './duplicate-contracts';

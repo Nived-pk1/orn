@@ -19,13 +19,12 @@ import { draftStatusText, editingUnavailableReason } from './draft-text';
 import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
 import { useLiveChecks, type LiveChecks } from './live-validation';
-import { NamesSection, namesFieldLabel } from './names-section';
-import { SpeciesForm } from './species-form';
-import { SPECIES_FIELD_LABELS } from './species-model';
+import { formOwns, labelOfField, sectionOf, titleOf } from './form-kinds';
+import { namesFieldLabel } from './names-section';
+import { RecordForm } from './record-form';
 import styles from './editor.module.css';
 
 export const LIVE_DEBOUNCE_MS = 300;
-const SECTION_OF: Readonly<Record<string, string>> = { species: 'species' };
 
 /** Live L1 of the draft: computed at once for a new draft, again `LIVE_DEBOUNCE_MS` after the last change. */
 function useLiveFindings(kind: Parameters<typeof parseRecord>[0], draft: unknown, timers: EditorPort['timers']): readonly Finding[] {
@@ -156,7 +155,7 @@ export function EditorHost(props: EditorHostProps) {
       }
       if (!outcome.structureChecked) toasts.push({ kind: 'warning', text: 'Structure duplicates could not be checked' });
     }
-    const result = await port.commit(sessionId, choices, SECTION_OF[session.kind] ?? 'names');
+    const result = await port.commit(sessionId, choices, sectionOf(entry.session.kind));
     setBusy(false);
     if (result.ok) {
       closing.current = true;
@@ -204,11 +203,8 @@ export function EditorHost(props: EditorHostProps) {
   const refused = refusal !== null && refusal.findings.length > 0;
   const shown = refused ? refusal.findings : mergeFindings(live, checks.dry.findings, checks.structure.findings);
   const notes = refused ? [] : checkNotes(checks);
-  const species = session.kind === 'species';
-  const topOf = (path: string | undefined): string => (path ?? '').split(/[.[]/)[0] ?? '';
-  const inForm = (path: string | undefined): boolean =>
-    species ? topOf(path) === 'names' || Object.hasOwn(SPECIES_FIELD_LABELS, topOf(path)) : path === 'names' || (path ?? '').startsWith('names.');
-  const title = species ? (session.target === null ? 'New species' : `Edit ${baseName}`) : `Edit names of ${baseName}`;
+  const inForm = (path: string | undefined): boolean => formOwns(session.kind, path);
+  const title = titleOf(session.kind, session.target === null, baseName);
 
   const footer = (
     <div className={styles.footer}>
@@ -267,7 +263,7 @@ export function EditorHost(props: EditorHostProps) {
             comparisons={comparisons}
             choices={view.choices}
             saving={busy}
-            labelOf={(path) => namesFieldLabel(path) ?? SPECIES_FIELD_LABELS[path]}
+            labelOf={(path) => namesFieldLabel(path) ?? labelOfField(session.kind, path)}
             onChoose={(path: string, choice: ConflictChoice) => setView({ ...view, choices: { ...view.choices, [path]: choice } })}
             onSave={() => void save(view.choices)}
             onBack={() => setView({ kind: 'form' })}
@@ -276,21 +272,18 @@ export function EditorHost(props: EditorHostProps) {
           <DeletedView onBack={() => setView({ kind: 'form' })} onDiscard={() => setAsking(true)} />
         ) : (
           <div className={phone ? styles.bodyPhone : styles.body}>
-            {species ? (
-              <SpeciesForm
-                draft={draft}
-                onEdit={edit}
-                invalid={invalid}
-                phone={phone}
-                structure={port.structure}
-                timers={port.timers}
-                suggestions={checks.structure.suggestions}
-                {...(port.classes === undefined ? {} : { picker: port.classes })}
-                {...(unavailable === undefined ? {} : { unavailable })}
-              />
-            ) : (
-              <NamesSection draft={draft} onEdit={edit} invalid={invalid} phone={phone} {...(unavailable === undefined ? {} : { unavailable })} />
-            )}
+            <RecordForm
+              kind={session.kind}
+              draft={draft}
+              onEdit={edit}
+              invalid={invalid}
+              phone={phone}
+              structure={port.structure}
+              timers={port.timers}
+              suggestions={checks.structure.suggestions}
+              {...(port.records === undefined ? {} : { picker: port.records })}
+              {...(unavailable === undefined ? {} : { unavailable })}
+            />
             <div className={phone ? undefined : styles.aside}>
               {refusal?.message === null || refusal === null ? null : (
                 <p className={styles.notice} role="alert">

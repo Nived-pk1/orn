@@ -6,7 +6,7 @@
  */
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Species } from '@/core/schema';
+import type { ChemicalClass, Species } from '@/core/schema';
 import { PHONE_QUERIES } from '@/ui/hooks';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
@@ -41,15 +41,14 @@ const openWorkbench = (): void => {
 const editor = (): Promise<HTMLElement> => screen.findByRole('dialog', { name: 'New species' });
 
 describe('the Workbench page (desktop)', () => {
-  it('offers New species; New class and New reagent are listed and unavailable until step 6.2b', () => {
+  it('offers New species and New class; New reagent is listed and unavailable until step 6.2b part 3', () => {
     renderWithApp(fakeApp({ state: demoState() }));
     openWorkbench();
     const page = within(screen.getByRole('region', { name: 'Workbench' }));
     expect(page.getByRole('button', { name: 'New species' }).getAttribute('aria-disabled')).toBeNull();
-    for (const name of ['New class', 'New reagent']) {
-      const button = page.getByRole('button', { name: name, description: 'Arrives in step 6.2b' });
-      expect(button.getAttribute('aria-disabled')).toBe('true');
-    }
+    expect(page.getByRole('button', { name: 'New class' }).getAttribute('aria-disabled')).toBeNull();
+    const reagent = page.getByRole('button', { name: 'New reagent', description: 'Arrives in step 6.2b, part 3' });
+    expect(reagent.getAttribute('aria-disabled')).toBe('true');
     expect(page.getByText('No unfinished drafts.')).toBeTruthy();
   });
 
@@ -102,6 +101,49 @@ describe('the Workbench page (desktop)', () => {
   });
 });
 
+const classNames = (app: FakeApp): string[] => Object.values(app.store.getState().records.class).map((c) => (c as ChemicalClass).names.canonical);
+const classEditor = (): Promise<HTMLElement> => screen.findByRole('dialog', { name: 'New class' });
+
+describe('New class through the real window (step 6.2b decision D5)', () => {
+  it('opens on a blank class; Save is refused until a name AND a kind are given, then ONE entry "Create class Diols" that Undo removes', async () => {
+    const app = fakeApp({ state: demoState() });
+    renderWithApp(app);
+    openWorkbench();
+    fireEvent.click(screen.getByRole('button', { name: 'New class' }));
+    const dialog = await classEditor();
+    const before = classNames(app).length;
+    expect((within(dialog).getByLabelText('Kind of class') as HTMLSelectElement).value).toBe('');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(await within(dialog).findByRole('heading', { name: 'Save was refused' })).toBeTruthy();
+    expect(classNames(app)).toHaveLength(before);
+    fireEvent.change(within(dialog).getByLabelText('Canonical name (required)'), { target: { value: 'Diols' } });
+    fireEvent.change(within(dialog).getByLabelText('Kind of class'), { target: { value: 'compound_class' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New class' })).toBeNull());
+    expect(classNames(app)).toContain('Diols');
+    expect(app.store.historyLabels().undo.at(-1)).toBe('Create class Diols');
+    const created = Object.values(app.store.getState().records.class).find((c) => (c as ChemicalClass).names.canonical === 'Diols') as ChemicalClass;
+    expect(created).toMatchObject({ classKind: 'compound_class', parentIds: [], exampleSpeciesIds: [], provenance: { origin: 'user' }, review: { lifecycle: 'draft', status: 'unreviewed' } });
+    app.store.undo();
+    expect(classNames(app)).not.toContain('Diols');
+  });
+
+  it('a read-only tab says why on New class', () => {
+    renderWithApp(fakeApp({ state: demoState(), status: { mode: 'follower', reason: 'other_tab_is_writer' } }));
+    openWorkbench();
+    expect(screen.getByRole('button', { name: 'New class', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('the palette lists "New class", runs it, and says why when unavailable', () => {
+    const run = vi.fn();
+    const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
+    const commands = buildCommands({ ...base, newClass: { reason: undefined, run } } as unknown as CommandDeps);
+    commands.find((c) => c.id === 'new-class')?.run();
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(buildCommands({ ...base, newClass: { reason: 'read-only', run } } as unknown as CommandDeps).find((c) => c.id === 'new-class')?.unavailable).toBe('read-only');
+  });
+});
+
 describe('the palette command "New species"', () => {
   const deps = (newSpecies: CommandDeps['newSpecies']): CommandDeps =>
     ({ mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, newSpecies, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } }) as unknown as CommandDeps;
@@ -119,6 +161,18 @@ describe('the palette command "New species"', () => {
 describe('on a phone', () => {
   beforeEach(() => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
+  });
+
+  it('More > New class opens the class editor full-screen; Save works', async () => {
+    const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
+    renderWithApp(app);
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'More' })).getByRole('button', { name: 'New class' }));
+    const dialog = await classEditor();
+    fireEvent.change(within(dialog).getByLabelText('Canonical name (required)'), { target: { value: 'Phone class' } });
+    fireEvent.change(within(dialog).getByLabelText('Kind of class'), { target: { value: 'functional_group' } });
+    await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
+    await waitFor(() => expect(classNames(app)).toContain('Phone class'));
   });
 
   it('More > New species opens the editor full-screen; sections are collapsible and a finding in a closed section opens it; Save works', async () => {

@@ -6,27 +6,27 @@ import type { Species } from '@/core/schema';
 import { editorRig, renderWithToasts, speciesOf, type EditorRig } from '@/test-support/editor-kit';
 import { stubDialog } from '@/test-support/window-kit';
 import type { DraftChecksPort } from './check-contracts';
-import type { ClassChoice, ClassPickerPort } from './class-picker-contracts';
+import type { RecordChoice, RecordPickerPort } from './record-picker-contracts';
 import { EditorHost } from './editor-host';
 
 beforeAll(stubDialog);
 afterEach(cleanup);
 
-const ALCOHOLS: ClassChoice = { id: 'cls_alcohols', name: 'Alcohols', kind: 'compound class', scope: 'in the syllabus' };
-const ETHERS: ClassChoice = { id: 'cls_ethers', name: 'Ethers', kind: 'compound class', scope: 'enrichment' };
-const picker = (): ClassPickerPort => ({
-  describe: (id) => [ALCOHOLS, ETHERS].find((c) => c.id === id),
-  search: async (text) => [ALCOHOLS, ETHERS].filter((c) => c.name.toLowerCase().includes(text.toLowerCase())),
+const ALCOHOLS: RecordChoice = { kind: 'class', id: 'cls_alcohols', name: 'Alcohols', kindWords: 'compound class', scope: 'in the syllabus' };
+const ETHERS: RecordChoice = { kind: 'class', id: 'cls_ethers', name: 'Ethers', kindWords: 'compound class', scope: 'enrichment' };
+const picker = (): RecordPickerPort => ({
+  describe: (_kind, id) => [ALCOHOLS, ETHERS].find((c) => c.id === id),
+  search: async (_kinds, text) => [ALCOHOLS, ETHERS].filter((c) => c.name.toLowerCase().includes(text.toLowerCase())),
 });
 const quiet: DraftChecksPort = {
   dryRun: async (_k, _d, version) => ({ version, state: 'checked', findings: [] }),
   structure: async (_k, _d, version) => ({ version, state: 'none' }),
 };
 
-function show(options: { rig?: EditorRig; checks?: DraftChecksPort; classes?: ClassPickerPort } = {}) {
+function show(options: { rig?: EditorRig; checks?: DraftChecksPort; classes?: RecordPickerPort } = {}) {
   const rig = options.rig ?? editorRig();
   const id = rig.open();
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.checks ?? quiet, classes: options.classes ?? picker() }} sessionId={id} open onClose={vi.fn()} />);
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.checks ?? quiet, records: options.classes ?? picker() }} sessionId={id} open onClose={vi.fn()} />);
   return { rig, id, dialog: screen.getByRole('dialog') };
 }
 const draftOf = (rig: EditorRig, id: string): Species => rig.drafts.entry(id)?.session.draft as Species;

@@ -45,3 +45,14 @@ export function shotsDir(): string {
   mkdirSync(SHOTS, { recursive: true });
   return SHOTS;
 }
+
+/** Shows a record in the inspector through the palette: Ctrl K, `<prefix>: <name>` (s species, c class, r reagent), its result. With an ID the result is that exact record. */
+export async function showRecord(page: Page, prefix: 's' | 'c' | 'r', name: string, id?: string): Promise<void> {
+  await page.keyboard.press('Control+K');
+  await expect(palette(page)).toBeVisible();
+  await searchFor(page, `${prefix}: ${name}`);
+  const option = id === undefined ? palette(page).getByRole('option', { name: new RegExp(`^${name}`, 'i') }).first() : palette(page).locator(`[role="option"][data-record-id="${id}"]`);
+  await expect(option).toBeVisible({ timeout: 60_000 });
+  await option.click();
+  if (id !== undefined) await expect(record(page)).toHaveAttribute('data-record-id', id);
+}

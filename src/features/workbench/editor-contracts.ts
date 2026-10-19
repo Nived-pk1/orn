@@ -5,7 +5,7 @@
 import type { DraftCommitOutcome, EditorSession } from '@/core/commands';
 import type { ConflictChoices, DraftRecipe, EditMeta } from '@/core/editing';
 import type { RecordRef } from '@/core/schema';
-import type { ClassPickerPort } from './class-picker-contracts';
+import type { RecordPickerPort } from './record-picker-contracts';
 import type { StructurePort } from './structure-contracts';
 import type { DraftChecksPort } from './check-contracts';
 import type { DuplicatePort } from './duplicate-contracts';
@@ -41,8 +41,8 @@ export interface EditorPort {
   readonly checks?: DraftChecksPort;
   /** The duplicate check on Save of a species and the way to show a record; absent: no check. */
   readonly duplicates?: DuplicatePort;
-  /** The Classes section's search and words; absent: classes cannot be searched here. */
-  readonly classes?: ClassPickerPort;
+  /** The record pickers' search, words and cycle questions (step 6.2b decision D4); absent: records cannot be searched here. */
+  readonly records?: RecordPickerPort;
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
   readonly structure?: StructurePort;
   /** Injected timers (the 300 ms debounce of the live panel). */

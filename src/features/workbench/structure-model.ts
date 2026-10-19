@@ -5,6 +5,7 @@
  */
 import type { DraftRecipe } from '@/core/editing';
 import { LIMITS, type StructureRep } from '@/core/schema';
+import { setGenericField } from './generic-model';
 
 export type StructureFormat = StructureRep['format'];
 
@@ -23,7 +24,14 @@ export function limitProblem(text: string): string | undefined {
   return `${kind} can have at most ${limit.toLocaleString('en-US')} characters; this one has ${text.length.toLocaleString('en-US')}. It was not accepted and nothing was cut.`;
 }
 
-export const setStructureText = (text: string): DraftRecipe => (draft) => {
+/** Where the panel's structure lives: a species' own `structure`, or a class's `generic.structure` (step 6.2b: R-labelled, no formula derived). */
+export type StructureSlot = 'species' | 'generic';
+
+export const setStructureText = (text: string, slot: StructureSlot = 'species'): DraftRecipe => (draft) => {
+  if (slot === 'generic') {
+    setGenericField('structure', text === '' ? undefined : { format: formatOf(text), value: text })(draft);
+    return;
+  }
   if (text === '') Reflect.deleteProperty(draft, 'structure');
   else draft.structure = { format: formatOf(text), value: text };
 };
@@ -42,9 +50,10 @@ export interface StructureView {
   readonly descriptors: readonly string[];
 }
 
-export function structureViewOf(draft: unknown): StructureView {
+export function structureViewOf(draft: unknown, slot: StructureSlot = 'species'): StructureView {
   const fields = (typeof draft === 'object' && draft !== null ? draft : {}) as Record<string, unknown>;
-  const rep = fields['structure'] as { format?: unknown; value?: unknown } | undefined;
+  const holder = slot === 'generic' ? ((typeof fields['generic'] === 'object' && fields['generic'] !== null ? fields['generic'] : {}) as Record<string, unknown>) : fields;
+  const rep = holder['structure'] as { format?: unknown; value?: unknown } | undefined;
   const structure = typeof rep?.value === 'string' && rep.value !== '' && (rep.format === 'smiles' || rep.format === 'cxsmiles' || rep.format === 'molfile') ? ({ format: rep.format, value: rep.value } as StructureRep) : undefined;
   const stereo = fields['stereo'] as { kind?: unknown; descriptors?: unknown } | undefined;
   return {

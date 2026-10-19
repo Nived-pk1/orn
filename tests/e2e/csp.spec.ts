@@ -12,7 +12,7 @@ import { loadDemo, openApp, watch } from './kit';
 import { startHeaderServer, type HeaderServer } from './support/header-server';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
-const FINDINGS = 'Findings: E 0 / W 2 / I 19 / Review 38';
+const FINDINGS = 'Findings: E 0 / W 2 / I 17 / Review 38';
 const CHEM_ENTRY = /^\/assets\/worker-chem-[\w-]+\.js$/;
 /** What the deliberate violations of this spec put in the console or the page errors. */
 const DELIBERATE = /Content Security Policy|Content-Security-Policy|CSP|unsafe-eval|EvalError|invalid\.invalid|Refused|blocked|violat/i;

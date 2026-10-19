@@ -4,9 +4,9 @@
  * of properties and notes. Collapsible and keyboard-navigable (SectionFrame); a phone starts with the long sections closed.
  */
 import type { ClassSuggestion } from './check-contracts';
-import type { ClassPickerPort } from './class-picker-contracts';
 import { ClassesSection } from './classes-section';
 import { NamesSection } from './names-section';
+import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
 import { AromaticitySection, FormulaChargeSection, IdentitySection, ReviewSection, StereoSection } from './species-sections';
@@ -18,7 +18,7 @@ import styles from './editor.module.css';
 export interface SpeciesFormProps extends SectionProps {
   readonly structure: StructurePort | undefined;
   readonly timers: { after(ms: number, run: () => void): () => void };
-  readonly picker?: ClassPickerPort;
+  readonly picker?: RecordPickerPort;
   readonly suggestions: readonly ClassSuggestion[];
 }
 

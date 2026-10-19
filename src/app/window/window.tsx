@@ -230,6 +230,7 @@ function WindowContent() {
     openExport: exports.open,
     editNames: editNamesCommand(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()),
     newSpecies: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newSpecies() },
+    newClass: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newClass() },
     structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),

@@ -47,7 +47,7 @@ export function demoClasses(): ChemicalClass[] {
       formulaText: 'Ar–X', aliases: ['Aryl halides'], examples: ['chlorobenzene'],
     }),
     chemClass('alcohols', 'Alcohols', 'compound_class', {
-      formulaText: 'R–OH', generalFormula: 'CnH2n+1OH', smarts: '[CX4][OX2H]',
+      formulaText: 'R–OH', generalFormula: 'CnH2n+1OH',
       examples: ['ethanol', 'propan-2-ol', 'methylpropan-2-ol'],
       description: 'Compounds with a hydroxyl group on a saturated carbon.',
     }),

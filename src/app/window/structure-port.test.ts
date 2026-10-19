@@ -15,13 +15,14 @@ import type { ChemWorkerApi } from '@/workers/rpc/contracts';
 import { makeEditorPort } from './editor-port';
 
 let port: NonNullable<ReturnType<typeof makeEditorPort>['structure']>;
+let chem: ReturnType<typeof createChemService>;
 beforeAll(async () => {
   const module = await sharedRdkit();
   const toolkit = withChemCache(createRdkitToolkit({ load: async () => module }));
   const workers = createMemoryWorkers((worker) => void createRpcHost(worker.host, createChemHandlers(toolkit, () => performance.now())));
   const gate = createWarmUpGate<ChemWorkerApi>();
   const client = createRpcClient<ChemWorkerApi>({ factory: workers.factory, specs: CHEM_SPECS, options: { onRestart: gate.onRestart } });
-  const chem = createChemService(client, gate);
+  chem = createChemService(client, gate);
   const made = makeEditorPort({ drafts: {} as ReturnType<typeof createDraftManager>, store: {} as never, chem }, { after: () => () => undefined });
   if (made.structure === undefined) throw new Error('the port has no structure part');
   port = made.structure;
@@ -45,5 +46,35 @@ describe('the structure port', () => {
     const refused = await port.parse({ format: 'smiles', value: 'C'.repeat(20_001) });
     expect(refused).toMatchObject({ ok: false, reason: 'invalid' });
     expect(!refused.ok && refused.error).toMatch(/20000/);
+  });
+});
+
+describe('the class editor\'s two chem needs (step 6.2b part 1: no new worker method)', () => {
+  const generic = { format: 'cxsmiles', value: '[*]C(O)CO |$R;;;;$|' } as const;
+
+  it('a generic R-labelled CXSMILES is read with no formula (a dummy atom is said, not hidden)', async () => {
+    const outcome = await port.parse(generic);
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.facts.formula).toBeUndefined();
+    expect(outcome.facts.warnings.join(' ')).toMatch(/dummy/);
+  });
+
+  it('and it draws, with the R label (the drawing differs from the same SMILES without labels)', async () => {
+    const options = { width: 256, height: 160, showAtomMaps: false };
+    const labelled = await chem.depict(generic, options);
+    const plain = await chem.depict({ format: 'smiles', value: '[*]C(O)CO' }, options);
+    expect(labelled.ok && plain.ok).toBe(true);
+    if (!labelled.ok || !plain.ok) return;
+    expect(labelled.depiction.svg.startsWith('<svg')).toBe(true);
+    expect(labelled.depiction.svg).not.toBe(plain.depiction.svg);
+  });
+
+  it('checks a SMARTS: readable, unreadable (the engine\'s words) and the limits', async () => {
+    expect(await port.checkSmarts?.('[CX4][OX2H]')).toEqual({ state: 'ok' });
+    const bad = await port.checkSmarts?.('[CX4][OX2H');
+    expect(bad).toMatchObject({ state: 'invalid' });
+    expect(bad?.state === 'invalid' && bad.message.length).toBeGreaterThan(0);
+    expect(await port.checkSmarts?.('C'.repeat(20_001))).toMatchObject({ state: 'invalid', message: expect.stringMatching(/1 to 20000 characters/) });
   });
 });

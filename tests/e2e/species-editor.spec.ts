@@ -1,7 +1,8 @@
 /**
  * The species editor end to end (step 6.2a part 4; ADR-040 addendum), PRODUCTION build, every engine:
- *  (1) create "Propan-1-ol" from scratch: name, SMILES CCCO, the drawing appears, "Use derived formula", the suggestion "Alcohols" added,
- *      Save; it is in search, the inspector and the Alcohols family (its Members); Undo removes it;
+ *  (1) the demo's Alcohols class has no membership SMARTS (demo chemistry is never edited): this test FIRST gives it [CX4][OX2H] through the
+ *      class editor and saves; then creates "Propan-1-ol" from scratch: name, SMILES CCCO, the drawing appears, "Use derived formula", the
+ *      suggestion "Alcohols (matches its pattern)" added, Save; it is in search, the inspector and the Alcohols family (its Members); Undo removes it;
  *  (2) ADV-036: a species with SMILES "C1CC" can be saved, with a CHEM-001 warning shown;
  *  (3) editing ethanol's structure text shows the derived values beside the entered ones.
  * Axe on the editor; zero policy violations. Screenshots: screenshots/{workbench,species-editor,species-editor-invalid-smiles}-1280x800.png.
@@ -9,7 +10,7 @@
 import { resolve } from 'node:path';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, watch } from './kit';
-import { openDemo, openNamesEditor, palette, pane, record, searchFor, shotsDir, showSpecies } from './editor-kit';
+import { editorDialog, openDemo, openNamesEditor, palette, pane, record, searchFor, shotsDir, showRecord, showSpecies } from './editor-kit';
 import type { Page } from '@playwright/test';
 
 const newSpeciesDialog = (page: Page) => page.getByRole('dialog', { name: 'New species' });
@@ -28,8 +29,16 @@ test.describe('the species editor', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
+    // this test's own data: a membership SMARTS on Alcohols, set through the class editor (the demo file is unchanged)
+    await showRecord(page, 'c', 'alcohols', 'cls_alcohols');
+    await openNamesEditor(page, 'Alcohols');
+    const classDialog = editorDialog(page, 'Alcohols');
+    await classDialog.getByLabel('Membership SMARTS (optional)').fill('[CX4][OX2H]');
+    await expect(classDialog.getByText('The chemistry engine can read this pattern.')).toBeVisible({ timeout: 60_000 });
+    await classDialog.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(classDialog).toBeHidden();
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: /Workbench/ }).click();
-    await expect(page.getByRole('button', { name: 'New class', description: 'Arrives in step 6.2b' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'New reagent', description: 'Arrives in step 6.2b, part 3' })).toBeVisible();
     await page.screenshot({ path: resolve(shotsDir(), 'workbench-1280x800.png') });
     await page.getByRole('button', { name: 'New species' }).click();
     const dialog = newSpeciesDialog(page);

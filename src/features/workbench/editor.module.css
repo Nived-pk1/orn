@@ -304,3 +304,8 @@
   max-height: calc(100vh - 14rem);
   overflow-y: auto;
 }
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-13);
+}

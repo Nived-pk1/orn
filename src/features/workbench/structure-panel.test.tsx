@@ -170,3 +170,58 @@ describe('typography and layout (review of 6.2a)', () => {
     expect(screen.getByLabelText('SMILES, CXSMILES or molfile').closest('div')?.parentElement?.className).toMatch(/phone/);
   });
 });
+
+describe('the generic slot (step 6.2b: a class\'s R-labelled structure)', () => {
+  it('writes at generic.structure, keeps the other generic fields, and removes an emptied generic block', () => {
+    const d = { generic: { formulaText: 'R-OH', rGroupNote: 'x' } } as Record<string, unknown>;
+    setStructureText('[*]C(O)CO |$R;;;;$|', 'generic')(d as never);
+    expect(d.generic).toEqual({ formulaText: 'R-OH', rGroupNote: 'x', structure: { format: 'cxsmiles', value: '[*]C(O)CO |$R;;;;$|' } });
+    setStructureText('', 'generic')(d as never);
+    expect(d.generic).toEqual({ formulaText: 'R-OH', rGroupNote: 'x' });
+    const only = { generic: { structure: { format: 'smiles', value: 'C' } } } as Record<string, unknown>;
+    setStructureText('', 'generic')(only as never);
+    expect(Object.hasOwn(only, 'generic')).toBe(false);
+  });
+
+  it('reads the generic structure, shows no facts table and no "Use derived formula", and says no formula is derived', async () => {
+    const timers = manualScheduler();
+    const parse = vi.fn(async () => ok({ formula: undefined, warnings: ['formula: an atom is a dummy or not an element in the table'] }));
+    render(<StructurePanel draft={{ generic: { structure: { format: 'cxsmiles', value: '[*]C(O)CO |$R;;;;$|' } }, formula: 'x' }} port={{ parse }} timers={timers} onEdit={() => undefined} slot="generic" />);
+    await act(async () => void timers.fireAfter(400));
+    expect(parse).toHaveBeenCalledWith({ format: 'cxsmiles', value: '[*]C(O)CO |$R;;;;$|' });
+    expect(screen.getByLabelText('R-labelled CXSMILES or molfile')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Use derived formula' })).toBeNull();
+    expect(screen.getByText(/No formula is derived from a generic structure/)).toBeTruthy();
+  });
+
+  it('typing edits generic.structure with its own field path', () => {
+    const { edits, state } = (() => {
+      const timers = manualScheduler();
+      const edits: string[] = [];
+      const state = { draft: { generic: {} } as Record<string, unknown> };
+      function Host() {
+        const [draft, setDraft] = useState<unknown>(state.draft);
+        return (
+          <StructurePanel
+            draft={draft}
+            port={{ parse: async () => ok() }}
+            timers={timers}
+            slot="generic"
+            onEdit={(recipe, path) => {
+              edits.push(path ?? 'none');
+              const next = editDraft({ draft, past: [], future: [] } as never, recipe, clockContext(), path === undefined ? {} : { path });
+              setDraft(next.draft);
+              state.draft = next.draft as never;
+            }}
+          />
+        );
+      }
+      render(<Host />);
+      return { edits, state };
+    })();
+    fireEvent.change(screen.getByLabelText('R-labelled CXSMILES or molfile'), { target: { value: '*CO |$R;;$|' } });
+    expect(edits).toEqual(['generic.structure']);
+    expect(state.draft.generic).toEqual({ structure: { format: 'cxsmiles', value: '*CO |$R;;$|' } });
+  });
+});

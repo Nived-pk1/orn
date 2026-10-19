@@ -14,15 +14,13 @@ Checked: 66 species (65 with a structure), 27 reactions, 3 mechanisms; no class 
 - CHEM-004: 0
 - CHEM-005: 0
 - CHEM-006: 0
-- CHEM-007: 2
+- CHEM-007: 0
 - CHEM-008: 0
 - CHEM-009: 0
 
 ## Every finding
 
-- CHEM-007 (info) on species `spc_3-hydroxybutanal` "3-Hydroxybutanal", path `classIds`: The structure matches the SMARTS of class cls_alcohols, which this species does not list. Suggestion: consider adding it.
 - CHEM-001 (warning) on species `spc_invalid-smiles-demo` "Unparsable structure (demo record)", path `structure`: The structure cannot be read: RDKit cannot read this smiles.
-- CHEM-007 (info) on species `spc_lactic-acid` "2-Hydroxypropanoic acid", path `classIds`: The structure matches the SMARTS of class cls_alcohols, which this species does not list. Suggestion: consider adding it.
 
 ## What could not be compared (said by the service, never silent)
 

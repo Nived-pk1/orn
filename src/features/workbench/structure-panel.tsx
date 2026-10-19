@@ -9,12 +9,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { StructureFacts } from '@/chem/contracts';
 import type { DraftRecipe } from '@/core/editing';
 import type { StructureRep } from '@/core/schema';
-import { Runs } from '@/render/equation';
-import { formulaRuns } from '@/render/scene';
 import { createDepictionBinding, drawingFailed, useRetryingDepiction, useStructureMode } from '@/render/svg';
 import { Button } from '@/ui/primitives';
+import { FormulaText } from './formula-text';
 import type { StructurePort } from './structure-contracts';
-import { limitProblem, setStructureText, structureViewOf, setDerivedFormula } from './structure-model';
+import { limitProblem, setStructureText, structureViewOf, setDerivedFormula, type StructureSlot } from './structure-model';
 import styles from './structure-panel.module.css';
 
 export const STRUCTURE_PARSE_DEBOUNCE_MS = 400;
@@ -35,6 +34,8 @@ export interface StructurePanelProps {
   readonly invalid?: ReadonlySet<string>;
   readonly unavailable?: string;
   readonly phone?: boolean;
+  /** `generic`: a class's R-labelled structure (`generic.structure`): drawn, nothing derived, no facts table, no formula button. */
+  readonly slot?: StructureSlot;
 }
 
 function stereoLine(facts: StructureFacts): string {
@@ -51,10 +52,7 @@ function stereoLine(facts: StructureFacts): string {
   return parts.length === 0 ? 'no stereochemistry' : parts.join('; ');
 }
 
-/** A formula in the formula typography (subscripts); the text inputs elsewhere stay plain text. */
-const FormulaCell = (props: { readonly formula: string }) => <Runs runs={formulaRuns(props.formula)} />;
-
-function Drawing(props: { readonly structure: StructureRep; readonly port: StructurePort; readonly timers: StructurePanelProps['timers'] }) {
+function Drawing(props: { readonly structure: StructureRep; readonly port: StructurePort; readonly timers: StructurePanelProps['timers']; readonly alt: string }) {
   const { port, timers } = props;
   const binding = useMemo(() => (port.depictions === undefined ? undefined : createDepictionBinding(port.depictions, timers, DRAWING_AREA)), [port, timers]);
   useStructureMode(port.depictions);
@@ -63,7 +61,7 @@ function Drawing(props: { readonly structure: StructureRep; readonly port: Struc
   if (status.state === 'ready') {
     return (
       <div className={styles.tile}>
-        <img className={styles.drawing} src={status.url} alt="Drawing of the entered structure" />
+        <img className={styles.drawing} src={status.url} alt={props.alt} />
       </div>
     );
   }
@@ -76,7 +74,11 @@ function Drawing(props: { readonly structure: StructureRep; readonly port: Struc
 
 export function StructurePanel(props: StructurePanelProps) {
   const { draft, onEdit, port, timers, unavailable } = props;
-  const view = structureViewOf(draft);
+  const slot = props.slot ?? 'species';
+  const generic = slot === 'generic';
+  const fieldPath = generic ? 'generic.structure' : 'structure';
+  const textId = generic ? 'generic-structure-text' : 'structure-text';
+  const view = structureViewOf(draft, slot);
   const [typed, setTyped] = useState(view.text);
   const [refusal, setRefusal] = useState<string | undefined>(undefined);
   const [reading, setReading] = useState<Reading>(view.structure === undefined ? { state: 'none' } : { state: 'reading' });
@@ -112,32 +114,32 @@ export function StructurePanel(props: StructurePanelProps) {
     setTyped(text);
     const problem = limitProblem(text);
     setRefusal(problem);
-    if (problem === undefined) onEdit(setStructureText(text), 'structure');
+    if (problem === undefined) onEdit(setStructureText(text, slot), fieldPath);
   };
   const facts = reading.state === 'read' ? reading.facts : undefined;
-  const bad = props.invalid?.has('structure') === true || refusal !== undefined;
+  const bad = props.invalid?.has(fieldPath) === true || refusal !== undefined;
   const derived = facts?.formula;
   const same = derived !== undefined && derived === view.formula;
 
   return (
     <div className={props.phone === true ? `${styles.panel} ${styles.phone}` : styles.panel}>
       <div className={styles.field}>
-        <label htmlFor="structure-text">SMILES, CXSMILES or molfile</label>
+        <label htmlFor={textId}>{generic ? 'R-labelled CXSMILES or molfile' : 'SMILES, CXSMILES or molfile'}</label>
         <textarea
-          id="structure-text"
+          id={textId}
           className={styles.text}
           value={typed}
           rows={view.structure?.format === 'molfile' || typed.includes('\n') ? 8 : 3}
           readOnly={unavailable !== undefined}
           aria-invalid={bad ? true : undefined}
-          aria-describedby={refusal === undefined ? undefined : 'structure-refusal'}
-          data-field-path="structure"
+          aria-describedby={refusal === undefined ? undefined : `${textId}-refusal`}
+          data-field-path={fieldPath}
           autoComplete="off"
           spellCheck={false}
           onChange={(event) => change(event.target.value)}
         />
         {refusal === undefined ? null : (
-          <p id="structure-refusal" className={styles.refusal} role="alert">
+          <p id={`${textId}-refusal`} className={styles.refusal} role="alert">
             {refusal}
           </p>
         )}
@@ -153,8 +155,9 @@ export function StructurePanel(props: StructurePanelProps) {
           The chemistry engine did not answer, so the structure was not read: {reading.message}
         </p>
       ) : null}
-      {reading.state === 'read' ? <Drawing structure={reading.structure} port={port} timers={timers} /> : null}
-      {facts === undefined ? null : (
+      {reading.state === 'read' ? <Drawing structure={reading.structure} port={port} timers={timers} alt={generic ? 'Drawing of the generic structure' : 'Drawing of the entered structure'} /> : null}
+      {generic && reading.state === 'read' ? <p className={styles.hint}>The R labels are drawn as written. No formula is derived from a generic structure.</p> : null}
+      {facts === undefined || generic ? null : (
         <table className={styles.facts} aria-label="Entered and derived values">
           <thead>
             <tr>
@@ -166,9 +169,9 @@ export function StructurePanel(props: StructurePanelProps) {
           <tbody>
             <tr>
               <th scope="row">Formula</th>
-              <td data-label="Entered">{view.formula === undefined ? 'not entered' : <FormulaCell formula={view.formula} />}</td>
+              <td data-label="Entered">{view.formula === undefined ? 'not entered' : <FormulaText formula={view.formula} />}</td>
               <td data-label="Derived from the structure">
-                {derived === undefined ? 'not available' : <FormulaCell formula={derived} />}{' '}
+                {derived === undefined ? 'not available' : <FormulaText formula={derived} />}{' '}
                 {derived === undefined || same ? null : (
                   <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => onEdit(setDerivedFormula(derived)) })}>Use derived formula</Button>
                 )}
