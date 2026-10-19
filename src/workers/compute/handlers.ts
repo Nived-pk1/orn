@@ -7,6 +7,7 @@ import { taskOptionsFrom, withTransfer } from '@/workers/rpc/helpers';
 import { migrationRunner } from '@/core/migrations';
 import type { MigrationRunner } from '@/core/migrations/contracts';
 import { assertUtcInstant, buildExportBytes, planExport } from './export-flow';
+import { dryRun } from './dry-run';
 import { createImportHost, type ImportHost } from './import-host';
 import { createReplica, type Replica, type ReplicaOptions } from './replica';
 import { buildSnapshotBytes } from './snapshot-build';
@@ -31,6 +32,11 @@ export function createComputeHandlers(options: ComputeHandlerOptions = {}): Comp
     loadReplica: async ({ state, revision }) => replica.load(state, revision),
     applyChanges: async ({ changes }) => replica.apply(changes),
     validateAll: async ({ revision }, ctx) => replica.validateAll(revision, ctx.signal),
+    checkDraft: async ({ revision, kind, draft }) => {
+      const held = replica.snapshot();
+      if (held.revision !== revision) return { ok: false, code: 'REPLICA_STALE', have: held.revision };
+      return dryRun(held.state, held.indexes, kind, draft);
+    },
     findRoutes: async ({ revision, query }, ctx) => replica.findRoutes(revision, query, ctx.signal),
     importPreview: (params, ctx) => imports.preview(params, ctx),
     importRevise: (params, ctx) => imports.revise(params, ctx),

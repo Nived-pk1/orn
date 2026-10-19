@@ -14,6 +14,7 @@ import type { MigrationRunner } from '@/core/migrations/contracts';
 import type { BootReport, BroadcastChannelFactory, DexieAdapter, LockManagerLike, OrnDbOptions, Scheduler } from '@/persistence';
 import type { ReplicaSync } from '@/workers/compute';
 import type { DepictionService } from './depiction';
+import type { DraftChecksPort } from '@/features/workbench';
 import type { DraftManager } from './drafts';
 import type { DerivedIndexes } from './derived-indexes';
 import type { Flows } from './flow-types';
@@ -100,6 +101,8 @@ export interface AppServices {
    * answering values; one whole-state operation at a time (`AppStatus.operation`); apply and restore answer only after `flush()`.
    */
   readonly flows: Flows;
+  /** The live panel's checks of a draft (step 6.2a): L1-L3 dry run in the compute worker, L4 of the structure in the chem worker. */
+  readonly draftChecks: DraftChecksPort;
   /** The editor sessions (ADR-040): open drafts in memory, kept in storage by a 2 s throttle, offered again at the next boot. */
   readonly drafts: DraftManager;
   /** Synchronous: ChangeSets accepted but not yet durable, or a failing save (for `beforeunload`). */

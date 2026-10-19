@@ -22,6 +22,7 @@ import { decideMode, emptyState, noticesOf, openStorage } from './boot';
 import type { AppEnv, AppServices } from './contracts';
 import { createChemPart, createLayoutPart } from './chem-layout';
 import { createDepictionService } from './depiction';
+import { createDraftChecks } from './draft-checks';
 import { createDraftManager } from './drafts';
 import { createDerivedIndexes } from './derived-indexes';
 import { startFollower } from './follower';
@@ -196,6 +197,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     depictions,
     flows,
     drafts,
+    draftChecks: createDraftChecks({ store, sync: () => replica.sync(), chem: chemPart.service }),
     async retryEngine(name) {
       const result = await (name === 'chem' ? chemPart : layoutPart).retry();
       log.add({ source: 'app', event: { type: 'engine_retry', message: `retry of the ${name} engine: ${result.ok ? 'ready' : result.message}` } });

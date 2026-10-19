@@ -35,6 +35,37 @@ function byKind(rules: readonly ValidationRule[], level: 2 | 3): ReadonlyMap<Rec
   return map;
 }
 
+/** L2, then L3 only when L2 found no ERROR: the order every path (stored record, draft) shares. */
+function levelsTwoAndThree(
+  l2: ReadonlyMap<RecordKind, readonly ValidationRule[]>,
+  l3: ReadonlyMap<RecordKind, readonly ValidationRule[]>,
+  record: AnyRecord,
+  ctx: RuleContext,
+): readonly Finding[] {
+  const referential = runRules(l2.get(record.kind) ?? [], record, ctx);
+  if (referential.some((finding) => finding.severity === 'error')) return referential;
+  return [...referential, ...runRules(l3.get(record.kind) ?? [], record, ctx)];
+}
+
+/**
+ * L1-L3 of ONE value as a record of `kind`, against `ctx` (step 6.2a, the live panel's dry run): the same rules in the same order as
+ * the validator, for a value that is not in `ctx.state` (a draft). Reads `ctx`, writes nothing. Sorted like a validator's findings.
+ */
+export type RecordChecker = (kind: RecordKind, value: unknown, ctx: RuleContext) => readonly Finding[];
+
+export function createRecordChecker(rules: readonly ValidationRule[] = RULES): RecordChecker {
+  const l2 = byKind(rules, 2);
+  const l3 = byKind(rules, 3);
+  return (kind, value, ctx) => {
+    const parsed = parseRecord(kind, value);
+    if (!parsed.ok) return [...parsed.findings].sort(byFinding);
+    return [...levelsTwoAndThree(l2, l3, parsed.record, ctx)].sort(byFinding);
+  };
+}
+
+/** The default rule set's single-record check. */
+export const checkRecord: RecordChecker = createRecordChecker();
+
 export function createValidator(rules: readonly ValidationRule[] = RULES): Validator {
   const l2 = byKind(rules, 2);
   const l3 = byKind(rules, 3);
@@ -44,9 +75,7 @@ export function createValidator(rules: readonly ValidationRule[] = RULES): Valid
   const findingsOf = (record: AnyRecord, ctx: RuleContext): readonly Finding[] => {
     const parsed = parseRecord(record.kind, record);
     if (!parsed.ok) return parsed.findings;
-    const referential = runRules(l2.get(record.kind) ?? [], record, ctx);
-    if (referential.some((finding) => finding.severity === 'error')) return referential;
-    return [...referential, ...runRules(l3.get(record.kind) ?? [], record, ctx)];
+    return levelsTwoAndThree(l2, l3, record, ctx);
   };
 
   interface Plan {

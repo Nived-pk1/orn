@@ -19,4 +19,5 @@ export { EXTERNAL_RULES } from './rules/external';
 export { REFERENCE_RULES } from './rules/references';
 export { L2_RULES, L3_RULES, RULES } from './rules/registry';
 export { createFindingStore } from './store';
-export { commitFindings, commitTouched, createValidator, validator } from './validator';
+export { checkRecord, commitFindings, commitTouched, createRecordChecker, createValidator, validator } from './validator';
+export type { RecordChecker } from './validator';

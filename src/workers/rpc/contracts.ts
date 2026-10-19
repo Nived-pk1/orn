@@ -3,7 +3,7 @@
  * report progress. Workers: chem (RDKit, L4), layout (ELK), search (MiniSearch), compute (replica
  * of canonical state: full validation, route search, import preview, export building).
  */
-import type { AssetId, CanonicalState, StructureRep } from '@/core/schema';
+import type { AssetId, CanonicalState, RecordKind, StructureRep } from '@/core/schema';
 import type { MigrationError, MigrationStepReport } from '@/core/migrations/contracts';
 import type { PrecomputedFindings } from '@/core/commands';
 import type { ChangeSet } from '@/core/dataset/contracts';
@@ -315,6 +315,9 @@ export interface ExportBuildParams {
 /** The export's own result as a value (`CANCELLED`, `SERIALIZE_FAILED`) or `REPLICA_STALE`; the result bytes are transferred. */
 export type ExportBuildAnswer = ExportBuildResult | ReplicaStale;
 
+/** The dry run's answer: the draft's findings, a kind that is not a record kind, or a replica at another revision. */
+export type CheckDraftAnswer = ReplicaAnswer<{ readonly findings: readonly Finding[] }> | { readonly ok: false; readonly code: 'NOT_A_RECORD'; readonly message: string };
+
 export interface ComputeWorkerApi {
   /**
    * Replaces the replica with `state` at `revision` and answers `validateAll` of it, stamped for adoption at that
@@ -329,6 +332,12 @@ export interface ComputeWorkerApi {
   applyChanges(params: { readonly changes: ChangeSet }, ctx: RpcCallContext): Promise<ReplicaAnswer<{ readonly revision: number }>>;
   /** Full L1-L3 pass over the replica; `REPLICA_STALE` when the replica is not at `revision`. */
   validateAll(params: { readonly revision: number }, ctx: RpcCallContext): Promise<ReplicaAnswer<{ readonly findings: readonly Finding[] }>>;
+  /**
+   * Step 6.2a, additive: L1-L3 of a draft record as if committed, against the replica at `revision` (`REPLICA_STALE` for another one).
+   * The replica is not changed: the state is an overlay and the indexes a read-only view (docs/PROGRESS.md "Step 6.2a, part 2"). The
+   * findings are the DRAFT's own. `NOT_A_RECORD` (a value) for an unknown kind. Idempotent.
+   */
+  checkDraft(params: { readonly revision: number; readonly kind: RecordKind; readonly draft: unknown }, ctx: RpcCallContext): Promise<CheckDraftAnswer>;
   /** Route search over the replica (its time budget is timed inside the worker); `REPLICA_STALE` as above. `query.limits.signal` is set by the worker. */
   findRoutes(params: { readonly revision: number; readonly query: RouteQuery }, ctx: RpcCallContext): Promise<ReplicaAnswer<{ readonly result: RouteSearchResult }>>;
   /**

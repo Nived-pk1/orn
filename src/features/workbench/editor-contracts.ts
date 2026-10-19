@@ -5,6 +5,7 @@
 import type { DraftCommitOutcome, EditorSession } from '@/core/commands';
 import type { ConflictChoices, DraftRecipe, EditMeta } from '@/core/editing';
 import type { RecordRef } from '@/core/schema';
+import type { DraftChecksPort } from './check-contracts';
 import type { DraftSaveView, DraftsViewModel } from './contracts';
 
 /** One open session as the editor sees it (the manager replaces the object when anything about it changes). */
@@ -33,6 +34,8 @@ export interface EditorPort {
   discard(id: string): Promise<void>;
   /** Warnings on a record after a save, for "Saved, 1 warning". */
   warningsOf(ref: RecordRef): number;
+  /** The live panel's checks (L1-L3 dry run, L4 of the structure); absent: only the schema check runs live. */
+  readonly checks?: DraftChecksPort;
   /** Injected timers (the 300 ms debounce of the live panel). */
   readonly timers: { after(ms: number, run: () => void): () => void };
 }

@@ -2,7 +2,7 @@
 import type { EditorPort } from '@/features/workbench';
 import type { WindowServices } from './context';
 
-export function makeEditorPort(services: Pick<WindowServices, 'drafts' | 'store'>, timers: EditorPort['timers']): EditorPort {
+export function makeEditorPort(services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks'>>, timers: EditorPort['timers']): EditorPort {
   const { drafts, store } = services;
   return {
     entry: (id) => drafts.entry(id),
@@ -15,6 +15,7 @@ export function makeEditorPort(services: Pick<WindowServices, 'drafts' | 'store'
     commit: (id, choices, section) => drafts.commit(id, choices, section),
     discard: (id) => drafts.discard(id),
     warningsOf: (ref) => store.findings.bySubject(ref).filter((finding) => finding.severity === 'warning').length,
+    ...(services.draftChecks === undefined ? {} : { checks: services.draftChecks }),
     timers,
   };
 }

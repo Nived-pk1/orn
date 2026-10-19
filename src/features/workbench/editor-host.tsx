@@ -16,6 +16,7 @@ import { ConflictView, DeletedView } from './conflict-view';
 import { draftStatusText, editingUnavailableReason } from './draft-text';
 import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
+import { useLiveChecks, type LiveChecks } from './live-validation';
 import { NamesSection, namesFieldLabel } from './names-section';
 import styles from './editor.module.css';
 
@@ -45,6 +46,22 @@ const nameOfBase = (record: AnyRecord | null, fallback: string): string => {
   return typeof names?.canonical === 'string' && names.canonical !== '' ? names.canonical : fallback;
 };
 
+/** The findings of the three sources, once each (the same problem keeps its ID), in the order they arrive: schema, then L2-L3, then L4. */
+function mergeFindings(...sources: readonly (readonly Finding[])[]): readonly Finding[] {
+  const seen = new Set<string>();
+  return sources.flat().filter((finding) => !seen.has(finding.id) && seen.add(finding.id));
+}
+
+export function checkNotes(checks: LiveChecks): readonly { readonly id: string; readonly text: string }[] {
+  const notes: { id: string; text: string }[] = [];
+  if (checks.dry.phase === 'checking') notes.push({ id: 'checking-dry', text: 'Checking references and names...' });
+  if (checks.dry.phase === 'unavailable') notes.push({ id: 'dry-unavailable', text: checks.dry.message ?? 'The references and names were not checked.' });
+  if (checks.structure.phase === 'checking') notes.push({ id: 'checking-structure', text: 'Checking the structure...' });
+  if (checks.structure.phase === 'unavailable') notes.push({ id: 'structure-unavailable', text: checks.structure.message ?? 'The structure was not checked.' });
+  notes.push({ id: 'others', text: 'Other records are checked when you save.' });
+  return notes;
+}
+
 type View =
   | { readonly kind: 'form' }
   | { readonly kind: 'conflict'; readonly current: AnyRecord; readonly choices: ConflictChoices }
@@ -73,6 +90,7 @@ export function EditorHost(props: EditorHostProps) {
   const kind = entry?.session.kind ?? 'species';
   const draft = entry?.session.draft;
   const live = useLiveFindings(kind, draft, port.timers);
+  const checks = useLiveChecks(kind, draft, live.some((finding) => finding.severity === 'error'), port);
   const unavailable = editingUnavailableReason(keeping);
 
   // the session is gone (saved or discarded): the editor goes with it
@@ -156,7 +174,9 @@ export function EditorHost(props: EditorHostProps) {
   const session = entry.session;
   const baseName = nameOfBase(session.baseRecord, session.target?.id ?? `new ${session.kind}`);
   const comparisons: readonly FieldComparison[] = view.kind === 'conflict' ? compareForConflict(session.baseRecord, view.current, session.draft) : [];
-  const shown = refusal !== null && refusal.findings.length > 0 ? refusal.findings : live;
+  const refused = refusal !== null && refusal.findings.length > 0;
+  const shown = refused ? refusal.findings : mergeFindings(live, checks.dry.findings, checks.structure.findings);
+  const notes = refused ? [] : checkNotes(checks);
   const inForm = (path: string | undefined): boolean => path === 'names' || (path ?? '').startsWith('names.');
 
   const footer = (
@@ -237,6 +257,7 @@ export function EditorHost(props: EditorHostProps) {
                 inForm={inForm}
                 onFocusField={focusField}
                 emptyText="No problems found in this draft."
+                notes={notes}
               />
             </div>
           </div>

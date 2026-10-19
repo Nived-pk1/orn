@@ -9,6 +9,7 @@ export const COMPUTE_SPECS: RpcMethodSpecs<ComputeWorkerApi> = {
   loadReplica: { idempotent: true, timeoutMs: 30_000 },
   applyChanges: { idempotent: false, timeoutMs: 5_000 },
   validateAll: { idempotent: true, timeoutMs: 30_000 },
+  checkDraft: { idempotent: true, timeoutMs: 5_000 },
   findRoutes: { idempotent: true, timeoutMs: 5_000 },
   importPreview: { idempotent: true, timeoutMs: 60_000 },
   // The pending batch lives in the worker and is lost with it: a retried revise or prepare would only answer UNKNOWN_BATCH,

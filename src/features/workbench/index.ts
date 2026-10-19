@@ -6,3 +6,4 @@
 export type { DraftSaveView, DraftsListPort, DraftsViewModel, DraftListItemView, UnreadableDraftView } from './contracts';
 export { draftStatusText, draftsLabel, editingUnavailableReason, shortTime } from './draft-text';
 export type { EditorEntryView, EditorCommitResult, EditorPort } from './editor-contracts';
+export type { ClassSuggestion, DraftChecksPort, DryRunAnswer, StructureChecksAnswer } from './check-contracts';

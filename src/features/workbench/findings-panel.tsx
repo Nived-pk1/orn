@@ -29,12 +29,15 @@ export function FindingsPanel(props: {
   readonly inForm: (path: string | undefined) => boolean;
   readonly onFocusField: (path: string | undefined) => void;
   readonly emptyText: string;
+  /** Status lines under the findings ("Checking the structure...", a worker that is down, what is checked at Save). */
+  readonly notes?: readonly { readonly id: string; readonly text: string }[];
 }) {
   const { findings } = props;
+  const notes = props.notes ?? [];
   return (
     <section className={styles.panel} aria-label="Findings">
       <h3>{props.heading}</h3>
-      {findings.length === 0 ? (
+      {findings.length === 0 && !notes.some((note) => note.id.startsWith('checking')) ? (
         <p className={styles.hint}>{props.emptyText}</p>
       ) : (
         <ul className={styles.findings}>
@@ -57,6 +60,15 @@ export function FindingsPanel(props: {
               </li>
             );
           })}
+        </ul>
+      )}
+      {notes.length === 0 ? null : (
+        <ul className={styles.notes} aria-label="Checks">
+          {notes.map((note) => (
+            <li key={note.id} className={styles.hint}>
+              {note.text}
+            </li>
+          ))}
         </ul>
       )}
     </section>
