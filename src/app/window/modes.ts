@@ -8,6 +8,8 @@ export const NAVIGATOR_MODE = 'navigator';
 /** The record counts of step 5.1d, kept reachable beside the navigator (step 5.5a). */
 export const DATASET_MODE = 'dataset';
 
+export const WORKBENCH_MODE = 'workbench';
+
 export const MODES: readonly ModeItem[] = [
   { id: NAVIGATOR_MODE, label: 'Navigator' },
   { id: DATASET_MODE, label: 'Dataset' },
@@ -17,5 +19,5 @@ export const MODES: readonly ModeItem[] = [
   { id: 'named', label: 'Named', unavailable: 'Phase 7' },
   { id: 'mechanisms', label: 'Mechanisms', unavailable: 'Phase 7' },
   { id: 'syllabus', label: 'Syllabus', unavailable: 'Phase 7' },
-  { id: 'workbench', label: 'Workbench', unavailable: 'Phase 6' },
+  { id: WORKBENCH_MODE, label: 'Workbench' },
 ];

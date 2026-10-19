@@ -55,7 +55,9 @@ describe('the demo dataset (Phase 4 DoD)', () => {
     const perRule: Record<string, number> = {};
     for (const f of found) perRule[f.ruleId] = (perRule[f.ruleId] ?? 0) + 1;
     // palmitic acid had a 15-carbon SMILES (CHEM-003); the reviewer corrected it to 16 carbons (step 4.3b review, follow-up c)
-    expect(perRule).toEqual({ 'CHEM-001': 1 });
+    // step 6.2a: the demo's Alcohols class gained the membership SMARTS [CX4][OX2H] (the editor's class suggestions need one); two species with a
+    // saturated carbon-hydroxyl (3-hydroxybutanal, lactic acid) do not list the class: two CHEM-007 INFO suggestions, true and never assigned
+    expect(perRule).toEqual({ 'CHEM-001': 1, 'CHEM-007': 2 });
     // every species with a structure was checked, in batches of 32
     expect(service.stats().items.checkSpecies).toBe(65);
     expect(service.stats().calls.checkSpecies).toBe(3);

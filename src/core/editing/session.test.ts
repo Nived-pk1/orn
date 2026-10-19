@@ -172,3 +172,26 @@ describe('undoDraft and redoDraft', () => {
     );
   });
 });
+
+describe('a blank species draft (ADR-040 addendum, decision D3)', () => {
+  it('has every required field at its empty value, the ID and times from the context, and fails L1 only for the empty name', async () => {
+    const { parseRecord } = await import('../validation');
+    const ctx = clockContext();
+    const result = openSession(ctx, makeStore().getState(), 0, { kind: 'species', blank: true });
+    if (!result.ok) throw new Error('no session');
+    const draft = result.session.draft as { id: string; provenance: { createdAt: string; updatedAt: string } };
+    expect(draft).toMatchObject({ kind: 'species', speciesKind: 'unspecified', classIds: [], properties: [], tags: [], citations: [], names: { canonical: '', common: [], aliases: [] }, provenance: { origin: 'user' }, review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] } });
+    expect(draft.id).toMatch(/^spc_/);
+    expect(draft.provenance.createdAt).toBe(draft.provenance.updatedAt);
+    const parsed = parseRecord('species', draft);
+    expect(!parsed.ok && parsed.findings.map((f) => f.path)).toEqual(['names.canonical']);
+    const named = openSession(ctx, makeStore().getState(), 0, { kind: 'species', blank: true });
+    if (!named.ok) throw new Error('no session');
+    expect(parseRecord('species', { ...(named.session.draft as object), names: { canonical: 'Propan-1-ol', common: [], aliases: [] } }).ok).toBe(true);
+  });
+  it('another kind falls back to the smallest draft', () => {
+    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'reagent', blank: true });
+    if (!result.ok) throw new Error('no session');
+    expect(Object.keys(result.session.draft as object).sort()).toEqual(['id', 'kind']);
+  });
+});

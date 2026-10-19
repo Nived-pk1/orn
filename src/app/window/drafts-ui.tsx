@@ -13,8 +13,14 @@ export interface EditorsApi {
   openDrafts(): void;
   /** Opens (or reopens) the names editor of a record. Answers nothing: a refusal is said in a toast. */
   editNames(ref: RecordRef): void;
+  /** Opens the editor on a NEW species (step 6.2a, decision D3). A refusal is said in a toast. */
+  newSpecies(): void;
+  /** Opens a listed draft (its stored session). */
+  openDraft(id: string): void;
   /** Why editing is unavailable now (a read-only tab); undefined when it is available. */
   readonly editReason: string | undefined;
+  /** Record kinds that open the full editor (step 6.2a: species; classes and reagents arrive in 6.2b). */
+  readonly fullEditorKinds?: readonly string[];
 }
 
 export const EditorsContext = createContext<EditorsApi | null>(null);

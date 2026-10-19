@@ -30,7 +30,8 @@ import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
 import { FirstRun } from "./first-run";
-import { MODES, NAVIGATOR_MODE } from "./modes";
+import { MODES, NAVIGATOR_MODE, WORKBENCH_MODE } from "./modes";
+import { WorkbenchPage } from "./workbench-page";
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { hasNames } from "@/core/editing";
@@ -110,6 +111,8 @@ function Canvas(props: {
         <FirstRun imports={imports} onStartEmpty={onStartEmpty} />
       ) : showsNavigator ? (
         <NavigatorView />
+      ) : props.mode === WORKBENCH_MODE ? (
+        <WorkbenchPage />
       ) : (
         <DatasetView counts={props.counts} empty={empty} imports={imports} exports={props.exports} onAskReplace={props.onAskReplace} />
       )}
@@ -132,7 +135,7 @@ function InspectorPanel(props: {
       openPane,
       closePane,
       navigatorShown,
-      ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames } }),
+      ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }) } }),
       edgeEnds: (edgeId) => {
         const edge = model.getState().scene?.edges.find((e) => e.id === edgeId);
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };
@@ -226,6 +229,7 @@ function WindowContent() {
     pickFile: imports.pick,
     openExport: exports.open,
     editNames: editNamesCommand(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()),
+    newSpecies: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newSpecies() },
     structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),

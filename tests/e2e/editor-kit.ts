@@ -9,7 +9,7 @@ export const SHOTS = resolve(process.cwd(), 'screenshots');
 export const pane = (page: Page) => page.getByRole('complementary', { name: 'Inspector' });
 export const record = (page: Page) => pane(page).getByRole('article', { name: 'Record' });
 export const palette = (page: Page) => page.getByRole('dialog', { name: 'Search' });
-export const editorDialog = (page: Page, name: string) => page.getByRole('dialog', { name: `Edit names of ${name}` });
+export const editorDialog = (page: Page, name: string) => page.getByRole('dialog', { name: `Edit ${name}` });
 export const draftStatus = (page: Page) => page.getByRole('status', { name: 'Draft status' });
 export const canonicalInput = (page: Page) => page.getByLabel('Canonical name (required)');
 
@@ -37,7 +37,7 @@ export async function showSpecies(page: Page, id: string, name: string): Promise
 }
 
 export async function openNamesEditor(page: Page, name: string): Promise<void> {
-  await pane(page).getByRole('button', { name: 'Edit names' }).click();
+  await pane(page).getByRole('button', { name: 'Edit', exact: true }).click();
   await expect(editorDialog(page, name)).toBeVisible();
 }
 

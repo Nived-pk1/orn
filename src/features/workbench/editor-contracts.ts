@@ -5,6 +5,7 @@
 import type { DraftCommitOutcome, EditorSession } from '@/core/commands';
 import type { ConflictChoices, DraftRecipe, EditMeta } from '@/core/editing';
 import type { RecordRef } from '@/core/schema';
+import type { ClassPickerPort } from './class-picker-contracts';
 import type { StructurePort } from './structure-contracts';
 import type { DraftChecksPort } from './check-contracts';
 import type { DraftSaveView, DraftsViewModel } from './contracts';
@@ -37,6 +38,8 @@ export interface EditorPort {
   warningsOf(ref: RecordRef): number;
   /** The live panel's checks (L1-L3 dry run, L4 of the structure); absent: only the schema check runs live. */
   readonly checks?: DraftChecksPort;
+  /** The Classes section's search and words; absent: classes cannot be searched here. */
+  readonly classes?: ClassPickerPort;
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
   readonly structure?: StructurePort;
   /** Injected timers (the 300 ms debounce of the live panel). */

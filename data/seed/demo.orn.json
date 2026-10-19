@@ -2966,7 +2966,8 @@
         "parentIds": [],
         "generic": {
           "formulaText": "R–OH",
-          "generalFormula": "CnH2n+1OH"
+          "generalFormula": "CnH2n+1OH",
+          "smarts": "[CX4][OX2H]"
         },
         "exampleSpeciesIds": [
           "spc_ethanol",

@@ -120,7 +120,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
         {host.editNames === undefined || !hasNames(record) ? null : (
           // on a phone the button shows in the FULL sheet, not in the peek (authoring is desktop-first, ADR-039 addendum)
           <div className={styles.actions} data-sheet-full="">
-            <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.open(props.refOf) } : { unavailable: host.editNames.unavailable })}>Edit names</Button>
+            <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.open(props.refOf) } : { unavailable: host.editNames.unavailable })}>{host.editNames.fullEditorKinds?.includes(record.kind) === true ? 'Edit' : 'Edit names'}</Button>
           </div>
         )}
         {place.actions.length === 0 ? null : (

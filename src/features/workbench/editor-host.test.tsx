@@ -23,7 +23,7 @@ describe('the form', () => {
   it('is a dialog named for the record, with canonical, display, IUPAC, qualifier and the two lists, and the draft\'s own Undo and Redo', () => {
     const { rig, dialog } = show();
     const name = speciesOf(rig).names.canonical;
-    expect(within(dialog).getByRole('heading', { name: `Edit names of ${name}` })).toBeTruthy();
+    expect(within(dialog).getByRole('heading', { name: `Edit ${name}` })).toBeTruthy();
     expect((within(dialog).getByLabelText('Canonical name (required)') as HTMLInputElement).value).toBe(name);
     for (const label of [/Display name/, /IUPAC name/, /Qualifier/]) expect(within(dialog).getByLabelText(label)).toBeTruthy();
     expect(within(dialog).getByRole('group', { name: 'Common names' })).toBeTruthy();
@@ -145,7 +145,7 @@ describe('live findings (L1, debounced 300 ms) and Save', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(speciesOf(rig).names.canonical).toBe('Renamed here');
-    expect(rig.store.historyLabels().undo).toEqual([`Edit names of ${old}`]);
+    expect(rig.store.historyLabels().undo).toEqual([`Edit species of ${old}`]);
     expect(await screen.findByText('Saved')).toBeTruthy();
     expect(rig.drafts.view().count).toBe(0);
   });
@@ -169,7 +169,7 @@ describe('live findings (L1, debounced 300 ms) and Save', () => {
     const before = rig.store.getState();
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByRole('heading', { name: 'Save was refused' })).toBeTruthy();
-    expect(screen.getByText(/REF-001|does-not-exist|resolve/i)).toBeTruthy();
+    expect(screen.getAllByText(/REF-001|does-not-exist|resolve/i).length).toBeGreaterThan(0);
     expect(onClose).not.toHaveBeenCalled();
     expect(rig.store.getState()).toBe(before);
     expect(rig.drafts.entry(id)).toBeDefined(); // the draft is kept
@@ -244,7 +244,7 @@ describe('a conflict (the record changed since the draft was started)', () => {
     const canonical = rows.find((r) => r.textContent?.startsWith('Canonical name')) as HTMLElement;
     expect(canonical.textContent).toContain('Mine');
     expect(canonical.textContent).toContain('Theirs');
-    const notes = rows.find((r) => r.textContent?.startsWith('notes')) as HTMLElement;
+    const notes = rows.find((r) => r.textContent?.startsWith('Notes')) as HTMLElement;
     expect(notes.textContent).toContain('Kept as it is now');
     const save = screen.getByRole('button', { name: 'Save with these choices' });
     expect(save.getAttribute('aria-disabled')).toBe('true'); // no default choice

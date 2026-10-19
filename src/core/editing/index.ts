@@ -1,6 +1,7 @@
 export { COALESCE_WINDOW_MS, MAX_DRAFT_STEPS } from './contracts';
 export type { CommitOptions, ConflictChoice, ConflictChoices, EditMeta, FieldComparison, FieldStatus, OpenSessionResult, OpenTarget } from './contracts';
 export { compareForConflict, sameValue } from './conflict';
+export { blankDraft } from './blank';
 export { commitDraft, mergeDraft } from './commit';
 export { canRedoDraft, canUndoDraft, editDraft, openSession, redoDraft, undoDraft } from './session';
 export type { DraftRecipe, DraftValue } from './session';

@@ -68,7 +68,7 @@ describe('commitDraft: success', () => {
     const outcome = commitDraft(store, fresh, ctx, undefined, { section: 'record' });
     expect(outcome.ok).toBe(true);
     expect(recordIn<Species>(store.getState(), 'species', 'spc_brand-new').names.canonical).toBe('Brand new');
-    expect(store.historyLabels().undo).toEqual(['Edit record of Brand new']);
+    expect(store.historyLabels().undo).toEqual(['Create species Brand new']);
   });
 });
 

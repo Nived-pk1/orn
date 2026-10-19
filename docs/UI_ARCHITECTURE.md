@@ -111,6 +111,7 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 ## 8. Compound and structure authoring (#12)
 
 - Species editor: names (canonical, IUPAC, common, aliases, qualifier), kind, structure, formula, charge, stereo, aromaticity claim, classes, properties, notes, citations.
+  *Step 6.2a (ADR-040 addendum):* the species editor has the sections Names, Identity, Structure, Formula and charge, Stereo, Aromaticity claim, Classes (search by name, kind and scope shown, SMARTS suggestions as chips) and Review (lifecycle editable, status read-only until 6.8); properties, notes and citations are shown read-only ("Editing arrives in step 6.6"). Entry points: "Edit" in the inspector, "New species" in the palette, in More on a phone and on the Workbench page; classes and reagents keep "Edit names" until 6.2b.
 - **Structure panel**: SMILES/CXSMILES text field (Plex Mono) or pasted molfile → debounced parse in the chem worker → depiction + derived formula/charge/stereo shown **beside** the entered values; "Use derived formula" is an explicit button. A drawing editor is ARCHITECTURALLY SUPPORTED behind `StructureEditor` (`src/features/workbench/structure-editor/`, Ketcher adapter, lazy-loaded).
 - On save: duplicate check by folded name and canonical structure with "use existing / merge / keep both".
 - Class assignment shows SMARTS-based suggestions (CHEM-007) as chips the user can accept; nothing is assigned automatically.

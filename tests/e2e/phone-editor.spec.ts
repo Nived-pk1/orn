@@ -28,10 +28,10 @@ async function walk(page: Page, device: string): Promise<void> {
   await expect(sheet(page)).toHaveAttribute('data-sheet', 'peek');
 
   // authoring is desktop-first: the button is in the FULL sheet, not in the peek
-  await expect(page.getByRole('button', { name: 'Edit names' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeHidden();
   await page.getByRole('button', { name: 'Show the whole record' }).tap();
   await expect(sheet(page)).toHaveAttribute('data-sheet', 'full');
-  await page.getByRole('button', { name: 'Edit names' }).tap();
+  await page.getByRole('button', { name: 'Edit', exact: true }).tap();
 
   // the editor opens full-screen and works
   const dialog = editorDialog(page, 'Ethanol');
@@ -62,8 +62,8 @@ async function walk(page: Page, device: string): Promise<void> {
   await expect(page.getByRole('banner').getByRole('button', { name: /^Undo/ })).toHaveCount(0);
   await page.getByRole('button', { name: 'More' }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
-  await expect(more.getByRole('button', { name: 'Undo Edit names of Ethanol' })).toBeVisible();
-  await more.getByRole('button', { name: 'Undo Edit names of Ethanol' }).tap();
+  await expect(more.getByRole('button', { name: 'Undo Edit species of Ethanol' })).toBeVisible();
+  await more.getByRole('button', { name: 'Undo Edit species of Ethanol' }).tap();
   await expect(more).toBeHidden().catch(() => undefined);
   await expectClean(seen);
 }

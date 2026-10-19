@@ -7,6 +7,7 @@
 import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from 'react';
 import type { RecordRef } from '@/core/schema';
 import type { EditorPort } from '@/features/workbench';
+import { createClassPicker } from './class-picker-port';
 import { makeEditorPort } from './editor-port';
 import { useSubscribable } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
@@ -15,6 +16,9 @@ import { EditorsContext, type EditorsApi } from './drafts-ui';
 
 const DraftsDialog = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
 const EditorHost = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.EditorHost })));
+
+/** The kinds whose editor is the full one (the others edit names only until step 6.2b). */
+const FULL_EDITOR_KINDS: readonly string[] = ['species'];
 
 /** Why editing cannot start in this tab now; undefined when it can (a session-only tab edits in memory and says so in the editor). */
 export function editReasonOf(mode: string | null): string | undefined {
@@ -46,11 +50,22 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
     () => ({
       openDrafts: () => setDraftsOpen(true),
       editNames: (ref: RecordRef) => show(services.drafts.open(ref)),
+      newSpecies: () => show(services.drafts.open({ kind: 'species', blank: true })),
+      openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
+      fullEditorKinds: FULL_EDITOR_KINDS,
     }),
     [reason, services, show],
   );
-  const port = useMemo<EditorPort>(() => makeEditorPort(services, inspector.timers, inspector.depictions), [services, inspector]);
+  const port = useMemo<EditorPort>(() => {
+    const classes = createClassPicker({
+      search: services.search.search,
+      state: services.store.getState,
+      indexes: inspector.indexes.current,
+      activeExam: () => inspector.ui.exam?.getState().active ?? null,
+    });
+    return makeEditorPort(services, inspector.timers, inspector.depictions, classes);
+  }, [services, inspector]);
   return (
     <EditorsContext.Provider value={api}>
       {props.children}

@@ -121,7 +121,7 @@ async function phoneWalk(page: Page, device: 'pixel7' | 'iphone14'): Promise<voi
   await searchFor(page, 's: ethanol');
   await palette(page).locator('[role="option"][data-record-id="spc_ethanol"]').tap();
   await page.getByRole('button', { name: 'Show the whole record' }).tap();
-  await page.getByRole('button', { name: 'Edit names' }).tap();
+  await page.getByRole('button', { name: 'Edit', exact: true }).tap();
   const dialog = editorDialog(page, 'Ethanol');
   await expect(dialog).toBeVisible();
   await canonicalInput(page).fill(LONG_NAME);

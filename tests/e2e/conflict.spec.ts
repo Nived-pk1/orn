@@ -31,7 +31,7 @@ test.describe('a conflict', () => {
     await expect(page.getByText('Draft kept')).toBeVisible();
 
     // the top bar's Undo reverts edit 1 (the store's history, not the draft's)
-    await page.getByRole('button', { name: 'Undo Edit names of Ethanol' }).click();
+    await page.getByRole('button', { name: 'Undo Edit species of Ethanol' }).click();
     await expect(record(page).getByRole('heading', { level: 3, name: 'Ethanol', exact: true })).toBeVisible();
 
     // the draft is opened again and saved: the record changed since it was started

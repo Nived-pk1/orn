@@ -9,7 +9,7 @@ import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView, useToasts } from '@/ui/primitives';
 import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
-import { useDraftsView } from './drafts-ui';
+import { useDraftsView, useEditors } from './drafts-ui';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 import { alertOf } from './phone-alert';
 import { RecordCounts } from './record-counts';
@@ -33,6 +33,7 @@ export function PhoneBar(props: {
 }) {
   const [more, setMore] = useState(false);
   const file = useFileWithDrafts(props.file);
+  const editors = useEditors();
   // a choice that opens another dialog closes this one first (two modal dialogs are never open together)
   const then = (run: () => void) => (): void => {
     setMore(false);
@@ -60,6 +61,14 @@ export function PhoneBar(props: {
             ))}
           </ul>
         </section>
+        {editors === null ? null : (
+          <section aria-label="Workbench" className={styles.section}>
+            <h3>Workbench</h3>
+            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newSpecies) } : { unavailable: editors.editReason })}>
+              New species
+            </Button>
+          </section>
+        )}
         {props.history === undefined ? null : <HistorySection history={props.history} />}
         {props.structures === undefined ? null : (
           <section aria-label="Structures" className={styles.section}>

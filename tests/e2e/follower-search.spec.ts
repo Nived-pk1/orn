@@ -49,7 +49,7 @@ test('a rename saved in the writer tab is found by the follower tab\'s search, a
   await follower.keyboard.press('Escape');
 
   // the follower's Edit names is unavailable, with its reason
-  const edit = pane(follower).getByRole('button', { name: 'Edit names' });
+  const edit = pane(follower).getByRole('button', { name: 'Edit', exact: true });
   await expect(edit).toHaveAttribute('aria-disabled', 'true');
   await expect(edit).toHaveAccessibleDescription(/read-only|another tab|writer/i);
   await expect(follower.getByText(FOLLOWER)).toBeVisible();

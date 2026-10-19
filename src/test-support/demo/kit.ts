@@ -140,6 +140,8 @@ export interface ClassOptions extends NameOptions, CurationOptions {
   readonly parents?: readonly string[];
   readonly formulaText?: string;
   readonly generalFormula?: string;
+  /** A membership query for the derived CHEM-007 suggestions (never assigns a class). */
+  readonly smarts?: string;
   readonly examples?: readonly string[];
   readonly description?: string;
   readonly studyNotes?: string;
@@ -152,7 +154,7 @@ export function chemClass(
   classKind: (typeof CLASS_KINDS)[number],
   o: ClassOptions = {},
 ): ChemicalClass {
-  const hasGeneric = o.formulaText !== undefined || o.generalFormula !== undefined;
+  const hasGeneric = o.formulaText !== undefined || o.generalFormula !== undefined || o.smarts !== undefined;
   return {
     id: clsId(body),
     kind: 'class',
@@ -164,6 +166,7 @@ export function chemClass(
           generic: {
             ...(o.formulaText === undefined ? {} : { formulaText: o.formulaText }),
             ...(o.generalFormula === undefined ? {} : { generalFormula: o.generalFormula }),
+            ...(o.smarts === undefined ? {} : { smarts: o.smarts }),
           },
         }
       : {}),

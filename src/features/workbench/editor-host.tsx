@@ -18,10 +18,12 @@ import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
 import { useLiveChecks, type LiveChecks } from './live-validation';
 import { NamesSection, namesFieldLabel } from './names-section';
+import { SpeciesForm } from './species-form';
+import { SPECIES_FIELD_LABELS } from './species-model';
 import styles from './editor.module.css';
 
 export const LIVE_DEBOUNCE_MS = 300;
-const SECTION = 'names';
+const SECTION_OF: Readonly<Record<string, string>> = { species: 'species' };
 
 /** Live L1 of the draft: computed at once for a new draft, again `LIVE_DEBOUNCE_MS` after the last change. */
 function useLiveFindings(kind: Parameters<typeof parseRecord>[0], draft: unknown, timers: EditorPort['timers']): readonly Finding[] {
@@ -111,7 +113,13 @@ export function EditorHost(props: EditorHostProps) {
   );
   const invalid = useMemo(() => new Set((refusal?.findings ?? live).flatMap((f) => (f.path === undefined ? [] : [f.path]))), [live, refusal]);
   const focusField = useCallback((path: string | undefined) => {
-    if (root.current !== null) fieldFor(root.current, path)?.focus();
+    if (root.current === null) return;
+    const field = fieldFor(root.current, path);
+    if (field === null) return;
+    // a field in a closed section: open the section first (its toggle), then the field can take the focus
+    const closed = field.closest('[data-collapsed="true"]');
+    if (closed !== null) closed.parentElement?.querySelector<HTMLElement>('button[data-section-toggle]')?.click();
+    field.focus();
   }, []);
 
   const close = useCallback(() => {
@@ -135,7 +143,7 @@ export function EditorHost(props: EditorHostProps) {
     if (entry === undefined || busy) return;
     const target = refTarget();
     setBusy(true);
-    const result = await port.commit(sessionId, choices, SECTION);
+    const result = await port.commit(sessionId, choices, SECTION_OF[session.kind] ?? 'names');
     setBusy(false);
     if (result.ok) {
       closing.current = true;
@@ -177,7 +185,11 @@ export function EditorHost(props: EditorHostProps) {
   const refused = refusal !== null && refusal.findings.length > 0;
   const shown = refused ? refusal.findings : mergeFindings(live, checks.dry.findings, checks.structure.findings);
   const notes = refused ? [] : checkNotes(checks);
-  const inForm = (path: string | undefined): boolean => path === 'names' || (path ?? '').startsWith('names.');
+  const species = session.kind === 'species';
+  const topOf = (path: string | undefined): string => (path ?? '').split(/[.[]/)[0] ?? '';
+  const inForm = (path: string | undefined): boolean =>
+    species ? topOf(path) === 'names' || Object.hasOwn(SPECIES_FIELD_LABELS, topOf(path)) : path === 'names' || (path ?? '').startsWith('names.');
+  const title = species ? (session.target === null ? 'New species' : `Edit ${baseName}`) : `Edit names of ${baseName}`;
 
   const footer = (
     <div className={styles.footer}>
@@ -217,7 +229,7 @@ export function EditorHost(props: EditorHostProps) {
   );
 
   return (
-    <Dialog open={props.open} onClose={close} title={`Edit names of ${baseName}`} size={phone ? 'screen' : 'wide'} footer={footer}>
+    <Dialog open={props.open} onClose={close} title={title} size={phone ? 'screen' : 'wide'} footer={footer}>
       {/* the key handler is the draft's own undo and redo; the dialog's focus stays inside it */}
       <div ref={root} onKeyDown={onKeyDown} data-testid="editor-root">
         <p className={styles.hint}>{session.kind}</p>
@@ -235,7 +247,7 @@ export function EditorHost(props: EditorHostProps) {
             comparisons={comparisons}
             choices={view.choices}
             saving={busy}
-            labelOf={namesFieldLabel}
+            labelOf={(path) => namesFieldLabel(path) ?? SPECIES_FIELD_LABELS[path]}
             onChoose={(path: string, choice: ConflictChoice) => setView({ ...view, choices: { ...view.choices, [path]: choice } })}
             onSave={() => void save(view.choices)}
             onBack={() => setView({ kind: 'form' })}
@@ -244,7 +256,21 @@ export function EditorHost(props: EditorHostProps) {
           <DeletedView onBack={() => setView({ kind: 'form' })} onDiscard={() => setAsking(true)} />
         ) : (
           <div className={phone ? styles.bodyPhone : styles.body}>
-            <NamesSection draft={draft} onEdit={edit} invalid={invalid} phone={phone} {...(unavailable === undefined ? {} : { unavailable })} />
+            {species ? (
+              <SpeciesForm
+                draft={draft}
+                onEdit={edit}
+                invalid={invalid}
+                phone={phone}
+                structure={port.structure}
+                timers={port.timers}
+                suggestions={checks.structure.suggestions}
+                {...(port.classes === undefined ? {} : { picker: port.classes })}
+                {...(unavailable === undefined ? {} : { unavailable })}
+              />
+            ) : (
+              <NamesSection draft={draft} onEdit={edit} invalid={invalid} phone={phone} {...(unavailable === undefined ? {} : { unavailable })} />
+            )}
             <div>
               {refusal?.message === null || refusal === null ? null : (
                 <p className={styles.notice} role="alert">

@@ -8,3 +8,4 @@ export { draftStatusText, draftsLabel, editingUnavailableReason, shortTime } fro
 export type { EditorEntryView, EditorCommitResult, EditorPort } from './editor-contracts';
 export type { ClassSuggestion, DraftChecksPort, DryRunAnswer, StructureChecksAnswer } from './check-contracts';
 export type { StructurePort } from './structure-contracts';
+export type { ClassChoice, ClassPickerPort } from './class-picker-contracts';

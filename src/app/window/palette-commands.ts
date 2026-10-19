@@ -24,6 +24,8 @@ export interface CommandDeps {
   openExport(): void;
   /** "Edit names of the selection" (ADR-040): why it cannot run now, and what it does. Absent: no such command. */
   readonly editNames?: { readonly reason: string | undefined; run(): void } | undefined;
+  /** "New species" (step 6.2a): why it cannot run now, and what it does. Absent: no such command. */
+  readonly newSpecies?: { readonly reason: string | undefined; run(): void } | undefined;
   /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
   readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
   readonly ui: NavigatorUiStores;
@@ -91,6 +93,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     withReason({ id: 'replace-demo', title: 'Replace with the demo dataset', keywords: ['load', 'import', 'demo'], run: deps.askReplace }, importReason),
     withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, undoReason),
     ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit names of the selection', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
+    ...(deps.newSpecies === undefined ? [] : [withReason({ id: 'new-species', title: 'New species', keywords: ['create', 'add', 'compound', 'author', 'workbench', 'draft'], run: deps.newSpecies.run }, deps.newSpecies.reason)]),
     ...structureCommands,
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),

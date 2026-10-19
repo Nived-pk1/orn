@@ -30,6 +30,8 @@ export interface NamesSectionProps {
   readonly unavailable?: string;
   /** A phone: the text field takes the whole row, Up, Down and Remove sit in one row under it, and the buttons are named by the text. */
   readonly phone?: boolean;
+  /** Inside a SectionFrame, which supplies the heading: no section element and no heading of its own. */
+  readonly framed?: boolean;
 }
 
 const OPTIONAL: readonly { readonly field: OptionalNameField; readonly label: string }[] = [
@@ -61,9 +63,10 @@ export function NamesSection(props: NamesSectionProps) {
   const { onEdit, unavailable } = props;
   const names = namesViewOf(props.draft);
   const bad = (path: string): boolean => props.invalid?.has(path) === true;
+  const Wrapper = props.framed === true ? 'div' : 'section';
   return (
-    <section className={styles.section} aria-label="Names">
-      <h3>Names</h3>
+    <Wrapper {...(props.framed === true ? {} : { className: styles.section, 'aria-label': 'Names' })}>
+      {props.framed === true ? null : <h3>Names</h3>}
       <div className={styles.field}>
         <label htmlFor="names-canonical">Canonical name (required)</label>
         <input
@@ -145,6 +148,6 @@ export function NamesSection(props: NamesSectionProps) {
           </div>
         );
       })}
-    </section>
+    </Wrapper>
   );
 }

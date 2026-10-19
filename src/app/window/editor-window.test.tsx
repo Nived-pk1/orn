@@ -44,21 +44,21 @@ function inspectSpecies(app: FakeApp, id = speciesIds(app)[0] as string): string
   act(() => app.inspectorStore.getState().open({ kind: 'species', id }));
   return id;
 }
-const editor = (): Promise<HTMLElement> => screen.findByRole('dialog', { name: /^Edit names of / });
+const editor = (): Promise<HTMLElement> => screen.findByRole('dialog', { name: /^Edit / });
 
 describe('Edit names in the inspector (desktop)', () => {
   it('a species has the button; it opens the editor, Save changes the name everywhere and one history entry is made', async () => {
     const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
     const id = inspectSpecies(app);
     const old = speciesNamed(app, id);
-    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit names' }));
+    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit' }));
     const dialog = await editor();
     fireEvent.change(within(dialog).getByLabelText('Canonical name (required)'), { target: { value: 'Brand new name' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit names of / })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
     expect(speciesNamed(app, id)).toBe('Brand new name');
     expect(within(pane()).getByRole('heading', { name: 'Brand new name' })).toBeTruthy();
-    expect(app.store.historyLabels().undo).toEqual([`Edit names of ${old}`]);
+    expect(app.store.historyLabels().undo).toEqual([`Edit species of ${old}`]);
     expect(await screen.findByText('Saved')).toBeTruthy();
   });
 
@@ -67,13 +67,13 @@ describe('Edit names in the inspector (desktop)', () => {
     const id = inspectSpecies(app);
     const old = speciesNamed(app, id);
     expect(screen.getByRole('button', { name: 'Undo' }).getAttribute('aria-disabled')).toBe('true');
-    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit names' }));
+    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit' }));
     fireEvent.change(within(await editor()).getByLabelText('Canonical name (required)'), { target: { value: 'Changed' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    const undo = await screen.findByRole('button', { name: `Undo Edit names of ${old}` });
+    const undo = await screen.findByRole('button', { name: `Undo Edit species of ${old}` });
     fireEvent.click(undo);
     expect(speciesNamed(app, id)).toBe(old);
-    fireEvent.click(await screen.findByRole('button', { name: `Redo Edit names of ${old}` }));
+    fireEvent.click(await screen.findByRole('button', { name: `Redo Edit species of ${old}` }));
     expect(speciesNamed(app, id)).toBe('Changed');
   });
 
@@ -89,20 +89,20 @@ describe('Edit names in the inspector (desktop)', () => {
   it('a read-only tab: the button is unavailable with the reason', () => {
     const app = fakeApp({ state: demoState(), status: { mode: 'follower', reason: 'other_tab_is_writer' }, navigator: { depictions: true } });
     inspectSpecies(app);
-    const button = within(pane()).getByRole('button', { name: 'Edit names', description: 'This tab is read-only: edit in the tab that is saving' });
+    const button = within(pane()).getByRole('button', { name: 'Edit', description: 'This tab is read-only: edit in the tab that is saving' });
     expect(button.getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(button);
-    expect(screen.queryByRole('dialog', { name: /^Edit names of / })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull();
   });
 
   it('opening the editor again for the same record reopens its session, with its undo history', async () => {
     const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
     inspectSpecies(app);
-    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit names' }));
+    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit' }));
     fireEvent.change(within(await editor()).getByLabelText('Canonical name (required)'), { target: { value: 'Half done' } });
     fireEvent.click(screen.getByRole('button', { name: 'Close (keeps the draft)' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit names of / })).toBeNull());
-    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit names' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
+    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit' }));
     const dialog = await editor();
     expect((within(dialog).getByLabelText('Canonical name (required)') as HTMLInputElement).value).toBe('Half done');
     expect(within(dialog).getByRole('button', { name: 'Undo' }).getAttribute('aria-disabled')).toBeNull();
@@ -144,7 +144,7 @@ describe('the global Undo and Redo keys', () => {
 
   it('while an editor is open the global history is left alone (the keys are the draft\'s)', async () => {
     const { app, id } = await withOneEdit();
-    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit names' }));
+    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit' }));
     await editor();
     fireEvent.keyDown(document.body, { key: 'z', ctrlKey: true });
     expect(speciesNamed(app, id)).toBe('After');
@@ -210,7 +210,7 @@ describe('on a phone', () => {
     const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
     renderWithApp(app);
     act(() => app.inspectorStore.getState().open({ kind: 'species', id: speciesIds(app)[0] as string }));
-    const button = screen.getByRole('button', { name: 'Edit names', hidden: true });
+    const button = screen.getByRole('button', { name: 'Edit', hidden: true });
     expect(button.closest('[data-sheet-full]')).not.toBeNull();
   });
 

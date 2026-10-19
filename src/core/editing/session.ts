@@ -5,10 +5,11 @@
  * edit) lives in a WeakMap keyed by the session value: it is memory only, never stored, so after a reload the next edit starts a new step.
  */
 import { applyPatches, enablePatches, produceWithPatches, type Draft, type Patch } from 'immer';
-import { RECORD_ID_PREFIX, type RecordKind } from '../schema';
+import { RECORD_ID_PREFIX, type RecordRef } from '../schema';
 import type { CommandContext, EditorSession } from '../commands/contracts';
 import { recordAt } from '../commands/lookup';
 import type { CanonicalState } from '../schema';
+import { blankDraft } from './blank';
 import { COALESCE_WINDOW_MS, MAX_DRAFT_STEPS, type EditMeta, type OpenSessionResult, type OpenTarget } from './contracts';
 
 enablePatches();
@@ -23,7 +24,7 @@ interface Memory {
 const memory = new WeakMap<EditorSession, Memory>();
 
 const clone = <T>(value: T): T => structuredClone(value);
-const isTarget = (target: OpenTarget): target is { readonly kind: RecordKind; readonly id: string } => 'id' in target;
+const isTarget = (target: OpenTarget): target is RecordRef => 'id' in target;
 
 export function openSession(ctx: CommandContext, state: CanonicalState, revision: number, target: OpenTarget): OpenSessionResult {
   if (isTarget(target)) {
@@ -52,8 +53,8 @@ export function openSession(ctx: CommandContext, state: CanonicalState, revision
       target: null,
       baseRevision: revision,
       baseRecord: null,
-      // the smallest draft that names itself: its kind and a fresh ID (the schema still decides whether it is a record)
-      draft: { kind: target.kind, id: ctx.newId(RECORD_ID_PREFIX[target.kind]) },
+      // a blank draft (decision D3) or the smallest one that names itself: its kind and a fresh ID (the schema still decides whether it is a record)
+      draft: (target.blank === true ? blankDraft(target.kind, ctx) : undefined) ?? { kind: target.kind, id: ctx.newId(RECORD_ID_PREFIX[target.kind]) },
       past: [],
       future: [],
       updatedAt: ctx.now(),

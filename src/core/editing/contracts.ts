@@ -16,7 +16,8 @@ export interface EditMeta {
   readonly path?: string;
 }
 
-export type OpenTarget = RecordRef | { readonly kind: RecordKind };
+/** A record to edit, or a NEW record of a kind: `blank` starts it with every required field at its empty value (species only, `blankDraft`). */
+export type OpenTarget = RecordRef | { readonly kind: RecordKind; readonly blank?: true };
 
 export type OpenSessionResult =
   | { readonly ok: true; readonly session: EditorSession }
