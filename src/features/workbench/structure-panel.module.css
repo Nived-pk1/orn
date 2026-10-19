@@ -40,11 +40,21 @@
   color: var(--color-ink-2);
 }
 
+/* the same tile as a family card: border, radius and the card's background */
+.tile {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
 .drawing {
+  display: block;
   max-width: 100%;
   width: 256px;
   height: auto;
-  align-self: flex-start;
 }
 
 .facts {
@@ -58,4 +68,43 @@
   vertical-align: top;
   padding: var(--space-1) var(--space-2);
   border-bottom: 1px solid var(--color-rule);
+}
+
+/* a phone: the drawing is at most 160 px high and every fact is a stacked group (Fact, Entered, Derived) so nothing wraps word by word */
+.phone .drawing {
+  width: auto;
+  max-height: 160px;
+}
+
+.phone .facts,
+.phone .facts tbody,
+.phone .facts tr,
+.phone .facts th,
+.phone .facts td {
+  display: block;
+}
+
+.phone .facts thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.phone .facts tr {
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.phone .facts th,
+.phone .facts td {
+  border-bottom: 0;
+  padding: var(--space-1) 0;
+}
+
+.phone .facts td::before {
+  content: attr(data-label) ': ';
+  font-weight: 600;
+  color: var(--color-ink-2);
 }

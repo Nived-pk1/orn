@@ -48,7 +48,7 @@ import { ExportOpenContext } from "./export-context";
 import { useExportActions, type ExportActions } from "./use-export-actions";
 import { useImportActions, type ImportActions } from "./use-import-actions";
 
-/** The palette command "Edit names of the selection": the record in the inspector, when it has names (ADR-040). */
+/** The palette command "Edit the selected record": the record in the inspector, when it has names (ADR-040). */
 function editNamesCommand(editors: EditorsApi | null, state: CanonicalState, inspector: Parameters<typeof currentOf>[0]): CommandDeps['editNames'] {
   const ref = currentOf(inspector);
   const record = ref === null ? undefined : (state.records[ref.kind] as Readonly<Record<string, { readonly kind: string }>>)[ref.id];

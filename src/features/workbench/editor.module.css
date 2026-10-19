@@ -295,3 +295,12 @@
   width: 128px;
   height: auto;
 }
+
+/* desktop: the findings stay in view while the form scrolls */
+.aside {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: calc(100vh - 14rem);
+  overflow-y: auto;
+}

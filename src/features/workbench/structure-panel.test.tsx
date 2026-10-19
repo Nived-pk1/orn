@@ -82,8 +82,9 @@ describe('the panel', () => {
     await act(async () => void timers.fireAfter(400));
     const table = screen.getByRole('table', { name: 'Entered and derived values' });
     const formulaRow = within(table).getByText('Formula').closest('tr') as HTMLElement;
-    expect(within(formulaRow).getByText('C3H8O')).toBeTruthy(); // entered
-    expect(within(formulaRow).getByText(/C2H6O/)).toBeTruthy(); // derived, beside it
+    const cells = within(formulaRow).getAllByRole('cell');
+    expect(cells[0]?.textContent).toBe('C3H8O'); // entered (in the formula typography: the digits are subscripts)
+    expect(cells[1]?.textContent).toMatch(/^C2H6O/); // derived, beside it
     expect((state.session.draft as unknown as { formula: string }).formula).toBe('C3H8O'); // nothing written
     fireEvent.click(within(formulaRow).getByRole('button', { name: 'Use derived formula' }));
     expect((state.session.draft as unknown as { formula: string }).formula).toBe('C2H6O');
@@ -131,6 +132,41 @@ describe('the panel', () => {
     await act(async () => void timers.fireAfter(400));
     await act(async () => first(ok({ formula: 'STALE' })));
     expect(screen.queryByText(/STALE/)).toBeNull();
-    expect(screen.getAllByText(/C3H8O/).length).toBeGreaterThan(0);
+    expect(screen.getByRole('table').textContent).toMatch(/C3H8O/);
+  });
+});
+
+describe('typography and layout (review of 6.2a)', () => {
+  it('formulas in the facts table use subscripts; the text inputs stay plain text', async () => {
+    const { timers } = rig(async () => ok({ formula: 'C2H6O' }), { structure: { format: 'smiles', value: 'CCO' }, formula: 'C3H8O' });
+    await act(async () => void timers.fireAfter(400));
+    const table = screen.getByRole('table', { name: 'Entered and derived values' });
+    const subs = [...table.querySelectorAll('sub')].map((el) => el.textContent);
+    expect(subs).toEqual(expect.arrayContaining(['3', '8', '2', '6']));
+    expect((screen.getByLabelText('SMILES, CXSMILES or molfile') as HTMLTextAreaElement).value).toBe('CCO');
+  });
+
+  it('the drawing sits in a tile (the family card styling class)', async () => {
+    const timers = manualScheduler();
+    render(
+      <StructurePanel
+        draft={{ structure: { format: 'smiles', value: 'CCO' } }}
+        port={{ parse: async () => ok(), depictions: undefined as never }}
+        timers={timers}
+        onEdit={() => undefined}
+      />,
+    );
+    await act(async () => void timers.fireAfter(400));
+    // without a depiction port the hint stands in; the tile wraps only a ready drawing
+    expect(document.querySelector('img')).toBeNull();
+  });
+
+  it('a phone marks every cell with its label so the rows can stack', async () => {
+    const timers = manualScheduler();
+    render(<StructurePanel draft={{ structure: { format: 'smiles', value: 'CCO' }, formula: 'C3H8O' }} port={{ parse: async () => ok() }} timers={timers} onEdit={() => undefined} phone />);
+    await act(async () => void timers.fireAfter(400));
+    const row = screen.getByText('Formula').closest('tr') as HTMLElement;
+    expect([...row.querySelectorAll('td')].map((td) => td.getAttribute('data-label'))).toEqual(['Entered', 'Derived from the structure']);
+    expect(screen.getByLabelText('SMILES, CXSMILES or molfile').closest('div')?.parentElement?.className).toMatch(/phone/);
   });
 });

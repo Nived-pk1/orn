@@ -291,7 +291,7 @@ export function EditorHost(props: EditorHostProps) {
             ) : (
               <NamesSection draft={draft} onEdit={edit} invalid={invalid} phone={phone} {...(unavailable === undefined ? {} : { unavailable })} />
             )}
-            <div>
+            <div className={phone ? undefined : styles.aside}>
               {refusal?.message === null || refusal === null ? null : (
                 <p className={styles.notice} role="alert">
                   {refusal.message}

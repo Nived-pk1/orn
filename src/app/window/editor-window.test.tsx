@@ -158,7 +158,7 @@ describe('the global Undo and Redo keys', () => {
   });
 });
 
-describe('the palette command "Edit names of the selection"', () => {
+describe('the palette command "Edit the selected record"', () => {
   const deps = (editNames: CommandDeps['editNames']): CommandDeps => {
     const app = fakeApp({ state: demoState() });
     return {
@@ -181,7 +181,7 @@ describe('the palette command "Edit names of the selection"', () => {
   it('runs when a record with names is in the inspector, and says why it cannot otherwise', () => {
     const run = vi.fn();
     const ok = buildCommands(deps({ reason: undefined, run })).find((c) => c.id === 'edit-names');
-    expect(ok?.title).toBe('Edit names of the selection');
+    expect(ok?.title).toBe('Edit the selected record');
     expect(ok?.unavailable).toBeUndefined();
     ok?.run();
     expect(run).toHaveBeenCalledTimes(1);
@@ -194,8 +194,8 @@ describe('the palette command "Edit names of the selection"', () => {
     renderWithApp(app);
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
     const dialog = await screen.findByRole('dialog', { name: 'Search' });
-    fireEvent.change(within(dialog).getByRole('combobox'), { target: { value: '>Edit names' } });
-    const item = await within(dialog).findByText('Edit names of the selection');
+    fireEvent.change(within(dialog).getByRole('combobox'), { target: { value: '>Edit the selected' } });
+    const item = await within(dialog).findByText('Edit the selected record');
     expect(item).toBeTruthy();
     expect(dialog.textContent).toContain('show a species, class or reagent in the inspector first');
   });

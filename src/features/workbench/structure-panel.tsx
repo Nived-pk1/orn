@@ -9,6 +9,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { StructureFacts } from '@/chem/contracts';
 import type { DraftRecipe } from '@/core/editing';
 import type { StructureRep } from '@/core/schema';
+import { Runs } from '@/render/equation';
+import { formulaRuns } from '@/render/scene';
 import { createDepictionBinding, drawingFailed, useRetryingDepiction, useStructureMode } from '@/render/svg';
 import { Button } from '@/ui/primitives';
 import type { StructurePort } from './structure-contracts';
@@ -32,6 +34,7 @@ export interface StructurePanelProps {
   readonly timers: { after(ms: number, run: () => void): () => void };
   readonly invalid?: ReadonlySet<string>;
   readonly unavailable?: string;
+  readonly phone?: boolean;
 }
 
 function stereoLine(facts: StructureFacts): string {
@@ -48,13 +51,22 @@ function stereoLine(facts: StructureFacts): string {
   return parts.length === 0 ? 'no stereochemistry' : parts.join('; ');
 }
 
+/** A formula in the formula typography (subscripts); the text inputs elsewhere stay plain text. */
+const FormulaCell = (props: { readonly formula: string }) => <Runs runs={formulaRuns(props.formula)} />;
+
 function Drawing(props: { readonly structure: StructureRep; readonly port: StructurePort; readonly timers: StructurePanelProps['timers'] }) {
   const { port, timers } = props;
   const binding = useMemo(() => (port.depictions === undefined ? undefined : createDepictionBinding(port.depictions, timers, DRAWING_AREA)), [port, timers]);
   useStructureMode(port.depictions);
   const key = binding?.keyOf(props.structure);
   const status = useRetryingDepiction(binding?.manager, key, timers);
-  if (status.state === 'ready') return <img className={styles.drawing} src={status.url} alt="Drawing of the entered structure" />;
+  if (status.state === 'ready') {
+    return (
+      <div className={styles.tile}>
+        <img className={styles.drawing} src={status.url} alt="Drawing of the entered structure" />
+      </div>
+    );
+  }
   return (
     <p className={styles.hint} role="status">
       {drawingFailed(status) ? 'The structure could not be drawn.' : binding === undefined ? 'No drawing is available here.' : 'Drawing the structure...'}
@@ -108,7 +120,7 @@ export function StructurePanel(props: StructurePanelProps) {
   const same = derived !== undefined && derived === view.formula;
 
   return (
-    <div className={styles.panel}>
+    <div className={props.phone === true ? `${styles.panel} ${styles.phone}` : styles.panel}>
       <div className={styles.field}>
         <label htmlFor="structure-text">SMILES, CXSMILES or molfile</label>
         <textarea
@@ -154,9 +166,9 @@ export function StructurePanel(props: StructurePanelProps) {
           <tbody>
             <tr>
               <th scope="row">Formula</th>
-              <td>{view.formula ?? 'not entered'}</td>
-              <td>
-                {derived ?? 'not available'}{' '}
+              <td data-label="Entered">{view.formula === undefined ? 'not entered' : <FormulaCell formula={view.formula} />}</td>
+              <td data-label="Derived from the structure">
+                {derived === undefined ? 'not available' : <FormulaCell formula={derived} />}{' '}
                 {derived === undefined || same ? null : (
                   <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => onEdit(setDerivedFormula(derived)) })}>Use derived formula</Button>
                 )}
@@ -164,13 +176,13 @@ export function StructurePanel(props: StructurePanelProps) {
             </tr>
             <tr>
               <th scope="row">Charge</th>
-              <td>{view.charge === undefined ? 'not entered' : view.charge}</td>
-              <td>{facts.charge ?? 'not available'}</td>
+              <td data-label="Entered">{view.charge === undefined ? 'not entered' : view.charge}</td>
+              <td data-label="Derived from the structure">{facts.charge ?? 'not available'}</td>
             </tr>
             <tr>
               <th scope="row">Stereo</th>
-              <td>{view.stereoKind === undefined ? 'not entered' : `${view.stereoKind}${view.descriptors.length === 0 ? '' : ` (${view.descriptors.join(', ')})`}`}</td>
-              <td>{stereoLine(facts)}</td>
+              <td data-label="Entered">{view.stereoKind === undefined ? 'not entered' : `${view.stereoKind}${view.descriptors.length === 0 ? '' : ` (${view.descriptors.join(', ')})`}`}</td>
+              <td data-label="Derived from the structure">{stereoLine(facts)}</td>
             </tr>
           </tbody>
         </table>

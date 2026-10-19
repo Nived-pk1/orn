@@ -38,7 +38,7 @@ export function SpeciesForm(props: SpeciesFormProps) {
         {props.structure === undefined ? (
           <p className={styles.hint}>The chemistry engine is not available here, so the structure is not read.</p>
         ) : (
-          <StructurePanel draft={props.draft} onEdit={props.onEdit} port={props.structure} timers={props.timers} {...(props.invalid === undefined ? {} : { invalid: props.invalid })} {...unavailable} />
+          <StructurePanel draft={props.draft} onEdit={props.onEdit} port={props.structure} timers={props.timers} {...(props.phone === true ? { phone: true } : {})} {...(props.invalid === undefined ? {} : { invalid: props.invalid })} {...unavailable} />
         )}
       </SectionFrame>
       <SectionFrame id="formula" title="Formula and charge" initiallyOpen={open}>
