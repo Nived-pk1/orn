@@ -280,6 +280,7 @@ export function EditorHost(props: EditorHostProps) {
               phone={phone}
               structure={port.structure}
               timers={port.timers}
+              newId={port.newId}
               suggestions={checks.structure.suggestions}
               {...(port.records === undefined ? {} : { picker: port.records })}
               {...(unavailable === undefined ? {} : { unavailable })}

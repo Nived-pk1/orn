@@ -297,6 +297,7 @@ export function createDraftManager(options: DraftManagerOptions): DraftManager {
       notify();
       await removeRow(id);
     },
+    newId: (prefix) => ids.newId(prefix),
     async flush() {
       const dirty = [...slots.values()].filter((slot) => slot.edited && (slot.cancelTimer !== undefined || slot.save.state === 'saving'));
       for (const slot of dirty) stopTimer(slot);

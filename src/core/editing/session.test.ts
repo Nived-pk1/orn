@@ -173,6 +173,21 @@ describe('undoDraft and redoDraft', () => {
   });
 });
 
+describe('a blank reagent draft (step 6.2b, decision D5)', () => {
+  it('has every required field at its empty value; L1 refuses only the empty name', async () => {
+    const { parseRecord } = await import('../validation');
+    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'reagent', blank: true });
+    if (!result.ok) throw new Error('no session');
+    const draft = result.session.draft as Record<string, unknown> & { id: string };
+    expect(draft).toMatchObject({ kind: 'reagent', components: [], families: [], classIds: [], profiles: [], tags: [], citations: [], names: { canonical: '', common: [], aliases: [] }, provenance: { origin: 'user' }, review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] } });
+    expect(draft.id).toMatch(/^rgt_/);
+    expect(Object.hasOwn(draft, 'speciesId')).toBe(false);
+    const parsed = parseRecord('reagent', draft);
+    expect(!parsed.ok && parsed.findings.map((f) => f.path)).toEqual(['names.canonical']);
+    expect(parseRecord('reagent', { ...draft, names: { canonical: "Tollens' reagent", common: [], aliases: [] } }).ok).toBe(true);
+  });
+});
+
 describe('a blank class draft (step 6.2b, decision D5)', () => {
   it('has every required field at its empty value except classKind, which is ABSENT; L1 refuses it until a name and a kind are given', async () => {
     const { parseRecord } = await import('../validation');
@@ -205,7 +220,7 @@ describe('a blank species draft (ADR-040 addendum, decision D3)', () => {
     expect(parseRecord('species', { ...(named.session.draft as object), names: { canonical: 'Propan-1-ol', common: [], aliases: [] } }).ok).toBe(true);
   });
   it('another kind falls back to the smallest draft', () => {
-    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'reagent', blank: true });
+    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'concept', blank: true });
     if (!result.ok) throw new Error('no session');
     expect(Object.keys(result.session.draft as object).sort()).toEqual(['id', 'kind']);
   });

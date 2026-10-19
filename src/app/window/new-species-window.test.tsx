@@ -6,7 +6,7 @@
  */
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ChemicalClass, Species } from '@/core/schema';
+import type { ChemicalClass, Reagent, Species } from '@/core/schema';
 import { PHONE_QUERIES } from '@/ui/hooks';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
@@ -41,14 +41,13 @@ const openWorkbench = (): void => {
 const editor = (): Promise<HTMLElement> => screen.findByRole('dialog', { name: 'New species' });
 
 describe('the Workbench page (desktop)', () => {
-  it('offers New species and New class; New reagent is listed and unavailable until step 6.2b part 3', () => {
+  it('offers New species, New class and New reagent', () => {
     renderWithApp(fakeApp({ state: demoState() }));
     openWorkbench();
     const page = within(screen.getByRole('region', { name: 'Workbench' }));
     expect(page.getByRole('button', { name: 'New species' }).getAttribute('aria-disabled')).toBeNull();
     expect(page.getByRole('button', { name: 'New class' }).getAttribute('aria-disabled')).toBeNull();
-    const reagent = page.getByRole('button', { name: 'New reagent', description: 'Arrives in step 6.2b, part 3' });
-    expect(reagent.getAttribute('aria-disabled')).toBe('true');
+    expect(page.getByRole('button', { name: 'New reagent' }).getAttribute('aria-disabled')).toBeNull();
     expect(page.getByText('No unfinished drafts.')).toBeTruthy();
   });
 
@@ -144,6 +143,43 @@ describe('New class through the real window (step 6.2b decision D5)', () => {
   });
 });
 
+const reagentNames = (app: FakeApp): string[] => Object.values(app.store.getState().records.reagent).map((r) => (r as Reagent).names.canonical);
+const reagentEditor = (): Promise<HTMLElement> => screen.findByRole('dialog', { name: 'New reagent' });
+
+describe('New reagent through the real window (step 6.2b decision D5)', () => {
+  it('opens on a blank reagent; Save is refused until a name is typed, then ONE entry "Create reagent Tollens\' reagent" that Undo removes', async () => {
+    const app = fakeApp({ state: demoState() });
+    renderWithApp(app);
+    openWorkbench();
+    fireEvent.click(screen.getByRole('button', { name: 'New reagent' }));
+    const dialog = await reagentEditor();
+    const before = reagentNames(app).length;
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(await within(dialog).findByRole('heading', { name: 'Save was refused' })).toBeTruthy();
+    expect(reagentNames(app)).toHaveLength(before);
+    fireEvent.change(within(dialog).getByLabelText('Canonical name (required)'), { target: { value: "Tollens' reagent" } });
+    fireEvent.click(within(dialog).getByRole('checkbox', { name: 'Oxidant' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New reagent' })).toBeNull());
+    expect(reagentNames(app)).toContain("Tollens' reagent");
+    expect(app.store.historyLabels().undo.at(-1)).toBe("Create reagent Tollens' reagent");
+    const created = Object.values(app.store.getState().records.reagent).find((r) => (r as Reagent).names.canonical === "Tollens' reagent") as Reagent;
+    expect(created).toMatchObject({ families: ['oxidant'], components: [], classIds: [], profiles: [], provenance: { origin: 'user' }, review: { lifecycle: 'draft', status: 'unreviewed' } });
+    app.store.undo();
+    expect(reagentNames(app)).not.toContain("Tollens' reagent");
+  });
+
+  it('a read-only tab says why on New reagent; the palette lists the command', () => {
+    renderWithApp(fakeApp({ state: demoState(), status: { mode: 'follower', reason: 'other_tab_is_writer' } }));
+    openWorkbench();
+    expect(screen.getByRole('button', { name: 'New reagent', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
+    const run = vi.fn();
+    const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
+    buildCommands({ ...base, newReagent: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-reagent')?.run();
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('the palette command "New species"', () => {
   const deps = (newSpecies: CommandDeps['newSpecies']): CommandDeps =>
     ({ mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, newSpecies, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } }) as unknown as CommandDeps;
@@ -161,6 +197,17 @@ describe('the palette command "New species"', () => {
 describe('on a phone', () => {
   beforeEach(() => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
+  });
+
+  it('More > New reagent opens the reagent editor full-screen; Save works', async () => {
+    const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
+    renderWithApp(app);
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'More' })).getByRole('button', { name: 'New reagent' }));
+    const dialog = await reagentEditor();
+    fireEvent.change(within(dialog).getByLabelText('Canonical name (required)'), { target: { value: 'Phone reagent' } });
+    await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
+    await waitFor(() => expect(reagentNames(app)).toContain('Phone reagent'));
   });
 
   it('More > New class opens the class editor full-screen; Save works', async () => {

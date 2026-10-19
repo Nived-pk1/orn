@@ -45,6 +45,8 @@ export interface EditorPort {
   readonly records?: RecordPickerPort;
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
   readonly structure?: StructurePort;
+  /** A fresh ID for a nested record the form creates (a reagent profile: 'rpf'). From the session manager's ID factory; deterministic under test. */
+  newId(prefix: string): string;
   /** Injected timers (the 300 ms debounce of the live panel). */
   readonly timers: { after(ms: number, run: () => void): () => void };
 }

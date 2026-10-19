@@ -76,6 +76,8 @@ export interface DraftManager {
   discardUnreadable(id: string): Promise<void>;
   /** Saves every dirty session now. */
   flush(): Promise<void>;
+  /** A fresh ID for a record or a nested record the editor creates (for example a reagent profile, prefix "rpf"). */
+  newId(prefix: string): string;
   /** Reads the stored rows again (after boot and after a promotion). */
   refresh(): Promise<void>;
   dispose(): void;

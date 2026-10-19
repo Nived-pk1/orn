@@ -46,8 +46,8 @@ export function shotsDir(): string {
   return SHOTS;
 }
 
-/** Shows a record in the inspector through the palette: Ctrl K, `<prefix>: <name>` (s species, c class, r reagent), its result. With an ID the result is that exact record. */
-export async function showRecord(page: Page, prefix: 's' | 'c' | 'r', name: string, id?: string): Promise<void> {
+/** Shows a record in the inspector through the palette: Ctrl K, `<prefix>: <name>` (s species, c class, g reagent; r is reactions), its result. With an ID the result is that exact record. */
+export async function showRecord(page: Page, prefix: 's' | 'c' | 'g', name: string, id?: string): Promise<void> {
   await page.keyboard.press('Control+K');
   await expect(palette(page)).toBeVisible();
   await searchFor(page, `${prefix}: ${name}`);

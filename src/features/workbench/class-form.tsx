@@ -3,7 +3,7 @@
  * the read-only record of what this editor does not edit. Collapsible and keyboard-navigable (SectionFrame); a phone starts with the long
  * sections closed.
  */
-import { ClassReadOnlySection } from './class-readonly';
+import { NotesReadOnlySection } from './record-readonly';
 import { GenericSection } from './class-generic';
 import { ClassIdentitySection, ExamplesSection, ParentsSection } from './class-sections';
 import { NamesSection } from './names-section';
@@ -46,7 +46,7 @@ export function ClassForm(props: ClassFormProps) {
         <ReviewSection {...common} />
       </SectionFrame>
       <SectionFrame id="readonly" title="Notes, tags and citations" initiallyOpen={open}>
-        <ClassReadOnlySection draft={props.draft} />
+        <NotesReadOnlySection draft={props.draft} />
       </SectionFrame>
     </div>
   );

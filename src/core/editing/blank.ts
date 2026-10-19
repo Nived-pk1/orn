@@ -1,6 +1,6 @@
 /**
  * The first draft of a NEW record (ADR-040 addendum, step 6.2a decision D3, extended in 6.2b decision D5): every required field has its
- * empty value, so the editor can show every field from the start. Species and classes today; any other kind starts as the smallest draft
+ * empty value, so the editor can show every field from the start. Species, classes and reagents; any other kind starts as the smallest draft
  * (`openSession`). Pure: the ID and both times come from the `CommandContext`. The empty canonical name does not pass L1, which is right:
  * Save is refused until a name is typed. A class has no empty `classKind` (the schema has no "unspecified" kind): the field is left ABSENT,
  * the form shows "Choose a kind" and L1 refuses Save with the schema's words until one is chosen. No kind is invented.
@@ -24,6 +24,10 @@ export function blankDraft(kind: RecordKind, ctx: CommandContext): Record<string
   if (kind === 'class') {
     const now = ctx.now();
     return { kind: 'class', id: ctx.newId(RECORD_ID_PREFIX.class), names: startNames(), parentIds: [], exampleSpeciesIds: [], ...startMeta(now) };
+  }
+  if (kind === 'reagent') {
+    const now = ctx.now();
+    return { kind: 'reagent', id: ctx.newId(RECORD_ID_PREFIX.reagent), names: startNames(), components: [], families: [], classIds: [], profiles: [], ...startMeta(now) };
   }
   return undefined;
 }

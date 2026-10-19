@@ -14,6 +14,7 @@ export function makeEditorPort(
     entry: (id) => drafts.entry(id),
     subscribe: drafts.subscribe,
     keeping: () => drafts.view().keeping,
+    newId: (prefix) => drafts.newId(prefix),
     edit: (id, recipe, meta) => drafts.edit(id, recipe, meta),
     undo: (id) => drafts.undo(id),
     redo: (id) => drafts.redo(id),

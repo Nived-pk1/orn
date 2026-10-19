@@ -1,5 +1,5 @@
 /**
- * What the class editor does not edit (step 6.2b decision D1): description, study notes, notes, the R-group note, tags and citations.
+ * What the class and reagent editors do not edit (step 6.2b decisions D1 and D3): description, study notes, notes, the R-group note of a class, tags and citations.
  * Shown, never edited: "Editing arrives in step 6.6." The draft keeps them exactly as they are, so a Save never loses them.
  */
 import styles from './editor.module.css';
@@ -11,7 +11,7 @@ const excerpt = (value: unknown): string | undefined => {
   return value.length > 240 ? `${value.slice(0, 239)}... (${value.length.toLocaleString('en-US')} characters)` : value;
 };
 
-export function ClassReadOnlySection(props: { readonly draft: unknown }) {
+export function NotesReadOnlySection(props: { readonly draft: unknown }) {
   const fields = (typeof props.draft === 'object' && props.draft !== null ? props.draft : {}) as Fields;
   const generic = (typeof fields.generic === 'object' && fields.generic !== null ? fields.generic : {}) as Fields;
   const texts: readonly (readonly [string, string | undefined])[] = [

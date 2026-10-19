@@ -7,7 +7,8 @@ import { demoState } from '@/test-support/app-boot-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 
-beforeAll(() => {
+beforeAll(async () => {
+  await import('@/features/workbench/layer'); // the drafts list is a lazy chunk (ADR-040): load it once so findBy* never races a slow machine
   stubDialog();
   fakeLayout();
 });

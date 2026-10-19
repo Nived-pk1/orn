@@ -28,6 +28,8 @@ export interface CommandDeps {
   readonly newSpecies?: { readonly reason: string | undefined; run(): void } | undefined;
   /** "New class" (step 6.2b): why it cannot run now, and what it does. Absent: no such command. */
   readonly newClass?: { readonly reason: string | undefined; run(): void } | undefined;
+  /** "New reagent" (step 6.2b): why it cannot run now, and what it does. Absent: no such command. */
+  readonly newReagent?: { readonly reason: string | undefined; run(): void } | undefined;
   /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
   readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
   readonly ui: NavigatorUiStores;
@@ -97,6 +99,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit the selected record', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
     ...(deps.newSpecies === undefined ? [] : [withReason({ id: 'new-species', title: 'New species', keywords: ['create', 'add', 'compound', 'author', 'workbench', 'draft'], run: deps.newSpecies.run }, deps.newSpecies.reason)]),
     ...(deps.newClass === undefined ? [] : [withReason({ id: 'new-class', title: 'New class', keywords: ['create', 'add', 'group', 'functional group', 'family', 'author', 'workbench', 'draft'], run: deps.newClass.run }, deps.newClass.reason)]),
+    ...(deps.newReagent === undefined ? [] : [withReason({ id: 'new-reagent', title: 'New reagent', keywords: ['create', 'add', 'catalyst', 'oxidant', 'author', 'workbench', 'draft'], run: deps.newReagent.run }, deps.newReagent.reason)]),
     ...structureCommands,
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),

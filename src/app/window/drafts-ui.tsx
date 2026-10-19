@@ -17,11 +17,13 @@ export interface EditorsApi {
   newSpecies(): void;
   /** Opens the editor on a NEW class (step 6.2b, decision D5). A refusal is said in a toast. */
   newClass(): void;
+  /** Opens the editor on a NEW reagent (step 6.2b, decision D5). A refusal is said in a toast. */
+  newReagent(): void;
   /** Opens a listed draft (its stored session). */
   openDraft(id: string): void;
   /** Why editing is unavailable now (a read-only tab); undefined when it is available. */
   readonly editReason: string | undefined;
-  /** Record kinds that open the full editor (species and classes; reagents arrive in 6.2b part 3). */
+  /** Record kinds that open the full editor (species, classes and reagents). */
   readonly fullEditorKinds?: readonly string[];
 }
 

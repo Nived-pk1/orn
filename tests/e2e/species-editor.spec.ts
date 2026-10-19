@@ -38,7 +38,7 @@ test.describe('the species editor', () => {
     await classDialog.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(classDialog).toBeHidden();
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: /Workbench/ }).click();
-    await expect(page.getByRole('button', { name: 'New reagent', description: 'Arrives in step 6.2b, part 3' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'New reagent', exact: true })).not.toHaveAttribute('aria-disabled', 'true');
     await page.screenshot({ path: resolve(shotsDir(), 'workbench-1280x800.png') });
     await page.getByRole('button', { name: 'New species' }).click();
     const dialog = newSpeciesDialog(page);

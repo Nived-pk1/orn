@@ -1,14 +1,12 @@
 /**
  * The Workbench page (step 6.2a decision D5): where authoring starts on the desktop. "New species" opens the editor on a blank species;
- * "New class" opens it on a blank class (step 6.2b); "New reagent" is listed and unavailable until part 3 of that step (never hidden, never a silent no-op); the drafts list shows
+ * "New class" opens it on a blank class (step 6.2b); "New reagent" opens it on a blank reagent (step 6.2b); a read-only tab says why on every button (never hidden, never a silent no-op); the drafts list shows
  * every unfinished edit with a way back into it. Writer tab only: a read-only tab says why on each button.
  */
 import { shortTime } from '@/features/workbench';
 import { Button } from '@/ui/primitives';
 import { useDraftsView, useEditors } from './drafts-ui';
 import styles from './window.module.css';
-
-const LATER = 'Arrives in step 6.2b, part 3';
 
 export function WorkbenchPage() {
   const editors = useEditors();
@@ -23,7 +21,7 @@ export function WorkbenchPage() {
           New species
         </Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newClass } : { unavailable: reason ?? 'Editing is not available here.' })}>New class</Button>
-        <Button unavailable={LATER}>New reagent</Button>
+        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newReagent } : { unavailable: reason ?? 'Editing is not available here.' })}>New reagent</Button>
       </div>
       <h3>Drafts</h3>
       {drafts.items.length === 0 ? (
