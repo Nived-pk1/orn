@@ -99,9 +99,9 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-18T14:23Z",
-    "commit": "0941fed",
-    "version": "45965bc2-2b2c-46ed-b41c-4aab03d592eb"
+    "deployedAt": "2026-10-19T12:10Z",
+    "commit": "7e443f3",
+    "version": "f4608a1f-1db6-4d3b-97d3-c1dd9c27659e"
   },
   "nextStep": "6.2",
   "nextStepTitle": "Species, class, reagent editors; structure panel (live parse/depiction); duplicate check",

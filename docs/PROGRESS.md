@@ -4789,3 +4789,7 @@ REVIEW REQUIRED: (1) the empty variant set is a group of its own apart from name
 ### Outcome groups step, part 3 - close and deploy (2026-10-19)
 
 Speed check 0.65 / 0.76 / 0.66 s (median 0.66 s). ONE run, production build, Chromium + Firefox + WebKit: equation, equation-long-name, phone-equation, family, phone-family, inspector, inspector-views, structures, structures-late, editor, palette, csp, smoke, outcome-groups, phone-outcome-groups: 126 passed, 24 skipped (by-design device/engine skips: phone specs run Pixel 7 in Chromium and iPhone 14 in WebKit only; screenshots in Chromium only), 0 failed (11.8 min; no re-run needed). Chromium 45 / 5 skipped, Firefox 38 / 12, WebKit 43 / 7. Initial JS 389.06 kB gzip (the 395 kB line holds; build smoke budget 400 kB). `npm run build:smoke` passed. `npm run check` (part 2): 442 files, 5936 tests passed. PROJECT_STATE: `outcomeGroupsStep`; nextStep stays 6.2. The iPhone screenshot screenshots/phone-outcomes-e2-iphone14.png was taken in this run.
+
+### Outcome groups step, part 4 - deployed (2026-10-19)
+
+`npx wrangler deploy` of commit 7e443f3 (nothing was asked): version f4608a1f-1db6-4d3b-97d3-c1dd9c27659e at https://reaction-navigator.organic-reaction-navigator.workers.dev. Against the live URL, Chromium and WebKit: smoke, csp, phone, phone-family, equation, phone-equation (and the other phone specs the pattern matches): 45 passed, 17 skipped (by-design), 0 failed. PROJECT_STATE releasePreview updated.
