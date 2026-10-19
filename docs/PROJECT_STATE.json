@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-18",
+  "lastUpdated": "2026-10-19",
   "currentPhase": 6,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -92,6 +92,11 @@
     "6.1"
   ],
   "nextPhase": 7,
+  "outcomeGroupsStep": {
+    "closed": "2026-10-19",
+    "summary": "Outcomes of a reaction are grouped by condition-variant set (src/core/graph/outcome-groups.ts); the family card draws one scheme per group and the full equation is one per group in a bordered panel; presentation only, no schema change.",
+    "commits": ["294c244", "525afcd"]
+  },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-10-18T14:23Z",
