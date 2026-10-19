@@ -92,6 +92,7 @@
     "6.2a",
     "6.2b",
     "6.2",
+    "6.3a",
     "6.1"
   ],
   "nextPhase": 7,
@@ -106,8 +107,8 @@
     "commit": "8b22b27",
     "version": "55e74965-995f-4b44-8f97-c9c8724909cb"
   },
-  "nextStep": "6.3",
-  "nextStepTitle": "Reaction editor: identity, participants, stages",
+  "nextStep": "6.3b",
+  "nextStepTitle": "Reaction editor, second half (to be defined by the reviewer: 6.3a built identity, participants, stages and New reaction)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
