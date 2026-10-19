@@ -133,4 +133,30 @@ test.describe('the reagent editor', () => {
     await edit.getByRole('button', { name: 'Close (keeps the draft)' }).click();
     await expectClean(seen);
   });
+
+  test('the duplicate check: a second reagent with the same name, and one with the same backing species, show the dialog', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page);
+    await openDemo(page);
+    await startNewReagent(page);
+    const dialog = newReagentDialog(page);
+    await dialog.getByLabel('Canonical name (required)').fill('Potassium permanganate');
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+    const dup = page.getByRole('dialog', { name: 'This may already exist' });
+    await expect(dup).toBeVisible({ timeout: 60_000 });
+    await expect(dup.getByText('Matched by the same name.')).toBeVisible();
+    await dup.getByRole('button', { name: 'Back to the editor' }).click();
+    await expect(dup).toBeHidden();
+    // the same backing species under another name
+    await dialog.getByLabel('Canonical name (required)').fill('Purple oxidant');
+    await dialog.getByLabel('Find the backing species by name').fill('potassium permanganate');
+    await dialog.getByRole('list', { name: 'Backing species found' }).getByRole('button', { name: /^Add Potassium permanganate/ }).click();
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(dup).toBeVisible({ timeout: 60_000 });
+    await expect(dup.getByText('Matched by the same backing species.')).toBeVisible();
+    await dup.getByRole('button', { name: 'Keep both' }).click();
+    await expect(dup).toBeHidden();
+    await expect(dialog).toBeHidden();
+    await expectClean(seen);
+  });
 });

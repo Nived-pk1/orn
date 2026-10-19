@@ -15,7 +15,7 @@ import styles from './editor.module.css';
 const AREA = { width: 128, height: 80 } as const;
 export const MERGE_LATER = 'Merging arrives in step 6.8';
 
-const WHY: Readonly<Record<DuplicateMatch['reasons'][number], string>> = { name: 'the same name', structure: 'the same structure' };
+const WHY: Readonly<Record<DuplicateMatch['reasons'][number], string>> = { name: 'the same name', structure: 'the same structure', species: 'the same backing species' };
 
 function Picture(props: { readonly structure: StructureRep; readonly name: string; readonly port: StructurePort | undefined; readonly timers: { after(ms: number, run: () => void): () => void } }) {
   const { port, timers } = props;

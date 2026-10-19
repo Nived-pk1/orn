@@ -3,7 +3,7 @@
  * identical canonical structure, none, the record itself excluded, and a chem worker that cannot answer said in words.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { CanonicalState, Species } from '@/core/schema';
+import type { CanonicalState, ChemicalClass, Reagent, Species } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { indexEngine } from '@/core/indexes';
 import { realChecks, realChemPort, realRig } from '@/test-support/l4-real-kit';
@@ -71,5 +71,62 @@ describe('the duplicate check', () => {
     expect(out.structureChecked).toBe(false);
     expect(out.message).toMatch(/^Structure duplicates could not be checked/);
     expect(out.matches).toMatchObject([{ reasons: ['name'] }]);
+  });
+});
+
+/** Classes and reagents (step 6.2b part 4, decision D6): classes by folded name (equal qualifiers), reagents by folded name and by the same backing species. No chemistry. */
+describe('the duplicate check for classes', () => {
+  const ALCOHOLS = state.records.class['cls_alcohols' as never] as ChemicalClass;
+  const cls = (over: Partial<ChemicalClass>): ChemicalClass => ({ ...ALCOHOLS, id: 'cls_new-draft' as never, ...over }) as ChemicalClass;
+
+  it('finds the existing class by NAME (folded: case and spacing), with its name and generic formula for the dialog', async () => {
+    const out = await check.check('class', cls({ names: names('  ALCOHOLS'.trim()) }));
+    expect(out.matches).toMatchObject([{ ref: { kind: 'class', id: 'cls_alcohols' }, name: 'Alcohols', formula: 'R–OH', reasons: ['name'] }]);
+    expect(out.structureChecked).toBe(true);
+    expect(out.more).toBe(0);
+  });
+
+  it('a different qualifier tells two same-named classes apart (the CLS-002 rule); a new name matches nothing', async () => {
+    expect((await check.check('class', cls({ names: names('Alcohols', '(a new qualifier)') }))).matches).toEqual([]);
+    expect((await check.check('class', cls({ names: names('Diols') }))).matches).toEqual([]);
+  });
+
+  it('the class itself is never a match (editing Alcohols, unchanged)', async () => {
+    expect((await check.check('class', ALCOHOLS)).matches).toEqual([]);
+  });
+
+  it('a draft that fails the schema is not checked (L1 first)', async () => {
+    expect((await check.check('class', { ...cls({}), names: undefined })).matches).toEqual([]);
+  });
+});
+
+describe('the duplicate check for reagents', () => {
+  const KMNO4 = state.records.reagent['rgt_potassium-permanganate' as never] as Reagent;
+  const rgt = (over: Partial<Reagent>): Reagent => ({ ...KMNO4, id: 'rgt_new-draft' as never, ...over }) as Reagent;
+
+  it('finds the existing reagent by NAME (folded), with its display formula', async () => {
+    const out = await check.check('reagent', rgt({ names: names('POTASSIUM  PERMANGANATE'.replace('  ', ' ')), speciesId: undefined } as never));
+    expect(out.matches).toMatchObject([{ ref: { kind: 'reagent', id: 'rgt_potassium-permanganate' }, name: 'Potassium permanganate', formula: 'KMnO₄', reasons: ['name'] }]);
+  });
+
+  it('finds reagents by the SAME BACKING SPECIES when the names differ', async () => {
+    const out = await check.check('reagent', rgt({ names: names('Purple stuff') }));
+    expect(out.matches).toMatchObject([{ ref: { id: 'rgt_potassium-permanganate' }, reasons: ['species'] }]);
+  });
+
+  it('by name AND backing species: one match with both reasons', async () => {
+    const out = await check.check('reagent', rgt({ names: names('Potassium permanganate') }));
+    expect(out.matches).toHaveLength(1);
+    expect(out.matches[0]?.reasons).toEqual(['name', 'species']);
+  });
+
+  it('a reagent without a backing species is checked by name only; the reagent itself is never a match', async () => {
+    const out = await check.check('reagent', rgt({ names: names('Brand new mixture'), speciesId: undefined } as never));
+    expect(out.matches).toEqual([]);
+    expect((await check.check('reagent', KMNO4)).matches).toEqual([]);
+  });
+
+  it('other kinds are not checked', async () => {
+    expect((await check.check('concept', { id: 'cpt_x' })).matches).toEqual([]);
   });
 });

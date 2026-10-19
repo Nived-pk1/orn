@@ -122,4 +122,45 @@ test.describe('the class editor', () => {
     await expect(dialog).toBeHidden();
     await expectClean(seen);
   });
+
+  test('the duplicate check: a second "Alcohols" class shows the dialog; Open the existing; then Keep both saves', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page);
+    await openDemo(page);
+    await startNewClass(page);
+    const dialog = newClassDialog(page);
+    await dialog.getByLabel('Canonical name (required)').fill('Alcohols');
+    await dialog.getByLabel('Kind of class').selectOption('compound_class');
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+
+    const dup = page.getByRole('dialog', { name: 'This may already exist' });
+    await expect(dup).toBeVisible({ timeout: 60_000 });
+    await expect(dup.getByText('Alcohols', { exact: true })).toBeVisible();
+    await expect(dup.getByText('Matched by the same name.')).toBeVisible();
+    await expect(dup.getByRole('button', { name: 'Merge', description: 'Merging arrives in step 6.8' })).toHaveAttribute('aria-disabled', 'true');
+
+    // Open the existing: the draft stays a draft and the demo class is shown
+    await dup.getByRole('button', { name: 'Open Alcohols' }).click();
+    await expect(dup).toBeHidden();
+    await expect(newClassDialog(page)).toBeHidden();
+    await expect(record(page)).toHaveAttribute('data-record-id', 'cls_alcohols');
+    await expect(page.getByRole('list', { name: 'Drafts' })).toContainText('Alcohols');
+
+    // continue the draft, Save again, Keep both
+    await page.getByRole('button', { name: 'Continue Alcohols' }).click();
+    await expect(newClassDialog(page)).toBeVisible();
+    await newClassDialog(page).getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(dup).toBeVisible({ timeout: 60_000 });
+    await dup.getByRole('button', { name: 'Keep both' }).click();
+    await expect(dup).toBeHidden();
+    await expect(newClassDialog(page)).toBeHidden();
+
+    // two classes are named Alcohols now
+    await page.keyboard.press('Control+K');
+    await expect(palette(page)).toBeVisible();
+    await searchFor(page, 'c: alcohols');
+    await expect(palette(page).getByRole('option', { name: /^Alcohols/ })).toHaveCount(2, { timeout: 60_000 });
+    await page.keyboard.press('Escape');
+    await expectClean(seen);
+  });
 });

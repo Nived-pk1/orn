@@ -106,3 +106,37 @@ describe('on Save of a species', () => {
     expect(check).not.toHaveBeenCalled();
   });
 });
+
+describe('on Save of a class or a reagent (step 6.2b part 4, decision D6)', () => {
+  function showKind(kind: 'class' | 'reagent', outcome: DuplicateOutcome) {
+    const rig: EditorRig = editorRig();
+    const opened = rig.drafts.open({ kind, blank: true });
+    if (!opened.ok) throw new Error(opened.message);
+    const check = vi.fn(async () => outcome);
+    renderWithToasts(<EditorHost port={{ ...rig.port, duplicates: { check, openRecord: vi.fn() } }} sessionId={opened.id} open onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Canonical name (required)'), { target: { value: 'Alcohols' } });
+    if (kind === 'class') fireEvent.change(screen.getByLabelText('Kind of class'), { target: { value: 'compound_class' } });
+    return { rig, check };
+  }
+
+  it('a class: the dialog says "the same name", has no drawing, and Keep both saves it', async () => {
+    const { rig, check } = showKind('class', { matches: [{ ref: { kind: 'class', id: 'cls_alcohols' }, name: 'Alcohols', formula: 'R–OH', reasons: ['name'] }], more: 0, structureChecked: true });
+    save();
+    const dialog = await dupDialog();
+    expect(check).toHaveBeenCalledWith('class', expect.anything());
+    expect(within(dialog).getByText('Matched by the same name.')).toBeTruthy();
+    expect(within(dialog).queryByRole('img')).toBeNull();
+    const before = Object.keys(rig.store.getState().records.class).length;
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep both' }));
+    await waitFor(() => expect(Object.keys(rig.store.getState().records.class)).toHaveLength(before + 1));
+    expect(check).toHaveBeenCalledTimes(1);
+  });
+
+  it('a reagent: "the same name and the same backing species"; Merge stays unavailable', async () => {
+    showKind('reagent', { matches: [{ ref: { kind: 'reagent', id: 'rgt_pcc' }, name: 'PCC', reasons: ['name', 'species'] }], more: 0, structureChecked: true });
+    save();
+    const dialog = await dupDialog();
+    expect(within(dialog).getByText('Matched by the same name and the same backing species.')).toBeTruthy();
+    expect(within(dialog).getByRole('button', { name: 'Merge', description: 'Merging arrives in step 6.8' }).getAttribute('aria-disabled')).toBe('true');
+  });
+});

@@ -6,22 +6,22 @@
 import { closure, parentIdsOf } from '../../indexes/hierarchy';
 import type { HierarchyKind } from '../../indexes/contracts';
 import { foldedNamesOf } from '../../indexes/names';
-import type { AnyRecord, ChemicalClass, RecordKind, RecordRef, Species } from '../../schema';
+import type { AnyRecord, ChemicalClass, Reagent, RecordKind, RecordRef, Species } from '../../schema';
 import { TOPIC_KINDS } from '../../schema';
 import { fold } from '../../text';
 import type { RuleContext, ValidationRule } from '../contracts';
 import { MAX_RELATED, MAX_WALK_NODES, NO_REFERENCED_READS, allOfKinds, asRef, asRefs, at, existing, rule } from './helpers';
 
-type Named = Species | ChemicalClass;
+type Named = Species | ChemicalClass | Reagent;
 const fold_ = (text: string | undefined): string => (text === undefined ? '' : fold(text));
 
-/** Records of `kind` sharing this record's canonical name, unless a different qualifier tells them apart. */
+/** Records of `kind` sharing this record's canonical name, unless a different qualifier tells them apart (species, classes and, since step 6.2b, reagents: the duplicate check). */
 export function twinsOf(record: Named, ctx: RuleContext, kind: RecordKind): AnyRecord[] {
   const folded = fold_(record.names.canonical);
   const qualifier = fold_(record.names.qualifier);
   const others = existing(ctx, ctx.indexes.byFoldedName(kind, folded).filter((ref) => ref.id !== record.id));
   return others.filter((other) => {
-    if (other.kind !== 'species' && other.kind !== 'class') return false;
+    if (other.kind !== 'species' && other.kind !== 'class' && other.kind !== 'reagent') return false;
     return fold_(other.names.canonical) === folded && fold_(other.names.qualifier) === qualifier;
   });
 }

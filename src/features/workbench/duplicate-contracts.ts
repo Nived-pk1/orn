@@ -1,7 +1,7 @@
 /**
  * What the duplicate check on Save needs of the app (step 6.2a part 5): the records a species draft may repeat, and a way to show one of
  * them. The app fills it; the dialog decides nothing. `reasons`: `name` (the same folded name and qualifier), `structure` (the same canonical
- * structure).
+ * structure, species only), `species` (the same backing species, reagents only; step 6.2b decision D6).
  */
 import type { RecordKind, RecordRef, StructureRep } from '@/core/schema';
 
@@ -11,7 +11,7 @@ export interface DuplicateMatch {
   readonly qualifier?: string;
   readonly formula?: string;
   readonly structure?: StructureRep;
-  readonly reasons: readonly ('name' | 'structure')[];
+  readonly reasons: readonly ('name' | 'structure' | 'species')[];
 }
 
 export interface DuplicateOutcome {
