@@ -4958,3 +4958,8 @@ Speed check 0.568 / 0.565 / 0.554 s (median 0.565 s) before the close. Pending t
 **Row 6.2 is DONE (2026-10-19).** IMPLEMENTATION_PLAN row 6.2 marked; PROJECT_STATE completedSteps "6.2b" and "6.2", nextStep "6.3".
 **Screenshots** (git-ignored, in screenshots/): class-editor-1280x800.png, class-parent-refused-1280x800.png, reagent-editor-1280x800.png, phone-class-editor-<pixel7|iphone14>.png, phone-reagent-editor-<pixel7|iphone14>.png.
 Not deployed yet: Part 6.
+
+### Step 6.2b, part 6 - deployed (2026-10-19)
+
+`npx wrangler deploy` (static assets, ./dist built by `npm run build:smoke` at the Part 5 commit 8b22b27, initial JS index-BnLMgaa8.js): 13 files uploaded, Current Version ID **55e74965-995f-4b44-8f97-c9c8724909cb**, https://reaction-navigator.organic-reaction-navigator.workers.dev, 2026-10-19T12:08Z. It asked nothing.
+**Live run** (ORN_BASE_URL set to that URL, Chromium and WebKit, smoke, csp, phone, phone-family, equation, phone-equation, structures): **39 passed, 0 failed, 9 skipped** (Chromium 20 / 0 / 4, WebKit 19 / 0 / 5; the skips are the phone profile of the other engine and the engine-specific tests, as in the full run). PROJECT_STATE releasePreview: commit 8b22b27, version 55e74965-995f-4b44-8f97-c9c8724909cb, deployedAt 2026-10-19T12:08Z. Nothing started in this session is still running (the e2e web servers were Playwright's own and exited with their runs; no process was killed by name).
