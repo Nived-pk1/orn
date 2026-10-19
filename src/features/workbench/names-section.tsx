@@ -5,7 +5,6 @@
  * does, and the findings panel shows it). An empty optional input means the field is absent (`names-model.ts`).
  */
 import type { DraftRecipe } from '@/core/editing';
-import { Button } from '@/ui/primitives';
 import {
   addListItem,
   moveListItem,
@@ -17,6 +16,7 @@ import {
   type NameList,
   type OptionalNameField,
 } from './names-model';
+import { StringListEditor } from './string-list-editor';
 import styles from './editor.module.css';
 
 export interface NamesSectionProps {
@@ -97,57 +97,22 @@ export function NamesSection(props: NamesSectionProps) {
           />
         </div>
       ))}
-      {LISTS.map(({ list, title, one }) => {
-        const items = names[list];
-        return (
-          <div className={styles.list} key={list} role="group" aria-label={title}>
-            <h4>{title}</h4>
-            {items.length === 0 ? <p className={styles.hint}>None.</p> : null}
-            <ul>
-              {items.map((item, index) => {
-                const path = `names.${list}[${index}]`;
-                const number = index + 1;
-                const who = props.phone === true && item !== '' ? item : `${one.toLowerCase()} ${number}`;
-                return (
-                  // the list has no identity of its own: a row is its position
-                  <li key={index} className={props.phone === true ? `${styles.row} ${styles.rowPhone}` : styles.row}>
-                    <input
-                      type="text"
-                      value={item}
-                      readOnly={unavailable !== undefined}
-                      aria-label={`${one} ${number}`}
-                      aria-invalid={bad(path) ? true : undefined}
-                      data-field-path={path}
-                      autoComplete="off"
-                      spellCheck={false}
-                      onChange={(event) => onEdit(setListItem(list, index, event.target.value), path)}
-                    />
-                    <Button
-                      aria-label={`Move ${who} up`}
-                      {...(unavailable !== undefined ? { unavailable } : index === 0 ? { unavailable: 'it is the first' } : { onClick: () => onEdit(moveListItem(list, index, -1)) })}
-                    >
-                      Up
-                    </Button>
-                    <Button
-                      aria-label={`Move ${who} down`}
-                      {...(unavailable !== undefined ? { unavailable } : index === items.length - 1 ? { unavailable: 'it is the last' } : { onClick: () => onEdit(moveListItem(list, index, 1)) })}
-                    >
-                      Down
-                    </Button>
-                    <Button
-                      aria-label={`Remove ${who}`}
-                      {...(unavailable !== undefined ? { unavailable } : { onClick: () => onEdit(removeListItem(list, index)) })}
-                    >
-                      Remove
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
-            <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => onEdit(addListItem(list)) })}>{`Add ${one.toLowerCase()}`}</Button>
-          </div>
-        );
-      })}
+      {LISTS.map(({ list, title, one }) => (
+        <StringListEditor
+          key={list}
+          title={title}
+          one={one}
+          items={names[list]}
+          path={`names.${list}`}
+          invalid={props.invalid}
+          unavailable={unavailable}
+          phone={props.phone}
+          onSet={(index, value) => onEdit(setListItem(list, index, value), `names.${list}[${index}]`)}
+          onAdd={() => onEdit(addListItem(list))}
+          onRemove={(index) => onEdit(removeListItem(list, index))}
+          onMove={(index, by) => onEdit(moveListItem(list, index, by))}
+        />
+      ))}
     </Wrapper>
   );
 }

@@ -3,7 +3,7 @@
  * the search engine, the words for a record already chosen, and the cycle questions a picker asks BEFORE Save. The app fills it; the
  * pickers decide nothing. `kindWords` and `scope` are words ("compound class", "in the syllabus").
  */
-export type PickKind = 'species' | 'class' | 'reagent';
+export type PickKind = 'species' | 'class' | 'reagent' | 'reaction';
 
 export interface RecordChoice {
   readonly kind: PickKind;
@@ -12,6 +12,8 @@ export interface RecordChoice {
   readonly kindWords: string;
   /** The exam scope in words; empty when no exam is chosen (then nothing is said about it). */
   readonly scope: string;
+  /** For a reaction: its scope, so a picker of generic reactions can refuse a specific one in words. */
+  readonly reactionScope?: 'generic' | 'specific';
 }
 
 export interface RecordPickerPort {
@@ -23,6 +25,8 @@ export interface RecordPickerPort {
   parentRefusal?(owner: string, candidate: string): string | undefined;
   /** Why `candidate` cannot be a component of reagent `owner` (a reagent built from the owner would close a cycle); undefined when it can. */
   componentRefusal?(owner: string, candidate: { readonly kind: PickKind; readonly id: string }): string | undefined;
+  /** The profiles of a reagent (ID and label), in order, for a participant's profile choice; empty when the reagent has none or does not exist. */
+  profilesOf?(reagentId: string): readonly { readonly id: string; readonly label: string }[];
   /** Whether the class is a family on the navigator map (read-only; making one is step 6.6). */
   isMapFamily?(classId: string): boolean;
 }

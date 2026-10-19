@@ -53,7 +53,7 @@ function editNamesCommand(editors: EditorsApi | null, state: CanonicalState, ins
   const ref = currentOf(inspector);
   const record = ref === null ? undefined : (state.records[ref.kind] as Readonly<Record<string, { readonly kind: string }>>)[ref.id];
   const reason =
-    editors === null ? 'editing is not available here' : editors.editReason ?? (ref === null || record === undefined || !hasNames(record) ? 'show a species, class or reagent in the inspector first: only records with names can be edited here' : undefined);
+    editors === null ? 'editing is not available here' : editors.editReason ?? (ref === null || record === undefined || !(hasNames(record) || editors.fullEditorKinds?.includes(record.kind) === true) ? 'show a species, class, reagent or reaction in the inspector first: only these can be edited here' : undefined);
   return { reason, run: () => (ref === null || editors === null ? undefined : editors.editNames(ref)) };
 }
 

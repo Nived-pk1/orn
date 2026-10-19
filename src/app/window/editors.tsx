@@ -21,7 +21,7 @@ const EditorHost = lazy(() => import('@/features/workbench/layer').then((m) => (
 const machineTime = createLocalTimeFormatter();
 
 /** The kinds whose editor is the full one (the others edit names only). */
-const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent'];
+const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction'];
 
 /** Why editing cannot start in this tab now; undefined when it can (a session-only tab edits in memory and says so in the editor). */
 export function editReasonOf(mode: string | null): string | undefined {

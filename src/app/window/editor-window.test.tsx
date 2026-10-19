@@ -197,7 +197,7 @@ describe('the palette command "Edit the selected record"', () => {
     fireEvent.change(within(dialog).getByRole('combobox'), { target: { value: '>Edit the selected' } });
     const item = await within(dialog).findByText('Edit the selected record');
     expect(item).toBeTruthy();
-    expect(dialog.textContent).toContain('show a species, class or reagent in the inspector first');
+    expect(dialog.textContent).toContain('show a species, class, reagent or reaction in the inspector first');
   });
 });
 

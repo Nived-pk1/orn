@@ -45,8 +45,9 @@ function useLiveFindings(kind: Parameters<typeof parseRecord>[0], draft: unknown
 }
 
 const nameOfBase = (record: AnyRecord | null, fallback: string): string => {
-  const names = (record as { names?: { canonical?: unknown } } | null)?.names;
-  return typeof names?.canonical === 'string' && names.canonical !== '' ? names.canonical : fallback;
+  const fields = record as { names?: { canonical?: unknown }; name?: unknown } | null;
+  const own = fields?.names?.canonical ?? fields?.name; // a reaction has `name`, the others `names.canonical`
+  return typeof own === 'string' && own !== '' ? own : fallback;
 };
 
 /** The findings of the three sources, once each (the same problem keeps its ID), in the order they arrive: schema, then L2-L3, then L4. */
@@ -123,6 +124,8 @@ export function EditorHost(props: EditorHostProps) {
     // a field in a closed section: open the section first (its toggle), then the field can take the focus
     const closed = field.closest('[data-collapsed="true"]');
     if (closed !== null) closed.parentElement?.querySelector<HTMLElement>('button[data-section-toggle]')?.click();
+    const details = field.closest('details');
+    if (details !== null) details.open = true; // an "Advanced" area holding the field
     field.focus();
   }, []);
 

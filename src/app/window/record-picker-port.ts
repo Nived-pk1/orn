@@ -33,13 +33,14 @@ export const PICKER_CHANNEL = 'record-picker';
 
 export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
   const describe = (kind: PickKind, id: string): RecordChoice | undefined => {
-    const table = deps.state().records[kind] as Readonly<Record<string, { readonly id: string; readonly names: { readonly canonical: string }; readonly classKind?: ChemicalClass['classKind']; readonly speciesKind?: string }>>;
+    const table = deps.state().records[kind] as Readonly<Record<string, { readonly id: string; readonly names?: { readonly canonical: string }; readonly name?: string; readonly scope?: 'generic' | 'specific'; readonly classKind?: ChemicalClass['classKind']; readonly speciesKind?: string }>>;
     const record = Object.hasOwn(table, id) ? table[id] : undefined;
     if (record === undefined) return undefined;
     const exam = deps.activeExam();
     const scope = exam === null ? '' : SCOPE_WORDS[createScopeOf(deps.indexes(), exam.examId, exam.examVersionId)({ kind, id: record.id } as never)];
-    const kindWords = kind === 'class' ? CLASS_KIND_WORDS[record.classKind as ChemicalClass['classKind']] : kind === 'species' ? (record.speciesKind === undefined || record.speciesKind === 'unspecified' ? 'species' : record.speciesKind.replace(/_/g, ' ')) : 'reagent';
-    return { kind, id: record.id, name: record.names.canonical, kindWords, scope };
+    const reactionScope = kind === 'reaction' ? record.scope : undefined;
+    const kindWords = kind === 'reaction' ? `${reactionScope ?? ''} reaction`.trim() : kind === 'class' ? CLASS_KIND_WORDS[record.classKind as ChemicalClass['classKind']] : kind === 'species' ? (record.speciesKind === undefined || record.speciesKind === 'unspecified' ? 'species' : record.speciesKind.replace(/_/g, ' ')) : 'reagent';
+    return { kind, id: record.id, name: kind === 'reaction' ? (record.name ?? record.id) : (record.names?.canonical ?? record.id), kindWords, scope, ...(reactionScope === undefined ? {} : { reactionScope }) };
   };
   const nameOf = (kind: PickKind, id: string): string => describe(kind, id)?.name ?? id;
   return {
@@ -64,6 +65,10 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
       if (why === 'self') return 'A reagent cannot be a component of itself.';
       if (why === 'unchecked') return 'The composition is too large to check, so no reagent can be chosen here.';
       return `${nameOf('reagent', candidate.id)} is already built from this reagent, so it cannot be one of its components: that would make a cycle.`;
+    },
+    profilesOf(reagentId) {
+      const reagent = deps.state().records.reagent[reagentId as never];
+      return reagent === undefined ? [] : reagent.profiles.map((profile) => ({ id: profile.id, label: profile.label }));
     },
     isMapFamily: (classId) => deps.indexes().referrersOf(classId).some((r) => r.owner.kind === 'navigator_anchor' && r.path === 'target'),
   };
