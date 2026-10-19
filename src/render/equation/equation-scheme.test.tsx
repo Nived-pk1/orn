@@ -20,14 +20,14 @@ const smiles = (value: string): StructureRep => ({ format: 'smiles', value });
 const ref = (id: string) => ({ kind: 'species', id }) as EquationTerm['ref'];
 
 function term(name: string, substance: Partial<TermSubstance> = {}, extras: Partial<EquationTerm> = {}): EquationTerm {
-  return { coefficient: null, name, word: null, quantifier: null, role: null, text: name, ref: ref(`spc_${name}`), substance: { kind: 'species', name, ...substance }, ...extras };
+  return { coefficient: null, name, word: null, quantifier: null, role: null, regiochemistry: null, text: name, ref: ref(`spc_${name}`), substance: { kind: 'species', name, ...substance }, ...extras };
 }
 const NO_ARROW: ArrowText = { above: [], below: [] };
 const formulaPart = (text: string) => ({ kind: 'formula', text }) as ArrowText['above'][number];
 const plainPart = (text: string) => ({ kind: 'condition', text }) as ArrowText['above'][number];
 function equation(reactants: EquationTerm[], products: EquationTerm[], over: Partial<FullEquation> = {}): FullEquation {
   const side = (terms: EquationTerm[]): string => terms.map((t) => t.text).join(' + ');
-  return { outcomeId: 'out_x' as FullEquation['outcomeId'], reactants, products, arrow: NO_ARROW, equilibrium: false, text: `${side(reactants)} → ${side(products)}`, ...over };
+  return { outcomeId: 'out_x' as FullEquation['outcomeId'], outcomeIds: ['out_x' as FullEquation['outcomeId']], reactants, products, arrow: NO_ARROW, equilibrium: false, text: `${side(reactants)} → ${side(products)}`, ...over };
 }
 
 /** Facts by the structure's text; a drawing answers a size by the structure's text too (a longer text is a wider drawing). */

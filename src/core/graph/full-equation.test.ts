@@ -173,11 +173,11 @@ describe('the word of a product is the card\'s selectivity word (phone mode B, p
       for (const section of [study.reactionsOf, study.preparationOf]) {
         for (const group of section.groups) {
           for (const card of group.cards) {
-            for (const outcome of card.outcomes) {
-              const words = new Set(outcome.products.map((p) => p.selectivity));
-              const inEquation = new Set((outcome.equation?.products ?? []).map((t) => t.word));
+            for (const outcomes of card.groups) {
+              const words = new Set(outcomes.outcomes.flatMap((o) => o.products.map((p) => p.selectivity)));
+              const inEquation = new Set((outcomes.equation?.products ?? []).map((t) => t.word));
               for (const word of words) expect(inEquation.has(word), `${card.name}: ${String(word)}`).toBe(true);
-              for (const term of outcome.equation?.products ?? []) expect(term.text).not.toMatch(/\(main\)/);
+              for (const term of outcomes.equation?.products ?? []) expect(term.text).not.toMatch(/\(main\)/);
               compared += 1;
             }
           }

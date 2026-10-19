@@ -68,6 +68,6 @@ export function estimateOf(item: FamilyItem): number {
     case 'empty':
       return 56;
     case 'card':
-      return 120 + item.card.outcomes.length * 150 + (item.card.elsewhere.length > 0 ? 36 : 0);
+      return 120 + item.card.groups.reduce((count, group) => count + group.outcomes.length, 0) * 150 + (item.card.elsewhere.length > 0 ? 36 : 0);
   }
 }

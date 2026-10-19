@@ -3,7 +3,7 @@ import type { EquationTerm } from '@/core/graph';
 import { hangOf, wordOf } from './hang';
 
 const term = (name: string, extras: Partial<EquationTerm> = {}): EquationTerm =>
-  ({ coefficient: null, name, word: null, quantifier: null, role: null, text: name, ref: { kind: 'species', id: 'spc_x' }, substance: { kind: 'species', name }, ...extras }) as EquationTerm;
+  ({ coefficient: null, name, word: null, quantifier: null, role: null, regiochemistry: null, text: name, ref: { kind: 'species', id: 'spc_x' }, substance: { kind: 'species', name }, ...extras }) as EquationTerm;
 
 describe('the room for hanging names', () => {
   it('is 0 without names and words, and grows with the lines of the tallest name and word', () => {

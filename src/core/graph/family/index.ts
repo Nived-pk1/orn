@@ -4,6 +4,7 @@ export type {
   FamilyCardOutcome,
   FamilyElsewhere,
   FamilyGroup,
+  FamilyOutcomeGroup,
   FamilyPartner,
   FamilyProduct,
   FamilyReactionType,

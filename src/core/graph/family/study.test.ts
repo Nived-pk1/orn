@@ -16,7 +16,7 @@ const cardOf = (s: FamilyStudy, section: 'reactionsOf' | 'preparationOf', group:
   if (found === undefined) throw new Error(`no card ${name} in ${group}`);
   return found;
 };
-const below = (card: FamilyCard): string[][] => card.outcomes.map((o) => o.arrowText.below.map((p) => p.text));
+const below = (card: FamilyCard): string[][] => card.groups.map((g) => g.arrowText.below.map((p) => p.text));
 
 describe('familyStudy on the demo', () => {
   const alcohols = study('cls_alcohols');
@@ -65,8 +65,8 @@ describe('familyStudy on the demo', () => {
   it('Alcohols: PCC with ethanol gives ethanal; the card carries refs, the substrate and the products', () => {
     const pcc = cardOf(alcohols, 'reactionsOf', 'Aldehydes', 'Ethanol → ethanal (PCC)');
     expect(pcc.substrate).toMatchObject({ kind: 'species' });
-    expect(pcc.outcomes).toHaveLength(1);
-    const products = pcc.outcomes[0]?.products ?? [];
+    expect(pcc.groups).toHaveLength(1);
+    const products = pcc.groups[0]?.outcomes[0]?.products ?? [];
     expect(products).toHaveLength(1);
     expect(products[0]?.ref.kind).toBe('species');
     expect(demo.state.records.species[products[0]?.ref.id as string]?.names.canonical.toLowerCase()).toContain('ethanal');
@@ -144,7 +144,7 @@ describe('familyStudy on small states', () => {
   it('words: unspecified has none; the others are the schema words', () => {
     const ctx = contextOf(stateOf(...classes, ...members, rx('x1', 'X one', 'hub-a', [{ sel: 'major', to: 'hub-b' }, { sel: 'minor', to: 'hub-b' }, { sel: 'unspecified', to: 'hub-b' }])));
     const card = (familyStudy(ctx, 'cls_hub-a') as FamilyStudy).reactionsOf.groups[0]?.cards[0] as FamilyCard;
-    expect(card.outcomes.flatMap((o) => o.products.map((p) => p.selectivity))).toEqual(['major', 'minor', null]);
+    expect(card.groups.flatMap((g) => g.outcomes).flatMap((o) => o.products.map((p) => p.selectivity))).toEqual(['major', 'minor', null]);
   });
 
   it('counts outcomes that go elsewhere per group, and orders cards by folded name then ID', () => {

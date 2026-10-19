@@ -14,8 +14,11 @@ const GAP_PX = 4;
 const linesOf = (text: string): number => Math.max(1, Math.ceil(text.length / CHARS_PER_LINE));
 
 /** The words printed under a term besides its name: the outcome's word (with its quantifier) or a role. */
-export const wordOf = (term: EquationTerm): string | null =>
-  term.word !== null ? `(${term.quantifier === null ? '' : `${term.quantifier} `}${term.word})` : term.role !== null ? `(${term.role})` : null;
+export function wordOf(term: EquationTerm): string | null {
+  const said = term.word === null ? null : `${term.quantifier === null ? '' : `${term.quantifier} `}${term.word}`;
+  const parts = [said, term.regiochemistry].filter((part): part is string => part !== null);
+  return parts.length > 0 ? `(${parts.join(' · ')})` : term.role !== null ? `(${term.role})` : null;
+}
 
 /** The height in px that the tallest hanging text of these terms needs; 0 when there is none. */
 export function hangOf(terms: readonly EquationTerm[], names: boolean): number {

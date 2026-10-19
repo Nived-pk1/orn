@@ -1,6 +1,6 @@
 /**
  * "Show full equation" at L1 of a reaction (equation step, part 5; before: step 5.9a review, follow-up b): a disclosure with one textbook
- * scheme per outcome (`render/equation`): every reactant with its coefficient, an arrow with the reagents over it and the conditions
+ * scheme per GROUP of outcomes (`render/equation`; the outcomes that share their condition-variant set are one scheme): every reactant with its coefficient, an arrow with the reagents over it and the conditions
  * under it, every product with the card's selectivity word. Which terms are drawn and which are formulas is decided by the core from the
  * chem facts. The "Names" switch (one setting, saved with the panels) is in the first scheme; the text is always a React child, never markup.
  */
@@ -11,6 +11,7 @@ import { EQUATION_AREA, EquationScheme } from '@/render/equation';
 import { createDepictionBinding } from '@/render/svg';
 import { usePanels } from '@/ui/state';
 import { useInspectorEnv } from './env';
+import styles from './inspector.module.css';
 
 export function FullEquations(props: { readonly record: Reaction }) {
   const env = useInspectorEnv();
@@ -22,12 +23,14 @@ export function FullEquations(props: { readonly record: Reaction }) {
   const names = usePanels(ports.ui.panels, (state) => state.equationNames);
   if (equations.length === 0) return null;
   return (
-    <details onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details className={styles.equationPanel} data-equation-panel="" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Show full equation</summary>
       {open ? (
         <ul aria-label="Full equation">
           {equations.map((equation, index) => {
-            const label = equations.length > 1 ? (record.outcomes[index]?.label ?? `Outcome ${index + 1}`) : undefined;
+            // one scheme per GROUP of outcomes (the same condition-variant set); several groups are told apart by their outcomes' labels
+            const named = equation.outcomeIds.flatMap((id) => record.outcomes.find((outcome) => outcome.id === id)?.label ?? []);
+            const label = equations.length > 1 ? (named.length > 0 ? named.join(' and ') : `Outcome ${index + 1}`) : undefined;
             return (
               <li key={equation.outcomeId}>
                 <EquationScheme

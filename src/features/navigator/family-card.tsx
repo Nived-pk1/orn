@@ -1,13 +1,15 @@
 /**
- * One card of the family page (step 5.5b; ADR-037): a reaction in one group, drawn as a textbook scheme. Per outcome one row:
- * substrate → arrow → products, the arrow text above and below the arrow, each product's selectivity word under it. On a phone the
+ * One card of the family page (step 5.5b; ADR-037): a reaction in one group, drawn as a textbook scheme. Per GROUP of outcomes (the
+ * outcomes that share their condition-variant set) one scheme: substrate → arrow → the main products of each outcome, the arrow text above
+ * and below the arrow, each product's word (selectivity, and regiochemistry) under it. A card with several groups puts each in a bordered
+ * block headed by its conditions in words. On a phone the
  * scheme is drawn top to bottom (reactants in a row, a downward arrow with the reagents beside it and the conditions under them, the
  * products in a row). Outcomes of the same reaction that land in other groups are counted and linked ("Also gives → Alkenes (443 K)"); nothing is hidden. The card shows what the
  * study says and decides nothing. The name is a button (the keyboard way to select the reaction); a click anywhere on the card
  * selects it too.
  */
 import { Fragment, memo, useId } from 'react';
-import type { FamilyCard, FamilyCardOutcome } from '@/core/graph';
+import type { ArrowText, FamilyCard, FamilyOutcomeGroup } from '@/core/graph';
 import { FullEquationView } from './family-equation';
 import { useFamilyEnv } from './family-env';
 import { Structure } from './family-structure';
@@ -27,8 +29,8 @@ const plural = (count: number, one: string, many: string): string => `${count} $
  * The phone's arrow: a downward arrow CENTRED on the column (under the reactants), at least 48 px and as tall as the text beside it plus
  * 16 px; the reagents sit to its right, left-aligned, the conditions under them, the text block vertically centred on the arrow.
  */
-function DownArrow(props: { readonly outcome: FamilyCardOutcome }) {
-  const { above, below } = props.outcome.arrowText;
+function DownArrow(props: { readonly arrowText: ArrowText }) {
+  const { above, below } = props.arrowText;
   return (
     <div className={scheme.downArrow} data-arrow="" data-direction="down">
       <span aria-hidden="true" />
@@ -46,8 +48,8 @@ function DownArrow(props: { readonly outcome: FamilyCardOutcome }) {
   );
 }
 
-function Arrow(props: { readonly outcome: FamilyCardOutcome }) {
-  const { above, below } = props.outcome.arrowText;
+function Arrow(props: { readonly arrowText: ArrowText }) {
+  const { above, below } = props.arrowText;
   return (
     <div className={scheme.arrow} data-arrow="">
       <div className={scheme.arrowAbove}>{above.length === 0 ? null : <ArrowSide parts={above} />}</div>
@@ -59,34 +61,43 @@ function Arrow(props: { readonly outcome: FamilyCardOutcome }) {
   );
 }
 
-function OutcomeRow(props: { readonly card: FamilyCard; readonly outcome: FamilyCardOutcome }) {
+/**
+ * ONE scheme for a group of outcomes (outcome groups step): the carried substrate and the arrow once, then the main products of EACH
+ * outcome of the group, each with its word under it. On the desktop the outcomes' products are a column right of the arrow (the major on
+ * top); on a phone they are tiles side by side in a row that wraps, under the downward arrow. The full equation of the group is under it.
+ */
+function GroupScheme(props: { readonly card: FamilyCard; readonly group: FamilyOutcomeGroup }) {
   const env = useFamilyEnv();
-  const { card, outcome } = props;
+  const { card, group } = props;
   const substrate = env.describe(card.substrate)?.name ?? card.substrate.id;
-  const products = outcome.products.map((p) => env.describe(p.ref)?.name ?? p.ref.id);
-  const conditions = [sideText(outcome.arrowText.above), sideText(outcome.arrowText.below)].filter((text) => text !== '');
+  const products = group.outcomes.flatMap((outcome) => outcome.products).map((p) => env.describe(p.ref)?.name ?? p.ref.id);
+  const conditions = [sideText(group.arrowText.above), sideText(group.arrowText.below)].filter((text) => text !== '');
   const name = `${substrate} to ${products.join(' and ')}${conditions.length === 0 ? '' : `, ${conditions.join('; ')}`}`;
   return (
     <>
-    <div className={scheme.scheme} role="group" aria-label={name} data-outcome-id={outcome.outcomeId}>
-      {env.layout === 'phone' ? (
-        <div className={scheme.reactants}>
+      <div className={scheme.scheme} role="group" aria-label={name} data-outcome-ids={group.outcomes.map((outcome) => outcome.outcomeId).join(' ')}>
+        {env.layout === 'phone' ? (
+          <div className={scheme.reactants}>
+            <Structure substance={card.substrate} />
+          </div>
+        ) : (
           <Structure substance={card.substrate} />
+        )}
+        {env.layout === 'phone' ? <DownArrow arrowText={group.arrowText} /> : <Arrow arrowText={group.arrowText} />}
+        <div className={scheme.products}>
+          {group.outcomes.map((outcome) => (
+            <div key={outcome.outcomeId} className={scheme.outcomeProducts} data-outcome-id={outcome.outcomeId}>
+              {outcome.products.map((product, index) => (
+                <Fragment key={product.productId}>
+                  {index > 0 ? <span className={scheme.plus} aria-hidden="true">+</span> : null}
+                  <Structure substance={product.ref} {...(outcome.word === null ? {} : { caption: outcome.word })} />
+                </Fragment>
+              ))}
+            </div>
+          ))}
         </div>
-      ) : (
-        <Structure substance={card.substrate} />
-      )}
-      {env.layout === 'phone' ? <DownArrow outcome={outcome} /> : <Arrow outcome={outcome} />}
-      <div className={scheme.products}>
-        {outcome.products.map((product, index) => (
-          <Fragment key={product.productId}>
-            {index > 0 ? <span className={scheme.plus} aria-hidden="true">+</span> : null}
-            <Structure substance={product.ref} {...(product.selectivity === null ? {} : { caption: product.selectivity })} />
-          </Fragment>
-        ))}
       </div>
-    </div>
-    {outcome.equation === undefined ? null : <FullEquationView equation={outcome.equation} />}
+      {group.equation === undefined ? null : <FullEquationView equation={group.equation} />}
     </>
   );
 }
@@ -123,9 +134,16 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
         {card.caveatCount === 0 ? null : <span className={styles.chip}>{plural(card.caveatCount, 'caveat', 'caveats')}</span>}
       </header>
       <div className={outside === undefined ? undefined : styles.dimmedScheme}>
-        {card.outcomes.map((outcome) => (
-          <OutcomeRow key={outcome.outcomeId} card={card} outcome={outcome} />
-        ))}
+        {card.groups.length === 1 ? (
+          card.groups.map((group) => <GroupScheme key={group.key} card={card} group={group} />)
+        ) : (
+          card.groups.map((group) => (
+            <section key={group.key} className={styles.groupBlock} aria-label={group.heading} data-outcome-group={group.key}>
+              <h5 className={styles.groupHeading}>{group.heading}</h5>
+              <GroupScheme card={card} group={group} />
+            </section>
+          ))
+        )}
       </div>
       {card.elsewhere.length === 0 ? null : (
         <p className={styles.elsewhere}>

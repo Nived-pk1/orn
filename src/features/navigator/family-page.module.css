@@ -215,11 +215,34 @@
   line-height: 2rem; /* room for the Names switch on this line, only while it is shown */
 }
 
+/* The open full equation is a panel of its own (outcome groups step): a light border and the surface tone, so it is never mistaken for the card's scheme. */
+.equation[open] {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+/* A card with several outcome groups: each group in its own bordered block, headed by its conditions in words. */
+.groupBlock {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.groupHeading {
+  margin: 0 0 var(--space-2);
+  color: var(--color-ink-2);
+  font-size: var(--text-13);
+  font-weight: 600;
+}
+
 /* the equation's "Names" switch (part 6): on the summary line, at its right; when the card is too narrow for both it sits directly under it */
 .equationNames {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: var(--space-2); /* inside the panel's padding */
+  right: var(--space-3);
 }
 
 @container (max-width: 17rem) {

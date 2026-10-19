@@ -7,6 +7,11 @@
  * that a species already written on the left is not repeated on the arrow (a reagent that is the same record as a reactant, a gas of the
  * atmosphere with a reactant's formula). Text only: no markup; the renderer sets formulas in their typography.
  * A reactant that applies only under other condition variants than the outcome's is left out, as on the arrow.
+ *
+ * A GROUP (outcome groups step): the outcomes of one reaction that share their condition-variant set are ONE equation, the reactants and
+ * the arrow once; the products are the main products of every outcome in the group's order, each outcome's word on its last main product
+ * (with its regiochemistry), then the coproducts and byproducts of all of them, a species shared by several outcomes (the same record,
+ * never matched by name or formula) written ONCE.
  */
 import type { ReadonlyIndexes } from '../indexes/contracts';
 import type { CanonicalState, ConditionVariantId, Outcome, ParticipantId, Reaction, ReactionScheme, RecordRef } from '../schema';
@@ -14,18 +19,24 @@ import type { TermSubstance } from './equation-term';
 import { createDescriber } from './family/describe';
 import { selectivityWordOf, type SelectivityWord } from './selectivity-word';
 import { appliesTo, arrowTextOf, type ArrowText, type ArrowTextContext } from './arrow-text';
+import { groupOutcomes } from './outcome-groups';
 
 export interface EquationTerm {
   /** "2" for a coefficient of 2; null when none is stored or it is 1. */
   readonly coefficient: string | null;
   /** The name as written in the record (the wording as entered wins), or its ID when the record is gone. */
   readonly name: string;
-  /** Set on ONE main product, the last: the outcome's selectivity word ("exclusive", "major", ...), written once for the outcome (INV-08); null on every other term and when none is stored. */
+  /** Set on ONE main product per outcome, its last: the outcome's selectivity word ("exclusive", "major", ...), written once for the outcome (INV-08); null on every other term and when none is stored. */
   readonly word: SelectivityWord | null;
   /** "both" (two main products) or "all" (three or more) on the term that carries `word` when the outcome has several main products; null otherwise. */
   readonly quantifier: SelectivityQuantifier | null;
   /** Set on a product that is not a main product: its role word; null otherwise. */
   readonly role: ProductRoleWord | null;
+  /**
+   * The outcome's regiochemistry as stored ("Saytzeff"), on the term that carries the outcome's word ONLY when the equation holds several
+   * outcomes of one group (it tells them apart). Shown after the word ("major · Saytzeff"); not part of `text`. Null otherwise.
+   */
+  readonly regiochemistry: string | null;
   /** The term as one plain line: "2 Benzaldehyde", "Ethanal (exclusive)", "Water (byproduct)". */
   readonly text: string;
   /** The record behind the term (equation step, part 5): the species, class or reagent the participant or product names. */
@@ -35,14 +46,20 @@ export interface EquationTerm {
 }
 
 export interface FullEquation {
+  /** The outcome (the FIRST of the group when the equation holds several). */
   readonly outcomeId: Outcome['id'];
+  /** Every outcome the equation holds: one, or the outcomes of one group (same condition-variant set), in the group's order. */
+  readonly outcomeIds: readonly Outcome['id'][];
   readonly reactants: readonly EquationTerm[];
   readonly products: readonly EquationTerm[];
   /** Reagents, catalysts and conditions over and under the arrow, as on the card. */
   readonly arrow: ArrowText;
   /** The reaction is stored as an equilibrium (`reversibility.kind` is `equilibrium`): the arrow is drawn as one (equation step, part 5). */
   readonly equilibrium: boolean;
-  /** The equation without the arrow text: "2 Benzaldehyde → Benzyl alcohol + Sodium benzoate". */
+  /**
+   * One outcome: the equation without the arrow text, "2 Benzaldehyde → Benzyl alcohol + Sodium benzoate". Several outcomes (a group):
+   * ONE sentence for a screen reader, "(R)-2-Bromobutane with alc. KOH, heat gives But-2-ene (major) and But-1-ene (minor)".
+   */
   readonly text: string;
 }
 
@@ -57,57 +74,86 @@ export type SelectivityQuantifier = 'both' | 'all';
 const termText = (coefficient: string | null, name: string, word: string | null): string =>
   `${coefficient === null ? '' : `${coefficient} `}${name}${word === null ? '' : ` (${word})`}`;
 
-export function fullEquationOf(
-  reaction: Reaction,
-  outcome: Outcome,
-  context: Omit<ArrowTextContext, 'conditionVariantIds' | 'carriedParticipantId' | 'omitReactants'> & { readonly substanceOf?: (ref: RecordRef) => TermSubstance },
-): FullEquation {
+const refKey = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
+
+/** Joins "a", "a and b", "a, b and c". */
+const andList = (items: readonly string[]): string => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`);
+
+/** The arrow's words as the card joins them: ", " between parts, a space after a stage number. */
+const arrowWords = (arrow: ArrowText): string => {
+  const parts = [...arrow.above, ...arrow.below].filter((part) => part.kind !== 'more');
+  return parts.map((part, index) => `${index === 0 ? '' : parts[index - 1]?.kind === 'separator' ? ' ' : ', '}${part.text}`).join('');
+};
+
+type GroupContext = Omit<ArrowTextContext, 'conditionVariantIds' | 'carriedParticipantId' | 'omitReactants'> & { readonly substanceOf?: (ref: RecordRef) => TermSubstance };
+
+/** One group of outcomes (same condition-variant set, in the group's order) as ONE equation. One outcome: the equation of that outcome. */
+export function fullEquationOfGroup(reaction: Reaction, outcomes: readonly Outcome[], context: GroupContext): FullEquation {
+  const first = outcomes[0];
+  if (first === undefined) throw new Error('fullEquationOfGroup needs at least one outcome');
+  const several = outcomes.length > 1;
   const substanceOf = (ref: RecordRef, name: string): TermSubstance => context.substanceOf?.(ref) ?? { kind: 'missing', name };
-  const variantIds: readonly ConditionVariantId[] = outcome.conditionVariantIds;
+  const variantIds: readonly ConditionVariantId[] = first.conditionVariantIds;
   const nameOf = (ref: Parameters<ArrowTextContext['describe']>[0], written: string | undefined): string => {
     if (written !== undefined && written !== '') return written;
     const described = context.describe(ref);
     return described === undefined || described.name === '' ? ref.id : described.name;
   };
-  const reactants: EquationTerm[] = reaction.participants
-    .filter((p) => p.role === 'reactant' && appliesTo(reaction, p.id as ParticipantId, variantIds))
-    .map((p) => {
-      const coefficient = coefficientText(p.coefficient);
-      const name = nameOf(p.ref, p.originalText);
-      return {
-        coefficient,
-        name,
-        word: null,
-        quantifier: null,
-        role: null,
-        text: termText(coefficient, name, null),
-        ref: p.ref,
-        substance: substanceOf(p.ref, name),
-      };
-    });
-  const mainCount = outcome.products.filter((p) => p.role === 'main').length;
-  const lastMain = outcome.products.map((p) => p.role).lastIndexOf('main');
-  const quantifier: SelectivityQuantifier | null = mainCount < 2 ? null : mainCount === 2 ? 'both' : 'all';
-  const products: EquationTerm[] = outcome.products.map((p, index) => {
+  const written = reaction.participants.filter((p) => p.role === 'reactant' && appliesTo(reaction, p.id as ParticipantId, variantIds));
+  const reactants: EquationTerm[] = written.map((p) => {
     const coefficient = coefficientText(p.coefficient);
     const name = nameOf(p.ref, p.originalText);
-    // selectivity lives on the outcome (INV-08), so it is worded ONCE, after the last main product; a coproduct or byproduct says its role instead
-    const word = index === lastMain ? selectivityWordOf(outcome.selectivity) : null;
-    const said = word === null ? null : quantifier;
+    return {
+      coefficient,
+      name,
+      word: null,
+      quantifier: null,
+      role: null,
+      regiochemistry: null,
+      text: termText(coefficient, name, null),
+      ref: p.ref,
+      substance: substanceOf(p.ref, name),
+    };
+  });
+  const termOf = (p: Outcome['products'][number], word: SelectivityWord | null, quantifier: SelectivityQuantifier | null, regiochemistry: string | null): EquationTerm => {
+    const coefficient = coefficientText(p.coefficient);
+    const name = nameOf(p.ref, p.originalText);
     const role = p.role === 'main' ? null : p.role;
     return {
       coefficient,
       name,
       word,
-      quantifier: said,
+      quantifier: word === null ? null : quantifier,
       role,
-      text: termText(coefficient, name, word === null ? role : said === null ? word : `${said} ${word}`),
+      regiochemistry,
+      text: termText(coefficient, name, word === null ? role : quantifier === null ? word : `${quantifier} ${word}`),
       ref: p.ref,
       substance: substanceOf(p.ref, name),
     };
-  });
+  };
+  // the main products of each outcome in turn; selectivity lives on the outcome (INV-08), so it is worded ONCE per outcome, after its last main product
+  const mains: EquationTerm[] = [];
+  for (const outcome of outcomes) {
+    const own = outcome.products.filter((p) => p.role === 'main');
+    const quantifier: SelectivityQuantifier | null = own.length < 2 ? null : own.length === 2 ? 'both' : 'all';
+    const regiochemistry = several && outcome.regiochemistry !== undefined && outcome.regiochemistry.trim() !== '' ? outcome.regiochemistry.trim() : null;
+    own.forEach((p, index) => {
+      const last = index === own.length - 1;
+      mains.push(termOf(p, last ? selectivityWordOf(outcome.selectivity) : null, quantifier, last ? regiochemistry : null));
+    });
+  }
+  // then the coproducts and byproducts, a species several outcomes share once (the same record)
+  const extras: EquationTerm[] = [];
+  const seen = new Set<string>();
+  for (const outcome of outcomes) {
+    for (const p of outcome.products) {
+      if (p.role === 'main' || seen.has(refKey(p.ref))) continue;
+      seen.add(refKey(p.ref));
+      extras.push(termOf(p, null, null, null));
+    }
+  }
+  const products = [...mains, ...extras];
   // what is written on the left is not written again on the arrow
-  const written = reaction.participants.filter((p) => p.role === 'reactant' && appliesTo(reaction, p.id as ParticipantId, variantIds));
   const arrow = arrowTextOf(reaction, {
     ...context,
     conditionVariantIds: variantIds,
@@ -119,17 +165,25 @@ export function fullEquationOf(
     }),
   });
   const side = (terms: readonly EquationTerm[]): string => (terms.length === 0 ? 'nothing listed' : terms.map((t) => t.text).join(' + '));
+  const words = arrowWords(arrow);
+  const sentence = `${reactants.length === 0 ? 'nothing listed' : andList(reactants.map((t) => t.text))}${words === '' ? '' : ` with ${words}`} gives ${products.length === 0 ? 'nothing listed' : andList(products.map((t) => t.text))}`;
   return {
-    outcomeId: outcome.id,
+    outcomeId: first.id,
+    outcomeIds: outcomes.map((o) => o.id),
     reactants,
     products,
     arrow,
     equilibrium: reaction.reversibility.kind === 'equilibrium',
-    text: `${side(reactants)} → ${side(products)}`,
+    text: several ? sentence : `${side(reactants)} → ${side(products)}`,
   };
 }
 
-/** Every outcome of one reaction as a full equation, in the record's outcome order (the inspector's way in; indexes give the schemes). */
+/** One outcome as a full equation. */
+export function fullEquationOf(reaction: Reaction, outcome: Outcome, context: GroupContext): FullEquation {
+  return fullEquationOfGroup(reaction, [outcome], context);
+}
+
+/** Every GROUP of one reaction's outcomes as a full equation (`groupOutcomes`: in the order of each group's first outcome; the inspector's way in). */
 export function fullEquationsOfReaction(state: CanonicalState, indexes: ReadonlyIndexes, reaction: Reaction): readonly FullEquation[] {
   const describer = createDescriber(state);
   const ids = new Set(
@@ -139,8 +193,8 @@ export function fullEquationsOfReaction(state: CanonicalState, indexes: Readonly
       .map((r) => r.owner.id),
   );
   const schemes = [...ids].map((id) => state.records.reaction_scheme[id]).filter((s): s is ReactionScheme => s !== undefined);
-  return reaction.outcomes.map((outcome) =>
-    fullEquationOf(reaction, outcome, {
+  return groupOutcomes(reaction.outcomes).map((group) =>
+    fullEquationOfGroup(reaction, group.outcomes, {
       schemes,
       describe: describer.describeForArrow,
       substanceOf: describer.substanceOf,

@@ -19,13 +19,36 @@ export interface FamilyProduct {
   readonly selectivity: SelectivityWord | null;
 }
 
-/** One outcome of a reaction, as it lands in the card's group: its main products that resolve to the group, and its arrow text. */
+/** One outcome of a reaction, as it lands in the card's family group: its main products that resolve to the group. */
 export interface FamilyCardOutcome {
   readonly outcomeId: OutcomeId;
   readonly conditionVariantIds: readonly ConditionVariantId[];
   readonly products: readonly FamilyProduct[];
+  /** The stored selectivity (`exclusive` ... `unspecified`): the group's order reads it. */
+  readonly selectivity: string;
+  /** The stored regiochemistry text, as written; absent when the outcome has none. */
+  readonly regiochemistry?: string;
+  /**
+   * The word under each of its main products: the selectivity word, and in a group of several outcomes the regiochemistry after a middle dot
+   * ("major · Saytzeff"); null when there is none. A group of one outcome shows the selectivity word alone (as before the groups).
+   */
+  readonly word: string | null;
+}
+
+/**
+ * The outcomes of one card that share their condition-variant set (outcome groups step): drawn as ONE scheme, the reactants and the arrow
+ * once, each outcome's main products on the products side. The order is the group rule's (`../outcome-groups`).
+ */
+export interface FamilyOutcomeGroup {
+  /** The variant set as a string; unique within the card. Empty: all variants. */
+  readonly key: string;
+  readonly conditionVariantIds: readonly ConditionVariantId[];
+  /** The conditions of the group in words ("At 413 K"): the header of its block when the card has several groups. */
+  readonly heading: string;
+  readonly outcomes: readonly FamilyCardOutcome[];
+  /** The one arrow of the group's scheme. */
   readonly arrowText: ArrowText;
-  /** The whole outcome as an equation (every reactant, every product with its role): behind "Show full equation". */
+  /** The group as one equation (every reactant, the main products of every outcome with their words, the shared coproducts once): behind "Show full equation". */
   readonly equation?: FullEquation;
 }
 
@@ -48,7 +71,8 @@ export interface FamilyCard {
   readonly caveatCount: number;
   /** The carried substrate (a ref). */
   readonly substrate: RecordRef;
-  readonly outcomes: readonly FamilyCardOutcome[];
+  /** Outcome groups in the order of their first outcome in the record; one group: no header on the card. */
+  readonly groups: readonly FamilyOutcomeGroup[];
   readonly elsewhere: readonly FamilyElsewhere[];
 }
 

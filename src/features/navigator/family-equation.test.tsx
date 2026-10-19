@@ -36,7 +36,7 @@ const describedAs = (): string => document.getElementById(scheme().getAttribute(
 
 describe('FullEquationView', () => {
   it('is closed by default and says what it opens; Cannizzaro: 2 Benzaldehyde, both products, the card\'s word once', () => {
-    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').outcomes[0]?.equation;
+    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').groups[0]?.equation;
     if (equation === undefined) throw new Error('the card carries no equation');
     render(<FullEquationView equation={equation} />);
     const disclosure = screen.getByText('Show full equation').closest('details');
@@ -54,7 +54,7 @@ describe('FullEquationView', () => {
   it('the 413 K reaction lists water with its role word and keeps its temperature under the drawn arrow', () => {
     const study = familyStudy(demo, 'cls_alcohols') as FamilyStudy;
     const cards = study.reactionsOf.groups.flatMap((g) => g.cards).filter((c) => c.name.includes('Ethanol + conc.'));
-    const equation = cards.flatMap((c) => c.outcomes.map((o) => o.equation)).find((e) => e?.products.some((t) => t.name === 'Diethyl ether'));
+    const equation = cards.flatMap((c) => c.groups.map((g) => g.equation)).find((e) => e?.products.some((t) => t.name === 'Diethyl ether'));
     if (equation === undefined) throw new Error('no ether outcome');
     render(<FullEquationView equation={equation} />);
     openDisclosure();
@@ -71,7 +71,7 @@ describe('FullEquationView: the drawn arrow and the species written once (phone 
     const study = familyStudy(demo, 'cls_alcohols') as FamilyStudy;
     const equation = study.reactionsOf.groups
       .flatMap((g) => g.cards)
-      .flatMap((c) => c.outcomes.map((o) => o.equation))
+      .flatMap((c) => c.groups.map((g) => g.equation))
       .find((e) => e?.products.some((t) => t.name === 'Diethyl ether'));
     if (equation === undefined) throw new Error('no ether outcome');
     render(<FullEquationView equation={equation} />);
@@ -87,7 +87,7 @@ describe('FullEquationView: the drawn arrow and the species written once (phone 
   it('Lindlar: hydrogen is written on the left only (as the formula H2); the H2 atmosphere is not repeated under the arrow, the catalyst is over it', () => {
     const study = familyStudy(demo, 'cls_alkenes') as FamilyStudy;
     const card = [...study.reactionsOf.groups, ...study.preparationOf.groups].flatMap((g) => g.cards).find((c) => c.name.toLowerCase().includes('lindlar'));
-    const equation = card?.outcomes[0]?.equation;
+    const equation = card?.groups[0]?.equation;
     if (equation === undefined) throw new Error('no Lindlar card with an equation');
     render(<FullEquationView equation={equation} />);
     openDisclosure();
@@ -97,13 +97,13 @@ describe('FullEquationView: the drawn arrow and the species written once (phone 
     expect(document.querySelector('[data-equation-below]')?.textContent ?? '').not.toMatch(/H2|H₂/);
     expect(document.querySelector('[data-equation-above]')?.textContent).toContain('Lindlar');
     // the card's OWN arrow is unchanged: it still carries the atmosphere
-    expect(JSON.stringify(card?.outcomes[0]?.arrowText.below)).toMatch(/H2/);
+    expect(JSON.stringify(card?.groups[0]?.arrowText.below)).toMatch(/H2/);
   });
 
   it('shows the same selectivity word as the card under the product', () => {
     const card = cardNamed('cls_aldehydes', 'Cannizzaro');
-    const word = card.outcomes[0]?.products[0]?.selectivity;
-    const equation = card.outcomes[0]?.equation;
+    const word = card.groups[0]?.outcomes[0]?.products[0]?.selectivity;
+    const equation = card.groups[0]?.equation;
     if (equation === undefined || word === null || word === undefined) throw new Error('no word');
     render(<FullEquationView equation={equation} />);
     openDisclosure();
@@ -112,7 +112,7 @@ describe('FullEquationView: the drawn arrow and the species written once (phone 
 
   it('a reaction stored as an equilibrium has the equilibrium arrow, the others one arrow', () => {
     const study = familyStudy(demo, 'cls_alcohols') as FamilyStudy;
-    const equations = [...study.reactionsOf.groups, ...study.preparationOf.groups].flatMap((g) => g.cards).flatMap((c) => c.outcomes.map((o) => o.equation));
+    const equations = [...study.reactionsOf.groups, ...study.preparationOf.groups].flatMap((g) => g.cards).flatMap((c) => c.groups.map((g) => g.equation));
     const equilibrium = equations.find((e) => e?.equilibrium === true);
     const plain = equations.find((e) => e?.equilibrium === false);
     if (equilibrium === undefined || plain === undefined) throw new Error('the demo has both kinds');
@@ -162,7 +162,7 @@ describe('FullEquationView with the page\'s ports: the Names switch, the facts a
   it('the "Names" switch is on the "Show full equation" line (right after the summary, outside the scheme), on by default; off hides the name lines only, and it follows the setting', async () => {
     const names = { value: true };
     const { env } = envWith(names);
-    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').outcomes[0]?.equation;
+    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').groups[0]?.equation;
     if (equation === undefined) throw new Error('no equation');
     render(
       <FamilyEnvContext.Provider value={env}>
@@ -188,7 +188,7 @@ describe('FullEquationView with the page\'s ports: the Names switch, the facts a
   });
 
   it('on the phone the scheme is stacked (reactants, the down arrow, products); on the desktop it is one row', async () => {
-    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').outcomes[0]?.equation;
+    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').groups[0]?.equation;
     if (equation === undefined) throw new Error('no equation');
     const { env } = envWith({ value: true });
     render(
@@ -211,7 +211,7 @@ describe('FullEquationView with the page\'s ports: the Names switch, the facts a
 
   it('a species with a structure is drawn at the fixed scale through the page\'s binding', async () => {
     const { env, asked } = envWith({ value: true });
-    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').outcomes[0]?.equation;
+    const equation = cardNamed('cls_aldehydes', 'Cannizzaro').groups[0]?.equation;
     if (equation === undefined) throw new Error('no equation');
     render(
       <FamilyEnvContext.Provider value={env}>

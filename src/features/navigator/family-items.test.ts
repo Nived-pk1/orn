@@ -65,7 +65,7 @@ describe('familyItems', () => {
   it('every item has a positive height guess, larger for a card with more outcomes', () => {
     for (const item of items) expect(estimateOf(item)).toBeGreaterThan(0);
     const cards = items.filter((i) => i.kind === 'card');
-    const outcomes = (i: (typeof cards)[number]): number => (i.kind === 'card' ? i.card.outcomes.length : 0);
+    const outcomes = (i: (typeof cards)[number]): number => (i.kind === 'card' ? i.card.groups.reduce((count, group) => count + group.outcomes.length, 0) : 0);
     const most = cards.reduce((a, b) => (outcomes(b) > outcomes(a) ? b : a));
     const fewest = cards.reduce((a, b) => (outcomes(b) < outcomes(a) ? b : a));
     expect(estimateOf(most)).toBeGreaterThanOrEqual(estimateOf(fewest));

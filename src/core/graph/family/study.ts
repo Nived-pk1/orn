@@ -13,11 +13,11 @@ import type { NavigatorCandidate } from '../../indexes/contracts';
 import type { ConditionVariantId, ParticipantId, Reaction, ReactionScheme, RecordRef } from '../../schema';
 import { fold } from '../../text';
 import { arrowTextOf } from '../arrow-text';
-import { fullEquationOf } from '../full-equation';
 import type { ProjectionContext } from '../contracts';
 import { UNCLASSIFIED_HUB_ID } from '../navigator/hubs';
 import { arrangementsOf } from '../navigator/nodes';
 import { createDescriber } from './describe';
+import { outcomeGroupsOf, type OutcomeDraft } from './groups';
 import type {
   FamilyCard,
   FamilyCardOutcome,
@@ -141,24 +141,26 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
           }
           return texts.join('; ');
         };
-        const outcomes: FamilyCardOutcome[] = [...gathered.outcomes]
-          .sort((a, b) => compare(a[0], b[0]))
+        // the record's own order of outcomes; the group rule orders them within a group
+        const storedIndex = (outcomeId: string): number => reaction.outcomes.findIndex((x) => x.id === outcomeId);
+        const entries = [...gathered.outcomes]
+          .sort((a, b) => storedIndex(a[0]) - storedIndex(b[0]) || compare(a[0], b[0]))
           .map(([outcomeId, o]) => {
             const products: FamilyProduct[] = o.products
               .slice()
               .sort((a, b) => compare(a.productId, b.productId))
               .map((p) => ({ productId: p.productId, ref: p.product, selectivity: selectivityWordOf(p.selectivity) }));
-            const arrowText = arrowTextOf(reaction, {
-              schemes: schemesOf(reaction.id),
-              conditionVariantIds: o.variantIds,
-              carriedParticipantId: gathered.participantId,
-              describe: describer.describeForArrow,
-              shownAsNode,
-            });
             const stored = reaction.outcomes.find((x) => x.id === outcomeId);
-            const equation = stored === undefined ? undefined : fullEquationOf(reaction, stored, { schemes: schemesOf(reaction.id), describe: describer.describeForArrow, substanceOf: describer.substanceOf, shownAsNode });
-            return { outcomeId: outcomeId as FamilyCardOutcome['outcomeId'], conditionVariantIds: o.variantIds, products, arrowText, ...(equation === undefined ? {} : { equation }) };
+            const card: OutcomeDraft = {
+              outcomeId: outcomeId as FamilyCardOutcome['outcomeId'],
+              conditionVariantIds: o.variantIds,
+              products,
+              selectivity: stored?.selectivity ?? 'unspecified',
+              ...(stored?.regiochemistry === undefined ? {} : { regiochemistry: stored.regiochemistry }),
+            };
+            return { card, stored };
           });
+        const groupsOfCard = outcomeGroupsOf(reaction, entries, { schemes: schemesOf(reaction.id), participantId: gathered.participantId, describer, shownAsNode });
         const elsewhere: FamilyElsewhere[] = [...(landing.get(reactionId) ?? [])]
           .filter(([other]) => other !== group)
           .map(([other, landed]) => ({ hubId: other, name: hubInfo(other).name, outcomeCount: landed.size, conditionText: conditionTextOf(reaction, landed) }))
@@ -171,7 +173,7 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
           reviewStatus: reaction.review.status,
           caveatCount: ctx.indexes.caveatsFor({ kind: 'reaction', id: reaction.id } as RecordRef).length,
           substrate: gathered.substrate,
-          outcomes,
+          groups: groupsOfCard,
           elsewhere,
         });
       }

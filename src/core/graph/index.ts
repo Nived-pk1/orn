@@ -8,7 +8,9 @@ export type { BuildProjectionResult, ProjectionRegistry } from './registry';
 export { bundleEdges, drawnAsNode, flagsOf, projectionKey, referencing, sortEdges, sortNodes } from './kit';
 export { createDefaultProjectionRegistry, defaultProjectionDefinitions } from './defaults';
 export { arrowTextOf, MAX_ARROW_PARTS, MAX_CONDITION_PARTS } from './arrow-text';
-export { fullEquationOf, fullEquationsOfReaction } from './full-equation';
+export { fullEquationOf, fullEquationOfGroup, fullEquationsOfReaction } from './full-equation';
+export { groupOutcomes, outcomeWordOf, variantSetKeyOf } from './outcome-groups';
+export type { OutcomeGroup, OutcomeLike } from './outcome-groups';
 export type { EquationTerm, FullEquation, ProductRoleWord, SelectivityQuantifier } from './full-equation';
 export { MAX_FORMULA_HEAVY_ATOMS, needsFacts, termRepresentationOf } from './equation-term';
 export type { FactsInput, FormulaRepresentation, TermRepresentation, TermSubstance } from './equation-term';
@@ -40,4 +42,4 @@ export type {
   VisitedNode,
 } from './traversal';
 export { familyStudy, UNCLASSIFIED_NAME } from './family';
-export type { FamilyCard, FamilyCardOutcome, FamilyElsewhere, FamilyGroup, FamilyPartner, FamilyProduct, FamilyReactionType, FamilySection, FamilySectionKind, FamilyStudy, SelectivityWord } from './family';
+export type { FamilyCard, FamilyCardOutcome, FamilyElsewhere, FamilyGroup, FamilyOutcomeGroup, FamilyPartner, FamilyProduct, FamilyReactionType, FamilySection, FamilySectionKind, FamilyStudy, SelectivityWord } from './family';

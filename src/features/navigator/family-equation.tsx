@@ -18,7 +18,7 @@ export function FullEquationView(props: { readonly equation: FullEquation }) {
   const structures = env?.equation?.structures;
   const names = useSyncExternalStore(structures === undefined ? never : structures.subscribe, structures === undefined ? () => true : structures.equationNames);
   return (
-    <details className={styles.equation} onClick={(event) => event.stopPropagation()} onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details className={styles.equation} data-equation-panel="" onClick={(event) => event.stopPropagation()} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Show full equation</summary>
       {open && structures !== undefined ? (
         <div className={styles.equationNames} data-equation-names-line="">

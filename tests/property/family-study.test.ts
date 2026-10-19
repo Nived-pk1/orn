@@ -16,7 +16,7 @@ vi.setConfig({ testTimeout: TIMEOUT_MS });
 
 /** Every (group, reaction, outcome, product) a section shows, one entry per product line of a card outcome. */
 function shown(section: FamilySection): string[] {
-  return section.groups.flatMap((g) => g.cards.flatMap((c) => c.outcomes.flatMap((o) => o.products.map((p) => `${g.hubId}|${c.reactionId}|${o.outcomeId}|${p.productId}`))));
+  return section.groups.flatMap((g) => g.cards.flatMap((c) => c.groups.flatMap((group) => group.outcomes).flatMap((o) => o.products.map((p) => `${g.hubId}|${c.reactionId}|${o.outcomeId}|${p.productId}`))));
 }
 
 const expectedOf = (candidates: readonly NavigatorCandidate[], groupOf: (c: NavigatorCandidate) => string): string[] =>
@@ -49,7 +49,7 @@ describe('familyStudy: every candidate of the hub is in exactly one card outcome
           for (const group of study.reactionsOf.groups) {
             for (const card of group.cards) {
               cards += 1;
-              const own = new Set(card.outcomes.map((o) => o.outcomeId));
+              const own = new Set(card.groups.flatMap((group) => group.outcomes).map((o) => o.outcomeId));
               const all = new Set(from.filter((c) => c.reactionId === card.reactionId).map((c) => c.outcomeId));
               const elsewhereOutcomes = new Set(from.filter((c) => c.reactionId === card.reactionId && c.toHub !== group.hubId).map((c) => c.outcomeId));
               expect(card.elsewhere.reduce((sum, e) => sum + e.outcomeCount, 0)).toBe(from.filter((c) => c.reactionId === card.reactionId && c.toHub !== group.hubId).reduce((set, c) => set.add(`${c.toHub}|${c.outcomeId}`), new Set<string>()).size);
