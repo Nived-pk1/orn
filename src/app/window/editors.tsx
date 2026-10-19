@@ -12,10 +12,13 @@ import { createRecordPicker } from './record-picker-port';
 import { useSubscribable } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
 import { useApp } from './context';
+import { createLocalTimeFormatter } from './local-time';
 import { EditorsContext, type EditorsApi } from './drafts-ui';
 
 const DraftsDialog = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
 const EditorHost = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.EditorHost })));
+
+const machineTime = createLocalTimeFormatter();
 
 /** The kinds whose editor is the full one (the others edit names only). */
 const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent'];
@@ -28,7 +31,8 @@ export function editReasonOf(mode: string | null): string | undefined {
 }
 
 export function EditorsProvider(props: { readonly children: ReactNode }) {
-  const { services, inspector } = useApp();
+  const { services, inspector, formatTime: injected } = useApp();
+  const formatTime = injected ?? machineTime;
   const toasts = useToasts();
   const status = useSubscribable(services.status);
   const [draftsOpen, setDraftsOpen] = useState(false);
@@ -81,13 +85,14 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
             open
             onClose={() => setDraftsOpen(false)}
             port={services.drafts}
+            formatTime={formatTime}
             onOpenDraft={(id) => show(services.drafts.openStored(id))}
           />
         </Suspense>
       ) : null}
       {editingId === null ? null : (
         <Suspense fallback={null}>
-          <EditorHost port={port} sessionId={editingId} open onClose={() => setEditingId(null)} />
+          <EditorHost port={port} sessionId={editingId} open formatTime={formatTime} onClose={() => setEditingId(null)} />
         </Suspense>
       )}
     </EditorsContext.Provider>

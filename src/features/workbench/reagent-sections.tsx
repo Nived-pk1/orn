@@ -58,7 +58,7 @@ export function ReagentIdentitySection(props: ReagentPickerSectionProps) {
         {view.components.map((component, index) => {
           const name = picker?.describe(component.kind, component.id)?.name ?? component.id;
           return (
-            <li key={`${component.kind}:${component.id}`} className={styles.row}>
+            <li key={`${component.kind}:${component.id}`} className={props.phone === true ? `${styles.row} ${styles.rowPhone}` : styles.row} data-testid="component-row">
               <span>{choiceLine(picker?.describe(component.kind, component.id), component.id)}</span>
               <label>
                 Role of {name}{' '}

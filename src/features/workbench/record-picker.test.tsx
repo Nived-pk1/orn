@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 const ETHANOL: RecordChoice = { kind: 'species', id: 'spc_ethanol', name: 'Ethanol', kindWords: 'molecule', scope: 'in the syllabus' };
 const ALCOHOLS: RecordChoice = { kind: 'class', id: 'cls_alcohols', name: 'Alcohols', kindWords: 'compound class', scope: 'enrichment' };
-const PCC: RecordChoice = { kind: 'reagent', id: 'rgt_pcc', name: 'PCC', kindWords: 'reagent', scope: 'no exam chosen' };
+const PCC: RecordChoice = { kind: 'reagent', id: 'rgt_pcc', name: 'PCC', kindWords: 'reagent', scope: '' };
 const ALL = [ETHANOL, ALCOHOLS, PCC];
 const port = (search?: RecordPickerPort['search']): RecordPickerPort => ({
   describe: (kind, id) => ALL.find((c) => c.kind === kind && c.id === id),
@@ -65,7 +65,7 @@ describe('RecordPicker', () => {
     render(<RecordPicker id="p" label="Find" kinds={['reagent']} port={port(slow)} isListed={() => false} onPick={vi.fn()} />);
     type('p');
     type('pcc');
-    await screen.findByText('PCC (reagent, no exam chosen)');
+    await screen.findByText('PCC (reagent)');
     await act(async () => first([ETHANOL]));
     expect(screen.queryByText(/Ethanol/)).toBeNull();
   });

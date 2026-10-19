@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 /** The species editor's sections (step 6.2a part 4): each section's fields as recipes, the Classes picker and suggestions, collapsing, the keys, the read-only record. */
+import { utcTime } from '@/test-support/editing-kit';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Species } from '@/core/schema';
@@ -26,7 +27,7 @@ const quiet: DraftChecksPort = {
 function show(options: { rig?: EditorRig; checks?: DraftChecksPort; classes?: RecordPickerPort } = {}) {
   const rig = options.rig ?? editorRig();
   const id = rig.open();
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.checks ?? quiet, records: options.classes ?? picker() }} sessionId={id} open onClose={vi.fn()} />);
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.checks ?? quiet, records: options.classes ?? picker() }} sessionId={id} open formatTime={utcTime} onClose={vi.fn()} />);
   return { rig, id, dialog: screen.getByRole('dialog') };
 }
 const draftOf = (rig: EditorRig, id: string): Species => rig.drafts.entry(id)?.session.draft as Species;
@@ -137,7 +138,7 @@ describe('the Classes section', () => {
   it('without a picker the section says classes cannot be searched here', () => {
     const rig = editorRig();
     const id = rig.open();
-    renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet }} sessionId={id} open onClose={vi.fn()} />);
+    renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet }} sessionId={id} open formatTime={utcTime} onClose={vi.fn()} />);
     expect(screen.getByText('Searching for classes is not available here.')).toBeTruthy();
   });
 });

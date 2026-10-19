@@ -15,7 +15,7 @@ import { Button, Dialog, useToasts } from '@/ui/primitives';
 import { ConflictView, DeletedView } from './conflict-view';
 import { DuplicateDialog } from './duplicate-dialog';
 import type { DuplicateOutcome } from './duplicate-contracts';
-import { draftStatusText, editingUnavailableReason } from './draft-text';
+import { draftStatusText, editingUnavailableReason, type FormatTime } from './draft-text';
 import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
 import { useLiveChecks, type LiveChecks } from './live-validation';
@@ -76,6 +76,8 @@ export interface EditorHostProps {
   readonly open: boolean;
   /** The editor was closed (kept, saved or discarded). */
   readonly onClose: () => void;
+  /** The window's injected local-time formatter. */
+  readonly formatTime: FormatTime;
 }
 
 export function EditorHost(props: EditorHostProps) {
@@ -209,7 +211,7 @@ export function EditorHost(props: EditorHostProps) {
   const footer = (
     <div className={styles.footer}>
       <p className={styles.status} role="status" aria-live="polite" aria-label="Draft status">
-        {draftStatusText(entry.save, keeping)}
+        {draftStatusText(entry.save, keeping, props.formatTime)}
       </p>
       {asking ? (
         <div className={styles.confirm} role="group" aria-label="Discard this draft?">

@@ -19,7 +19,7 @@ test.describe('drafts', () => {
     const dialog = editorDialog(page, 'Ethanol');
     await canonicalInput(page).fill('Ethanol, half edited');
     await dialog.getByRole('button', { name: 'Add alias' }).click();
-    await expect(draftStatus(page)).toHaveText(/^Draft saved \d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC$/, { timeout: 30_000 });
+    await expect(draftStatus(page)).toHaveText(/^Draft saved \d{4}-\d{2}-\d{2} \d{2}:\d{2} \S+$/, { timeout: 30_000 });
 
     // a reload: the draft is offered, the store still has the old name
     await page.reload();

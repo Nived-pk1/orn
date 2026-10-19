@@ -10,6 +10,7 @@ export interface RecordChoice {
   readonly id: string;
   readonly name: string;
   readonly kindWords: string;
+  /** The exam scope in words; empty when no exam is chosen (then nothing is said about it). */
   readonly scope: string;
 }
 

@@ -4,7 +4,8 @@
  * in the entry chunk).
  */
 export type { DraftSaveView, DraftsListPort, DraftsViewModel, DraftListItemView, UnreadableDraftView } from './contracts';
-export { draftStatusText, draftsLabel, editingUnavailableReason, shortTime } from './draft-text';
+export type { FormatTime } from './draft-text';
+export { draftStatusText, draftsLabel, editingUnavailableReason } from './draft-text';
 export type { EditorEntryView, EditorCommitResult, EditorPort } from './editor-contracts';
 export type { ClassSuggestion, DraftChecksPort, DryRunAnswer, StructureChecksAnswer } from './check-contracts';
 export type { SmartsCheck, StructurePort } from './structure-contracts';

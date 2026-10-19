@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 /** The live panel beyond the schema (step 6.2a, part 2): 500 ms debounce, version-tagged answers, stale answers dropped, words for a worker that is down. */
+import { utcTime } from '@/test-support/editing-kit';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Finding } from '@/core/validation';
@@ -23,7 +24,7 @@ const deferred = <T,>(): Deferred<T> => {
 
 function show(checks: DraftChecksPort, rig: EditorRig = editorRig()) {
   const id = rig.open();
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks }} sessionId={id} open onClose={vi.fn()} />);
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks }} sessionId={id} open formatTime={utcTime} onClose={vi.fn()} />);
   return { rig, dialog: screen.getByRole('dialog') };
 }
 const quiet: DraftChecksPort = {
@@ -102,7 +103,7 @@ describe('without a checks port (a read-only or test window)', () => {
   it('still shows the schema findings and never calls anything', () => {
     const rig = editorRig();
     const id = rig.open();
-    renderWithToasts(<EditorHost port={rig.port} sessionId={id} open onClose={vi.fn()} />);
+    renderWithToasts(<EditorHost port={rig.port} sessionId={id} open formatTime={utcTime} onClose={vi.fn()} />);
     expect(screen.getByRole('dialog')).toBeTruthy();
   });
 });

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 /** The drafts list (ADR-040, step 6.1a part 3): rows, Open, Discard with its confirm, an unreadable row, "changed since", the empty list. */
+import { utcTime } from '@/test-support/editing-kit';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { stubDialog } from '@/test-support/window-kit';
@@ -41,7 +42,7 @@ const VIEW: DraftsViewModel = {
 
 describe('DraftsDialog', () => {
   it('lists each draft with its name, kind and edit time; a changed record says so; an unreadable row says it could not be read', () => {
-    render(<DraftsDialog open onClose={() => undefined} port={port(VIEW).p} />);
+    render(<DraftsDialog open formatTime={utcTime} onClose={() => undefined} port={port(VIEW).p} />);
     const list = screen.getByRole('list', { name: 'Unfinished drafts' });
     const [first, second, third] = within(list).getAllByRole('listitem');
     expect(first?.textContent).toContain('Ethanol');
@@ -57,13 +58,13 @@ describe('DraftsDialog', () => {
 
   it('Open asks the window to open that draft', () => {
     const open = vi.fn();
-    render(<DraftsDialog open onClose={() => undefined} port={port(VIEW).p} onOpenDraft={open} />);
+    render(<DraftsDialog open formatTime={utcTime} onClose={() => undefined} port={port(VIEW).p} onOpenDraft={open} />);
     fireEvent.click(within(screen.getAllByRole('listitem')[1] as HTMLElement).getByRole('button', { name: 'Open' }));
     expect(open).toHaveBeenCalledWith('eds_b');
   });
 
   it('Open is unavailable with the reason when the window cannot open drafts yet', () => {
-    render(<DraftsDialog open onClose={() => undefined} port={port(VIEW).p} openUnavailable="not built yet" />);
+    render(<DraftsDialog open formatTime={utcTime} onClose={() => undefined} port={port(VIEW).p} openUnavailable="not built yet" />);
     const button = within(screen.getAllByRole('listitem')[0] as HTMLElement).getByRole('button', { name: 'Open' });
     expect(button.getAttribute('aria-disabled')).toBe('true');
     expect(screen.getAllByText('not built yet').length).toBeGreaterThan(0);
@@ -71,7 +72,7 @@ describe('DraftsDialog', () => {
 
   it('Discard asks first ("Discard this draft? It cannot be undone."); Keep it changes nothing; Discard removes it', async () => {
     const { p, discard } = port(VIEW);
-    render(<DraftsDialog open onClose={() => undefined} port={p} onOpenDraft={() => undefined} />);
+    render(<DraftsDialog open formatTime={utcTime} onClose={() => undefined} port={p} onOpenDraft={() => undefined} />);
     const row = (): HTMLElement => screen.getAllByRole('listitem')[0] as HTMLElement;
     fireEvent.click(within(row()).getByRole('button', { name: 'Discard' }));
     expect(within(row()).getByText('Discard this draft? It cannot be undone.')).toBeTruthy();
@@ -87,7 +88,7 @@ describe('DraftsDialog', () => {
 
   it('an unreadable row is discarded through its own port call, after the same question', async () => {
     const { p, discardUnreadable } = port(VIEW);
-    render(<DraftsDialog open onClose={() => undefined} port={p} />);
+    render(<DraftsDialog open formatTime={utcTime} onClose={() => undefined} port={p} />);
     const row = (): HTMLElement => screen.getAllByRole('listitem')[2] as HTMLElement;
     fireEvent.click(within(row()).getByRole('button', { name: 'Discard' }));
     expect(within(row()).getByText(/cannot be undone/)).toBeTruthy();
@@ -96,7 +97,7 @@ describe('DraftsDialog', () => {
   });
 
   it('with no drafts it says so', () => {
-    render(<DraftsDialog open onClose={() => undefined} port={port({ keeping: 'stored', count: 0, items: [] }).p} />);
+    render(<DraftsDialog open formatTime={utcTime} onClose={() => undefined} port={port({ keeping: 'stored', count: 0, items: [] }).p} />);
     expect(screen.getByText('No unfinished drafts.')).toBeTruthy();
   });
 });

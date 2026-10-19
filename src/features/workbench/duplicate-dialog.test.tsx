@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 /** The duplicate check on Save (step 6.2a part 5): the dialog, its three buttons, no dialog without a match, the chem worker down. */
+import { utcTime } from '@/test-support/editing-kit';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { editorRig, renderWithToasts, speciesOf, type EditorRig } from '@/test-support/editor-kit';
@@ -20,7 +21,7 @@ function show(outcome: DuplicateOutcome) {
   const check = vi.fn(async () => outcome);
   const duplicates: DuplicatePort = { check, openRecord };
   const onClose = vi.fn();
-  renderWithToasts(<EditorHost port={{ ...rig.port, duplicates }} sessionId={id} open onClose={onClose} />);
+  renderWithToasts(<EditorHost port={{ ...rig.port, duplicates }} sessionId={id} open formatTime={utcTime} onClose={onClose} />);
   fireEvent.change(screen.getByLabelText('Canonical name (required)'), { target: { value: 'A changed name' } });
   return { rig, id, check, openRecord, onClose };
 }
@@ -99,7 +100,7 @@ describe('on Save of a species', () => {
     const rig = editorRig();
     const id = rig.open();
     const check = vi.fn(async () => one());
-    renderWithToasts(<EditorHost port={{ ...rig.port, duplicates: { check, openRecord: vi.fn() } }} sessionId={id} open onClose={vi.fn()} />);
+    renderWithToasts(<EditorHost port={{ ...rig.port, duplicates: { check, openRecord: vi.fn() } }} sessionId={id} open formatTime={utcTime} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Canonical name (required)'), { target: { value: '' } });
     save();
     expect(await screen.findByRole('heading', { name: 'Save was refused' })).toBeTruthy();
@@ -113,7 +114,7 @@ describe('on Save of a class or a reagent (step 6.2b part 4, decision D6)', () =
     const opened = rig.drafts.open({ kind, blank: true });
     if (!opened.ok) throw new Error(opened.message);
     const check = vi.fn(async () => outcome);
-    renderWithToasts(<EditorHost port={{ ...rig.port, duplicates: { check, openRecord: vi.fn() } }} sessionId={opened.id} open onClose={vi.fn()} />);
+    renderWithToasts(<EditorHost port={{ ...rig.port, duplicates: { check, openRecord: vi.fn() } }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Canonical name (required)'), { target: { value: 'Alcohols' } });
     if (kind === 'class') fireEvent.change(screen.getByLabelText('Kind of class'), { target: { value: 'compound_class' } });
     return { rig, check };

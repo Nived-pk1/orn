@@ -4,8 +4,10 @@
  * would close a cycle is refused with the reason), Families, Classes, Profiles with their own aliases (add, edit, move, remove), the read-only
  * conditions kept by Save. Over the real store, the real session manager and the real cycle guards.
  */
+import { utcTime } from '@/test-support/editing-kit';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { PHONE_QUERIES } from '@/ui/hooks';
 import { createRecordPicker } from '@/app/window/record-picker-port';
 import { indexEngine } from '@/core/indexes';
 import type { CanonicalState, Reagent } from '@/core/schema';
@@ -51,7 +53,7 @@ function show(options: { target?: string; blank?: boolean; state?: CanonicalStat
   const rig = editorRig(options.state === undefined ? {} : { state: options.state });
   const opened = rig.drafts.open(options.blank === true ? { kind: 'reagent', blank: true } : { kind: 'reagent', id: options.target ?? KMNO4 });
   if (!opened.ok) throw new Error(opened.message);
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet, records: pickerFor(rig) }} sessionId={opened.id} open onClose={vi.fn()} />);
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet, records: pickerFor(rig) }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
   return { rig, id: opened.id, dialog: screen.getByRole('dialog') };
 }
 const draftOf = (rig: EditorRig, id: string): Reagent => rig.drafts.entry(id)?.session.draft as Reagent;
@@ -118,6 +120,19 @@ describe('Identity: one backing species OR components, never both', () => {
     expect(draftOf(rig, id).components[1]?.ref.id).toBe(first);
     fireEvent.click(screen.getAllByRole('button', { name: /^Remove / }).find((b) => /Palladium/.test(b.getAttribute('aria-label') ?? '')) as HTMLElement);
     expect(draftOf(rig, id).components).toHaveLength(before - 1);
+  });
+
+  it('on a phone each Components row stacks: the record on its own row, then the role, the amount, then the buttons at 44 px (step 6.3 review)', () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
+    try {
+      show({ target: 'rgt_lindlar' });
+      const row = screen.getAllByTestId('component-row')[0] as HTMLElement;
+      expect(row.className).toContain('rowPhone');
+      expect(within(row).getByLabelText(/^Role of /)).toBeTruthy();
+      expect(within(row).getAllByRole('button').map((b) => b.textContent)).toEqual(['Up', 'Down', 'Remove']);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('a component that would close a cycle is refused with the reason and no button (HIER-003, asked before Save)', async () => {

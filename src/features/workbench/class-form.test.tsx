@@ -4,6 +4,7 @@
  * is shown, no button), the generic formula in the formula typography, an invalid SMARTS in the chem worker's words, the Examples order, the
  * Review lifecycle, and the read-only record kept by Save. Over the real store, real session manager and the real cycle guards.
  */
+import { utcTime } from '@/test-support/editing-kit';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createRecordPicker } from '@/app/window/record-picker-port';
@@ -50,7 +51,7 @@ function show(options: { target?: string; smarts?: (smarts: string) => Promise<S
   const opened = rig.drafts.open(options.blank === true ? { kind: 'class', blank: true } : { kind: 'class', id: options.target ?? ALCOHOLS });
   if (!opened.ok) throw new Error(opened.message);
   const structure = { parse: async () => ({ ok: false as const, reason: 'unavailable' as const, error: 'not needed here' }), ...(options.smarts === undefined ? {} : { checkSmarts: options.smarts }) };
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet, records: pickerFor(rig, options.mapFamily === true), structure }} sessionId={opened.id} open onClose={vi.fn()} />);
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet, records: pickerFor(rig, options.mapFamily === true), structure }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
   return { rig, id: opened.id, dialog: screen.getByRole('dialog') };
 }
 const draftOf = (rig: EditorRig, id: string): ChemicalClass => rig.drafts.entry(id)?.session.draft as ChemicalClass;
@@ -96,7 +97,7 @@ describe('Identity', () => {
 describe('Parents (cycle-safe, HIER-001)', () => {
   it('lists the parents with kind and scope, adds one found by name once, and removes one', async () => {
     const { rig, id, dialog } = show({ target: PRIMARY });
-    expect(within(within(dialog).getByRole('list', { name: 'Parent classes' })).getByText(/Alcohols \(compound class, no exam chosen\)/)).toBeTruthy();
+    expect(within(within(dialog).getByRole('list', { name: 'Parent classes' })).getByText(/Alcohols \(compound class\)/)).toBeTruthy();
     fireEvent.change(within(dialog).getByLabelText('Find a parent class by name'), { target: { value: 'Ethers' } });
     const found = within(await within(dialog).findByRole('list', { name: 'Classes found' }));
     fireEvent.click(found.getByRole('button', { name: 'Add Ethers' }));

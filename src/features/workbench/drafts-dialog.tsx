@@ -6,7 +6,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { Button, Dialog } from '@/ui/primitives';
 import type { DraftsListPort, DraftListItemView, UnreadableDraftView } from './contracts';
-import { shortTime } from './draft-text';
+import type { FormatTime } from './draft-text';
 import styles from './drafts-dialog.module.css';
 
 export interface DraftsDialogProps {
@@ -16,6 +16,8 @@ export interface DraftsDialogProps {
   /** Opens a draft in its editor. Absent: Open is unavailable with `openUnavailable` as the reason. */
   readonly onOpenDraft?: (id: string) => void;
   readonly openUnavailable?: string;
+  /** The window's injected local-time formatter. */
+  readonly formatTime: FormatTime;
 }
 
 function Row(props: {
@@ -26,6 +28,7 @@ function Row(props: {
   readonly onDiscard: () => void;
   readonly onOpen: (() => void) | undefined;
   readonly openUnavailable: string | undefined;
+  readonly formatTime: FormatTime;
 }) {
   const { item, asking } = props;
   return (
@@ -40,7 +43,7 @@ function Row(props: {
           <strong>{item.name}</strong>
           <p className={styles.meta}>
             {item.kind}
-            {item.isNew ? ' (new record)' : ''} · edited {shortTime(item.updatedAt)}
+            {item.isNew ? ' (new record)' : ''} · edited {props.formatTime(item.updatedAt)}
           </p>
           {item.changedSince ? <p className={styles.note}>The record changed since this draft was started.</p> : null}
         </>
@@ -79,6 +82,7 @@ export function DraftsDialog(props: DraftsDialogProps) {
             <Row
               key={item.id}
               item={item}
+              formatTime={props.formatTime}
               asking={asking === item.id}
               onAsk={() => setAsking(item.id)}
               onCancel={() => setAsking(null)}

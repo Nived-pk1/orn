@@ -28,12 +28,6 @@ beforeAll(async () => {
   proto.scrollIntoView ??= () => undefined;
   proto.hasPointerCapture ??= () => false;
   proto.releasePointerCapture ??= () => undefined;
-  // warm-up: open the editor once and close it, so the first test does not pay the cold start (the first render of the whole form took about 0.6 s alone and raced findBy's 1 s under a full parallel run). No assertion and no timeout of any test changes.
-  const warm = fakeApp({ state: demoState(), navigator: { depictions: true } });
-  inspectSpecies(warm);
-  fireEvent.click(within(pane()).getByRole('button', { name: 'Edit' }));
-  await screen.findByRole('dialog', { name: /^Edit / }, { timeout: 60_000 });
-  cleanup();
 });
 afterEach(() => {
   cleanup();

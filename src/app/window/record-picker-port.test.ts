@@ -28,7 +28,7 @@ function picker(state: CanonicalState = demoState(), requests: unknown[] = []) {
 describe('describe', () => {
   it('gives a class its kind words, a species its kind, a reagent "reagent", each with the scope words', () => {
     const port = picker();
-    expect(port.describe('class', 'cls_alcohols')).toEqual({ kind: 'class', id: 'cls_alcohols', name: 'Alcohols', kindWords: 'compound class', scope: 'no exam chosen' });
+    expect(port.describe('class', 'cls_alcohols')).toEqual({ kind: 'class', id: 'cls_alcohols', name: 'Alcohols', kindWords: 'compound class', scope: '' });
     expect(port.describe('reagent', 'rgt_pcc')).toMatchObject({ kind: 'reagent', name: 'PCC', kindWords: 'reagent' });
     expect(port.describe('species', 'spc_ethanol')).toMatchObject({ kind: 'species', name: 'Ethanol' });
     expect(port.describe('class', 'cls_nope')).toBeUndefined();

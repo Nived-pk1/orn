@@ -82,6 +82,16 @@
   flex: 1 1 100%;
 }
 
+.rowPhone > span,
+.rowPhone > label {
+  flex: 1 1 100%;
+}
+
+.rowPhone select {
+  width: 100%;
+  min-height: 44px;
+}
+
 .rowPhone button {
   flex: 1 1 0;
   min-width: 0;

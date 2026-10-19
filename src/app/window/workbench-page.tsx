@@ -3,12 +3,16 @@
  * "New class" opens it on a blank class (step 6.2b); "New reagent" opens it on a blank reagent (step 6.2b); a read-only tab says why on every button (never hidden, never a silent no-op); the drafts list shows
  * every unfinished edit with a way back into it. Writer tab only: a read-only tab says why on each button.
  */
-import { shortTime } from '@/features/workbench';
 import { Button } from '@/ui/primitives';
+import { useApp } from './context';
 import { useDraftsView, useEditors } from './drafts-ui';
+import { createLocalTimeFormatter } from './local-time';
 import styles from './window.module.css';
 
+const machineTime = createLocalTimeFormatter();
+
 export function WorkbenchPage() {
+  const formatTime = useApp().formatTime ?? machineTime;
   const editors = useEditors();
   const drafts = useDraftsView();
   const reason = editors === null ? 'Editing is not available here.' : editors.editReason;
@@ -33,7 +37,7 @@ export function WorkbenchPage() {
               <li key={item.id}>An unreadable draft: {item.reason}</li>
             ) : (
               <li key={item.id}>
-                {item.name} ({item.kind}, {item.isNew ? 'new' : 'edit'}, last changed {shortTime(item.updatedAt)}){item.changedSince ? ', the record changed since' : ''}{' '}
+                {item.name} ({item.kind}, {item.isNew ? 'new' : 'edit'}, last changed {formatTime(item.updatedAt)}){item.changedSince ? ', the record changed since' : ''}{' '}
                 <Button aria-label={`Continue ${item.name}`} {...(editors === null ? { unavailable: 'Editing is not available here.' } : { onClick: () => editors.openDraft(item.id) })}>
                   Continue
                 </Button>

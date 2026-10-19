@@ -1,7 +1,7 @@
 /**
  * The record pickers' port (step 6.2b decision D4, from the Classes section's port of 6.2a), made from the search service, the canonical
  * state, the indexes and the active exam. Records are found by name through the search engine; each choice carries its kind and its scope
- * in words (the scope of the chosen exam version, or "no exam chosen"). It also answers the two cycle questions a picker asks before
+ * in words (the scope of the chosen exam version, or empty when no exam is chosen). It also answers the two cycle questions a picker asks before
  * Save (a class parent, a reagent component) through the core's guards, in words. Derived at the moment it is asked; nothing is stored.
  * No chemistry.
  */
@@ -37,7 +37,7 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
     const record = Object.hasOwn(table, id) ? table[id] : undefined;
     if (record === undefined) return undefined;
     const exam = deps.activeExam();
-    const scope = exam === null ? 'no exam chosen' : SCOPE_WORDS[createScopeOf(deps.indexes(), exam.examId, exam.examVersionId)({ kind, id: record.id } as never)];
+    const scope = exam === null ? '' : SCOPE_WORDS[createScopeOf(deps.indexes(), exam.examId, exam.examVersionId)({ kind, id: record.id } as never)];
     const kindWords = kind === 'class' ? CLASS_KIND_WORDS[record.classKind as ChemicalClass['classKind']] : kind === 'species' ? (record.speciesKind === undefined || record.speciesKind === 'unspecified' ? 'species' : record.speciesKind.replace(/_/g, ' ')) : 'reagent';
     return { kind, id: record.id, name: record.names.canonical, kindWords, scope };
   };

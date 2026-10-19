@@ -23,3 +23,9 @@ export function clockContext(): ClockContext {
     },
   };
 }
+
+/** A local-time formatter with the zone pinned to UTC, so the words in a test never depend on where it runs. */
+export const utcTime = (iso: string): string => {
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime()) ? iso : `${at.toISOString().slice(0, 10)} ${at.toISOString().slice(11, 16)} UTC`;
+};

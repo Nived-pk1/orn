@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 /** The editor host (ADR-040, step 6.1a part 4): the form, list editing, the draft's own undo and redo and their keys, live findings, Save, refusals, conflicts. */
+import { utcTime } from '@/test-support/editing-kit';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { changeElsewhere, editorRig, renderWithToasts, speciesOf, type EditorRig } from '@/test-support/editor-kit';
@@ -13,7 +14,7 @@ afterEach(cleanup);
 function show(rig: EditorRig = editorRig()) {
   const id = rig.open();
   const onClose = vi.fn();
-  renderWithToasts(<EditorHost port={rig.port} sessionId={id} open onClose={onClose} />);
+  renderWithToasts(<EditorHost port={rig.port} sessionId={id} open formatTime={utcTime} onClose={onClose} />);
   return { rig, id, onClose, dialog: screen.getByRole('dialog') };
 }
 const draftNames = (rig: EditorRig, id: string) => (rig.drafts.entry(id)?.session.draft as { names: { canonical: string; aliases: string[]; display?: string } }).names;
@@ -164,7 +165,7 @@ describe('live findings (L1, debounced 300 ms) and Save', () => {
     const rig = editorRig();
     const id = rig.open();
     const onClose = vi.fn();
-    renderWithToasts(<EditorHost port={rig.port} sessionId={id} open onClose={onClose} />);
+    renderWithToasts(<EditorHost port={rig.port} sessionId={id} open formatTime={utcTime} onClose={onClose} />);
     rig.drafts.edit(id, (d) => void (d.classIds = ['cls_does-not-exist']));
     const before = rig.store.getState();
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -301,7 +302,7 @@ describe('a deleted target and a read-only tab', () => {
     expect(dispatched.ok).toBe(true);
     const opened = rig.drafts.open({ kind: 'species', id: 'spc_short-lived' });
     if (!opened.ok) throw new Error(opened.message);
-    renderWithToasts(<EditorHost port={rig.port} sessionId={opened.id} open onClose={() => undefined} />);
+    renderWithToasts(<EditorHost port={rig.port} sessionId={opened.id} open formatTime={utcTime} onClose={() => undefined} />);
     fireEvent.change(screen.getByLabelText('Canonical name (required)'), { target: { value: 'Mine' } });
     expect(rig.store.dispatch({ label: 'Delete', commands: [{ type: 'record.delete', ref: { kind: 'species', id: 'spc_short-lived' }, mode: 'restrict' }] }).ok).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -315,7 +316,7 @@ describe('a deleted target and a read-only tab', () => {
     const rig = editorRig();
     const id = rig.open();
     rig.status.update({ mode: 'follower' }); // the tab stopped being the one that saves
-    renderWithToasts(<EditorHost port={rig.port} sessionId={id} open onClose={() => undefined} />);
+    renderWithToasts(<EditorHost port={rig.port} sessionId={id} open formatTime={utcTime} onClose={() => undefined} />);
     const reason = 'This tab is read-only: edit in the tab that is saving';
     expect(screen.getAllByText(reason).length).toBeGreaterThan(0);
     expect((screen.getByLabelText('Canonical name (required)') as HTMLInputElement).readOnly).toBe(true);

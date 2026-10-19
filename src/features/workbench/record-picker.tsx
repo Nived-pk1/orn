@@ -12,7 +12,7 @@ import styles from './editor.module.css';
 
 export const MAX_PICKER_RESULTS = 8;
 
-export const choiceLine = (choice: RecordChoice | undefined, id: string): string => (choice === undefined ? `${id} (not in this dataset)` : `${choice.name} (${choice.kindWords}, ${choice.scope})`);
+export const choiceLine = (choice: RecordChoice | undefined, id: string): string => (choice === undefined ? `${id} (not in this dataset)` : `${choice.name} (${choice.kindWords}${choice.scope === '' ? '' : `, ${choice.scope}`})`);
 
 export interface RecordPickerProps {
   /** The field's id (the label's target). */
