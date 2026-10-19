@@ -30,8 +30,9 @@ export function mergeDraft(draft: unknown, comparisons: readonly FieldComparison
 }
 
 const nameOf = (record: unknown, id: string): string => {
-  const names = (record as { names?: { canonical?: unknown } } | null)?.names;
-  return typeof names?.canonical === 'string' && names.canonical !== '' ? names.canonical : id;
+  const fields = record as { names?: { canonical?: unknown }; name?: unknown } | null;
+  const own = fields?.names?.canonical ?? fields?.name; // a reaction has `name`, the others `names.canonical`
+  return typeof own === 'string' && own !== '' ? own : id;
 };
 
 export function commitDraft(

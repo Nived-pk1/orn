@@ -232,6 +232,7 @@ function WindowContent() {
     newSpecies: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newSpecies() },
     newClass: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newClass() },
     newReagent: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newReagent() },
+    newReaction: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newReaction() },
     structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),

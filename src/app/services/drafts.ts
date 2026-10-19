@@ -93,8 +93,9 @@ export function createDraftManager(options: DraftManagerOptions): DraftManager {
     canRedo: canRedoDraft(slot.session),
   });
   const nameOfSession = (session: EditorSession): string => {
-    const names = (session.draft as { names?: { canonical?: unknown } } | null)?.names;
-    if (typeof names?.canonical === 'string' && names.canonical !== '') return names.canonical;
+    const fields = session.draft as { names?: { canonical?: unknown }; name?: unknown } | null;
+    const own = fields?.names?.canonical ?? fields?.name; // a reaction has `name`, the others `names.canonical`
+    if (typeof own === 'string' && own !== '') return own;
     return session.target === null ? `New ${session.kind}` : session.target.id;
   };
   const changedSince = (session: EditorSession): boolean => {

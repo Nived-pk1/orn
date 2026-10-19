@@ -59,7 +59,8 @@ export function ParticipantRow(props: ParticipantRowProps) {
   const removeReason = usedBy === undefined ? undefined : `Participant ${n} is used by the condition '${usedBy}'; change that in step 6.4's editor first.`;
   const off = (action: () => void, reason?: string) => (locked !== undefined ? { unavailable: locked } : reason !== undefined ? { unavailable: reason } : { onClick: action });
   return (
-    <li className={props.phone === true ? `${styles.panel} ${styles.participantPhone}` : `${styles.panel} ${styles.participant}`} data-testid="participant-row" role="group" aria-label={`Participant ${n}`}>
+    <li className={props.phone === true ? `${styles.panel} ${styles.participantPhone}` : `${styles.panel} ${styles.participant}`} data-testid="participant-row">
+      <div role="group" aria-label={`Participant ${n}`} className={styles.participantBody}>
       <div className={styles.participantHead}>
         <strong data-field-path={`${base}.ref`} aria-invalid={bad(props, `${base}.ref`)}>
           {n}. {p.substance === undefined ? 'No substance' : choiceLine(choice, p.substance.id)}
@@ -207,6 +208,7 @@ export function ParticipantRow(props: ParticipantRowProps) {
         ))}
       </details>
       {p.originalText === '' ? null : <p className={styles.hint}>Written in the source as: {p.originalText}</p>}
+      </div>
     </li>
   );
 }

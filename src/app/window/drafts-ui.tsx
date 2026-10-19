@@ -19,6 +19,8 @@ export interface EditorsApi {
   newClass(): void;
   /** Opens the editor on a NEW reagent (step 6.2b, decision D5). A refusal is said in a toast. */
   newReagent(): void;
+  /** Opens the editor on a NEW reaction (step 6.3a, decision D4). A refusal is said in a toast. */
+  newReaction(): void;
   /** Opens a listed draft (its stored session). */
   openDraft(id: string): void;
   /** Why editing is unavailable now (a read-only tab); undefined when it is available. */

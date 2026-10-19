@@ -57,6 +57,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       newSpecies: () => show(services.drafts.open({ kind: 'species', blank: true })),
       newClass: () => show(services.drafts.open({ kind: 'class', blank: true })),
       newReagent: () => show(services.drafts.open({ kind: 'reagent', blank: true })),
+      newReaction: () => show(services.drafts.open({ kind: 'reaction', blank: true })),
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
       fullEditorKinds: FULL_EDITOR_KINDS,

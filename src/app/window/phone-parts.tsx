@@ -73,6 +73,9 @@ export function PhoneBar(props: {
             <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newReagent) } : { unavailable: editors.editReason })}>
               New reagent
             </Button>
+            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newReaction) } : { unavailable: editors.editReason })}>
+              New reaction
+            </Button>
           </section>
         )}
         {props.history === undefined ? null : <HistorySection history={props.history} />}

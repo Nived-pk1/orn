@@ -188,6 +188,21 @@ describe('a blank reagent draft (step 6.2b, decision D5)', () => {
   });
 });
 
+describe('a blank reaction draft (step 6.3a, decisions D4 and 3)', () => {
+  it('has every required field at its empty value; L1 refuses only the empty name and the missing scope; no stage', async () => {
+    const { parseRecord } = await import('../validation');
+    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'reaction', blank: true });
+    if (!result.ok) throw new Error('no session');
+    const draft = result.session.draft as Record<string, unknown> & { id: string };
+    expect(draft).toMatchObject({ kind: 'reaction', name: '', aliases: [], purposes: [], participants: [], stages: [], conditionVariants: [], outcomes: [], intermediates: [], reversibility: { kind: 'unknown' }, tags: [], citations: [], provenance: { origin: 'user' }, review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] } });
+    expect(draft.id).toMatch(/^rxn_/);
+    expect(Object.hasOwn(draft, 'scope')).toBe(false);
+    const parsed = parseRecord('reaction', draft);
+    expect(!parsed.ok && parsed.findings.map((f) => f.path).sort()).toEqual(['name', 'scope']);
+    expect(parseRecord('reaction', { ...draft, name: 'Propan-1-ol + PCC', scope: 'specific' }).ok).toBe(true);
+  });
+});
+
 describe('a blank class draft (step 6.2b, decision D5)', () => {
   it('has every required field at its empty value except classKind, which is ABSENT; L1 refuses it until a name and a kind are given', async () => {
     const { parseRecord } = await import('../validation');

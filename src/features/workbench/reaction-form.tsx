@@ -1,9 +1,10 @@
 /**
- * The reaction form (step 6.3a decision D1): Identity, Participants, Stages (step 6.3a part 4), Review, and the read-only summaries of what
+ * The reaction form (step 6.3a decision D1): Identity, Participants, Stages, Review, and the read-only summaries of what
  * this editor does not edit yet. Collapsible and keyboard-navigable (SectionFrame); a phone starts with the long sections closed.
  */
 import { ReactionIdentitySection } from './reaction-identity';
 import { ParticipantsSection } from './reaction-participants';
+import { StagesSection } from './reaction-stages';
 import { ClassificationReadOnlySection, ConditionsReadOnlySection, ReactionNotesReadOnlySection } from './reaction-readonly';
 import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
@@ -28,6 +29,9 @@ export function ReactionForm(props: ReactionFormProps) {
       </SectionFrame>
       <SectionFrame id="participants" title="Participants">
         <ParticipantsSection {...common} {...picker} newId={props.newId} />
+      </SectionFrame>
+      <SectionFrame id="stages" title="Stages">
+        <StagesSection {...common} {...picker} newId={props.newId} />
       </SectionFrame>
       <SectionFrame id="conditions" title="Conditions and outcomes" initiallyOpen={open}>
         <ConditionsReadOnlySection draft={props.draft} />
