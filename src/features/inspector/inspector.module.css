@@ -31,6 +31,12 @@
 .listRow { display: block; padding: var(--space-1) 0; overflow-wrap: anywhere; }
 .steps { margin: 0; padding-left: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
 .scopes { margin: 0; padding-left: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+.pictures { display: flex; flex-direction: column; gap: var(--space-3); }
+.pictureFigure { margin: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+.pictureFigure figcaption { overflow-wrap: anywhere; }
+/* fits the panel (a phone sheet too), never stretched past its natural size */
+.mechanismPicture { display: block; max-width: 100%; height: auto; background: var(--color-surface); border: 1px solid var(--color-rule); }
+.fullPicture { display: block; max-width: 100%; max-height: calc(100vh - 8rem); margin: 0 auto; object-fit: contain; }
 .assetImage { max-width: 100%; max-height: 320px; background: var(--color-surface); border: 1px solid var(--color-rule); }
 /* on the phone sheet at peek the main actions are large (ADR-039) */
 [data-sheet='peek'] .actions button { min-height: var(--tab-bar-height); flex: 1 1 40%; font-size: var(--text-16); }

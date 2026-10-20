@@ -13,6 +13,7 @@ import { useInspectorEnv } from './env';
 import { FactList, Facts, LevelSection } from './levels';
 import { RecordList } from './record-list';
 import { RecordLink, RichText } from './rich-text';
+import { MechanismPictures } from './view-pictures';
 import { CitationsAndTags, LinkFact, NoteFact, TextFact, words } from './view-parts';
 import styles from './inspector.module.css';
 
@@ -158,6 +159,7 @@ export function MechanismLevels(props: { readonly record: Mechanism }) {
   }, [env, record.id]);
   return (
     <>
+      <MechanismPictures mechanismId={record.id} />
       <LevelSection level={2} title="What it is">
         <FactList label="Mechanism">
           <TextFact label="Also called" value={record.aliases.join(', ')} />
