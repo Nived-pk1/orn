@@ -5120,3 +5120,8 @@ Correction to part 4: the engine-specific skips of the full run are the WebKit-o
 
 **ACCEPTED.** Row 6.3 closed and deployed (e6301e1d). Approved as built: compact participants, the live preview (0.04 ms p99; 0.08 ms at the schema ceiling), the full run 471 / 69 / 0, the deploy, every changed test. REVIEW REQUIRED answers: (1) the preview draws the full-equation component: approved. (2)-(8): approved.
 CHECK requested: in reaction-editor-preview-1280x800.png every preview structure still says "Drawing the structure..." (reactant and both products). Handled in the next part (the preview e2e must wait for and assert drawn structures for the E2 reaction in all three engines).
+
+### Step 6.3b review check - preview drawings (2026-10-20)
+
+**Finding: the drawings DO arrive; no product defect.** The old screenshot was taken as soon as the product names appeared, before the depiction service had answered. The preview's accessibility tree (Chromium, after the wait) holds `img "Structure of (R)-2-bromobutane"`, `img "Structure of But-2-ene"` and `img "Structure of But-1-ene"`; the request, key and chunk all resolve. Nothing in the product changed.
+**Test change:** `reaction-editor.spec.ts` (live preview of the E2 reaction) now waits until no "Drawing the structure" text is left in the preview, then asserts the reactant and both products are `img` elements that are complete with `naturalWidth > 0`, BEFORE the screenshot. Chromium, Firefox, WebKit: 3 passed. screenshots/reaction-editor-preview-1280x800.png retaken and checked: all three structures drawn.

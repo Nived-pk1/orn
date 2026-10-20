@@ -68,6 +68,13 @@ test.describe('the reaction editor', () => {
     await expect(preview.getByText('But-2-ene', { exact: true })).toBeVisible({ timeout: 60_000 });
     await expect(preview.getByText('But-1-ene', { exact: true })).toBeVisible();
     await expect(preview.locator('[data-equation-coefficient]')).toHaveCount(0);
+    // the drawings arrive: the reactant and both products are real images (decoded, not the placeholder)
+    await expect(preview.getByText('Drawing the structure', { exact: false })).toHaveCount(0, { timeout: 60_000 });
+    for (const name of ['(R)-2-bromobutane', 'But-2-ene', 'But-1-ene']) {
+      const drawn = preview.locator(`img[alt="Structure of ${name}"]`).first();
+      await expect(drawn).toBeVisible({ timeout: 60_000 });
+      await expect.poll(() => drawn.evaluate((img) => (img as HTMLImageElement).complete && (img as HTMLImageElement).naturalWidth > 0)).toBe(true);
+    }
     await page.screenshot({ path: resolve(shotsDir(), 'reaction-editor-preview-1280x800.png') });
     // the reactant's coefficient: the preview's full equation shows "2"
     const dialog = page.getByRole('dialog');
