@@ -12,7 +12,7 @@ import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import { createIdFactory } from '@/core/dataset';
 import type { AnyRecord, CanonicalState, Species } from '@/core/schema';
 import type { EditorPort } from '@/features/workbench';
-import { ToastProvider } from '@/ui/primitives';
+import { ToastProvider, type ToastTimers } from '@/ui/primitives';
 import { demoState } from './app-boot-kit';
 import { manualScheduler, type ManualScheduler } from './persistence-kit';
 
@@ -60,9 +60,9 @@ export function changeElsewhere(rig: EditorRig, change: (record: Species) => Any
   if (!result.ok) throw new Error(`${result.error.code}: ${result.error.message}`);
 }
 
-export function renderWithToasts(ui: ReactNode) {
+export function renderWithToasts(ui: ReactNode, timers?: ToastTimers) {
   return render(
-    <ToastProvider>
+    <ToastProvider {...(timers === undefined ? {} : { timers })}>
       {ui}
     </ToastProvider>,
   );

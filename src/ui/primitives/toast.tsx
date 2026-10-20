@@ -14,6 +14,16 @@ import styles from './toast.module.css';
 import hidden from './visually-hidden.module.css';
 
 export const MAX_TOASTS = 5;
+/** How long a result toast without an action stays (step 6.5a): the save state stays in the status line. */
+export const RESULT_TOAST_MS = 6_000;
+
+/** The timer functions a toast uses, injectable so tests need no real time (INV: injected clock). */
+export interface ToastTimers {
+  readonly set: (run: () => void, ms: number) => unknown;
+  readonly clear: (handle: unknown) => void;
+}
+const REAL_TIMERS: ToastTimers = { set: (run, ms) => setTimeout(run, ms), clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>) };
+const TimerContext = createContext<ToastTimers>(REAL_TIMERS);
 
 export interface ToastInput {
   readonly kind?: NoticeKind;
@@ -53,14 +63,57 @@ export function useToasts(): Toasts {
   return value;
 }
 
-function AutoDismiss(props: { readonly ms: number; readonly onDone: () => void }) {
+/** Closes the toast after `ms`; the countdown stops while `paused` (pointer over the toast or focus inside it) and starts again when it ends. */
+function AutoDismiss(props: { readonly ms: number; readonly paused: boolean; readonly onDone: () => void }) {
   const done = useRef(props.onDone);
   done.current = props.onDone;
+  const timers = useContext(TimerContext);
   useEffect(() => {
-    const timer = setTimeout(() => done.current(), props.ms);
-    return () => clearTimeout(timer);
-  }, [props.ms]);
+    if (props.paused) return undefined;
+    const handle = timers.set(() => done.current(), props.ms);
+    return () => timers.clear(handle);
+  }, [props.ms, props.paused, timers]);
   return null;
+}
+
+function ToastRow(props: { readonly item: ToastInput & { readonly id: number }; readonly dismiss: (id: number) => void }) {
+  const { item, dismiss } = props;
+  const [hover, setHover] = useState(false);
+  const [focus, setFocus] = useState(false);
+  return (
+    <div
+      className={styles.toast}
+      onPointerEnter={() => setHover(true)}
+      onPointerLeave={() => setHover(false)}
+      onFocus={() => setFocus(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocus(false);
+      }}
+    >
+      <Banner
+        kind={item.kind ?? 'info'}
+        actions={
+          <>
+            {item.action === undefined ? null : (
+              <Button
+                variant="quiet"
+                onClick={() => {
+                  dismiss(item.id);
+                  item.action?.onAction();
+                }}
+              >
+                {item.action.label}
+              </Button>
+            )}
+            <Button variant="quiet" onClick={() => dismiss(item.id)}>Dismiss</Button>
+          </>
+        }
+      >
+        {item.text}
+      </Banner>
+      {item.autoDismissMs === undefined ? null : <AutoDismiss ms={item.autoDismissMs} paused={hover || focus} onDone={() => dismiss(item.id)} />}
+    </div>
+  );
 }
 
 /** The toasts as banners (the floating region's content, or the phone's notices line when the provider is `folded`). */
@@ -71,36 +124,13 @@ export function ToastItems() {
   return (
     <>
       {items.map((item) => (
-        <div key={item.id} className={styles.toast}>
-          <Banner
-            kind={item.kind ?? 'info'}
-            actions={
-              <>
-                {item.action === undefined ? null : (
-                  <Button
-                    variant="quiet"
-                    onClick={() => {
-                      dismiss(item.id);
-                      item.action?.onAction();
-                    }}
-                  >
-                    {item.action.label}
-                  </Button>
-                )}
-                <Button variant="quiet" onClick={() => dismiss(item.id)}>Dismiss</Button>
-              </>
-            }
-          >
-            {item.text}
-          </Banner>
-          {item.autoDismissMs === undefined ? null : <AutoDismiss ms={item.autoDismissMs} onDone={() => dismiss(item.id)} />}
-        </div>
+        <ToastRow key={item.id} item={item} dismiss={dismiss} />
       ))}
     </>
   );
 }
 
-export function ToastProvider(props: { readonly children: ReactNode; readonly folded?: boolean }) {
+export function ToastProvider(props: { readonly children: ReactNode; readonly folded?: boolean; readonly timers?: ToastTimers }) {
   const [items, setItems] = useState<readonly Item[]>([]);
   const next = useRef(1);
   const dismiss = useCallback((id: number) => setItems((current) => current.filter((item) => item.id !== id)), []);
@@ -114,6 +144,7 @@ export function ToastProvider(props: { readonly children: ReactNode; readonly fo
   const view = useMemo(() => ({ items, dismiss }), [items, dismiss]);
   return (
     <ToastContext.Provider value={api}>
+      <TimerContext.Provider value={props.timers ?? REAL_TIMERS}>
       <ViewContext.Provider value={view}>
         {props.children}
         {props.folded === true ? (
@@ -128,6 +159,7 @@ export function ToastProvider(props: { readonly children: ReactNode; readonly fo
           </div>
         )}
       </ViewContext.Provider>
+      </TimerContext.Provider>
     </ToastContext.Provider>
   );
 }

@@ -151,6 +151,22 @@ describe('live findings (L1, debounced 300 ms) and Save', () => {
     expect(rig.drafts.view().count).toBe(0);
   });
 
+  it('the "Saved" toast closes by itself after 6 seconds (the save state stays in the status line)', async () => {
+    const due: Array<() => void> = [];
+    const ms: number[] = [];
+    const timers = { set: (run: () => void, after: number) => (due.push(run), ms.push(after), due.length), clear: () => undefined };
+    const rig = editorRig();
+    const id = rig.open();
+    const onClose = vi.fn();
+    renderWithToasts(<EditorHost port={rig.port} sessionId={id} open formatTime={utcTime} onClose={onClose} />, timers);
+    type('Canonical name (required)', 'Renamed here');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('Saved')).toBeTruthy();
+    expect(ms).toContain(6_000);
+    act(() => due.forEach((run) => run()));
+    expect(screen.queryByText('Saved')).toBeNull();
+  });
+
   it('after a save, warnings on the record are said in the toast ("Saved, 1 warning")', async () => {
     const rig = editorRig();
     const other = Object.values(rig.store.getState().records.species).find((s) => s.id !== rig.speciesId) as { names: { canonical: string } };

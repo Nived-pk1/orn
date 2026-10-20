@@ -1,0 +1,42 @@
+/**
+ * One open editor (step 6.5a, entry size): builds the editor port (record pickers, the live preview, depictions) where the editor
+ * opens and renders the editor host. It is loaded with `React.lazy` by `editors.tsx`, so the code only an OPEN editor needs
+ * (`record-picker-port`, `editor-port`, the preview builder) is in the editor's chunk and not in the entry.
+ */
+import { useMemo } from 'react';
+import type { RecordRef } from '@/core/schema';
+import { previewOfDraft } from '@/core/graph';
+import { EditorHost } from '@/features/workbench/layer';
+import type { EditorPort, PreviewPort } from '@/features/workbench';
+import { EQUATION_AREA } from '@/render/equation/contracts';
+import { createDepictionBinding } from '@/render/svg';
+import { useApp } from './context';
+import { makeEditorPort } from './editor-port';
+import { createRecordPicker } from './record-picker-port';
+
+export function EditorSession(props: { readonly sessionId: string; readonly formatTime: (iso: string) => string; readonly onClose: () => void }) {
+  const { services, inspector } = useApp();
+  const port = useMemo<EditorPort>(() => {
+    const records = createRecordPicker({
+      search: services.search.search,
+      state: services.store.getState,
+      indexes: inspector.indexes.current,
+      activeExam: () => inspector.ui.exam?.getState().active ?? null,
+    });
+    const openRecord = (ref: RecordRef): void => {
+      inspector.ui.inspector.getState().open(ref);
+      inspector.ui.panels.getState().setInspectorOpen(true);
+    };
+    // the live preview of a reaction draft: the core builds it from the current state and indexes (nothing is stored); it follows the Structures setting through the depiction port
+    const panels = inspector.ui.panels;
+    const preview: PreviewPort = {
+      build: (draft) => previewOfDraft(services.store.getState(), inspector.indexes.current(), draft),
+      binding: inspector.depictions === undefined ? undefined : createDepictionBinding(inspector.depictions, inspector.timers, EQUATION_AREA),
+      facts: inspector.facts,
+      timers: inspector.timers,
+      names: { get: () => panels.getState().equationNames, set: (names) => panels.getState().setEquationNames(names), subscribe: (listener) => panels.subscribe(() => listener()) },
+    };
+    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview });
+  }, [services, inspector]);
+  return <EditorHost port={port} sessionId={props.sessionId} open formatTime={props.formatTime} onClose={props.onClose} />;
+}

@@ -11,7 +11,7 @@ import type { AnyRecord, RecordRef } from '@/core/schema';
 import { parseRecord } from '@/core/validation';
 import type { Finding } from '@/core/validation';
 import { useLayoutMode } from '@/ui/hooks';
-import { Button, Dialog, useToasts } from '@/ui/primitives';
+import { Button, Dialog, RESULT_TOAST_MS, useToasts } from '@/ui/primitives';
 import { ConflictView, DeletedView } from './conflict-view';
 import { DuplicateDialog } from './duplicate-dialog';
 import type { DuplicateOutcome } from './duplicate-contracts';
@@ -142,7 +142,7 @@ export function EditorHost(props: EditorHostProps) {
     if (closing.current) return;
     closing.current = true;
     // dirty: something was changed in this session (or the draft is already stored); a never-edited session is dropped without a word
-    if (entry !== undefined && (entry.canUndo || entry.canRedo || ['saving', 'saved', 'failed'].includes(entry.save.state))) toasts.push({ kind: 'info', text: 'Draft kept' });
+    if (entry !== undefined && (entry.canUndo || entry.canRedo || ['saving', 'saved', 'failed'].includes(entry.save.state))) toasts.push({ kind: 'info', text: 'Draft kept', autoDismissMs: RESULT_TOAST_MS });
     port.release(sessionId);
     onClose();
   }, [entry, onClose, port, sessionId, toasts]);
@@ -174,7 +174,7 @@ export function EditorHost(props: EditorHostProps) {
     if (result.ok) {
       closing.current = true;
       const warnings = target === null ? 0 : port.warningsOf(target);
-      toasts.push({ kind: warnings > 0 ? 'warning' : 'info', text: warnings > 0 ? `Saved, ${warnings} ${warnings === 1 ? 'warning' : 'warnings'}` : 'Saved' });
+      toasts.push({ kind: warnings > 0 ? 'warning' : 'info', text: warnings > 0 ? `Saved, ${warnings} ${warnings === 1 ? 'warning' : 'warnings'}` : 'Saved', autoDismissMs: RESULT_TOAST_MS });
       onClose();
       return;
     }
@@ -234,7 +234,7 @@ export function EditorHost(props: EditorHostProps) {
               setAsking(false);
               closing.current = true;
               void port.discard(sessionId).then(() => {
-                toasts.push({ kind: 'info', text: 'Draft discarded' });
+                toasts.push({ kind: 'info', text: 'Draft discarded', autoDismissMs: RESULT_TOAST_MS });
                 onClose();
               });
             }}

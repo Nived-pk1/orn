@@ -6,12 +6,6 @@
  */
 import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from 'react';
 import type { RecordRef } from '@/core/schema';
-import { previewOfDraft } from '@/core/graph';
-import type { EditorPort, PreviewPort } from '@/features/workbench';
-import { EQUATION_AREA } from '@/render/equation/contracts';
-import { createDepictionBinding } from '@/render/svg';
-import { makeEditorPort } from './editor-port';
-import { createRecordPicker } from './record-picker-port';
 import { useSubscribable } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
 import { useApp } from './context';
@@ -19,7 +13,8 @@ import { createLocalTimeFormatter } from './local-time';
 import { EditorsContext, type EditorsApi } from './drafts-ui';
 
 const DraftsDialog = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
-const EditorHost = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.EditorHost })));
+// the session builds its port (pickers, preview) where it opens, so that code is in the editor's chunk and not in the entry (step 6.5a)
+const EditorSession = lazy(() => import('./editor-session').then((m) => ({ default: m.EditorSession })));
 
 const machineTime = createLocalTimeFormatter();
 
@@ -34,7 +29,7 @@ export function editReasonOf(mode: string | null): string | undefined {
 }
 
 export function EditorsProvider(props: { readonly children: ReactNode }) {
-  const { services, inspector, formatTime: injected } = useApp();
+  const { services, formatTime: injected } = useApp();
   const formatTime = injected ?? machineTime;
   const toasts = useToasts();
   const status = useSubscribable(services.status);
@@ -67,28 +62,6 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
     }),
     [reason, services, show],
   );
-  const port = useMemo<EditorPort>(() => {
-    const records = createRecordPicker({
-      search: services.search.search,
-      state: services.store.getState,
-      indexes: inspector.indexes.current,
-      activeExam: () => inspector.ui.exam?.getState().active ?? null,
-    });
-    const openRecord = (ref: RecordRef): void => {
-      inspector.ui.inspector.getState().open(ref);
-      inspector.ui.panels.getState().setInspectorOpen(true);
-    };
-    // the live preview of a reaction draft: the core builds it from the current state and indexes (nothing is stored); it follows the Structures setting through the depiction port
-    const panels = inspector.ui.panels;
-    const preview: PreviewPort = {
-      build: (draft) => previewOfDraft(services.store.getState(), inspector.indexes.current(), draft),
-      binding: inspector.depictions === undefined ? undefined : createDepictionBinding(inspector.depictions, inspector.timers, EQUATION_AREA),
-      facts: inspector.facts,
-      timers: inspector.timers,
-      names: { get: () => panels.getState().equationNames, set: (names) => panels.getState().setEquationNames(names), subscribe: (listener) => panels.subscribe(() => listener()) },
-    };
-    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview });
-  }, [services, inspector]);
   return (
     <EditorsContext.Provider value={api}>
       {props.children}
@@ -105,7 +78,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       ) : null}
       {editingId === null ? null : (
         <Suspense fallback={null}>
-          <EditorHost port={port} sessionId={editingId} open formatTime={formatTime} onClose={() => setEditingId(null)} />
+          <EditorSession sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} />
         </Suspense>
       )}
     </EditorsContext.Provider>
