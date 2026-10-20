@@ -8,6 +8,7 @@ import type { InspectorPorts } from '@/features/inspector';
 import type { NavigatorPorts } from '@/features/navigator';
 import type { PanelsStore } from '@/ui/state';
 import type { TimeFormatter } from './local-time';
+import type { DatasetInfo } from './dataset-types';
 
 /** What the window needs from the services (so a test can fake only these). */
 export type WindowServices = Pick<AppServices, 'store' | 'status' | 'flows' | 'saveEverythingNow' | 'retryReplica' | 'retryEngine' | 'search' | 'drafts'> & Partial<Pick<AppServices, 'searchSync' | 'draftChecks' | 'chem' | 'duplicateCheck' | 'assets' | 'persistence'>>;
@@ -16,8 +17,10 @@ export type DemoLoad = { readonly ok: true; readonly blob: Blob; readonly fileNa
 
 export interface AppContextValue {
   readonly services: WindowServices;
-  /** The bundled demo file, fetched from this origin. */
+  /** The dataset this build ships (the published study dataset or the demo), fetched from this origin. */
   loadDemo(): Promise<DemoLoad>;
+  /** Which dataset that is, and what this browser last loaded (studio step E4). Absent: the demo. */
+  readonly dataset?: DatasetInfo;
   /** The panels store (inspector width and open state, "Start empty" dismissed), persisted in `uiState`. */
   readonly panels: PanelsStore;
   /** What the navigator needs (step 5.5a): the store, indexes, layout service, text measurer, UI stores and timers. */

@@ -4,7 +4,7 @@
  * but RDKit's glue chunk, the glue chunk mentioned by a chunk that is not the chem worker, RDKit merged into one of our chunks.
  */
 import { spawnSync } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -55,7 +55,7 @@ const good = (): Files => ({
   'robots.txt': 'User-agent: *\nDisallow: /\n',
 });
 
-function run(files: Files): { status: number | null; out: string } {
+function run(files: Files, options: { edition?: string; published?: { file: string; bytes: Buffer; manifestSha?: string } } = {}): { status: number | null; out: string } {
   const root = mkdtempSync(join(tmpdir(), 'orn-build-'));
   dirs.push(root);
   const dist = join(root, 'dist');
@@ -67,7 +67,13 @@ function run(files: Files): { status: number | null; out: string } {
   }
   const doc = join(root, 'SECURITY.md');
   writeFileSync(doc, `# Security\n\n## 4. Content-Security-Policy\n\nInjected: \`${POLICY}\`.\n\n## 5. Delivery\n\nnot \`default-src 'none'\`\n`);
-  const result = spawnSync(process.execPath, [SCRIPT, dist, doc], { encoding: 'utf8' });
+  const publishedDir = join(root, 'published');
+  if (options.published !== undefined) {
+    mkdirSync(publishedDir, { recursive: true });
+    writeFileSync(join(publishedDir, options.published.file), options.published.bytes);
+    writeFileSync(join(publishedDir, 'manifest.json'), JSON.stringify({ manifestVersion: 1, file: options.published.file, sha256: options.published.manifestSha ?? createHash('sha256').update(options.published.bytes).digest('hex') }));
+  }
+  const result = spawnSync(process.execPath, [SCRIPT, dist, doc, ...(options.edition === undefined ? [] : [options.edition, publishedDir])], { encoding: 'utf8' });
   return { status: result.status, out: result.stdout + result.stderr };
 }
 
@@ -141,6 +147,43 @@ describe('scripts/check-build.mjs', () => {
     const changed = run({ 'assets/demo.orn-d1.json': Buffer.concat([DEMO, Buffer.from(' ')]) });
     expect(changed.status).toBe(1);
     expect(changed.out).toContain('FAIL assets/demo.orn-d1.json: differs from data/seed/demo.orn.json');
+  });
+
+  it('a Study build with a PUBLISHED dataset ships that file byte for byte and NOT the demo; the Studio build still ships the demo (studio step E4)', () => {
+    const published = { file: 'dataset.orn.json', bytes: Buffer.from('{"published":true}') };
+    const without = { 'assets/demo.orn-d1.json': null };
+    const study = run({ ...without, 'assets/dataset.orn-p1.json': published.bytes }, { edition: 'study', published });
+    expect(study.status, study.out).toBe(0);
+    expect(study.out).toContain('study dataset: assets/dataset.orn-p1.json');
+    const pkg = Buffer.from([0x50, 0x4b, 3, 4, 9]);
+    expect(run({ ...without, 'assets/dataset-p2.ornpkg': pkg }, { edition: 'study', published: { file: 'dataset.ornpkg', bytes: pkg } }).status).toBe(0);
+    const studio = run({}, { edition: 'studio', published });
+    expect(studio.status, studio.out).toBe(0);
+    expect(studio.out).toContain('demo dataset: assets/demo.orn-d1.json');
+  });
+
+  it('FAILS a Study build with a published dataset when the demo is still shipped, the dataset is missing or changed, or the manifest does not match the file', () => {
+    const published = { file: 'dataset.orn.json', bytes: Buffer.from('{"published":true}') };
+    const demoToo = run({ 'assets/dataset.orn-p1.json': published.bytes }, { edition: 'study', published });
+    expect(demoToo.status).toBe(1);
+    expect(demoToo.out).toContain('the demo dataset is shipped although a study dataset is published');
+    const missing = run({ 'assets/demo.orn-d1.json': null }, { edition: 'study', published });
+    expect(missing.status).toBe(1);
+    expect(missing.out).toContain('expected exactly one copy of the study dataset, found 0');
+    const changed = run({ 'assets/demo.orn-d1.json': null, 'assets/dataset.orn-p1.json': Buffer.from('{}') }, { edition: 'study', published });
+    expect(changed.status).toBe(1);
+    expect(changed.out).toContain('FAIL assets/dataset.orn-p1.json: differs from data/published/dataset.orn.json');
+    const stale = run({ 'assets/demo.orn-d1.json': null, 'assets/dataset.orn-p1.json': published.bytes }, { edition: 'study', published: { ...published, manifestSha: 'f'.repeat(64) } });
+    expect(stale.status).toBe(1);
+    expect(stale.out).toContain('the manifest sha256 is not the sha256 of data/published/dataset.orn.json');
+  });
+
+  it('a Study build with nothing published ships the demo as before, and ships no study dataset file', () => {
+    const none = run({}, { edition: 'study' });
+    expect(none.status, none.out).toBe(0);
+    const stray = run({ 'assets/dataset.orn-p1.json': Buffer.from('{}') }, { edition: 'study' });
+    expect(stray.status).toBe(1);
+    expect(stray.out).toContain('a study dataset file is shipped although none is published');
   });
 
   it('fails when the page policy differs from SECURITY section 4, naming index.html', () => {

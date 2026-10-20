@@ -38,6 +38,8 @@ import { EDITING, editionMarker } from "@/app/edition";
 import { useEditors } from "./drafts-ui";
 import { EditorsProvider } from "./editors";
 import { editorCommandDeps } from "./editor-commands";
+import { DatasetProvider, datasetWordsOf, useDatasetInfo } from "./dataset-info";
+import { StudyUpdateNotice, StudyUpdateProvider } from "./study-update";
 import { HistoryKeys } from "./history-keys";
 import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
 import { RecordCounts } from "./record-counts";
@@ -149,6 +151,7 @@ export function Window() {
   const layout = useLayoutMode();
   return (
     <ToastProvider folded={layout === 'phone'}>
+      <DatasetProvider>
       {EDITING ? (
         <EditorsProvider>
           <WindowContent />
@@ -156,6 +159,7 @@ export function Window() {
       ) : (
         <WindowContent />
       )}
+      </DatasetProvider>
     </ToastProvider>
   );
 }
@@ -166,6 +170,7 @@ function WindowContent() {
   const { actions: imports, element: importElement } = useImportActions();
   const { actions: exports, element: exportElement } = useExportActions();
   const status = useSubscribable(services.status);
+  const datasetInfo = useDatasetInfo();
   const [asking, setAsking] = useState(false);
   const [searching, setSearching] = useState(false);
   // the palette is a lazy chunk: fetch it once the first view is drawn and the browser is idle, so the first Ctrl/Cmd+K opens at once
@@ -220,6 +225,7 @@ function WindowContent() {
     writerReason: status.reason,
     importReason: imports.reason,
     askReplace: () => setAsking(true),
+    replaceTitle: datasetWordsOf(datasetInfo).replaceTitle,
     undoImport: imports.undoImport,
     pickFile: imports.pick,
     openExport: exports.open,
@@ -273,7 +279,7 @@ function WindowContent() {
     [width, open, panels],
   );
   return (
-    <>
+    <StudyUpdateProvider load={imports.loadDemo} hasData={hasData}>
       {EDITING ? <HistoryKeys history={services.store} /> : null}
       <ExportOpenContext.Provider value={exports.open}>
       <AboutOpenContext.Provider value={() => setAbout(true)}>
@@ -302,6 +308,7 @@ function WindowContent() {
           banners={
             <ErrorBoundary label="The notices panel">
               <Banners />
+              <StudyUpdateNotice />
               <BootLines />
             </ErrorBoundary>
           }
@@ -342,6 +349,6 @@ function WindowContent() {
       </NavigatorProvider>
       </AboutOpenContext.Provider>
       </ExportOpenContext.Provider>
-    </>
+    </StudyUpdateProvider>
   );
 }

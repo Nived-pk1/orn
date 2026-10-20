@@ -3,12 +3,14 @@ import { useSubscribable } from '@/ui/hooks';
 import { Button, Skeleton } from '@/ui/primitives';
 import { useAboutOpen } from './about-preview';
 import { useApp } from './context';
+import { datasetWordsOf, useDatasetInfo } from './dataset-info';
 import type { ImportActions } from './use-import-actions';
 
 export function FirstRun(props: { readonly imports: ImportActions; readonly onStartEmpty: () => void }) {
   const { services } = useApp();
   const status = useSubscribable(services.status);
   const { imports } = props;
+  const words = datasetWordsOf(useDatasetInfo());
   const about = useAboutOpen() ?? (() => undefined);
   const writable = status.mode === 'writer' || status.mode === 'session_only';
   const waiting = status.stage === 'booting' || status.mode === null;
@@ -16,7 +18,7 @@ export function FirstRun(props: { readonly imports: ImportActions; readonly onSt
     <section aria-label="First run">
       <h2>Get started</h2>
       <p>
-        Preview - the chemistry is a demo and not yet checked.{' '}
+        {words.lead}{' '}
         <Button variant="quiet" onClick={about}>
           About this preview
         </Button>
@@ -30,7 +32,7 @@ export function FirstRun(props: { readonly imports: ImportActions; readonly onSt
         <>
           <p>
             <Button variant="primary" disabled={imports.busy} onClick={imports.loadDemo}>
-              Load demo dataset
+              {words.load}
             </Button>{' '}
             <Button disabled={imports.busy} onClick={imports.pick}>
               Import a file

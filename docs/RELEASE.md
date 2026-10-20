@@ -63,7 +63,8 @@ The Study site ships ONE dataset: the published one if there is one, else the bu
 1. In Studio, export the data you want to publish: `.orn.json` with the pictures embedded ("Inside the file"), or an `.ornpkg`.
 2. `npm run publish:dataset -- <file>`. It runs the SAME import pipeline in Node (parse, envelope, L1-L3 validation, assets with magic bytes
    and SHA-256), refuses on any L1 ERROR or any rejected asset or a missing file, prints the counts and the findings, then copies the file to
-   `data/published/` with a small manifest (`sha256`, `publishedAt`, record counts).
+   `data/published/` (`dataset.orn.json` or `dataset.ornpkg`) with `manifest.json` (`sha256`, `publishedAt`, record counts). A refusal writes nothing
+   and leaves the previous dataset as it was. `ORN_NOW` (an ISO time) sets the published time for a repeatable manifest.
 3. Commit `data/published/`, `npm run build:smoke`, then `npm run deploy:study`.
 4. A visitor's first run offers "Load the study dataset" (the demo words when nothing is published). A visitor who loaded an earlier version
    is told at their next visit: "A newer version of the study dataset is available. Load it ..." with "Load it" (the existing replace import,

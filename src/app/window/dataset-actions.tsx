@@ -7,6 +7,7 @@
 import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import { useApp } from './context';
+import { datasetWordsOf, useDatasetInfo } from './dataset-info';
 import type { ExportActions } from './use-export-actions';
 import type { ImportActions } from './use-import-actions';
 
@@ -22,12 +23,13 @@ export const undoUnavailableReason = (mode: string | null, reason: string | null
 
 /** The confirm step of "Replace with the demo dataset": rendered once by the window, so the palette command and the button share it. */
 export function ReplaceDialog(props: { readonly open: boolean; readonly onClose: () => void; readonly imports: ImportActions }) {
+  const words = datasetWordsOf(useDatasetInfo());
   const { imports, onClose } = props;
   return (
     <Dialog
       open={props.open}
       onClose={onClose}
-      title="Replace with the demo dataset"
+      title={words.replaceTitle}
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
@@ -43,7 +45,7 @@ export function ReplaceDialog(props: { readonly open: boolean; readonly onClose:
         </>
       }
     >
-      <p>The current data is replaced by the bundled demo dataset. Undo import brings the current data back (a snapshot is taken first).</p>
+      <p>{words.replaceBody}</p>
     </Dialog>
   );
 }
@@ -52,6 +54,7 @@ export function DatasetActions(props: { readonly imports: ImportActions; readonl
   const { services } = useApp();
   const status = useSubscribable(services.status);
   const { imports } = props;
+  const words = datasetWordsOf(useDatasetInfo());
   const busy = imports.busy ? 'another operation is running' : undefined;
   const blocked = unavailableReason(status.mode, status.reason) ?? busy;
   const undoBlocked = undoUnavailableReason(status.mode, status.reason) ?? busy;
@@ -66,7 +69,7 @@ export function DatasetActions(props: { readonly imports: ImportActions; readonl
     <section aria-label="Replace the data">
       <h3>Replace the data</h3>
       <p>
-        <Button {...(blocked === undefined ? { onClick: props.onAskReplace } : { unavailable: blocked })}>Replace with the demo dataset</Button>{' '}
+        <Button {...(blocked === undefined ? { onClick: props.onAskReplace } : { unavailable: blocked })}>{words.replaceTitle}</Button>{' '}
         <Button {...(undoBlocked === undefined ? { onClick: imports.undoImport } : { unavailable: undoBlocked })}>Undo import</Button>
       </p>
     </section>

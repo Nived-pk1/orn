@@ -59,7 +59,7 @@ export interface ImportModel {
   /** The user chose a file (picker, drop, palette, first run). */
   openFile(file: File): void;
   /** Any blob; `auto`: apply without the preview step when nothing blocks (the bundled demo). */
-  openBlob(blob: Blob, fileName: string, options?: { readonly auto?: boolean }): void;
+  openBlob(blob: Blob, fileName: string, options?: { readonly auto?: boolean; readonly onApplied?: () => void }): void;
   change(change: PlanChange): void;
   confirm(): void;
   /** Cancel, or the dialog's Esc: whatever is open ends and nothing is changed (a stage past the commit cannot be cancelled). */
@@ -79,6 +79,8 @@ interface Source {
   readonly blob: Blob;
   readonly fileName: string;
   readonly auto: boolean;
+  /** Called once when this file's import was applied (the window remembers which study dataset a browser loaded). */
+  readonly onApplied?: (() => void) | undefined;
 }
 
 const CLOSED: ImportState = { phase: 'closed', fileName: '', inProcess: false, revising: false, cancellable: false };
@@ -143,6 +145,7 @@ export function createImportModel(ports: DataExchangePorts, options?: { readonly
       const words = appliedWords({ written: totals.written, skipped: totals.skipped, fileName, saved: answer.saved, sessionOnly: answer.sessionOnly, saveError: answer.save?.lastError ?? null });
       const extra = [...answer.notes, ...(answer.reportSaved ? [] : [`The import report could not be stored${answer.reportError === undefined ? '' : ` (${answer.reportError})`}.`])];
       set({ phase: 'closed' });
+      source?.onApplied?.();
       announce(words.kind === 'info' && extra.length > 0 ? 'warning' : words.kind, [words.text, ...extra.map((line) => (/[.!?]$/.test(line) ? line : `${line}.`))].join(' '), true);
       return;
     }
@@ -290,7 +293,7 @@ export function createImportModel(ports: DataExchangePorts, options?: { readonly
   return {
     store,
     openFile: (file) => start({ blob: file, fileName: file.name, auto: false }),
-    openBlob: (blob, fileName, options) => start({ blob, fileName, auto: options?.auto === true }),
+    openBlob: (blob, fileName, options) => start({ blob, fileName, auto: options?.auto === true, onApplied: options?.onApplied }),
     change: (change) => void runRevise(change),
     confirm() {
       const { phase, plan, fileName, inProcess, revising } = store.getState();

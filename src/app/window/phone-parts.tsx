@@ -10,6 +10,7 @@ import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView, us
 import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
 import { EDITING } from '@/app/edition';
+import { StudyUpdateNotice, useStudyUpdateDue } from './study-update';
 import { useDraftsView, useEditors } from './drafts-ui';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 import { alertOf } from './phone-alert';
@@ -138,7 +139,8 @@ export function PhoneNotices() {
   // the toasts (the import notice, the storage warning...) are counted and listed here on a phone; none floats over the cards
   const toastCount = useToastView()?.items.length ?? 0;
   const draftsCount = draftsLineOf(useDraftsView().count) === null ? 0 : 1;
-  const count = bannersOf(status, { storageNoticeDismissed }).length + bootLinesOf(status.notices).length + draftsCount + toastCount;
+  const updateCount = useStudyUpdateDue() ? 1 : 0;
+  const count = bannersOf(status, { storageNoticeDismissed }).length + bootLinesOf(status.notices).length + draftsCount + updateCount + toastCount;
   if (count === 0) return null;
   return (
     <div className={styles.notices}>
@@ -148,6 +150,7 @@ export function PhoneNotices() {
       {open ? (
         <ErrorBoundary label="The notices panel">
           <Banners />
+          <StudyUpdateNotice />
           <BootLines />
           <ToastItems />
         </ErrorBoundary>

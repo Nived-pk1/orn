@@ -8,6 +8,7 @@ import { createImportModel, ImportNotices, LazyImportScreen, type ImportModel } 
 import { useSubscribable } from '@/ui/hooks';
 import { useStore } from 'zustand';
 import { useApp } from './context';
+import { datasetWordsOf, useDatasetInfo } from './dataset-info';
 import { createImportPorts, importReason } from './import-port';
 import styles from './window.module.css';
 
@@ -27,6 +28,8 @@ const ACCEPT = '.json,.orn,.ornpkg,.zip,application/json';
 
 export function useImportActions(): { readonly actions: ImportActions; readonly element: ReactNode } {
   const { services, loadDemo: fetchDemo, navigator } = useApp();
+  const dataset = useDatasetInfo();
+  const words = datasetWordsOf(dataset);
   const status = useSubscribable(services.status);
   const ports = useMemo(() => createImportPorts(services, navigator.log), [services, navigator.log]);
   const model = useMemo(() => createImportModel(ports), [ports]);
@@ -43,16 +46,17 @@ export function useImportActions(): { readonly actions: ImportActions; readonly 
   const loadDemo = useCallback(() => {
     const why = model.unavailable();
     if (why !== undefined) {
-      model.say('warning', `The demo dataset was not loaded: ${why}.`);
+      model.say('warning', `The ${words.noun} was not loaded: ${why}.`);
       return;
     }
     setFetching(true);
     void fetchDemo().then((demo) => {
       setFetching(false);
-      if (demo.ok) model.openBlob(demo.blob, demo.fileName, { auto: true });
-      else model.say('warning', `The demo dataset could not be loaded: ${demo.message}`);
+      if (!demo.ok) model.say('warning', `The ${words.noun} could not be loaded: ${demo.message}`);
+      else if (dataset?.kind === 'published') model.openBlob(demo.blob, demo.fileName, { auto: true, onApplied: () => dataset.remember(dataset.sha256) });
+      else model.openBlob(demo.blob, demo.fileName, { auto: true });
     });
-  }, [model, fetchDemo]);
+  }, [model, fetchDemo, dataset, words.noun]);
 
   // A file dropped on the window opens the same screen. The browser's own "open this file" is always prevented; a drop that cannot be
   // taken says why, and extra files are said out loud (one file at a time).

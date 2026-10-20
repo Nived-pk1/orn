@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { APPLIED_OK, blockedPlan, conflictingPlan, fakePorts, plan } from '@/test-support/data-exchange-kit';
 import { createImportModel } from './import-model';
 
@@ -14,6 +14,28 @@ function start(answer: unknown = { ok: true, plan: plan(), inProcess: false }) {
   const model = createImportModel(ports);
   return { ports, model, state: () => model.store.getState() };
 }
+
+describe('onApplied (the window remembers which study dataset a browser loaded)', () => {
+  it('is called once when the import of the file was applied, and not when the apply was refused or the user cancelled', async () => {
+    const done = start();
+    const applied = vi.fn();
+    done.model.openBlob(new Blob(['{}']), 'dataset.orn.json', { auto: true, onApplied: applied });
+    await settle();
+    expect(applied).toHaveBeenCalledTimes(1);
+    const refused = start();
+    refused.ports.apply.mockResolvedValue({ ok: false, code: 'BLOCKED', message: 'no' });
+    const never = vi.fn();
+    refused.model.openBlob(new Blob(['{}']), 'dataset.orn.json', { auto: true, onApplied: never });
+    await settle();
+    expect(never).not.toHaveBeenCalled();
+    const preview = start();
+    const cancelled = vi.fn();
+    preview.model.openBlob(new Blob(['{}']), 'dataset.orn.json', { onApplied: cancelled });
+    await settle();
+    preview.model.cancel();
+    expect(cancelled).not.toHaveBeenCalled();
+  });
+});
 
 describe('choose and preview', () => {
   it('reads the file, then shows the preview; nothing is applied (INV-21)', async () => {

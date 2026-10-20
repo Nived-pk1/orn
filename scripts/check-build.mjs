@@ -18,7 +18,8 @@
 //      page's <meta> policy plus "frame-ancestors 'none'" and nothing else, and X-Robots-Tag noindex; one rule matches the emitted chem
 //      worker file and no other file, starts with "! Content-Security-Policy" and its policy is the page policy with 'unsafe-eval' added
 //      to script-src alone (ADR-035); no other rule allows 'unsafe-eval'; dist/robots.txt disallows everything.
-// Usage: node scripts/check-build.mjs [distDir = dist] [securityDoc = docs/SECURITY.md]
+// Usage: node scripts/check-build.mjs [distDir = dist] [securityDoc = docs/SECURITY.md] [edition] [publishedDir = data/published]
+import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -129,12 +130,38 @@ for (const file of js) {
 }
 report.push(`scanned ${js.length} JS chunk(s) for eval( / new Function / Function(`);
 
-// 5. the bundled demo dataset ("Load demo dataset", step 5.1d) is served from the origin and is the repo file, byte for byte
+// 5. the dataset the build ships is served from the origin and is the repo file, byte for byte (step 5.1d; studio step E4). The Study edition
+// ships the PUBLISHED dataset (data/published/, its manifest naming the file) when there is one and then NOT the demo; every other build
+// (Studio, or Study with nothing published) ships the bundled demo and no study dataset file.
+const publishedDir = process.argv[5] ?? process.env.ORN_PUBLISHED_DIR ?? fileURLToPath(new URL('../data/published', import.meta.url));
+const manifestPath = join(publishedDir, 'manifest.json');
+const shipsPublished = process.argv[4] === 'study' && existsSync(manifestPath);
 const demoSource = fileURLToPath(new URL('../data/seed/demo.orn.json', import.meta.url));
 const demoCopies = all.filter((path) => /^assets\/demo\.orn-[^/]+\.json$/.test(rel(path)));
-if (demoCopies.length !== 1) fail('assets/demo.orn-<hash>.json', `expected exactly one copy of the demo dataset, found ${demoCopies.length}`);
-else if (!readFileSync(demoCopies[0]).equals(readFileSync(demoSource))) fail(rel(demoCopies[0]), 'differs from data/seed/demo.orn.json');
-else report.push(`demo dataset: ${rel(demoCopies[0])} (${kB(statSync(demoCopies[0]).size)}) is identical to data/seed/demo.orn.json`);
+const studyCopies = all.filter((path) => /^assets\/dataset(\.orn)?-[^/]+\.(json|ornpkg)$/.test(rel(path)));
+if (shipsPublished) {
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  } catch (error) {
+    fail('data/published/manifest.json', `is not readable JSON (${error instanceof Error ? error.message : String(error)})`);
+  }
+  const source = manifest === undefined || typeof manifest.file !== 'string' ? undefined : join(publishedDir, manifest.file);
+  if (manifest !== undefined && (source === undefined || !existsSync(source))) fail('data/published/manifest.json', 'names a dataset file that is not there');
+  else if (source !== undefined) {
+    const sourceBytes = readFileSync(source);
+    if (createHash('sha256').update(sourceBytes).digest('hex') !== manifest.sha256) fail('data/published/manifest.json', `the manifest sha256 is not the sha256 of data/published/${manifest.file}`);
+    if (demoCopies.length > 0) fail(rel(demoCopies[0]), 'the demo dataset is shipped although a study dataset is published');
+    if (studyCopies.length !== 1) fail('assets/dataset-<hash>', `expected exactly one copy of the study dataset, found ${studyCopies.length}`);
+    else if (!readFileSync(studyCopies[0]).equals(sourceBytes)) fail(rel(studyCopies[0]), `differs from data/published/${manifest.file}`);
+    else report.push(`study dataset: ${rel(studyCopies[0])} (${kB(statSync(studyCopies[0]).size)}) is identical to data/published/${manifest.file}`);
+  }
+} else {
+  if (demoCopies.length !== 1) fail('assets/demo.orn-<hash>.json', `expected exactly one copy of the demo dataset, found ${demoCopies.length}`);
+  else if (!readFileSync(demoCopies[0]).equals(readFileSync(demoSource))) fail(rel(demoCopies[0]), 'differs from data/seed/demo.orn.json');
+  else report.push(`demo dataset: ${rel(demoCopies[0])} (${kB(statSync(demoCopies[0]).size)}) is identical to data/seed/demo.orn.json`);
+  if (studyCopies.length > 0) fail(rel(studyCopies[0]), 'a study dataset file is shipped although none is published');
+}
 
 // 6. lazy chunks (step 5.7): rarely used code is its own chunk, never part of the initial load, and (being JS chunks) scanned in 4
 // 2026-10-13 (5.10a review): legacy converter is static in the compute worker; WebKit re-evaluated the worker entry when a

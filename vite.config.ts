@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
@@ -109,9 +109,37 @@ function moduleReport(write: boolean): Plugin {
   };
 }
 
+/**
+ * `virtual:orn-dataset` (studio step E4): the dataset this build ships, so only that file is emitted as an asset. Study with a published
+ * dataset (`data/published/manifest.json`, written by `npm run publish:dataset`) ships it, with its sha256 and time; every other build
+ * (Studio, or Study with nothing published) ships the bundled demo.
+ */
+function datasetModule(): Plugin {
+  const id = 'virtual:orn-dataset';
+  // ORN_PUBLISHED_DIR: where the published dataset is (the e2e builds the Study site over a fixture it makes; default data/published)
+  const publishedDir = resolve(process.cwd(), process.env.ORN_PUBLISHED_DIR ?? 'data/published');
+  const manifestPath = resolve(publishedDir, 'manifest.json');
+  return {
+    name: 'orn-dataset',
+    resolveId: (source) => (source === id ? `\0${id}` : undefined),
+    load(loaded) {
+      if (loaded !== `\0${id}`) return undefined;
+      const published = edition === 'study' && existsSync(manifestPath);
+      if (!published) {
+        const demo = JSON.stringify(`${resolve(process.cwd(), 'data', 'seed', 'demo.orn.json')}?url`);
+        return `import url from ${demo};\nexport const dataset = { kind: 'demo', url, fileName: 'demo.orn.json' };\n`;
+      }
+      this.addWatchFile(manifestPath);
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as { file: string; sha256: string; publishedAt: string };
+      const file = JSON.stringify(`${resolve(publishedDir, manifest.file)}?url`);
+      return `import url from ${file};\nexport const dataset = { kind: 'published', url, fileName: ${JSON.stringify(manifest.file)}, sha256: ${JSON.stringify(manifest.sha256)}, publishedAt: ${JSON.stringify(manifest.publishedAt)} };\n`;
+    },
+  };
+}
+
 export default defineConfig({
   define: { __ORN_VERSION__: JSON.stringify(packageVersion), __ORN_COMMIT__: JSON.stringify(shortCommit()), __ORN_EDITION__: JSON.stringify(edition) },
-  plugins: [react(), contentSecurityPolicy(), moduleReport(true)],
+  plugins: [react(), contentSecurityPolicy(), datasetModule(), moduleReport(true)],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   worker: { format: 'es', rollupOptions: { output: workerOutput }, plugins: () => [moduleReport(false)] },
   build: { target: 'es2022', sourcemap: false, outDir, rollupOptions: { treeshake: { moduleSideEffects: (id) => !(edition === 'study' && isEditorModule(id)) } } },

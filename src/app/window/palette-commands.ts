@@ -18,6 +18,8 @@ export interface CommandDeps {
   readonly writerReason: string | null;
   /** Why an import cannot start now (undefined: it can). */
   readonly importReason: string | undefined;
+  /** The title of the replace command ("Replace with the demo dataset" or "... the study dataset"). Absent: the demo's. */
+  readonly replaceTitle?: string | undefined;
   askReplace(): void;
   undoImport(): void;
   pickFile(): void;
@@ -98,7 +100,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
   return [
     withReason({ id: 'import-file', title: 'Import a file...', keywords: ['import', 'open', 'file', 'v6', 'load', 'package'], run: deps.pickFile }, importReason),
     { id: 'export', title: 'Export...', keywords: ['export', 'backup', 'save', 'download', 'share', 'package'], run: deps.openExport },
-    withReason({ id: 'replace-demo', title: 'Replace with the demo dataset', keywords: ['load', 'import', 'demo'], run: deps.askReplace }, importReason),
+    withReason({ id: 'replace-demo', title: deps.replaceTitle ?? 'Replace with the demo dataset', keywords: ['load', 'import', 'demo', 'study'], run: deps.askReplace }, importReason),
     withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, undoReason),
     ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit the selected record', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
     ...(deps.newSpecies === undefined ? [] : [withReason({ id: 'new-species', title: 'New species', keywords: ['create', 'add', 'compound', 'author', 'workbench', 'draft'], run: deps.newSpecies.run }, deps.newSpecies.reason)]),
