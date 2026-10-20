@@ -1,11 +1,12 @@
 /**
- * The reaction form (step 6.3a decision D1): Identity, Participants, Stages, Review, and the read-only summaries of what
+ * The reaction form (step 6.3a decision D1; conditions and variants step 6.4a): Identity, Participants, Stages (with their conditions), Condition variants, Review, and the read-only summaries of what
  * this editor does not edit yet. Collapsible and keyboard-navigable (SectionFrame); a phone starts with the long sections closed.
  */
 import { ReactionIdentitySection } from './reaction-identity';
 import { ParticipantsSection } from './reaction-participants';
 import { StagesSection } from './reaction-stages';
-import { ClassificationReadOnlySection, ConditionsReadOnlySection, ReactionNotesReadOnlySection } from './reaction-readonly';
+import { VariantsSection } from './reaction-variants';
+import { ClassificationReadOnlySection, OutcomesReadOnlySection, ReactionNotesReadOnlySection } from './reaction-readonly';
 import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
@@ -33,8 +34,11 @@ export function ReactionForm(props: ReactionFormProps) {
       <SectionFrame id="stages" title="Stages">
         <StagesSection {...common} {...picker} newId={props.newId} />
       </SectionFrame>
-      <SectionFrame id="conditions" title="Conditions and outcomes" initiallyOpen={open}>
-        <ConditionsReadOnlySection draft={props.draft} />
+      <SectionFrame id="variants" title="Condition variants" initiallyOpen={open}>
+        <VariantsSection {...common} newId={props.newId} />
+      </SectionFrame>
+      <SectionFrame id="outcomes" title="Outcomes" initiallyOpen={open}>
+        <OutcomesReadOnlySection draft={props.draft} />
       </SectionFrame>
       <SectionFrame id="classification" title="Mechanism and classification" initiallyOpen={false}>
         <ClassificationReadOnlySection draft={props.draft} />
