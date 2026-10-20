@@ -52,6 +52,40 @@ function renderShell(over: { pane?: InspectorPane; onModeChange?: (id: string) =
   );
 }
 
+describe('the edition marker (studio step)', () => {
+  const withMarker = (marker?: string, phone = false) => (
+    <Shell
+      title="Organic Reaction Navigator"
+      topBar={null}
+      modes={MODES}
+      activeMode="navigator"
+      onModeChange={vi.fn()}
+      banners={null}
+      canvas={<p>c</p>}
+      inspectorTitle="Inspector"
+      inspector={<p>i</p>}
+      pane={pane()}
+      statusBar={null}
+      {...(marker === undefined ? {} : { marker })}
+      {...(phone ? { phone: { bar: <span>bar</span>, notices: null, alert: null, tabs: null } } : {})}
+    />
+  );
+  it('shows the marker beside the title, outside the h1, on a desktop; absent without one', () => {
+    viewport(1400);
+    const { unmount } = render(withMarker('Studio'));
+    expect(within(screen.getByRole('banner')).getByText('Studio')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeTruthy();
+    unmount();
+    render(withMarker());
+    expect(within(screen.getByRole('banner')).queryByText('Studio')).toBeNull();
+  });
+  it('shows it on a phone too, beside the short title', () => {
+    viewport(400);
+    render(withMarker('Studio', true));
+    expect(within(screen.getByRole('banner')).getByText('Studio')).toBeTruthy();
+  });
+});
+
 describe('the shell frame', () => {
   it('has the six regions: heading and top bar, modes, banners, main canvas, the inspector, the status bar', () => {
     renderShell();

@@ -34,10 +34,10 @@ import { MODES, NAVIGATOR_MODE, WORKBENCH_MODE } from "./modes";
 import { WorkbenchPage } from "./workbench-page";
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
-import { hasNames } from "@/core/editing";
-import { currentOf } from "@/ui/state";
-import { useEditors, type EditorsApi } from "./drafts-ui";
+import { EDITING, editionMarker } from "@/app/edition";
+import { useEditors } from "./drafts-ui";
 import { EditorsProvider } from "./editors";
+import { editorCommandDeps } from "./editor-commands";
 import { HistoryKeys } from "./history-keys";
 import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
 import { RecordCounts } from "./record-counts";
@@ -47,15 +47,6 @@ import { AboutDialog, AboutOpenContext } from "./about-preview";
 import { ExportOpenContext } from "./export-context";
 import { useExportActions, type ExportActions } from "./use-export-actions";
 import { useImportActions, type ImportActions } from "./use-import-actions";
-
-/** The palette command "Edit the selected record": the record in the inspector, when it has names (ADR-040). */
-function editNamesCommand(editors: EditorsApi | null, state: CanonicalState, inspector: Parameters<typeof currentOf>[0]): CommandDeps['editNames'] {
-  const ref = currentOf(inspector);
-  const record = ref === null ? undefined : (state.records[ref.kind] as Readonly<Record<string, { readonly kind: string }>>)[ref.id];
-  const reason =
-    editors === null ? 'editing is not available here' : editors.editReason ?? (ref === null || record === undefined || !(hasNames(record) || editors.fullEditorKinds?.includes(record.kind) === true) ? 'show a species, class, reagent, reaction or mechanism in the inspector first: only these can be edited here' : undefined);
-  return { reason, run: () => (ref === null || editors === null ? undefined : editors.editNames(ref)) };
-}
 
 const countsOf = (
   state: CanonicalState,
@@ -111,7 +102,7 @@ function Canvas(props: {
         <FirstRun imports={imports} onStartEmpty={onStartEmpty} />
       ) : showsNavigator ? (
         <NavigatorView />
-      ) : props.mode === WORKBENCH_MODE ? (
+      ) : EDITING && props.mode === WORKBENCH_MODE ? (
         <WorkbenchPage />
       ) : (
         <DatasetView counts={props.counts} empty={empty} imports={imports} exports={props.exports} onAskReplace={props.onAskReplace} />
@@ -158,9 +149,13 @@ export function Window() {
   const layout = useLayoutMode();
   return (
     <ToastProvider folded={layout === 'phone'}>
-      <EditorsProvider>
+      {EDITING ? (
+        <EditorsProvider>
+          <WindowContent />
+        </EditorsProvider>
+      ) : (
         <WindowContent />
-      </EditorsProvider>
+      )}
     </ToastProvider>
   );
 }
@@ -228,12 +223,7 @@ function WindowContent() {
     undoImport: imports.undoImport,
     pickFile: imports.pick,
     openExport: exports.open,
-    editNames: editNamesCommand(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()),
-    newSpecies: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newSpecies() },
-    newClass: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newClass() },
-    newReagent: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newReagent() },
-    newReaction: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newReaction() },
-    newMechanism: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newMechanism() },
+    ...(EDITING ? editorCommandDeps(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()) : {}),
     structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),
@@ -284,23 +274,24 @@ function WindowContent() {
   );
   return (
     <>
-      <HistoryKeys history={services.store} />
+      {EDITING ? <HistoryKeys history={services.store} /> : null}
       <ExportOpenContext.Provider value={exports.open}>
       <AboutOpenContext.Provider value={() => setAbout(true)}>
       <NavigatorProvider ports={navigator} active={totalOf(counts) > 0}>
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
           title="Organic Reaction Navigator"
+          marker={editionMarker()}
           topBar={
             <TopBar
               onSearch={() => setSearching(true)}
-              history={services.store}
+              {...(EDITING ? { history: services.store } : {})}
               file={file}
               exam={exam}
             />
           }
           phone={{
-            bar: <PhoneBar onSearch={() => setSearching(true)} structures={navigator.structures} file={file} exam={exam} counts={counts} onStatus={openStatus} history={services.store} />,
+            bar: <PhoneBar onSearch={() => setSearching(true)} structures={navigator.structures} file={file} exam={exam} counts={counts} onStatus={openStatus} {...(EDITING ? { history: services.store } : {})} />,
             notices: <PhoneNotices />,
             alert: <PhoneAlert onStatus={openStatus} />,
             tabs: <PhoneTabs onSearch={() => setSearching(true)} searching={searching} />,

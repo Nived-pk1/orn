@@ -28,6 +28,8 @@ export interface ShellProps {
   readonly title: string;
   /** False: the title is a plain line, not the page's h1 (a screen whose own content carries the h1, as the family page does). */
   readonly titleHeading?: boolean;
+  /** A short word beside the title (the Studio edition's name); absent: none. The shell knows no edition: the window says it. */
+  readonly marker?: string | undefined;
   /** Controls at the right of the top bar (menus, undo and redo, search ...). */
   readonly topBar: ReactNode;
   readonly modes: readonly ModeItem[];
@@ -106,6 +108,11 @@ export function Shell(props: ShellProps) {
           <p className={styles.title}>{phone === undefined ? props.title : 'ORN'}</p>
         ) : (
           <h1 ref={title} tabIndex={-1} className={styles.title} {...(phone === undefined ? {} : { 'aria-label': props.title })}>{phone === undefined ? props.title : 'ORN'}</h1>
+        )}
+        {props.marker === undefined ? null : (
+          <span className={styles.marker} data-edition-marker="">
+            {props.marker}
+          </span>
         )}
         {phone === undefined ? (
           <>

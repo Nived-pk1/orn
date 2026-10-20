@@ -6,6 +6,7 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
 import type { RecordRef } from '@/core/schema';
 import type { DraftsView } from '@/app/services/drafts-types';
+import { EDITING } from '@/app/edition';
 import { useAppOptional } from './context';
 
 /** What the window offers to open: the drafts list and the names editor. Absent in a window that has none (a test of one part). */
@@ -41,6 +42,8 @@ const never = (): (() => void) => () => undefined;
 
 /** The manager's cached view: the same object until something changes. Outside the app provider: no drafts. */
 export function useDraftsView(): DraftsView {
-  const manager = useAppOptional()?.services.drafts;
+  // Study never shows drafts: any stored in this browser (editors were public from 6.2 to 6.5) are left untouched and not listed
+  const app = useAppOptional();
+  const manager = EDITING ? app?.services.drafts : undefined;
   return useSyncExternalStore(manager?.subscribe ?? never, manager?.view ?? (() => NO_DRAFTS));
 }

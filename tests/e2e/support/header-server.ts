@@ -44,7 +44,8 @@ export const withUnsafeEval = (policy: string): string => policy.replace("script
 export const isChemWorkerEntry = (path: string): boolean => /^\/assets\/worker-chem-[\w-]+\.js$/.test(path);
 
 export async function startHeaderServer(kind: HeaderCase, root = process.cwd()): Promise<HeaderServer> {
-  const dist = resolve(root, 'dist');
+  // the specs run against the Studio build (studio step E6); ORN_DIST names another folder
+  const dist = resolve(root, process.env.ORN_DIST ?? 'dist-studio');
   const policy = pagePolicy(root);
   const allowance = withUnsafeEval(policy);
   if (allowance === policy) throw new Error("the page policy's script-src is not the expected one");

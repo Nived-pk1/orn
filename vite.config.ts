@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { basename, dirname } from 'node:path';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
@@ -62,10 +62,57 @@ function shortCommit(): string {
 }
 const packageVersion = (JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }).version;
 
+/**
+ * The edition of the build (studio step, ADR-041): 'study' (the public site, no editing code; the default) or 'studio' (everything), chosen
+ * by ORN_EDITION (scripts/edition.mjs sets it). Vitest runs as Studio so the editor tests are unchanged. Any other value stops the build.
+ */
+const edition = ((): 'study' | 'studio' => {
+  const raw = process.env.ORN_EDITION ?? (process.env.VITEST === undefined ? 'study' : 'studio');
+  if (raw !== 'study' && raw !== 'studio') throw new Error(`ORN_EDITION must be 'study' or 'studio', got '${raw}'`);
+  return raw;
+})();
+/**
+ * Study: the editor modules (scripts/editor-modules.json) are declared free of side effects, so a module of them that nothing uses is dropped
+ * whole (a module-level call such as enablePatches() or a zod schema would otherwise keep it, and what it imports, in the bundle). If a
+ * Study entry point did use one, its code would stay and scripts/check-edition.mjs would fail the build.
+ */
+const editorModules: string[] = (JSON.parse(readFileSync(new URL('./scripts/editor-modules.json', import.meta.url), 'utf8')) as { modules: string[] }).modules;
+const isEditorModule = (id: string): boolean => {
+  const path = slashed(relative(process.cwd(), id.split('?')[0] ?? id));
+  return editorModules.some((entry) => (entry.endsWith('/') ? path.startsWith(entry) : path === entry));
+};
+
+/** Each edition builds into its own folder: dist (Study, the Worker reaction-navigator) and dist-studio (Studio, reaction-navigator-studio). */
+const outDir = edition === 'studio' ? 'dist-studio' : 'dist';
+
+/**
+ * The module list of every chunk, written OUTSIDE the served folder (build-report/<edition>.json, git-ignored): the Vite manifest has no
+ * module list, and scripts/check-edition.mjs needs one to prove the Study build holds no editor module. Only modules that put code in
+ * the chunk count (a re-export barrel renders nothing).
+ */
+const collected: { file: string; isEntry: boolean; modules: string[] }[] = [];
+function moduleReport(write: boolean): Plugin {
+  return {
+    name: 'orn-module-report',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const root = process.cwd();
+      for (const item of Object.values(bundle)) {
+        if (item.type !== 'chunk') continue;
+        const modules = Object.entries(item.modules).filter(([, info]) => info.renderedLength > 0).map(([id]) => slashed(relative(root, id.split('?')[0] ?? id))).sort();
+        collected.push({ file: item.fileName, isEntry: item.isEntry, modules });
+      }
+      if (!write) return;
+      mkdirSync(resolve(root, 'build-report'), { recursive: true });
+      writeFileSync(resolve(root, 'build-report', edition + '.json'), JSON.stringify({ edition, chunks: collected }, null, 1));
+    },
+  };
+}
+
 export default defineConfig({
-  define: { __ORN_VERSION__: JSON.stringify(packageVersion), __ORN_COMMIT__: JSON.stringify(shortCommit()) },
-  plugins: [react(), contentSecurityPolicy()],
+  define: { __ORN_VERSION__: JSON.stringify(packageVersion), __ORN_COMMIT__: JSON.stringify(shortCommit()), __ORN_EDITION__: JSON.stringify(edition) },
+  plugins: [react(), contentSecurityPolicy(), moduleReport(true)],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  worker: { format: 'es', rollupOptions: { output: workerOutput } },
-  build: { target: 'es2022', sourcemap: false },
+  worker: { format: 'es', rollupOptions: { output: workerOutput }, plugins: () => [moduleReport(false)] },
+  build: { target: 'es2022', sourcemap: false, outDir, rollupOptions: { treeshake: { moduleSideEffects: (id) => !(edition === 'study' && isEditorModule(id)) } } },
 });

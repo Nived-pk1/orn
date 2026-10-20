@@ -12,11 +12,12 @@ import { useApp } from './context';
 import { createLocalTimeFormatter } from './local-time';
 import { EditorsContext, type EditorsApi } from './drafts-ui';
 
-const DraftsDialog = lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
+// /* @__PURE__ */: an unused lazy() is dropped with its import() in Study, where nothing mounts EditorsProvider (ADR-041)
+const DraftsDialog = /* @__PURE__ */ lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
 // the session builds its port (pickers, preview) where it opens, so that code is in the editor's chunk and not in the entry (step 6.5a)
-const EditorSession = lazy(() => import('./editor-session').then((m) => ({ default: m.EditorSession })));
+const EditorSession = /* @__PURE__ */ lazy(() => import('./editor-session').then((m) => ({ default: m.EditorSession })));
 
-const machineTime = createLocalTimeFormatter();
+const machineTime = /* @__PURE__ */ createLocalTimeFormatter();
 
 /** The kinds whose editor is the full one (the others edit names only). */
 const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction', 'mechanism'];

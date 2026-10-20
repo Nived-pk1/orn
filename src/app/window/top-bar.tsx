@@ -86,14 +86,14 @@ export function useFileWithDrafts(file: FileBinding): FileBinding {
   return editors === null ? file : { ...file, drafts: { count, onOpen: editors.openDrafts } };
 }
 
-export function TopBar(props: { readonly onSearch: () => void; readonly history: HistoryBinding; readonly exam: ExamScopeBinding; readonly file: FileBinding }) {
+export function TopBar(props: { readonly onSearch: () => void; readonly history?: HistoryBinding; readonly exam: ExamScopeBinding; readonly file: FileBinding }) {
   const file = useFileWithDrafts(props.file);
   return (
     <>
       <Menu label="File" items={fileItems(file)} />
       <IconButton label="Search" icon="search" onClick={props.onSearch} aria-keyshortcuts="Control+K Meta+K" />
       <ExamScopeSelector binding={props.exam} />
-      <History store={props.history} />
+      {props.history === undefined ? null : <History store={props.history} />}
     </>
   );
 }

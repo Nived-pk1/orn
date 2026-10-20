@@ -23,7 +23,9 @@ import type { AppEnv, AppServices } from './contracts';
 import { createChemPart, createLayoutPart } from './chem-layout';
 import { createDepictionService } from './depiction';
 import { lazyDraftChecks, lazyDuplicateCheck } from './lazy-editor-ports';
+import { EDITING } from '@/app/edition';
 import { createDraftManager } from './drafts';
+import { createInertEditorServices } from './editor-services-inert';
 import { createDerivedIndexes } from './derived-indexes';
 import { startFollower } from './follower';
 import { createFlows } from './flows';
@@ -135,7 +137,9 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   l4.checkAll();
   void search.started();
 
-  const drafts = createDraftManager({ store, adapter, status, timers: env.timers, ids, log });
+  // Study has no editing: stand-ins with the same shapes, so the real manager and `@/core/editing` are not in its build (ADR-041)
+  const inert = createInertEditorServices();
+  const drafts = EDITING ? createDraftManager({ store, adapter, status, timers: env.timers, ids, log }) : inert.drafts;
   // Every stored session is an unfinished draft (ADR-040): read them once the mode is known, and again when a follower is promoted.
   void drafts.refresh();
   let lastMode = status.get().mode;
@@ -221,8 +225,8 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
         if (adapter !== undefined && adapter.getStatus().state === 'saved') for (const sha of mine) held.delete(sha);
       },
     },
-    draftChecks: lazyDraftChecks({ store, sync: () => replica.sync(), chem: chemPart.service }),
-    duplicateCheck: lazyDuplicateCheck({ state: store.getState, indexes: () => indexes.current(), chem: chemPart.service, l4: l4.service }),
+    draftChecks: EDITING ? lazyDraftChecks({ store, sync: () => replica.sync(), chem: chemPart.service }) : inert.draftChecks,
+    duplicateCheck: EDITING ? lazyDuplicateCheck({ state: store.getState, indexes: () => indexes.current(), chem: chemPart.service, l4: l4.service }) : inert.duplicateCheck,
     async retryEngine(name) {
       const result = await (name === 'chem' ? chemPart : layoutPart).retry();
       log.add({ source: 'app', event: { type: 'engine_retry', message: `retry of the ${name} engine: ${result.ok ? 'ready' : result.message}` } });

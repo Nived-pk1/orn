@@ -1,0 +1,10 @@
+{
+  // Studio: the second Worker, from the same repo (docs/RELEASE.md, ADR-041). Static assets only, no Worker script. The site is the Studio
+  // build in ./dist-studio (npm run build:studio). Cloudflare Access is attached to THIS Worker only, in the dashboard, never to the public one.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "reaction-navigator-studio",
+  "compatibility_date": "2026-10-14",
+  "assets": {
+    "directory": "./dist-studio"
+  }
+}

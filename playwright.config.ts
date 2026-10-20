@@ -21,7 +21,8 @@ export default defineConfig({
   reporter: [['list']],
   use: { baseURL: REMOTE ?? `http://127.0.0.1:${PORT}`, trace: 'off', acceptDownloads: true },
   webServer: REMOTE !== undefined ? undefined : {
-    command: `npx vite build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
+    // the existing specs test the editors and the study views: they run against the STUDIO build (dist-studio), studio step E6
+    command: `node scripts/edition.mjs studio build && node scripts/edition.mjs studio preview --host 127.0.0.1 --port ${PORT} --strictPort`,
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: false,
     timeout: 300_000,

@@ -1,0 +1,27 @@
+{
+  "comment": "What counts as an editor module (studio step, ADR-041): a path prefix (ending in /) or an exact path, relative to the repo root, forward slashes. Read by vite.config.ts (Study: these modules have no side effects, so nothing keeps them in the build) and by scripts/check-edition.mjs (Study: none may be in the output; Studio: at least one). Deliberately not listed: src/core/editing/names.ts (which record kinds carry the shared Names type: schema knowledge the inspector reads) and src/app/window/drafts-ui.tsx (the React context the window reads; no editing code).",
+  "modules": [
+    "src/features/workbench/",
+    "src/core/editing/commit.ts",
+    "src/core/editing/session.ts",
+    "src/core/editing/stored.ts",
+    "src/core/editing/conflict.ts",
+    "src/core/editing/cycles.ts",
+    "src/core/editing/blank.ts",
+    "src/core/editing/role-defaults.ts",
+    "src/core/editing/mechanism-uses.ts",
+    "src/app/window/editors.tsx",
+    "src/app/window/editor-session.tsx",
+    "src/app/window/editor-port.ts",
+    "src/app/window/editor-commands.ts",
+    "src/app/window/workbench-page.tsx",
+    "src/app/window/pictures-port.ts",
+    "src/app/window/record-picker-port.ts",
+    "src/app/window/mechanism-links-port.ts",
+    "src/app/services/drafts.ts",
+    "src/app/services/drafts-types.ts",
+    "src/app/services/draft-checks.ts",
+    "src/app/services/duplicate-check.ts",
+    "src/app/services/lazy-editor-ports.ts"
+  ]
+}

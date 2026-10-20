@@ -9,6 +9,7 @@ import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView, useToasts } from '@/ui/primitives';
 import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
+import { EDITING } from '@/app/edition';
 import { useDraftsView, useEditors } from './drafts-ui';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 import { alertOf } from './phone-alert';
@@ -61,7 +62,7 @@ export function PhoneBar(props: {
             ))}
           </ul>
         </section>
-        {editors === null ? null : (
+        {!EDITING || editors === null ? null : (
           <section aria-label="Workbench" className={styles.section}>
             <h3>Workbench</h3>
             <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newSpecies) } : { unavailable: editors.editReason })}>

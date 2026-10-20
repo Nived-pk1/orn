@@ -1,3 +1,4 @@
+import { EDITING } from '@/app/edition';
 import type { ModeItem } from '@/ui/shell';
 
 /**
@@ -19,5 +20,5 @@ export const MODES: readonly ModeItem[] = [
   { id: 'named', label: 'Named', unavailable: 'Phase 7' },
   { id: 'mechanisms', label: 'Mechanisms', unavailable: 'Phase 7' },
   { id: 'syllabus', label: 'Syllabus', unavailable: 'Phase 7' },
-  { id: WORKBENCH_MODE, label: 'Workbench' },
+  ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }] : []),
 ];

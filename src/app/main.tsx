@@ -5,6 +5,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import demoUrl from '../../data/seed/demo.orn.json?url';
 import { App } from './App';
+import { pageTitleOf } from './edition';
 import { createBrowserEnv } from './env';
 import { installLifecycle } from './lifecycle';
 import { createAppServices } from './services';
@@ -31,6 +32,7 @@ async function loadDemo(): Promise<DemoLoad> {
 async function start(): Promise<void> {
   const rootElement = document.getElementById('root');
   if (!rootElement) throw new Error('Root element #root is missing from index.html');
+  document.title = pageTitleOf();
   const env = createBrowserEnv();
   const services = await createAppServices(env);
   const panels = createPanelsStore(createPanelsPort(services), env.timers);

@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
 import type { RecordRef } from '@/core/schema';
-import { hasNames } from '@/core/editing';
+import { hasNames } from '@/core/editing/names';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button } from '@/ui/primitives';
 import { SHEET_TITLE_ID } from '@/ui/shell';
