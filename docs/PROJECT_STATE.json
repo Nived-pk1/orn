@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-19",
+  "lastUpdated": "2026-10-20",
   "currentPhase": 6,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -93,6 +93,8 @@
     "6.2b",
     "6.2",
     "6.3a",
+    "6.3b",
+    "6.3",
     "6.1"
   ],
   "nextPhase": 7,
@@ -107,8 +109,8 @@
     "commit": "8b22b27",
     "version": "55e74965-995f-4b44-8f97-c9c8724909cb"
   },
-  "nextStep": "6.3b",
-  "nextStepTitle": "Reaction editor, second half (to be defined by the reviewer: 6.3a built identity, participants, stages and New reaction)",
+  "nextStep": "6.4",
+  "nextStepTitle": "Condition variants and outcomes editors",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

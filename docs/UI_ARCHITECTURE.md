@@ -108,6 +108,7 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 - **Templates and duplication**: "New specific reaction from this generic one" pre-fills `instanceOfId` and participants; "Duplicate" regenerates all nested IDs through the reference engine.
 - **Review queue**: all REVIEW_REQUIRED findings grouped by reason, with bulk "mark verified" (an undoable command).
 - *Step 6.3a (ADR-040 addendum, 2026-10-19):* the reaction editor builds Identity, Participants, Stages and Review (D1-D4); the other sections above stay read-only summaries until 6.4 (conditions, variants, outcomes), 6.5 (mechanism links, classification) and 6.6 (the rest). "Duplicate" and "New specific reaction from this generic one" move to step 6.7 (D7).
+- *Step 6.3b (ADR-040 addendum, 2026-10-19):* participants are summary lines with an Edit toggle (one row open at a time; a finding opens its row); beside the findings (a collapsible "Preview" at the top on a phone, closed by default) the editor shows the reaction as its card shows it, built from the draft by the core 400 ms after the last edit; words instead of a drawing while the draft cannot be read; "No products yet" without outcomes.
 
 ## 8. Compound and structure authoring (#12)
 
