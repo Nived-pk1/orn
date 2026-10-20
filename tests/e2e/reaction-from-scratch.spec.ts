@@ -43,6 +43,21 @@ async function errorCount(page: Page): Promise<number> {
   return Number(/^Findings: E (d+)/.exec(line ?? '')?.[1]);
 }
 
+/** (the Preparation strip comes first on a family page, the Reactions strip last) The number on a group heading of the open family page ("To Aldehydes" ... "3 reactions"): the strip button scrolls the group in, the count is read beside its heading. */
+async function groupCount(page: Page, strip: RegExp, group: string, which: "first" | "last"): Promise<number> {
+  await page.getByRole('button', { name: strip })[which]().click();
+  const heading = page.getByRole('heading', { level: 3, name: group, exact: true });
+  await expect(heading).toBeVisible();
+  const words = await heading.locator('xpath=..').textContent();
+  return Number(/(\d+)\s+reactions?/.exec(words ?? '')?.[1]);
+}
+
+/** Dismisses the open toasts, so a screenshot shows the page and not the notices. */
+async function dismissToasts(page: Page): Promise<void> {
+  const toasts = page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' });
+  for (let left = await toasts.count(); left > 0; left = await toasts.count()) await toasts.first().click();
+}
+
 async function workbench(page: Page): Promise<void> {
   await modes(page).getByRole('button', { name: /Workbench/ }).click();
   await expect(page.getByRole('region', { name: 'Workbench' })).toBeVisible();
@@ -97,6 +112,12 @@ test.describe('a reaction from scratch', () => {
     await openDemo(page);
     await showDataset(page);
     const errorsBefore = await errorCount(page);
+    // the groups the new reaction joins, counted before it exists
+    await openFamily(page, 'cls_alcohols', 'Alcohols');
+    const toBefore = await groupCount(page, /^Aldehydes\s*\d+\s*reactions?$/, 'To Aldehydes', 'last');
+    await page.getByRole('button', { name: 'Overview' }).click();
+    await openFamily(page, 'cls_aldehydes', 'Aldehydes');
+    const fromBefore = await groupCount(page, /^Alcohols\s*\d+\s*reactions?$/, 'From Alcohols', 'first');
     const before = { species: await recordCount(page, 'species'), reaction: await recordCount(page, 'reaction') };
 
     // (1) the species
@@ -154,7 +175,7 @@ test.describe('a reaction from scratch', () => {
     await openFamily(page, 'cls_alcohols', 'Alcohols');
     await page.locator('[data-virtual-list]').evaluate((el) => el.scrollTo(0, 0)); // the page opens at the selected reaction
     await expect(page.getByRole('heading', { level: 2, name: 'Reactions of Alcohols' })).toBeVisible();
-    await page.getByRole('button', { name: 'Aldehydes 4 reactions', exact: true }).click(); // the demo has 3 reactions to Aldehydes: this is the fourth
+    expect(await groupCount(page, /^Aldehydes\s*\d+\s*reactions?$/, 'To Aldehydes', 'last'), 'one more reaction to Aldehydes').toBe(toBefore + 1);
     await expect(page.getByRole('heading', { level: 3, name: 'To Aldehydes' })).toBeVisible();
     const card = cardOf(page, NAME);
     await expect(card).toBeVisible({ timeout: 60_000 });
@@ -164,6 +185,7 @@ test.describe('a reaction from scratch', () => {
     await expect(card.locator('[data-arrow]')).toContainText('PCC');
     await expect(card).toContainText('exclusive');
     await card.scrollIntoViewIfNeeded();
+    await dismissToasts(page);
     await page.screenshot({ path: resolve(shotsDir(), 'from-scratch-family-card-1280x800.png') });
     await card.getByText('Show full equation').click();
     const scheme = card.getByRole('group', { name: 'Full equation' });
@@ -173,13 +195,14 @@ test.describe('a reaction from scratch', () => {
     await expect(scheme.locator('[data-equation-arrow] [data-equation-above]')).toContainText('PCC');
     await expect(scheme.locator('[data-equation-arrow] [data-equation-below]')).toContainText('Dichloromethane');
     await expect(scheme.locator('img').first()).toBeVisible({ timeout: 60_000 });
+    await dismissToasts(page);
     await page.screenshot({ path: resolve(shotsDir(), 'from-scratch-full-equation-1280x800.png') });
 
     // the Aldehydes family page: Preparation, From Alcohols
     await page.getByRole('button', { name: 'Overview' }).click();
     await hubGroup(page, 'cls_aldehydes').dblclick({ timeout: 30_000 });
     await expect(page.getByRole('region', { name: 'Family page: Aldehydes' })).toBeVisible();
-    await page.getByRole('button', { name: 'Alcohols 4 reactions', exact: true }).click(); // the demo has 3 preparations of aldehydes from alcohols: this is the fourth
+    expect(await groupCount(page, /^Alcohols\s*\d+\s*reactions?$/, 'From Alcohols', 'first'), 'one more preparation from Alcohols').toBe(fromBefore + 1);
     await expect(page.getByRole('heading', { level: 3, name: 'From Alcohols' })).toBeVisible();
     await expect(cardOf(page, NAME)).toBeVisible({ timeout: 60_000 });
 
