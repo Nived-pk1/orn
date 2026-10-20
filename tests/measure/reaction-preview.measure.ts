@@ -1,11 +1,11 @@
 /**
- * Step 6.3b, part 1 (informal; run once, alone; REPORTED): building the equations of one reaction DRAFT (the preview's work) at the design
+ * Step 6.3b, part 1 (informal; run once, alone; REPORTED): building the preview (`previewOfDraft`) of one reaction DRAFT (the preview's work) at the design
  * tier (hub_explosion state): the largest reaction of the dataset, in the replica's own code (no thread). Fact sheet: the builders take a
  * reaction record and read the state and indexes; nothing is written.
  * Run: `npx tsx tests/measure/reaction-preview.measure.ts [samples]`.
  */
 import { performance } from 'node:perf_hooks';
-import { fullEquationsOfReaction } from '@/core/graph';
+import { previewOfDraft } from '@/core/graph';
 import type { Reaction } from '@/core/schema';
 import { designTierHubState } from '@/test-support/perf-kit';
 import { createReplica } from '@/workers/compute/replica';
@@ -25,12 +25,12 @@ replica.load(state, 0);
 const held = replica.snapshot();
 console.log(`largest reaction ${largest.id}: ${largest.participants.length} participants, ${largest.stages.length} stages, ${largest.outcomes.length} outcomes, ${largest.conditionVariants.length} variants; ${Object.keys(state.records.species).length} species; node ${process.version}`);
 const draft: Reaction = { ...largest, participants: largest.participants.map((p) => ({ ...p })) };
-for (let i = 0; i < 30; i += 1) fullEquationsOfReaction(held.state, held.indexes, draft);
+for (let i = 0; i < 30; i += 1) previewOfDraft(held.state, held.indexes, draft);
 const times: number[] = [];
 let groups = 0;
 for (let i = 0; i < samples; i += 1) {
   const t = performance.now();
-  groups = fullEquationsOfReaction(held.state, held.indexes, draft).length;
+  groups = ((p) => (p.ok ? p.equations.length : 0))(previewOfDraft(held.state, held.indexes, draft));
   times.push(performance.now() - t);
 }
 console.log(`${groups} equation(s) per build, ${samples} samples: ${stats(times)}`);
@@ -43,11 +43,11 @@ const many: Reaction = {
   stages: Array.from({ length: 16 }, (_, i) => ({ ...(largest.stages[0] ?? { id: 'stg_x', kind: 'reaction', participantIds: [], parameters: { solventCharacter: [], activation: [], other: [], parsedFields: [], conditions: [] } }), id: `stg_ceiling-${i}` as never, participantIds: [] })) as never,
   outcomes: Array.from({ length: 32 }, (_, i) => ({ ...(largest.outcomes[0] as Reaction['outcomes'][number]), id: `out_ceiling-${i}` as never })),
 };
-for (let i = 0; i < 30; i += 1) fullEquationsOfReaction(held.state, held.indexes, many);
+for (let i = 0; i < 30; i += 1) previewOfDraft(held.state, held.indexes, many);
 const ceiling: number[] = [];
 for (let i = 0; i < samples; i += 1) {
   const t = performance.now();
-  fullEquationsOfReaction(held.state, held.indexes, many);
+  previewOfDraft(held.state, held.indexes, many);
   ceiling.push(performance.now() - t);
 }
 console.log(`schema ceiling (64 participants, 16 stages, 32 outcomes): ${stats(ceiling)}`);

@@ -9,5 +9,6 @@ export { draftStatusText, draftsLabel, editingUnavailableReason } from './draft-
 export type { EditorEntryView, EditorCommitResult, EditorPort } from './editor-contracts';
 export type { ClassSuggestion, DraftChecksPort, DryRunAnswer, StructureChecksAnswer } from './check-contracts';
 export type { SmartsCheck, StructurePort } from './structure-contracts';
+export type { PreviewPort } from './preview-contracts';
 export type { PickKind, RecordChoice, RecordPickerPort } from './record-picker-contracts';
 export type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome, DuplicatePort } from './duplicate-contracts';

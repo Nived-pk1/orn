@@ -9,9 +9,11 @@ export { bundleEdges, drawnAsNode, flagsOf, projectionKey, referencing, sortEdge
 export { createDefaultProjectionRegistry, defaultProjectionDefinitions } from './defaults';
 export { arrowTextOf, MAX_ARROW_PARTS, MAX_CONDITION_PARTS } from './arrow-text';
 export { fullEquationOf, fullEquationOfGroup, fullEquationsOfReaction } from './full-equation';
+export { previewOfDraft } from './draft-preview';
+export type { DraftPreview, PreviewGroup } from './draft-preview';
 export { groupOutcomes, outcomeWordOf, variantSetKeyOf } from './outcome-groups';
 export type { OutcomeGroup, OutcomeLike } from './outcome-groups';
-export type { EquationTerm, FullEquation, ProductRoleWord, SelectivityQuantifier } from './full-equation';
+export type { EquationShape, EquationTerm, FullEquation, ProductRoleWord, SelectivityQuantifier } from './full-equation';
 export { MAX_FORMULA_HEAVY_ATOMS, needsFacts, termRepresentationOf } from './equation-term';
 export type { FactsInput, FormulaRepresentation, TermRepresentation, TermSubstance } from './equation-term';
 export { selectivityWordOf } from './selectivity-word';

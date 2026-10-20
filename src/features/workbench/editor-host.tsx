@@ -21,6 +21,7 @@ import { fieldFor, FindingsPanel } from './findings-panel';
 import { useLiveChecks, type LiveChecks } from './live-validation';
 import { formOwns, labelOfField, sectionOf, titleOf } from './form-kinds';
 import { namesFieldLabel } from './names-section';
+import { PreviewPanel } from './reaction-preview';
 import { RecordForm } from './record-form';
 import styles from './editor.module.css';
 
@@ -285,6 +286,7 @@ export function EditorHost(props: EditorHostProps) {
           <DeletedView onBack={() => setView({ kind: 'form' })} onDiscard={() => setAsking(true)} />
         ) : (
           <div className={phone ? styles.bodyPhone : styles.body}>
+            <PreviewPanel kind={session.kind} draft={draft} port={port.preview} phone={phone} where="top" />
             <RecordForm
               kind={session.kind}
               draft={draft}
@@ -312,6 +314,7 @@ export function EditorHost(props: EditorHostProps) {
                 emptyText="No problems found in this draft."
                 notes={notes}
               />
+              <PreviewPanel kind={session.kind} draft={draft} port={port.preview} phone={phone} where="aside" />
             </div>
           </div>
         )}

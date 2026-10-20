@@ -85,15 +85,29 @@ const arrowWords = (arrow: ArrowText): string => {
   return parts.map((part, index) => `${index === 0 ? '' : parts[index - 1]?.kind === 'separator' ? ' ' : ', '}${part.text}`).join('');
 };
 
-type GroupContext = Omit<ArrowTextContext, 'conditionVariantIds' | 'carriedParticipantId' | 'omitReactants'> & { readonly substanceOf?: (ref: RecordRef) => TermSubstance };
+export type GroupContext = Omit<ArrowTextContext, 'conditionVariantIds' | 'carriedParticipantId' | 'omitReactants'> & { readonly substanceOf?: (ref: RecordRef) => TermSubstance };
+
+/** An equation without its outcome IDs: what a reaction with NO outcome can show (the reactants and the arrow). */
+export type EquationShape = Omit<FullEquation, 'outcomeId' | 'outcomeIds'>;
 
 /** One group of outcomes (same condition-variant set, in the group's order) as ONE equation. One outcome: the equation of that outcome. */
 export function fullEquationOfGroup(reaction: Reaction, outcomes: readonly Outcome[], context: GroupContext): FullEquation {
   const first = outcomes[0];
   if (first === undefined) throw new Error('fullEquationOfGroup needs at least one outcome');
+  return { outcomeId: first.id, outcomeIds: outcomes.map((o) => o.id), ...buildEquation(reaction, outcomes, first.conditionVariantIds, context) };
+}
+
+/**
+ * A reaction with NO outcome (a draft, step 6.3b): the reactants common to every variant and the arrow with the reagents and conditions
+ * of the stages; the products side is empty. The same code as the equation of a group.
+ */
+export function fullEquationWithoutOutcome(reaction: Reaction, context: GroupContext): EquationShape {
+  return buildEquation(reaction, [], [], context);
+}
+
+function buildEquation(reaction: Reaction, outcomes: readonly Outcome[], variantIds: readonly ConditionVariantId[], context: GroupContext): EquationShape {
   const several = outcomes.length > 1;
   const substanceOf = (ref: RecordRef, name: string): TermSubstance => context.substanceOf?.(ref) ?? { kind: 'missing', name };
-  const variantIds: readonly ConditionVariantId[] = first.conditionVariantIds;
   const nameOf = (ref: Parameters<ArrowTextContext['describe']>[0], written: string | undefined): string => {
     if (written !== undefined && written !== '') return written;
     const described = context.describe(ref);
@@ -168,8 +182,6 @@ export function fullEquationOfGroup(reaction: Reaction, outcomes: readonly Outco
   const words = arrowWords(arrow);
   const sentence = `${reactants.length === 0 ? 'nothing listed' : andList(reactants.map((t) => t.text))}${words === '' ? '' : ` with ${words}`} gives ${products.length === 0 ? 'nothing listed' : andList(products.map((t) => t.text))}`;
   return {
-    outcomeId: first.id,
-    outcomeIds: outcomes.map((o) => o.id),
     reactants,
     products,
     arrow,

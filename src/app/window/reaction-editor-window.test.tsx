@@ -59,6 +59,13 @@ describe('the reaction editor through the real window', () => {
     const reactant = pccReaction(app).participants.findIndex((p) => p.role === 'reactant') + 1;
     fireEvent.click(within(dialog).getByRole('button', { name: `Edit participant ${reactant}` }));
     fireEvent.change(within(dialog).getByLabelText(`Coefficient of participant ${reactant}`), { target: { value: '2' } });
+    // the live preview (step 6.3b) is in the editor, drawn from the draft with the card's equation component; it takes the edit after 400 ms
+    const preview = within(dialog).getByRole('region', { name: 'Preview' });
+    expect(within(preview).getByRole('group', { name: 'Full equation' })).toBeTruthy();
+    await waitFor(() => {
+      act(() => app.navigator.timers.advance(400));
+      expect(preview.querySelector('[data-equation-coefficient]')?.textContent).toBe('2');
+    });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
     expect(pccReaction(app).participants[reactant - 1]?.coefficient).toBe(2);

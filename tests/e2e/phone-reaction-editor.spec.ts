@@ -3,7 +3,7 @@
  * PRODUCTION build, on the two touch devices: Pixel 7 (Chromium) and iPhone 14 (WebKit). More > New reaction opens the editor full-screen;
  * a name, the scope, two participants (each a stacked card), Save. On the Pixel 7 the reagent Components rows of the 6.2b follow-up are also
  * checked in the browser: the record on its own row, the role under it, 44 px buttons. Screenshots:
- * screenshots/phone-reaction-editor-compact-<pixel7|iphone14>.png (step 6.3b: the first participant is a summary line, the new one open) and screenshots/phone-reagent-components-pixel7.png.
+ * screenshots/phone-reaction-editor-compact-<pixel7|iphone14>.png, phone-reaction-editor-preview-<pixel7|iphone14>.png (step 6.3b: the first participant is a summary line, the new one open) and screenshots/phone-reagent-components-pixel7.png.
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
@@ -47,6 +47,15 @@ async function walk(page: Page, device: string): Promise<void> {
   // compact (step 6.3b D1): the first participant is a SUMMARY LINE (a short card, no fields); the one just added is open
   await expect(cards.first().getByText(/^1\. Ethanol · Reactant$/)).toBeVisible();
   await expect(cards.first().getByLabel('Role of participant 1')).toHaveCount(0);
+  // the live preview is a collapsible section at the top, closed until it is opened (step 6.3b D2)
+  const section = dialog.locator('details[data-preview-section]');
+  await expect(section).not.toHaveAttribute('open', '');
+  await section.locator('summary').tap();
+  await expect(section.getByText('No products yet (outcomes arrive in step 6.4)')).toBeVisible();
+  await expect(section.getByRole('group', { name: 'Full equation' })).toContainText('Ethanol');
+  await section.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `${shotsDir()}/phone-reaction-editor-preview-${device}.png` });
+  await section.locator('summary').tap();
   const folded = await cards.first().boundingBox();
   expect(folded?.height ?? 999, 'a summary card is short').toBeLessThan(140);
   // the open card: its fields are in ONE column (the second field starts below the first)

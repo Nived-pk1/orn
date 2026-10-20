@@ -7,7 +7,7 @@
  * are stacked like the phone card: the reactants in a centred row that wraps, the down arrow with its text to its right, the products.
  */
 import { Fragment, useId, type CSSProperties } from 'react';
-import type { FullEquation } from '@/core/graph';
+import type { EquationShape, FullEquation } from '@/core/graph';
 import type { DepictionBinding, DepictionTimers } from '@/render/svg';
 import type { StructureFactsPort } from './contracts';
 import { STACKED_MAX_DRAWING_WIDTH } from './contracts';
@@ -19,7 +19,8 @@ import { TermColumn, type TermPorts } from './term-view';
 import styles from './equation-scheme.module.css';
 
 export interface EquationSchemeProps {
-  readonly equation: FullEquation;
+  /** A full equation, or the shape of a reaction with no outcome (reactants and arrow; the editor's preview). */
+  readonly equation: EquationShape;
   /** The fixed-scale depiction binding (`EQUATION_AREA`); absent: no drawing is asked for and every term is its formula or name. */
   readonly binding: DepictionBinding | undefined;
   readonly timers: DepictionTimers;
@@ -34,6 +35,8 @@ export interface EquationSchemeProps {
   readonly maxDrawingWidth?: number;
   /** `row` (default): terms and arrow in one wrapping row. `stacked` (the phone): reactants, the down arrow, products, one above the other. */
   readonly layout?: 'row' | 'stacked';
+  /** Said in place of "nothing listed" on the products side (a reaction with no outcome yet); absent: "nothing listed". */
+  readonly noProducts?: string;
 }
 
 function Side(props: { readonly terms: FullEquation['reactants']; readonly names: boolean; readonly ports: TermPorts; readonly empty: string }) {
@@ -78,7 +81,7 @@ export function EquationScheme(props: EquationSchemeProps) {
           </div>
           <SchemeDownArrow arrow={equation.arrow} equilibrium={equation.equilibrium} />
           <div className={styles.sideRow} data-equation-side="products">
-            <Side terms={equation.products} names={names} ports={ports} empty="nothing listed" />
+            <Side terms={equation.products} names={names} ports={ports} empty={props.noProducts ?? 'nothing listed'} />
           </div>
         </div>
       ) : (
@@ -87,7 +90,7 @@ export function EquationScheme(props: EquationSchemeProps) {
           <span className={styles.arrowCell}>
             <SchemeArrow arrow={equation.arrow} equilibrium={equation.equilibrium} />
           </span>
-          <Side terms={equation.products} names={names} ports={ports} empty="nothing listed" />
+          <Side terms={equation.products} names={names} ports={ports} empty={props.noProducts ?? 'nothing listed'} />
         </div>
       )}
     </div>

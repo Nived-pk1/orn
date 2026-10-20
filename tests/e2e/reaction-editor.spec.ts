@@ -52,7 +52,48 @@ async function addParticipant(page: Page, role: string, search: string, name: st
   await add.click();
 }
 
+/** The live preview (step 6.3b D2): the card's own full equation, built from the draft 400 ms after the last edit. */
+const previewOf = (page: Page) => page.getByRole('dialog').getByRole('region', { name: 'Preview' });
+
 test.describe('the reaction editor', () => {
+  test("the live preview of the demo's E2 reaction shows both products with their words and follows an edit of the coefficient", async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page);
+    await openDemo(page);
+    await showRecord(page, 'r', '(R)-2-Bromobutane', 'rxn_r-2-bromobutane-alc-koh');
+    await openNamesEditor(page, '(R)-2-Bromobutane + alc. KOH');
+    const preview = previewOf(page);
+    await expect(preview.getByRole('group', { name: 'Full equation' })).toHaveCount(1);
+    await expect(preview.locator('[data-equation-word]')).toHaveText(['(major · Saytzeff)', '(minor · Hofmann)']);
+    await expect(preview.getByText('But-2-ene', { exact: true })).toBeVisible({ timeout: 60_000 });
+    await expect(preview.getByText('But-1-ene', { exact: true })).toBeVisible();
+    await expect(preview.locator('[data-equation-coefficient]')).toHaveCount(0);
+    await page.screenshot({ path: resolve(shotsDir(), 'reaction-editor-preview-1280x800.png') });
+    // the reactant's coefficient: the preview's full equation shows "2"
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /^Edit participant 1$/ }).click();
+    await dialog.getByLabel('Coefficient of participant 1').fill('2');
+    await expect(preview.locator('[data-equation-coefficient]')).toHaveText('2');
+    await dialog.getByRole('button', { name: 'Close (keeps the draft)' }).click();
+    await expectClean(seen);
+  });
+
+  test('a New reaction with two participants: the preview shows them and "No products yet"', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page);
+    await openDemo(page);
+    await startNewReaction(page, 'Preview check');
+    const dialog = newDialog(page);
+    await expect(previewOf(page).getByText('Add a participant to see the reaction here.')).toBeVisible();
+    await addParticipant(page, 'reactant', 'ethanol', 'Ethanol');
+    await addParticipant(page, 'reagent', 'pcc', 'PCC');
+    await expect(previewOf(page).getByText('No products yet (outcomes arrive in step 6.4)')).toBeVisible();
+    await expect(previewOf(page).getByRole('group', { name: 'Full equation' })).toContainText('Ethanol');
+    await expect(previewOf(page).getByRole('group', { name: 'Full equation' })).toContainText('PCC');
+    await dialog.getByRole('button', { name: 'Close (keeps the draft)' }).click();
+    await expectClean(seen);
+  });
+
   test('New reaction "Propan-1-ol + PCC": reactant, reagent, solvent, Save as a draft with the RXN-002 warning, search, inspector, Undo', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page);

@@ -8,6 +8,7 @@ import type { RecordRef } from '@/core/schema';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { StructurePort } from './structure-contracts';
 import type { DraftChecksPort } from './check-contracts';
+import type { PreviewPort } from './preview-contracts';
 import type { DuplicatePort } from './duplicate-contracts';
 import type { DraftSaveView, DraftsViewModel } from './contracts';
 
@@ -43,6 +44,8 @@ export interface EditorPort {
   readonly duplicates?: DuplicatePort;
   /** The record pickers' search, words and cycle questions (step 6.2b decision D4); absent: records cannot be searched here. */
   readonly records?: RecordPickerPort;
+  /** The reaction editor's live preview (step 6.3b D2); absent: the editor shows no preview. */
+  readonly preview?: PreviewPort;
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
   readonly structure?: StructurePort;
   /** A fresh ID for a nested record the form creates (a reagent profile: 'rpf'). From the session manager's ID factory; deterministic under test. */
