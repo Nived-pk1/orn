@@ -1,0 +1,106 @@
+/* a participant of the reaction editor: a desktop row is a grid of fields, a phone row one stacked card (step 6.3a) */
+.participant,
+.participantPhone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.participantBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.participantHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.participantActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.participantGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-2) var(--space-3);
+  align-items: start;
+}
+
+.participantPhone .participantGrid {
+  grid-template-columns: 1fr;
+}
+
+.participantPhone .participantActions {
+  width: 100%;
+}
+
+.participantPhone .participantActions button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.participantPhone select,
+.participantPhone input[type='number'],
+.participantPhone input[type='text'] {
+  min-height: 44px;
+  width: 100%;
+}
+
+.advanced {
+  border-top: 1px solid var(--color-rule);
+  padding-top: var(--space-2);
+}
+
+.advanced summary {
+  cursor: pointer;
+  min-height: var(--hit-min);
+  display: flex;
+  align-items: center;
+}
+
+/* compact participants (step 6.3b D1): a summary line with its actions; the expanded fields below it */
+.participantSummary {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.participantSummary[aria-invalid='true'] {
+  color: var(--color-error);
+}
+
+.participantMarker {
+  flex: 0 0 auto;
+}
+
+.participantFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.participantSubstance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* the stage choice takes the whole row, so its words ("Stage 2: 2. H3O+ work-up (workup)") are not cut */
+.participantWide {
+  grid-column: 1 / -1;
+}
+
+.participantWide select {
+  width: 100%;
+}

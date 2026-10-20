@@ -65,14 +65,24 @@ test.describe('the reaction editor', () => {
     await addParticipant(page, 'reagent', 'pcc', 'PCC');
     await addParticipant(page, 'solvent', 'dichloromethane', 'Dichloromethane');
     await expect(dialog.getByTestId('participant-row')).toHaveCount(3);
+    // compact rows (step 6.3b D1): each is a summary line; the one just added (the solvent) is open and the others are folded
+    await expect(dialog.getByText(/^1\. Propan-1-ol · Reactant$/)).toBeVisible();
+    await expect(dialog.getByText(/^2\. PCC · Reagent$/)).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Close participant 3' })).toHaveAttribute('aria-expanded', 'true');
+    await expect(dialog.getByLabel(/^Role of participant/)).toHaveCount(1);
     await expect(dialog.getByText('By default a solvent contributes no atoms, is not consumed and is not catalytic.')).toBeVisible();
     // the live checks say what is missing: no outcome yet (RXN-002, a WARNING for a draft)
     await expect(dialog.getByText(/has no outcome with a product/).first()).toBeVisible({ timeout: 60_000 });
     expect(await axeProblems(page)).toEqual([]);
     await dialog.getByRole('heading', { name: 'Participants' }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: resolve(shotsDir(), 'reaction-editor-participants-1280x800.png') });
-    // the override flags are collapsed and say the default
-    const advanced = dialog.getByTestId('participant-row').first().locator('details');
+    await page.screenshot({ path: resolve(shotsDir(), 'reaction-editor-compact-1280x800.png') });
+    // only one row is open: Edit on the first closes the third; its "More details" and override flags are collapsed and say the default
+    await dialog.getByRole('button', { name: 'Edit participant 1' }).click();
+    await expect(dialog.getByLabel(/^Role of participant/)).toHaveCount(1);
+    await expect(dialog.getByLabel('Role of participant 1')).toBeVisible();
+    await expect(dialog.getByText('More details').locator('xpath=..')).not.toHaveAttribute('open', '');
+    const advanced = dialog.getByTestId('participant-row').first().locator('details', { hasText: 'Advanced: override flags' });
     await advanced.locator('summary').click();
     await expect(dialog.getByLabel('Is consumed: participant 1')).toBeVisible();
     await dialog.getByLabel('Is consumed: participant 1').scrollIntoViewIfNeeded();
@@ -125,6 +135,12 @@ test.describe('the reaction editor', () => {
     expect(original).toBe('1. CH₃MgBr, dry ether');
     await dialog.getByRole('heading', { name: 'Stages' }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: resolve(shotsDir(), 'reaction-editor-stages-1280x800.png') });
+    // the stage choice of an open participant is as wide as its row, so its words are not cut (step 6.3b D1)
+    await dialog.getByRole('button', { name: 'Edit participant 1' }).click();
+    const stage = await dialog.getByLabel('Stage of participant 1').boundingBox();
+    const rowBox = await dialog.getByTestId('participant-row').first().boundingBox();
+    expect(stage?.width ?? 0, 'the stage choice fills the row').toBeGreaterThan((rowBox?.width ?? 0) * 0.8);
+    await dialog.getByRole('button', { name: 'Close participant 1' }).click();
 
     await dialog.getByRole('button', { name: 'Move stage 1 down' }).click();
     await expect(dialog.getByLabel('Kind of stage 1')).toHaveValue('workup');

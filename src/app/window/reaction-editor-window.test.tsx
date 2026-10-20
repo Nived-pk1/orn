@@ -57,6 +57,7 @@ describe('the reaction editor through the real window', () => {
     fireEvent.click(await within(await screen.findByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: 'Edit' }));
     const dialog = await screen.findByRole('dialog', { name: /^Edit / });
     const reactant = pccReaction(app).participants.findIndex((p) => p.role === 'reactant') + 1;
+    fireEvent.click(within(dialog).getByRole('button', { name: `Edit participant ${reactant}` }));
     fireEvent.change(within(dialog).getByLabelText(`Coefficient of participant ${reactant}`), { target: { value: '2' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());

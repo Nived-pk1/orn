@@ -119,14 +119,22 @@ export function EditorHost(props: EditorHostProps) {
   const invalid = useMemo(() => new Set((refusal?.findings ?? live).flatMap((f) => (f.path === undefined ? [] : [f.path]))), [live, refusal]);
   const focusField = useCallback((path: string | undefined) => {
     if (root.current === null) return;
-    const field = fieldFor(root.current, path);
+    const container = root.current;
+    const field = fieldFor(container, path);
     if (field === null) return;
+    const reveal = (found: HTMLElement): void => {
+      const details = found.closest('details');
+      if (details !== null) details.open = true; // an "Advanced" area holding the field
+      found.focus();
+    };
     // a field in a closed section: open the section first (its toggle), then the field can take the focus
     const closed = field.closest('[data-collapsed="true"]');
     if (closed !== null) closed.parentElement?.querySelector<HTMLElement>('button[data-section-toggle]')?.click();
-    const details = field.closest('details');
-    if (details !== null) details.open = true; // an "Advanced" area holding the field
-    field.focus();
+    // a collapsed row (a participant): its Edit button stands in for its fields; open the row, then look for the field again once it is drawn
+    const collapsedRow = field.dataset.openRow !== undefined && field.getAttribute('aria-expanded') === 'false';
+    if (collapsedRow) field.click();
+    reveal(field);
+    if (collapsedRow) queueMicrotask(() => { const opened = fieldFor(container, path); if (opened !== null && opened !== field) reveal(opened); });
   }, []);
 
   const close = useCallback(() => {

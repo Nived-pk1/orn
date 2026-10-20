@@ -53,7 +53,8 @@ describe('the Stages section', () => {
     expect(draftOf(rig, id).stages).toHaveLength(1);
     expect(draftOf(rig, id).stages[0]?.participantIds).toEqual(draftOf(rig, id).participants.map((p) => p.id));
     expect(screen.getByText(`All ${count} participants are now in stage 1.`)).toBeTruthy();
-    // the participant rows now show their stage
+    // the participant rows now show their stage (a row shows its fields once it is opened with Edit; step 6.3b)
+    fireEvent.click(screen.getByRole('button', { name: 'Edit participant 1' }));
     expect(screen.getByLabelText('Stage of participant 1')).toBeTruthy();
   });
 
