@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import type { Asset } from '@/core/schema';
 import { Button, Dialog } from '@/ui/primitives';
+import { FullPicture } from './full-picture';
 import { useInspectorEnv } from './env';
 import { picturesOfMechanism } from './model/pictures';
 import { RichText } from './rich-text';
@@ -68,7 +69,7 @@ function PictureFigure(props: { readonly asset: Asset }) {
           <Button onClick={() => setBig(true)}>Open full size</Button>
           {big ? (
             <Dialog open onClose={() => setBig(false)} title={alt} size="screen">
-              <img className={styles.fullPicture} src={shown.url} alt={alt} />
+              <FullPicture url={shown.url} alt={alt} />
             </Dialog>
           ) : null}
         </>

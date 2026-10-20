@@ -86,6 +86,19 @@ describe('the scheme', () => {
     expect(document.querySelectorAll('[data-equation-plus]')).toHaveLength(2);
   });
 
+  it('every "+" is in ONE unbreakable unit with the term it introduces, so it can never wrap away from it (follow-up G3)', async () => {
+    show(equation([WATER, WATER, term('Salt')], [term('Acid'), term('Base')]));
+    await settle();
+    const pluses = [...document.querySelectorAll('[data-equation-plus]')];
+    expect(pluses).toHaveLength(3);
+    for (const plus of pluses) {
+      const unit = plus.parentElement;
+      expect(unit?.hasAttribute('data-equation-unit')).toBe(true);
+      expect(unit?.children).toHaveLength(2);
+      expect(plus.nextElementSibling?.hasAttribute('data-equation-term')).toBe(true);
+    }
+  });
+
   it('a coefficient other than 1 is printed before its term at text size', async () => {
     show(equation([term('Benzaldehyde', {}, { coefficient: '2', text: '2 Benzaldehyde' })], [term('Acid')]));
     await settle();

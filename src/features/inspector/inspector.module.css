@@ -36,7 +36,8 @@
 .pictureFigure figcaption { overflow-wrap: anywhere; }
 /* fits the panel (a phone sheet too), never stretched past its natural size */
 .mechanismPicture { display: block; max-width: 100%; height: auto; background: var(--color-surface); border: 1px solid var(--color-rule); }
-.fullPicture { display: block; max-width: 100%; max-height: calc(100vh - 8rem); margin: 0 auto; object-fit: contain; }
+.fullStage { display: flex; align-items: center; justify-content: center; width: 100%; height: calc(100dvh - 8rem); }
+.fullPicture { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
 .assetImage { max-width: 100%; max-height: 320px; background: var(--color-surface); border: 1px solid var(--color-rule); }
 /* on the phone sheet at peek the main actions are large (ADR-039) */
 [data-sheet='peek'] .actions button { min-height: var(--tab-bar-height); flex: 1 1 40%; font-size: var(--text-16); }

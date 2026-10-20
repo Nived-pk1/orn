@@ -46,11 +46,16 @@ function Side(props: { readonly terms: FullEquation['reactants']; readonly names
       {props.terms.map((term, index) => (
         <Fragment key={`${term.ref.id}:${index}`}>
           {index > 0 ? (
-            <span className={styles.plus} data-equation-plus="" aria-hidden="true">
-              +
+            // the "+" and the term it introduces are one unit: the line can break before the "+", never between it and its term
+            <span className={styles.unit} data-equation-unit="">
+              <span className={styles.plus} data-equation-plus="" aria-hidden="true">
+                +
+              </span>
+              <TermColumn term={term} names={props.names} ports={props.ports} />
             </span>
-          ) : null}
-          <TermColumn term={term} names={props.names} ports={props.ports} />
+          ) : (
+            <TermColumn term={term} names={props.names} ports={props.ports} />
+          )}
         </Fragment>
       ))}
     </>

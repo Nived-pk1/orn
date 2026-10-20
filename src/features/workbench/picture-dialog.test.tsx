@@ -29,6 +29,18 @@ function open(fake = fakePictures(), onClose = vi.fn(), mode: Parameters<typeof 
 }
 
 describe('adding', () => {
+  it('the chooser looks like the buttons of the app ("Choose a picture", then the chosen file name); the real file input stays (follow-up G2)', () => {
+    open();
+    const button = screen.getByText('Choose a picture');
+    expect(button.tagName).toBe('LABEL');
+    expect(button.getAttribute('for')).toBe('picture-file');
+    expect(chooser().type).toBe('file');
+    expect(screen.getByText('No file chosen')).toBeTruthy();
+    choose();
+    expect(screen.getByText('step.png')).toBeTruthy();
+    expect(screen.queryByText('No file chosen')).toBeNull();
+  });
+
   it('the chooser accepts exactly the supported media types and has no capture attribute (a phone offers its system chooser)', () => {
     open();
     expect(chooser().getAttribute('accept')).toBe('image/png,image/jpeg,image/webp,image/gif,image/svg+xml');

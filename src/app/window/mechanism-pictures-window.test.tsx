@@ -11,6 +11,7 @@ import type { Asset, Mechanism } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { PNG_BYTES } from '@/test-support/pictures-kit';
+import { warmEditors } from '@/test-support/editor-warmup';
 import { fakeApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { AppProvider } from './context';
 import { Window } from './window';
@@ -33,6 +34,12 @@ beforeAll(async () => {
   proto.scrollIntoView ??= () => undefined;
   proto.hasPointerCapture ??= () => false;
   proto.releasePointerCapture ??= () => undefined;
+  await warmEditors(); // the first editor render is cold: pay for it here, not inside a findBy wait (studio step G4)
+  // and the picture dialog's first render, which only this file opens
+  const rig = appWithPictures();
+  fireEvent.click(within(await openEditor(rig)).getByRole('button', { name: 'Add picture' }));
+  await screen.findByRole('dialog', { name: 'Add picture' }, { timeout: 30_000 });
+  cleanup();
 });
 beforeEach(() => {
   URL.createObjectURL = vi.fn(() => 'blob:window/1');

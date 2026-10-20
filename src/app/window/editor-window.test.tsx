@@ -10,6 +10,7 @@ import type { Species } from '@/core/schema';
 import { PHONE_QUERIES } from '@/ui/hooks';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
+import { warmEditors } from '@/test-support/editor-warmup';
 import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { buildCommands, type CommandDeps } from './palette-commands';
 import { prefetchPalette } from './lazy-palette';
@@ -29,6 +30,7 @@ beforeAll(async () => {
   proto.scrollIntoView ??= () => undefined;
   proto.hasPointerCapture ??= () => false;
   proto.releasePointerCapture ??= () => undefined;
+  await warmEditors(); // the first editor render is cold: pay for it here, not inside a findBy wait (studio step G4)
 });
 afterEach(() => {
   cleanup();

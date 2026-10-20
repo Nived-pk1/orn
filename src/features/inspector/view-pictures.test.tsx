@@ -149,3 +149,44 @@ describe('Open full size', () => {
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Backside attack' })).toBeNull());
   });
 });
+
+describe('Open full size: fitted to the screen (follow-up G1)', () => {
+  async function bigImage(natural: { width: number; height: number }): Promise<HTMLElement> {
+    show(withAssets(asset('ast_one', { altText: 'Backside attack' })));
+    fireEvent.click(await within(pictures()).findByRole('button', { name: 'Open full size' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Backside attack' });
+    const big = within(dialog).getByRole('img', { name: 'Backside attack' });
+    Object.defineProperty(big, 'naturalWidth', { value: natural.width, configurable: true });
+    Object.defineProperty(big, 'naturalHeight', { value: natural.height, configurable: true });
+    fireEvent.load(big);
+    return big;
+  }
+  beforeEach(() => {
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { value: 1200, configurable: true });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { value: 600, configurable: true });
+  });
+  afterEach(() => {
+    delete (HTMLElement.prototype as unknown as Record<string, unknown>).clientWidth;
+    delete (HTMLElement.prototype as unknown as Record<string, unknown>).clientHeight;
+  });
+
+  it('a small picture is enlarged to 2x its natural size and no more', async () => {
+    const big = await bigImage({ width: 100, height: 50 });
+    await waitFor(() => expect(big.style.width).toBe('200px'));
+    expect(big.style.height).toBe('100px');
+  });
+  it('a picture that is smaller than the screen but under 2x is enlarged to fit', async () => {
+    const big = await bigImage({ width: 400, height: 300 });
+    await waitFor(() => expect(big.style.width).toBe('800px'));
+    expect(big.style.height).toBe('600px');
+  });
+  it('a large picture shrinks to fit', async () => {
+    const big = await bigImage({ width: 3000, height: 1500 });
+    await waitFor(() => expect(big.style.width).toBe('1200px'));
+    expect(big.style.height).toBe('600px');
+  });
+  it('the picture sits in a stage that centres it both ways', async () => {
+    const big = await bigImage({ width: 100, height: 50 });
+    expect(big.parentElement?.getAttribute('data-picture-stage')).not.toBeNull();
+  });
+});

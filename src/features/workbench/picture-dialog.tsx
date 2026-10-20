@@ -33,6 +33,7 @@ export function PictureDialog(props: PictureDialogProps) {
   const [caption, setCaption] = useState(mode.kind === 'edit' ? mode.picture.caption : '');
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
   const asked = useRef(0);
 
   // the preview's blob URL is made when a file passes the checks and revoked when it is replaced or the dialog goes
@@ -52,6 +53,7 @@ export function PictureDialog(props: PictureDialogProps) {
     setPrepared(null);
     setSize(null);
     setMessage(null);
+    setFileName(file?.name ?? null);
     if (file === undefined) return;
     void port.prepare(file).then((result) => {
       if (mine !== asked.current) return; // a newer choice supersedes this one
@@ -89,7 +91,13 @@ export function PictureDialog(props: PictureDialogProps) {
         {adding ? (
           <>
             <label htmlFor="picture-file">Picture file</label>
-            <input id="picture-file" type="file" accept={PICTURE_ACCEPT} onChange={(event) => choose(event.target.files?.[0])} />
+            <div className={styles.chooser}>
+              <input id="picture-file" className={styles.fileInput} type="file" accept={PICTURE_ACCEPT} onChange={(event) => choose(event.target.files?.[0])} />
+              <label htmlFor="picture-file" className={styles.chooseButton}>
+                Choose a picture
+              </label>
+              <span className={styles.fileName}>{fileName ?? 'No file chosen'}</span>
+            </div>
             {previewUrl === null ? null : (
               <img
                 className={styles.preview}

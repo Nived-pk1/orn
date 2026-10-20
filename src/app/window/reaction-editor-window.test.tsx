@@ -8,6 +8,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Reaction } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
+import { warmEditors } from '@/test-support/editor-warmup';
 import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { prefetchPalette } from './lazy-palette';
 
@@ -30,6 +31,7 @@ beforeAll(async () => {
   proto.scrollIntoView ??= () => undefined;
   proto.hasPointerCapture ??= () => false;
   proto.releasePointerCapture ??= () => undefined;
+  await warmEditors(); // the first editor render is cold: pay for it here, not inside a findBy wait (studio step G4)
   // the family page's list renders every item when the scroller is tall (jsdom does no layout)
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get(this: HTMLElement) { return isScroller(this) ? 20_000 : 40; } });
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 900 });
