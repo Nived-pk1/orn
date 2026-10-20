@@ -1,0 +1,122 @@
+/* the conditions form of a stage or a condition variant (step 6.4a): a grid of fields; a phone stacks them */
+.conditions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-2) var(--space-3);
+  align-items: start;
+}
+
+.stacked .grid {
+  grid-template-columns: 1fr;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.group {
+  margin: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.group legend {
+  font-weight: 600;
+  padding: 0 var(--space-1);
+}
+
+.group[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.inline input[type='number'] {
+  width: 7rem;
+}
+
+.stacked .inline input,
+.stacked .inline select {
+  flex: 1 1 100%;
+  min-height: 44px;
+  width: 100%;
+}
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+
+.checks label {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  min-height: var(--hit-min);
+}
+
+.parsed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin: 0;
+  font-size: var(--text-13);
+  color: var(--color-warning);
+}
+
+.stacked .parsed button,
+.stacked .group button {
+  min-height: 44px;
+}
+
+.conditions select,
+.conditions textarea {
+  min-height: var(--hit-min);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.conditions select[aria-invalid='true'],
+.conditions input[aria-invalid='true'] {
+  border-color: var(--color-error);
+  outline: 1px solid var(--color-error);
+}
+
+.conditions textarea {
+  min-height: 4.5rem;
+  width: 100%;
+  resize: vertical;
+}
+
+.summary {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--text-13);
+  color: var(--color-ink-2);
+}

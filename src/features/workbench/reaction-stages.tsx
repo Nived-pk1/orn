@@ -2,16 +2,19 @@
  * The reaction editor's Stages section (step 6.3a decisions D3, 4 and 5): an ordered list (add, label, kind, Up / Down, remove). Adding the
  * FIRST stage puts every participant in it and says so ("All 3 participants are now in stage 1"). Removing a stage that participants use asks
  * where to move them (another stage) or cancels; a stage a condition variant or an intermediate names is refused in words (those are edited
- * in step 6.4). The stage's conditions are read-only here ("Editing arrives in step 6.4"). Text only; the recipes and the core decide.
+ * in step 6.4's variants editor). Each stage shows ONE summary line of its conditions (the arrow's own builder) and opens the conditions form (step 6.4a D1). Text only; the recipes and the core decide.
  */
 import { useState } from 'react';
 import { STAGE_KINDS } from '@/core/schema';
 import { Button } from '@/ui/primitives';
+import { ConditionFields } from './condition-fields';
+import { parametersOf, stageLoc, summaryOf } from './condition-model';
 import { participantsViewOf } from './participant-model';
 import { wordsOf } from './reagent-model';
 import { addStage, moveStage, removeStage, setStageKind, setStageLabel, stagesViewOf, stageUseOf, type StageKindValue } from './stage-model';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
+import conditionStyles from './condition.module.css';
 import styles from './editor.module.css';
 
 export interface StagesSectionProps extends SectionProps {
@@ -30,6 +33,8 @@ export function StagesSection(props: StagesSectionProps) {
   const locked = props.unavailable;
   const [kind, setKind] = useState<StageKindValue>('reaction');
   const [said, setSaid] = useState('');
+  /** The stage whose conditions are open (one at a time, by ID): the others show their one summary line. */
+  const [openStage, setOpenStage] = useState<string | null>(null);
   const [asking, setAsking] = useState<{ readonly index: number; readonly to: number } | null>(null);
   const nameOf = (id: string): string => {
     const found = participants.find((p) => p.id === id);
@@ -94,9 +99,15 @@ export function StagesSection(props: StagesSectionProps) {
               <p>
                 {stage.participantIds.length === 0 ? 'No participants in this stage.' : `${plural(stage.participantIds.length, 'participant')}: ${stage.participantIds.map(nameOf).join(', ')}.`}
               </p>
-              <p className={styles.hint}>
-                Conditions: {stage.conditionsText === '' ? 'none written' : stage.conditionsText}. Editing arrives in step 6.4.
-              </p>
+              <div className={styles.participantHead}>
+                <span className={conditionStyles.summary} data-testid="stage-conditions">
+                  Conditions: {summaryOf(parametersOf(props.draft, stageLoc(index)))}
+                </span>
+                <Button aria-label={`${openStage === stage.id ? 'Close' : 'Edit'} conditions of stage ${n}`} aria-expanded={openStage === stage.id} data-field-path={`${base}.parameters`} data-open-row="" onClick={() => setOpenStage(openStage === stage.id ? null : stage.id)}>
+                  {openStage === stage.id ? 'Close' : 'Edit conditions'}
+                </Button>
+              </div>
+              {openStage === stage.id ? <ConditionFields draft={props.draft} onEdit={onEdit} loc={stageLoc(index)} who={`stage ${n}`} {...(props.invalid === undefined ? {} : { invalid: props.invalid })} {...(locked === undefined ? {} : { unavailable: locked })} {...(props.phone === undefined ? {} : { phone: props.phone })} /> : null}
               {ask !== null ? (
                 <div className={styles.confirm} role="group" aria-label={`Remove stage ${n}?`}>
                   {others.length === 0 ? (

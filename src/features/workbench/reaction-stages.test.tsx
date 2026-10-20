@@ -70,7 +70,7 @@ describe('the Stages section', () => {
     expect(within(stageRow(before + 1)).getByText('No participants in this stage.')).toBeTruthy();
   });
 
-  it('label and kind are edited; an empty label removes the field; the conditions are read-only', () => {
+  it('label and kind are edited; an empty label removes the field; the conditions are one summary line', () => {
     const { rig, id } = show(GRIGNARD);
     fireEvent.change(screen.getByLabelText('Label of stage 1'), { target: { value: 'Grignard addition' } });
     fireEvent.change(screen.getByLabelText('Kind of stage 2'), { target: { value: 'quench' } });
@@ -78,7 +78,7 @@ describe('the Stages section', () => {
     expect(draftOf(rig, id).stages[1]?.kind).toBe('quench');
     fireEvent.change(screen.getByLabelText('Label of stage 1'), { target: { value: '' } });
     expect(Object.hasOwn(must(draftOf(rig, id).stages[0]), 'label')).toBe(false);
-    expect(within(stageRow(1)).getByText(/Editing arrives in step 6\.4/)).toBeTruthy();
+    expect(within(stageRow(1)).getByTestId('stage-conditions').textContent).toBe('Conditions: anhydrous'); // the arrow's words (step 6.4a; was "Editing arrives in step 6.4")
   });
 
   it('Up and Down reorder the stages as an exact permutation, and back; each stage keeps its participants', () => {

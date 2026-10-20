@@ -85,4 +85,38 @@ describe('the reaction editor through the real window', () => {
       expect(pccCard().querySelector('[data-equation-coefficient]')).toBeNull();
     });
   });
+
+  it("a stage's conditions: reflux and an acidic medium are added, saved, the card's arrow shows them, and Undo restores the stage (step 6.4a)", async () => {
+    const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
+    app.navigator.ui.family.getState().openFamily('cls_alcohols');
+    app.panels.getState().setInspectorOpen(true);
+    renderWithApp(app);
+    await screen.findByRole('region', { name: /^Family page/ });
+    act(() => app.navigator.timers.advance(0));
+    await screen.findByRole('heading', { level: 2, name: /^Reactions of / });
+    act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: PCC }));
+    fireEvent.click(await within(await screen.findByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: 'Edit' }));
+    const dialog = await screen.findByRole('dialog', { name: /^Edit / });
+    const before = pccReaction(app).stages[0]?.parameters;
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit conditions of stage 1' }));
+    fireEvent.change(within(dialog).getByLabelText('Temperature kind of stage 1'), { target: { value: 'qualitative' } });
+    fireEvent.change(within(dialog).getByLabelText('Temperature word of stage 1'), { target: { value: 'reflux' } });
+    fireEvent.change(within(dialog).getByLabelText('Medium of stage 1'), { target: { value: 'acidic' } });
+    expect(within(dialog).getByTestId('stage-conditions').textContent).toBe('Conditions: reflux · acidic medium · anhydrous');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
+    expect(pccReaction(app).stages[0]?.parameters).toMatchObject({ temperature: { kind: 'qualitative', value: 'reflux' }, medium: 'acidic', anhydrous: true });
+    fireEvent.click(within(pccCard()).getByText('Show full equation'));
+    await waitFor(() => {
+      act(() => app.navigator.timers.advance(10));
+      expect(within(pccCard()).getAllByText(/reflux/).length).toBeGreaterThan(0);
+      expect(within(pccCard()).getAllByText(/acidic medium/).length).toBeGreaterThan(0);
+    });
+    act(() => void app.store.undo());
+    expect(pccReaction(app).stages[0]?.parameters).toEqual(before);
+    await waitFor(() => {
+      act(() => app.navigator.timers.advance(10));
+      expect(within(pccCard()).queryAllByText(/reflux/)).toHaveLength(0);
+    });
+  });
 });

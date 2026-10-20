@@ -25,7 +25,7 @@ export function ConditionsReadOnlySection(props: { readonly draft: unknown }) {
   const stagesWithConditions = list(fields.stages).filter((s) => isBag(s) && (text((s.parameters as Fields | undefined)?.text) !== '' || Object.keys(isBag(s.parameters) ? s.parameters : {}).some((k) => !['solventCharacter', 'activation', 'other', 'parsedFields', 'text'].includes(k)))).length;
   return (
     <div>
-      <p className={styles.hint}>Editing arrives in step 6.4. These are kept unchanged when you save.</p>
+      <p className={styles.hint}>Stage conditions are edited under Stages. Variants and outcomes: editing arrives in step 6.4. These are kept unchanged when you save.</p>
       <p>
         Stage conditions: {stagesWithConditions === 0 ? 'none stated' : `${plural(stagesWithConditions, 'stage')} with conditions`}. Condition variants: {variants.length === 0 ? 'none' : variants.map((label) => `'${label}'`).join(', ')}.
       </p>
