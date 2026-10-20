@@ -17,9 +17,12 @@ import type { SectionProps } from './section-props';
 import { BondRows, MapsNote, MovementRows } from './step-bonds';
 import { useStepMaps } from './step-maps';
 import { addStep, moveStep, readRows, removeStep, setStepFlag, setStepText, stepSummary, stepsViewOf, toggleStepKind, type StepView } from './step-model';
+import { SummaryLine } from './summary-line';
+import { TriChoice } from './step-flags';
 import { StepSpeciesRows } from './step-species';
 import type { StructurePort } from './structure-contracts';
 import styles from './editor.module.css';
+import fields from './step-fields.module.css';
 import own from './participant.module.css';
 
 export interface StepsSectionProps extends SectionProps {
@@ -54,11 +57,11 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
   const common = { draft: props.draft, onEdit, v, s, ...(props.invalid === undefined ? {} : { invalid: props.invalid }), ...(locked === undefined ? {} : { unavailable: locked }), ...(props.phone === undefined ? {} : { phone: props.phone }) };
   return (
     <div className={`${own.participantBody} ${props.phone === true ? own.participantPhone : ''}`}>
-      <fieldset className={styles.field} aria-label={`Step kinds of step ${n}`} data-field-path={`${base}.stepKinds`}>
+      <fieldset className={fields.kinds} aria-label={`Step kinds of step ${n}`} data-field-path={`${base}.stepKinds`}>
         <legend>Step kinds</legend>
-        <div className={styles.choices}>
+        <div className={`${fields.kindGrid} ${props.phone === true ? fields.kindGridPhone : ''}`}>
           {STEP_KINDS.map((kind) => (
-            <label key={kind} className={styles.choice}>
+            <label key={kind} className={fields.kind}>
               <input type="checkbox" checked={view.kinds.includes(kind)} disabled={locked !== undefined} onChange={(event) => onEdit(toggleStepKind(v, s, kind, event.target.checked))} />
               {wordsOf(kind)}
             </label>
@@ -76,15 +79,9 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
         {maps.unread > 0 ? <p className={styles.hint}>{maps.unread} structure(s) of this step could not be read, so their atom maps are not offered.</p> : null}
         {maps.cut ? <p className={styles.hint}>Only the first 60 atom maps are offered.</p> : null}
       </div>
-      <div className={styles.choices}>
-        <label className={styles.choice}>
-          <input type="checkbox" checked={view.isRateDetermining === true} disabled={locked !== undefined} data-field-path={`${base}.isRateDetermining`} onChange={(event) => onEdit(setStepFlag(v, s, 'isRateDetermining', event.target.checked))} />
-          Rate-determining
-        </label>
-        <label className={styles.choice}>
-          <input type="checkbox" checked={view.reversible === true} disabled={locked !== undefined} data-field-path={`${base}.reversible`} onChange={(event) => onEdit(setStepFlag(v, s, 'reversible', event.target.checked))} />
-          Reversible
-        </label>
+      <div className={fields.flags}>
+        <TriChoice legend="Rate-determining" flag="isRateDetermining" idBase={`step-${v}-${s}`} path={`${base}.isRateDetermining`} value={view.isRateDetermining} disabled={locked !== undefined} phone={props.phone} onChange={(value) => onEdit(setStepFlag(v, s, 'isRateDetermining', value))} />
+        <TriChoice legend="Reversible" flag="reversible" idBase={`step-${v}-${s}`} path={`${base}.reversible`} value={view.reversible} disabled={locked !== undefined} phone={props.phone} onChange={(value) => onEdit(setStepFlag(v, s, 'reversible', value))} />
       </div>
       <div className={styles.field}>
         <label htmlFor={`step-event-${v}-${s}`}>Stereochemical event</label>
@@ -99,6 +96,7 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
         unavailable={locked}
         phone={props.phone}
         linkExists={props.links?.exists}
+        linkName={props.links?.name}
         onChange={(value) => onEdit(setStepText(v, s, 'description', value), `${base}.description`)}
       />
       {view.title === '' ? null : <p>Title: {view.title}</p>}
@@ -124,11 +122,11 @@ export function StepsSection(props: StepsSectionProps) {
           const base = `variants[${v}].steps[${s}]`;
           const open = openId === view.id;
           return (
-            <li key={view.id || s} className={styles.panel} data-testid="step-row" data-phone={props.phone === true ? 'true' : undefined}>
+            <li key={view.id || s} className={`${styles.panel} ${props.phone === true ? fields.nestedRow : ''}`} data-testid="step-row" data-phone={props.phone === true ? 'true' : undefined}>
               <div role="group" aria-label={`Step ${n}`} className={own.participantBody}>
                 <div className={own.participantHead}>
                   <span className={conditionStyles.summary} data-testid="step-summary" aria-invalid={markedUnder(props.invalid, base)}>
-                    {stepSummary(view, n)}
+                    <SummaryLine text={stepSummary(view, n)} />
                   </span>
                   <div className={own.participantActions}>
                     <Button aria-label={`${open ? 'Close' : 'Edit'} step ${n}`} aria-expanded={open} data-field-path={base} data-open-row="" onClick={() => setOpenId(open ? null : view.id)}>

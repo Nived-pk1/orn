@@ -69,9 +69,12 @@ export const toggleStepKind = (v: number, s: number, kind: string, on: boolean):
   if (on && at < 0) kinds.push(kind);
   if (!on && at >= 0) kinds.splice(at, 1);
 };
-export const setStepFlag = (v: number, s: number, flag: StepFlag, value: boolean): DraftRecipe => (draft) => {
+/** true = Yes, false = No (a chemistry claim, kept), undefined = Not stated: the field is ABSENT. */
+export const setStepFlag = (v: number, s: number, flag: StepFlag, value: boolean | undefined): DraftRecipe => (draft) => {
   const step = stepAt(draft, v, s);
-  if (step !== undefined) step[flag] = value;
+  if (step === undefined) return;
+  if (value === undefined) Reflect.deleteProperty(step, flag);
+  else step[flag] = value;
 };
 export const setStepText = (v: number, s: number, field: StepText, value: string): DraftRecipe => (draft) => {
   const step = stepAt(draft, v, s);
@@ -107,8 +110,10 @@ export function stepsViewOf(draft: unknown, v: number): readonly StepView[] {
   });
 }
 
-/** "Step <n> · <step kinds> · rate-determining · reversible": a part not stated (or cleared) is left out. */
+/** "Step <n> · <step kinds> · rate-determining · reversible": Yes says it, No says "not ...", Not stated says nothing. */
+const flagWords = (value: boolean | undefined, words: string): string[] => (value === undefined ? [] : [value ? words : `not ${words}`]);
+
 export function stepSummary(step: StepView, n: number): string {
   const kinds = step.kinds.map((kind) => wordsOf(kind).toLowerCase()).join(', ');
-  return [`Step ${n}`, ...(kinds === '' ? [] : [kinds]), ...(step.isRateDetermining === true ? ['rate-determining'] : []), ...(step.reversible === true ? ['reversible'] : [])].join(' · ');
+  return [`Step ${n}`, ...(kinds === '' ? [] : [kinds]), ...flagWords(step.isRateDetermining, 'rate-determining'), ...flagWords(step.reversible, 'reversible')].join(' · ');
 }

@@ -4,6 +4,7 @@
  */
 import { outcomeUsesOfVariant } from '@/core/editing';
 import type { CanonicalState, RecordRef } from '@/core/schema';
+import { nameOfRecord } from '@/features/inspector';
 import type { MechanismLinksPort } from '@/features/workbench';
 
 export function createMechanismLinks(state: () => CanonicalState): MechanismLinksPort {
@@ -11,5 +12,9 @@ export function createMechanismLinks(state: () => CanonicalState): MechanismLink
     variantUses: (mechanismId, variantId) => outcomeUsesOfVariant(state(), mechanismId, variantId),
     variantsOf: (mechanismId) => state().records.mechanism[mechanismId as never]?.variants.map((variant) => ({ id: variant.id, label: variant.label })) ?? [],
     exists: (ref: RecordRef) => (state().records[ref.kind] as Readonly<Record<string, unknown>>)[ref.id] !== undefined,
+    name: (ref: RecordRef) => {
+      const record = (state().records[ref.kind] as Readonly<Record<string, unknown>>)[ref.id];
+      return record === undefined ? undefined : nameOfRecord(record as Parameters<typeof nameOfRecord>[0]);
+    },
   };
 }

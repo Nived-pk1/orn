@@ -1,0 +1,137 @@
+/* the fields of one open mechanism step (step 6.5a review F1, F2, F4) */
+
+/* step kinds: a grid, each checkbox and its words ONE clickable cell */
+.kinds {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.kinds legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+}
+
+.kindGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-1) var(--space-3);
+}
+
+.kindGridPhone {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.kind {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--hit-min);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.kind input {
+  flex: 0 0 auto;
+}
+
+/* the three-way choices */
+.tri {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.tri legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+}
+
+.segments {
+  display: inline-flex;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.segment {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  cursor: pointer;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.segment {
+  white-space: nowrap;
+}
+
+.segment + .segment {
+  border-left: 1px solid var(--color-rule);
+}
+
+.segment input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.segment:has(input:checked) {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: 700;
+}
+
+.segment:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.triPhone .segments {
+  display: flex;
+  width: 100%;
+}
+
+.triPhone .segment {
+  flex: 1 1 0;
+  min-height: 44px;
+}
+
+.flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* a phone: nested sections (mechanism > variant > step > row) add no side indent: a thin rule at the left of a variant and a top border for
+   the rows inside it, no box border or padding at the sides (the element selector wins over the box rule of editor.module.css) */
+li.nestedVariant {
+  padding: var(--space-2) 0 var(--space-2) var(--space-2);
+  border-width: 0 0 0 2px;
+  border-radius: 0;
+}
+
+li.nestedRow {
+  padding: var(--space-2) 0;
+  border-width: 1px 0 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* a part of a summary line moves to the next line whole; only a part wider than the line itself breaks */
+.part {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}

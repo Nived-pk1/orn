@@ -24,36 +24,42 @@ export interface RichTextFieldProps {
   readonly phone?: boolean | undefined;
   /** Whether the record a [[link]] names exists; absent: links are not checked in the preview. */
   readonly linkExists?: ((ref: RecordRef) => boolean) | undefined;
+  /** The name of the record a [[link]] names, shown for a link with no label (as the inspector does); absent: the record's ID. */
+  readonly linkName?: ((ref: RecordRef) => string | undefined) | undefined;
   readonly rows?: number;
 }
 
-type Exists = RichTextFieldProps['linkExists'];
+/** What the preview may ask about a [[link]]: whether its record exists, and its name. */
+interface Links {
+  readonly exists: RichTextFieldProps['linkExists'];
+  readonly name: RichTextFieldProps['linkName'];
+}
 
-function Nodes(props: { readonly nodes: readonly RichNode[]; readonly exists: Exists }) {
+function Nodes(props: { readonly nodes: readonly RichNode[]; readonly links: Links }) {
   return (
     <>
       {props.nodes.map((node, index) => (
-        <Node key={index} node={node} exists={props.exists} />
+        <Node key={index} node={node} links={props.links} />
       ))}
     </>
   );
 }
 
-function Node(props: { readonly node: RichNode; readonly exists: Exists }) {
-  const { node, exists } = props;
+function Node(props: { readonly node: RichNode; readonly links: Links }) {
+  const { node, links } = props;
   switch (node.type) {
     case 'text':
       return <>{node.text}</>;
     case 'strong':
       return (
         <strong>
-          <Nodes nodes={node.children} exists={exists} />
+          <Nodes nodes={node.children} links={links} />
         </strong>
       );
     case 'em':
       return (
         <em>
-          <Nodes nodes={node.children} exists={exists} />
+          <Nodes nodes={node.children} links={links} />
         </em>
       );
     case 'sub':
@@ -61,8 +67,10 @@ function Node(props: { readonly node: RichNode; readonly exists: Exists }) {
     case 'sup':
       return <sup>{node.text}</sup>;
     case 'link': {
-      const label = node.label === '' ? node.target.id : node.label;
-      if (exists !== undefined && !exists(node.target)) {
+      // the parser gives a link with no label the ID as its label
+      const unlabelled = node.label === '' || node.label === node.target.id;
+      const label = unlabelled ? (links.name?.(node.target) ?? node.target.id) : node.label;
+      if (links.exists !== undefined && !links.exists(node.target)) {
         return (
           <span className={styles.missing} data-missing="">
             {node.label === '' ? '' : `${node.label}, `}missing record {node.target.id}
@@ -78,7 +86,7 @@ function Node(props: { readonly node: RichNode; readonly exists: Exists }) {
     case 'paragraph':
       return (
         <p>
-          <Nodes nodes={node.children} exists={exists} />
+          <Nodes nodes={node.children} links={links} />
         </p>
       );
     case 'bullets':
@@ -86,7 +94,7 @@ function Node(props: { readonly node: RichNode; readonly exists: Exists }) {
         <ul>
           {node.items.map((item, index) => (
             <li key={index}>
-              <Nodes nodes={item} exists={exists} />
+              <Nodes nodes={item} links={links} />
             </li>
           ))}
         </ul>
@@ -116,7 +124,7 @@ export function RichTextField(props: RichTextFieldProps) {
       />
       <p id={helpId} className={styles.help}>{RICH_TEXT_HELP}</p>
       <div className={styles.preview} role="region" aria-label={`Preview of ${props.label}`}>
-        {shown === '' ? <p className={styles.empty}>Nothing to preview.</p> : <Nodes nodes={parseRichText(shown)} exists={props.linkExists} />}
+        {shown === '' ? <p className={styles.empty}>Nothing to preview.</p> : <Nodes nodes={parseRichText(shown)} links={{ exists: props.linkExists, name: props.linkName }} />}
       </div>
     </div>
   );

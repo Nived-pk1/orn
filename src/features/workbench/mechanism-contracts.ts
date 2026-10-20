@@ -19,4 +19,6 @@ export interface MechanismLinksPort {
   variantsOf(mechanismId: string): readonly { readonly id: string; readonly label: string }[];
   /** Whether the record exists now, for the preview of a [[link]]. */
   exists(ref: RecordRef): boolean;
+  /** The record's name as the inspector shows it, for a [[link]] with no label; undefined when the record is not there. */
+  name(ref: RecordRef): string | undefined;
 }

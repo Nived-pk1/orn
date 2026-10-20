@@ -109,6 +109,16 @@ describe('hostile content is inert (ADV-033, inspector part)', () => {
     expect(within(container).queryByRole('link')).toBeNull();
   });
 
+  it("a [[link]] with no label to a record that is there shows the record's NAME; a label wins (step 6.5a review F5)", () => {
+    const { state } = rig();
+    const id = Object.keys(state.records.reaction)[0] as string;
+    const name = (state.records.reaction as Record<string, { name: string }>)[id]?.name as string;
+    const { container } = withEnv(<RichText source={`See [[${id}]] and [[${id}|my words]].`} />);
+    expect(within(container).getByRole('link', { name })).toBeTruthy();
+    expect(within(container).getByRole('link', { name: 'my words' })).toBeTruthy();
+    expect(within(container).queryByText(id)).toBeNull();
+  });
+
   it('RecordLink to a missing record is words', () => {
     const { container } = withEnv(<RecordLink kind="species" id="spc_missing" />);
     expect(container.textContent).toBe('missing record spc_missing');

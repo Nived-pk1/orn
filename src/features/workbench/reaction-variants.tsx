@@ -13,7 +13,9 @@ import { stagesViewOf } from './stage-model';
 import type { SectionProps } from './section-props';
 import { wordsOf } from './reagent-model';
 import { ADDABLE_OVERRIDES, addVariant, moveVariant, outcomeNaming, overridesOf, removeVariant, setVariantLabel, setVariantStage, variantsViewOf, variantSummary, type OverrideField } from './variant-model';
+import { SummaryLine } from './summary-line';
 import styles from './editor.module.css';
+import own from './participant.module.css';
 
 export interface VariantsSectionProps extends SectionProps {
   /** A fresh variant ID ('cvr_...'). */
@@ -62,12 +64,12 @@ export function VariantsSection(props: VariantsSectionProps) {
           const ask = asking === index;
           return (
             <li key={variant.id || index} className={styles.panel} data-testid="variant-row">
-              <div role="group" aria-label={`Variant ${n}`} className={styles.participantBody}>
-                <div className={styles.participantHead}>
+              <div role="group" aria-label={`Variant ${n}`} className={own.participantBody}>
+                <div className={own.participantHead}>
                   <span className={conditionStyles.summary} data-testid="variant-summary" aria-invalid={bad(props, base)}>
-                    {n}. {variantSummary(props.draft, index)}
+                    <SummaryLine text={`${n}. ${variantSummary(props.draft, index)}`} />
                   </span>
-                  <div className={styles.participantActions}>
+                  <div className={own.participantActions}>
                     <Button aria-label={`${open ? 'Close' : 'Edit'} variant ${n}`} aria-expanded={open} data-field-path={base} data-open-row="" onClick={() => setOpenId(open ? null : variant.id)}>
                       {open ? 'Close' : 'Edit'}
                     </Button>
@@ -97,7 +99,7 @@ export function VariantsSection(props: VariantsSectionProps) {
                 ) : null}
                 {open ? (
                   <>
-                    <div className={styles.participantGrid}>
+                    <div className={own.participantGrid}>
                       <div className={styles.field}>
                         <label htmlFor={`variant-label-${index}`}>Label (required)</label>
                         <input id={`variant-label-${index}`} type="text" aria-label={`Label of variant ${n}`} value={variant.label} readOnly={locked !== undefined} aria-invalid={bad(props, `${base}.label`)} data-field-path={`${base}.label`} autoComplete="off" onChange={(event) => onEdit(setVariantLabel(index, event.target.value), `${base}.label`)} />
@@ -157,7 +159,7 @@ export function VariantsSection(props: VariantsSectionProps) {
           );
         })}
       </ul>
-      <div className={styles.participantGrid}>
+      <div className={own.participantGrid}>
         <div className={styles.field}>
           <label htmlFor="new-variant-label">Label of a new variant (required)</label>
           <input id="new-variant-label" type="text" value={label} readOnly={locked !== undefined} autoComplete="off" onChange={(event) => setLabel(event.target.value)} />

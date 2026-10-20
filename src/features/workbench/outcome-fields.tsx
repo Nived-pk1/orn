@@ -28,6 +28,7 @@ import { isomerGroupsOf, variantChoicesOf, type OutcomeView } from './outcome-vi
 import { wordsOf } from './reagent-model';
 import type { SectionProps } from './section-props';
 import styles from './editor.module.css';
+import own from './participant.module.css';
 
 export interface OutcomeFieldsProps extends SectionProps {
   readonly index: number;
@@ -51,7 +52,7 @@ export function OutcomeFields(props: OutcomeFieldsProps) {
   const stereo = outcome.stereo;
   const stereoHasContent = stereo !== undefined && (stereo.descriptors.length > 0 || stereo.note !== '');
   return (
-    <div className={styles.participantBody}>
+    <div className={own.participantBody}>
       <fieldset className={styles.choices} aria-label={`Holds under, outcome ${n}`} data-field-path={`${base}.conditionVariantIds`} aria-invalid={bad(props, `${base}.conditionVariantIds`)}>
         <legend>Holds under</legend>
         <label className={styles.choice}>
@@ -72,7 +73,7 @@ export function OutcomeFields(props: OutcomeFieldsProps) {
         ))}
         {variants.length === 0 ? <span className={styles.hint}>The reaction has no condition variants: the outcome holds under all conditions.</span> : null}
       </fieldset>
-      <div className={styles.participantGrid}>
+      <div className={own.participantGrid}>
         <div className={styles.field}>
           <label htmlFor={`o-sel-${index}`}>Selectivity</label>
           <select

@@ -14,6 +14,7 @@ import { OutcomeProducts } from './outcome-products';
 import type { MechanismLinksPort } from './mechanism-contracts';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
+import { SummaryLine } from './summary-line';
 import styles from './editor.module.css';
 import own from './participant.module.css';
 import outcomeStyles from './outcome.module.css';
@@ -83,7 +84,7 @@ export function OutcomesSection(props: OutcomesSectionProps) {
                 <div role="group" aria-label={`Outcome ${n}`} className={own.participantBody}>
                   <div className={own.participantHead}>
                     <span className={own.participantSummary} data-testid="outcome-summary" aria-invalid={marked ? true : undefined}>
-                      {outcomeSummary(props.draft, index, nameOf)}
+                      <SummaryLine text={outcomeSummary(props.draft, index, nameOf)} />
                     </span>
                     {!open && marked ? (
                       <Button className={own.participantMarker} aria-label={`Outcome ${n} has a finding: open it`} onClick={toggle}>

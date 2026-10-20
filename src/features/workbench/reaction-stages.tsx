@@ -16,6 +16,7 @@ import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
 import conditionStyles from './condition.module.css';
 import styles from './editor.module.css';
+import own from './participant.module.css';
 
 export interface StagesSectionProps extends SectionProps {
   /** A fresh stage ID ('stg_...'). */
@@ -59,11 +60,11 @@ export function StagesSection(props: StagesSectionProps) {
           const others = stages.flatMap((_, at) => (at === index ? [] : [at]));
           const ask = asking?.index === index ? asking : null;
           return (
-            <li key={stage.id || index} className={`${styles.panel} ${props.phone === true ? styles.participantPhone : styles.participant}`} data-testid="stage-row">
-              <div role="group" aria-label={`Stage ${n}`} className={styles.participantBody}>
-              <div className={styles.participantHead}>
+            <li key={stage.id || index} className={`${styles.panel} ${props.phone === true ? own.participantPhone : own.participant}`} data-testid="stage-row">
+              <div role="group" aria-label={`Stage ${n}`} className={own.participantBody}>
+              <div className={own.participantHead}>
                 <strong>Stage {n}</strong>
-                <div className={styles.participantActions}>
+                <div className={own.participantActions}>
                   <Button aria-label={`Move stage ${n} up`} {...off(() => onEdit(moveStage(index, -1)), index === 0 ? 'it is first' : undefined)}>
                     Up
                   </Button>
@@ -79,7 +80,7 @@ export function StagesSection(props: StagesSectionProps) {
                 </div>
               </div>
               {reason === undefined ? null : <p className={styles.hint}>{reason}</p>}
-              <div className={styles.participantGrid}>
+              <div className={own.participantGrid}>
                 <div className={styles.field}>
                   <label htmlFor={`stage-label-${index}`}>Label (optional)</label>
                   <input id={`stage-label-${index}`} type="text" aria-label={`Label of stage ${n}`} value={stage.label} readOnly={locked !== undefined} aria-invalid={bad(props, `${base}.label`)} data-field-path={`${base}.label`} autoComplete="off" onChange={(event) => onEdit(setStageLabel(index, event.target.value), `${base}.label`)} />
@@ -99,7 +100,7 @@ export function StagesSection(props: StagesSectionProps) {
               <p>
                 {stage.participantIds.length === 0 ? 'No participants in this stage.' : `${plural(stage.participantIds.length, 'participant')}: ${stage.participantIds.map(nameOf).join(', ')}.`}
               </p>
-              <div className={styles.participantHead}>
+              <div className={own.participantHead}>
                 <span className={conditionStyles.summary} data-testid="stage-conditions">
                   Conditions: {summaryOf(parametersOf(props.draft, stageLoc(index)))}
                 </span>

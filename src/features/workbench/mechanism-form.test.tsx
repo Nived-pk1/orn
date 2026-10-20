@@ -34,6 +34,7 @@ function linksOf(rig: EditorRig): MechanismLinksPort {
     variantUses: (mechanismId, variantId) => outcomeUsesOfVariant(rig.store.getState(), mechanismId, variantId),
     variantsOf: () => [],
     exists: (ref) => (rig.store.getState().records as unknown as Record<string, Record<string, unknown>>)[ref.kind]?.[ref.id] !== undefined,
+    name: () => undefined,
   };
 }
 function show(target: { id: string } | { blank: true }, phone = false) {

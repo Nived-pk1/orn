@@ -299,7 +299,8 @@ describe('the compact participant rows (step 6.3b D1)', () => {
     set('Strength of participant 2', 'concentrated');
     fireEvent.click(screen.getByRole('button', { name: 'Close participant 2' }));
     expect(draftOf(rig, id).participants[1]).toMatchObject({ coefficient: 2, phase: 'l', strength: 'concentrated' });
-    expect(within(row(2)).getByText(/· ×2 · l · Concentrated$/)).toBeTruthy();
+    // each part of the line is its own element now (so a part never breaks inside), the text is the same
+    expect(row(2).textContent).toMatch(/· ×2 · l · Concentrated/);
     expect(within(row(2)).queryByText(/Not stated/)).toBeNull();
   });
 

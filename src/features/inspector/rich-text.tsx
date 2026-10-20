@@ -23,7 +23,8 @@ export function RecordLink(props: { readonly kind: string; readonly id: string; 
       </span>
     );
   }
-  const label = props.label === undefined || props.label === '' ? env.name(ref) : props.label;
+  // the parser gives a [[link]] with no label the ID as its label: that, too, shows the record's name
+  const label = props.label === undefined || props.label === '' || props.label === props.id ? env.name(ref) : props.label;
   return (
     <a
       href={`#${props.id}`}

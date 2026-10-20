@@ -64,6 +64,15 @@ describe('RichTextField', () => {
     expect(box.queryByText(/missing record rxn_here/)).toBeNull();
   });
 
+  it("a [[link]] with no label to an existing record shows the record's NAME (as the inspector does); a label wins; a missing record is unchanged", () => {
+    render(<Host initial={'See [[rxn_here]], [[rxn_here|my words]] and [[rxn_gone]].'} linkExists={(ref) => ref.id === 'rxn_here'} linkName={(ref) => (ref.id === 'rxn_here' ? 'Ethanol to ethanal' : undefined)} />);
+    const box = within(preview());
+    expect(box.getByText('Ethanol to ethanal')).toBeTruthy();
+    expect(box.queryByText('rxn_here')).toBeNull();
+    expect(box.getByText('my words')).toBeTruthy();
+    expect(box.getByText(/missing record rxn_gone/)).toBeTruthy();
+  });
+
   it('malformed markup is shown literally and does not throw', () => {
     render(<Host initial={'*never closed and **half and _{open and [[rxn_'} />);
     expect(preview().textContent).toContain('*never closed and **half and _{open and [[rxn_');

@@ -35,15 +35,24 @@ describe('steps', () => {
     expect(step(run(toggleStepKind(0, 0, 'proton_transfer', false)))['stepKinds']).toEqual([]);
     expect(step(run(setStepFlag(0, 1, 'reversible', true)), 1)['reversible']).toBe(true);
     expect(step(run(setStepFlag(0, 0, 'isRateDetermining', false)))['isRateDetermining']).toBe(false);
+    // "Not stated" is the field ABSENT; "No" (false) is a chemistry claim and stays
+    expect(Object.hasOwn(step(run(setStepFlag(0, 0, 'isRateDetermining', undefined))), 'isRateDetermining')).toBe(false);
+    expect(Object.hasOwn(step(run(setStepFlag(0, 0, 'reversible', undefined))), 'reversible')).toBe(false);
+    expect(step(run(setStepFlag(0, 0, 'reversible', false)))['reversible']).toBe(false);
     expect(step(run(setStepText(0, 0, 'description', ' *slow* \n')))['description']).toBe(' *slow* \n');
     expect(Object.hasOwn(step(run(setStepText(0, 0, 'stereochemicalEvent', ''))), 'stereochemicalEvent')).toBe(false);
   });
   it('the summary line is "Step <n> · <kinds> · rate-determining · reversible" with unstated parts left out', () => {
     const views = stepsViewOf(base(), 0);
-    expect(stepSummary(views[0] as never, 1)).toBe('Step 1 · proton transfer · rate-determining');
+    expect(stepSummary(views[0] as never, 1)).toBe('Step 1 · proton transfer · rate-determining · not reversible');
     expect(stepSummary(views[1] as never, 2)).toBe('Step 2');
     const both = stepsViewOf(run(setStepFlag(0, 0, 'reversible', true)), 0);
     expect(stepSummary(both[0] as never, 1)).toBe('Step 1 · proton transfer · rate-determining · reversible');
+    // No is said ("not reversible"); Not stated says nothing
+    const no = stepsViewOf(run(setStepFlag(0, 0, 'reversible', false)), 0);
+    expect(stepSummary(no[0] as never, 1)).toBe('Step 1 · proton transfer · rate-determining · not reversible');
+    const noRate = stepsViewOf(run(setStepFlag(0, 0, 'isRateDetermining', false)), 0);
+    expect(stepSummary(noRate[0] as never, 1)).toBe('Step 1 · proton transfer · not rate-determining · not reversible');
   });
 });
 

@@ -66,6 +66,8 @@ test.describe('the mechanism editor', () => {
     await expect(preview.locator('em')).toHaveText('aldehyde');
     await expect(preview.locator('sub')).toHaveText('2');
     await expect(dialog.getByText('*emphasis*, **strong**, H_{2}O, Br^{-}, - bullet, [[record link]]')).toBeVisible();
+    // the live L1 findings follow an edit 300 ms later (a first "Must not be blank (name)" is not stale, it has not been recomputed yet; review F7)
+    await expect(dialog.getByText('Must not be blank (name)')).toHaveCount(0);
     await dismissToasts(page);
     await dialog.getByRole('textbox', { name: 'Summary' }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: resolve(shotsDir(), 'rich-text-field-1280x800.png') });
@@ -93,7 +95,7 @@ test.describe('the mechanism editor', () => {
     await dialog.getByLabel('From of movement 1').selectOption('bond:3-4');
     await dialog.getByLabel('To of movement 1').selectOption('lone_pair:3');
     await dialog.getByLabel('Electrons of movement 1').selectOption('2');
-    await dialog.getByRole('checkbox', { name: 'Rate-determining' }).check();
+    await dialog.getByRole('group', { name: 'Rate-determining' }).getByRole('radio', { name: 'Yes' }).check();
     await expect(dialog.getByTestId('step-summary').first()).toHaveText('Step 1 · bond cleavage · rate-determining');
     await expect(dialog.getByRole('img', { name: 'Drawing of the entered structure' })).toBeVisible({ timeout: 60_000 });
     expect(await axeProblems(page)).toEqual([]);

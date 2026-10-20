@@ -11,6 +11,10 @@ describe('createMechanismLinks', () => {
     expect(uses.map((u) => [u.reactionId, u.outcomeNumber])).toEqual([['rxn_r-2-bromobutane-alc-koh', 2]]);
     expect(links.variantUses('mec_e2-haloalkane', 'mvr_new')).toEqual([]);
   });
+  it("gives a record's name the way the inspector shows it", () => {
+    expect(links.name({ kind: 'reaction', id: 'rxn_ethanal-aldol' })).toBe(demoState().records.reaction['rxn_ethanal-aldol' as never]?.name);
+    expect(links.name({ kind: 'reaction', id: 'rxn_nope' })).toBeUndefined();
+  });
   it('knows which records exist', () => {
     expect(links.exists({ kind: 'reaction', id: 'rxn_ethanal-aldol' })).toBe(true);
     expect(links.exists({ kind: 'reaction', id: 'rxn_nope' })).toBe(false);

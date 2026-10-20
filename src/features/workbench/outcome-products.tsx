@@ -26,6 +26,7 @@ import { wordsOf } from './reagent-model';
 import type { SectionProps } from './section-props';
 import styles from './editor.module.css';
 import own from './outcome.module.css';
+import rowStyles from './participant.module.css';
 
 export interface OutcomeProductsProps extends SectionProps {
   readonly index: number;
@@ -77,7 +78,7 @@ export function OutcomeProducts(props: OutcomeProductsProps) {
           const choice = product.substance === undefined ? undefined : picker?.describe(product.substance.kind, product.substance.id);
           return (
             <li key={product.id || at} className={props.phone === true ? `${own.product} ${own.productPhone}` : own.product} data-testid="product-row">
-              <div role="group" aria-label={`Product ${n} of outcome ${on}`} className={styles.participantBody}>
+              <div role="group" aria-label={`Product ${n} of outcome ${on}`} className={rowStyles.participantBody}>
                 <strong tabIndex={-1} data-field-path={`${base}.ref`} aria-invalid={bad(props, `${base}.ref`)}>
                   {n}. {product.substance === undefined ? 'No substance' : choiceLine(choice, product.substance.id)}
                 </strong>
@@ -97,7 +98,7 @@ export function OutcomeProducts(props: OutcomeProductsProps) {
                     </label>
                   ))}
                 </fieldset>
-                <div className={styles.participantActions}>
+                <div className={rowStyles.participantActions}>
                   <Button aria-label={`Move product ${n} of outcome ${on} up`} {...off(() => onEdit(moveProduct(index, at, -1)), at === 0 ? 'it is first' : undefined)}>
                     Up
                   </Button>
@@ -116,7 +117,7 @@ export function OutcomeProducts(props: OutcomeProductsProps) {
                 </div>
                 <details className={own.moreDetails}>
                   <summary>More details</summary>
-                  <div className={styles.participantGrid}>
+                  <div className={rowStyles.participantGrid}>
                     <div className={styles.field}>
                       <label htmlFor={`pd-coef-${index}-${at}`}>Coefficient</label>
                       <input

@@ -65,6 +65,16 @@
   gap: var(--space-2);
 }
 
+/* a list that IS the <ul> (cards, summary rows): no bullets, no indent */
+ul.list {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .row {
   display: flex;
   flex-wrap: wrap;

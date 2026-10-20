@@ -11,7 +11,9 @@ import type { MechanismLinksPort, VariantUse } from './mechanism-contracts';
 import { addVariant, moveVariant, removeVariant, setVariantApplicability, setVariantLabel, setVariantRateLaw, variantSummary, variantsViewOf } from './mechanism-model';
 import { RichTextField } from './rich-text-field';
 import type { SectionProps } from './section-props';
+import { SummaryLine } from './summary-line';
 import styles from './editor.module.css';
+import fields from './step-fields.module.css';
 import own from './participant.module.css';
 
 export interface MechanismVariantsProps extends SectionProps {
@@ -52,11 +54,11 @@ export function MechanismVariantsSection(props: MechanismVariantsProps) {
           const open = openId === variant.id;
           const refusal = usageWords(props.links?.variantUses(mechanismId, variant.id) ?? []);
           return (
-            <li key={variant.id || index} className={styles.panel} data-testid="mech-variant-row" data-phone={props.phone === true ? 'true' : undefined}>
+            <li key={variant.id || index} className={`${styles.panel} ${props.phone === true ? fields.nestedVariant : ''}`} data-testid="mech-variant-row" data-phone={props.phone === true ? 'true' : undefined}>
               <div role="group" aria-label={`Variant ${n}`} className={`${own.participantBody} ${props.phone === true ? own.participantPhone : ''}`}>
                 <div className={own.participantHead}>
                   <span className={conditionStyles.summary} data-testid="mech-variant-summary" aria-invalid={bad(props, base)}>
-                    {n}. {variantSummary(variant)}
+                    <SummaryLine text={`${n}. ${variantSummary(variant)}`} />
                   </span>
                   <div className={own.participantActions}>
                     <Button aria-label={`${open ? 'Close' : 'Edit'} variant ${n}`} aria-expanded={open} data-field-path={base} data-open-row="" onClick={() => setOpenId(open ? null : variant.id)}>
@@ -108,6 +110,7 @@ export function MechanismVariantsSection(props: MechanismVariantsProps) {
                       unavailable={locked}
                       phone={props.phone}
                       linkExists={props.links?.exists}
+        linkName={props.links?.name}
                       rows={2}
                       onChange={(value) => onEdit(setVariantApplicability(index, value), `${base}.applicability`)}
                     />

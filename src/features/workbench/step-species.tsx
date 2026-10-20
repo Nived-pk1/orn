@@ -16,6 +16,7 @@ import { addSpecies, moveSpecies, onSpeciesRow, removeSpecies, setSpeciesLabel, 
 import type { StructurePort } from './structure-contracts';
 import { StructurePanel } from './structure-panel';
 import styles from './editor.module.css';
+import fields from './step-fields.module.css';
 import own from './participant.module.css';
 
 export interface StepSpeciesProps extends SectionProps {
@@ -49,7 +50,7 @@ export function StepSpeciesRows(props: StepSpeciesProps) {
           const showStructure = hasStructure || opened.includes(index);
           const chosen = ref === undefined ? undefined : picker?.describe(ref.kind, ref.id);
           return (
-            <li key={index} className={styles.panel} data-testid="species-row" data-phone={props.phone === true ? 'true' : undefined}>
+            <li key={index} className={`${styles.panel} ${props.phone === true ? fields.nestedRow : ''}`} data-testid="species-row" data-phone={props.phone === true ? 'true' : undefined}>
               <div className={`${own.participantBody} ${props.phone === true ? own.participantPhone : ''}`}>
                 <div className={own.participantHead}>
                   <select aria-label={`Role of species ${k}`} value={role} disabled={locked !== undefined} aria-invalid={bad(props, `${base}.role`)} data-field-path={`${base}.role`} onChange={(event) => onEdit(setSpeciesRole(v, s, index, event.target.value), `${base}.role`)}>

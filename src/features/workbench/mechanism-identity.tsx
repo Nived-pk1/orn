@@ -51,6 +51,7 @@ export function MechanismSummarySection(props: SectionProps & { readonly links?:
       unavailable={props.unavailable}
       phone={props.phone}
       linkExists={props.links?.exists}
+        linkName={props.links?.name}
       onChange={(value) => props.onEdit(setSummary(value), 'summary')}
     />
   );
