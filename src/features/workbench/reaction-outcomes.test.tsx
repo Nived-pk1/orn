@@ -206,11 +206,11 @@ describe('a new outcome', () => {
     expect(summaries()[1]).toMatch(/^2\. trace · .+ · under all conditions$/);
   });
 
-  it('the mechanism link is read-only and says when editing arrives', () => {
+  it('the mechanism link is a picker since step 6.5a (its choices are tested in reaction-mechanism-links.test.tsx)', () => {
     show(E2);
     editOutcome(1);
-    expect(screen.getByText(/^Mechanism: .*Editing arrives in step 6\.5\./)).toBeTruthy();
-    expect(screen.queryByLabelText(/Mechanism of outcome/)).toBeNull();
+    expect((screen.getByLabelText('Mechanism of outcome 1') as HTMLSelectElement).value).toBe('mec_e2-haloalkane');
+    expect(screen.queryByText(/Editing arrives in step 6\.5\./)).toBeNull();
   });
 });
 

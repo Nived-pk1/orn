@@ -15,6 +15,8 @@ export interface VariantUse {
 export interface MechanismLinksPort {
   /** The outcomes of any reaction (as saved) that link this variant of this mechanism. */
   variantUses(mechanismId: string, variantId: string): readonly VariantUse[];
+  /** The variants (ID and label, in order) of a mechanism as saved; empty when it is not saved or has none. */
+  variantsOf(mechanismId: string): readonly { readonly id: string; readonly label: string }[];
   /** Whether the record exists now, for the preview of a [[link]]. */
   exists(ref: RecordRef): boolean;
 }

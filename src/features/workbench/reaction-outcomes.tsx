@@ -11,6 +11,7 @@ import { OutcomeFields } from './outcome-fields';
 import { addOutcome, moveOutcome, removeOutcome, type ProductKind } from './outcome-model';
 import { holdsUnderWords, outcomeSummary, outcomesViewOf, type OutcomeView } from './outcome-view';
 import { OutcomeProducts } from './outcome-products';
+import type { MechanismLinksPort } from './mechanism-contracts';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
 import styles from './editor.module.css';
@@ -19,6 +20,7 @@ import outcomeStyles from './outcome.module.css';
 
 export interface OutcomesSectionProps extends SectionProps {
   readonly picker?: RecordPickerPort | undefined;
+  readonly links?: MechanismLinksPort | undefined;
   /** A fresh outcome or product ID ('out_...', 'pdt_...'). */
   readonly newId: (prefix: string) => string;
 }

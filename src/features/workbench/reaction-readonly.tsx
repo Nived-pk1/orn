@@ -22,10 +22,10 @@ export function ClassificationReadOnlySection(props: { readonly draft: unknown }
   const reversibility = isBag(fields.reversibility) ? text(fields.reversibility.kind) : '';
   return (
     <div>
-      <p className={styles.hint}>Editing arrives in step 6.5. These are kept unchanged when you save.</p>
+      <p className={styles.hint}>Editing arrives in step 6.6. These are kept unchanged when you save.</p>
       <p>Reversibility: {reversibility === '' ? 'not stated' : wordsOf(reversibility).toLowerCase()}.</p>
       <p>
-        Named reactions: {list(fields.namedReactionIds).length}. Transformations: {list(fields.transformationIds).length}. Reaction types: {list(fields.reactionTypes).length}. Mechanism classes: {list(fields.mechanismClasses).length}. Mechanisms: {list(fields.mechanismIds).length}. Concepts: {list(fields.conceptIds).length}. Prerequisite concepts: {list(fields.prerequisiteConceptIds).length}. Intermediates: {list(fields.intermediates).length}.
+        Named reactions: {list(fields.namedReactionIds).length}. Transformations: {list(fields.transformationIds).length}. Reaction types: {list(fields.reactionTypes).length}. Mechanism classes: {list(fields.mechanismClasses).length}. Concepts: {list(fields.conceptIds).length}. Prerequisite concepts: {list(fields.prerequisiteConceptIds).length}. Intermediates: {list(fields.intermediates).length}.
       </p>
     </div>
   );

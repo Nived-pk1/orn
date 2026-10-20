@@ -32,6 +32,7 @@ const ALDOL = 'mec_aldol-ethanal';
 function linksOf(rig: EditorRig): MechanismLinksPort {
   return {
     variantUses: (mechanismId, variantId) => outcomeUsesOfVariant(rig.store.getState(), mechanismId, variantId),
+    variantsOf: () => [],
     exists: (ref) => (rig.store.getState().records as unknown as Record<string, Record<string, unknown>>)[ref.kind]?.[ref.id] !== undefined,
   };
 }

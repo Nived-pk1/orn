@@ -39,8 +39,8 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
     const exam = deps.activeExam();
     const scope = exam === null ? '' : SCOPE_WORDS[createScopeOf(deps.indexes(), exam.examId, exam.examVersionId)({ kind, id: record.id } as never)];
     const reactionScope = kind === 'reaction' ? record.scope : undefined;
-    const kindWords = kind === 'reaction' ? `${reactionScope ?? ''} reaction`.trim() : kind === 'class' ? CLASS_KIND_WORDS[record.classKind as ChemicalClass['classKind']] : kind === 'species' ? (record.speciesKind === undefined || record.speciesKind === 'unspecified' ? 'species' : record.speciesKind.replace(/_/g, ' ')) : 'reagent';
-    return { kind, id: record.id, name: kind === 'reaction' ? (record.name ?? record.id) : (record.names?.canonical ?? record.id), kindWords, scope, ...(reactionScope === undefined ? {} : { reactionScope }) };
+    const kindWords = kind === 'reaction' ? `${reactionScope ?? ''} reaction`.trim() : kind === 'class' ? CLASS_KIND_WORDS[record.classKind as ChemicalClass['classKind']] : kind === 'species' ? (record.speciesKind === undefined || record.speciesKind === 'unspecified' ? 'species' : record.speciesKind.replace(/_/g, ' ')) : kind === 'mechanism' ? 'mechanism' : 'reagent';
+    return { kind, id: record.id, name: kind === 'reaction' || kind === 'mechanism' ? (record.name ?? record.id) : (record.names?.canonical ?? record.id), kindWords, scope, ...(reactionScope === undefined ? {} : { reactionScope }) };
   };
   const nameOf = (kind: PickKind, id: string): string => describe(kind, id)?.name ?? id;
   return {

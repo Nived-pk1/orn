@@ -21,6 +21,9 @@ import {
   type SelectivityValue,
   type StereoValue,
 } from './outcome-model';
+import { OutcomeMechanism } from './outcome-mechanism';
+import type { MechanismLinksPort } from './mechanism-contracts';
+import type { RecordPickerPort } from './record-picker-contracts';
 import { isomerGroupsOf, variantChoicesOf, type OutcomeView } from './outcome-view';
 import { wordsOf } from './reagent-model';
 import type { SectionProps } from './section-props';
@@ -29,6 +32,8 @@ import styles from './editor.module.css';
 export interface OutcomeFieldsProps extends SectionProps {
   readonly index: number;
   readonly outcome: OutcomeView;
+  readonly picker?: RecordPickerPort | undefined;
+  readonly links?: MechanismLinksPort | undefined;
 }
 
 const bad = (props: SectionProps, path: string): true | undefined => (props.invalid?.has(path) === true ? true : undefined);
@@ -242,7 +247,7 @@ export function OutcomeFields(props: OutcomeFieldsProps) {
           onChange={(event) => onEdit(setRationale(index, event.target.value), `${base}.rationale`)}
         />
       </div>
-      <p className={styles.hint}>Mechanism: {outcome.mechanismId === '' ? 'none linked' : outcome.mechanismId}. Editing arrives in step 6.5.</p>
+      <OutcomeMechanism draft={props.draft} onEdit={onEdit} index={index} picker={props.picker} links={props.links} {...(props.invalid === undefined ? {} : { invalid: props.invalid })} {...(locked === undefined ? {} : { unavailable: locked })} />
     </div>
   );
 }

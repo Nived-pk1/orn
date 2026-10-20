@@ -68,7 +68,7 @@ export function ParticipantsSection(props: ParticipantsSectionProps) {
         unavailable={locked}
         isListed={() => false}
         onPick={(found) => {
-          if (found.kind === 'reaction') return;
+          if (found.kind === 'reaction' || found.kind === 'mechanism') return;
           const added = props.newId('prt');
           props.onEdit(addParticipant(added, { kind: found.kind, id: found.id }, role));
           setOpenKey(added);

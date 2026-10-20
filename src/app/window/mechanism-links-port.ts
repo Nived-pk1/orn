@@ -9,6 +9,7 @@ import type { MechanismLinksPort } from '@/features/workbench';
 export function createMechanismLinks(state: () => CanonicalState): MechanismLinksPort {
   return {
     variantUses: (mechanismId, variantId) => outcomeUsesOfVariant(state(), mechanismId, variantId),
+    variantsOf: (mechanismId) => state().records.mechanism[mechanismId as never]?.variants.map((variant) => ({ id: variant.id, label: variant.label })) ?? [],
     exists: (ref: RecordRef) => (state().records[ref.kind] as Readonly<Record<string, unknown>>)[ref.id] !== undefined,
   };
 }

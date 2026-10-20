@@ -3,7 +3,7 @@
  * the search engine, the words for a record already chosen, and the cycle questions a picker asks BEFORE Save. The app fills it; the
  * pickers decide nothing. `kindWords` and `scope` are words ("compound class", "in the syllabus").
  */
-export type PickKind = 'species' | 'class' | 'reagent' | 'reaction';
+export type PickKind = 'species' | 'class' | 'reagent' | 'reaction' | 'mechanism';
 
 export interface RecordChoice {
   readonly kind: PickKind;

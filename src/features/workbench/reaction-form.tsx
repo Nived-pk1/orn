@@ -5,6 +5,8 @@
 import { ReactionIdentitySection } from './reaction-identity';
 import { ParticipantsSection } from './reaction-participants';
 import { StagesSection } from './reaction-stages';
+import { MechanismLinksSection } from './reaction-mechanism-links';
+import type { MechanismLinksPort } from './mechanism-contracts';
 import { OutcomesSection } from './reaction-outcomes';
 import { VariantsSection } from './reaction-variants';
 import { ClassificationReadOnlySection, ReactionNotesReadOnlySection } from './reaction-readonly';
@@ -17,6 +19,7 @@ import styles from './editor.module.css';
 export interface ReactionFormProps extends SectionProps {
   readonly picker?: RecordPickerPort;
   readonly newId: (prefix: string) => string;
+  readonly links?: MechanismLinksPort | undefined;
 }
 
 export function ReactionForm(props: ReactionFormProps) {
@@ -39,9 +42,12 @@ export function ReactionForm(props: ReactionFormProps) {
         <VariantsSection {...common} newId={props.newId} />
       </SectionFrame>
       <SectionFrame id="outcomes" title="Outcomes" initiallyOpen={open}>
-        <OutcomesSection {...common} {...picker} newId={props.newId} />
+        <OutcomesSection {...common} {...picker} links={props.links} newId={props.newId} />
       </SectionFrame>
-      <SectionFrame id="classification" title="Mechanism and classification" initiallyOpen={false}>
+      <SectionFrame id="mechanism-links" title="Mechanism links" initiallyOpen={open}>
+        <MechanismLinksSection {...common} {...picker} />
+      </SectionFrame>
+      <SectionFrame id="classification" title="Classification" initiallyOpen={false}>
         <ClassificationReadOnlySection draft={props.draft} />
       </SectionFrame>
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
