@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-20",
+  "lastUpdated": "2026-10-21",
   "currentPhase": 6,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -101,13 +101,17 @@
     "6.1",
     "6.5a",
     "6.5b",
-    "6.5"
+    "6.5",
+    "studio"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
     "closed": "2026-10-19",
     "summary": "Outcomes of a reaction are grouped by condition-variant set (src/core/graph/outcome-groups.ts); the family card draws one scheme per group and the full equation is one per group in a bordered panel; presentation only, no schema change.",
-    "commits": ["294c244", "525afcd"]
+    "commits": [
+      "294c244",
+      "525afcd"
+    ]
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
@@ -115,8 +119,17 @@
     "commit": "4b6e671",
     "version": "d6b74fe6-66d7-4443-a840-f69e91d0a35c"
   },
-  "nextStep": "studio",
-  "nextStepTitle": "Studio: a separate build with editing, for the owner",
+  "studioPreview": {
+    "workerName": "reaction-navigator-studio",
+    "config": "wrangler.studio.jsonc",
+    "url": null,
+    "deployedAt": null,
+    "version": null,
+    "protected": false,
+    "note": "built and checked (2026-10-21); not deployed. Cloudflare Access must be turned on by the user for THIS Worker only (docs/RELEASE.md, Access)."
+  },
+  "nextStep": "6.6",
+  "nextStepTitle": "Caveats, relationships, curriculum mappings, citations editors",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

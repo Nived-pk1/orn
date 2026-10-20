@@ -11,3 +11,4 @@ screenshots/
 .wrangler/
 build-report/
 dist-studio/
+dist-study-e2e/

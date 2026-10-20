@@ -83,7 +83,8 @@ const isEditorModule = (id: string): boolean => {
 };
 
 /** Each edition builds into its own folder: dist (Study, the Worker reaction-navigator) and dist-studio (Studio, reaction-navigator-studio). */
-const outDir = edition === 'studio' ? 'dist-studio' : 'dist';
+// ORN_OUT_DIR: the e2e builds the Study edition over a fixture into its own folder, so `dist` is never a test build
+const outDir = process.env.ORN_OUT_DIR ?? (edition === 'studio' ? 'dist-studio' : 'dist');
 
 /**
  * The module list of every chunk, written OUTSIDE the served folder (build-report/<edition>.json, git-ignored): the Vite manifest has no

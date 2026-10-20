@@ -7,7 +7,8 @@
  */
 export type Edition = 'study' | 'studio';
 
-export const EDITION: Edition = __ORN_EDITION__ === 'studio' ? 'studio' : 'study';
+// typeof: a Node script or test runner that loads src without the build has no literal; that is Study too
+export const EDITION: Edition = typeof __ORN_EDITION__ !== 'undefined' && __ORN_EDITION__ === 'studio' ? 'studio' : 'study';
 /** True only in Studio: guards every entry point of an editor (the Workbench, Edit, New, Drafts, global Undo and Redo, the session manager). */
 export const EDITING: boolean = EDITION === 'studio';
 

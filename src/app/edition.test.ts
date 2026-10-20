@@ -33,6 +33,19 @@ describe('edition', () => {
     }
   });
 
+  it('no literal at all (a Node script or a test runner that loads src without the build) is Study, not a crash', async () => {
+    vi.resetModules();
+    const had = Object.getOwnPropertyDescriptor(globalThis, '__ORN_EDITION__');
+    delete (globalThis as Record<string, unknown>).__ORN_EDITION__; // not declared at all
+    try {
+      const { EDITION, EDITING } = await import('./edition');
+      expect(EDITION).toBe('study');
+      expect(EDITING).toBe(false);
+    } finally {
+      if (had !== undefined) Object.defineProperty(globalThis, '__ORN_EDITION__', had);
+    }
+  });
+
   it('the word "Studio" comes from one constant, and the Studio page title is "ORN " plus it', async () => {
     const { STUDIO_NAME, pageTitleOf, SITE_TITLE } = await loadAs('studio');
     expect(STUDIO_NAME).toBe('Studio');
