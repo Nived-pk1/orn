@@ -112,6 +112,7 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 - *Step 6.4a (ADR-040 addendum, 2026-10-20):* each stage shows one summary line of its conditions (the arrow's own builder) and opens a conditions form with every schema field (values as entered, "Not stated" absent); a field read from text says so and has Confirm (editing it also confirms it); condition variants are expandable summary lines that hold only their overriding fields; a variant an outcome names cannot be removed (outcomes: step 6.4b).
 - *Step 6.4b (ADR-040 addendum, 2026-10-20):* the Outcomes section lists the outcomes in the card's groups (by condition-variant set), each one summary line ("1. exclusive · Propanal · under all conditions") with Edit, Up, Down and Remove (Remove asks); one open at a time. Expanded: Holds under (All conditions or a choice of variants), selectivity (a new outcome is "unspecified"), products (generic picker limited by the scope; role as three radio buttons with no default), isomer group (choose or type), regiochemistry, stereochemistry, rationale, the mechanism link read-only (step 6.5). Dry-run findings (RXN-003, RXN-008, RXN-009) mark the outcome's line and open it from "Finding". The preview's no-outcome text is "No products yet: add an outcome in the Outcomes section".
 - *Step 6.5a (ADR-040 addendum, 2026-10-20):* the mechanism editor has Identity, Summary (the rich-text field: a textarea stored as typed, a live preview, a help line), Variants (summary lines "<label> · <n> steps · <applicability>", one open at a time, Remove asks and is refused in words while an outcome uses the variant), Review and a read-only section; its steps, species, bond and electron-movement rows, and the reaction and outcome mechanism links, follow in parts 4 and 5. New mechanism: Workbench page, palette, More on a phone; Edit in the inspector.
+- *Step 6.5b (ADR-040 addendum, 2026-10-20):* the mechanism editor has a **Pictures** section after Summary: each picture small with Edit and Remove; "Add picture" opens a dialog (file chooser, preview, alt text required, caption optional) and saves AT ONCE ("The picture is saved now; it does not wait for the mechanism's Save"); a mechanism never saved says "Save the mechanism once before adding pictures." Remove detaches ("Removed from this mechanism. The picture stays in your data until deleting arrives (step 6.8)."). Rate-determining and Reversible are three-way choices (Not stated / Yes / No).
 
 ## 8. Compound and structure authoring (#12)
 
@@ -135,6 +136,8 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 | L5 | Provenance, legacy trace, findings detail, raw record (read-only JSON) |
 
 The chosen level persists per user (uiState). Every record reference in the inspector is a link that focuses it in the current view.
+
+- *Step 6.5b (ADR-038 addendum):* the mechanism view shows the mechanism's pictures FIRST, under the title and before the summary and variants: `<img>` only (blob URL made and revoked through the assets port), alt text from the record, caption under it, never enlarged past its natural size; "Open full size" opens a modal dialog (Esc and Close, focus returns); bytes missing in this browser: "Picture missing: its file is not stored in this browser" with the alt text.
 
 ## 10. Interaction model (#19)
 
