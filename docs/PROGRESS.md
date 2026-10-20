@@ -5115,3 +5115,8 @@ No timing measurement was pending (the 6.3a dry-run figures and the preview benc
 
 `npx wrangler deploy` of commit afade7e (nothing was asked): version e6301e1d-4038-4b52-91cb-b9b16de17184 at https://reaction-navigator.organic-reaction-navigator.workers.dev. Against the live URL, Chromium and WebKit: smoke, csp, phone, phone-family, equation, phone-equation, structures (the pattern `phone` also ran the other phone specs): 49 passed, 21 skipped (by design), 0 failed. PROJECT_STATE releasePreview updated. Nothing started in this session is still running (the e2e servers were Playwright's own and exited with their runs; no process was killed by name).
 Correction to part 4: the engine-specific skips of the full run are the WebKit-only tests (persistent / ordinary context, the 0.5 MB import), the Chromium-only page-lifecycle test, and the touch walk, besides the phone profiles of the other engine; there are no Firefox-only skips (Firefox skips the phone specs and these engine-specific ones).
+
+### Step 6.3b review (reviewer, 2026-10-20)
+
+**ACCEPTED.** Row 6.3 closed and deployed (e6301e1d). Approved as built: compact participants, the live preview (0.04 ms p99; 0.08 ms at the schema ceiling), the full run 471 / 69 / 0, the deploy, every changed test. REVIEW REQUIRED answers: (1) the preview draws the full-equation component: approved. (2)-(8): approved.
+CHECK requested: in reaction-editor-preview-1280x800.png every preview structure still says "Drawing the structure..." (reactant and both products). Handled in the next part (the preview e2e must wait for and assert drawn structures for the E2 reaction in all three engines).
