@@ -32,6 +32,8 @@ export interface CommandDeps {
   readonly newReagent?: { readonly reason: string | undefined; run(): void } | undefined;
   /** "New reaction" (step 6.3a): why it cannot run now, and what it does. Absent: no such command. */
   readonly newReaction?: { readonly reason: string | undefined; run(): void } | undefined;
+  /** "New mechanism" (step 6.5a): why it cannot run now, and what it does. Absent: no such command. */
+  readonly newMechanism?: { readonly reason: string | undefined; run(): void } | undefined;
   /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
   readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
   readonly ui: NavigatorUiStores;
@@ -103,6 +105,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     ...(deps.newClass === undefined ? [] : [withReason({ id: 'new-class', title: 'New class', keywords: ['create', 'add', 'group', 'functional group', 'family', 'author', 'workbench', 'draft'], run: deps.newClass.run }, deps.newClass.reason)]),
     ...(deps.newReagent === undefined ? [] : [withReason({ id: 'new-reagent', title: 'New reagent', keywords: ['create', 'add', 'catalyst', 'oxidant', 'author', 'workbench', 'draft'], run: deps.newReagent.run }, deps.newReagent.reason)]),
     ...(deps.newReaction === undefined ? [] : [withReason({ id: 'new-reaction', title: 'New reaction', keywords: ['create', 'add', 'equation', 'participants', 'stages', 'author', 'workbench', 'draft'], run: deps.newReaction.run }, deps.newReaction.reason)]),
+    ...(deps.newMechanism === undefined ? [] : [withReason({ id: 'new-mechanism', title: 'New mechanism', keywords: ['create', 'add', 'steps', 'pathway', 'variants', 'arrow pushing', 'author', 'workbench', 'draft'], run: deps.newMechanism.run }, deps.newMechanism.reason)]),
     ...structureCommands,
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),

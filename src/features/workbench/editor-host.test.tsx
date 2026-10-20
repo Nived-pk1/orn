@@ -162,7 +162,7 @@ describe('live findings (L1, debounced 300 ms) and Save', () => {
     type('Canonical name (required)', 'Renamed here');
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('Saved')).toBeTruthy();
-    expect(ms).toContain(6_000);
+    await waitFor(() => expect(ms).toContain(6_000));
     act(() => due.forEach((run) => run()));
     expect(screen.queryByText('Saved')).toBeNull();
   });

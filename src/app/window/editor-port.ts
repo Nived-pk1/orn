@@ -1,14 +1,14 @@
 /** The editor's port filled from the app's session manager and store (ADR-040). Pure wiring; no chemistry. */
 import { LIMITS, type RecordRef } from '@/core/schema';
-import type { EditorPort, PreviewPort, RecordPickerPort, SmartsCheck, StructurePort } from '@/features/workbench';
+import type { EditorPort, MechanismLinksPort, PreviewPort, RecordPickerPort, SmartsCheck, StructurePort } from '@/features/workbench';
 import type { WindowServices } from './context';
 
 export function makeEditorPort(
   services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks' | 'chem' | 'duplicateCheck'>>,
   timers: EditorPort['timers'],
-  extras: { readonly depictions?: StructurePort['depictions']; readonly records?: RecordPickerPort; readonly openRecord?: (ref: RecordRef) => void; readonly preview?: PreviewPort } = {},
+  extras: { readonly depictions?: StructurePort['depictions']; readonly records?: RecordPickerPort; readonly openRecord?: (ref: RecordRef) => void; readonly preview?: PreviewPort; readonly links?: MechanismLinksPort } = {},
 ): EditorPort {
-  const { depictions, records, openRecord, preview } = extras;
+  const { depictions, records, openRecord, preview, links } = extras;
   const { drafts, store } = services;
   return {
     entry: (id) => drafts.entry(id),
@@ -26,6 +26,7 @@ export function makeEditorPort(
     ...(services.chem === undefined ? {} : { structure: { parse: (structure) => (services.chem as NonNullable<typeof services.chem>).parse(structure), checkSmarts: (smarts) => checkSmarts(services.chem as NonNullable<typeof services.chem>, smarts), ...(depictions === undefined ? {} : { depictions }) } }),
     ...(records === undefined ? {} : { records }),
     ...(preview === undefined ? {} : { preview }),
+    ...(links === undefined ? {} : { links }),
     ...(services.duplicateCheck === undefined || openRecord === undefined ? {} : { duplicates: { check: services.duplicateCheck.check, openRecord } }),
     timers,
   };

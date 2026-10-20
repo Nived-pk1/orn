@@ -203,6 +203,20 @@ describe('a blank reaction draft (step 6.3a, decisions D4 and 3)', () => {
   });
 });
 
+describe('a blank mechanism draft (step 6.5a, decision D6)', () => {
+  it('has every required field at its empty value; L1 refuses only the empty name; a summary alone is valid', async () => {
+    const { parseRecord } = await import('../validation');
+    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'mechanism', blank: true });
+    if (!result.ok) throw new Error('no session');
+    const draft = result.session.draft as Record<string, unknown> & { id: string };
+    expect(draft).toMatchObject({ kind: 'mechanism', name: '', aliases: [], mechanismClasses: [], variants: [], conceptIds: [], tags: [], citations: [], provenance: { origin: 'user' }, review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] } });
+    expect(draft.id).toMatch(/^mec_/);
+    const parsed = parseRecord('mechanism', draft);
+    expect(!parsed.ok && parsed.findings.map((f) => f.path)).toEqual(['name']);
+    expect(parseRecord('mechanism', { ...draft, name: 'Oxidation by PCC', summary: 'Only a summary.' }).ok).toBe(true);
+  });
+});
+
 describe('a blank class draft (step 6.2b, decision D5)', () => {
   it('has every required field at its empty value except classKind, which is ABSENT; L1 refuses it until a name and a kind are given', async () => {
     const { parseRecord } = await import('../validation');

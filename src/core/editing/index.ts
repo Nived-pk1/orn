@@ -12,3 +12,5 @@ export type { StoredSessionParse } from './stored';
 export { NAMES_KINDS, hasNames, kindHasNames } from './names';
 export { ROLE_FLAG_DEFAULTS } from './role-defaults';
 export type { RoleFlagDefaults } from './role-defaults';
+export { outcomeUsesOfMechanism, outcomeUsesOfVariant } from './mechanism-uses';
+export type { MechanismUse } from './mechanism-uses';

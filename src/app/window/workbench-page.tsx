@@ -27,6 +27,7 @@ export function WorkbenchPage() {
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newClass } : { unavailable: reason ?? 'Editing is not available here.' })}>New class</Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newReagent } : { unavailable: reason ?? 'Editing is not available here.' })}>New reagent</Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newReaction } : { unavailable: reason ?? 'Editing is not available here.' })}>New reaction</Button>
+        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newMechanism } : { unavailable: reason ?? 'Editing is not available here.' })}>New mechanism</Button>
       </div>
       <h3>Drafts</h3>
       {drafts.items.length === 0 ? (

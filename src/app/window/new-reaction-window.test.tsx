@@ -17,6 +17,7 @@ import { buildCommands, type CommandDeps } from './palette-commands';
 beforeAll(async () => {
   await prefetchPalette();
   await import('@/features/workbench/layer');
+  await import('./editor-session'); // the editor opens through this lazy chunk (step 6.5a)
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

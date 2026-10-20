@@ -11,4 +11,5 @@ export type { ClassSuggestion, DraftChecksPort, DryRunAnswer, StructureChecksAns
 export type { SmartsCheck, StructurePort } from './structure-contracts';
 export type { PreviewPort } from './preview-contracts';
 export type { PickKind, RecordChoice, RecordPickerPort } from './record-picker-contracts';
+export type { MechanismLinksPort, VariantUse } from './mechanism-contracts';
 export type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome, DuplicatePort } from './duplicate-contracts';

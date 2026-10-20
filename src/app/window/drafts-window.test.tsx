@@ -9,7 +9,8 @@ import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support
 import { createLocalTimeFormatter } from './local-time';
 
 beforeAll(async () => {
-  await import('@/features/workbench/layer'); // the drafts list is a lazy chunk (ADR-040): load it once so findBy* never races a slow machine
+  await import('@/features/workbench/layer');
+  await import('./editor-session'); // the editor opens through this lazy chunk (step 6.5a) // the drafts list is a lazy chunk (ADR-040): load it once so findBy* never races a slow machine
   stubDialog();
   fakeLayout();
 });

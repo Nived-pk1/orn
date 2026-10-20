@@ -5,6 +5,7 @@
  */
 import type { RecordKind } from '@/core/schema';
 import { CLASS_FIELD_LABELS } from './class-model';
+import { MECHANISM_FIELD_LABELS } from './mechanism-model';
 import { REACTION_FIELD_LABELS } from './reaction-model';
 import { REAGENT_FIELD_LABELS } from './reagent-model';
 import { SPECIES_FIELD_LABELS } from './species-model';
@@ -14,10 +15,11 @@ const LABELS: Partial<Readonly<Record<RecordKind, Readonly<Record<string, string
   class: CLASS_FIELD_LABELS,
   reagent: REAGENT_FIELD_LABELS,
   reaction: REACTION_FIELD_LABELS,
+  mechanism: MECHANISM_FIELD_LABELS,
 };
 
 /** Kinds whose editor is a full form (Names and more). */
-export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'reaction'];
+export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'reaction', 'mechanism'];
 
 export const hasFullForm = (kind: RecordKind): boolean => FULL_FORM_KINDS.includes(kind);
 

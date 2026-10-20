@@ -16,7 +16,8 @@ import { prefetchPalette } from './lazy-palette';
 
 beforeAll(async () => {
   await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
-  await import('@/features/workbench/layer'); // the editor and the drafts list are a lazy chunk (ADR-040): load it once so findBy* never races a slow machine
+  await import('@/features/workbench/layer');
+  await import('./editor-session'); // the editor opens through this lazy chunk (step 6.5a) // the editor and the drafts list are a lazy chunk (ADR-040): load it once so findBy* never races a slow machine
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {
@@ -197,7 +198,7 @@ describe('the palette command "Edit the selected record"', () => {
     fireEvent.change(within(dialog).getByRole('combobox'), { target: { value: '>Edit the selected' } });
     const item = await within(dialog).findByText('Edit the selected record');
     expect(item).toBeTruthy();
-    expect(dialog.textContent).toContain('show a species, class, reagent or reaction in the inspector first');
+    expect(dialog.textContent).toContain('show a species, class, reagent, reaction or mechanism in the inspector first');
   });
 });
 

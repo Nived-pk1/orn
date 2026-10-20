@@ -53,7 +53,7 @@ function editNamesCommand(editors: EditorsApi | null, state: CanonicalState, ins
   const ref = currentOf(inspector);
   const record = ref === null ? undefined : (state.records[ref.kind] as Readonly<Record<string, { readonly kind: string }>>)[ref.id];
   const reason =
-    editors === null ? 'editing is not available here' : editors.editReason ?? (ref === null || record === undefined || !(hasNames(record) || editors.fullEditorKinds?.includes(record.kind) === true) ? 'show a species, class, reagent or reaction in the inspector first: only these can be edited here' : undefined);
+    editors === null ? 'editing is not available here' : editors.editReason ?? (ref === null || record === undefined || !(hasNames(record) || editors.fullEditorKinds?.includes(record.kind) === true) ? 'show a species, class, reagent, reaction or mechanism in the inspector first: only these can be edited here' : undefined);
   return { reason, run: () => (ref === null || editors === null ? undefined : editors.editNames(ref)) };
 }
 
@@ -233,6 +233,7 @@ function WindowContent() {
     newClass: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newClass() },
     newReagent: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newReagent() },
     newReaction: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newReaction() },
+    newMechanism: { reason: editors === null ? 'editing is not available here' : editors.editReason, run: () => editors?.newMechanism() },
     structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
     exams: examOptions(services.store.getState()),

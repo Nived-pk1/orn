@@ -296,6 +296,7 @@ export function EditorHost(props: EditorHostProps) {
               structure={port.structure}
               timers={port.timers}
               newId={port.newId}
+              links={port.links}
               suggestions={checks.structure.suggestions}
               {...(port.records === undefined ? {} : { picker: port.records })}
               {...(unavailable === undefined ? {} : { unavailable })}

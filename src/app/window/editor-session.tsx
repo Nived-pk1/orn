@@ -12,6 +12,7 @@ import { EQUATION_AREA } from '@/render/equation/contracts';
 import { createDepictionBinding } from '@/render/svg';
 import { useApp } from './context';
 import { makeEditorPort } from './editor-port';
+import { createMechanismLinks } from './mechanism-links-port';
 import { createRecordPicker } from './record-picker-port';
 
 export function EditorSession(props: { readonly sessionId: string; readonly formatTime: (iso: string) => string; readonly onClose: () => void }) {
@@ -36,7 +37,7 @@ export function EditorSession(props: { readonly sessionId: string; readonly form
       timers: inspector.timers,
       names: { get: () => panels.getState().equationNames, set: (names) => panels.getState().setEquationNames(names), subscribe: (listener) => panels.subscribe(() => listener()) },
     };
-    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview });
+    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview, links: createMechanismLinks(services.store.getState) });
   }, [services, inspector]);
   return <EditorHost port={port} sessionId={props.sessionId} open formatTime={props.formatTime} onClose={props.onClose} />;
 }

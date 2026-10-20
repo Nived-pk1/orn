@@ -19,7 +19,7 @@ const EditorSession = lazy(() => import('./editor-session').then((m) => ({ defau
 const machineTime = createLocalTimeFormatter();
 
 /** The kinds whose editor is the full one (the others edit names only). */
-const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction'];
+const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction', 'mechanism'];
 
 /** Why editing cannot start in this tab now; undefined when it can (a session-only tab edits in memory and says so in the editor). */
 export function editReasonOf(mode: string | null): string | undefined {
@@ -56,6 +56,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       newClass: () => show(services.drafts.open({ kind: 'class', blank: true })),
       newReagent: () => show(services.drafts.open({ kind: 'reagent', blank: true })),
       newReaction: () => show(services.drafts.open({ kind: 'reaction', blank: true })),
+      newMechanism: () => show(services.drafts.open({ kind: 'mechanism', blank: true })),
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
       fullEditorKinds: FULL_EDITOR_KINDS,

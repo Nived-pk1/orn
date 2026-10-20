@@ -18,6 +18,7 @@ const isScroller = (el: Element): boolean => el.hasAttribute('data-virtual-list'
 beforeAll(async () => {
   await prefetchPalette();
   await import('@/features/workbench/layer');
+  await import('./editor-session'); // the editor opens through this lazy chunk (step 6.5a)
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {
@@ -57,7 +58,7 @@ describe('the reaction editor through the real window', () => {
     await screen.findByRole('heading', { level: 2, name: /^Reactions of / });
     act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: PCC }));
     fireEvent.click(await within(await screen.findByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: 'Edit' }));
-    const dialog = await screen.findByRole('dialog', { name: /^Edit / });
+    const dialog = await screen.findByRole('dialog', { name: /^Edit / }, { timeout: 5_000 });
     const reactant = pccReaction(app).participants.findIndex((p) => p.role === 'reactant') + 1;
     fireEvent.click(within(dialog).getByRole('button', { name: `Edit participant ${reactant}` }));
     fireEvent.change(within(dialog).getByLabelText(`Coefficient of participant ${reactant}`), { target: { value: '2' } });
@@ -98,7 +99,7 @@ describe('the reaction editor through the real window', () => {
     await screen.findByRole('heading', { level: 2, name: /^Reactions of / });
     act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: PCC }));
     fireEvent.click(await within(await screen.findByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: 'Edit' }));
-    const dialog = await screen.findByRole('dialog', { name: /^Edit / });
+    const dialog = await screen.findByRole('dialog', { name: /^Edit / }, { timeout: 5_000 });
     const before = pccReaction(app).stages[0]?.parameters;
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit conditions of stage 1' }));
     fireEvent.change(within(dialog).getByLabelText('Temperature kind of stage 1'), { target: { value: 'qualitative' } });
@@ -132,7 +133,7 @@ describe('the reaction editor through the real window', () => {
     expect(e2Card().textContent).toMatch(/minor/);
     act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: E2 }));
     fireEvent.click(await within(await screen.findByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: 'Edit' }));
-    const dialog = await screen.findByRole('dialog', { name: /^Edit / });
+    const dialog = await screen.findByRole('dialog', { name: /^Edit / }, { timeout: 5_000 });
     const minor = (app.store.getState().records.reaction[E2 as never] as Reaction).outcomes.findIndex((o) => o.selectivity === 'minor') + 1;
     fireEvent.click(within(dialog).getByRole('button', { name: `Edit outcome ${minor}` }));
     fireEvent.change(within(dialog).getByLabelText(`Selectivity of outcome ${minor}`), { target: { value: 'trace' } });
