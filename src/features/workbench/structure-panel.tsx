@@ -36,6 +36,12 @@ export interface StructurePanelProps {
   readonly phone?: boolean;
   /** `generic`: a class's R-labelled structure (`generic.structure`): drawn, nothing derived, no facts table, no formula button. */
   readonly slot?: StructureSlot;
+  /** Several panels on one page (the species rows of a mechanism step, step 6.5a): a prefix that keeps each field's ID and name its own. */
+  readonly idBase?: string;
+  /** The label of the text field; absent: the usual words. */
+  readonly label?: string;
+  /** False: the table of entered and derived values (and its formula button) is not shown, because the structure belongs to a row that has no formula. */
+  readonly showFacts?: boolean;
 }
 
 function stereoLine(facts: StructureFacts): string {
@@ -77,7 +83,7 @@ export function StructurePanel(props: StructurePanelProps) {
   const slot = props.slot ?? 'species';
   const generic = slot === 'generic';
   const fieldPath = generic ? 'generic.structure' : 'structure';
-  const textId = generic ? 'generic-structure-text' : 'structure-text';
+  const textId = props.idBase !== undefined ? `${props.idBase}-structure-text` : generic ? 'generic-structure-text' : 'structure-text';
   const view = structureViewOf(draft, slot);
   const [typed, setTyped] = useState(view.text);
   const [refusal, setRefusal] = useState<string | undefined>(undefined);
@@ -124,7 +130,7 @@ export function StructurePanel(props: StructurePanelProps) {
   return (
     <div className={props.phone === true ? `${styles.panel} ${styles.phone}` : styles.panel}>
       <div className={styles.field}>
-        <label htmlFor={textId}>{generic ? 'R-labelled CXSMILES or molfile' : 'SMILES, CXSMILES or molfile'}</label>
+        <label htmlFor={textId}>{props.label ?? (generic ? 'R-labelled CXSMILES or molfile' : 'SMILES, CXSMILES or molfile')}</label>
         <textarea
           id={textId}
           className={styles.text}
@@ -157,7 +163,7 @@ export function StructurePanel(props: StructurePanelProps) {
       ) : null}
       {reading.state === 'read' ? <Drawing structure={reading.structure} port={port} timers={timers} alt={generic ? 'Drawing of the generic structure' : 'Drawing of the entered structure'} /> : null}
       {generic && reading.state === 'read' ? <p className={styles.hint}>The R labels are drawn as written. No formula is derived from a generic structure.</p> : null}
-      {facts === undefined || generic ? null : (
+      {facts === undefined || generic || props.showFacts === false ? null : (
         <table className={styles.facts} aria-label="Entered and derived values">
           <thead>
             <tr>

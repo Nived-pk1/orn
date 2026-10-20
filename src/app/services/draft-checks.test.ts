@@ -29,7 +29,7 @@ function syncOver(handlers: ReturnType<typeof createComputeHandlers>, state: 'in
 let chem: Pick<ChemService, 'checkSpecies' | 'matches'>;
 beforeAll(async () => {
   const port = realChemPort(await realChecks());
-  chem = { checkSpecies: port.checkSpecies, matches: port.matches } as never;
+  chem = { checkSpecies: port.checkSpecies, matches: port.matches, checkMechanism: port.checkMechanism } as never;
 });
 
 describe('dryRun', () => {
@@ -105,5 +105,49 @@ describe('requestOfDraft', () => {
     expect(requestOfDraft({ id: 'a', structure: { format: 'smiles', value: 'C' }, formula: 'CH4', charge: 1.5 })).toEqual({ id: 'a', structure: { format: 'smiles', value: 'C' }, formula: 'CH4' });
     expect(requestOfDraft({ id: 'a', structure: { format: 'smiles', value: '' } })).toBeUndefined();
     expect(requestOfDraft(null)).toBeUndefined();
+  });
+});
+
+describe('structure checks of a mechanism draft (CHEM-008, step 6.5a part 4)', () => {
+  const mechanism = (bondMaps: [number, number]) => ({
+    kind: 'mechanism',
+    id: 'mec_draft',
+    name: 'Draft',
+    aliases: [],
+    mechanismClasses: [],
+    conceptIds: [],
+    tags: [],
+    citations: [],
+    provenance: { origin: 'user', createdAt: '2026-10-20T00:00:00.000Z', updatedAt: '2026-10-20T00:00:00.000Z' },
+    review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] },
+    variants: [
+      {
+        id: 'mvr_draft-a',
+        label: 'A',
+        steps: [
+          {
+            id: 'mst_draft-a',
+            stepKinds: [],
+            species: [{ role: 'reactant', structure: { format: 'smiles', value: '[CH3:1][OH:2]' } }],
+            bondsFormed: [],
+            bondsBroken: [{ atoms: bondMaps, order: 1 }],
+            electronMovements: [],
+          },
+        ],
+      },
+    ],
+  });
+  const checks = () => createDraftChecks({ store, sync: () => undefined, chem });
+
+  it('a bond that names a map the step structures do not have gets CHEM-008 at the bond row', async () => {
+    const answer = await checks().structure('mechanism', mechanism([1, 9]), 11);
+    expect(answer).toMatchObject({ version: 11, state: 'checked' });
+    expect(answer.state === 'checked' && answer.findings.map((f) => [f.ruleId, f.path])).toEqual([['CHEM-008', 'variants[0].steps[0].bondsBroken[0]']]);
+  });
+
+  it('maps that are all there give no finding; a draft that is not a mechanism yet is not checked', async () => {
+    const fine = await checks().structure('mechanism', mechanism([1, 2]), 12);
+    expect(fine.state === 'checked' && fine.findings).toEqual([]);
+    expect(await checks().structure('mechanism', { kind: 'mechanism', id: 'mec_x' }, 13)).toEqual({ version: 13, state: 'none' });
   });
 });

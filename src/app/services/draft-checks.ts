@@ -4,11 +4,12 @@
  * and CHEM-006 by `checkSpecies`, CHEM-007 by the class SMARTS probes). Both answer a value, never throw; a worker that cannot answer is
  * `unavailable` with its words. The advice is never the gate: Save runs the store's own validation.
  */
+import { mechanismPlan } from '@/chem/checks/plan-mechanism';
 import { membershipPlan, readMembership } from '@/chem/checks/plan-species';
 import type { CheckDraft, NotCompared, SpeciesCheckRequest } from '@/chem/checks/contracts';
 import { toFinding } from '@/chem/checks/rules';
 import type { StoreHandle } from '@/core/commands';
-import { StructureRepSchema, type RecordRef, type Species } from '@/core/schema';
+import { StructureRepSchema, type Mechanism, type RecordRef, type Species } from '@/core/schema';
 import { parseRecord } from '@/core/validation';
 import type { ClassSuggestion, DraftChecksPort, StructureChecksAnswer } from '@/features/workbench';
 import type { ChemService } from '@/workers/chem';
@@ -17,7 +18,7 @@ import type { ReplicaSync } from '@/workers/compute';
 export interface DraftChecksOptions {
   readonly store: Pick<StoreHandle, 'getState' | 'getRevision'>;
   readonly sync: () => ReplicaSync | undefined;
-  readonly chem: Pick<ChemService, 'checkSpecies' | 'matches'>;
+  readonly chem: Pick<ChemService, 'checkSpecies' | 'matches'> & Partial<Pick<ChemService, 'checkMechanism'>>;
 }
 
 const text = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
@@ -66,6 +67,7 @@ export function createDraftChecks(options: DraftChecksOptions): DraftChecksPort 
     },
 
     async structure(kind, draft, version): Promise<StructureChecksAnswer> {
+      if (kind === 'mechanism') return mechanismStructure(options, draft, version);
       if (kind !== 'species') return { version, state: 'none' };
       const request = requestOfDraft(draft);
       if (request === undefined) return { version, state: 'none' };
@@ -108,4 +110,30 @@ export function createDraftChecks(options: DraftChecksOptions): DraftChecksPort 
       };
     },
   };
+}
+
+/**
+ * CHEM-008 for a mechanism draft (step 6.5a part 4): the same plan the stored-record check uses (`mechanismPlan`), asked of the chem worker for
+ * the draft as it stands. Only a draft that already passes L1 is a mechanism the plan can read; any other is `none` (its L1 findings say what
+ * is wrong). A step that uses atom maps but has no structure is listed as not compared, never as clean.
+ */
+async function mechanismStructure(options: DraftChecksOptions, draft: unknown, version: number): Promise<StructureChecksAnswer> {
+  const parsed = parseRecord('mechanism', draft);
+  if (!parsed.ok) return { version, state: 'none' };
+  const mechanism = parsed.record as Mechanism;
+  const plan = mechanismPlan(mechanism);
+  if (plan.requests.length === 0 && plan.notCompared.length === 0) return { version, state: 'none' };
+  const subject: RecordRef = { kind: 'mechanism', id: mechanism.id };
+  const notCompared = plan.notCompared.map((item) => `${item.ruleId}: ${item.reason}`);
+  if (plan.requests.length === 0) return { version, state: 'checked', findings: [], suggestions: [], notCompared };
+  if (options.chem.checkMechanism === undefined) return { version, state: 'unavailable', message: 'The structure was not checked: the chemistry engine is not available here.' };
+  const call = await options.chem.checkMechanism(plan.requests);
+  if (!call.ok) return { version, state: 'unavailable', message: `The structure was not checked: ${call.error}` };
+  const findings = [];
+  for (const result of call.value.results) {
+    if (result.status.state === 'not_checked') return { version, state: 'unavailable', message: `The structure was not checked: ${result.status.message}` };
+    notCompared.push(...result.status.notCompared.map((item) => `${item.ruleId}: ${item.reason}`));
+    findings.push(...result.drafts.map((found) => toFinding(found.ruleId, subject, found)));
+  }
+  return { version, state: 'checked', findings, suggestions: [], notCompared };
 }

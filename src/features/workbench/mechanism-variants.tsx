@@ -12,6 +12,7 @@ import { addVariant, moveVariant, removeVariant, setVariantApplicability, setVar
 import { RichTextField } from './rich-text-field';
 import type { SectionProps } from './section-props';
 import styles from './editor.module.css';
+import own from './participant.module.css';
 
 export interface MechanismVariantsProps extends SectionProps {
   /** A fresh variant ID ('mvr'). */
@@ -52,12 +53,12 @@ export function MechanismVariantsSection(props: MechanismVariantsProps) {
           const refusal = usageWords(props.links?.variantUses(mechanismId, variant.id) ?? []);
           return (
             <li key={variant.id || index} className={styles.panel} data-testid="mech-variant-row" data-phone={props.phone === true ? 'true' : undefined}>
-              <div role="group" aria-label={`Variant ${n}`} className={styles.participantBody}>
-                <div className={styles.participantHead}>
+              <div role="group" aria-label={`Variant ${n}`} className={`${own.participantBody} ${props.phone === true ? own.participantPhone : ''}`}>
+                <div className={own.participantHead}>
                   <span className={conditionStyles.summary} data-testid="mech-variant-summary" aria-invalid={bad(props, base)}>
                     {n}. {variantSummary(variant)}
                   </span>
-                  <div className={styles.participantActions}>
+                  <div className={own.participantActions}>
                     <Button aria-label={`${open ? 'Close' : 'Edit'} variant ${n}`} aria-expanded={open} data-field-path={base} data-open-row="" onClick={() => setOpenId(open ? null : variant.id)}>
                       {open ? 'Close' : 'Edit'}
                     </Button>
