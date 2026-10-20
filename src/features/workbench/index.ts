@@ -13,3 +13,4 @@ export type { PreviewPort } from './preview-contracts';
 export type { PickKind, RecordChoice, RecordPickerPort } from './record-picker-contracts';
 export type { MechanismLinksPort, VariantUse } from './mechanism-contracts';
 export type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome, DuplicatePort } from './duplicate-contracts';
+export type { PictureFields, PictureFile, PictureImage, PictureResult, PicturesPort, PictureView, PrepareResult, PreparedPicture } from './picture-contracts';

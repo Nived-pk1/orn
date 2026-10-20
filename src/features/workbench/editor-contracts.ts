@@ -11,6 +11,7 @@ import type { DraftChecksPort } from './check-contracts';
 import type { PreviewPort } from './preview-contracts';
 import type { DuplicatePort } from './duplicate-contracts';
 import type { MechanismLinksPort } from './mechanism-contracts';
+import type { PicturesPort } from './picture-contracts';
 import type { DraftSaveView, DraftsViewModel } from './contracts';
 
 /** One open session as the editor sees it (the manager replaces the object when anything about it changes). */
@@ -49,6 +50,8 @@ export interface EditorPort {
   readonly preview?: PreviewPort;
   /** Which outcomes use a mechanism variant, and whether a linked record exists (step 6.5a); absent: nothing is known about links. */
   readonly links?: MechanismLinksPort;
+  /** The mechanism editor's pictures, saved at once outside the draft (step 6.5b); absent: no Pictures section. */
+  readonly pictures?: PicturesPort;
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
   readonly structure?: StructurePort;
   /** A fresh ID for a nested record the form creates (a reagent profile: 'rpf'). From the session manager's ID factory; deterministic under test. */

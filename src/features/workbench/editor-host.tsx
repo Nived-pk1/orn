@@ -297,6 +297,8 @@ export function EditorHost(props: EditorHostProps) {
               timers={port.timers}
               newId={port.newId}
               links={port.links}
+              pictures={port.pictures}
+              saved={session.baseRecord !== null}
               suggestions={checks.structure.suggestions}
               {...(port.records === undefined ? {} : { picker: port.records })}
               {...(unavailable === undefined ? {} : { unavailable })}

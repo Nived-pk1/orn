@@ -13,6 +13,7 @@ import { createDepictionBinding } from '@/render/svg';
 import { useApp } from './context';
 import { makeEditorPort } from './editor-port';
 import { createMechanismLinks } from './mechanism-links-port';
+import { createPicturesPort } from './pictures-port';
 import { createRecordPicker } from './record-picker-port';
 
 export function EditorSession(props: { readonly sessionId: string; readonly formatTime: (iso: string) => string; readonly onClose: () => void }) {
@@ -37,7 +38,10 @@ export function EditorSession(props: { readonly sessionId: string; readonly form
       timers: inspector.timers,
       names: { get: () => panels.getState().equationNames, set: (names) => panels.getState().setEquationNames(names), subscribe: (listener) => panels.subscribe(() => listener()) },
     };
-    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview, links: createMechanismLinks(services.store.getState) });
+    const { assets, persistence } = services;
+    // pictures are saved at once outside the draft: they need the asset host (a window without one has no Pictures section)
+    const pictures = assets === undefined ? undefined : createPicturesPort({ store: services.store, assets, getBlob: persistence === undefined ? undefined : (id) => persistence.getAssetBlob(id) });
+    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview, links: createMechanismLinks(services.store.getState), ...(pictures === undefined ? {} : { pictures }) });
   }, [services, inspector]);
   return <EditorHost port={port} sessionId={props.sessionId} open formatTime={props.formatTime} onClose={props.onClose} />;
 }

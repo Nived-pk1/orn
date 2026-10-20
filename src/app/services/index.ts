@@ -1,5 +1,5 @@
 export { createAppServices } from './create';
-export type { AppEnv, AppServices, ModeDecision, RetryReplicaResult, ResumeResult, SaveEverythingResult, ShutdownResult } from './contracts';
+export type { AppEnv, AppServices, AssetHost, ModeDecision, RetryReplicaResult, ResumeResult, SaveEverythingResult, ShutdownResult } from './contracts';
 export { createDerivedIndexes } from './derived-indexes';
 export type { BuildReason, DerivedIndexes, DerivedIndexStats, DerivedIndexesOptions } from './derived-indexes';
 export { decideMode, emptyState } from './boot';

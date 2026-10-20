@@ -14,6 +14,7 @@ import type { MigrationRunner } from '@/core/migrations/contracts';
 import type { BootReport, BroadcastChannelFactory, DexieAdapter, LockManagerLike, OrnDbOptions, Scheduler } from '@/persistence';
 import type { ReplicaSync } from '@/workers/compute';
 import type { DepictionService } from './depiction';
+import type { AssetStagePort } from '@/io';
 import type { DraftChecksPort, DuplicateCheckPort } from '@/features/workbench';
 import type { DraftManager } from './drafts';
 import type { DerivedIndexes } from './derived-indexes';
@@ -60,6 +61,19 @@ export type ResumeResult =
 
 export type RetryReplicaResult = { readonly ok: true } | { readonly ok: false; readonly message: string };
 
+/**
+ * What saving ONE picture needs that the drafts cannot carry (step 6.5b, additive): the asset stage behind the write queue's `blobsFor` (the
+ * bytes of the asset record a commit creates reach IndexedDB in the SAME transaction), a fresh ID and the clock (the editor does not own
+ * either), and `saved()`, which answers when the write queue holds everything accepted so far (no adapter: at once).
+ */
+export interface AssetHost {
+  readonly stage: AssetStagePort;
+  newId(prefix: string): string;
+  /** UTC ISO timestamp. */
+  now(): string;
+  saved(): Promise<void>;
+}
+
 export interface AppServices {
   /** The one canonical store of this tab. Read-only for a follower, a read-only tab and until a promotion is done. */
   readonly store: StoreHandle;
@@ -105,6 +119,8 @@ export interface AppServices {
   readonly draftChecks: DraftChecksPort;
   /** The duplicate check on Save of a species (step 6.2a part 5): by folded name and by canonical structure. */
   readonly duplicateCheck: DuplicateCheckPort;
+  /** What a picture needs to be saved at once (step 6.5b): see `AssetHost`. */
+  readonly assets: AssetHost;
   /** The editor sessions (ADR-040): open drafts in memory, kept in storage by a 2 s throttle, offered again at the next boot. */
   readonly drafts: DraftManager;
   /** Synchronous: ChangeSets accepted but not yet durable, or a failing save (for `beforeunload`). */

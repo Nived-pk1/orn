@@ -36,7 +36,7 @@ describe('the services are plain TypeScript (E1)', () => {
     expect(services.status.get().mode).toBe('writer');
     expect(Object.keys(services).sort()).toEqual(
       [
-        'bootReport', 'chem', 'depictions', 'dispose', 'draftChecks', 'drafts', 'duplicateCheck', 'flows', 'indexes', 'l4', 'layout', 'log', 'logApp', 'pendingWrites', 'persistence', 'replicaSync', 'resume', 'retryEngine', 'retryReplica',
+        'assets', 'bootReport', 'chem', 'depictions', 'dispose', 'draftChecks', 'drafts', 'duplicateCheck', 'flows', 'indexes', 'l4', 'layout', 'log', 'logApp', 'pendingWrites', 'persistence', 'replicaSync', 'resume', 'retryEngine', 'retryReplica',
         'saveEverythingNow', 'search', 'searchSync', 'shutdown', 'snapshotsIdle', 'status', 'store',
       ].sort(),
     );

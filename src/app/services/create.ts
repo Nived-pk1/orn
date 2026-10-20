@@ -197,6 +197,18 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     depictions,
     flows,
     drafts,
+    assets: {
+      stage: assetStage.port,
+      newId: (prefix) => ids.newId(prefix),
+      now: () => ids.now(),
+      saved: async () => {
+        try {
+          await adapter?.flush();
+        } catch {
+          // a flush that rejects leaves the failure in the SaveStatus, which the status line shows
+        }
+      },
+    },
     draftChecks: lazyDraftChecks({ store, sync: () => replica.sync(), chem: chemPart.service }),
     duplicateCheck: lazyDuplicateCheck({ state: store.getState, indexes: () => indexes.current(), chem: chemPart.service, l4: l4.service }),
     async retryEngine(name) {
