@@ -125,9 +125,10 @@
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-10-21",
     "version": "a2a480d3-81cc-4978-850d-f717cd6f5dc9",
-    "protected": false,
-    "note": "deployed and NOT protected yet: the user must turn on Cloudflare Access for the Worker reaction-navigator-studio only (docs/RELEASE.md, Access); protected becomes true only after the live check.",
-    "commit": "539d4f4"
+    "protected": true,
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check 2026-10-21: an unauthenticated request got 302 (Cloudflare Access) and not the app; the public Worker still answered 200 with the app.",
+    "commit": "539d4f4",
+    "protectedCheckedAt": "2026-10-21"
   },
   "nextStep": "6.6",
   "nextStepTitle": "Caveats, relationships, curriculum mappings, citations editors",
