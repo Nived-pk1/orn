@@ -36,7 +36,7 @@ test.describe('stage conditions, variants and parsed fields', () => {
     await expect(dialog.getByTestId('variant-summary')).toHaveText(['1. 413 K, excess ethanol: stage 1 temperature 413 K', '2. 443 K, excess acid: stage 1 temperature 443 K']);
     // a variant an outcome names cannot be removed, in words
     await expect(dialog.getByRole('button', { name: 'Remove variant 2' })).toHaveAttribute('aria-disabled', 'true');
-    await expect(dialog.getByText("Outcome 2 holds only under '443 K, excess acid'; change the outcome first (step 6.4b).").first()).toBeVisible();
+    await expect(dialog.getByText("Outcome 2 holds only under '443 K, excess acid'; change the outcome's 'Holds under' first.").first()).toBeVisible();
     await dialog.getByRole('button', { name: 'Edit variant 2' }).click();
     const override = dialog.getByLabel('Temperature value of variant 2');
     await expect(override).toHaveValue('443');

@@ -96,6 +96,8 @@
     "6.3b",
     "6.3",
     "6.4a",
+    "6.4b",
+    "6.4",
     "6.1"
   ],
   "nextPhase": 7,
@@ -110,8 +112,8 @@
     "commit": "afade7e",
     "version": "e6301e1d-4038-4b52-91cb-b9b16de17184"
   },
-  "nextStep": "6.4b",
-  "nextStepTitle": "Outcomes editor (row 6.4, second half)",
+  "nextStep": "6.5",
+  "nextStepTitle": "Mechanism editor",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
