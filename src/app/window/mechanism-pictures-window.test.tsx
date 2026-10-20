@@ -57,6 +57,7 @@ function appWithPictures() {
     stage: { stage: (list: readonly ParsedAsset[]) => (staged = list), clear: () => (staged = []) },
     newId: (prefix: string) => `${prefix}_win${++n}`,
     now: () => new Date(Date.UTC(2026, 9, 20, 12, 0, n)).toISOString(),
+    held: () => undefined,
     saved: async () => undefined,
   };
   const persistence = { getAssetBlob: async (id: string) => blobs.get((app.store.getState().records.asset[id as never] as Asset | undefined)?.sha256 ?? '') };

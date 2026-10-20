@@ -4,6 +4,7 @@
  * (Redo brings the record back); Remove detaches and the asset record stays; equal bytes are stored once; a refused picture saves nothing.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createInspectorPorts } from '@/app/window/inspector-port';
 import { createPicturesPort } from '@/app/window/pictures-port';
 import type { Asset } from '@/core/schema';
 import { createBooter, demoState } from '@/test-support/app-boot-kit';
@@ -54,6 +55,24 @@ describe('a picture on a mechanism, with real storage', () => {
     expect(asset).toBeDefined();
     expect(await bytesOf(await persistence.getAssetBlob((asset as Asset).id))).toEqual([...PNG]);
     expect(services.status.get().save).toMatchObject({ state: 'saved', pendingRevisions: 0 });
+  });
+
+  it('a new picture can be shown at once, before its bytes are durable: both the editor and the inspector read what is held; nothing is held after the save', async () => {
+    const { services, persistence, port, prepared } = await boot();
+    const picture = await prepared();
+    await persistence.flush();
+    const adding = port.add(SN2, picture, { altText: 'Backside attack', caption: '' }); // the commit has happened, the write has not
+    const asset = assetsOf(services.store.getState()).find((a) => a.altText === 'Backside attack') as Asset;
+    expect(services.assets.held(asset.sha256)).toBeDefined();
+    const urls: string[] = [];
+    vi.stubGlobal('URL', { createObjectURL: (blob: Blob) => (urls.push(String(blob.size)), 'blob:held/1'), revokeObjectURL: () => undefined });
+    expect(await port.image(asset.id, 'image/png')).toEqual({ ok: true, url: 'blob:held/1' });
+    const inspector = createInspectorPorts(services, { depictions: undefined, facts: undefined, timers: { after: () => () => undefined }, ui: {} } as never, {} as never, {} as never);
+    expect(await inspector.assets?.open(asset.id, 'image/png')).toEqual({ ok: true, url: 'blob:held/1' });
+    vi.unstubAllGlobals();
+    await adding;
+    expect(services.assets.held(asset.sha256)).toBeUndefined();
+    expect(await bytesOf(await persistence.getAssetBlob(asset.id))).toEqual([...PNG]);
   });
 
   it('a reload still has the picture, attached, with its bytes', async () => {

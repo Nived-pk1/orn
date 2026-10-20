@@ -71,6 +71,13 @@ export interface AssetHost {
   newId(prefix: string): string;
   /** UTC ISO timestamp. */
   now(): string;
+  /**
+   * The bytes of a picture added in this session that may not be durable yet, by SHA-256: the store tells its subscribers at the commit, the
+   * write queue stores the bytes a moment later, and a view that asks in between must not find "missing". Released once `saved()` saw the
+   * write done; kept for the session in a tab that keeps nothing on disk and after a failed save.
+   */
+  held(sha256: string): Blob | undefined;
+  /** Answers when the write queue holds everything accepted so far (no adapter: at once). */
   saved(): Promise<void>;
 }
 

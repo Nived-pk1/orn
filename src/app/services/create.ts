@@ -96,6 +96,8 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
   replica.start(store);
   const indexes = createDerivedIndexes({ store, clock: env.clock });
   const assetStage = createAssetStage();
+  /** Bytes of pictures added in this session until the write queue has them (see `AssetHost.held`). */
+  const held = new Map<string, Blob>();
   const writer = createWriterPart({ store, adapter, status, log, ids, blobsFor: assetStage.blobsFor });
   const periodic = createPeriodicPart({ store, adapter, replica, status, log, ids, env });
   const l4 = createL4Part({ store, indexes, chem: chemPart.service, timers: env.timers, status, log });
@@ -198,15 +200,25 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
     flows,
     drafts,
     assets: {
-      stage: assetStage.port,
+      stage: {
+        stage: (list) => {
+          for (const asset of list) held.set(asset.sha256, new Blob([asset.bytes as BlobPart], { type: asset.mediaType }));
+          assetStage.port.stage(list);
+        },
+        clear: () => assetStage.port.clear(),
+      },
       newId: (prefix) => ids.newId(prefix),
       now: () => ids.now(),
+      held: (sha256) => held.get(sha256),
       saved: async () => {
+        const mine = [...held.keys()];
         try {
           await adapter?.flush();
         } catch {
           // a flush that rejects leaves the failure in the SaveStatus, which the status line shows
         }
+        // durable: the stored bytes answer from now on; not durable (no adapter, a failed save): the session keeps them
+        if (adapter !== undefined && adapter.getStatus().state === 'saved') for (const sha of mine) held.delete(sha);
       },
     },
     draftChecks: lazyDraftChecks({ store, sync: () => replica.sync(), chem: chemPart.service }),

@@ -7,7 +7,7 @@ import type { InspectorPorts } from '@/features/inspector';
 import type { NavigatorPorts } from '@/features/navigator';
 import type { InspectorStore, PanelsStore } from '@/ui/state';
 
-export type InspectorPortServices = Pick<AppServices, 'store' | 'indexes' | 'l4' | 'logApp' | 'persistence'>;
+export type InspectorPortServices = Pick<AppServices, 'store' | 'indexes' | 'l4' | 'logApp' | 'persistence'> & Partial<Pick<AppServices, 'assets'>>;
 
 export function createInspectorPorts(services: InspectorPortServices, navigator: Pick<NavigatorPorts, 'depictions' | 'facts' | 'timers' | 'ui'>, inspector: InspectorStore, panels: PanelsStore): InspectorPorts {
   return {
@@ -19,9 +19,12 @@ export function createInspectorPorts(services: InspectorPortServices, navigator:
     ...(navigator.facts === undefined ? {} : { facts: navigator.facts }),
     assets: {
       async open(assetId, mediaType) {
-        if (services.persistence === undefined) return { ok: false, reason: 'unavailable', message: 'This tab keeps nothing on disk, so no image bytes are available.' };
+        // a picture added a moment ago may not be durable yet: what the services still hold answers first
+        const sha = (services.store.getState().records.asset[assetId as never] as { sha256: string } | undefined)?.sha256;
+        const held = sha === undefined ? undefined : services.assets?.held(sha);
+        if (held === undefined && services.persistence === undefined) return { ok: false, reason: 'unavailable', message: 'This tab keeps nothing on disk, so no image bytes are available.' };
         try {
-          const blob = await services.persistence.getAssetBlob(assetId);
+          const blob = held ?? (await services.persistence?.getAssetBlob(assetId));
           if (blob === undefined) return { ok: false, reason: 'missing', message: 'The bytes of this image are not stored (finding AST-002).' };
           // the declared media type decides how the browser reads the bytes; an SVG is only ever an image, never markup
           return { ok: true, url: URL.createObjectURL(new Blob([blob], { type: mediaType })) };

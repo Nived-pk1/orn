@@ -141,9 +141,11 @@ export function createPicturesPort(deps: PicturesPortDeps): PicturesPort {
     },
 
     async image(assetId, mediaType) {
-      if (getBlob === undefined) return { ok: false, message: 'This tab keeps nothing on disk, so no picture is shown here.' };
       try {
-        const blob = await getBlob(assetId);
+        // a picture just added may not be durable yet: what is held answers first
+        const sha = assetOf(assetId)?.sha256;
+        const blob = (sha === undefined ? undefined : assets.held(sha)) ?? (getBlob === undefined ? undefined : await getBlob(assetId));
+        if (blob === undefined && getBlob === undefined) return { ok: false, message: 'This tab keeps nothing on disk, so no picture is shown here.' };
         if (blob === undefined) return { ok: false, message: 'Picture missing: its file is not stored in this browser' };
         // the stored type decides how the browser reads the bytes; an SVG is only ever an image, never markup
         return { ok: true, url: URL.createObjectURL(new Blob([blob], { type: mediaType })) };

@@ -23,6 +23,7 @@ function hostOf(calls: string[]): AssetHost {
     stage: { stage: (staged) => calls.push(`stage:${staged.map((s) => s.assetId).join(',')}`), clear: () => calls.push('clear') },
     newId: (prefix) => `${prefix}_test${++n}`,
     now: () => new Date(Date.UTC(2026, 9, 20, 12, 0, ++clock)).toISOString(),
+    held: () => undefined,
     saved: async () => {
       calls.push('saved');
     },

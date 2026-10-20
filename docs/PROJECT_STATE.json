@@ -99,7 +99,9 @@
     "6.4b",
     "6.4",
     "6.1",
-    "6.5a"
+    "6.5a",
+    "6.5b",
+    "6.5"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -113,8 +115,8 @@
     "commit": "d09fe96",
     "version": "bd22e545-e922-4ba6-87f3-37cef198198b"
   },
-  "nextStep": "6.5b",
-  "nextStepTitle": "Mechanism editor, second half",
+  "nextStep": "studio",
+  "nextStepTitle": "Studio: a separate build with editing, for the owner",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
