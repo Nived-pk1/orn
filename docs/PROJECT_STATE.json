@@ -95,6 +95,7 @@
     "6.3a",
     "6.3b",
     "6.3",
+    "6.4a",
     "6.1"
   ],
   "nextPhase": 7,
@@ -109,8 +110,8 @@
     "commit": "afade7e",
     "version": "e6301e1d-4038-4b52-91cb-b9b16de17184"
   },
-  "nextStep": "6.4",
-  "nextStepTitle": "Condition variants and outcomes editors",
+  "nextStep": "6.4b",
+  "nextStepTitle": "Outcomes editor (row 6.4, second half)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
