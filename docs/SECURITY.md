@@ -53,3 +53,11 @@ What a host that sends a header policy must send, as plain lines:
 ## 5. Delivery
 
 Serve over `http(s)` (static hosting or `npm run preview`); `file://` is unsupported because module workers, WASM and IndexedDB origins require it. A PWA service worker (Phase 9) caches the app shell for offline use. A host that adds a header policy follows the plain lines at the end of §4 (2026-10-12): the page policy everywhere, the chem worker entry alone with `'unsafe-eval'` added.
+
+## 6. Editions: Study and Studio (ADR-041, the Studio step)
+
+- **The public site (Study) has no editing code.** It is a separate BUILD, not a hidden setting: the editors, the draft manager and the other editing modules are not in any chunk of its output (`scripts/check-edition.mjs`, run by `npm run build:smoke`, fails the build otherwise). A visitor cannot switch editing on: there is nothing to switch.
+- **Studio (the owner's site) is protected by Cloudflare Access in front of the Worker** `reaction-navigator-studio`, set in the Cloudflare dashboard by the owner; the app holds no secret and checks no identity. The public Worker is never protected. After every Studio deploy the release check confirms that an unauthenticated request does not get the app (docs/RELEASE.md, "Access"). No email address or other identity is written into the repo.
+- **A visitor's data is per browser** (IndexedDB), so whatever a visitor does or imports never reaches anyone else. Drafts that editors left in a visitor's browser (editors were public from 6.2 to 6.5) are untouched and not shown in Study.
+- **Publishing goes only through the repo:** the owner exports from Studio, `npm run publish:dataset` validates the file with the same import pipeline (L1 ERRORs and rejected assets refuse it) and writes `data/published/`; the Study build ships it. There is no upload endpoint and no server (no Worker script, no database).
+- The CSP, `_headers` and the SVG sanitiser are the same for both editions.

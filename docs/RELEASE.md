@@ -1,27 +1,79 @@
-# RELEASE - the hosted preview
+# RELEASE - the two hosted editions
 
-The preview is a static site: the production build in `dist/`, served by Cloudflare Workers static assets. There is no Worker script, no
-server code, no database and no account system. Everything the visitor does stays in their browser (IndexedDB). Config: `wrangler.jsonc`
-(project name `reaction-navigator`, assets directory `./dist`). Headers and robots: `public/_headers` and `public/robots.txt`, which
-Vite copies into `dist/`. `wrangler` 4.151.0 is a dev dependency only; it is never shipped (docs/DEPENDENCIES.md).
+There are two sites from one repo, both static: the production build served by Cloudflare Workers static assets. There is no Worker script, no
+server code, no database and no account system in the app. Everything a visitor does stays in their browser (IndexedDB).
+
+| | Study (public) | Studio (owner only) |
+|---|---|---|
+| What it is | the study site: no editing code at all (ADR-041) | the same app plus the editors; "Studio" marker, page title "ORN Studio" |
+| Worker | `reaction-navigator` (today's URL) | `reaction-navigator-studio` |
+| Config | `wrangler.jsonc` | `wrangler.studio.jsonc` |
+| Build folder | `dist/` | `dist-studio/` |
+| Build | `npm run build` (= `npm run build:study`) | `npm run build:studio` |
+| Local preview | `npm run preview` (http://127.0.0.1:4173) | `npm run preview:studio` |
+| Deploy | `npm run deploy:study` | `npm run deploy:studio` |
+| Who may open it | everyone | only whom Cloudflare Access lets in (set in the dashboard, below) |
+
+`wrangler` 4.151.0 is a dev dependency only; it is never shipped (docs/DEPENDENCIES.md). Headers and robots: `public/_headers` and
+`public/robots.txt`, which Vite copies into each build folder (the same files for both editions).
+
+## Build and check
+
+1. `npm run check` is green and the change is committed.
+2. `npm run build:smoke` builds BOTH editions and checks each one: `scripts/check-build.mjs` (CSP, workers, WASM, no eval, the demo or
+   published dataset, lazy chunks, the `_headers` rules, `robots.txt`) and `scripts/check-edition.mjs` (the Study build contains NO editor
+   module in any chunk, from the build's own module list `build-report/<edition>.json`; the Studio build contains them; both print the initial
+   JS gzip, and Studio must stay at or under 395 kB). It must pass before anything is deployed.
 
 ## Deploy again
 
-1. `npm run check` is green and the change is committed.
-2. `npm run build` (this also runs the build smoke, which checks `dist/_headers` and `dist/robots.txt`, rule 9).
-3. `npx wrangler login` once per machine (a browser opens: choose Sign in with Google and click Allow).
-4. `npx wrangler deploy`. It prints the URL. The URL does not change between deploys.
-5. Check it: `curl -sI <url>/` and one `/assets/...` file and the chem worker file; then
-   `ORN_BASE_URL=<url> npx playwright test tests/e2e/smoke.spec.ts tests/e2e/csp.spec.ts tests/e2e/phone.spec.ts`.
+1. `npx wrangler login` once per machine (a browser opens: choose Sign in with Google and click Allow).
+2. Study: `npm run build`, then `npm run deploy:study`. Studio: `npm run build:studio`, then `npm run deploy:studio`. Each prints its URL. The
+   URLs do not change between deploys.
+3. Check Study: `curl -sI <url>/` and one `/assets/...` file and the chem worker file; then
+   `ORN_BASE_URL=<url> npx playwright test tests/e2e/smoke.spec.ts tests/e2e/csp.spec.ts tests/e2e/phone.spec.ts`, and
+   `tests/e2e/study-edition.spec.ts` (no editing UI on the live site).
+4. Check Studio, EVERY time (see "Access" below): an unauthenticated request must NOT get the app.
 
-Never rename the project (`name` in `wrangler.jsonc`) and never change the URL: a new name is a new site at a new address, and the old
-address would keep serving the old build until it is deleted by hand.
+Never rename either Worker (`name` in the config file) and never change a URL: a new name is a new site at a new address, and the old address
+would keep serving the old build until it is deleted by hand.
 
-Try it locally first: `npm run build`, then `npx wrangler dev` (http://127.0.0.1:8787) serves `dist/` with the same `_headers`.
+Try it locally first: `npm run build`, then `npx wrangler dev` (http://127.0.0.1:8787) serves `dist/` with the same `_headers`; for Studio
+`npx wrangler dev -c wrangler.studio.jsonc`.
+
+## Access (Studio)
+
+Studio is protected by Cloudflare Access in front of the Worker; the app holds no secret and checks no identity. The user does every dashboard
+step (nothing here needs credentials beyond the `wrangler` login), once:
+
+1. Cloudflare dashboard, Zero Trust, Access: add an Access policy to the Worker `reaction-navigator-studio` ONLY, allowing the owner's
+   sign-in (an email one-time PIN or the Google account; the address is typed in the dashboard and is never written into this repo). Access
+   covers the Worker's workers.dev address, its routes, custom domains and preview URLs, and is enforced before a request reaches the Worker
+   (a static-assets-only Worker too).
+2. NEVER attach a policy to "all Workers" and never to `reaction-navigator`: the public site must stay public.
+
+After EVERY Studio deploy, check it:
+`curl -sI https://reaction-navigator-studio.<account>.workers.dev/` must answer a redirect to a `cloudflareaccess.com` sign-in (or 401 / 403),
+never the app (no `200` with the app's HTML); and `curl -sI https://reaction-navigator.<account>.workers.dev/` must still answer `200`.
+
+## Publishing a dataset (first version: no server, no Publish button)
+
+The Study site ships ONE dataset: the published one if there is one, else the bundled demo. Publishing goes only through the repo.
+
+1. In Studio, export the data you want to publish: `.orn.json` with the pictures embedded ("Inside the file"), or an `.ornpkg`.
+2. `npm run publish:dataset -- <file>`. It runs the SAME import pipeline in Node (parse, envelope, L1-L3 validation, assets with magic bytes
+   and SHA-256), refuses on any L1 ERROR or any rejected asset or a missing file, prints the counts and the findings, then copies the file to
+   `data/published/` with a small manifest (`sha256`, `publishedAt`, record counts).
+3. Commit `data/published/`, `npm run build:smoke`, then `npm run deploy:study`.
+4. A visitor's first run offers "Load the study dataset" (the demo words when nothing is published). A visitor who loaded an earlier version
+   is told at their next visit: "A newer version of the study dataset is available. Load it ..." with "Load it" (the existing replace import,
+   with its pre-import snapshot and Undo import) and "Later" (asked again next visit). Studio NEVER shows this notice: the owner's working
+   copy is never replaced by a prompt.
 
 ## Take it down
 
-`npx wrangler delete` removes the site. Nothing else holds data: the visitors' data is in their own browsers and is not touched.
+`npx wrangler delete` removes the Study site; `npx wrangler delete -c wrangler.studio.jsonc` removes Studio. Nothing else holds data: the
+visitors' data is in their own browsers and is not touched.
 
 ## What each header does
 
@@ -47,4 +99,4 @@ Try it locally first: `npm run build`, then `npx wrangler dev` (http://127.0.0.1
 ## The account
 
 The Cloudflare account signs in with Google, so Google 2-Step Verification protects it. Keep 2-Step Verification on for that Google
-account. Whoever can sign in can deploy or delete the site.
+account. Whoever can sign in can deploy or delete either site and change the Access policy.

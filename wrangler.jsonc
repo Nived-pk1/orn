@@ -1,5 +1,5 @@
 {
-  // Static assets only, no Worker script (release preview, docs/RELEASE.md). The site is the production build in ./dist.
+  // The STUDY Worker (public): static assets only, no Worker script (docs/RELEASE.md). The site is the Study build in ./dist (npm run build). Studio is wrangler.studio.jsonc.
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "reaction-navigator",
   "compatibility_date": "2026-10-14",

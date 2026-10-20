@@ -91,7 +91,8 @@ Named by the `nextPhase` / `nextStep` fields of `docs/PROJECT_STATE.json`; its t
 nvm use                      # Node 24 (.nvmrc; engines >=22)
 npm install                  # first time: creates package-lock.json (commit it)
 npm run dev                  # Vite dev server (http://localhost:5173)
-npm run build                # typecheck + production build (CSP injected)
+npm run build                # typecheck + production build of the STUDY edition (CSP injected; = build:study, into dist/)
+npm run build:studio         # typecheck + the STUDIO edition (the editors) into dist-studio/ (ADR-041)
 npm run preview              # serve the production build
 npm run typecheck            # tsc -p tsconfig.json && tsc -p tsconfig.node.json
 npm run lint                 # ESLint
@@ -105,7 +106,7 @@ npm test                     # all Vitest tests
 npm run test:property        # property tests only
 npm run test:adversarial     # adversarial matrix only
 npm run test:timing          # wall-clock budget assertions (tests/timing); gates only, NOT part of check or test:coverage
-npm run build:smoke          # build + scripts/check-build.mjs: CSP, the four worker chunks, RDKit WASM as its own asset, no eval / new Function outside RDKit's glue (ADR-035); phase-close and gate command, NOT part of check (slow)
+npm run build:smoke          # BOTH editions (Study into dist/, Studio into dist-studio/), each with scripts/check-edition.mjs (no editor module in the Study build) and scripts/check-build.mjs: CSP, the four worker chunks, RDKit WASM as its own asset, no eval / new Function outside RDKit's glue (ADR-035); phase-close and gate command, NOT part of check (slow)
 npm run test:coverage         # coverage thresholds (core 90/85; persistence, io, workers, chem, layout, search 80 lines); phase-close and gate command, NOT part of check
 npm run bench                # benchmarks (tests/perf), console output only
 npm run bench:baseline       # regenerate tests/perf/baseline.json (mean/p75/p99/sample count); gates only

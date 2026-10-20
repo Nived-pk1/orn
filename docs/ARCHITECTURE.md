@@ -240,3 +240,7 @@ Principles: fail visibly, keep memory authoritative, never corrupt stored data, 
 | Exam scope can be stored per record | changes each year across thousands of records | derived scope with explicit overrides |
 | Mechanisms are text | cannot be reused, checked or animated | structured steps with atom maps (text allowed as summary) |
 | Assets can live inside records | huge records, slow parsing | separate blob store, hashed, referenced |
+
+## Editions (ADR-041)
+
+Two builds of the same code: **Study** (the public site: no editing code) and **Studio** (the owner's site: the editors, behind Cloudflare Access), chosen at build time by one literal (`src/app/edition.ts`). The layers and invariants are the same; the editing entry points of the window and the services are guarded by that literal and the editing modules (`scripts/editor-modules.json`) are not in the Study output. See ADR-041, docs/SECURITY.md section 6 and docs/RELEASE.md.
