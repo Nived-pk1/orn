@@ -114,7 +114,7 @@ export function OutcomeProducts(props: OutcomeProductsProps) {
                     Remove
                   </Button>
                 </div>
-                <details>
+                <details className={own.moreDetails}>
                   <summary>More details</summary>
                   <div className={styles.participantGrid}>
                     <div className={styles.field}>

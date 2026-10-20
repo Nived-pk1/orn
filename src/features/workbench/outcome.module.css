@@ -74,3 +74,10 @@
 .groupItem {
   list-style: none;
 }
+
+.moreDetails summary {
+  cursor: pointer;
+  min-height: var(--hit-min);
+  display: flex;
+  align-items: center;
+}
