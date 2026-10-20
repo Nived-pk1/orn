@@ -1,6 +1,6 @@
 /**
  * What the reaction editor does not edit yet (step 6.3a decision D1), shown as short read-only summaries and kept unchanged by Save:
- * outcomes ("Editing arrives in step 6.4b"), mechanism links, reversibility and classification (6.5), and notes,
+ * mechanism links, reversibility and classification (6.5), and notes,
  * citations, tags and the rest (6.6). Counts and words only; the draft is never changed here.
  */
 import { wordsOf } from './reagent-model';
@@ -11,37 +11,11 @@ const isBag = (value: unknown): value is Fields => typeof value === 'object' && 
 const fieldsOf = (draft: unknown): Fields => (isBag(draft) ? draft : {});
 const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 const text = (value: unknown): string => (typeof value === 'string' ? value : '');
-const plural = (count: number, one: string, many = `${one}s`): string => `${count} ${count === 1 ? one : many}`;
 const excerpt = (value: unknown): string | undefined => {
   const t = text(value);
   if (t === '') return undefined;
   return t.length > 240 ? `${t.slice(0, 239)}... (${t.length.toLocaleString('en-US')} characters)` : t;
 };
-
-export function OutcomesReadOnlySection(props: { readonly draft: unknown }) {
-  const fields = fieldsOf(props.draft);
-  const outcomes = list(fields.outcomes);
-  return (
-    <div>
-      <p className={styles.hint}>Editing arrives in step 6.4b. These are kept unchanged when you save.</p>
-      <p>
-        Outcomes: {outcomes.length === 0 ? 'none yet (a draft without outcomes saves with a warning; publishing needs one)' : plural(outcomes.length, 'outcome')}.
-      </p>
-      {outcomes.length === 0 ? null : (
-        <ul>
-          {outcomes.map((outcome, index) => {
-            const o = isBag(outcome) ? outcome : {};
-            return (
-              <li key={text(o.id) || index}>
-                {text(o.label) === '' ? `Outcome ${index + 1}` : text(o.label)}: {wordsOf(text(o.selectivity) || 'unspecified').toLowerCase()}, {plural(list(o.products).length, 'product')}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 export function ClassificationReadOnlySection(props: { readonly draft: unknown }) {
   const fields = fieldsOf(props.draft);

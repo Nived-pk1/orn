@@ -51,7 +51,7 @@ async function walk(page: Page, device: string): Promise<void> {
   const section = dialog.locator('details[data-preview-section]');
   await expect(section).not.toHaveAttribute('open', '');
   await section.locator('summary').tap();
-  await expect(section.getByText('No products yet (outcomes arrive in step 6.4)')).toBeVisible();
+  await expect(section.getByText('No products yet: add an outcome in the Outcomes section')).toBeVisible();
   await expect(section.getByRole('group', { name: 'Full equation' })).toContainText('Ethanol');
   await section.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${shotsDir()}/phone-reaction-editor-preview-${device}.png` });

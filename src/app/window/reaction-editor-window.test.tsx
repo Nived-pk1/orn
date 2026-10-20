@@ -12,6 +12,7 @@ import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support
 import { prefetchPalette } from './lazy-palette';
 
 const PCC = 'rxn_ethanol-to-ethanal-pcc';
+const E2 = 'rxn_r-2-bromobutane-alc-koh';
 const isScroller = (el: Element): boolean => el.hasAttribute('data-virtual-list');
 
 beforeAll(async () => {
@@ -42,6 +43,7 @@ afterEach(() => {
 });
 
 const pccReaction = (app: FakeApp): Reaction => app.store.getState().records.reaction[PCC as never] as Reaction;
+const e2Card = (): HTMLElement => screen.getAllByRole('article').find((el) => el.querySelector('h4')?.textContent?.includes('alc. KOH')) as HTMLElement;
 const pccCard = (): HTMLElement => screen.getAllByRole('article').find((el) => el.querySelector('h4')?.textContent === 'Ethanol → ethanal (PCC)') as HTMLElement;
 
 describe('the reaction editor through the real window', () => {
@@ -117,6 +119,37 @@ describe('the reaction editor through the real window', () => {
     await waitFor(() => {
       act(() => app.navigator.timers.advance(10));
       expect(within(pccCard()).queryAllByText(/reflux/)).toHaveLength(0);
+    });
+  });
+  it("an outcome's selectivity: the minor outcome of the E2 reaction is changed to trace, saved, the card's word changes, and Undo restores it (step 6.4b)", async () => {
+    const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
+    app.navigator.ui.family.getState().openFamily('cls_haloalkanes');
+    app.panels.getState().setInspectorOpen(true);
+    renderWithApp(app);
+    await screen.findByRole('region', { name: /^Family page/ });
+    act(() => app.navigator.timers.advance(0));
+    await screen.findByRole('heading', { level: 2, name: /^Reactions of / });
+    expect(e2Card().textContent).toMatch(/minor/);
+    act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: E2 }));
+    fireEvent.click(await within(await screen.findByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: 'Edit' }));
+    const dialog = await screen.findByRole('dialog', { name: /^Edit / });
+    const minor = (app.store.getState().records.reaction[E2 as never] as Reaction).outcomes.findIndex((o) => o.selectivity === 'minor') + 1;
+    fireEvent.click(within(dialog).getByRole('button', { name: `Edit outcome ${minor}` }));
+    fireEvent.change(within(dialog).getByLabelText(`Selectivity of outcome ${minor}`), { target: { value: 'trace' } });
+    expect(within(dialog).getAllByTestId('outcome-summary')[minor - 1]?.textContent).toMatch(/trace/);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
+    expect((app.store.getState().records.reaction[E2 as never] as Reaction).outcomes[minor - 1]?.selectivity).toBe('trace');
+    await waitFor(() => {
+      act(() => app.navigator.timers.advance(10));
+      expect(e2Card().textContent).toMatch(/trace/);
+      expect(e2Card().textContent).not.toMatch(/minor/);
+    });
+    act(() => void app.store.undo());
+    expect((app.store.getState().records.reaction[E2 as never] as Reaction).outcomes[minor - 1]?.selectivity).toBe('minor');
+    await waitFor(() => {
+      act(() => app.navigator.timers.advance(10));
+      expect(e2Card().textContent).toMatch(/minor/);
     });
   });
 });

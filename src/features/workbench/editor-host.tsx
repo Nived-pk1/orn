@@ -117,7 +117,7 @@ export function EditorHost(props: EditorHostProps) {
     },
     [port, sessionId],
   );
-  const invalid = useMemo(() => new Set((refusal?.findings ?? live).flatMap((f) => (f.path === undefined ? [] : [f.path]))), [live, refusal]);
+  const invalid = useMemo(() => new Set((refusal?.findings ?? [...live, ...checks.dry.findings]).flatMap((f) => (f.path === undefined ? [] : [f.path]))), [live, refusal, checks.dry.findings]);
   const focusField = useCallback((path: string | undefined) => {
     if (root.current === null) return;
     const container = root.current;

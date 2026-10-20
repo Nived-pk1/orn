@@ -94,7 +94,7 @@ test.describe('the reaction editor', () => {
     await expect(previewOf(page).getByText('Add a participant to see the reaction here.')).toBeVisible();
     await addParticipant(page, 'reactant', 'ethanol', 'Ethanol');
     await addParticipant(page, 'reagent', 'pcc', 'PCC');
-    await expect(previewOf(page).getByText('No products yet (outcomes arrive in step 6.4)')).toBeVisible();
+    await expect(previewOf(page).getByText('No products yet: add an outcome in the Outcomes section')).toBeVisible();
     await expect(previewOf(page).getByRole('group', { name: 'Full equation' })).toContainText('Ethanol');
     await expect(previewOf(page).getByRole('group', { name: 'Full equation' })).toContainText('PCC');
     await dialog.getByRole('button', { name: 'Close (keeps the draft)' }).click();

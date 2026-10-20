@@ -45,8 +45,8 @@ describe('the variant recipes', () => {
 
 describe('the words', () => {
   it('names the outcomes that hold the variant', () => {
-    expect(outcomeNaming(base(), 'cvr_1', '443 K')).toBe("Outcome 1 holds only under '443 K'; Outcome 3 names '443 K'; change the outcomes first (step 6.4b).");
-    expect(outcomeNaming({ ...base(), outcomes: [base().outcomes[0]] }, 'cvr_1', '443 K')).toBe("Outcome 1 holds only under '443 K'; change the outcome first (step 6.4b).");
+    expect(outcomeNaming(base(), 'cvr_1', '443 K')).toBe("Outcome 1 holds only under '443 K'; Outcome 3 names '443 K'; change the outcomes' 'Holds under' first.");
+    expect(outcomeNaming({ ...base(), outcomes: [base().outcomes[0]] }, 'cvr_1', '443 K')).toBe("Outcome 1 holds only under '443 K'; change the outcome's 'Holds under' first.");
     expect(outcomeNaming(base(), 'cvr_9', 'x')).toBeUndefined();
   });
 

@@ -99,7 +99,7 @@ describe('the live preview', () => {
     expect(within(preview()).queryByRole('group', { name: 'Full equation' })).toBeNull();
   });
 
-  it('no outcomes: the reactant side and the arrow, and "No products yet (outcomes arrive in step 6.4)"', async () => {
+  it('no outcomes: the reactant side and the arrow, and "No products yet: add an outcome in the Outcomes section"', async () => {
     const { rig, id } = show();
     act(() =>
       rig.port.edit(id, (draft) => {
@@ -107,7 +107,7 @@ describe('the live preview', () => {
       }),
     );
     await settle(rig);
-    expect(within(preview()).getByText('No products yet (outcomes arrive in step 6.4)')).toBeTruthy();
+    expect(within(preview()).getByText('No products yet: add an outcome in the Outcomes section')).toBeTruthy();
     expect(within(preview()).getByRole('group', { name: 'Full equation' }).textContent).toContain('(R)-2-bromobutane');
     expect(within(preview()).queryByText('nothing listed')).toBeNull();
   });

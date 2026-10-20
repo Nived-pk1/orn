@@ -3,7 +3,7 @@
  * it overrides (`stageId`; absent = the first stage of kind reaction, as the arrow reads it) and ONLY the parameters it overrides; the parameters
  * are edited with the same recipes as a stage's (`condition-model.ts`, `variantLoc`). A new variant starts empty: its label is required (the
  * form asks for it) and its stage is the only stage when there is exactly one, else the person's choice. Removing a variant an outcome names is
- * refused in words (outcomes are edited in step 6.4b); one no outcome names is removed after a question, and the participants it lists (present
+ * refused in words (its 'Holds under' is edited in the Outcomes section); one no outcome names is removed after a question, and the participants it lists (present
  * only under it) are named, because they become common. No chemistry here.
  */
 import { conditionPartsOf } from '@/core/graph';
@@ -65,7 +65,7 @@ export function variantsViewOf(draft: unknown): readonly VariantView[] {
   });
 }
 
-/** The outcomes that name this variant, as the refusal says them: "Outcome 2 holds only under '443 K'; change the outcome first (step 6.4b)." or undefined. */
+/** The outcomes that name this variant, as the refusal says them: "Outcome 2 holds only under '443 K'; change the outcome's 'Holds under' first." or undefined. */
 export function outcomeNaming(draft: unknown, variantId: string, label: string): string | undefined {
   const outcomes = isBag(draft) && Array.isArray(draft.outcomes) ? draft.outcomes : [];
   const naming = outcomes.flatMap((item, at) => {
@@ -74,7 +74,7 @@ export function outcomeNaming(draft: unknown, variantId: string, label: string):
   });
   if (naming.length === 0) return undefined;
   const words = naming.map((one) => `Outcome ${one.n} ${one.only ? 'holds only under' : 'names'} '${label}'`);
-  return `${words.join('; ')}; change ${naming.length === 1 ? 'the outcome' : 'the outcomes'} first (step 6.4b).`;
+  return `${words.join('; ')}; change ${naming.length === 1 ? "the outcome's" : "the outcomes'"} 'Holds under' first.`;
 }
 
 /** The index of the stage a variant overrides: the one it names, else the first stage of kind reaction; -1 when there is none. */

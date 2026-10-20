@@ -141,7 +141,7 @@ describe('removing and adding a variant', () => {
     const { rig, id } = show(ETHANOL);
     const button = screen.getByRole('button', { name: 'Remove variant 2' });
     expect(button.getAttribute('aria-disabled')).toBe('true');
-    expect(within(rows()[1] as HTMLElement).getAllByText("Outcome 2 holds only under '443 K, excess acid'; change the outcome first (step 6.4b).").length).toBeGreaterThan(0);
+    expect(within(rows()[1] as HTMLElement).getAllByText("Outcome 2 holds only under '443 K, excess acid'; change the outcome's 'Holds under' first.").length).toBeGreaterThan(0);
     fireEvent.click(button);
     expect(draftOf(rig, id).conditionVariants).toHaveLength(2);
     expect(screen.queryByRole('group', { name: 'Remove variant 2?' })).toBeNull();

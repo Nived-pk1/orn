@@ -55,7 +55,7 @@ export function ReactionPreview(props: { readonly draft: unknown; readonly port:
                 layout={phone ? 'stacked' : 'row'}
                 {...(index === 0 ? { onNamesChange: port.names.set } : {})}
                 {...(group.label === undefined ? {} : { label: group.label })}
-                {...(built.hasOutcomes ? {} : { noProducts: 'No products yet (outcomes arrive in step 6.4)' })}
+                {...(built.hasOutcomes ? {} : { noProducts: 'No products yet: add an outcome in the Outcomes section' })}
               />
             </li>
           ))}
