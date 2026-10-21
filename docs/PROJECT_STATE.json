@@ -120,18 +120,18 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-10-21",
-    "commit": "539d4f4",
-    "version": "b5435631-fc4e-4111-a3dc-e8f689fc35a1"
+    "commit": "c798102",
+    "version": "bb00c22b-fcfc-47a6-9336-c5713a75dbbd"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-10-21",
-    "version": "a2a480d3-81cc-4978-850d-f717cd6f5dc9",
+    "version": "1fe9d5c4-6e2d-47ee-a27e-191b40bfb404",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check 2026-10-21: an unauthenticated request got 302 (Cloudflare Access) and not the app; the public Worker still answered 200 with the app.",
-    "commit": "539d4f4",
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 6.6 deploy, 2026-10-21: an unauthenticated request got 302 (Cloudflare Access) and not the app; the public Worker still answered 200 with the app.",
+    "commit": "c798102",
     "protectedCheckedAt": "2026-10-21"
   },
   "nextStep": "exams",

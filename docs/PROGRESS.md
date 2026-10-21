@@ -5673,3 +5673,13 @@ No product code. Read from the files named (line numbers at HEAD 2018a05) and fr
 **REVIEW REQUIRED (all of 6.6c):** (a) a topic's and a map family's `order` start empty and L1 refuses until given (no default invented); (b) a map family's cell is optional in the schema, so the editor allows "no cell" and says the map draws it in the row below; (c) routes cannot be a mapping or relevance target or a relationship end (no picker until Phase 7); (d) `OpenTarget.seed` and `EditorPort.chain` (a contract addition, ADR-040 addendum); (e) the form-level notices for CUR-006 and PRS-002, because those rules flag only the later ID and a new record's ID sorts before the demo's; (f) changing the exam in an exam relevance clears its versions (and says so); (g) the Studio initial JS is 394.55 kB, 0.45 kB under the line; (h) the existing tests changed: `knowledge-window.test.tsx` (the relationship history label), `session.test.ts` (a kind with no blank draft is now `exam`), `class-form.test.tsx` (the read-only family paragraph replaced by the Map family section), `status-parts.test.tsx` and `editor-commands.test.ts` (the editors' API and command keys).
 **Amendments:** the ADR-040 addendum (step 6.6c) and UI_ARCHITECTURE section 7 (Part 2); no schema, DB_STORES, CSP, `_headers` or sanitiser change.
 `npm run check` (one command, default workers): 540 files, 6,784 tests, green.
+
+
+### Step 6.6c, part 6 - deployed (2026-10-21)
+
+Deployed after the ONE clean full run (part 5, 0 failed), Study first, then Studio, as docs/RELEASE.md says.
+- **Study** `reaction-navigator`: `npm run build`, `npm run deploy:study`, version **bb00c22b-fcfc-47a6-9336-c5713a75dbbd** (commit c798102), https://reaction-navigator.organic-reaction-navigator.workers.dev. Live specs smoke, csp, phone, phone-family, equation, phone-equation, structures and study-edition (no editing UI on the live site) in Chromium and WebKit: **45 passed, 17 skipped (the other engine's device profiles), 0 failed**.
+- **Studio** `reaction-navigator-studio`: `npm run build:studio`, `npm run deploy:studio`, version **1fe9d5c4-6e2d-47ee-a27e-191b40bfb404**, https://reaction-navigator-studio.organic-reaction-navigator.workers.dev.
+- **Access check (live, after the Studio deploy):** an unauthenticated `curl -sI` of the Studio URL answered **302 Found** with a `CF_AppSession` cookie (Cloudflare Access sign-in), no app HTML; the public Study URL answered **200 OK**. Studio is protected.
+Recorded in `docs/PROJECT_STATE.json` (`releasePreview`, `studioPreview`). Nothing started by this session is still running.
+`npm run check` (one command, default workers): 540 files, 6,784 tests, green.
