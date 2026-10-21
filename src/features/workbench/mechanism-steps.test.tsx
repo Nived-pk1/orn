@@ -135,8 +135,8 @@ describe('the fields of one step', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Description of step 1' }), { target: { value: 'Backside *attack*.' } });
     expect(stepOf(rig, id).description).toBe('Backside *attack*.');
     expect(within(screen.getByRole('region', { name: 'Preview of Description of step 1' })).getByText('attack').tagName).toBe('EM');
-    expect(screen.getByText(/Title: Hydroxide attacks the carbon opposite the leaving group/)).toBeTruthy();
-    expect(screen.getAllByText(/Editing arrives in step 6\.6/).length).toBeGreaterThan(0);
+    expect((screen.getByLabelText('Title of step 1') as HTMLInputElement).value).toBe('Hydroxide attacks the carbon opposite the leaving group');
+    expect(screen.queryByText(/Editing arrives in step 6\.6\./)).toBeNull();
   });
 });
 

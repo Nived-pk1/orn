@@ -8,7 +8,7 @@ import { useState, type ReactNode } from 'react';
 import { Button } from '@/ui/primitives';
 import conditionStyles from './condition.module.css';
 import type { MechanismLinksPort, VariantUse } from './mechanism-contracts';
-import { addVariant, moveVariant, removeVariant, setVariantApplicability, setVariantLabel, setVariantRateLaw, variantSummary, variantsViewOf } from './mechanism-model';
+import { addVariant, moveVariant, removeVariant, setVariantApplicability, setVariantLabel, setVariantNote, setVariantRateLaw, variantSummary, variantsViewOf } from './mechanism-model';
 import { RichTextField } from './rich-text-field';
 import type { SectionProps } from './section-props';
 import { SummaryLine } from './summary-line';
@@ -118,6 +118,19 @@ export function MechanismVariantsSection(props: MechanismVariantsProps) {
                       <label htmlFor={`mech-variant-rate-${index}`}>Rate law</label>
                       <input id={`mech-variant-rate-${index}`} type="text" aria-label={`Rate law of variant ${n}`} value={variant.rateLaw} readOnly={locked !== undefined} aria-invalid={bad(props, `${base}.rateLaw`)} data-field-path={`${base}.rateLaw`} autoComplete="off" onChange={(event) => onEdit(setVariantRateLaw(index, event.target.value), `${base}.rateLaw`)} />
                     </div>
+                    <RichTextField
+                      id={`mech-variant-note-${index}`}
+                      label={`Note of variant ${n}`}
+                      path={`${base}.note`}
+                      value={variant.note}
+                      invalid={props.invalid?.has(`${base}.note`) === true}
+                      unavailable={locked}
+                      phone={props.phone}
+                      linkExists={props.links?.exists}
+                      linkName={props.links?.name}
+                      rows={2}
+                      onChange={(value) => onEdit(setVariantNote(index, value), `${base}.note`)}
+                    />
                     {props.renderSteps?.(index)}
                   </>
                 ) : null}

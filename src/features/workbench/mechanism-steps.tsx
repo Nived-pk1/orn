@@ -84,6 +84,10 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
         <TriChoice legend="Reversible" flag="reversible" idBase={`step-${v}-${s}`} path={`${base}.reversible`} value={view.reversible} disabled={locked !== undefined} phone={props.phone} onChange={(value) => onEdit(setStepFlag(v, s, 'reversible', value))} />
       </div>
       <div className={styles.field}>
+        <label htmlFor={`step-title-${v}-${s}`}>Title of step {n}</label>
+        <input id={`step-title-${v}-${s}`} type="text" value={view.title} readOnly={locked !== undefined} aria-invalid={props.invalid?.has(`${base}.title`) === true ? true : undefined} data-field-path={`${base}.title`} autoComplete="off" onChange={(event) => onEdit(setStepText(v, s, 'title', event.target.value), `${base}.title`)} />
+      </div>
+      <div className={styles.field}>
         <label htmlFor={`step-event-${v}-${s}`}>Stereochemical event</label>
         <input id={`step-event-${v}-${s}`} type="text" aria-label={`Stereochemical event of step ${n}`} value={view.stereochemicalEvent} readOnly={locked !== undefined} data-field-path={`${base}.stereochemicalEvent`} autoComplete="off" onChange={(event) => onEdit(setStepText(v, s, 'stereochemicalEvent', event.target.value), `${base}.stereochemicalEvent`)} />
       </div>
@@ -99,8 +103,19 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
         linkName={props.links?.name}
         onChange={(value) => onEdit(setStepText(v, s, 'description', value), `${base}.description`)}
       />
-      {view.title === '' ? null : <p>Title: {view.title}</p>}
-      <p className={styles.hint}>The step&apos;s title and note are kept as they are. Editing arrives in step 6.6.</p>
+      <RichTextField
+        id={`step-note-${v}-${s}`}
+        label={`Note of step ${n}`}
+        path={`${base}.note`}
+        value={view.note}
+        invalid={props.invalid?.has(`${base}.note`) === true}
+        unavailable={locked}
+        phone={props.phone}
+        rows={2}
+        linkExists={props.links?.exists}
+        linkName={props.links?.name}
+        onChange={(value) => onEdit(setStepText(v, s, 'note', value), `${base}.note`)}
+      />
     </div>
   );
 }

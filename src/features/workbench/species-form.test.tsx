@@ -87,11 +87,11 @@ describe('the sections', () => {
     expect(within(dialog).queryByLabelText(/Review status/)).toBeNull();
   });
 
-  it('Properties, notes and citations are shown with "Editing arrives in step 6.6" and kept unchanged by a Save', async () => {
+  it('Properties, notes, tags and citations are editable and a Save of another field keeps them unchanged', async () => {
     const rig = editorRig();
     const stored = speciesOf(rig);
     const { id, dialog } = show({ rig });
-    expect(within(dialog).getByText(/Editing arrives in step 6\.6/)).toBeTruthy();
+    expect(within(dialog).queryByText(/Editing arrives in step 6\.6/)).toBeNull();
     set('Kind of species', stored.speciesKind === 'ion' ? 'molecule' : 'ion');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(rig.drafts.entry(id)).toBeUndefined());

@@ -63,7 +63,7 @@ describe('the mechanism editor sections', () => {
     for (const name of ['Identity', 'Summary', 'Variants', 'Review']) expect(screen.getByRole('region', { name })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Notes, tags and citations' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Mechanism classes' })).toBeTruthy();
-    expect(screen.getAllByText(/Editing arrives in step 6\.6a/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Editing arrives in step 6\.6/)).toBeNull();
   });
 
   it('name and aliases are edited as typed; the fields the editor does not name stay unchanged', () => {

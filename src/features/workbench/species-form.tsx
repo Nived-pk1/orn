@@ -11,7 +11,7 @@ import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
 import { AromaticitySection, FormulaChargeSection, IdentitySection, ReviewSection, StereoSection } from './species-sections';
 import { SharedFieldsSection } from './shared-bundle';
-import { PropertiesReadOnlySection } from './species-readonly';
+import { PropertiesSection } from './properties-section';
 import { StructurePanel } from './structure-panel';
 import type { StructurePort } from './structure-contracts';
 import styles from './editor.module.css';
@@ -58,7 +58,7 @@ export function SpeciesForm(props: SpeciesFormProps) {
         <ReviewSection {...common} />
       </SectionFrame>
       <SectionFrame id="properties" title="Properties" initiallyOpen={open}>
-        <PropertiesReadOnlySection draft={props.draft} />
+        <PropertiesSection {...common} picker={props.picker} />
       </SectionFrame>
       <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={open}>
         <SharedFieldsSection {...common} notes={['studyNotes', 'notes', 'acidBaseNotes']} picker={props.picker} />

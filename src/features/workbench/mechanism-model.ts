@@ -33,6 +33,11 @@ export const setVariantLabel = (index: number, value: string): DraftRecipe => (d
   const variant = variantAt(draft, index);
   if (variant !== undefined) variant.label = value;
 };
+export const setVariantNote = (index: number, value: string): DraftRecipe => (draft) => {
+  const variant = variantAt(draft, index);
+  if (variant !== undefined) setOrDelete(variant, 'note', value);
+};
+
 export const setVariantApplicability = (index: number, value: string): DraftRecipe => (draft) => {
   const variant = variantAt(draft, index);
   if (variant !== undefined) setOrDelete(variant, 'applicability', value);
@@ -81,6 +86,7 @@ export interface VariantView {
   readonly label: string;
   readonly applicability: string;
   readonly rateLaw: string;
+  readonly note: string;
   readonly stepCount: number;
 }
 
@@ -88,7 +94,7 @@ export function variantsViewOf(draft: unknown): readonly VariantView[] {
   const variants = isBag(draft) && Array.isArray(draft.variants) ? draft.variants : [];
   return variants.map((item): VariantView => {
     const row = isBag(item) ? item : {};
-    return { id: text(row.id), label: text(row.label), applicability: text(row.applicability), rateLaw: text(row.rateLaw), stepCount: Array.isArray(row.steps) ? row.steps.length : 0 };
+    return { id: text(row.id), label: text(row.label), applicability: text(row.applicability), rateLaw: text(row.rateLaw), note: text(row.note), stepCount: Array.isArray(row.steps) ? row.steps.length : 0 };
   });
 }
 

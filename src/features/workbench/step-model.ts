@@ -11,7 +11,7 @@ import { wordsOf } from './reagent-model';
 
 export type StepKindValue = (typeof STEP_KINDS)[number];
 export type StepFlag = 'isRateDetermining' | 'reversible';
-export type StepText = 'stereochemicalEvent' | 'description';
+export type StepText = 'stereochemicalEvent' | 'description' | 'title' | 'note';
 
 export type Fields = Record<string, unknown>;
 export const isBag = (value: unknown): value is Fields => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -89,6 +89,7 @@ export interface StepView {
   readonly reversible: boolean | undefined;
   readonly stereochemicalEvent: string;
   readonly description: string;
+  readonly note: string;
   readonly speciesCount: number;
 }
 
@@ -105,6 +106,7 @@ export function stepsViewOf(draft: unknown, v: number): readonly StepView[] {
       reversible: typeof row.reversible === 'boolean' ? row.reversible : undefined,
       stereochemicalEvent: text(row.stereochemicalEvent),
       description: text(row.description),
+      note: text(row.note),
       speciesCount: Array.isArray(row.species) ? row.species.length : 0,
     };
   });

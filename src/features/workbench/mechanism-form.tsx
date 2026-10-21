@@ -5,7 +5,7 @@
 import type { MechanismLinksPort } from './mechanism-contracts';
 import { MechanismIdentitySection, MechanismSummarySection } from './mechanism-identity';
 import { MechanismPicturesSection } from './mechanism-pictures';
-import { MechanismReadOnlySection } from './mechanism-readonly';
+import { ClassificationSection } from './classification-section';
 import { SharedFieldsSection } from './shared-bundle';
 import { StepsSection } from './mechanism-steps';
 import { MechanismVariantsSection } from './mechanism-variants';
@@ -59,8 +59,8 @@ export function MechanismForm(props: MechanismFormProps) {
       <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={false}>
         <SharedFieldsSection {...common} notes={['studyNotes', 'notes']} concepts links={props.links} picker={props.picker} />
       </SectionFrame>
-      <SectionFrame id="readonly" title="Mechanism classes" initiallyOpen={false}>
-        <MechanismReadOnlySection draft={props.draft} />
+      <SectionFrame id="classes" title="Mechanism classes" initiallyOpen={open}>
+        <ClassificationSection {...common} field="mechanismClasses" label="Mechanism classes" findLabel="Find a mechanism class by name" picker={props.picker} />
       </SectionFrame>
     </div>
   );

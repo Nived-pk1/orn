@@ -10,6 +10,7 @@ import type { MechanismLinksPort } from './mechanism-contracts';
 import { OutcomesSection } from './reaction-outcomes';
 import { VariantsSection } from './reaction-variants';
 import { ClassificationReadOnlySection, ReactionTextsReadOnlySection } from './reaction-readonly';
+import { ClassificationSection } from './classification-section';
 import { SharedFieldsSection } from './shared-bundle';
 import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
@@ -49,6 +50,8 @@ export function ReactionForm(props: ReactionFormProps) {
         <MechanismLinksSection {...common} {...picker} />
       </SectionFrame>
       <SectionFrame id="classification" title="Classification" initiallyOpen={false}>
+        <ClassificationSection {...common} field="reactionTypes" label="Reaction types" findLabel="Find a reaction type by name" picker={props.picker} />
+        <ClassificationSection {...common} field="mechanismClasses" label="Mechanism classes" findLabel="Find a mechanism class by name" picker={props.picker} />
         <ClassificationReadOnlySection draft={props.draft} />
       </SectionFrame>
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
