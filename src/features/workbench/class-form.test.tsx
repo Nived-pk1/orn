@@ -194,9 +194,9 @@ describe('Review and the read-only record', () => {
     expect(screen.getByText(/arrives with the review queue in step 6.8/)).toBeTruthy();
   });
 
-  it('notes, description, tags and citations are shown read-only and kept unchanged by Save', async () => {
+  it('notes, description, tags and citations are edited in the shared section and everything else is kept unchanged by Save', async () => {
     const { rig, dialog } = show();
-    expect(within(dialog).getByText(/Editing arrives in step 6.6/)).toBeTruthy();
+    expect(within(dialog).getByRole('region', { name: 'Notes, tags and citations' })).toBeTruthy();
     const before = storedClass(rig);
     set('Kind of class', 'functional_group');
     await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));

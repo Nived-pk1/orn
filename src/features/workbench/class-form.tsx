@@ -3,13 +3,13 @@
  * the read-only record of what this editor does not edit. Collapsible and keyboard-navigable (SectionFrame); a phone starts with the long
  * sections closed.
  */
-import { NotesReadOnlySection } from './record-readonly';
 import { GenericSection } from './class-generic';
 import { ClassIdentitySection, ExamplesSection, ParentsSection } from './class-sections';
 import { NamesSection } from './names-section';
 import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
+import { SharedFieldsSection } from './shared-bundle';
 import { ReviewSection } from './species-sections';
 import type { StructurePort } from './structure-contracts';
 import styles from './editor.module.css';
@@ -45,8 +45,8 @@ export function ClassForm(props: ClassFormProps) {
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>
-      <SectionFrame id="readonly" title="Notes, tags and citations" initiallyOpen={open}>
-        <NotesReadOnlySection draft={props.draft} />
+      <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={open}>
+        <SharedFieldsSection {...common} notes={['description', 'studyNotes', 'notes', 'generic.rGroupNote']} {...picker} />
       </SectionFrame>
     </div>
   );

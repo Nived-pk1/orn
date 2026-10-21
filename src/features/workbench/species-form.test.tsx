@@ -37,7 +37,7 @@ describe('the sections', () => {
   it('lists Names, Identity, Structure, Formula and charge, Stereo, Aromaticity claim, Classes, Review and the read-only record, each with a toggle', () => {
     const { dialog } = show();
     const toggles = within(dialog).getAllByRole('button', { expanded: true }).map((b) => b.textContent?.replace(/^[▾▸]\s*/, ''));
-    expect(toggles).toEqual(['Names', 'Identity', 'Structure', 'Formula and charge', 'Stereo', 'Aromaticity claim', 'Classes', 'Review', 'Properties, notes and citations']);
+    expect(toggles).toEqual(['Names', 'Identity', 'Structure', 'Formula and charge', 'Stereo', 'Aromaticity claim', 'Classes', 'Review', 'Properties', 'Notes, tags and citations']);
   });
 
   it('Identity, Formula and charge, Aromaticity: each field edits the draft only; an empty optional field is absent', () => {

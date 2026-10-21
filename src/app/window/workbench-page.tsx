@@ -1,6 +1,6 @@
 /**
  * The Workbench page (step 6.2a decision D5): where authoring starts on the desktop. "New species" opens the editor on a blank species;
- * "New class" opens it on a blank class (step 6.2b); "New reagent" opens it on a blank reagent (step 6.2b); "New reaction" opens it on a blank reaction (step 6.3a); a read-only tab says why on every button (never hidden, never a silent no-op); the drafts list shows
+ * "New class" opens it on a blank class (step 6.2b); "New reagent" opens it on a blank reagent (step 6.2b); "New reaction" opens it on a blank reaction (step 6.3a); "New source" opens it on a blank source (step 6.6a); a read-only tab says why on every button (never hidden, never a silent no-op); the drafts list shows
  * every unfinished edit with a way back into it. Writer tab only: a read-only tab says why on each button.
  */
 import { Button } from '@/ui/primitives';
@@ -28,6 +28,7 @@ export function WorkbenchPage() {
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newReagent } : { unavailable: reason ?? 'Editing is not available here.' })}>New reagent</Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newReaction } : { unavailable: reason ?? 'Editing is not available here.' })}>New reaction</Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newMechanism } : { unavailable: reason ?? 'Editing is not available here.' })}>New mechanism</Button>
+        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newSource } : { unavailable: reason ?? 'Editing is not available here.' })}>New source</Button>
       </div>
       <h3>Drafts</h3>
       {drafts.items.length === 0 ? (

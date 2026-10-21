@@ -1,5 +1,5 @@
 /**
- * The palette's editing commands (ADR-040, studio step E1): "Edit the selected record" and the five "New ..." commands. Studio only: in
+ * The palette's editing commands (ADR-040, studio step E1): "Edit the selected record" and the six "New ..." commands. Studio only: in
  * Study `editorCommandDeps` answers an empty object, so the palette lists none of them (they are optional deps), and `window.tsx` does
  * not even call it there (the literal folds the call away with this module and `@/core/editing`).
  */
@@ -21,7 +21,7 @@ function editNamesCommand(editors: EditorsApi | null, state: CanonicalState, ins
 
 const unavailable = (editors: EditorsApi | null): string | undefined => (editors === null ? 'editing is not available here' : editors.editReason);
 
-type EditorDeps = Pick<CommandDeps, 'editNames' | 'newSpecies' | 'newClass' | 'newReagent' | 'newReaction' | 'newMechanism'>;
+type EditorDeps = Pick<CommandDeps, 'editNames' | 'newSpecies' | 'newClass' | 'newReagent' | 'newReaction' | 'newMechanism' | 'newSource'>;
 
 export function editorCommandDeps(editors: EditorsApi | null, state: CanonicalState, inspector: Parameters<typeof currentOf>[0]): EditorDeps {
   if (!EDITING) return {};
@@ -33,5 +33,6 @@ export function editorCommandDeps(editors: EditorsApi | null, state: CanonicalSt
     newReagent: { reason, run: () => editors?.newReagent() },
     newReaction: { reason, run: () => editors?.newReaction() },
     newMechanism: { reason, run: () => editors?.newMechanism() },
+    newSource: { reason, run: () => editors?.newSource() },
   };
 }

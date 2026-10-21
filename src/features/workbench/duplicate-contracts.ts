@@ -11,7 +11,7 @@ export interface DuplicateMatch {
   readonly qualifier?: string;
   readonly formula?: string;
   readonly structure?: StructureRep;
-  readonly reasons: readonly ('name' | 'structure' | 'species')[];
+  readonly reasons: readonly ('name' | 'structure' | 'species' | 'title' | 'identifier')[];
 }
 
 export interface DuplicateOutcome {

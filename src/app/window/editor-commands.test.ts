@@ -1,12 +1,12 @@
 /**
- * The palette's editing commands (studio step E1): in Studio the six editing deps exist (with the reason when editing is unavailable);
+ * The palette's editing commands (studio step E1): in Studio the seven editing deps exist (with the reason when editing is unavailable);
  * in Study they are ABSENT, so the palette does not list five unavailable "New ..." commands.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(() => vi.unstubAllGlobals());
 
-const KEYS = ['editNames', 'newSpecies', 'newClass', 'newReagent', 'newReaction', 'newMechanism'];
+const KEYS = ['editNames', 'newSpecies', 'newClass', 'newReagent', 'newReaction', 'newMechanism', 'newSource'];
 
 async function depsIn(edition: 'study' | 'studio') {
   vi.resetModules();
@@ -17,7 +17,7 @@ async function depsIn(edition: 'study' | 'studio') {
 }
 
 describe('editorCommandDeps', () => {
-  it('studio: all six exist, unavailable with the reason when there is no editor', async () => {
+  it('studio: all seven exist, unavailable with the reason when there is no editor', async () => {
     const deps = await depsIn('studio');
     expect(Object.keys(deps).sort()).toEqual([...KEYS].sort());
     expect(deps.newSpecies?.reason).toBe('editing is not available here');

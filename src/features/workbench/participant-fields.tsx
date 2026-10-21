@@ -73,7 +73,7 @@ export function ParticipantFields(props: ParticipantFieldsProps) {
           unavailable={locked}
           isListed={(found) => p.substance?.kind === found.kind && p.substance.id === found.id}
           onPick={(found) => {
-            if (found.kind !== 'reaction' && found.kind !== 'mechanism') onEdit(setParticipantRef(index, { kind: found.kind, id: found.id }));
+            if ((found.kind === 'species' || found.kind === 'class' || found.kind === 'reagent')) onEdit(setParticipantRef(index, { kind: found.kind, id: found.id }));
             setChanging(false);
           }}
         />

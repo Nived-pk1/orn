@@ -9,7 +9,8 @@ import { MechanismLinksSection } from './reaction-mechanism-links';
 import type { MechanismLinksPort } from './mechanism-contracts';
 import { OutcomesSection } from './reaction-outcomes';
 import { VariantsSection } from './reaction-variants';
-import { ClassificationReadOnlySection, ReactionNotesReadOnlySection } from './reaction-readonly';
+import { ClassificationReadOnlySection, ReactionTextsReadOnlySection } from './reaction-readonly';
+import { SharedFieldsSection } from './shared-bundle';
 import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
@@ -53,8 +54,9 @@ export function ReactionForm(props: ReactionFormProps) {
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>
-      <SectionFrame id="readonly" title="Notes, tags and citations" initiallyOpen={false}>
-        <ReactionNotesReadOnlySection draft={props.draft} />
+      <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={false}>
+        <SharedFieldsSection {...common} notes={['limitations', 'studyNotes', 'notes']} concepts links={props.links} {...picker} />
+        <ReactionTextsReadOnlySection draft={props.draft} />
       </SectionFrame>
     </div>
   );

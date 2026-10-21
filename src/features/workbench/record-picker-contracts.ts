@@ -3,7 +3,7 @@
  * the search engine, the words for a record already chosen, and the cycle questions a picker asks BEFORE Save. The app fills it; the
  * pickers decide nothing. `kindWords` and `scope` are words ("compound class", "in the syllabus").
  */
-export type PickKind = 'species' | 'class' | 'reagent' | 'reaction' | 'mechanism';
+export type PickKind = 'species' | 'class' | 'reagent' | 'reaction' | 'mechanism' | 'concept' | 'reference';
 
 export interface RecordChoice {
   readonly kind: PickKind;
@@ -27,6 +27,10 @@ export interface RecordPickerPort {
   componentRefusal?(owner: string, candidate: { readonly kind: PickKind; readonly id: string }): string | undefined;
   /** The profiles of a reagent (ID and label), in order, for a participant's profile choice; empty when the reagent has none or does not exist. */
   profilesOf?(reagentId: string): readonly { readonly id: string; readonly label: string }[];
-  /** Whether the class is a family on the navigator map (read-only; making one is step 6.6). */
+  /** How many records of this kind the dataset has ("No sources yet" needs it). */
+  count?(kind: PickKind): number;
+  /** The title and year of a source (a citation's summary line), or undefined when it is not in the dataset. */
+  sourceOf?(referenceId: string): { readonly title: string; readonly year?: number | undefined } | undefined;
+  /** Whether the class is a family on the navigator map (read-only; making one is step 6.6b). */
   isMapFamily?(classId: string): boolean;
 }

@@ -2,7 +2,7 @@
  * The class editor's Identity, Parents and Examples sections (step 6.2b decision D1). Parents come from the generic record picker with the
  * CYCLE question asked before Save: a class cannot get itself or any of its descendants as a parent, and the picker shows the reason
  * instead of a button (HIER-001 would refuse it at Save). Examples are species, ordered. Identity also says, read-only, whether the class
- * is a family on the map (decision D2: making one arrives in step 6.6). Each section renders the draft and reports every change as a
+ * is a family on the map (decision D2: making one arrives in step 6.6b). Each section renders the draft and reports every change as a
  * recipe with the field path; none decides what is valid (L1 and the store's gate do).
  */
 import { CLASS_KINDS } from '@/core/schema';
@@ -40,7 +40,7 @@ export function ClassIdentitySection(props: ClassPickerSectionProps) {
       {family === undefined ? null : (
         <p>
           <strong>{family ? 'A family on the map' : 'Not a family on the map'}</strong>
-          <span className={styles.hint}> (read-only; making a class a family arrives in step 6.6)</span>
+          <span className={styles.hint}> (read-only; making a class a family arrives in step 6.6b)</span>
         </p>
       )}
     </div>

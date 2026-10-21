@@ -81,3 +81,22 @@ describe('isMapFamily', () => {
     expect(port.isMapFamily?.(plain as string)).toBe(false);
   });
 });
+
+describe('concepts and sources (step 6.6a)', () => {
+  const withSource = (state: CanonicalState): CanonicalState =>
+    ({ ...state, records: { ...state.records, reference: { ref_a: { id: 'ref_a', kind: 'reference', refKind: 'textbook', title: 'Morrison and Boyd', year: 2010 } } } }) as unknown as CanonicalState;
+  it('describes a concept by its name and kind, and a source by its title and kind of source', () => {
+    const port = picker(withSource(demoState()));
+    const concept = Object.values(demoState().records.concept)[0];
+    expect(port.describe('concept', concept?.id as string)).toMatchObject({ kind: 'concept', name: concept?.name });
+    expect(port.describe('reference', 'ref_a')).toEqual({ kind: 'reference', id: 'ref_a', name: 'Morrison and Boyd', kindWords: 'textbook, 2010', scope: '' });
+    expect(port.describe('reference', 'ref_nope')).toBeUndefined();
+  });
+  it('counts records of a kind and gives the title and year of a source', () => {
+    const port = picker(withSource(demoState()));
+    expect(port.count?.('reference')).toBe(1);
+    expect(picker().count?.('reference')).toBe(0);
+    expect(port.sourceOf?.('ref_a')).toEqual({ title: 'Morrison and Boyd', year: 2010 });
+    expect(port.sourceOf?.('ref_nope')).toBeUndefined();
+  });
+});

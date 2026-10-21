@@ -6,7 +6,7 @@
 import { NamesSection } from './names-section';
 import { ProfilesSection } from './reagent-profiles';
 import { FamiliesSection, ReagentClassesSection, ReagentIdentitySection } from './reagent-sections';
-import { NotesReadOnlySection } from './record-readonly';
+import { SharedFieldsSection } from './shared-bundle';
 import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
@@ -43,8 +43,8 @@ export function ReagentForm(props: ReagentFormProps) {
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>
-      <SectionFrame id="readonly" title="Notes, tags and citations" initiallyOpen={open}>
-        <NotesReadOnlySection draft={props.draft} />
+      <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={open}>
+        <SharedFieldsSection {...common} notes={['description', 'studyNotes', 'notes']} {...picker} />
       </SectionFrame>
     </div>
   );

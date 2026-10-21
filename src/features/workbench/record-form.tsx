@@ -13,6 +13,7 @@ import { ReagentForm } from './reagent-form';
 import type { PicturesPort } from './picture-contracts';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
+import { SourceForm } from './source-form';
 import { SpeciesForm } from './species-form';
 import type { StructurePort } from './structure-contracts';
 
@@ -32,6 +33,7 @@ export function RecordForm(props: RecordFormProps) {
   const { kind, suggestions, newId, links, pictures, saved, ...rest } = props;
   if (kind === 'species') return <SpeciesForm {...rest} suggestions={suggestions} />;
   if (kind === 'class') return <ClassForm {...rest} />;
+  if (kind === 'reference') return <SourceForm draft={rest.draft} onEdit={rest.onEdit} picker={rest.picker} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} />;
   if (kind === 'reaction') return <ReactionForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} links={links} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} {...(rest.picker === undefined ? {} : { picker: rest.picker })} />;
   if (kind === 'mechanism') return <MechanismForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} links={links} pictures={pictures} saved={saved} picker={rest.picker} structure={rest.structure} timers={rest.timers} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} />;
   if (kind === 'reagent') return <ReagentForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} {...(rest.picker === undefined ? {} : { picker: rest.picker })} />;

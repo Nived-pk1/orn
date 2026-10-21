@@ -8,7 +8,8 @@
  */
 import { speciesRequest } from '@/chem/checks/plan-species';
 import type { CoreIndexes } from '@/core/indexes/contracts';
-import type { CanonicalState, ChemicalClass, Reagent, RecordRef, Species, StructureRep } from '@/core/schema';
+import type { CanonicalState, ChemicalClass, Reagent, RecordRef, Reference, Species, StructureRep } from '@/core/schema';
+import { sourceDuplicates } from './source-duplicates';
 import { parseRecord, sameNameRecords } from '@/core/validation';
 import type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome } from '@/features/workbench';
 import type { ChemService, L4Service } from '@/workers/chem';
@@ -28,6 +29,10 @@ const NOT_CHECKED = 'Structure duplicates could not be checked';
 export function createDuplicateCheck(options: DuplicateCheckOptions): DuplicateCheckPort {
   return {
     async check(kind, draft): Promise<DuplicateOutcome> {
+      if (kind === 'reference') {
+        const parsedSource = parseRecord('reference', draft);
+        return parsedSource.ok ? sourceDuplicates(options.state(), parsedSource.record as Reference) : { matches: [], more: 0, structureChecked: true };
+      }
       if (kind === 'class' || kind === 'reagent') return namedCheck(options, kind, draft);
       if (kind !== 'species') return { matches: [], more: 0, structureChecked: true };
       const parsed = parseRecord('species', draft);

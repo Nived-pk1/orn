@@ -6,6 +6,7 @@ import type { MechanismLinksPort } from './mechanism-contracts';
 import { MechanismIdentitySection, MechanismSummarySection } from './mechanism-identity';
 import { MechanismPicturesSection } from './mechanism-pictures';
 import { MechanismReadOnlySection } from './mechanism-readonly';
+import { SharedFieldsSection } from './shared-bundle';
 import { StepsSection } from './mechanism-steps';
 import { MechanismVariantsSection } from './mechanism-variants';
 import type { PicturesPort } from './picture-contracts';
@@ -55,7 +56,10 @@ export function MechanismForm(props: MechanismFormProps) {
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>
-      <SectionFrame id="readonly" title="Classes, notes, tags and citations" initiallyOpen={false}>
+      <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={false}>
+        <SharedFieldsSection {...common} notes={['studyNotes', 'notes']} concepts links={props.links} picker={props.picker} />
+      </SectionFrame>
+      <SectionFrame id="readonly" title="Mechanism classes" initiallyOpen={false}>
         <MechanismReadOnlySection draft={props.draft} />
       </SectionFrame>
     </div>

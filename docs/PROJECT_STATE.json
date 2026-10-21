@@ -261,7 +261,8 @@
     "exportEndToEnd": "step 5.9b, Chromium against the production build: P-02 in a real browser (the demo exported, imported into a fresh context through the import screen, exported again: SHA-256 equal), INV-19 (two exports of the same state identical), a package with a 1x1 PNG re-imports and exports again with its image byte for byte, Cancel gives no download, axe, zero policy violations; the three-engine smoke gains \"an export downloads a file\". Full run: 116 passed, 1 skipped (the 5.1d fixme), 0 failed (Chromium 102, Firefox 7, WebKit 7)"
   },
   "openItems": [
-    "-> later: pictures on a single mechanism step need a schema change (asset attachment to a step): a RecordRef cannot name a step; 6.5b builds mechanism pictures only (ADR-038 addendum).",
+    "-> later (schema v3 candidate): pictures on a single mechanism step need a schema change (asset attachment to a step): a RecordRef cannot name a step; 6.5b builds mechanism pictures only (ADR-038 addendum).",
+    "-> later (schema v3 candidate): structured value + unit for numeric species properties (needs a unit decision per key); 6.6a edits a property as the schema types it (key, label, value text with the unit written in it, note, citations).",
     "-> Phase 8: bond choices in the mechanism editor list the pairs that are bonded in the step's structures first (needs a bond reader for mapped structures; Phase 8 arrow drawings need it too)",
     "-> 6.6 (presentation): making a class a map family (navigator anchor, arrangement cell). The 6.2b class editor only says, read-only, whether a class is one (ADR-040 addendum D2).",
     "NEW (6.2a review, 2026-10-19): membership SMARTS for the demo classes: a content decision for the content track, REVIEW REQUIRED. Demo chemistry is never edited to make a test or a screen work.",

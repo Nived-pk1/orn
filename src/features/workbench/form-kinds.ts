@@ -8,6 +8,7 @@ import { CLASS_FIELD_LABELS } from './class-model';
 import { MECHANISM_FIELD_LABELS } from './mechanism-model';
 import { REACTION_FIELD_LABELS } from './reaction-model';
 import { REAGENT_FIELD_LABELS } from './reagent-model';
+import { SOURCE_FIELD_LABELS } from './source-model';
 import { SPECIES_FIELD_LABELS } from './species-model';
 
 const LABELS: Partial<Readonly<Record<RecordKind, Readonly<Record<string, string>>>>> = {
@@ -16,10 +17,11 @@ const LABELS: Partial<Readonly<Record<RecordKind, Readonly<Record<string, string
   reagent: REAGENT_FIELD_LABELS,
   reaction: REACTION_FIELD_LABELS,
   mechanism: MECHANISM_FIELD_LABELS,
+  reference: SOURCE_FIELD_LABELS,
 };
 
 /** Kinds whose editor is a full form (Names and more). */
-export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'reaction', 'mechanism'];
+export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference'];
 
 export const hasFullForm = (kind: RecordKind): boolean => FULL_FORM_KINDS.includes(kind);
 
@@ -39,5 +41,5 @@ export function formOwns(kind: RecordKind, path: string | undefined): boolean {
 
 export function titleOf(kind: RecordKind, isNew: boolean, name: string): string {
   if (!hasFullForm(kind)) return `Edit names of ${name}`;
-  return isNew ? `New ${kind}` : `Edit ${name}`;
+  return isNew ? `New ${kind === 'reference' ? 'source' : kind}` : `Edit ${name}`;
 }

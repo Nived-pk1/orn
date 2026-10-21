@@ -10,7 +10,8 @@ import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
 import { AromaticitySection, FormulaChargeSection, IdentitySection, ReviewSection, StereoSection } from './species-sections';
-import { ReadOnlySection } from './species-readonly';
+import { SharedFieldsSection } from './shared-bundle';
+import { PropertiesReadOnlySection } from './species-readonly';
 import { StructurePanel } from './structure-panel';
 import type { StructurePort } from './structure-contracts';
 import styles from './editor.module.css';
@@ -56,8 +57,11 @@ export function SpeciesForm(props: SpeciesFormProps) {
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>
-      <SectionFrame id="readonly" title="Properties, notes and citations" initiallyOpen={open}>
-        <ReadOnlySection draft={props.draft} />
+      <SectionFrame id="properties" title="Properties" initiallyOpen={open}>
+        <PropertiesReadOnlySection draft={props.draft} />
+      </SectionFrame>
+      <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={open}>
+        <SharedFieldsSection {...common} notes={['studyNotes', 'notes', 'acidBaseNotes']} picker={props.picker} />
       </SectionFrame>
     </div>
   );
