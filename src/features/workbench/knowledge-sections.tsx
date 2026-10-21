@@ -111,7 +111,7 @@ export function ShortTextField(props: SectionProps & { readonly field: Knowledge
   );
 }
 
-const PARENT_WORDS: Readonly<Record<ParentKind, { readonly list: string; readonly find: string; readonly noun: string; readonly results: string }>> = {
+const PARENT_WORDS: Readonly<Record<Exclude<ParentKind, 'topic'>, { readonly list: string; readonly find: string; readonly noun: string; readonly results: string }>> = {
   class: { list: 'Parent classes', find: 'Find a parent class by name', noun: 'class', results: 'Classes found' },
   concept: { list: 'Parent concepts', find: 'Find a parent concept by name', noun: 'concept', results: 'Concepts found' },
   named_reaction: { list: 'Parent named reactions', find: 'Find a parent named reaction by name', noun: 'named reaction', results: 'Named reactions found' },

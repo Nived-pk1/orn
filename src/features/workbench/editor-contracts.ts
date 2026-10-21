@@ -4,7 +4,7 @@
  */
 import type { DraftCommitOutcome, EditorSession } from '@/core/commands';
 import type { ConflictChoices, DraftRecipe, EditMeta } from '@/core/editing';
-import type { RecordRef } from '@/core/schema';
+import type { RecordKind, RecordRef } from '@/core/schema';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { StructurePort } from './structure-contracts';
 import type { DraftChecksPort } from './check-contracts';
@@ -52,6 +52,8 @@ export interface EditorPort {
   readonly links?: MechanismLinksPort;
   /** The mechanism editor's pictures, saved at once outside the draft (step 6.5b); absent: no Pictures section. */
   readonly pictures?: PicturesPort;
+  /** Another editor in place of this one (step 6.6c): a NEW record of a kind with fields already filled in, or an existing record's editor. The host closes this editor first and keeps its draft. */
+  readonly chain?: { start(kind: RecordKind, seed: Readonly<Record<string, unknown>>): void; edit(ref: RecordRef): void };
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
   readonly structure?: StructurePort;
   /** A fresh ID for a nested record the form creates (a reagent profile: 'rpf'). From the session manager's ID factory; deterministic under test. */

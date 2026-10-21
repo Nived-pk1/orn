@@ -17,7 +17,8 @@ export interface EditMeta {
 }
 
 /** A record to edit, or a NEW record of a kind: `blank` starts it with every required field at its empty value (species only, `blankDraft`). */
-export type OpenTarget = RecordRef | { readonly kind: RecordKind; readonly blank?: true };
+/** `seed` (step 6.6c): fields laid over the blank draft so a new record can open with one choice already made (never the ID, the kind or the provenance). */
+export type OpenTarget = RecordRef | { readonly kind: RecordKind; readonly blank?: true; readonly seed?: Readonly<Record<string, unknown>> };
 
 export type OpenSessionResult =
   | { readonly ok: true; readonly session: EditorSession }

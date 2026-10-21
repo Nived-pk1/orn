@@ -5,6 +5,10 @@
 import type { RecordKind, RecordRef } from '@/core/schema';
 import type { ClassSuggestion } from './check-contracts';
 import { CaveatForm } from './caveat-form';
+import { CURRICULUM_TARGET_KINDS } from './curriculum-model';
+import { SyllabusTopicsSection } from './curriculum-lists';
+import { MappingForm } from './mapping-form';
+import { TopicForm } from './topic-form';
 import { ClassForm } from './class-form';
 import { ConceptForm } from './concept-form';
 import { NamedReactionForm } from './named-reaction-form';
@@ -37,10 +41,17 @@ export interface RecordFormProps extends SectionProps {
   readonly saved?: boolean | undefined;
   /** Closes the editor (the draft is kept) and shows the record in the inspector: "Used by" and "Relationships" lists. */
   readonly openRecord?: ((ref: RecordRef) => void) | undefined;
+  /** Closes the editor (the draft is kept) and opens a NEW editor of this kind with these fields filled in (step 6.6c). */
+  readonly startNew?: ((kind: RecordKind, seed: Readonly<Record<string, unknown>>) => void) | undefined;
+  /** Closes the editor (the draft is kept) and opens the editor of an existing record (step 6.6c). */
+  readonly editRecord?: ((ref: RecordRef) => void) | undefined;
 }
 
 function KindForm(props: RecordFormProps) {
-  const { kind, suggestions, newId, links, pictures, saved, openRecord, ...rest } = props;
+  const { kind, suggestions, newId, links, pictures, saved, openRecord, startNew, editRecord, ...rest } = props;
+  void editRecord;
+  if (kind === 'topic') return <TopicForm {...rest} saved={saved} openRecord={openRecord} startNew={startNew} />;
+  if (kind === 'topic_mapping') return <MappingForm {...rest} />;
   if (kind === 'relationship') return <RelationshipForm {...rest} />;
   if (kind === 'caveat') return <CaveatForm {...rest} />;
   if (kind === 'concept') return <ConceptForm {...rest} />;
@@ -57,7 +68,7 @@ function KindForm(props: RecordFormProps) {
 }
 
 /** Kinds that can be an end of a relationship: their editor ends with the read-only "Relationships" list (step 6.6b part 4). */
-const NO_RELATIONSHIPS: readonly RecordKind[] = ['relationship', 'reference'];
+const NO_RELATIONSHIPS: readonly RecordKind[] = ['relationship', 'reference', 'topic', 'topic_mapping', 'exam_relevance', 'navigator_anchor'];
 
 export function RecordForm(props: RecordFormProps) {
   const id = (props.draft as { id?: unknown } | null)?.id;
@@ -65,9 +76,12 @@ export function RecordForm(props: RecordFormProps) {
   return (
     <div className={styles.formColumn} data-editor-form="">
       <KindForm {...props} />
+      {!CURRICULUM_TARGET_KINDS.includes(props.kind) ? null : (
+        <SyllabusTopicsSection kind={props.kind} id={typeof id === 'string' ? id : ''} saved={props.saved === true} picker={props.picker} openRecord={props.openRecord} startNew={props.startNew} />
+      )}
       {!listed ? null : (
         <SectionFrame id="relationships" title="Relationships" initiallyOpen={false}>
-          <RelationshipsList kind={props.kind} id={typeof id === 'string' ? id : ''} picker={props.picker} openRecord={props.openRecord} />
+          <RelationshipsList kind={props.kind} id={typeof id === 'string' ? id : ''} picker={props.picker} openRecord={props.openRecord} saved={props.saved === true} startNew={props.startNew} />
         </SectionFrame>
       )}
     </div>

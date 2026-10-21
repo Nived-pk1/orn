@@ -5,7 +5,7 @@
 import type { CanonicalStore, CommandContext, DraftCommitOutcome, EditorSession } from '../commands/contracts';
 import { recordAt } from '../commands/lookup';
 import type { AnyRecord, CanonicalState, RecordRef } from '../schema';
-import { nameOfRef, relationshipWords } from './labels';
+import { composedName, nameOfRef, relationshipWords } from './labels';
 import { parseRecord } from '../validation/l1';
 import { compareForConflict, sameValue } from './conflict';
 import type { CommitOptions, ConflictChoices, FieldComparison } from './contracts';
@@ -39,6 +39,8 @@ const nameOf = (record: unknown, id: string): string => {
 
 /** A relationship is named by both its ends ("Create relationship: A commonly confused with B"); the others by their name. */
 function labelOf(verb: string, noun: string, record: AnyRecord, state: CanonicalState): string {
+  const composed = composedName(state, record);
+  if (composed !== undefined) return `${verb} ${noun}: ${composed}`;
   if (record.kind !== 'relationship') return `${verb} ${noun} ${nameOf(record, record.id)}`;
   return `${verb} ${noun}: ${relationshipWords(record.type, nameOfRef(state, record.from), nameOfRef(state, record.to))}`;
 }

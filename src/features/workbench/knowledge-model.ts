@@ -111,7 +111,7 @@ export function knowledgeViewOf(draft: unknown): KnowledgeView {
   };
 }
 
-const COMMON_LABELS: Readonly<Record<string, string>> = {
+export const COMMON_LABELS: Readonly<Record<string, string>> = {
   name: 'Name',
   aliases: 'Aliases',
   studyNotes: 'Study notes',

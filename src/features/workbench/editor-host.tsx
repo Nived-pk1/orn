@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
 import { compareForConflict, type ConflictChoice, type ConflictChoices, type DraftRecipe, type EditMeta, type FieldComparison } from '@/core/editing';
-import type { AnyRecord, RecordRef } from '@/core/schema';
+import type { AnyRecord, RecordKind, RecordRef } from '@/core/schema';
 import { parseRecord } from '@/core/validation';
 import type { Finding } from '@/core/validation';
 import { useLayoutMode } from '@/ui/hooks';
@@ -24,6 +24,7 @@ import { namesFieldLabel } from './names-section';
 import { PreviewPanel } from './reaction-preview';
 import { RecordForm } from './record-form';
 import { relationshipTitleWords } from './relationship-model';
+import { curriculumTitleWords } from './curriculum-model';
 import styles from './editor.module.css';
 
 export const LIVE_DEBOUNCE_MS = 300;
@@ -199,6 +200,16 @@ export function EditorHost(props: EditorHostProps) {
     port.duplicates?.openRecord(ref);
   };
 
+  // another editor in place of this one: this draft is kept (a draft stays a draft), then the other opens
+  const startNew = port.chain === undefined ? undefined : (kind: RecordKind, seed: Readonly<Record<string, unknown>>): void => {
+    close();
+    port.chain?.start(kind, seed);
+  };
+  const editRecord = port.chain === undefined ? undefined : (ref: RecordRef): void => {
+    close();
+    port.chain?.edit(ref);
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (!(event.ctrlKey || event.metaKey) || event.altKey || unavailable !== undefined) return;
     const key = event.key.toLowerCase();
@@ -219,8 +230,8 @@ export function EditorHost(props: EditorHostProps) {
   const shown = refused ? refusal.findings : mergeFindings(live, checks.dry.findings, checks.structure.findings);
   const notes = refused ? [] : checkNotes(checks);
   const inForm = (path: string | undefined): boolean => formOwns(session.kind, path);
-  const ends = session.kind === 'relationship' ? relationshipTitleWords(draft, port.records) : undefined;
-  const title = ends === undefined ? titleOf(session.kind, session.target === null, baseName) : `${session.target === null ? 'New' : 'Edit'} relationship: ${ends}`;
+  const ends = session.kind === 'relationship' ? relationshipTitleWords(draft, port.records) : curriculumTitleWords(session.kind, draft, port.records);
+  const title = ends === undefined ? titleOf(session.kind, session.target === null, baseName) : `${session.target === null ? 'New' : 'Edit'} ${kindWords(session.kind)}: ${ends}`;
 
   const footer = (
     <div className={styles.footer}>
@@ -302,6 +313,8 @@ export function EditorHost(props: EditorHostProps) {
               pictures={port.pictures}
               saved={session.baseRecord !== null}
               openRecord={port.duplicates === undefined ? undefined : openExisting}
+              startNew={startNew}
+              editRecord={editRecord}
               suggestions={checks.structure.suggestions}
               {...(port.records === undefined ? {} : { picker: port.records })}
               {...(unavailable === undefined ? {} : { unavailable })}

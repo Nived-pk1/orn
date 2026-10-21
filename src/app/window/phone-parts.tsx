@@ -99,6 +99,12 @@ export function PhoneBar(props: {
             <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newCaveat) } : { unavailable: editors.editReason })}>
               New caveat
             </Button>
+            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newTopic) } : { unavailable: editors.editReason })}>
+              New topic
+            </Button>
+            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newTopicMapping) } : { unavailable: editors.editReason })}>
+              New topic mapping
+            </Button>
           </section>
         )}
         {props.history === undefined ? null : <HistorySection history={props.history} />}

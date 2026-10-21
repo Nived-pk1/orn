@@ -4,7 +4,7 @@
  * (`record-picker-port`, `editor-port`, the preview builder) is in the editor's chunk and not in the entry.
  */
 import { useMemo } from 'react';
-import type { RecordRef } from '@/core/schema';
+import type { RecordKind, RecordRef } from '@/core/schema';
 import { previewOfDraft } from '@/core/graph';
 import { EditorHost } from '@/features/workbench/layer';
 import type { EditorPort, PreviewPort } from '@/features/workbench';
@@ -16,8 +16,16 @@ import { createMechanismLinks } from './mechanism-links-port';
 import { createPicturesPort } from './pictures-port';
 import { createRecordPicker } from './record-picker-port';
 
-export function EditorSession(props: { readonly sessionId: string; readonly formatTime: (iso: string) => string; readonly onClose: () => void }) {
+export function EditorSession(props: {
+  readonly sessionId: string;
+  readonly formatTime: (iso: string) => string;
+  readonly onClose: () => void;
+  /** Another editor in place of this one: a NEW record with fields filled in, or an existing record's editor (step 6.6c). */
+  readonly onStart?: (kind: RecordKind, seed: Readonly<Record<string, unknown>>) => void;
+  readonly onEdit?: (ref: RecordRef) => void;
+}) {
   const { services, inspector } = useApp();
+  const { onStart, onEdit } = props;
   const port = useMemo<EditorPort>(() => {
     const records = createRecordPicker({
       search: services.search.search,
@@ -41,7 +49,7 @@ export function EditorSession(props: { readonly sessionId: string; readonly form
     const { assets, persistence } = services;
     // pictures are saved at once outside the draft: they need the asset host (a window without one has no Pictures section)
     const pictures = assets === undefined ? undefined : createPicturesPort({ store: services.store, assets, getBlob: persistence === undefined ? undefined : (id) => persistence.getAssetBlob(id) });
-    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview, links: createMechanismLinks(services.store.getState), ...(pictures === undefined ? {} : { pictures }) });
-  }, [services, inspector]);
+    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview, links: createMechanismLinks(services.store.getState), ...(pictures === undefined ? {} : { pictures }), ...(onStart === undefined || onEdit === undefined ? {} : { chain: { start: onStart, edit: onEdit } }) });
+  }, [services, inspector, onStart, onEdit]);
   return <EditorHost port={port} sessionId={props.sessionId} open formatTime={props.formatTime} onClose={props.onClose} />;
 }

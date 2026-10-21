@@ -231,7 +231,7 @@ describe('the start-up line for unfinished drafts (ADR-040)', () => {
     draftIn(app);
     const open = vi.fn();
     renderWithApp(app, (
-      <EditorsContext.Provider value={{ openDrafts: open, editNames: vi.fn(), newSpecies: vi.fn(), newClass: vi.fn(), newReagent: vi.fn(), newReaction: vi.fn(), newMechanism: vi.fn(), newSource: vi.fn(), newConcept: vi.fn(), newNamedReaction: vi.fn(), newTransformation: vi.fn(), newRelationship: vi.fn(), newCaveat: vi.fn(), openDraft: vi.fn(), editReason: undefined }}>
+      <EditorsContext.Provider value={{ openDrafts: open, editNames: vi.fn(), newSpecies: vi.fn(), newClass: vi.fn(), newReagent: vi.fn(), newReaction: vi.fn(), newMechanism: vi.fn(), newSource: vi.fn(), newConcept: vi.fn(), newNamedReaction: vi.fn(), newTransformation: vi.fn(), newRelationship: vi.fn(), newCaveat: vi.fn(), newTopic: vi.fn(), newTopicMapping: vi.fn(), startNew: vi.fn(), openDraft: vi.fn(), editReason: undefined }}>
         <BootLines />
       </EditorsContext.Provider>
     ));

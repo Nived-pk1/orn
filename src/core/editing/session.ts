@@ -26,6 +26,16 @@ const memory = new WeakMap<EditorSession, Memory>();
 const clone = <T>(value: T): T => structuredClone(value);
 const isTarget = (target: OpenTarget): target is RecordRef => 'id' in target;
 
+const NOT_SEEDED: ReadonlySet<string> = new Set(['id', 'kind', 'provenance']);
+
+/** The seed's fields laid over a new draft (a copy of each value); the ID, the kind and the provenance are never replaced. */
+function seeded(draft: DraftValue, seed: Readonly<Record<string, unknown>> | undefined): DraftValue {
+  if (seed === undefined) return draft;
+  const next: DraftValue = { ...draft };
+  for (const [field, value] of Object.entries(seed)) if (!NOT_SEEDED.has(field)) next[field] = clone(value);
+  return next;
+}
+
 export function openSession(ctx: CommandContext, state: CanonicalState, revision: number, target: OpenTarget): OpenSessionResult {
   if (isTarget(target)) {
     const record = recordAt(state, target);
@@ -54,7 +64,7 @@ export function openSession(ctx: CommandContext, state: CanonicalState, revision
       baseRevision: revision,
       baseRecord: null,
       // a blank draft (decision D3) or the smallest one that names itself: its kind and a fresh ID (the schema still decides whether it is a record)
-      draft: (target.blank === true ? blankDraft(target.kind, ctx) : undefined) ?? { kind: target.kind, id: ctx.newId(RECORD_ID_PREFIX[target.kind]) },
+      draft: seeded((target.blank === true ? blankDraft(target.kind, ctx) : undefined) ?? { kind: target.kind, id: ctx.newId(RECORD_ID_PREFIX[target.kind]) }, target.seed),
       past: [],
       future: [],
       updatedAt: ctx.now(),

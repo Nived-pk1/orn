@@ -45,6 +45,9 @@ export interface ShownKnowledge {
   readonly id: string;
   readonly dialog: HTMLElement;
   readonly openRecord: Mock;
+  /** `chain.start(kind, seed)` and `chain.edit(ref)`: the editor closed and another one was asked for. */
+  readonly start: Mock;
+  readonly editRecord: Mock;
   readonly draft: () => Record<string, unknown>;
 }
 
@@ -58,12 +61,14 @@ const realChecks = (rig: EditorRig): DraftChecksPort => ({
   structure: quiet.structure,
 });
 
-export function showKnowledge(kind: RecordKind, options: { target?: string; blank?: boolean; rig?: EditorRig; real?: boolean } = {}): ShownKnowledge {
+export function showKnowledge(kind: RecordKind, options: { target?: string; blank?: boolean; seed?: Record<string, unknown>; rig?: EditorRig; real?: boolean } = {}): ShownKnowledge {
   const rig = options.rig ?? editorRig();
-  const opened = rig.drafts.open(options.blank === true ? { kind, blank: true } : { kind, id: options.target as string });
+  const opened = rig.drafts.open(options.blank === true ? { kind, blank: true, ...(options.seed === undefined ? {} : { seed: options.seed }) } : { kind, id: options.target as string });
   if (!opened.ok) throw new Error(opened.message);
   const openRecord = vi.fn((_ref: RecordRef) => undefined);
+  const start = vi.fn((_kind: RecordKind, _seed: Record<string, unknown>) => undefined);
+  const editRecord = vi.fn((_ref: RecordRef) => undefined);
   const duplicates = { check: async () => ({ matches: [], more: 0, structureChecked: true }), openRecord };
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.real === true ? realChecks(rig) : quiet, records: knowledgePicker(rig), duplicates: duplicates as never }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
-  return { rig, id: opened.id, dialog: screen.getByRole('dialog'), openRecord, draft: () => rig.drafts.entry(opened.id)?.session.draft as Record<string, unknown> };
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.real === true ? realChecks(rig) : quiet, records: knowledgePicker(rig), duplicates: duplicates as never, chain: { start, edit: editRecord } }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
+  return { rig, id: opened.id, dialog: screen.getByRole('dialog'), openRecord, start, editRecord, draft: () => rig.drafts.entry(opened.id)?.session.draft as Record<string, unknown> };
 }

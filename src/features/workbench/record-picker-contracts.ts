@@ -7,7 +7,36 @@
 export type PickKind = 'species' | 'class' | 'reagent' | 'reaction' | 'mechanism' | 'concept' | 'reference' | 'named_reaction' | 'transformation' | 'caveat' | 'route';
 
 /** The kinds that have parents (a hierarchy): a parent picker asks the cycle question for one of these. */
-export type ParentKind = 'class' | 'concept' | 'named_reaction';
+export type ParentKind = 'class' | 'concept' | 'named_reaction' | 'topic';
+
+/** A topic as a choice in a list (a select), in tree order (step 6.6c). */
+export interface TopicChoice {
+  readonly id: string;
+  readonly name: string;
+  readonly topicKind: string;
+  /** 0 for a top-level topic. */
+  readonly depth: number;
+  readonly order: number;
+  readonly parentId?: string;
+}
+
+/** A line of a read-only list about a record: the linking record's ID (for opening it) and the line in words. */
+export interface CurriculumLine {
+  readonly id: string;
+  readonly words: string;
+}
+
+/** A navigator anchor as the map-family editor and its cell grid read it (step 6.6c). */
+export interface MapFamilyChoice {
+  readonly id: string;
+  readonly targetId: string;
+  /** The label, or the class name when there is none. */
+  readonly name: string;
+  readonly group?: string;
+  readonly tone?: string;
+  readonly order: number;
+  readonly cell?: { readonly column: number; readonly row: number };
+}
 
 export interface RecordChoice {
   readonly kind: PickKind;
@@ -41,6 +70,21 @@ export interface RecordPickerPort {
   count?(kind: PickKind): number;
   /** The title and year of a source (a citation's summary line), or undefined when it is not in the dataset. */
   sourceOf?(referenceId: string): { readonly title: string; readonly year?: number | undefined } | undefined;
-  /** Whether the class is a family on the navigator map (read-only; making one is step 6.6b). */
+  /** Whether the class is a family on the navigator map. */
   isMapFamily?(classId: string): boolean;
+  /** Every topic, depth first (a topic, then its children by order); bounded. */
+  topics?(): readonly TopicChoice[];
+  /** The topic mappings of a record: "<topic> · <role>" (the mapping's ID to open it). */
+  topicLinesOf?(ref: { readonly kind: string; readonly id: string }): readonly (CurriculumLine & { readonly topicId: string })[];
+  /** The records mapped to a topic: "<record> (<kind>) · <role>" with the record to open. */
+  mappedRecordsOf?(topicId: string): readonly (CurriculumLine & { readonly target: { readonly kind: string; readonly id: string } })[];
+  /** The exams (name order) and the versions of one exam (label order). */
+  exams?(): readonly { readonly id: string; readonly name: string }[];
+  versionsOf?(examId: string): readonly { readonly id: string; readonly label: string }[];
+  /** The exam relevance records of a record: "<versions> · <scope>". */
+  relevanceLinesOf?(ref: { readonly kind: string; readonly id: string }): readonly CurriculumLine[];
+  /** Every navigator anchor, in ID order. */
+  mapFamilies?(): readonly MapFamilyChoice[];
+  /** The ID of the anchor of a class, or undefined (the lowest ID when there are several). */
+  mapFamilyOf?(classId: string): string | undefined;
 }

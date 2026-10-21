@@ -4,7 +4,7 @@
  * (`editors.tsx` loads them with `React.lazy`).
  */
 import { createContext, useContext, useSyncExternalStore } from 'react';
-import type { RecordRef } from '@/core/schema';
+import type { RecordKind, RecordRef } from '@/core/schema';
 import type { DraftsView } from '@/app/services/drafts-types';
 import { EDITING } from '@/app/edition';
 import { useAppOptional } from './context';
@@ -36,6 +36,12 @@ export interface EditorsApi {
   newRelationship(): void;
   /** Opens the editor on a NEW caveat (step 6.6b, decision N6). A refusal is said in a toast. */
   newCaveat(): void;
+  /** Opens the editor on a NEW topic (step 6.6c, decision M1). A refusal is said in a toast. */
+  newTopic(): void;
+  /** Opens the editor on a NEW topic mapping (step 6.6c, decision M2). A refusal is said in a toast. */
+  newTopicMapping(): void;
+  /** Opens the editor on a NEW record of this kind with some fields already filled in (step 6.6c: "Map to a topic" and the like). */
+  startNew(kind: RecordKind, seed: Readonly<Record<string, unknown>>): void;
   /** Opens a listed draft (its stored session). */
   openDraft(id: string): void;
   /** Why editing is unavailable now (a read-only tab); undefined when it is available. */

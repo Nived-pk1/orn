@@ -24,7 +24,12 @@ const KINDS: readonly [RecordKind, string][] = [
   ['transformation', 'transformation'],
   ['relationship', 'relationship'],
   ['caveat', 'caveat'],
+  ['topic', 'topic'],
+  ['topic_mapping', 'topic mapping'],
 ];
+
+/** Kinds that cannot be an end of a relationship. */
+const NO_RELATIONSHIPS: readonly RecordKind[] = ['relationship', 'reference', 'topic', 'topic_mapping'];
 
 describe.each(KINDS)('the %s editor', (kind, words) => {
   it('has the form and the side column as the only two columns, Findings first in the side column', () => {
@@ -42,7 +47,7 @@ describe.each(KINDS)('the %s editor', (kind, words) => {
     const form = dialog.querySelector('[data-editor-form]') as HTMLElement;
     const labels = Array.from(form.querySelectorAll('section[data-section]')).map((s) => s.getAttribute('aria-label') ?? '');
     const at = labels.indexOf('Relationships');
-    if (kind === 'relationship' || kind === 'reference') return expect(at).toBe(-1);
+    if (NO_RELATIONSHIPS.includes(kind)) return expect(at).toBe(-1);
     expect(at).toBeGreaterThan(-1);
     const shared = labels.findIndex((l) => /tags and citations/.test(l));
     expect(at).toBeGreaterThan(shared);

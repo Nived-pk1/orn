@@ -5,7 +5,7 @@ export { blankDraft } from './blank';
 export { classParentGuard, hierarchyParentGuard, reagentComponentGuard, MAX_COMPOSITION_WALK } from './cycles';
 export type { CycleRefusal } from './cycles';
 export { commitDraft, mergeDraft } from './commit';
-export { nameOfRef, NAME_WORDS_MAX, relationshipWords, shortName } from './labels';
+export { composedName, nameOfRef, NAME_WORDS_MAX, relationshipWords, shortName } from './labels';
 export { canRedoDraft, canUndoDraft, editDraft, openSession, redoDraft, undoDraft } from './session';
 export type { DraftRecipe, DraftValue } from './session';
 export { parseStoredSession } from './stored';

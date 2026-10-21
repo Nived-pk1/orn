@@ -5,6 +5,7 @@
  * Save (a class parent, a reagent component) through the core's guards, in words. Derived at the moment it is asked; nothing is stored.
  * No chemistry.
  */
+import { createCurriculumPort } from './curriculum-picker-port';
 import type { ParentKind, PickKind, RecordChoice, RecordPickerPort } from '@/features/workbench';
 import { hierarchyParentGuard, reagentComponentGuard } from '@/core/editing';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
@@ -52,7 +53,13 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
     return { kind, id: record.id, name: kind === 'reaction' || kind === 'mechanism' ? (record.name ?? record.id) : (record.names?.canonical ?? record.id), kindWords, scope, ...(reactionScope === undefined ? {} : { reactionScope }) };
   };
   const nameOf = (kind: PickKind, id: string): string => describe(kind, id)?.name ?? id;
+  const curriculum = createCurriculumPort(
+    deps.state,
+    (kind, id) => (DESCRIBED.has(kind) ? nameOf(kind as PickKind, id) : id),
+    (kind, id) => (DESCRIBED.has(kind) ? (describe(kind as PickKind, id)?.kindWords ?? kind) : kind.replace(/_/g, ' ')),
+  );
   return {
+    ...curriculum,
     describe,
     async search(kinds, text) {
       const answer = await deps.search(`${PICKER_CHANNEL}:${kinds.join(',')}`, { text, kinds: [...kinds], limit: 10 });
@@ -66,7 +73,8 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
       const why = hierarchyParentGuard(deps.indexes(), kind, owner)(candidate);
       if (why === undefined) return undefined;
       const noun = kind.replace(/_/g, ' ');
-      return why === 'self' ? `A ${noun} cannot be its own parent.` : `${nameOf(kind, candidate)} is already below this ${noun}, so it cannot be its parent: that would make a cycle.`;
+      const name = kind === 'topic' ? (deps.state().records.topic[candidate as never]?.name ?? candidate) : nameOf(kind, candidate);
+      return why === 'self' ? `A ${noun} cannot be its own parent.` : `${name} is already below this ${noun}, so it cannot be its parent: that would make a cycle.`;
     },
     relationshipsOf(ref) {
       const lines: { id: string; words: string }[] = [];

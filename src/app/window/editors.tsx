@@ -5,7 +5,7 @@
  * shown, so none of the editor is in the entry chunk. It fills the editor's port from the session manager; it knows no chemistry.
  */
 import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from 'react';
-import type { RecordRef } from '@/core/schema';
+import type { RecordKind, RecordRef } from '@/core/schema';
 import { useSubscribable } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
 import { useApp } from './context';
@@ -21,7 +21,7 @@ const EditorSession = /* @__PURE__ */ lazy(() => import('./editor-session').then
 const machineTime = /* @__PURE__ */ createLocalTimeFormatter();
 
 /** The kinds whose editor is the full one (the others edit names only). */
-const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference', 'concept', 'named_reaction', 'transformation', 'relationship', 'caveat'];
+const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference', 'concept', 'named_reaction', 'transformation', 'relationship', 'caveat', 'topic', 'topic_mapping'];
 
 /** Why editing cannot start in this tab now; undefined when it can (a session-only tab edits in memory and says so in the editor). */
 export function editReasonOf(mode: string | null): string | undefined {
@@ -61,6 +61,9 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       newMechanism: () => show(services.drafts.open({ kind: 'mechanism', blank: true })),
       newSource: () => show(services.drafts.open({ kind: 'reference', blank: true })),
       newRelationship: () => show(services.drafts.open({ kind: 'relationship', blank: true })),
+      newTopic: () => show(services.drafts.open({ kind: 'topic', blank: true })),
+      newTopicMapping: () => show(services.drafts.open({ kind: 'topic_mapping', blank: true })),
+      startNew: (kind: RecordKind, seed: Readonly<Record<string, unknown>>) => show(services.drafts.open({ kind, blank: true, seed })),
       newCaveat: () => show(services.drafts.open({ kind: 'caveat', blank: true })),
       newConcept: () => show(services.drafts.open({ kind: 'concept', blank: true })),
       newNamedReaction: () => show(services.drafts.open({ kind: 'named_reaction', blank: true })),
@@ -88,7 +91,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       ) : null}
       {editingId === null ? null : (
         <Suspense fallback={null}>
-          <EditorSession sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} />
+          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} />
         </Suspense>
       )}
     </EditorsContext.Provider>

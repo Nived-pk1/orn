@@ -6,9 +6,9 @@ import type { WindowServices } from './context';
 export function makeEditorPort(
   services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks' | 'chem' | 'duplicateCheck'>>,
   timers: EditorPort['timers'],
-  extras: { readonly depictions?: StructurePort['depictions']; readonly records?: RecordPickerPort; readonly openRecord?: (ref: RecordRef) => void; readonly preview?: PreviewPort; readonly links?: MechanismLinksPort; readonly pictures?: PicturesPort } = {},
+  extras: { readonly depictions?: StructurePort['depictions']; readonly records?: RecordPickerPort; readonly openRecord?: (ref: RecordRef) => void; readonly preview?: PreviewPort; readonly links?: MechanismLinksPort; readonly pictures?: PicturesPort; readonly chain?: EditorPort['chain'] } = {},
 ): EditorPort {
-  const { depictions, records, openRecord, preview, links, pictures } = extras;
+  const { depictions, records, openRecord, preview, links, pictures, chain } = extras;
   const { drafts, store } = services;
   return {
     entry: (id) => drafts.entry(id),
@@ -28,6 +28,7 @@ export function makeEditorPort(
     ...(preview === undefined ? {} : { preview }),
     ...(links === undefined ? {} : { links }),
     ...(pictures === undefined ? {} : { pictures }),
+    ...(chain === undefined ? {} : { chain }),
     ...(services.duplicateCheck === undefined || openRecord === undefined ? {} : { duplicates: { check: services.duplicateCheck.check, openRecord } }),
     timers,
   };

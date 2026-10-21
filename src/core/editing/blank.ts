@@ -1,6 +1,6 @@
 /**
  * The first draft of a NEW record (ADR-040 addendum, step 6.2a decision D3, extended in 6.2b decision D5): every required field has its
- * empty value, so the editor can show every field from the start. Species, classes, reagents, reactions, mechanisms (step 6.5a), sources (step 6.6a), concepts, named reactions, transformations, relationships and caveats (step 6.6b); any other kind starts as the smallest draft
+ * empty value, so the editor can show every field from the start. Species, classes, reagents, reactions, mechanisms (step 6.5a), sources (step 6.6a), concepts, named reactions, transformations, relationships and caveats (step 6.6b), topics, topic mappings, exam relevance and map families (step 6.6c); any other kind starts as the smallest draft
  * (`openSession`). Pure: the ID and both times come from the `CommandContext`. The empty canonical name does not pass L1, which is right:
  * Save is refused until a name is typed. A class has no empty `classKind` (the schema has no "unspecified" kind): the field is left ABSENT,
  * the form shows "Choose a kind" and L1 refuses Save with the schema's words until one is chosen. No kind is invented.
@@ -73,6 +73,22 @@ export function blankDraft(kind: RecordKind, ctx: CommandContext): Record<string
   if (kind === 'relationship') {
     // a relationship: the type and both ends have no empty value (ABSENT until chosen, L1 refuses Save)
     return { kind: 'relationship', id: ctx.newId(RECORD_ID_PREFIX.relationship), ...startMeta(ctx.now()) };
+  }
+  if (kind === 'topic') {
+    // a topic: the kind of topic and the order have no empty value (ABSENT until given, L1 refuses Save); no parent is a top-level topic
+    return { kind: 'topic', id: ctx.newId(RECORD_ID_PREFIX.topic), name: '', aliases: [], ...startMeta(ctx.now()) };
+  }
+  if (kind === 'topic_mapping') {
+    // topic, target and role have no empty value (ABSENT until chosen)
+    return { kind: 'topic_mapping', id: ctx.newId(RECORD_ID_PREFIX.topic_mapping), ...startMeta(ctx.now()) };
+  }
+  if (kind === 'exam_relevance') {
+    // target, exam and scope have no empty value; no versions means every version of the exam
+    return { kind: 'exam_relevance', id: ctx.newId(RECORD_ID_PREFIX.exam_relevance), examVersionIds: [], ...startMeta(ctx.now()) };
+  }
+  if (kind === 'navigator_anchor') {
+    // a map family: the target and the order have no empty value; presentation records carry provenance only
+    return { kind: 'navigator_anchor', id: ctx.newId(RECORD_ID_PREFIX.navigator_anchor), provenance: startMeta(ctx.now()).provenance };
   }
   if (kind === 'named_reaction') {
     return { kind: 'named_reaction', id: ctx.newId(RECORD_ID_PREFIX.named_reaction), name: '', aliases: [], parentIds: [], conceptIds: [], prerequisiteConceptIds: [], ...startMeta(ctx.now()) };
