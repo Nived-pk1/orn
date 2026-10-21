@@ -156,6 +156,14 @@ describe('citations', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit citation NCERT Chemistry XII' }));
     expect(screen.getAllByLabelText('Locator')).toHaveLength(1);
   });
+  it('K1: the locator is a one-line input; the note (the schema allows line breaks) is a 3-row textarea', () => {
+    show([{ referenceId: 'ref_morrison' }]);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit citation Morrison and Boyd (2010)' }));
+    expect(screen.getByLabelText('Locator').tagName).toBe('INPUT');
+    const note = screen.getByLabelText('Citation note') as HTMLTextAreaElement;
+    expect(note.tagName).toBe('TEXTAREA');
+    expect(note.rows).toBe(3);
+  });
   it('moves and removes', () => {
     const spy = show([{ referenceId: 'ref_morrison' }, { referenceId: 'ref_ncert' }]);
     fireEvent.click(screen.getByRole('button', { name: 'Move citation NCERT Chemistry XII up' }));

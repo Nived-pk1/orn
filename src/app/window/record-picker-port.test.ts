@@ -92,6 +92,10 @@ describe('concepts and sources (step 6.6a)', () => {
     expect(port.describe('reference', 'ref_a')).toEqual({ kind: 'reference', id: 'ref_a', name: 'Morrison and Boyd', kindWords: 'textbook, 2010', scope: '' });
     expect(port.describe('reference', 'ref_nope')).toBeUndefined();
   });
+  it('V4: a concept choice carries its concept kind, so a picker can put the matching kind first', () => {
+    const concept = Object.values(demoState().records.concept)[0];
+    expect(picker().describe('concept', concept?.id as string)).toMatchObject({ conceptKind: concept?.conceptKind });
+  });
   it('counts records of a kind and gives the title and year of a source', () => {
     const port = picker(withSource(demoState()));
     expect(port.count?.('reference')).toBe(1);

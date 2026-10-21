@@ -123,9 +123,11 @@ export function RichTextField(props: RichTextFieldProps) {
         onChange={(event) => props.onChange(event.target.value)}
       />
       <p id={helpId} className={styles.help}>{RICH_TEXT_HELP}</p>
-      <div className={styles.preview} role="region" aria-label={`Preview of ${props.label}`}>
-        {shown === '' ? <p className={styles.empty}>Nothing to preview.</p> : <Nodes nodes={parseRichText(shown)} links={{ exists: props.linkExists, name: props.linkName }} />}
-      </div>
+      {shown === '' ? null : (
+        <div className={styles.preview} role="region" aria-label={`Preview of ${props.label}`}>
+          <Nodes nodes={parseRichText(shown)} links={{ exists: props.linkExists, name: props.linkName }} />
+        </div>
+      )}
     </div>
   );
 }

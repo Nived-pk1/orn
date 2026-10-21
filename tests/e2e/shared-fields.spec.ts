@@ -64,6 +64,7 @@ test.describe('the shared fields (Studio)', () => {
     await dialog.getByRole('button', { name: 'Add Shared fields textbook' }).click({ timeout: 60_000 });
     await dialog.getByRole('button', { name: 'Edit citation Shared fields textbook (2010)' }).click();
     await dialog.getByLabel('Locator', { exact: true }).fill('ch. 4');
+    expect((await dialog.getByLabel('Locator', { exact: true }).boundingBox())?.height ?? 999).toBeLessThan(80); // K1: a one-line input, not a 300 px column
     await dialog.getByLabel('Citation note').scrollIntoViewIfNeeded();
     await shot(page, 'citations');
     await dialog.getByLabel('Add a tag').scrollIntoViewIfNeeded();
@@ -75,6 +76,7 @@ test.describe('the shared fields (Studio)', () => {
     await dialog.getByLabel('Property', { exact: true }).selectOption('boiling_point');
     await expect(dialog.getByText('e.g. 78 °C (at 1 atm)')).toBeVisible();
     await dialog.getByLabel('Value', { exact: true }).fill('78.37 °C (at 1 atm)');
+    expect((await dialog.getByLabel('Value', { exact: true }).boundingBox())?.height ?? 999).toBeLessThan(80); // K1
     await dialog.getByLabel('Value', { exact: true }).scrollIntoViewIfNeeded();
     await shot(page, 'species-properties');
     expect(await axeProblems(page)).toEqual([]);
@@ -96,7 +98,7 @@ test.describe('the shared fields (Studio)', () => {
     await reaction.getByRole('list', { name: 'Concepts found' }).getByRole('button', { name: 'Add Oxidation' }).first().click({ timeout: 60_000 });
     const certainty = reaction.getByLabel('Certainty of Oxidation');
     await expect(certainty).toHaveValue('');
-    await expect(reaction.getByText('Oxidation (certainty not chosen)')).toBeVisible();
+    await expect(reaction.getByLabel('Certainty of Oxidation')).toBeVisible();
     await reaction.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(reaction.getByRole('heading', { name: 'Save was refused' })).toBeVisible();
     await certainty.selectOption('possible');

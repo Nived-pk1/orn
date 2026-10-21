@@ -29,6 +29,37 @@ export interface RecordPickerProps {
   readonly noun?: string;
   /** The accessible name of the results list, plural ('Classes found'). */
   readonly resultsLabel?: string;
+  /** Results that fit the field come first under `resultsLabel`; every other result stays choosable under `otherLabel` (no rule forbids it). */
+  readonly preferred?: (choice: RecordChoice) => boolean;
+  readonly otherLabel?: string;
+}
+
+function Results(args: { readonly label: string; readonly results: readonly RecordChoice[]; readonly props: RecordPickerProps }) {
+  const { props, results } = args;
+  const unavailable = props.unavailable;
+  return (
+    <ul className={styles.results} aria-label={args.label}>
+      {results.map((choice) => {
+        const reason = props.refusal?.(choice);
+        return (
+          <li key={`${choice.kind}:${choice.id}`} className={styles.choice}>
+            <span>{choiceLine(choice, choice.id)}</span>
+            {props.isListed(choice) ? (
+              <span className={styles.hint}>Already listed</span>
+            ) : reason !== undefined ? (
+              <span className={styles.hint} role="note">
+                Cannot be chosen: {reason}
+              </span>
+            ) : (
+              <Button aria-label={`Add ${choice.name}`} {...(unavailable === undefined ? { onClick: () => props.onPick(choice) } : { unavailable })}>
+                Add
+              </Button>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 export function RecordPicker(props: RecordPickerProps) {
@@ -55,6 +86,8 @@ export function RecordPicker(props: RecordPickerProps) {
 
   if (port === undefined) return <p className={styles.hint}>Searching for {(props.resultsLabel ?? 'Records found').replace(/ found$/, '').toLowerCase()} is not available here.</p>;
   const searching = text.trim() !== '';
+  const first = props.preferred === undefined ? results : results.filter(props.preferred);
+  const rest = props.preferred === undefined ? [] : results.filter((choice) => !props.preferred?.(choice));
   return (
     <div className={styles.field}>
       <label htmlFor={props.id}>{props.label}</label>
@@ -62,28 +95,12 @@ export function RecordPicker(props: RecordPickerProps) {
       <p id={`${props.id}-count`} className={styles.hint} role="status">
         {!searching ? '' : results.length === 0 ? `No ${noun} matches.` : `${results.length} found`}
       </p>
-      {results.length === 0 ? null : (
-        <ul className={styles.results} aria-label={props.resultsLabel ?? 'Records found'}>
-          {results.map((choice) => {
-            const reason = props.refusal?.(choice);
-            return (
-              <li key={`${choice.kind}:${choice.id}`} className={styles.choice}>
-                <span>{choiceLine(choice, choice.id)}</span>
-                {props.isListed(choice) ? (
-                  <span className={styles.hint}>Already listed</span>
-                ) : reason !== undefined ? (
-                  <span className={styles.hint} role="note">
-                    Cannot be chosen: {reason}
-                  </span>
-                ) : (
-                  <Button aria-label={`Add ${choice.name}`} {...(unavailable === undefined ? { onClick: () => props.onPick(choice) } : { unavailable })}>
-                    Add
-                  </Button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+      {first.length === 0 ? null : <Results label={props.resultsLabel ?? 'Records found'} results={first} props={props} />}
+      {rest.length === 0 ? null : (
+        <>
+          {first.length === 0 ? null : <h4 className={styles.hint}>{props.otherLabel ?? 'Other records'}</h4>}
+          <Results label={props.otherLabel ?? 'Other records'} results={rest} props={props} />
+        </>
       )}
     </div>
   );

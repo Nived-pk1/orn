@@ -87,6 +87,23 @@ ul.list {
   min-width: 0;
 }
 
+/* the open editor of a summary row takes the whole row, and its fields keep their natural size (the row's basis above would be a HEIGHT here) */
+.row > .field {
+  flex: 1 1 100%;
+}
+
+.row .field input {
+  flex: none;
+}
+
+.row .field select {
+  flex: none;
+}
+
+.row .field textarea {
+  flex: none;
+}
+
 /* a phone: the text field takes the row; Up, Down and Remove share the one row under it */
 .rowPhone input {
   flex: 1 1 100%;

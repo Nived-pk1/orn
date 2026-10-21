@@ -86,9 +86,13 @@ describe('RichTextField', () => {
     expect(preview().querySelector('*:not(p)')).toBeNull();
   });
 
-  it('an empty value has no preview text to show', () => {
+  it('an empty value has NO preview region (K2); the help line stays; the region appears with text', () => {
     render(<Host />);
-    expect(preview().textContent).toBe('Nothing to preview.');
+    expect(screen.queryByRole('region', { name: /^Preview of/ })).toBeNull();
+    expect(screen.getByText(/\*emphasis\*/)).toBeTruthy();
+    cleanup();
+    render(<Host initial="some text" />);
+    expect(preview().textContent).toBe('some text');
   });
 
   it('is read-only with a reason, and marks an invalid field', () => {

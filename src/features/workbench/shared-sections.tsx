@@ -157,7 +157,7 @@ export function CitationsSection(props: SectionProps & { readonly picker: Record
                   <input id={`${path}-${index}-locator`} type="text" value={citation.locator} readOnly={locked} autoComplete="off" data-field-path={`${path}[${index}].locator`} aria-invalid={props.invalid?.has(`${path}[${index}].locator`) === true ? true : undefined} onChange={(event) => props.onEdit(setCitationField(path, index, 'locator', event.target.value), `${path}[${index}].locator`)} />
                   <p className={styles.hint}>Where in the source: a page, a chapter, a table.</p>
                   <label htmlFor={`${path}-${index}-note`}>Citation note</label>
-                  <input id={`${path}-${index}-note`} type="text" value={citation.note} readOnly={locked} autoComplete="off" data-field-path={`${path}[${index}].note`} aria-invalid={props.invalid?.has(`${path}[${index}].note`) === true ? true : undefined} onChange={(event) => props.onEdit(setCitationField(path, index, 'note', event.target.value), `${path}[${index}].note`)} />
+                  <textarea id={`${path}-${index}-note`} rows={3} value={citation.note} readOnly={locked} autoComplete="off" spellCheck={false} data-field-path={`${path}[${index}].note`} aria-invalid={props.invalid?.has(`${path}[${index}].note`) === true ? true : undefined} onChange={(event) => props.onEdit(setCitationField(path, index, 'note', event.target.value), `${path}[${index}].note`)} />
                 </div>
               )}
             </li>

@@ -40,6 +40,3 @@ export const setCertainty = (field: ClassificationField, index: number, value: s
 export const removeClassification = (field: ClassificationField, index: number): DraftRecipe => (draft) => {
   listOf(draft, field).splice(index, 1);
 };
-
-/** "SN2 (definite)"; a certainty not chosen says so. */
-export const classificationLine = (name: string, certainty: string): string => `${name} (${certainty === '' ? 'certainty not chosen' : certainty})`;

@@ -37,7 +37,7 @@ describe('properties model', () => {
     expect((run(base, removeProperty(0)).properties as { value: string }[]).map((p) => p.value)).toEqual(['b']);
   });
   it('the summary line is "<property> · <value>"; "other" uses its label; an unchosen key says so', () => {
-    expect(propertyLine({ key: 'boiling_point', label: '', value: '78 °C', note: '', citations: 0 })).toBe('boiling point · 78 °C');
+    expect(propertyLine({ key: 'boiling_point', label: '', value: '78 °C', note: '', citations: 0 })).toBe('Boiling point · 78 °C');
     expect(propertyLine({ key: 'other', label: 'Refractive index', value: '1.36', note: '', citations: 0 })).toBe('Refractive index · 1.36');
     expect(propertyLine({ key: '', label: '', value: '', note: '', citations: 0 })).toBe('Property not chosen');
     expect(propertiesOf({ properties: [{ key: 'colour', value: 'red', citations: [{ referenceId: 'r' }] }] })).toEqual([{ key: 'colour', label: '', value: 'red', note: '', citations: 1 }]);

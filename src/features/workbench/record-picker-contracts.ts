@@ -14,6 +14,8 @@ export interface RecordChoice {
   readonly scope: string;
   /** For a reaction: its scope, so a picker of generic reactions can refuse a specific one in words. */
   readonly reactionScope?: 'generic' | 'specific';
+  /** For a concept: its conceptKind (reaction_type, mechanism_class, ...), so a picker can offer the matching kind first. */
+  readonly conceptKind?: string;
 }
 
 export interface RecordPickerPort {

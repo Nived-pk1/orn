@@ -36,7 +36,7 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
     const table = deps.state().records[kind] as Readonly<Record<string, { readonly id: string; readonly names?: { readonly canonical: string }; readonly name?: string; readonly scope?: 'generic' | 'specific'; readonly classKind?: ChemicalClass['classKind']; readonly speciesKind?: string; readonly conceptKind?: string; readonly title?: string; readonly refKind?: string; readonly year?: number }>>;
     const record = Object.hasOwn(table, id) ? table[id] : undefined;
     if (record === undefined) return undefined;
-    if (kind === 'concept') return { kind, id: record.id, name: record.name ?? record.id, kindWords: String(record.conceptKind ?? 'concept').replace(/_/g, ' '), scope: '' };
+    if (kind === 'concept') return { kind, id: record.id, name: record.name ?? record.id, kindWords: String(record.conceptKind ?? 'concept').replace(/_/g, ' '), scope: '', ...(record.conceptKind === undefined ? {} : { conceptKind: record.conceptKind }) };
     if (kind === 'reference') return { kind, id: record.id, name: record.title ?? record.id, kindWords: [String(record.refKind ?? 'source').replace(/_/g, ' '), record.year].filter((part) => part !== undefined).join(', '), scope: '' };
     const exam = deps.activeExam();
     const scope = exam === null ? '' : SCOPE_WORDS[createScopeOf(deps.indexes(), exam.examId, exam.examVersionId)({ kind, id: record.id } as never)];

@@ -1,6 +1,6 @@
 /** The classification recipes and words (step 6.6a, decision C3): `{ conceptId, certainty }`, certainty with NO default. */
 import { describe, expect, it } from 'vitest';
-import { addClassification, CERTAINTY_WORDS, classificationLine, classificationsOf, removeClassification, setCertainty } from './classification-model';
+import { addClassification, CERTAINTY_WORDS, classificationsOf, removeClassification, setCertainty } from './classification-model';
 
 const run = (draft: Record<string, unknown>, ...recipes: ((d: Record<string, unknown>) => void)[]) => {
   const copy = structuredClone(draft);
@@ -23,9 +23,7 @@ describe('classification model', () => {
   it('the view reads what is there; certainty is "" when absent', () => {
     expect(classificationsOf({ reactionTypes: [{ conceptId: 'a', certainty: 'possible' }, { conceptId: 'b' }, 5] }, 'reactionTypes')).toEqual([{ conceptId: 'a', certainty: 'possible' }, { conceptId: 'b', certainty: '' }]);
   });
-  it('the summary line is "SN2 (definite)", or says the certainty is not chosen', () => {
-    expect(classificationLine('SN2', 'definite')).toBe('SN2 (definite)');
-    expect(classificationLine('SN2', '')).toBe('SN2 (certainty not chosen)');
+  it('the certainty words are the choice list words; the name is NOT repeated in a summary (K3)', () => {
     expect(Object.keys(CERTAINTY_WORDS)).toEqual(['definite', 'probable', 'possible']);
   });
 });

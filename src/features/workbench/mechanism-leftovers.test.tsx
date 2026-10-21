@@ -52,7 +52,7 @@ describe('mechanism classes', () => {
     await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
     expect(await within(dialog).findByRole('heading', { name: 'Save was refused' })).toBeTruthy();
     fireEvent.change(within(dialog).getByLabelText('Certainty of SN2'), { target: { value: 'definite' } });
-    expect(within(dialog).getByText('SN2 (definite)')).toBeTruthy();
+    expect((within(dialog).getByLabelText('Certainty of SN2') as HTMLSelectElement).value).toBe('definite');
     await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: /^Save/ })));
     await waitFor(() => expect((rig.store.getState().records.mechanism[E2 as never] as Mechanism).mechanismClasses.at(-1)).toEqual({ conceptId: 'cpt_sn2', certainty: 'definite' }));
   });

@@ -91,7 +91,9 @@ export const movePropertyBy = (index: number, by: -1 | 1): DraftRecipe => (draft
   list.splice(to, 0, item);
 };
 
+/** The property in the same words as its choice list: "Boiling point"; the label for `other` (or "Other" with no label yet); "" when not chosen. */
+const propertyTitle = (property: PropertyView): string => (property.key === 'other' ? (property.label === '' ? PROPERTY_KEY_WORDS.other : property.label) : (PROPERTY_KEY_WORDS[property.key as PropertyKey] ?? property.key));
 /** The name of the property in words: the label for `other`, the key otherwise ("boiling point"), or "" when not chosen. */
 export const propertyName = (property: PropertyView): string => (property.key === 'other' ? (property.label === '' ? 'other' : property.label) : property.key.replace(/_/g, ' '));
 /** "<property> · <value>"; an unchosen key says so. */
-export const propertyLine = (property: PropertyView): string => (property.key === '' ? 'Property not chosen' : `${propertyName(property)} · ${property.value}`);
+export const propertyLine = (property: PropertyView): string => (property.key === '' ? 'Property not chosen' : `${propertyTitle(property)} · ${property.value}`);

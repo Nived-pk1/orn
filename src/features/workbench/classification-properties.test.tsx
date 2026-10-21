@@ -50,18 +50,54 @@ describe('the classification section', () => {
     fireEvent.change(screen.getByLabelText('Find a mechanism class by name'), { target: { value: 'sn' } });
     fireEvent.click(await screen.findByRole('button', { name: 'Add SN2' }));
     expect(list(spy)).toEqual([{ conceptId: 'cpt_sn2' }]);
-    expect(screen.getByText('SN2 (certainty not chosen)')).toBeTruthy();
+    expect(screen.getAllByText('SN2')).toHaveLength(1);
     const select = screen.getByLabelText('Certainty of SN2') as HTMLSelectElement;
     expect(select.value).toBe('');
     expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual(['Choose certainty', 'Definite', 'Probable', 'Possible']);
   });
-  it('choosing the certainty gives the chip "SN2 (definite)"; Remove removes', () => {
+  it('choosing the certainty shows the name ONCE, beside the choice (K3); Remove removes', () => {
     const spy = show([{ conceptId: 'cpt_sn2' }]);
     fireEvent.change(screen.getByLabelText('Certainty of SN2'), { target: { value: 'definite' } });
     expect(list(spy)).toEqual([{ conceptId: 'cpt_sn2', certainty: 'definite' }]);
-    expect(screen.getByText('SN2 (definite)')).toBeTruthy();
+    expect(screen.getAllByText('SN2')).toHaveLength(1);
+    expect(screen.queryByText(/SN2 \(/)).toBeNull();
+    expect((screen.getByLabelText('Certainty of SN2') as HTMLSelectElement).value).toBe('definite');
     fireEvent.click(screen.getByRole('button', { name: 'Remove SN2' }));
     expect(list(spy)).toEqual([]);
+  });
+});
+
+describe('V4: concepts of the matching kind come first', () => {
+  const RT: RecordChoice = { kind: 'concept', id: 'cpt_add', name: 'Nucleophilic addition', kindWords: 'reaction type', scope: '', conceptKind: 'reaction_type' };
+  const MC: RecordChoice = { kind: 'concept', id: 'cpt_sn2b', name: 'Nucleophilic SN2', kindWords: 'mechanism class', scope: '', conceptKind: 'mechanism_class' };
+  const both: RecordPickerPort = { ...picker, search: async (kinds, text) => [MC, RT].filter((c) => kinds.includes(c.kind) && c.name.toLowerCase().includes(text.toLowerCase())) };
+  it('reaction types: reaction types first under "Concepts found", every other concept under "Other concepts" (still choosable)', async () => {
+    const spy: Spy = {};
+    render(
+      <Harness initial={{ reactionTypes: [] }} spy={spy}>
+        {(p) => <ClassificationSection {...p} field="reactionTypes" label="Reaction types" findLabel="Find a reaction type by name" picker={both} />}
+      </Harness>,
+    );
+    fireEvent.change(screen.getByLabelText('Find a reaction type by name'), { target: { value: 'nucleophilic' } });
+    const first = await screen.findByRole('list', { name: 'Concepts found' });
+    expect(within(first).getByText(/Nucleophilic addition/)).toBeTruthy();
+    expect(within(first).queryByText(/SN2/)).toBeNull();
+    const other = screen.getByRole('list', { name: 'Other concepts' });
+    expect(within(other).getByText(/Nucleophilic SN2/)).toBeTruthy();
+    fireEvent.click(within(other).getByRole('button', { name: 'Add Nucleophilic SN2' }));
+    expect((spy.draft as { reactionTypes: unknown[] }).reactionTypes).toEqual([{ conceptId: 'cpt_sn2b' }]);
+  });
+  it('mechanism classes: mechanism classes come first', async () => {
+    const spy: Spy = {};
+    render(
+      <Harness initial={{ mechanismClasses: [] }} spy={spy}>
+        {(p) => <ClassificationSection {...p} field="mechanismClasses" label="Mechanism classes" findLabel="Find a mechanism class by name" picker={both} />}
+      </Harness>,
+    );
+    fireEvent.change(screen.getByLabelText('Find a mechanism class by name'), { target: { value: 'nucleophilic' } });
+    const first = await screen.findByRole('list', { name: 'Concepts found' });
+    expect(within(first).getByText(/Nucleophilic SN2/)).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Other concepts' })).getByText(/Nucleophilic addition/)).toBeTruthy();
   });
 });
 
@@ -103,7 +139,7 @@ describe('the properties section', () => {
   });
   it('summary lines "<property> · <value>", one open at a time, Up, Down and Remove', () => {
     const spy = show([{ key: 'colour', value: 'red', citations: [] }, { key: 'odour', value: 'sweet', citations: [] }]);
-    expect(screen.getByText('colour · red')).toBeTruthy();
+    expect(screen.getByText('Colour · red')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Edit property colour' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit property odour' }));
     expect(screen.getAllByLabelText('Value')).toHaveLength(1);
