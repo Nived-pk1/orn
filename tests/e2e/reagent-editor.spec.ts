@@ -103,7 +103,7 @@ test.describe('the reagent editor', () => {
 
     await findsByName(page, 'g: wagner', /Potassium permanganate/);
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: 'Undo Edit reagent of Potassium permanganate' }).click();
+    await page.getByRole('button', { name: 'Undo Edit reagent Potassium permanganate' }).click();
     await page.keyboard.press('Control+K');
     await expect(palette(page)).toBeVisible();
     await searchFor(page, 'g: wagner');

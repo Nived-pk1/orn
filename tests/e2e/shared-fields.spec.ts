@@ -102,7 +102,7 @@ test.describe('the shared fields (Studio)', () => {
     await reaction.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(reaction.getByRole('heading', { name: 'Save was refused' })).toBeVisible();
     await certainty.selectOption('possible');
-    await expect(reaction.getByText('Oxidation (possible)')).toBeVisible();
+    await expect(certainty).toHaveValue('possible'); // K3: the concept's name is shown once, beside the certainty choice
     await shot(page, 'classification');
     await openSection(page, /Notes, tags and citations/);
     await reaction.getByLabel('Find a concept by name').fill('oxid');
