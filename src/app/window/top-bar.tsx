@@ -55,7 +55,7 @@ export function stepHistory(store: HistoryBinding, direction: 'undo' | 'redo', t
   if (answer !== null && !answer.ok) toasts.push({ kind: 'error', text: `${direction === 'undo' ? 'Undo' : 'Redo'} failed (${answer.error?.code ?? 'UNKNOWN'}): ${answer.error?.message ?? 'no message'}` });
 }
 
-/** The button's name: "Undo Edit names of Ethanol" when there is a step and the store knows its label, else just "Undo". */
+/** The button's name: "Undo Edit species Ethanol" when there is a step and the store knows its label, else just "Undo". */
 export function historyLabelOf(store: HistoryBinding, direction: 'undo' | 'redo'): string {
   const word = direction === 'undo' ? 'Undo' : 'Redo';
   const next = (store.historyLabels?.()[direction] ?? [])[0];

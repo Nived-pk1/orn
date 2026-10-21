@@ -96,7 +96,7 @@ describe('editing a demo mechanism', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
     expect(named(app, 'E2 elimination of a haloalkane')?.variants[0]?.label).toBe('Zaitsev elimination (small base)');
-    expect(app.store.historyLabels().undo.at(-1)).toBe('Edit mechanism of E2 elimination of a haloalkane');
+    expect(app.store.historyLabels().undo.at(-1)).toBe('Edit mechanism E2 elimination of a haloalkane');
     await waitFor(() => expect(within(screen.getByRole('complementary', { name: 'Inspector' })).getAllByText(/Zaitsev elimination \(small base\)/).length).toBeGreaterThan(0));
     act(() => void app.store.undo());
     expect(named(app, 'E2 elimination of a haloalkane')?.variants[0]?.label).toBe('Saytzeff elimination (small base)');

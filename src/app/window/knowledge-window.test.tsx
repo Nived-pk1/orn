@@ -114,10 +114,36 @@ describe('renaming a demo named reaction', () => {
     fireEvent.change(within(dialog).getByLabelText('Name (required)'), { target: { value: 'Cannizzaro disproportionation' } });
     await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
     await waitFor(() => expect(named(app, 'nrx_cannizzaro').name).toBe('Cannizzaro disproportionation'));
+    expect(app.store.historyLabels().undo.at(-1)).toBe('Edit named reaction Cannizzaro reaction');
     act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: 'rxn_benzaldehyde-cannizzaro' }));
     const pane = await screen.findByRole('complementary', { name: 'Inspector' });
     expect(await within(pane).findByText('Cannizzaro disproportionation')).toBeTruthy();
     act(() => void app.store.undo());
     expect(named(app, 'nrx_cannizzaro').name).toBe('Cannizzaro reaction');
+  });
+});
+
+describe('linking a demo reaction to a named reaction (step 6.6b part 3)', () => {
+  it('Saved, the inspector shows the named reaction and the new reversibility; Undo restores', async () => {
+    const app = fakeApp({ state: demoState() });
+    answerSearch(app);
+    app.panels.getState().setInspectorOpen(true);
+    renderWithApp(app);
+    const id = 'rxn_benzene-nitration-draft';
+    act(() => app.inspectorStore.getState().open({ kind: 'reaction', id }));
+    const inspector = await screen.findByRole('complementary', { name: 'Inspector' });
+    fireEvent.click(await within(inspector).findByRole('button', { name: 'Edit' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Nitration of benzene (draft)' });
+    const toggle = within(dialog).getByRole('button', { name: /Links and reversibility/ });
+    if (toggle.getAttribute('aria-expanded') === 'false') fireEvent.click(toggle);
+    fireEvent.change(within(dialog).getByLabelText('Find a named reaction by name'), { target: { value: 'Cannizzaro' } });
+    fireEvent.click(await within(dialog).findByRole('button', { name: 'Add Cannizzaro reaction' }));
+    fireEvent.change(within(dialog).getByLabelText('Reversibility'), { target: { value: 'irreversible' } });
+    await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: /^Save/ })));
+    await waitFor(() => expect((app.store.getState().records.reaction[id as never] as { namedReactionIds: string[] }).namedReactionIds).toEqual(['nrx_cannizzaro']));
+    expect(await within(await screen.findByRole('complementary', { name: 'Inspector' })).findByText('Cannizzaro reaction')).toBeTruthy();
+    act(() => void app.store.undo());
+    expect((app.store.getState().records.reaction[id as never] as { namedReactionIds: string[]; reversibility: { kind: string } }).namedReactionIds).toEqual([]);
+    expect((app.store.getState().records.reaction[id as never] as { reversibility: { kind: string } }).reversibility.kind).toBe('unknown');
   });
 });

@@ -28,15 +28,15 @@ const otherEdit = (store: ReturnType<typeof makeStore>, fields: Record<string, u
   mustCommit(store.dispatch({ label: 'Other edit', commands: [{ type: 'record.update', record: withFields(recordIn(store.getState(), 'species', SPECIES), fields) }] }));
 
 describe('commitDraft: success', () => {
-  it('one dispatch: one global history entry labelled "Edit <section> of <name>", the revision up by one, selection hint on the record', () => {
+  it('one dispatch: one global history entry labelled "Edit <kind words> <name>", the revision up by one, selection hint on the record', () => {
     const { ctx, store, session } = open();
     const oldName = (recordIn<Species>(store.getState(), 'species', SPECIES).names).canonical;
     const draft = edited(session, ctx, rename('Propan-2-one'));
     const revision = store.getRevision();
-    const outcome = commitDraft(store, draft, ctx, undefined, { section: 'names' });
+    const outcome = commitDraft(store, draft, ctx, undefined, { section: 'species' });
     expect(outcome.ok).toBe(true);
     expect(store.getRevision()).toBe(revision + 1);
-    expect(store.historyLabels().undo).toEqual([`Edit names of ${oldName}`]);
+    expect(store.historyLabels().undo).toEqual([`Edit species ${oldName}`]);
     expect(recordIn<Species>(store.getState(), 'species', SPECIES).names.canonical).toBe('Propan-2-one');
     // the history entry's selection hint
     mustCommit(store.undo() ?? { ok: false, error: { code: 'INTERNAL', message: 'null' } });

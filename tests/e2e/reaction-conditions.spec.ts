@@ -51,7 +51,7 @@ test.describe('stage conditions, variants and parsed fields', () => {
     await expect(dialog).toBeHidden();
     await expect(card).toContainText('453 K', { timeout: 60_000 });
     await expect(card).not.toContainText('443 K');
-    await page.getByRole('button', { name: /^Undo Edit reaction of / }).click();
+    await page.getByRole('button', { name: /^Undo Edit reaction / }).click();
     await expect(card).toContainText('443 K', { timeout: 60_000 });
     await expect(card).not.toContainText('453 K');
     await expectClean(seen);

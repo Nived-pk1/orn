@@ -203,7 +203,7 @@ test.describe('the reaction editor', () => {
     await openNamesEditor(page, 'CH₃MgBr + ethanal, then H₃O⁺');
     await expect(dialog.getByLabel('Label of stage 1')).toHaveValue('Addition');
     await dialog.getByRole('button', { name: 'Close (keeps the draft)' }).click();
-    await page.getByRole('button', { name: /^Undo Edit reaction of / }).click();
+    await page.getByRole('button', { name: /^Undo Edit reaction / }).click();
     await openNamesEditor(page, 'CH₃MgBr + ethanal, then H₃O⁺');
     await expect(dialog.getByLabel('Label of stage 1')).toHaveValue(original);
     await dialog.getByRole('button', { name: 'Close (keeps the draft)' }).click();

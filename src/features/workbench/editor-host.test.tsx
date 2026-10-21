@@ -146,7 +146,7 @@ describe('live findings (L1, debounced 300 ms) and Save', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(speciesOf(rig).names.canonical).toBe('Renamed here');
-    expect(rig.store.historyLabels().undo).toEqual([`Edit species of ${old}`]);
+    expect(rig.store.historyLabels().undo).toEqual([`Edit species ${old}`]);
     expect(await screen.findByText('Saved')).toBeTruthy();
     expect(rig.drafts.view().count).toBe(0);
   });

@@ -6,7 +6,7 @@
  * No chemistry here.
  */
 import type { DraftRecipe } from '@/core/editing';
-import { CARBON_CHAIN_CHANGES, CONCEPT_KINDS } from '@/core/schema';
+import { CARBON_CHAIN_CHANGES, CONCEPT_KINDS, type REVERSIBILITY } from '@/core/schema';
 import { conceptIdsOf } from './shared-model';
 
 export { addAlias, moveAlias, removeAlias, setAlias, setName } from './reaction-model';
@@ -20,6 +20,9 @@ export const wordsOfKind = (value: string): string => {
 
 export const CONCEPT_KIND_WORDS: Readonly<Record<(typeof CONCEPT_KINDS)[number], string>> = Object.fromEntries(CONCEPT_KINDS.map((kind) => [kind, wordsOfKind(kind)])) as Record<(typeof CONCEPT_KINDS)[number], string>;
 export const CARBON_CHAIN_WORDS: Readonly<Record<(typeof CARBON_CHAIN_CHANGES)[number], string>> = Object.fromEntries(CARBON_CHAIN_CHANGES.map((kind) => [kind, wordsOfKind(kind)])) as Record<(typeof CARBON_CHAIN_CHANGES)[number], string>;
+
+/** The schema's own `unknown` is "Not stated" (a new reaction starts there). */
+export const REVERSIBILITY_WORDS: Readonly<Record<(typeof REVERSIBILITY)[number], string>> = { unknown: 'Not stated', equilibrium: 'Equilibrium', reversible_under_other_conditions: 'Reversible under other conditions', irreversible: 'Irreversible' };
 
 type Fields = Record<string, unknown>;
 const isBag = (value: unknown): value is Fields => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -47,7 +50,19 @@ export const setCarbonChain = (value: string): DraftRecipe => (draft) => {
   else draft.carbonChainChange = value;
 };
 
-export type KnowledgeText = 'equationText' | 'bondChangeSummary';
+/** The kind is required in the schema, so it is never removed; the note is optional (empty removes it). */
+export const setReversibility = (value: string): DraftRecipe => (draft) => {
+  const current = isBag(draft.reversibility) ? draft.reversibility : {};
+  draft.reversibility = { ...current, kind: value };
+};
+export const setReversibilityNote = (value: string): DraftRecipe => (draft) => {
+  const current: Fields = isBag(draft.reversibility) ? { ...draft.reversibility } : { kind: 'unknown' };
+  if (value === '') Reflect.deleteProperty(current, 'note');
+  else current.note = value;
+  draft.reversibility = current;
+};
+
+export type KnowledgeText = 'equationText' | 'bondChangeSummary' | 'generalizedEquation';
 
 /** The draft's fields as plain values for the forms. */
 export interface KnowledgeView {
@@ -65,6 +80,12 @@ export interface KnowledgeView {
   readonly bondChangeSummary: string;
   /** Read-only: a future seam, kept unchanged. */
   readonly reactionSmarts: string;
+  readonly reversibility: string;
+  readonly reversibilityNote: string;
+  readonly namedReactionIds: readonly string[];
+  readonly transformationIds: readonly string[];
+  /** Read-only: the atom-mapped reaction (a future seam), as "format: value"; '' when absent. */
+  readonly mappedReaction: string;
 }
 
 export function knowledgeViewOf(draft: unknown): KnowledgeView {
@@ -82,6 +103,11 @@ export function knowledgeViewOf(draft: unknown): KnowledgeView {
     equationText: text(fields.equationText),
     bondChangeSummary: text(fields.bondChangeSummary),
     reactionSmarts: text(fields.reactionSmarts),
+    reversibility: isBag(fields.reversibility) && text(fields.reversibility.kind) !== '' ? text(fields.reversibility.kind) : 'unknown',
+    reversibilityNote: isBag(fields.reversibility) ? text(fields.reversibility.note) : '',
+    namedReactionIds: conceptIdsOf(draft, 'namedReactionIds'),
+    transformationIds: conceptIdsOf(draft, 'transformationIds'),
+    mappedReaction: isBag(fields.mappedReaction) ? text(fields.mappedReaction.value) : '',
   };
 }
 

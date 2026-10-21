@@ -62,7 +62,7 @@ export function commitDraft(
   const record = parsed.record;
   const ref = { kind: record.kind, id: record.id } as RecordRef;
   const result = store.dispatch({
-    label: current === undefined ? `Create ${record.kind.replace(/_/g, ' ')} ${nameOf(record, record.id)}` : `Edit ${options.section ?? 'record'} of ${nameOf(current, record.id)}`,
+    label: current === undefined ? `Create ${record.kind.replace(/_/g, ' ')} ${nameOf(record, record.id)}` : `Edit ${options.section ?? 'record'} ${nameOf(current, record.id)}`,
     commands: [session.target === null ? { type: 'record.create', record } : { type: 'record.update', record }],
     expectedRevision: store.getRevision(),
     selectionHint: [ref],

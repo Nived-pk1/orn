@@ -59,7 +59,7 @@ describe('Edit names in the inspector (desktop)', () => {
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
     expect(speciesNamed(app, id)).toBe('Brand new name');
     expect(within(pane()).getByRole('heading', { name: 'Brand new name' })).toBeTruthy();
-    expect(app.store.historyLabels().undo).toEqual([`Edit species of ${old}`]);
+    expect(app.store.historyLabels().undo).toEqual([`Edit species ${old}`]);
     expect(await screen.findByText('Saved')).toBeTruthy();
   });
 
@@ -71,10 +71,10 @@ describe('Edit names in the inspector (desktop)', () => {
     fireEvent.click(within(pane()).getByRole('button', { name: 'Edit' }));
     fireEvent.change(within(await editor()).getByLabelText('Canonical name (required)'), { target: { value: 'Changed' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    const undo = await screen.findByRole('button', { name: `Undo Edit species of ${old}` });
+    const undo = await screen.findByRole('button', { name: `Undo Edit species ${old}` });
     fireEvent.click(undo);
     expect(speciesNamed(app, id)).toBe(old);
-    fireEvent.click(await screen.findByRole('button', { name: `Redo Edit species of ${old}` }));
+    fireEvent.click(await screen.findByRole('button', { name: `Redo Edit species ${old}` }));
     expect(speciesNamed(app, id)).toBe('Changed');
   });
 

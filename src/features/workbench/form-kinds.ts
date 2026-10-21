@@ -29,11 +29,11 @@ export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reag
 
 export const hasFullForm = (kind: RecordKind): boolean => FULL_FORM_KINDS.includes(kind);
 
-/** The word in the history label "Edit <section> of <name>". */
-export const sectionOf = (kind: RecordKind): string => (hasFullForm(kind) ? kind.replace(/_/g, ' ') : 'names');
+const KIND_WORDS: Partial<Readonly<Record<RecordKind, string>>> = { reference: 'source' };
 
-/** The kind in words for a title ("New source", "New named reaction"). */
-const KIND_WORDS: Partial<Readonly<Record<RecordKind, string>>> = { reference: 'source', named_reaction: 'named reaction' };
+/** The kind in words, for a title ("New source", "New named reaction") and for the history label "Edit <kind words> <record name>". */
+export const kindWords = (kind: RecordKind): string => KIND_WORDS[kind] ?? kind.replace(/_/g, ' ');
+export const sectionOf = kindWords;
 
 export const labelOfField = (kind: RecordKind, path: string): string | undefined => LABELS[kind]?.[path];
 
@@ -48,5 +48,5 @@ export function formOwns(kind: RecordKind, path: string | undefined): boolean {
 
 export function titleOf(kind: RecordKind, isNew: boolean, name: string): string {
   if (!hasFullForm(kind)) return `Edit names of ${name}`;
-  return isNew ? `New ${KIND_WORDS[kind] ?? kind}` : `Edit ${name}`;
+  return isNew ? `New ${kindWords(kind)}` : `Edit ${name}`;
 }

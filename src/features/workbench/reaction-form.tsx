@@ -9,7 +9,7 @@ import { MechanismLinksSection } from './reaction-mechanism-links';
 import type { MechanismLinksPort } from './mechanism-contracts';
 import { OutcomesSection } from './reaction-outcomes';
 import { VariantsSection } from './reaction-variants';
-import { ClassificationReadOnlySection, ReactionTextsReadOnlySection } from './reaction-readonly';
+import { ReactionLinksSection } from './reaction-links';
 import { ClassificationSection } from './classification-section';
 import { SharedFieldsSection } from './shared-bundle';
 import type { RecordPickerPort } from './record-picker-contracts';
@@ -52,14 +52,15 @@ export function ReactionForm(props: ReactionFormProps) {
       <SectionFrame id="classification" title="Classification" initiallyOpen={false}>
         <ClassificationSection {...common} field="reactionTypes" label="Reaction types" findLabel="Find a reaction type by name" picker={props.picker} />
         <ClassificationSection {...common} field="mechanismClasses" label="Mechanism classes" findLabel="Find a mechanism class by name" picker={props.picker} />
-        <ClassificationReadOnlySection draft={props.draft} />
+      </SectionFrame>
+      <SectionFrame id="links" title="Links and reversibility" initiallyOpen={false}>
+        <ReactionLinksSection {...common} {...picker} />
       </SectionFrame>
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>
       <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={false}>
         <SharedFieldsSection {...common} notes={['limitations', 'studyNotes', 'notes']} concepts links={props.links} {...picker} />
-        <ReactionTextsReadOnlySection draft={props.draft} />
       </SectionFrame>
     </div>
   );

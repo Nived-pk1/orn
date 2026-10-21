@@ -2,7 +2,7 @@
  * The class editor on a phone (step 6.2b part 2; ADR-039 addendum: authoring is desktop-first, but an editor opens full-screen and must
  * work), PRODUCTION build, on the two touch devices: Pixel 7 (Chromium) and iPhone 14 (WebKit). A class is found on the Search tab and
  * shown in the sheet; "Edit" is in the FULL sheet; the editor fills the screen, the long sections start closed and open by tap, the
- * parent picker works by touch, Save works, More shows "Undo Edit class of ...".
+ * parent picker works by touch, Save works, More shows "Undo Edit class ...".
  * Screenshots: screenshots/phone-class-editor-<pixel7|iphone14>.png.
  */
 import { devices, type Page } from '@playwright/test';
@@ -59,8 +59,8 @@ async function walk(page: Page, device: string): Promise<void> {
 
   await page.getByRole('button', { name: 'More' }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
-  await expect(more.getByRole('button', { name: 'Undo Edit class of Alcohols' })).toBeVisible();
-  await more.getByRole('button', { name: 'Undo Edit class of Alcohols' }).tap();
+  await expect(more.getByRole('button', { name: 'Undo Edit class Alcohols' })).toBeVisible();
+  await more.getByRole('button', { name: 'Undo Edit class Alcohols' }).tap();
   await expect(more).toBeHidden().catch(() => undefined);
   await expectClean(seen);
 }

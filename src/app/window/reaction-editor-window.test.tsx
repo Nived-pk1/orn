@@ -72,7 +72,7 @@ describe('the reaction editor through the real window', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
     expect(pccReaction(app).participants[reactant - 1]?.coefficient).toBe(2);
-    expect(app.store.historyLabels().undo.at(-1)).toMatch(/^Edit reaction of /);
+    expect(app.store.historyLabels().undo.at(-1)).toMatch(/^Edit reaction /);
 
     // the card's "Show full equation" is drawn from the saved reaction and prints the coefficient
     fireEvent.click(within(pccCard()).getByText('Show full equation'));

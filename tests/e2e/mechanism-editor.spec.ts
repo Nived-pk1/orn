@@ -137,7 +137,7 @@ test.describe('the mechanism editor', () => {
     await editor.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(editor).toBeHidden();
     await expect(record(page)).toContainText(NAME, { timeout: 60_000 });
-    await page.getByRole('button', { name: new RegExp(`^Undo Edit reaction of ${PCC_REACTION.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`) }).click();
+    await page.getByRole('button', { name: new RegExp(`^Undo Edit reaction ${PCC_REACTION.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`) }).click();
     await expect(record(page)).not.toContainText(NAME, { timeout: 60_000 });
 
     // (3) a bond that names a map the structure then loses shows CHEM-008 on its row

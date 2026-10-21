@@ -69,9 +69,9 @@ test.describe('the names editor', () => {
     await expect(record(page).getByRole('heading', { level: 3, name: NEW_NAME })).toBeVisible();
 
     // the top bar's Undo restores the old name; Redo brings the new one back
-    await page.getByRole('button', { name: 'Undo Edit species of Ethanol' }).click();
+    await page.getByRole('button', { name: 'Undo Edit species Ethanol' }).click();
     await expect(record(page).getByRole('heading', { level: 3, name: 'Ethanol', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Redo Edit species of Ethanol' }).click();
+    await page.getByRole('button', { name: 'Redo Edit species Ethanol' }).click();
     await expect(record(page).getByRole('heading', { level: 3, name: NEW_NAME })).toBeVisible();
     await expectClean(seen);
   });

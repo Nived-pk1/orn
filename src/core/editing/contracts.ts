@@ -42,6 +42,6 @@ export type ConflictChoice = 'mine' | 'theirs';
 export type ConflictChoices = Readonly<Record<string, ConflictChoice>>;
 
 export interface CommitOptions {
-  /** The section edited, for the history label "Edit <section> of <name>". Default "record". */
+  /** The section edited, for the history label "Edit <kind words> <name>". Default "record". */
   readonly section?: string;
 }

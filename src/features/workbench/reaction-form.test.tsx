@@ -70,13 +70,14 @@ const withReaction = (id: string, change: (r: Reaction) => Reaction): CanonicalS
 };
 
 describe('the reaction form', () => {
-  it('lists Identity, Participants, the read-only summaries and Review, each with a toggle; the title names the reaction', () => {
+  it('lists Identity, Participants, Links and reversibility and Review, each with a toggle; the title names the reaction', () => {
     const { dialog } = show();
     const toggles = within(dialog).getAllByRole('button', { expanded: true }).map((b) => b.textContent?.replace(/^[▾▸]\s*/, ''));
     expect(toggles).toContain('Identity');
     expect(toggles).toContain('Participants');
     expect(within(dialog).getByRole('heading', { name: /^Edit / })).toBeTruthy();
-    expect(within(dialog).getAllByText(/Editing arrives in step 6\.[456]/).length).toBeGreaterThan(0);
+    expect(within(dialog).getByRole('button', { name: /Links and reversibility/ })).toBeTruthy(); // the 6.6b section replaced the read-only summaries
+    expect(within(dialog).queryByText(/Editing arrives in step 6\.6b/)).toBeNull();
   });
 
   it('Identity: name and aliases (no Names section), purposes; each change is a draft edit', () => {

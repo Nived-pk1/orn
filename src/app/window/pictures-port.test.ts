@@ -153,7 +153,7 @@ describe('list, edit and detach', () => {
     expect(asset.altText).toBe('new alt');
     expect(Object.hasOwn(asset, 'caption')).toBe(false);
     expect(asset.sha256).toBe(createHash('sha256').update(PNG).digest('hex'));
-    expect(store.historyLabels().undo[0]).toBe(`Edit picture of ${SN2_NAME}`);
+    expect(store.historyLabels().undo[0]).toBe(`Edit picture ${SN2_NAME}`);
     expect(await port.edit('ast_test1', { altText: ' ', caption: '' })).toEqual({ ok: false, message: 'Write the alt text: it describes what the picture shows.' });
     store.undo();
     expect(asAsset(store, 'ast_test1')?.caption).toBe('old');

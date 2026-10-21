@@ -166,6 +166,6 @@ describe('a picture on a demo mechanism', () => {
     fireEvent.change(within(dialog).getByLabelText('Alt text (required)'), { target: { value: 'better alt' } });
     await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save picture' })));
     await waitFor(() => expect(mine(rig.app)[0]?.altText).toBe('better alt'));
-    expect(rig.app.store.historyLabels().undo[0]).toBe(`Edit picture of ${SN2_NAME}`);
+    expect(rig.app.store.historyLabels().undo[0]).toBe(`Edit picture ${SN2_NAME}`);
   });
 });

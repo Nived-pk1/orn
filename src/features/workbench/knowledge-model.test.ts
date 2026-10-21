@@ -2,7 +2,7 @@
 import { produce } from 'immer';
 import { describe, expect, it } from 'vitest';
 import { CONCEPT_KINDS } from '@/core/schema';
-import { CARBON_CHAIN_WORDS, CONCEPT_KIND_WORDS, knowledgeViewOf, setCarbonChain, setConceptKind, setDifficulty, wordsOfKind } from './knowledge-model';
+import { CARBON_CHAIN_WORDS, CONCEPT_KIND_WORDS, knowledgeViewOf, REVERSIBILITY_WORDS, setCarbonChain, setConceptKind, setDifficulty, setReversibility, setReversibilityNote, wordsOfKind } from './knowledge-model';
 
 const apply = (draft: object, recipe: (d: never) => void): Record<string, unknown> => produce(draft as Record<string, unknown>, recipe as never);
 
@@ -36,5 +36,21 @@ describe('the view', () => {
   it('reads the fields as plain values, tolerating a draft that is not a record', () => {
     expect(knowledgeViewOf(null)).toMatchObject({ id: '', name: '', conceptKind: '', difficulty: '', carbonChain: '', parentIds: [], fromClassIds: [] });
     expect(knowledgeViewOf({ id: 'x', name: 'N', aliases: ['a'], conceptKind: 'rule', difficulty: 2, parentIds: ['p'], carbonChainChange: 'none', equationText: 'e', bondChangeSummary: 'b', reactionSmarts: 's' })).toMatchObject({ id: 'x', name: 'N', aliases: ['a'], conceptKind: 'rule', difficulty: '2', parentIds: ['p'], carbonChain: 'none', equationText: 'e', bondChangeSummary: 'b', reactionSmarts: 's' });
+  });
+});
+
+describe('reversibility recipes (step 6.6b part 3)', () => {
+  it('the kind is set apart from the note; an empty note removes it; the kind is never removed', () => {
+    expect(apply({ reversibility: { kind: 'unknown' } }, setReversibility('equilibrium'))).toEqual({ reversibility: { kind: 'equilibrium' } });
+    expect(apply({ reversibility: { kind: 'equilibrium', note: 'n' } }, setReversibility('irreversible'))).toEqual({ reversibility: { kind: 'irreversible', note: 'n' } });
+    expect(apply({ reversibility: { kind: 'equilibrium', note: 'n' } }, setReversibilityNote(''))).toEqual({ reversibility: { kind: 'equilibrium' } });
+    expect(apply({ reversibility: { kind: 'equilibrium' } }, setReversibilityNote('why'))).toEqual({ reversibility: { kind: 'equilibrium', note: 'why' } });
+    expect(apply({}, setReversibilityNote('why'))).toEqual({ reversibility: { kind: 'unknown', note: 'why' } });
+  });
+  it('words: the schema\'s unknown is "Not stated"', () => {
+    expect(REVERSIBILITY_WORDS.unknown).toBe('Not stated');
+    expect(REVERSIBILITY_WORDS.reversible_under_other_conditions).toBe('Reversible under other conditions');
+    expect(knowledgeViewOf({ reversibility: { kind: 'equilibrium', note: 'x' } })).toMatchObject({ reversibility: 'equilibrium', reversibilityNote: 'x' });
+    expect(knowledgeViewOf({}).reversibility).toBe('unknown');
   });
 });

@@ -125,7 +125,7 @@ export function createPicturesPort(deps: PicturesPortDeps): PicturesPort {
       const caption = optional(fields.caption);
       const { caption: _old, ...rest } = asset;
       const next = { ...rest, altText: fields.altText, ...(caption === undefined ? {} : { caption }), provenance: { ...asset.provenance, updatedAt: assets.now() } } as Asset;
-      const result = store.dispatch({ label: `Edit picture of ${attachedTo(asset)}`, commands: [{ type: 'record.update', record: next }] });
+      const result = store.dispatch({ label: `Edit picture ${attachedTo(asset)}`, commands: [{ type: 'record.update', record: next }] });
       if (!result.ok) return result.error.code === 'EMPTY_COMMAND' ? { ok: true } : failure(result);
       await assets.saved();
       return { ok: true };

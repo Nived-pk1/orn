@@ -62,8 +62,8 @@ async function walk(page: Page, device: string): Promise<void> {
   await expect(page.getByRole('banner').getByRole('button', { name: /^Undo/ })).toHaveCount(0);
   await page.getByRole('button', { name: 'More' }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
-  await expect(more.getByRole('button', { name: 'Undo Edit species of Ethanol' })).toBeVisible();
-  await more.getByRole('button', { name: 'Undo Edit species of Ethanol' }).tap();
+  await expect(more.getByRole('button', { name: 'Undo Edit species Ethanol' })).toBeVisible();
+  await more.getByRole('button', { name: 'Undo Edit species Ethanol' }).tap();
   await expect(more).toBeHidden().catch(() => undefined);
   await expectClean(seen);
 }
