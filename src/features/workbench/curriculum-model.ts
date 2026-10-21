@@ -60,6 +60,12 @@ export function curriculumTitleWords(kind: string, draft: unknown, picker: Recor
     if (name === undefined || topicId === '') return undefined;
     return `${name} in ${shortName(picker?.topics?.().find((t) => t.id === topicId)?.name ?? topicId)}`;
   }
+  if (kind === 'exam_relevance') {
+    const examId = textField(draft, 'examId');
+    const name = nameOfTarget();
+    if (name === undefined || examId === '') return undefined;
+    return `${name} for ${shortName(picker?.exams?.().find((e) => e.id === examId)?.name ?? examId)}`;
+  }
   return undefined;
 }
 

@@ -47,6 +47,8 @@ export interface CommandDeps {
   /** "New topic" and "New topic mapping" (step 6.6c part 2). */
   readonly newTopic?: { readonly reason: string | undefined; run(): void } | undefined;
   readonly newTopicMapping?: { readonly reason: string | undefined; run(): void } | undefined;
+  /** "New exam relevance" (step 6.6c part 3). */
+  readonly newExamRelevance?: { readonly reason: string | undefined; run(): void } | undefined;
   /** "New caveat" (step 6.6b part 5). */
   readonly newCaveat?: { readonly reason: string | undefined; run(): void } | undefined;
   /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
@@ -129,6 +131,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     ...(deps.newCaveat === undefined ? [] : [withReason({ id: 'new-caveat', title: 'New caveat', keywords: ['create', 'add', 'exception', 'trap', 'limitation', 'common mistake', 'special case', 'author', 'workbench', 'draft'], run: deps.newCaveat.run }, deps.newCaveat.reason)]),
     ...(deps.newTopic === undefined ? [] : [withReason({ id: 'new-topic', title: 'New topic', keywords: ['create', 'add', 'syllabus', 'chapter', 'subject', 'section', 'curriculum', 'author', 'workbench', 'draft'], run: deps.newTopic.run }, deps.newTopic.reason)]),
     ...(deps.newTopicMapping === undefined ? [] : [withReason({ id: 'new-topic-mapping', title: 'New topic mapping', keywords: ['create', 'add', 'map', 'place', 'syllabus', 'topic', 'curriculum', 'author', 'workbench', 'draft'], run: deps.newTopicMapping.run }, deps.newTopicMapping.reason)]),
+    ...(deps.newExamRelevance === undefined ? [] : [withReason({ id: 'new-exam-relevance', title: 'New exam relevance', keywords: ['create', 'add', 'exam', 'scope', 'official', 'outside', 'enrichment', 'syllabus', 'jee', 'author', 'workbench', 'draft'], run: deps.newExamRelevance.run }, deps.newExamRelevance.reason)]),
     ...structureCommands,
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),

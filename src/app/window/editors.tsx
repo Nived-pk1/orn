@@ -21,7 +21,7 @@ const EditorSession = /* @__PURE__ */ lazy(() => import('./editor-session').then
 const machineTime = /* @__PURE__ */ createLocalTimeFormatter();
 
 /** The kinds whose editor is the full one (the others edit names only). */
-const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference', 'concept', 'named_reaction', 'transformation', 'relationship', 'caveat', 'topic', 'topic_mapping'];
+const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference', 'concept', 'named_reaction', 'transformation', 'relationship', 'caveat', 'topic', 'topic_mapping', 'exam_relevance'];
 
 /** Why editing cannot start in this tab now; undefined when it can (a session-only tab edits in memory and says so in the editor). */
 export function editReasonOf(mode: string | null): string | undefined {
@@ -62,6 +62,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       newSource: () => show(services.drafts.open({ kind: 'reference', blank: true })),
       newRelationship: () => show(services.drafts.open({ kind: 'relationship', blank: true })),
       newTopic: () => show(services.drafts.open({ kind: 'topic', blank: true })),
+      newExamRelevance: () => show(services.drafts.open({ kind: 'exam_relevance', blank: true })),
       newTopicMapping: () => show(services.drafts.open({ kind: 'topic_mapping', blank: true })),
       startNew: (kind: RecordKind, seed: Readonly<Record<string, unknown>>) => show(services.drafts.open({ kind, blank: true, seed })),
       newCaveat: () => show(services.drafts.open({ kind: 'caveat', blank: true })),

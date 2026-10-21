@@ -36,6 +36,7 @@ export function WorkbenchPage() {
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newCaveat } : { unavailable: reason ?? 'Editing is not available here.' })}>New caveat</Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newTopic } : { unavailable: reason ?? 'Editing is not available here.' })}>New topic</Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newTopicMapping } : { unavailable: reason ?? 'Editing is not available here.' })}>New topic mapping</Button>
+        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newExamRelevance } : { unavailable: reason ?? 'Editing is not available here.' })}>New exam relevance</Button>
       </div>
       <h3>Drafts</h3>
       {drafts.items.length === 0 ? (

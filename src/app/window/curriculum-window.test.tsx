@@ -109,3 +109,47 @@ describe('mapping a demo reaction to a demo topic', () => {
     expect(Object.keys(app.store.getState().records.topic_mapping)).toHaveLength(before);
   });
 });
+
+describe('marking a demo reaction outside one exam version', () => {
+  it('from the reaction\'s editor: "Mark exam relevance" opens a NEW one with the reaction filled in; "outside" for JEE Main 2026, Save; the exam scope treats it like the existing records', async () => {
+    const { createScopeOf } = await import('@/core/graph/scope');
+    const { indexEngine } = await import('@/core/indexes');
+    const app = fakeApp({ state: demoState() });
+    answerSearch(app);
+    app.panels.getState().setInspectorOpen(true);
+    renderWithApp(app);
+    const reaction = 'rxn_aniline-diazotisation';
+    const scopeNow = () => createScopeOf(indexEngine.build(app.store.getState()), 'exm_jee-main' as never, 'exv_jee-main-2026' as never)({ kind: 'reaction', id: reaction } as never);
+    const before = scopeNow();
+    expect(before).not.toBe('outside');
+    act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: reaction }));
+    const inspector = await screen.findByRole('complementary', { name: 'Inspector' });
+    fireEvent.click(await within(inspector).findByRole('button', { name: 'Edit' }));
+    const editor = await screen.findByRole('dialog', { name: 'Edit Diazotisation of aniline' });
+    const toggle = within(editor).getByRole('button', { name: /Exam relevance/ });
+    if (toggle.getAttribute('aria-expanded') === 'false') fireEvent.click(toggle);
+    fireEvent.click(within(editor).getByRole('button', { name: 'Mark exam relevance' }));
+    const marking = await screen.findByRole('dialog', { name: 'New exam relevance' });
+    expect(within(marking).getByRole('list', { name: 'Target record' }).textContent).toContain('Diazotisation of aniline');
+    fireEvent.change(within(marking).getByLabelText('Exam'), { target: { value: 'exm_jee-main' } });
+    fireEvent.click(within(marking).getByRole('checkbox', { name: 'JEE Main 2026 (provisional)' }));
+    fireEvent.change(within(marking).getByLabelText('Scope'), { target: { value: 'outside' } });
+    const count = Object.keys(app.store.getState().records.exam_relevance).length;
+    await act(async () => void fireEvent.click(within(marking).getByRole('button', { name: 'Save' })));
+    await waitFor(() => expect(Object.keys(app.store.getState().records.exam_relevance)).toHaveLength(count + 1));
+    expect(scopeNow()).toBe('outside');
+    expect(app.store.historyLabels().undo.at(-1)).toMatch(/^Create exam relevance: Diazotisation of aniline for JEE Main/);
+    act(() => void app.store.undo());
+    expect(scopeNow()).toBe(before);
+  });
+  it('the Workbench has "New exam relevance" and the palette lists it', async () => {
+    renderWithApp(fakeApp({ state: demoState() }));
+    openWorkbench();
+    fireEvent.click(screen.getByRole('button', { name: 'New exam relevance' }));
+    expect(await screen.findByRole('dialog', { name: 'New exam relevance' })).toBeTruthy();
+    const run = vi.fn();
+    const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
+    const command = buildCommands({ ...base, newExamRelevance: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-exam-relevance');
+    expect(command?.title).toBe('New exam relevance');
+  });
+});

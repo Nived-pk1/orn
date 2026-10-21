@@ -6,7 +6,8 @@ import type { RecordKind, RecordRef } from '@/core/schema';
 import type { ClassSuggestion } from './check-contracts';
 import { CaveatForm } from './caveat-form';
 import { CURRICULUM_TARGET_KINDS } from './curriculum-model';
-import { SyllabusTopicsSection } from './curriculum-lists';
+import { ExamRelevanceSection, SyllabusTopicsSection } from './curriculum-lists';
+import { RelevanceForm } from './relevance-form';
 import { MappingForm } from './mapping-form';
 import { TopicForm } from './topic-form';
 import { ClassForm } from './class-form';
@@ -52,6 +53,7 @@ function KindForm(props: RecordFormProps) {
   void editRecord;
   if (kind === 'topic') return <TopicForm {...rest} saved={saved} openRecord={openRecord} startNew={startNew} />;
   if (kind === 'topic_mapping') return <MappingForm {...rest} />;
+  if (kind === 'exam_relevance') return <RelevanceForm {...rest} />;
   if (kind === 'relationship') return <RelationshipForm {...rest} />;
   if (kind === 'caveat') return <CaveatForm {...rest} />;
   if (kind === 'concept') return <ConceptForm {...rest} />;
@@ -77,7 +79,10 @@ export function RecordForm(props: RecordFormProps) {
     <div className={styles.formColumn} data-editor-form="">
       <KindForm {...props} />
       {!CURRICULUM_TARGET_KINDS.includes(props.kind) ? null : (
-        <SyllabusTopicsSection kind={props.kind} id={typeof id === 'string' ? id : ''} saved={props.saved === true} picker={props.picker} openRecord={props.openRecord} startNew={props.startNew} />
+        <>
+          <SyllabusTopicsSection kind={props.kind} id={typeof id === 'string' ? id : ''} saved={props.saved === true} picker={props.picker} openRecord={props.openRecord} startNew={props.startNew} />
+          <ExamRelevanceSection kind={props.kind} id={typeof id === 'string' ? id : ''} saved={props.saved === true} picker={props.picker} openRecord={props.openRecord} startNew={props.startNew} />
+        </>
       )}
       {!listed ? null : (
         <SectionFrame id="relationships" title="Relationships" initiallyOpen={false}>

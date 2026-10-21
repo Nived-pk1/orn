@@ -23,6 +23,30 @@ const startButton = (props: CurriculumListProps, label: string, kind: RecordKind
   <Button {...(props.startNew === undefined ? { unavailable: 'not available here' } : props.saved ? { onClick: () => props.startNew?.(kind, { target: { kind: props.kind, id: props.id } }) } : { unavailable: 'save the record first' })}>{label}</Button>
 );
 
+export function ExamRelevanceSection(props: CurriculumListProps) {
+  const lines = props.picker?.relevanceLinesOf?.({ kind: props.kind, id: props.id }) ?? [];
+  return (
+    <SectionFrame id="exam-relevance" title="Exam relevance" initiallyOpen={false}>
+      {lines.length === 0 ? <p className={styles.hint}>No exam relevance is marked for this record.</p> : null}
+      {lines.length === 0 ? null : (
+        <ul aria-label="Exam relevance" className={styles.chips}>
+          {lines.map((line) => (
+            <li key={line.id} className={styles.chip}>
+              <span>{line.words}</span>
+              {props.openRecord === undefined ? null : (
+                <Button aria-label={`Open ${line.words} in the inspector`} onClick={() => props.openRecord?.({ kind: 'exam_relevance', id: line.id } as RecordRef)}>
+                  Open
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {startButton(props, 'Mark exam relevance', 'exam_relevance')}
+    </SectionFrame>
+  );
+}
+
 export function SyllabusTopicsSection(props: CurriculumListProps) {
   const lines = props.picker?.topicLinesOf?.({ kind: props.kind, id: props.id }) ?? [];
   return (

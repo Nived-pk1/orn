@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(() => vi.unstubAllGlobals());
 
-const KEYS = ['editNames', 'newSpecies', 'newClass', 'newReagent', 'newReaction', 'newMechanism', 'newSource', 'newConcept', 'newNamedReaction', 'newTransformation', 'newRelationship', 'newCaveat', 'newTopic', 'newTopicMapping'];
+const KEYS = ['editNames', 'newSpecies', 'newClass', 'newReagent', 'newReaction', 'newMechanism', 'newSource', 'newConcept', 'newNamedReaction', 'newTransformation', 'newRelationship', 'newCaveat', 'newTopic', 'newTopicMapping', 'newExamRelevance'];
 
 async function depsIn(edition: 'study' | 'studio') {
   vi.resetModules();

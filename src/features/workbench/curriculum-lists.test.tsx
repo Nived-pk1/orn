@@ -66,3 +66,29 @@ describe('Relationships', () => {
     expect(screen.getByRole('button', { name: 'New relationship from here', description: /save the record first/i }).getAttribute('aria-disabled')).toBe('true');
   });
 });
+
+describe('Exam relevance', () => {
+  it('lists "<versions> · <scope>" for a record that has one, with a way to open it in the inspector', () => {
+    const shown = showKnowledge('reaction', { target: 'rxn_cyclohexanone-oxime-beckmann' });
+    open(/Exam relevance/);
+    const list = screen.getByRole('list', { name: 'Exam relevance' });
+    expect(within(list).getByText('JEE Advanced 2026 (provisional) · enrichment')).toBeTruthy();
+    fireEvent.click(within(list).getByRole('button', { name: 'Open JEE Advanced 2026 (provisional) · enrichment in the inspector' }));
+    expect(shown.openRecord).toHaveBeenCalledWith({ kind: 'exam_relevance', id: 'erl_beckmann-advanced' });
+  });
+  it('"Mark exam relevance" keeps the draft and asks for a NEW exam relevance with the target filled in', () => {
+    const shown = showKnowledge('reaction', { target: REACTION });
+    open(/Exam relevance/);
+    expect(screen.getByText('No exam relevance is marked for this record.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Mark exam relevance' }));
+    expect(shown.start).toHaveBeenCalledWith('exam_relevance', { target: { kind: 'reaction', id: REACTION } });
+  });
+  it('on a record not saved yet the button says to save it first; the section is on target kinds only', () => {
+    showKnowledge('species', { blank: true });
+    open(/Exam relevance/);
+    expect(screen.getByRole('button', { name: 'Mark exam relevance', description: /save the record first/i }).getAttribute('aria-disabled')).toBe('true');
+    cleanup();
+    showKnowledge('topic', { blank: true });
+    expect(screen.queryByRole('region', { name: 'Exam relevance' })).toBeNull();
+  });
+});

@@ -6,7 +6,7 @@
 import type { RecordKind } from '@/core/schema';
 import { CAVEAT_FIELD_LABELS } from './caveat-model';
 import { CLASS_FIELD_LABELS } from './class-model';
-import { MAPPING_FIELD_LABELS, TOPIC_FIELD_LABELS } from './curriculum-model';
+import { MAPPING_FIELD_LABELS, RELEVANCE_FIELD_LABELS, TOPIC_FIELD_LABELS } from './curriculum-model';
 import { CONCEPT_FIELD_LABELS, NAMED_REACTION_FIELD_LABELS, TRANSFORMATION_FIELD_LABELS } from './knowledge-model';
 import { MECHANISM_FIELD_LABELS } from './mechanism-model';
 import { RELATIONSHIP_FIELD_LABELS } from './relationship-model';
@@ -29,10 +29,11 @@ const LABELS: Partial<Readonly<Record<RecordKind, Readonly<Record<string, string
   caveat: CAVEAT_FIELD_LABELS,
   topic: TOPIC_FIELD_LABELS,
   topic_mapping: MAPPING_FIELD_LABELS,
+  exam_relevance: RELEVANCE_FIELD_LABELS,
 };
 
 /** Kinds whose editor is a full form (Names and more). */
-export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference', 'concept', 'named_reaction', 'transformation', 'relationship', 'caveat', 'topic', 'topic_mapping'];
+export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference', 'concept', 'named_reaction', 'transformation', 'relationship', 'caveat', 'topic', 'topic_mapping', 'exam_relevance'];
 
 export const hasFullForm = (kind: RecordKind): boolean => FULL_FORM_KINDS.includes(kind);
 
