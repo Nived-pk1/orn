@@ -96,6 +96,9 @@ export function PhoneBar(props: {
             <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newRelationship) } : { unavailable: editors.editReason })}>
               New relationship
             </Button>
+            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newCaveat) } : { unavailable: editors.editReason })}>
+              New caveat
+            </Button>
           </section>
         )}
         {props.history === undefined ? null : <HistorySection history={props.history} />}

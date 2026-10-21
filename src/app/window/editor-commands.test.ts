@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(() => vi.unstubAllGlobals());
 
-const KEYS = ['editNames', 'newSpecies', 'newClass', 'newReagent', 'newReaction', 'newMechanism', 'newSource', 'newConcept', 'newNamedReaction', 'newTransformation', 'newRelationship'];
+const KEYS = ['editNames', 'newSpecies', 'newClass', 'newReagent', 'newReaction', 'newMechanism', 'newSource', 'newConcept', 'newNamedReaction', 'newTransformation', 'newRelationship', 'newCaveat'];
 
 async function depsIn(edition: 'study' | 'studio') {
   vi.resetModules();
@@ -17,7 +17,7 @@ async function depsIn(edition: 'study' | 'studio') {
 }
 
 describe('editorCommandDeps', () => {
-  it('studio: all eleven exist, unavailable with the reason when there is no editor', async () => {
+  it('studio: all twelve exist, unavailable with the reason when there is no editor', async () => {
     const deps = await depsIn('studio');
     expect(Object.keys(deps).sort()).toEqual([...KEYS].sort());
     expect(deps.newSpecies?.reason).toBe('editing is not available here');

@@ -4,6 +4,7 @@
  */
 import type { RecordKind, RecordRef } from '@/core/schema';
 import type { ClassSuggestion } from './check-contracts';
+import { CaveatForm } from './caveat-form';
 import { ClassForm } from './class-form';
 import { ConceptForm } from './concept-form';
 import { NamedReactionForm } from './named-reaction-form';
@@ -40,6 +41,7 @@ export interface RecordFormProps extends SectionProps {
 function KindForm(props: RecordFormProps) {
   const { kind, suggestions, newId, links, pictures, saved, openRecord, ...rest } = props;
   if (kind === 'relationship') return <RelationshipForm {...rest} />;
+  if (kind === 'caveat') return <CaveatForm {...rest} />;
   if (kind === 'concept') return <ConceptForm {...rest} />;
   if (kind === 'named_reaction') return <NamedReactionForm {...rest} openRecord={openRecord} />;
   if (kind === 'transformation') return <TransformationForm {...rest} openRecord={openRecord} />;

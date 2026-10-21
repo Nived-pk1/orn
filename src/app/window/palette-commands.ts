@@ -44,6 +44,8 @@ export interface CommandDeps {
   readonly newTransformation?: { readonly reason: string | undefined; run(): void } | undefined;
   /** "New relationship" (step 6.6b part 4). */
   readonly newRelationship?: { readonly reason: string | undefined; run(): void } | undefined;
+  /** "New caveat" (step 6.6b part 5). */
+  readonly newCaveat?: { readonly reason: string | undefined; run(): void } | undefined;
   /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
   readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
   readonly ui: NavigatorUiStores;
@@ -121,6 +123,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     ...(deps.newNamedReaction === undefined ? [] : [withReason({ id: 'new-named-reaction', title: 'New named reaction', keywords: ['create', 'add', 'name reaction', 'author', 'workbench', 'draft'], run: deps.newNamedReaction.run }, deps.newNamedReaction.reason)]),
     ...(deps.newTransformation === undefined ? [] : [withReason({ id: 'new-transformation', title: 'New transformation', keywords: ['create', 'add', 'conversion', 'functional group', 'class to class', 'author', 'workbench', 'draft'], run: deps.newTransformation.run }, deps.newTransformation.reason)]),
     ...(deps.newRelationship === undefined ? [] : [withReason({ id: 'new-relationship', title: 'New relationship', keywords: ['create', 'add', 'link', 'commonly confused', 'prerequisite', 'reverse of', 'competes', 'author', 'workbench', 'draft'], run: deps.newRelationship.run }, deps.newRelationship.reason)]),
+    ...(deps.newCaveat === undefined ? [] : [withReason({ id: 'new-caveat', title: 'New caveat', keywords: ['create', 'add', 'exception', 'trap', 'limitation', 'common mistake', 'special case', 'author', 'workbench', 'draft'], run: deps.newCaveat.run }, deps.newCaveat.reason)]),
     ...structureCommands,
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),

@@ -19,16 +19,18 @@ export type MeasureKind = 'value' | 'range' | 'qualitative';
 
 /** Where a set of parameters lives: the stage or the condition variant at this index. */
 export interface ParamsLoc {
-  readonly of: 'stage' | 'variant' | 'profile';
+  readonly of: 'stage' | 'variant' | 'profile' | 'caveat';
   readonly index: number;
 }
 export const stageLoc = (index: number): ParamsLoc => ({ of: 'stage', index });
 export const variantLoc = (index: number): ParamsLoc => ({ of: 'variant', index });
 /** A reagent profile's conditions (step 6.6a, decision C5): the same form, the draft's `profiles[index].parameters`. */
 export const profileLoc = (index: number): ParamsLoc => ({ of: 'profile', index });
-const ROWS: Readonly<Record<ParamsLoc['of'], string>> = { stage: 'stages', variant: 'conditionVariants', profile: 'profiles' };
-/** The draft path of the parameters ("stages[0].parameters"). */
-export const paramsPath = (loc: ParamsLoc): string => `${ROWS[loc.of]}[${loc.index}].parameters`;
+/** A caveat's trigger conditions (step 6.6b part 5, decision N6): the same form; the block is the draft's top-level `triggerConditions`, not a row. */
+export const caveatLoc: ParamsLoc = { of: 'caveat', index: 0 };
+const ROWS: Readonly<Record<'stage' | 'variant' | 'profile', string>> = { stage: 'stages', variant: 'conditionVariants', profile: 'profiles' };
+/** The draft path of the parameters ("stages[0].parameters", "triggerConditions"). */
+export const paramsPath = (loc: ParamsLoc): string => (loc.of === 'caveat' ? 'triggerConditions' : `${ROWS[loc.of]}[${loc.index}].parameters`);
 
 type Fields = Record<string, unknown>;
 const isBag = (value: unknown): value is Fields => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -40,6 +42,12 @@ const listOf = (bag: Fields, field: string): unknown[] => {
 /** The parameters bag of the stage / variant, with the schema's required lists present; undefined when there is no such row. */
 function paramsAt(draft: unknown, loc: ParamsLoc): Fields | undefined {
   if (!isBag(draft)) return undefined;
+  if (loc.of === 'caveat') {
+    if (!isBag(draft.triggerConditions)) draft.triggerConditions = {};
+    const trigger = draft.triggerConditions as Fields;
+    for (const list of ['solventCharacter', 'activation', 'other', 'parsedFields']) listOf(trigger, list);
+    return trigger;
+  }
   const rows = draft[ROWS[loc.of]];
   const row = Array.isArray(rows) ? rows[loc.index] : undefined;
   if (!isBag(row)) return undefined;
@@ -145,6 +153,7 @@ export const clearField = (loc: ParamsLoc, field: ParameterField | 'other' | 'te
 
 /** The parameters of a stage / variant as the draft has them now (a bag; empty when the row or its parameters are missing). Read only. */
 export function parametersOf(draft: unknown, loc: ParamsLoc): Readonly<Fields> {
+  if (loc.of === 'caveat') return isBag(draft) && isBag(draft.triggerConditions) ? draft.triggerConditions : {};
   const rows = isBag(draft) ? draft[ROWS[loc.of]] : undefined;
   const row = Array.isArray(rows) ? rows[loc.index] : undefined;
   return isBag(row) && isBag(row.parameters) ? row.parameters : {};

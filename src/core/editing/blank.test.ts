@@ -42,3 +42,12 @@ describe('blankDraft relationship (step 6.6b part 4)', () => {
     expect(String(draft?.id)).toMatch(/^rel/);
   });
 });
+
+describe('blankDraft caveat (step 6.6b part 5)', () => {
+  it('has an empty title and statement, no targets, and NO caveatKind and NO importance', () => {
+    const draft = blankDraft('caveat', ctx);
+    expect(draft).toMatchObject({ kind: 'caveat', title: '', statement: '', targets: [], conceptIds: [], tags: [], citations: [] });
+    for (const field of ['caveatKind', 'importance', 'triggerConditions']) expect(draft).not.toHaveProperty(field);
+    expect(String(draft?.id)).toMatch(/^cav/);
+  });
+});

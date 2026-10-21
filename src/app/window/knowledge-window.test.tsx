@@ -207,3 +207,45 @@ describe('relationships (step 6.6b part 4)', () => {
     expect(run).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('caveats (step 6.6b part 5)', () => {
+  it('a new caveat targeting a demo reaction shows where caveats show today (the reaction\'s Level 4); Undo removes it', async () => {
+    const app = fakeApp({ state: demoState() });
+    answerSearch(app);
+    app.panels.getState().setInspectorOpen(true);
+    renderWithApp(app);
+    openWorkbench();
+    fireEvent.click(screen.getByRole('button', { name: 'New caveat' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New caveat' });
+    fireEvent.change(within(dialog).getByLabelText('Kind of caveat'), { target: { value: 'trap' } });
+    fireEvent.change(within(dialog).getByLabelText('Title (required)'), { target: { value: 'Zz window caveat' } });
+    fireEvent.change(within(dialog).getByLabelText('Statement (required)'), { target: { value: 'A statement from the window test.' } });
+    const targets = within(dialog).getByRole('button', { name: /Targets/ });
+    if (targets.getAttribute('aria-expanded') === 'false') fireEvent.click(targets);
+    fireEvent.change(within(dialog).getByLabelText('Find a target record by name'), { target: { value: 'Diazotisation of aniline' } });
+    fireEvent.click(await within(dialog).findByRole('button', { name: 'Add Diazotisation of aniline' }));
+    fireEvent.change(within(dialog).getByLabelText('Role of Diazotisation of aniline'), { target: { value: 'affected_reaction' } });
+    const before = Object.keys(app.store.getState().records.caveat).length;
+    await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
+    await waitFor(() => expect(Object.keys(app.store.getState().records.caveat)).toHaveLength(before + 1));
+    expect(app.store.historyLabels().undo.at(-1)).toBe('Create caveat Zz window caveat');
+    act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: 'rxn_aniline-diazotisation' }));
+    const pane = await screen.findByRole('complementary', { name: 'Inspector' });
+    const level4 = await within(pane).findByRole('button', { name: /Level 4/ });
+    if (level4.getAttribute('aria-expanded') === 'false') fireEvent.click(level4);
+    expect(await within(pane).findByText('Zz window caveat')).toBeTruthy();
+    act(() => void app.store.undo());
+    expect(Object.keys(app.store.getState().records.caveat)).toHaveLength(before);
+  });
+  it('the palette lists "New caveat"; a read-only tab says why on the Workbench button', () => {
+    renderWithApp(fakeApp({ state: demoState(), status: { mode: 'follower', reason: 'other_tab_is_writer' } }));
+    openWorkbench();
+    expect(screen.getByRole('button', { name: 'New caveat', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
+    const run = vi.fn();
+    const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
+    const command = buildCommands({ ...base, newCaveat: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-caveat');
+    expect(command?.title).toBe('New caveat');
+    command?.run();
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+});

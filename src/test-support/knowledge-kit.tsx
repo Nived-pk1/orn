@@ -10,6 +10,7 @@ import { indexEngine } from '@/core/indexes';
 import type { RecordKind, RecordRef } from '@/core/schema';
 import { EditorHost } from '@/features/workbench/editor-host';
 import type { DraftChecksPort } from '@/features/workbench';
+import { dryRun } from '@/workers/compute/dry-run';
 import { utcTime } from './editing-kit';
 import { editorRig, renderWithToasts, type EditorRig } from './editor-kit';
 
@@ -47,12 +48,22 @@ export interface ShownKnowledge {
   readonly draft: () => Record<string, unknown>;
 }
 
-export function showKnowledge(kind: RecordKind, options: { target?: string; blank?: boolean; rig?: EditorRig } = {}): ShownKnowledge {
+/** The REAL L1-L3 dry run (the one the checking worker runs) over the rig's store: live findings such as CAV-001 and CAV-002 come from the real rules. */
+const realChecks = (rig: EditorRig): DraftChecksPort => ({
+  dryRun: async (kind, draft, version) => {
+    const state = rig.store.getState();
+    const answer = dryRun(state, indexEngine.build(state), kind, draft);
+    return answer.ok ? { version, state: 'checked', findings: answer.findings } : { version, state: 'unavailable', message: answer.message };
+  },
+  structure: quiet.structure,
+});
+
+export function showKnowledge(kind: RecordKind, options: { target?: string; blank?: boolean; rig?: EditorRig; real?: boolean } = {}): ShownKnowledge {
   const rig = options.rig ?? editorRig();
   const opened = rig.drafts.open(options.blank === true ? { kind, blank: true } : { kind, id: options.target as string });
   if (!opened.ok) throw new Error(opened.message);
   const openRecord = vi.fn((_ref: RecordRef) => undefined);
   const duplicates = { check: async () => ({ matches: [], more: 0, structureChecked: true }), openRecord };
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet, records: knowledgePicker(rig), duplicates: duplicates as never }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.real === true ? realChecks(rig) : quiet, records: knowledgePicker(rig), duplicates: duplicates as never }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
   return { rig, id: opened.id, dialog: screen.getByRole('dialog'), openRecord, draft: () => rig.drafts.entry(opened.id)?.session.draft as Record<string, unknown> };
 }

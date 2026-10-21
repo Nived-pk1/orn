@@ -1,6 +1,6 @@
 /**
  * The first draft of a NEW record (ADR-040 addendum, step 6.2a decision D3, extended in 6.2b decision D5): every required field has its
- * empty value, so the editor can show every field from the start. Species, classes, reagents, reactions, mechanisms (step 6.5a), sources (step 6.6a), concepts, named reactions, transformations and relationships (step 6.6b); any other kind starts as the smallest draft
+ * empty value, so the editor can show every field from the start. Species, classes, reagents, reactions, mechanisms (step 6.5a), sources (step 6.6a), concepts, named reactions, transformations, relationships and caveats (step 6.6b); any other kind starts as the smallest draft
  * (`openSession`). Pure: the ID and both times come from the `CommandContext`. The empty canonical name does not pass L1, which is right:
  * Save is refused until a name is typed. A class has no empty `classKind` (the schema has no "unspecified" kind): the field is left ABSENT,
  * the form shows "Choose a kind" and L1 refuses Save with the schema's words until one is chosen. No kind is invented.
@@ -65,6 +65,10 @@ export function blankDraft(kind: RecordKind, ctx: CommandContext): Record<string
   if (kind === 'concept') {
     // a concept: the kind of concept has no empty value (ABSENT until chosen, L1 refuses Save); the name starts empty
     return { kind: 'concept', id: ctx.newId(RECORD_ID_PREFIX.concept), name: '', aliases: [], parentIds: [], ...startMeta(ctx.now()) };
+  }
+  if (kind === 'caveat') {
+    // a caveat: the kind has no empty value (ABSENT until chosen, L1 refuses Save); the title and statement start empty, no targets
+    return { kind: 'caveat', id: ctx.newId(RECORD_ID_PREFIX.caveat), title: '', statement: '', targets: [], conceptIds: [], ...startMeta(ctx.now()) };
   }
   if (kind === 'relationship') {
     // a relationship: the type and both ends have no empty value (ABSENT until chosen, L1 refuses Save)

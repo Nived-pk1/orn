@@ -33,6 +33,7 @@ export function WorkbenchPage() {
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newNamedReaction } : { unavailable: reason ?? 'Editing is not available here.' })}>New named reaction</Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newTransformation } : { unavailable: reason ?? 'Editing is not available here.' })}>New transformation</Button>
         <Button {...(reason === undefined && editors !== null ? { onClick: editors.newRelationship } : { unavailable: reason ?? 'Editing is not available here.' })}>New relationship</Button>
+        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newCaveat } : { unavailable: reason ?? 'Editing is not available here.' })}>New caveat</Button>
       </div>
       <h3>Drafts</h3>
       {drafts.items.length === 0 ? (

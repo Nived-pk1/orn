@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { produce } from 'immer';
 import type { DraftRecipe } from '@/core/editing';
-import { addQualifier, clearField, confirmField, moveQualifier, NO_CONDITIONS, parametersOf, removeQualifier, setAnhydrous, setChoice, setConditionText, setListMember, setMeasureChoice, setMeasureKind, setMeasureNumber, setQualifier, stageLoc, summaryOf, variantLoc } from './condition-model';
+import { addQualifier, clearField, confirmField, moveQualifier, NO_CONDITIONS, parametersOf, removeQualifier, setAnhydrous, setChoice, setConditionText, setListMember, setMeasureChoice, setMeasureKind, setMeasureNumber, setQualifier, stageLoc, summaryOf, variantLoc, caveatLoc, paramsPath } from './condition-model';
 
 const empty = () => ({ solventCharacter: [], activation: [], other: [], parsedFields: [] });
 const draftOf = (parameters: Record<string, unknown> = empty()) => ({ stages: [{ id: 'stg_a', kind: 'reaction', participantIds: [], parameters }], conditionVariants: [{ id: 'cvr_a', label: 'x', parameters: empty(), participantIds: [] }] });
@@ -100,5 +100,21 @@ describe('the summary line', () => {
 
   it('a solvent character alone is not on the arrow, so it is not in the line', () => {
     expect(summaryOf({ ...empty(), solventCharacter: ['aqueous'] })).toBe(NO_CONDITIONS);
+  });
+});
+
+describe('a caveat\'s trigger conditions (step 6.6b part 5): the same recipes at the top level', () => {
+  it('the path is triggerConditions; reading never creates the block; an edit creates it with the schema\'s lists', () => {
+    expect(paramsPath(caveatLoc)).toBe('triggerConditions');
+    const draft = { id: 'cav_x' };
+    expect(parametersOf(draft, caveatLoc)).toEqual({});
+    expect(draft).toEqual({ id: 'cav_x' });
+    const next = run(draft as Record<string, unknown>, setChoice(caveatLoc, 'medium', 'acidic'));
+    expect(next.triggerConditions).toEqual({ solventCharacter: [], activation: [], other: [], parsedFields: [], medium: 'acidic' });
+    expect(summaryOf(parametersOf(next, caveatLoc))).toBe('acidic medium');
+  });
+  it('a stage and a caveat do not interfere', () => {
+    const next = run({ ...draftOf(), id: 'c' } as Record<string, unknown>, setChoice(caveatLoc, 'light', 'uv'));
+    expect(stage(next)).toEqual(empty());
   });
 });
