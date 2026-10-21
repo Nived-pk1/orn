@@ -9,6 +9,8 @@ import { CURRICULUM_TARGET_KINDS } from './curriculum-model';
 import { ExamRelevanceSection, SyllabusTopicsSection } from './curriculum-lists';
 import { RelevanceForm } from './relevance-form';
 import { FamilyForm } from './family-form';
+import { ExamForm } from './exam-form';
+import { ExamVersionForm } from './exam-version-form';
 import { MappingForm } from './mapping-form';
 import { TopicForm } from './topic-form';
 import { ClassForm } from './class-form';
@@ -52,6 +54,8 @@ export interface RecordFormProps extends SectionProps {
 function KindForm(props: RecordFormProps) {
   const { kind, suggestions, newId, links, pictures, saved, openRecord, startNew, editRecord, ...rest } = props;
   if (kind === 'topic') return <TopicForm {...rest} saved={saved} openRecord={openRecord} startNew={startNew} />;
+  if (kind === 'exam') return <ExamForm {...rest} saved={saved} startNew={startNew} editRecord={editRecord} />;
+  if (kind === 'exam_version') return <ExamVersionForm {...rest} newId={newId} saved={saved} />;
   if (kind === 'topic_mapping') return <MappingForm {...rest} />;
   if (kind === 'exam_relevance') return <RelevanceForm {...rest} />;
   if (kind === 'navigator_anchor') return <FamilyForm {...rest} />;
@@ -71,7 +75,7 @@ function KindForm(props: RecordFormProps) {
 }
 
 /** Kinds that can be an end of a relationship: their editor ends with the read-only "Relationships" list (step 6.6b part 4). */
-const NO_RELATIONSHIPS: readonly RecordKind[] = ['relationship', 'reference', 'topic', 'topic_mapping', 'exam_relevance', 'navigator_anchor'];
+const NO_RELATIONSHIPS: readonly RecordKind[] = ['relationship', 'reference', 'topic', 'topic_mapping', 'exam_relevance', 'navigator_anchor', 'exam', 'exam_version'];
 
 export function RecordForm(props: RecordFormProps) {
   const id = (props.draft as { id?: unknown } | null)?.id;

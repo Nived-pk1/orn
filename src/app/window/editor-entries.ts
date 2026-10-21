@@ -41,6 +41,8 @@ export const NEW_ENTRIES: readonly NewEntry[] = [
   entry('topic', 'New topic', ['create', 'add', 'syllabus', 'chapter', 'subject', 'section', 'curriculum']),
   entry('topic_mapping', 'New topic mapping', ['create', 'add', 'map', 'place', 'syllabus', 'topic', 'curriculum']),
   entry('exam_relevance', 'New exam relevance', ['create', 'add', 'exam', 'scope', 'official', 'outside', 'enrichment', 'syllabus']),
+  entry('exam', 'New exam', ['create', 'add', 'board', 'entrance', 'syllabus', 'curriculum']),
+  entry('exam_version', 'New exam version', ['create', 'add', 'year', 'syllabus', 'units', 'coverage', 'curriculum']),
   entry('navigator_anchor', 'New map family', ['create', 'add', 'hub', 'anchor', 'overview', 'map', 'group', 'class']),
 ];
 

@@ -90,6 +90,14 @@ export function blankDraft(kind: RecordKind, ctx: CommandContext): Record<string
     // a map family: the target and the order have no empty value; presentation records carry provenance only
     return { kind: 'navigator_anchor', id: ctx.newId(RECORD_ID_PREFIX.navigator_anchor), provenance: startMeta(ctx.now()).provenance };
   }
+  if (kind === 'exam') {
+    // an exam: only the name is required; it starts empty like any name
+    return { kind: 'exam', id: ctx.newId(RECORD_ID_PREFIX.exam), name: '', ...startMeta(ctx.now()) };
+  }
+  if (kind === 'exam_version') {
+    // the exam, the year and the status have no empty value (ABSENT until chosen, L1 refuses Save); no units yet
+    return { kind: 'exam_version', id: ctx.newId(RECORD_ID_PREFIX.exam_version), label: '', units: [], ...startMeta(ctx.now()) };
+  }
   if (kind === 'named_reaction') {
     return { kind: 'named_reaction', id: ctx.newId(RECORD_ID_PREFIX.named_reaction), name: '', aliases: [], parentIds: [], conceptIds: [], prerequisiteConceptIds: [], ...startMeta(ctx.now()) };
   }

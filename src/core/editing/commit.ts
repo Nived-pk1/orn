@@ -31,9 +31,9 @@ export function mergeDraft(draft: unknown, comparisons: readonly FieldComparison
 }
 
 const nameOf = (record: unknown, id: string): string => {
-  const fields = record as { names?: { canonical?: unknown }; name?: unknown; title?: unknown; type?: unknown } | null;
+  const fields = record as { names?: { canonical?: unknown }; name?: unknown; title?: unknown; label?: unknown; type?: unknown } | null;
   const type = typeof fields?.type === 'string' ? fields.type.replace(/_/g, ' ') : undefined; // a relationship has no name: its type names it
-  const own = fields?.names?.canonical ?? fields?.name ?? fields?.title ?? type; // a reaction has `name`, a source `title`, the others `names.canonical`
+  const own = fields?.names?.canonical ?? fields?.name ?? fields?.title ?? fields?.label ?? type; // a reaction has `name`, a source `title`, the others `names.canonical`
   return typeof own === 'string' && own !== '' ? own : id;
 };
 

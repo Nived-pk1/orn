@@ -4,12 +4,12 @@
  * the moment it is asked from the canonical state; nothing is stored. Bounded; no chemistry.
  */
 import type { CanonicalState, ExamVersion, NavigatorAnchor, Topic } from '@/core/schema';
-import type { CurriculumLine, MapFamilyChoice, RecordPickerPort, TopicChoice } from '@/features/workbench';
+import type { CurriculumLine, MapFamilyChoice, RecordPickerPort, TopicChoice, VersionUnit } from '@/features/workbench';
 
 /** Most topics, lines and families one list holds (a bound, not a truncation: the demo has 27 topics). */
 export const MAX_CURRICULUM_LINES = 500;
 
-type Curriculum = Pick<RecordPickerPort, 'topics' | 'topicLinesOf' | 'mappedRecordsOf' | 'exams' | 'versionsOf' | 'relevanceLinesOf' | 'mapFamilies' | 'mapFamilyOf'>;
+type Curriculum = Pick<RecordPickerPort, 'topics' | 'topicLinesOf' | 'mappedRecordsOf' | 'exams' | 'versionsOf' | 'versionSummariesOf' | 'unitsOfVersion' | 'relevanceLinesOf' | 'mapFamilies' | 'mapFamilyOf'>;
 
 const byId = <T extends { readonly id: string }>(a: T, b: T): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 const byOrder = (a: Topic, b: Topic): number => a.order - b.order || byId(a, b);
@@ -61,6 +61,15 @@ export function createCurriculumPort(state: () => CanonicalState, nameOf: (kind:
         .filter((v) => v.examId === examId)
         .map((v) => ({ id: v.id as string, label: versionLabel(v) }))
         .sort((a, b) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0) || byId(a, b)),
+    versionSummariesOf: (examId) =>
+      Object.values(state().records.exam_version)
+        .filter((v) => v.examId === examId)
+        .map((v) => ({ id: v.id as string, label: versionLabel(v), status: v.status as string, units: v.units.length }))
+        .sort((a, b) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0) || byId(a, b)),
+    unitsOfVersion: (versionId) => {
+      const version = Object.hasOwn(state().records.exam_version, versionId) ? state().records.exam_version[versionId as never] : undefined;
+      return version === undefined ? undefined : structuredClone(version.units as unknown as readonly VersionUnit[]);
+    },
     relevanceLinesOf(ref) {
       const { exam, exam_version: versions } = state().records;
       return Object.values(state().records.exam_relevance)

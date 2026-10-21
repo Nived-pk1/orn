@@ -27,6 +27,15 @@ export interface CurriculumLine {
 }
 
 /** A navigator anchor as the map-family editor and its cell grid read it (step 6.6c). */
+/** A syllabus unit as the editors copy it (the schema's shape, plain data). */
+export interface VersionUnit {
+  readonly id: string;
+  readonly code?: string;
+  readonly title: string;
+  readonly officialText?: string;
+  readonly topicCoverage: readonly { readonly topicId: string; readonly coverage: string; readonly note?: string }[];
+}
+
 export interface MapFamilyChoice {
   readonly id: string;
   readonly targetId: string;
@@ -81,6 +90,10 @@ export interface RecordPickerPort {
   /** The exams (name order) and the versions of one exam (label order). */
   exams?(): readonly { readonly id: string; readonly name: string }[];
   versionsOf?(examId: string): readonly { readonly id: string; readonly label: string }[];
+  /** The versions of one exam as summary lines: label, status and the number of syllabus units (label order). */
+  versionSummariesOf?(examId: string): readonly { readonly id: string; readonly label: string; readonly status: string; readonly units: number }[];
+  /** A version's syllabus units (a copy, to start another version from), or undefined when it is not in the dataset. */
+  unitsOfVersion?(versionId: string): readonly VersionUnit[] | undefined;
   /** The exam relevance records of a record: "<versions> · <scope>". */
   relevanceLinesOf?(ref: { readonly kind: string; readonly id: string }): readonly CurriculumLine[];
   /** Every navigator anchor, in ID order. */

@@ -29,7 +29,7 @@ export function composedName(state: CanonicalState, record: AnyRecord): string |
 
 /** The name of a stored record for a label (its canonical name, name or title), or its ID. */
 export function nameOfRef(state: CanonicalState, ref: RecordRef): string {
-  const fields = recordAt(state, ref) as { names?: { canonical?: unknown }; name?: unknown; title?: unknown } | undefined;
-  const own = fields?.names?.canonical ?? fields?.name ?? fields?.title;
+  const fields = recordAt(state, ref) as { names?: { canonical?: unknown }; name?: unknown; title?: unknown; label?: unknown } | undefined;
+  const own = fields?.names?.canonical ?? fields?.name ?? fields?.title ?? fields?.label; // an exam version has a `label`
   return typeof own === 'string' && own !== '' ? own : ref.id;
 }

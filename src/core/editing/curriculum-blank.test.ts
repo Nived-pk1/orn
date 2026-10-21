@@ -9,6 +9,21 @@ import { demoState } from '@/test-support/app-boot-kit';
 
 const ctx = { now: () => '2026-10-21T00:00:00.000Z', newId: (prefix: string) => `${prefix}_new` } as never;
 
+describe('blankDraft exams', () => {
+  it('an exam has an empty name and nothing else to choose', () => {
+    const draft = blankDraft('exam', ctx);
+    expect(draft).toMatchObject({ kind: 'exam', name: '', tags: [], citations: [], review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] } });
+    for (const field of ['shortName', 'authority', 'notes']) expect(draft).not.toHaveProperty(field);
+    expect(String(draft?.id)).toMatch(/^exm/);
+  });
+  it('an exam version has an empty label and no units; the exam, the year and the status are absent (no default status)', () => {
+    const draft = blankDraft('exam_version', ctx);
+    expect(draft).toMatchObject({ kind: 'exam_version', label: '', units: [], tags: [], citations: [] });
+    for (const field of ['examId', 'year', 'status', 'effectiveFrom', 'effectiveTo']) expect(draft).not.toHaveProperty(field);
+    expect(String(draft?.id)).toMatch(/^exv/);
+  });
+});
+
 describe('blankDraft curriculum records', () => {
   it('a topic has an empty name and no aliases; the kind of topic and the order are absent', () => {
     const draft = blankDraft('topic', ctx);

@@ -18,7 +18,7 @@ describe('NEW_ENTRIES', () => {
   });
 
   it('keeps the words the Workbench has always shown, in this order', () => {
-    expect(NEW_ENTRIES.map((e) => e.title)).toEqual(['New species', 'New class', 'New reagent', 'New reaction', 'New mechanism', 'New source', 'New concept', 'New named reaction', 'New transformation', 'New relationship', 'New caveat', 'New topic', 'New topic mapping', 'New exam relevance', 'New map family']);
+    expect(NEW_ENTRIES.map((e) => e.title)).toEqual(['New species', 'New class', 'New reagent', 'New reaction', 'New mechanism', 'New source', 'New concept', 'New named reaction', 'New transformation', 'New relationship', 'New caveat', 'New topic', 'New topic mapping', 'New exam relevance', 'New exam', 'New exam version', 'New map family']);
   });
 
   it('every entry and every full-editor kind has a full form', () => {

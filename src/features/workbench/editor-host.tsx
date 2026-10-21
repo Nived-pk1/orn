@@ -48,8 +48,8 @@ function useLiveFindings(kind: Parameters<typeof parseRecord>[0], draft: unknown
 }
 
 const nameOfBase = (record: AnyRecord | null, fallback: string): string => {
-  const fields = record as { names?: { canonical?: unknown }; name?: unknown; title?: unknown; type?: unknown } | null;
-  const own = fields?.names?.canonical ?? fields?.name ?? fields?.title ?? (typeof fields?.type === 'string' ? fields.type.replace(/_/g, ' ') : undefined); // a reaction has `name`, a relationship its `type`, the others `names.canonical`
+  const fields = record as { names?: { canonical?: unknown }; name?: unknown; title?: unknown; label?: unknown; type?: unknown } | null;
+  const own = fields?.names?.canonical ?? fields?.name ?? fields?.title ?? fields?.label ?? (typeof fields?.type === 'string' ? fields.type.replace(/_/g, ' ') : undefined); // a reaction has `name`, a relationship its `type`, the others `names.canonical`
   return typeof own === 'string' && own !== '' ? own : fallback;
 };
 
