@@ -299,6 +299,7 @@ export function EditorHost(props: EditorHostProps) {
               links={port.links}
               pictures={port.pictures}
               saved={session.baseRecord !== null}
+              openRecord={port.duplicates === undefined ? undefined : openExisting}
               suggestions={checks.structure.suggestions}
               {...(port.records === undefined ? {} : { picker: port.records })}
               {...(unavailable === undefined ? {} : { unavailable })}

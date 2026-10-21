@@ -9,6 +9,7 @@
 import { speciesRequest } from '@/chem/checks/plan-species';
 import type { CoreIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, ChemicalClass, Reagent, RecordRef, Reference, Species, StructureRep } from '@/core/schema';
+import { knowledgeDuplicates } from './knowledge-duplicates';
 import { sourceDuplicates } from './source-duplicates';
 import { parseRecord, sameNameRecords } from '@/core/validation';
 import type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome } from '@/features/workbench';
@@ -32,6 +33,10 @@ export function createDuplicateCheck(options: DuplicateCheckOptions): DuplicateC
       if (kind === 'reference') {
         const parsedSource = parseRecord('reference', draft);
         return parsedSource.ok ? sourceDuplicates(options.state(), parsedSource.record as Reference) : { matches: [], more: 0, structureChecked: true };
+      }
+      if (kind === 'concept' || kind === 'named_reaction' || kind === 'transformation') {
+        const parsedKnowledge = parseRecord(kind, draft);
+        return parsedKnowledge.ok ? knowledgeDuplicates(options.state(), options.indexes(), kind, parsedKnowledge.record as Parameters<typeof knowledgeDuplicates>[3]) : { matches: [], more: 0, structureChecked: true };
       }
       if (kind === 'class' || kind === 'reagent') return namedCheck(options, kind, draft);
       if (kind !== 'species') return { matches: [], more: 0, structureChecked: true };

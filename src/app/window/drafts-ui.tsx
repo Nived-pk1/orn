@@ -26,11 +26,17 @@ export interface EditorsApi {
   newMechanism(): void;
   /** Opens the editor on a NEW source, a record of kind `reference` (step 6.6a, decision C2). A refusal is said in a toast. */
   newSource(): void;
+  /** Opens the editor on a NEW concept (step 6.6b, decision N1). A refusal is said in a toast. */
+  newConcept(): void;
+  /** Opens the editor on a NEW named reaction (step 6.6b, decision N2). A refusal is said in a toast. */
+  newNamedReaction(): void;
+  /** Opens the editor on a NEW transformation (step 6.6b, decision N3). A refusal is said in a toast. */
+  newTransformation(): void;
   /** Opens a listed draft (its stored session). */
   openDraft(id: string): void;
   /** Why editing is unavailable now (a read-only tab); undefined when it is available. */
   readonly editReason: string | undefined;
-  /** Record kinds that open the full editor (species, classes, reagents, reactions, mechanisms and sources). */
+  /** Record kinds that open the full editor (species, classes, reagents, reactions, mechanisms, sources, concepts, named reactions and transformations). */
   readonly fullEditorKinds?: readonly string[];
   /** Record kinds with the shared Names type (core/editing/names.ts; the inspector reads them through its host, never imports them). */
   readonly namesKinds?: readonly string[];

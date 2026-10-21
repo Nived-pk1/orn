@@ -2,7 +2,7 @@ export { COALESCE_WINDOW_MS, MAX_DRAFT_STEPS } from './contracts';
 export type { CommitOptions, ConflictChoice, ConflictChoices, EditMeta, FieldComparison, FieldStatus, OpenSessionResult, OpenTarget } from './contracts';
 export { compareForConflict, sameValue } from './conflict';
 export { blankDraft } from './blank';
-export { classParentGuard, reagentComponentGuard, MAX_COMPOSITION_WALK } from './cycles';
+export { classParentGuard, hierarchyParentGuard, reagentComponentGuard, MAX_COMPOSITION_WALK } from './cycles';
 export type { CycleRefusal } from './cycles';
 export { commitDraft, mergeDraft } from './commit';
 export { canRedoDraft, canUndoDraft, editDraft, openSession, redoDraft, undoDraft } from './session';

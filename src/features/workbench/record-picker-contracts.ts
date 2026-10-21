@@ -3,7 +3,10 @@
  * the search engine, the words for a record already chosen, and the cycle questions a picker asks BEFORE Save. The app fills it; the
  * pickers decide nothing. `kindWords` and `scope` are words ("compound class", "in the syllabus").
  */
-export type PickKind = 'species' | 'class' | 'reagent' | 'reaction' | 'mechanism' | 'concept' | 'reference';
+export type PickKind = 'species' | 'class' | 'reagent' | 'reaction' | 'mechanism' | 'concept' | 'reference' | 'named_reaction' | 'transformation' | 'caveat';
+
+/** The kinds that have parents (a hierarchy): a parent picker asks the cycle question for one of these. */
+export type ParentKind = 'class' | 'concept' | 'named_reaction';
 
 export interface RecordChoice {
   readonly kind: PickKind;
@@ -23,8 +26,10 @@ export interface RecordPickerPort {
   search(kinds: readonly PickKind[], text: string): Promise<readonly RecordChoice[]>;
   /** The record with this kind and ID in the dataset now, or undefined. */
   describe(kind: PickKind, id: string): RecordChoice | undefined;
-  /** Why class `candidate` cannot be a parent of class `owner` (it would close a cycle), in words; undefined when it can. */
-  parentRefusal?(owner: string, candidate: string): string | undefined;
+  /** Why `candidate` cannot be a parent of the `kind` record `owner` (it would close a cycle), in words; undefined when it can. `kind` is a class when absent. */
+  parentRefusal?(owner: string, candidate: string, kind?: ParentKind): string | undefined;
+  /** The reactions that name this named reaction or transformation (derived from the reactions' links), once each, in ID order; "Used by". */
+  usedBy?(kind: 'named_reaction' | 'transformation', id: string): readonly RecordChoice[];
   /** Why `candidate` cannot be a component of reagent `owner` (a reagent built from the owner would close a cycle); undefined when it can. */
   componentRefusal?(owner: string, candidate: { readonly kind: PickKind; readonly id: string }): string | undefined;
   /** The profiles of a reagent (ID and label), in order, for a participant's profile choice; empty when the reagent has none or does not exist. */

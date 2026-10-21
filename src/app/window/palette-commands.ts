@@ -38,6 +38,10 @@ export interface CommandDeps {
   readonly newMechanism?: { readonly reason: string | undefined; run(): void } | undefined;
   /** "New source" (step 6.6a): why it cannot run now, and what it does. Absent: no such command. */
   readonly newSource?: { readonly reason: string | undefined; run(): void } | undefined;
+  /** "New concept", "New named reaction" and "New transformation" (step 6.6b): why they cannot run now, and what they do. Absent: no such command. */
+  readonly newConcept?: { readonly reason: string | undefined; run(): void } | undefined;
+  readonly newNamedReaction?: { readonly reason: string | undefined; run(): void } | undefined;
+  readonly newTransformation?: { readonly reason: string | undefined; run(): void } | undefined;
   /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
   readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
   readonly ui: NavigatorUiStores;
@@ -111,6 +115,9 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     ...(deps.newReaction === undefined ? [] : [withReason({ id: 'new-reaction', title: 'New reaction', keywords: ['create', 'add', 'equation', 'participants', 'stages', 'author', 'workbench', 'draft'], run: deps.newReaction.run }, deps.newReaction.reason)]),
     ...(deps.newMechanism === undefined ? [] : [withReason({ id: 'new-mechanism', title: 'New mechanism', keywords: ['create', 'add', 'steps', 'pathway', 'variants', 'arrow pushing', 'author', 'workbench', 'draft'], run: deps.newMechanism.run }, deps.newMechanism.reason)]),
     ...(deps.newSource === undefined ? [] : [withReason({ id: 'new-source', title: 'New source', keywords: ['create', 'add', 'reference', 'textbook', 'book', 'citation', 'cite', 'author', 'workbench', 'draft'], run: deps.newSource.run }, deps.newSource.reason)]),
+    ...(deps.newConcept === undefined ? [] : [withReason({ id: 'new-concept', title: 'New concept', keywords: ['create', 'add', 'topic idea', 'reaction type', 'mechanism class', 'rule', 'author', 'workbench', 'draft'], run: deps.newConcept.run }, deps.newConcept.reason)]),
+    ...(deps.newNamedReaction === undefined ? [] : [withReason({ id: 'new-named-reaction', title: 'New named reaction', keywords: ['create', 'add', 'name reaction', 'author', 'workbench', 'draft'], run: deps.newNamedReaction.run }, deps.newNamedReaction.reason)]),
+    ...(deps.newTransformation === undefined ? [] : [withReason({ id: 'new-transformation', title: 'New transformation', keywords: ['create', 'add', 'conversion', 'functional group', 'class to class', 'author', 'workbench', 'draft'], run: deps.newTransformation.run }, deps.newTransformation.reason)]),
     ...structureCommands,
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),

@@ -1,7 +1,7 @@
 /**
  * Test-only. The first time a file opens an editor, the editor's components render for the first time in that worker (cold code, a big
  * form), which takes ~0.3 s alone and over a second when the machine is busy with the other test workers: longer than a `findBy*` waits
- * (R7 family, studio step G4). A window test file calls this once in `beforeAll`, after `stubDialog()` and `fakeLayout()`, so the cold cost
+ * (R7 family, studio step G4). `window-setup.ts` (the main project's setup file) calls this once in `beforeAll` of every window test file, after `stubDialog()` and `fakeLayout()`, so the cold cost
  * is paid in the hook (which has its own, longer limit) and the asserted waits only see a warm editor. No wait anywhere is raised.
  */
 import { expect } from 'vitest';

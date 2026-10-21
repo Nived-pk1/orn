@@ -1,0 +1,58 @@
+/**
+ * Test kit for the knowledge editors (step 6.6b): the real editor host over the real store, session manager and picker port, with the
+ * search worker replaced by a name scan (names, titles or `names.canonical`), quiet live checks, and the open-record call recorded.
+ * Test-only.
+ */
+import { screen } from '@testing-library/react';
+import { vi, type Mock } from 'vitest';
+import { createRecordPicker } from '@/app/window/record-picker-port';
+import { indexEngine } from '@/core/indexes';
+import type { RecordKind, RecordRef } from '@/core/schema';
+import { EditorHost } from '@/features/workbench/editor-host';
+import type { DraftChecksPort } from '@/features/workbench';
+import { utcTime } from './editing-kit';
+import { editorRig, renderWithToasts, type EditorRig } from './editor-kit';
+
+const quiet: DraftChecksPort = {
+  dryRun: async (_k, _d, version) => ({ version, state: 'checked', findings: [] }),
+  structure: async (_k, _d, version) => ({ version, state: 'none' }),
+};
+
+type Named = { id: string; names?: { canonical: string }; name?: string; title?: string };
+const nameOf = (r: Named): string => r.names?.canonical ?? r.name ?? r.title ?? '';
+
+/** The real picker port over the rig's state; the search is a scan of the names. */
+export function knowledgePicker(rig: EditorRig) {
+  const state = () => rig.store.getState();
+  return createRecordPicker({
+    search: (async (_channel: string, request: { text: string; kinds: readonly string[] }) => ({
+      ok: true,
+      value: request.kinds.flatMap((kind) =>
+        Object.values((state().records as unknown as Record<string, Record<string, Named>>)[kind] ?? {})
+          .filter((r) => nameOf(r).toLowerCase().includes(request.text.toLowerCase()))
+          .map((r) => ({ ref: { kind, id: r.id } })),
+      ),
+    })) as never,
+    state,
+    indexes: () => indexEngine.build(state()),
+    activeExam: () => null,
+  });
+}
+
+export interface ShownKnowledge {
+  readonly rig: EditorRig;
+  readonly id: string;
+  readonly dialog: HTMLElement;
+  readonly openRecord: Mock;
+  readonly draft: () => Record<string, unknown>;
+}
+
+export function showKnowledge(kind: RecordKind, options: { target?: string; blank?: boolean; rig?: EditorRig } = {}): ShownKnowledge {
+  const rig = options.rig ?? editorRig();
+  const opened = rig.drafts.open(options.blank === true ? { kind, blank: true } : { kind, id: options.target as string });
+  if (!opened.ok) throw new Error(opened.message);
+  const openRecord = vi.fn((_ref: RecordRef) => undefined);
+  const duplicates = { check: async () => ({ matches: [], more: 0, structureChecked: true }), openRecord };
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet, records: knowledgePicker(rig), duplicates: duplicates as never }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
+  return { rig, id: opened.id, dialog: screen.getByRole('dialog'), openRecord, draft: () => rig.drafts.entry(opened.id)?.session.draft as Record<string, unknown> };
+}

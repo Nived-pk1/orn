@@ -249,7 +249,7 @@ describe('a blank species draft (ADR-040 addendum, decision D3)', () => {
     expect(parseRecord('species', { ...(named.session.draft as object), names: { canonical: 'Propan-1-ol', common: [], aliases: [] } }).ok).toBe(true);
   });
   it('another kind falls back to the smallest draft', () => {
-    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'concept', blank: true });
+    const result = openSession(clockContext(), makeStore().getState(), 0, { kind: 'topic', blank: true });
     if (!result.ok) throw new Error('no session');
     expect(Object.keys(result.session.draft as object).sort()).toEqual(['id', 'kind']);
   });

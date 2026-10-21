@@ -5,8 +5,8 @@
  * Save (a class parent, a reagent component) through the core's guards, in words. Derived at the moment it is asked; nothing is stored.
  * No chemistry.
  */
-import type { PickKind, RecordChoice, RecordPickerPort } from '@/features/workbench';
-import { classParentGuard, reagentComponentGuard } from '@/core/editing';
+import type { ParentKind, PickKind, RecordChoice, RecordPickerPort } from '@/features/workbench';
+import { hierarchyParentGuard, reagentComponentGuard } from '@/core/editing';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import { createScopeOf } from '@/core/graph/scope';
 import type { CanonicalState, ChemicalClass } from '@/core/schema';
@@ -33,10 +33,12 @@ export const PICKER_CHANNEL = 'record-picker';
 
 export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
   const describe = (kind: PickKind, id: string): RecordChoice | undefined => {
-    const table = deps.state().records[kind] as Readonly<Record<string, { readonly id: string; readonly names?: { readonly canonical: string }; readonly name?: string; readonly scope?: 'generic' | 'specific'; readonly classKind?: ChemicalClass['classKind']; readonly speciesKind?: string; readonly conceptKind?: string; readonly title?: string; readonly refKind?: string; readonly year?: number }>>;
+    const table = deps.state().records[kind] as Readonly<Record<string, { readonly id: string; readonly names?: { readonly canonical: string }; readonly name?: string; readonly scope?: 'generic' | 'specific'; readonly classKind?: ChemicalClass['classKind']; readonly speciesKind?: string; readonly conceptKind?: string; readonly title?: string; readonly caveatKind?: string; readonly refKind?: string; readonly year?: number }>>;
     const record = Object.hasOwn(table, id) ? table[id] : undefined;
     if (record === undefined) return undefined;
     if (kind === 'concept') return { kind, id: record.id, name: record.name ?? record.id, kindWords: String(record.conceptKind ?? 'concept').replace(/_/g, ' '), scope: '', ...(record.conceptKind === undefined ? {} : { conceptKind: record.conceptKind }) };
+    if (kind === 'named_reaction' || kind === 'transformation') return { kind, id: record.id, name: record.name ?? record.id, kindWords: kind.replace(/_/g, ' '), scope: '' };
+    if (kind === 'caveat') return { kind, id: record.id, name: record.title ?? record.id, kindWords: String(record.caveatKind ?? 'caveat').replace(/_/g, ' '), scope: '' };
     if (kind === 'reference') return { kind, id: record.id, name: record.title ?? record.id, kindWords: [String(record.refKind ?? 'source').replace(/_/g, ' '), record.year].filter((part) => part !== undefined).join(', '), scope: '' };
     const exam = deps.activeExam();
     const scope = exam === null ? '' : SCOPE_WORDS[createScopeOf(deps.indexes(), exam.examId, exam.examVersionId)({ kind, id: record.id } as never)];
@@ -55,10 +57,23 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
         return choice === undefined ? [] : [choice];
       });
     },
-    parentRefusal(owner, candidate) {
-      const why = classParentGuard(deps.indexes(), owner)(candidate);
+    parentRefusal(owner, candidate, kind: ParentKind = 'class') {
+      const why = hierarchyParentGuard(deps.indexes(), kind, owner)(candidate);
       if (why === undefined) return undefined;
-      return why === 'self' ? 'A class cannot be its own parent.' : `${nameOf('class', candidate)} is already below this class, so it cannot be its parent: that would make a cycle.`;
+      const noun = kind.replace(/_/g, ' ');
+      return why === 'self' ? `A ${noun} cannot be its own parent.` : `${nameOf(kind, candidate)} is already below this ${noun}, so it cannot be its parent: that would make a cycle.`;
+    },
+    usedBy(kind, id) {
+      const field = kind === 'named_reaction' ? 'namedReactionIds' : 'transformationIds';
+      const seen = new Set<string>();
+      const users: RecordChoice[] = [];
+      for (const referrer of deps.indexes().referrersOf(id)) {
+        if (referrer.owner.kind !== 'reaction' || !referrer.path.startsWith(field) || seen.has(referrer.owner.id)) continue;
+        seen.add(referrer.owner.id);
+        const choice = describe('reaction', referrer.owner.id);
+        if (choice !== undefined) users.push(choice);
+      }
+      return users;
     },
     componentRefusal(owner, candidate) {
       if (candidate.kind !== 'reagent') return undefined; // only a reagent can close a cycle of compositions

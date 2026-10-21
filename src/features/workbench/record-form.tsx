@@ -2,10 +2,13 @@
  * The form of the record being edited: the species form, the class form, the reagent form, or (a kind without a full form) the Names section alone. One
  * place chooses, so the host knows no kind (step 6.2b).
  */
-import type { RecordKind } from '@/core/schema';
+import type { RecordKind, RecordRef } from '@/core/schema';
 import type { ClassSuggestion } from './check-contracts';
 import { ClassForm } from './class-form';
+import { ConceptForm } from './concept-form';
+import { NamedReactionForm } from './named-reaction-form';
 import { NamesSection } from './names-section';
+import { TransformationForm } from './transformation-form';
 import { MechanismForm } from './mechanism-form';
 import type { MechanismLinksPort } from './mechanism-contracts';
 import { ReactionForm } from './reaction-form';
@@ -27,10 +30,15 @@ export interface RecordFormProps extends SectionProps {
   readonly links?: MechanismLinksPort | undefined;
   readonly pictures?: PicturesPort | undefined;
   readonly saved?: boolean | undefined;
+  /** Closes the editor (the draft is kept) and shows the record in the inspector: "Used by" and "Relationships" lists. */
+  readonly openRecord?: ((ref: RecordRef) => void) | undefined;
 }
 
 export function RecordForm(props: RecordFormProps) {
-  const { kind, suggestions, newId, links, pictures, saved, ...rest } = props;
+  const { kind, suggestions, newId, links, pictures, saved, openRecord, ...rest } = props;
+  if (kind === 'concept') return <ConceptForm {...rest} />;
+  if (kind === 'named_reaction') return <NamedReactionForm {...rest} openRecord={openRecord} />;
+  if (kind === 'transformation') return <TransformationForm {...rest} openRecord={openRecord} />;
   if (kind === 'species') return <SpeciesForm {...rest} suggestions={suggestions} />;
   if (kind === 'class') return <ClassForm {...rest} />;
   if (kind === 'reference') return <SourceForm draft={rest.draft} onEdit={rest.onEdit} picker={rest.picker} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} />;

@@ -12,3 +12,24 @@ describe('blankDraft reference', () => {
     expect(String(draft?.id)).toMatch(/^ref/);
   });
 });
+
+describe('blankDraft knowledge records (step 6.6b)', () => {
+  it('a concept has an empty name, no parents, the shared fields, and NO conceptKind', () => {
+    const draft = blankDraft('concept', ctx);
+    expect(draft).toMatchObject({ kind: 'concept', name: '', aliases: [], parentIds: [], tags: [], citations: [], review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] } });
+    expect(draft).not.toHaveProperty('conceptKind');
+    expect(String(draft?.id)).toMatch(/^cpt/);
+  });
+  it('a named reaction has the empty lists and no difficulty', () => {
+    const draft = blankDraft('named_reaction', ctx);
+    expect(draft).toMatchObject({ kind: 'named_reaction', name: '', aliases: [], parentIds: [], conceptIds: [], prerequisiteConceptIds: [] });
+    expect(draft).not.toHaveProperty('difficulty');
+    expect(String(draft?.id)).toMatch(/^nrx/);
+  });
+  it('a transformation has empty class and concept lists and no chain statement', () => {
+    const draft = blankDraft('transformation', ctx);
+    expect(draft).toMatchObject({ kind: 'transformation', name: '', aliases: [], fromClassIds: [], toClassIds: [], conceptIds: [] });
+    expect(draft).not.toHaveProperty('carbonChainChange');
+    expect(String(draft?.id)).toMatch(/^trf/);
+  });
+});

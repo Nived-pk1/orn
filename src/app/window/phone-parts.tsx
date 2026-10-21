@@ -84,6 +84,15 @@ export function PhoneBar(props: {
             <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newSource) } : { unavailable: editors.editReason })}>
               New source
             </Button>
+            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newConcept) } : { unavailable: editors.editReason })}>
+              New concept
+            </Button>
+            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newNamedReaction) } : { unavailable: editors.editReason })}>
+              New named reaction
+            </Button>
+            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newTransformation) } : { unavailable: editors.editReason })}>
+              New transformation
+            </Button>
           </section>
         )}
         {props.history === undefined ? null : <HistorySection history={props.history} />}

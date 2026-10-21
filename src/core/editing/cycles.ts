@@ -4,7 +4,7 @@
  * instead of letting a person save into an ERROR. Both answers come from the derived indexes, never from a copy of the rule's text, and
  * both walks are bounded. Pure; reads only.
  */
-import type { CoreIndexes } from '../indexes/contracts';
+import type { CoreIndexes, HierarchyKind } from '../indexes/contracts';
 import { closure } from '../indexes/hierarchy';
 
 /** Most records a reagent composition walk visits (the same bound as HIER-003's own walk). */
@@ -13,13 +13,17 @@ export const MAX_COMPOSITION_WALK = 10_000;
 export type CycleRefusal = 'self' | 'below' | 'unchecked';
 
 /**
- * Why `candidate` cannot be a parent of class `owner`: it is the class itself ('self') or is already below it ('below'), so the link
- * would close a cycle. A class with no stored descendants (a new one) refuses only itself. `undefined`: allowed.
+ * Why `candidate` cannot be a parent of the `kind` record `owner` (kind-generic since step 6.6b: class, concept, named reaction, topic): it is
+ * the record itself ('self') or is already below it ('below'), so the link would close a cycle (HIER-001). A record with no stored
+ * descendants (a new one) refuses only itself. `undefined`: allowed.
  */
-export function classParentGuard(indexes: Pick<CoreIndexes, 'descendantsOf'>, owner: string): (candidate: string) => CycleRefusal | undefined {
-  const below = new Set(indexes.descendantsOf('class', owner));
+export function hierarchyParentGuard(indexes: Pick<CoreIndexes, 'descendantsOf'>, kind: HierarchyKind, owner: string): (candidate: string) => CycleRefusal | undefined {
+  const below = new Set(indexes.descendantsOf(kind, owner));
   return (candidate) => (candidate === owner ? 'self' : below.has(candidate) ? 'below' : undefined);
 }
+
+/** The class case of {@link hierarchyParentGuard} (step 6.2b). */
+export const classParentGuard = (indexes: Pick<CoreIndexes, 'descendantsOf'>, owner: string): ((candidate: string) => CycleRefusal | undefined) => hierarchyParentGuard(indexes, 'class', owner);
 
 /**
  * Why reagent `candidate` cannot be a COMPONENT of reagent `owner`: it is the reagent itself, or it is already built (directly or

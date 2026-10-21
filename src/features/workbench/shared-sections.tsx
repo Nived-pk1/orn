@@ -15,7 +15,7 @@ import type { SectionProps } from './section-props';
 import { addCitation, addConcept, addTag, citationLine, citationsOf, conceptIdsOf, moveCitation, removeCitation, removeConcept, removeTag, setCitationField, setTextField, tagProblem, tagsOf, textOf } from './shared-model';
 import styles from './editor.module.css';
 
-const NOTE_LABELS: Readonly<Record<string, string>> = { notes: 'Notes', studyNotes: 'Study notes', acidBaseNotes: 'Acid-base notes', description: 'Description', 'generic.rGroupNote': 'R-group note', limitations: 'Limitations' };
+const NOTE_LABELS: Readonly<Record<string, string>> = { notes: 'Notes', studyNotes: 'Study notes', acidBaseNotes: 'Acid-base notes', description: 'Description', 'generic.rGroupNote': 'R-group note', limitations: 'Limitations', summary: 'Summary', typicalConditions: 'Typical conditions' };
 
 export function NotesSection(props: SectionProps & { readonly fields: readonly string[]; readonly links?: MechanismLinksPort | undefined }) {
   return (
@@ -108,13 +108,13 @@ export function TagsSection(props: SectionProps) {
   );
 }
 
-export function ConceptsSection(props: SectionProps & { readonly picker: RecordPickerPort | undefined; readonly field?: string }) {
+export function ConceptsSection(props: SectionProps & { readonly picker: RecordPickerPort | undefined; readonly field?: string; readonly label?: string; readonly findLabel?: string }) {
   const field = props.field ?? 'conceptIds';
   const ids = conceptIdsOf(props.draft, field);
   return (
     <div>
-      <RecordList label="Concepts" fieldPath={field} items={ids.map((id) => ({ kind: 'concept' as const, id }))} port={props.picker} unavailable={props.unavailable} emptyText="No concepts." onRemove={(index) => props.onEdit(removeConcept(index, field))} />
-      <RecordPicker id={`shared-${field}-search`} label="Find a concept by name" kinds={['concept']} port={props.picker} noun="concept" resultsLabel="Concepts found" unavailable={props.unavailable} isListed={(choice) => ids.includes(choice.id)} onPick={(choice) => props.onEdit(addConcept(choice.id, field))} />
+      <RecordList label={props.label ?? 'Concepts'} fieldPath={field} items={ids.map((id) => ({ kind: 'concept' as const, id }))} port={props.picker} unavailable={props.unavailable} emptyText={props.label === undefined ? 'No concepts.' : 'None.'} onRemove={(index) => props.onEdit(removeConcept(index, field))} />
+      <RecordPicker id={`shared-${field}-search`} label={props.findLabel ?? 'Find a concept by name'} kinds={['concept']} port={props.picker} noun="concept" resultsLabel="Concepts found" unavailable={props.unavailable} isListed={(choice) => ids.includes(choice.id)} onPick={(choice) => props.onEdit(addConcept(choice.id, field))} />
     </div>
   );
 }

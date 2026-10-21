@@ -104,3 +104,38 @@ describe('concepts and sources (step 6.6a)', () => {
     expect(port.sourceOf?.('ref_nope')).toBeUndefined();
   });
 });
+
+describe('knowledge records (step 6.6b part 2)', () => {
+  const state = demoState();
+  const named = Object.values(state.records.named_reaction);
+  const transformation = Object.values(state.records.transformation)[0];
+  it('describes a named reaction, a transformation and a caveat by name (a caveat by title)', () => {
+    const port = picker();
+    expect(port.describe('named_reaction', named[0]?.id as string)).toMatchObject({ kind: 'named_reaction', name: named[0]?.name, kindWords: 'named reaction' });
+    expect(port.describe('transformation', transformation?.id as string)).toMatchObject({ kind: 'transformation', name: transformation?.name, kindWords: 'transformation' });
+    const caveat = Object.values(state.records.caveat)[0];
+    expect(port.describe('caveat', caveat?.id as string)).toMatchObject({ kind: 'caveat', name: caveat?.title, kindWords: caveat?.caveatKind.replace(/_/g, ' ') });
+    expect(port.describe('named_reaction', 'nrx_nope')).toBeUndefined();
+  });
+  it('answers the parent-cycle question for concepts and named reactions, in words', () => {
+    const port = picker();
+    const concepts = Object.keys(state.records.concept);
+    const top = concepts.find((id) => indexEngine.build(state).descendantsOf('concept', id).length > 0) as string;
+    const below = indexEngine.build(state).descendantsOf('concept', top)[0] as string;
+    expect(port.parentRefusal?.(top, top, 'concept')).toMatch(/cannot be its own parent/);
+    expect(port.parentRefusal?.(top, below, 'concept')).toMatch(/already below this concept.*cycle/);
+    expect(port.parentRefusal?.(top, concepts.find((id) => id !== top && id !== below && !indexEngine.build(state).descendantsOf('concept', top).includes(id)) as string, 'concept')).toBeUndefined();
+    expect(port.parentRefusal?.(named[0]?.id as string, named[0]?.id as string, 'named_reaction')).toMatch(/named reaction cannot be its own parent/);
+    expect(port.parentRefusal?.('cls_alcohols', 'cls_alcohols')).toMatch(/A class cannot be its own parent/); // the class default is unchanged
+  });
+  it('"Used by": the reactions that name a named reaction or a transformation, once each', () => {
+    const port = picker();
+    const reaction = Object.values(state.records.reaction).find((r) => r.namedReactionIds.length > 0);
+    const users = port.usedBy?.('named_reaction', reaction?.namedReactionIds[0] as string) ?? [];
+    expect(users.map((u) => u.id)).toContain(reaction?.id);
+    expect(new Set(users.map((u) => u.id)).size).toBe(users.length);
+    const t = Object.values(state.records.reaction).find((r) => r.transformationIds.length > 0);
+    expect(port.usedBy?.('transformation', t?.transformationIds[0] as string).map((u) => u.id)).toContain(t?.id);
+    expect(port.usedBy?.('named_reaction', 'nrx_nobody')).toEqual([]);
+  });
+});

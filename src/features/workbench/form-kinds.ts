@@ -5,6 +5,7 @@
  */
 import type { RecordKind } from '@/core/schema';
 import { CLASS_FIELD_LABELS } from './class-model';
+import { CONCEPT_FIELD_LABELS, NAMED_REACTION_FIELD_LABELS, TRANSFORMATION_FIELD_LABELS } from './knowledge-model';
 import { MECHANISM_FIELD_LABELS } from './mechanism-model';
 import { REACTION_FIELD_LABELS } from './reaction-model';
 import { REAGENT_FIELD_LABELS } from './reagent-model';
@@ -18,15 +19,21 @@ const LABELS: Partial<Readonly<Record<RecordKind, Readonly<Record<string, string
   reaction: REACTION_FIELD_LABELS,
   mechanism: MECHANISM_FIELD_LABELS,
   reference: SOURCE_FIELD_LABELS,
+  concept: CONCEPT_FIELD_LABELS,
+  named_reaction: NAMED_REACTION_FIELD_LABELS,
+  transformation: TRANSFORMATION_FIELD_LABELS,
 };
 
 /** Kinds whose editor is a full form (Names and more). */
-export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference'];
+export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference', 'concept', 'named_reaction', 'transformation'];
 
 export const hasFullForm = (kind: RecordKind): boolean => FULL_FORM_KINDS.includes(kind);
 
 /** The word in the history label "Edit <section> of <name>". */
-export const sectionOf = (kind: RecordKind): string => (hasFullForm(kind) ? kind : 'names');
+export const sectionOf = (kind: RecordKind): string => (hasFullForm(kind) ? kind.replace(/_/g, ' ') : 'names');
+
+/** The kind in words for a title ("New source", "New named reaction"). */
+const KIND_WORDS: Partial<Readonly<Record<RecordKind, string>>> = { reference: 'source', named_reaction: 'named reaction' };
 
 export const labelOfField = (kind: RecordKind, path: string): string | undefined => LABELS[kind]?.[path];
 
@@ -41,5 +48,5 @@ export function formOwns(kind: RecordKind, path: string | undefined): boolean {
 
 export function titleOf(kind: RecordKind, isNew: boolean, name: string): string {
   if (!hasFullForm(kind)) return `Edit names of ${name}`;
-  return isNew ? `New ${kind === 'reference' ? 'source' : kind}` : `Edit ${name}`;
+  return isNew ? `New ${KIND_WORDS[kind] ?? kind}` : `Edit ${name}`;
 }

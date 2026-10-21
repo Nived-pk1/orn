@@ -37,7 +37,7 @@ export default mergeConfig(
       // File order must not depend on an earlier run: no results cache (Vitest would otherwise run last time's failures first).
       cache: false,
       projects: [
-        { extends: true, test: { name: 'main', include: ALL_TESTS, exclude: [...EXCLUDED, ...REAL_THREAD_FILES] } },
+        { extends: true, test: { name: 'main', include: ALL_TESTS, exclude: [...EXCLUDED, ...REAL_THREAD_FILES], setupFiles: ['src/test-support/window-setup.ts'] } },
         { extends: true, test: { name: 'real-threads', include: REAL_THREAD_FILES, exclude: EXCLUDED, fileParallelism: false, maxWorkers: 1, testTimeout: REAL_THREAD_TEST_TIMEOUT_MS, sequence: { groupOrder: 1 } } },
       ],
       // Targets: src/core >= 90% lines, >= 85% branches; src/persistence, src/io, src/workers, src/chem, src/layout, src/search >= 80% lines (services, TEST_STRATEGY §1; the last three from step 4.6), src/app/services >= 80% lines (step 5.1a).
