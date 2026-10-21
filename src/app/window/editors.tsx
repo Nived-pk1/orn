@@ -10,6 +10,7 @@ import { useSubscribable } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
 import { useApp } from './context';
 import { createLocalTimeFormatter } from './local-time';
+import { NAMES_KINDS } from '@/core/editing/names';
 import { EditorsContext, type EditorsApi } from './drafts-ui';
 
 // /* @__PURE__ */: an unused lazy() is dropped with its import() in Study, where nothing mounts EditorsProvider (ADR-041)
@@ -61,6 +62,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
       fullEditorKinds: FULL_EDITOR_KINDS,
+      namesKinds: NAMES_KINDS,
     }),
     [reason, services, show],
   );

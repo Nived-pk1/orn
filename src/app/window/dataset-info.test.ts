@@ -4,7 +4,7 @@
  * written when a load is applied).
  */
 import { describe, expect, it, vi } from 'vitest';
-import { createDatasetInfo, datasetWordsOf, STUDY_DATASET_KEY, studyUpdateDue, type DatasetInfo } from './dataset-info';
+import { createDatasetInfo, datasetWordsOf, STUDY_DATASET_DECLINED_KEY, STUDY_DATASET_KEY, studyUpdateDue, type DatasetInfo } from './dataset-info';
 
 const SHA_A = 'a'.repeat(64);
 const SHA_B = 'b'.repeat(64);
@@ -65,5 +65,32 @@ describe('createDatasetInfo: the remembered sha256 in uiState', () => {
     const info = createDatasetInfo({ bootReport: { uiState: {} }, persistence: { setUiState: async () => Promise.reject(new Error('full')) }, status: { get: () => ({ mode: 'writer' }) } } as never, manifest);
     if (info.kind !== 'published') throw new Error('expected published');
     expect(() => info.remember(SHA_B)).not.toThrow();
+  });
+});
+
+describe('H1: "Keep my data" (declined sha256)', () => {
+  const due = (declinedSha256: string | undefined) => studyUpdateDue({ editing: false, dataset: published(SHA_A), hasData: true, dismissed: false, declinedSha256 });
+  it('not due while the declined sha256 is the published one; due again when a different one is published', () => {
+    expect(due(published(SHA_A).kind === 'published' ? (published(SHA_A) as { sha256: string }).sha256 : undefined)).toBe(false);
+    expect(due('f'.repeat(64))).toBe(true);
+    expect(due(undefined)).toBe(true);
+  });
+  const manifest = { sha256: SHA_B, publishedAt: '2026-10-21T09:30:00.000Z' };
+  const make = (mode: string, entry: unknown, setUiState = vi.fn(async () => undefined)) =>
+    createDatasetInfo({ bootReport: { uiState: entry === undefined ? {} : { [STUDY_DATASET_DECLINED_KEY]: entry } }, persistence: { setUiState }, status: { get: () => ({ mode }) } } as never, manifest);
+  it('reads the declined sha256 at boot; anything not a sha256 is "none"', () => {
+    expect(make('writer', { sha256: SHA_A })).toMatchObject({ declinedSha256: SHA_A });
+    for (const bad of [undefined, null, 5, { sha256: 'short' }, [SHA_A]]) expect(make('writer', bad)).toMatchObject({ declinedSha256: undefined });
+  });
+  it('decline writes {sha256} under its own key in a writer tab only', () => {
+    const setUiState = vi.fn(async () => undefined);
+    const info = make('writer', undefined, setUiState);
+    if (info.kind !== 'published') throw new Error('expected published');
+    info.decline?.(SHA_B);
+    expect(setUiState).toHaveBeenCalledWith(STUDY_DATASET_DECLINED_KEY, { sha256: SHA_B });
+    setUiState.mockClear();
+    const follower = make('follower', undefined, setUiState);
+    if (follower.kind === 'published') follower.decline?.(SHA_B);
+    expect(setUiState).not.toHaveBeenCalled();
   });
 });

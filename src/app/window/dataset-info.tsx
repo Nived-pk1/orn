@@ -12,6 +12,8 @@ import { useAppOptional } from './context';
 import type { DatasetInfo } from './dataset-types';
 
 export const STUDY_DATASET_KEY = 'studyDataset';
+/** `{ sha256 }`: the published version the visitor declined with "Keep my data"; the notice returns only for a different one. */
+export const STUDY_DATASET_DECLINED_KEY = 'studyDatasetDeclined';
 
 export type { DatasetInfo };
 
@@ -53,6 +55,7 @@ export function DatasetProvider(props: { readonly children: ReactNode }) {
   const app = useAppOptional();
   const base = EDITING ? undefined : app?.dataset;
   const [loadedNow, setLoadedNow] = useState<string | undefined>(undefined);
+  const [declinedNow, setDeclinedNow] = useState<string | undefined>(undefined);
   const value = useMemo<DatasetInfo | undefined>(
     () =>
       base?.kind !== 'published'
@@ -64,18 +67,24 @@ export function DatasetProvider(props: { readonly children: ReactNode }) {
               base.remember(sha256);
               setLoadedNow(sha256);
             },
+            declinedSha256: declinedNow ?? base.declinedSha256,
+            decline: (sha256) => {
+              base.decline?.(sha256);
+              setDeclinedNow(sha256);
+            },
           },
-    [base, loadedNow],
+    [base, loadedNow, declinedNow],
   );
   return <DatasetContext.Provider value={value}>{props.children}</DatasetContext.Provider>;
 }
 
 export const useDatasetInfo = (): DatasetInfo | undefined => useContext(DatasetContext);
 
-/** Due: Study, a published dataset whose sha256 is not the one last loaded, something to replace (an empty dataset gets the first-run screen), and no "Later" this visit. */
-export function studyUpdateDue(input: { readonly editing: boolean; readonly dataset: DatasetInfo | undefined; readonly hasData: boolean; readonly dismissed: boolean }): boolean {
+/** Due: Study, a published dataset whose sha256 is not the one last loaded or declined ("Keep my data"), something to replace (an empty dataset gets the first-run screen), and no "Later" this visit. */
+export function studyUpdateDue(input: { readonly editing: boolean; readonly dataset: DatasetInfo | undefined; readonly hasData: boolean; readonly dismissed: boolean; readonly declinedSha256?: string | undefined }): boolean {
   const { editing, dataset, hasData, dismissed } = input;
-  return !editing && dataset?.kind === 'published' && hasData && !dismissed && dataset.loadedSha256 !== dataset.sha256;
+  const declined = input.declinedSha256 ?? (dataset?.kind === 'published' ? dataset.declinedSha256 : undefined);
+  return !editing && dataset?.kind === 'published' && hasData && !dismissed && dataset.loadedSha256 !== dataset.sha256 && declined !== dataset.sha256;
 }
 
 const SHA256 = /^[0-9a-f]{64}$/;
@@ -92,6 +101,11 @@ export function createDatasetInfo(services: Pick<AppServices, 'bootReport' | 'pe
     sha256: manifest.sha256,
     publishedAt: manifest.publishedAt,
     loadedSha256: shaOf(services.bootReport?.uiState[STUDY_DATASET_KEY]),
+    declinedSha256: shaOf(services.bootReport?.uiState[STUDY_DATASET_DECLINED_KEY]),
+    decline(sha256) {
+      if (services.persistence === undefined || services.status.get().mode !== 'writer') return;
+      void services.persistence.setUiState(STUDY_DATASET_DECLINED_KEY, { sha256 }).catch(() => undefined);
+    },
     remember(sha256) {
       if (services.persistence === undefined || services.status.get().mode !== 'writer') return;
       // a write that fails is not an error of the load: the notice simply shows again at the next visit

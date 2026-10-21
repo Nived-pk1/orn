@@ -1,5 +1,5 @@
 {
-  "comment": "What counts as an editor module (studio step, ADR-041): a path prefix (ending in /) or an exact path, relative to the repo root, forward slashes. Read by vite.config.ts (Study: these modules have no side effects, so nothing keeps them in the build) and by scripts/check-edition.mjs (Study: none may be in the output; Studio: at least one). Deliberately not listed: src/core/editing/names.ts (which record kinds carry the shared Names type: schema knowledge the inspector reads) and src/app/window/drafts-ui.tsx (the React context the window reads; no editing code).",
+  "comment": "What counts as an editor module (studio step, ADR-041): a path prefix (ending in /) or an exact path, relative to the repo root, forward slashes. Read by vite.config.ts (Study: these modules have no side effects, so nothing keeps them in the build) and by scripts/check-edition.mjs (Study: none may be in the output; Studio: at least one). Deliberately not listed: src/core/editing/names.ts (which record kinds carry the shared Names type: schema knowledge the inspector reads). src/app/window/drafts-ui.tsx IS listed (H2): the Study-safe parts read it only through editors-access.ts, inert in Study. names.ts is read by the inspector only through the host (window.tsx passes namesKinds inside the EDITING guard).",
   "modules": [
     "src/features/workbench/",
     "src/core/editing/commit.ts",
@@ -8,9 +8,11 @@
     "src/core/editing/conflict.ts",
     "src/core/editing/cycles.ts",
     "src/core/editing/blank.ts",
+    "src/core/editing/names.ts",
     "src/core/editing/role-defaults.ts",
     "src/core/editing/mechanism-uses.ts",
     "src/app/window/editors.tsx",
+    "src/app/window/drafts-ui.tsx",
     "src/app/window/editor-session.tsx",
     "src/app/window/editor-port.ts",
     "src/app/window/editor-commands.ts",

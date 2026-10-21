@@ -34,6 +34,9 @@ server code, no database and no account system in the app. Everything a visitor 
    `ORN_BASE_URL=<url> npx playwright test tests/e2e/smoke.spec.ts tests/e2e/csp.spec.ts tests/e2e/phone.spec.ts`, and
    `tests/e2e/study-edition.spec.ts` (no editing UI on the live site).
 4. Check Studio, EVERY time (see "Access" below): an unauthenticated request must NOT get the app.
+5. Every row close deploys BOTH editions, Study first, then Studio, and re-runs the live Access check (below) after EACH Studio deploy.
+   Record both Worker versions in `docs/PROJECT_STATE.json` (`releasePreview` for Study, `studioPreview` for Studio). Any failure in the
+   full e2e run means NO deploy until the reviewer approves, even after a fix.
 
 Never rename either Worker (`name` in the config file) and never change a URL: a new name is a new site at a new address, and the old address
 would keep serving the old build until it is deleted by hand.

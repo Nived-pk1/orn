@@ -41,7 +41,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-type Info = { kind: 'demo' } | { kind: 'published'; sha256: string; publishedAt: string; loadedSha256: string | undefined; remember: (sha: string) => void };
+type Info = { kind: 'demo' } | { kind: 'published'; sha256: string; publishedAt: string; loadedSha256: string | undefined; remember: (sha: string) => void; declinedSha256?: string; decline?: (sha: string) => void };
 const published = (loadedSha256: string | undefined, remember = vi.fn()): Info => ({ kind: 'published', sha256: SHA_B, publishedAt: '2026-10-21T09:30:00.000Z', loadedSha256, remember });
 
 function show(k: Loaded, dataset: Info | undefined, options: { withData?: boolean } = {}) {
@@ -171,5 +171,36 @@ describe('the dataset view words follow the dataset', () => {
     show(k, { kind: 'demo' }, { withData: true });
     k.fireEvent.click(k.screen.getByRole('button', { name: /Dataset/ }));
     expect(k.screen.getByRole('button', { name: 'Replace with the demo dataset' })).toBeTruthy();
+  });
+});
+
+describe('H1: "Keep my data"', () => {
+  it('a third button records this published sha256 as declined and hides the notice, in a fresh window too', () => {
+    const k = loaded.study;
+    const decline = vi.fn();
+    const info = { ...published(SHA_A), decline } as Info;
+    show(k, info, { withData: true });
+    k.fireEvent.click(k.screen.getByRole('button', { name: 'Keep my data' }));
+    expect(decline).toHaveBeenCalledWith(SHA_B);
+    expect(k.screen.queryByText(NOTICE)).toBeNull();
+  });
+  it('not shown when that sha256 was declined earlier; shown again when a different one is published', () => {
+    const k = loaded.study;
+    show(k, { ...published(SHA_A), declinedSha256: SHA_B } as Info, { withData: true });
+    expect(k.screen.queryByText(NOTICE)).toBeNull();
+    k.cleanup();
+    show(k, { ...published(SHA_A), declinedSha256: SHA_A } as Info, { withData: true });
+    expect(k.screen.getByText(NOTICE)).toBeTruthy();
+  });
+  it('"Later" and "Keep my data" sit side by side in the notice', () => {
+    const k = loaded.study;
+    show(k, published(SHA_A), { withData: true });
+    expect(k.screen.getByRole('button', { name: 'Later' })).toBeTruthy();
+    expect(k.screen.getByRole('button', { name: 'Keep my data' })).toBeTruthy();
+  });
+  it('studio never shows the notice or the button', () => {
+    const k = loaded.studio;
+    show(k, published(SHA_A), { withData: true });
+    expect(k.screen.queryByRole('button', { name: 'Keep my data' })).toBeNull();
   });
 });

@@ -4,7 +4,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import { IconButton, Menu, useToasts, type MenuItem, type Toasts } from '@/ui/primitives';
-import { useDraftsView, useEditors } from './drafts-ui';
+import { useDraftsView, useEditors } from './editors-access';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 
 /** What the File menu needs of the window (step 5.9a): why an import cannot start, and the two actions. */

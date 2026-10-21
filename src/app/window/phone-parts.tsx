@@ -11,7 +11,7 @@ import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
 import { EDITING } from '@/app/edition';
 import { StudyUpdateNotice, useStudyUpdateDue } from './study-update';
-import { useDraftsView, useEditors } from './drafts-ui';
+import { useDraftsView, useEditors } from './editors-access';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 import { alertOf } from './phone-alert';
 import { RecordCounts } from './record-counts';

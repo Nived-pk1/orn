@@ -30,6 +30,8 @@ export interface EditorsApi {
   readonly editReason: string | undefined;
   /** Record kinds that open the full editor (species, classes, reagents, reactions and mechanisms). */
   readonly fullEditorKinds?: readonly string[];
+  /** Record kinds with the shared Names type (core/editing/names.ts; the inspector reads them through its host, never imports them). */
+  readonly namesKinds?: readonly string[];
 }
 
 export const EditorsContext = createContext<EditorsApi | null>(null);

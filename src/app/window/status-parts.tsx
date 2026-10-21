@@ -8,7 +8,7 @@ import { usePanels } from '@/ui/state';
 import { bannersOf, bannerKindOf, bootLinesOf, draftsLineOf, layoutCacheTextOf, operationTextOf, periodicTextOf, quarantineTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
 import { createLocalTimeFormatter } from './local-time';
-import { useDraftsOpen, useDraftsView } from './drafts-ui';
+import { useDraftsOpen, useDraftsView } from './editors-access';
 import { useExportOpen } from './export-context';
 import styles from './status-parts.module.css';
 

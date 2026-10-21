@@ -35,7 +35,7 @@ import { WorkbenchPage } from "./workbench-page";
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { EDITING, editionMarker } from "@/app/edition";
-import { useEditors } from "./drafts-ui";
+import { useEditors } from "./editors-access";
 import { EditorsProvider } from "./editors";
 import { editorCommandDeps } from "./editor-commands";
 import { DatasetProvider, datasetWordsOf, useDatasetInfo } from "./dataset-info";
@@ -128,7 +128,7 @@ function InspectorPanel(props: {
       openPane,
       closePane,
       navigatorShown,
-      ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }) } }),
+      ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }), ...(editors.namesKinds === undefined ? {} : { namesKinds: editors.namesKinds }) } }),
       edgeEnds: (edgeId) => {
         const edge = model.getState().scene?.edges.find((e) => e.id === edgeId);
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };

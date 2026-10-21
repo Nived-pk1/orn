@@ -1,7 +1,7 @@
 /**
  * The study dataset update notice (studio step E4, ADR-041). STUDY only: when the build ships a published dataset whose sha256 differs from
  * the one this browser last loaded (kept in `uiState`), a notice says so: "Load it" runs the existing replace import (replace_all, its
- * pre-import snapshot, Undo import), "Later" hides it for this visit and it is asked again at the next one. It is not shown in an empty
+ * pre-import snapshot, Undo import), "Later" hides it for this visit and it is asked again at the next one; "Keep my data" (H1) records THIS sha256 as declined (`uiState` `studyDatasetDeclined`) so the notice returns only when a different one is published. It is not shown in an empty
  * dataset (the first-run screen already offers the dataset) and never in Studio: the owner's working copy is never replaced by a prompt.
  */
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
@@ -14,8 +14,9 @@ interface StudyUpdate {
   readonly due: boolean;
   loadIt(): void;
   later(): void;
+  keep(): void;
 }
-const NONE: StudyUpdate = { due: false, loadIt: () => undefined, later: () => undefined };
+const NONE: StudyUpdate = { due: false, loadIt: () => undefined, later: () => undefined, keep: () => undefined };
 const StudyUpdateContext = createContext<StudyUpdate>(NONE);
 
 export const NOTICE_TEXT = 'A newer version of the study dataset is available. Load it (this replaces the data in this browser; export a backup first if you imported your own data).';
@@ -25,7 +26,7 @@ export function StudyUpdateProvider(props: { readonly load: () => void; readonly
   const [dismissed, setDismissed] = useState(false);
   const { load, hasData } = props;
   const value = useMemo<StudyUpdate>(
-    () => ({ due: studyUpdateDue({ editing: EDITING, dataset, hasData, dismissed }), loadIt: load, later: () => setDismissed(true) }),
+    () => ({ due: studyUpdateDue({ editing: EDITING, dataset, hasData, dismissed }), loadIt: load, later: () => setDismissed(true), keep: () => { if (dataset?.kind === 'published') dataset.decline?.(dataset.sha256); setDismissed(true); } }),
     [dataset, hasData, dismissed, load],
   );
   return <StudyUpdateContext.Provider value={value}>{props.children}</StudyUpdateContext.Provider>;
@@ -34,7 +35,7 @@ export function StudyUpdateProvider(props: { readonly load: () => void; readonly
 export const useStudyUpdateDue = (): boolean => useContext(StudyUpdateContext).due;
 
 export function StudyUpdateNotice() {
-  const { due, loadIt, later } = useContext(StudyUpdateContext);
+  const { due, loadIt, later, keep } = useContext(StudyUpdateContext);
   if (!due) return null;
   return (
     <section aria-label="Study dataset update">
@@ -46,6 +47,7 @@ export function StudyUpdateNotice() {
               <>
                 <Button onClick={loadIt}>Load it</Button>
                 <Button onClick={later}>Later</Button>
+                <Button onClick={keep}>Keep my data</Button>
               </>
             }
           >
