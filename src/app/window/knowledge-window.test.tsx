@@ -147,3 +147,63 @@ describe('linking a demo reaction to a named reaction (step 6.6b part 3)', () =>
     expect((app.store.getState().records.reaction[id as never] as { reversibility: { kind: string } }).reversibility.kind).toBe('unknown');
   });
 });
+
+describe('relationships (step 6.6b part 4)', () => {
+  const pickEnd = async (dialog: HTMLElement, end: 'from' | 'to', text: string, name: string): Promise<void> => {
+    fireEvent.change(within(dialog).getByLabelText(`Find the ${end} record by name`), { target: { value: text } });
+    fireEvent.click(await within(dialog).findByRole('button', { name: `Add ${name}` }));
+  };
+  it('a new "commonly confused with" between two demo reactions shows in both inspectors; Undo removes it', async () => {
+    const app = fakeApp({ state: demoState() });
+    answerSearch(app);
+    app.panels.getState().setInspectorOpen(true);
+    renderWithApp(app);
+    openWorkbench();
+    fireEvent.click(screen.getByRole('button', { name: 'New relationship' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New relationship' });
+    fireEvent.change(within(dialog).getByLabelText('Type of relationship'), { target: { value: 'commonly_confused_with' } });
+    await pickEnd(dialog, 'from', 'Diazotisation of aniline', 'Diazotisation of aniline');
+    await pickEnd(dialog, 'to', '1° alcohol', '1° alcohol → aldehyde (PCC)');
+    const before = Object.keys(app.store.getState().records.relationship).length;
+    await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
+    await waitFor(() => expect(Object.keys(app.store.getState().records.relationship)).toHaveLength(before + 1));
+    expect(app.store.historyLabels().undo.at(-1)).toBe('Create relationship commonly confused with'); // a relationship has no name: its type names it
+    for (const [id, other] of [['rxn_aniline-diazotisation', /1° alcohol/], ['rxn_alcohol1-to-aldehyde-pcc', /Diazotisation of aniline/]] as const) {
+      act(() => app.inspectorStore.getState().open({ kind: 'reaction', id }));
+      const pane = await screen.findByRole('complementary', { name: 'Inspector' });
+      const level3 = await within(pane).findByRole('button', { name: /Level 3/ }); // a reaction's related reactions are at Level 3
+      if (level3.getAttribute('aria-expanded') === 'false') fireEvent.click(level3);
+      expect((await within(pane).findAllByText(other)).length).toBeGreaterThan(0);
+      expect(within(pane).getAllByText(/commonly confused with/i).length).toBeGreaterThan(0);
+    }
+    act(() => void app.store.undo());
+    expect(Object.keys(app.store.getState().records.relationship)).toHaveLength(before);
+  });
+  it('a prerequisite_of that would close a cycle is refused at Save, in words', async () => {
+    const app = fakeApp({ state: demoState() });
+    answerSearch(app);
+    renderWithApp(app);
+    openWorkbench();
+    fireEvent.click(screen.getByRole('button', { name: 'New relationship' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New relationship' });
+    fireEvent.change(within(dialog).getByLabelText('Type of relationship'), { target: { value: 'prerequisite_of' } });
+    await pickEnd(dialog, 'from', "Markovnikov's", "Markovnikov's rule");
+    await pickEnd(dialog, 'to', 'Hyperconjugation', 'Hyperconjugation');
+    const before = Object.keys(app.store.getState().records.relationship).length;
+    await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
+    expect(await within(dialog).findByRole('heading', { name: 'Save was refused' })).toBeTruthy();
+    expect(within(dialog).getAllByText(/closes a cycle/).length).toBeGreaterThan(0);
+    expect(Object.keys(app.store.getState().records.relationship)).toHaveLength(before);
+  });
+  it('the palette lists "New relationship"; a read-only tab says why on the Workbench button', () => {
+    renderWithApp(fakeApp({ state: demoState(), status: { mode: 'follower', reason: 'other_tab_is_writer' } }));
+    openWorkbench();
+    expect(screen.getByRole('button', { name: 'New relationship', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
+    const run = vi.fn();
+    const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
+    const command = buildCommands({ ...base, newRelationship: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-relationship');
+    expect(command?.title).toBe('New relationship');
+    command?.run();
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+});

@@ -21,7 +21,7 @@ function editNamesCommand(editors: EditorsApi | null, state: CanonicalState, ins
 
 const unavailable = (editors: EditorsApi | null): string | undefined => (editors === null ? 'editing is not available here' : editors.editReason);
 
-type EditorDeps = Pick<CommandDeps, 'editNames' | 'newSpecies' | 'newClass' | 'newReagent' | 'newReaction' | 'newMechanism' | 'newSource' | 'newConcept' | 'newNamedReaction' | 'newTransformation'>;
+type EditorDeps = Pick<CommandDeps, 'editNames' | 'newSpecies' | 'newClass' | 'newReagent' | 'newReaction' | 'newMechanism' | 'newSource' | 'newConcept' | 'newNamedReaction' | 'newTransformation' | 'newRelationship'>;
 
 export function editorCommandDeps(editors: EditorsApi | null, state: CanonicalState, inspector: Parameters<typeof currentOf>[0]): EditorDeps {
   if (!EDITING) return {};
@@ -34,6 +34,7 @@ export function editorCommandDeps(editors: EditorsApi | null, state: CanonicalSt
     newReaction: { reason, run: () => editors?.newReaction() },
     newMechanism: { reason, run: () => editors?.newMechanism() },
     newSource: { reason, run: () => editors?.newSource() },
+    newRelationship: { reason, run: () => editors?.newRelationship() },
     newConcept: { reason, run: () => editors?.newConcept() },
     newNamedReaction: { reason, run: () => editors?.newNamedReaction() },
     newTransformation: { reason, run: () => editors?.newTransformation() },

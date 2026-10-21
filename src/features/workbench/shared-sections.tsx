@@ -15,7 +15,7 @@ import type { SectionProps } from './section-props';
 import { addCitation, addConcept, addTag, citationLine, citationsOf, conceptIdsOf, moveCitation, removeCitation, removeConcept, removeTag, setCitationField, setTextField, tagProblem, tagsOf, textOf } from './shared-model';
 import styles from './editor.module.css';
 
-const NOTE_LABELS: Readonly<Record<string, string>> = { notes: 'Notes', studyNotes: 'Study notes', acidBaseNotes: 'Acid-base notes', description: 'Description', 'generic.rGroupNote': 'R-group note', limitations: 'Limitations', summary: 'Summary', typicalConditions: 'Typical conditions' };
+const NOTE_LABELS: Readonly<Record<string, string>> = { notes: 'Notes', studyNotes: 'Study notes', acidBaseNotes: 'Acid-base notes', description: 'Description', 'generic.rGroupNote': 'R-group note', limitations: 'Limitations', summary: 'Summary', note: 'Note', typicalConditions: 'Typical conditions' };
 
 export function NotesSection(props: SectionProps & { readonly fields: readonly string[]; readonly links?: MechanismLinksPort | undefined }) {
   return (

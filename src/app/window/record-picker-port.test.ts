@@ -139,3 +139,22 @@ describe('knowledge records (step 6.6b part 2)', () => {
     expect(port.usedBy?.('named_reaction', 'nrx_nobody')).toEqual([]);
   });
 });
+
+describe('relationshipsOf (step 6.6b part 4)', () => {
+  const port = picker();
+  it('lists the relationships a record is an end of, in words, with the label at the right end', () => {
+    expect(port.relationshipsOf?.({ kind: 'reaction', id: 'rxn_benzaldehyde-cannizzaro' })).toEqual([
+      { id: 'rel_cannizzaro-aldol-confusion', words: 'commonly confused with Aldol reaction of ethanal' },
+    ]);
+    const words = port.relationshipsOf?.({ kind: 'concept', id: 'cpt_carbocation-stability' }).map((r) => r.words) ?? [];
+    expect(words).toContain('requires Hyperconjugation');
+    expect(words).toContain("prerequisite of Markovnikov's rule");
+  });
+  it('is empty for a record with none, an unknown record, and is bounded', () => {
+    expect(port.relationshipsOf?.({ kind: 'species', id: 'spc_nope' })).toEqual([]);
+    expect((port.relationshipsOf?.({ kind: 'concept', id: 'cpt_carbocation-stability' }) ?? []).length).toBeLessThanOrEqual(50);
+  });
+  it('describes a record of a kind with no name field by its fallbacks (the relationship endpoints are records)', () => {
+    expect(port.describe('reaction', 'rxn_ethanal-aldol')?.name).toBe('Aldol reaction of ethanal');
+  });
+});

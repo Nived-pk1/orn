@@ -32,6 +32,8 @@ export interface EditorsApi {
   newNamedReaction(): void;
   /** Opens the editor on a NEW transformation (step 6.6b, decision N3). A refusal is said in a toast. */
   newTransformation(): void;
+  /** Opens the editor on a NEW relationship (step 6.6b, decision N5). A refusal is said in a toast. */
+  newRelationship(): void;
   /** Opens a listed draft (its stored session). */
   openDraft(id: string): void;
   /** Why editing is unavailable now (a read-only tab); undefined when it is available. */

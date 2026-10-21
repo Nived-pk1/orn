@@ -28,6 +28,8 @@ export interface RecordPickerPort {
   describe(kind: PickKind, id: string): RecordChoice | undefined;
   /** Why `candidate` cannot be a parent of the `kind` record `owner` (it would close a cycle), in words; undefined when it can. `kind` is a class when absent. */
   parentRefusal?(owner: string, candidate: string, kind?: ParentKind): string | undefined;
+  /** The relationships this record is an end of (stored ones only), in words ("commonly confused with <other>"; "requires <other>" from the far end of a directed one), in ID order and bounded. */
+  relationshipsOf?(ref: { readonly kind: string; readonly id: string }): readonly { readonly id: string; readonly words: string }[];
   /** The reactions that name this named reaction or transformation (derived from the reactions' links), once each, in ID order; "Used by". */
   usedBy?(kind: 'named_reaction' | 'transformation', id: string): readonly RecordChoice[];
   /** Why `candidate` cannot be a component of reagent `owner` (a reagent built from the owner would close a cycle); undefined when it can. */

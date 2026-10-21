@@ -33,3 +33,12 @@ describe('blankDraft knowledge records (step 6.6b)', () => {
     expect(String(draft?.id)).toMatch(/^trf/);
   });
 });
+
+describe('blankDraft relationship (step 6.6b part 4)', () => {
+  it('has the shared fields and NO type, from, to or reverseKind: each is chosen', () => {
+    const draft = blankDraft('relationship', ctx);
+    expect(draft).toMatchObject({ kind: 'relationship', tags: [], citations: [], review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] } });
+    for (const field of ['type', 'from', 'to', 'reverseKind']) expect(draft).not.toHaveProperty(field);
+    expect(String(draft?.id)).toMatch(/^rel/);
+  });
+});

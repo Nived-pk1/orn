@@ -9,7 +9,7 @@ import type { ParentKind, PickKind, RecordChoice, RecordPickerPort } from '@/fea
 import { hierarchyParentGuard, reagentComponentGuard } from '@/core/editing';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import { createScopeOf } from '@/core/graph/scope';
-import type { CanonicalState, ChemicalClass } from '@/core/schema';
+import { RELATIONSHIP_TYPE_SPECS, type CanonicalState, type ChemicalClass } from '@/core/schema';
 import type { SearchService } from '@/workers/search';
 import type { ActiveExam } from '@/ui/state';
 
@@ -30,6 +30,10 @@ const CLASS_KIND_WORDS: Readonly<Record<ChemicalClass['classKind'], string>> = {
 const SCOPE_WORDS = { official: 'in the syllabus', prerequisite: 'prerequisite', enrichment: 'enrichment', outside: 'outside the syllabus', unmapped: 'not mapped to the syllabus' } as const;
 
 export const PICKER_CHANNEL = 'record-picker';
+
+/** Most relationships listed for one record (a record with more says so by the cap, not by a wall of rows). */
+export const MAX_RELATIONSHIP_LINES = 50;
+const DESCRIBED = new Set(['species', 'class', 'reagent', 'reaction', 'mechanism', 'concept', 'reference', 'named_reaction', 'transformation', 'caveat']);
 
 export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
   const describe = (kind: PickKind, id: string): RecordChoice | undefined => {
@@ -62,6 +66,18 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
       if (why === undefined) return undefined;
       const noun = kind.replace(/_/g, ' ');
       return why === 'self' ? `A ${noun} cannot be its own parent.` : `${nameOf(kind, candidate)} is already below this ${noun}, so it cannot be its parent: that would make a cycle.`;
+    },
+    relationshipsOf(ref) {
+      const lines: { id: string; words: string }[] = [];
+      for (const rel of Object.values(deps.state().records.relationship)) {
+        const isFrom = rel.from.kind === ref.kind && rel.from.id === ref.id;
+        if (!isFrom && !(rel.to.kind === ref.kind && rel.to.id === ref.id)) continue;
+        const spec = RELATIONSHIP_TYPE_SPECS[rel.type];
+        const other = isFrom ? rel.to : rel.from;
+        const name = DESCRIBED.has(other.kind) ? nameOf(other.kind as PickKind, other.id) : other.id;
+        lines.push({ id: rel.id, words: `${isFrom ? spec.label : spec.inverseLabel} ${name}` });
+      }
+      return lines.sort((a, b) => (a.id < b.id ? -1 : 1)).slice(0, MAX_RELATIONSHIP_LINES);
     },
     usedBy(kind, id) {
       const field = kind === 'named_reaction' ? 'namedReactionIds' : 'transformationIds';
