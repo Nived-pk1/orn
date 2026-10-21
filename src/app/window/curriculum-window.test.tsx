@@ -153,3 +153,58 @@ describe('marking a demo reaction outside one exam version', () => {
     expect(command?.title).toBe('New exam relevance');
   });
 });
+
+describe('making a class a map family', () => {
+  beforeAll(() => {
+    // jsdom does no layout: give every element a tall box so the virtual List view renders all of its rows
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => 4000 });
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 900 });
+  });
+  it('a class with no family, made one in a free cell from its own editor, appears on the overview map and in the Families list; Undo removes it', async () => {
+    const { arrangementsOf } = await import('@/core/graph/navigator/nodes');
+    const { indexEngine } = await import('@/core/indexes');
+    const app = fakeApp({ state: demoState() });
+    answerSearch(app);
+    app.panels.getState().setInspectorOpen(true);
+    renderWithApp(app);
+    const cls = 'cls_acyl-halides';
+    act(() => app.inspectorStore.getState().open({ kind: 'class', id: cls }));
+    const inspector = await screen.findByRole('complementary', { name: 'Inspector' });
+    fireEvent.click(await within(inspector).findByRole('button', { name: 'Edit' }));
+    const editor = await screen.findByRole('dialog', { name: 'Edit Acyl halides' });
+    fireEvent.click(within(editor).getByRole('button', { name: 'Make this a map family' }));
+    const family = await screen.findByRole('dialog', { name: 'New map family: Acyl halides' });
+    fireEvent.change(within(family).getByLabelText('Group'), { target: { value: 'Oxygen compounds' } });
+    fireEvent.change(within(family).getByLabelText('Order'), { target: { value: '14' } });
+    fireEvent.click(within(family).getByRole('button', { name: /^Column 0, row 2:/ }));
+    const before = Object.keys(app.store.getState().records.navigator_anchor).length;
+    await act(async () => void fireEvent.click(within(family).getByRole('button', { name: 'Save' })));
+    await waitFor(() => expect(Object.keys(app.store.getState().records.navigator_anchor)).toHaveLength(before + 1));
+    const made = Object.values(app.store.getState().records.navigator_anchor).find((a) => a.target.id === cls);
+    expect(made).toMatchObject({ order: 14, group: 'Oxygen compounds', tone: 'green', cell: { column: 0, row: 2 } });
+    expect(app.store.historyLabels().undo.at(-1)).toBe('Create map family: Acyl halides');
+    const arrangement = arrangementsOf({ indexes: indexEngine.build(app.store.getState()) } as never).get(cls);
+    expect(arrangement).toEqual({ cell: { column: 0, row: 2 }, group: 'Oxygen compounds', tone: 'green' });
+    // the overview map draws it, in its group
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Modes' })).getByRole('button', { name: /Overview|Navigator/ }));
+    const svg = await screen.findByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ });
+    expect(svg.querySelectorAll('[data-box="hub"]')).toHaveLength(16);
+    expect(screen.getByRole('graphics-symbol', { name: /^Acyl halides, class hub, Oxygen compounds/ })).toBeTruthy();
+    // and the Families list has the row
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name: 'List' }));
+    const table = await screen.findByRole('table', { name: 'Families' });
+    expect(within(table).getAllByText('Acyl halides').length).toBeGreaterThan(0);
+    act(() => void app.store.undo());
+    expect(Object.keys(app.store.getState().records.navigator_anchor)).toHaveLength(before);
+  });
+  it('the Workbench has "New map family" and the palette lists it', async () => {
+    renderWithApp(fakeApp({ state: demoState() }));
+    openWorkbench();
+    fireEvent.click(screen.getByRole('button', { name: 'New map family' }));
+    expect(await screen.findByRole('dialog', { name: 'New map family' })).toBeTruthy();
+    const run = vi.fn();
+    const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
+    const command = buildCommands({ ...base, newMapFamily: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-map-family');
+    expect(command?.title).toBe('New map family');
+  });
+});

@@ -3,12 +3,14 @@
  * the read-only record of what this editor does not edit. Collapsible and keyboard-navigable (SectionFrame); a phone starts with the long
  * sections closed.
  */
+import type { RecordKind, RecordRef } from '@/core/schema';
 import { GenericSection } from './class-generic';
 import { ClassIdentitySection, ExamplesSection, ParentsSection } from './class-sections';
 import { NamesSection } from './names-section';
 import type { RecordPickerPort } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
+import { MapFamilySection } from './map-family-section';
 import { SharedFieldsSection } from './shared-bundle';
 import { ReviewSection } from './species-sections';
 import type { StructurePort } from './structure-contracts';
@@ -18,6 +20,9 @@ export interface ClassFormProps extends SectionProps {
   readonly structure: StructurePort | undefined;
   readonly timers: { after(ms: number, run: () => void): () => void };
   readonly picker?: RecordPickerPort;
+  readonly saved?: boolean | undefined;
+  readonly startNew?: ((kind: RecordKind, seed: Readonly<Record<string, unknown>>) => void) | undefined;
+  readonly editRecord?: ((ref: RecordRef) => void) | undefined;
 }
 
 export function ClassForm(props: ClassFormProps) {
@@ -32,6 +37,9 @@ export function ClassForm(props: ClassFormProps) {
       </SectionFrame>
       <SectionFrame id="identity" title="Identity">
         <ClassIdentitySection {...common} {...picker} />
+      </SectionFrame>
+      <SectionFrame id="map-family" title="Map family">
+        <MapFamilySection draft={props.draft} picker={props.picker} saved={props.saved === true} startNew={props.startNew} editRecord={props.editRecord} />
       </SectionFrame>
       <SectionFrame id="parents" title="Parents">
         <ParentsSection {...common} {...picker} />

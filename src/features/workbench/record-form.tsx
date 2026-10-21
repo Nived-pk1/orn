@@ -8,6 +8,7 @@ import { CaveatForm } from './caveat-form';
 import { CURRICULUM_TARGET_KINDS } from './curriculum-model';
 import { ExamRelevanceSection, SyllabusTopicsSection } from './curriculum-lists';
 import { RelevanceForm } from './relevance-form';
+import { FamilyForm } from './family-form';
 import { MappingForm } from './mapping-form';
 import { TopicForm } from './topic-form';
 import { ClassForm } from './class-form';
@@ -50,17 +51,17 @@ export interface RecordFormProps extends SectionProps {
 
 function KindForm(props: RecordFormProps) {
   const { kind, suggestions, newId, links, pictures, saved, openRecord, startNew, editRecord, ...rest } = props;
-  void editRecord;
   if (kind === 'topic') return <TopicForm {...rest} saved={saved} openRecord={openRecord} startNew={startNew} />;
   if (kind === 'topic_mapping') return <MappingForm {...rest} />;
   if (kind === 'exam_relevance') return <RelevanceForm {...rest} />;
+  if (kind === 'navigator_anchor') return <FamilyForm {...rest} />;
   if (kind === 'relationship') return <RelationshipForm {...rest} />;
   if (kind === 'caveat') return <CaveatForm {...rest} />;
   if (kind === 'concept') return <ConceptForm {...rest} />;
   if (kind === 'named_reaction') return <NamedReactionForm {...rest} openRecord={openRecord} />;
   if (kind === 'transformation') return <TransformationForm {...rest} openRecord={openRecord} />;
   if (kind === 'species') return <SpeciesForm {...rest} suggestions={suggestions} />;
-  if (kind === 'class') return <ClassForm {...rest} />;
+  if (kind === 'class') return <ClassForm {...rest} saved={saved} startNew={startNew} editRecord={editRecord} />;
   if (kind === 'reference') return <SourceForm draft={rest.draft} onEdit={rest.onEdit} picker={rest.picker} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} />;
   if (kind === 'reaction') return <ReactionForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} links={links} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} {...(rest.picker === undefined ? {} : { picker: rest.picker })} />;
   if (kind === 'mechanism') return <MechanismForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} links={links} pictures={pictures} saved={saved} picker={rest.picker} structure={rest.structure} timers={rest.timers} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} />;

@@ -32,7 +32,8 @@ export const setRef = (field: string, ref: { readonly kind: string; readonly id:
   else draft[field] = { kind: ref.kind, id: ref.id };
 };
 
-const capital = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
+export const capitalWord = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
+const capital = capitalWord;
 
 export const TOPIC_KIND_WORDS: Readonly<Record<(typeof TOPIC_KINDS)[number], string>> = Object.fromEntries(TOPIC_KINDS.map((kind) => [kind, capital(kind)])) as Record<(typeof TOPIC_KINDS)[number], string>;
 export const ROLE_WORDS: Readonly<Record<(typeof MAPPING_ROLES)[number], string>> = Object.fromEntries(MAPPING_ROLES.map((role) => [role, capital(role)])) as Record<(typeof MAPPING_ROLES)[number], string>;
@@ -59,6 +60,10 @@ export function curriculumTitleWords(kind: string, draft: unknown, picker: Recor
     const name = nameOfTarget();
     if (name === undefined || topicId === '') return undefined;
     return `${name} in ${shortName(picker?.topics?.().find((t) => t.id === topicId)?.name ?? topicId)}`;
+  }
+  if (kind === 'navigator_anchor') {
+    const label = textField(draft, 'label');
+    return label !== '' ? shortName(label) : nameOfTarget();
   }
   if (kind === 'exam_relevance') {
     const examId = textField(draft, 'examId');

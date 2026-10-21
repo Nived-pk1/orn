@@ -25,8 +25,8 @@ export interface TopicFormProps extends PickerSectionProps {
 const bad = (props: PickerSectionProps, path: string): true | undefined => (props.invalid?.has(path) === true ? true : undefined);
 
 /** "Before: A (order 4). After: B (order 9)." among the other topics under the same parent, for the order typed. */
-export function orderHint(siblings: readonly TopicChoice[], order: number | undefined): string {
-  if (order === undefined) return 'The order among the topics under the same parent; fractions such as 2.5 fit between 2 and 3.';
+export function orderHint(siblings: readonly { readonly name: string; readonly order: number }[], order: number | undefined): string {
+  if (order === undefined) return 'The order among its neighbours (the topics under the same parent, or the families of the same group); fractions such as 2.5 fit between 2 and 3.';
   const before = siblings.filter((s) => s.order < order).sort((a, b) => b.order - a.order)[0];
   const after = siblings.filter((s) => s.order > order).sort((a, b) => a.order - b.order)[0];
   const same = siblings.filter((s) => s.order === order);

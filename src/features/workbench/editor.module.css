@@ -354,3 +354,31 @@ ul.list {
   gap: var(--space-3);
   min-width: 0;
 }
+
+/* the cell grid of the map family editor: the current arrangement plus one free row and column */
+.cellGrid {
+  display: grid;
+  gap: var(--space-1);
+  overflow-x: auto;
+}
+
+.gridCell {
+  min-height: var(--hit-min);
+  padding: var(--space-1);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: var(--text-13);
+  overflow-wrap: anywhere;
+}
+
+.gridCell[data-state='taken'] {
+  background: var(--color-surface);
+  color: var(--color-ink-2);
+}
+
+.gridCell[data-state='mine'] {
+  border-color: var(--color-accent);
+  border-width: 2px;
+}

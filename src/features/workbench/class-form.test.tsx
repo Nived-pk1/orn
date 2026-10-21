@@ -62,7 +62,7 @@ describe('the class form', () => {
   it('lists Names, Identity, Parents, Generic representation, Examples, Review and the read-only record, each with a toggle', () => {
     const { dialog } = show();
     const toggles = within(dialog).getAllByRole('button', { expanded: true }).map((b) => b.textContent?.replace(/^[▾▸]\s*/, ''));
-    expect(toggles).toEqual(['Names', 'Identity', 'Parents', 'Generic representation', 'Examples', 'Review', 'Notes, tags and citations']);
+    expect(toggles).toEqual(['Names', 'Identity', 'Map family', 'Parents', 'Generic representation', 'Examples', 'Review', 'Notes, tags and citations']);
   });
 
   it('is titled "Edit <name>" for a stored class and "New class" for a new one', () => {
@@ -82,15 +82,6 @@ describe('Identity', () => {
     expect(draftOf(rig, id).classKind).toBe('functional_group');
     expect(storedClass(rig)).toEqual(before);
     expect(within(screen.getByLabelText('Kind of class')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Choose a kind', 'Compound class', 'Functional group', 'Structural family', 'Homologous series', 'Reagent family']);
-  });
-
-  it('says read-only whether the class is a family on the map (decision D2), and offers no way to change it', () => {
-    show({ mapFamily: true });
-    expect(screen.getByText('A family on the map')).toBeTruthy();
-    expect(screen.getByText(/making a class a family arrives in step 6.6/)).toBeTruthy();
-    cleanup();
-    show({ mapFamily: false });
-    expect(screen.getByText('Not a family on the map')).toBeTruthy();
   });
 });
 

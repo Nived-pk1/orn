@@ -42,6 +42,8 @@ export interface EditorsApi {
   newTopicMapping(): void;
   /** Opens the editor on a NEW exam relevance (step 6.6c, decision M3). A refusal is said in a toast. */
   newExamRelevance(): void;
+  /** Opens the editor on a NEW map family, a navigator anchor of a class (step 6.6c, decision M4). A refusal is said in a toast. */
+  newMapFamily(): void;
   /** Opens the editor on a NEW record of this kind with some fields already filled in (step 6.6c: "Map to a topic" and the like). */
   startNew(kind: RecordKind, seed: Readonly<Record<string, unknown>>): void;
   /** Opens a listed draft (its stored session). */

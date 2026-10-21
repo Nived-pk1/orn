@@ -27,10 +27,11 @@ const KINDS: readonly [RecordKind, string][] = [
   ['topic', 'topic'],
   ['topic_mapping', 'topic mapping'],
   ['exam_relevance', 'exam relevance'],
+  ['navigator_anchor', 'map family'],
 ];
 
 /** Kinds that cannot be an end of a relationship. */
-const NO_RELATIONSHIPS: readonly RecordKind[] = ['relationship', 'reference', 'topic', 'topic_mapping', 'exam_relevance'];
+const NO_RELATIONSHIPS: readonly RecordKind[] = ['relationship', 'reference', 'topic', 'topic_mapping', 'exam_relevance', 'navigator_anchor'];
 
 describe.each(KINDS)('the %s editor', (kind, words) => {
   it('has the form and the side column as the only two columns, Findings first in the side column', () => {

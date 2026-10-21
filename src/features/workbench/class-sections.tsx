@@ -23,7 +23,6 @@ const SPECIES = ['species'] as const;
 export function ClassIdentitySection(props: ClassPickerSectionProps) {
   const view = classViewOf(props.draft);
   const locked = props.unavailable !== undefined;
-  const family = props.picker?.isMapFamily?.(view.id);
   return (
     <div>
       <div className={styles.field}>
@@ -37,12 +36,6 @@ export function ClassIdentitySection(props: ClassPickerSectionProps) {
           ))}
         </select>
       </div>
-      {family === undefined ? null : (
-        <p>
-          <strong>{family ? 'A family on the map' : 'Not a family on the map'}</strong>
-          <span className={styles.hint}> (read-only; making a class a family arrives in step 6.6b)</span>
-        </p>
-      )}
     </div>
   );
 }

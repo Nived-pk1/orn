@@ -37,6 +37,9 @@ const nameOf = (record: unknown, id: string): string => {
   return typeof own === 'string' && own !== '' ? own : id;
 };
 
+/** The kind in words for a history label, where the kind's name is not plain words (step 6.6c). */
+const LABEL_NOUN: Readonly<Partial<Record<string, string>>> = { navigator_anchor: 'map family' };
+
 /** A relationship is named by both its ends ("Create relationship: A commonly confused with B"); the others by their name. */
 function labelOf(verb: string, noun: string, record: AnyRecord, state: CanonicalState): string {
   const composed = composedName(state, record);
@@ -72,7 +75,7 @@ export function commitDraft(
   const record = parsed.record;
   const ref = { kind: record.kind, id: record.id } as RecordRef;
   const result = store.dispatch({
-    label: current === undefined ? labelOf('Create', record.kind.replace(/_/g, ' '), record, store.getState()) : labelOf('Edit', options.section ?? 'record', current, store.getState()),
+    label: current === undefined ? labelOf('Create', LABEL_NOUN[record.kind] ?? record.kind.replace(/_/g, ' '), record, store.getState()) : labelOf('Edit', options.section ?? 'record', current, store.getState()),
     commands: [session.target === null ? { type: 'record.create', record } : { type: 'record.update', record }],
     expectedRevision: store.getRevision(),
     selectionHint: [ref],
