@@ -6,6 +6,7 @@
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { showKnowledge } from '@/test-support/knowledge-kit';
+import { demoState } from '@/test-support/app-boot-kit';
 import { stubDialog } from '@/test-support/window-kit';
 
 beforeAll(stubDialog);
@@ -17,15 +18,17 @@ const open = (name: RegExp): void => {
   if (toggle.getAttribute('aria-expanded') === 'false') fireEvent.click(toggle);
 };
 
+const rigTopics = (): Record<string, { parentId?: string; order: number }> => demoState().records.topic as never;
+
 describe('a new topic', () => {
-  it('has no kind of topic and no order; the five kinds are in plain words; the parent starts as "None"; Save is refused until given', async () => {
+  it('has no kind of topic; the order starts after the last sibling; the five kinds are in plain words; the parent starts as "None"; Save is refused until given', async () => {
     const { draft, rig } = showKnowledge('topic', { blank: true });
     expect(draft()).not.toHaveProperty('topicKind');
-    expect(draft()).not.toHaveProperty('order');
+    expect(draft().order).toBe(2); // the one top-level topic has order 1
     const kind = screen.getByLabelText('Kind of topic') as HTMLSelectElement;
     expect(kind.value).toBe('');
     expect(within(kind).getAllByRole('option').map((o) => o.textContent)).toEqual(['Choose a kind', 'Subject', 'Chapter', 'Section', 'Topic', 'Subtopic']);
-    expect((screen.getByLabelText('Order') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Order') as HTMLInputElement).value).toBe('2');
     const parent = screen.getByLabelText('Parent topic') as HTMLSelectElement;
     expect(parent.value).toBe('');
     expect(within(parent).getAllByRole('option')[0]?.textContent).toBe('None (a top-level topic)');
@@ -45,6 +48,16 @@ describe('a new topic', () => {
     expect(draft().parentId).toBe('top_organic-chemistry');
     set('Parent topic', '');
     expect(draft()).not.toHaveProperty('parentId');
+  });
+  it('the order follows the highest sibling plus 1 under the chosen parent, until the person types one', () => {
+    const { draft } = showKnowledge('topic', { blank: true });
+    set('Parent topic', 'top_alcohols-phenols-ethers');
+    const highest = Math.max(...Object.values(rigTopics()).filter((t) => t.parentId === 'top_alcohols-phenols-ethers').map((t) => t.order));
+    expect(draft().order).toBe(highest + 1);
+    expect((screen.getByLabelText('Order') as HTMLInputElement).value).toBe(String(highest + 1));
+    set('Order', '3');
+    set('Parent topic', 'top_organic-chemistry');
+    expect(draft().order).toBe(3);
   });
   it('says which siblings come before and after the order given', () => {
     showKnowledge('topic', { blank: true });

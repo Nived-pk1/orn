@@ -24,6 +24,8 @@
     "src/app/services/drafts-types.ts",
     "src/app/services/draft-checks.ts",
     "src/app/services/duplicate-check.ts",
-    "src/app/services/lazy-editor-ports.ts"
+    "src/app/services/lazy-editor-ports.ts",
+    "src/app/window/editor-entries.ts",
+    "src/app/services/lazy-drafts.ts"
   ]
 }

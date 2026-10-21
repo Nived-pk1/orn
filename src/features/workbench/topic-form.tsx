@@ -9,6 +9,7 @@ import { TOPIC_KINDS } from '@/core/schema';
 import { Button } from '@/ui/primitives';
 import { numberField, setChoice, setNumber, textField, TOPIC_KIND_WORDS } from './curriculum-model';
 import { NameAliasesSection, type PickerSectionProps } from './knowledge-sections';
+import { useAfterLastOrder } from './order-default';
 import { NumberField } from './number-field';
 import type { TopicChoice } from './record-picker-contracts';
 import { SectionFrame } from './section-frame';
@@ -64,6 +65,7 @@ function Identity(props: PickerSectionProps) {
   const self = textField(props.draft, 'id');
   const order = numberField(props.draft, 'order');
   const siblings = topics.filter((t) => (t.parentId ?? '') === parentId && t.id !== self);
+  const typed = useAfterLastOrder(order, siblings.map((t) => t.order), (value) => props.onEdit(setNumber('order', value), 'order'));
   return (
     <div>
       <NameAliasesSection draft={props.draft} onEdit={props.onEdit} invalid={props.invalid} unavailable={props.unavailable} phone={props.phone} idPrefix="topic" />
@@ -79,7 +81,7 @@ function Identity(props: PickerSectionProps) {
         </select>
       </div>
       <ParentSelect {...props} topics={topics} />
-      <NumberField id="topic-order" label="Order" path="order" value={order} invalid={bad(props, 'order') === true} unavailable={props.unavailable} hint={orderHint(siblings, order)} onChange={(value) => props.onEdit(setNumber('order', value), 'order')} />
+      <NumberField id="topic-order" label="Order" path="order" value={order} invalid={bad(props, 'order') === true} unavailable={props.unavailable} hint={orderHint(siblings, order)} onChange={(value) => (typed(value), props.onEdit(setNumber('order', value), 'order'))} />
     </div>
   );
 }

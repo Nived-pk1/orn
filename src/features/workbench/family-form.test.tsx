@@ -7,6 +7,7 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { showKnowledge, type ShownKnowledge } from '@/test-support/knowledge-kit';
+import { demoState } from '@/test-support/app-boot-kit';
 import { stubDialog } from '@/test-support/window-kit';
 
 beforeAll(stubDialog);
@@ -22,14 +23,13 @@ const settle = async (shown: ShownKnowledge): Promise<void> => {
 const cell = (column: number, row: number): HTMLElement => screen.getByRole('button', { name: new RegExp(`^Column ${column}, row ${row}:`) });
 
 describe('a new map family', () => {
-  it('opens with the class filled in; the label is optional (the class name is shown); nothing else has a default', async () => {
+  it('opens with the class filled in; the label is optional (the class name is shown); only the order has a start (after the last)', () => {
     const { draft, rig } = showKnowledge('navigator_anchor', { blank: true, seed: SEED });
     expect(screen.getByRole('list', { name: 'Class' }).textContent).toContain('Acyl halides');
     expect(screen.getByLabelText(/Label/)).toBeTruthy();
     expect(screen.getByText('The map shows the class name: Acyl halides.')).toBeTruthy();
-    for (const field of ['order', 'cell', 'group', 'tone']) expect(draft()).not.toHaveProperty(field);
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    await screen.findByRole('heading', { name: 'Save was refused' });
+    expect(draft().order).toBe(1);
+    for (const field of ['cell', 'group', 'tone']) expect(draft()).not.toHaveProperty(field);
     expect(Object.keys(rig.store.getState().records.navigator_anchor)).toHaveLength(15);
   });
   it('the title names the family', () => {
@@ -68,7 +68,16 @@ describe('the group and the tone', () => {
 });
 
 describe('the order', () => {
-  it('has no default; the hint names the families before and after it in its group', () => {
+  it('starts after the last family of the chosen group, until the person types one', () => {
+    const { draft } = showKnowledge('navigator_anchor', { blank: true, seed: SEED });
+    set('Group', 'Oxygen compounds');
+    const highest = Math.max(...Object.values(demoState().records.navigator_anchor as never as Record<string, { group?: string; order: number }>).filter((a) => a.group === 'Oxygen compounds').map((a) => a.order));
+    expect(draft().order).toBe(highest + 1);
+    set('Order', '40');
+    set('Group', 'Hydrocarbons');
+    expect(draft().order).toBe(40);
+  });
+  it('the hint names the families before and after it in its group', () => {
     showKnowledge('navigator_anchor', { blank: true, seed: SEED });
     set('Group', 'Oxygen compounds');
     set('Order', '10.5');

@@ -4,14 +4,14 @@
  * `openDrafts()` (the File menu, the start-up line), and loads the drafts list and the editor with `React.lazy` the first time one is
  * shown, so none of the editor is in the entry chunk. It fills the editor's port from the session manager; it knows no chemistry.
  */
-import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { RecordKind, RecordRef } from '@/core/schema';
 import { useSubscribable } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
 import { useApp } from './context';
 import { createLocalTimeFormatter } from './local-time';
-import { NAMES_KINDS } from '@/core/editing/names';
 import { EditorsContext, type EditorsApi } from './drafts-ui';
+import type { EditorEntries } from './editor-entries';
 
 // /* @__PURE__ */: an unused lazy() is dropped with its import() in Study, where nothing mounts EditorsProvider (ADR-041)
 const DraftsDialog = /* @__PURE__ */ lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
@@ -19,9 +19,7 @@ const DraftsDialog = /* @__PURE__ */ lazy(() => import('@/features/workbench/lay
 const EditorSession = /* @__PURE__ */ lazy(() => import('./editor-session').then((m) => ({ default: m.EditorSession })));
 
 const machineTime = /* @__PURE__ */ createLocalTimeFormatter();
-
-/** The kinds whose editor is the full one (the others edit names only). */
-const FULL_EDITOR_KINDS: readonly string[] = ['species', 'class', 'reagent', 'reaction', 'mechanism', 'reference', 'concept', 'named_reaction', 'transformation', 'relationship', 'caveat', 'topic', 'topic_mapping', 'exam_relevance', 'navigator_anchor'];
+const NO_ENTRIES: EditorsApi['entries'] = [];
 
 /** Why editing cannot start in this tab now; undefined when it can (a session-only tab edits in memory and says so in the editor). */
 export function editReasonOf(mode: string | null): string | undefined {
@@ -31,12 +29,23 @@ export function editReasonOf(mode: string | null): string | undefined {
 }
 
 export function EditorsProvider(props: { readonly children: ReactNode }) {
-  const { services, formatTime: injected } = useApp();
+  const { services, formatTime: injected, editorEntries, inspector } = useApp();
   const formatTime = injected ?? machineTime;
   const toasts = useToasts();
   const status = useSubscribable(services.status);
   const [draftsOpen, setDraftsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // the entry points (titles, palette words, the full-editor kinds) are a lazy chunk, loaded after the first paint (entry room, exams step)
+  const [entries, setEntries] = useState<EditorEntries | null>(editorEntries ?? null);
+  useEffect(() => {
+    if (entries !== null) return undefined;
+    let live = true;
+    const cancel = inspector.timers.after(0, () => void import('./editor-entries').then((m) => live && setEntries(m.EDITOR_ENTRIES)));
+    return () => {
+      live = false;
+      cancel();
+    };
+  }, [entries, inspector.timers]);
   const reason = editReasonOf(status.mode);
 
   const show = useCallback(
@@ -54,28 +63,13 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
     () => ({
       openDrafts: () => setDraftsOpen(true),
       editNames: (ref: RecordRef) => show(services.drafts.open(ref)),
-      newSpecies: () => show(services.drafts.open({ kind: 'species', blank: true })),
-      newClass: () => show(services.drafts.open({ kind: 'class', blank: true })),
-      newReagent: () => show(services.drafts.open({ kind: 'reagent', blank: true })),
-      newReaction: () => show(services.drafts.open({ kind: 'reaction', blank: true })),
-      newMechanism: () => show(services.drafts.open({ kind: 'mechanism', blank: true })),
-      newSource: () => show(services.drafts.open({ kind: 'reference', blank: true })),
-      newRelationship: () => show(services.drafts.open({ kind: 'relationship', blank: true })),
-      newTopic: () => show(services.drafts.open({ kind: 'topic', blank: true })),
-      newExamRelevance: () => show(services.drafts.open({ kind: 'exam_relevance', blank: true })),
-      newMapFamily: () => show(services.drafts.open({ kind: 'navigator_anchor', blank: true })),
-      newTopicMapping: () => show(services.drafts.open({ kind: 'topic_mapping', blank: true })),
       startNew: (kind: RecordKind, seed: Readonly<Record<string, unknown>>) => show(services.drafts.open({ kind, blank: true, seed })),
-      newCaveat: () => show(services.drafts.open({ kind: 'caveat', blank: true })),
-      newConcept: () => show(services.drafts.open({ kind: 'concept', blank: true })),
-      newNamedReaction: () => show(services.drafts.open({ kind: 'named_reaction', blank: true })),
-      newTransformation: () => show(services.drafts.open({ kind: 'transformation', blank: true })),
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
-      fullEditorKinds: FULL_EDITOR_KINDS,
-      namesKinds: NAMES_KINDS,
+      entries: entries?.entries ?? NO_ENTRIES,
+      ...(entries === null ? {} : { fullEditorKinds: entries.fullEditorKinds, namesKinds: entries.namesKinds }),
     }),
-    [reason, services, show],
+    [entries, reason, services, show],
   );
   return (
     <EditorsContext.Provider value={api}>

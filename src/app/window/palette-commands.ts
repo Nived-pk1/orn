@@ -10,6 +10,15 @@ import { undoUnavailableReason } from './dataset-actions';
 import { ALL_LABEL, type ExamOptions } from './exam-scope';
 import { NAVIGATOR_MODE } from './modes';
 
+/** One "New <kind>" palette command. */
+export interface NewKindCommand {
+  readonly id: string;
+  readonly title: string;
+  readonly keywords: readonly string[];
+  readonly reason: string | undefined;
+  run(): void;
+}
+
 export interface CommandDeps {
   readonly mode: string;
   setMode(mode: string): void;
@@ -26,33 +35,8 @@ export interface CommandDeps {
   openExport(): void;
   /** "Edit the selected record" (ADR-040): why it cannot run now, and what it does. Absent: no such command. */
   readonly editNames?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New species" (step 6.2a): why it cannot run now, and what it does. Absent: no such command. */
-  readonly newSpecies?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New class" (step 6.2b): why it cannot run now, and what it does. Absent: no such command. */
-  readonly newClass?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New reagent" (step 6.2b): why it cannot run now, and what it does. Absent: no such command. */
-  readonly newReagent?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New reaction" (step 6.3a): why it cannot run now, and what it does. Absent: no such command. */
-  readonly newReaction?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New mechanism" (step 6.5a): why it cannot run now, and what it does. Absent: no such command. */
-  readonly newMechanism?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New source" (step 6.6a): why it cannot run now, and what it does. Absent: no such command. */
-  readonly newSource?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New concept", "New named reaction" and "New transformation" (step 6.6b): why they cannot run now, and what they do. Absent: no such command. */
-  readonly newConcept?: { readonly reason: string | undefined; run(): void } | undefined;
-  readonly newNamedReaction?: { readonly reason: string | undefined; run(): void } | undefined;
-  readonly newTransformation?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New relationship" (step 6.6b part 4). */
-  readonly newRelationship?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New topic" and "New topic mapping" (step 6.6c part 2). */
-  readonly newTopic?: { readonly reason: string | undefined; run(): void } | undefined;
-  readonly newTopicMapping?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New exam relevance" (step 6.6c part 3). */
-  readonly newExamRelevance?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New map family" (step 6.6c part 4). */
-  readonly newMapFamily?: { readonly reason: string | undefined; run(): void } | undefined;
-  /** "New caveat" (step 6.6b part 5). */
-  readonly newCaveat?: { readonly reason: string | undefined; run(): void } | undefined;
+  /** The "New ..." commands (one per editor entry, from the lazy entries table): why each cannot run now, and what it does. Absent or empty: none are listed. */
+  readonly newKinds?: readonly NewKindCommand[] | undefined;
   /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
   readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
   readonly ui: NavigatorUiStores;
@@ -120,21 +104,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     withReason({ id: 'replace-demo', title: deps.replaceTitle ?? 'Replace with the demo dataset', keywords: ['load', 'import', 'demo', 'study'], run: deps.askReplace }, importReason),
     withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, undoReason),
     ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit the selected record', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
-    ...(deps.newSpecies === undefined ? [] : [withReason({ id: 'new-species', title: 'New species', keywords: ['create', 'add', 'compound', 'author', 'workbench', 'draft'], run: deps.newSpecies.run }, deps.newSpecies.reason)]),
-    ...(deps.newClass === undefined ? [] : [withReason({ id: 'new-class', title: 'New class', keywords: ['create', 'add', 'group', 'functional group', 'family', 'author', 'workbench', 'draft'], run: deps.newClass.run }, deps.newClass.reason)]),
-    ...(deps.newReagent === undefined ? [] : [withReason({ id: 'new-reagent', title: 'New reagent', keywords: ['create', 'add', 'catalyst', 'oxidant', 'author', 'workbench', 'draft'], run: deps.newReagent.run }, deps.newReagent.reason)]),
-    ...(deps.newReaction === undefined ? [] : [withReason({ id: 'new-reaction', title: 'New reaction', keywords: ['create', 'add', 'equation', 'participants', 'stages', 'author', 'workbench', 'draft'], run: deps.newReaction.run }, deps.newReaction.reason)]),
-    ...(deps.newMechanism === undefined ? [] : [withReason({ id: 'new-mechanism', title: 'New mechanism', keywords: ['create', 'add', 'steps', 'pathway', 'variants', 'arrow pushing', 'author', 'workbench', 'draft'], run: deps.newMechanism.run }, deps.newMechanism.reason)]),
-    ...(deps.newSource === undefined ? [] : [withReason({ id: 'new-source', title: 'New source', keywords: ['create', 'add', 'reference', 'textbook', 'book', 'citation', 'cite', 'author', 'workbench', 'draft'], run: deps.newSource.run }, deps.newSource.reason)]),
-    ...(deps.newConcept === undefined ? [] : [withReason({ id: 'new-concept', title: 'New concept', keywords: ['create', 'add', 'topic idea', 'reaction type', 'mechanism class', 'rule', 'author', 'workbench', 'draft'], run: deps.newConcept.run }, deps.newConcept.reason)]),
-    ...(deps.newNamedReaction === undefined ? [] : [withReason({ id: 'new-named-reaction', title: 'New named reaction', keywords: ['create', 'add', 'name reaction', 'author', 'workbench', 'draft'], run: deps.newNamedReaction.run }, deps.newNamedReaction.reason)]),
-    ...(deps.newTransformation === undefined ? [] : [withReason({ id: 'new-transformation', title: 'New transformation', keywords: ['create', 'add', 'conversion', 'functional group', 'class to class', 'author', 'workbench', 'draft'], run: deps.newTransformation.run }, deps.newTransformation.reason)]),
-    ...(deps.newRelationship === undefined ? [] : [withReason({ id: 'new-relationship', title: 'New relationship', keywords: ['create', 'add', 'link', 'commonly confused', 'prerequisite', 'reverse of', 'competes', 'author', 'workbench', 'draft'], run: deps.newRelationship.run }, deps.newRelationship.reason)]),
-    ...(deps.newCaveat === undefined ? [] : [withReason({ id: 'new-caveat', title: 'New caveat', keywords: ['create', 'add', 'exception', 'trap', 'limitation', 'common mistake', 'special case', 'author', 'workbench', 'draft'], run: deps.newCaveat.run }, deps.newCaveat.reason)]),
-    ...(deps.newTopic === undefined ? [] : [withReason({ id: 'new-topic', title: 'New topic', keywords: ['create', 'add', 'syllabus', 'chapter', 'subject', 'section', 'curriculum', 'author', 'workbench', 'draft'], run: deps.newTopic.run }, deps.newTopic.reason)]),
-    ...(deps.newTopicMapping === undefined ? [] : [withReason({ id: 'new-topic-mapping', title: 'New topic mapping', keywords: ['create', 'add', 'map', 'place', 'syllabus', 'topic', 'curriculum', 'author', 'workbench', 'draft'], run: deps.newTopicMapping.run }, deps.newTopicMapping.reason)]),
-    ...(deps.newExamRelevance === undefined ? [] : [withReason({ id: 'new-exam-relevance', title: 'New exam relevance', keywords: ['create', 'add', 'exam', 'scope', 'official', 'outside', 'enrichment', 'syllabus', 'jee', 'author', 'workbench', 'draft'], run: deps.newExamRelevance.run }, deps.newExamRelevance.reason)]),
-    ...(deps.newMapFamily === undefined ? [] : [withReason({ id: 'new-map-family', title: 'New map family', keywords: ['create', 'add', 'hub', 'anchor', 'overview', 'map', 'group', 'class', 'author', 'workbench', 'draft'], run: deps.newMapFamily.run }, deps.newMapFamily.reason)]),
+    ...(deps.newKinds ?? []).map((command) => withReason({ id: command.id, title: command.title, keywords: command.keywords, run: command.run }, command.reason)),
     ...structureCommands,
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),

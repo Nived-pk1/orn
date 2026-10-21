@@ -6,6 +6,7 @@ import { render } from '@testing-library/react';
 import { vi, type Mock } from 'vitest';
 import { AppProvider, type AppContextValue, type DemoLoad, type WindowServices } from '@/app/window/context';
 import { createEventLog, createStatusStore, emptyState, type AppStatus } from '@/app/services';
+import { EDITOR_ENTRIES } from '@/app/window/editor-entries';
 import { createDraftManager, type DraftManager } from '@/app/services/drafts';
 import type { StatusWriter } from '@/app/services/status';
 import type { ImportPlan, ImportPreview } from '@/io';
@@ -126,7 +127,7 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
     ui: { inspector: inspectorStore, selection: navigator.ports.ui.selection, family: navigator.ports.ui.family, panels },
     log: () => undefined,
   };
-  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigatorPorts, inspector, loadDemo, nowMs: () => 1_790_000_000_000, formatTime: createLocalTimeFormatter('UTC'), reload } };
+  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigatorPorts, inspector, loadDemo, nowMs: () => 1_790_000_000_000, formatTime: createLocalTimeFormatter('UTC'), reload, editorEntries: EDITOR_ENTRIES } };
 }
 
 export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {

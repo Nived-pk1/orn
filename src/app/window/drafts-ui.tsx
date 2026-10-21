@@ -8,44 +8,17 @@ import type { RecordKind, RecordRef } from '@/core/schema';
 import type { DraftsView } from '@/app/services/drafts-types';
 import { EDITING } from '@/app/edition';
 import { useAppOptional } from './context';
+import type { NewEntry } from './editor-entries';
 
 /** What the window offers to open: the drafts list and the names editor. Absent in a window that has none (a test of one part). */
 export interface EditorsApi {
   openDrafts(): void;
   /** Opens (or reopens) the names editor of a record. Answers nothing: a refusal is said in a toast. */
   editNames(ref: RecordRef): void;
-  /** Opens the editor on a NEW species (step 6.2a, decision D3). A refusal is said in a toast. */
-  newSpecies(): void;
-  /** Opens the editor on a NEW class (step 6.2b, decision D5). A refusal is said in a toast. */
-  newClass(): void;
-  /** Opens the editor on a NEW reagent (step 6.2b, decision D5). A refusal is said in a toast. */
-  newReagent(): void;
-  /** Opens the editor on a NEW reaction (step 6.3a, decision D4). A refusal is said in a toast. */
-  newReaction(): void;
-  /** Opens the editor on a NEW mechanism (step 6.5a, decision D6). A refusal is said in a toast. */
-  newMechanism(): void;
-  /** Opens the editor on a NEW source, a record of kind `reference` (step 6.6a, decision C2). A refusal is said in a toast. */
-  newSource(): void;
-  /** Opens the editor on a NEW concept (step 6.6b, decision N1). A refusal is said in a toast. */
-  newConcept(): void;
-  /** Opens the editor on a NEW named reaction (step 6.6b, decision N2). A refusal is said in a toast. */
-  newNamedReaction(): void;
-  /** Opens the editor on a NEW transformation (step 6.6b, decision N3). A refusal is said in a toast. */
-  newTransformation(): void;
-  /** Opens the editor on a NEW relationship (step 6.6b, decision N5). A refusal is said in a toast. */
-  newRelationship(): void;
-  /** Opens the editor on a NEW caveat (step 6.6b, decision N6). A refusal is said in a toast. */
-  newCaveat(): void;
-  /** Opens the editor on a NEW topic (step 6.6c, decision M1). A refusal is said in a toast. */
-  newTopic(): void;
-  /** Opens the editor on a NEW topic mapping (step 6.6c, decision M2). A refusal is said in a toast. */
-  newTopicMapping(): void;
-  /** Opens the editor on a NEW exam relevance (step 6.6c, decision M3). A refusal is said in a toast. */
-  newExamRelevance(): void;
-  /** Opens the editor on a NEW map family, a navigator anchor of a class (step 6.6c, decision M4). A refusal is said in a toast. */
-  newMapFamily(): void;
-  /** Opens the editor on a NEW record of this kind with some fields already filled in (step 6.6c: "Map to a topic" and the like). */
+  /** Opens the editor on a NEW record of this kind, with some fields already filled in when a seed is given (every "New ..." button; step 6.6c: "Map to a topic" and the like). A refusal is said in a toast. */
   startNew(kind: RecordKind, seed: Readonly<Record<string, unknown>>): void;
+  /** The "New ..." entry points (the Workbench, phone More and the palette read this one list). Empty until the lazy chunk has loaded, after the first paint. */
+  readonly entries: readonly NewEntry[];
   /** Opens a listed draft (its stored session). */
   openDraft(id: string): void;
   /** Why editing is unavailable now (a read-only tab); undefined when it is available. */

@@ -63,7 +63,7 @@ describe('New topic and New topic mapping (desktop)', () => {
   it('the palette lists both commands', () => {
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    const commands = buildCommands({ ...base, newTopic: { reason: undefined, run }, newTopicMapping: { reason: undefined, run } } as unknown as CommandDeps);
+    const commands = buildCommands({ ...base, newKinds: [{ id: 'new-topic', title: 'New topic', keywords: [], reason: undefined, run: run }, { id: 'new-topic-mapping', title: 'New topic mapping', keywords: [], reason: undefined, run: run }] } as unknown as CommandDeps);
     expect(commands.map((command) => command.title)).toEqual(expect.arrayContaining(['New topic', 'New topic mapping']));
     for (const id of ['new-topic', 'new-topic-mapping']) commands.find((c) => c.id === id)?.run();
     expect(run).toHaveBeenCalledTimes(2);
@@ -149,7 +149,7 @@ describe('marking a demo reaction outside one exam version', () => {
     expect(await screen.findByRole('dialog', { name: 'New exam relevance' })).toBeTruthy();
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    const command = buildCommands({ ...base, newExamRelevance: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-exam-relevance');
+    const command = buildCommands({ ...base, newKinds: [{ id: 'new-exam-relevance', title: 'New exam relevance', keywords: [], reason: undefined, run }], } as unknown as CommandDeps).find((c) => c.id === 'new-exam-relevance');
     expect(command?.title).toBe('New exam relevance');
   });
 });
@@ -204,7 +204,7 @@ describe('making a class a map family', () => {
     expect(await screen.findByRole('dialog', { name: 'New map family' })).toBeTruthy();
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    const command = buildCommands({ ...base, newMapFamily: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-map-family');
+    const command = buildCommands({ ...base, newKinds: [{ id: 'new-map-family', title: 'New map family', keywords: [], reason: undefined, run: run }] } as unknown as CommandDeps).find((c) => c.id === 'new-map-family');
     expect(command?.title).toBe('New map family');
   });
 });

@@ -31,6 +31,7 @@ async function writerWithDraft() {
   const world = await worldHolding(demoState(), 2);
   const t = testEnv({ world });
   const services = await booter.bootEnv(t);
+    await services.drafts.refresh(); // the draft manager is a lazy chunk, loaded after the first paint in the app
   const opened = services.drafts.open({ kind: 'species', id: firstSpecies(services) });
   if (!opened.ok) throw new Error(opened.message);
   services.drafts.edit(opened.id, rename('First'), { path: 'names.canonical' });
@@ -52,6 +53,7 @@ describe('a dirty session is stored within 2 s (a throttle) and offered at the n
 
     await services.dispose();
     const again = await booter.bootEnv(testEnv({ world }));
+    await again.drafts.refresh(); // the draft manager is a lazy chunk, loaded after the first paint in the app
     expect(again.bootReport?.editorSessionIds).toEqual([id]); // offered, whether or not a crash is suspected
     await vi.waitFor(() => expect(again.drafts.view().count).toBe(1));
     const item = again.drafts.view().items[0];
@@ -109,6 +111,7 @@ describe('Save and Discard remove the row', () => {
   it('a session that was opened and never edited leaves no row and is not a draft', async () => {
     const world = await worldHolding(demoState(), 2);
     const services = await booter.bootEnv(testEnv({ world }));
+    await services.drafts.refresh(); // the draft manager is a lazy chunk, loaded after the first paint in the app
     const opened = services.drafts.open({ kind: 'species', id: firstSpecies(services) });
     if (!opened.ok) throw new Error(opened.message);
     await vi.waitFor(() => expect(services.drafts.view().count).toBe(0));
@@ -123,6 +126,7 @@ describe('stored rows are untrusted', () => {
     const world = await worldHolding(demoState(), 2);
     await tamper(world, (db) => db.editorSessions.put({ id: 'eds_broken', nonsense: true } as never));
     const services = await booter.bootEnv(testEnv({ world }));
+    await services.drafts.refresh(); // the draft manager is a lazy chunk, loaded after the first paint in the app
     await vi.waitFor(() => expect(services.drafts.view().count).toBe(1));
     expect(services.drafts.view().items).toEqual([{ id: 'eds_broken', unreadable: true, reason: expect.any(String) }]);
     expect(await storedIds(world)).toEqual(['eds_broken']);
@@ -136,6 +140,7 @@ describe('bounds', () => {
   it('at most 20 stored sessions: opening a 21st is refused with the reason', async () => {
     const world = await worldHolding(demoState(), 2);
     const services = await booter.bootEnv(testEnv({ world }));
+    await services.drafts.refresh(); // the draft manager is a lazy chunk, loaded after the first paint in the app
     const species = Object.keys(services.store.getState().records.species).sort();
     expect(species.length).toBeGreaterThan(20);
     for (const id of species.slice(0, 20)) {
@@ -170,6 +175,7 @@ describe('tabs', () => {
     const { world, services: a, id } = await writerWithDraft();
     await a.drafts.flush();
     const b = await booter.bootEnv(testEnv({ world }));
+    await b.drafts.refresh(); // the draft manager is a lazy chunk, loaded after the first paint in the app
     expect(b.status.get().mode).toBe('follower');
     expect(b.drafts.open({ kind: 'species', id: firstSpecies(b) })).toMatchObject({ ok: false, reason: 'read_only', message: 'This tab is read-only: edit in the tab that is saving' });
     expect(b.drafts.view()).toMatchObject({ count: null, keeping: 'read_only' });
@@ -182,6 +188,7 @@ describe('tabs', () => {
 
   it('a session-only tab edits in memory and keeps nothing', async () => {
     const services = await booter.bootEnv(testEnv({ noIndexedDb: true }));
+    await services.drafts.refresh(); // the draft manager is a lazy chunk, loaded after the first paint in the app
     expect(services.status.get().mode).toBe('session_only');
     // a session-only tab starts empty: a new record's draft
     const opened = services.drafts.open({ kind: 'species' });

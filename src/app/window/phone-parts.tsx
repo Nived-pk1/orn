@@ -66,51 +66,11 @@ export function PhoneBar(props: {
         {!EDITING || editors === null ? null : (
           <section aria-label="Workbench" className={styles.section}>
             <h3>Workbench</h3>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newSpecies) } : { unavailable: editors.editReason })}>
-              New species
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newClass) } : { unavailable: editors.editReason })}>
-              New class
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newReagent) } : { unavailable: editors.editReason })}>
-              New reagent
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newReaction) } : { unavailable: editors.editReason })}>
-              New reaction
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newMechanism) } : { unavailable: editors.editReason })}>
-              New mechanism
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newSource) } : { unavailable: editors.editReason })}>
-              New source
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newConcept) } : { unavailable: editors.editReason })}>
-              New concept
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newNamedReaction) } : { unavailable: editors.editReason })}>
-              New named reaction
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newTransformation) } : { unavailable: editors.editReason })}>
-              New transformation
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newRelationship) } : { unavailable: editors.editReason })}>
-              New relationship
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newCaveat) } : { unavailable: editors.editReason })}>
-              New caveat
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newTopic) } : { unavailable: editors.editReason })}>
-              New topic
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newTopicMapping) } : { unavailable: editors.editReason })}>
-              New topic mapping
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newExamRelevance) } : { unavailable: editors.editReason })}>
-              New exam relevance
-            </Button>
-            <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(editors.newMapFamily) } : { unavailable: editors.editReason })}>
-              New map family
-            </Button>
+            {editors.entries.map((entry) => (
+              <Button key={entry.kind} className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(() => editors.startNew(entry.kind, {})) } : { unavailable: editors.editReason })}>
+                {entry.title}
+              </Button>
+            ))}
           </section>
         )}
         {props.history === undefined ? null : <HistorySection history={props.history} />}

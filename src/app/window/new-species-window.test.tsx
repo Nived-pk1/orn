@@ -137,10 +137,10 @@ describe('New class through the real window (step 6.2b decision D5)', () => {
   it('the palette lists "New class", runs it, and says why when unavailable', () => {
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    const commands = buildCommands({ ...base, newClass: { reason: undefined, run } } as unknown as CommandDeps);
+    const commands = buildCommands({ ...base, newKinds: [{ id: 'new-class', title: 'New class', keywords: [], reason: undefined, run }], } as unknown as CommandDeps);
     commands.find((c) => c.id === 'new-class')?.run();
     expect(run).toHaveBeenCalledTimes(1);
-    expect(buildCommands({ ...base, newClass: { reason: 'read-only', run } } as unknown as CommandDeps).find((c) => c.id === 'new-class')?.unavailable).toBe('read-only');
+    expect(buildCommands({ ...base, newKinds: [{ id: 'new-class', title: 'New class', keywords: [], reason: 'read-only', run }], } as unknown as CommandDeps).find((c) => c.id === 'new-class')?.unavailable).toBe('read-only');
   });
 });
 
@@ -176,14 +176,14 @@ describe('New reagent through the real window (step 6.2b decision D5)', () => {
     expect(screen.getByRole('button', { name: 'New reagent', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    buildCommands({ ...base, newReagent: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-reagent')?.run();
+    buildCommands({ ...base, newKinds: [{ id: 'new-reagent', title: 'New reagent', keywords: [], reason: undefined, run: run }] } as unknown as CommandDeps).find((c) => c.id === 'new-reagent')?.run();
     expect(run).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('the palette command "New species"', () => {
-  const deps = (newSpecies: CommandDeps['newSpecies']): CommandDeps =>
-    ({ mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, newSpecies, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } }) as unknown as CommandDeps;
+  const deps = (newSpecies: { reason: string | undefined; run(): void } | undefined): CommandDeps =>
+    ({ mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, newKinds: newSpecies === undefined ? undefined : [{ id: 'new-species', title: 'New species', keywords: [], ...newSpecies }], ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } }) as unknown as CommandDeps;
 
   it('is listed, runs, and is unavailable with its reason in a read-only tab', () => {
     const run = vi.fn();

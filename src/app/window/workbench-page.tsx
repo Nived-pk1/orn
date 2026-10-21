@@ -1,7 +1,7 @@
 /**
- * The Workbench page (step 6.2a decision D5): where authoring starts on the desktop. "New species" opens the editor on a blank species;
- * "New class" opens it on a blank class (step 6.2b); "New reagent" opens it on a blank reagent (step 6.2b); "New reaction" opens it on a blank reaction (step 6.3a); "New source" opens it on a blank source (step 6.6a); a read-only tab says why on every button (never hidden, never a silent no-op); the drafts list shows
- * every unfinished edit with a way back into it. Writer tab only: a read-only tab says why on each button.
+ * The Workbench page (step 6.2a decision D5): where authoring starts on the desktop. One "New <kind>" button per entry of the editors' lazy
+ * entries table (they appear a moment after the first paint); each opens the editor on a blank record of its kind. A read-only tab says why on
+ * every button (never hidden, never a silent no-op); the drafts list shows every unfinished edit with a way back into it.
  */
 import { Button } from '@/ui/primitives';
 import { useApp } from './context';
@@ -21,23 +21,11 @@ export function WorkbenchPage() {
       <h2>Workbench</h2>
       <p>Add or change records. Everything you save can be undone.</p>
       <div className={styles.actionRow}>
-        <Button variant="primary" {...(reason === undefined && editors !== null ? { onClick: editors.newSpecies } : { unavailable: reason ?? 'Editing is not available here.' })}>
-          New species
-        </Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newClass } : { unavailable: reason ?? 'Editing is not available here.' })}>New class</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newReagent } : { unavailable: reason ?? 'Editing is not available here.' })}>New reagent</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newReaction } : { unavailable: reason ?? 'Editing is not available here.' })}>New reaction</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newMechanism } : { unavailable: reason ?? 'Editing is not available here.' })}>New mechanism</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newSource } : { unavailable: reason ?? 'Editing is not available here.' })}>New source</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newConcept } : { unavailable: reason ?? 'Editing is not available here.' })}>New concept</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newNamedReaction } : { unavailable: reason ?? 'Editing is not available here.' })}>New named reaction</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newTransformation } : { unavailable: reason ?? 'Editing is not available here.' })}>New transformation</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newRelationship } : { unavailable: reason ?? 'Editing is not available here.' })}>New relationship</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newCaveat } : { unavailable: reason ?? 'Editing is not available here.' })}>New caveat</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newTopic } : { unavailable: reason ?? 'Editing is not available here.' })}>New topic</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newTopicMapping } : { unavailable: reason ?? 'Editing is not available here.' })}>New topic mapping</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newExamRelevance } : { unavailable: reason ?? 'Editing is not available here.' })}>New exam relevance</Button>
-        <Button {...(reason === undefined && editors !== null ? { onClick: editors.newMapFamily } : { unavailable: reason ?? 'Editing is not available here.' })}>New map family</Button>
+        {(editors?.entries ?? []).map((entry) => (
+          <Button key={entry.kind} {...(entry.primary === undefined ? {} : { variant: 'primary' as const })} {...(reason === undefined && editors !== null ? { onClick: () => editors.startNew(entry.kind, {}) } : { unavailable: reason ?? 'Editing is not available here.' })}>
+            {entry.title}
+          </Button>
+        ))}
       </div>
       <h3>Drafts</h3>
       {drafts.items.length === 0 ? (

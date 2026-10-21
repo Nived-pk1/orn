@@ -94,7 +94,7 @@ describe('New source (desktop)', () => {
     expect(screen.getByRole('button', { name: 'New source', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    const command = buildCommands({ ...base, newSource: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-source');
+    const command = buildCommands({ ...base, newKinds: [{ id: 'new-source', title: 'New source', keywords: [], reason: undefined, run }], } as unknown as CommandDeps).find((c) => c.id === 'new-source');
     expect(command?.title).toBe('New source');
     command?.run();
     expect(run).toHaveBeenCalledTimes(1);

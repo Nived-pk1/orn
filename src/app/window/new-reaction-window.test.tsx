@@ -102,7 +102,7 @@ describe('New reaction (desktop)', () => {
     expect(screen.getByRole('button', { name: 'New reaction', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    const command = buildCommands({ ...base, newReaction: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-reaction');
+    const command = buildCommands({ ...base, newKinds: [{ id: 'new-reaction', title: 'New reaction', keywords: [], reason: undefined, run }], } as unknown as CommandDeps).find((c) => c.id === 'new-reaction');
     expect(command?.title).toBe('New reaction');
     command?.run();
     expect(run).toHaveBeenCalledTimes(1);

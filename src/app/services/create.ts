@@ -24,7 +24,7 @@ import { createChemPart, createLayoutPart } from './chem-layout';
 import { createDepictionService } from './depiction';
 import { lazyDraftChecks, lazyDuplicateCheck } from './lazy-editor-ports';
 import { EDITING } from '@/app/edition';
-import { createDraftManager } from './drafts';
+import { createLazyDraftManager } from './lazy-drafts';
 import { createInertEditorServices } from './editor-services-inert';
 import { createDerivedIndexes } from './derived-indexes';
 import { startFollower } from './follower';
@@ -139,9 +139,11 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
 
   // Study has no editing: stand-ins with the same shapes, so the real manager and `@/core/editing` are not in its build (ADR-041)
   const inert = createInertEditorServices();
-  const drafts = EDITING ? createDraftManager({ store, adapter, status, timers: env.timers, ids, log }) : inert.drafts;
-  // Every stored session is an unfinished draft (ADR-040): read them once the mode is known, and again when a follower is promoted.
-  void drafts.refresh();
+  const lazyDrafts = EDITING ? createLazyDraftManager({ store, adapter, status, timers: env.timers, ids, log }) : undefined;
+  const drafts = lazyDrafts ?? inert.drafts;
+  // Every stored session is an unfinished draft (ADR-040): the manager is a lazy chunk, loaded after the first paint, and reads them when it
+  // has; they are read again when a follower is promoted.
+  lazyDrafts?.start();
   let lastMode = status.get().mode;
   const offMode = status.subscribe((next) => {
     if (next.mode === lastMode) return;

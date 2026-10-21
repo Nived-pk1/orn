@@ -80,7 +80,7 @@ describe('New concept, New named reaction, New transformation (desktop)', () => 
   it('the palette lists the three commands and runs them', () => {
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
     const run = vi.fn();
-    const deps = { ...base, newConcept: { reason: undefined, run }, newNamedReaction: { reason: undefined, run }, newTransformation: { reason: undefined, run } } as unknown as CommandDeps;
+    const deps = { ...base, newKinds: [{ id: 'new-concept', title: 'New concept', keywords: [], reason: undefined, run }, { id: 'new-named-reaction', title: 'New named reaction', keywords: [], reason: undefined, run }, { id: 'new-transformation', title: 'New transformation', keywords: [], reason: undefined, run }], } as unknown as CommandDeps;
     const commands = buildCommands(deps);
     expect(commands.filter((c) => c.title.startsWith('New ')).map((c) => c.title)).toEqual(expect.arrayContaining(['New concept', 'New named reaction', 'New transformation']));
     for (const id of ['new-concept', 'new-named-reaction', 'new-transformation']) commands.find((c) => c.id === id)?.run();
@@ -201,7 +201,7 @@ describe('relationships (step 6.6b part 4)', () => {
     expect(screen.getByRole('button', { name: 'New relationship', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    const command = buildCommands({ ...base, newRelationship: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-relationship');
+    const command = buildCommands({ ...base, newKinds: [{ id: 'new-relationship', title: 'New relationship', keywords: [], reason: undefined, run }], } as unknown as CommandDeps).find((c) => c.id === 'new-relationship');
     expect(command?.title).toBe('New relationship');
     command?.run();
     expect(run).toHaveBeenCalledTimes(1);
@@ -243,7 +243,7 @@ describe('caveats (step 6.6b part 5)', () => {
     expect(screen.getByRole('button', { name: 'New caveat', description: 'This tab is read-only: edit in the tab that is saving' }).getAttribute('aria-disabled')).toBe('true');
     const run = vi.fn();
     const base = { mode: 'navigator', setMode: () => undefined, hasData: true, writerMode: 'writer', writerReason: null, importReason: undefined, askReplace: () => undefined, undoImport: () => undefined, pickFile: () => undefined, openExport: () => undefined, ui: fakeApp({ state: demoState() }).navigator.ports.ui, exams: { options: [], omitted: 0 } };
-    const command = buildCommands({ ...base, newCaveat: { reason: undefined, run } } as unknown as CommandDeps).find((c) => c.id === 'new-caveat');
+    const command = buildCommands({ ...base, newKinds: [{ id: 'new-caveat', title: 'New caveat', keywords: [], reason: undefined, run }], } as unknown as CommandDeps).find((c) => c.id === 'new-caveat');
     expect(command?.title).toBe('New caveat');
     command?.run();
     expect(run).toHaveBeenCalledTimes(1);

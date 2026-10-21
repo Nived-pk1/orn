@@ -7,6 +7,7 @@ import type { AppServices } from '@/app/services';
 import type { InspectorPorts } from '@/features/inspector';
 import type { NavigatorPorts } from '@/features/navigator';
 import type { PanelsStore } from '@/ui/state';
+import type { EditorEntries } from './editor-entries';
 import type { TimeFormatter } from './local-time';
 import type { DatasetInfo } from './dataset-types';
 
@@ -31,6 +32,8 @@ export interface AppContextValue {
   nowMs?(): number;
   /** Local time for the words people read (a stored UTC time shown in their zone). Absent: the machine's own zone. */
   formatTime?: TimeFormatter;
+  /** The editors' entry points when they are already loaded (a test hands them in; the app loads them after the first paint). */
+  readonly editorEntries?: EditorEntries;
   /** Reloads the page (`location.reload()` in the browser). */
   reload(): void;
 }

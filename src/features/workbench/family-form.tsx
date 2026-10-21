@@ -11,6 +11,7 @@ import { numberField, refField, setNumber, setRef } from './curriculum-model';
 import { FamilyGrid } from './family-grid';
 import { familyViewOf, groupsOf, NEW_GROUP, setGroup, setLabel, setTone, TONE_WORDS } from './family-model';
 import type { PickerSectionProps } from './knowledge-sections';
+import { useAfterLastOrder } from './order-default';
 import { NumberField } from './number-field';
 import { RecordList, RecordPicker } from './record-picker';
 import { orderHint } from './topic-form';
@@ -104,6 +105,7 @@ export function FamilyForm(props: PickerSectionProps) {
   const others = families.filter((f) => f.id !== view.id && f.targetId === view.targetId && view.targetId !== '');
   const order = numberField(props.draft, 'order');
   const siblings = families.filter((f) => f.id !== view.id && (f.group ?? '') === view.group);
+  const typed = useAfterLastOrder(order, siblings.map((f) => f.order), (value) => props.onEdit(setNumber('order', value), 'order'));
   const common = { draft: props.draft, onEdit: props.onEdit, ...(props.invalid === undefined ? {} : { invalid: props.invalid }), ...(props.unavailable === undefined ? {} : { unavailable: props.unavailable }), ...(props.phone === undefined ? {} : { phone: props.phone }) };
   return (
     <div className={styles.sections} data-editor-sections="">
@@ -116,7 +118,7 @@ export function FamilyForm(props: PickerSectionProps) {
           <p className={styles.hint}>{className === '' ? 'The map shows the class name when the label is empty.' : `The map shows the class name: ${className}.`}</p>
         </div>
         <GroupAndTone {...common} picker={props.picker} />
-        <NumberField id="family-order" label="Order" path="order" value={order} invalid={bad(props, 'order') === true} unavailable={props.unavailable} hint={orderHint(siblings, order)} onChange={(value) => props.onEdit(setNumber('order', value), 'order')} />
+        <NumberField id="family-order" label="Order" path="order" value={order} invalid={bad(props, 'order') === true} unavailable={props.unavailable} hint={orderHint(siblings, order)} onChange={(value) => (typed(value), props.onEdit(setNumber('order', value), 'order'))} />
       </SectionFrame>
       <SectionFrame id="cell" title="Cell on the map">
         <FamilyGrid selfId={view.id} families={families} chosen={view.cell} unavailable={props.unavailable} invalid={bad(props, 'cell') === true} onEdit={props.onEdit} />
