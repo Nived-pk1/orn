@@ -209,6 +209,46 @@ test.describe('desktop', () => {
       expect(await axeProblems(page)).toEqual([]);
       await expectClean(seen);
     });
+
+    test('Keep my data: this published version is not asked again, after a reload either (H1)', async ({ page, browserName }) => {
+      test.setTimeout(300_000);
+      const seen = await watch(page, STUDY);
+      await openStudy(page);
+      await importOwnData(page);
+      const notice = page.getByRole('region', { name: 'Study dataset update' });
+      await expect(notice.getByText(NOTICE)).toBeVisible();
+      await expect(notice.getByRole('button', { name: 'Later' })).toBeVisible();
+      if (browserName === 'chromium') await page.screenshot({ path: resolve(shotsDir(), 'study-update-notice-keep-1280x800.png') });
+      await notice.getByRole('button', { name: 'Keep my data' }).click();
+      await expect(notice).toBeHidden();
+      // the decision is written to IndexedDB in the background: wait for the row before the reload (a reload is not a flush)
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              new Promise<boolean>((resolve) => {
+                const open = indexedDB.open('orn');
+                open.onerror = () => resolve(false);
+                open.onsuccess = () => {
+                  const db = open.result;
+                  if (!db.objectStoreNames.contains('uiState')) return resolve(false);
+                  const row = db.transaction('uiState', 'readonly').objectStore('uiState').get('studyDatasetDeclined');
+                  row.onsuccess = () => {
+                    db.close();
+                    resolve(row.result !== undefined);
+                  };
+                  row.onerror = () => resolve(false);
+                };
+              }),
+          ),
+        )
+        .toBe(true);
+      await page.reload();
+      await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
+      await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByRole('region', { name: 'Study dataset update' })).toHaveCount(0);
+      await expectClean(seen);
+    });
   });
 
   test('a small own dataset imports and works as before in Study (import and export of the visitor\'s own data stay)', async ({ page }) => {

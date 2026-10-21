@@ -65,7 +65,7 @@ test.describe('the mechanism editor', () => {
     const preview = dialog.getByRole('region', { name: 'Preview of Summary' });
     await expect(preview.locator('em')).toHaveText('aldehyde');
     await expect(preview.locator('sub')).toHaveText('2');
-    await expect(dialog.getByText('*emphasis*, **strong**, H_{2}O, Br^{-}, - bullet, [[record link]]')).toBeVisible();
+    await expect(dialog.getByText('*emphasis*, **strong**, H_{2}O, Br^{-}, - bullet, [[record link]]').first()).toBeVisible(); // the Summary, and now the shared Notes fields, each show the help line
     // the live L1 findings follow an edit 300 ms later (a first "Must not be blank (name)" is not stale, it has not been recomputed yet; review F7)
     await expect(dialog.getByText('Must not be blank (name)')).toHaveCount(0);
     await dismissToasts(page);

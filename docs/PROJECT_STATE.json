@@ -102,7 +102,8 @@
     "6.5a",
     "6.5b",
     "6.5",
-    "studio"
+    "studio",
+    "6.6a"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -130,8 +131,8 @@
     "commit": "539d4f4",
     "protectedCheckedAt": "2026-10-21"
   },
-  "nextStep": "6.6",
-  "nextStepTitle": "Caveats, relationships, curriculum mappings, citations editors",
+  "nextStep": "6.6b",
+  "nextStepTitle": "Caveats, relationships, curriculum mappings and map family editors (second half of row 6.6)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
