@@ -5,6 +5,7 @@
  * kinds come from the schema's own table (`RELATIONSHIP_TYPE_SPECS`), so the editor offers nothing the schema refuses. No chemistry.
  */
 import type { DraftRecipe } from '@/core/editing';
+import { relationshipWords } from '@/core/editing';
 import { RELATIONSHIP_TYPES, RELATIONSHIP_TYPE_SPECS, type REVERSE_KINDS, type RecordRef, type RelationshipType } from '@/core/schema';
 import type { PickKind } from './record-picker-contracts';
 
@@ -63,6 +64,14 @@ export interface RelationshipView {
 export function relationshipViewOf(draft: unknown): RelationshipView {
   const fields = isBag(draft) ? draft : {};
   return { type: text(fields.type), from: refOf(fields.from), to: refOf(fields.to), reverseKind: text(fields.reverseKind), note: text(fields.note) };
+}
+
+/** "A commonly confused with B" for the editor's title, or undefined until the type and both ends are chosen. Names are the picker's (the ID when not found). */
+export function relationshipTitleWords(draft: unknown, picker: { describe(kind: PickKind, id: string): { readonly name: string } | undefined } | undefined): string | undefined {
+  const view = relationshipViewOf(draft);
+  if (!Object.hasOwn(RELATIONSHIP_TYPE_SPECS, view.type) || view.from === undefined || view.to === undefined) return undefined;
+  const name = (ref: RecordRef): string => picker?.describe(ref.kind as PickKind, ref.id)?.name ?? ref.id;
+  return relationshipWords(view.type, name(view.from), name(view.to));
 }
 
 /** The labels of the fields the relationship editor owns, by path. */

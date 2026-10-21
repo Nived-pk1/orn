@@ -33,7 +33,7 @@ export const PICKER_CHANNEL = 'record-picker';
 
 /** Most relationships listed for one record (a record with more says so by the cap, not by a wall of rows). */
 export const MAX_RELATIONSHIP_LINES = 50;
-const DESCRIBED = new Set(['species', 'class', 'reagent', 'reaction', 'mechanism', 'concept', 'reference', 'named_reaction', 'transformation', 'caveat']);
+const DESCRIBED = new Set(['species', 'class', 'reagent', 'reaction', 'mechanism', 'concept', 'reference', 'named_reaction', 'transformation', 'caveat', 'route']);
 
 export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
   const describe = (kind: PickKind, id: string): RecordChoice | undefined => {
@@ -42,6 +42,7 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
     if (record === undefined) return undefined;
     if (kind === 'concept') return { kind, id: record.id, name: record.name ?? record.id, kindWords: String(record.conceptKind ?? 'concept').replace(/_/g, ' '), scope: '', ...(record.conceptKind === undefined ? {} : { conceptKind: record.conceptKind }) };
     if (kind === 'named_reaction' || kind === 'transformation') return { kind, id: record.id, name: record.name ?? record.id, kindWords: kind.replace(/_/g, ' '), scope: '' };
+    if (kind === 'route') return { kind, id: record.id, name: record.name ?? record.id, kindWords: 'route', scope: '' };
     if (kind === 'caveat') return { kind, id: record.id, name: record.title ?? record.id, kindWords: String(record.caveatKind ?? 'caveat').replace(/_/g, ' '), scope: '' };
     if (kind === 'reference') return { kind, id: record.id, name: record.title ?? record.id, kindWords: [String(record.refKind ?? 'source').replace(/_/g, ' '), record.year].filter((part) => part !== undefined).join(', '), scope: '' };
     const exam = deps.activeExam();

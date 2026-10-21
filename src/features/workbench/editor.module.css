@@ -346,3 +346,11 @@ ul.list {
   font-family: var(--font-mono);
   font-size: var(--text-13);
 }
+
+/* the main column of the editor: the kind's form and the sections every record has (Relationships, ...) */
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}

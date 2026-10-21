@@ -33,7 +33,7 @@ export const FULL_FORM_KINDS: readonly RecordKind[] = ['species', 'class', 'reag
 
 export const hasFullForm = (kind: RecordKind): boolean => FULL_FORM_KINDS.includes(kind);
 
-const KIND_WORDS: Partial<Readonly<Record<RecordKind, string>>> = { reference: 'source' };
+const KIND_WORDS: Partial<Readonly<Record<RecordKind, string>>> = { reference: 'source', navigator_anchor: 'map family' };
 
 /** The kind in words, for a title ("New source", "New named reaction") and for the history label "Edit <kind words> <record name>". */
 export const kindWords = (kind: RecordKind): string => KIND_WORDS[kind] ?? kind.replace(/_/g, ' ');

@@ -4,7 +4,8 @@
  */
 import type { CanonicalStore, CommandContext, DraftCommitOutcome, EditorSession } from '../commands/contracts';
 import { recordAt } from '../commands/lookup';
-import type { AnyRecord, RecordRef } from '../schema';
+import type { AnyRecord, CanonicalState, RecordRef } from '../schema';
+import { nameOfRef, relationshipWords } from './labels';
 import { parseRecord } from '../validation/l1';
 import { compareForConflict, sameValue } from './conflict';
 import type { CommitOptions, ConflictChoices, FieldComparison } from './contracts';
@@ -36,6 +37,12 @@ const nameOf = (record: unknown, id: string): string => {
   return typeof own === 'string' && own !== '' ? own : id;
 };
 
+/** A relationship is named by both its ends ("Create relationship: A commonly confused with B"); the others by their name. */
+function labelOf(verb: string, noun: string, record: AnyRecord, state: CanonicalState): string {
+  if (record.kind !== 'relationship') return `${verb} ${noun} ${nameOf(record, record.id)}`;
+  return `${verb} ${noun}: ${relationshipWords(record.type, nameOfRef(state, record.from), nameOfRef(state, record.to))}`;
+}
+
 export function commitDraft(
   store: CanonicalStore,
   session: EditorSession,
@@ -63,7 +70,7 @@ export function commitDraft(
   const record = parsed.record;
   const ref = { kind: record.kind, id: record.id } as RecordRef;
   const result = store.dispatch({
-    label: current === undefined ? `Create ${record.kind.replace(/_/g, ' ')} ${nameOf(record, record.id)}` : `Edit ${options.section ?? 'record'} ${nameOf(current, record.id)}`,
+    label: current === undefined ? labelOf('Create', record.kind.replace(/_/g, ' '), record, store.getState()) : labelOf('Edit', options.section ?? 'record', current, store.getState()),
     commands: [session.target === null ? { type: 'record.create', record } : { type: 'record.update', record }],
     expectedRevision: store.getRevision(),
     selectionHint: [ref],

@@ -3,7 +3,8 @@
  * the search engine, the words for a record already chosen, and the cycle questions a picker asks BEFORE Save. The app fills it; the
  * pickers decide nothing. `kindWords` and `scope` are words ("compound class", "in the syllabus").
  */
-export type PickKind = 'species' | 'class' | 'reagent' | 'reaction' | 'mechanism' | 'concept' | 'reference' | 'named_reaction' | 'transformation' | 'caveat';
+/** `route` can be described (its name, for an existing relationship end) but has no search yet (Phase 7). */
+export type PickKind = 'species' | 'class' | 'reagent' | 'reaction' | 'mechanism' | 'concept' | 'reference' | 'named_reaction' | 'transformation' | 'caveat' | 'route';
 
 /** The kinds that have parents (a hierarchy): a parent picker asks the cycle question for one of these. */
 export type ParentKind = 'class' | 'concept' | 'named_reaction';

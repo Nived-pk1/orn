@@ -19,10 +19,11 @@ import { draftStatusText, editingUnavailableReason, type FormatTime } from './dr
 import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
 import { useLiveChecks, type LiveChecks } from './live-validation';
-import { formOwns, labelOfField, sectionOf, titleOf } from './form-kinds';
+import { formOwns, kindWords, labelOfField, sectionOf, titleOf } from './form-kinds';
 import { namesFieldLabel } from './names-section';
 import { PreviewPanel } from './reaction-preview';
 import { RecordForm } from './record-form';
+import { relationshipTitleWords } from './relationship-model';
 import styles from './editor.module.css';
 
 export const LIVE_DEBOUNCE_MS = 300;
@@ -218,7 +219,8 @@ export function EditorHost(props: EditorHostProps) {
   const shown = refused ? refusal.findings : mergeFindings(live, checks.dry.findings, checks.structure.findings);
   const notes = refused ? [] : checkNotes(checks);
   const inForm = (path: string | undefined): boolean => formOwns(session.kind, path);
-  const title = titleOf(session.kind, session.target === null, baseName);
+  const ends = session.kind === 'relationship' ? relationshipTitleWords(draft, port.records) : undefined;
+  const title = ends === undefined ? titleOf(session.kind, session.target === null, baseName) : `${session.target === null ? 'New' : 'Edit'} relationship: ${ends}`;
 
   const footer = (
     <div className={styles.footer}>
@@ -262,7 +264,7 @@ export function EditorHost(props: EditorHostProps) {
     <Dialog open={props.open} onClose={close} title={title} size={phone ? 'screen' : 'wide'} footer={footer}>
       {/* the key handler is the draft's own undo and redo; the dialog's focus stays inside it */}
       <div ref={root} onKeyDown={onKeyDown} data-testid="editor-root">
-        <p className={styles.hint}>{session.kind}</p>
+        <p className={styles.hint} data-editor-kind="">{kindWords(session.kind)}</p>
         {unavailable === undefined ? null : <p className={styles.notice}>{unavailable}</p>}
         <div className={styles.toolbar} role="toolbar" aria-label="Draft history">
           <Button aria-keyshortcuts="Control+Z Meta+Z" {...(unavailable !== undefined ? { unavailable } : entry.canUndo ? { onClick: () => port.undo(sessionId) } : { unavailable: 'nothing to undo in this draft' })}>
@@ -304,7 +306,7 @@ export function EditorHost(props: EditorHostProps) {
               {...(port.records === undefined ? {} : { picker: port.records })}
               {...(unavailable === undefined ? {} : { unavailable })}
             />
-            <div className={phone ? undefined : styles.aside}>
+            <div className={phone ? undefined : styles.aside} data-editor-aside="">
               {refusal?.message === null || refusal === null ? null : (
                 <p className={styles.notice} role="alert">
                   {refusal.message}

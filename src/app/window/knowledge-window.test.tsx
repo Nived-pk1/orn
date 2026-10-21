@@ -167,7 +167,7 @@ describe('relationships (step 6.6b part 4)', () => {
     const before = Object.keys(app.store.getState().records.relationship).length;
     await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
     await waitFor(() => expect(Object.keys(app.store.getState().records.relationship)).toHaveLength(before + 1));
-    expect(app.store.historyLabels().undo.at(-1)).toBe('Create relationship commonly confused with'); // a relationship has no name: its type names it
+    expect(app.store.historyLabels().undo.at(-1)).toBe('Create relationship: Diazotisation of aniline commonly confused with 1° alcohol → aldehyde (PCC)'); // both ends (step 6.6c L3)
     for (const [id, other] of [['rxn_aniline-diazotisation', /1° alcohol/], ['rxn_alcohol1-to-aldehyde-pcc', /Diazotisation of aniline/]] as const) {
       act(() => app.inspectorStore.getState().open({ kind: 'reaction', id }));
       const pane = await screen.findByRole('complementary', { name: 'Inspector' });

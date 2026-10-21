@@ -22,6 +22,7 @@ import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
 import { SourceForm } from './source-form';
 import { SpeciesForm } from './species-form';
+import styles from './editor.module.css';
 import type { StructurePort } from './structure-contracts';
 
 export interface RecordFormProps extends SectionProps {
@@ -62,13 +63,13 @@ export function RecordForm(props: RecordFormProps) {
   const id = (props.draft as { id?: unknown } | null)?.id;
   const listed = !NO_RELATIONSHIPS.includes(props.kind);
   return (
-    <>
+    <div className={styles.formColumn} data-editor-form="">
       <KindForm {...props} />
       {!listed ? null : (
         <SectionFrame id="relationships" title="Relationships" initiallyOpen={false}>
           <RelationshipsList kind={props.kind} id={typeof id === 'string' ? id : ''} picker={props.picker} openRecord={props.openRecord} />
         </SectionFrame>
       )}
-    </>
+    </div>
   );
 }
