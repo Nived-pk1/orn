@@ -1,11 +1,15 @@
 /**
  * The reagent editor's Profiles section (step 6.2b decision D3): named usage conditions with their OWN aliases (for KMnO4 the profile
  * "Cold, dilute, alkaline" has the alias "Baeyer's reagent"). Add, remove, reorder, and edit the label and the aliases. A profile's
- * conditions (temperature, medium and the rest) and its behaviour note are not edited here: shown read-only with "Editing arrives in step
- * 6.6" and kept unchanged. A new profile's ID comes from the editor port (an ID inside a pure recipe has to be given).
+ * conditions (the SAME form as a stage's, step 6.6a decision C5) and its behaviour (rich text, no default) are edited here. A new profile's ID comes from the editor port (an ID inside a pure recipe has to be given).
  */
+import { useState } from 'react';
 import { Button } from '@/ui/primitives';
-import { addProfile, addProfileAlias, moveProfile, reagentViewOf, removeProfile, removeProfileAlias, setProfileAlias, setProfileLabel } from './reagent-model';
+import { ConditionFields } from './condition-fields';
+import conditionStyles from './condition.module.css';
+import { parametersOf, profileLoc, summaryOf } from './condition-model';
+import { RichTextField } from './rich-text-field';
+import { addProfile, addProfileAlias, moveProfile, reagentViewOf, removeProfile, removeProfileAlias, setProfileAlias, setProfileBehaviour, setProfileLabel } from './reagent-model';
 import type { SectionProps } from './section-props';
 import styles from './editor.module.css';
 
@@ -20,6 +24,7 @@ export function ProfilesSection(props: ProfilesSectionProps) {
   const view = reagentViewOf(props.draft);
   const { onEdit } = props;
   const locked = props.unavailable;
+  const [openProfile, setOpenProfile] = useState<string | null>(null);
   const off = (action: () => void, reason?: string) => (locked !== undefined ? { unavailable: locked } : reason !== undefined ? { unavailable: reason } : { onClick: action });
   return (
     <div>
@@ -28,6 +33,7 @@ export function ProfilesSection(props: ProfilesSectionProps) {
         {view.profiles.map((profile, index) => {
           const n = index + 1;
           const base = `profiles[${index}]`;
+          const key = profile.id || String(index);
           return (
             <li key={profile.id || index} className={styles.panel}>
               <div className={styles.field}>
@@ -51,9 +57,16 @@ export function ProfilesSection(props: ProfilesSectionProps) {
                   Add alias
                 </Button>
               </div>
-              <p className={styles.hint}>
-                Conditions: {profile.conditionsText === '' ? 'not described in words' : profile.conditionsText}. Conditions and behaviour: editing arrives in step 6.6; they are kept unchanged.
-              </p>
+              <div className={styles.row}>
+                <span className={conditionStyles.summary} data-testid="profile-conditions">
+                  Conditions: {summaryOf(parametersOf(props.draft, profileLoc(index)))}
+                </span>
+                <Button aria-label={`${openProfile === key ? 'Close' : 'Edit'} conditions of profile ${n}`} aria-expanded={openProfile === key} data-field-path={`${base}.parameters`} onClick={() => setOpenProfile(openProfile === key ? null : key)}>
+                  {openProfile === key ? 'Close' : 'Edit conditions'}
+                </Button>
+              </div>
+              {openProfile === key ? <ConditionFields draft={props.draft} onEdit={onEdit} loc={profileLoc(index)} who={`profile ${n}`} {...(props.invalid === undefined ? {} : { invalid: props.invalid })} {...(locked === undefined ? {} : { unavailable: locked })} {...(props.phone === undefined ? {} : { phone: props.phone })} /> : null}
+              <RichTextField id={`profile-behaviour-${index}`} label={`Behaviour of profile ${n}`} path={`${base}.behaviour`} value={profile.behaviour} invalid={props.invalid?.has(`${base}.behaviour`) === true} unavailable={locked} phone={props.phone} rows={2} onChange={(value) => onEdit(setProfileBehaviour(index, value), `${base}.behaviour`)} />
               <div className={styles.row}>
                 <Button aria-label={`Move profile ${n} up`} {...off(() => onEdit(moveProfile(index, -1)), index === 0 ? 'it is first' : undefined)}>
                   Up

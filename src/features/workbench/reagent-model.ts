@@ -88,6 +88,13 @@ export const setProfileLabel = (index: number, value: string): DraftRecipe => (d
   const item = objectAt(listOf(draft, 'profiles'), index);
   if (item !== undefined) item.label = value;
 };
+/** The behaviour is rich text with no default: absent when empty, stored exactly as typed otherwise. */
+export const setProfileBehaviour = (index: number, value: string): DraftRecipe => (draft) => {
+  const item = objectAt(listOf(draft, 'profiles'), index);
+  if (item === undefined) return;
+  if (value === '') Reflect.deleteProperty(item, 'behaviour');
+  else item.behaviour = value;
+};
 const aliasesOf = (profile: Fields): string[] => {
   if (!Array.isArray(profile.aliases)) profile.aliases = [];
   return profile.aliases as string[];
@@ -119,8 +126,9 @@ export interface ProfileView {
   readonly id: string;
   readonly label: string;
   readonly aliases: readonly string[];
-  /** The profile's free-text restatement of its conditions (`parameters.text`), shown read-only. */
+  /** The profile's free-text restatement of its conditions (`parameters.text`). */
   readonly conditionsText: string;
+  readonly behaviour: string;
 }
 export interface ReagentView {
   readonly id: string;
@@ -143,8 +151,8 @@ export function reagentViewOf(draft: unknown): ReagentView {
     return isPick(row.ref?.kind) && typeof row.ref?.id === 'string' ? [{ kind: row.ref.kind, id: row.ref.id, role: text(row.role), amountText: text(row.amountText) }] : [];
   });
   const profiles = (Array.isArray(fields.profiles) ? fields.profiles : []).map((item): ProfileView => {
-    const row = (typeof item === 'object' && item !== null ? item : {}) as { id?: unknown; label?: unknown; aliases?: unknown; parameters?: { text?: unknown } };
-    return { id: text(row.id), label: text(row.label), aliases: strings(row.aliases), conditionsText: text(row.parameters?.text) };
+    const row = (typeof item === 'object' && item !== null ? item : {}) as { id?: unknown; label?: unknown; aliases?: unknown; parameters?: { text?: unknown }; behaviour?: unknown };
+    return { id: text(row.id), label: text(row.label), aliases: strings(row.aliases), conditionsText: text(row.parameters?.text), behaviour: text(row.behaviour) };
   });
   return {
     id: text(fields.id),

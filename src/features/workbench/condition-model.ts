@@ -1,5 +1,5 @@
 /**
- * The conditions of a stage (or of a condition variant) as recipes over the draft, and their view (step 6.4a decisions D1, D2 and D4).
+ * The conditions of a stage (or of a condition variant, or of a reagent profile) as recipes over the draft, and their view (step 6.4a decisions D1, D2 and D4).
  * A stage's or variant's `parameters` is the schema's ConditionParameters: temperature, pressure and time are a value, a range (not time) or a
  * word; the rest are single choices, lists of choices, a yes / no, the `other` qualifiers and the free `text`. Values are stored exactly as
  * entered (no unit conversion, no rounding); "Not stated" is the field absent (an empty list for the list fields). A new field starts empty:
@@ -19,13 +19,16 @@ export type MeasureKind = 'value' | 'range' | 'qualitative';
 
 /** Where a set of parameters lives: the stage or the condition variant at this index. */
 export interface ParamsLoc {
-  readonly of: 'stage' | 'variant';
+  readonly of: 'stage' | 'variant' | 'profile';
   readonly index: number;
 }
 export const stageLoc = (index: number): ParamsLoc => ({ of: 'stage', index });
 export const variantLoc = (index: number): ParamsLoc => ({ of: 'variant', index });
+/** A reagent profile's conditions (step 6.6a, decision C5): the same form, the draft's `profiles[index].parameters`. */
+export const profileLoc = (index: number): ParamsLoc => ({ of: 'profile', index });
+const ROWS: Readonly<Record<ParamsLoc['of'], string>> = { stage: 'stages', variant: 'conditionVariants', profile: 'profiles' };
 /** The draft path of the parameters ("stages[0].parameters"). */
-export const paramsPath = (loc: ParamsLoc): string => `${loc.of === 'stage' ? 'stages' : 'conditionVariants'}[${loc.index}].parameters`;
+export const paramsPath = (loc: ParamsLoc): string => `${ROWS[loc.of]}[${loc.index}].parameters`;
 
 type Fields = Record<string, unknown>;
 const isBag = (value: unknown): value is Fields => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -37,7 +40,7 @@ const listOf = (bag: Fields, field: string): unknown[] => {
 /** The parameters bag of the stage / variant, with the schema's required lists present; undefined when there is no such row. */
 function paramsAt(draft: unknown, loc: ParamsLoc): Fields | undefined {
   if (!isBag(draft)) return undefined;
-  const rows = draft[loc.of === 'stage' ? 'stages' : 'conditionVariants'];
+  const rows = draft[ROWS[loc.of]];
   const row = Array.isArray(rows) ? rows[loc.index] : undefined;
   if (!isBag(row)) return undefined;
   if (!isBag(row.parameters)) row.parameters = {};
@@ -142,7 +145,7 @@ export const clearField = (loc: ParamsLoc, field: ParameterField | 'other' | 'te
 
 /** The parameters of a stage / variant as the draft has them now (a bag; empty when the row or its parameters are missing). Read only. */
 export function parametersOf(draft: unknown, loc: ParamsLoc): Readonly<Fields> {
-  const rows = isBag(draft) ? draft[loc.of === 'stage' ? 'stages' : 'conditionVariants'] : undefined;
+  const rows = isBag(draft) ? draft[ROWS[loc.of]] : undefined;
   const row = Array.isArray(rows) ? rows[loc.index] : undefined;
   return isBag(row) && isBag(row.parameters) ? row.parameters : {};
 }

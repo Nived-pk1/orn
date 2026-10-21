@@ -202,9 +202,9 @@ describe('Profiles', () => {
     expect(draftOf(rig, id).profiles.map((p) => p.id)).toEqual(ids.slice(0, 1).concat(ids.slice(2)));
   });
 
-  it('shows the conditions read-only and Save keeps them (and everything else of the profile) unchanged', async () => {
+  it('shows each profile conditions as one summary line, and Save keeps the profiles you did not touch (and everything else) unchanged', async () => {
     const { rig, dialog } = show();
-    expect(within(dialog).getByText(/Cold, dilute, alkaline\. Conditions and behaviour: editing arrives in step 6.6/)).toBeTruthy();
+    expect(within(dialog).getAllByTestId('profile-conditions')).toHaveLength(2);
     const before = stored(rig);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add profile' }));
     set('Profile 3 label', 'Neutral');
