@@ -291,6 +291,14 @@ export function EditorHost(props: EditorHostProps) {
           <Button aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z" {...(unavailable !== undefined ? { unavailable } : entry.canRedo ? { onClick: () => port.redo(sessionId) } : { unavailable: 'nothing to redo in this draft' })}>
             Redo
           </Button>
+          {session.kind !== 'reaction' || session.target === null || port.chain?.from === undefined ? null : (
+            <>
+              <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.from?.('duplicate', session.target as RecordRef) })}>Duplicate</Button>
+              {(session.baseRecord as { scope?: string } | null)?.scope !== 'generic' ? null : (
+                <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.from?.('specific', session.target as RecordRef) })}>New specific reaction from this one</Button>
+              )}
+            </>
+          )}
         </div>
         {view.kind === 'conflict' ? (
           <ConflictView

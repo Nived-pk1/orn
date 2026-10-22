@@ -120,6 +120,12 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
           // on a phone the button shows in the FULL sheet, not in the peek (authoring is desktop-first, ADR-039 addendum)
           <div className={styles.actions} data-sheet-full="">
             <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.open(props.refOf) } : { unavailable: host.editNames.unavailable })}>{host.editNames.fullEditorKinds?.includes(record.kind) === true ? 'Edit' : 'Edit names'}</Button>
+            {record.kind !== 'reaction' || host.editNames.startFrom === undefined ? null : (
+              <>
+                <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.startFrom?.('duplicate', props.refOf) } : { unavailable: host.editNames.unavailable })}>Duplicate</Button>
+                {record.scope !== 'generic' ? null : <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.startFrom?.('specific', props.refOf) } : { unavailable: host.editNames.unavailable })}>New specific reaction from this one</Button>}
+              </>
+            )}
           </div>
         )}
         {place.actions.length === 0 ? null : (

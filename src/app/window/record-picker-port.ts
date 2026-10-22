@@ -112,6 +112,7 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
       const reagent = deps.state().records.reagent[reagentId as never];
       return reagent === undefined ? [] : reagent.profiles.map((profile) => ({ id: profile.id, label: profile.label }));
     },
+    memberOf: (classId, speciesId) => deps.state().records.species[speciesId as never]?.classIds.includes(classId as never) === true,
     count: (kind) => Object.keys(deps.state().records[kind]).length,
     sourceOf(referenceId) {
       const table = deps.state().records.reference;

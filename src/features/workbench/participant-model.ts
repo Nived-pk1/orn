@@ -6,6 +6,7 @@
  * The roles, phases, strengths and qualifiers come from the schema's own lists. No chemistry here.
  */
 import type { DraftRecipe } from '@/core/editing';
+import { slotClassOf } from './slot-model';
 import type { PARTICIPANT_ROLES, PHASES, QUANTITY_QUALIFIERS, STRENGTHS } from '@/core/schema';
 
 export type ParticipantRoleValue = (typeof PARTICIPANT_ROLES)[number];
@@ -154,6 +155,8 @@ export interface ParticipantView {
   readonly flags: Readonly<Record<FlagName, FlagChoice>>;
   readonly primary: boolean;
   readonly originalText: string;
+  /** The class an empty slot stands for (step 6.7a), or undefined. */
+  readonly slotClassId?: string | undefined;
   /** Index of the stage that lists it, or -1 (no stages, or listed by none). */
   readonly stageIndex: number;
 }
@@ -193,6 +196,7 @@ export function participantsViewOf(draft: unknown): readonly ParticipantView[] {
       flags: { contributesAtoms: choiceOf(flags, 'contributesAtoms'), consumed: choiceOf(flags, 'consumed'), catalytic: choiceOf(flags, 'catalytic') },
       primary: row.isPrimarySubstrate === true,
       originalText: text(row.originalText),
+      slotClassId: slotClassOf(row),
       stageIndex: stages.findIndex((stage) => isBag(stage) && Array.isArray(stage.participantIds) && stage.participantIds.includes(id)),
     };
   });

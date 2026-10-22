@@ -12,11 +12,15 @@ import { useApp } from './context';
 import { createLocalTimeFormatter } from './local-time';
 import { EditorsContext, type EditorsApi } from './drafts-ui';
 import type { EditorEntries } from './editor-entries';
+import type { TemplateMode } from './template-dialog';
+import { duplicateSeed, specificSeed } from '@/core/editing';
 
 // /* @__PURE__ */: an unused lazy() is dropped with its import() in Study, where nothing mounts EditorsProvider (ADR-041)
 const DraftsDialog = /* @__PURE__ */ lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
 // the session builds its port (pickers, preview) where it opens, so that code is in the editor's chunk and not in the entry (step 6.5a)
 const EditorSession = /* @__PURE__ */ lazy(() => import('./editor-session').then((m) => ({ default: m.EditorSession })));
+
+const TemplateDialog = /* @__PURE__ */ lazy(() => import('./template-dialog').then((m) => ({ default: m.TemplateDialog })));
 
 const machineTime = /* @__PURE__ */ createLocalTimeFormatter();
 const NO_ENTRIES: EditorsApi['entries'] = [];
@@ -28,6 +32,8 @@ export function editReasonOf(mode: string | null): string | undefined {
   return 'This tab is read-only: edit in the tab that is saving';
 }
 
+const nameOfReaction = (record: { readonly name?: string } | undefined): string => (record?.name === undefined || record.name === '' ? 'this reaction' : record.name);
+
 export function EditorsProvider(props: { readonly children: ReactNode }) {
   const { services, formatTime: injected, editorEntries, inspector } = useApp();
   const formatTime = injected ?? machineTime;
@@ -38,6 +44,8 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
   // the nested editor of "Create new" (step 6.7a): one at a time, over the editor that asked; `done` picks its record into that editor
   const [nested, setNested] = useState<{ readonly id: string; readonly done: (ref: RecordRef) => void } | null>(null);
   const nestedOpen = useRef(false);
+  // the question before a copy or a specific reaction (step 6.7a)
+  const [template, setTemplate] = useState<{ readonly mode: TemplateMode; readonly ref: RecordRef } | null>(null);
   // the entry points (titles, palette words, the full-editor kinds) are a lazy chunk, loaded after the first paint (entry room, exams step)
   const [entries, setEntries] = useState<EditorEntries | null>(editorEntries ?? null);
   useEffect(() => {
@@ -83,6 +91,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
     () => ({
       openDrafts: () => setDraftsOpen(true),
       editNames: (ref: RecordRef) => show(services.drafts.open(ref)),
+      startFrom: (mode: TemplateMode, ref: RecordRef) => setTemplate({ mode, ref }),
       startNew: (kind: RecordKind, seed: Readonly<Record<string, unknown>>) => show(services.drafts.open({ kind, blank: true, seed })),
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
@@ -105,9 +114,28 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
           />
         </Suspense>
       ) : null}
+      {template === null ? null : (
+        <Suspense fallback={null}>
+          <TemplateDialog
+            mode={template.mode}
+            name={nameOfReaction(services.store.getState().records.reaction[template.ref.id as never])}
+            onCancel={() => setTemplate(null)}
+            onStart={() => {
+              const seed = (template.mode === 'duplicate' ? duplicateSeed : specificSeed)(services.store.getState(), template.ref, { newId: (prefix) => services.drafts.newId(prefix) });
+              setTemplate(null);
+              if (seed === undefined) {
+                toasts.push({ kind: 'warning', text: 'That reaction is no longer there, or it is not generic.' });
+                return;
+              }
+              if (editingId !== null) services.drafts.release(editingId); // the editor it was started from keeps its draft, if it has one
+              show(services.drafts.open({ kind: 'reaction', blank: true, seed }));
+            }}
+          />
+        </Suspense>
+      )}
       {editingId === null ? null : (
         <Suspense fallback={null}>
-          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} onCreate={startNested} covered={nested !== null} />
+          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} onCreate={startNested} onFrom={(mode, ref) => setTemplate({ mode, ref })} covered={nested !== null} />
         </Suspense>
       )}
       {nested === null ? null : (

@@ -3,6 +3,7 @@
  * isomer groups in use and the one summary line of an outcome. Reads only; the recipes are in `outcome-model.ts`. No chemistry here.
  */
 import { selectivityWordOf } from '@/core/graph';
+import { slotClassOf } from './slot-model';
 import type { ProductKind, ProductRoleValue } from './outcome-model';
 
 type Fields = Record<string, unknown>;
@@ -17,6 +18,8 @@ export interface ProductView {
   readonly phase: string;
   readonly originalText: string;
   readonly note: string;
+  /** The class an empty slot stands for (step 6.7a), or undefined. */
+  readonly slotClassId?: string | undefined;
 }
 export interface OutcomeView {
   readonly id: string;
@@ -50,6 +53,7 @@ function productViewOf(item: unknown): ProductView {
     phase: text(row.phase),
     originalText: text(row.originalText),
     note: text(row.note),
+    slotClassId: slotClassOf(row),
   };
 }
 export function outcomesViewOf(draft: unknown): readonly OutcomeView[] {

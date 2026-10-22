@@ -128,7 +128,7 @@ function InspectorPanel(props: {
       openPane,
       closePane,
       navigatorShown,
-      ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }), ...(editors.namesKinds === undefined ? {} : { namesKinds: editors.namesKinds }) } }),
+      ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.startFrom === undefined ? {} : { startFrom: editors.startFrom }), ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }), ...(editors.namesKinds === undefined ? {} : { namesKinds: editors.namesKinds }) } }),
       edgeEnds: (edgeId) => {
         const edge = model.getState().scene?.edges.find((e) => e.id === edgeId);
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };

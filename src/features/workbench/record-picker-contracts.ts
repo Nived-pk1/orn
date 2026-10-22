@@ -75,6 +75,8 @@ export interface RecordPickerPort {
   componentRefusal?(owner: string, candidate: { readonly kind: PickKind; readonly id: string }): string | undefined;
   /** The profiles of a reagent (ID and label), in order, for a participant's profile choice; empty when the reagent has none or does not exist. */
   profilesOf?(reagentId: string): readonly { readonly id: string; readonly label: string }[];
+  /** Whether this species is assigned to this class (its `classIds`); a slot picker offers members first (step 6.7a). */
+  memberOf?(classId: string, speciesId: string): boolean;
   /** How many records of this kind the dataset has ("No sources yet" needs it). */
   count?(kind: PickKind): number;
   /** The title and year of a source (a citation's summary line), or undefined when it is not in the dataset. */

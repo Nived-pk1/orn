@@ -23,6 +23,8 @@ import { type OutcomeView } from './outcome-view';
 import { RecordPicker, choiceLine } from './record-picker';
 import type { PickKind, RecordPickerPort } from './record-picker-contracts';
 import { wordsOf } from './reagent-model';
+import { fillProductSlot } from './slot-model';
+import { SlotPicker } from './slot-picker';
 import type { SectionProps } from './section-props';
 import styles from './editor.module.css';
 import own from './outcome.module.css';
@@ -82,6 +84,7 @@ export function OutcomeProducts(props: OutcomeProductsProps) {
                 <strong tabIndex={-1} data-field-path={`${base}.ref`} aria-invalid={bad(props, `${base}.ref`)}>
                   {n}. {product.substance === undefined ? 'No substance' : choiceLine(choice, product.substance.id)}
                 </strong>
+                {product.slotClassId === undefined ? null : <SlotPicker id={`slot-product-${index}-${at}`} classId={product.slotClassId} picker={picker} unavailable={locked} fill={(speciesId) => fillProductSlot(index, at, speciesId)} onEdit={onEdit} />}
                 <fieldset className={own.roleGroup} aria-label={`Role of product ${n} of outcome ${on}`} data-field-path={`${base}.role`} aria-invalid={bad(props, `${base}.role`)}>
                   {product.role === undefined ? <legend>Choose a role</legend> : null}
                   {PRODUCT_ROLES.map((role) => (

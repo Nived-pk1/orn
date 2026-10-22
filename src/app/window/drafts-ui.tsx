@@ -17,6 +17,8 @@ export interface EditorsApi {
   editNames(ref: RecordRef): void;
   /** Opens the editor on a NEW record of this kind, with some fields already filled in when a seed is given (every "New ..." button; step 6.6c: "Map to a topic" and the like). A refusal is said in a toast. */
   startNew(kind: RecordKind, seed: Readonly<Record<string, unknown>>): void;
+  /** Duplicate a reaction, or start a specific reaction from a generic one (step 6.7a): asks once, then opens a NEW draft. */
+  startFrom?(mode: 'duplicate' | 'specific', ref: RecordRef): void;
   /** The "New ..." entry points (the Workbench, phone More and the palette read this one list). Empty until the lazy chunk has loaded, after the first paint. */
   readonly entries: readonly NewEntry[];
   /** Opens a listed draft (its stored session). */

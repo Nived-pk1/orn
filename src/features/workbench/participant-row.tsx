@@ -8,6 +8,8 @@ import { Button } from '@/ui/primitives';
 import { ParticipantFields } from './participant-fields';
 import { moveParticipant, removeParticipant, variantUsing, type ParticipantView, type StageSummary } from './participant-model';
 import { summaryLineOf } from './participant-summary';
+import { SlotPicker } from './slot-picker';
+import { fillParticipantSlot } from './slot-model';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
 import { SummaryLine } from './summary-line';
@@ -66,6 +68,7 @@ export function ParticipantRow(props: ParticipantRowProps) {
           </div>
         </div>
         {removeReason === undefined ? null : <p className={styles.hint}>{removeReason}</p>}
+        {p.slotClassId === undefined ? null : <SlotPicker id={`slot-participant-${index}`} classId={p.slotClassId} picker={picker} unavailable={locked} fill={(speciesId) => fillParticipantSlot(index, speciesId)} onEdit={onEdit} />}
         {open ? <ParticipantFields {...props} /> : null}
       </div>
     </li>
