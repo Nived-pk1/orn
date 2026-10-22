@@ -12,6 +12,7 @@ beforeAll(() => {
 afterEach(cleanup);
 
 const EXPECTED =
+  'Organic chemistry reactions, mechanisms and syllabus scopes for board and entrance exams. ' +
   'Preview version. The chemistry here is a small demo and has NOT been checked by an expert yet - please do not study from it. ' +
   'Everything you do stays on this device: nothing is sent anywhere, there are no accounts and no tracking. ' +
   'Your data lives in this browser only; use File > Export to keep a copy. © 2026 Ponap. All rights reserved.';

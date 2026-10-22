@@ -268,6 +268,7 @@
     "-> Phase 7 (reagent explorer): show a reagent profile's conditions BESIDE a reaction that uses the profile, never merged into the stage's arrow text (6.6a review V1).",
     "-> later (schema v3 candidate): pictures on a single mechanism step need a schema change (asset attachment to a step): a RecordRef cannot name a step; 6.5b builds mechanism pictures only (ADR-038 addendum).",
     "-> later (schema v3 candidate): structured value + unit for numeric species properties (needs a unit decision per key); 6.6a edits a property as the schema types it (key, label, value text with the unit written in it, note, citations).",
+    "-> later (schema v3 candidate): exam kind (board / entrance) for the grouped scope selector. The exam record has no such field, so the selector stays a flat list by exam name, then version (Exams step part 3, reviewer decision 2026-10-21).",
     "-> Phase 8: bond choices in the mechanism editor list the pairs that are bonded in the step's structures first (needs a bond reader for mapped structures; Phase 8 arrow drawings need it too)",
     "-> 6.6 (presentation): making a class a map family (navigator anchor, arrangement cell). The 6.2b class editor only says, read-only, whether a class is one (ADR-040 addendum D2).",
     "NEW (6.2a review, 2026-10-19): membership SMARTS for the demo classes: a content decision for the content track, REVIEW REQUIRED. Demo chemistry is never edited to make a test or a screen work.",
