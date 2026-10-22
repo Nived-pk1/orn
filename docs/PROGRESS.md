@@ -5857,3 +5857,9 @@ Q1, Q3 and Q4 built (Studio only; everything lazy). **Core (pure):** `src/core/q
 **Initial JS gzip:** Studio 392.57 kB (line 395), Study 386.86 kB; quick-entry chunks (lazy): dialog 6.12 kB + host 1.73 kB + css 0.50 kB. `npm run build:smoke` passed for both editions. Timing measurements passed.
 **Screenshots (screenshots/):** quick-entry-{resolved,unknown,error,draft}-1280x800.png, phone-quick-entry-{pixel7,iphone14}.png, specific-from-generic-1280x800.png.
 **Amendments:** none. **REVIEW REQUIRED:** as in the part 3 entry, plus the two fixes above and the unexplained one-off ERR_FILE_NOT_FOUND in mechanism-pictures (decide: accept as flake and deploy, or investigate).
+
+### Step 6.7b, part 5 - deployed (2026-10-22)
+
+**Reviewer approval (2026-10-22):** deploy APPROVED. The failure of `mechanism-pictures.spec.ts:245` (Chromium, console "net::ERR_FILE_NOT_FOUND", passed alone in 2.4 s) is accepted as a test-side flake for this deploy only; it will be investigated in 6.8's Part A.
+**Study** (`reaction-navigator`), commit 203bbf5: version `febe017a-5a1f-47ae-9174-69b313c9e3e7`. Live specs (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition) in Chromium and WebKit: 45 passed, 17 skipped (fixture-only or other-engine profiles), 0 failed.
+**Studio** (`reaction-navigator-studio`): version `b1c07398-bf8c-44de-b072-7f3ccae70798`. **Access check:** an unauthenticated `curl -sI` got 302 (Cloudflare Access), not the app; the public Study Worker answered 200.
