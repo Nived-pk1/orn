@@ -13,6 +13,7 @@ import type { DuplicatePort } from './duplicate-contracts';
 import type { MechanismLinksPort } from './mechanism-contracts';
 import type { PicturesPort } from './picture-contracts';
 import type { DraftSaveView, DraftsViewModel } from './contracts';
+import type { CreateNewApi } from './create-new';
 
 /** One open session as the editor sees it (the manager replaces the object when anything about it changes). */
 export interface EditorEntryView {
@@ -54,6 +55,8 @@ export interface EditorPort {
   readonly pictures?: PicturesPort;
   /** Another editor in place of this one (step 6.6c): a NEW record of a kind with fields already filled in, or an existing record's editor. The host closes this editor first and keeps its draft. */
   readonly chain?: { start(kind: RecordKind, seed: Readonly<Record<string, unknown>>): void; edit(ref: RecordRef): void };
+  /** "Create new" in the pickers (step 6.7a): opens a nested editor over this one; absent: the pickers show no Create new row. A nested editor gets `nested: true` and no `chain`. */
+  readonly createNew?: CreateNewApi;
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
   readonly structure?: StructurePort;
   /** A fresh ID for a nested record the form creates (a reagent profile: 'rpf'). From the session manager's ID factory; deterministic under test. */

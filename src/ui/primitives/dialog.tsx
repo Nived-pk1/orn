@@ -25,6 +25,8 @@ export interface DialogProps {
   readonly size?: 'default' | 'wide' | 'screen';
   /** `false`: the dialog cannot be dismissed while the caller's work runs - no Close button, Esc and the backdrop do nothing (default true). */
   readonly closable?: boolean;
+  /** `true`: another dialog is open over this one (a nested editor); nothing in this one can be reached until it closes. */
+  readonly inert?: boolean;
 }
 
 const ACTIVATORS = 'button, [role="button"], [role="menuitem"], a[href], input, select, textarea, [tabindex]';
@@ -52,7 +54,7 @@ function openerNow(): HTMLElement | null {
 }
 
 export function Dialog(props: DialogProps) {
-  const { open, onClose, title, children, footer, dismissOnBackdrop = false, initialFocus, size = 'default', closable = true } = props;
+  const { open, onClose, title, children, footer, dismissOnBackdrop = false, initialFocus, size = 'default', closable = true, inert = false } = props;
   const element = useRef<HTMLDialogElement | null>(null);
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -97,7 +99,7 @@ export function Dialog(props: DialogProps) {
   };
 
   return (
-    <dialog ref={attach} className={size === 'default' ? styles.dialog : `${styles.dialog} ${styles[size]}`} aria-labelledby={titleId} onCancel={onCancel} onClick={onBackdrop}>
+    <dialog ref={attach} className={size === 'default' ? styles.dialog : `${styles.dialog} ${styles[size]}`} aria-labelledby={titleId} inert={inert || undefined} onCancel={onCancel} onClick={onBackdrop}>
       {open ? (
         <PortalContainerContext.Provider value={container}>
           <div className={styles.frame}>

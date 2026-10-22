@@ -13,6 +13,7 @@ import type { Finding } from '@/core/validation';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, Dialog, RESULT_TOAST_MS, useToasts } from '@/ui/primitives';
 import { ConflictView, DeletedView } from './conflict-view';
+import { CreateNewContext } from './create-new';
 import { DuplicateDialog } from './duplicate-dialog';
 import type { DuplicateOutcome } from './duplicate-contracts';
 import { draftStatusText, editingUnavailableReason, type FormatTime } from './draft-text';
@@ -82,6 +83,10 @@ export interface EditorHostProps {
   readonly onClose: () => void;
   /** The window's injected local-time formatter. */
   readonly formatTime: FormatTime;
+  /** The record was saved (a nested editor tells its parent, which picks it). Called once, before `onClose`. */
+  readonly onSaved?: (ref: RecordRef) => void;
+  /** A nested editor is open over this one: nothing here can be reached (step 6.7a). */
+  readonly covered?: boolean;
 }
 
 export function EditorHost(props: EditorHostProps) {
@@ -177,6 +182,7 @@ export function EditorHost(props: EditorHostProps) {
       closing.current = true;
       const warnings = target === null ? 0 : port.warningsOf(target);
       toasts.push({ kind: warnings > 0 ? 'warning' : 'info', text: warnings > 0 ? `Saved, ${warnings} ${warnings === 1 ? 'warning' : 'warnings'}` : 'Saved', autoDismissMs: RESULT_TOAST_MS });
+      if (target !== null) props.onSaved?.(target);
       onClose();
       return;
     }
@@ -272,7 +278,8 @@ export function EditorHost(props: EditorHostProps) {
 
   return (
     <>
-    <Dialog open={props.open} onClose={close} title={title} size={phone ? 'screen' : 'wide'} footer={footer}>
+    <CreateNewContext.Provider value={port.createNew}>
+    <Dialog open={props.open} onClose={close} title={title} size={phone ? 'screen' : 'wide'} footer={footer} inert={props.covered === true}>
       {/* the key handler is the draft's own undo and redo; the dialog's focus stays inside it */}
       <div ref={root} onKeyDown={onKeyDown} data-testid="editor-root">
         <p className={styles.hint} data-editor-kind="">{kindWords(session.kind)}</p>
@@ -339,6 +346,7 @@ export function EditorHost(props: EditorHostProps) {
         )}
       </div>
     </Dialog>
+    </CreateNewContext.Provider>
     {duplicates === null ? null : (
       <DuplicateDialog
         outcome={duplicates}

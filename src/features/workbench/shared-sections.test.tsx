@@ -131,13 +131,15 @@ describe('citations', () => {
     return spy;
   };
   const cites = (spy: Spy) => (spy.draft as { citations: unknown[] }).citations;
-  it('with no sources at all it says so, in words', () => {
+  it('with no sources at all it says so, in words, and the picker is still there to make one', () => {
     show([], picker(0));
-    expect(screen.getByText('No sources yet. Add one with New source (Workbench).')).toBeTruthy();
+    expect(screen.getByText('No sources yet. Type a title below to make one.')).toBeTruthy();
+    expect(screen.getByLabelText('Find a source by title')).toBeTruthy();
   });
-  it('says a source cannot be made from here', () => {
+  it('no longer says a source cannot be made from here (Create new does it, step 6.7a)', () => {
     show();
-    expect(screen.getByText(/cannot be made here/)).toBeTruthy();
+    expect(screen.queryByText(/cannot be made here/)).toBeNull();
+    expect(screen.queryByText(/New source (Workbench)/)).toBeNull();
   });
   it('picks a source through the picker and shows the summary line', async () => {
     const spy = show();

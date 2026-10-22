@@ -164,12 +164,8 @@ export function CitationsSection(props: SectionProps & { readonly picker: Record
           );
         })}
       </ul>
-      {noSources ? (
-        <p className={styles.hint}>No sources yet. Add one with New source (Workbench).</p>
-      ) : (
-        <RecordPicker id={`${path}-source-search`} label="Find a source by title" kinds={['reference']} port={picker} noun="source" resultsLabel="Sources found" unavailable={props.unavailable} isListed={() => false} onPick={(choice) => props.onEdit(addCitation(path, choice.id))} />
-      )}
-      <p className={styles.hint}>A new source cannot be made here: use New source (Workbench). Making one from a citation arrives in step 6.7.</p>
+      {noSources ? <p className={styles.hint}>No sources yet. Type a title below to make one.</p> : null}
+      <RecordPicker id={`${path}-source-search`} label="Find a source by title" kinds={['reference']} port={picker} noun="source" resultsLabel="Sources found" unavailable={props.unavailable} isListed={() => false} onPick={(choice) => props.onEdit(addCitation(path, choice.id))} />
     </div>
   );
 }

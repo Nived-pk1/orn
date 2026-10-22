@@ -5,6 +5,7 @@
 export { DraftsDialog } from './drafts-dialog';
 export type { DraftsDialogProps } from './drafts-dialog';
 export { EditorHost } from './editor-host';
+export { nameSeed } from './create-new';
 export type { EditorHostProps } from './editor-host';
 export { StructurePanel, STRUCTURE_PARSE_DEBOUNCE_MS } from './structure-panel';
 export type { StructurePanelProps } from './structure-panel';

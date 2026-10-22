@@ -163,3 +163,14 @@ describe('Dialog', () => {
     expect(openLayers()).toBe(0);
   });
 });
+
+describe('Dialog inert (step 6.7a: a nested editor is open over this one)', () => {
+  it('inert makes the dialog unreachable and is removed again with it', () => {
+    const { rerender } = render(<Dialog open onClose={() => undefined} title="Under">body</Dialog>);
+    expect(screen.getByRole('dialog', { name: 'Under', hidden: true }).hasAttribute('inert')).toBe(false);
+    rerender(<Dialog open onClose={() => undefined} title="Under" inert>body</Dialog>);
+    expect(screen.getByRole('dialog', { name: 'Under', hidden: true }).hasAttribute('inert')).toBe(true);
+    rerender(<Dialog open onClose={() => undefined} title="Under" inert={false}>body</Dialog>);
+    expect(screen.getByRole('dialog', { name: 'Under', hidden: true }).hasAttribute('inert')).toBe(false);
+  });
+});

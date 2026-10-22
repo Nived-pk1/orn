@@ -3,10 +3,12 @@
  * name through the port (kind and scope shown beside every result), offers "Add <name>" for each, says "Already listed" for a record that is
  * chosen, and for a record that may not be chosen (a cycle) shows the REASON instead of a button. Keyboard: Tab reaches the field, then each
  * result's button; the result count is announced (a status region). The list shows each chosen record with Remove (and Up / Down where the
- * order matters). No "create new" (step 6.7). No chemistry and no rules: the port and the draft decide.
+ * order matters). "Create new" rows (step 6.7a, `create-new.tsx`) when the host provides them. No chemistry and no rules: the port and the draft decide.
  */
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/ui/primitives';
+import { canCreate, NESTED_SENTENCE, useCreateNew } from './create-new';
+import { kindWords } from './form-kinds';
 import type { PickKind, RecordChoice, RecordPickerPort } from './record-picker-contracts';
 import styles from './editor.module.css';
 
@@ -68,6 +70,8 @@ export function RecordPicker(props: RecordPickerProps) {
   const [text, setText] = useState('');
   const [results, setResults] = useState<readonly RecordChoice[]>([]);
   const ask = useRef(0);
+  const field = useRef<HTMLInputElement | null>(null);
+  const create = useCreateNew();
   const kindsKey = kinds.join(',');
 
   useEffect(() => {
@@ -91,7 +95,7 @@ export function RecordPicker(props: RecordPickerProps) {
   return (
     <div className={styles.field}>
       <label htmlFor={props.id}>{props.label}</label>
-      <input id={props.id} type="search" value={text} readOnly={unavailable !== undefined} autoComplete="off" aria-describedby={`${props.id}-count`} onChange={(event) => setText(event.target.value)} />
+      <input ref={field} id={props.id} type="search" value={text} readOnly={unavailable !== undefined} autoComplete="off" aria-describedby={`${props.id}-count`} onChange={(event) => setText(event.target.value)} />
       <p id={`${props.id}-count`} className={styles.hint} role="status">
         {!searching ? '' : results.length === 0 ? `No ${noun} matches.` : `${results.length} found`}
       </p>
@@ -101,6 +105,29 @@ export function RecordPicker(props: RecordPickerProps) {
           {first.length === 0 ? null : <h4 className={styles.hint}>{props.otherLabel ?? 'Other records'}</h4>}
           <Results label={props.otherLabel ?? 'Other records'} results={rest} props={props} />
         </>
+      )}
+      {create === undefined || !searching || unavailable !== undefined ? null : create.nested ? (
+        <p className={styles.hint} role="note">
+          {NESTED_SENTENCE}
+        </p>
+      ) : (
+        <ul className={styles.results} aria-label="Create new">
+          {kinds.filter(canCreate).map((kind) => (
+            <li key={kind} className={styles.choice}>
+              <Button
+                onClick={() => {
+                  field.current?.focus(); // the dialog returns the focus to what was focused when it opened
+                  create.start(kind, text.trim(), (ref) => {
+                    const made = port.describe(ref.kind as PickKind, ref.id);
+                    if (made !== undefined) props.onPick(made);
+                  });
+                }}
+              >
+                {`Create new ${kindWords(kind)} "${text.trim()}"`}
+              </Button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

@@ -4,7 +4,7 @@
  * `openDrafts()` (the File menu, the start-up line), and loads the drafts list and the editor with `React.lazy` the first time one is
  * shown, so none of the editor is in the entry chunk. It fills the editor's port from the session manager; it knows no chemistry.
  */
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { RecordKind, RecordRef } from '@/core/schema';
 import { useSubscribable } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
@@ -35,6 +35,9 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
   const status = useSubscribable(services.status);
   const [draftsOpen, setDraftsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // the nested editor of "Create new" (step 6.7a): one at a time, over the editor that asked; `done` picks its record into that editor
+  const [nested, setNested] = useState<{ readonly id: string; readonly done: (ref: RecordRef) => void } | null>(null);
+  const nestedOpen = useRef(false);
   // the entry points (titles, palette words, the full-editor kinds) are a lazy chunk, loaded after the first paint (entry room, exams step)
   const [entries, setEntries] = useState<EditorEntries | null>(editorEntries ?? null);
   useEffect(() => {
@@ -50,12 +53,29 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
 
   const show = useCallback(
     (answer: ReturnType<typeof services.drafts.open>): void => {
+      if (nestedOpen.current) {
+        toasts.push({ kind: 'info', text: 'Finish the new record that is open first' });
+        return;
+      }
       if (!answer.ok) {
         toasts.push({ kind: 'warning', text: answer.message });
         return;
       }
       setDraftsOpen(false);
       setEditingId(answer.id);
+    },
+    [services, toasts],
+  );
+  const startNested = useCallback(
+    (kind: RecordKind, seed: Readonly<Record<string, unknown>>, done: (ref: RecordRef) => void): void => {
+      if (nestedOpen.current) return; // one level only
+      const answer = services.drafts.open({ kind, blank: true, seed });
+      if (!answer.ok) {
+        toasts.push({ kind: 'warning', text: answer.message });
+        return;
+      }
+      nestedOpen.current = true;
+      setNested({ id: answer.id, done });
     },
     [services, toasts],
   );
@@ -87,7 +107,22 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       ) : null}
       {editingId === null ? null : (
         <Suspense fallback={null}>
-          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} />
+          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} onCreate={startNested} covered={nested !== null} />
+        </Suspense>
+      )}
+      {nested === null ? null : (
+        <Suspense fallback={null}>
+          <EditorSession
+            key={nested.id}
+            sessionId={nested.id}
+            formatTime={formatTime}
+            nested
+            onSaved={nested.done}
+            onClose={() => {
+              nestedOpen.current = false;
+              setNested(null);
+            }}
+          />
         </Suspense>
       )}
     </EditorsContext.Provider>
