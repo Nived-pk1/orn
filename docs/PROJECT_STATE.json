@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-21",
+  "lastUpdated": "2026-10-22",
   "currentPhase": 6,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -107,7 +107,8 @@
     "6.6b",
     "6.6c",
     "6.6",
-    "exams"
+    "exams",
+    "6.7a"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -135,8 +136,8 @@
     "commit": "b751cb6",
     "protectedCheckedAt": "2026-10-21"
   },
-  "nextStep": "6.7",
-  "nextStepTitle": "Quick-entry parser and pickers with 'create new'",
+  "nextStep": "6.7b",
+  "nextStepTitle": "Quick-entry parser, row 6.7 close",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
