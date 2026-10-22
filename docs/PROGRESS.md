@@ -5748,3 +5748,11 @@ No product code. Read from the files named (HEAD 00f7917) and from `data/seed/de
 **Screenshots (`screenshots/`, git-ignored):** exam-editor-1280x800.png, exam-version-editor-1280x800.png, scope-selector-1280x800.png, about-1280x800.png, phone-exam-version-pixel7.png, phone-exam-version-iphone14.png (toasts dismissed first).
 **REVIEW REQUIRED:** (a) scope-selector-1280x800.png shows the native select focused with the new version chosen: a native dropdown list is drawn by the browser outside the page and is not in a page screenshot, so "open" is not literally shown. (b) exam-version-editor-1280x800.png shows the unit open and scrolled to its two coverage rows (the unit title is above the fold).
 **Amendments:** none. `npm run check` on this commit: docs and e2e spec only; unchanged green of part 3 (548 files, 6,818 tests).
+
+### Exams step, part 5 - deploy (2026-10-22)
+
+Deployed from commit b751cb6 (`npm run build:smoke` green in part 4; both builds rebuilt for the deploy).
+**Study** `reaction-navigator`: version c8d26edd-0b59-40ba-a938-bc02b213e751. Live specs (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition; Chromium and WebKit, `ORN_BASE_URL` = the live URL): 45 passed, 17 skipped, 0 failed. (A first attempt used a name filter that also matched Studio-only specs such as equation-long-name and phone-class-editor, which fail against the Study site by design; it was re-run with the exact file list.) `curl -sI` of the public URL: 200.
+**Studio** `reaction-navigator-studio`: version cea79b10-2227-4807-a8a0-018ef8e3cda6.
+**Access check:** an unauthenticated request to the Studio URL answered 302 to the cloudflareaccess.com sign-in, not the app; the public URL answered 200. Passed.
+Recorded in PROJECT_STATE (`releasePreview`, `studioPreview`). **Amendments:** none.
