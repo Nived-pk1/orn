@@ -95,16 +95,46 @@ describe('specificSeed (C3)', () => {
       expect(made.outcomes[i]?.selectivity).toBe(o.selectivity); // copied as it is
     });
   });
-  it('stages and variants are copied with new ids; nothing else is guessed (no classification, links or intermediates)', () => {
+  it('stages and variants are copied with new ids; intermediates, notes, tags and citations are not copied', () => {
     const old = new Set(nestedIds(generic));
     for (const id of nestedIds(made)) expect(old.has(id)).toBe(false);
     expect(made.stages).toHaveLength(generic.stages.length);
     expect(made.conditionVariants).toHaveLength(generic.conditionVariants.length);
     expect(made.intermediates).toEqual([]);
-    expect(made.mechanismIds).toEqual([]);
-    expect(made.reactionTypes).toEqual([]);
-    expect(made.namedReactionIds).toEqual([]);
+    for (const field of ['notes', 'studyNotes', 'tags', 'citations']) expect(seed).not.toHaveProperty(field);
     const participants = new Set(made.participants.map((p) => p.id));
     for (const stage of made.stages) for (const id of stage.participantIds) expect(participants.has(id)).toBe(true);
   });
+  it('T2: classification, mechanism links, outcome mechanism links, named reactions and transformations ARE copied', () => {
+    const outcomeMechanism = { mechanismId: 'mch_x', variantId: 'mvr_x' };
+    const rich = {
+      ...state,
+      records: {
+        ...state.records,
+        reaction: {
+          ...state.records.reaction,
+          [generic.id]: {
+            ...generic,
+            reactionTypes: [{ conceptId: 'cpt_t1', certainty: 'definite' }],
+            mechanismClasses: [{ conceptId: 'cpt_m1', certainty: 'probable' }],
+            mechanismIds: ['mch_one', 'mch_two'],
+            namedReactionIds: ['nmr_one'],
+            transformationIds: ['trf_one'],
+            notes: { format: 'plain', text: 'a note' },
+            tags: ['t'],
+            outcomes: generic.outcomes.map((o, i) => (i === 0 ? { ...o, mechanism: outcomeMechanism } : o)),
+          },
+        },
+      },
+    } as never;
+    const copy = specificSeed(rich, { kind: 'reaction', id: generic.id }, ctx) as unknown as Reaction & Record<string, unknown>;
+    expect(copy.reactionTypes).toEqual([{ conceptId: 'cpt_t1', certainty: 'definite' }]);
+    expect(copy.mechanismClasses).toEqual([{ conceptId: 'cpt_m1', certainty: 'probable' }]);
+    expect(copy.mechanismIds).toEqual(['mch_one', 'mch_two']);
+    expect(copy.namedReactionIds).toEqual(['nmr_one']);
+    expect(copy.transformationIds).toEqual(['trf_one']);
+    expect(copy.outcomes[0]?.mechanism).toEqual(outcomeMechanism);
+    for (const field of ['notes', 'studyNotes', 'tags', 'citations']) expect(copy).not.toHaveProperty(field);
+  });
+
 });

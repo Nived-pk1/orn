@@ -26,7 +26,7 @@ export function EditorSession(props: {
   /** Create new (step 6.7a): opens a nested editor over this one. Absent in a nested editor (one level only). */
   readonly onCreate?: (kind: RecordKind, seed: Readonly<Record<string, unknown>>, done: (ref: RecordRef) => void) => void;
   /** Duplicate / specific from the editor toolbar (step 6.7a). */
-  readonly onFrom?: (mode: 'duplicate' | 'specific', ref: RecordRef) => void;
+  readonly onFrom?: (mode: 'duplicate' | 'specific', ref: RecordRef, unsaved?: boolean) => void;
   /** This is the nested editor: no chain, and its pickers say "Finish this one first". */
   readonly nested?: boolean;
   /** A nested editor saved its record. */

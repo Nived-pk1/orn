@@ -146,3 +146,45 @@ describe('from the reaction editor toolbar', () => {
     expect(within(within(copy).getByRole('toolbar', { name: 'Draft history' })).queryByRole('button', { name: 'Duplicate' })).toBeNull();
   });
 });
+
+describe('step 6.7b part A (T1, T2, T3)', () => {
+  it('T1: an empty slot shows "Choose a species of <class> (participant n)" in the findings, never the schema text; the participant line reads "n. Choose a species of <class> · <role>"', async () => {
+    const app = fakeApp({ state: demoState() });
+    const inspector = await inspect(app, GENERIC);
+    fireEvent.click(await within(inspector).findByRole('button', { name: 'New specific reaction from this one' }));
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'New specific reaction' })).getByRole('button', { name: 'Start the specific reaction' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New reaction' });
+    const panel = await within(dialog).findByRole('region', { name: 'Findings' });
+    await waitFor(() => expect(panel.textContent).toMatch(/Choose a species of .+ \(participant \d+\)/));
+    expect(panel.textContent).not.toContain('Unknown field');
+    expect(panel.textContent).not.toContain('slotOfClassId');
+    expect(within(panel).getAllByText(/Choose a species of/).length).toBeGreaterThan(0);
+    const line = within(dialog).getAllByTestId('participant-row').find((row) => /^\d+\. Choose a species of /.test(row.querySelector('[data-summary-text]')?.textContent ?? ''));
+    expect(line).toBeTruthy();
+    expect(line?.querySelector('[data-summary-text]')?.textContent).toMatch(/^\d+\. Choose a species of .+ · /);
+  });
+
+  it('T2: the specific notice names what is not copied', async () => {
+    const app = fakeApp({ state: demoState() });
+    const inspector = await inspect(app, GENERIC);
+    fireEvent.click(await within(inspector).findByRole('button', { name: 'New specific reaction from this one' }));
+    const ask = await screen.findByRole('dialog', { name: 'New specific reaction' });
+    expect(within(ask).getByText(/Notes, study notes, tags, citations and intermediates are not copied/)).toBeTruthy();
+  });
+
+  it('T3: Duplicate from an editor with unsaved changes says it duplicates the saved version', async () => {
+    const app = fakeApp({ state: demoState() });
+    const inspector = await inspect(app, E2);
+    fireEvent.click(await within(inspector).findByRole('button', { name: 'Edit' }));
+    const editor = await screen.findByRole('dialog', { name: /^Edit / });
+    const toolbar = within(editor).getByRole('toolbar', { name: 'Draft history' });
+    fireEvent.click(within(toolbar).getByRole('button', { name: 'Duplicate' }));
+    let ask = await screen.findByRole('dialog', { name: 'Duplicate reaction' });
+    expect(within(ask).queryByText(/Duplicates the saved version/)).toBeNull();
+    fireEvent.click(within(ask).getByRole('button', { name: 'Cancel' }));
+    fireEvent.change(within(editor).getByLabelText('Name (required)'), { target: { value: 'Changed name' } });
+    fireEvent.click(within(toolbar).getByRole('button', { name: 'Duplicate' }));
+    ask = await screen.findByRole('dialog', { name: 'Duplicate reaction' });
+    expect(within(ask).getByText('Duplicates the saved version; your unsaved changes stay in this draft.')).toBeTruthy();
+  });
+});

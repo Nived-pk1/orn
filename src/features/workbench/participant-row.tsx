@@ -45,7 +45,7 @@ export function ParticipantRow(props: ParticipantRowProps) {
       <div role="group" aria-label={`Participant ${n}`} className={own.participantBody}>
         <div className={own.participantHead}>
           <span className={own.participantSummary} aria-invalid={hasFinding(props.invalid, base) ? true : undefined}>
-            <SummaryLine text={summaryLineOf(n, p.substance === undefined ? undefined : (choice?.name ?? p.substance.id), p)} />
+            <SummaryLine text={summaryLineOf(n, p.slotClassId !== undefined ? `Choose a species of ${picker?.describe('class', p.slotClassId)?.name ?? p.slotClassId}` : p.substance === undefined ? undefined : (choice?.name ?? p.substance.id), p)} />
           </span>
           {!open && hasFinding(props.invalid, base) ? (
             <Button className={own.participantMarker} aria-label={`Participant ${n} has a finding: open it`} onClick={props.onToggle}>

@@ -45,7 +45,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
   const [nested, setNested] = useState<{ readonly id: string; readonly done: (ref: RecordRef) => void } | null>(null);
   const nestedOpen = useRef(false);
   // the question before a copy or a specific reaction (step 6.7a)
-  const [template, setTemplate] = useState<{ readonly mode: TemplateMode; readonly ref: RecordRef } | null>(null);
+  const [template, setTemplate] = useState<{ readonly mode: TemplateMode; readonly ref: RecordRef; readonly unsaved: boolean } | null>(null);
   // the entry points (titles, palette words, the full-editor kinds) are a lazy chunk, loaded after the first paint (entry room, exams step)
   const [entries, setEntries] = useState<EditorEntries | null>(editorEntries ?? null);
   useEffect(() => {
@@ -91,7 +91,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
     () => ({
       openDrafts: () => setDraftsOpen(true),
       editNames: (ref: RecordRef) => show(services.drafts.open(ref)),
-      startFrom: (mode: TemplateMode, ref: RecordRef) => setTemplate({ mode, ref }),
+      startFrom: (mode: TemplateMode, ref: RecordRef) => setTemplate({ mode, ref, unsaved: false }),
       startNew: (kind: RecordKind, seed: Readonly<Record<string, unknown>>) => show(services.drafts.open({ kind, blank: true, seed })),
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
@@ -118,6 +118,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
         <Suspense fallback={null}>
           <TemplateDialog
             mode={template.mode}
+            unsaved={template.unsaved}
             name={nameOfReaction(services.store.getState().records.reaction[template.ref.id as never])}
             onCancel={() => setTemplate(null)}
             onStart={() => {
@@ -135,7 +136,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       )}
       {editingId === null ? null : (
         <Suspense fallback={null}>
-          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} onCreate={startNested} onFrom={(mode, ref) => setTemplate({ mode, ref })} covered={nested !== null} />
+          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} onCreate={startNested} onFrom={(mode, ref, unsaved) => setTemplate({ mode, ref, unsaved: unsaved === true })} covered={nested !== null} />
         </Suspense>
       )}
       {nested === null ? null : (

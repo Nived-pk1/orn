@@ -7,7 +7,7 @@
  *  - `specificSeed`: a specific reaction that is an instance of a generic one. Participants, stages, condition variants and outcomes are
  *    copied with new IDs; every CLASS participant and class product stays as its class `ref` and carries `slotOfClassId`, a key the schema
  *    does not know, so L1 refuses Save with its "Unknown field" finding until the slot is filled (the form then removes the key). The
- *    name starts empty. Nothing is guessed: classification, mechanism links, intermediates and notes are not copied.
+ *    name starts empty. Classification, mechanism links (and each outcome's), named reaction and transformation links are copied (T2, 6.7b); intermediates, notes, study notes, tags and citations are not.
  * No chemistry: a slot is any class reference; which species fit it is the picker's question.
  */
 import type { CanonicalState, Reaction, RecordRef } from '../schema';
@@ -58,12 +58,12 @@ export function specificSeed(state: CanonicalState, ref: RecordRef, ctx: Pick<Co
     participants: copy.participants.map(slot),
     stages: copy.stages,
     conditionVariants: copy.conditionVariants,
-    outcomes: copy.outcomes.map(({ mechanism: _mechanism, ...outcome }) => ({ ...outcome, products: outcome.products.map(slot) })),
+    outcomes: copy.outcomes.map((outcome) => ({ ...outcome, products: outcome.products.map(slot) })),
     intermediates: [],
-    mechanismIds: [],
-    reactionTypes: [],
-    mechanismClasses: [],
-    namedReactionIds: [],
-    transformationIds: [],
+    mechanismIds: copy.mechanismIds,
+    reactionTypes: copy.reactionTypes,
+    mechanismClasses: copy.mechanismClasses,
+    namedReactionIds: copy.namedReactionIds,
+    transformationIds: copy.transformationIds,
   };
 }

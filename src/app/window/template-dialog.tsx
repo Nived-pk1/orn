@@ -16,11 +16,11 @@ export const TEMPLATE_WORDS: Readonly<Record<TemplateMode, { readonly title: str
   specific: {
     title: 'New specific reaction',
     start: 'Start the specific reaction',
-    line: (name) => `A specific reaction starts from ${name}, with a place to choose a species for each class. Nothing is saved until you save it.`,
+    line: (name) => `A specific reaction starts from ${name}, with a place to choose a species for each class. Its classification, mechanism links, named reaction and transformation links are copied. Notes, study notes, tags, citations and intermediates are not copied. Nothing is saved until you save it.`,
   },
 };
 
-export function TemplateDialog(props: { readonly mode: TemplateMode; readonly name: string; readonly onStart: () => void; readonly onCancel: () => void }) {
+export function TemplateDialog(props: { readonly mode: TemplateMode; readonly name: string; readonly unsaved?: boolean; readonly onStart: () => void; readonly onCancel: () => void }) {
   const words = TEMPLATE_WORDS[props.mode];
   return (
     <Dialog
@@ -37,6 +37,7 @@ export function TemplateDialog(props: { readonly mode: TemplateMode; readonly na
       }
     >
       <p>{words.line(props.name)}</p>
+      {props.unsaved === true ? <p>Duplicates the saved version; your unsaved changes stay in this draft.</p> : null}
     </Dialog>
   );
 }

@@ -19,6 +19,7 @@ import type { DuplicateOutcome } from './duplicate-contracts';
 import { draftStatusText, editingUnavailableReason, type FormatTime } from './draft-text';
 import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
+import { slotFindings } from './slot-findings';
 import { useLiveChecks, type LiveChecks } from './live-validation';
 import { formOwns, kindWords, labelOfField, sectionOf, titleOf } from './form-kinds';
 import { namesFieldLabel } from './names-section';
@@ -233,7 +234,7 @@ export function EditorHost(props: EditorHostProps) {
   const baseName = nameOfBase(session.baseRecord, session.target?.id ?? `new ${session.kind}`);
   const comparisons: readonly FieldComparison[] = view.kind === 'conflict' ? compareForConflict(session.baseRecord, view.current, session.draft) : [];
   const refused = refusal !== null && refusal.findings.length > 0;
-  const shown = refused ? refusal.findings : mergeFindings(live, checks.dry.findings, checks.structure.findings);
+  const shown = slotFindings(refused ? refusal.findings : mergeFindings(live, checks.dry.findings, checks.structure.findings), draft, (classId) => port.records?.describe('class', classId)?.name);
   const notes = refused ? [] : checkNotes(checks);
   const inForm = (path: string | undefined): boolean => formOwns(session.kind, path);
   const ends = session.kind === 'relationship' ? relationshipTitleWords(draft, port.records) : curriculumTitleWords(session.kind, draft, port.records);
@@ -293,9 +294,9 @@ export function EditorHost(props: EditorHostProps) {
           </Button>
           {session.kind !== 'reaction' || session.target === null || port.chain?.from === undefined ? null : (
             <>
-              <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.from?.('duplicate', session.target as RecordRef) })}>Duplicate</Button>
+              <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.from?.('duplicate', session.target as RecordRef, entry.canUndo) })}>Duplicate</Button>
               {(session.baseRecord as { scope?: string } | null)?.scope !== 'generic' ? null : (
-                <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.from?.('specific', session.target as RecordRef) })}>New specific reaction from this one</Button>
+                <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.from?.('specific', session.target as RecordRef, entry.canUndo) })}>New specific reaction from this one</Button>
               )}
             </>
           )}

@@ -20,7 +20,8 @@ export function fieldFor(root: ParentNode, path: string | undefined): HTMLElemen
   return fields.find((field) => (field.dataset.fieldPath ?? '').startsWith(`${current}.`) || field.dataset.fieldPath === current) ?? null;
 }
 
-export const findingLine = (finding: Finding): string => `${finding.message}${finding.path === undefined ? '' : ` (${finding.path})`}`;
+/** A slot finding (slot-findings.ts) already says where it is ("participant 2"), so the path is not repeated. */
+export const findingLine = (finding: Finding): string => `${finding.message}${finding.path === undefined || finding.data?.slot === true ? '' : ` (${finding.path})`}`;
 
 export function FindingsPanel(props: {
   readonly heading: string;

@@ -64,3 +64,15 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* Fieldsets (step 6.7b T4): no native border, margin or padding, so the legend never breaks a border; a class that wants a frame says so. */
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+legend {
+  padding: 0;
+}
