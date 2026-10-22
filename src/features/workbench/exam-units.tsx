@@ -12,6 +12,7 @@ import { addRow, addUnit, COVERAGE_WORDS, removeRow, removeUnit, rowsWord, setRo
 import type { PickerSectionProps } from './knowledge-sections';
 import { RichTextField } from './rich-text-field';
 import { SummaryLine } from './summary-line';
+import rows from './exam-rows.module.css';
 import styles from './editor.module.css';
 
 type Asking = { readonly unit: number; readonly row?: number } | null;
@@ -19,6 +20,7 @@ type Asking = { readonly unit: number; readonly row?: number } | null;
 const unitName = (title: string, index: number): string => (title === '' ? `unit ${index + 1}` : title);
 
 function Rows(props: PickerSectionProps & { readonly unit: number; readonly asking: Asking; readonly ask: (value: Asking) => void }) {
+  const [changing, setChanging] = useState<number | null>(null); // the row whose topic is being chosen again
   const unit = unitsOf(props.draft)[props.unit];
   const topics = props.picker?.topics?.() ?? [];
   const locked = props.unavailable !== undefined;
@@ -29,16 +31,37 @@ function Rows(props: PickerSectionProps & { readonly unit: number; readonly aski
         const n = index + 1;
         const base = `units[${props.unit}].topicCoverage[${index}]`;
         return (
-          <div key={index} className={styles.field}>
-            <select aria-label={`Topic of row ${n}`} value={row.topicId} disabled={locked} aria-invalid={bad(`${base}.topicId`)} data-field-path={`${base}.topicId`} onChange={(event) => props.onEdit(setRowChoice(props.unit, index, 'topicId', event.target.value))}>
-              <option value="">Choose a topic</option>
-              {row.topicId === '' || topics.some((t) => t.id === row.topicId) ? null : <option value={row.topicId}>{row.topicId} (not in this dataset)</option>}
-              {topics.map((topic) => (
-                <option key={topic.id} value={topic.id}>
-                  {`${'– '.repeat(topic.depth)}${topic.name}`}
-                </option>
-              ))}
-            </select>
+          <div key={index} className={rows.coverageRow} role="group" aria-label={`Coverage row ${n}`}>
+            {row.topicId !== '' && changing !== index ? (
+              <>
+                <span className={rows.topicName} data-topic-name="">
+                  {topics.find((t) => t.id === row.topicId)?.name ?? `${row.topicId} (not in this dataset)`}
+                </span>
+                <Button aria-label={`Change topic of row ${n}`} data-field-path={`${base}.topicId`} {...(locked ? { unavailable: props.unavailable as string } : { onClick: () => setChanging(index) })}>
+                  Change topic
+                </Button>
+              </>
+            ) : (
+              <select
+                aria-label={`Topic of row ${n}`}
+                value={row.topicId}
+                disabled={locked}
+                aria-invalid={bad(`${base}.topicId`)}
+                data-field-path={`${base}.topicId`}
+                onChange={(event) => {
+                  props.onEdit(setRowChoice(props.unit, index, 'topicId', event.target.value));
+                  if (event.target.value !== '') setChanging(null);
+                }}
+              >
+                <option value="">Choose a topic</option>
+                {row.topicId === '' || topics.some((t) => t.id === row.topicId) ? null : <option value={row.topicId}>{row.topicId} (not in this dataset)</option>}
+                {topics.map((topic) => (
+                  <option key={topic.id} value={topic.id}>
+                    {`${'– '.repeat(topic.depth)}${topic.name}`}
+                  </option>
+                ))}
+              </select>
+            )}
             <select aria-label={`Coverage of row ${n}`} value={row.coverage} disabled={locked} aria-invalid={bad(`${base}.coverage`)} data-field-path={`${base}.coverage`} onChange={(event) => props.onEdit(setRowChoice(props.unit, index, 'coverage', event.target.value))}>
               <option value="">Choose coverage</option>
               {COVERAGE_LEVELS.map((level) => (

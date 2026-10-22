@@ -19,8 +19,8 @@ const records = (state: CanonicalState): AnyRecord[] => RECORD_KINDS.flatMap((ki
 const GENERATED = { species: 12, classes: 3, reagents: 3, reactions: 8, relationshipsPerReaction: 0.5, topics: 3, shape: 'dense', seed: 5 } as const;
 
 describe('which records have a document', () => {
-  it('exactly the SEARCH §1 kinds; presentation records, relationships, exams, mappings, relevance and assets never', () => {
-    expect([...SEARCH_KINDS].sort()).toEqual(['caveat', 'class', 'concept', 'mechanism', 'named_reaction', 'reaction', 'reagent', 'reference', 'route', 'species', 'topic', 'transformation']);
+  it('exactly the SEARCH §1 kinds; presentation records, relationships, mappings, relevance and assets never', () => {
+    expect([...SEARCH_KINDS].sort()).toEqual(['caveat', 'class', 'concept', 'exam', 'exam_version', 'mechanism', 'named_reaction', 'reaction', 'reagent', 'reference', 'route', 'species', 'topic', 'transformation']);
     const ports = portsOf(demo);
     const made = new Map<RecordKind, number>();
     for (const record of records(demo)) {
@@ -28,11 +28,27 @@ describe('which records have a document', () => {
       expect(doc !== undefined, `${record.kind} ${record.id}`).toBe(isSearchKind(record.kind));
       if (doc !== undefined) made.set(record.kind, (made.get(record.kind) ?? 0) + 1);
     }
-    for (const kind of ['navigator_anchor', 'reaction_scheme', 'view_preset', 'entity_display', 'relationship', 'exam', 'exam_version', 'topic_mapping', 'exam_relevance', 'asset'] as const) {
+    for (const kind of ['navigator_anchor', 'reaction_scheme', 'view_preset', 'entity_display', 'relationship', 'topic_mapping', 'exam_relevance', 'asset'] as const) {
       expect(made.has(kind), kind).toBe(false);
     }
     expect(Object.keys(demo.records.entity_display).length + Object.keys(demo.records.navigator_anchor).length).toBeGreaterThan(0); // the demo has presentation records to exclude
     for (const kind of ['species', 'class', 'reagent', 'reaction', 'named_reaction', 'concept', 'mechanism', 'topic']) expect(made.get(kind as RecordKind), kind).toBeGreaterThan(0);
+  });
+
+  it('exams and exam versions are findable by name, label and year (exams step review E3)', () => {
+    const ports = portsOf(demo);
+    const exam = Object.values(demo.records.exam)[0] as AnyRecord & { name: string };
+    const version = Object.values(demo.records.exam_version)[0] as AnyRecord & { label: string };
+    const examDoc = buildDocument(exam, ports);
+    expect(examDoc?.kind).toBe('exam');
+    expect(examDoc?.title).toBe(exam.name);
+    expect(examDoc?.names).toContain(exam.name);
+    const withYear = { ...version, year: 2027 } as AnyRecord;
+    const versionDoc = buildDocument(withYear, ports);
+    expect(versionDoc?.kind).toBe('exam_version');
+    expect(versionDoc?.title).toBe(version.label);
+    expect(versionDoc?.names).toContain(version.label);
+    expect(versionDoc?.text).toContain('2027');
   });
 
   it('one document per record, id and kind from the record, title not empty, every field the contract requires', () => {

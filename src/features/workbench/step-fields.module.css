@@ -132,6 +132,19 @@ li.nestedRow {
 .part {
   display: inline-block;
   max-width: 100%;
-  vertical-align: top;
+  vertical-align: baseline;
   overflow-wrap: anywhere;
+}
+
+/* the text of a summary line: one element, so on a phone it takes its own line and the buttons share the row under it (exams step review E2) */
+.summaryText {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 899px) {
+  .summaryText {
+    display: block;
+    flex: 1 1 100%;
+    margin-bottom: var(--space-1);
+  }
 }

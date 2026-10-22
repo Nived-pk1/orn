@@ -104,6 +104,10 @@ export function partOf(record: AnyRecord): Part | undefined {
     }
     case 'topic':
       return { ...named(record.name, record.aliases), pieces: new TextPieces().rich(record.summary, record.notes) };
+    case 'exam':
+      return { title: record.name, names: distinct([record.name, record.shortName]), aliases: [], pieces: new TextPieces().add(record.authority).rich(record.notes) };
+    case 'exam_version':
+      return { title: record.label, names: distinct([record.label]), aliases: [], pieces: new TextPieces().add(record.year === undefined ? undefined : String(record.year), record.status).rich(record.notes) };
     case 'reference':
       return {
         title: record.title,

@@ -10,7 +10,7 @@ const SEPARATOR = ' · ';
 export function SummaryLine(props: { readonly text: string }) {
   if (props.text === '') return null;
   return (
-    <>
+    <span className={styles.summaryText} data-summary-text="">
       {props.text.split(SEPARATOR).map((part, index) => (
         // a summary has a handful of parts that never reorder: the index is a stable key
         <Fragment key={index}>
@@ -20,6 +20,6 @@ export function SummaryLine(props: { readonly text: string }) {
           </span>
         </Fragment>
       ))}
-    </>
+    </span>
   );
 }

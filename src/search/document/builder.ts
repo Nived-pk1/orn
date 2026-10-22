@@ -45,6 +45,8 @@ export const SEARCH_KINDS = [
   'route',
   'topic',
   'reference',
+  'exam',
+  'exam_version',
 ] as const satisfies readonly RecordKind[];
 
 const SEARCHABLE: ReadonlySet<string> = new Set(SEARCH_KINDS);

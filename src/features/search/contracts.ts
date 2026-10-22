@@ -73,6 +73,8 @@ export const KIND_TITLES: Readonly<Partial<Record<RecordKind, string>>> = {
   caveat: 'Caveats',
   route: 'Routes',
   reference: 'References',
+  exam: 'Exams',
+  exam_version: 'Exam versions',
 };
 
 /** One record's kind in words ("Named reaction"), for a row; the group header uses the plural `kindTitle`. */

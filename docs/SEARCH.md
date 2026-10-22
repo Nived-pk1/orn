@@ -6,7 +6,7 @@ Package section **#16 Search**. Contracts: `src/search/contracts.ts`, `src/core/
 
 MiniSearch runs in the **search worker**. The main thread builds `SearchDocument`s from records (pure function in `src/search`) and sends incremental updates derived from each ChangeSet (`upsert`, `remove`, `revision`). The serialized index is cached in `derivedCache` keyed by revision for warm boots; a mismatch triggers a background rebuild while the previous index keeps answering.
 
-Indexed kinds: species, class, reagent, reaction, named reaction, concept, mechanism, transformation, caveat, route, topic, reference. Presentation records are not indexed.
+Indexed kinds: species, class, reagent, reaction, named reaction, concept, mechanism, transformation, caveat, route, topic, reference, exam, exam version (by name, short name, label and year; exams step review E3, 2026-10-22; the index configuration id is orn-search-config-3 so a cached index without them is rebuilt). Presentation records are not indexed.
 
 ## 2. Chemistry-aware normalisation
 

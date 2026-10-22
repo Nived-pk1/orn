@@ -97,6 +97,26 @@ describe('syllabus units and coverage', () => {
     click('Close unit U');
     expect(screen.getByRole('list', { name: 'Syllabus units' }).textContent).toContain('U · 1 topic');
   });
+  it('E1: a chosen topic is shown as its name (no indent mark) in one grouped row; "Change topic" reopens the picker', () => {
+    const { draft } = showKnowledge('exam_version', { blank: true, seed: SEED });
+    click('Add a unit');
+    set('Unit title (required)', 'U');
+    click('Add a topic');
+    const row = screen.getByRole('group', { name: 'Coverage row 1' });
+    expect(within(row).getByLabelText('Topic of row 1')).toBeTruthy(); // not chosen yet: the picker
+    set('Topic of row 1', TOPIC);
+    expect(within(row).queryByLabelText('Topic of row 1')).toBeNull();
+    const name = row.querySelector('[data-topic-name]');
+    expect(name?.textContent ?? '').not.toBe('');
+    expect(name?.textContent).not.toMatch(/^[–-]/);
+    expect(name?.textContent).not.toContain('– ');
+    expect(within(row).getByLabelText('Coverage of row 1')).toBeTruthy();
+    expect(within(row).getByRole('button', { name: 'Remove row 1' })).toBeTruthy();
+    click('Change topic of row 1', row);
+    expect((within(row).getByLabelText('Topic of row 1') as HTMLSelectElement).value).toBe(TOPIC);
+    expect(row.querySelector('[data-topic-name]')).toBeNull();
+    expect((draft().units as Unit[])[0]?.topicCoverage[0]?.topicId).toBe(TOPIC);
+  });
   it('CUR-002 is live: the same topic twice in one version is flagged', async () => {
     const shown = showKnowledge('exam_version', { blank: true, real: true, seed: SEED });
     set('Label (required)', 'Test 2027');

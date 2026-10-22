@@ -1,0 +1,23 @@
+/* a topic-coverage row (exams step review E1): one bordered block; the topic's name as text, the coverage choice and Remove beside it */
+.coverageRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.topicName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 899px) {
+  .topicName {
+    flex: 1 1 100%;
+  }
+}

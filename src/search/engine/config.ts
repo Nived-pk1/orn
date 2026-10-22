@@ -18,7 +18,7 @@ export type FieldName = (typeof FIELDS)[number];
 export const BOOST: Readonly<Record<FieldName, number>> = { name: 4, alias: 4, formula: 3, structure: 2, tags: 2, text: 1 };
 
 /** Changes whenever the options above change; a serialised index built under another value is refused (`BAD_INDEX`). */
-export const CONFIG_ID = 'orn-search-config-2';
+export const CONFIG_ID = 'orn-search-config-3';
 
 /** What MiniSearch indexes for one document: one string per field (several values joined by newlines). */
 export interface MiniDoc {
