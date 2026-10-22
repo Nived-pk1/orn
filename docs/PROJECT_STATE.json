@@ -106,7 +106,8 @@
     "6.6a",
     "6.6b",
     "6.6c",
-    "6.6"
+    "6.6",
+    "exams"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -134,8 +135,8 @@
     "commit": "c798102",
     "protectedCheckedAt": "2026-10-21"
   },
-  "nextStep": "exams",
-  "nextStepTitle": "Exams step: exam and exam-version editors, exam-generic wording, grouped scope selector",
+  "nextStep": "6.7",
+  "nextStepTitle": "Quick-entry parser and pickers with 'create new'",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
