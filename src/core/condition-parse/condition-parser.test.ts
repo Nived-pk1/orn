@@ -3,7 +3,7 @@
  * shapes when unambiguous, else `other[]`; the three regex flags; `parsedFields`; and every `conditions` object of both fixtures.
  */
 import { describe, expect, it } from 'vitest';
-import { ConditionParametersSchema } from '@/core/schema';
+import { ConditionParametersSchema } from '../schema';
 import { legacyFixture, legacyTestFixture } from '@/test-support/legacy-kit';
 import { parseConditionField, type ConditionField } from './condition-fields';
 import { parseLegacyConditions } from './condition-parser';

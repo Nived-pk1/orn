@@ -11,7 +11,7 @@
  * Every parser returns `segments` that tile the value exactly (see parse-spans.ts): each character is in a parsed span or in the
  * remainder, and the remainder is what `other` carries. Total: never throws, whatever the string.
  */
-import type { ConditionParameters, Temperature } from '@/core/schema';
+import type { ConditionParameters, Temperature } from '../schema';
 import { remainderText, tile, toOtherEntries, type Parsed, type ParseReview, type Segment } from './parse-spans';
 import { scanPressures, scanTemperatures, toTemperature, type PressureUnit } from './quantity';
 

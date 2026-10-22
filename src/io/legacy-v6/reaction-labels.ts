@@ -6,7 +6,7 @@
 import { PARAMETER_FIELDS, type ConditionParameters } from '@/core/schema';
 import { excerpt, type CompoundScope } from './compound-scope';
 import type { ParsedLabel } from './label-parser';
-import { toOtherEntries } from './parse-spans';
+import { toOtherEntries } from '@/core/condition-parse/parse-spans';
 
 /** `ConditionParametersSchema.other` holds at most this many entries. */
 const MAX_OTHER = 16;

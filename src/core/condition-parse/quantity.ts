@@ -8,7 +8,7 @@
  * (`5-0 °C`, never reordered), a temperature below absolute zero, a number that overflows. A number with no unit is not a
  * quantity at all. A range needs the same unit on both ends when it is written twice (`0 °C - 5 °C`).
  */
-import type { Temperature } from '@/core/schema';
+import type { Temperature } from '../schema';
 
 export type TemperatureUnit = 'C' | 'K';
 export type PressureUnit = 'atm' | 'bar' | 'kPa' | 'mmHg';

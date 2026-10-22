@@ -10,10 +10,10 @@ import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { ConditionParametersSchema, LabelTextSchema } from '@/core/schema';
 import { legacyFixture, legacyTestFixture } from '@/test-support/legacy-kit';
-import { parseConditionField, type ConditionField } from './condition-fields';
-import { parseLegacyConditions } from './condition-parser';
+import { parseConditionField, type ConditionField } from '@/core/condition-parse/condition-fields';
+import { parseLegacyConditions } from '@/core/condition-parse/condition-parser';
 import { parseLabel } from './label-parser';
-import { remainderText, toOtherEntries, type Segment } from './parse-spans';
+import { remainderText, toOtherEntries, type Segment } from '@/core/condition-parse/parse-spans';
 
 const FIELDS: readonly ConditionField[] = ['temperature', 'pressure', 'medium', 'phase', 'strength', 'atmosphere'];
 const PIECES = ['aq.', '(aq)', 'alc.', 'conc.', 'dil.', 'dry', 'anhydrous', '(excess)', '(cat.)', 'non-', 'KOH', 'H2SO4', ' ', '  ', '\t', '\n', '(', ')', ',', ';', '-', '–', '−', '‐', '°C', '° C', 'K', 'C', 'F', '443', '0', '5', '-78', '25', '.', 'atm', 'bar', 'kPa', 'mm Hg', 'hv', 'hν', 'UV', 'light', 'rt', 'reflux', 'heat', 'Δ', 'acidic', 'aqueous', 'nitrogen', 'under', 'ν', '\u0000', '‮', '\ud800', 'é', '😀', 'x'];

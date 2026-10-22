@@ -10,7 +10,7 @@
  * into `provenance.legacy.unmapped`. Nothing here throws; no `other[]` entry is truncated (overflow beyond the schema's 16 is
  * returned in `overflowOther`).
  */
-import { PARAMETER_FIELDS, ShortTextSchema, type ConditionParameters } from '@/core/schema';
+import { PARAMETER_FIELDS, ShortTextSchema, type ConditionParameters } from '../schema';
 import { parseConditionField, type ConditionField, type FieldParse } from './condition-fields';
 import type { ParseNote, ParseReview } from './parse-spans';
 

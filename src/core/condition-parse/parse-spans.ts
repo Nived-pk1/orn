@@ -7,7 +7,7 @@
  * without one is remainder (returned as text for matching, or as `other[]` entries). Only whitespace may be normalised when the
  * remainder is turned into a value, and that is stated where it happens.
  */
-import { LIMITS } from '@/core/schema';
+import { LIMITS } from '../schema';
 
 export interface Segment {
   readonly start: number;

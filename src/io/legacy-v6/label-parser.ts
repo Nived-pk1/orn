@@ -10,8 +10,8 @@
  * throws for any string, and the returned `segments` tile the label exactly (see parse-spans.ts): no character is lost.
  */
 import type { ConditionParameters, Participant, Temperature } from '@/core/schema';
-import { remainderText, tile, toOtherEntries, type Parsed, type ParseReview, type Segment } from './parse-spans';
-import { scanTemperatures, toTemperature } from './quantity';
+import { remainderText, tile, toOtherEntries, type Parsed, type ParseReview, type Segment } from '@/core/condition-parse/parse-spans';
+import { scanTemperatures, toTemperature } from '@/core/condition-parse/quantity';
 
 type Strength = NonNullable<Participant['strength']>;
 type Qualifier = NonNullable<NonNullable<Participant['quantity']>['qualifier']>;

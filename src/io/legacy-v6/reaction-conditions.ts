@@ -8,7 +8,7 @@
  * did not read), or - for entries beyond the schema's `other[]` cap - kept in `unmapped.conditions.overflowOther`.
  */
 import type { ConditionParameters } from '@/core/schema';
-import { parseLegacyConditions } from './condition-parser';
+import { parseLegacyConditions } from '@/core/condition-parse/condition-parser';
 import { excerpt, type CompoundScope } from './compound-scope';
 import { list } from './compound-review';
 import type { ReportBuilder } from './report';
