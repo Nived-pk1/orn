@@ -41,6 +41,18 @@ describe('the preview of a draft', () => {
     expect(ready(draft).equations[0]?.equation.reactants[0]?.coefficient).toBe('2');
   });
 
+  it('a product whose role is not chosen yet (quick entry, a new product) is drawn as a plain product, never with the word "undefined"', () => {
+    const draft = reactionOf(E2) as unknown as { outcomes: { products: Record<string, unknown>[] }[] };
+    for (const outcome of draft.outcomes) for (const product of outcome.products) delete product.role;
+    const preview = ready(draft);
+    const terms = preview.equations.flatMap((e) => e.equation.products);
+    expect(terms.length).toBeGreaterThan(0);
+    for (const term of terms) {
+      expect(term.role).toBeNull();
+      expect(term.text).not.toContain('undefined');
+    }
+  });
+
   it('nothing is written: the draft is in no store table and the state is unchanged', () => {
     const before = JSON.stringify(state.records.reaction[E2 as never]);
     const draft = { ...reactionOf(E2), id: 'rxn_not-stored-draft' };

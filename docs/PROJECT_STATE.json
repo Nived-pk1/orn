@@ -108,7 +108,9 @@
     "6.6c",
     "6.6",
     "exams",
-    "6.7a"
+    "6.7a",
+    "6.7b",
+    "6.7"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -136,8 +138,8 @@
     "commit": "b751cb6",
     "protectedCheckedAt": "2026-10-21"
   },
-  "nextStep": "6.7b",
-  "nextStepTitle": "Quick-entry parser, row 6.7 close",
+  "nextStep": "6.8",
+  "nextStepTitle": "Delete / merge with impact dialogs, review queue, multi-selection",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

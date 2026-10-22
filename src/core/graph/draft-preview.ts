@@ -43,11 +43,18 @@ function missingOf(draft: unknown): readonly string[] {
   return missing;
 }
 
+/** A product whose role is not chosen yet (a new draft, quick entry: the form says "Choose a role") is DRAWN as a plain product; the draft itself is not changed. */
+function withDrawnRoles(reaction: Reaction): Reaction {
+  const unchosen = (product: { readonly role?: unknown }): boolean => product.role === undefined;
+  if (!reaction.outcomes.some((outcome) => outcome.products.some(unchosen))) return reaction;
+  return { ...reaction, outcomes: reaction.outcomes.map((outcome) => ({ ...outcome, products: outcome.products.map((product) => (unchosen(product) ? { ...product, role: 'main' as const } : product)) })) };
+}
+
 /** The equations of `draft` as the card shows them: one per group of outcomes, or the reactants and the arrow when there is no outcome. */
 export function previewOfDraft(state: CanonicalState, indexes: ReadonlyIndexes, draft: unknown): DraftPreview {
   const missing = missingOf(draft);
   if (missing.length > 0) return { ok: false, missing };
-  const reaction = draft as Reaction;
+  const reaction = withDrawnRoles(draft as Reaction);
   try {
     const describer = createDescriber(state);
     const schemes = [...new Set(indexes.referrersOf(reaction.id).filter((r) => r.owner.kind === 'reaction_scheme').map((r) => r.owner.id))]

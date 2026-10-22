@@ -20,6 +20,8 @@ import { createRecordPicker } from './record-picker-port';
 export const QUICK_ENTRY_CHANNEL = 'quick-entry';
 const KINDS = ['species', 'reagent', 'class'] as const satisfies readonly PickKind[];
 const MAX_HITS = 20;
+/** The search service lets a newer query on a channel replace an older one; the terms of a line are asked together, so each takes the next of this many channels (more than a line has terms). */
+const CHANNELS = 64;
 const MAX_SUGGESTIONS = 5;
 
 export interface QuickEntryPortDeps {
@@ -52,10 +54,11 @@ const probeSpecies = (smiles: string): unknown => {
 
 export function createQuickEntryPort(deps: QuickEntryPortDeps): QuickEntryPort {
   const picker = createRecordPicker({ search: deps.search, state: deps.state, indexes: deps.indexes, activeExam: deps.activeExam });
+  let next = 0;
   const choiceOf = (kind: PickKind, id: string): RecordChoice | undefined => picker.describe(kind, id);
   return {
     async find(text) {
-      const answer = await deps.search(QUICK_ENTRY_CHANNEL, { text, kinds: [...KINDS], limit: MAX_HITS });
+      const answer = await deps.search(`${QUICK_ENTRY_CHANNEL}:${(next = (next + 1) % CHANNELS)}`, { text, kinds: [...KINDS], limit: MAX_HITS });
       if (!answer.ok) throw new Error((answer as { message?: string }).message ?? 'the search is not ready');
       const wanted = fold(text);
       const state = deps.state();

@@ -90,7 +90,7 @@ export function QuickReview(props: QuickReviewProps) {
           <option value="specific">Specific</option>
           <option value="generic">Generic</option>
         </select>
-        <span data-testid="quick-scope">{props.scopeChoice === null ? auto.words : `Scope: you chose ${props.scopeChoice}. ${auto.words}`}</span>
+        <span data-testid="quick-scope">{props.scopeChoice === null ? auto.words : `Scope: you chose ${props.scopeChoice}.${auto.scope === props.scopeChoice ? '' : ` The terms alone say: ${auto.words}`}`}</span>
       </div>
       {similar.map((one) => (
         <p key={one.id}>
