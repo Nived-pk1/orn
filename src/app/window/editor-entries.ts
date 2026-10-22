@@ -49,10 +49,19 @@ export const NEW_ENTRIES: readonly NewEntry[] = [
 /** The kinds whose editor is the full one (the others edit names only). */
 export const FULL_EDITOR_KINDS: readonly string[] = NEW_ENTRIES.map((e) => e.kind);
 
+/** The Quick entry command (step 6.7b): one text line becomes a reaction draft. The Workbench button, phone More and the palette read this one row. */
+export interface QuickEntryRow {
+  readonly title: string;
+  readonly paletteId: string;
+  readonly keywords: readonly string[];
+}
+export const QUICK_ENTRY: QuickEntryRow = { title: 'Quick entry', paletteId: 'quick-entry', keywords: ['reaction', 'line', 'type', 'text', 'parse', 'fast', ...AUTHOR] };
+
 /** What the provider hands the window once this chunk has loaded. */
 export interface EditorEntries {
   readonly entries: readonly NewEntry[];
   readonly fullEditorKinds: readonly string[];
   readonly namesKinds: readonly string[];
+  readonly quickEntry: QuickEntryRow;
 }
-export const EDITOR_ENTRIES: EditorEntries = { entries: NEW_ENTRIES, fullEditorKinds: FULL_EDITOR_KINDS, namesKinds: NAMES_KINDS };
+export const EDITOR_ENTRIES: EditorEntries = { entries: NEW_ENTRIES, fullEditorKinds: FULL_EDITOR_KINDS, namesKinds: NAMES_KINDS, quickEntry: QUICK_ENTRY };

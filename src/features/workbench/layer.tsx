@@ -6,6 +6,8 @@ export { DraftsDialog } from './drafts-dialog';
 export type { DraftsDialogProps } from './drafts-dialog';
 export { EditorHost } from './editor-host';
 export { nameSeed } from './create-new';
+export { QuickEntryDialog } from './quick-entry-dialog';
+export type { QuickEntryDialogProps } from './quick-entry-dialog';
 export type { EditorHostProps } from './editor-host';
 export { StructurePanel, STRUCTURE_PARSE_DEBOUNCE_MS } from './structure-panel';
 export type { StructurePanelProps } from './structure-panel';

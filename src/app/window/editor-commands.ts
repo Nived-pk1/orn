@@ -28,6 +28,9 @@ export function editorCommandDeps(editors: EditorsApi | null, state: CanonicalSt
   return {
     editNames: editNamesCommand(editors, state, inspector),
     // one command per entry in the lazy table: none until it has loaded (after the first paint)
-    newKinds: (editors?.entries ?? []).map((entry) => ({ id: entry.paletteId, title: entry.title, keywords: entry.keywords, reason, run: () => editors?.startNew(entry.kind, {}) })),
+    newKinds: [
+      ...(editors?.entries ?? []).map((entry) => ({ id: entry.paletteId, title: entry.title, keywords: entry.keywords, reason, run: () => editors?.startNew(entry.kind, {}) })),
+      ...(editors?.quickEntry === undefined ? [] : [{ id: editors.quickEntry.paletteId, title: editors.quickEntry.title, keywords: editors.quickEntry.keywords, reason, run: () => editors.openQuickEntry?.() }]),
+    ],
   };
 }

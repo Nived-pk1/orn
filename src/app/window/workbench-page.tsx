@@ -26,6 +26,9 @@ export function WorkbenchPage() {
             {entry.title}
           </Button>
         ))}
+        {editors?.quickEntry === undefined ? null : (
+          <Button {...(reason === undefined && editors !== null ? { onClick: () => editors.openQuickEntry?.() } : { unavailable: reason ?? 'Editing is not available here.' })}>{editors.quickEntry.title}</Button>
+        )}
       </div>
       <h3>Drafts</h3>
       {drafts.items.length === 0 ? (

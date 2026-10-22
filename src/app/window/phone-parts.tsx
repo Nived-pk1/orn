@@ -71,6 +71,11 @@ export function PhoneBar(props: {
                 {entry.title}
               </Button>
             ))}
+            {editors.quickEntry === undefined ? null : (
+              <Button className={styles.wide} {...(editors.editReason === undefined ? { onClick: then(() => editors.openQuickEntry?.()) } : { unavailable: editors.editReason })}>
+                {editors.quickEntry.title}
+              </Button>
+            )}
           </section>
         )}
         {props.history === undefined ? null : <HistorySection history={props.history} />}

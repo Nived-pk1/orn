@@ -8,7 +8,7 @@ import type { RecordKind, RecordRef } from '@/core/schema';
 import type { DraftsView } from '@/app/services/drafts-types';
 import { EDITING } from '@/app/edition';
 import { useAppOptional } from './context';
-import type { NewEntry } from './editor-entries';
+import type { NewEntry, QuickEntryRow } from './editor-entries';
 
 /** What the window offers to open: the drafts list and the names editor. Absent in a window that has none (a test of one part). */
 export interface EditorsApi {
@@ -21,6 +21,9 @@ export interface EditorsApi {
   startFrom?(mode: 'duplicate' | 'specific', ref: RecordRef): void;
   /** The "New ..." entry points (the Workbench, phone More and the palette read this one list). Empty until the lazy chunk has loaded, after the first paint. */
   readonly entries: readonly NewEntry[];
+  /** Quick entry (step 6.7b): its words, from the lazy entries table (absent until it has loaded), and how to open the dialog. */
+  readonly quickEntry?: QuickEntryRow;
+  openQuickEntry?(): void;
   /** Opens a listed draft (its stored session). */
   openDraft(id: string): void;
   /** Why editing is unavailable now (a read-only tab); undefined when it is available. */

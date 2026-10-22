@@ -10,6 +10,7 @@ export type { EditorEntryView, EditorCommitResult, EditorPort } from './editor-c
 export type { ClassSuggestion, DraftChecksPort, DryRunAnswer, StructureChecksAnswer } from './check-contracts';
 export type { SmartsCheck, StructurePort } from './structure-contracts';
 export type { PreviewPort } from './preview-contracts';
+export type { FindResult, QuickEntryPort, StructureAnswer } from './quick-entry-contracts';
 export type { CreateNewApi } from './create-new';
 export type { CurriculumLine, MapFamilyChoice, ParentKind, PickKind, RecordChoice, RecordPickerPort, TopicChoice, VersionUnit } from './record-picker-contracts';
 export type { MechanismLinksPort, VariantUse } from './mechanism-contracts';

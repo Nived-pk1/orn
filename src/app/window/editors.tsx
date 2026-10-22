@@ -20,6 +20,7 @@ const DraftsDialog = /* @__PURE__ */ lazy(() => import('@/features/workbench/lay
 // the session builds its port (pickers, preview) where it opens, so that code is in the editor's chunk and not in the entry (step 6.5a)
 const EditorSession = /* @__PURE__ */ lazy(() => import('./editor-session').then((m) => ({ default: m.EditorSession })));
 
+const QuickEntryHost = /* @__PURE__ */ lazy(() => import('./quick-entry-host').then((m) => ({ default: m.QuickEntryHost })));
 const TemplateDialog = /* @__PURE__ */ lazy(() => import('./template-dialog').then((m) => ({ default: m.TemplateDialog })));
 
 const machineTime = /* @__PURE__ */ createLocalTimeFormatter();
@@ -46,6 +47,9 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
   const nestedOpen = useRef(false);
   // the question before a copy or a specific reaction (step 6.7a)
   const [template, setTemplate] = useState<{ readonly mode: TemplateMode; readonly ref: RecordRef; readonly unsaved: boolean } | null>(null);
+  // quick entry (step 6.7b): the dialog is open or not; the line typed stays for the session
+  const [quickOpen, setQuickOpen] = useState(false);
+  const quickLine = useRef('');
   // the entry points (titles, palette words, the full-editor kinds) are a lazy chunk, loaded after the first paint (entry room, exams step)
   const [entries, setEntries] = useState<EditorEntries | null>(editorEntries ?? null);
   useEffect(() => {
@@ -93,13 +97,17 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       editNames: (ref: RecordRef) => show(services.drafts.open(ref)),
       startFrom: (mode: TemplateMode, ref: RecordRef) => setTemplate({ mode, ref, unsaved: false }),
       startNew: (kind: RecordKind, seed: Readonly<Record<string, unknown>>) => show(services.drafts.open({ kind, blank: true, seed })),
+      openQuickEntry: () => setQuickOpen(true),
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
       entries: entries?.entries ?? NO_ENTRIES,
-      ...(entries === null ? {} : { fullEditorKinds: entries.fullEditorKinds, namesKinds: entries.namesKinds }),
+      ...(entries === null ? {} : { fullEditorKinds: entries.fullEditorKinds, namesKinds: entries.namesKinds, quickEntry: entries.quickEntry }),
     }),
     [entries, reason, services, show],
   );
+  const closeQuick = useCallback(() => setQuickOpen(false), []);
+  const rememberLine = useCallback((line: string) => void (quickLine.current = line), []);
+  const openFromQuick = useCallback((seed: Readonly<Record<string, unknown>>) => show(services.drafts.open({ kind: 'reaction', blank: true, seed })), [services, show]);
   return (
     <EditorsContext.Provider value={api}>
       {props.children}
@@ -112,6 +120,11 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
             formatTime={formatTime}
             onOpenDraft={(id) => show(services.drafts.openStored(id))}
           />
+        </Suspense>
+      ) : null}
+      {quickOpen ? (
+        <Suspense fallback={null}>
+          <QuickEntryHost initialLine={quickLine.current} onLine={rememberLine} onClose={closeQuick} onCreate={startNested} onOpen={openFromQuick} />
         </Suspense>
       ) : null}
       {template === null ? null : (
