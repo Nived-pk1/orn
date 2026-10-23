@@ -2,15 +2,16 @@
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
   "lastUpdated": "2026-10-23",
-  "currentPhase": 6,
-  "currentPhaseStatus": "in_progress",
+  "currentPhase": 7,
+  "currentPhaseStatus": "not_started",
   "completedPhases": [
     0,
     1,
     2,
     3,
     4,
-    5
+    5,
+    6
   ],
   "completedSteps": [
     "0",
@@ -142,8 +143,8 @@
     "commit": "81ce55f",
     "protectedCheckedAt": "2026-10-23"
   },
-  "nextStep": "gate-d-verdict",
-  "nextStepTitle": "Gate D verdict (reviewer), then tag phase-6 and deploy",
+  "nextStep": "7.1",
+  "nextStepTitle": "Phase 7, exploration views, first step: the reaction explorer (the plan lists the Phase 7 steps in one paragraph, one step each)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -177,7 +178,10 @@
     "D": {
       "phase": 6,
       "title": "Authoring",
-      "status": "pending"
+      "status": "passed",
+      "note": "Reviewer verdict PASSED (docs/reviews/phase-6-close.md, docs/PROGRESS.md \"Phase 6 closed - Gate D passed\")",
+      "packet": "docs/reviews/phase-6-close.md",
+      "date": "2026-10-23"
     },
     "F": {
       "phase": 10,

@@ -166,7 +166,7 @@ Phase 5 note (step 4.4 review, decision 2): layout requests carry one edge per b
 
 The contracts fit scan of this plan (Q1-Q14) and the open points it found are in docs/PROGRESS.md, "Phase 5 plan review (reviewer, 2026-10-02)"; the decisions that settle them are in "Phase 5 contract decisions (reviewer, 2026-10-02)". Step numbers in the review entry are the OLD ones (old 5.1b = new 5.1b engines + 5.1c flows; old 5.1c = new 5.1d).
 
-### Phase 6 — Authoring workbench → Gate D
+### Phase 6 — Authoring workbench → Gate D — DONE 2026-10-23 (Gate D passed; docs/reviews/phase-6-close.md)
 
 > A release-preview step (hosting, reviewer's prompt) comes before 6.1.
 
