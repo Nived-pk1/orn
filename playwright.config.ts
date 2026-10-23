@@ -14,6 +14,8 @@ const STUDIO_PORT = 4173;
 const STUDY_PORT = 4174;
 /** Release preview: set ORN_BASE_URL to run the specs against a site that is already up (wrangler dev, the live site); no server is started then. */
 const REMOTE = process.env.ORN_BASE_URL;
+/** The Gate D authoring spec belongs to the project "gate-d" alone. */
+const GATE_D_SPEC = '**/author-demo-all.spec.ts';
 
 const FIXTURE_DIR = 'test-results/e2e-published';
 const studyEnv = { ORN_PUBLISH_DIR: FIXTURE_DIR, ORN_PUBLISHED_DIR: FIXTURE_DIR, ORN_OUT_DIR: 'dist-study-e2e', ORN_NOW: '2026-10-21T09:30:00.000Z' };
@@ -47,8 +49,10 @@ export default defineConfig({
           },
         ],
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'chromium', testIgnore: GATE_D_SPEC, use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', testIgnore: GATE_D_SPEC, use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', testIgnore: GATE_D_SPEC, use: { ...devices['Desktop Safari'] } },
+    // Gate D (step 6.9): all 27 demo reactions authored from scratch, Chromium only; present only when `npm run e2e:gate-d` asks for it
+    ...(process.env.ORN_GATE_D === undefined ? [] : [{ name: 'gate-d', testMatch: GATE_D_SPEC, use: { ...devices['Desktop Chrome'] } }]),
   ],
 });

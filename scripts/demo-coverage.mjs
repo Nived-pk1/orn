@@ -15,8 +15,6 @@ const ENUM_PATHS = new Set([
 ]);
 /** Leaf details of a value (number, unit, range ends) are one feature with their parent: the editors set them together. */
 const DETAIL = /\.(value|unit|min|max|certainty|conceptId)$/;
-/** Paths that are identity, bookkeeping or bare ids: not features. */
-const SKIP = /(^|\.)(id|kind|provenance|review|createdAt|updatedAt)(\[\]|$|\.)|participantIds|conditionVariantIds|\.stageId$/;
 
 export function pathsOf(value, prefix = '', out = new Set()) {
   if (Array.isArray(value)) {

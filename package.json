@@ -30,6 +30,7 @@
     "bench:baseline": "node scripts/generate-baseline.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
     "e2e": "playwright test",
+    "e2e:gate-d": "node scripts/run-gate-d.mjs",
     "lint": "eslint .",
     "lint:deps": "depcruise src --config .dependency-cruiser.cjs",
     "check:size": "node scripts/check-file-size.mjs",
