@@ -12,14 +12,18 @@ import conditionStyles from './condition.module.css';
 import { stagesViewOf } from './stage-model';
 import type { SectionProps } from './section-props';
 import { wordsOf } from './reagent-model';
-import { ADDABLE_OVERRIDES, addVariant, moveVariant, outcomeNaming, overridesOf, removeVariant, setVariantLabel, setVariantStage, variantsViewOf, variantSummary, type OverrideField } from './variant-model';
+import { ADDABLE_OVERRIDES, addVariant, moveVariant, outcomeNaming, overridesOf, removeVariant, setVariantLabel, setVariantNote, setVariantStage, variantsViewOf, variantSummary, type OverrideField } from './variant-model';
 import { SummaryLine } from './summary-line';
+import { RichTextField } from './rich-text-field';
+import { VariantParticipants } from './variant-participants';
+import type { PickKind, RecordPickerPort } from './record-picker-contracts';
 import styles from './editor.module.css';
 import own from './participant.module.css';
 
 export interface VariantsSectionProps extends SectionProps {
   /** A fresh variant ID ('cvr_...'). */
   readonly newId: (prefix: string) => string;
+  readonly picker?: RecordPickerPort | undefined;
 }
 
 const bad = (props: SectionProps, path: string): true | undefined => (props.invalid?.has(path) === true ? true : undefined);
@@ -67,7 +71,7 @@ export function VariantsSection(props: VariantsSectionProps) {
               <div role="group" aria-label={`Variant ${n}`} className={own.participantBody}>
                 <div className={own.participantHead}>
                   <span className={conditionStyles.summary} data-testid="variant-summary" aria-invalid={bad(props, base)}>
-                    <SummaryLine text={`${n}. ${variantSummary(props.draft, index)}`} />
+                    <SummaryLine text={`${n}. ${variantSummary(props.draft, index, (kind, id) => props.picker?.describe(kind as PickKind, id)?.name)}`} />
                   </span>
                   <div className={own.participantActions}>
                     <Button aria-label={`${open ? 'Close' : 'Edit'} variant ${n}`} aria-expanded={open} data-field-path={base} data-open-row="" onClick={() => setOpenId(open ? null : variant.id)}>
@@ -117,6 +121,8 @@ export function VariantsSection(props: VariantsSectionProps) {
                         </select>
                       </div>
                     </div>
+                    <VariantParticipants {...props} index={index} listed={variant.participantIds} />
+                    <RichTextField id={`variant-note-${index}`} label={`Note of variant ${n}`} path={`${base}.note`} value={variant.note} invalid={bad(props, `${base}.note`) === true} unavailable={locked} phone={props.phone} rows={2} onChange={(value) => onEdit(setVariantNote(index, value), `${base}.note`)} />
                     {shown.size === 0 ? <p className={styles.hint}>This variant overrides nothing yet. Add a field to override; the other fields keep the stage's values.</p> : null}
                     {hasField(params, 'solventCharacter') ? <p className={styles.hint}>A variant's solvent character does not reach the arrow (the arrow never writes it).</p> : null}
                     <ConditionFields

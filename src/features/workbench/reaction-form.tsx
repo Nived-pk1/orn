@@ -41,7 +41,7 @@ export function ReactionForm(props: ReactionFormProps) {
         <StagesSection {...common} {...picker} newId={props.newId} />
       </SectionFrame>
       <SectionFrame id="variants" title="Condition variants" initiallyOpen={open}>
-        <VariantsSection {...common} newId={props.newId} />
+        <VariantsSection {...common} {...picker} newId={props.newId} />
       </SectionFrame>
       <SectionFrame id="outcomes" title="Outcomes" initiallyOpen={open}>
         <OutcomesSection {...common} {...picker} links={props.links} newId={props.newId} />

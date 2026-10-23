@@ -51,16 +51,16 @@ describe('the words', () => {
   });
 
   it('the summary line: label, stage, then only the overridden fields in the arrow\'s words', () => {
-    expect(variantSummary(base(), 0)).toBe('443 K, excess acid: stage 2 temperature 443 K'); // no stageId: the first stage of kind reaction
+    expect(variantSummary(base(), 0)).toBe('443 K, excess acid: stage 2 temperature 443 K · only with prt_x'); // no stageId: the first stage of kind reaction
     const named = run(base(), setVariantStage(0, 'stg_a'), setMeasureKind(variantLoc(0), 'pressure', 'qualitative'));
-    expect(variantSummary(named, 0)).toBe('443 K, excess acid: stage 1 temperature 443 K, pressure (not complete)');
+    expect(variantSummary(named, 0)).toBe('443 K, excess acid: stage 1 temperature 443 K, pressure (not complete) · only with prt_x');
     const fresh = run(base(), addVariant('cvr_n', 'cold', 'stg_b'));
     expect(variantSummary(fresh, 1)).toBe('cold: stage 2 no overrides yet');
   });
 
   it('a reaction with no stage says "no stage to override"; the stage index follows the id', () => {
     const none = { ...base(), stages: [] };
-    expect(variantSummary(none, 0)).toBe('443 K, excess acid: no stage to override, temperature 443 K');
+    expect(variantSummary(none, 0)).toBe('443 K, excess acid: no stage to override, temperature 443 K · only with prt_x');
     expect(stageIndexOf(base(), 'stg_a')).toBe(0);
     expect(stageIndexOf(base(), '')).toBe(1);
     expect(stageIndexOf(base(), 'stg_zz')).toBe(-1);

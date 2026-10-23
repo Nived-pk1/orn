@@ -23,6 +23,7 @@ export interface ProductView {
 }
 export interface OutcomeView {
   readonly id: string;
+  readonly label: string;
   readonly selectivity: string;
   /** The variants it names (empty = all conditions). */
   readonly variantIds: readonly string[];
@@ -63,6 +64,7 @@ export function outcomesViewOf(draft: unknown): readonly OutcomeView[] {
     const stereo = isBag(row.stereochemistry) ? row.stereochemistry : undefined;
     return {
       id: text(row.id),
+      label: text(row.label),
       selectivity: text(row.selectivity),
       variantIds: Array.isArray(row.conditionVariantIds) ? row.conditionVariantIds.filter((id): id is string => typeof id === 'string') : [],
       products: (Array.isArray(row.products) ? row.products : []).map(productViewOf),

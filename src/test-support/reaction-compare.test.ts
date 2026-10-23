@@ -69,3 +69,21 @@ describe('compareReaction', () => {
     expect(texts.some((text) => text.startsWith('participant 1 ref'))).toBe(false);
   });
 });
+
+describe('a variant that names no stage', () => {
+  const params = { solventCharacter: [], activation: [], other: [], parsedFields: [] };
+  const withVariant = (stageId: string | undefined) => reaction({ conditionVariants: [{ id: 'cvr_1', label: 'hot', ...(stageId === undefined ? {} : { stageId }), parameters: params, participantIds: [] }] });
+  it('equals one that names the first reaction stage, in both directions', () => {
+    expect(compareReaction(withVariant(undefined), withVariant('stg_1'), nameOf, nameOf)).toEqual([]);
+    expect(compareReaction(withVariant('stg_1'), withVariant(undefined), nameOf, nameOf)).toEqual([]);
+  });
+  it('differs from one that names another stage, and nothing is guessed when the reaction has no reaction stage', () => {
+    const two = (id: string | undefined) => {
+      const r = withVariant(id);
+      return { ...r, stages: [...r.stages, { id: 'stg_2', kind: 'workup', participantIds: [], parameters: params }] };
+    };
+    expect(compareReaction(two(undefined), two('stg_2'), nameOf, nameOf).map((one) => one.path)).toEqual(['variant 1 stage id']);
+    const bare = (id: string | undefined) => ({ ...withVariant(id), stages: [] });
+    expect(compareReaction(bare(undefined), bare('stg_1'), nameOf, nameOf).map((one) => one.path)).toEqual(['variant 1 stage id']);
+  });
+});

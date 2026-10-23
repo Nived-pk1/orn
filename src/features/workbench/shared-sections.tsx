@@ -108,12 +108,12 @@ export function TagsSection(props: SectionProps) {
   );
 }
 
-export function ConceptsSection(props: SectionProps & { readonly picker: RecordPickerPort | undefined; readonly field?: string; readonly label?: string; readonly findLabel?: string }) {
+export function ConceptsSection(props: SectionProps & { readonly picker: RecordPickerPort | undefined; readonly field?: string; readonly fieldPath?: string; readonly label?: string; readonly findLabel?: string }) {
   const field = props.field ?? 'conceptIds';
   const ids = conceptIdsOf(props.draft, field);
   return (
     <div>
-      <RecordList label={props.label ?? 'Concepts'} fieldPath={field} items={ids.map((id) => ({ kind: 'concept' as const, id }))} port={props.picker} unavailable={props.unavailable} emptyText={props.label === undefined ? 'No concepts.' : 'None.'} onRemove={(index) => props.onEdit(removeConcept(index, field))} />
+      <RecordList label={props.label ?? 'Concepts'} fieldPath={props.fieldPath ?? field} items={ids.map((id) => ({ kind: 'concept' as const, id }))} port={props.picker} unavailable={props.unavailable} emptyText={props.label === undefined ? 'No concepts.' : 'None.'} onRemove={(index) => props.onEdit(removeConcept(index, field))} />
       <RecordPicker id={`shared-${field}-search`} label={props.findLabel ?? 'Find a concept by name'} kinds={['concept']} port={props.picker} noun="concept" resultsLabel="Concepts found" unavailable={props.unavailable} isListed={(choice) => ids.includes(choice.id)} onPick={(choice) => props.onEdit(addConcept(choice.id, field))} />
     </div>
   );

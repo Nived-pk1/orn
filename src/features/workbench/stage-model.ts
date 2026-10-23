@@ -37,6 +37,13 @@ export const setStageLabel = (index: number, value: string): DraftRecipe => (dra
   if (value === '') Reflect.deleteProperty(stage, 'label');
   else stage.label = value;
 };
+/** The stage's source wording (one line); empty = absent. */
+export const setStageOriginalText = (index: number, value: string): DraftRecipe => (draft) => {
+  const stage = stageAt(draft, index);
+  if (stage === undefined) return;
+  if (value === '') Reflect.deleteProperty(stage, 'originalText');
+  else stage.originalText = value;
+};
 export const setStageKind = (index: number, kind: string): DraftRecipe => (draft) => {
   const stage = stageAt(draft, index);
   if (stage === undefined) return;

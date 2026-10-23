@@ -104,6 +104,13 @@ export const setRegiochemistry =
     const outcome = outcomeAt(draft, index);
     if (outcome !== undefined) setOrDelete(outcome, 'regiochemistry', value);
   };
+/** The outcome's one-line label; empty = absent. */
+export const setOutcomeLabel =
+  (index: number, value: string): DraftRecipe =>
+  (draft) => {
+    const outcome = outcomeAt(draft, index);
+    if (outcome !== undefined) setOrDelete(outcome, 'label', value);
+  };
 export const setRationale =
   (index: number, value: string): DraftRecipe =>
   (draft) => {

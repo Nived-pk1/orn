@@ -102,7 +102,7 @@ describe('the overrides of a variant', () => {
     const offered = Array.from((screen.getByLabelText('Add a field to override') as HTMLSelectElement).options).map((o) => o.textContent);
     expect(offered).not.toContain('Temperature');
     expect(offered).toContain('Medium');
-    expect(offered).not.toContain('Solvent character'); // a variant's solvent never reaches the arrow
+    expect(offered).toContain('Solvent character'); // stored chemistry, though the arrow never writes it (6.9b)
     change('Add a field to override', 'medium');
     expect(screen.getByLabelText('Medium of variant 1')).toBeTruthy();
     expect((screen.getByLabelText('Medium of variant 1') as HTMLSelectElement).value).toBe('');

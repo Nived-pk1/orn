@@ -11,7 +11,7 @@ import { ConditionFields } from './condition-fields';
 import { parametersOf, stageLoc, summaryOf } from './condition-model';
 import { participantsViewOf } from './participant-model';
 import { wordsOf } from './reagent-model';
-import { addStage, moveStage, removeStage, setStageKind, setStageLabel, stagesViewOf, stageUseOf, type StageKindValue } from './stage-model';
+import { addStage, moveStage, removeStage, setStageKind, setStageLabel, setStageOriginalText, stagesViewOf, stageUseOf, type StageKindValue } from './stage-model';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
 import conditionStyles from './condition.module.css';
@@ -96,6 +96,10 @@ export function StagesSection(props: StagesSectionProps) {
                     ))}
                   </select>
                 </div>
+              </div>
+              <div className={styles.field}>
+                <label htmlFor={`stage-orig-${index}`}>Written in the source as</label>
+                <input id={`stage-orig-${index}`} type="text" aria-label={`Written in the source as, stage ${n}`} value={stage.originalText} readOnly={locked !== undefined} aria-invalid={bad(props, `${base}.originalText`)} data-field-path={`${base}.originalText`} autoComplete="off" onChange={(event) => onEdit(setStageOriginalText(index, event.target.value), `${base}.originalText`)} />
               </div>
               <p>
                 {stage.participantIds.length === 0 ? 'No participants in this stage.' : `${plural(stage.participantIds.length, 'participant')}: ${stage.participantIds.map(nameOf).join(', ')}.`}

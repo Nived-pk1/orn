@@ -7,12 +7,14 @@
 import { useState } from 'react';
 import { PARTICIPANT_ROLES, PHASES, QUANTITY_QUALIFIERS, STRENGTHS } from '@/core/schema';
 import { Button } from '@/ui/primitives';
+import { RichTextField } from './rich-text-field';
 import { FLAG_LABELS, FLAG_NAMES, defaultOf, roleDefaultsWords } from './participant-words';
 import {
   setCoefficient,
   setDry,
   setFlag,
   setParticipantRef,
+  setParticipantText,
   setParticipantStage,
   setPhase,
   setPrimary,
@@ -178,7 +180,11 @@ export function ParticipantFields(props: ParticipantFieldsProps) {
             </div>
           )}
         </div>
-        {p.originalText === '' ? null : <p className={styles.hint}>Written in the source as: {p.originalText}</p>}
+        <div className={styles.field}>
+          <label htmlFor={`p-orig-${index}`}>Written in the source as</label>
+          <input id={`p-orig-${index}`} type="text" aria-label={`Written in the source as, participant ${n}`} value={p.originalText} readOnly={locked !== undefined} aria-invalid={bad(props, `${base}.originalText`)} data-field-path={`${base}.originalText`} autoComplete="off" onChange={(event) => onEdit(setParticipantText(index, 'originalText', event.target.value), `${base}.originalText`)} />
+        </div>
+        <RichTextField id={`p-note-${index}`} label={`Note of participant ${n}`} path={`${base}.note`} value={p.note} invalid={bad(props, `${base}.note`) === true} unavailable={locked} phone={props.phone} rows={2} onChange={(value) => onEdit(setParticipantText(index, 'note', value), `${base}.note`)} />
       </details>
       <details className={own.advanced}>
         <summary>Advanced: override flags</summary>

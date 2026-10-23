@@ -244,10 +244,10 @@ describe('the participant rows', () => {
     expect(draftOf(rig, id).participants[2]?.ref).toEqual({ kind: 'species', id: 'spc_propanone' });
   });
 
-  it('the wording written in the source is read-only text', () => {
+  it('the wording written in the source is an editable one-line field (6.9b)', () => {
     show({ state: withReaction(PCC, (r) => ({ ...r, participants: r.participants.map((p, i) => (i === 0 ? { ...p, originalText: 'alc. KOH' } : p)) }) as Reaction) });
     expand(1);
-    expect(within(row(1)).getByText('Written in the source as: alc. KOH')).toBeTruthy();
+    expect((within(row(1)).getByLabelText('Written in the source as, participant 1') as HTMLInputElement).value).toBe('alc. KOH');
   });
 
   it('Save keeps every field the editor does not edit; Undo restores the coefficient', async () => {

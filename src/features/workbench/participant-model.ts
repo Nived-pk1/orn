@@ -105,6 +105,11 @@ export const setPrimary = (index: number, on: boolean): DraftRecipe => (draft) =
   const item = participantAt(draft, index);
   if (item !== undefined) setOrDelete(item, 'isPrimarySubstrate', on ? true : undefined);
 };
+/** The participant's source wording (one line) or its note (mini-markup); empty = absent. */
+export const setParticipantText = (index: number, field: 'originalText' | 'note', value: string): DraftRecipe => (draft) => {
+  const item = participantAt(draft, index);
+  if (item !== undefined) setOrDelete(item, field, value);
+};
 export const setProfile = (index: number, profileId: string): DraftRecipe => (draft) => {
   const item = participantAt(draft, index);
   if (item !== undefined) setOrDelete(item, 'profileId', profileId);
@@ -155,6 +160,7 @@ export interface ParticipantView {
   readonly flags: Readonly<Record<FlagName, FlagChoice>>;
   readonly primary: boolean;
   readonly originalText: string;
+  readonly note: string;
   /** The class an empty slot stands for (step 6.7a), or undefined. */
   readonly slotClassId?: string | undefined;
   /** Index of the stage that lists it, or -1 (no stages, or listed by none). */
@@ -196,6 +202,7 @@ export function participantsViewOf(draft: unknown): readonly ParticipantView[] {
       flags: { contributesAtoms: choiceOf(flags, 'contributesAtoms'), consumed: choiceOf(flags, 'consumed'), catalytic: choiceOf(flags, 'catalytic') },
       primary: row.isPrimarySubstrate === true,
       originalText: text(row.originalText),
+      note: text(row.note),
       slotClassId: slotClassOf(row),
       stageIndex: stages.findIndex((stage) => isBag(stage) && Array.isArray(stage.participantIds) && stage.participantIds.includes(id)),
     };

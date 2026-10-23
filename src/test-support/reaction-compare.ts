@@ -101,8 +101,17 @@ function flatten(reaction: Bag, nameOf: NameOf): Map<string, string> {
   return out;
 }
 
+/** A variant that names no stage overrides the first stage of kind "reaction"; the two spellings are the SAME record (Gate D round 1, G2). */
+function withDefaultStages(reaction: Bag): Bag {
+  const stages = Array.isArray(reaction['stages']) ? reaction['stages'] : [];
+  const first = stages.find((stage) => isBag(stage) && stage['kind'] === 'reaction');
+  const variants = reaction['conditionVariants'];
+  if (!isBag(first) || !Array.isArray(variants)) return reaction;
+  return { ...reaction, conditionVariants: variants.map((variant) => (isBag(variant) && variant['stageId'] === undefined ? { ...variant, stageId: first['id'] } : variant)) };
+}
+
 export function compareReaction(demo: Bag, authored: Bag, demoNameOf: NameOf, authoredNameOf: NameOf): Difference[] {
-  const [a, b] = [flatten(demo, demoNameOf), flatten(authored, authoredNameOf)];
+  const [a, b] = [flatten(withDefaultStages(demo), demoNameOf), flatten(withDefaultStages(authored), authoredNameOf)];
   const paths = [...new Set([...a.keys(), ...b.keys()])].sort();
   const out: Difference[] = [];
   for (const path of paths) {

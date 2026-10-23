@@ -13,6 +13,7 @@ import {
   removeDescriptor,
   removeStereo,
   setIsomerGroup,
+  setOutcomeLabel,
   setRationale,
   setRegiochemistry,
   setSelectivity,
@@ -22,6 +23,7 @@ import {
   type StereoValue,
 } from './outcome-model';
 import { OutcomeMechanism } from './outcome-mechanism';
+import { ConceptsSection } from './shared-sections';
 import type { MechanismLinksPort } from './mechanism-contracts';
 import type { RecordPickerPort } from './record-picker-contracts';
 import { isomerGroupsOf, variantChoicesOf, type OutcomeView } from './outcome-view';
@@ -74,6 +76,20 @@ export function OutcomeFields(props: OutcomeFieldsProps) {
         {variants.length === 0 ? <span className={styles.hint}>The reaction has no condition variants: the outcome holds under all conditions.</span> : null}
       </fieldset>
       <div className={own.participantGrid}>
+        <div className={styles.field}>
+          <label htmlFor={`o-label-${index}`}>Label</label>
+          <input
+            id={`o-label-${index}`}
+            type="text"
+            aria-label={`Label of outcome ${n}`}
+            value={outcome.label}
+            readOnly={locked !== undefined}
+            aria-invalid={bad(props, `${base}.label`)}
+            data-field-path={`${base}.label`}
+            autoComplete="off"
+            onChange={(event) => onEdit(setOutcomeLabel(index, event.target.value), `${base}.label`)}
+          />
+        </div>
         <div className={styles.field}>
           <label htmlFor={`o-sel-${index}`}>Selectivity</label>
           <select
@@ -248,6 +264,7 @@ export function OutcomeFields(props: OutcomeFieldsProps) {
           onChange={(event) => onEdit(setRationale(index, event.target.value), `${base}.rationale`)}
         />
       </div>
+      <ConceptsSection draft={props.draft} onEdit={onEdit} picker={props.picker} field={`outcomes.${index}.conceptIds`} fieldPath={`${base}.conceptIds`} label={`Concepts of outcome ${n}`} findLabel={`Find a concept for outcome ${n} by name`} {...(locked === undefined ? {} : { unavailable: locked })} />
       <OutcomeMechanism draft={props.draft} onEdit={onEdit} index={index} picker={props.picker} links={props.links} {...(props.invalid === undefined ? {} : { invalid: props.invalid })} {...(locked === undefined ? {} : { unavailable: locked })} />
     </div>
   );

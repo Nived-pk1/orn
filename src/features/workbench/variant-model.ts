@@ -37,6 +37,22 @@ export const setVariantStage = (index: number, stageId: string): DraftRecipe => 
   if (stageId === '') Reflect.deleteProperty(variant, 'stageId');
   else variant.stageId = stageId;
 };
+/** The variant's note (mini-markup); empty = absent. */
+export const setVariantNote = (index: number, value: string): DraftRecipe => (draft) => {
+  const variant = variantAt(draft, index);
+  if (variant === undefined) return;
+  if (value === '') Reflect.deleteProperty(variant, 'note');
+  else variant.note = value;
+};
+/** Lists the participant as present only under this variant, or takes it off the list. The participant stays in the reaction and in its stage. */
+export const setVariantParticipant = (index: number, participantId: string, listed: boolean): DraftRecipe => (draft) => {
+  const variant = variantAt(draft, index);
+  if (variant === undefined) return;
+  const ids = listOf(variant, 'participantIds');
+  const at = ids.indexOf(participantId);
+  if (listed && at < 0) ids.push(participantId);
+  if (!listed && at >= 0) ids.splice(at, 1);
+};
 export const removeVariant = (index: number): DraftRecipe => (draft) => {
   const variants = listOf(draft, 'conditionVariants');
   if (index >= 0 && index < variants.length) variants.splice(index, 1);
@@ -55,13 +71,15 @@ export interface VariantView {
   readonly label: string;
   readonly stageId: string;
   readonly participantCount: number;
+  readonly participantIds: readonly string[];
+  readonly note: string;
 }
 
 export function variantsViewOf(draft: unknown): readonly VariantView[] {
   const variants = isBag(draft) && Array.isArray(draft.conditionVariants) ? draft.conditionVariants : [];
   return variants.map((item): VariantView => {
     const row = isBag(item) ? item : {};
-    return { id: text(row.id), label: text(row.label), stageId: text(row.stageId), participantCount: Array.isArray(row.participantIds) ? row.participantIds.length : 0 };
+    return { id: text(row.id), label: text(row.label), stageId: text(row.stageId), participantCount: Array.isArray(row.participantIds) ? row.participantIds.length : 0, participantIds: Array.isArray(row.participantIds) ? row.participantIds.filter((id): id is string => typeof id === 'string') : [], note: text(row.note) };
   });
 }
 
@@ -103,8 +121,21 @@ function overrideText(params: Readonly<Fields>, field: OverrideField): string {
   return MEASURED.includes(field) ? `${field} ${parts.join(', ')}` : parts.join(', ');
 }
 
-/** The one summary line of a variant: "443 K, excess acid: stage 1 temperature 443 K"; "no stage to override" without a stage; "no overrides yet". */
-export function variantSummary(draft: unknown, index: number): string {
+/** The participants a variant lists, by the name `nameOf` gives their substance (their number when there is no name): "Sodium hydroxide, participant 3". */
+function onlyWith(draft: unknown, ids: readonly string[], nameOf: ((kind: string, id: string) => string | undefined) | undefined): string {
+  const participants = isBag(draft) && Array.isArray(draft.participants) ? draft.participants : [];
+  return ids
+    .map((id) => {
+      const at = participants.findIndex((p) => isBag(p) && p.id === id);
+      const ref = at < 0 || !isBag(participants[at]) ? undefined : (participants[at] as Fields).ref;
+      const name = isBag(ref) && typeof ref.kind === 'string' && typeof ref.id === 'string' ? nameOf?.(ref.kind, ref.id) : undefined;
+      return name ?? (at < 0 ? id : `participant ${at + 1}`);
+    })
+    .join(', ');
+}
+
+/** The one summary line of a variant: "443 K, excess acid: stage 1 temperature 443 K"; "no stage to override" without a stage; "no overrides yet"; then " · only with <participants>" when it lists any. */
+export function variantSummary(draft: unknown, index: number, nameOf?: (kind: string, id: string) => string | undefined): string {
   const view = variantsViewOf(draft)[index];
   if (view === undefined) return '';
   const params = parametersOf(draft, variantLoc(index));
@@ -113,11 +144,12 @@ export function variantSummary(draft: unknown, index: number): string {
   const where = stage < 0 ? 'no stage to override' : `stage ${stage + 1}`;
   const what = fields.length === 0 ? 'no overrides yet' : fields.map((field) => overrideText(params, field)).join(', ');
   const label = view.label === '' ? `Variant ${index + 1}` : view.label;
-  return stage < 0 ? `${label}: ${where}${fields.length === 0 ? '' : `, ${what}`}` : `${label}: ${where} ${what}`;
+  const line = stage < 0 ? `${label}: ${where}${fields.length === 0 ? '' : `, ${what}`}` : `${label}: ${where} ${what}`;
+  return view.participantIds.length === 0 ? line : `${line} · only with ${onlyWith(draft, view.participantIds, nameOf)}`;
 }
 
-/** The fields a new override may start with: every structured field the variant does not already have, except the solvent character (a variant's solvent never reaches the arrow). */
-export const ADDABLE_OVERRIDES: readonly { readonly field: Exclude<OverrideField, 'solventCharacter'>; readonly title: string }[] = [
+/** The fields a new override may start with: every structured field the variant does not already have. The solvent character is stored chemistry even though the arrow never writes it. */
+export const ADDABLE_OVERRIDES: readonly { readonly field: OverrideField; readonly title: string }[] = [
   { field: 'temperature', title: 'Temperature' },
   { field: 'pressure', title: 'Pressure' },
   { field: 'time', title: 'Time' },
@@ -125,6 +157,7 @@ export const ADDABLE_OVERRIDES: readonly { readonly field: Exclude<OverrideField
   { field: 'light', title: 'Light' },
   { field: 'atmosphere', title: 'Atmosphere' },
   { field: 'anhydrous', title: 'Anhydrous' },
+  { field: 'solventCharacter', title: 'Solvent character' },
   { field: 'activation', title: 'Activation' },
   { field: 'other', title: 'Other qualifiers' },
   { field: 'text', title: 'Free text' },

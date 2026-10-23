@@ -17,6 +17,7 @@ const view = (change: Partial<ParticipantView> = {}): ParticipantView => ({
   flags: { contributesAtoms: 'default', consumed: 'default', catalytic: 'default' },
   primary: false,
   originalText: '',
+  note: '',
   stageIndex: -1,
   ...change,
 });
