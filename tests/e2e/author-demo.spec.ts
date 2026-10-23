@@ -30,12 +30,15 @@ export const COVERAGE_SET = [
 ] as const;
 
 const only = process.env['AUTHOR_ONLY'];
+/** The reaction whose card is photographed (variants, two outcomes, byproducts). */
+const CARD_REACTION = 'rxn_ethanol-conc-h2so4';
 
 for (const id of COVERAGE_SET) {
   if (only !== undefined && !only.split(',').includes(id)) continue;
-  test(`authors ${id} from scratch and it equals the demo reaction`, async ({ page }) => {
+  test(`authors ${id} from scratch and it equals the demo reaction`, async ({ page, browserName }) => {
     test.setTimeout(600_000);
-    await runAuthoring(page, id);
+    // the screenshot of an authored reaction's card is taken once, in Chromium
+    await runAuthoring(page, id, id === CARD_REACTION && browserName === 'chromium' ? { card: `author-demo-${id.replace(/^rxn_/, '')}-1280x800.png` } : {});
   });
 }
 
@@ -48,7 +51,7 @@ for (const [name, profile, engine] of [['Pixel 7', PIXEL, 'chromium'], ['iPhone 
       test(`authors ${id} from scratch on the ${name} and it equals the demo reaction`, async ({ page, browserName }) => {
         test.skip(browserName !== engine, `the ${name} profile is ${engine}`);
         test.setTimeout(600_000);
-        await runAuthoring(page, id, true);
+        await runAuthoring(page, id, { phone: true });
       });
     }
   });

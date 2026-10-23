@@ -10,7 +10,10 @@ import { authoringData, demoRecords } from './author-data';
 import { authorReaction } from './author-kit';
 import { authorPointer, pointersAt } from './author-pointers';
 import { resetMade } from './author-nested';
-import { asBag, asList, setPhone } from './author-helpers';
+import { resolve } from 'node:path';
+import { asBag, asList, dismissToasts, exactly, setPhone } from './author-helpers';
+import { shotsDir, showRecord } from './editor-kit';
+import { cardOf } from './outcome-kit';
 import { exportRecords } from './author-readback';
 import { compareReaction } from '../../src/test-support/reaction-compare';
 import { knownFinding } from './author-findings';
@@ -18,7 +21,8 @@ import { chooseFile, expectClean, expectPreview, importDialog, openApp, openPhon
 
 type Bag = Record<string, unknown>;
 
-export async function runAuthoring(page: Page, id: string, phone = false): Promise<void> {
+export async function runAuthoring(page: Page, id: string, options: { readonly phone?: boolean; readonly card?: string } = {}): Promise<void> {
+  const phone = options.phone === true;
   resetMade();
   setPhone(phone);
   const seen = await watch(page);
@@ -35,6 +39,16 @@ export async function runAuthoring(page: Page, id: string, phone = false): Promi
   const reactions = demo['reaction'] ?? {};
   const base = typeof asBag(reactions[id])['instanceOfId'] === 'string' ? [String(asBag(reactions[id])['instanceOfId'])] : [];
   for (const wanted of [...base, id]) await authorReaction(page, demo, asBag(reactions[wanted]));
+  if (options.card !== undefined) {
+    // the authored reaction's card on its family page, beside nothing else (the toasts are dismissed first)
+    const name = String(asBag(reactions[id])['name']);
+    await showRecord(page, 'r', name);
+    const card = cardOf(page, exactly(name)).first();
+    await expect(card).toBeVisible({ timeout: 60_000 });
+    await card.scrollIntoViewIfNeeded();
+    await dismissToasts(page);
+    await card.screenshot({ path: resolve(shotsDir(), options.card) });
+  }
   const authored = await exportRecords(page);
   const nameIn = (records: typeof demo) => (rid: string): string | undefined => {
     for (const set of Object.values(records)) {

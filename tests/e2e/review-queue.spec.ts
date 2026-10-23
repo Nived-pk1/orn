@@ -189,6 +189,13 @@ async function walkPhone(page: Page, device: string): Promise<void> {
   await page.locator('svg [data-node-id="cls_aldehydes"]').tap();
   const bar = page.getByRole('region', { name: 'Selection actions' });
   await expect(bar).toContainText(/^2 families selected \(\d+ reactions?\)/);
+  // step 6.9 Z2: no floating button is covered by the bar, even in part
+  const barBox = await bar.boundingBox();
+  for (const name of ['Select', 'Fit', 'Legend']) {
+    const box = await page.getByRole('button', { name, exact: true }).boundingBox();
+    expect(box, `the ${name} button is shown`).not.toBeNull();
+    expect((box?.y ?? 0) + (box?.height ?? 0) <= (barBox?.y ?? 0), `the ${name} button is above the Select bar, not behind it`).toBe(true);
+  }
   await dismissToasts(page);
   await page.screenshot({ path: resolve(shotsDir(), `phone-select-mode-${device}.png`) });
   const n = await markVerified(page, bar, true);

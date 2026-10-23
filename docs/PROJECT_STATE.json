@@ -113,7 +113,8 @@
     "6.7",
     "6.8a",
     "6.8b",
-    "6.8"
+    "6.8",
+    "6.9"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -141,8 +142,8 @@
     "commit": "81ce55f",
     "protectedCheckedAt": "2026-10-23"
   },
-  "nextStep": "6.9",
-  "nextStepTitle": "Author every demo reaction from scratch in e2e; Gate D",
+  "nextStep": "gate-d-verdict",
+  "nextStepTitle": "Gate D verdict (reviewer), then tag phase-6 and deploy",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -465,7 +466,8 @@
     "-> Phase 9: watch the Firefox 'downloadable font: download failed' console error in e2e; if it recurs, preload or self-check the font files",
     "-> Phase 9 (storage diagnostics): remove unused picture files (blob rows no asset record uses), with a clear 'cannot be undone' step",
     "-> later: the Review page on a phone (Studio is desktop-first; the queue is not offered on a phone)",
-  "-> Phase 9: a pointer-path bench (Shift-click, marquee) against the interaction budget"
+    "-> Phase 9: a pointer-path bench (Shift-click, marquee) against the interaction budget",
+    "NEW (step 6.9, Gate D findings): demo fields no editor can set - outcome label, outcome conceptIds, condition variant note, participants present only under a variant, stage and participant originalText, participant note, variant solvent character. Decide: add the editor field or keep read-only (docs/reviews/phase-6-close.md section 4)."
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",
