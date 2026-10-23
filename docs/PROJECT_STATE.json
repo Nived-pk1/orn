@@ -111,7 +111,9 @@
     "6.7a",
     "6.7b",
     "6.7",
-    "6.8a"
+    "6.8a",
+    "6.8b",
+    "6.8"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -139,8 +141,8 @@
     "commit": "203bbf5",
     "protectedCheckedAt": "2026-10-21"
   },
-  "nextStep": "6.8b",
-  "nextStepTitle": "Review queue, bulk actions, multi-selection, unused-picture cleanup, row 6.8 close",
+  "nextStep": "6.9",
+  "nextStepTitle": "Author every demo reaction from scratch in e2e; Gate D",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
