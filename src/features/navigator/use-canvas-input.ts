@@ -13,7 +13,7 @@ import type { PointerHandlers, ViewportController } from '@/render/viewport';
 import type { NavigatorUiStores } from '@/ui/state';
 import { canvasMenuOf, nameOf, type CanvasMenu, type MenuAction } from './canvas-menu';
 import { intentOfKey } from './canvas-keys';
-import type { MultiSelect } from './use-multi-select';
+import type { MultiSelect } from './multi-types';
 import { viewportToReveal } from './reveal';
 
 export interface OpenMenu {
@@ -197,7 +197,6 @@ export function useCanvasInput(args: Args): CanvasInput {
       case 'toggle':
         if (live.current.multi === null) return; // Study: nothing acts on a multi-selection
         handled();
-        if (id === undefined) return announce('Move to a family first, then press Shift+Space to select it');
         return live.current.multi.toggleFocused(id);
       case 'escape':
         if (live.current.multi !== null && live.current.multi.items.length > 0) {

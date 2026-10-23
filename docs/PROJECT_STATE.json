@@ -461,7 +461,8 @@
     "-> later: merging reagents moves A's profiles into B and rewrites the reactions' profile references (2026-10-23, step 6.8a: a reagent whose profiles reactions use is refused in words).",
     "NOTE (2026-10-21): reaction_scheme, view_preset and entity_display have no form editor; they are made by the views that own them (map arrangement, presets, display settings). asset has no stand-alone editor; deleting assets is 6.8.",
     "-> Phase 9: watch the Firefox 'downloadable font: download failed' console error in e2e; if it recurs, preload or self-check the font files",
-    "-> Phase 9 (storage diagnostics): remove unused picture files (blob rows no asset record uses), with a clear 'cannot be undone' step"
+    "-> Phase 9 (storage diagnostics): remove unused picture files (blob rows no asset record uses), with a clear 'cannot be undone' step",
+    "-> later: the Review page on a phone (Studio is desktop-first; the queue is not offered on a phone)"
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",

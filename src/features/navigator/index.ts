@@ -13,4 +13,6 @@ export { StructuresControl, StructuresMenu } from './structures-control';
 export { createDepictionBinding, MAX_DEPICTION_LOOKUP } from './depictions';
 export type { DepictionBinding } from './depictions';
 export { MapBulkContext } from './bulk-context';
-export type { MapBulk } from './bulk-context';
+export type { MapBulk } from './multi-types';
+export { useMultiSelect } from './use-multi-select';
+export { loadMultiEngine, warmMultiEngine } from './multi-entry';

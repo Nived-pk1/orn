@@ -91,7 +91,7 @@ const outDir = process.env.ORN_OUT_DIR ?? (edition === 'studio' ? 'dist-studio' 
  * module list, and scripts/check-edition.mjs needs one to prove the Study build holds no editor module. Only modules that put code in
  * the chunk count (a re-export barrel renders nothing).
  */
-const collected: { file: string; isEntry: boolean; modules: string[] }[] = [];
+const collected: { file: string; isEntry: boolean; modules: string[]; rendered: Record<string, number> }[] = [];
 function moduleReport(write: boolean): Plugin {
   return {
     name: 'orn-module-report',
@@ -100,8 +100,8 @@ function moduleReport(write: boolean): Plugin {
       const root = process.cwd();
       for (const item of Object.values(bundle)) {
         if (item.type !== 'chunk') continue;
-        const modules = Object.entries(item.modules).filter(([, info]) => info.renderedLength > 0).map(([id]) => slashed(relative(root, id.split('?')[0] ?? id))).sort();
-        collected.push({ file: item.fileName, isEntry: item.isEntry, modules });
+        const listed = Object.entries(item.modules).filter(([, info]) => info.renderedLength > 0).map(([id, info]) => [slashed(relative(root, id.split('?')[0] ?? id)), info.renderedLength] as const).sort((x, y) => (x[0] < y[0] ? -1 : 1));
+        collected.push({ file: item.fileName, isEntry: item.isEntry, modules: listed.map(([id]) => id), rendered: Object.fromEntries(listed) });
       }
       if (!write) return;
       mkdirSync(resolve(root, 'build-report'), { recursive: true });

@@ -3,7 +3,7 @@
  *  (1) a demo species with the impact dialog ("Removed from"), Delete, then Undo brings it back (one history step);
  *  (2) a species a reaction uses: "Blocks the delete" with Open, Delete unavailable;
  *  (3) a map family removed from the class editor and brought back by Undo;
- *  (4) a duplicate species merged from the duplicate dialog with a scalar choice ("Take ..."), one Undo;
+ *  (4) a duplicate species merged from the duplicate dialog with a scalar choice ("Take ..."), a field filled in from the duplicate, one Undo;
  *  (5) a merge of two DIFFERENT structures is refused in words and Merge is unavailable;
  *  (6) the Pixel 7 and iPhone 14: Delete with the impact dialog, then Undo from More.
  * Axe on both dialogs; zero policy violations. Screenshots: screenshots/{delete-impact,delete-blocked,merge-dialog,merge-refused}-1280x800.png
@@ -39,7 +39,7 @@ async function imagesSettled(scope: Locator): Promise<void> {
 }
 
 /** Saves a new species named Ethanol with the given structure (and notes) and waits for the duplicate dialog. */
-async function saveDuplicateEthanol(page: Page, smiles: string, notes?: string): Promise<Locator> {
+async function saveDuplicateEthanol(page: Page, smiles: string, notes?: string, formula?: string): Promise<Locator> {
   await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: /Workbench/ }).click();
   await expect(page.getByRole('region', { name: 'Workbench' })).toBeVisible();
   await page.getByRole('button', { name: 'New species' }).click();
@@ -52,6 +52,11 @@ async function saveDuplicateEthanol(page: Page, smiles: string, notes?: string):
     const shared = dialog.getByRole('button', { name: /Notes, tags and citations/ });
     if ((await shared.getAttribute('aria-expanded')) === 'false') await shared.click();
     await dialog.getByLabel('Notes', { exact: true }).fill(notes);
+  }
+  if (formula !== undefined) {
+    const section = dialog.getByRole('button', { name: /Formula and charge/ });
+    if ((await section.getAttribute('aria-expanded')) === 'false') await section.click();
+    await dialog.getByLabel('Formula (optional)').fill(formula);
   }
   await dialog.getByRole('button', { name: 'Save', exact: true }).click();
   const dup = page.getByRole('dialog', { name: 'This may already exist' });
@@ -129,15 +134,19 @@ test.describe('delete and merge (desktop)', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    const dup = await saveDuplicateEthanol(page, 'CCO', 'A note typed on the duplicate.');
+    // the demo's Ethanol has no note, so the typed note is FILLED IN (no choice); its formula differs, so the Formula is a choice (W1, W2)
+    const dup = await saveDuplicateEthanol(page, 'CCO', 'A note typed on the duplicate.', 'C2H6O');
     await dup.getByRole('button', { name: 'Merge', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Merge into Ethanol' });
     await expect(dialog).toBeVisible();
-    const notes = dialog.getByRole('group', { name: 'Notes' });
-    await expect(notes).toBeVisible({ timeout: 60_000 });
+    const formula = dialog.getByRole('group', { name: 'Formula', exact: true });
+    await expect(formula).toBeVisible({ timeout: 60_000 });
+    await expect(dialog.getByRole('group', { name: 'formula', exact: true })).toHaveCount(0); // words, never the schema key
+    await expect(dialog.getByRole('group', { name: 'Notes' })).toHaveCount(0); // only A has a note: filled in, not a choice
+    await expect(dialog.getByRole('list', { name: /^Filled in from / }).getByText(/Notes: A note typed on the duplicate\./)).toBeVisible();
     await expect(dialog.getByText('Includes your unsaved changes')).toBeVisible();
     await expect(dialog.getByRole('list', { name: 'Records that will change' })).toBeVisible();
-    await notes.getByRole('radio', { name: /^Take / }).check();
+    await formula.getByRole('radio', { name: /^Take / }).check();
     expect(await axeProblems(page, 10)).toEqual([]); // a modal dialog leaves the page inert: fewer rules apply
     await dismissToasts(page);
     await page.screenshot({ path: resolve(shotsDir(), 'merge-dialog-1280x800.png') });

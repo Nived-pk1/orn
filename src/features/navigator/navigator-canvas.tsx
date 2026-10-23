@@ -19,9 +19,8 @@ import { FIT_FLOOR } from '@/render/viewport';
 import { depictionBindingOf } from './depictions';
 import { ListView } from './list-view';
 import { keyOf, legendOf } from './legend';
-import { MultiActions } from './multi-actions';
+import { useMapBulk, useNoMulti } from './bulk-context';
 import { useCanvasInput } from './use-canvas-input';
-import { useMultiSelect } from './use-multi-select';
 import { outsideNoteOf } from './scope-lens';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorLegend } from './navigator-legend';
@@ -78,7 +77,9 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const isHub = useCallback((id: string): boolean => state.hubIds.includes(id), [state.hubIds]);
   const openFamily = useCallback((hubId: string): void => ports.ui.family.getState().openFamily(hubId), [ports]);
   const [svg, setSvg] = useState<SVGSVGElement | null>(null);
-  const multi = useMultiSelect({ scene, svg, controller, isHub, announce });
+  // Studio's window provides the multi-selection shell; Study's provides none and the map has no multi-selection (step 6.8b, Y1)
+  const useMulti = useMapBulk()?.useMulti ?? useNoMulti;
+  const multi = useMulti({ scene, svg, controller, isHub, announce });
   const input = useCanvasInput({ ui: ports.ui, scene, isHub, controller, svg, announce, multi, ...(props.returnTo === undefined ? {} : { returnTo: props.returnTo }) });
   // Back from a family page the focus returns to the overview: the drawing (on the family just left), or the list's tab stop.
   const returning = useRef(props.returnTo !== undefined);
@@ -169,7 +170,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           Unanchored reactions ({unanchored.length})
         </Button>
         <NavigatorSelection {...(multi !== null && multi.items.length > 0 ? { multiLine: multi.line } : {})} />
-        {multi !== null && multi.items.length > 0 ? <MultiActions multi={multi} /> : null}
+        {multi?.actions(false)}
       </div>
       )}
       {cut === null ? null : (
@@ -185,8 +186,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
       {listing || phone ? null : <NavigatorLegend items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} />}
       <div className={styles.drawing} aria-busy={state.working}>
-        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { select: { on: multi.selectMode, set: multi.setSelectMode } })} /> : null}
-        {phone && multi !== null && multi.items.length > 0 ? <MultiActions multi={multi} bar /> : null}
+        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} /> : null}
+        {phone ? multi?.actions(true) : null}
         {multi?.marquee == null ? null : <div className={styles.marquee} aria-hidden="true" style={{ left: multi.marquee.left, top: multi.marquee.top, width: multi.marquee.width, height: multi.marquee.height }} />}
         {state.error !== null ? (
           <div className={styles.error} role="alert">

@@ -4,7 +4,7 @@
  * per-row and BULK actions "Mark verified" and "Needs review". Long lists are virtual. The rows, the order and the changes come from the
  * core (`core/editing/review-queue.ts`); this file shows them. The app never verifies anything by itself.
  */
-import { useEffect, useMemo, useReducer, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useId, useMemo, useReducer, useRef, useState, type ChangeEvent } from 'react';
 import { queueRows, STATUS_WORDS, type QueueFilters, type QueueRow, type ReviewStatus } from '@/core/editing';
 import type { RecordKind, RecordRef } from '@/core/schema';
 import { Button, VirtualList } from '@/ui/primitives';
@@ -17,19 +17,18 @@ const keyOf = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
 const ROW_ESTIMATE = 84;
 
 function Select(props: { readonly label: string; readonly value: string; readonly options: readonly (readonly [string, string])[]; readonly onChange: (value: string) => void }) {
+  const id = useId();
   return (
     <div className={styles.filter}>
-      <label>
-        {props.label}
-        <select value={props.value} onChange={(event: ChangeEvent<HTMLSelectElement>) => props.onChange(event.target.value)}>
-          <option value="">All</option>
-          {props.options.map(([value, words]) => (
-            <option key={value} value={value}>
-              {words}
-            </option>
-          ))}
-        </select>
-      </label>
+      <label htmlFor={id}>{props.label}</label>
+      <select id={id} value={props.value} onChange={(event: ChangeEvent<HTMLSelectElement>) => props.onChange(event.target.value)}>
+        <option value="">All</option>
+        {props.options.map(([value, words]) => (
+          <option key={value} value={value}>
+            {words}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

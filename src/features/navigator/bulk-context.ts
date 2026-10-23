@@ -5,15 +5,9 @@
  * happens to it, belongs to the host that receives the IDs.
  */
 import { createContext, useContext } from 'react';
-
-export interface MapBulk {
-  /** Why the bulk actions cannot run in this tab (read-only); undefined when they can. */
-  readonly unavailable: string | undefined;
-  /** "Mark verified (n)": the review queue's path, with its refusals and confirm. */
-  markVerified(reactionIds: readonly string[]): void;
-  /** "Delete (n)": ONE aggregated impact dialog and one undo step. */
-  remove(reactionIds: readonly string[]): void;
-}
+import type { MapBulk } from './multi-types';
 
 export const MapBulkContext = createContext<MapBulk | undefined>(undefined);
 export const useMapBulk = (): MapBulk | undefined => useContext(MapBulkContext);
+/** What the map uses when the window provides no bulk actions (Study): no multi-selection. */
+export const useNoMulti = (): null => null;

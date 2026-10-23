@@ -17,6 +17,9 @@ async function load(edition: 'study' | 'studio') {
   const { demoState } = await import('@/test-support/app-boot-kit');
   const { fakeLayout } = await import('@/test-support/inspector-kit');
   const { PHONE_QUERIES } = await import('@/ui/hooks');
+  // the multi-selection engine is a lazy chunk (step 6.8b, Y1); a test that is not about the loading has it there from the first Shift-click
+  const { loadMultiEngine } = await import('@/features/navigator');
+  await loadMultiEngine();
   kit.stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

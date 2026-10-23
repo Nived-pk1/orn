@@ -4,7 +4,7 @@
  * act (a read-only tab, a selection with no reactions); the host (`MapBulk`) runs the review queue's path and the aggregated impact dialog.
  */
 import { Button } from '@/ui/primitives';
-import type { MultiSelect } from './use-multi-select';
+import type { MultiSelect } from './multi-types';
 import styles from './navigator.module.css';
 
 export function MultiActions(props: { readonly multi: MultiSelect; readonly bar?: boolean }) {

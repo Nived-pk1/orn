@@ -6,7 +6,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -103,5 +103,27 @@ describe('scripts/check-edition.mjs', () => {
     expect(studio.out).toContain('over the 395 kB line');
     const study = run('study', studyChunks, { indexJs: heavy });
     expect(study.status).toBe(0);
+  });
+});
+
+describe('the multi-selection modules (step 6.8b, Y1)', () => {
+  const listed = (JSON.parse(readFileSync(SCRIPT.replace('check-edition.mjs', 'editor-modules.json'), 'utf8')) as { modules: string[] }).modules;
+  const MULTI = [
+    'src/features/navigator/multi-entry.ts',
+    'src/features/navigator/multi-select-toggle.tsx',
+    'src/features/navigator/multi-select.ts',
+    'src/features/navigator/multi-loader.ts',
+    'src/features/navigator/multi-engine.tsx',
+    'src/features/navigator/multi-actions.tsx',
+    'src/features/navigator/use-multi-select.tsx',
+  ];
+  it('lists every multi-selection module as an editor module', () => {
+    for (const id of MULTI) expect(listed, id).toContain(id);
+  });
+  it('fails a Study build that holds one of them', () => {
+    const chunks: Chunk[] = [{ file: 'assets/index-a1.js', isEntry: true, modules: [...APP, 'src/features/navigator/multi-select.ts'] }];
+    const { status, out } = run('study', chunks);
+    expect(status).toBe(1);
+    expect(out).toContain('src/features/navigator/multi-select.ts');
   });
 });
