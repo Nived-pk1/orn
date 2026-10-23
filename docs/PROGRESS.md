@@ -6154,3 +6154,14 @@ No product code. Every field below is in `src/core/schema/reaction.ts` (L = line
 **New test files:** `reaction-missing-fields.test.tsx` (15 tests; seen red: yes, 13 failed first; the 2 that passed at once are "a stored solvent value is shown" and "a variant listing none has no 'only with'", both already true); 2 new tests in `reaction-compare.test.ts` (seen red: yes, 1 failed first, the other already true).
 **Changed existing tests:** `reaction-variants.test.tsx` (Solvent character is now offered), `reaction-form.test.tsx` ("Written in the source as" is an input, not text), `variant-model.test.ts` (3 summaries gain " · only with prt_x": the variant lists a participant), `participant-summary.test.ts` (the view has `note`).
 **Amendments:** none. **`npm run check`:** green, 588 test files, 7140 tests (one command, default workers).
+
+### Step 6.9b, part 3 - gate D round 2 (2026-10-23)
+
+**Driver.** `author-kit.ts` fills stage and participant "Written in the source as", the participant note, the variant "Participant K: only under variant N" ticks and the variant note; `author-outcomes.ts` fills the outcome label and picks the outcome concepts; `author-findings.ts` FINDINGS is now empty (every difference fails the run). No spec asserted a changed string, so no spec needed an update; `author-conditions.ts` now finds Solvent character offered for variants.
+**Gate D round 2:** `npm run e2e:gate-d` 27 passed (2.8 m), ZERO comparator differences (no DIFFERENCE, NOT OFFERED or SKIPPED line). The demo is not edited.
+**Full e2e, ONE run:** 653 passed, 133 skipped by profile, 0 failed, 1.2 h (Chromium 232 / 30 / 0, Firefox 196 / 66 / 0, WebKit 225 / 37 / 0). No timeout.
+**Sizes:** initial JS gzip Study 387.11 kB, Studio 391.03 kB (limit 395 kB). `npm run build:smoke` passed for both editions.
+**Speed check** 1.271 / 1.314 / 1.287 s (median 1.287, under 1.3 s). **`npm run bench:compare`** once: 480 entries, 2 over +20% p99 ('step 4.2d store from the boot result WITH precomputed findings' +23.9%, 'step 4.4 ELK layered demo' +28.9%), neither near code touched in 6.9b; read as noise; no baseline change, no budget breach.
+**Screenshots** (toasts dismissed, git-ignored): outcome-label-1280x800.png, variant-participants-1280x800.png, source-wording-1280x800.png.
+**Docs:** `docs/reviews/phase-6-close.md` sections 4, 5, 6, 9 and 10 carry round 2 under the round 1 text; it still ends "Reviewer verdict: (pending)". Not deployed, not tagged; nextStep stays "gate-d-verdict".
+**Amendments:** none. Code under `src/` did not change in this part (tests/e2e and docs only), so `npm run check` was not re-run; Part 2's run (588 files, 7140 tests) stands.

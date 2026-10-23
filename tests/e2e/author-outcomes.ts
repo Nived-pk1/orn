@@ -6,7 +6,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from './fixtures';
 import { substanceOrCreate } from './author-nested';
 import type { DemoRecords } from './author-data';
-import { asBag, asList, chooseText, exactly, nameOfDemo, spaced } from './author-helpers';
+import { asBag, asList, chooseText, exactly, nameOfDemo, pickRecord, spaced } from './author-helpers';
 
 type Bag = Record<string, unknown>;
 const cap = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
@@ -39,6 +39,8 @@ async function oneOutcome(dialog: Locator, page: Page, demo: DemoRecords, rxn: B
   const open = dialog.getByRole('button', { name: `Edit outcome ${o}`, exact: true });
   if (await open.count()) await open.click();
   await label('Selectivity').selectOption(String(outcome['selectivity']));
+  if (typeof outcome['label'] === 'string') await label('Label').fill(outcome['label']);
+  for (const id of (outcome['conceptIds'] as string[]) ?? []) await pickRecord(dialog, `Find a concept for outcome ${o} by name`, 'Concepts found', nameOfDemo(demo, 'concept', id));
   const variantIds = outcome['conditionVariantIds'] as string[];
   for (const id of variantIds) {
     const at2 = asList(rxn['conditionVariants']).findIndex((variant) => variant['id'] === id);

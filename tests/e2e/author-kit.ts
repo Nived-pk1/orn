@@ -46,6 +46,7 @@ async function stages(dialog: Locator, rxn: Bag): Promise<void> {
     await chooseText(dialog.getByLabel('Add a stage of kind'), new RegExp(`^${spaced(String(stage['kind']))}$`, 'i'));
     await dialog.getByRole('button', { name: 'Add stage', exact: true }).click();
     if (typeof stage['label'] === 'string') await dialog.getByLabel(`Label of stage ${at + 1}`, { exact: true }).fill(stage['label']);
+    if (typeof stage['originalText'] === 'string') await dialog.getByLabel(`Written in the source as, stage ${at + 1}`, { exact: true }).fill(stage['originalText']);
   }
 }
 
@@ -66,6 +67,8 @@ async function participants(dialog: Locator, page: Page, demo: DemoRecords, rxn:
     if (p['strength'] !== undefined) await field('Strength').selectOption(String(p['strength']));
     const more = dialog.getByRole('group', { name: `Participant ${n}`, exact: true }).locator('details').first();
     if (!(await more.evaluate((element) => (element as HTMLDetailsElement).open))) await more.locator('summary').click();
+    if (typeof p['originalText'] === 'string') await dialog.getByLabel(`Written in the source as, participant ${n}`, { exact: true }).fill(p['originalText']);
+    if (typeof p['note'] === 'string') await dialog.getByLabel(`Note of participant ${n}`, { exact: true }).fill(p['note']);
     if (p['dry'] === true) await dialog.getByLabel(`Dry: participant ${n}`, { exact: true }).check();
     const primary = dialog.getByLabel(`Main substrate: participant ${n}`, { exact: true });
     if (p['isPrimarySubstrate'] === true) await primary.check();
@@ -110,7 +113,14 @@ async function variants(dialog: Locator, rxn: Bag): Promise<void> {
     if (stageList.length >= 2 && stageAt >= 0) await chooseText(dialog.getByLabel('Stage it overrides').last(), new RegExp(`^(Stage )?${stageAt + 1}\\b`));
     await dialog.getByRole('button', { name: 'Add variant', exact: true }).click();
     const params = asBag(variant['parameters']);
-    await setParameters(dialog.getByRole('group', { name: `Variant ${at + 1}`, exact: true }), `variant ${at + 1}`, params, true);
+    const row = dialog.getByRole('group', { name: `Variant ${at + 1}`, exact: true });
+    // the participants present only under this variant: ticked by their place in the reaction (they were entered in the demo's order)
+    for (const id of (variant['participantIds'] as string[]) ?? []) {
+      const place = asList(rxn['participants']).findIndex((p) => p['id'] === id);
+      await row.getByLabel(`Participant ${place + 1}: only under variant ${at + 1}`, { exact: true }).check();
+    }
+    if (typeof variant['note'] === 'string') await row.getByLabel(`Note of variant ${at + 1}`, { exact: true }).fill(variant['note']);
+    await setParameters(row, `variant ${at + 1}`, params, true);
     const closer = dialog.getByRole('button', { name: `Close variant ${at + 1}`, exact: true });
     if (await closer.count()) await closer.click();
   }

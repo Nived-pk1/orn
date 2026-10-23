@@ -51,6 +51,12 @@ Differences from the demo are all fields no editor can set (Gate D findings; the
 
 Every other field of every reaction and pointer record compared equal (ids, nested ids, provenance and review ignored; references compared by name).
 
+### Round 2 (step 6.9b, after the missing-field editors)
+
+The round 1 table above is kept for the record. The eight fields now have editors (outcome label and concepts, variant note, variant participants and solvent character, participant note and source wording, stage source wording) and the comparator treats a variant with no `stageId` and one naming the first reaction stage as equal (G2). The driver (`tests/e2e/author-kit.ts`, `author-outcomes.ts`) enters them; the findings list is now empty, so any difference fails the run.
+
+**27 passed, 0 failed (2.8 m). ZERO comparator differences** (no DIFFERENCE, NOT OFFERED or SKIPPED line). The demo is not edited.
+
 ## 5. E2E, ONE run, production builds
 
 652 passed, 133 skipped by profile (each with its reason in its spec), 1 failed, 1.3 h.
@@ -63,12 +69,28 @@ Every other field of every reaction and pointer record compared equal (ids, nest
 
 The one failure was `author-demo.spec.ts`, `rxn_ethanol-conc-h2so4`, Chromium: a test bug in the new card screenshot (the reaction's card appears twice on its family page, so the locator matched two elements). It is fixed (`.first()`) and re-run alone: passed, with its Pixel 7 twin. No timeout and no other failure. The coverage set (14 reactions x 3 browsers; 2 reactions on the Pixel 7 and iPhone 14) passed otherwise.
 
+### Round 2 (step 6.9b)
+
+ONE run, every spec on the Studio build plus study-edition on the Study build, Chromium, Firefox, WebKit, production builds: **653 passed, 133 skipped by profile, 0 failed, 1.2 h.** No timeout, so no spec was re-run.
+
+| Browser | Passed | Skipped | Failed |
+|---|---|---|---|
+| Chromium | 232 | 30 | 0 |
+| Firefox | 196 | 66 | 0 |
+| WebKit | 225 | 37 | 0 |
+
 ## 6. Sizes, benches, timing
 
 - Initial JS gzip: Study 387.11 kB, Studio 391.03 kB (6.8b close: 387.76 / 394.99). `npm run build:smoke` passed for both editions and the edition check passed (Study 0 editor modules, Studio 176).
 - Speed check 0.615 / 0.611 / 0.590 s (median 0.611). No measurement is pending.
 - `npm run bench:compare`: 480 entries compared, no budget breach. 237 entries are over +20% p99 against the Gate E baseline, nearly all by 25-50% with the whole suite moving together (the 5.11b / 6.1a picture, read as workstation noise); no baseline change.
 - Phase 6 WATCH items: 'navigator overview, every hub expanded' (design/dense) 16.11 ms p99 against 16 (just over, as in 6.1a: 16.2-22.0); 'projection: reaction_explorer, focused on the hub' (design/dense) 12.49 ms (under 16); 'validateTouched: like water hub, review lifecycle changed' is not among the 237.
+
+### Round 2 (step 6.9b)
+
+- Initial JS gzip: Study 387.11 kB, Studio 391.03 kB (limit 395 kB; budget 400 kB). `npm run build:smoke` passed for both editions, the edition check passed.
+- Speed check before the benches: 1.271 / 1.314 / 1.287 s (median 1.287 s, under the 1.3 s line; this is a slower reading than round 1's 0.611 s, so the bench numbers are noisier).
+- `npm run bench:compare` (once): 480 entries compared; the command exits 1 because 2 entries are over +20% p99: 'step 4.2d: the store from the boot result WITH precomputed findings (design/dense)' 227.6 -> 282.1 ms (+23.9%) and 'step 4.4: ELK layered: demo (layout)' 37.8 -> 48.8 ms (+28.9%). Neither touches code changed in 6.9b (store boot and layout); both read as workstation noise. No budget breach, no baseline change. The 237 entries over +20% of round 1 are not repeated this time. The three Phase 6 WATCH items were not in the flagged list. Two new 6.1b entries have no baseline yet.
 
 ## 7. Accessibility (axe 0 serious / critical)
 
@@ -87,12 +109,15 @@ Editors covered: species, class, reagent, reaction (identity, participants, stag
 - The coverage set has 14 reactions, not 8-10.
 - Quick entry is not part of the driver (`quick-entry.spec.ts` covers it).
 - The Z3 controller split was written before its test.
-- The section 4 findings.
-- 237 of 480 bench entries are over +20% (noise reading, no budget breach).
+- The section 4 findings (round 1; round 2 below has none).
+- 237 of 480 bench entries are over +20% (round 1; noise reading, no budget breach). Round 2: 2 of 480.
 - Part 1's "docs-only" claim missed that `scripts/demo-coverage.mjs` is linted; fixed in Part 2.
+- Round 2 (step 6.9b): the outcome summary line is unchanged (the label has its own input); the variant summary gained " · only with <names>"; the variant participants control can also add a new participant (it runs `addParticipant` and then lists it); the driver's findings list is empty; Part 1's line references were corrected in the Part 2 PROGRESS entry, not by amending.
 - Earlier steps' items were decided in their reviews (docs/PROGRESS.md).
 
 ## 10. Screenshot index (git-ignored `screenshots/`)
+
+Round 2: outcome-label-1280x800.png, variant-participants-1280x800.png, source-wording-1280x800.png (toasts dismissed). Round 1:
 
 author-demo-ethanol-conc-h2so4-1280x800.png (an authored reaction's card), merge-dialog-1280x800.png (Z1, fresh), phone-select-mode-pixel7.png (Z2, fresh; the e2e now asserts no button is behind the bar), phone-select-mode-iphone14.png, review-queue-1280x800.png, review-confirm-1280x800.png, map-multiselect-1280x800.png, and the Phase 6 editor set (species, class, reagent, reaction, mechanism, curriculum and exam editors; the from-scratch family card and full equation; the nested editor; the duplicate dialog; the phone editors).
 
@@ -101,6 +126,6 @@ author-demo-ethanol-conc-h2so4-1280x800.png (an authored reaction's card), merge
 Gate D NOT YET PASSED. Accepted: 27 of 27 authored; the adversarial test; sizes; axe; CSP; the coverage set of 14 (exact minimum); quick entry covered by its own spec; the Z3 test order (recorded); the Part 1 lint slip (recorded); the bench reading as noise; the WATCH item 'navigator overview, every hub expanded' at 16.11 ms against 16 (new Phase 9 openItem).
 NOT accepted (G1): the eight fields no editor can set (outcome label, outcome conceptIds, variant note, participant note, participant and stage originalText, variant solvent character, participants present only under a variant). Phase 6's promise is that any reaction can be entered completely.
 The variant stageId difference is an EQUIVALENT default (G2): the comparator treats "no stageId" and "the first reaction stage" as equal.
-Step 6.9b adds the editors and re-runs the proof (round 2 below once it is run).
+Step 6.9b added the editors and re-ran the proof: round 2 results are in sections 4, 5, 6 and 9 above (ZERO differences).
 
 Reviewer verdict: (pending)
