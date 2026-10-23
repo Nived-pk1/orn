@@ -29,8 +29,8 @@ const READY: MergeView = {
 };
 const portOf = (view: MergeView, run: MergePort['run'] = async () => ({ ok: true })): MergePort => ({ candidates: () => [], preview: async () => view, run });
 
-function show(port: MergePort, onDone = vi.fn()) {
-  render(<MergeDialog port={port} from={{ id: 'spc_a' }} into={INTO} intoName="Diethyl ether" onDone={onDone} onClose={() => undefined} />);
+function show(port: MergePort, onDone = vi.fn(), unsaved?: boolean) {
+  render(<MergeDialog port={port} from={{ id: 'spc_a' }} into={INTO} intoName="Diethyl ether" {...(unsaved === undefined ? {} : { unsaved })} onDone={onDone} onClose={() => undefined} />);
   return onDone;
 }
 const dialog = (): HTMLElement => screen.getByRole('dialog', { name: 'Merge into Diethyl ether' });
@@ -89,5 +89,17 @@ describe('a refused merge', () => {
     fireEvent.click(merge);
     expect(run).not.toHaveBeenCalled();
     expect(within(dialog()).queryByRole('list', { name: 'Records that will change' })).toBeNull();
+  });
+});
+
+describe('unsaved changes (V2)', () => {
+  it('says "Includes your unsaved changes" when the merged draft has unsaved edits, and not otherwise', async () => {
+    show(portOf(READY), vi.fn(), true);
+    await within(dialog()).findByRole('group', { name: 'notes' });
+    expect(within(dialog()).getByText('Includes your unsaved changes')).toBeTruthy();
+    cleanup();
+    show(portOf(READY));
+    await within(dialog()).findByRole('group', { name: 'notes' });
+    expect(within(dialog()).queryByText('Includes your unsaved changes')).toBeNull();
   });
 });

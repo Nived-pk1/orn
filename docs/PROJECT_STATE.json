@@ -457,6 +457,7 @@
     "CLOSED (step 6.6c, 2026-10-21): the TOPIC editor (with its Mapped records), topic mapping, exam relevance and map family editors; Syllabus topics, Exam relevance and Relationships lists in every record editor; \"Map to a topic\", \"Mark exam relevance\", \"Make this a map family\" and \"New relationship from here\" open a NEW editor with a field filled in (OpenTarget.seed). Open: routes cannot be chosen as a mapping, relevance or relationship end until Phase 7.",
     "-> Exams step (2026-10-21, right after 6.6c): exam and exam_version editors (syllabus units, topic coverage, provisional status, CUR rules) with the user's request for CBSE, KCET and BITSAT: app wording exam-generic, scope selector grouped (Board exam / Entrance exams).",
     "-> Phase 7 (2026-10-21): the ROUTE editor, with the precursor explorer and route search.",
+    "-> later: merging reagents moves A's profiles into B and rewrites the reactions' profile references (2026-10-23, step 6.8a: a reagent whose profiles reactions use is refused in words).",
     "NOTE (2026-10-21): reaction_scheme, view_preset and entity_display have no form editor; they are made by the views that own them (map arrangement, presets, display settings). asset has no stand-alone editor; deleting assets is 6.8."
   ],
   "phoneMode": {

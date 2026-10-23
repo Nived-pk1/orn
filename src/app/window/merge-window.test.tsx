@@ -108,3 +108,35 @@ describe('Merge into... (editor toolbar) of a stored copy', () => {
     expect(app.store.getState().records).toEqual(before);
   });
 });
+
+describe('the clock and unsaved edits (V2, V3)', () => {
+  it('the merged record updatedAt comes from the injected clock; the dialog says it includes unsaved changes', async () => {
+    const app = fakeApp({ state: demoState(), navigator: { depictions: true } });
+    const { species, klass } = original(app);
+    const copy = { ...species, id: 'spc_copy-of-original', names: { ...species.names, canonical: `${species.names.canonical} (copy)`, common: [], aliases: [] } } as unknown as Species;
+    expect(app.store.dispatch({ label: 'make a copy', commands: [{ type: 'record.create', record: copy }, { type: 'record.update', record: { ...klass, exampleSpeciesIds: [...klass.exampleSpeciesIds, copy.id] } as never }] }).ok).toBe(true);
+    inspect(app, { kind: 'species', id: copy.id });
+    fireEvent.click(within(pane()).getByRole('button', { name: 'Edit' }));
+    const editor = await screen.findByRole('dialog', { name: /^Edit / });
+    fireEvent.click(within(editor).getByRole('button', { name: 'Merge into...' }));
+    let picker = await screen.findByRole('dialog', { name: 'Merge into...' });
+    fireEvent.change(within(picker).getByLabelText('Search for the species to keep'), { target: { value: species.names.canonical.slice(0, 5) } });
+    fireEvent.click(await within(picker).findByRole('button', { name: `Merge into ${species.names.canonical}` }));
+    let dialog = await screen.findByRole('dialog', { name: `Merge into ${species.names.canonical}` });
+    await within(dialog).findByRole('list', { name: 'Records that will change' });
+    expect(within(dialog).queryByText('Includes your unsaved changes')).toBeNull();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    fireEvent.change(within(editor).getByLabelText('Canonical name (required)'), { target: { value: `${copy.names.canonical} typed` } });
+    fireEvent.click(within(editor).getByRole('button', { name: 'Merge into...' }));
+    picker = await screen.findByRole('dialog', { name: 'Merge into...' });
+    fireEvent.change(within(picker).getByLabelText('Search for the species to keep'), { target: { value: species.names.canonical.slice(0, 5) } });
+    fireEvent.click(await within(picker).findByRole('button', { name: `Merge into ${species.names.canonical}` }));
+    dialog = await screen.findByRole('dialog', { name: `Merge into ${species.names.canonical}` });
+    await within(dialog).findByRole('list', { name: 'Records that will change' });
+    expect(within(dialog).getByText('Includes your unsaved changes')).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Merge' }));
+    await waitFor(() => expect(Object.hasOwn(app.store.getState().records.species, copy.id)).toBe(false));
+    expect(speciesOf(app, species.id).provenance.updatedAt).toBe(new Date(1_790_000_000_000).toISOString());
+  });
+});
+

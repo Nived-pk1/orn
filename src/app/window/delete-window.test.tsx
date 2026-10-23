@@ -111,6 +111,14 @@ describe('an open draft of a record that is deleted', () => {
     expect(added).toHaveLength(1);
     expect(added[0]).not.toBe(ref.id);
     expect((app.store.getState().records.species[added[0] as never] as Species).names.canonical).toBe('Typed after the delete');
+    // V1: fresh provenance through the injected clock and a reset review, like Duplicate
+    const saved = app.store.getState().records.species[added[0] as never] as Species;
+    const at = new Date(1_790_000_000_000).toISOString();
+    expect(saved.provenance.origin).toBe('user');
+    expect(saved.provenance.createdAt).toBe(at);
+    expect(saved.review.lifecycle).toBe('draft');
+    expect(saved.review.status).toBe('unreviewed');
+    expect(saved.review.reviewedAt).toBeUndefined();
   });
 
   it('the editor toolbar has Delete... and shows the same dialog', async () => {

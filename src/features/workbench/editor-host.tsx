@@ -390,7 +390,7 @@ export function EditorHost(props: EditorHostProps) {
       />
     )}
     {merging === null || port.merge === undefined ? null : (
-      <EditorMerge port={port.merge} kind={kind} kindWords={kindWords(kind)} draft={draft} into={merging.into} leave={async () => { closing.current = true; await port.discard(sessionId); }} show={(ref) => port.duplicates?.openRecord(ref)} onCancel={() => setMerging(null)} onMerged={() => { setMerging(null); onClose(); }} />
+      <EditorMerge port={port.merge} kind={kind} kindWords={kindWords(kind)} draft={draft} unsaved={entry?.canUndo === true || entry?.session.target === null} into={merging.into} leave={async () => { closing.current = true; await port.discard(sessionId); }} show={(ref) => port.duplicates?.openRecord(ref)} onCancel={() => setMerging(null)} onMerged={() => { setMerging(null); onClose(); }} />
     )}
     </>
   );

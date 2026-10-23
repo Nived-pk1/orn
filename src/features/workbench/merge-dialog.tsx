@@ -25,6 +25,8 @@ export interface MergeDialogProps {
   readonly from: unknown;
   readonly into: RecordRef;
   readonly intoName: string;
+  /** The record being merged has edits that are not saved yet: they are part of the merge, and the dialog says so. */
+  readonly unsaved?: boolean;
   readonly onDone: (into: RecordRef) => void;
   readonly onClose: () => void;
 }
@@ -67,6 +69,7 @@ export function MergeDialog(props: MergeDialogProps) {
   return (
     <Dialog open onClose={props.onClose} title={`Merge into ${props.intoName}`} size="wide" footer={footer}>
       <p>{`The record you merge is deleted and ${props.intoName} is kept. Its names are added to ${props.intoName}'s aliases, and everything that pointed at it points at ${props.intoName}.`}</p>
+      {props.unsaved === true ? <p>Includes your unsaved changes</p> : null}
       {view === null ? <p role="status">Looking at what would change...</p> : null}
       {view !== null && !view.ok ? <p role="status">{view.message}</p> : null}
       {view !== null && view.ok ? (

@@ -17,6 +17,7 @@ export interface MergeFlowProps {
   /** The record being merged away: stored, or a draft. */
   readonly from: unknown;
   readonly exceptId: string;
+  readonly unsaved?: boolean;
   readonly into?: MergeCandidate;
   readonly onDone: (into: RecordRef) => void;
   readonly onClose: () => void;
@@ -25,7 +26,7 @@ export interface MergeFlowProps {
 export function MergeFlow(props: MergeFlowProps) {
   const [chosen, setChosen] = useState<MergeCandidate | undefined>(props.into);
   const [text, setText] = useState('');
-  if (chosen !== undefined) return <MergeDialog port={props.port} from={props.from} into={chosen.ref} intoName={chosen.name} onDone={props.onDone} onClose={props.onClose} />;
+  if (chosen !== undefined) return <MergeDialog port={props.port} from={props.from} into={chosen.ref} intoName={chosen.name} {...(props.unsaved === true ? { unsaved: true } : {})} onDone={props.onDone} onClose={props.onClose} />;
   const found = text.trim() === '' ? [] : props.port.candidates(props.kind, text, props.exceptId);
   return (
     <Dialog open onClose={props.onClose} title="Merge into..." footer={<Button onClick={props.onClose}>Cancel</Button>}>
@@ -55,6 +56,8 @@ export function EditorMerge(props: {
   readonly kind: RecordRef['kind'];
   readonly kindWords: string;
   readonly draft: unknown;
+  /** The draft has edits that are not saved yet. */
+  readonly unsaved: boolean;
   readonly into: MergeCandidate | undefined;
   /** Ends this editor on purpose (marks it closing, discards the draft); resolves when the draft is gone. */
   readonly leave: () => Promise<void>;
@@ -68,6 +71,7 @@ export function EditorMerge(props: {
       kind={props.kind}
       kindWords={props.kindWords}
       from={props.draft}
+      unsaved={props.unsaved}
       exceptId={(props.draft as { id?: string } | undefined)?.id ?? ''}
       {...(props.into === undefined ? {} : { into: props.into })}
       onDone={(into) => {
