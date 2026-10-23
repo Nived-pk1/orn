@@ -8,6 +8,7 @@ import type { InspectorPorts } from '@/features/inspector';
 import type { NavigatorPorts } from '@/features/navigator';
 import type { PanelsStore } from '@/ui/state';
 import type { EditorEntries } from './editor-entries';
+import type { EditorsControllerType } from './editors-api';
 import type { TimeFormatter } from './local-time';
 import type { DatasetInfo } from './dataset-types';
 
@@ -34,6 +35,8 @@ export interface AppContextValue {
   formatTime?: TimeFormatter;
   /** The editors' entry points when they are already loaded (a test hands them in; the app loads them after the first paint). */
   readonly editorEntries?: EditorEntries;
+  /** The editors' controller when it is already loaded (a test hands it in; the app loads it after the first paint, step 6.9 Z3). */
+  readonly editorsController?: EditorsControllerType;
   /** Reloads the page (`location.reload()` in the browser). */
   reload(): void;
 }

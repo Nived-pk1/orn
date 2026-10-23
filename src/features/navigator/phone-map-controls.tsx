@@ -16,11 +16,13 @@ export function PhoneMapControls(props: {
   readonly outsideNote?: string;
   /** Studio's Select toggle (step 6.8b): a tap toggles instead of selecting. Absent in Study. */
   readonly extra?: ReactNode;
+  /** The Select bar is shown at the bottom: the buttons move to the top so none is half covered (step 6.9, Z2). */
+  readonly barShown?: boolean;
 }) {
   const [legend, setLegend] = useState(false);
   return (
     <>
-      <div className={styles.floating}>
+      <div className={styles.floating} {...(props.barShown === true ? { 'data-bar': 'shown' } : {})}>
         {props.extra}
         <button type="button" className={styles.round} aria-label="Fit" onClick={() => props.controller?.fit()} aria-disabled={props.controller === null ? true : undefined}>
           <Icon name="fit" size={22} />

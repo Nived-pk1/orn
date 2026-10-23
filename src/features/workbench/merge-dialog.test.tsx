@@ -111,8 +111,14 @@ describe('W1/W2', () => {
     show(portOf(READY));
     await within(dialog()).findByRole('group', { name: 'Notes' });
     expect(dialog().textContent).not.toContain('speciesKind');
-    const filled = within(dialog()).getByRole('list', { name: 'Filled in from Ethoxyethane (twin)' });
+    const filled = within(dialog()).getByRole('list', { name: 'Filled in from Ethoxyethane (twin) (the record being merged)' });
     expect(filled.textContent).toContain('Formula');
     expect(filled.textContent).toContain('C4H10O');
+  });
+  it('Z1: when both records have the same name the heading still says which is which', async () => {
+    show(portOf({ ...READY, fromName: 'Diethyl ether' }));
+    const filled = await within(dialog()).findByRole('list', { name: 'Filled in from Diethyl ether (the record being merged)' });
+    expect(filled.textContent).toContain('C4H10O');
+    expect(within(dialog()).getByText('The record you merge is deleted and Diethyl ether is kept.', { exact: false })).toBeTruthy();
   });
 });

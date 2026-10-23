@@ -88,8 +88,8 @@ export function MergeDialog(props: MergeDialogProps) {
           ))}
           {view.filled.length === 0 ? null : (
             <>
-              <h3>{`Filled in from ${view.fromName}`}</h3>
-              <ul aria-label={`Filled in from ${view.fromName}`} className={styles.matches}>
+              <h3>{`Filled in from ${view.fromName} (the record being merged)`}</h3>
+              <ul aria-label={`Filled in from ${view.fromName} (the record being merged)`} className={styles.matches}>
                 {view.filled.map((one) => (
                   <li key={one.path}>{`${one.words}: ${valueWords(one.value)}`}</li>
                 ))}

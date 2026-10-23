@@ -80,6 +80,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   // Studio's window provides the multi-selection shell; Study's provides none and the map has no multi-selection (step 6.8b, Y1)
   const useMulti = useMapBulk()?.useMulti ?? useNoMulti;
   const multi = useMulti({ scene, svg, controller, isHub, announce });
+  const selectBar = phone ? multi?.actions(true) : null;
   const input = useCanvasInput({ ui: ports.ui, scene, isHub, controller, svg, announce, multi, ...(props.returnTo === undefined ? {} : { returnTo: props.returnTo }) });
   // Back from a family page the focus returns to the overview: the drawing (on the family just left), or the list's tab stop.
   const returning = useRef(props.returnTo !== undefined);
@@ -186,8 +187,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
       {listing || phone ? null : <NavigatorLegend items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} />}
       <div className={styles.drawing} aria-busy={state.working}>
-        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} /> : null}
-        {phone ? multi?.actions(true) : null}
+        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} /> : null}
+        {phone ? selectBar : null}
         {multi?.marquee == null ? null : <div className={styles.marquee} aria-hidden="true" style={{ left: multi.marquee.left, top: multi.marquee.top, width: multi.marquee.width, height: multi.marquee.height }} />}
         {state.error !== null ? (
           <div className={styles.error} role="alert">

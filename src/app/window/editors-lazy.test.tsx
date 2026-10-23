@@ -22,12 +22,16 @@ afterEach(() => {
 describe('the editors load after the first paint', () => {
   it('no "New ..." button before the scheduler runs; all of them after; one opens its editor', async () => {
     const app = fakeApp({ state: demoState() });
-    renderWithApp({ ...app, value: { ...app.value, editorEntries: undefined } } as unknown as typeof app);
+    renderWithApp({ ...app, value: { ...app.value, editorEntries: undefined, editorsController: undefined } } as unknown as typeof app);
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Modes' })).getByRole('button', { name: /Workbench/ }));
     expect(screen.queryByRole('button', { name: 'New species' })).toBeNull();
-    await act(async () => {
-      (app.inspector.timers as unknown as ManualTimers).advance(10);
-    });
+    // step 6.9 Z3: the controller loads first (its own scheduler tick), then the entries (a second tick); no editor control before
+    for (const _tick of [1, 2]) {
+      await act(async () => {
+        (app.inspector.timers as unknown as ManualTimers).advance(10);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+    }
     expect(await screen.findByRole('button', { name: 'New species' })).toBeTruthy();
     for (const name of ['New class', 'New topic', 'New map family']) expect(screen.getByRole('button', { name })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'New topic' }));
