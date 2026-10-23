@@ -6,6 +6,7 @@
 import type { RecordKind, RecordRef } from '@/core/schema';
 import { Button } from '@/ui/primitives';
 import { textField } from './curriculum-model';
+import { useRemove } from './remove-context';
 import type { RecordPickerPort } from './record-picker-contracts';
 import styles from './editor.module.css';
 
@@ -19,6 +20,7 @@ export interface MapFamilySectionProps {
 
 export function MapFamilySection(props: MapFamilySectionProps) {
   const id = textField(props.draft, 'id');
+  const remove = useRemove();
   const familyId = props.picker?.mapFamilyOf?.(id);
   if (props.picker?.mapFamilyOf === undefined) return <p className={styles.hint}>Whether this class is a map family is not available here.</p>;
   if (familyId !== undefined) {
@@ -26,6 +28,7 @@ export function MapFamilySection(props: MapFamilySectionProps) {
       <div>
         <p>This class is a map family.</p>
         <Button {...(props.editRecord === undefined ? { unavailable: 'not available here' } : { onClick: () => props.editRecord?.({ kind: 'navigator_anchor', id: familyId } as RecordRef) })}>Edit map family</Button>
+        {remove === undefined ? null : <Button onClick={() => remove({ kind: 'navigator_anchor', id: familyId } as RecordRef)}>Remove from the map</Button>}
       </div>
     );
   }

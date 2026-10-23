@@ -142,8 +142,14 @@ describe('one family per class and a stored family', () => {
     expect(cell(1, 1).getAttribute('aria-disabled')).not.toBe('true');
     expect(draft().order).toBe(7);
   });
-  it('removing a family from the map says it arrives with deleting', () => {
-    showKnowledge('navigator_anchor', { target: 'anc_alcohols' });
-    expect(screen.getByText('Removing a family from the map arrives with deleting in step 6.8')).toBeTruthy();
+  it('"Remove from the map" asks for the Delete dialog of the family; the 6.6c "arrives with deleting" words are gone (step 6.8a, D2)', () => {
+    const shown = showKnowledge('navigator_anchor', { target: 'anc_alcohols' });
+    expect(screen.queryByText(/arrives with deleting/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove from the map' }));
+    expect(shown.remove).toHaveBeenCalledWith({ kind: 'navigator_anchor', id: 'anc_alcohols' });
+  });
+  it('a family not saved yet has nothing to remove', () => {
+    showKnowledge('navigator_anchor', { blank: true });
+    expect(screen.queryByRole('button', { name: 'Remove from the map' })).toBeNull();
   });
 });

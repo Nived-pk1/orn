@@ -17,3 +17,5 @@ export { duplicateSeed, SLOT_KEY, specificSeed } from './templates';
 export { outcomeUsesOfMechanism, outcomeUsesOfVariant } from './mechanism-uses';
 export type { MechanismUse } from './mechanism-uses';
 export { findingWords, isSchemaWording } from './schema-words';
+export { deleteEnvelope, deleteView } from './delete-view';
+export type { DeleteRow, DeleteView } from './delete-view';

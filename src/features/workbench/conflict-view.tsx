@@ -95,14 +95,15 @@ export function ConflictView(props: {
 }
 
 /** The target was deleted: the draft cannot be saved as an edit. */
-export function DeletedView(props: { readonly onBack: () => void; readonly onDiscard: () => void }) {
+export function DeletedView(props: { readonly onBack?: () => void; readonly onDiscard: () => void; readonly onSaveAsNew?: () => void }) {
   return (
     <section aria-label="Deleted record" className={styles.section}>
-      <h3>This record was deleted since you started</h3>
-      <p>This record was deleted since you started; the draft cannot be saved as an edit.</p>
+      <h3>This record was deleted</h3>
+      <p>This record was deleted; the draft cannot be saved as an edit. Save it as a new record, or discard it.</p>
       <p className={styles.confirm}>
+        {props.onSaveAsNew === undefined ? null : <Button variant="primary" onClick={props.onSaveAsNew}>Save as a new record</Button>}
         <Button onClick={props.onDiscard}>Discard draft</Button>
-        <Button onClick={props.onBack}>Back</Button>
+        {props.onBack === undefined ? null : <Button onClick={props.onBack}>Back</Button>}
       </p>
     </section>
   );

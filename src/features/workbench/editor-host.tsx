@@ -15,6 +15,7 @@ import { Button, Dialog, RESULT_TOAST_MS, useToasts } from '@/ui/primitives';
 import { ConflictView, DeletedView } from './conflict-view';
 import { CreateNewContext } from './create-new';
 import { DuplicateDialog } from './duplicate-dialog';
+import { RemoveContext } from './remove-context';
 import type { DuplicateOutcome } from './duplicate-contracts';
 import { draftStatusText, editingUnavailableReason, type FormatTime } from './draft-text';
 import type { EditorPort } from './editor-contracts';
@@ -97,6 +98,7 @@ export function EditorHost(props: EditorHostProps) {
   const entry = useSyncExternalStore(port.subscribe, () => port.entry(sessionId));
   const keeping = useSyncExternalStore(port.subscribe, () => port.keeping());
   const [view, setView] = useState<View>({ kind: 'form' });
+  const gone = useSyncExternalStore(port.subscribe, () => port.gone?.(sessionId) ?? false);
   const [refusal, setRefusal] = useState<{ readonly findings: readonly Finding[]; readonly message: string | null } | null>(null);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -116,6 +118,14 @@ export function EditorHost(props: EditorHostProps) {
       onClose();
     }
   }, [entry, onClose]);
+
+  // the record was deleted: the draft goes on as a NEW record (a fresh ID, the same fields) and this session ends (step 6.8a)
+  const saveAsNew = async (): Promise<void> => {
+    const { id: _id, provenance: _provenance, review: _review, ...rest } = (draft ?? {}) as Record<string, unknown>;
+    closing.current = true; // this editor goes away on purpose: its onClose must not close the new one
+    await port.discard(sessionId);
+    port.chain?.start(kind, rest);
+  };
 
   const edit = useCallback(
     (recipe: DraftRecipe, path?: string) => {
@@ -265,13 +275,13 @@ export function EditorHost(props: EditorHostProps) {
         </div>
       ) : (
         <>
-          {view.kind !== 'form' ? null : (
+          {view.kind !== 'form' || gone ? null : (
             <Button variant="primary" {...(unavailable !== undefined ? { unavailable } : busy ? { unavailable: 'saving' } : { onClick: () => void save() })}>
               Save
             </Button>
           )}
           <Button onClick={close}>Close (keeps the draft)</Button>
-          {view.kind !== 'form' ? null : <Button onClick={() => setAsking(true)}>Discard draft</Button>}
+          {view.kind !== 'form' || gone ? null : <Button onClick={() => setAsking(true)}>Discard draft</Button>}
         </>
       )}
     </div>
@@ -292,6 +302,9 @@ export function EditorHost(props: EditorHostProps) {
           <Button aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z" {...(unavailable !== undefined ? { unavailable } : entry.canRedo ? { onClick: () => port.redo(sessionId) } : { unavailable: 'nothing to redo in this draft' })}>
             Redo
           </Button>
+          {session.target === null || port.chain?.remove === undefined ? null : (
+            <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.remove?.(session.target as RecordRef) })}>Delete...</Button>
+          )}
           {session.kind !== 'reaction' || session.target === null || port.chain?.from === undefined ? null : (
             <>
               <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.from?.('duplicate', session.target as RecordRef, entry.canUndo) })}>Duplicate</Button>
@@ -311,10 +324,10 @@ export function EditorHost(props: EditorHostProps) {
             onSave={() => void save(view.choices)}
             onBack={() => setView({ kind: 'form' })}
           />
-        ) : view.kind === 'deleted' ? (
-          <DeletedView onBack={() => setView({ kind: 'form' })} onDiscard={() => setAsking(true)} />
+        ) : view.kind === 'deleted' || gone ? (
+          <DeletedView {...(gone ? {} : { onBack: () => setView({ kind: 'form' }) })} onDiscard={() => setAsking(true)} {...(port.chain === undefined ? {} : { onSaveAsNew: () => void saveAsNew() })} />
         ) : (
-          <div className={phone ? styles.bodyPhone : styles.body}>
+          <RemoveContext.Provider value={port.chain?.remove}><div className={phone ? styles.bodyPhone : styles.body}>
             <PreviewPanel kind={session.kind} draft={draft} port={port.preview} phone={phone} where="top" />
             <RecordForm
               kind={session.kind}
@@ -351,7 +364,7 @@ export function EditorHost(props: EditorHostProps) {
               />
               <PreviewPanel kind={session.kind} draft={draft} port={port.preview} phone={phone} where="aside" />
             </div>
-          </div>
+          </div></RemoveContext.Provider>
         )}
       </div>
     </Dialog>

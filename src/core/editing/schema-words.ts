@@ -56,3 +56,14 @@ export function findingWords(finding: Finding): string {
   if (parts.some((part) => part.startsWith('Invalid option'))) return `Choose ${article(field)} ${field}${place === '' ? '' : ` for ${place}`}`;
   return `${capital(field)} is not valid${place === '' ? '' : ` (${place})`}`;
 }
+
+/** A reference path in words for the delete dialog: "classIds[2]" -> "class list", "participants[1].ref" -> "substance (participant 2)". */
+export function referenceFieldWords(path: string): string {
+  const tokens = tokensOf(path);
+  const last = tokens.at(-1);
+  if (last === undefined) return 'a reference';
+  const name = spaced(last.name);
+  const field = name === 'ref' ? 'substance' : name.replace(/ ids$/, ' list').replace(/ id$/, '').replace(/^ids$/, 'list') || name;
+  const place = placeOf(tokens.slice(0, -1));
+  return place === '' ? field : `${field} (${place})`;
+}

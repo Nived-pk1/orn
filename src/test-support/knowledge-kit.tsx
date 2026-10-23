@@ -48,6 +48,8 @@ export interface ShownKnowledge {
   /** `chain.start(kind, seed)` and `chain.edit(ref)`: the editor closed and another one was asked for. */
   readonly start: Mock;
   readonly editRecord: Mock;
+  /** `chain.remove(ref)`: the Delete dialog was asked for this record (step 6.8a). */
+  readonly remove: Mock;
   readonly draft: () => Record<string, unknown>;
 }
 
@@ -68,7 +70,8 @@ export function showKnowledge(kind: RecordKind, options: { target?: string; blan
   const openRecord = vi.fn((_ref: RecordRef) => undefined);
   const start = vi.fn((_kind: RecordKind, _seed: Record<string, unknown>) => undefined);
   const editRecord = vi.fn((_ref: RecordRef) => undefined);
+  const remove = vi.fn((_ref: RecordRef) => undefined);
   const duplicates = { check: async () => ({ matches: [], more: 0, structureChecked: true }), openRecord };
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.real === true ? realChecks(rig) : quiet, records: knowledgePicker(rig), duplicates: duplicates as never, chain: { start, edit: editRecord } }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
-  return { rig, id: opened.id, dialog: screen.getByRole('dialog'), openRecord, start, editRecord, draft: () => rig.drafts.entry(opened.id)?.session.draft as Record<string, unknown> };
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: options.real === true ? realChecks(rig) : quiet, records: knowledgePicker(rig), duplicates: duplicates as never, chain: { start, edit: editRecord, remove } }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
+  return { rig, id: opened.id, dialog: screen.getByRole('dialog'), openRecord, start, editRecord, remove, draft: () => rig.drafts.entry(opened.id)?.session.draft as Record<string, unknown> };
 }

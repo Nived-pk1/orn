@@ -311,7 +311,7 @@ describe('a conflict (the record changed since the draft was started)', () => {
 });
 
 describe('a deleted target and a read-only tab', () => {
-  it('a deleted record: "This record was deleted since you started; the draft cannot be saved as an edit", with Discard draft and Back', async () => {
+  it('a deleted record: "This record was deleted" at once (no Save needed), with Discard draft; nothing to go back to', async () => {
     const rig = editorRig();
     const source = speciesOf(rig);
     const dispatched = rig.store.dispatch({ label: 'Add', commands: [{ type: 'record.create', record: { ...source, id: 'spc_short-lived', names: { ...source.names, canonical: 'Short lived' } } as never }] });
@@ -321,11 +321,10 @@ describe('a deleted target and a read-only tab', () => {
     renderWithToasts(<EditorHost port={rig.port} sessionId={opened.id} open formatTime={utcTime} onClose={() => undefined} />);
     fireEvent.change(screen.getByLabelText('Canonical name (required)'), { target: { value: 'Mine' } });
     expect(rig.store.dispatch({ label: 'Delete', commands: [{ type: 'record.delete', ref: { kind: 'species', id: 'spc_short-lived' }, mode: 'restrict' }] }).ok).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    expect(await screen.findByText('This record was deleted since you started; the draft cannot be saved as an edit.')).toBeTruthy();
+    expect(await screen.findByText(/This record was deleted; the draft cannot be saved as an edit/)).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Discard draft' })).toHaveLength(1); // the view's own; the footer's Save and Discard draft give way
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    expect(screen.getByLabelText('Canonical name (required)')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    expect(screen.queryByLabelText('Canonical name (required)')).toBeNull();
   });
 
   it('a read-only tab: the fields are read-only and every control says why', () => {

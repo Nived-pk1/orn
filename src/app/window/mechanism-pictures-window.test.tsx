@@ -142,7 +142,7 @@ describe('a picture on a demo mechanism', () => {
     fireEvent.click(within(editor).getByRole('button', { name: 'Remove from this mechanism' }));
     expect(mine(rig.app)).toHaveLength(1);
     expect(mine(rig.app)[0]?.attachedTo).toEqual([]);
-    expect(within(editor).getByText('Removed from this mechanism. The picture stays in your data until deleting arrives (step 6.8).')).toBeTruthy();
+    expect(within(editor).getByText('Removed from this mechanism. The picture stays in your data until you delete it.')).toBeTruthy();
     expect(rig.app.store.findings.bySubject({ kind: 'asset', id: mine(rig.app)[0]?.id as never }).map((f) => f.ruleId)).toContain('AST-001');
     act(() => void rig.app.store.undo());
     expect(mine(rig.app)[0]?.attachedTo).toHaveLength(1);

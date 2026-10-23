@@ -143,7 +143,7 @@ test.describe('desktop', () => {
     const again = await openEditor(page);
     await again.getByRole('button', { name: 'Remove picture 1 from this mechanism', exact: true }).click();
     await again.getByRole('button', { name: 'Remove from this mechanism', exact: true }).click();
-    await expect(again.getByText('Removed from this mechanism. The picture stays in your data until deleting arrives (step 6.8).')).toBeVisible();
+    await expect(again.getByText('Removed from this mechanism. The picture stays in your data until you delete it.')).toBeVisible();
     await expect(again.getByText('No pictures yet.')).toBeVisible();
     await closeEditor(again);
     await expect(pictures(page)).toHaveCount(0);

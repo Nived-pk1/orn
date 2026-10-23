@@ -22,6 +22,15 @@ describe('Map family (class editor)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit map family' }));
     expect(shown.editRecord).toHaveBeenCalledWith({ kind: 'navigator_anchor', id: 'anc_alcohols' });
   });
+  it('a class that is one has "Remove from the map": it asks for the Delete dialog of the family (step 6.8a, D2)', () => {
+    const shown = showKnowledge('class', { target: 'cls_alcohols' });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove from the map' }));
+    expect(shown.remove).toHaveBeenCalledWith({ kind: 'navigator_anchor', id: 'anc_alcohols' });
+  });
+  it('a class that is not one has no "Remove from the map"', () => {
+    showKnowledge('class', { target: 'cls_acyl-halides' });
+    expect(screen.queryByRole('button', { name: 'Remove from the map' })).toBeNull();
+  });
   it('a class not saved yet cannot be made one: the button says to save it first', () => {
     showKnowledge('class', { blank: true });
     expect(screen.getByRole('button', { name: 'Make this a map family', description: /save the class first/i }).getAttribute('aria-disabled')).toBe('true');

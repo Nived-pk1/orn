@@ -9,6 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { fakePictures, view } from '@/test-support/pictures-kit';
 import { stubDialog } from '@/test-support/window-kit';
 import { MechanismPicturesSection } from './mechanism-pictures';
+import { RemoveContext } from './remove-context';
 
 beforeAll(stubDialog);
 beforeEach(() => {
@@ -103,7 +104,7 @@ describe('adding, editing and removing', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove picture 1 from this mechanism' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove from this mechanism' }));
     expect(fake.detach).toHaveBeenCalledWith('mec_x', 'ast_1');
-    expect(screen.getByRole('status').textContent).toBe('Removed from this mechanism. The picture stays in your data until deleting arrives (step 6.8).');
+    expect(screen.getByRole('status').textContent).toBe('Removed from this mechanism. The picture stays in your data until you delete it.');
     expect(screen.getAllByRole('group', { name: /^Picture \d$/ })).toHaveLength(1);
   });
 
@@ -114,6 +115,23 @@ describe('adding, editing and removing', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove picture 1 from this mechanism' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove from this mechanism' }));
     expect(screen.getByRole('alert').textContent).toBe('This tab cannot save changes: it is read-only.');
+  });
+});
+
+describe('Delete picture (step 6.8a, D1)', () => {
+  it('with the Delete dialog available each picture has "Delete picture N...", which asks for the dialog of its asset; without it there is none', () => {
+    const remove = vi.fn();
+    const fake = fakePictures(TWO);
+    render(
+      <RemoveContext.Provider value={remove}>
+        <MechanismPicturesSection mechanismId="mec_x" port={fake.port} saved />
+      </RemoveContext.Provider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete picture 2...' }));
+    expect(remove).toHaveBeenCalledWith({ kind: 'asset', id: 'ast_2' });
+    cleanup();
+    show();
+    expect(screen.queryByRole('button', { name: /^Delete picture/ })).toBeNull();
   });
 });
 

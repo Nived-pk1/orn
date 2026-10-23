@@ -40,3 +40,10 @@ export function rewriteRecordRichTextLinks(record: AnyRecord, idMap: ReadonlyMap
   }
   return { record: applyEdits(record, edits), rewritten };
 }
+
+/** How many `[[id]]` links in the record's rich-text fields point at one of `ids` (soft references, REF-008). Counted, never changed. */
+export function countRecordRichTextLinks(record: AnyRecord, ids: ReadonlySet<string>): number {
+  if (ids.size === 0) return 0;
+  const marked = new Map([...ids].map((id) => [id, `${id}~counted`] as const));
+  return rewriteRecordRichTextLinks(record, marked).rewritten;
+}

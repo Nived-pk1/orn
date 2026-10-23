@@ -21,6 +21,7 @@ const DraftsDialog = /* @__PURE__ */ lazy(() => import('@/features/workbench/lay
 const EditorSession = /* @__PURE__ */ lazy(() => import('./editor-session').then((m) => ({ default: m.EditorSession })));
 
 const QuickEntryHost = /* @__PURE__ */ lazy(() => import('./quick-entry-host').then((m) => ({ default: m.QuickEntryHost })));
+const DeleteHost = /* @__PURE__ */ lazy(() => import('./delete-host').then((m) => ({ default: m.DeleteHost })));
 const TemplateDialog = /* @__PURE__ */ lazy(() => import('./template-dialog').then((m) => ({ default: m.TemplateDialog })));
 
 const machineTime = /* @__PURE__ */ createLocalTimeFormatter();
@@ -50,6 +51,8 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
   // quick entry (step 6.7b): the dialog is open or not; the line typed stays for the session
   const [quickOpen, setQuickOpen] = useState(false);
   const quickLine = useRef('');
+  // the delete dialog (step 6.8a): the record it was asked for
+  const [removing, setRemoving] = useState<RecordRef | null>(null);
   // the entry points (titles, palette words, the full-editor kinds) are a lazy chunk, loaded after the first paint (entry room, exams step)
   const [entries, setEntries] = useState<EditorEntries | null>(editorEntries ?? null);
   useEffect(() => {
@@ -98,6 +101,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       startFrom: (mode: TemplateMode, ref: RecordRef) => setTemplate({ mode, ref, unsaved: false }),
       startNew: (kind: RecordKind, seed: Readonly<Record<string, unknown>>) => show(services.drafts.open({ kind, blank: true, seed })),
       openQuickEntry: () => setQuickOpen(true),
+      requestDelete: (ref: RecordRef) => setRemoving(ref),
       openDraft: (id: string) => show(services.drafts.openStored(id)),
       editReason: reason,
       entries: entries?.entries ?? NO_ENTRIES,
@@ -127,6 +131,11 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
           <QuickEntryHost initialLine={quickLine.current} onLine={rememberLine} onClose={closeQuick} onCreate={startNested} onOpen={openFromQuick} />
         </Suspense>
       ) : null}
+      {removing === null ? null : (
+        <Suspense fallback={null}>
+          <DeleteHost target={removing} reason={reason} onClose={() => setRemoving(null)} />
+        </Suspense>
+      )}
       {template === null ? null : (
         <Suspense fallback={null}>
           <TemplateDialog
@@ -149,7 +158,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       )}
       {editingId === null ? null : (
         <Suspense fallback={null}>
-          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} onCreate={startNested} onFrom={(mode, ref, unsaved) => setTemplate({ mode, ref, unsaved: unsaved === true })} covered={nested !== null} />
+          <EditorSession key={editingId} sessionId={editingId} formatTime={formatTime} onClose={() => setEditingId(null)} onStart={(kind, seed) => show(services.drafts.open({ kind, blank: true, seed }))} onEdit={(ref) => show(services.drafts.open(ref))} onCreate={startNested} onFrom={(mode, ref, unsaved) => setTemplate({ mode, ref, unsaved: unsaved === true })} onRemove={setRemoving} covered={nested !== null} />
         </Suspense>
       )}
       {nested === null ? null : (

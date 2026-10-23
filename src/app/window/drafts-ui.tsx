@@ -13,6 +13,8 @@ import type { NewEntry, QuickEntryRow } from './editor-entries';
 /** What the window offers to open: the drafts list and the names editor. Absent in a window that has none (a test of one part). */
 export interface EditorsApi {
   openDrafts(): void;
+  /** Delete (step 6.8a): shows the impact dialog for this record; Delete is unavailable in a read-only tab. */
+  requestDelete?(ref: RecordRef): void;
   /** Opens (or reopens) the names editor of a record. Answers nothing: a refusal is said in a toast. */
   editNames(ref: RecordRef): void;
   /** Opens the editor on a NEW record of this kind, with some fields already filled in when a seed is given (every "New ..." button; step 6.6c: "Map to a topic" and the like). A refusal is said in a toast. */

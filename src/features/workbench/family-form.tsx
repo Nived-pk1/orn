@@ -6,7 +6,8 @@
  * already has one. Removing a family from the map arrives with deleting (step 6.8).
  */
 import { useState } from 'react';
-import { ANCHOR_TONES } from '@/core/schema';
+import { ANCHOR_TONES, type RecordRef } from '@/core/schema';
+import { Button } from '@/ui/primitives';
 import { numberField, refField, setNumber, setRef } from './curriculum-model';
 import { FamilyGrid } from './family-grid';
 import { familyViewOf, groupsOf, NEW_GROUP, setGroup, setLabel, setTone, TONE_WORDS } from './family-model';
@@ -14,6 +15,7 @@ import type { PickerSectionProps } from './knowledge-sections';
 import { useAfterLastOrder } from './order-default';
 import { NumberField } from './number-field';
 import { RecordList, RecordPicker } from './record-picker';
+import { useRemove } from './remove-context';
 import { orderHint } from './topic-form';
 import { SectionFrame } from './section-frame';
 import styles from './editor.module.css';
@@ -100,6 +102,7 @@ function GroupAndTone(props: PickerSectionProps) {
 
 export function FamilyForm(props: PickerSectionProps) {
   const view = familyViewOf(props.draft);
+  const remove = useRemove();
   const families = props.picker?.mapFamilies?.() ?? [];
   const className = view.targetId === '' ? '' : (props.picker?.describe('class', view.targetId)?.name ?? view.targetId);
   const others = families.filter((f) => f.id !== view.id && f.targetId === view.targetId && view.targetId !== '');
@@ -123,7 +126,11 @@ export function FamilyForm(props: PickerSectionProps) {
       <SectionFrame id="cell" title="Cell on the map">
         <FamilyGrid selfId={view.id} families={families} chosen={view.cell} unavailable={props.unavailable} invalid={bad(props, 'cell') === true} onEdit={props.onEdit} />
       </SectionFrame>
-      <p className={styles.hint}>Removing a family from the map arrives with deleting in step 6.8</p>
+      {remove === undefined || !families.some((f) => f.id === view.id) ? null : (
+        <p>
+          <Button onClick={() => remove({ kind: 'navigator_anchor', id: view.id } as RecordRef)}>Remove from the map</Button>
+        </p>
+      )}
     </div>
   );
 }

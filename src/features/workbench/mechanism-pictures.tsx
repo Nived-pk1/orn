@@ -5,15 +5,17 @@
  * picture ("Save the mechanism once before adding pictures."). Text only; the port decides.
  */
 import { useEffect, useState } from 'react';
+import type { RecordRef } from '@/core/schema';
 import { Button } from '@/ui/primitives';
 import type { PicturesPort, PictureView } from './picture-contracts';
 import { PictureDialog, type PictureDialogMode } from './picture-dialog';
 import { PictureThumb } from './picture-thumb';
+import { useRemove } from './remove-context';
 import styles from './editor.module.css';
 import own from './picture.module.css';
 
 export const NOT_SAVED_YET = 'Save the mechanism once before adding pictures.';
-export const REMOVED_WORDS = 'Removed from this mechanism. The picture stays in your data until deleting arrives (step 6.8).';
+export const REMOVED_WORDS = 'Removed from this mechanism. The picture stays in your data until you delete it.';
 
 export interface MechanismPicturesProps {
   readonly mechanismId: string;
@@ -30,6 +32,7 @@ export function MechanismPicturesSection(props: MechanismPicturesProps) {
   const [pictures, setPictures] = useState<readonly PictureView[]>(() => port.list(mechanismId));
   const [dialog, setDialog] = useState<PictureDialogMode | null>(null);
   const [asking, setAsking] = useState<string | null>(null);
+  const remove = useRemove();
   const [notice, setNotice] = useState<{ readonly kind: 'status' | 'alert'; readonly text: string } | null>(null);
   useEffect(() => {
     const refresh = (): void => setPictures(port.list(mechanismId));
@@ -62,6 +65,11 @@ export function MechanismPicturesSection(props: MechanismPicturesProps) {
                   <Button aria-label={`Remove picture ${n} from this mechanism`} {...off(() => setAsking(picture.id))}>
                     Remove
                   </Button>
+                  {remove === undefined ? null : (
+                    <Button aria-label={`Delete picture ${n}...`} {...off(() => remove({ kind: 'asset', id: picture.id } as RecordRef))}>
+                      Delete...
+                    </Button>
+                  )}
                 </div>
               </div>
               {asking === picture.id ? (

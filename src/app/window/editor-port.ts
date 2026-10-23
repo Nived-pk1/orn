@@ -21,6 +21,10 @@ export function makeEditorPort(
     release: (id) => drafts.release(id),
     commit: (id, choices, section) => drafts.commit(id, choices, section),
     discard: (id) => drafts.discard(id),
+    gone: (id) => {
+      const target = drafts.entry(id)?.session.target;
+      return target !== null && target !== undefined && !Object.hasOwn(store.getState().records[target.kind], target.id);
+    },
     warningsOf: (ref) => store.findings.bySubject(ref).filter((finding) => finding.severity === 'warning').length,
     ...(services.draftChecks === undefined ? {} : { checks: services.draftChecks }),
     ...(services.chem === undefined ? {} : { structure: { parse: (structure) => (services.chem as NonNullable<typeof services.chem>).parse(structure), checkSmarts: (smarts) => checkSmarts(services.chem as NonNullable<typeof services.chem>, smarts), ...(depictions === undefined ? {} : { depictions }) } }),

@@ -54,7 +54,9 @@ export interface EditorPort {
   /** The mechanism editor's pictures, saved at once outside the draft (step 6.5b); absent: no Pictures section. */
   readonly pictures?: PicturesPort;
   /** Another editor in place of this one (step 6.6c): a NEW record of a kind with fields already filled in, or an existing record's editor. The host closes this editor first and keeps its draft. */
-  readonly chain?: { start(kind: RecordKind, seed: Readonly<Record<string, unknown>>): void; edit(ref: RecordRef): void; /** Duplicate a saved reaction or start a specific one from a generic one (step 6.7a); the window asks first and then opens a NEW draft. */ from?(mode: 'duplicate' | 'specific', ref: RecordRef, unsaved?: boolean): void };
+  readonly chain?: { start(kind: RecordKind, seed: Readonly<Record<string, unknown>>): void; edit(ref: RecordRef): void; /** Duplicate a saved reaction or start a specific one from a generic one (step 6.7a); the window asks first and then opens a NEW draft. */ from?(mode: 'duplicate' | 'specific', ref: RecordRef, unsaved?: boolean): void; /** Delete (step 6.8a): the window shows the impact dialog for this record. */ remove?(ref: RecordRef): void };
+  /** True when this session edits a saved record that no longer exists (deleted here or in another tab): the editor then shows "This record was deleted" (step 6.8a). */
+  gone?(id: string): boolean;
   /** "Create new" in the pickers (step 6.7a): opens a nested editor over this one; absent: the pickers show no Create new row. A nested editor gets `nested: true` and no `chain`. */
   readonly createNew?: CreateNewApi;
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
