@@ -6034,3 +6034,65 @@ Speed check at the start: 0.617, 0.634, 0.609 s (median 0.617, under 1.3 s). Sta
 **Changed existing tests (reason):** `merge-dialog.test.tsx` (the list's name carries "(the record being merged)"); `editors-lazy.test.tsx` (two scheduler ticks: the controller, then the entries); `test-support/window-kit.tsx` (hands in `EditorsController`).
 **Amendments:** none (`AppContext` is not a contract file; no schema, no `DB_STORES`). **REVIEW REQUIRED:** (a) Z1 is a wording fix because the core was already right; (b) Z3's controller test was written after the code; (c) the Select toggle moves to the top with the other buttons on a phone while the bar shows (the screenshot is retaken in Part 3).
 **`npm run check`:** green, 585 test files, 7097 tests (one command, default workers). `editors-api.ts` (types only, a leaf) holds `EditorsApi` and `EditorsControllerType` so `context.tsx` can name the controller without an import cycle (`drafts-ui.tsx` re-exports them).
+
+### Step 6.9, part 1 - coverage plan (2026-10-23)
+
+No product code. `scripts/demo-coverage.mjs` (new, a script: `node scripts/demo-coverage.mjs plan | set | table | json`) reads `data/seed/demo.orn.json` (never edits it) and builds the table and the set below; Part 2's data-set builder reads the same module.
+
+**The 27 demo reactions against the features they use** (x = used; the columns are the feature families the step named plus what the schema has; `count` is the number of reactions):
+
+| Reaction | generic | instanceOf | class part. | >1 stage | workup | variants | parsed | group | excl | major | minor | byprod | coprod | interm. | mech | out.mech | class. | named | transf. | caveat | relat. | topic | notes | tags/cit. |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| alcohol1-to-aldehyde-pcc | x |  | x |  |  |  |  |  | x |  |  |  |  |  |  |  | x |  | x | x |  | x | x |  |
+| aniline-diazotisation |  |  |  |  |  |  |  |  |  | x |  | x |  |  |  |  | x | x | x |  | x | x | x |  |
+| benzaldehyde-cannizzaro |  |  |  |  |  |  |  |  | x |  |  |  |  |  |  |  | x | x | x | x | x | x | x |  |
+| benzene-friedel-crafts-acylation |  |  |  |  |  |  |  |  |  | x |  |  | x |  |  |  | x | x | x | x |  | x |  |  |
+| benzene-nitration-draft |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | x |  |  |  |  | x | x |  |
+| benzenediazonium-sandmeyer |  |  |  |  |  |  |  |  |  | x |  | x |  |  |  |  | x | x | x |  | x | x |  |  |
+| benzenediazonium-to-phenol |  |  |  |  |  |  |  |  |  | x |  | x | x |  |  |  | x |  | x |  |  | x | x |  |
+| but-2-yne-lindlar |  |  |  |  |  |  |  |  | x |  |  |  |  |  |  |  | x | x | x |  |  | x | x |  |
+| cyclohexanone-oxime-beckmann |  |  |  |  |  |  |  |  |  | x |  |  |  |  |  |  | x | x |  |  |  | x |  |  |
+| ethanal-aldol |  |  |  |  |  | x |  |  |  | x |  |  |  |  | x | x | x | x | x |  | x | x |  |  |
+| ethanal-to-ethanoic-acid |  |  |  |  |  |  |  |  |  | x |  |  |  |  |  |  | x |  | x |  |  | x |  |  |
+| ethanol-conc-h2so4 |  |  |  |  |  | x |  |  |  | x |  | x |  |  |  |  | x |  | x |  | x | x |  |  |
+| ethanol-to-ethanal-dichromate |  |  |  |  |  |  |  |  |  | x |  |  |  |  |  |  | x |  | x |  | x | x | x |  |
+| ethanol-to-ethanal-pcc |  | x |  |  |  |  |  |  | x |  |  |  |  |  |  |  | x |  | x |  | x | x |  |  |
+| ethanol-to-ethanoic-acid |  |  |  |  |  |  |  |  |  | x |  |  |  |  |  |  | x |  | x |  |  | x |  |  |
+| ethene-baeyers |  |  |  |  |  |  |  |  |  | x |  | x |  |  |  |  | x | x | x |  |  | x |  |  |
+| ethene-hydration |  |  |  |  |  |  |  |  |  | x |  |  |  |  |  |  | x |  | x |  | x | x | x |  |
+| ethyl-ethanoate-hydrolysis |  |  |  |  |  |  |  |  |  | x |  |  |  |  |  |  | x |  | x |  | x | x |  |  |
+| fischer-esterification |  |  |  |  |  |  |  |  |  | x |  | x |  |  |  |  | x | x | x |  | x | x | x |  |
+| haloform-ethanol |  |  |  |  |  |  |  |  |  | x |  | x | x |  |  |  | x | x | x | x |  | x | x |  |
+| haloform-propanone |  |  |  |  |  |  |  |  |  | x |  | x | x |  |  |  | x | x | x | x |  | x |  |  |
+| methylmgbr-ethanal |  |  |  | x | x |  |  |  | x |  |  |  |  |  |  |  | x | x | x |  | x | x |  |  |
+| methylmgbr-propanone |  |  |  | x | x |  |  |  | x |  |  |  |  |  |  |  | x | x | x |  | x | x |  |  |
+| propene-hbr |  |  |  |  |  |  |  | x |  | x | x |  |  |  |  |  | x |  | x |  | x | x |  |  |
+| propene-hbr-peroxide |  |  |  |  |  |  |  | x |  | x | x |  |  |  |  |  | x | x | x | x | x | x | x |  |
+| r-2-bromobutane-alc-koh |  |  |  |  |  |  |  | x |  | x | x |  |  |  | x | x | x |  | x | x | x | x |  |  |
+| r-2-bromobutane-aq-koh |  |  |  |  |  |  |  |  |  | x |  |  |  |  | x | x | x |  | x |  | x | x |  |  |
+| **count** | 1 | 1 | 1 | 2 | 2 | 2 | 0 | 3 | 6 | 20 | 3 | 8 | 4 | 0 | 3 | 3 | 27 | 14 | 25 | 7 | 16 | 27 | 11 | 0 |
+
+**Present in the schema, used by NO demo reaction** (so no demo reaction can exercise them; the editors still have them): parsed fields (`parsedFields`), intermediates, tags, citations, aliases, `mappedReaction`, `participants[].quantity.equivalents` / `.text`, selectivity `trace` / `mixture_component` / `unspecified` on a stored outcome, `proportion`-like fields (none exist), stage kinds `quench` / `activation` / `purification`. A feature absent from the demo cannot be compared, and is not in the coverage need.
+
+**Fields the editors cannot set (read-only by design or a later phase), excluded from the comparison:** `mappedReaction` (atom-mapped reaction: "architecturally supported", no editor; the demo has none); `intermediates` (no editor in the reaction editor; the demo has none); `provenance` and `review` (set by the store and the Review actions, ignored by the comparator); ids (all of them, including nested ids); the records that point at a reaction and have no editor yet: `route.steps[].reactionId` (routes are Phase 7, 4 demo reactions are used by the 2 demo routes) and `reaction_scheme.reactionId` (a presentation record, 1 reaction). There is no `reactionSmarts` in the schema.
+
+**The coverage set: 14 reactions, not the 8-10 the prompt expected (REVIEW REQUIRED).** An exact search (the smallest set whose features together include every feature present, `scripts/demo-coverage.mjs set`, branching on the rarest uncovered feature) over the feature FAMILIES (a field is a feature; an enum value is a feature only where the person chooses between kinds of the thing: scope, participant role, stage kind, selectivity, product role, reversibility, purpose) finds 106 features and a minimum of **14**. At the finest grain (every enum value, every temperature kind) it is 17. The reason is the schema's single-owner fields (each only one demo reaction has): `instanceOfId`, a participant note, a stage `originalText`, the `initiator` role, light, pressure, atmosphere, the exam-relevance pointer, `prerequisiteConceptIds`, product notes, `contributesAtoms`, `unknown` reversibility with `notes`, workup and several stages. Each of them needs a reaction of its own unless two share one:
+1. `rxn_alcohol1-to-aldehyde-pcc` - generic scope, a class participant and a class product, `generalizedEquation`, exclusive selectivity, study notes, a caveat.
+2. `rxn_ethanol-conc-h2so4` - condition variants with label, temperature and note; outcomes tied to a variant; byproducts; reversibility "reversible under other conditions".
+3. `rxn_ethanal-aldol` - condition variants with medium, solvent character and variant-only participants; the outcome mechanism link and `mechanismIds` (the 3 demo mechanisms stay in the data set); a relationship.
+4. `rxn_ethanol-to-ethanal-pcc` - `instanceOfId` (a specific reaction of the generic one in 1; authored after it).
+5. `rxn_benzene-nitration-draft` - reversibility "unknown" with reaction notes (the draft one: no stages).
+6. `rxn_benzene-friedel-crafts-acylation` - a participant note, coproduct, a stoichiometric quantity, flags.
+7. `rxn_propene-hbr-peroxide` - the initiator role, light, the "other" qualifier, an outcome group (isomerGroup), major + minor, rationale, a caveat.
+8. `rxn_cyclohexanone-oxime-beckmann` - the exam-relevance pointer, difficulty 4.
+9. `rxn_propene-hbr` - `prerequisiteConceptIds`, outcome concepts.
+10. `rxn_ethene-hydration` - the industrial-process purpose, a pressure range, a single temperature, limitations.
+11. `rxn_ethanol-to-ethanal-dichromate` - a stage `originalText`, profile ids, limiting quantity.
+12. `rxn_but-2-yne-lindlar` - atmosphere, stereochemistry (syn addition) with descriptors and note, a species made in the nested editor.
+13. `rxn_haloform-ethanol` - the distinction-test purpose, `contributesAtoms`, product notes and coefficients, a caveat.
+14. `rxn_methylmgbr-ethanal` - several stages with a workup stage and a workup reagent, exclusive selectivity.
+Covered by these without a reaction of their own: transformation / named reaction links, reaction types and mechanism classes, topic mappings (all 14 have them), relationships (3, 4, 7, ...), difficulty, reversibility "equilibrium"/"irreversible", byproduct / coproduct / main, and the selectivities exclusive / major / minor.
+
+**Species and reagents the data set will create through "Create new" (Part 2):** records the demo's reactions use that NOTHING else in the demo refers to: species `spc_3-hydroxybutanal` (reaction 3), `spc_caprolactam` and `spc_cyclohexanone-oxime` (reaction 8), `spc_hydrogen` (12); reagent `rgt_lindlar` (12), `rgt_benzoyl-peroxide` (7). Part 2 removes the first two species and the Lindlar reagent (three records, through the nested editor of the reaction editor) and the rest stay in the data set. The comparator compares a reference by the referenced record's name, never its id.
+
+**`npm run check`:** not run (docs and one script only; the script is not part of the build). **Amendments:** none. **REVIEW REQUIRED:** (a) the set has 14 reactions, not 8-10: running it in three browsers is the longer e2e of this step; (b) features are counted at the grain above (a field, an enum value only where it is a choice); a coarser grain gives a smaller set but leaves fields untested.
