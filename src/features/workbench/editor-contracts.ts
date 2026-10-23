@@ -12,6 +12,7 @@ import type { PreviewPort } from './preview-contracts';
 import type { DuplicatePort } from './duplicate-contracts';
 import type { MechanismLinksPort } from './mechanism-contracts';
 import type { PicturesPort } from './picture-contracts';
+import type { MergePort } from './merge-contracts';
 import type { DraftSaveView, DraftsViewModel } from './contracts';
 import type { CreateNewApi } from './create-new';
 
@@ -59,6 +60,8 @@ export interface EditorPort {
   gone?(id: string): boolean;
   /** "Create new" in the pickers (step 6.7a): opens a nested editor over this one; absent: the pickers show no Create new row. A nested editor gets `nested: true` and no `chain`. */
   readonly createNew?: CreateNewApi;
+  /** Merge A into B (step 6.8a): the candidates, the preview and the merge; absent: no "Merge into..." and the duplicate dialog's Merge is unavailable. */
+  readonly merge?: MergePort;
   /** The structure panel's parse and drawing; absent: the panel reads nothing (the text is still kept). */
   readonly structure?: StructurePort;
   /** A fresh ID for a nested record the form creates (a reagent profile: 'rpf'). From the session manager's ID factory; deterministic under test. */

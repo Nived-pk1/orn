@@ -6,7 +6,7 @@
  * ERROR keeps the dialog open with its findings; a conflict shows the conflict view. The host knows no chemistry: it renders the core's words.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
-import { compareForConflict, type ConflictChoice, type ConflictChoices, type DraftRecipe, type EditMeta, type FieldComparison } from '@/core/editing';
+import { compareForConflict, isMergeable, type ConflictChoice, type ConflictChoices, type DraftRecipe, type EditMeta, type FieldComparison } from '@/core/editing';
 import type { AnyRecord, RecordKind, RecordRef } from '@/core/schema';
 import { parseRecord } from '@/core/validation';
 import type { Finding } from '@/core/validation';
@@ -16,7 +16,9 @@ import { ConflictView, DeletedView } from './conflict-view';
 import { CreateNewContext } from './create-new';
 import { DuplicateDialog } from './duplicate-dialog';
 import { RemoveContext } from './remove-context';
-import type { DuplicateOutcome } from './duplicate-contracts';
+import { EditorMerge } from './merge-flow';
+import type { MergeCandidate } from './merge-contracts';
+import type { DuplicateMatch, DuplicateOutcome } from './duplicate-contracts';
 import { draftStatusText, editingUnavailableReason, type FormatTime } from './draft-text';
 import type { EditorPort } from './editor-contracts';
 import { fieldFor, FindingsPanel } from './findings-panel';
@@ -98,6 +100,7 @@ export function EditorHost(props: EditorHostProps) {
   const entry = useSyncExternalStore(port.subscribe, () => port.entry(sessionId));
   const keeping = useSyncExternalStore(port.subscribe, () => port.keeping());
   const [view, setView] = useState<View>({ kind: 'form' });
+  const [merging, setMerging] = useState<{ readonly into?: MergeCandidate } | null>(null);
   const gone = useSyncExternalStore(port.subscribe, () => port.gone?.(sessionId) ?? false);
   const [refusal, setRefusal] = useState<{ readonly findings: readonly Finding[]; readonly message: string | null } | null>(null);
   const [asking, setAsking] = useState(false);
@@ -305,6 +308,9 @@ export function EditorHost(props: EditorHostProps) {
           {session.target === null || port.chain?.remove === undefined ? null : (
             <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.remove?.(session.target as RecordRef) })}>Delete...</Button>
           )}
+          {session.target === null || port.merge === undefined ? null : (
+            <Button {...(unavailable !== undefined ? { unavailable } : !isMergeable(session.kind).ok ? { unavailable: (isMergeable(session.kind) as { message: string }).message } : { onClick: () => setMerging({}) })}>Merge into...</Button>
+          )}
           {session.kind !== 'reaction' || session.target === null || port.chain?.from === undefined ? null : (
             <>
               <Button {...(unavailable !== undefined ? { unavailable } : { onClick: () => port.chain?.from?.('duplicate', session.target as RecordRef, entry.canUndo) })}>Duplicate</Button>
@@ -375,12 +381,16 @@ export function EditorHost(props: EditorHostProps) {
         structure={port.structure}
         timers={port.timers}
         onOpenExisting={(match) => openExisting(match.ref)}
+        {...(port.merge === undefined || !isMergeable(kind).ok ? {} : { onMerge: (match: DuplicateMatch) => { setDuplicates(null); setMerging({ into: { ref: match.ref, name: match.name } }); } })}
         onKeepBoth={() => {
           setDuplicates(null);
           void save(undefined, true);
         }}
         onClose={() => setDuplicates(null)}
       />
+    )}
+    {merging === null || port.merge === undefined ? null : (
+      <EditorMerge port={port.merge} kind={kind} kindWords={kindWords(kind)} draft={draft} into={merging.into} leave={async () => { closing.current = true; await port.discard(sessionId); }} show={(ref) => port.duplicates?.openRecord(ref)} onCancel={() => setMerging(null)} onMerged={() => { setMerging(null); onClose(); }} />
     )}
     </>
   );

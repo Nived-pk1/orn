@@ -120,6 +120,15 @@ describe('the duplicate check for reagents', () => {
     expect(out.matches[0]?.reasons).toEqual(['name', 'species']);
   });
 
+  it('ALIASES join the check (6.2 open item): a new reagent whose alias is the name of an existing one matches it, and so does a name that is an alias of another', async () => {
+    const aliased = await check.check('reagent', rgt({ names: { canonical: 'Permanganate (new)', common: [], aliases: ['potassium PERMANGANATE'] }, speciesId: undefined } as never));
+    expect(aliased.matches).toMatchObject([{ ref: { id: 'rgt_potassium-permanganate' }, reasons: ['name'] }]);
+    const other = Object.values(state.records.reagent).find((one) => one.id !== KMNO4.id && one.names.aliases.length + one.names.common.length > 0);
+    if (other === undefined) return;
+    const spelling = [...other.names.common, ...other.names.aliases][0] as string;
+    const byAlias = await check.check('reagent', rgt({ names: names(spelling), speciesId: undefined } as never));
+    expect(byAlias.matches.map((one) => one.ref.id)).toContain(other.id);
+  });
   it('a reagent without a backing species is checked by name only; the reagent itself is never a match', async () => {
     const out = await check.check('reagent', rgt({ names: names('Brand new mixture'), speciesId: undefined } as never));
     expect(out.matches).toEqual([]);

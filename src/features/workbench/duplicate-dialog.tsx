@@ -1,7 +1,7 @@
 /**
  * The duplicate dialog (step 6.2a part 5, decision D4): on Save of a species that may repeat an existing one, each match with its name,
  * formula, drawing and why it matched, and three choices. "Open the existing" keeps the draft as a draft and shows the existing record;
- * "Keep both" goes on with the Save (the store's gate still runs); "Merge" is unavailable ("Merging arrives in step 6.8"). Closing the
+ * "Keep both" goes on with the Save (the store's gate still runs); "Merge" (step 6.8a) merges the draft INTO the one match (several matches: open one and use "Merge into..."). Closing the
  * dialog goes back to the editor. It decides nothing about chemistry: the check was made by the workers.
  */
 import { useMemo } from 'react';
@@ -13,7 +13,8 @@ import type { StructurePort } from './structure-contracts';
 import styles from './editor.module.css';
 
 const AREA = { width: 128, height: 80 } as const;
-export const MERGE_LATER = 'Merging arrives in step 6.8';
+export const MERGE_NOT_HERE = 'Merging is not available here';
+export const MERGE_SEVERAL = 'Several records match: open one of them and use Merge into... there';
 
 const WHY: Readonly<Record<DuplicateMatch['reasons'][number], string>> = { name: 'the same name', structure: 'the same structure', species: 'the same backing species', title: 'the same title and year', identifier: 'the same identifier' };
 
@@ -33,6 +34,8 @@ export interface DuplicateDialogProps {
   readonly timers: { after(ms: number, run: () => void): () => void };
   readonly onOpenExisting: (match: DuplicateMatch) => void;
   readonly onKeepBoth: () => void;
+  /** Merge the draft into this match; absent: merging is not available here. */
+  readonly onMerge?: (match: DuplicateMatch) => void;
   /** Back to the editor. */
   readonly onClose: () => void;
 }
@@ -44,7 +47,7 @@ export function DuplicateDialog(props: DuplicateDialogProps) {
       <Button variant="primary" onClick={props.onKeepBoth}>
         Keep both
       </Button>
-      <Button unavailable={MERGE_LATER}>Merge</Button>
+      <Button {...(props.onMerge === undefined ? { unavailable: MERGE_NOT_HERE } : outcome.matches.length === 1 ? { onClick: () => props.onMerge?.(outcome.matches[0] as DuplicateMatch) } : { unavailable: MERGE_SEVERAL })}>Merge</Button>
       <Button onClick={props.onClose}>Back to the editor</Button>
     </div>
   );

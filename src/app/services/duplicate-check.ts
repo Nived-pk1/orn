@@ -11,6 +11,7 @@ import type { CoreIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, ChemicalClass, Reagent, RecordRef, Reference, Species, StructureRep } from '@/core/schema';
 import { knowledgeDuplicates } from './knowledge-duplicates';
 import { sourceDuplicates } from './source-duplicates';
+import { fold } from '@/core/text/normalizer';
 import { parseRecord, sameNameRecords } from '@/core/validation';
 import type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome } from '@/features/workbench';
 import type { ChemService, L4Service } from '@/workers/chem';
@@ -102,6 +103,12 @@ function namedCheck(options: DuplicateCheckOptions, kind: 'class' | 'reagent', d
     found.set(other.id, entry);
   };
   for (const twin of sameNameRecords(record, { state, indexes }, kind)) if (twin.kind === kind) note(twin as ChemicalClass | Reagent, 'name');
+  if (record.kind === 'reagent') {
+    // ALIASES take part (6.2 open item, step 6.8a): any spelling of this reagent that equals any spelling of another one
+    const spellings = (names: Reagent['names']): Set<string> => new Set([names.canonical, ...names.common, ...names.aliases].map((one) => fold(one)).filter((one) => one !== ''));
+    const mine = spellings(record.names);
+    for (const other of Object.values(state.records.reagent)) if (other.id !== record.id && [...spellings(other.names)].some((one) => mine.has(one))) note(other, 'name');
+  }
   if (record.kind === 'reagent' && record.speciesId !== undefined) {
     for (const referrer of indexes.referrersOf(record.speciesId)) {
       if (referrer.owner.kind !== 'reagent' || referrer.path !== 'speciesId') continue;

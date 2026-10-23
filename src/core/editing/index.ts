@@ -19,3 +19,5 @@ export type { MechanismUse } from './mechanism-uses';
 export { findingWords, isSchemaWording } from './schema-words';
 export { deleteEnvelope, deleteView } from './delete-view';
 export type { DeleteRow, DeleteView } from './delete-view';
+export { isMergeable, mergeEnvelope, mergePreview, MERGE_KINDS } from './merge';
+export type { MergePick, MergePreview, ScalarChoice } from './merge';

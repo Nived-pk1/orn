@@ -6,6 +6,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { editorRig, renderWithToasts, speciesOf, type EditorRig } from '@/test-support/editor-kit';
 import { stubDialog } from '@/test-support/window-kit';
 import type { DuplicateOutcome, DuplicatePort } from './duplicate-contracts';
+import type { MergePort } from './merge-contracts';
 import { EditorHost } from './editor-host';
 
 beforeAll(stubDialog);
@@ -39,7 +40,7 @@ describe('on Save of a species', () => {
     expect(within(dialog).getByText('Matched by the same name and the same structure.')).toBeTruthy();
     expect(within(dialog).getByRole('button', { name: 'Open Ethanol' })).toBeTruthy();
     expect(within(dialog).getByRole('button', { name: 'Keep both' })).toBeTruthy();
-    const merge = within(dialog).getByRole('button', { name: 'Merge', description: 'Merging arrives in step 6.8' });
+    const merge = within(dialog).getByRole('button', { name: 'Merge', description: 'Merging is not available here' });
     expect(merge.getAttribute('aria-disabled')).toBe('true');
   });
 
@@ -138,6 +139,36 @@ describe('on Save of a class or a reagent (step 6.2b part 4, decision D6)', () =
     save();
     const dialog = await dupDialog();
     expect(within(dialog).getByText('Matched by the same name and the same backing species.')).toBeTruthy();
-    expect(within(dialog).getByRole('button', { name: 'Merge', description: 'Merging arrives in step 6.8' }).getAttribute('aria-disabled')).toBe('true');
+    expect(within(dialog).getByRole('button', { name: 'Merge', description: 'Merging is not available here' }).getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+describe('Merge in the duplicate dialog (step 6.8a, D3)', () => {
+  const merge = (): MergePort => ({ candidates: () => [], preview: async () => ({ ok: true, scalars: [], changes: [{ ref: { kind: 'species', id: 'spc_ethanol' }, name: 'Ethanol' }], deleted: undefined }), run: vi.fn(async () => ({ ok: true as const })) });
+  function showMerge(outcome: DuplicateOutcome, port: MergePort) {
+    const rig: EditorRig = editorRig();
+    const id = rig.open();
+    const openRecord = vi.fn();
+    renderWithToasts(<EditorHost port={{ ...rig.port, merge: port, duplicates: { check: async () => outcome, openRecord } }} sessionId={id} open formatTime={utcTime} onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Canonical name (required)'), { target: { value: 'A changed name' } });
+    return { rig, id, openRecord };
+  }
+  it('with one match Merge is enabled: it opens the merge dialog into that match, and merging discards the draft and shows the kept record', async () => {
+    const port = merge();
+    const { rig, id, openRecord } = showMerge(one(), port);
+    save();
+    fireEvent.click(within(await dupDialog()).getByRole('button', { name: 'Merge' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Merge into Ethanol' });
+    fireEvent.click(await within(dialog).findByRole('button', { name: 'Merge' }));
+    await waitFor(() => expect(port.run).toHaveBeenCalledTimes(1));
+    expect((port.run as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]).toEqual({ kind: 'species', id: 'spc_ethanol' });
+    await waitFor(() => expect(openRecord).toHaveBeenCalledWith({ kind: 'species', id: 'spc_ethanol' }));
+    await waitFor(() => expect(rig.drafts.entry(id)).toBeUndefined());
+  });
+  it('with several matches Merge says to open one of them and use Merge into... there', async () => {
+    const many: DuplicateOutcome = { matches: [...one().matches, { ref: { kind: 'species', id: 'spc_other' }, name: 'Other', reasons: ['name'] }], more: 0, structureChecked: true };
+    showMerge(many, merge());
+    save();
+    expect(within(await dupDialog()).getByRole('button', { name: 'Merge', description: /Several records match/ }).getAttribute('aria-disabled')).toBe('true');
   });
 });

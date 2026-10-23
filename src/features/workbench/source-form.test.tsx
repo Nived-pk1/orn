@@ -112,7 +112,7 @@ describe('the source editor', () => {
     expect(screen.getByLabelText('Kind of source')).toBeTruthy();
   });
 
-  it('the same title and year: Save lists the existing source in the duplicate dialog (Keep both, and Merge unavailable until step 6.8)', async () => {
+  it('the same title and year: Save lists the existing source in the duplicate dialog (Keep both, and Merge unavailable without a merge port)', async () => {
     const rig = editorRig();
     const opened = rig.drafts.open({ kind: 'reference', blank: true });
     if (!opened.ok) throw new Error(opened.message);
@@ -123,6 +123,6 @@ describe('the source editor', () => {
     await act(async () => void fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Save' })));
     await waitFor(() => expect(check).toHaveBeenCalledWith('reference', expect.anything()));
     expect(await screen.findByText(/the same title and year/)).toBeTruthy();
-    expect(screen.getByText('Merging arrives in step 6.8')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Merge', description: 'Merging is not available here' })).toBeTruthy();
   });
 });

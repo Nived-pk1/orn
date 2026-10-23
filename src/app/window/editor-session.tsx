@@ -12,6 +12,7 @@ import { EQUATION_AREA } from '@/render/equation/contracts';
 import { createDepictionBinding } from '@/render/svg';
 import { useApp } from './context';
 import { makeEditorPort } from './editor-port';
+import { createMergePort } from './merge-port';
 import { createMechanismLinks } from './mechanism-links-port';
 import { createPicturesPort } from './pictures-port';
 import { createRecordPicker } from './record-picker-port';
@@ -61,7 +62,8 @@ export function EditorSession(props: {
     const { assets, persistence } = services;
     // pictures are saved at once outside the draft: they need the asset host (a window without one has no Pictures section)
     const pictures = assets === undefined ? undefined : createPicturesPort({ store: services.store, assets, getBlob: persistence === undefined ? undefined : (id) => persistence.getAssetBlob(id) });
-    return makeEditorPort(services, inspector.timers, { ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview, links: createMechanismLinks(services.store.getState), ...(pictures === undefined ? {} : { pictures }), ...(nested || onStart === undefined || onEdit === undefined ? {} : { chain: { start: onStart, edit: onEdit, ...(onFrom === undefined ? {} : { from: onFrom }), ...(onRemove === undefined ? {} : { remove: onRemove }) } }), ...(nested ? { createNew: { nested: true, start: () => undefined } } : onCreate === undefined ? {} : { createNew: { nested: false, start: (kind: RecordKind, name: string, done: (ref: RecordRef) => void) => onCreate(kind, nameSeed(kind, name), done) } }) });
+    const merge = createMergePort({ state: services.store.getState, indexes: inspector.indexes.current, dispatch: (envelope) => services.store.dispatch(envelope), chem: services.chem, now: () => new Date().toISOString() });
+    return makeEditorPort(services, inspector.timers, { merge, ...(inspector.depictions === undefined ? {} : { depictions: inspector.depictions }), records, openRecord, preview, links: createMechanismLinks(services.store.getState), ...(pictures === undefined ? {} : { pictures }), ...(nested || onStart === undefined || onEdit === undefined ? {} : { chain: { start: onStart, edit: onEdit, ...(onFrom === undefined ? {} : { from: onFrom }), ...(onRemove === undefined ? {} : { remove: onRemove }) } }), ...(nested ? { createNew: { nested: true, start: () => undefined } } : onCreate === undefined ? {} : { createNew: { nested: false, start: (kind: RecordKind, name: string, done: (ref: RecordRef) => void) => onCreate(kind, nameSeed(kind, name), done) } }) });
   }, [services, inspector, onStart, onEdit, onCreate, onFrom, onRemove, nested]);
   return <EditorHost port={port} sessionId={props.sessionId} open formatTime={props.formatTime} onClose={props.onClose} {...(props.onSaved === undefined ? {} : { onSaved: props.onSaved })} covered={props.covered === true} />;
 }

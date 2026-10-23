@@ -16,3 +16,4 @@ export type { CurriculumLine, MapFamilyChoice, ParentKind, PickKind, RecordChoic
 export type { MechanismLinksPort, VariantUse } from './mechanism-contracts';
 export type { DuplicateCheckPort, DuplicateMatch, DuplicateOutcome, DuplicatePort } from './duplicate-contracts';
 export type { PictureFields, PictureFile, PictureImage, PictureResult, PicturesPort, PictureView, PrepareResult, PreparedPicture } from './picture-contracts';
+export type { MergeCandidate, MergePick, MergePort, MergeView } from './merge-contracts';
