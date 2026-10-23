@@ -29,6 +29,19 @@ describe('resolveTerm', () => {
     expect(await resolveTerm('x', port)).toEqual({ state: 'which', candidates: [ethanol, pcc], how: 'name' });
     expect(port.structure).not.toHaveBeenCalled();
   });
+  it('U3: a reagent and the species it is made of (the same substance) resolve to the REAGENT, naming the species as the other choice', async () => {
+    const dcm = choice('species', 'spc_dcm', 'Dichloromethane');
+    const dcmReagent = choice('reagent', 'rgt_dcm', 'DCM');
+    const port = { ...portOf([dcm, dcmReagent]), find: vi.fn(async () => ({ exact: [dcm, dcmReagent], suggestions: [], sameSubstance: [{ reagent: dcmReagent, species: dcm }] })) };
+    expect(await resolveTerm('DCM', port)).toMatchObject({ state: 'resolved', ref: { kind: 'reagent', id: 'rgt_dcm' }, instead: dcm });
+  });
+  it('U3: any other set of several matches still asks "Which one?"', async () => {
+    const dcm = choice('species', 'spc_dcm', 'Dichloromethane');
+    const dcmReagent = choice('reagent', 'rgt_dcm', 'DCM');
+    const other = choice('species', 'spc_other', 'Other');
+    const port = { ...portOf([dcm, dcmReagent, other]), find: vi.fn(async () => ({ exact: [dcm, dcmReagent, other], suggestions: [], sameSubstance: [{ reagent: dcmReagent, species: dcm }] })) };
+    expect(await resolveTerm('DCM', port)).toMatchObject({ state: 'which' });
+  });
   it('no match: up to five suggestions, the structure question is asked only of a term with no spaces', async () => {
     const five = Array.from({ length: 7 }, (_, i) => choice('species', `spc_${i}`, `S${i}`));
     const port = portOf([], five);

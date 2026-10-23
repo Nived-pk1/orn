@@ -88,7 +88,7 @@ export function StagesSection(props: StagesSectionProps) {
                 <div className={styles.field}>
                   <label htmlFor={`stage-kind-${index}`}>Kind</label>
                   <select id={`stage-kind-${index}`} aria-label={`Kind of stage ${n}`} value={stage.kind} disabled={locked !== undefined} aria-invalid={bad(props, `${base}.kind`)} data-field-path={`${base}.kind`} onChange={(event) => onEdit(setStageKind(index, event.target.value))}>
-                    {STAGE_KINDS.includes(stage.kind as StageKindValue) ? null : <option value={stage.kind}>{stage.kind}</option>}
+                    {STAGE_KINDS.includes(stage.kind as StageKindValue) ? null : <option value={stage.kind}>{stage.kind === '' ? 'Choose a kind' : stage.kind}</option>}
                     {STAGE_KINDS.map((one) => (
                       <option key={one} value={one}>
                         {wordsOf(one)}

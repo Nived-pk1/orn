@@ -6,8 +6,9 @@
  */
 import { useMemo } from 'react';
 import { conditionsFromText } from '@/core/quick-entry/conditions';
-import { stageConditionText, type QuickEntry } from '@/core/quick-entry/grammar';
-import { quickScope, quickSeed, type QuickRefs, type QuickScope, type TermRef } from '@/core/quick-entry/seed';
+import { conditionPieces } from '@/core/quick-entry/conditions';
+import type { QuickEntry } from '@/core/quick-entry/grammar';
+import { quickScope, quickSeed, remainingText, type QuickRefs, type QuickScope, type TermRef } from '@/core/quick-entry/seed';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button } from '@/ui/primitives';
 import type { QuickEntryPort } from './quick-entry-contracts';
@@ -25,6 +26,8 @@ export interface QuickReviewProps {
   readonly stateOf: (text: string) => TermState;
   /** What each term resolved to (undefined while it is not), in the order of the entry. */
   readonly refs: QuickRefs;
+  /** Items of the ( ) texts that exactly name a species (U2), by the item's text. */
+  readonly solvents: Readonly<Record<string, TermRef>>;
   readonly onChoose: (text: string, choice: RecordChoice) => void;
   readonly onCreate: (text: string, kind: 'species' | 'reagent', withStructure: boolean) => void;
   readonly scopeChoice: 'specific' | 'generic' | null;
@@ -57,11 +60,11 @@ export function QuickReview(props: QuickReviewProps) {
   const scope: QuickScope = props.scopeChoice ?? auto.scope;
   const previewSeed = useMemo(() => {
     let n = 0;
-    return quickSeed({ entry, refs, scope, newId: (prefix) => `${prefix}_quick${(n += 1)}` });
-  }, [entry, refs, scope]);
+    return quickSeed({ entry, refs, scope, solvents: props.solvents, newId: (prefix) => `${prefix}_quick${(n += 1)}` });
+  }, [entry, refs, scope, props.solvents]);
   const similar = previewSeed === undefined ? [] : port.similar(refs.stages.flat() as TermRef[], refs.products as TermRef[]);
   const open = (): void => {
-    const seed = quickSeed({ entry, refs, scope, newId: (prefix) => port.newId(prefix) });
+    const seed = quickSeed({ entry, refs, scope, solvents: props.solvents, newId: (prefix) => port.newId(prefix) });
     if (seed !== undefined) props.onOpen(seed);
   };
   return (
@@ -73,7 +76,10 @@ export function QuickReview(props: QuickReviewProps) {
               <QuickTermRow key={t} text={term.text} state={props.stateOf(term.text)} onChoose={(choice) => props.onChoose(term.text, choice)} onCreate={(kind, withStructure) => props.onCreate(term.text, kind, withStructure)} />
             ))}
           </ul>
-          {stageConditionText(stage) === '' ? null : <StageConditions index={s} text={stageConditionText(stage)} />}
+          {stage.terms.flatMap((term) => (term.condition === undefined ? [] : conditionPieces(term.condition))).filter((item) => Object.hasOwn(props.solvents, item)).map((item) => (
+            <p key={item} data-testid="quick-condition-species" className={styles.hint}>{`${port.describe(props.solvents[item] as TermRef)?.name ?? item} · species, a participant of stage ${s + 1}. Choose a role in the editor (solvent, catalyst or another).`}</p>
+          ))}
+          {remainingText(stage, (item) => Object.hasOwn(props.solvents, item)) === '' ? null : <StageConditions index={s} text={remainingText(stage, (item) => Object.hasOwn(props.solvents, item))} />}
         </section>
       ))}
       <section aria-label="Products">

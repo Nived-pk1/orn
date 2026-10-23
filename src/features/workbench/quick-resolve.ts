@@ -10,7 +10,7 @@ import type { RecordChoice } from './record-picker-contracts';
 
 export type TermState =
   | { readonly state: 'loading' }
-  | { readonly state: 'resolved'; readonly ref: TermRef; readonly name: string; readonly kindWords: string; readonly how: 'name' | 'structure' | 'chosen' }
+  | { readonly state: 'resolved'; readonly ref: TermRef; readonly name: string; readonly kindWords: string; readonly how: 'name' | 'structure' | 'chosen'; readonly instead?: RecordChoice }
   | { readonly state: 'which'; readonly candidates: readonly RecordChoice[]; readonly how: 'name' | 'structure' }
   | { readonly state: 'missing'; readonly suggestions: readonly RecordChoice[]; readonly structure: 'none' | 'new' | 'unanswered'; readonly message?: string };
 
@@ -30,7 +30,11 @@ export async function resolveTerm(text: string, port: Pick<QuickEntryPort, 'find
   try {
     const found = await port.find(text);
     if (found.exact.length === 1) return resolvedFrom(found.exact[0] as RecordChoice, 'name');
-    if (found.exact.length > 1) return { state: 'which', candidates: found.exact, how: 'name' };
+    if (found.exact.length > 1) {
+      const pair = found.exact.length === 2 ? found.sameSubstance?.find((one) => found.exact.some((c) => c.id === one.reagent.id) && found.exact.some((c) => c.id === one.species.id)) : undefined;
+      if (pair !== undefined) return { ...resolvedFrom(pair.reagent, 'name'), instead: pair.species } as TermState;
+      return { state: 'which', candidates: found.exact, how: 'name' };
+    }
     const suggestions = found.suggestions.slice(0, MAX_SUGGESTIONS);
     if (/\s/.test(text)) return { state: 'missing', suggestions, structure: 'none' };
     const answer = await port.structure(text);
@@ -40,5 +44,17 @@ export async function resolveTerm(text: string, port: Pick<QuickEntryPort, 'find
     return { state: 'missing', suggestions, structure: 'none' };
   } catch (error) {
     return { state: 'missing', suggestions: [], structure: 'unanswered', message: `The search did not answer${error instanceof Error ? ` (${error.message})` : ''}` };
+  }
+}
+
+/** The species an item of a term's ( ) text exactly names (U2): one exact species, or a reagent with the species it is made of. Never a guess. */
+export async function speciesOfItem(text: string, port: Pick<QuickEntryPort, 'find'>): Promise<TermRef | undefined> {
+  try {
+    const found = await port.find(text);
+    const pair = found.exact.length === 2 ? found.sameSubstance?.find((one) => found.exact.some((c) => c.id === one.reagent.id) && found.exact.some((c) => c.id === one.species.id)) : undefined;
+    const only = pair !== undefined ? pair.species : found.exact.length === 1 ? found.exact[0] : undefined;
+    return only?.kind === 'species' ? { kind: 'species', id: only.id } : undefined;
+  } catch {
+    return undefined;
   }
 }

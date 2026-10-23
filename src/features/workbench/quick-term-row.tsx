@@ -35,8 +35,9 @@ export function QuickTermRow(props: QuickTermRowProps) {
       {state.state === 'loading' ? <span className={styles.hint}>Looking...</span> : null}
       {state.state === 'resolved' ? (
         <span>
-          {`${state.name} · ${state.ref.kind}`}
+          {state.instead === undefined ? `${state.name} · ${state.ref.kind}` : `${state.name} (reagent) · `}
           {state.how === 'structure' ? ' (matched by structure)' : ''}
+          {state.instead === undefined ? null : <Button onClick={() => props.onChoose(state.instead as RecordChoice)}>Use the species instead</Button>}
         </span>
       ) : null}
       {state.state === 'which' ? (

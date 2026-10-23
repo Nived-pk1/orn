@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import type { Asset } from '@/core/schema';
+import { revokeWhenUnused } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import { FullPicture } from './full-picture';
 import { useInspectorEnv } from './env';
@@ -48,7 +49,7 @@ function PictureFigure(props: { readonly asset: Asset }) {
     });
     return () => {
       cancelled = true;
-      if (made !== undefined) assets.revoke(made);
+      if (made !== undefined) revokeWhenUnused(assets.revoke, made);
     };
   }, [ports, asset.id, asset.mediaType, asset.sha256]);
 

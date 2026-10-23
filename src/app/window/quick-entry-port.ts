@@ -73,7 +73,12 @@ export function createQuickEntryPort(deps: QuickEntryPortDeps): QuickEntryPort {
         if (choice === undefined || record === undefined) continue;
         (spellings(record).some((spelling) => fold(spelling) === wanted) ? exact : others).push(choice);
       }
-      return { exact, suggestions: others.slice(0, MAX_SUGGESTIONS) };
+      const sameSubstance = exact.flatMap((reagent) => {
+        const made = reagent.kind === 'reagent' ? (state.records.reagent as Readonly<Record<string, { readonly speciesId?: string }>>)[reagent.id]?.speciesId : undefined;
+        const species = made === undefined ? undefined : exact.find((one) => one.kind === 'species' && one.id === made);
+        return species === undefined ? [] : [{ reagent, species }];
+      });
+      return { exact, suggestions: others.slice(0, MAX_SUGGESTIONS), ...(sameSubstance.length > 0 ? { sameSubstance } : {}) };
     },
     async structure(text) {
       if (deps.chem === undefined) return { state: 'unanswered', message: 'The structure toolkit is not available here, so this was not read as a structure.' };

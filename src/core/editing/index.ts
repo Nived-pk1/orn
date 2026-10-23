@@ -16,3 +16,4 @@ export type { RoleFlagDefaults } from './role-defaults';
 export { duplicateSeed, SLOT_KEY, specificSeed } from './templates';
 export { outcomeUsesOfMechanism, outcomeUsesOfVariant } from './mechanism-uses';
 export type { MechanismUse } from './mechanism-uses';
+export { findingWords, isSchemaWording } from './schema-words';

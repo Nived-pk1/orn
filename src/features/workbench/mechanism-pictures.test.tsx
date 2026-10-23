@@ -116,3 +116,25 @@ describe('adding, editing and removing', () => {
     expect(screen.getByRole('alert').textContent).toBe('This tab cannot save changes: it is read-only.');
   });
 });
+
+describe('a blob URL is not revoked while an image still shows it (step 6.8 follow-up U1)', () => {
+  it('changing the picture revokes the old URL only after its image element is gone', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const fake = fakePictures([]);
+      const shownWhenRevoked: boolean[] = [];
+      fake.revoke.mockImplementation((url: string) => shownWhenRevoked.push(document.querySelector(`img[src="${url}"]`) !== null));
+      const { PictureThumb } = await import('./picture-thumb');
+      const { rerender } = render(<PictureThumb port={fake.port} picture={view('ast_1', 'First')} />);
+      await screen.findByRole('img', { name: 'First' });
+      rerender(<PictureThumb port={fake.port} picture={view('ast_2', 'Second')} />);
+      await screen.findByRole('img', { name: 'Second' });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(200);
+      });
+      expect(shownWhenRevoked).toEqual([false]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

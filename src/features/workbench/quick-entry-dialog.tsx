@@ -6,14 +6,14 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { parseQuickEntry } from '@/core/quick-entry/grammar';
-import type { QuickRefs } from '@/core/quick-entry/seed';
+import { conditionItems, type QuickRefs, type TermRef } from '@/core/quick-entry/seed';
 import type { RecordRef } from '@/core/schema';
 import { Dialog } from '@/ui/primitives';
 import { Button } from '@/ui/primitives';
 import { nameSeed } from './create-new';
 import type { QuickEntryPort } from './quick-entry-contracts';
 import { QuickReview } from './quick-entry-review';
-import { resolvedFrom, resolveTerm, type TermState } from './quick-resolve';
+import { resolvedFrom, resolveTerm, speciesOfItem, type TermState } from './quick-resolve';
 import type { RecordChoice } from './record-picker-contracts';
 import styles from './quick-entry.module.css';
 
@@ -34,6 +34,7 @@ export function QuickEntryDialog(props: QuickEntryDialogProps) {
   const [line, setLine] = useState(props.initialLine);
   const [found, setFound] = useState<Readonly<Record<string, TermState>>>({});
   const [picked, setPicked] = useState<Readonly<Record<string, TermState>>>({});
+  const [solvents, setSolvents] = useState<Readonly<Record<string, TermRef | null>>>({});
   const [scopeChoice, setScopeChoice] = useState<'specific' | 'generic' | null>(null);
   const asked = useRef(new Set<string>());
   const live = useRef(true);
@@ -57,6 +58,19 @@ export function QuickEntryDialog(props: QuickEntryDialogProps) {
       });
     }
   }, [texts, port]);
+
+  const items = useMemo(() => (entry === undefined ? [] : conditionItems(entry)), [entry]);
+  useEffect(() => {
+    for (const item of items) {
+      const key = `item:${item}`;
+      if (asked.current.has(key)) continue;
+      asked.current.add(key);
+      void speciesOfItem(item, port).then((ref) => {
+        if (live.current) setSolvents((was) => ({ ...was, [item]: ref ?? null }));
+      });
+    }
+  }, [items, port]);
+  const named = useMemo(() => Object.fromEntries(Object.entries(solvents).filter((one): one is [string, TermRef] => one[1] !== null)), [solvents]);
 
   const stateOf = useCallback((text: string): TermState => picked[text] ?? found[text] ?? LOADING, [picked, found]);
   const refs: QuickRefs | undefined = useMemo(() => {
@@ -111,6 +125,7 @@ export function QuickEntryDialog(props: QuickEntryDialogProps) {
             port={port}
             stateOf={stateOf}
             refs={refs}
+            solvents={named}
             onChoose={choose}
             onCreate={create}
             scopeChoice={scopeChoice}

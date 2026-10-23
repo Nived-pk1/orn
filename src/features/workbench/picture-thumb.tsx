@@ -3,6 +3,7 @@
  * when it goes (never by this view's own bytes handling). Bytes missing in this browser are said in words, never a broken image icon.
  */
 import { useEffect, useState } from 'react';
+import { revokeWhenUnused } from '@/ui/hooks';
 import type { PicturesPort, PictureView } from './picture-contracts';
 import styles from './picture.module.css';
 
@@ -29,7 +30,7 @@ export function PictureThumb(props: { readonly port: PicturesPort; readonly pict
     });
     return () => {
       cancelled = true;
-      if (made !== undefined) port.revoke(made);
+      if (made !== undefined) revokeWhenUnused(port.revoke, made);
     };
   }, [port, picture.id, picture.mediaType]);
   if (shown.state === 'loading') return <span className={styles.note}>Loading the picture.</span>;

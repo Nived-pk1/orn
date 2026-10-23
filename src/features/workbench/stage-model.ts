@@ -39,7 +39,9 @@ export const setStageLabel = (index: number, value: string): DraftRecipe => (dra
 };
 export const setStageKind = (index: number, kind: string): DraftRecipe => (draft) => {
   const stage = stageAt(draft, index);
-  if (stage !== undefined) stage.kind = kind;
+  if (stage === undefined) return;
+  if (kind === '') Reflect.deleteProperty(stage, 'kind'); // the "Choose a kind" option: no kind, and L1 refuses Save until one is chosen
+  else stage.kind = kind;
 };
 
 /** Swaps the stage with its neighbour: the array stays a permutation of the same stages (the participants stay in their stages). */

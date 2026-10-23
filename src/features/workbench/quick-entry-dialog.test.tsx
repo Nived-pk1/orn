@@ -26,6 +26,8 @@ const TABLE: Record<string, RecordChoice[]> = {
   pcc: [choice('reagent', 'rgt_pcc', 'PCC')],
   'primary alcohols': [choice('class', 'cls_alcohols-primary', 'Primary alcohols', 'compound class')],
   both: [choice('species', 'spc_both-a', 'Both A'), choice('species', 'spc_both-b', 'Both B')],
+  ch2cl2: [choice('species', 'spc_dcm', 'Dichloromethane')],
+  dcm: [choice('species', 'spc_dcm', 'Dichloromethane'), choice('reagent', 'rgt_dcm', 'DCM')],
 };
 
 interface Rig {
@@ -43,7 +45,7 @@ function rig(options: { structure?: (text: string) => StructureAnswer; similar?:
   const openRecord = vi.fn();
   let n = 0;
   const port: QuickEntryPort = {
-    find: async (text): Promise<FindResult> => ({ exact: TABLE[text.toLowerCase()] ?? [], suggestions: options.suggestions ?? [] }),
+    find: async (text): Promise<FindResult> => ({ exact: TABLE[text.toLowerCase()] ?? [], suggestions: options.suggestions ?? [], ...(text.toLowerCase() === 'dcm' ? { sameSubstance: [{ reagent: choice('reagent', 'rgt_dcm', 'DCM'), species: choice('species', 'spc_dcm', 'Dichloromethane') }] } : {}) }),
     structure: async (text) => options.structure?.(text) ?? { state: 'not_structure' },
     describe: (ref) => known.get(`${ref.kind}:${ref.id}`),
     similar: options.similar ?? (() => []),
@@ -103,9 +105,12 @@ describe('the review of each term', () => {
     expect((await termRow('PCC')).textContent).toContain('reagent');
     expect((await termRow('ethanal')).textContent).toContain('Ethanal');
     const conditions = within(dialog()).getByRole('group', { name: 'Conditions of stage 1' });
-    expect(conditions.textContent).toContain('CH2Cl2, 0 °C');
+    expect(conditions.textContent).toContain('0 °C');
     expect(conditions.textContent).toMatch(/0 °C.*temperature.*needs? (to be )?confirm/i);
-    expect(conditions.textContent).toMatch(/Not recognised.*CH2Cl2/);
+    cleanup();
+    show(rig(), 'ethanol + PCC (xylene, 0 °C) -> ethanal');
+    const unread = await within(dialog()).findByRole('group', { name: 'Conditions of stage 1' });
+    expect(unread.textContent).toMatch(/Not recognised.*xylene/);
   });
   it('"Which one?" lists the candidates and choosing one resolves the term', async () => {
     show(rig(), 'both -> ethanal');
@@ -151,7 +156,7 @@ describe('the review of each term', () => {
 });
 
 describe('scope, similar reaction and Open', () => {
-  it('scope in words: specific when every term is a species, generic when any is a class, choose for a reagent mix; changeable', async () => {
+  it('scope in words: specific when every term is a species or a reagent, generic when any is a class, choose while a term is unresolved; changeable', async () => {
     show(rig(), 'ethanol -> ethanal');
     await waitFor(() => expect(within(dialog()).getByTestId('quick-scope').textContent).toMatch(/Specific: every term is a species/));
     expect((within(dialog()).getByLabelText('Scope') as HTMLSelectElement).value).toBe('specific');
@@ -160,6 +165,9 @@ describe('scope, similar reaction and Open', () => {
     await waitFor(() => expect(within(dialog()).getByTestId('quick-scope').textContent).toMatch(/Generic: at least one term is a class/));
     cleanup();
     show(rig(), 'ethanol + PCC -> ethanal');
+    await waitFor(() => expect(within(dialog()).getByTestId('quick-scope').textContent).toMatch(/Specific: every term is a species or a reagent/));
+    cleanup();
+    show(rig(), 'ethanol + zzz -> ethanal');
     await waitFor(() => expect(within(dialog()).getByTestId('quick-scope').textContent).toMatch(/Choose a scope/));
     expect((within(dialog()).getByLabelText('Scope') as HTMLSelectElement).value).toBe('');
     fireEvent.change(within(dialog()).getByLabelText('Scope'), { target: { value: 'generic' } });
@@ -195,18 +203,44 @@ describe('scope, similar reaction and Open', () => {
     expect(seed.outcomes[0]?.selectivity).toBe('unspecified');
     expect(onClose).toHaveBeenCalled();
   });
-  it('the scope the user chose is in the seed; "Choose" leaves it out', async () => {
+  it('the scope the terms suggest is in the seed, and the scope the user chose wins', async () => {
     const r = rig();
     show(r, 'ethanol + PCC -> ethanal');
     await waitFor(() => expect(within(dialog()).getByRole('button', { name: 'Open in the reaction editor' }).getAttribute('aria-disabled')).toBeNull());
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Open in the reaction editor' }));
-    expect(r.open.mock.calls[0]?.[0]).not.toHaveProperty('scope');
+    expect(r.open.mock.calls[0]?.[0]).toMatchObject({ scope: 'specific' });
     cleanup();
     const again = rig();
     show(again, 'ethanol + PCC -> ethanal');
     await waitFor(() => expect(within(dialog()).getByRole('button', { name: 'Open in the reaction editor' }).getAttribute('aria-disabled')).toBeNull());
-    fireEvent.change(within(dialog()).getByLabelText('Scope'), { target: { value: 'specific' } });
+    fireEvent.change(within(dialog()).getByLabelText('Scope'), { target: { value: 'generic' } });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Open in the reaction editor' }));
-    expect(again.open.mock.calls[0]?.[0]).toMatchObject({ scope: 'specific' });
+    expect(again.open.mock.calls[0]?.[0]).toMatchObject({ scope: 'generic' });
+  });
+});
+
+describe('follow-ups U2 and U3', () => {
+  it('U2: an item in ( ) that exactly matches a species is a participant of that stage with a role to choose; the rest stays condition text', async () => {
+    const r = rig();
+    show(r, 'ethanol + PCC (CH2Cl2, 0 °C) -> ethanal');
+    const item = await within(dialog()).findByTestId('quick-condition-species');
+    await waitFor(() => expect(item.textContent).toContain('Dichloromethane'));
+    expect(item.textContent).toMatch(/Choose a role in the editor/);
+    expect(within(dialog()).getByRole('group', { name: 'Conditions of stage 1' }).textContent).not.toContain('CH2Cl2');
+    await waitFor(() => expect(within(dialog()).getByRole('button', { name: 'Open in the reaction editor' }).getAttribute('aria-disabled')).toBeNull());
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Open in the reaction editor' }));
+    const seed = r.open.mock.calls[0]?.[0] as { participants: { ref: { id: string }; role?: string }[]; stages: { parameters: { text?: string } }[] };
+    expect(seed.participants.map((p) => p.ref.id)).toEqual(['spc_ethanol', 'rgt_pcc', 'spc_dcm']);
+    expect(seed.participants[2]).not.toHaveProperty('role');
+    expect(seed.stages[0]?.parameters.text).toBe('0 °C');
+  });
+  it('U3: a reagent and the species it is made of resolve to the reagent, with "Use the species instead"', async () => {
+    show(rig(), 'DCM -> ethanal');
+    const row = await termRow('DCM');
+    await waitFor(() => expect(row.textContent).toContain('DCM (reagent)'));
+    expect(row.textContent).not.toContain('Which one?');
+    fireEvent.click(within(row).getByRole('button', { name: 'Use the species instead' }));
+    await waitFor(() => expect(row.textContent).toContain('Dichloromethane'));
+    expect(row.textContent).not.toContain('Use the species instead');
   });
 });

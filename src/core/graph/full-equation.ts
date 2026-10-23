@@ -66,7 +66,7 @@ export interface FullEquation {
 const coefficientText = (value: number | undefined): string | null => (value === undefined || value === 1 ? null : String(value));
 
 /** The words for a product that is not a main product (selectivity lives on the outcome and is worded on the main products only). */
-export type ProductRoleWord = 'coproduct' | 'byproduct';
+export type ProductRoleWord = 'coproduct' | 'byproduct' | 'role not chosen';
 
 /** Said before the selectivity word when an outcome has several main products: "(both exclusive)", "(all exclusive)". */
 export type SelectivityQuantifier = 'both' | 'all';
@@ -132,7 +132,7 @@ function buildEquation(reaction: Reaction, outcomes: readonly Outcome[], variant
   const termOf = (p: Outcome['products'][number], word: SelectivityWord | null, quantifier: SelectivityQuantifier | null, regiochemistry: string | null): EquationTerm => {
     const coefficient = coefficientText(p.coefficient);
     const name = nameOf(p.ref, p.originalText);
-    const role = p.role === 'main' ? null : p.role;
+    const role = p.role === 'main' ? null : (p.role ?? 'role not chosen'); // a draft product with no role yet (quick entry) is never drawn as the main product
     return {
       coefficient,
       name,

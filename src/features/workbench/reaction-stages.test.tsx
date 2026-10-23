@@ -70,6 +70,16 @@ describe('the Stages section', () => {
     expect(within(stageRow(before + 1)).getByText('No participants in this stage.')).toBeTruthy();
   });
 
+  it('U5: a stage with no kind (quick entry, after ", then") says "Choose a kind" and lets the person choose', () => {
+    const { rig, id } = show(GRIGNARD);
+    fireEvent.change(screen.getByLabelText('Kind of stage 2'), { target: { value: '' } });
+    const select = screen.getByLabelText('Kind of stage 2') as HTMLSelectElement;
+    expect(within(select).getByRole('option', { name: 'Choose a kind' })).toBeTruthy();
+    expect(draftOf(rig, id).stages[1]).not.toHaveProperty('kind');
+    fireEvent.change(select, { target: { value: 'quench' } });
+    expect(draftOf(rig, id).stages[1]?.kind).toBe('quench');
+  });
+
   it('label and kind are edited; an empty label removes the field; the conditions are one summary line', () => {
     const { rig, id } = show(GRIGNARD);
     fireEvent.change(screen.getByLabelText('Label of stage 1'), { target: { value: 'Grignard addition' } });

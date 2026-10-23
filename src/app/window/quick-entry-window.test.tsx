@@ -84,12 +84,12 @@ const row = async (dialog: HTMLElement, text: string): Promise<HTMLElement> => {
   return within(dialog).getAllByTestId('quick-term').find((r) => r.getAttribute('data-term') === text) as HTMLElement;
 };
 
-/** In the demo "PCC" is both the name of a reagent and an alias of the species pyridinium chlorochromate: the dialog asks "Which one?" and the user chooses the reagent. */
+/** In the demo "PCC" is both the name of a reagent and an alias of the species that reagent is made of: it resolves to the REAGENT at once (U3) and offers "Use the species instead". */
 async function chooseReagentPcc(dialog: HTMLElement): Promise<void> {
   const pcc = await row(dialog, 'PCC');
-  await waitFor(() => expect(pcc.textContent).toContain('Which one?'));
-  fireEvent.click(within(pcc).getByRole('button', { name: 'Use PCC (reagent)' }));
-  await waitFor(() => expect(pcc.textContent).toContain('PCC · reagent'));
+  await waitFor(() => expect(pcc.textContent).toContain('PCC (reagent)'));
+  expect(pcc.textContent).toContain('Use the species instead');
+  expect(pcc.textContent).not.toContain('Which one?');
 }
 
 describe('entry points', () => {
@@ -136,10 +136,9 @@ describe('the PCC line end to end', () => {
     await waitFor(() => expect((within(dialog).getAllByTestId('quick-term').find((r) => r.getAttribute('data-term') === 'ethanol') as HTMLElement).textContent).toContain('species'));
     await chooseReagentPcc(dialog);
     await waitFor(() => expect((within(dialog).getAllByTestId('quick-term').find((r) => r.getAttribute('data-term') === 'ethanal') as HTMLElement).textContent).toContain('Ethanal'));
-    expect(within(dialog).getByRole('group', { name: 'Conditions of stage 1' }).textContent).toMatch(/Not recognised.*CH2Cl2/);
-    await waitFor(() => expect(within(dialog).getByTestId('quick-scope').textContent).toMatch(/Choose a scope/));
+    await waitFor(() => expect(within(dialog).getByTestId('quick-scope').textContent).toMatch(/Specific: every term is a species or a reagent/));
+    expect(within(dialog).getByRole('group', { name: 'Conditions of stage 1' }).textContent).toMatch(/Not recognised.*CH2Cl2/); // this fake search finds names only, not formulas
     await waitFor(() => expect(within(dialog).getByRole('list', { name: 'Reaction preview' })).toBeTruthy()); // the card's equation, drawn from the draft
-    fireEvent.change(within(dialog).getByLabelText('Scope'), { target: { value: 'specific' } });
     const before = reactions(app).length;
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open in the reaction editor' }));
     const editor = await screen.findByRole('dialog', { name: 'New reaction' });
@@ -176,14 +175,31 @@ describe('the PCC line end to end', () => {
     expect(within(editor).getByRole('button', { name: /^Confirm temperature/ })).toBeTruthy();
   });
 
+  it('U2: an item in ( ) that names a demo species becomes a participant whose role is still to be chosen in the editor', async () => {
+    const app = fakeApp({ state: demoState() });
+    const dialog = await openQuickEntry(app);
+    type(dialog, 'ethanol + PCC (dichloromethane) -> ethanal');
+    await chooseReagentPcc(dialog);
+    const solvent = await within(dialog).findByTestId('quick-condition-species');
+    expect(solvent.textContent).toMatch(/Dichloromethane.*Choose a role in the editor/);
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Open in the reaction editor' }).getAttribute('aria-disabled')).toBeNull());
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Open in the reaction editor' }));
+    const editor = await screen.findByRole('dialog', { name: 'New reaction' });
+    expect(within(editor).getAllByTestId('participant-row')).toHaveLength(3);
+    fireEvent.click(within(editor).getByRole('button', { name: 'Edit participant 3' }));
+    const role = within(editor).getByLabelText('Role of participant 3') as HTMLSelectElement;
+    expect(role.value).toBe('');
+    expect(within(role).getByRole('option', { name: 'Choose a role' })).toBeTruthy();
+  });
+
   it('a two-stage line: ", then" gives a second stage with its own participants', async () => {
     const app = fakeApp({ state: demoState() });
     const dialog = await openQuickEntry(app);
     type(dialog, 'ethanol + PCC, then Sulfuric acid -> ethanal');
     await chooseReagentPcc(dialog);
     const acid = await row(dialog, 'Sulfuric acid'); // a species and a reagent have this name
-    await waitFor(() => expect(acid.textContent).toContain('Which one?'));
-    fireEvent.click(within(acid).getByRole('button', { name: 'Use Sulfuric acid (reagent)' }));
+    await waitFor(() => expect(acid.textContent).toContain('(reagent)'));
+    expect(acid.textContent).not.toContain('Which one?');
     await waitFor(() => expect(within(dialog).getByRole('region', { name: 'Stage 2' })).toBeTruthy());
     await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Open in the reaction editor' }).getAttribute('aria-disabled')).toBeNull());
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open in the reaction editor' }));

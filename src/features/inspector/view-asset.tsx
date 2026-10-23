@@ -6,6 +6,7 @@
  */
 import { useEffect, useState } from 'react';
 import type { Asset } from '@/core/schema';
+import { revokeWhenUnused } from '@/ui/hooks';
 import { useInspectorEnv } from './env';
 import { FactList, Facts, LevelSection } from './levels';
 import { RecordList } from './record-list';
@@ -41,7 +42,7 @@ export function AssetImageView(props: { readonly asset: Asset }) {
     });
     return () => {
       cancelled = true;
-      if (made !== undefined) assets.revoke(made);
+      if (made !== undefined) revokeWhenUnused(assets.revoke, made);
     };
   }, [ports, asset.id, asset.mediaType, asset.sha256]);
   if (shown.state === 'loading') return <p className={styles.muted} role="status">Loading the image.</p>;

@@ -41,14 +41,15 @@ describe('the preview of a draft', () => {
     expect(ready(draft).equations[0]?.equation.reactants[0]?.coefficient).toBe('2');
   });
 
-  it('a product whose role is not chosen yet (quick entry, a new product) is drawn as a plain product, never with the word "undefined"', () => {
+  it('a product whose role is not chosen yet (quick entry, a new product) is drawn as "(role not chosen)", never as the main product and never with the word "undefined" (U7)', () => {
     const draft = reactionOf(E2) as unknown as { outcomes: { products: Record<string, unknown>[] }[] };
     for (const outcome of draft.outcomes) for (const product of outcome.products) delete product.role;
     const preview = ready(draft);
     const terms = preview.equations.flatMap((e) => e.equation.products);
     expect(terms.length).toBeGreaterThan(0);
     for (const term of terms) {
-      expect(term.role).toBeNull();
+      expect(term.role).toBe('role not chosen');
+      expect(term.text).toContain('(role not chosen)');
       expect(term.text).not.toContain('undefined');
     }
   });

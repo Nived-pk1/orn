@@ -1,7 +1,7 @@
 /**
  * The quick-entry draft seed and scope words (step 6.7b, Q3/Q4): roles come from what a term IS (a species or class on the left is a reactant,
  * a reagent record a reagent), nothing else is set - no primary-substrate flag, product roles absent ("Choose ..."), selectivity unspecified,
- * ONE outcome holding under all conditions. Scope: specific when every term is a species, generic when any is a class, else choose.
+ * ONE outcome holding under all conditions. Scope: specific when every term is a species or a reagent, generic when any is a class, choose only when a term is unresolved.
  */
 import { describe, expect, it } from 'vitest';
 import { ReactionSchema } from '../schema';
@@ -35,9 +35,11 @@ describe('quickScope', () => {
     expect(quickScope([species('a'), cls('c')])).toMatchObject({ scope: 'generic' });
     expect(quickScope([cls('c'), reagent('r')]).words).toMatch(/generic/i);
   });
-  it('choose when a reagent is mixed with species, and when a term is unresolved or there are none', () => {
-    expect(quickScope([species('a'), reagent('r')])).toMatchObject({ scope: 'choose' });
-    expect(quickScope([species('a'), reagent('r')]).words).toMatch(/choose/i);
+  it('specific when every term is a species or a reagent (U4)', () => {
+    expect(quickScope([species('a'), reagent('r')])).toMatchObject({ scope: 'specific' });
+    expect(quickScope([reagent('r')]).words).toMatch(/specific/i);
+  });
+  it('choose only when a term is unresolved or there are none', () => {
     expect(quickScope([species('a'), undefined])).toMatchObject({ scope: 'choose' });
     expect(quickScope([species('a'), undefined]).words).toMatch(/not resolved/i);
     expect(quickScope([])).toMatchObject({ scope: 'choose' });
@@ -80,6 +82,7 @@ describe('quickSeed', () => {
     expect(stages[0]?.participantIds).toEqual([participants[0]?.id, participants[1]?.id]);
     expect(stages[1]?.participantIds).toEqual([participants[2]?.id]);
     expect(stages[0]?.kind).toBe('reaction');
+    expect(stages[1]).not.toHaveProperty('kind'); // U5: a later stage starts "Choose a kind"
     expect(stages[0]?.parameters.text).toBe('aqueous, 0 °C');
     expect([...(stages[0]?.parameters.parsedFields ?? [])].sort()).toEqual(['solventCharacter', 'temperature']);
     expect(stages[0]?.parameters.solventCharacter).toEqual(['aqueous']);
@@ -108,9 +111,33 @@ describe('quickSeed', () => {
     const parsed = ReactionSchema.safeParse({ ...blank, ...seed });
     expect(parsed.success).toBe(false);
     const paths = (parsed.success ? [] : parsed.error.issues.map((issue) => issue.path.join('.'))).sort();
-    expect(paths).toEqual(['outcomes.0.products.0.role', 'scope']);
-    const done = ReactionSchema.safeParse({ ...blank, ...seed, scope: 'specific', outcomes: (seed.outcomes as { products: object[] }[]).map((o) => ({ ...o, products: o.products.map((p) => ({ ...p, role: 'main' })) })) });
+    expect(paths).toEqual(['outcomes.0.products.0.role', 'scope', 'stages.1.kind']);
+    const done = ReactionSchema.safeParse({ ...blank, ...seed, scope: 'specific', stages: (seed.stages as object[]).map((s) => ({ ...s, kind: 'reaction' })), outcomes: (seed.outcomes as { products: object[] }[]).map((o) => ({ ...o, products: o.products.map((p) => ({ ...p, role: 'main' })) })) });
     expect(done.success).toBe(true);
+  });
+  it('U2: an item in ( ) that is exactly a species becomes a participant of the stage of its term with NO role; the rest stays condition text', () => {
+    const made = quickSeed({
+      entry: entry('ethanol + PCC (CH2Cl2, 0 °C) -> ethanal'),
+      refs: { stages: [[species('spc_ethanol'), reagent('rgt_pcc')]], products: [species('spc_ethanal')] },
+      solvents: { 'CH2Cl2': species('spc_dcm') },
+      scope: 'specific',
+      newId: ids(),
+    }) as { participants: Record<string, unknown>[]; stages: { participantIds: string[]; parameters: { text?: string } }[] };
+    expect(made.participants.map((p) => (p.ref as TermRef).id)).toEqual(['spc_ethanol', 'rgt_pcc', 'spc_dcm']);
+    expect(made.participants[2]).not.toHaveProperty('role');
+    expect(made.participants[2]?.originalText).toBe('CH2Cl2');
+    expect(made.stages[0]?.participantIds).toHaveLength(3);
+    expect(made.stages[0]?.parameters.text).toBe('0 °C');
+  });
+  it('U2: when every item is a species the stage has no condition text', () => {
+    const made = quickSeed({
+      entry: entry('a + b (water) -> c'),
+      refs: { stages: [[species('a'), species('b')]], products: [species('c')] },
+      solvents: { water: species('spc_water') },
+      scope: 'specific',
+      newId: ids(),
+    }) as { stages: { parameters: { text?: string } }[] };
+    expect(made.stages[0]?.parameters.text).toBeUndefined();
   });
   it('the typed wording that is too long for the schema is left out, never cut', () => {
     const long = 'x'.repeat(20000);

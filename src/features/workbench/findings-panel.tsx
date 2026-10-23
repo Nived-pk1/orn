@@ -2,6 +2,7 @@
  * The findings panel beside the form (ADR-040): the live L1 findings of the draft, or the findings a refused Save returned (L2-L3 ERRORs).
  * A finding whose path is a field of the form is a button that moves the focus to that field. Text nodes only; the message is the core's.
  */
+import { findingWords } from '@/core/editing';
 import type { Finding } from '@/core/validation';
 import styles from './editor.module.css';
 
@@ -21,7 +22,10 @@ export function fieldFor(root: ParentNode, path: string | undefined): HTMLElemen
 }
 
 /** A slot finding (slot-findings.ts) already says where it is ("participant 2"), so the path is not repeated. */
-export const findingLine = (finding: Finding): string => `${finding.message}${finding.path === undefined || finding.data?.slot === true ? '' : ` (${finding.path})`}`;
+export const findingLine = (finding: Finding): string => {
+  const words = findingWords(finding); // the schema library's own phrases are put in words, with the place in them (U6)
+  return `${words}${finding.path === undefined || finding.data?.slot === true || words !== finding.message ? '' : ` (${finding.path})`}`;
+};
 
 export function FindingsPanel(props: {
   readonly heading: string;

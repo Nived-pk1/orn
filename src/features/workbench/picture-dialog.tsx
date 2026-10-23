@@ -6,6 +6,7 @@
  * refused save) is words and nothing is saved. No file handling here: the port checks the file.
  */
 import { useEffect, useRef, useState } from 'react';
+import { revokeWhenUnused } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import type { PictureView, PicturesPort, PreparedPicture } from './picture-contracts';
 import styles from './picture.module.css';
@@ -44,7 +45,7 @@ export function PictureDialog(props: PictureDialogProps) {
     }
     const url = URL.createObjectURL(prepared.preview);
     setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
+    return () => revokeWhenUnused((made) => URL.revokeObjectURL(made), url);
   }, [prepared]);
 
   const choose = (file: File | undefined): void => {

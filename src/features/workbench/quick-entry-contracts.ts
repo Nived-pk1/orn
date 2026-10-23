@@ -13,6 +13,8 @@ export interface FindResult {
   readonly exact: readonly RecordChoice[];
   /** The best other matches from search, at most five. */
   readonly suggestions: readonly RecordChoice[];
+  /** Pairs inside `exact` where the reagent is made of that species (the same substance, U3). */
+  readonly sameSubstance?: readonly { readonly reagent: RecordChoice; readonly species: RecordChoice }[];
 }
 
 /** A term with no spaces asked of the chem worker: not a structure, one it could not read, an existing species with it, or a new one. */
