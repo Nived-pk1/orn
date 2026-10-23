@@ -133,7 +133,7 @@ test.describe('delete and merge (desktop)', () => {
     await dup.getByRole('button', { name: 'Merge', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Merge into Ethanol' });
     await expect(dialog).toBeVisible();
-    const notes = dialog.getByRole('group', { name: 'notes' });
+    const notes = dialog.getByRole('group', { name: 'Notes' });
     await expect(notes).toBeVisible({ timeout: 60_000 });
     await expect(dialog.getByText('Includes your unsaved changes')).toBeVisible();
     await expect(dialog.getByRole('list', { name: 'Records that will change' })).toBeVisible();

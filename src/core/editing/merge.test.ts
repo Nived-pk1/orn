@@ -17,7 +17,7 @@ const A = ref('species', 'spc_twin-ether');
 /** The maximal fixture plus a twin A of B (other alias, other note), a class listing both, and a rich-text link to A. */
 function withTwin(overrides: Partial<Species> = {}): { state: CanonicalState; twin: Species } {
   const state = loadFixtureState('maximal-valid');
-  const original = recordIn<Species>(state, 'species', B.id);
+  const original = { ...recordIn<Species>(state, 'species', B.id), notes: 'Original note.' } as Species; // both sides hold a real note: a choice
   const twin: Species = {
     ...original,
     id: A.id as Species['id'],
@@ -29,7 +29,7 @@ function withTwin(overrides: Partial<Species> = {}): { state: CanonicalState; tw
   const klass = Object.values(state.records.class)[0] as ChemicalClass;
   const records = {
     ...state.records,
-    species: { ...state.records.species, [A.id]: twin },
+    species: { ...state.records.species, [original.id]: original, [A.id]: twin },
     class: { ...state.records.class, [klass.id]: { ...klass, exampleSpeciesIds: [twin.id, original.id], notes: `Compare [[${A.id}]] and [[${A.id}|the twin]].` } },
   };
   return { state: { ...state, records } as unknown as CanonicalState, twin };
@@ -119,7 +119,7 @@ describe('mergeEnvelope', () => {
   it('A that is only a draft (not stored) changes B alone: its names join B and nothing is deleted', () => {
     const state = loadFixtureState('maximal-valid');
     const store = makeStore(state);
-    const original = recordIn<Species>(state, 'species', B.id);
+    const original = { ...recordIn<Species>(state, 'species', B.id), notes: 'Original note.' } as Species; // both sides hold a real note: a choice
     const draft = { ...original, id: 'spc_draft-twin', names: { ...original.names, canonical: 'Drafted twin', aliases: [] } } as unknown as Species;
     const built = mergeEnvelope(state, indexesOf(state), draft, B, {}, NOW);
     if (!built.ok) throw new Error('refused');
@@ -138,5 +138,46 @@ describe('mergeEnvelope', () => {
     if (!built.ok) throw new Error('refused');
     mustCommit(store.dispatch(built.envelope));
     expect((recordIn<ChemicalClass>(store.getState(), 'class', first.id)).parentIds).not.toContain(first.id);
+  });
+});
+
+describe('W1/W2 - field words and fields that are only filled in', () => {
+  it('every scalar choice carries the editors words, never the schema key', () => {
+    const { state, twin } = withTwin({ formula: 'C4H10O', speciesKind: 'ion' } as Partial<Species>);
+    const preview = mergePreview(state, indexesOf(state), twin, B);
+    if (!preview.ok) throw new Error('refused');
+    const words = Object.fromEntries(preview.scalars.map((one) => [one.path, one.words]));
+    expect(words['notes']).toBe('Notes');
+    for (const one of preview.scalars) expect(one.words).not.toMatch(/^[a-z]+[A-Z]/);
+    if (words['formula'] !== undefined) expect(words['formula']).toBe('Formula');
+    if (words['speciesKind'] !== undefined) expect(words['speciesKind']).toBe('Kind of species');
+  });
+  it('an empty or "unspecified" side is not a choice: the real value is kept and listed as filled in from A', () => {
+    const { state, twin } = withTwin({ formula: 'C4H10O', notes: undefined, speciesKind: 'unspecified' } as unknown as Partial<Species>);
+    const bare = { ...state.records.species[B.id], formula: undefined, speciesKind: 'molecule', notes: 'Kept note.' };
+    const withBare = { ...state, records: { ...state.records, species: { ...state.records.species, [B.id]: bare } } } as unknown as CanonicalState;
+    const preview = mergePreview(withBare, indexesOf(withBare), twin, B);
+    if (!preview.ok) throw new Error('refused');
+    const paths = preview.scalars.map((one) => one.path);
+    expect(paths).not.toContain('formula'); // B empty, A real: filled in
+    expect(paths).not.toContain('speciesKind'); // A unspecified: B's value stays
+    expect(paths).not.toContain('notes'); // A empty
+    expect(preview.filled).toEqual([{ path: 'formula', words: 'Formula', value: 'C4H10O' }]);
+    expect(preview.fromName).toBe('Ethoxyethane (twin)');
+    const store = makeStore(withBare);
+    const built = mergeEnvelope(store.getState(), indexesOf(store.getState()), twin, B, {}, NOW);
+    if (!built.ok) throw new Error('refused');
+    mustCommit(store.dispatch(built.envelope));
+    const merged = recordIn<Species>(store.getState(), 'species', B.id);
+    expect((merged as unknown as { formula?: string }).formula).toBe('C4H10O');
+    expect(merged.speciesKind).toBe('molecule');
+    expect(merged.notes).toBe('Kept note.');
+  });
+  it('two different real values stay a choice', () => {
+    const { state, twin } = withTwin({ notes: 'A note.' });
+    const preview = mergePreview(state, indexesOf(state), twin, B);
+    if (!preview.ok) throw new Error('refused');
+    expect(preview.scalars.map((one) => one.path)).toContain('notes');
+    expect(preview.filled.map((one) => one.path)).not.toContain('notes');
   });
 });

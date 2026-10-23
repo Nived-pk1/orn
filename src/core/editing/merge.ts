@@ -14,6 +14,7 @@ import { type AnyRecord, type CanonicalState, type RecordKind, type RecordRef } 
 import { canonicalJson } from '../text/canonical-json';
 import { fold } from '../text/normalizer';
 import { nameOfRef } from './labels';
+import { isUnstated, mergeFieldWords } from './merge-words';
 
 export const MERGE_KINDS = ['species', 'class', 'reagent', 'concept', 'named_reaction', 'transformation', 'reference', 'topic', 'exam'] as const satisfies readonly RecordKind[];
 
@@ -27,10 +28,19 @@ export function isMergeable(kind: string): { readonly ok: true } | { readonly ok
 export interface ScalarChoice {
   /** "notes", "names.iupac". */
   readonly path: string;
+  /** The field in the editors' words ("Kind of species"). */
+  readonly words: string;
   /** B's value (the survivor; selected first). */
   readonly into: unknown;
   /** A's value. */
   readonly from: unknown;
+}
+
+/** A field where only A has a real value: B takes it, no choice (W2). */
+export interface FilledField {
+  readonly path: string;
+  readonly words: string;
+  readonly value: unknown;
 }
 
 export type MergePick = 'keep' | 'take';
@@ -39,6 +49,9 @@ export type MergePreview =
   | {
       readonly ok: true;
       readonly scalars: readonly ScalarChoice[];
+      /** Fields B lacked (empty or "unspecified") that A's real value fills. */
+      readonly filled: readonly FilledField[];
+      readonly fromName: string;
       /** Every record that will change (B included) and A, which is deleted when it is stored. */
       readonly changes: readonly { readonly ref: RecordRef; readonly name: string }[];
       readonly deleted: { readonly ref: RecordRef; readonly name: string } | undefined;
@@ -82,18 +95,24 @@ function nameParts(record: Bag): { readonly canonical: string; readonly others: 
   return { canonical: typeof record['name'] === 'string' ? record['name'] : typeof record['title'] === 'string' ? record['title'] : '', others: Array.isArray(record['aliases']) ? (record['aliases'] as string[]) : [] };
 }
 
-/** The scalar fields that differ, B's value first. `names.iupac` / `names.qualifier` are scalars of the names object. */
-function scalarsOf(from: Bag, into: Bag): ScalarChoice[] {
-  const out: ScalarChoice[] = [];
+/** The scalar fields where BOTH sides hold different real values (B's first), and the fields A's real value fills in on an empty B. */
+function scalarsOf(from: Bag, into: Bag): { readonly choices: ScalarChoice[]; readonly filled: FilledField[] } {
+  const choices: ScalarChoice[] = [];
+  const filled: FilledField[] = [];
+  const sort = (path: string, a: unknown, b: unknown): void => {
+    if (same(a, b) || isUnstated(a)) return;
+    if (isUnstated(b)) filled.push({ path, words: mergeFieldWords(path), value: a });
+    else choices.push({ path, words: mergeFieldWords(path), into: b, from: a });
+  };
   const hasAliases = Array.isArray(into['aliases']);
   for (const key of [...new Set([...Object.keys(into), ...Object.keys(from)])].sort()) {
     if (SPECIAL.has(key) || Array.isArray(into[key]) || Array.isArray(from[key])) continue;
     if (key === 'name' && hasAliases) continue; // A's name becomes an alias of B
-    if (!same(from[key], into[key])) out.push({ path: key, into: into[key], from: from[key] });
+    sort(key, from[key], into[key]);
   }
   const [fn, bn] = [isBag(from['names']) ? from['names'] : {}, isBag(into['names']) ? into['names'] : {}];
-  for (const key of ['iupac', 'qualifier']) if (!same(fn[key], bn[key])) out.push({ path: `names.${key}`, into: bn[key], from: fn[key] });
-  return out;
+  for (const key of ['iupac', 'qualifier']) sort(`names.${key}`, fn[key], bn[key]);
+  return { choices, filled };
 }
 
 function mergedRecord(from: Bag, into: Bag, picks: Readonly<Record<string, MergePick>>, now: string): Bag {
@@ -103,7 +122,12 @@ function mergedRecord(from: Bag, into: Bag, picks: Readonly<Record<string, Merge
     const [a, b] = [from[key], into[key]];
     if (Array.isArray(a) || Array.isArray(b)) merged[key] = unionOf(Array.isArray(b) ? b : [], Array.isArray(a) ? a : []);
   }
-  for (const choice of scalarsOf(from, into)) {
+  const { choices, filled } = scalarsOf(from, into);
+  for (const fill of filled) {
+    if (fill.path.startsWith('names.')) merged['names'] = { ...(isBag(merged['names']) ? merged['names'] : {}), [fill.path.slice(6)]: fill.value };
+    else merged[fill.path] = fill.value;
+  }
+  for (const choice of choices) {
     if (picks[choice.path] !== 'take') continue;
     if (choice.path.startsWith('names.')) {
       const key = choice.path.slice(6);
@@ -149,7 +173,7 @@ function dedupeId(value: unknown, id: string): unknown {
 
 /** What the merge changes, as the commands of ONE envelope; shared by the preview and the envelope. */
 function planned(state: CanonicalState, indexes: CoreIndexes, from: AnyRecord, into: RecordRef, picks: Readonly<Record<string, MergePick>>, now: string):
-  | { readonly ok: true; readonly commands: readonly DomainCommand[]; readonly changed: readonly RecordRef[]; readonly scalars: readonly ScalarChoice[]; readonly stored: boolean }
+  | { readonly ok: true; readonly commands: readonly DomainCommand[]; readonly changed: readonly RecordRef[]; readonly scalars: readonly ScalarChoice[]; readonly filled: readonly FilledField[]; readonly stored: boolean }
   | { readonly ok: false; readonly message: string } {
   const allowed = isMergeable(from.kind);
   if (!allowed.ok) return allowed;
@@ -160,7 +184,7 @@ function planned(state: CanonicalState, indexes: CoreIndexes, from: AnyRecord, i
   const fromRef = { kind: from.kind, id: from.id } as RecordRef;
   const stored = recordAt(state, fromRef) !== undefined;
   const idMap = new Map([[from.id, into.id]]);
-  const scalars = scalarsOf(from as unknown as Bag, target as unknown as Bag);
+  const { choices: scalars, filled } = scalarsOf(from as unknown as Bag, target as unknown as Bag);
   let merged = mergedRecord(from as unknown as Bag, target as unknown as Bag, picks, now) as unknown as AnyRecord;
   merged = referenceEngine.detach(merged, new Set([from.id, into.id]));
   merged = rewriteRecordRichTextLinks(merged, idMap).record;
@@ -184,7 +208,7 @@ function planned(state: CanonicalState, indexes: CoreIndexes, from: AnyRecord, i
   commands.push({ type: 'record.update', record: merged });
   changed.push(into);
   if (stored) commands.push({ type: 'record.delete', ref: fromRef, mode: 'restrict' });
-  return { ok: true, commands, changed, scalars, stored };
+  return { ok: true, commands, changed, scalars, filled, stored };
 }
 
 export function mergePreview(state: CanonicalState, indexes: CoreIndexes, from: AnyRecord, into: RecordRef): MergePreview {
@@ -193,6 +217,8 @@ export function mergePreview(state: CanonicalState, indexes: CoreIndexes, from: 
   return {
     ok: true,
     scalars: plan.scalars,
+    filled: plan.filled,
+    fromName: nameOf(from),
     changes: plan.changed.map((ref) => ({ ref, name: nameOfRef(state, ref) })),
     deleted: plan.stored ? { ref: { kind: from.kind, id: from.id } as RecordRef, name: nameOf(from) } : undefined,
   };

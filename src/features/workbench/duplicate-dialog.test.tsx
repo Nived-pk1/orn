@@ -144,7 +144,7 @@ describe('on Save of a class or a reagent (step 6.2b part 4, decision D6)', () =
 });
 
 describe('Merge in the duplicate dialog (step 6.8a, D3)', () => {
-  const merge = (): MergePort => ({ candidates: () => [], preview: async () => ({ ok: true, scalars: [], changes: [{ ref: { kind: 'species', id: 'spc_ethanol' }, name: 'Ethanol' }], deleted: undefined }), run: vi.fn(async () => ({ ok: true as const })) });
+  const merge = (): MergePort => ({ candidates: () => [], preview: async () => ({ ok: true, scalars: [], filled: [], fromName: 'A', changes: [{ ref: { kind: 'species', id: 'spc_ethanol' }, name: 'Ethanol' }], deleted: undefined }), run: vi.fn(async () => ({ ok: true as const })) });
   function showMerge(outcome: DuplicateOutcome, port: MergePort) {
     const rig: EditorRig = editorRig();
     const id = rig.open();

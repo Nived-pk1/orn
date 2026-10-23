@@ -14,7 +14,10 @@ export type MergeView =
   | {
       readonly ok: true;
       /** The fields where the two differ: B's value (`into`, selected first) and A's (`from`). */
-      readonly scalars: readonly { readonly path: string; readonly into: unknown; readonly from: unknown }[];
+      readonly scalars: readonly { readonly path: string; readonly words: string; readonly into: unknown; readonly from: unknown }[];
+      /** Fields the kept record lacked that A's real value fills in (no choice). */
+      readonly filled: readonly { readonly path: string; readonly words: string; readonly value: unknown }[];
+      readonly fromName: string;
       readonly changes: readonly { readonly ref: RecordRef; readonly name: string }[];
       /** A, when it is a stored record (it is deleted in the same step). */
       readonly deleted: { readonly ref: RecordRef; readonly name: string } | undefined;

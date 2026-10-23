@@ -18,13 +18,15 @@ const INTO: RecordRef = { kind: 'species', id: 'spc_b' };
 const READY: MergeView = {
   ok: true,
   scalars: [
-    { path: 'notes', into: 'Original note.', from: 'Twin note.' },
-    { path: 'structure', into: undefined, from: { format: 'smiles', value: 'CCOCC' } },
+    { path: 'notes', words: 'Notes', into: 'Original note.', from: 'Twin note.' },
+    { path: 'structure', words: 'Structure', into: undefined, from: { format: 'smiles', value: 'CCOCC' } },
   ],
   changes: [
     { ref: { kind: 'class', id: 'cls_x' }, name: 'Ethers' },
     { ref: INTO, name: 'Diethyl ether' },
   ],
+  filled: [{ path: 'formula', words: 'Formula', value: 'C4H10O' }],
+  fromName: 'Ethoxyethane (twin)',
   deleted: { ref: { kind: 'species', id: 'spc_a' }, name: 'Ethoxyethane (twin)' },
 };
 const portOf = (view: MergeView, run: MergePort['run'] = async () => ({ ok: true })): MergePort => ({ candidates: () => [], preview: async () => view, run });
@@ -38,12 +40,12 @@ const dialog = (): HTMLElement => screen.getByRole('dialog', { name: 'Merge into
 describe('the review', () => {
   it('each differing scalar shows both values, B\'s selected first; an absent value is said', async () => {
     show(portOf(READY));
-    const notes = await within(dialog()).findByRole('group', { name: 'notes' });
+    const notes = await within(dialog()).findByRole('group', { name: 'Notes' });
     const keep = within(notes).getByRole('radio', { name: /Keep Original note\./ }) as HTMLInputElement;
     const take = within(notes).getByRole('radio', { name: /Take Twin note\./ }) as HTMLInputElement;
     expect(keep.checked).toBe(true);
     expect(take.checked).toBe(false);
-    const structure = within(dialog()).getByRole('group', { name: 'structure' });
+    const structure = within(dialog()).getByRole('group', { name: 'Structure' });
     expect(within(structure).getByRole('radio', { name: /Keep \(nothing\)/ })).toBeTruthy();
     expect(within(structure).getByRole('radio', { name: /Take .*CCOCC/ })).toBeTruthy();
   });
@@ -54,7 +56,7 @@ describe('the review', () => {
     expect(dialog().textContent).toContain('Ethoxyethane (twin) is deleted');
   });
   it('a merge with nothing to choose says so', async () => {
-    show(portOf({ ok: true, scalars: [], changes: [{ ref: INTO, name: 'Diethyl ether' }], deleted: undefined }));
+    show(portOf({ ok: true, scalars: [], filled: [], fromName: 'A', changes: [{ ref: INTO, name: 'Diethyl ether' }], deleted: undefined }));
     expect(await within(dialog()).findByText('No field differs: nothing to choose.')).toBeTruthy();
   });
 });
@@ -63,7 +65,7 @@ describe('Merge', () => {
   it('sends the picks (default keep B, a changed field take) and reports done', async () => {
     const run = vi.fn(async () => ({ ok: true as const }));
     const onDone = show(portOf(READY, run));
-    const notes = await within(dialog()).findByRole('group', { name: 'notes' });
+    const notes = await within(dialog()).findByRole('group', { name: 'Notes' });
     fireEvent.click(within(notes).getByRole('radio', { name: /Take Twin note\./ }));
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Merge' }));
     await waitFor(() => expect(onDone).toHaveBeenCalledWith(INTO));
@@ -71,7 +73,7 @@ describe('Merge', () => {
   });
   it('a refusal from the store is said in words and the dialog stays', async () => {
     const onDone = show(portOf(READY, async () => ({ ok: false, message: 'The merge was refused: something changed' })));
-    await within(dialog()).findByRole('group', { name: 'notes' });
+    await within(dialog()).findByRole('group', { name: 'Notes' });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Merge' }));
     expect((await within(dialog()).findByRole('alert')).textContent).toContain('The merge was refused');
     expect(onDone).not.toHaveBeenCalled();
@@ -95,11 +97,22 @@ describe('a refused merge', () => {
 describe('unsaved changes (V2)', () => {
   it('says "Includes your unsaved changes" when the merged draft has unsaved edits, and not otherwise', async () => {
     show(portOf(READY), vi.fn(), true);
-    await within(dialog()).findByRole('group', { name: 'notes' });
+    await within(dialog()).findByRole('group', { name: 'Notes' });
     expect(within(dialog()).getByText('Includes your unsaved changes')).toBeTruthy();
     cleanup();
     show(portOf(READY));
-    await within(dialog()).findByRole('group', { name: 'notes' });
+    await within(dialog()).findByRole('group', { name: 'Notes' });
     expect(within(dialog()).queryByText('Includes your unsaved changes')).toBeNull();
+  });
+});
+
+describe('W1/W2', () => {
+  it('fields are named in words, and a filled-in field is listed under "Filled in from <A>"', async () => {
+    show(portOf(READY));
+    await within(dialog()).findByRole('group', { name: 'Notes' });
+    expect(dialog().textContent).not.toContain('speciesKind');
+    const filled = within(dialog()).getByRole('list', { name: 'Filled in from Ethoxyethane (twin)' });
+    expect(filled.textContent).toContain('Formula');
+    expect(filled.textContent).toContain('C4H10O');
   });
 });

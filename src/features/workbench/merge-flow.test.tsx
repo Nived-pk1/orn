@@ -12,7 +12,7 @@ afterEach(cleanup);
 const B = { ref: { kind: 'species', id: 'spc_b' }, name: 'Diethyl ether' } as const;
 const portOf = (): MergePort => ({
   candidates: vi.fn((_kind, text) => (text.toLowerCase().includes('eth') ? [B] : [])),
-  preview: async () => ({ ok: true, scalars: [], changes: [{ ref: B.ref, name: B.name }], deleted: undefined }),
+  preview: async () => ({ ok: true, scalars: [], filled: [], fromName: 'A', changes: [{ ref: B.ref, name: B.name }], deleted: undefined }),
   run: async () => ({ ok: true }),
 });
 

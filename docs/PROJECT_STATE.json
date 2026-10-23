@@ -459,7 +459,9 @@
     "-> Exams step (2026-10-21, right after 6.6c): exam and exam_version editors (syllabus units, topic coverage, provisional status, CUR rules) with the user's request for CBSE, KCET and BITSAT: app wording exam-generic, scope selector grouped (Board exam / Entrance exams).",
     "-> Phase 7 (2026-10-21): the ROUTE editor, with the precursor explorer and route search.",
     "-> later: merging reagents moves A's profiles into B and rewrites the reactions' profile references (2026-10-23, step 6.8a: a reagent whose profiles reactions use is refused in words).",
-    "NOTE (2026-10-21): reaction_scheme, view_preset and entity_display have no form editor; they are made by the views that own them (map arrangement, presets, display settings). asset has no stand-alone editor; deleting assets is 6.8."
+    "NOTE (2026-10-21): reaction_scheme, view_preset and entity_display have no form editor; they are made by the views that own them (map arrangement, presets, display settings). asset has no stand-alone editor; deleting assets is 6.8.",
+    "-> Phase 9: watch the Firefox 'downloadable font: download failed' console error in e2e; if it recurs, preload or self-check the font files",
+    "-> Phase 9 (storage diagnostics): remove unused picture files (blob rows no asset record uses), with a clear 'cannot be undone' step"
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",

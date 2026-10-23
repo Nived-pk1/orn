@@ -76,8 +76,8 @@ export function MergeDialog(props: MergeDialogProps) {
         <>
           {view.scalars.length === 0 ? <p>No field differs: nothing to choose.</p> : <p>Where the two differ, choose which value stays.</p>}
           {view.scalars.map((one) => (
-            <fieldset key={one.path} className={styles.field} role="group" aria-label={one.path}>
-              <legend>{one.path}</legend>
+            <fieldset key={one.path} className={styles.field} role="group" aria-label={one.words}>
+              <legend>{one.words}</legend>
               {(['keep', 'take'] as const).map((pick) => (
                 <label key={pick}>
                   <input type="radio" name={`merge-${one.path}`} checked={(picks[one.path] ?? 'keep') === pick} onChange={() => setPicks((was) => ({ ...was, [one.path]: pick }))} />{' '}
@@ -86,6 +86,16 @@ export function MergeDialog(props: MergeDialogProps) {
               ))}
             </fieldset>
           ))}
+          {view.filled.length === 0 ? null : (
+            <>
+              <h3>{`Filled in from ${view.fromName}`}</h3>
+              <ul aria-label={`Filled in from ${view.fromName}`} className={styles.matches}>
+                {view.filled.map((one) => (
+                  <li key={one.path}>{`${one.words}: ${valueWords(one.value)}`}</li>
+                ))}
+              </ul>
+            </>
+          )}
           <h3>Records that will change</h3>
           <ul aria-label="Records that will change" className={styles.matches}>
             {view.changes.map((change) => (
