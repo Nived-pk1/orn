@@ -6118,3 +6118,11 @@ Packet: docs/reviews/phase-6-close.md (ends "Reviewer verdict: (pending)"). Spee
 **Screenshots:** author-demo-ethanol-conc-h2so4-1280x800.png, merge-dialog-1280x800.png, phone-select-mode-pixel7.png (fresh).
 **Changed existing tests:** `review-queue.spec.ts` (the Z2 assertion). **Amendments:** none. **REVIEW REQUIRED:** see packet section 9.
 **`npm run check`:** green, 587 test files, 7123 tests (one command, default workers).
+
+### Gate D review (reviewer, 2026-10-23)
+
+Gate D NOT YET PASSED. Accepted: 27 of 27 authored; the adversarial test; sizes; axe; CSP; the coverage set of 14 (exact minimum); quick entry covered by its own spec; the Z3 test order (recorded); the Part 1 lint slip (recorded); the bench reading as noise; the WATCH item 'navigator overview, every hub expanded' at 16.11 ms against 16 -> NEW openItem "-> Phase 9 (performance hardening)". NOT accepted (G1): the eight fields no editor can set. Phase 6's promise is that any reaction can be entered completely. The variant stageId difference is an EQUIVALENT default (G2): the comparator treats "no stageId" and "the first reaction stage" as equal. Docs only; no `npm run check` for this commit.
+
+### Step 6.9b, part A - Gate D review round 1 (2026-10-23)
+
+Recorded the review above in docs/reviews/phase-6-close.md ("Reviewer review, round 1", before the pending verdict line) and the Phase 9 openItem in PROJECT_STATE. Speed check 0.103 s median (no measurement pending). HEAD at start 19f9e18, tree clean, ports 4173, 4174, 8787, 9333 free. Docs-only commit: `npm run check` skipped. **Amendments:** none.

@@ -96,4 +96,11 @@ Editors covered: species, class, reagent, reaction (identity, participants, stag
 
 author-demo-ethanol-conc-h2so4-1280x800.png (an authored reaction's card), merge-dialog-1280x800.png (Z1, fresh), phone-select-mode-pixel7.png (Z2, fresh; the e2e now asserts no button is behind the bar), phone-select-mode-iphone14.png, review-queue-1280x800.png, review-confirm-1280x800.png, map-multiselect-1280x800.png, and the Phase 6 editor set (species, class, reagent, reaction, mechanism, curriculum and exam editors; the from-scratch family card and full equation; the nested editor; the duplicate dialog; the phone editors).
 
+## Reviewer review, round 1 (2026-10-23)
+
+Gate D NOT YET PASSED. Accepted: 27 of 27 authored; the adversarial test; sizes; axe; CSP; the coverage set of 14 (exact minimum); quick entry covered by its own spec; the Z3 test order (recorded); the Part 1 lint slip (recorded); the bench reading as noise; the WATCH item 'navigator overview, every hub expanded' at 16.11 ms against 16 (new Phase 9 openItem).
+NOT accepted (G1): the eight fields no editor can set (outcome label, outcome conceptIds, variant note, participant note, participant and stage originalText, variant solvent character, participants present only under a variant). Phase 6's promise is that any reaction can be entered completely.
+The variant stageId difference is an EQUIVALENT default (G2): the comparator treats "no stageId" and "the first reaction stage" as equal.
+Step 6.9b adds the editors and re-runs the proof (round 2 below once it is run).
+
 Reviewer verdict: (pending)
