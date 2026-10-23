@@ -6015,3 +6015,7 @@ Speed check at the start: 0.609, 0.604, 0.625 s (median 0.609, under 1.3 s). Sta
 **Builds.** `npm run build:smoke` passed for both editions. Initial JS gzip: **Study 387.76 kB, Studio 394.99 kB** (the 395 kB line holds, 0.01 kB of room; budget 400 kB).
 **Screenshots (git-ignored `screenshots/`):** review-queue-1280x800.png, review-confirm-1280x800.png, map-multiselect-1280x800.png, phone-select-mode-pixel7.png, phone-select-mode-iphone14.png, fresh merge-dialog-1280x800.png. The map screenshot still shows the browser's "did not grant persistent storage" banner (a normal e2e-browser banner, not dismissed by the spec).
 **Changed existing tests:** none in this part. **Amendments:** none. **REVIEW REQUIRED:** (a) Studio has 0.01 kB under the line; (b) the 393 kB target of Y1 was not met (Part 4a); (c) the map-multiselect screenshot carries the storage banner.
+
+### Step 6.8b, part 5 - deployed (2026-10-23)
+
+Study (`reaction-navigator`) version **cffbc677-884d-4023-b0c0-17505f70b711**; live specs (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition) in Chromium and WebKit: 45 passed, 17 skipped by profile, 0 failed. Studio (`reaction-navigator-studio`) version **6a1fac49-bb2a-475c-89a3-5b803d5d07ca**. Live Access check after the Studio deploy: the Studio address answered 302 (Cloudflare Access sign-in), not the app; the Study address answered 200. Both recorded in `releasePreview` / `studioPreview` (commit 81ce55f, the code of both).

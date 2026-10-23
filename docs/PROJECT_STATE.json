@@ -126,20 +126,20 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-22",
-    "commit": "203bbf5",
-    "version": "febe017a-5a1f-47ae-9174-69b313c9e3e7"
+    "deployedAt": "2026-10-23",
+    "commit": "81ce55f",
+    "version": "cffbc677-884d-4023-b0c0-17505f70b711"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-22",
-    "version": "b1c07398-bf8c-44de-b072-7f3ccae70798",
+    "deployedAt": "2026-10-23",
+    "version": "6a1fac49-bb2a-475c-89a3-5b803d5d07ca",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 6.7 deploy, 2026-10-22: an unauthenticated request got 302 (Cloudflare Access) and not the app; the public Worker still answered 200 with the app.",
-    "commit": "203bbf5",
-    "protectedCheckedAt": "2026-10-21"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 6.8 deploy, 2026-10-23: an unauthenticated request got 302 (Cloudflare Access) and not the app; the public Worker still answered 200 with the app.",
+    "commit": "81ce55f",
+    "protectedCheckedAt": "2026-10-23"
   },
   "nextStep": "6.9",
   "nextStepTitle": "Author every demo reaction from scratch in e2e; Gate D",
