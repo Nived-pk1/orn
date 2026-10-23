@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-22",
+  "lastUpdated": "2026-10-23",
   "currentPhase": 6,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -110,7 +110,8 @@
     "exams",
     "6.7a",
     "6.7b",
-    "6.7"
+    "6.7",
+    "6.8a"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -138,8 +139,8 @@
     "commit": "203bbf5",
     "protectedCheckedAt": "2026-10-21"
   },
-  "nextStep": "6.8",
-  "nextStepTitle": "Delete / merge with impact dialogs, review queue, multi-selection",
+  "nextStep": "6.8b",
+  "nextStepTitle": "Review queue, bulk actions, multi-selection, unused-picture cleanup, row 6.8 close",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

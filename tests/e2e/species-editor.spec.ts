@@ -156,7 +156,8 @@ test.describe('the species editor', () => {
     await expect(dup.getByText('Ethanol', { exact: true })).toBeVisible();
     await expect(dup.getByText('Matched by the same name and the same structure.')).toBeVisible();
     await expect(dup.getByRole('img', { name: 'Structure of Ethanol' })).toBeVisible({ timeout: 60_000 });
-    await expect(dup.getByRole('button', { name: 'Merge', description: 'Merging arrives in step 6.8' })).toHaveAttribute('aria-disabled', 'true');
+    // one match: Merge is offered (6.8a)
+    await expect(dup.getByRole('button', { name: 'Merge', exact: true })).not.toHaveAttribute('aria-disabled', 'true');
     await page.screenshot({ path: resolve(shotsDir(), 'duplicate-dialog-1280x800.png') });
 
     // Open the existing: the draft stays a draft and the demo ethanol is shown

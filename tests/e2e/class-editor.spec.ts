@@ -137,7 +137,8 @@ test.describe('the class editor', () => {
     await expect(dup).toBeVisible({ timeout: 60_000 });
     await expect(dup.getByText('Alcohols', { exact: true })).toBeVisible();
     await expect(dup.getByText('Matched by the same name.')).toBeVisible();
-    await expect(dup.getByRole('button', { name: 'Merge', description: 'Merging arrives in step 6.8' })).toHaveAttribute('aria-disabled', 'true');
+    // one match: Merge is offered (6.8a)
+    await expect(dup.getByRole('button', { name: 'Merge', exact: true })).not.toHaveAttribute('aria-disabled', 'true');
 
     // Open the existing: the draft stays a draft and the demo class is shown
     await dup.getByRole('button', { name: 'Open Alcohols' }).click();

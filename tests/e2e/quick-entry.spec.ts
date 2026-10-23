@@ -54,18 +54,25 @@ async function openQuickEntry(page: Page, tap = false): Promise<Locator> {
 
 const termRow = (dialog: Locator, term: string): Locator => dialog.locator(`[data-testid="quick-term"][data-term="${term}"]`);
 
-/** "PCC" is the name of a reagent and an alias of a species in the demo: the dialog asks which one. */
-async function chooseReagent(dialog: Locator, term: string, name: string, tap = false): Promise<void> {
+/** "PCC" is the name of a reagent and an alias of a species in the demo: since 6.7b a reagent and the species it is made of resolve to the REAGENT, with no question. */
+async function expectReagent(dialog: Locator, term: string, name: string): Promise<void> {
   const row = termRow(dialog, term);
-  await expect(row).toContainText('Which one?', { timeout: 60_000 });
-  const button = row.getByRole('button', { name: `Use ${name} (reagent)`, exact: true });
-  if (tap) await button.tap();
-  else await button.click();
-  await expect(row).toContainText(`${name} · reagent`);
+  // shown "<name> (reagent)" with "Use the species instead" next to it
+  await expect(row).toContainText(`${name} (reagent)`, { timeout: 60_000 });
+  await expect(row).not.toContainText('Which one?');
 }
 
 async function waitResolved(dialog: Locator, term: string, text: string): Promise<void> {
   await expect(termRow(dialog, term)).toContainText(text, { timeout: 60_000 });
+}
+
+/** The participant made from the "( )" text (CH2Cl2) has no role yet: the finding takes us to its Role field, and the solvent is chosen. */
+async function chooseSolventRole(editor: Locator, tap = false): Promise<void> {
+  const finding = editor.getByRole('button', { name: /^Error Choose a role for participant/ }).first();
+  await expect(finding).toBeVisible();
+  if (tap) await finding.tap();
+  else await finding.click();
+  await editor.locator('select[aria-label^="Role of participant"]:focus').selectOption('solvent');
 }
 
 async function chooseMainRole(editor: Locator, tap = false): Promise<void> {
@@ -75,7 +82,7 @@ async function chooseMainRole(editor: Locator, tap = false): Promise<void> {
   if (tap) await edit.tap();
   else await edit.click();
   const main = editor.getByRole('group', { name: 'Role of product 1 of outcome 1' }).getByRole('radio', { name: 'Main' });
-  await expect(editor.getByText('Choose a role')).toBeVisible();
+  await expect(editor.getByRole('group', { name: 'Role of product 1 of outcome 1' }).getByText('Choose a role')).toBeVisible();
   if (tap) await main.tap();
   else await main.check();
 }
@@ -89,10 +96,11 @@ test.describe('quick entry (desktop)', () => {
     await dialog.getByLabel('Reaction line').fill('ethanol + PCC (CH2Cl2) -> ethanal');
     await waitResolved(dialog, 'ethanol', 'Ethanol · species');
     await waitResolved(dialog, 'ethanal', 'Ethanal · species');
-    await chooseReagent(dialog, 'PCC', 'PCC');
-    await expect(dialog.getByRole('group', { name: 'Conditions of stage 1' })).toContainText('Not recognised (kept as text): CH2Cl2');
-    await expect(dialog.getByTestId('quick-scope')).toContainText('Choose a scope');
-    await dialog.getByLabel('Scope', { exact: true }).selectOption('specific');
+    await expectReagent(dialog, 'PCC', 'PCC');
+    // the formula CH2Cl2 names one species exactly: a participant (its role is still to be chosen), not condition text, so no conditions group is left;
+    // every term is a species or a reagent, so the scope is Specific
+    await expect(dialog.getByRole('group', { name: 'Conditions of stage 1' })).toHaveCount(0);
+    await expect(dialog.getByTestId('quick-scope')).toContainText('Specific');
     const preview = dialog.getByRole('list', { name: 'Reaction preview' });
     await expect(preview).toBeVisible({ timeout: 60_000 });
     await imagesSettled(dialog);
@@ -104,6 +112,7 @@ test.describe('quick entry (desktop)', () => {
     await expect(editor).toBeVisible();
     await expect(editor.getByLabel('Name (required)')).toHaveValue('ethanol + PCC (CH2Cl2) → ethanal');
     await expect(editor.getByLabel('Scope (required)')).toHaveValue('specific');
+    await chooseSolventRole(editor);
     await chooseMainRole(editor);
     await dismissToasts(page);
     await editor.getByLabel('Name (required)').scrollIntoViewIfNeeded();
@@ -122,10 +131,8 @@ test.describe('quick entry (desktop)', () => {
     await openDemo(page);
     const dialog = await openQuickEntry(page);
     await dialog.getByLabel('Reaction line').fill('ethanol + PCC, then Sulfuric acid -> ethanal');
-    await chooseReagent(dialog, 'PCC', 'PCC');
-    const acid = termRow(dialog, 'Sulfuric acid');
-    await expect(acid).toContainText('Which one?', { timeout: 60_000 });
-    await acid.getByRole('button', { name: 'Use Sulfuric acid (reagent)', exact: true }).click();
+    await expectReagent(dialog, 'PCC', 'PCC');
+    await expectReagent(dialog, 'Sulfuric acid', 'Sulfuric acid');
     await expect(dialog.getByRole('region', { name: 'Stage 2' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Open in the reaction editor', exact: true }).click();
     const editor = reactionDialog(page);
@@ -180,9 +187,8 @@ async function walkPhone(page: Page, device: string): Promise<void> {
   const dialog = await openQuickEntry(page, true);
   await dialog.getByLabel('Reaction line').fill('ethanol + PCC (CH2Cl2) -> ethanal');
   await waitResolved(dialog, 'ethanol', 'Ethanol · species');
-  await chooseReagent(dialog, 'PCC', 'PCC', true);
+  await expectReagent(dialog, 'PCC', 'PCC');
   await waitResolved(dialog, 'ethanal', 'Ethanal · species');
-  await dialog.getByLabel('Scope', { exact: true }).selectOption('specific');
   const box = await dialog.boundingBox();
   expect(box?.width ?? 0, 'the dialog fits the screen').toBeLessThanOrEqual((page.viewportSize()?.width ?? 0) + 1);
   expect(await axeProblems(page)).toEqual([]);
@@ -191,6 +197,7 @@ async function walkPhone(page: Page, device: string): Promise<void> {
   await dialog.getByRole('button', { name: 'Open in the reaction editor', exact: true }).tap();
   const editor = reactionDialog(page);
   await expect(editor).toBeVisible();
+  await chooseSolventRole(editor, true);
   await chooseMainRole(editor, true);
   await editor.getByRole('button', { name: 'Save', exact: true }).tap();
   await expect(editor).toBeHidden();
