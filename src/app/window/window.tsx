@@ -40,6 +40,7 @@ import { BootLines, Banners, StatusLine } from "./status-parts";
 import { EDITING, editionMarker } from "@/app/edition";
 import { useEditors } from "./editors-access";
 import { EditorsProvider } from "./editors";
+import { MapBulkProvider } from "./map-bulk-host";
 import { editorCommandDeps } from "./editor-commands";
 import { DatasetProvider, datasetWordsOf, useDatasetInfo } from "./dataset-info";
 import { StudyUpdateNotice, StudyUpdateProvider } from "./study-update";
@@ -161,7 +162,9 @@ export function Window() {
       <DatasetProvider>
       {EDITING ? (
         <EditorsProvider>
-          <WindowContent />
+          <MapBulkProvider>
+            <WindowContent />
+          </MapBulkProvider>
         </EditorsProvider>
       ) : (
         <WindowContent />

@@ -219,3 +219,40 @@
     gap: var(--space-1) var(--space-3);
   }
 }
+
+/* Multi-selection (step 6.8b, Studio): the marquee being dragged, and the bulk actions beside the toolbar or in a bottom bar on a phone. */
+.marquee {
+  position: absolute;
+  z-index: 1;
+  border: 1px dashed var(--color-accent);
+  background: var(--color-hover);
+  pointer-events: none;
+}
+
+.selectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.selectionBar {
+  position: absolute;
+  z-index: 1;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  left: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+}
+
+.selectionBarLine {
+  flex: 1 0 100%;
+  margin: 0;
+  color: var(--color-ink-2);
+}

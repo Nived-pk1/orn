@@ -13,6 +13,7 @@ import type { PointerHandlers, ViewportController } from '@/render/viewport';
 import type { NavigatorUiStores } from '@/ui/state';
 import { canvasMenuOf, nameOf, type CanvasMenu, type MenuAction } from './canvas-menu';
 import { intentOfKey } from './canvas-keys';
+import type { MultiSelect } from './use-multi-select';
 import { viewportToReveal } from './reveal';
 
 export interface OpenMenu {
@@ -38,6 +39,8 @@ interface Args {
   readonly controller: ViewportController | null;
   readonly svg: SVGSVGElement | null;
   readonly announce: (message: string) => void;
+  /** Studio's multi-selection (step 6.8b); absent in Study, where Shift means nothing. */
+  readonly multi?: MultiSelect | null;
   /** The family whose page was just closed: where the keyboard focus lands when the drawing takes it. */
   readonly returnTo?: string;
 }
@@ -56,8 +59,9 @@ export function useCanvasInput(args: Args): CanvasInput {
   const { ui, scene, isHub, controller, svg, announce } = args;
   const [focus, setFocus] = useState<FocusState>({ id: undefined, ring: false, inside: false });
   const [menu, setMenu] = useState<OpenMenu | null>(null);
-  const live = useRef({ scene, isHub, controller, svg, announce, focus });
-  live.current = { scene, isHub, controller, svg, announce, focus };
+  const multi = args.multi ?? null;
+  const live = useRef({ scene, isHub, controller, svg, announce, focus, multi });
+  live.current = { scene, isHub, controller, svg, announce, focus, multi };
   const last = useRef<string | undefined>(args.returnTo);
   const armed = useRef<string | undefined>(undefined);
   // Was the last thing a press on the drawing (a mouse or finger focus) rather than a key or a program? A press names no family and draws no ring.
@@ -190,7 +194,17 @@ export function useCanvasInput(args: Args): CanvasInput {
         if (target === undefined || view === null) return announce('Move to a family first, then press F to centre it');
         view.focus([target]);
         return;
+      case 'toggle':
+        if (live.current.multi === null) return; // Study: nothing acts on a multi-selection
+        handled();
+        if (id === undefined) return announce('Move to a family first, then press Shift+Space to select it');
+        return live.current.multi.toggleFocused(id);
       case 'escape':
+        if (live.current.multi !== null && live.current.multi.items.length > 0) {
+          handled();
+          live.current.multi.clear();
+          return announce('Selection cleared');
+        }
         if (selected === null) return; // nothing of ours to close: Esc goes on to the layers around the canvas
         handled();
         armed.current = undefined;
@@ -218,11 +232,17 @@ export function useCanvasInput(args: Args): CanvasInput {
     setFocus((now) => ({ ...now, ring: false, inside: false }));
   };
 
+  const enabled = multi !== null;
   const pointer = useMemo<PointerHandlers>(
     () => ({
       onClick(hit) {
-        const { scene: current, svg: element } = live.current;
+        const { scene: current, svg: element, multi: many } = live.current;
         armed.current = undefined;
+        if (many !== null && many.selectMode) {
+          // the phone's Select mode: a tap toggles the item under it; a tap on nothing changes nothing
+          if (hit !== null) many.toggle(hit);
+          return;
+        }
         ui.selection.getState().select(hit);
         element?.focus({ preventScroll: true });
         const id = hit !== null && hit.kind === 'node' ? familyId(hit.id, current) : undefined;
@@ -231,9 +251,11 @@ export function useCanvasInput(args: Args): CanvasInput {
         setFocus({ id, ring: false, inside: true });
       },
       onDoubleClick(hit) {
+        if (live.current.multi?.selectMode === true) return;
         if (hit !== null && hit.kind === 'node' && live.current.isHub(hit.id)) ui.family.getState().openFamily(hit.id);
       },
       onConfirm(hit) {
+        if (live.current.multi?.selectMode === true) return;
         if (hit !== null) ui.selection.getState().reveal();
       },
       onContextMenu(hit, point) {
@@ -242,8 +264,15 @@ export function useCanvasInput(args: Args): CanvasInput {
         if (hit !== null) ui.selection.getState().select(hit);
         setMenu({ at: point, menu: canvasMenuOf(current, hit, hub) });
       },
+      ...(enabled
+        ? {
+            onToggle: (hit) => live.current.multi?.toggle(hit),
+            onMarquee: (rect, done) => live.current.multi?.onMarquee(rect, done),
+            onMarqueeCancel: () => live.current.multi?.onMarqueeCancel(),
+          }
+        : {}),
     }),
-    [ui],
+    [ui, enabled],
   );
 
   const closeMenu = useCallback((): void => setMenu(null), []);

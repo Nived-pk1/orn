@@ -16,7 +16,20 @@ export interface ZoomBinding {
   readonly destroy: () => void;
 }
 
-export function bindZoom(element: SVGSVGElement, onGesture: (view: Viewport) => void, minScale: number = SCALE_MIN): ZoomBinding {
+interface GestureLike {
+  readonly type: string;
+  readonly shiftKey: boolean;
+  readonly ctrlKey: boolean;
+  readonly button: number;
+}
+
+/** d3-zoom's own default filter, except that a Shift press (not the wheel) is refused while multi-selection is on: it draws a marquee (step 6.8b). */
+export const zoomFilter =
+  (multiOn: () => boolean) =>
+  (event: GestureLike): boolean =>
+    (!event.ctrlKey || event.type === 'wheel') && !event.button && !(event.shiftKey && event.type !== 'wheel' && multiOn());
+
+export function bindZoom(element: SVGSVGElement, onGesture: (view: Viewport) => void, minScale: number = SCALE_MIN, multiOn: () => boolean = () => false): ZoomBinding {
   let adopting = false;
   const selection = select<SVGSVGElement, unknown>(element);
   const behaviour: ZoomBehavior<SVGSVGElement, unknown> = zoom<SVGSVGElement, unknown>()
@@ -25,6 +38,7 @@ export function bindZoom(element: SVGSVGElement, onGesture: (view: Viewport) => 
       const box = element.getBoundingClientRect();
       return [[0, 0], [box.width, box.height]];
     })
+    .filter(zoomFilter(multiOn))
     .scaleExtent([minScale, SCALE_MAX])
     .on('zoom', (event: { readonly transform: { readonly x: number; readonly y: number; readonly k: number } }) => {
       if (!adopting) onGesture({ x: event.transform.x, y: event.transform.y, scale: event.transform.k });

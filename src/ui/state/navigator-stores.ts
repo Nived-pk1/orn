@@ -16,6 +16,11 @@ export interface Selected {
 
 export interface SelectionState {
   readonly selected: Selected | null;
+  /**
+   * The multi-selection of Studio's map (step 6.8b, R2): families and arrows chosen with Shift-click, Shift-drag or Shift+Space, in the
+   * order they were chosen, never the same item twice. Empty in Study (nothing acts on it). Never saved. A single `select` empties it.
+   */
+  readonly multi: readonly Selected[];
   /** Counts every non-null `select` call, also one that changes nothing (step 5.6a): the inspector opens on a click even for what was already selected. Never saved. */
   readonly picks: number;
   /**
@@ -26,6 +31,10 @@ export interface SelectionState {
   readonly reveals: number;
   select(next: Selected | null): void;
   reveal(): void;
+  /** Adds the item, or removes it when it is in. */
+  toggle(item: Selected): void;
+  setMulti(items: readonly Selected[]): void;
+  clearMulti(): void;
 }
 export type SelectionStore = StoreApi<SelectionState>;
 
@@ -34,12 +43,26 @@ const sameSelected = (a: Selected | null, b: Selected | null): boolean => a === 
 export function createSelectionStore(initial: Selected | null = null): SelectionStore {
   return createStore<SelectionState>((set, get) => ({
     selected: initial,
+    multi: [],
     picks: 0,
     reveals: 0,
     reveal: () => set({ reveals: get().reveals + 1 }),
     select(next) {
       const picks = next === null ? get().picks : get().picks + 1;
-      if (!sameSelected(get().selected, next) || picks !== get().picks) set({ selected: next, picks });
+      const multi = get().multi.length === 0 ? get().multi : [];
+      if (!sameSelected(get().selected, next) || picks !== get().picks || multi !== get().multi) set({ selected: next, picks, multi });
+    },
+    toggle(item) {
+      const has = get().multi.some((one) => sameSelected(one, item));
+      set({ multi: has ? get().multi.filter((one) => !sameSelected(one, item)) : [...get().multi, item] });
+    },
+    setMulti(items) {
+      const out: Selected[] = [];
+      for (const item of items) if (!out.some((one) => sameSelected(one, item))) out.push(item);
+      set({ multi: out });
+    },
+    clearMulti() {
+      if (get().multi.length > 0) set({ multi: [] });
     },
   }));
 }

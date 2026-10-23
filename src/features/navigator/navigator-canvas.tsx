@@ -19,7 +19,9 @@ import { FIT_FLOOR } from '@/render/viewport';
 import { depictionBindingOf } from './depictions';
 import { ListView } from './list-view';
 import { keyOf, legendOf } from './legend';
+import { MultiActions } from './multi-actions';
 import { useCanvasInput } from './use-canvas-input';
+import { useMultiSelect } from './use-multi-select';
 import { outsideNoteOf } from './scope-lens';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorLegend } from './navigator-legend';
@@ -68,14 +70,16 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   sceneRef.current = scene;
   const controllerRef = useRef<ViewportController | null>(null);
   controllerRef.current = controller;
-  const selectedIds = useMemo(() => (selected === null ? NO_IDS : new Set([selected.id])), [selected]);
+  const picked = useStore(ports.ui.selection, (s) => s.multi);
+  const selectedIds = useMemo(() => (picked.length > 0 ? new Set(picked.map((one) => one.id)) : selected === null ? NO_IDS : new Set([selected.id])), [selected, picked]);
   const initialViewport = useMemo<Viewport | undefined>(() => ports.ui.viewports.getState().views[VIEW], [ports]);
   const depictions = useMemo(() => depictionBindingOf(ports)?.manager, [ports]);
   const hubs = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
   const isHub = useCallback((id: string): boolean => state.hubIds.includes(id), [state.hubIds]);
   const openFamily = useCallback((hubId: string): void => ports.ui.family.getState().openFamily(hubId), [ports]);
   const [svg, setSvg] = useState<SVGSVGElement | null>(null);
-  const input = useCanvasInput({ ui: ports.ui, scene, isHub, controller, svg, announce, ...(props.returnTo === undefined ? {} : { returnTo: props.returnTo }) });
+  const multi = useMultiSelect({ scene, svg, controller, isHub, announce });
+  const input = useCanvasInput({ ui: ports.ui, scene, isHub, controller, svg, announce, multi, ...(props.returnTo === undefined ? {} : { returnTo: props.returnTo }) });
   // Back from a family page the focus returns to the overview: the drawing (on the family just left), or the list's tab stop.
   const returning = useRef(props.returnTo !== undefined);
   useEffect(() => {
@@ -164,7 +168,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         <Button onClick={() => setUnanchoredOpen((open) => !open)} aria-expanded={unanchoredOpen && unanchoredReason === undefined} {...(unanchoredReason === undefined ? {} : { unavailable: unanchoredReason })}>
           Unanchored reactions ({unanchored.length})
         </Button>
-        <NavigatorSelection />
+        <NavigatorSelection {...(multi !== null && multi.items.length > 0 ? { multiLine: multi.line } : {})} />
+        {multi !== null && multi.items.length > 0 ? <MultiActions multi={multi} /> : null}
       </div>
       )}
       {cut === null ? null : (
@@ -180,7 +185,9 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
       {listing || phone ? null : <NavigatorLegend items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} />}
       <div className={styles.drawing} aria-busy={state.working}>
-        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} /> : null}
+        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { select: { on: multi.selectMode, set: multi.setSelectMode } })} /> : null}
+        {phone && multi !== null && multi.items.length > 0 ? <MultiActions multi={multi} bar /> : null}
+        {multi?.marquee == null ? null : <div className={styles.marquee} aria-hidden="true" style={{ left: multi.marquee.left, top: multi.marquee.top, width: multi.marquee.width, height: multi.marquee.height }} />}
         {state.error !== null ? (
           <div className={styles.error} role="alert">
             <p>The navigator could not be drawn ({state.error.code}).</p>

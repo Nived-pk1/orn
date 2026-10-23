@@ -19,6 +19,8 @@
     "src/app/window/editor-commands.ts",
     "src/app/window/workbench-page.tsx",
     "src/app/window/review-host.tsx",
+    "src/app/window/map-bulk-host.tsx",
+    "src/app/window/map-bulk-dialogs.tsx",
     "src/app/window/pictures-port.ts",
     "src/app/window/record-picker-port.ts",
     "src/app/window/mechanism-links-port.ts",

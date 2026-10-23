@@ -14,8 +14,8 @@ let log: Log;
 let timers: ReturnType<typeof manualTimers>;
 let unbind: () => void;
 
-function fire(target: Element | Document, type: string, init: { id?: number; kind?: string; x?: number; y?: number; button?: number } = {}): void {
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: init.x ?? 10, clientY: init.y ?? 10, button: init.button ?? 0 });
+function fire(target: Element | Document, type: string, init: { id?: number; kind?: string; x?: number; y?: number; button?: number; shift?: boolean } = {}): void {
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: init.x ?? 10, clientY: init.y ?? 10, button: init.button ?? 0, shiftKey: init.shift === true });
   Object.defineProperty(event, 'pointerId', { value: init.id ?? 1 });
   Object.defineProperty(event, 'pointerType', { value: init.kind ?? 'mouse' });
   target.dispatchEvent(event);
@@ -144,6 +144,41 @@ describe('the pointer binding, with a fake clock', () => {
     unbind();
     expect(timers.pending()).toBe(0);
     tap(node('a'));
+    expect(log).toEqual(['click a']);
+  });
+});
+
+describe('Shift (step 6.8b), only when the handlers say multi-selection is on', () => {
+  const bindMulti = (on: boolean): void => {
+    unbind();
+    unbind = bindPointer(
+      svg,
+      {
+        onClick: (hit) => log.push(`click ${hit?.id ?? 'none'}`),
+        onToggle: (hit) => log.push(`toggle ${hit.id}`),
+        onMarquee: (rect, done) => log.push(`marquee ${rect.x0},${rect.y0}-${rect.x1},${rect.y1}${done ? ' done' : ''}`),
+        onMarqueeCancel: () => log.push('marquee cancelled'),
+        multi: () => on,
+      },
+      timers,
+    );
+  };
+  it('a Shift click toggles instead of clicking, and a plain click still clicks', () => {
+    bindMulti(true);
+    tap(node('a'), { shift: true });
+    tap(node('b'));
+    expect(log).toEqual(['toggle a', 'click b']);
+  });
+  it('a Shift drag reports a normalised rectangle, then done on the release', () => {
+    bindMulti(true);
+    fire(svg, 'pointerdown', { x: 100, y: 80, shift: true });
+    fire(document, 'pointermove', { x: 40, y: 20 });
+    fire(document, 'pointerup', { x: 40, y: 20 });
+    expect(log).toEqual(['marquee 40,20-100,80', 'marquee 40,20-100,80 done']);
+  });
+  it('with multi-selection off Shift means nothing: the click is a click', () => {
+    bindMulti(false);
+    tap(node('a'), { shift: true });
     expect(log).toEqual(['click a']);
   });
 });

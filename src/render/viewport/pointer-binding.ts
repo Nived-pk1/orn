@@ -28,6 +28,13 @@ export interface PointerHandlers {
   readonly onConfirm?: (hit: SceneHit | null) => void;
   /** A right click, or a press held 500 ms; `point` is in client (screen) coordinates. */
   readonly onContextMenu?: (hit: SceneHit | null, point: PointerPoint) => void;
+  /** Multi-selection (step 6.8b): a Shift click. Read live; when `multi()` is not true Shift means nothing here. */
+  readonly onToggle?: (hit: SceneHit) => void;
+  /** A Shift drag: the rectangle in client coordinates (corners ordered), and `done` on the release. */
+  readonly onMarquee?: (rect: { readonly x0: number; readonly y0: number; readonly x1: number; readonly y1: number }, done: boolean) => void;
+  readonly onMarqueeCancel?: () => void;
+  /** Whether multi-selection is on right now (Studio). Absent: off, and a Shift press behaves as a plain one. */
+  readonly multi?: () => boolean;
 }
 
 export const windowTimers: PointerTimers = {
@@ -63,6 +70,12 @@ export function bindPointer(element: Element, handlers: PointerHandlers, timers:
       }
       case 'confirm':
         return handlers.onConfirm?.(effect.hit);
+      case 'toggle':
+        return handlers.onToggle?.(effect.hit);
+      case 'marquee':
+        return handlers.onMarquee?.({ x0: Math.min(effect.from.x, effect.to.x), y0: Math.min(effect.from.y, effect.to.y), x1: Math.max(effect.from.x, effect.to.x), y1: Math.max(effect.from.y, effect.to.y) }, effect.done);
+      case 'marqueeCancel':
+        return handlers.onMarqueeCancel?.();
       case 'contextMenu':
         holdOpened = state.phase === 'held';
         return handlers.onContextMenu?.(effect.hit, { x: effect.x, y: effect.y });
@@ -92,7 +105,7 @@ export function bindPointer(element: Element, handlers: PointerHandlers, timers:
   const down = (event: Event): void => {
     const e = event as PointerEvent;
     holdOpened = false;
-    feed({ type: 'down', id: e.pointerId, kind: kindOf(e.pointerType), x: e.clientX, y: e.clientY, button: e.button, hit: hitOf(e.target) });
+    feed({ type: 'down', id: e.pointerId, kind: kindOf(e.pointerType), x: e.clientX, y: e.clientY, button: e.button, hit: hitOf(e.target), ...(e.shiftKey && handlers.multi?.() === true ? { shift: true } : {}) });
   };
   const move = (event: Event): void => {
     const e = event as PointerEvent;

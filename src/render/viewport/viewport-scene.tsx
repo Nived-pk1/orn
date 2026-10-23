@@ -92,7 +92,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       onFrame: (candidates, lod) => queue?.update(candidates, lod),
       ...(minScale === undefined ? {} : { minScale }),
     });
-    bound.binding = bindZoom(svg, controller.gesture, minScale);
+    bound.binding = bindZoom(svg, controller.gesture, minScale, () => pointerRef.current?.onToggle !== undefined);
     controllerRef.current = controller;
     controller.setScene(sceneRef.current);
     let fitted = false;
@@ -183,6 +183,10 @@ export function ViewportScene(props: ViewportSceneProps) {
         onDoubleClick: (hit) => pointerRef.current?.onDoubleClick?.(hit),
         onConfirm: (hit) => pointerRef.current?.onConfirm?.(hit),
         onContextMenu: (hit, point) => pointerRef.current?.onContextMenu?.(hit, point),
+        onToggle: (hit) => pointerRef.current?.onToggle?.(hit),
+        onMarquee: (rect, done) => pointerRef.current?.onMarquee?.(rect, done),
+        onMarqueeCancel: () => pointerRef.current?.onMarqueeCancel?.(),
+        multi: () => pointerRef.current?.onToggle !== undefined,
       },
       pointerTimers,
     );

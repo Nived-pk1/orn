@@ -16,6 +16,8 @@ export type CanvasIntent =
   | { readonly type: 'fit' }
   | { readonly type: 'centre' }
   | { readonly type: 'escape' }
+  /** Shift+Space: toggles the focused item in the multi-selection (Studio; step 6.8b). */
+  | { readonly type: 'toggle' }
   | { readonly type: 'menu' };
 
 export interface KeyLike {
@@ -30,6 +32,7 @@ const ARROWS: Readonly<Record<string, Direction>> = { ArrowLeft: 'left', ArrowRi
 
 export function intentOfKey(event: KeyLike): CanvasIntent | undefined {
   if (event.altKey || event.ctrlKey || event.metaKey) return undefined;
+  if (event.key === ' ') return event.shiftKey ? { type: 'toggle' } : undefined;
   if (event.key === 'F10') return event.shiftKey ? { type: 'menu' } : undefined;
   if (event.key === 'ContextMenu') return { type: 'menu' };
   if (event.key === 'Tab') return { type: 'tab', delta: event.shiftKey ? -1 : 1 };

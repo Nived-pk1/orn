@@ -65,6 +65,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
     };
   }, [entries, inspector.timers]);
   const reason = editReasonOf(status.mode);
+  const removeList = useMemo(() => (removing === null ? [] : [removing]), [removing]);
 
   const show = useCallback(
     (answer: ReturnType<typeof services.drafts.open>): void => {
@@ -133,7 +134,7 @@ export function EditorsProvider(props: { readonly children: ReactNode }) {
       ) : null}
       {removing === null ? null : (
         <Suspense fallback={null}>
-          <DeleteHost target={removing} reason={reason} onClose={() => setRemoving(null)} />
+          <DeleteHost targets={removeList} reason={reason} onClose={() => setRemoving(null)} />
         </Suspense>
       )}
       {template === null ? null : (

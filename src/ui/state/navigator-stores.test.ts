@@ -51,4 +51,28 @@ describe('the navigator UI stores', () => {
     expect(calls).toBe(1);
     expect(views.getState().views.navigator).toEqual({ x: 1, y: 2, scale: 3 });
   });
+
+  it('multi-selection (step 6.8b): toggle adds and removes, a single select or clear empties it, set replaces it', () => {
+    const store = createSelectionStore();
+    const a = { kind: 'node', id: 'a' } as const;
+    const e = { kind: 'edge', id: 'e1' } as const;
+    store.getState().toggle(a);
+    store.getState().toggle(e);
+    expect(store.getState().multi).toEqual([a, e]);
+    store.getState().toggle(a);
+    expect(store.getState().multi).toEqual([e]);
+    store.getState().setMulti([a, a, e]);
+    expect(store.getState().multi).toEqual([a, e]); // never the same item twice
+    store.getState().select({ kind: 'node', id: 'b' });
+    expect(store.getState().multi).toEqual([]);
+    store.getState().toggle(a);
+    store.getState().clearMulti();
+    expect(store.getState().multi).toEqual([]);
+  });
+
+  it('the multi-selection is not saved with the single selection (it is never persisted)', () => {
+    const store = createSelectionStore();
+    store.getState().toggle({ kind: 'node', id: 'a' });
+    expect(store.getState().selected).toBeNull();
+  });
 });

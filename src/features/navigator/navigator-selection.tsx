@@ -3,7 +3,7 @@ import { useStore } from 'zustand';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import styles from './navigator.module.css';
 
-export function NavigatorSelection() {
+export function NavigatorSelection(props: { /** The multi-selection in words (Studio; step 6.8b): shown instead of the single selection. */ readonly multiLine?: string }) {
   const { ports } = useNavigator();
   const selected = useStore(ports.ui.selection, (s) => s.selected);
   const reaction = useStore(ports.ui.family, (s) => s.reaction);
@@ -14,6 +14,7 @@ export function NavigatorSelection() {
       {text}
     </p>
   );
+  if (props.multiLine !== undefined) return line(props.multiLine);
   if (selected === null && reaction !== null) return line(`Selected: reaction ${ports.store.getState().records.reaction[reaction]?.name ?? reaction}.`);
   if (selected === null) return line('Nothing is selected.');
   const found = scene === null ? undefined : selected.kind === 'node' ? scene.nodes.find((n) => n.id === selected.id) : scene.edges.find((e) => e.id === selected.id);

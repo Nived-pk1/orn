@@ -10,10 +10,12 @@ export interface PointerInit {
   readonly kind?: 'mouse' | 'touch' | 'pen';
   readonly x?: number;
   readonly y?: number;
+  /** Shift held (multi-selection, step 6.8b). */
+  readonly shift?: boolean;
 }
 
 export function firePointer(target: Element | Document, type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel', init: PointerInit = {}): void {
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: init.x ?? 10, clientY: init.y ?? 10, button: 0 });
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: init.x ?? 10, clientY: init.y ?? 10, button: 0, shiftKey: init.shift === true });
   Object.defineProperty(event, 'pointerId', { value: init.id ?? 1 });
   Object.defineProperty(event, 'pointerType', { value: init.kind ?? 'mouse' });
   act(() => {

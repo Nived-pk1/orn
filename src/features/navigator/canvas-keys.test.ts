@@ -21,6 +21,8 @@ const TABLE: ReadonlyArray<readonly [string, KeyLike, CanvasIntent | undefined]>
   ['0', key('0'), { type: 'fit' }],
   ['F', key('f'), { type: 'centre' }],
   ['Escape', key('Escape'), { type: 'escape' }],
+  ['Shift+Space toggles the focused item (step 6.8b)', key(' ', { shiftKey: true }), { type: 'toggle' }],
+  ['plain Space is not bound', key(' '), undefined],
   ['Shift+F10', key('F10', { shiftKey: true }), { type: 'menu' }],
   ['the context-menu key', key('ContextMenu'), { type: 'menu' }],
   ['F10 alone is not ours', key('F10'), undefined],

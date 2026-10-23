@@ -19,7 +19,8 @@ export interface BulkReview {
   readonly dialogs: ReactNode;
 }
 
-export function useBulkReview(port: ReviewPort, onDone?: () => void): BulkReview {
+/** `onDone` runs after a change was made; `onCancel` when a dialog was closed without one (the map's host closes its own state on either). */
+export function useBulkReview(port: ReviewPort, onDone?: () => void, onCancel?: () => void): BulkReview {
   const toasts = useToasts();
   const [verify, setVerify] = useState<readonly RecordRef[] | null>(null);
   const [needs, setNeeds] = useState<readonly RecordRef[] | null>(null);
@@ -64,7 +65,10 @@ export function useBulkReview(port: ReviewPort, onDone?: () => void): BulkReview
         <VerifyDialog
           plan={verifyPlan(port.state(), verify, port.findingsOf)}
           unavailable={port.unavailable}
-          onClose={() => setVerify(null)}
+          onClose={() => {
+            setVerify(null);
+            onCancel?.();
+          }}
           onConfirm={() => {
             const plan = verifyPlan(port.state(), verify, port.findingsOf);
             if (apply(plan.ready)) setVerify(null);
@@ -76,7 +80,10 @@ export function useBulkReview(port: ReviewPort, onDone?: () => void): BulkReview
           count={needs.length}
           unavailable={port.unavailable}
           message={message}
-          onClose={() => setNeeds(null)}
+          onClose={() => {
+            setNeeds(null);
+            onCancel?.();
+          }}
           onConfirm={(reason) => {
             const built = needsReviewEnvelope(port.state(), needs, reason, port.now());
             if (!built.ok) return setMessage(built.message);

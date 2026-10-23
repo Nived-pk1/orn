@@ -10,7 +10,7 @@ import type { PointerEffect, PointerInput, PointerState } from './pointer-machin
 
 const A: SceneHit = { kind: 'node', id: 'a' };
 const B: SceneHit = { kind: 'node', id: 'b' };
-const down = (hit: SceneHit | null, id = 1, kind: 'mouse' | 'touch' = 'mouse', button = 0): PointerInput => ({ type: 'down', id, kind, x: 10, y: 10, button, hit });
+const down = (hit: SceneHit | null, id = 1, kind: 'mouse' | 'touch' = 'mouse', button = 0, shift = false): PointerInput => ({ type: 'down', id, kind, x: 10, y: 10, button, hit, ...(shift ? { shift } : {}) });
 const move = (dx: number, id = 1): PointerInput => ({ type: 'move', id, x: 10 + dx, y: 10 });
 const up = (id = 1): PointerInput => ({ type: 'up', id, x: 10, y: 10 });
 const timer = (which: 'long' | 'window', token: number): PointerInput => ({ type: 'timer', timer: which, token });
@@ -165,5 +165,34 @@ describe('the pointer state machine', () => {
   it('is deterministic: the same inputs give the same effects', () => {
     const inputs = [down(A), up(), down(A), up(), down(B), move(9), up()];
     expect(play(inputs)).toEqual(play(inputs));
+  });
+});
+
+describe('Shift (step 6.8b): a toggle and a marquee, only when the press carries Shift', () => {
+  it('a Shift click is ONE toggle of the hit: no click, no double-click window, no pending', () => {
+    const { effects, state } = play([down(A, 1, 'mouse', 0, true), up()]);
+    expect(effects).toEqual([start('long', LONG_PRESS_MS, 1), stop(1), { type: 'toggle', hit: A }]);
+    expect(state.phase).toBe('idle');
+    expect(state.pending).toBeNull();
+  });
+  it('a Shift press that moves over the slop is a marquee: each move reports the rectangle, the release ends it, nothing clicks', () => {
+    const { effects, state } = play([down(null, 1, 'mouse', 0, true), move(MOVE_SLOP_PX + 6), move(40), up()]);
+    const marquee = effects.filter((one) => one.type === 'marquee');
+    expect(marquee).toEqual([
+      { type: 'marquee', from: { x: 10, y: 10 }, to: { x: 10 + MOVE_SLOP_PX + 6, y: 10 }, done: false },
+      { type: 'marquee', from: { x: 10, y: 10 }, to: { x: 50, y: 10 }, done: false },
+      { type: 'marquee', from: { x: 10, y: 10 }, to: { x: 10, y: 10 }, done: true },
+    ]);
+    expect(effects.some((one) => one.type === 'click' || one.type === 'toggle')).toBe(false);
+    expect(state.phase).toBe('idle');
+  });
+  it('a cancel during a marquee ends it without a selection', () => {
+    const { effects, state } = play([down(null, 1, 'mouse', 0, true), move(30), { type: 'cancel', id: 1 }]);
+    expect(effects.at(-1)).toEqual({ type: 'marqueeCancel' });
+    expect(state.phase).toBe('idle');
+  });
+  it('without Shift nothing changes: a click is a click and a drag pans', () => {
+    expect(play([down(A), up()]).effects.map((one) => one.type)).toEqual(['startTimer', 'cancelTimer', 'click', 'startTimer']);
+    expect(play([down(null), move(30)]).state.phase).toBe('panning');
   });
 });

@@ -67,6 +67,7 @@ export function DeleteDialog(props: DeleteDialogProps) {
   );
   return (
     <Dialog open onClose={props.onClose} title={`Delete ${name}?`} size="wide" footer={footer}>
+      {view.targets.length < 2 ? null : <Rows label="Records to delete" rows={view.targets.map((target) => ({ ref: target.ref, name: target.name, fields: [] }))} />}
       <Rows label="Removed from" rows={view.removedFrom} />
       <Rows label="Deleted with it" rows={view.deletedWith} />
       <Rows label="Blocks the delete" rows={view.blocks} onOpen={props.onOpen} />
