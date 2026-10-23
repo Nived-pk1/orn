@@ -4,7 +4,7 @@
  * and its result a Toast (import-panel.tsx); the inspector shows the record in focus (step 5.6a). Composition only: the frame is
  * `src/ui/shell` and knows nothing of `AppStatus`; chemistry never lives here.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Inspector, placeOf, type InspectorHost } from "@/features/inspector";
 import {
   NavigatorView,
@@ -30,8 +30,11 @@ import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
 import { FirstRun } from "./first-run";
-import { MODES, NAVIGATOR_MODE, WORKBENCH_MODE } from "./modes";
+import { MODES, NAVIGATOR_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
 import { WorkbenchPage } from "./workbench-page";
+
+// Studio only: the review queue is a lazy chunk (and a dropped one in Study, where EDITING is false)
+const ReviewHost = /* @__PURE__ */ lazy(() => import("./review-host").then((m) => ({ default: m.ReviewHost })));
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { EDITING, editionMarker } from "@/app/edition";
@@ -106,6 +109,10 @@ function Canvas(props: {
         <NavigatorView />
       ) : EDITING && props.mode === WORKBENCH_MODE ? (
         <WorkbenchPage />
+      ) : EDITING && props.mode === REVIEW_MODE ? (
+        <Suspense fallback={null}>
+          <ReviewHost />
+        </Suspense>
       ) : (
         <DatasetView counts={props.counts} empty={empty} imports={imports} exports={props.exports} onAskReplace={props.onAskReplace} />
       )}

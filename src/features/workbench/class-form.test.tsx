@@ -178,11 +178,12 @@ describe('Examples', () => {
 });
 
 describe('Review and the read-only record', () => {
-  it('the lifecycle is editable; the status is read-only', () => {
+  it('the lifecycle is editable; the status changes only by Mark verified / Needs review', () => {
     const { rig, id } = show();
     set('Lifecycle', 'draft');
     expect(draftOf(rig, id).review.lifecycle).toBe('draft');
-    expect(screen.getByText(/arrives with the review queue in step 6.8/)).toBeTruthy();
+    expect(screen.queryByText(/step 6\.8/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Mark verified' })).toBeTruthy();
   });
 
   it('notes, description, tags and citations are edited in the shared section and everything else is kept unchanged by Save', async () => {

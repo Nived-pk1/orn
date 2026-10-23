@@ -79,6 +79,19 @@ describe('desktop', () => {
     expect(await k.screen.findByRole('menuitem', { name: 'Drafts (0)' })).toBeTruthy();
   });
 
+  it('study: no Review page in the navigation; studio: Review opens the queue (step 6.8b)', async () => {
+    const study = loaded.study;
+    show(study);
+    expect(study.within(study.screen.getByRole('navigation', { name: 'Modes' })).queryByText('Review')).toBeNull();
+    study.cleanup();
+    const k = loaded.studio;
+    show(k);
+    k.fireEvent.click(k.within(k.screen.getByRole('navigation', { name: 'Modes' })).getByText('Review'));
+    const region = await k.screen.findByRole('region', { name: 'Review' }, { timeout: 10_000 });
+    expect(k.within(region).getByRole('heading', { name: 'Review' })).toBeTruthy();
+    expect(k.within(region).getByRole('button', { name: 'Select all shown' })).toBeTruthy();
+  });
+
   it('study: Ctrl+Z does not touch the history (no key handler)', async () => {
     const k = loaded.study;
     const app = show(k);
@@ -99,6 +112,7 @@ describe('phone', () => {
     expect(more.getByRole('button', { name: 'Undo import' })).toBeTruthy();
     expect(more.queryByRole('region', { name: 'Workbench' })).toBeNull();
     expect(more.queryByText(/^New /)).toBeNull();
+    expect(more.queryByText('Review')).toBeNull();
     expect(more.queryByRole('button', { name: /^Undo$|^Redo$/ })).toBeNull();
     expect(more.queryByRole('button', { name: /^Drafts/ })).toBeNull();
   });

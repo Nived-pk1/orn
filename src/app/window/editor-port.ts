@@ -6,15 +6,16 @@ import type { WindowServices } from './context';
 export function makeEditorPort(
   services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks' | 'chem' | 'duplicateCheck'>>,
   timers: EditorPort['timers'],
-  extras: { readonly depictions?: StructurePort['depictions']; readonly records?: RecordPickerPort; readonly openRecord?: (ref: RecordRef) => void; readonly preview?: PreviewPort; readonly links?: MechanismLinksPort; readonly pictures?: PicturesPort; readonly chain?: EditorPort['chain']; readonly createNew?: EditorPort['createNew']; readonly merge?: EditorPort['merge'] } = {},
+  extras: { readonly depictions?: StructurePort['depictions']; readonly records?: RecordPickerPort; readonly openRecord?: (ref: RecordRef) => void; readonly preview?: PreviewPort; readonly links?: MechanismLinksPort; readonly pictures?: PicturesPort; readonly chain?: EditorPort['chain']; readonly createNew?: EditorPort['createNew']; readonly merge?: EditorPort['merge']; readonly now?: () => string } = {},
 ): EditorPort {
-  const { depictions, records, openRecord, preview, links, pictures, chain, createNew, merge } = extras;
+  const { depictions, records, openRecord, preview, links, pictures, chain, createNew, merge, now } = extras;
   const { drafts, store } = services;
   return {
     entry: (id) => drafts.entry(id),
     subscribe: drafts.subscribe,
     keeping: () => drafts.view().keeping,
     newId: (prefix) => drafts.newId(prefix),
+    ...(now === undefined ? {} : { now }),
     edit: (id, recipe, meta) => drafts.edit(id, recipe, meta),
     undo: (id) => drafts.undo(id),
     redo: (id) => drafts.redo(id),

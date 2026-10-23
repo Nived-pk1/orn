@@ -78,12 +78,13 @@ describe('the sections', () => {
     expect(Object.hasOwn(draftOf(rig, id), 'stereo')).toBe(false);
   });
 
-  it('Review: lifecycle is editable, the review status is read-only and says verifying arrives in step 6.8', () => {
+  it('Review: lifecycle is editable, the review status is words (it changes only by Mark verified / Needs review)', () => {
     const { rig, id, dialog } = show();
     set('Lifecycle', 'draft');
     expect(draftOf(rig, id).review.lifecycle).toBe('draft');
     expect(within(dialog).getByText(/Review status:/)).toBeTruthy();
-    expect(within(dialog).getByText(/review queue in step 6\.8/)).toBeTruthy();
+    expect(within(dialog).queryByText(/step 6\.8/)).toBeNull();
+    expect(within(dialog).getByRole('button', { name: 'Mark verified' })).toBeTruthy();
     expect(within(dialog).queryByLabelText(/Review status/)).toBeNull();
   });
 

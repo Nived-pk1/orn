@@ -10,6 +10,8 @@ export const NAVIGATOR_MODE = 'navigator';
 export const DATASET_MODE = 'dataset';
 
 export const WORKBENCH_MODE = 'workbench';
+/** Studio's review queue (step 6.8b). */
+export const REVIEW_MODE = 'review';
 
 export const MODES: readonly ModeItem[] = [
   { id: NAVIGATOR_MODE, label: 'Navigator' },
@@ -20,5 +22,5 @@ export const MODES: readonly ModeItem[] = [
   { id: 'named', label: 'Named', unavailable: 'Phase 7' },
   { id: 'mechanisms', label: 'Mechanisms', unavailable: 'Phase 7' },
   { id: 'syllabus', label: 'Syllabus', unavailable: 'Phase 7' },
-  ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }] : []),
+  ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }, { id: REVIEW_MODE, label: 'Review' }] : []),
 ];

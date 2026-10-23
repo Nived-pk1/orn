@@ -16,6 +16,7 @@ import { ConflictView, DeletedView } from './conflict-view';
 import { CreateNewContext } from './create-new';
 import { DuplicateDialog } from './duplicate-dialog';
 import { RemoveContext } from './remove-context';
+import { ReviewContext, reviewActionsOf } from './review-context';
 import { EditorMerge } from './merge-flow';
 import type { MergeCandidate } from './merge-contracts';
 import type { DuplicateMatch, DuplicateOutcome } from './duplicate-contracts';
@@ -248,6 +249,7 @@ export function EditorHost(props: EditorHostProps) {
   const comparisons: readonly FieldComparison[] = view.kind === 'conflict' ? compareForConflict(session.baseRecord, view.current, session.draft) : [];
   const refused = refusal !== null && refusal.findings.length > 0;
   const shown = slotFindings(refused ? refusal.findings : mergeFindings(live, checks.dry.findings, checks.structure.findings), draft, (classId) => port.records?.describe('class', classId)?.name);
+  const reviewActions = reviewActionsOf(shown, port.now);
   const notes = refused ? [] : checkNotes(checks);
   const inForm = (path: string | undefined): boolean => formOwns(session.kind, path);
   const ends = session.kind === 'relationship' ? relationshipTitleWords(draft, port.records) : curriculumTitleWords(session.kind, draft, port.records);
@@ -333,7 +335,7 @@ export function EditorHost(props: EditorHostProps) {
         ) : view.kind === 'deleted' || gone ? (
           <DeletedView {...(gone ? {} : { onBack: () => setView({ kind: 'form' }) })} onDiscard={() => setAsking(true)} {...(port.chain === undefined ? {} : { onSaveAsNew: () => void saveAsNew() })} />
         ) : (
-          <RemoveContext.Provider value={port.chain?.remove}><div className={phone ? styles.bodyPhone : styles.body}>
+          <RemoveContext.Provider value={port.chain?.remove}><ReviewContext.Provider value={reviewActions}><div className={phone ? styles.bodyPhone : styles.body}>
             <PreviewPanel kind={session.kind} draft={draft} port={port.preview} phone={phone} where="top" />
             <RecordForm
               kind={session.kind}
@@ -370,7 +372,7 @@ export function EditorHost(props: EditorHostProps) {
               />
               <PreviewPanel kind={session.kind} draft={draft} port={port.preview} phone={phone} where="aside" />
             </div>
-          </div></RemoveContext.Provider>
+          </div></ReviewContext.Provider></RemoveContext.Provider>
         )}
       </div>
     </Dialog>

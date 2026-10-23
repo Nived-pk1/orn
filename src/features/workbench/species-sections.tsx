@@ -15,7 +15,6 @@ import {
   setDescriptor,
   setFormula,
   setIsotopeNote,
-  setLifecycle,
   setSpeciesKind,
   setStereoKind,
   setStereoNote,
@@ -133,23 +132,4 @@ export function AromaticitySection(props: SectionProps) {
   );
 }
 
-const STATUS_WORDS: Readonly<Record<string, string>> = { unreviewed: 'Not reviewed', review_required: 'Needs review', verified: 'Verified' };
-
-export function ReviewSection(props: SectionProps) {
-  const view = speciesViewOf(props.draft);
-  return (
-    <div>
-      <div className={styles.field}>
-        <label htmlFor="species-lifecycle">Lifecycle</label>
-        <select id="species-lifecycle" value={view.lifecycle} disabled={props.unavailable !== undefined} aria-invalid={bad(props, 'review.lifecycle')} data-field-path="review.lifecycle" onChange={(event) => props.onEdit(setLifecycle(event.target.value), 'review.lifecycle')}>
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-        </select>
-      </div>
-      <p>
-        Review status: <strong>{STATUS_WORDS[view.status] ?? view.status}</strong>
-      </p>
-      <p className={styles.hint}>Marking a record verified arrives with the review queue in step 6.8.</p>
-    </div>
-  );
-}
+export { ReviewSection } from './review-section';
