@@ -9,6 +9,9 @@ export const NAVIGATOR_MODE = 'navigator';
 /** The record counts of step 5.1d, kept reachable beside the navigator (step 5.5a). */
 export const DATASET_MODE = 'dataset';
 
+/** The Reactions list (step 7.1b). */
+export const REACTIONS_MODE = 'reactions';
+
 export const WORKBENCH_MODE = 'workbench';
 /** Studio's review queue (step 6.8b). */
 export const REVIEW_MODE = 'review';
@@ -16,7 +19,7 @@ export const REVIEW_MODE = 'review';
 export const MODES: readonly ModeItem[] = [
   { id: NAVIGATOR_MODE, label: 'Navigator' },
   { id: DATASET_MODE, label: 'Dataset' },
-  { id: 'reactions', label: 'Reactions', unavailable: 'Phase 7' },
+  { id: REACTIONS_MODE, label: 'Reactions' },
   { id: 'precursors', label: 'Precursors', unavailable: 'Phase 7' },
   { id: 'reagents', label: 'Reagents', unavailable: 'Phase 7' },
   { id: 'named', label: 'Named', unavailable: 'Phase 7' },

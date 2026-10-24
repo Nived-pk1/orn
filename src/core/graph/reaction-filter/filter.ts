@@ -40,7 +40,7 @@ function optionsOf(entry: ReactionFilterEntry, dimension: Dimension, usedAs: Non
  */
 function pairsOfEntry(entry: ReactionFilterEntry, from: ReadonlySet<string> | undefined, to: ReadonlySet<string> | undefined) {
   const matches = entry.pairs.filter((pair) => (from === undefined || from.has(pair[0])) && (to === undefined || to.has(pair[1])));
-  return { matches: matches.length > 0, fromOptions: entry.pairs.filter((pair) => to === undefined || to.has(pair[1])).map((pair) => pair[0]), toOptions: entry.pairs.filter((pair) => from === undefined || from.has(pair[0])).map((pair) => pair[1]) };
+  return { matches: (from === undefined && to === undefined) || matches.length > 0, fromOptions: entry.pairs.filter((pair) => to === undefined || to.has(pair[1])).map((pair) => pair[0]), toOptions: entry.pairs.filter((pair) => from === undefined || from.has(pair[0])).map((pair) => pair[1]) };
 }
 
 export function filterReactions(input: ReactionFilterInput, filter: ReactionFilter, scope: ScopeOf | undefined): ReactionFilterResult {

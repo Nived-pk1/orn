@@ -55,3 +55,5 @@ export { createNavigatorUi, MAX_SAVED_EXPANDED, NAVIGATOR_UI_KEY, parseNavigator
 export type { NavigatorUi, NavigatorUiPort, NavigatorUiStatus, ParsedNavigatorUi } from './navigator-persist';
 export { canBack, canForward, createInspectorStore, currentOf, MAX_HISTORY } from './inspector-store';
 export type { InspectorEntry, InspectorState, InspectorStore } from './inspector-store';
+export { createExplorerStore, EMPTY_EXPLORER_FILTER, EXPLORER_USES, isFilterSet, parseExplorer } from './explorer-state';
+export type { ExplorerFilter, ExplorerKind, ExplorerState, ExplorerStore, ExplorerUse, ExplorerView } from './explorer-state';

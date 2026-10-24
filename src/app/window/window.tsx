@@ -30,9 +30,11 @@ import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
 import { FirstRun } from "./first-run";
-import { MODES, NAVIGATOR_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
+import { MODES, NAVIGATOR_MODE, REACTIONS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
 import { WorkbenchPage } from "./workbench-page";
 
+// the Reactions list: a lazy chunk in BOTH editions (step 7.1b)
+const ReactionsHost = lazy(() => import("./reactions-host").then((m) => ({ default: m.ReactionsHost })));
 // Studio only: the review queue is a lazy chunk (and a dropped one in Study, where EDITING is false)
 const ReviewHost = /* @__PURE__ */ lazy(() => import("./review-host").then((m) => ({ default: m.ReviewHost })));
 import { PanelsStatus } from "./panels-status";
@@ -108,6 +110,10 @@ function Canvas(props: {
         <FirstRun imports={imports} onStartEmpty={onStartEmpty} />
       ) : showsNavigator ? (
         <NavigatorView />
+      ) : !empty && props.mode === REACTIONS_MODE ? (
+        <Suspense fallback={null}>
+          <ReactionsHost />
+        </Suspense>
       ) : EDITING && props.mode === WORKBENCH_MODE ? (
         <WorkbenchPage />
       ) : EDITING && props.mode === REVIEW_MODE ? (

@@ -104,6 +104,7 @@ describe('createNavigatorUi', () => {
       overviewMode: 'map',
       recentSearches: [],
       activeExam: null,
+      explorer: { filter: { substanceIds: [], usedAs: 'any', fromFamilyIds: [], toFamilyIds: [], typeIds: [], namedReactionIds: [], reviewStatuses: [], text: '', onlyInScope: false }, view: 'cards', last: 'reactions' },
     });
   });
 

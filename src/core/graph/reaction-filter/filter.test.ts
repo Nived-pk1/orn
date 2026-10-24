@@ -254,4 +254,13 @@ describe('From family and To family together match ONE candidate (7.1b C2)', () 
     for (const option of asked.toFamily) expect(option.count).toBe(ids({ fromFamilyIds: ['A'], toFamilyIds: [option.id] }).length);
     for (const option of facets.fromFamily) expect(option.count).toBe(ids({ toFamilyIds: ['D'], fromFamilyIds: [option.id] }).length);
   });
+
+  it('a reaction with NO candidate (on no family page) is still a result while From and To are both empty, and never when one is set', () => {
+    const loose: ReactionFilterInput = { entries: [entry('loose', []), ...input.entries] };
+    const all = (filter: ReactionFilter): string[] => filterReactions(loose, filter, undefined).rows.map((row) => row.id);
+    expect(all({})).toContain('loose');
+    expect(all({ typeIds: [] })).toContain('loose');
+    expect(all({ fromFamilyIds: ['A'] })).not.toContain('loose');
+    expect(all({ toFamilyIds: ['D'] })).not.toContain('loose');
+  });
 });

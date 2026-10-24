@@ -1,6 +1,8 @@
 export { NavigatorCanvas, openFamilyReason } from './navigator-canvas';
 export { NavigatorView } from './navigator-view';
 export { PhoneTabs } from './phone-tabs';
+export { ReactionCardHost } from './reaction-card-host';
+export type { ReactionCardHostProps } from './reaction-card-host';
 export { FamilyPage } from './family-page';
 export { NavigatorSelection } from './navigator-selection';
 export { navigatorNoticesOf, NavigatorStatus, truncationLineOf } from './navigator-status';

@@ -267,12 +267,12 @@ describe('a dataset with data', () => {
 });
 
 describe('the shell frame around the window', () => {
-  it('Navigator, Dataset and Workbench are the enabled modes; the others are listed with the phase that brings them', () => {
+  it('Navigator, Dataset, Reactions and Workbench are the enabled modes; the others are listed with the phase that brings them', () => {
     renderWithApp(app());
     const rail = within(screen.getByRole('navigation', { name: 'Modes' }));
     expect(rail.getByRole('button', { name: 'Navigator' }).getAttribute('aria-current')).toBe('page');
     expect(rail.getByRole('button', { name: 'Workbench' }).getAttribute('aria-disabled')).toBeNull(); // a page since step 6.2a
-    for (const [name, phase] of [['Reactions', 'Phase 7'], ['Syllabus', 'Phase 7']] as const) {
+    for (const [name, phase] of [['Syllabus', 'Phase 7']] as const) {
       const mode = rail.getByRole('button', { name: new RegExp(name) });
       expect(mode.getAttribute('aria-disabled')).toBe('true');
       expect(within(mode).getByText(phase)).toBeTruthy();

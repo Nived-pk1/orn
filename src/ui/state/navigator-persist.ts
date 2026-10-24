@@ -29,6 +29,7 @@ import {
   type SavedViewport,
   type Selected,
 } from './navigator-stores';
+import { createExplorerStore, parseExplorer, type ParsedExplorer } from './explorer-state';
 import { createRecentStore, createViewCommandsStore, MAX_RECENT_LENGTH, MAX_RECENT_SEARCHES } from './search-stores';
 import { SAVE_DEBOUNCE_MS, type PanelPersistence, type PanelsPort, type PanelsTimers } from './panels';
 
@@ -37,7 +38,7 @@ export const NAVIGATOR_UI_KEY = 'navigator';
 export const MAX_SAVED_EXPANDED = 1_000;
 const MAX_ID_LENGTH = 512;
 const MAX_COORDINATE = 1e7;
-const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'phoneTab', 'recentSearches', 'activeExam']);
+const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'phoneTab', 'recentSearches', 'activeExam', 'explorer']);
 
 /** The same shape as the panels port: the stored entry, whether this tab writes, and the write. */
 export type NavigatorUiPort = PanelsPort;
@@ -52,6 +53,8 @@ export interface ParsedNavigatorUi {
   readonly overviewMode: OverviewMode;
   /** The phone's home tab (ADR-039); absent in the file means the default, Families. */
   readonly phoneTab: PhoneTab;
+  /** The Reactions view's filter, view and last explorer (step 7.1b). */
+  readonly explorer: ParsedExplorer;
   /** The palette's recent searches, newest first (step 5.8). */
   readonly recent: readonly string[];
   /** The chosen exam version (step 5.8), or null: no exam scope. Not judged against the data here: the selector does that. */
@@ -78,7 +81,7 @@ function parseExpanded(value: unknown): ExpansionState['expanded'] | undefined {
 }
 
 export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
-  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', phoneTab: 'families', recent: [], exam: null, damaged: [], extra: {} };
+  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', phoneTab: 'families', explorer: parseExplorer(undefined), recent: [], exam: null, damaged: [], extra: {} };
   if (raw === undefined) return empty;
   if (!isRecord(raw)) return { ...empty, damaged: ['navigator'] };
   const damaged: string[] = [];
@@ -115,6 +118,8 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     if ((PHONE_TABS as readonly unknown[]).includes(raw.phoneTab)) phoneTab = raw.phoneTab as PhoneTab;
     else damaged.push('phoneTab');
   }
+  const explorer = parseExplorer(raw.explorer);
+  damaged.push(...explorer.damaged);
   let recent: string[] = [];
   const r = raw.recentSearches;
   if (r !== undefined) {
@@ -139,7 +144,7 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     } else damaged.push('viewports');
   }
   const extra = Object.fromEntries(Object.entries(raw).filter(([key]) => !KNOWN.has(key)));
-  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, phoneTab, recent, exam, damaged, extra };
+  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, phoneTab, explorer, recent, exam, damaged, extra };
 }
 
 export interface NavigatorUiStatus {
@@ -169,6 +174,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     viewports: createViewportsStore(parsed.views),
     family: createFamilyStore(parsed.openFamily),
     overview: createOverviewStore(parsed.overviewMode, parsed.phoneTab),
+    explorer: createExplorerStore({ filter: parsed.explorer.filter, view: parsed.explorer.view, last: parsed.explorer.last }),
     recent: createRecentStore(parsed.recent),
     viewCommands: createViewCommandsStore(),
   };
@@ -192,10 +198,11 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { views } = stores.viewports.getState();
     const { open } = stores.family.getState();
     const { mode: overviewMode, phoneTab } = stores.overview.getState();
+    const { filter, view, last } = stores.explorer.getState();
     const { items: recentSearches } = stores.recent.getState();
     const { active: activeExam } = stores.exam.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === 'families' ? {} : { phoneTab }), recentSearches, activeExam });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === 'families' ? {} : { phoneTab }), recentSearches, activeExam, explorer: { filter, view, last } });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -219,7 +226,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     });
   }
 
-  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.recent.subscribe(schedule), stores.exam.subscribe(schedule)];
+  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.explorer.subscribe(schedule), stores.recent.subscribe(schedule), stores.exam.subscribe(schedule)];
   // The removed expansion is written back empty, once.
   if (removedExpansion > 0) schedule();
   return {

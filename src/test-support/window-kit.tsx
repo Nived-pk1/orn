@@ -48,6 +48,8 @@ export interface FakeApp {
   readonly saveEverythingNow: Mock;
   readonly retryReplica: Mock;
   readonly retryEngine: Mock;
+  /** The search service's `search` call (a stand-in that answers "not loaded"). */
+  readonly search: Mock;
   readonly loadDemo: Mock;
   readonly reload: Mock;
   readonly panels: PanelsStore;
@@ -128,7 +130,7 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
     ui: { inspector: inspectorStore, selection: navigator.ports.ui.selection, family: navigator.ports.ui.family, panels },
     log: () => undefined,
   };
-  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigatorPorts, inspector, loadDemo, nowMs: () => 1_790_000_000_000, formatTime: createLocalTimeFormatter('UTC'), reload, editorEntries: EDITOR_ENTRIES, editorsController: EditorsController } };
+  return { status, store, drafts, flows, saveEverythingNow, retryReplica, retryEngine, search: search.search, loadDemo, reload, panels, panelSaves, navigator, inspectorStore, inspector, value: { services, panels, navigator: navigatorPorts, inspector, loadDemo, nowMs: () => 1_790_000_000_000, formatTime: createLocalTimeFormatter('UTC'), reload, editorEntries: EDITOR_ENTRIES, editorsController: EditorsController } };
 }
 
 export function renderWithApp(app: FakeApp, ui: ReactNode = <Window />) {

@@ -237,7 +237,7 @@ test.describe('the three breakpoints', () => {
     expect(Math.round(sheet.width)).toBe(700);
     expect(sheet.y + sheet.height).toBeLessThanOrEqual(rail.y + 1);
     expect(await page.locator('body').evaluate((b) => b.scrollWidth <= window.innerWidth)).toBe(true); // no horizontal page scroll
-    await expect(page.getByRole('button', { name: /Reactions/ })).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.getByRole('button', { name: /Syllabus/ })).toHaveAttribute('aria-disabled', 'true');
   });
 });
 
