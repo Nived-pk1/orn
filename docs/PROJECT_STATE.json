@@ -129,19 +129,20 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-10-23",
-    "commit": "81ce55f",
-    "version": "cffbc677-884d-4023-b0c0-17505f70b711"
+    "commit": "a7c7205",
+    "version": "33727cfc-2839-48c3-9d73-3af86ba5a91d",
+    "liveSpecs": "2026-10-24: 45 passed, 17 skipped, 0 failed (Chromium 23, WebKit 22)"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-23",
-    "version": "6a1fac49-bb2a-475c-89a3-5b803d5d07ca",
+    "deployedAt": "2026-10-24",
+    "version": "803759e9-b4a9-440e-99b9-21fcae2bfbc5",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 6.8 deploy, 2026-10-23: an unauthenticated request got 302 (Cloudflare Access) and not the app; the public Worker still answered 200 with the app.",
-    "commit": "81ce55f",
-    "protectedCheckedAt": "2026-10-23"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the phase-6 deploy, 2026-10-24: an unauthenticated request got 302 (Cloudflare Access, Www-Authenticate: Cloudflare-Access) and not the app; the public Worker still answered 200 with the app.",
+    "commit": "a7c7205",
+    "protectedCheckedAt": "2026-10-24"
   },
   "nextStep": "7.1",
   "nextStepTitle": "Phase 7, exploration views, first step: the reaction explorer (the plan lists the Phase 7 steps in one paragraph, one step each)",

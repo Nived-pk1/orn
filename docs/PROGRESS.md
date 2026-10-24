@@ -6174,3 +6174,11 @@ Reviewer verdict: PASSED (2026-10-23). Round 2: 27 of 27 demo reactions authored
 **Speed check.** The 6.9b report said 0.10 s at the start and 1.29 s before the benches. They were different loops: the start reading used the handbook loop; the pre-bench reading used `s += i` (no `& 7`), which is slower on any machine, so 1.29 s was NOT a slow-machine reading and the benches were not run on a slow machine. This session, the handbook loop (SONNET_HANDOFF §19), command `node -e "const t=Date.now();let s=0;for(let i=0;i<3e8;i++)s+=i&7;console.log((Date.now()-t)/1000)"` three times: 0.561 / 0.542 / 0.548 s, median 0.548 s.
 **Phase 5 tag procedure followed:** annotated tag named `phase-N` ("Phase N complete: Gate X passed") on the commit that records the verdict, not pushed (the repository has no remote), no bench baseline refresh at the gate (the baseline was refreshed in a step, 5.10b). The tag message is "Phase 6 complete: Gate D passed".
 **Departure:** IMPLEMENTATION_PLAN has no numbered Phase 7 rows (one paragraph: "one step each"), so nextStep "7.1" is the first of those steps, the reaction explorer, by the paragraph's order.
+
+### Phase 6 deployed (2026-10-24)
+
+Docs only; no product code changed. Both editions were built from a7c7205 (tag phase-6).
+**Study** `reaction-navigator`: version 33727cfc-2839-48c3-9d73-3af86ba5a91d (deployed 2026-10-23, not redeployed). Live specs against its URL (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition): 45 passed, 17 skipped by profile, 0 failed (Chromium 23 passed / 8 skipped, WebKit 22 / 9).
+**Studio** `reaction-navigator-studio`: version 803759e9-b4a9-440e-99b9-21fcae2bfbc5 (deployed 2026-10-24, after `npm run build:studio`).
+**Access check (after the Studio deploy):** an unauthenticated `curl -sI` of the Studio URL answered 302 with `Www-Authenticate: Cloudflare-Access`, not the app; the public Study URL answered 200 with the app.
+**nextStep "7.1"** means the reaction explorer, the first Phase 7 item in IMPLEMENTATION_PLAN. Phase 7 has no numbered rows yet; the reviewer will number them.
