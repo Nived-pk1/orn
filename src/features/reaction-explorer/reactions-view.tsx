@@ -8,7 +8,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import { createReactionFilterMemo, createScopeOf, filterReactions, type ReactionFacets } from '@/core/graph';
-import { LiveRegion, SegmentedControl } from '@/ui/primitives';
+import { useLayoutMode } from '@/ui/hooks';
+import { Button, Dialog, LiveRegion, SegmentedControl } from '@/ui/primitives';
 import { isFilterSet, type ExplorerFilter } from '@/ui/state';
 import { PAGE_SIZE, type ExplorerPorts } from './contracts';
 import { FilterPopover, OptionList, type FilterOption } from './filter-popover';
@@ -33,6 +34,8 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
   const selected = useStore(ports.ui.family, (s) => s.reaction);
   const [version, setVersion] = useState(0);
   const [pruned, setPruned] = useState(false);
+  const phone = useLayoutMode() === 'phone';
+  const [sheet, setSheet] = useState(false);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const memo = useRef(createReactionFilterMemo()).current;
   useEffect(() => ports.store.subscribe(() => setVersion((v) => v + 1)), [ports]);
@@ -79,34 +82,54 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
   ];
 
   const none = result.total === 0;
+  const nameAndScope = (
+    <>
+      <label className={styles.field}>
+        <span>Find by name</span>
+        <input type="search" value={filter.text} autoComplete="off" spellCheck={false} onChange={(event) => set({ text: event.target.value })} />
+      </label>
+      {versionName === undefined ? null : (
+        <label className={styles.option}>
+          <input type="checkbox" checked={filter.onlyInScope} onChange={(event) => set({ onlyInScope: event.target.checked })} />
+          <span>{`Only ${versionName}`}</span>
+        </label>
+      )}
+    </>
+  );
+  const chosenCount = chips.length + (filter.onlyInScope ? 1 : 0);
   return (
-    <section className={styles.view} aria-label="Reactions">
+    <section className={styles.view} aria-label="Reactions" data-layout={phone ? 'phone' : 'desktop'}>
       <header className={styles.header}>
         <h2 className={styles.title}>Reactions</h2>
         <p className={styles.count}>{line}</p>
         <SegmentedControl label="Show as" options={[{ value: 'cards', label: 'Cards' }, { value: 'compact', label: 'Compact' }]} value={view} onChange={(next) => ports.ui.explorer.getState().setView(next)} />
+        {phone && !none ? <button type="button" className={styles.filtersButton} aria-haspopup="dialog" onClick={() => setSheet(true)}>{`Filters (${chosenCount})`}</button> : null}
         {filtered ? <button type="button" onClick={clear}>Clear all filters</button> : null}
       </header>
       {pruned ? <p className={styles.notice} role="status">{PRUNED_WORDS}</p> : null}
-      {none ? null : (
+      {none || phone ? null : (
         <div className={styles.bar} role="group" aria-label="Filters">
           {sections.map((section) => (
             <FilterPopover key={section.title} title={section.title} chosen={section.chosen}>
               {section.body}
             </FilterPopover>
           ))}
-          <label className={styles.field}>
-            <span>Find by name</span>
-            <input type="search" value={filter.text} autoComplete="off" spellCheck={false} onChange={(event) => set({ text: event.target.value })} />
-          </label>
-          {versionName === undefined ? null : (
-            <label className={styles.option}>
-              <input type="checkbox" checked={filter.onlyInScope} onChange={(event) => set({ onlyInScope: event.target.checked })} />
-              <span>{`Only ${versionName}`}</span>
-            </label>
-          )}
+          {nameAndScope}
         </div>
       )}
+      {phone && sheet ? (
+        <Dialog open onClose={() => setSheet(false)} title="Filters" size="screen" footer={<Button variant="primary" onClick={() => setSheet(false)}>{`Show ${result.rows.length} ${result.rows.length === 1 ? 'reaction' : 'reactions'}`}</Button>}>
+          <div className={styles.sheet}>
+            {sections.map((section) => (
+              <section key={section.title} className={styles.sheetSection}>
+                <h3>{section.title}</h3>
+                {section.body}
+              </section>
+            ))}
+            {nameAndScope}
+          </div>
+        </Dialog>
+      ) : null}
       {chips.length === 0 ? null : (
         <ul className={styles.chips} aria-label="Chosen filters">
           {chips.map((chip) => (

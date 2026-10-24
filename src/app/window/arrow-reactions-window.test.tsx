@@ -40,7 +40,7 @@ describe('the reactions of an arrow in the inspector', () => {
     expect(many).toBeDefined();
     fireEvent.click((many as { row: HTMLElement }).row);
     const list = within(pane()).getByRole('region', { name: 'Reactions on this arrow' });
-    const buttons = within(list).getAllByRole('button');
+    const buttons = within(within(list).getByRole('list')).getAllByRole('button'); // the region also holds "Open these n reactions in Reactions" since 7.1b
     expect(buttons.length).toBeGreaterThanOrEqual(2);
     expect(buttons.length).toBeLessThanOrEqual((many as { count: number }).count);
     expect(new Set(buttons.map((b) => b.textContent)).size).toBe(buttons.length);
@@ -50,7 +50,7 @@ describe('the reactions of an arrow in the inspector', () => {
   it('a listed reaction opens in the inspector', async () => {
     const { rows } = await arrows();
     fireEvent.click((rows.find((r) => r.count >= 2) as { row: HTMLElement }).row);
-    const first = within(within(pane()).getByRole('region', { name: 'Reactions on this arrow' })).getAllByRole('button')[0] as HTMLElement;
+    const first = within(within(within(pane()).getByRole('region', { name: 'Reactions on this arrow' })).getByRole('list')).getAllByRole('button')[0] as HTMLElement;
     fireEvent.click(first);
     expect(within(pane()).getByRole('article', { name: 'Record' }).getAttribute('data-record-id')).toMatch(/^rxn_/);
     expect(within(pane()).queryByRole('region', { name: 'Reactions on this arrow' })).toBeNull();

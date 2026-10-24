@@ -1,5 +1,5 @@
 /** A few monochrome line icons (UI_ARCHITECTURE §3: no emoji icons). Decorative: `aria-hidden`; the control carries the name. */
-export type IconName = 'close' | 'menu' | 'inspector' | 'undo' | 'redo' | 'search' | 'import' | 'chevron-down' | 'families' | 'map' | 'fit' | 'info';
+export type IconName = 'close' | 'menu' | 'inspector' | 'undo' | 'redo' | 'search' | 'import' | 'chevron-down' | 'families' | 'map' | 'fit' | 'info' | 'explore';
 
 const PATHS: Readonly<Record<IconName, string>> = {
   close: 'M4 4l8 8M12 4l-8 8',
@@ -13,6 +13,7 @@ const PATHS: Readonly<Record<IconName, string>> = {
   families: 'M2.5 2.5h11v4.5h-11zM2.5 9h11v4.5h-11z',
   map: 'M2.5 3h4v3.5h-4zM9.5 9.5h4V13h-4zM6.5 4.75h3v4.75M9.5 11.25h-1.5',
   fit: 'M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10',
+  explore: 'M2.5 3.5h11M2.5 8h11M2.5 12.5h11M5 2v3M10 6.5v3M7 11v3',
   info: 'M8 2a6 6 0 100 12A6 6 0 008 2zM8 7.2V11M8 5v.2',
 };
 

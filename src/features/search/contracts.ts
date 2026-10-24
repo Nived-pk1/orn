@@ -45,6 +45,10 @@ export interface SearchPorts {
   factsOf(ref: RecordRef): HitFacts;
   /** Opens a result: shows it in the inspector and places it (a family on the map, a reaction on its family page). */
   open(ref: RecordRef, title: string): void;
+  /**
+   * Opens the Reactions view filtered by this record (step 7.1b E2, Alt+Enter on a hit of SHOW_REACTIONS_KINDS). Absent: no such key and no hint.
+   */
+  showReactions?(ref: RecordRef, title: string): void;
   /** The commands now (asked each time the palette opens and each time a command text changes, so availability is current). */
   commands(): readonly PaletteCommand[];
   readonly log: (type: string, message: string) => void;
@@ -81,3 +85,6 @@ export const KIND_TITLES: Readonly<Partial<Record<RecordKind, string>>> = {
 export const kindName = (kind: RecordKind): string => `${kind.charAt(0).toUpperCase()}${kind.slice(1).replaceAll('_', ' ')}`;
 
 export const kindTitle = (kind: RecordKind): string => KIND_TITLES[kind] ?? `${kind.charAt(0).toUpperCase()}${kind.slice(1).replaceAll('_', ' ')}`;
+
+/** The hits whose reactions can be listed: a species, a class, a reagent (Used as: Any) or a named reaction. */
+export const SHOW_REACTIONS_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'named_reaction'];

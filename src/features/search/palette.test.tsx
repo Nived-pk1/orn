@@ -30,6 +30,7 @@ const hits = (count: number, kind = 'species'): SearchHit[] =>
 function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = []) {
   const timers = manualTimers();
   const opened: [RecordRef, string][] = [];
+  const shown: [RecordRef, string][] = [];
   const closed = vi.fn();
   const recent = createRecentStore(['old search']);
   const ports: SearchPorts = {
@@ -39,6 +40,7 @@ function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = 
     examVersionId: () => undefined,
     factsOf: () => ({}),
     open: (ref, title) => void opened.push([ref, title]),
+    showReactions: (ref, title) => void shown.push([ref, title]),
     commands: () => commands,
     log: () => undefined,
   };
@@ -52,8 +54,8 @@ function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = 
       await Promise.resolve();
     });
   };
-  const key = (name: string): void => void fireEvent.keyDown(input, { key: name });
-  return { ports, input, type, key, opened, closed, recent, timers };
+  const key = (name: string, extra: { altKey?: boolean } = {}): void => void fireEvent.keyDown(input, { key: name, ...extra });
+  return { ports, input, type, key, opened, shown, closed, recent, timers };
 }
 
 describe('the palette', () => {
@@ -138,5 +140,45 @@ describe('the palette', () => {
     await r.type('name');
     fireEvent.click(screen.getAllByRole('option')[1] as HTMLElement);
     expect(r.opened[0]?.[1]).toBe('Name 1');
+  });
+});
+
+describe('Alt+Enter: show the reactions of a hit (step 7.1b E2)', () => {
+  it.each(['species', 'class', 'reagent', 'named_reaction'])('on a %s hit it opens Reactions filtered by it and closes, and the hint says so', async (kind) => {
+    const r = rig({ ok: true, value: hits(2, kind) });
+    await r.type('name');
+    expect(screen.getByText('Alt+Enter: show its reactions')).toBeTruthy();
+    r.key('ArrowDown');
+    r.key('Enter', { altKey: true });
+    expect(r.shown).toEqual([[{ kind, id: 'id_1' }, 'Name 1']]);
+    expect(r.opened).toEqual([]);
+    expect(r.closed).toHaveBeenCalledTimes(1);
+    expect(r.recent.getState().items[0]).toBe('name');
+  });
+
+  it.each(['reaction', 'concept', 'mechanism'])('on a %s hit Alt+Enter does nothing special: no hint, a plain open', async (kind) => {
+    const r = rig({ ok: true, value: hits(1, kind) });
+    await r.type('name');
+    expect(screen.queryByText('Alt+Enter: show its reactions')).toBeNull();
+    r.key('Enter', { altKey: true });
+    expect(r.shown).toEqual([]);
+    expect(r.opened).toHaveLength(1);
+  });
+
+  it('plain Enter still opens the record in the inspector', async () => {
+    const r = rig({ ok: true, value: hits(1) });
+    await r.type('name');
+    r.key('Enter');
+    expect(r.shown).toEqual([]);
+    expect(r.opened).toHaveLength(1);
+  });
+
+  it('with no showReactions port there is no hint and Alt+Enter opens as Enter does', async () => {
+    const r = rig({ ok: true, value: hits(1) });
+    delete (r.ports as { showReactions?: unknown }).showReactions;
+    await r.type('name');
+    expect(screen.queryByText('Alt+Enter: show its reactions')).toBeNull();
+    r.key('Enter', { altKey: true });
+    expect(r.opened).toHaveLength(1);
   });
 });

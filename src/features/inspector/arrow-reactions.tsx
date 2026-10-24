@@ -20,6 +20,11 @@ export function ArrowReactions() {
   return (
     <section aria-label="Reactions on this arrow" className={styles.arrowReactions}>
       <h4 className={styles.arrowTitle}>Reactions on this arrow ({ids.length})</h4>
+      {host.showArrowReactions === undefined ? null : (
+        <button type="button" onClick={() => host.showArrowReactions?.(ends)}>
+          {`Open these ${ids.length} reactions in Reactions`}
+        </button>
+      )}
       <ul className={styles.arrowList}>
         {ids.map((id) => {
           const ref = { kind: 'reaction', id } as const;

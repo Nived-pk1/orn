@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * The phone home (ADR-039) through the real window on the demo: the bottom tab bar Families | Map | Search, the Families cards equal the
+ * The phone home (ADR-039) through the real window on the demo: the bottom tab bar Families | Map | Explore | Search, the Families cards equal the
  * List projection (count, order, groups), the map without a toolbar and a permanent legend but with floating Fit and Legend buttons, the
  * remembered tab, and the Search tab. The desktop tests elsewhere run without matchMedia and are not touched.
  */
@@ -61,7 +61,7 @@ describe('the Families tab', () => {
     phone();
     renderWithApp(demo());
     await screen.findByRole('region', { name: 'Families' });
-    expect(within(tabs()).getAllByRole('button').map((button) => button.textContent)).toEqual(['Families', 'Map', 'Search']);
+    expect(within(tabs()).getAllByRole('button').map((button) => button.textContent)).toEqual(['Families', 'Map', 'Explore', 'Search']);
     expect(tab('Families').getAttribute('aria-current')).toBe('page');
     expect(tab('Map').getAttribute('aria-current')).toBeNull();
     expect(screen.queryByRole('group', { name: NAVIGATOR })).toBeNull();

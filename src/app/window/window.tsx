@@ -5,6 +5,7 @@
  * `src/ui/shell` and knows nothing of `AppStatus`; chemistry never lives here.
  */
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStore } from "zustand";
 import { Inspector, placeOf, type InspectorHost } from "@/features/inspector";
 import {
   NavigatorView,
@@ -22,7 +23,7 @@ import {
 import { useLayoutMode, useStoreSelector, useSubscribable } from "@/ui/hooks";
 import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
 import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
-import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels } from "@/ui/state";
+import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels, type ExplorerFilter } from "@/ui/state";
 import { useApp } from "./context";
 import { LazyPalette, prefetchPalette } from "./lazy-palette";
 import { DatasetActions, ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
@@ -32,6 +33,7 @@ import { createSearchPorts } from "./search-port";
 import { FirstRun } from "./first-run";
 import { MODES, NAVIGATOR_MODE, REACTIONS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
 import { WorkbenchPage } from "./workbench-page";
+import { filterFor, openReactions } from "./reactions-entry";
 
 // the Reactions list: a lazy chunk in BOTH editions (step 7.1b)
 const ReactionsHost = lazy(() => import("./reactions-host").then((m) => ({ default: m.ReactionsHost })));
@@ -132,23 +134,29 @@ function InspectorPanel(props: {
   readonly navigatorShown: boolean;
   readonly openPane: () => void;
   readonly closePane: () => void;
+  readonly onReactions: (filter: Partial<ExplorerFilter>) => void;
 }) {
   const { inspector } = useApp();
   const editors = useEditors();
   const { model } = useNavigator();
-  const { navigatorShown, openPane, closePane } = props;
+  const { navigatorShown, openPane, closePane, onReactions } = props;
   const host = useMemo<InspectorHost>(
     () => ({
       openPane,
       closePane,
       navigatorShown,
+      showReactions: (ref) => {
+        const filter = filterFor(ref);
+        if (filter !== undefined) onReactions(filter);
+      },
+      showArrowReactions: (ends) => onReactions({ fromFamilyIds: [ends.from], toFamilyIds: [ends.to] }),
       ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.requestDelete === undefined ? {} : { remove: editors.requestDelete }), ...(editors.startFrom === undefined ? {} : { startFrom: editors.startFrom }), ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }), ...(editors.namesKinds === undefined ? {} : { namesKinds: editors.namesKinds }) } }),
       edgeEnds: (edgeId) => {
         const edge = model.getState().scene?.edges.find((e) => e.id === edgeId);
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };
       },
     }),
-    [model, navigatorShown, openPane, closePane, editors],
+    [model, navigatorShown, openPane, closePane, editors, onReactions],
   );
   return <Inspector ports={inspector} host={host} />;
 }
@@ -204,6 +212,14 @@ function WindowContent() {
   const width = usePanels(panels, (s) => s.inspectorWidth);
   const open = usePanels(panels, (s) => s.inspectorOpen);
   const [mode, setMode] = useState(NAVIGATOR_MODE);
+  // the phone's Explore tab IS the Reactions mode (step 7.1b E1); the other tabs are the Navigator
+  const layoutMode = useLayoutMode();
+  const phoneTab = useStore(navigator.ui.overview, (s) => s.phoneTab);
+  useEffect(() => {
+    if (layoutMode !== 'phone') return;
+    if (phoneTab === 'explore') setMode(REACTIONS_MODE);
+    else setMode((current) => (current === REACTIONS_MODE ? NAVIGATOR_MODE : current));
+  }, [layoutMode, phoneTab]);
   const [openRequest, setOpenRequest] = useState(0);
   const [closeRequest, setCloseRequest] = useState(0);
   // A pick on the canvas shows the record: the wide pane opens (its state is saved); the drawer or sheet is asked through the shell.
@@ -212,6 +228,8 @@ function WindowContent() {
     setOpenRequest((n) => n + 1);
   }, [panels]);
   const closePane = useCallback(() => setCloseRequest((n) => n + 1), []);
+  // an entry point opens Reactions filtered (the palette's Alt+Enter, the inspector's buttons)
+  const onReactions = useCallback((filter: Partial<ExplorerFilter>) => openReactions(navigator.ui, setMode, filter), [navigator]);
   const hasData = totalOf(counts) > 0;
   // When the first-run screen closes (data arrived, or Start empty) the control that had the focus is gone: the focus goes to the page title,
   // so the next Tab starts from the top in every engine (UI_ARCHITECTURE §11).
@@ -259,16 +277,21 @@ function WindowContent() {
         indexes: navigator.indexes,
         l4: inspectorPorts.l4,
         navigator,
+        showReactions(ref) {
+          const filter = filterFor(ref);
+          if (filter !== undefined) onReactions(filter);
+        },
         commands: () => (commandDeps.current === null ? [] : buildCommands({ ...commandDeps.current, exams: examOptions(services.store.getState()) })),
         show(ref, title) {
           setMode(NAVIGATOR_MODE);
+          if (navigator.ui.overview.getState().phoneTab === 'explore') navigator.ui.overview.getState().setPhoneTab('families');
           inspectorPorts.ui.inspector.getState().open(ref);
           openPane();
           // a family is focused on the map, a reaction opens its family page at its card; anything else has its places in the inspector
           placeOf(ref, title, navigator.indexes.current(), { selection: navigator.ui.selection, family: navigator.ui.family }, true).actions[0]?.run();
         },
       }),
-    [services, navigator, inspectorPorts, openPane],
+    [services, navigator, inspectorPorts, openPane, onReactions],
   );
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
@@ -340,6 +363,7 @@ function WindowContent() {
                 navigatorShown={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
                 openPane={openPane}
                 closePane={closePane}
+                onReactions={onReactions}
               />
             </ErrorBoundary>
           }

@@ -196,3 +196,28 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Phone (ADR-039, ADR-042 E8): one column, the filters in a full-screen sheet, 44 px targets. */
+.view[data-layout='phone'] {
+  padding: var(--space-3);
+}
+
+.view[data-layout='phone'] button,
+.view[data-layout='phone'] input[type='search'] {
+  min-height: 44px;
+}
+
+.view[data-layout='phone'] .option {
+  min-height: 44px;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sheetSection h3 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-16);
+}

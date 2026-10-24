@@ -17,6 +17,7 @@ import {
   PALETTE_CHANNEL,
   PALETTE_DEBOUNCE_MS,
   PALETTE_LIMIT,
+  SHOW_REACTIONS_KINDS,
   STARTING_RETRY_MAX,
   STARTING_RETRY_MS,
   type PaletteCommand,
@@ -45,7 +46,7 @@ export interface PaletteModel {
   /** Runs a command; answers its reason when it cannot run now (nothing ran). */
   runCommand(command: PaletteCommand): { readonly ran: boolean; readonly reason?: string };
   /** Opens a result (and keeps the typed text as a recent search). */
-  openHit(index: number): void;
+  openHit(index: number, how?: 'record' | 'reactions'): void;
   /** Shows the recent searches / the command list afresh (the palette was opened). */
   reset(): void;
   dispose(): void;
@@ -145,12 +146,13 @@ export function createPaletteModel(ports: SearchPorts): PaletteModel {
       command.run();
       return { ran: true };
     },
-    openHit(index) {
+    openHit(index, how = 'record') {
       const row = store.getState().rows[index];
       if (row === undefined || row.type !== 'hit') return;
       const { parsed } = store.getState();
       if (parsed.mode === 'search' && parsed.text !== '') ports.recent.getState().add(store.getState().input.trim());
-      ports.open(row.hit.ref, row.hit.title);
+      if (how === 'reactions' && ports.showReactions !== undefined && SHOW_REACTIONS_KINDS.includes(row.hit.ref.kind)) ports.showReactions(row.hit.ref, row.hit.title);
+      else ports.open(row.hit.ref, row.hit.title);
     },
     reset() {
       token += 1;

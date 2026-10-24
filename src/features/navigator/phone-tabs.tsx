@@ -1,5 +1,5 @@
 /**
- * The phone's bottom tab bar (ADR-039): Families | Map | Search, 48 px, an icon and a word each, the current tab marked (aria-current and
+ * The phone's bottom tab bar (ADR-039): Families | Map | Explore | Search (Explore opens the last explorer, now Reactions; step 7.1b), 48 px, an icon and a word each, the current tab marked (aria-current and
  * a bar, never colour alone). Families and Map are places: the last one is saved in `uiState`, and pressing one leaves an open family
  * page. Search is an action: it opens the palette (full screen on a phone).
  */
@@ -13,6 +13,7 @@ import styles from './phone-home.module.css';
 const TABS: readonly { readonly id: PhoneTab; readonly label: string; readonly icon: IconName }[] = [
   { id: 'families', label: 'Families', icon: 'families' },
   { id: 'map', label: 'Map', icon: 'map' },
+  { id: 'explore', label: 'Explore', icon: 'explore' },
 ];
 
 export function PhoneTabs(props: { readonly onSearch: () => void; readonly searching: boolean }) {

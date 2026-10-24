@@ -17,6 +17,9 @@ import { kindWord, nameOfRecord, recordOf } from './model/describe';
 import { l4Words, severityBadges } from './model/findings';
 import { placeOf } from './model/places';
 import { ArrowReactions } from './arrow-reactions';
+
+/** The records whose reactions the Reactions view can list (the same set the palette's Alt+Enter uses). */
+const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 'named_reaction'];
 import { ProvenanceLevel } from './provenance';
 import { LevelSection } from './levels';
 import { useBridge } from './use-bridge';
@@ -127,6 +130,13 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
                 {record.scope !== 'generic' ? null : <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.startFrom?.('specific', props.refOf) } : { unavailable: host.editNames.unavailable })}>New specific reaction from this one</Button>}
               </>
             )}
+          </div>
+        )}
+        {host.showReactions === undefined || !SHOW_REACTIONS_KINDS.includes(props.refOf.kind) ? null : (
+          <div className={styles.actions}>
+            <button type="button" onClick={() => { host.showReactions?.(props.refOf); if (phone) host.closePane?.(); }}>
+              Show its reactions
+            </button>
           </div>
         )}
         {place.actions.length === 0 ? null : (

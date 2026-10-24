@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useStore } from 'zustand';
 import { useLayoutMode } from '@/ui/hooks';
 import { Dialog } from '@/ui/primitives';
-import { kindName, kindTitle, type PaletteCommand, type SearchPorts } from './contracts';
+import { kindName, kindTitle, SHOW_REACTIONS_KINDS, type PaletteCommand, type SearchPorts } from './contracts';
 import { createPaletteModel } from './palette-model';
 import { HEADER_ROW_HEIGHT, LIST_HEIGHT, nextHit, scrollToShow, windowOf, type PaletteRow } from './rows';
 import { matchWords } from './words';
@@ -54,7 +54,7 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a new list is a new serial
   }, [state.serial]);
 
-  const activate = (key: string): void => {
+  const activate = (key: string, how: 'record' | 'reactions' = 'record'): void => {
     if (key.startsWith('command:')) {
       const command = state.commands.find((c) => `command:${c.id}` === key);
       if (command === undefined) return;
@@ -64,7 +64,7 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
     } else if (key.startsWith('recent:')) {
       model.setInput(key.slice('recent:'.length));
     } else {
-      model.openHit(state.rows.findIndex((row) => row.key === key));
+      model.openHit(state.rows.findIndex((row) => row.key === key), how);
       onClose();
     }
   };
@@ -99,10 +99,12 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
       } else move(Math.min(entries.length - 1, Math.max(0, at < 0 ? 0 : at + direction * step)));
     } else if (event.key === 'Enter' && selected !== '') {
       handled();
-      activate(selected);
+      activate(selected, event.altKey ? 'reactions' : 'record');
     }
   };
 
+  const selectedHit = state.rows.find((row) => row.type === 'hit' && row.key === selected);
+  const canShowReactions = ports.showReactions !== undefined && selectedHit?.type === 'hit' && SHOW_REACTIONS_KINDS.includes(selectedHit.hit.ref.kind);
   const win = windowOf(state.rows, scrollTop, LIST_HEIGHT);
   const hitPosition = new Map<string, number>();
   for (const row of state.rows) if (row.type === 'hit') hitPosition.set(row.key, hitPosition.size + 1);
@@ -129,6 +131,7 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
       />
       <p id="palette-hint" className={styles.hint}>
         {HINT}
+        {canShowReactions ? <span> <span>Alt+Enter: show its reactions</span></span> : null}
       </p>
       <p className={styles.status} role="status" aria-live="polite" data-palette-status="">
         {statusText}

@@ -63,6 +63,10 @@ export interface InspectorHost {
   closePane?(): void;
   /** The two families an overview arrow joins; undefined when the arrow is not drawn now. */
   edgeEnds(edgeId: string): { readonly from: string; readonly to: string } | undefined;
+  /** Opens the Reactions view filtered by this record (step 7.1b E3; species, class, reagent, named reaction). Absent: no "Show its reactions" button. */
+  showReactions?(ref: RecordRef): void;
+  /** Opens the Reactions view for an overview arrow: From = its from family, To = its to family (a self-loop: the same family twice). Absent: no such button. */
+  showArrowReactions?(ends: { readonly from: string; readonly to: string }): void;
   /** True while the navigator is the view on the canvas (a record can then have a place in it). */
   readonly navigatorShown: boolean;
   /** Opens the names editor of a record (ADR-040, step 6.1a part 4). Absent: no "Edit names" button. `unavailable` is the reason it cannot be used now (a read-only tab). The inspector knows no editor: this is the whole port. */
