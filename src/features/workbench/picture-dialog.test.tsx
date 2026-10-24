@@ -23,7 +23,7 @@ const addButton = () => screen.getByRole('button', { name: 'Add picture' });
 const isOff = (el: HTMLElement) => el.getAttribute('aria-disabled') === 'true';
 const PREVIEW = { name: 'Preview of the chosen picture' };
 
-function open(fake = fakePictures(), onClose = vi.fn(), mode: Parameters<typeof PictureDialog>[0]['mode'] = { kind: 'add', mechanismId: 'mec_x' }) {
+function open(fake = fakePictures(), onClose = vi.fn(), mode: Parameters<typeof PictureDialog>[0]['mode'] = { kind: 'add', target: { kind: 'mechanism', id: 'mec_x' } }) {
   render(<PictureDialog mode={mode} port={fake.port} onClose={onClose} />);
   return { fake, onClose };
 }
@@ -87,7 +87,7 @@ describe('adding', () => {
     fireEvent.change(screen.getByLabelText('Caption (optional)'), { target: { value: 'The *nucleophile* arrives.' } });
     fireEvent.click(addButton());
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(fake.add).toHaveBeenCalledWith('mec_x', expect.objectContaining({ mediaType: 'image/png', sha256: 'a'.repeat(64) }), { altText: ' Backside attack ', caption: 'The *nucleophile* arrives.', width: 64, height: 32 });
+    expect(fake.add).toHaveBeenCalledWith({ kind: 'mechanism', id: 'mec_x' }, expect.objectContaining({ mediaType: 'image/png', sha256: 'a'.repeat(64) }), { altText: ' Backside attack ', caption: 'The *nucleophile* arrives.', width: 64, height: 32 });
   });
 
   it.each([
@@ -127,7 +127,7 @@ describe('adding', () => {
 describe('editing', () => {
   it('is the same dialog for alt text and caption: no file chooser, the values filled in, saved the same way', async () => {
     const fake = fakePictures([view('ast_1', 'Old alt', 'Old caption', 'a.png')]);
-    const { onClose } = open(fake, vi.fn(), { kind: 'edit', picture: view('ast_1', 'Old alt', 'Old caption', 'a.png') });
+    const { onClose } = open(fake, vi.fn(), { kind: 'edit', picture: view('ast_1', 'Old alt', 'Old caption', 'a.png'), target: { kind: 'mechanism', id: 'mec_x' } });
     expect(screen.queryByLabelText('Picture file')).toBeNull();
     expect(screen.getByText("The picture is saved now; it does not wait for the mechanism's Save.")).toBeTruthy();
     expect((screen.getByLabelText('Alt text (required)') as HTMLInputElement).value).toBe('Old alt');
@@ -139,7 +139,7 @@ describe('editing', () => {
   });
 
   it('cannot be saved with the alt text cleared', () => {
-    open(fakePictures(), vi.fn(), { kind: 'edit', picture: view('ast_1', 'Old alt') });
+    open(fakePictures(), vi.fn(), { kind: 'edit', picture: view('ast_1', 'Old alt'), target: { kind: 'mechanism', id: 'mec_x' } });
     fireEvent.change(screen.getByLabelText('Alt text (required)'), { target: { value: '  ' } });
     expect(isOff(screen.getByRole('button', { name: 'Save picture' }))).toBe(true);
   });

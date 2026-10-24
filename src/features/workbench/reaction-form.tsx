@@ -13,6 +13,7 @@ import { ReactionLinksSection } from './reaction-links';
 import { ClassificationSection } from './classification-section';
 import { SharedFieldsSection } from './shared-bundle';
 import type { RecordPickerPort } from './record-picker-contracts';
+import { PicturesFrame } from './pictures-frame';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
 import { ReviewSection } from './species-sections';
@@ -34,6 +35,7 @@ export function ReactionForm(props: ReactionFormProps) {
       <SectionFrame id="identity" title="Identity">
         <ReactionIdentitySection {...common} {...picker} />
       </SectionFrame>
+      <PicturesFrame kind="reaction" form={props} />
       <SectionFrame id="participants" title="Participants">
         <ParticipantsSection {...common} {...picker} newId={props.newId} />
       </SectionFrame>

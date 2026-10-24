@@ -13,12 +13,14 @@
  *  (3) phone (Pixel 7 in Chromium, iPhone 14 in WebKit): More has File and Undo import and no Workbench, New, Undo, Redo or Drafts.
  * Screenshots: study-desktop-1280x800.png, study-phone-pixel7.png, study-update-notice-1280x800.png (git-ignored).
  */
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, watch, type UploadFile } from './kit';
-import { palette, pane, record, shotsDir, showRecord } from './editor-kit';
+import { palette, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
+import { makePng } from './png-kit';
 
 const REMOTE = process.env.ORN_BASE_URL !== undefined;
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
@@ -58,6 +60,33 @@ const recordTotal = async (page: Page): Promise<number> => {
   const items = await page.getByRole('list', { name: 'Record counts' }).getByRole('listitem').allTextContents();
   return items.reduce((sum, text) => sum + Number(/(\d+)$/.exec(text)?.[1] ?? 0), 0);
 };
+
+/** The demo with ONE picture attached to a concept, its bytes inside the file (what a Studio export with the pictures embedded holds; step 7.1a). */
+function demoWithConceptPicture(conceptId: string, alt: string): UploadFile {
+  const doc = JSON.parse(readFileSync(resolve(process.cwd(), 'data/seed/demo.orn.json'), 'utf8')) as { records: Record<string, unknown[]>; embeddedAssets?: unknown[] };
+  const bytes = makePng(96, 64);
+  const now = '2026-10-24T10:00:00.000Z';
+  doc.records.asset = [
+    ...(doc.records.asset ?? []),
+    {
+      id: 'ast_study-concept-pic',
+      kind: 'asset',
+      mediaType: 'image/png',
+      byteSize: bytes.length,
+      sha256: createHash('sha256').update(bytes).digest('hex'),
+      altText: alt,
+      caption: 'Drawn by the *author*.',
+      assetRole: 'reference_image',
+      attachedTo: [{ ref: { kind: 'concept', id: conceptId } }],
+      tags: [],
+      citations: [],
+      provenance: { origin: 'user', createdAt: now, updatedAt: now },
+      review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] },
+    },
+  ];
+  doc.embeddedAssets = [{ assetId: 'ast_study-concept-pic', base64: bytes.toString('base64') }];
+  return { name: 'demo-with-concept-picture.orn.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc), 'utf8') };
+}
 
 /** Writes the "last loaded study dataset" entry straight into IndexedDB (what a browser that loaded another version would hold). */
 const rememberSha = (page: Page, sha256: string): Promise<void> =>
@@ -249,6 +278,38 @@ test.describe('desktop', () => {
       await expect(page.getByRole('region', { name: 'Study dataset update' })).toHaveCount(0);
       await expectClean(seen);
     });
+  });
+
+  test('a concept with a picture shows it under the header, full size, and no editing control exists (step 7.1a)', async ({ page }) => {
+    test.setTimeout(300_000);
+    const ALT = 'Hyperconjugation drawn by the author';
+    const seen = await watch(page, STUDY);
+    const scripts: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.endsWith('.js')) scripts.push(request.url().split('/').pop() as string);
+    });
+    await openStudy(page);
+    await importOwnData(page, demoWithConceptPicture('cpt_carbocation-stability', ALT));
+    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
+    await page.keyboard.press('Control+K');
+    await expect(palette(page)).toBeVisible();
+    await searchFor(page, 'Carbocation stability');
+    await palette(page).locator('[role="option"][data-record-id="cpt_carbocation-stability"]').click();
+    await expect(record(page)).toHaveAttribute('data-record-id', 'cpt_carbocation-stability');
+    const region = pane(page).getByRole('region', { name: 'Pictures of this concept' });
+    const img = region.getByRole('img', { name: ALT });
+    await expect(img).toBeVisible({ timeout: 60_000 });
+    await expect(img).toHaveAttribute('src', /^blob:/);
+    await expect(region.locator('figcaption em')).toHaveText('author');
+    await region.getByRole('button', { name: 'Open full size' }).click();
+    await expect(page.getByRole('dialog', { name: ALT })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog', { name: ALT })).toBeHidden();
+    for (const name of ['Edit', 'Add picture', 'Delete...', /^Remove picture/]) await expect(page.getByRole('button', { name })).toHaveCount(0);
+    const editors = editorChunkNames();
+    expect(scripts.filter((name) => editors.includes(name) || /^(editor-host|editor-session)-/.test(name)), 'editor chunks requested').toEqual([]);
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
   });
 
   test('a small own dataset imports and works as before in Study (import and export of the visitor\'s own data stay)', async ({ page }) => {

@@ -7,15 +7,17 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { revokeWhenUnused } from '@/ui/hooks';
+import { kindWordsOf } from '@/core/editing';
+import type { RecordRef } from '@/core/schema';
 import { Button, Dialog } from '@/ui/primitives';
 import type { PictureView, PicturesPort, PreparedPicture } from './picture-contracts';
 import styles from './picture.module.css';
 
-export type PictureDialogMode = { readonly kind: 'add'; readonly mechanismId: string } | { readonly kind: 'edit'; readonly picture: PictureView };
+export type PictureDialogMode = { readonly kind: 'add'; readonly target: RecordRef } | { readonly kind: 'edit'; readonly picture: PictureView; readonly target: RecordRef };
 
 /** The media types the asset pipeline accepts, as the file chooser's `accept`. */
 export const PICTURE_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,image/svg+xml';
-export const SAVED_NOW = "The picture is saved now; it does not wait for the mechanism's Save.";
+export const savedNowWords = (kind: string): string => `The picture is saved now; it does not wait for the ${kindWordsOf(kind)}'s Save.`;
 export const ALT_REASON = 'Describe what the picture shows. It is read aloud, and shown if the picture cannot load.';
 
 export interface PictureDialogProps {
@@ -68,7 +70,7 @@ export function PictureDialog(props: PictureDialogProps) {
     setMessage(null);
     const result =
       mode.kind === 'add' && prepared !== null
-        ? await port.add(mode.mechanismId, prepared, { altText: alt, caption, ...(size === null ? {} : size) })
+        ? await port.add(mode.target, prepared, { altText: alt, caption, ...(size === null ? {} : size) })
         : mode.kind === 'edit'
           ? await port.edit(mode.picture.id, { altText: alt, caption })
           : { ok: false as const, message: 'Choose a picture file first.' };
@@ -123,7 +125,7 @@ export function PictureDialog(props: PictureDialogProps) {
         </p>
         <label htmlFor="picture-caption">Caption (optional)</label>
         <textarea id="picture-caption" rows={3} value={caption} onChange={(event) => setCaption(event.target.value)} />
-        <p className={styles.note}>{SAVED_NOW}</p>
+        <p className={styles.note}>{savedNowWords(mode.target.kind)}</p>
         {message === null ? null : (
           <p role="alert" className={styles.problem}>
             {message}

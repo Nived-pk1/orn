@@ -8,6 +8,7 @@ import { GenericSection } from './class-generic';
 import { ClassIdentitySection, ExamplesSection, ParentsSection } from './class-sections';
 import { NamesSection } from './names-section';
 import type { RecordPickerPort } from './record-picker-contracts';
+import { PicturesFrame } from './pictures-frame';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
 import { MapFamilySection } from './map-family-section';
@@ -56,6 +57,7 @@ export function ClassForm(props: ClassFormProps) {
       <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={open}>
         <SharedFieldsSection {...common} notes={['description', 'studyNotes', 'notes', 'generic.rGroupNote']} {...picker} />
       </SectionFrame>
+      <PicturesFrame kind="class" form={props} />
     </div>
   );
 }

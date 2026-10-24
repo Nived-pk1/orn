@@ -7,6 +7,7 @@
 import type { RecordRef } from '@/core/schema';
 import { CarbonChainField, KeptTextSection, LinkedRecordsSection, NameAliasesSection, ShortTextField, UsedBySection, type PickerSectionProps } from './knowledge-sections';
 import { knowledgeViewOf } from './knowledge-model';
+import { PicturesFrame } from './pictures-frame';
 import { SectionFrame } from './section-frame';
 import { SharedFieldsSection } from './shared-bundle';
 import { ReviewSection } from './species-sections';
@@ -41,6 +42,7 @@ export function TransformationForm(props: TransformationFormProps) {
       <SectionFrame id="shared" title="Texts, concepts, tags and citations" initiallyOpen={open}>
         <SharedFieldsSection {...common} notes={['description', 'studyNotes', 'notes']} concepts picker={props.picker} />
       </SectionFrame>
+      <PicturesFrame kind="transformation" form={props} />
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>

@@ -7,6 +7,7 @@ import type { ClassSuggestion } from './check-contracts';
 import { ClassesSection } from './classes-section';
 import { NamesSection } from './names-section';
 import type { RecordPickerPort } from './record-picker-contracts';
+import { PicturesFrame } from './pictures-frame';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
 import { AromaticitySection, FormulaChargeSection, IdentitySection, ReviewSection, StereoSection } from './species-sections';
@@ -35,6 +36,7 @@ export function SpeciesForm(props: SpeciesFormProps) {
       <SectionFrame id="identity" title="Identity">
         <IdentitySection {...common} />
       </SectionFrame>
+      <PicturesFrame kind="species" form={props} />
       <SectionFrame id="structure" title="Structure">
         {props.structure === undefined ? (
           <p className={styles.hint}>The chemistry engine is not available here, so the structure is not read.</p>

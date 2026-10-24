@@ -2,6 +2,7 @@
  * The form of the record being edited: the species form, the class form, the reagent form, or (a kind without a full form) the Names section alone. One
  * place chooses, so the host knows no kind (step 6.2b).
  */
+import { isPictureKind } from '@/core/editing';
 import type { RecordKind, RecordRef } from '@/core/schema';
 import type { ClassSuggestion } from './check-contracts';
 import { CaveatForm } from './caveat-form';
@@ -52,7 +53,10 @@ export interface RecordFormProps extends SectionProps {
 }
 
 function KindForm(props: RecordFormProps) {
-  const { kind, suggestions, newId, links, pictures, saved, openRecord, startNew, editRecord, ...rest } = props;
+  const { kind, suggestions, newId, links, pictures, saved, openRecord, startNew, editRecord, ...given } = props;
+  // the Pictures section: only the kinds of PICTURE_KINDS, only when the editor has the port (the mechanism form draws its own)
+  const recordPictures = pictures !== undefined && isPictureKind(kind) && kind !== 'mechanism' ? { port: pictures, saved: saved === true } : undefined;
+  const rest = { ...given, recordPictures };
   if (kind === 'topic') return <TopicForm {...rest} saved={saved} openRecord={openRecord} startNew={startNew} />;
   if (kind === 'exam') return <ExamForm {...rest} saved={saved} startNew={startNew} editRecord={editRecord} />;
   if (kind === 'exam_version') return <ExamVersionForm {...rest} newId={newId} saved={saved} />;
@@ -67,9 +71,9 @@ function KindForm(props: RecordFormProps) {
   if (kind === 'species') return <SpeciesForm {...rest} suggestions={suggestions} />;
   if (kind === 'class') return <ClassForm {...rest} saved={saved} startNew={startNew} editRecord={editRecord} />;
   if (kind === 'reference') return <SourceForm draft={rest.draft} onEdit={rest.onEdit} picker={rest.picker} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} />;
-  if (kind === 'reaction') return <ReactionForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} links={links} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} {...(rest.picker === undefined ? {} : { picker: rest.picker })} />;
+  if (kind === 'reaction') return <ReactionForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} links={links} recordPictures={recordPictures} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} {...(rest.picker === undefined ? {} : { picker: rest.picker })} />;
   if (kind === 'mechanism') return <MechanismForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} links={links} pictures={pictures} saved={saved} picker={rest.picker} structure={rest.structure} timers={rest.timers} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} />;
-  if (kind === 'reagent') return <ReagentForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} {...(rest.picker === undefined ? {} : { picker: rest.picker })} />;
+  if (kind === 'reagent') return <ReagentForm draft={rest.draft} onEdit={rest.onEdit} newId={newId} recordPictures={recordPictures} {...(rest.invalid === undefined ? {} : { invalid: rest.invalid })} {...(rest.unavailable === undefined ? {} : { unavailable: rest.unavailable })} {...(rest.phone === undefined ? {} : { phone: rest.phone })} {...(rest.picker === undefined ? {} : { picker: rest.picker })} />;
   const { draft, onEdit, invalid, unavailable, phone } = props;
   return <NamesSection draft={draft} onEdit={onEdit} phone={phone} {...(invalid === undefined ? {} : { invalid })} {...(unavailable === undefined ? {} : { unavailable })} />;
 }

@@ -14,6 +14,7 @@ import conditionStyles from './condition.module.css';
 import { wordsOfKind } from './knowledge-model';
 import { choiceLine, RecordPicker } from './record-picker';
 import type { RecordPickerPort } from './record-picker-contracts';
+import { PicturesFrame } from './pictures-frame';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
 import { NotesSection } from './shared-sections';
@@ -134,6 +135,7 @@ export function CaveatForm(props: CaveatFormProps) {
       <SectionFrame id="identity" title="Identity">
         <IdentitySection {...common} />
       </SectionFrame>
+      <PicturesFrame kind="caveat" form={props} />
       <SectionFrame id="statement" title="Statement and explanation">
         <NotesSection {...common} fields={['statement', 'rule', 'trigger', 'explanation']} />
       </SectionFrame>

@@ -1,5 +1,6 @@
 /** What every section of the species editor gets (step 6.2a part 4): the whole draft, how to edit it, which paths have findings, and why editing may be off. */
 import type { DraftRecipe } from '@/core/editing';
+import type { PicturesSlot } from './picture-contracts';
 
 export interface SectionProps {
   readonly draft: unknown;
@@ -11,4 +12,6 @@ export interface SectionProps {
   readonly unavailable?: string;
   /** A phone: rows stack. */
   readonly phone?: boolean;
+  /** The Pictures section's port and whether the record is saved (step 7.1a); absent: the form has no Pictures section. */
+  readonly recordPictures?: PicturesSlot | undefined;
 }

@@ -40,3 +40,4 @@ export const AssetSchema = z.strictObject({
   ...recordMetaShape,
 });
 export type Asset = z.infer<typeof AssetSchema>;
+export type AssetRole = (typeof ASSET_ROLES)[number];

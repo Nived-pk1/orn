@@ -14,7 +14,7 @@ import { createLocalTimeFormatter } from './local-time';
 import { EditorsContext, type EditorsApi } from './drafts-ui';
 import type { EditorEntries } from './editor-entries';
 import type { TemplateMode } from './template-dialog';
-import { duplicateSeed, specificSeed } from '@/core/editing';
+import { duplicateSeed, picturesOf, specificSeed } from '@/core/editing';
 
 // /* @__PURE__ */: an unused lazy() is dropped with its import() in Study, where nothing mounts EditorsProvider (ADR-041)
 const DraftsDialog = /* @__PURE__ */ lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));
@@ -144,6 +144,7 @@ export function EditorsController(props: { readonly onApi: (api: EditorsApi) => 
           <TemplateDialog
             mode={template.mode}
             unsaved={template.unsaved}
+            pictures={picturesOf(services.store.getState(), template.ref).length}
             name={nameOfReaction(services.store.getState().records.reaction[template.ref.id as never])}
             onCancel={() => setTemplate(null)}
             onStart={() => {

@@ -14,6 +14,7 @@ import { createPicturesPort } from './pictures-port';
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4, 5, 6, 7, 8]);
 const SN2 = 'mec_sn2-haloalkane';
 const SN2_NAME = 'SN2 substitution of a haloalkane';
+const mech = (id: string) => ({ kind: 'mechanism' as const, id });
 const file = (bytes: Uint8Array, name = 'My picture.png') => ({ name, size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length) as ArrayBuffer });
 
 function hostOf(calls: string[]): AssetHost {
@@ -81,7 +82,7 @@ describe('add', () => {
     const { store, calls, port } = rig();
     const before = store.getState().records.mechanism[SN2 as never] as Mechanism;
     const revision = store.getRevision();
-    const result = await port.add(SN2, await prepared(port), { altText: ' Backside attack ', caption: 'The *nucleophile* arrives.', width: 64, height: 32 });
+    const result = await port.add(mech(SN2), await prepared(port), { altText: ' Backside attack ', caption: 'The *nucleophile* arrives.', width: 64, height: 32 });
     expect(result).toEqual({ ok: true });
     expect(store.getRevision()).toBe(revision + 1);
     expect(calls).toEqual(['stage:ast_test1', 'commit', 'clear', 'saved']); // the answer waits until the write queue has the bytes
@@ -106,26 +107,26 @@ describe('add', () => {
   it('alt text is required; a blank caption is left out; nothing is saved when refused', async () => {
     const { store, port } = rig();
     const revision = store.getRevision();
-    expect(await port.add(SN2, await prepared(port), { altText: '   ', caption: '' })).toEqual({ ok: false, message: 'Write the alt text: it describes what the picture shows.' });
+    expect(await port.add(mech(SN2), await prepared(port), { altText: '   ', caption: '' })).toEqual({ ok: false, message: 'Write the alt text: it describes what the picture shows.' });
     expect(store.getRevision()).toBe(revision);
-    await port.add(SN2, await prepared(port), { altText: 'x', caption: '  ' });
+    await port.add(mech(SN2), await prepared(port), { altText: 'x', caption: '  ' });
     expect(Object.hasOwn(asAsset(store, 'ast_test1') as object, 'caption')).toBe(false);
   });
   it('a mechanism that is not saved yet, and a read-only tab, are refused in words; nothing is saved or staged', async () => {
     const { store, calls, port } = rig();
     const revision = store.getRevision();
     const picture = await prepared(port);
-    expect(await port.add('mec_new-never-saved', picture, { altText: 'x', caption: '' })).toEqual({ ok: false, message: 'Save the mechanism once before adding pictures.' });
+    expect(await port.add(mech('mec_new-never-saved'), picture, { altText: 'x', caption: '' })).toEqual({ ok: false, message: 'Save the mechanism once before adding pictures.' });
     const readOnly = createCanonicalStore({ initial: demoState(), revision: 1, validateInitial: false, readOnly: () => true });
     const other = createPicturesPort({ store: readOnly, assets: hostOf([]), getBlob: async () => undefined });
-    const refused = await other.add(SN2, picture, { altText: 'x', caption: '' });
+    const refused = await other.add(mech(SN2), picture, { altText: 'x', caption: '' });
     expect(refused.ok).toBe(false);
     expect(store.getRevision()).toBe(revision);
     expect(calls).toEqual([]);
   });
   it('global Undo removes the asset record, Redo brings it back', async () => {
     const { store, port } = rig();
-    await port.add(SN2, await prepared(port), { altText: 'x', caption: '' });
+    await port.add(mech(SN2), await prepared(port), { altText: 'x', caption: '' });
     store.undo();
     expect(asAsset(store, 'ast_test1')).toBeUndefined();
     store.redo();
@@ -136,18 +137,18 @@ describe('add', () => {
 describe('list, edit and detach', () => {
   it('lists the pictures of THIS mechanism, oldest first', async () => {
     const { port } = rig();
-    await port.add(SN2, await prepared(port), { altText: 'first', caption: '' });
-    await port.add('mec_e2-haloalkane', await prepared(port), { altText: 'elsewhere', caption: '' });
-    await port.add(SN2, await prepared(port), { altText: 'second', caption: 'cap' });
-    expect(port.list(SN2).map((p) => [p.id, p.altText, p.caption, p.filename])).toEqual([
+    await port.add(mech(SN2), await prepared(port), { altText: 'first', caption: '' });
+    await port.add(mech('mec_e2-haloalkane'), await prepared(port), { altText: 'elsewhere', caption: '' });
+    await port.add(mech(SN2), await prepared(port), { altText: 'second', caption: 'cap' });
+    expect(port.list(mech(SN2)).map((p) => [p.id, p.altText, p.caption, p.filename])).toEqual([
       ['ast_test1', 'first', '', 'My picture.png'],
       ['ast_test3', 'second', 'cap', 'My picture.png'],
     ]);
-    expect(port.list('mec_aldol-ethanal')).toEqual([]);
+    expect(port.list(mech('mec_aldol-ethanal'))).toEqual([]);
   });
   it('edit changes alt text and caption only (a blank caption is removed) and is one undoable entry', async () => {
     const { store, port } = rig();
-    await port.add(SN2, await prepared(port), { altText: 'first', caption: 'old' });
+    await port.add(mech(SN2), await prepared(port), { altText: 'first', caption: 'old' });
     expect(await port.edit('ast_test1', { altText: 'new alt', caption: '' })).toEqual({ ok: true });
     const asset = asAsset(store, 'ast_test1') as Asset;
     expect(asset.altText).toBe('new alt');
@@ -160,12 +161,12 @@ describe('list, edit and detach', () => {
   });
   it('detach keeps the asset record, attached to nothing; Undo restores the attachment', async () => {
     const { store, port } = rig();
-    await port.add(SN2, await prepared(port), { altText: 'first', caption: '' });
-    expect(port.detach(SN2, 'ast_test1')).toEqual({ ok: true });
+    await port.add(mech(SN2), await prepared(port), { altText: 'first', caption: '' });
+    expect(port.detach(mech(SN2), 'ast_test1')).toEqual({ ok: true });
     expect(asAsset(store, 'ast_test1')?.attachedTo).toEqual([]);
-    expect(port.list(SN2)).toEqual([]);
+    expect(port.list(mech(SN2))).toEqual([]);
     expect(store.historyLabels().undo[0]).toBe(`Remove picture from ${SN2_NAME}`);
     store.undo();
-    expect(port.list(SN2).map((p) => p.id)).toEqual(['ast_test1']);
+    expect(port.list(mech(SN2)).map((p) => p.id)).toEqual(['ast_test1']);
   });
 });

@@ -4,6 +4,7 @@
  * keyboard-navigable (SectionFrame); a phone starts with the long sections closed. The schema has no concept links and no prerequisites.
  */
 import { ConceptKindField, DifficultyField, KnowledgeParentsSection, NameAliasesSection, type PickerSectionProps } from './knowledge-sections';
+import { PicturesFrame } from './pictures-frame';
 import { SectionFrame } from './section-frame';
 import { SharedFieldsSection } from './shared-bundle';
 import { ReviewSection } from './species-sections';
@@ -25,6 +26,7 @@ export function ConceptForm(props: PickerSectionProps) {
       <SectionFrame id="shared" title="Summary, notes, tags and citations" initiallyOpen={open}>
         <SharedFieldsSection {...common} notes={['summary', 'studyNotes', 'notes']} picker={props.picker} />
       </SectionFrame>
+      <PicturesFrame kind="concept" form={props} />
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>

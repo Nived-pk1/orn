@@ -1,17 +1,19 @@
 /**
- * The user's own pictures of a mechanism, FIRST in its view (step 6.5b part 3, ADR-038 addendum P6; SECURITY §2). Each is an `<img>` whose
+ * The user's own pictures of a record, FIRST in its view (step 6.5b part 3, ADR-038 addendum P6; every PICTURE_KINDS record since step 7.1a, Q5;
+ * SECURITY §2). ONE component, drawn from `OtherView` (the lazy chunk) for every kind of PICTURE_KINDS and no other. Each is an `<img>` whose
  * blob URL is made and revoked through the inspector's assets port (never by this view); an SVG is never inlined (an `<img>` runs no
  * script). The alt text and the caption come from the record; the picture fits the panel and is never enlarged past its natural size.
  * "Open full size" shows it in a modal dialog as large as the screen allows. Bytes not in this browser are said in words with the alt
  * text, never a broken image icon. Nothing is drawn as arrows (Phase 8).
  */
 import { useEffect, useState } from 'react';
-import type { Asset } from '@/core/schema';
+import { isPictureKind, picturesOf } from '@/core/editing';
+import type { Asset, RecordRef } from '@/core/schema';
 import { revokeWhenUnused } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import { FullPicture } from './full-picture';
 import { useInspectorEnv } from './env';
-import { picturesOfMechanism } from './model/pictures';
+import { kindWord } from './model/describe';
 import { RichText } from './rich-text';
 import styles from './inspector.module.css';
 
@@ -84,13 +86,14 @@ function PictureFigure(props: { readonly asset: Asset }) {
   );
 }
 
-/** The mechanism's pictures, oldest first; nothing at all when it has none. */
-export function MechanismPictures(props: { readonly mechanismId: string }) {
+/** The record's pictures, oldest first; nothing at all when it has none or its kind takes none. */
+export function RecordPictures(props: { readonly target: RecordRef }) {
   const { state } = useInspectorEnv();
-  const pictures = picturesOfMechanism(state, props.mechanismId);
+  const { target } = props;
+  const pictures = isPictureKind(target.kind) ? picturesOf(state, target) : [];
   if (pictures.length === 0) return null;
   return (
-    <section className={styles.pictures} aria-label="Pictures of this mechanism">
+    <section className={styles.pictures} aria-label={`Pictures of this ${kindWord(target.kind)}`}>
       {pictures.map((asset) => (
         <PictureFigure key={asset.id} asset={asset} />
       ))}

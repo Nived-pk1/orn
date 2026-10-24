@@ -1,13 +1,14 @@
 /**
- * The mechanism editor's pictures port (step 6.5b, ADR-038 addendum P1-P5). A picture is an `asset` record attached to a mechanism
- * (`attachedTo[].ref`; the mechanism record is never changed) and its bytes. It is saved AT ONCE, outside the draft: the bytes are staged
+ * The editors' pictures port (step 6.5b, ADR-038 addendum P1-P5; ONE generic port for every PICTURE_KINDS record since step 7.1a, Q3). A picture
+ * is an `asset` record attached to a record (`attachedTo[].ref`; that record is never changed) and its bytes. It is saved AT ONCE, outside the draft: the bytes are staged
  * for the write queue (`AssetHost.stage`), ONE `record.create` is dispatched through the store's gate (L1-L3), and the queue writes the
  * record and the bytes in one transaction. A chosen file is checked first (the size cap, the magic bytes against the supported types, the
  * SHA-256 the way the import pipeline computes it); every refusal is words and saves nothing. No chemistry; every failure is a value.
  */
 import type { StoreHandle } from '@/core/commands';
 import type { CommitResult } from '@/core/commands';
-import { ASSET_MEDIA_TYPES, type Asset, type CanonicalState } from '@/core/schema';
+import { assetRoleOfPictureKind, isPictureKind, kindWordsOf, nameOfRef, picturesOf } from '@/core/editing';
+import { ASSET_MEDIA_TYPES, type Asset, type CanonicalState, type RecordRef } from '@/core/schema';
 import { IMPORT_LIMITS } from '@/io';
 import { magicBytesMatch } from '@/io/asset-magic';
 import { sha256Hex } from '@/io/hash';
@@ -23,7 +24,8 @@ export interface PicturesPortDeps {
 
 const MB = 1024 * 1024;
 const ALT_REQUIRED = 'Write the alt text: it describes what the picture shows.';
-const NOT_SAVED = 'Save the mechanism once before adding pictures.';
+const notSaved = (kind: string): string => `Save the ${kindWordsOf(kind)} once before adding pictures.`;
+const sameRecord = (one: RecordRef, other: RecordRef): boolean => one.kind === other.kind && one.id === other.id;
 
 const megabytes = (bytes: number): string => `${(bytes / MB).toFixed(1)} MB`;
 
@@ -47,19 +49,17 @@ function failure(result: Extract<CommitResult, { ok: false }>): PictureResult {
 export function createPicturesPort(deps: PicturesPortDeps): PicturesPort {
   const { store, assets, getBlob } = deps;
   const state = (): CanonicalState => store.getState();
-  const mechanismName = (id: string): string => state().records.mechanism[id as never]?.name ?? 'the mechanism';
+  const nameOf = (ref: RecordRef): string => nameOfRef(state(), ref);
   const assetOf = (id: string): Asset | undefined => state().records.asset[id as never];
 
   const attachedTo = (asset: Asset): string => {
-    const ref = asset.attachedTo.find((one) => one.ref.kind === 'mechanism');
-    return ref === undefined ? 'a mechanism' : mechanismName(ref.ref.id);
+    const ref = asset.attachedTo.find((one) => isPictureKind(one.ref.kind));
+    return ref === undefined ? 'a record' : nameOf(ref.ref as RecordRef);
   };
 
   return {
-    list(mechanismId) {
-      const found = (Object.values(state().records.asset) as Asset[]).filter((asset) => asset.attachedTo.some((one) => one.ref.kind === 'mechanism' && one.ref.id === mechanismId));
-      found.sort((a, b) => a.provenance.createdAt.localeCompare(b.provenance.createdAt) || a.id.localeCompare(b.id));
-      return found.map((asset): PictureView => ({ id: asset.id, mediaType: asset.mediaType, altText: asset.altText ?? '', caption: asset.caption ?? '', filename: asset.filename ?? '' }));
+    list(target) {
+      return picturesOf(state(), target).map((asset): PictureView => ({ id: asset.id, mediaType: asset.mediaType, altText: asset.altText ?? '', caption: asset.caption ?? '', filename: asset.filename ?? '' }));
     },
     subscribe: (listener) => store.subscribe(() => listener()),
 
@@ -79,15 +79,16 @@ export function createPicturesPort(deps: PicturesPortDeps): PicturesPort {
       return { ok: true, picture: { mediaType, byteSize: bytes.length, sha256: await sha256Hex(bytes), bytes, filename: baseName(file.name), preview: new Blob([bytes as BlobPart], { type: mediaType }) } };
     },
 
-    async add(mechanismId, picture, fields: PictureFields) {
+    async add(target, picture, fields: PictureFields) {
+      if (!isPictureKind(target.kind)) return { ok: false, message: `Pictures cannot be added to a ${kindWordsOf(target.kind)}.` };
       if (fields.altText.trim() === '') return { ok: false, message: ALT_REQUIRED };
       if (store.isReadOnly()) return { ok: false, message: 'This tab cannot save changes: it is read-only.' };
-      const mechanism = state().records.mechanism[mechanismId as never];
-      if (mechanism === undefined) return { ok: false, message: NOT_SAVED };
+      const record = (state().records[target.kind] as Readonly<Record<string, unknown>>)[target.id];
+      if (record === undefined) return { ok: false, message: notSaved(target.kind) };
       const now = assets.now();
       const id = assets.newId('ast');
       const caption = optional(fields.caption);
-      const record = {
+      const created = {
         id,
         kind: 'asset',
         mediaType: picture.mediaType,
@@ -97,8 +98,8 @@ export function createPicturesPort(deps: PicturesPortDeps): PicturesPort {
         ...(fields.height === undefined || fields.height < 1 ? {} : { height: fields.height }),
         ...(picture.filename === undefined ? {} : { filename: picture.filename }),
         altText: fields.altText,
-        assetRole: 'mechanism_image',
-        attachedTo: [{ ref: { kind: 'mechanism', id: mechanismId } }],
+        assetRole: assetRoleOfPictureKind(target.kind),
+        attachedTo: [{ ref: { kind: target.kind, id: target.id } }],
         ...(caption === undefined ? {} : { caption }),
         tags: [],
         citations: [],
@@ -107,9 +108,9 @@ export function createPicturesPort(deps: PicturesPortDeps): PicturesPort {
       } as unknown as Asset;
       let result: CommitResult;
       // the bytes are staged for exactly this commit: the store notifies the write queue synchronously, which reads them
-      assets.stage.stage([{ assetId: record.id, sha256: picture.sha256, mediaType: picture.mediaType, bytes: picture.bytes }]);
+      assets.stage.stage([{ assetId: created.id, sha256: picture.sha256, mediaType: picture.mediaType, bytes: picture.bytes }]);
       try {
-        result = store.dispatch({ label: `Add picture to ${mechanism.name}`, commands: [{ type: 'record.create', record }], selectionHint: [{ kind: 'mechanism', id: mechanismId }] });
+        result = store.dispatch({ label: `Add picture to ${nameOf(target)}`, commands: [{ type: 'record.create', record: created }], selectionHint: [target] });
       } finally {
         assets.stage.clear();
       }
@@ -131,12 +132,12 @@ export function createPicturesPort(deps: PicturesPortDeps): PicturesPort {
       return { ok: true };
     },
 
-    detach(mechanismId, assetId) {
+    detach(target, assetId) {
       const asset = assetOf(assetId);
       if (asset === undefined) return { ok: false, message: 'This picture is no longer in your data.' };
-      const kept = asset.attachedTo.filter((one) => !(one.ref.kind === 'mechanism' && one.ref.id === mechanismId));
+      const kept = asset.attachedTo.filter((one) => !sameRecord(one.ref as RecordRef, target));
       const next = { ...asset, attachedTo: kept, provenance: { ...asset.provenance, updatedAt: assets.now() } } as Asset;
-      const result = store.dispatch({ label: `Remove picture from ${mechanismName(mechanismId)}`, commands: [{ type: 'record.update', record: next }], selectionHint: [{ kind: 'mechanism', id: mechanismId }] });
+      const result = store.dispatch({ label: `Remove picture from ${nameOf(target)}`, commands: [{ type: 'record.update', record: next }], selectionHint: [target] });
       return result.ok ? { ok: true } : failure(result);
     },
 

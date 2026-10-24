@@ -23,3 +23,5 @@ export { isMergeable, mergeEnvelope, mergePreview, MERGE_KINDS } from './merge';
 export type { MergePick, MergePreview, ScalarChoice } from './merge';
 export { kindWordsOf, markVerifiedEnvelope, needsReviewEnvelope, queueRows, STATUS_WORDS, verifyPlan } from './review-queue';
 export type { FindingsOf, QueueFilters, QueueFinding, QueueRow, ReviewStatus, VerifyPlan } from './review-queue';
+export { assetRoleOfPictureKind, isPictureKind, PICTURE_KINDS, picturesOf } from './picture-kinds';
+export type { PictureKind } from './picture-kinds';

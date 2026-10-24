@@ -5,6 +5,7 @@
  * original stays.
  */
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { produce } from 'immer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Reaction, Species } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
@@ -186,5 +187,50 @@ describe('step 6.7b part A (T1, T2, T3)', () => {
     fireEvent.click(within(toolbar).getByRole('button', { name: 'Duplicate' }));
     ask = await screen.findByRole('dialog', { name: 'Duplicate reaction' });
     expect(within(ask).getByText('Duplicates the saved version; your unsaved changes stay in this draft.')).toBeTruthy();
+  });
+});
+
+describe('Duplicate and pictures (step 7.1a, ADR-038 addendum Q6)', () => {
+  const withPicture = () =>
+    produce(demoState(), (draft) => {
+      const record = {
+        id: 'ast_dup1',
+        kind: 'asset',
+        mediaType: 'image/png',
+        byteSize: 12,
+        sha256: 'a'.repeat(64),
+        altText: 'A picture',
+        assetRole: 'reaction_image',
+        attachedTo: [{ ref: { kind: 'reaction', id: E2 } }],
+        tags: [],
+        citations: [],
+        provenance: { origin: 'user', createdAt: '2026-10-24T10:00:00.000Z', updatedAt: '2026-10-24T10:00:00.000Z' },
+        review: { lifecycle: 'draft', status: 'unreviewed', reasons: [] },
+      };
+      (draft.records.asset as Record<string, unknown>)[record.id] = record;
+    });
+  const PICTURES_NOT_COPIED = 'Pictures are not copied: add them to the new record after saving.';
+
+  it('says pictures are not copied when the reaction has some, and the copy has none', async () => {
+    const app = fakeApp({ state: withPicture() });
+    const inspector = await inspect(app, E2);
+    fireEvent.click(await within(inspector).findByRole('button', { name: 'Duplicate' }));
+    const ask = await screen.findByRole('dialog', { name: 'Duplicate reaction' });
+    expect(within(ask).getByText(PICTURES_NOT_COPIED)).toBeTruthy();
+    fireEvent.click(within(ask).getByRole('button', { name: 'Start the copy' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New reaction' });
+    await act(async () => void fireEvent.click(within(dialog).getByRole('button', { name: 'Save' })));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New reaction' })).toBeNull());
+    const copy = reactions(app).find((r) => r.name.endsWith('(copy)')) as Reaction;
+    const attached = (Object.values(app.store.getState().records.asset) as { attachedTo: { ref: { id: string } }[] }[]).filter((a) => a.attachedTo.some((one) => one.ref.id === copy.id));
+    expect(attached).toEqual([]);
+  });
+
+  it('says nothing about pictures when the reaction has none', async () => {
+    const app = fakeApp({ state: demoState() });
+    const inspector = await inspect(app, E2);
+    fireEvent.click(await within(inspector).findByRole('button', { name: 'Duplicate' }));
+    const ask = await screen.findByRole('dialog', { name: 'Duplicate reaction' });
+    expect(within(ask).queryByText(PICTURES_NOT_COPIED)).toBeNull();
   });
 });

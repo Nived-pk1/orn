@@ -17,6 +17,7 @@ afterEach(() => {
 });
 
 const SN2 = 'mec_sn2-haloalkane';
+const mech = (id: string) => ({ kind: 'mechanism' as const, id });
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 9, 9, 9, 9, 9, 9]);
 const file = (bytes: Uint8Array) => ({ name: 'step.png', size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length) as ArrayBuffer });
 
@@ -42,7 +43,7 @@ describe('a picture on a mechanism, with real storage', () => {
     const picture = await prepared();
     await persistence.flush();
     const spy = vi.spyOn(persistence, 'writeChanges');
-    const result = await port.add(SN2, picture, { altText: 'Backside attack', caption: '' });
+    const result = await port.add(mech(SN2), picture, { altText: 'Backside attack', caption: '' });
     expect(result).toEqual({ ok: true });
     await persistence.flush();
     expect(spy).toHaveBeenCalledTimes(1);
@@ -61,7 +62,7 @@ describe('a picture on a mechanism, with real storage', () => {
     const { services, persistence, port, prepared } = await boot();
     const picture = await prepared();
     await persistence.flush();
-    const adding = port.add(SN2, picture, { altText: 'Backside attack', caption: '' }); // the commit has happened, the write has not
+    const adding = port.add(mech(SN2), picture, { altText: 'Backside attack', caption: '' }); // the commit has happened, the write has not
     const asset = assetsOf(services.store.getState()).find((a) => a.altText === 'Backside attack') as Asset;
     expect(services.assets.held(asset.sha256)).toBeDefined();
     const urls: string[] = [];
@@ -77,7 +78,7 @@ describe('a picture on a mechanism, with real storage', () => {
 
   it('a reload still has the picture, attached, with its bytes', async () => {
     const { world, services, port, prepared } = await boot();
-    await port.add(SN2, await prepared(), { altText: 'Backside attack', caption: 'cap' });
+    await port.add(mech(SN2), await prepared(), { altText: 'Backside attack', caption: 'cap' });
     await services.dispose();
     const again = await booter.bootEnv(testEnv({ world }));
     const found = assetsOf(again.store.getState()).filter((a) => a.attachedTo.some((one) => one.ref.id === SN2));
@@ -88,7 +89,7 @@ describe('a picture on a mechanism, with real storage', () => {
 
   it('global Undo removes the record and keeps the bytes; Redo brings the record back; the same file again reuses the stored bytes', async () => {
     const { services, persistence, port, prepared } = await boot();
-    await port.add(SN2, await prepared(), { altText: 'first', caption: '' });
+    await port.add(mech(SN2), await prepared(), { altText: 'first', caption: '' });
     const id = (assetsOf(services.store.getState()).find((a) => a.altText === 'first') as Asset).id;
     const hash = (services.store.getState().records.asset[id as never] as Asset).sha256;
     services.store.undo();
@@ -104,17 +105,17 @@ describe('a picture on a mechanism, with real storage', () => {
   it('equal bytes are stored once (two pictures, one stored file)', async () => {
     const { persistence, port, prepared } = await boot();
     const before = (await persistence.listAssetBlobHashes()).length;
-    await port.add(SN2, await prepared(), { altText: 'first', caption: '' });
-    await port.add('mec_e2-haloalkane', await prepared(), { altText: 'second', caption: '' });
+    await port.add(mech(SN2), await prepared(), { altText: 'first', caption: '' });
+    await port.add(mech('mec_e2-haloalkane'), await prepared(), { altText: 'second', caption: '' });
     await persistence.flush();
     expect((await persistence.listAssetBlobHashes()).length).toBe(before + 1);
   });
 
   it('Remove detaches: the record and its bytes stay, attached to nothing, and the reload agrees', async () => {
     const { world, services, persistence, port, prepared } = await boot();
-    await port.add(SN2, await prepared(), { altText: 'first', caption: '' });
+    await port.add(mech(SN2), await prepared(), { altText: 'first', caption: '' });
     const id = (assetsOf(services.store.getState()).find((a) => a.altText === 'first') as Asset).id;
-    expect(port.detach(SN2, id)).toEqual({ ok: true });
+    expect(port.detach(mech(SN2), id)).toEqual({ ok: true });
     await persistence.flush();
     await services.dispose();
     const again = await booter.bootEnv(testEnv({ world }));
@@ -127,8 +128,8 @@ describe('a picture on a mechanism, with real storage', () => {
     const picture = await prepared();
     const revision = services.store.getRevision();
     const hashes = (await persistence.listAssetBlobHashes()).length;
-    expect((await port.add('mec_never-saved', picture, { altText: 'x', caption: '' })).ok).toBe(false);
-    expect((await port.add(SN2, picture, { altText: '  ', caption: '' })).ok).toBe(false);
+    expect((await port.add(mech('mec_never-saved'), picture, { altText: 'x', caption: '' })).ok).toBe(false);
+    expect((await port.add(mech(SN2), picture, { altText: '  ', caption: '' })).ok).toBe(false);
     await persistence.flush();
     expect(services.store.getRevision()).toBe(revision);
     expect((await persistence.listAssetBlobHashes()).length).toBe(hashes);

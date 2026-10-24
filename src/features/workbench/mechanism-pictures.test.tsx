@@ -103,7 +103,7 @@ describe('adding, editing and removing', () => {
     expect(fake.detach).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Remove picture 1 from this mechanism' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove from this mechanism' }));
-    expect(fake.detach).toHaveBeenCalledWith('mec_x', 'ast_1');
+    expect(fake.detach).toHaveBeenCalledWith({ kind: 'mechanism', id: 'mec_x' }, 'ast_1');
     expect(screen.getByRole('status').textContent).toBe('Removed from this mechanism. The picture stays in your data until you delete it.');
     expect(screen.getAllByRole('group', { name: /^Picture \d$/ })).toHaveLength(1);
   });

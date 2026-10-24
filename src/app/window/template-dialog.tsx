@@ -20,7 +20,10 @@ export const TEMPLATE_WORDS: Readonly<Record<TemplateMode, { readonly title: str
   },
 };
 
-export function TemplateDialog(props: { readonly mode: TemplateMode; readonly name: string; readonly unsaved?: boolean; readonly onStart: () => void; readonly onCancel: () => void }) {
+/** Said in a copy's dialog when the original has pictures (step 7.1a, ADR-038 addendum Q6). */
+export const PICTURES_NOT_COPIED = 'Pictures are not copied: add them to the new record after saving.';
+
+export function TemplateDialog(props: { readonly mode: TemplateMode; readonly name: string; readonly unsaved?: boolean; readonly pictures?: number; readonly onStart: () => void; readonly onCancel: () => void }) {
   const words = TEMPLATE_WORDS[props.mode];
   return (
     <Dialog
@@ -37,6 +40,7 @@ export function TemplateDialog(props: { readonly mode: TemplateMode; readonly na
       }
     >
       <p>{words.line(props.name)}</p>
+      {props.mode === 'duplicate' && (props.pictures ?? 0) > 0 ? <p>{PICTURES_NOT_COPIED}</p> : null}
       {props.unsaved === true ? <p>Duplicates the saved version; your unsaved changes stay in this draft.</p> : null}
     </Dialog>
   );

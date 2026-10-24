@@ -6,6 +6,7 @@
 import type { RecordRef } from '@/core/schema';
 import { DifficultyField, KnowledgeParentsSection, NameAliasesSection, UsedBySection, type PickerSectionProps } from './knowledge-sections';
 import { knowledgeViewOf } from './knowledge-model';
+import { PicturesFrame } from './pictures-frame';
 import { SectionFrame } from './section-frame';
 import { SharedFieldsSection } from './shared-bundle';
 import { ConceptsSection } from './shared-sections';
@@ -38,6 +39,7 @@ export function NamedReactionForm(props: NamedReactionFormProps) {
       <SectionFrame id="shared" title="Texts, concepts, tags and citations" initiallyOpen={open}>
         <SharedFieldsSection {...common} notes={['summary', 'typicalConditions', 'studyNotes', 'notes']} concepts picker={props.picker} />
       </SectionFrame>
+      <PicturesFrame kind="named_reaction" form={props} />
       <SectionFrame id="review" title="Review" initiallyOpen={open}>
         <ReviewSection {...common} />
       </SectionFrame>

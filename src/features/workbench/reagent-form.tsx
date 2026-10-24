@@ -8,6 +8,7 @@ import { ProfilesSection } from './reagent-profiles';
 import { FamiliesSection, ReagentClassesSection, ReagentIdentitySection } from './reagent-sections';
 import { SharedFieldsSection } from './shared-bundle';
 import type { RecordPickerPort } from './record-picker-contracts';
+import { PicturesFrame } from './pictures-frame';
 import { SectionFrame } from './section-frame';
 import type { SectionProps } from './section-props';
 import { ReviewSection } from './species-sections';
@@ -46,6 +47,7 @@ export function ReagentForm(props: ReagentFormProps) {
       <SectionFrame id="shared" title="Notes, tags and citations" initiallyOpen={open}>
         <SharedFieldsSection {...common} notes={['description', 'studyNotes', 'notes']} {...picker} />
       </SectionFrame>
+      <PicturesFrame kind="reagent" form={props} />
     </div>
   );
 }
