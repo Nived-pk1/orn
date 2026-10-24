@@ -191,3 +191,5 @@ Full-state scans on user input; synchronous layout or validation-all on the main
 (2026-10-14, Gate E review) The boot rows are Chromium rows. Firefox and WebKit boot times are reported, not gated, until Phase 9.
 
 (2026-10-14, step 5.11a) The compute worker is the one engine thread created at boot: `createAppServices` starts it before the IndexedDB open (nothing is sent), so its start overlaps the read. Chem, layout and search are still created at their first need.
+
+(2026-10-24, step 7.1a, ADR-042 E10) The reaction filter (`src/core/graph/reaction-filter`, `tests/perf/reaction-filter.bench.ts`, budgets in `tests/perf/budgets-explorer.mjs`) has a 50 ms budget at the design tier (5,000 reactions) for every ask: the empty filter with all facets, a type + family + exam-scope filter, a substance + name filter, and building its input once per state. First measured 2026-10-24 (speed check 0.89-0.93 s): p99 5.4-8.2 ms for the three filters and 28.7-38.6 ms for building the input, in both shapes (dense, hub_explosion); so the filter runs on the main thread. Not yet in `baseline.json`.

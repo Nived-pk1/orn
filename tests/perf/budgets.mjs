@@ -17,6 +17,7 @@ import { NAVIGATOR_BUDGETS } from './budgets-navigator.mjs';
 import { SCENE_BUDGETS } from './budgets-scene.mjs';
 import { VIEWPORT_BUDGETS } from './budgets-viewport.mjs';
 import { SEARCH_BUDGETS } from './budgets-search.mjs';
+import { EXPLORER_BUDGETS } from './budgets-explorer.mjs';
 
 export const BUDGETS = {
   'commit (design tier, dense) > dispatch: update one species (notes)':
@@ -392,6 +393,7 @@ export const BUDGETS = {
   ...APP_BUDGETS,
   ...SEARCH_BUDGETS,
   ...NAVIGATOR_BUDGETS,
+  ...EXPLORER_BUDGETS,
   ...SCENE_BUDGETS,
   ...VIEWPORT_BUDGETS,
 };
