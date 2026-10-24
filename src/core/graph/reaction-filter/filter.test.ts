@@ -8,7 +8,7 @@ import { indexEngine } from '../../indexes';
 import { UNCLASSIFIED_HUB_ID } from '../navigator/hubs';
 import { anchorOn, chemClass, cl, reaction, sp, species, stateOf, rg, reagent } from '@/test-support/graph-state';
 import type { AnyRecord } from '../../schema';
-import { buildReactionFilterInput, filterReactions, type ReactionFilter } from '.';
+import { buildReactionFilterInput, filterReactions, type ReactionFilter, type ReactionFilterEntry, type ReactionFilterInput } from '.';
 
 const ETHANOL = sp('ethanol');
 const ETHANAL = sp('ethanal');
@@ -212,5 +212,46 @@ describe('facets (E4)', () => {
 describe('totals', () => {
   it('ALL is what the input holds', () => {
     expect(ids({}).sort()).toEqual(ALL);
+  });
+});
+
+describe('From family and To family together match ONE candidate (7.1b C2)', () => {
+  // Entries made by hand: a reaction with two candidates, A to B and C to D. Today's roll-up gives a reaction ONE carried substrate (so
+  // one from family), but the rule is about the pair, so it must not depend on that.
+  const entry = (id: string, pairs: readonly (readonly [string, string])[]): ReactionFilterEntry => ({
+    id,
+    name: id,
+    folded: id,
+    fromFamilyIds: [...new Set(pairs.map((p) => p[0]))].sort(),
+    toFamilyIds: [...new Set(pairs.map((p) => p[1]))].sort(),
+    pairs,
+    typeIds: [],
+    namedReactionIds: [],
+    status: 'unreviewed',
+    reactants: new Set(),
+    arrow: new Set(),
+    products: new Set(),
+    any: new Set(),
+  });
+  const input: ReactionFilterInput = { entries: [entry('crossed', [['A', 'B'], ['C', 'D']]), entry('straight', [['A', 'D']]), entry('other', [['C', 'B']])] };
+  const ids = (filter: ReactionFilter): string[] => filterReactions(input, filter, undefined).rows.map((row) => row.id);
+
+  it('with both set, a reaction matches only when ONE candidate has the from AND the to', () => {
+    expect(ids({ fromFamilyIds: ['A'], toFamilyIds: ['D'] })).toEqual(['straight']); // "crossed" has A and D in different candidates
+    expect(ids({ fromFamilyIds: ['A', 'C'], toFamilyIds: ['B'] })).toEqual(['crossed', 'other']);
+  });
+
+  it('with only one set, the meaning stays: any candidate', () => {
+    expect(ids({ fromFamilyIds: ['A'] })).toEqual(['crossed', 'straight']);
+    expect(ids({ toFamilyIds: ['D'] })).toEqual(['crossed', 'straight']);
+  });
+
+  it('the facets follow the pair rule: a from option counts a reaction only if it pairs with a chosen to', () => {
+    const facets = filterReactions(input, { toFamilyIds: ['D'] }, undefined).facets;
+    expect(facets.fromFamily).toEqual([{ id: 'A', count: 1 }, { id: 'C', count: 1 }]); // crossed: C to D; straight: A to D
+    const asked = filterReactions(input, { fromFamilyIds: ['A'] }, undefined).facets;
+    expect(asked.toFamily).toEqual([{ id: 'B', count: 1 }, { id: 'D', count: 1 }]); // crossed: A to B; straight: A to D
+    for (const option of asked.toFamily) expect(option.count).toBe(ids({ fromFamilyIds: ['A'], toFamilyIds: [option.id] }).length);
+    for (const option of facets.fromFamily) expect(option.count).toBe(ids({ toFamilyIds: ['D'], fromFamilyIds: [option.id] }).length);
   });
 });

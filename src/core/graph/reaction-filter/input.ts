@@ -15,6 +15,8 @@ export interface ReactionFilterEntry {
   readonly folded: string;
   readonly fromFamilyIds: readonly string[];
   readonly toFamilyIds: readonly string[];
+  /** The (from, to) family of each of the reaction's candidates, distinct, sorted: From and To together match ONE of them (7.1b C2). */
+  readonly pairs: readonly (readonly [string, string])[];
   readonly typeIds: readonly string[];
   readonly namedReactionIds: readonly string[];
   readonly status: string;
@@ -31,19 +33,21 @@ export interface ReactionFilterInput {
 
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
-function familiesOf(indexes: ReadonlyIndexes): { from: Map<string, Set<string>>; to: Map<string, Set<string>> } {
-  const from = new Map<string, Set<string>>();
-  const to = new Map<string, Set<string>>();
+/** Per reaction, the distinct (from, to) pairs of its candidates. */
+function pairsOf(indexes: ReadonlyIndexes): Map<string, Map<string, readonly [string, string]>> {
+  const out = new Map<string, Map<string, readonly [string, string]>>();
   for (const pair of indexes.navigatorRollup().pairs()) {
     for (const candidate of pair.candidates) {
-      (from.get(candidate.reactionId) ?? from.set(candidate.reactionId, new Set()).get(candidate.reactionId))?.add(pair.from);
-      (to.get(candidate.reactionId) ?? to.set(candidate.reactionId, new Set()).get(candidate.reactionId))?.add(pair.to);
+      let mine = out.get(candidate.reactionId);
+      if (mine === undefined) out.set(candidate.reactionId, (mine = new Map()));
+      mine.set(`${pair.from}\u0000${pair.to}`, [pair.from, pair.to]);
     }
   }
-  return { from, to };
+  return out;
 }
 
-function entryOf(reaction: Reaction, from: ReadonlySet<string> | undefined, to: ReadonlySet<string> | undefined): ReactionFilterEntry {
+function entryOf(reaction: Reaction, found: ReadonlyMap<string, readonly [string, string]> | undefined): ReactionFilterEntry {
+  const pairs = [...(found?.values() ?? [])].sort((a, b) => compare(a[0], b[0]) || compare(a[1], b[1]));
   const reactants = new Set<string>();
   const arrow = new Set<string>();
   const products = new Set<string>();
@@ -56,8 +60,9 @@ function entryOf(reaction: Reaction, from: ReadonlySet<string> | undefined, to: 
     id: reaction.id,
     name: reaction.name,
     folded: [reaction.name, ...reaction.aliases].map(fold).join('\n'),
-    fromFamilyIds: [...(from ?? [])].sort(compare),
-    toFamilyIds: [...(to ?? [])].sort(compare),
+    fromFamilyIds: [...new Set(pairs.map((pair) => pair[0]))],
+    toFamilyIds: [...new Set(pairs.map((pair) => pair[1]))].sort(compare),
+    pairs,
     typeIds: [...new Set(reaction.reactionTypes.map((type) => type.conceptId as string))].sort(compare),
     namedReactionIds: [...new Set(reaction.namedReactionIds as readonly string[])].sort(compare),
     status: reaction.review.status,
@@ -69,8 +74,8 @@ function entryOf(reaction: Reaction, from: ReadonlySet<string> | undefined, to: 
 }
 
 export function buildReactionFilterInput(source: { readonly state: CanonicalState; readonly indexes: ReadonlyIndexes }): ReactionFilterInput {
-  const { from, to } = familiesOf(source.indexes);
-  const entries = (Object.values(source.state.records.reaction) as Reaction[]).map((reaction) => entryOf(reaction, from.get(reaction.id), to.get(reaction.id)));
+  const pairs = pairsOf(source.indexes);
+  const entries = (Object.values(source.state.records.reaction) as Reaction[]).map((reaction) => entryOf(reaction, pairs.get(reaction.id)));
   const keyed = entries.map((entry) => ({ entry, key: fold(entry.name) }));
   keyed.sort((a, b) => compare(a.key, b.key) || compare(a.entry.id, b.entry.id));
   return { entries: keyed.map((one) => one.entry) };

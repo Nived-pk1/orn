@@ -9,7 +9,8 @@ import type { ScopeOf } from '../scope';
 import type { ReactionFilterEntry, ReactionFilterInput } from './input';
 import type { FacetOption, ReactionFacets, ReactionFilter, ReactionFilterResult, ReactionFilterRow } from './types';
 
-const DIMENSIONS = ['substance', 'fromFamily', 'toFamily', 'type', 'namedReaction', 'reviewStatus'] as const;
+/** The dimensions a facet counts one by one. From and To family are coupled (one candidate holds both) and are handled together. */
+const DIMENSIONS = ['substance', 'type', 'namedReaction', 'reviewStatus'] as const;
 type Dimension = (typeof DIMENSIONS)[number];
 
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -23,10 +24,6 @@ function optionsOf(entry: ReactionFilterEntry, dimension: Dimension, usedAs: Non
   switch (dimension) {
     case 'substance':
       return usedAs === 'reactant' ? entry.reactants : usedAs === 'arrow' ? entry.arrow : usedAs === 'product' ? entry.products : entry.any;
-    case 'fromFamily':
-      return entry.fromFamilyIds;
-    case 'toFamily':
-      return entry.toFamilyIds;
     case 'type':
       return entry.typeIds;
     case 'namedReaction':
@@ -36,61 +33,71 @@ function optionsOf(entry: ReactionFilterEntry, dimension: Dimension, usedAs: Non
   }
 }
 
+/**
+ * From and To family (7.1b C2): with both chosen the entry needs ONE candidate with its from in From AND its to in To; with one chosen,
+ * any candidate. `fromOptions` / `toOptions` are what the entry offers the two facets: a from option counts the reaction when it pairs with
+ * a chosen To (any To when none is chosen), and the same the other way round, so a facet equals the result with that option chosen.
+ */
+function pairsOfEntry(entry: ReactionFilterEntry, from: ReadonlySet<string> | undefined, to: ReadonlySet<string> | undefined) {
+  const matches = entry.pairs.filter((pair) => (from === undefined || from.has(pair[0])) && (to === undefined || to.has(pair[1])));
+  return { matches: matches.length > 0, fromOptions: entry.pairs.filter((pair) => to === undefined || to.has(pair[1])).map((pair) => pair[0]), toOptions: entry.pairs.filter((pair) => from === undefined || from.has(pair[0])).map((pair) => pair[1]) };
+}
+
 export function filterReactions(input: ReactionFilterInput, filter: ReactionFilter, scope: ScopeOf | undefined): ReactionFilterResult {
   const usedAs = filter.usedAs ?? 'any';
   const chosen: Record<Dimension, readonly string[]> = {
     substance: filter.substanceIds ?? [],
-    fromFamily: filter.fromFamilyIds ?? [],
-    toFamily: filter.toFamilyIds ?? [],
     type: filter.typeIds ?? [],
     namedReaction: filter.namedReactionIds ?? [],
     reviewStatus: filter.reviewStatuses ?? [],
   };
+  const fromSet = filter.fromFamilyIds === undefined || filter.fromFamilyIds.length === 0 ? undefined : new Set(filter.fromFamilyIds);
+  const toSet = filter.toFamilyIds === undefined || filter.toFamilyIds.length === 0 ? undefined : new Set(filter.toFamilyIds);
   const text = fold(filter.text ?? '').trim();
   const hide = filter.onlyInScope === true && scope !== undefined;
 
-  const counts = Object.fromEntries(DIMENSIONS.map((dimension) => [dimension, new Map<string, number>()])) as Record<Dimension, Map<string, number>>;
+  const counts = Object.fromEntries([...DIMENSIONS, 'fromFamily', 'toFamily'].map((dimension) => [dimension, new Map<string, number>()])) as Record<Dimension | 'fromFamily' | 'toFamily', Map<string, number>>;
   const rows: ReactionFilterRow[] = [];
   let hiddenByScope = 0;
 
   for (const entry of input.entries) {
     const outside = scope !== undefined && scope({ kind: 'reaction', id: entry.id } as never) === 'outside';
-    let failedFacet: Dimension | null = null;
-    let failures = 0; // facet dimensions and the name text
+    const failed: Dimension[] = [];
     for (const dimension of DIMENSIONS) {
       const wanted = chosen[dimension];
       if (wanted.length === 0) continue;
-      if (hasAny(wanted, optionsOf(entry, dimension, usedAs) as readonly string[] | ReadonlySet<string>)) continue;
-      failures += 1;
-      failedFacet = dimension;
+      if (!hasAny(wanted, optionsOf(entry, dimension, usedAs) as readonly string[] | ReadonlySet<string>)) failed.push(dimension);
     }
-    if (text !== '' && !entry.folded.includes(text)) {
-      failures += 1;
-      failedFacet = null;
-    }
+    const geo = pairsOfEntry(entry, fromSet, toSet);
+    const geoFails = !geo.matches;
+    const textFails = text !== '' && !entry.folded.includes(text);
     const scopeFails = hide && outside;
-    if (failures === 0 && scopeFails) hiddenByScope += 1;
-    if (scopeFails || failures > 1) continue;
-    if (failures === 1 && failedFacet === null) continue; // failed the name only: no facet counts it
+    if (!textFails && failed.length === 0 && !geoFails && scopeFails) hiddenByScope += 1;
+    if (scopeFails || textFails) continue; // the name box and the exam scope apply to every facet
+    // a facet counts an entry that passes everything but that facet's own choice (From and To: the pair rule makes its options)
     for (const dimension of DIMENSIONS) {
-      if (failures === 1 && dimension !== failedFacet) continue;
+      if (geoFails || failed.some((one) => one !== dimension)) continue;
       for (const option of optionsOf(entry, dimension, usedAs)) counts[dimension].set(option, (counts[dimension].get(option) ?? 0) + 1);
     }
-    if (failures === 0) rows.push({ id: entry.id, name: entry.name, fromFamilyIds: entry.fromFamilyIds, toFamilyIds: entry.toFamilyIds, outside, typeIds: entry.typeIds });
+    if (failed.length === 0) {
+      for (const option of new Set(geo.fromOptions)) counts.fromFamily.set(option, (counts.fromFamily.get(option) ?? 0) + 1);
+      for (const option of new Set(geo.toOptions)) counts.toFamily.set(option, (counts.toFamily.get(option) ?? 0) + 1);
+    }
+    if (failed.length === 0 && !geoFails) rows.push({ id: entry.id, name: entry.name, fromFamilyIds: entry.fromFamilyIds, toFamilyIds: entry.toFamilyIds, outside, typeIds: entry.typeIds });
   }
 
-  const facet = (dimension: Dimension): FacetOption[] => {
+  const facet = (dimension: Dimension | 'fromFamily' | 'toFamily', picked: readonly string[]): FacetOption[] => {
     const map = counts[dimension];
-    for (const id of chosen[dimension]) if (!map.has(id)) map.set(id, 0); // a selected option is shown, with 0
+    for (const id of picked) if (!map.has(id)) map.set(id, 0); // a selected option is shown, with 0
     return [...map].map(([id, count]) => ({ id, count })).sort((a, b) => compare(a.id, b.id));
   };
   const facets: ReactionFacets = {
-    substance: facet('substance'),
-    fromFamily: facet('fromFamily'),
-    toFamily: facet('toFamily'),
-    type: facet('type'),
-    namedReaction: facet('namedReaction'),
-    reviewStatus: facet('reviewStatus'),
+    substance: facet('substance', chosen.substance),
+    fromFamily: facet('fromFamily', filter.fromFamilyIds ?? []),
+    toFamily: facet('toFamily', filter.toFamilyIds ?? []),
+    type: facet('type', chosen.type),
+    namedReaction: facet('namedReaction', chosen.namedReaction),
+    reviewStatus: facet('reviewStatus', chosen.reviewStatus),
   };
   return { rows, total: input.entries.length, hiddenByScope, facets };
 }

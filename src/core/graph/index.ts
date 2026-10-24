@@ -43,7 +43,7 @@ export type {
   TraversedEdge,
   VisitedNode,
 } from './traversal';
-export { familyStudy, UNCLASSIFIED_NAME } from './family';
-export type { FamilyCard, FamilyCardOutcome, FamilyElsewhere, FamilyGroup, FamilyOutcomeGroup, FamilyPartner, FamilyProduct, FamilyReactionType, FamilySection, FamilySectionKind, FamilyStudy, SelectivityWord } from './family';
-export { buildReactionFilterInput, filterReactions } from './reaction-filter';
-export type { FacetOption, ReactionFacets, ReactionFilter, ReactionFilterEntry, ReactionFilterInput, ReactionFilterResult, ReactionFilterRow, SubstanceUse } from './reaction-filter';
+export { familyStudy, reactionCard, UNCLASSIFIED_NAME } from './family';
+export type { ReactionCardMissing, FamilyCard, FamilyCardOutcome, FamilyElsewhere, FamilyGroup, FamilyOutcomeGroup, FamilyPartner, FamilyProduct, FamilyReactionType, FamilySection, FamilySectionKind, FamilyStudy, SelectivityWord } from './family';
+export { buildReactionFilterInput, createReactionFilterMemo, filterReactions } from './reaction-filter';
+export type { ReactionFilterMemo, FacetOption, ReactionFacets, ReactionFilter, ReactionFilterEntry, ReactionFilterInput, ReactionFilterResult, ReactionFilterRow, SubstanceUse } from './reaction-filter';

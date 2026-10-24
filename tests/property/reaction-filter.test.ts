@@ -5,7 +5,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import fc from 'fast-check';
-import { buildReactionFilterInput, filterReactions, type ReactionFilter } from '@/core/graph';
+import { buildReactionFilterInput, filterReactions, type ReactionFilter, type ReactionFilterEntry } from '@/core/graph';
 import { fold } from '@/core/text/normalizer';
 import type { Reaction } from '@/core/schema';
 import { frozenStateOf, smallParamsArb } from '@/test-support/arbitraries';
@@ -96,5 +96,28 @@ describe('filterReactions', () => {
       PARAMS,
     );
     expect(facetsChecked).toBeGreaterThan(0);
+  });
+
+  it('From and To together (7.1b C2): over entries with several candidates each, a facet equals the result with that option chosen', () => {
+    const family = fc.constantFrom('A', 'B', 'C', 'D');
+    const entryArb = fc.array(fc.tuple(family, family), { minLength: 0, maxLength: 3 });
+    fc.assert(
+      fc.property(fc.array(entryArb, { minLength: 1, maxLength: 12 }), fc.subarray(['A', 'B', 'C', 'D']), fc.subarray(['A', 'B', 'C', 'D']), (all, from, to) => {
+        const entries: ReactionFilterEntry[] = all.map((candidates, index) => {
+          const pairs = [...new Map(candidates.map((p) => [p.join('|'), p as readonly [string, string]])).values()].sort();
+          const id = `rxn_${String(index).padStart(3, '0')}`;
+          return { id, name: id, folded: id, fromFamilyIds: [...new Set(pairs.map((p) => p[0]))].sort(), toFamilyIds: [...new Set(pairs.map((p) => p[1]))].sort(), pairs, typeIds: [], namedReactionIds: [], status: 'unreviewed', reactants: new Set(), arrow: new Set(), products: new Set(), any: new Set() };
+        });
+        const input = { entries };
+        const filter: ReactionFilter = { fromFamilyIds: from, toFamilyIds: to };
+        const result = filterReactions(input, filter, undefined);
+        // the rule: ONE candidate with its from in From and its to in To (an empty choice is no constraint)
+        const expected = entries.filter((e) => e.pairs.some((p) => (from.length === 0 || from.includes(p[0])) && (to.length === 0 || to.includes(p[1])))).map((e) => e.id);
+        expect(result.rows.map((r) => r.id)).toEqual(expected);
+        for (const option of result.facets.fromFamily) expect(option.count, `from ${option.id}`).toBe(filterReactions(input, { ...filter, fromFamilyIds: [option.id] }, undefined).rows.length);
+        for (const option of result.facets.toFamily) expect(option.count, `to ${option.id}`).toBe(filterReactions(input, { ...filter, toFamilyIds: [option.id] }, undefined).rows.length);
+      }),
+      PARAMS,
+    );
   });
 });
