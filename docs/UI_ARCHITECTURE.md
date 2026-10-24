@@ -76,6 +76,8 @@ Zustand stores are small and sliced (selection, viewport, panels, filters, palet
 | Syllabus | Topic tree for the active exam version with derived scope, counts and gaps |
 | Workbench | Authoring (§7, §8) and the review queue |
 
+*2026-10-24 (ADR-042):* the Reactions row is now a filterable LIST of every reaction (cards or compact rows) with substance, family, type, named-reaction, review-status and name filters and facet counts, not the bipartite canvas. Built in 7.1b; the filter itself is core code from 7.1a.
+
 ## 6. Rendering architecture
 
 ```
@@ -145,6 +147,7 @@ Projection (core, memoised) ──► LayoutRequest (sorted, seeded) ──► l
 The chosen level persists per user (uiState). Every record reference in the inspector is a link that focuses it in the current view.
 
 - *Step 6.5b (ADR-038 addendum):* the mechanism view shows the mechanism's pictures FIRST, under the title and before the summary and variants: `<img>` only (blob URL made and revoked through the assets port), alt text from the record, caption under it, never enlarged past its natural size; "Open full size" opens a modal dialog (Esc and Close, focus returns); bytes missing in this browser: "Picture missing: its file is not stored in this browser" with the alt text.
+- *2026-10-24 (ADR-038 addendum, step 7.1a):* pictures are available on every PICTURE_KINDS record (species, class, reagent, reaction, transformation, named reaction, concept, caveat, mechanism): ONE inspector component shows them under the header before the first level (aria-label "Pictures of this <kind word>"), in Study too; the editor has a "Pictures" section after the summary or description section. Family-page cards show none.
 
 ## 10. Interaction model (#19)
 
@@ -194,3 +197,5 @@ First run offers "Load demo dataset", "Import v6 export" and "Start empty". Load
 - **Map**: no toolbar row, no permanent legend; round floating Fit and Legend (i) buttons (Legend opens a sheet). Pinch zoom, minimum = `FIT_FLOOR`. One tap on a family selects it and opens the sheet at peek; double tap opens the family page; long press keeps the context menu; a tap on an arrow opens the sheet with its reactions.
 - **Inspector sheet**: a bottom sheet with peek (~35%: name, kind, key line, large main-action buttons such as "Open family", "Show on map"), full (all inspector content) and closed. Drag handle, swipe up / down, Close button, Escape closes; focus moves in on open and back to the tapped item on close; a non-modal region labelled by the record's name; the content above stays visible at peek. The same inspector content as the desktop.
 - **Next (not built here)**: the family page on phone (single column, vertical reaction scheme); load-time fixes.
+
+- *2026-10-24 (ADR-042, built in 7.1b):* the phone bottom tabs become "Families | Map | Explore | Search"; Explore opens the last explorer used (the Reactions list in 7.1); its filters are behind "Filters (n)" in a full-screen sheet; one column; 44 px targets.

@@ -1,9 +1,9 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-23",
+  "lastUpdated": "2026-10-24",
   "currentPhase": 7,
-  "currentPhaseStatus": "not_started",
+  "currentPhaseStatus": "in_progress",
   "completedPhases": [
     0,
     1,
@@ -144,8 +144,8 @@
     "commit": "a7c7205",
     "protectedCheckedAt": "2026-10-24"
   },
-  "nextStep": "7.1",
-  "nextStepTitle": "Phase 7, exploration views, first step: the reaction explorer (the plan lists the Phase 7 steps in one paragraph, one step each)",
+  "nextStep": "7.1a",
+  "nextStepTitle": "Pictures on any record and the reaction filter (7.1a)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -279,7 +279,7 @@
   },
   "openItems": [
     "-> Phase 9 (performance hardening): 'navigator overview, every hub expanded' (dense) sits at the 16 ms budget (16.11 at 6.9).",
-    "-> Phase 7 (reagent explorer): show a reagent profile's conditions BESIDE a reaction that uses the profile, never merged into the stage's arrow text (6.6a review V1).",
+    "-> Phase 7 (reagent explorer): show a reagent profile's conditions BESIDE a reaction that uses the profile, never merged into the stage's arrow text (6.6a review V1). -> 7.3 (2026-10-24).",
     "-> later (schema v3 candidate): pictures on a single mechanism step need a schema change (asset attachment to a step): a RecordRef cannot name a step; 6.5b builds mechanism pictures only (ADR-038 addendum).",
     "-> later (schema v3 candidate): structured value + unit for numeric species properties (needs a unit decision per key); 6.6a edits a property as the schema types it (key, label, value text with the unit written in it, note, citations).",
     "-> later (schema v3 candidate): exam kind (board / entrance) for the grouped scope selector. The exam record has no such field, so the selector stays a flat list by exam name, then version (Exams step part 3, reviewer decision 2026-10-21).",
@@ -406,7 +406,7 @@
     "Step 4.6 (Gate E, from the 4.5 review decision 6): the full-load document build for search on the main thread (193 ms with the indexes ready) is a Gate E watch item; remedy candidate: build the documents in the compute worker. -> step 5.1b, 5.10b [CLOSED by the Gate E verdict, 2026-10-14; text kept.]",
     "CLOSED (step 5.1d review, 2026-10-03): chem cold start measured in Chromium (loadMs 96-116 ms); ELK loads in the production worker in three browsers (follow-up a); ENGINE_LOAD_TIMEOUT_MS stays 20,000 (the engine loads in about 0.1 s here and a slow phone must still fit): FINAL unless Gate E shows otherwise. Was: PARTLY CLOSED in step 5.1d: chem cold start measured in Chromium (loadMs 96-116 ms, request to answer 151-159 ms; ENGINE_LOAD_TIMEOUT_MS left at 20,000, the reviewer decides). Open: ELK does not load in the production layout worker (see the REVIEW REQUIRED item on ELK). Was: PARTLY CLOSED in step 5.0 (2026-10-02): engine start-up has its own limit (warmUp, ENGINE_LOAD_TIMEOUT_MS = 20,000; ADR-034 dated line). Open: the real-browser cold start of RDKit and ELK is measured in step 5.1d, which also revisits the 20 s; step 5.1b creates the clients with onRestart: gate.onRestart (createWarmUpGate, src/workers/rpc/warm-up.ts) and the services with the same gate. -> step 5.1b, 5.1d",
     "CLOSED in step 6.1b part 4 (2026-10-18): periodic snapshots are taken in the writer tab by the existing policy, built by the compute worker (snapshotBuild) and stored with storeSnapshotBytes (pruned to five); the status line says so. Was: Moved out of Phase 5 (Phase 5 contract decisions, 2026-10-02): periodic snapshots are built in Phase 6 step 6.1, when edits exist, through the compute worker's snapshotBuild. -> step 6.1",
-    "Moved out of Phase 5 (Phase 5 contract decisions, 2026-10-02): bundle fan-out (listing and expanding the reactions inside a bundle or overflow node in the graph); Phase 5 only lists them in the inspector (step 5.5b). -> Phase 7",
+    "Moved out of Phase 5 (Phase 5 contract decisions, 2026-10-02): bundle fan-out (listing and expanding the reactions inside a bundle or overflow node in the graph); Phase 5 only lists them in the inspector (step 5.5b). -> Phase 7 -> 7.1b (2026-10-24): the arrow inspector's \"Open these N reactions in Reactions\" (ADR-042 E7).",
     "Moved out of Phase 5 (Phase 5 contract decisions, 2026-10-02): the persistent depiction cache in derivedCache (Phase 5 keeps a memory LRU), storageEstimate in Diagnostics, and derived tables over the store's own core handle (Q1 candidate, so the core part is not built twice). -> Phase 9",
     "CLOSED (step 5.1b): decided at the 5.0 review (see the DECIDED item) and built: retry only on a user action. Was: Step 5.0: an engine whose warmUp answered engine_unavailable stays unavailable for the life of its gate (a page reload retries); chem answers unavailable with the message, layout the fallback layout. The reviewer may want a retry after a pause or on user action. -> step 5.1d",
     "Step 5.0: the navigator fact sheet (docs/PROGRESS.md, step 5.0 item c) is the input of step 5.4c: bundles are made from admitted edges only and do not know their full count, hidden counts dropped edges at admitted ends, and the roll-up has no per-pair index. -> step 5.4c",
@@ -440,7 +440,7 @@
     "NEW (step 5.5d): the storage warning is also asked at boot with persisted() (REVIEW REQUIRED 1 of the 5.5d close); the Unanchored list is a plain list until 5.8.",
     "NEW (step 5.8 close): initial JS 367.89 kB gzip (354.29 at the start of the session, +13.6 kB: the palette, cmdk and its Radix pieces about 5.8 kB, the exam scope, the top bar); target 400 kB, build:smoke fails over it. The palette could be loaded lazily (a Gate E decision).",
     "NEW (step 5.8, REVIEW REQUIRED): the exam-scope selector starts at All (no exam scope), not at the latest official or provisional version JEE_ONTOLOGY section 3 describes; a family is outside the exam scope when it has reactions and all of them are (the family's own record is not used), recorded in GRAPH_SEMANTICS and ADR-037. The demo has no all-outside family under either version (JEE Main: 26 official, 1 outside = Beckmann, unanchored; Advanced: 26 official, 1 enrichment).",
-    "NEW (step 5.8): the palette orders its groups by the best hit (a query that fits several reaction names lists Reactions before Species); \"Choose the exam scope\" is one command per choice; Alt+Enter (reaction explorer) is not bound (Phase 7); the palette is not lazily loaded.",
+    "NEW (step 5.8): the palette orders its groups by the best hit (a query that fits several reaction names lists Reactions before Species); \"Choose the exam scope\" is one command per choice; Alt+Enter (reaction explorer) is not bound (Phase 7); the palette is not lazily loaded. -> Alt+Enter clause: 7.1b (2026-10-24).",
     "NEW (step 5.7 review, ADR-038 \"Mechanism pictures\"): Phase 6 row 6.5 attaches the user's own mechanism images to a mechanism or a step (asset records, <img> with a blob URL only), shown first in the mechanism view; a new Phase 8 step \"Arrow-pushing diagrams\" draws each mechanism step from the structured data (static drawings; arrow-pushing moves from ARCHITECTURALLY SUPPORTED to REQUIRED; animation stays FUTURE). Phase 8 also: family boxes at least 44 px on coarse pointers (the 5.7 review).",
     "NEW (step 5.8): Undo and Redo are bound to the store and unavailable with reasons; Phase 5 has no editing, so they stay unavailable until Phase 6 (tested with a stub store that has history). The Replace-with-the-demo confirm dialog now lives in the window (the palette command and the Dataset button share it).",
     "CLOSED (step 5.10b, reviewer decision 1, 2026-10-14): Was: NEW (step 5.9a): Gate E watch item, the import's main-thread blocks (Chromium trace, 16.9 MB design-tier dense file): the preview has a 3,707 ms task starting 711 ms after the file is chosen whose cause is not established, and the apply has a 2,644 ms microtask block (1,091 ms in one function of the main bundle: merged state, snapshot and replaceState on main). Nothing fixed; see docs/PROGRESS.md 'Phase 5, step 5.9a, part 2', item j. The palette not being lazy (5.8 review item 6) stays a watch item with the initial JS (372.76 kB gzip). RESULT: the 3,707 ms preview task is a HARNESS cost (Playwright setInputFiles sends the buffer as base64 through the protocol; by path there is no long task), proven by path; closed. The 2,644 ms apply block is NOT REPRODUCED at full speed (longest task 849 ms: replaceState 473 ms + the persistence write); closed; its top functions stay in the packet. The palette not being lazy stays a watch item with the initial JS.",
@@ -466,14 +466,15 @@
     "-> 6.7: duplicating a reaction and \"New specific reaction from this generic one\" (UI_ARCHITECTURE §7 templates) move to step 6.7 (step 6.3a decision D7, 2026-10-19).",
     "CLOSED (step 6.6c, 2026-10-21): the TOPIC editor (with its Mapped records), topic mapping, exam relevance and map family editors; Syllabus topics, Exam relevance and Relationships lists in every record editor; \"Map to a topic\", \"Mark exam relevance\", \"Make this a map family\" and \"New relationship from here\" open a NEW editor with a field filled in (OpenTarget.seed). Open: routes cannot be chosen as a mapping, relevance or relationship end until Phase 7.",
     "-> Exams step (2026-10-21, right after 6.6c): exam and exam_version editors (syllabus units, topic coverage, provisional status, CUR rules) with the user's request for CBSE, KCET and BITSAT: app wording exam-generic, scope selector grouped (Board exam / Entrance exams).",
-    "-> Phase 7 (2026-10-21): the ROUTE editor, with the precursor explorer and route search.",
+    "-> Phase 7 (2026-10-21): the ROUTE editor, with the precursor explorer and route search. -> 7.2 (2026-10-24).",
     "-> later: merging reagents moves A's profiles into B and rewrites the reactions' profile references (2026-10-23, step 6.8a: a reagent whose profiles reactions use is refused in words).",
     "NOTE (2026-10-21): reaction_scheme, view_preset and entity_display have no form editor; they are made by the views that own them (map arrangement, presets, display settings). asset has no stand-alone editor; deleting assets is 6.8.",
     "-> Phase 9: watch the Firefox 'downloadable font: download failed' console error in e2e; if it recurs, preload or self-check the font files",
     "-> Phase 9 (storage diagnostics): remove unused picture files (blob rows no asset record uses), with a clear 'cannot be undone' step",
     "-> later: the Review page on a phone (Studio is desktop-first; the queue is not offered on a phone)",
     "-> Phase 9: a pointer-path bench (Shift-click, marquee) against the interaction budget",
-    "NEW (step 6.9, Gate D findings): demo fields no editor can set - outcome label, outcome conceptIds, condition variant note, participants present only under a variant, stage and participant originalText, participant note, variant solvent character. Decide: add the editor field or keep read-only (docs/reviews/phase-6-close.md section 4)."
+    "NEW (step 6.9, Gate D findings): demo fields no editor can set - outcome label, outcome conceptIds, condition variant note, participants present only under a variant, stage and participant originalText, participant note, variant solvent character. Decide: add the editor field or keep read-only (docs/reviews/phase-6-close.md section 4).",
+    "NEW (content track request, 2026-10-24): pictures on concepts and other records, not only mechanisms -> 7.1a (ADR-038 addendum 7.1a)"
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",

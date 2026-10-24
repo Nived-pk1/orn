@@ -186,6 +186,18 @@ The contracts fit scan of this plan (Q1-Q14) and the open points it found are in
 ### Phase 7 — Exploration views
 Reaction explorer, precursor explorer with route-search panel, reagent explorer, named reactions, mechanisms view, syllabus view with version diff (one step each).
 
+| Row | Content |
+|---|---|
+| 7.1 | Reaction explorer. **7.1a:** pictures on any record (the content track's request) and the pure reaction filter in core. **7.1b:** the Reactions view on desktop and phone, its entry points (mode rail, palette Alt+Enter, inspector, an arrow's reactions = Phase 5's bundle fan-out), row close with the full e2e run and deploy. |
+| 7.2 | Precursor explorer + route-search panel + the ROUTE editor in Studio. |
+| 7.3 | Reagent explorer (a profile's conditions shown BESIDE the reactions that use it, never merged into the arrow text). |
+| 7.4 | Named reactions view. |
+| 7.5 | Mechanisms view. |
+| 7.6 | Syllabus view with version diff. |
+| 7.7 | Phase 7 close: full e2e, both sizes, the Phase 7 Definition of Done (§3). |
+
+Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)
+
 ### Phase 8 — Export and visual polish
 
 Also here (moved from 5.5d by the 5.5c review): 200 ms layout transitions (none with reduced motion); the overview no longer expands, so a layout changes only with the data.

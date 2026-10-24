@@ -6182,3 +6182,10 @@ Docs only; no product code changed. Both editions were built from a7c7205 (tag p
 **Studio** `reaction-navigator-studio`: version 803759e9-b4a9-440e-99b9-21fcae2bfbc5 (deployed 2026-10-24, after `npm run build:studio`).
 **Access check (after the Studio deploy):** an unauthenticated `curl -sI` of the Studio URL answered 302 with `Www-Authenticate: Cloudflare-Access`, not the app; the public Study URL answered 200 with the app.
 **nextStep "7.1"** means the reaction explorer, the first Phase 7 item in IMPLEMENTATION_PLAN. Phase 7 has no numbered rows yet; the reviewer will number them.
+
+### Step 7.1a, part A - Phase 7 plan (2026-10-24)
+
+Docs only. IMPLEMENTATION_PLAN Phase 7 is now a numbered table 7.1-7.7 (the paragraph kept as the intro); ARCHITECTURE_DECISIONS: ADR-042 "Exploration views: the Reactions list" (E1-E10) and the ADR-038 addendum for step 7.1a (Q1-Q8); UI_ARCHITECTURE §5, §9, §13 carry dated lines; PROJECT_STATE: currentPhaseStatus in_progress, nextStep "7.1a"; openItems: the content-track item ADDED; the Phase 5 bundle fan-out item re-pointed to 7.1b, the step 5.8 Alt+Enter clause to 7.1b, the ROUTE editor item to 7.2, the reagent-explorer item to 7.3 (each by appending the target and date to its text; none deleted).
+**Start:** git status clean; HEAD 3562c73 "phase-6: deployed" as expected (tag phase-6 on a7c7205). Ports 4173, 4174, 8787, 9333 free; no process stopped. **Speed check** 0.928 / 0.936 / 0.935 s (median 0.935, normal range).
+**Phase 6 close:** no open REVIEW REQUIRED items.
+**Check:** docs-only commit; `npm run check` skipped.
