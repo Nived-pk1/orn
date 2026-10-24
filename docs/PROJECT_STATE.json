@@ -474,7 +474,8 @@
     "-> later: the Review page on a phone (Studio is desktop-first; the queue is not offered on a phone)",
     "-> Phase 9: a pointer-path bench (Shift-click, marquee) against the interaction budget",
     "NEW (step 6.9, Gate D findings): demo fields no editor can set - outcome label, outcome conceptIds, condition variant note, participants present only under a variant, stage and participant originalText, participant note, variant solvent character. Decide: add the editor field or keep read-only (docs/reviews/phase-6-close.md section 4).",
-    "NEW (content track request, 2026-10-24): pictures on concepts and other records, not only mechanisms -> 7.1a (ADR-038 addendum 7.1a)"
+    "NEW (content track request, 2026-10-24): pictures on concepts and other records, not only mechanisms -> 7.1a (ADR-038 addendum 7.1a)",
+    "NEW (step 7.1a part B, 2026-10-24): publish:dataset and io/publish.ts have no 25 MiB check; Cloudflare serves at most 25 MiB per static file and a published .orn.json grows by 4/3 of every picture -> reviewer decides (Phase 9 or the first step that publishes pictures)"
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",
