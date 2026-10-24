@@ -312,6 +312,40 @@ test.describe('desktop', () => {
     await expectClean(seen);
   });
 
+  test('Reactions works in Study: filters, Cards and Compact, a card opens the inspector, no editing control exists and no editor chunk is requested (step 7.1b)', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page, STUDY);
+    const scripts: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.endsWith('.js')) scripts.push(request.url().split('/').pop() as string);
+    });
+    await openStudy(page);
+    await importOwnData(page);
+    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions' }).click();
+    const view = page.getByRole('region', { name: 'Reactions', exact: true });
+    await expect(page.getByRole('heading', { name: 'Reactions', exact: true })).toBeVisible();
+    await expect(view.locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
+    const all = await view.locator('[data-reaction-id]').count();
+    await view.getByRole('button', { name: /^Type/ }).click();
+    await view.getByRole('group', { name: 'Type filter' }).getByRole('checkbox', { name: /^Oxidation/ }).check();
+    await expect(view.getByRole('list', { name: 'Chosen filters' }).getByRole('listitem')).toHaveCount(1);
+    expect(await view.locator('[data-reaction-id]').count()).toBeLessThan(all);
+    await page.keyboard.press('Escape');
+    await view.getByRole('radio', { name: 'Compact' }).check();
+    await expect(view.locator('article[data-reaction-id]')).toHaveCount(0);
+    await view.getByRole('radio', { name: 'Cards' }).check();
+    const card = view.locator('article[data-reaction-id]').first();
+    const id = await card.getAttribute('data-reaction-id');
+    await card.getByRole('button').first().click();
+    await expect(record(page)).toHaveAttribute('data-record-id', id as string);
+    for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+    const editors = editorChunkNames();
+    expect(scripts.filter((name) => editors.includes(name) || /^(editor-host|editor-session)-/.test(name)), 'editor chunks requested').toEqual([]);
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+
   test('a small own dataset imports and works as before in Study (import and export of the visitor\'s own data stay)', async ({ page }) => {
     const seen = await watch(page, STUDY);
     await openStudy(page);

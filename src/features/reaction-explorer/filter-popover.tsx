@@ -22,21 +22,21 @@ export function FilterPopover(props: { readonly title: string; readonly chosen: 
     const onDown = (event: MouseEvent): void => {
       if (root.current !== null && !root.current.contains(event.target as Node)) setOpen(false);
     };
+    // Escape works wherever the focus is: WebKit does not focus a checkbox that was clicked
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      button.current?.focus();
+    };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
   }, [open]);
   return (
-    <div
-      ref={root}
-      className={styles.popoverRoot}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape' && open) {
-          event.stopPropagation();
-          setOpen(false);
-          button.current?.focus();
-        }
-      }}
-    >
+    <div ref={root} className={styles.popoverRoot}>
       <button ref={button} type="button" className={styles.filterButton} aria-expanded={open} aria-controls={open ? panelId : undefined} aria-haspopup="true" onClick={() => setOpen((value) => !value)}>
         {props.chosen > 0 ? `${props.title} (${props.chosen})` : props.title}
       </button>

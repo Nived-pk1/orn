@@ -106,6 +106,16 @@ describe('filters', () => {
     expect(document.activeElement).toBe(button);
   });
 
+  it('Escape closes a popover even when the focus is not inside it (WebKit does not focus a clicked checkbox)', () => {
+    setup();
+    const button = screen.getByRole('button', { name: 'Type' });
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(button);
+  });
+
   it('the name box narrows by folded text', () => {
     setup();
     fireEvent.change(screen.getByRole('searchbox', { name: 'Find by name' }), { target: { value: 'pcc' } });
