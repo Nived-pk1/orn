@@ -6,7 +6,7 @@
  *
  * Refused: a file the parser rejects; an older-app (legacy) file (export from Studio instead); a preview that cannot be built or cannot be
  * confirmed (an L1-L3 ERROR); any record the file lists that failed its schema; any ERROR finding; a rejected asset; a package entry that
- * could not be read; picture records with no bytes (a published picture must show to everyone).
+ * could not be read; picture records with no bytes (a published picture must show to everyone); a file over 25 MiB (the host's limit).
  */
 import type { IdFactory } from '@/core/dataset/contracts';
 import type { MigrationRunner } from '@/core/migrations';
@@ -28,6 +28,9 @@ export interface PublishInput {
   readonly bytes: Uint8Array;
 }
 
+/** The host (Cloudflare) serves at most 25 MiB per static file; a larger file would publish and then fail at deploy. */
+export const MAX_PUBLISH_BYTES = 26_214_400;
+
 /** The findings listed in a verdict (errors first, then the rest, as the preview lists them), bounded. */
 const MAX_LISTED_FINDINGS = 50;
 
@@ -46,6 +49,10 @@ export type PublishVerdict =
 const refuse = (reasons: readonly string[], findings: readonly Finding[] = []): PublishVerdict => ({ ok: false, reasons, findings: findings.slice(0, MAX_LISTED_FINDINGS) });
 
 export async function checkForPublish(input: PublishInput, deps: PublishDeps): Promise<PublishVerdict> {
+  if (input.bytes.byteLength > MAX_PUBLISH_BYTES) {
+    const megabytes = (Math.ceil((input.bytes.byteLength / 1_048_576) * 10) / 10).toFixed(1);
+    return refuse([`This file is ${megabytes} MB. The host serves at most 25 MB per file: publish fewer or smaller pictures.`]);
+  }
   const parsed = await parseImportSource({ fileName: input.fileName, bytes: new Blob([input.bytes as BlobPart]) }, { runner: deps.runner });
   if (!parsed.ok) return refuse([`the file was not read (${parsed.code}): ${parsed.message}`]);
   const result = parsed.result;

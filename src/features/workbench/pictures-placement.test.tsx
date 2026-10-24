@@ -24,7 +24,7 @@ const AFTER: Readonly<Record<string, string>> = {
   transformation: 'shared',
   named_reaction: 'shared',
   concept: 'shared',
-  caveat: 'identity',
+  caveat: 'statement',
   mechanism: 'summary',
 };
 

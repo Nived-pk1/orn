@@ -135,10 +135,10 @@ export function CaveatForm(props: CaveatFormProps) {
       <SectionFrame id="identity" title="Identity">
         <IdentitySection {...common} />
       </SectionFrame>
-      <PicturesFrame kind="caveat" form={props} />
       <SectionFrame id="statement" title="Statement and explanation">
         <NotesSection {...common} fields={['statement', 'rule', 'trigger', 'explanation']} />
       </SectionFrame>
+      <PicturesFrame kind="caveat" form={props} />
       <SectionFrame id="trigger-conditions" title="Trigger conditions" initiallyOpen={open}>
         <TriggerSection {...common} />
       </SectionFrame>

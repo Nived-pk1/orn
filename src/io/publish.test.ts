@@ -87,3 +87,26 @@ describe('checkForPublish: refused, in words, nothing written by the check', () 
     expect(legacy.ok).toBe(false);
   });
 });
+
+describe('checkForPublish: the host serves at most 25 MiB per file (7.1b R7)', () => {
+  const LIMIT = 26_214_400;
+  const padded = async (size: number): Promise<Uint8Array> => {
+    const base = await exportBytes(demoState());
+    const out = new Uint8Array(size).fill(0x20); // JSON ignores trailing spaces
+    out.set(base, 0);
+    return out;
+  };
+
+  it('just under and exactly at the limit: not refused for size', async () => {
+    for (const size of [LIMIT - 1, LIMIT]) {
+      const verdict = await checkForPublish({ fileName: 'big.orn.json', bytes: await padded(size) }, deps());
+      expect(reasons(verdict), String(size)).not.toContain('The host serves');
+    }
+  });
+
+  it('just over the limit: refused in words before anything is read', async () => {
+    const verdict = await checkForPublish({ fileName: 'big.orn.json', bytes: await padded(LIMIT + 1) }, deps());
+    expect(verdict.ok).toBe(false);
+    expect(reasons(verdict)).toBe('This file is 25.1 MB. The host serves at most 25 MB per file: publish fewer or smaller pictures.');
+  });
+});

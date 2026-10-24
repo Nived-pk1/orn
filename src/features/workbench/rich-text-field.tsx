@@ -102,6 +102,11 @@ function Node(props: { readonly node: RichNode; readonly links: Links }) {
   }
 }
 
+/** The preview alone, for a text shown elsewhere in the workbench (a picture's caption): the same parser and elements, typed HTML stays text. */
+export function RichTextPreview(props: { readonly source: string; readonly linkExists?: RichTextFieldProps['linkExists']; readonly linkName?: RichTextFieldProps['linkName'] }) {
+  return <Nodes nodes={parseRichText(props.source)} links={{ exists: props.linkExists, name: props.linkName }} />;
+}
+
 export function RichTextField(props: RichTextFieldProps) {
   const helpId = useId();
   const locked = props.unavailable !== undefined;

@@ -34,6 +34,16 @@ describe('the pictures of a concept', () => {
     expect(first.getByRole('button', { name: 'Remove picture 1 from this concept' })).toBeTruthy();
   });
 
+  it('shows the caption through the rich-text preview: emphasis is drawn, never the asterisks, never HTML (7.1b F1)', async () => {
+    const fake = fakePictures([view('ast_9', 'A sketch', 'My own *ranking* sketch. <b>x</b>', 'c.png')]);
+    show('concept', fake);
+    const first = within(screen.getByRole('group', { name: 'Picture 1' }));
+    expect((await first.findByText('ranking')).tagName).toBe('EM');
+    expect(first.queryByText(/\*ranking\*/)).toBeNull();
+    expect(first.getByText(/<b>x<\/b>/)).toBeTruthy(); // typed HTML stays text
+    expect(first.queryByText('x', { selector: 'b' })).toBeNull();
+  });
+
   it('asks the port for the pictures of THIS record, by reference', () => {
     const fake = fakePictures(ONE);
     const list = vi.spyOn(fake.port, 'list');

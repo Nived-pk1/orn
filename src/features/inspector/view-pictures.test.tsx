@@ -101,7 +101,7 @@ describe('the pictures of a mechanism', () => {
     expect(img.hasAttribute('width') || img.hasAttribute('style')).toBe(false);
     expect(pictures().querySelector('object, embed, iframe, svg, canvas')).toBeNull();
     const css = readFileSync(resolve(process.cwd(), 'src/features/inspector/inspector.module.css'), 'utf8');
-    const rule = /\.mechanismPicture\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+    const rule = /\.recordPicture\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
     expect(rule).toMatch(/max-width:\s*100%/);
     expect(rule).toMatch(/height:\s*auto/);
     expect(rule).not.toMatch(/[^-]width:\s*100%/); // never stretched past its natural size

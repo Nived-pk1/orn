@@ -160,6 +160,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   await chooser.setFiles(png());
   await expect(addDialog(page).getByRole('img', { name: 'Preview of the chosen picture' })).toBeVisible();
   await addDialog(page).getByLabel('Alt text (required)').fill(ALT);
+  await addDialog(page).getByLabel('Caption (optional)').fill(CAPTION); // 7.1b F2: the first phone run wrote none, so none showed
   await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(43, 79, 216)');
   await addDialog(page).getByRole('button', { name: 'Add picture', exact: true }).tap();
   await expect(addDialog(page)).toBeHidden({ timeout: 60_000 });
@@ -168,6 +169,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   // the full sheet shows it, inside the screen's width
   const region = pictures(page);
   await expectPictureShown(region);
+  await expect(region.locator('figcaption em')).toHaveText('ranking');
   const viewport = page.viewportSize()?.width ?? 0;
   const box = await region.getByRole('img', { name: ALT }).boundingBox();
   expect(box !== null && box.x >= 0 && box.x + box.width <= viewport, 'the picture fits the screen').toBe(true);

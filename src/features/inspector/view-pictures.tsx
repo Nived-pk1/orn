@@ -68,7 +68,7 @@ function PictureFigure(props: { readonly asset: Asset }) {
       ) : null}
       {shown.state === 'ready' ? (
         <>
-          <img className={styles.mechanismPicture} src={shown.url} alt={alt} />
+          <img className={styles.recordPicture} src={shown.url} alt={alt} />
           <Button onClick={() => setBig(true)}>Open full size</Button>
           {big ? (
             <Dialog open onClose={() => setBig(false)} title={alt} size="screen">

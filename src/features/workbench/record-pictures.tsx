@@ -13,6 +13,7 @@ import type { PicturesPort, PictureView } from './picture-contracts';
 import { PictureDialog, type PictureDialogMode } from './picture-dialog';
 import { PictureThumb } from './picture-thumb';
 import { useRemove } from './remove-context';
+import { RichTextPreview } from './rich-text-field';
 import styles from './editor.module.css';
 import own from './picture.module.css';
 
@@ -60,7 +61,11 @@ export function RecordPicturesSection(props: RecordPicturesProps) {
                 </div>
                 <div className={own.text}>
                   <p>{picture.altText === '' ? 'No alt text is written.' : picture.altText}</p>
-                  {picture.caption === '' ? null : <p className={styles.hint}>{picture.caption}</p>}
+                  {picture.caption === '' ? null : (
+                    <div className={styles.hint}>
+                      <RichTextPreview source={picture.caption} />
+                    </div>
+                  )}
                 </div>
                 <div className={own.actions}>
                   <Button aria-label={`Edit picture ${n}`} {...off(() => setDialog({ kind: 'edit', picture, target }))}>
