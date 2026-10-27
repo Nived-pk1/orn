@@ -131,21 +131,21 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-23",
-    "commit": "a7c7205",
-    "version": "33727cfc-2839-48c3-9d73-3af86ba5a91d",
-    "liveSpecs": "2026-10-24: 45 passed, 17 skipped, 0 failed (Chromium 23, WebKit 22)"
+    "deployedAt": "2026-10-27",
+    "commit": "d731964",
+    "version": "294364b7-db8b-4c85-a10a-b48c1e4dcabe",
+    "liveSpecs": "2026-10-27: 61 passed, 19 skipped, 0 failed (Chromium 31 passed / 9 skipped, WebKit 30 passed / 10 skipped); smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, reaction-explorer"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-24",
-    "version": "803759e9-b4a9-440e-99b9-21fcae2bfbc5",
+    "deployedAt": "2026-10-27",
+    "version": "af760cb4-bf75-4d0c-b1de-7d8908499eb1",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the phase-6 deploy, 2026-10-24: an unauthenticated request got 302 (Cloudflare Access, Www-Authenticate: Cloudflare-Access) and not the app; the public Worker still answered 200 with the app.",
-    "commit": "a7c7205",
-    "protectedCheckedAt": "2026-10-24"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.1b deploy, 2026-10-27: an unauthenticated request got 302 to cloudflareaccess.com (Www-Authenticate: Cloudflare-Access) and not the app; the public Worker answered 200 with the app.",
+    "commit": "d731964",
+    "protectedCheckedAt": "2026-10-27"
   },
   "nextStep": "7.2",
   "nextStepTitle": "Precursor explorer, route search and the route editor",
