@@ -115,7 +115,10 @@
     "6.8a",
     "6.8b",
     "6.8",
-    "6.9"
+    "6.9",
+    "7.1a",
+    "7.1b",
+    "7.1"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -144,8 +147,8 @@
     "commit": "a7c7205",
     "protectedCheckedAt": "2026-10-24"
   },
-  "nextStep": "7.1b",
-  "nextStepTitle": "Reactions view on desktop and phone, its entry points, row close with the full e2e run and deploy (7.1b)",
+  "nextStep": "7.2",
+  "nextStepTitle": "Precursor explorer, route search and the route editor",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -474,8 +477,9 @@
     "-> later: the Review page on a phone (Studio is desktop-first; the queue is not offered on a phone)",
     "-> Phase 9: a pointer-path bench (Shift-click, marquee) against the interaction budget",
     "NEW (step 6.9, Gate D findings): demo fields no editor can set - outcome label, outcome conceptIds, condition variant note, participants present only under a variant, stage and participant originalText, participant note, variant solvent character. Decide: add the editor field or keep read-only (docs/reviews/phase-6-close.md section 4).",
-    "NEW (content track request, 2026-10-24): pictures on concepts and other records, not only mechanisms -> 7.1a (ADR-038 addendum 7.1a) -> built in 7.1a (commit e3ec005), live with the 7.1b deploy (2026-10-24).",
-    "CLOSED (step 7.1b part A, 2026-10-24: io/publish.ts (and so npm run publish:dataset) refuses a file over 26,214,400 bytes in words and copies nothing; tests at LIMIT-1, LIMIT and LIMIT+1). Was: NEW (step 7.1a part B, 2026-10-24): publish:dataset and io/publish.ts have no 25 MiB check; Cloudflare serves at most 25 MiB per static file and a published .orn.json grows by 4/3 of every picture -> reviewer decides (Phase 9 or the first step that publishes pictures)"
+    "CLOSED (step 7.1b part F, 2026-10-24: live with the 7.1b deploy). Was: NEW (content track request, 2026-10-24): pictures on concepts and other records, not only mechanisms -> 7.1a (ADR-038 addendum 7.1a) -> built in 7.1a (commit e3ec005), live with the 7.1b deploy (2026-10-24).",
+    "CLOSED (step 7.1b part A, 2026-10-24: io/publish.ts (and so npm run publish:dataset) refuses a file over 26,214,400 bytes in words and copies nothing; tests at LIMIT-1, LIMIT and LIMIT+1). Was: NEW (step 7.1a part B, 2026-10-24): publish:dataset and io/publish.ts have no 25 MiB check; Cloudflare serves at most 25 MiB per static file and a published .orn.json grows by 4/3 of every picture -> reviewer decides (Phase 9 or the first step that publishes pictures)",
+    "NEW (7.1b close, 2026-10-27): WebKit raises 'ResizeObserver loop completed with undelivered notifications' under load and the e2e page-error check fails on it (4 tests, one run); decide in Phase 9 whether the helper treats it as benign, with a test -> Phase 9"
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",

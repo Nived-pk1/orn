@@ -188,7 +188,7 @@ Reaction explorer, precursor explorer with route-search panel, reagent explorer,
 
 | Row | Content |
 |---|---|
-| 7.1 | Reaction explorer. **7.1a:** pictures on any record (the content track's request) and the pure reaction filter in core. **7.1b:** the Reactions view on desktop and phone, its entry points (mode rail, palette Alt+Enter, inspector, an arrow's reactions = Phase 5's bundle fan-out), row close with the full e2e run and deploy. |
+| 7.1 | **DONE 2026-10-24.** Reaction explorer. **7.1a:** pictures on any record (the content track's request) and the pure reaction filter in core. **7.1b:** the Reactions view on desktop and phone, its entry points (mode rail, palette Alt+Enter, inspector, an arrow's reactions = Phase 5's bundle fan-out), row close with the full e2e run and deploy. |
 | 7.2 | Precursor explorer + route-search panel + the ROUTE editor in Studio. |
 | 7.3 | Reagent explorer (a profile's conditions shown BESIDE the reactions that use it, never merged into the arrow text). |
 | 7.4 | Named reactions view. |

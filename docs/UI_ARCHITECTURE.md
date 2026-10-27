@@ -76,7 +76,7 @@ Zustand stores are small and sliced (selection, viewport, panels, filters, palet
 | Syllabus | Topic tree for the active exam version with derived scope, counts and gaps |
 | Workbench | Authoring (§7, §8) and the review queue |
 
-*2026-10-24 (ADR-042):* the Reactions row is now a filterable LIST of every reaction (cards or compact rows) with substance, family, type, named-reaction, review-status and name filters and facet counts, not the bipartite canvas. Built in 7.1b; the filter itself is core code from 7.1a.
+*2026-10-24 (ADR-042):* the Reactions row is now a filterable LIST of every reaction (cards or compact rows) with substance, family, type, named-reaction, review-status and name filters and facet counts, not the bipartite canvas. Built in 7.1b (2026-10-24; the filter itself is core code from 7.1a). As built: the mode rail's Reactions is a lazy chunk in BOTH editions; the header has the count line, a Cards | Compact choice and "Clear all filters"; the filter bar has Substance (a search box, then "Used as"), From family, To family, Type, Named reaction, Review status, "Find by name" and, with an exam scope, "Only <exam version>"; chosen values are removable chips; results are 30 at a time. A card is the family card of the WHOLE reaction (the navigator feature's card host, injected by the app); a reaction with no card shows its compact row with the reason.
 
 ## 6. Rendering architecture
 
@@ -198,4 +198,4 @@ First run offers "Load demo dataset", "Import v6 export" and "Start empty". Load
 - **Inspector sheet**: a bottom sheet with peek (~35%: name, kind, key line, large main-action buttons such as "Open family", "Show on map"), full (all inspector content) and closed. Drag handle, swipe up / down, Close button, Escape closes; focus moves in on open and back to the tapped item on close; a non-modal region labelled by the record's name; the content above stays visible at peek. The same inspector content as the desktop.
 - **Next (not built here)**: the family page on phone (single column, vertical reaction scheme); load-time fixes.
 
-- *2026-10-24 (ADR-042, built in 7.1b):* the phone bottom tabs become "Families | Map | Explore | Search"; Explore opens the last explorer used (the Reactions list in 7.1); its filters are behind "Filters (n)" in a full-screen sheet; one column; 44 px targets.
+- *2026-10-24 (ADR-042, built in 7.1b):* the phone bottom tabs become "Families | Map | Explore | Search"; Explore opens the last explorer used (the Reactions list in 7.1); its filters are behind "Filters (n)" in a full-screen sheet; one column; 44 px targets. As built (7.1b): the Explore tab sets the Reactions mode on a phone, the full-screen sheet is titled "Filters" with one heading per filter and a "Show <n> reactions" button; Alt+Enter in the palette and "Show its reactions" / "Open these <n> reactions in Reactions" in the inspector open the view filtered.
