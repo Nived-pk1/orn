@@ -49,7 +49,7 @@ async function tickFirst(page: Page, filter: string): Promise<void> {
 }
 
 test.describe('desktop', () => {
-  test('the mode opens; each filter narrows the list and its chip removes it; Cards and Compact; empty state; the choices survive a reload', async ({ page }) => {
+  test('the mode opens; each filter narrows the list and its chip removes it; Cards and Compact; empty state', async ({ page }) => {
     test.setTimeout(480_000);
     const seen = await watch(page);
     await openDemo(page);
@@ -106,7 +106,17 @@ test.describe('desktop', () => {
     await page.screenshot({ path: `${shotsDir()}/reactions-empty-1280x800.png` });
     await view(page).getByRole('searchbox', { name: 'Find by name' }).fill('');
 
-    // the choices survive a reload: Compact and a Type filter
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+
+  // its own test, with no screenshot: WebKit reports the style its screenshot injects and a reload loses the helper's count of those (as in exam-scope.spec.ts)
+  test('the choices survive a reload: Compact and a Type filter', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page);
+    await openDemo(page);
+    await openReactions(page);
+    await view(page).getByRole('radio', { name: 'Compact' }).check();
     await view(page).getByRole('button', { name: /^Type/ }).click();
     await view(page).getByRole('group', { name: 'Type filter' }).getByRole('checkbox', { name: /^Oxidation/ }).check();
     await page.keyboard.press('Escape');
