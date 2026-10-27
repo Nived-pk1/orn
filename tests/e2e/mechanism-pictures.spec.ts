@@ -108,7 +108,9 @@ test.describe('desktop', () => {
     // a real picture: saved at once
     await addPicture(page, editor, { shots: true });
     await expect(editor.getByRole('img', { name: ALT })).toBeVisible({ timeout: 60_000 });
-    await expect(editor.getByRole('group', { name: 'Picture 1' })).toContainText(CAPTION);
+    // the caption is drawn through the rich-text preview (7.1b F1): emphasis, not asterisks
+    await expect(editor.getByRole('group', { name: 'Picture 1' })).toContainText('My own sketch of the backside attack.');
+    await expect(editor.getByRole('group', { name: 'Picture 1' }).locator('em')).toHaveText('backside');
     await dismissToasts(page);
     // the live findings follow an edit 300 ms later (review F7): wait for them before a screenshot
     await expect(editor.getByText('Must not be blank (name)')).toHaveCount(0);
