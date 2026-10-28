@@ -346,6 +346,46 @@ test.describe('desktop', () => {
     await expectClean(seen);
   });
 
+  test('Precursors works in Study: a target, what makes it, a route search, a card opens the inspector, no editing control exists and no editor chunk is requested (step 7.2a)', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page, STUDY);
+    const scripts: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.endsWith('.js')) scripts.push(request.url().split('/').pop() as string);
+    });
+    await openStudy(page);
+    await importOwnData(page);
+    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Precursors' }).click();
+    const view = page.getByRole('region', { name: 'Precursors', exact: true });
+    await expect(page.getByRole('heading', { name: 'Make a compound' })).toBeVisible();
+    const pickIn = async (label: string, text: string, hitName: string): Promise<void> => {
+      const box = view.getByRole('searchbox', { name: label, exact: true });
+      const hit = view.getByRole('button', { name: hitName, exact: true });
+      await expect(async () => {
+        await box.fill('');
+        await box.fill(text);
+        await expect(hit).toBeVisible({ timeout: 3000 });
+      }).toPass({ timeout: 60_000 });
+      await hit.click();
+    };
+    await pickIn('Compound to make', 'propan-2-ol', 'Choose Propan-2-ol');
+    await expect(view.getByRole('heading', { name: 'Made directly from' })).toBeVisible();
+    const card = view.locator('article[data-reaction-id]').first();
+    await expect(card).toBeVisible({ timeout: 60_000 });
+    await pickIn('Start from (optional)', 'ethanol', 'Start from Ethanol');
+    await view.getByRole('button', { name: 'Search', exact: true }).click();
+    await expect(view.getByRole('region', { name: 'Routes found' }).getByText('2 routes found')).toBeVisible();
+    const id = await card.getAttribute('data-reaction-id');
+    await card.getByRole('button').first().click();
+    await expect(record(page)).toHaveAttribute('data-record-id', id as string);
+    for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+    const editors = editorChunkNames();
+    expect(scripts.filter((name) => editors.includes(name) || /^(editor-host|editor-session)-/.test(name)), 'editor chunks requested').toEqual([]);
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+
   test('a small own dataset imports and works as before in Study (import and export of the visitor\'s own data stay)', async ({ page }) => {
     const seen = await watch(page, STUDY);
     await openStudy(page);

@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-24",
+  "lastUpdated": "2026-10-28",
   "currentPhase": 7,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -118,7 +118,8 @@
     "6.9",
     "7.1a",
     "7.1b",
-    "7.1"
+    "7.1",
+    "7.2a"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -147,8 +148,8 @@
     "commit": "d731964",
     "protectedCheckedAt": "2026-10-27"
   },
-  "nextStep": "7.2",
-  "nextStepTitle": "Precursor explorer, route search and the route editor",
+  "nextStep": "7.2b",
+  "nextStepTitle": "Route editor, save a found route, Precursors on the phone, row 7.2 close",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -469,7 +470,7 @@
     "-> 6.7: duplicating a reaction and \"New specific reaction from this generic one\" (UI_ARCHITECTURE §7 templates) move to step 6.7 (step 6.3a decision D7, 2026-10-19).",
     "CLOSED (step 6.6c, 2026-10-21): the TOPIC editor (with its Mapped records), topic mapping, exam relevance and map family editors; Syllabus topics, Exam relevance and Relationships lists in every record editor; \"Map to a topic\", \"Mark exam relevance\", \"Make this a map family\" and \"New relationship from here\" open a NEW editor with a field filled in (OpenTarget.seed). Open: routes cannot be chosen as a mapping, relevance or relationship end until Phase 7.",
     "-> Exams step (2026-10-21, right after 6.6c): exam and exam_version editors (syllabus units, topic coverage, provisional status, CUR rules) with the user's request for CBSE, KCET and BITSAT: app wording exam-generic, scope selector grouped (Board exam / Entrance exams).",
-    "-> Phase 7 (2026-10-21): the ROUTE editor, with the precursor explorer and route search. -> 7.2 (2026-10-24).",
+    "-> Phase 7 (2026-10-21): the ROUTE editor, with the precursor explorer and route search. -> 7.2 (2026-10-24). -> 7.2b (2026-10-28).",
     "-> later: merging reagents moves A's profiles into B and rewrites the reactions' profile references (2026-10-23, step 6.8a: a reagent whose profiles reactions use is refused in words).",
     "NOTE (2026-10-21): reaction_scheme, view_preset and entity_display have no form editor; they are made by the views that own them (map arrangement, presets, display settings). asset has no stand-alone editor; deleting assets is 6.8.",
     "-> Phase 9: watch the Firefox 'downloadable font: download failed' console error in e2e; if it recurs, preload or self-check the font files",

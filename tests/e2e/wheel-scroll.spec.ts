@@ -6,6 +6,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { loadDemo, openApp, watch } from './kit';
+import { shotsDir } from './editor-kit';
 
 test.use({ actionTimeout: 60_000 });
 
@@ -65,6 +66,11 @@ for (const width of WIDTHS) {
       await page.mouse.move(Math.round(width * 0.35), 520);
       await page.mouse.wheel(0, 500);
       await expect.poll(() => scrolled(page), { timeout: 5000 }).toBeGreaterThan(before);
+      if (mode === 'Review' && width === 1700) {
+        const toasts = page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' });
+        for (let left = await toasts.count(); left > 0; left = await toasts.count()) await toasts.first().click();
+        await page.screenshot({ path: `${shotsDir()}/review-queue-scrolled-1700x900.png` });
+      }
     });
   }
 }
