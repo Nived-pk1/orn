@@ -36,12 +36,18 @@ export interface ListRows {
 
 export function listRowsOf(scene: Scene): ListRows {
   const names = new Map(scene.nodes.map((node) => [node.id, plainText(node.label)] as const));
+  // the projection counts each family's DISTINCT reactions (a reaction that leaves by two arrows is one); a scene without them sums its arrows
   const out = new Map<string, number>();
   const into = new Map<string, number>();
   for (const edge of scene.edges) {
     const count = bundleOf(edge);
     out.set(edge.from, (out.get(edge.from) ?? 0) + count);
     into.set(edge.to, (into.get(edge.to) ?? 0) + count);
+  }
+  for (const node of scene.nodes) {
+    if (node.reactionCounts === undefined) continue;
+    out.set(node.id, node.reactionCounts.outAll);
+    into.set(node.id, node.reactionCounts.inAll);
   }
   const families = scene.nodes
     .filter((node) => node.box === 'hub' || node.box === 'unclassified')

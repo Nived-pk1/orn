@@ -52,6 +52,7 @@ export function SubstancePicker(props: {
         <span>Find a species, class or reagent</span>
         <input type="search" value={text} autoComplete="off" spellCheck={false} onChange={(event) => setText(event.target.value)} />
       </label>
+      <p className={styles.muted}>Only substances used in a reaction are listed.</p>
       {filter.substanceIds.length === 0 ? null : (
         <ul className={styles.chosenList} aria-label="Chosen substances">
           {filter.substanceIds.map((id) => (

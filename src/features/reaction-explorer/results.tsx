@@ -9,7 +9,7 @@ import type { ReactionFilterRow } from '@/core/graph';
 import type { CanonicalState } from '@/core/schema';
 import type { ExplorerView } from '@/ui/state';
 import { PAGE_SIZE, type ExplorerPorts } from './contracts';
-import type { Labels } from './model';
+import { compactEquationOf, type Labels } from './model';
 import styles from './reactions-view.module.css';
 
 const unscoped = (): 'unmapped' => 'unmapped';
@@ -48,7 +48,7 @@ export function Results(props: {
   const outsideOf = (row: ReactionFilterRow): string | undefined => (row.outside ? props.outsideNote : undefined);
   const compactOf = (row: ReactionFilterRow, reason?: string) => {
     const card = reactionCard({ state: props.state, indexes: props.indexes, scopeOf: unscoped }, row.id);
-    const equation = 'missing' in card ? '' : card.groups.map((group) => group.equation?.text ?? '').filter((text) => text !== '').join('; ');
+    const equation = 'missing' in card ? '' : compactEquationOf(card.groups);
     return <CompactRow key={row.id} row={row} equation={equation} labels={props.labels} selected={props.selected === row.id} outside={outsideOf(row)} onSelect={ports.select} {...(reason === undefined ? {} : { reason })} />;
   };
   return (

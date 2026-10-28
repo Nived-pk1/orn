@@ -22,22 +22,25 @@ export function FilterPopover(props: { readonly title: string; readonly chosen: 
     const onDown = (event: MouseEvent): void => {
       if (root.current !== null && !root.current.contains(event.target as Node)) setOpen(false);
     };
-    // Escape works wherever the focus is: WebKit does not focus a checkbox that was clicked
+    // Escape works wherever the focus is (WebKit does not focus a checkbox that was clicked) and closes ONLY this popover: the listener is on
+    // the window in the capture phase and stops the key press there, so the inspector or another layer never sees the same press (step 7.2a)
     const onKey = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      event.preventDefault();
       setOpen(false);
       button.current?.focus();
     };
     document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
     return () => {
       document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
     };
   }, [open]);
   return (
     <div ref={root} className={styles.popoverRoot}>
-      <button ref={button} type="button" className={styles.filterButton} aria-expanded={open} aria-controls={open ? panelId : undefined} aria-haspopup="true" onClick={() => setOpen((value) => !value)}>
+      <button ref={button} type="button" className={styles.filterButton} data-filter-title={props.title} aria-expanded={open} aria-controls={open ? panelId : undefined} aria-haspopup="true" onClick={() => setOpen((value) => !value)}>
         {props.chosen > 0 ? `${props.title} (${props.chosen})` : props.title}
       </button>
       {open ? (

@@ -56,12 +56,14 @@ async function listed(app: FakeApp = fakeApp({ state: demoState() })): Promise<F
 describe('the List view equals the projection', () => {
   it('has one family row per hub of the projection, in the projections order, with its reactions out and in', async () => {
     await listed();
-    const { projection, paths } = projectionOfDemo();
+    const { projection } = projectionOfDemo();
     expect(keysOf('Families')).toEqual(projection.nodes.map((node) => node.id));
     for (const row of bodyRows('Families')) {
       const id = row.getAttribute('data-row-key') as string;
-      const out = paths.filter((path) => path.from === id).reduce((sum, path) => sum + path.total, 0);
-      const into = paths.filter((path) => path.to === id).reduce((sum, path) => sum + path.total, 0);
+      // step 7.2a: a family's reactions are DISTINCT reactions (the projection's node counts), not the sum of its arrows' counts
+      const counts = projection.nodes.find((node) => node.id === id)?.reactionCounts;
+      const out = counts?.outAll ?? 0;
+      const into = counts?.inAll ?? 0;
       const cells = cellsOf(row);
       expect(Number(cells[2]), `${id} out`).toBe(out);
       expect(Number(cells[3]), `${id} in`).toBe(into);

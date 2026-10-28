@@ -49,6 +49,14 @@
   }
 }
 
+/* a page whose list scrolls inside the canvas (the Review queue): the canvas keeps its padding, the page gets a definite height */
+.canvasFill {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  padding: var(--space-4);
+}
+
 .canvasFull {
   height: 100%;
   min-height: 0;

@@ -76,8 +76,8 @@
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M772 657.74 L108 620.26" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M772 657.74 L108 620.26" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_992aaa6a696a4453" data-from="spc_ethanal" data-to="spc_3-hydroxybutanal" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanal to 3-Hydroxybutanal, 2 reactions">
-        <title>Ethanal to 3-Hydroxybutanal, 2 reactions</title>
+      <g data-edge-id="bnd_992aaa6a696a4453" data-from="spc_ethanal" data-to="spc_3-hydroxybutanal" data-semantic="transforms_to" data-stroke="dotted" data-weight="heavy" role="graphics-symbol" aria-label="Ethanal to 3-Hydroxybutanal, 1 reaction">
+        <title>Ethanal to 3-Hydroxybutanal, 1 reaction</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec _edgeDotted_e97cec" d="M108 597.52 L275.03 512" stroke-width="3" stroke-dasharray="1.5 4.5" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M108 597.52 L275.03 512" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
@@ -485,7 +485,7 @@
         <title>2-Bromopropane · C3H7Br</title>
         <rect class="_member_e97cec" width="104" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(260 468)" id="orn-ID-node-spc_3-hydroxybutanal" data-node-id="spc_3-hydroxybutanal" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="3-Hydroxybutanal, species, member of a hub, 2 reactions in">
+      <g transform="translate(260 468)" id="orn-ID-node-spc_3-hydroxybutanal" data-node-id="spc_3-hydroxybutanal" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="3-Hydroxybutanal, species, member of a hub, 1 reaction in">
         <title>3-Hydroxybutanal · C4H8O2</title>
         <rect class="_member_e97cec" width="116" height="44" rx="2"></rect>
       </g>
@@ -497,7 +497,7 @@
         <title>Aniline · C6H5NH2</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(22 460)" id="orn-ID-node-spc_benzaldehyde" data-node-id="spc_benzaldehyde" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzaldehyde, species, member of a hub, 2 reactions out">
+      <g transform="translate(22 460)" id="orn-ID-node-spc_benzaldehyde" data-node-id="spc_benzaldehyde" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Benzaldehyde, species, member of a hub, 1 reaction out">
         <title>Benzaldehyde · C6H5CHO</title>
         <rect class="_member_e97cec" width="92" height="44" rx="2"></rect>
       </g>
@@ -549,7 +549,7 @@
         <title>Diethyl ether · C4H10O</title>
         <rect class="_member_e97cec" width="100" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 596)" id="orn-ID-node-spc_ethanal" data-node-id="spc_ethanal" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanal, species, member of a hub, 4 reactions out, 2 reactions in">
+      <g transform="translate(28 596)" id="orn-ID-node-spc_ethanal" data-node-id="spc_ethanal" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanal, species, member of a hub, 3 reactions out, 2 reactions in">
         <title>Ethanal · CH3CHO</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
@@ -561,7 +561,7 @@
         <title>Ethanoic acid · CH3COOH</title>
         <rect class="_member_e97cec" width="100" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(772 638)" id="orn-ID-node-spc_ethanol" data-node-id="spc_ethanol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanol, species, member of a hub, 7 reactions out, 2 reactions in">
+      <g transform="translate(772 638)" id="orn-ID-node-spc_ethanol" data-node-id="spc_ethanol" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethanol, species, member of a hub, 5 reactions out, 2 reactions in">
         <title>Ethanol · C2H5OH</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
@@ -569,7 +569,7 @@
         <title>Ethene · C2H4</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(522 610)" id="orn-ID-node-spc_ethyl-ethanoate" data-node-id="spc_ethyl-ethanoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethyl ethanoate, species, member of a hub, 2 reactions out, 1 reaction in">
+      <g transform="translate(522 610)" id="orn-ID-node-spc_ethyl-ethanoate" data-node-id="spc_ethyl-ethanoate" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Ethyl ethanoate, species, member of a hub, 1 reaction out, 1 reaction in">
         <title>Ethyl ethanoate · CH3COOC2H5</title>
         <rect class="_member_e97cec" width="112" height="44" rx="2"></rect>
       </g>
@@ -589,15 +589,15 @@
         <title>Propan-2-ol · C3H8O</title>
         <rect class="_member_e97cec" width="88" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 800)" id="orn-ID-node-spc_propanone" data-node-id="spc_propanone" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propanone, species, member of a hub, 3 reactions out">
+      <g transform="translate(28 800)" id="orn-ID-node-spc_propanone" data-node-id="spc_propanone" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propanone, species, member of a hub, 2 reactions out">
         <title>Propanone · C3H6O</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(28 868)" id="orn-ID-node-spc_propene" data-node-id="spc_propene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propene, species, member of a hub, 4 reactions out">
+      <g transform="translate(28 868)" id="orn-ID-node-spc_propene" data-node-id="spc_propene" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="Propene, species, member of a hub, 2 reactions out">
         <title>Propene · C3H6</title>
         <rect class="_member_e97cec" width="80" height="44" rx="2"></rect>
       </g>
-      <g transform="translate(6 936)" id="orn-ID-node-spc_r-2-bromobutane" data-node-id="spc_r-2-bromobutane" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="(R)-2-Bromobutane, species, member of a hub, 3 reactions out">
+      <g transform="translate(6 936)" id="orn-ID-node-spc_r-2-bromobutane" data-node-id="spc_r-2-bromobutane" data-glyph="species" data-box="member" role="graphics-symbol" aria-label="(R)-2-Bromobutane, species, member of a hub, 2 reactions out">
         <title>(R)-2-Bromobutane · C4H9Br</title>
         <rect class="_member_e97cec" width="124" height="44" rx="2"></rect>
       </g>
@@ -1212,10 +1212,10 @@
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
         <text class="_count_e97cec" x="10" y="14.2">2</text>
       </g>
-      <g transform="translate(181.515625 544.76)" data-count-of="bnd_992aaa6a696a4453" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions">
-        <title>2 reactions</title>
+      <g transform="translate(181.515625 544.76)" data-count-of="bnd_992aaa6a696a4453" data-chip-width="20" data-chip-height="20" role="img" aria-label="1 reaction">
+        <title>1 reaction</title>
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
-        <text class="_count_e97cec" x="10" y="14.2">2</text>
+        <text class="_count_e97cec" x="10" y="14.2">1</text>
       </g>
       <g transform="translate(177 914.2719999999999)" data-count-of="bnd_d4fc6738e8346989" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions">
         <title>2 reactions</title>

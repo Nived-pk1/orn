@@ -6,7 +6,7 @@
 import { compareRank, comparePairs } from '../../indexes/pair-table';
 import type { NavigatorCandidate } from '../../indexes/contracts';
 import { compareStrings } from '../../indexes/table';
-import { DEFAULT_DEGREE_CAP } from '../contracts';
+import { DEFAULT_DEGREE_CAP, type NodeReactionCounts } from '../contracts';
 
 export { compareRank };
 
@@ -44,6 +44,34 @@ export function groupPairs(arrows: Iterable<Arrow>): Pair[] {
     candidates.push(arrow.candidate);
   }
   return pairs;
+}
+
+/** How many DISTINCT reactions a pair's arrows belong to (a reaction with several outcomes into the same pair is one reaction; step 7.2a). */
+export function reactionsOf(candidates: readonly NavigatorCandidate[]): number {
+  return new Set(candidates.map((candidate) => candidate.reactionId)).size;
+}
+
+/** Per node, the distinct reactions of the pairs that leave it, enter it and loop on it (step 7.2a). */
+export function nodeReactionCounts(admitted: readonly Pair[]): Map<string, NodeReactionCounts> {
+  const sets = new Map<string, { out: Set<string>; into: Set<string>; loops: Set<string> }>();
+  const at = (id: string) => {
+    let entry = sets.get(id);
+    if (entry === undefined) sets.set(id, (entry = { out: new Set(), into: new Set(), loops: new Set() }));
+    return entry;
+  };
+  for (const pair of admitted) {
+    const ids = pair.candidates.map((candidate) => candidate.reactionId);
+    if (pair.from === pair.to) for (const id of ids) at(pair.from).loops.add(id);
+    else {
+      for (const id of ids) at(pair.from).out.add(id);
+      for (const id of ids) at(pair.to).into.add(id);
+    }
+  }
+  const counts = new Map<string, NodeReactionCounts>();
+  for (const [id, one] of sets) {
+    counts.set(id, { out: one.out.size, in: one.into.size, loops: one.loops.size, outAll: new Set([...one.out, ...one.loops]).size, inAll: new Set([...one.into, ...one.loops]).size });
+  }
+  return counts;
 }
 
 /** The order in which pairs are admitted: largest total first, then from, then to. */

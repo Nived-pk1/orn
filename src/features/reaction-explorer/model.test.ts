@@ -3,11 +3,11 @@
  * filter's ids that name nothing any more.
  */
 import { describe, expect, it } from 'vitest';
-import { UNCLASSIFIED_HUB_ID } from '@/core/graph';
+import { reactionCard, UNCLASSIFIED_HUB_ID } from '@/core/graph';
 import { demoState } from '@/test-support/app-boot-kit';
 import { contextOf } from '@/test-support/graph-state';
 import { EMPTY_EXPLORER_FILTER } from '@/ui/state';
-import { chipsOf, countLine, labelsOf, pruneFilter, toReactionFilter, USE_WORDS } from './model';
+import { chipsOf, compactEquationOf, countLine, labelsOf, pruneFilter, toReactionFilter, USE_WORDS } from './model';
 
 const ctx = contextOf(demoState());
 const labels = labelsOf(ctx.state, ctx.indexes);
@@ -78,5 +78,33 @@ describe('pruneFilter', () => {
 describe('toReactionFilter', () => {
   it('maps the saved filter to the core filter', () => {
     expect(toReactionFilter({ ...EMPTY_EXPLORER_FILTER, typeIds: ['t'], usedAs: 'arrow', substanceIds: ['s'], onlyInScope: true, text: 'x' })).toMatchObject({ typeIds: ['t'], usedAs: 'arrow', substanceIds: ['s'], onlyInScope: true, text: 'x' });
+  });
+});
+
+describe('compactEquationOf (step 7.2a, A3)', () => {
+  const cards = Object.keys(ctx.state.records.reaction).flatMap((id) => {
+    const card = reactionCard({ state: ctx.state, indexes: ctx.indexes, scopeOf: () => 'unmapped' }, id);
+    return 'missing' in card ? [] : [card];
+  });
+
+  it('a reaction with several outcome groups names each group before its equation, so no two parts read the same', () => {
+    const several = cards.filter((card) => card.groups.length > 1);
+    expect(several.length).toBeGreaterThan(0);
+    for (const card of several) {
+      const parts = compactEquationOf(card.groups).split('; ');
+      expect(parts).toHaveLength(card.groups.filter((g) => (g.equation?.text ?? '') !== '').length);
+      card.groups.forEach((group, i) => expect(parts[i]).toBe(`${group.heading}: ${group.equation?.text ?? ''}`));
+    }
+  });
+
+  it('a reaction with one group shows its equation alone (no heading to repeat)', () => {
+    const one = cards.find((card) => card.groups.length === 1 && (card.groups[0]?.equation?.text ?? '') !== '');
+    expect(one).toBeDefined();
+    expect(compactEquationOf(one?.groups ?? [])).toBe(one?.groups[0]?.equation?.text);
+  });
+
+  it('a group without an equation is left out, and a group without a heading shows its equation alone', () => {
+    const group = (heading: string, text: string | undefined) => ({ heading, equation: text === undefined ? undefined : { text } }) as never;
+    expect(compactEquationOf([group('At 278 K', 'A → B'), group('At 293 K', undefined), group('', 'C → D')])).toBe('At 278 K: A → B; C → D');
   });
 });

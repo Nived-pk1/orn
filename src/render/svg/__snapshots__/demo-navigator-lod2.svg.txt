@@ -33,8 +33,8 @@
   </defs>
   <g data-world="true">
     <g data-layer="edges">
-      <g data-edge-id="bnd_324d46034ec02b80" data-from="cls_alkenes" data-to="cls_haloalkanes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alkenes to Haloalkanes, 4 reactions, through class membership">
-        <title>Alkenes to Haloalkanes, 4 reactions, through class membership</title>
+      <g data-edge-id="bnd_324d46034ec02b80" data-from="cls_alkenes" data-to="cls_haloalkanes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alkenes to Haloalkanes, 2 reactions, through class membership">
+        <title>Alkenes to Haloalkanes, 2 reactions, through class membership</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M373.33 40 L58 184" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M373.33 40 L58 184" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
@@ -43,8 +43,8 @@
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M377.33 224 L392 368" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M377.33 224 L392 368" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_a08c9dcf0ab7e7a8" data-from="cls_haloalkanes" data-to="cls_alkenes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Haloalkanes to Alkenes, 2 reactions, through class membership">
-        <title>Haloalkanes to Alkenes, 2 reactions, through class membership</title>
+      <g data-edge-id="bnd_a08c9dcf0ab7e7a8" data-from="cls_haloalkanes" data-to="cls_alkenes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Haloalkanes to Alkenes, 1 reaction, through class membership">
+        <title>Haloalkanes to Alkenes, 1 reaction, through class membership</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M70 184 L385.33 40" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M70 184 L385.33 40" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
@@ -53,8 +53,8 @@
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M410.67 40 L392 184" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M410.67 40 L392 184" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_cb00d015a2f16f5e" data-from="cls_aldehydes" data-to="cls_aldehydes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="2 reactions that stay within Aldehydes, through class membership">
-        <title>2 reactions that stay within Aldehydes, through class membership</title>
+      <g data-edge-id="bnd_cb00d015a2f16f5e" data-from="cls_aldehydes" data-to="cls_aldehydes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="1 reaction that stays within Aldehydes, through class membership">
+        <title>1 reaction that stays within Aldehydes, through class membership</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M446 368 L446.57 358.88 L448.17 351.81 L450.63 346.62 L453.78 343.14 L457.44 341.19 L461.44 340.6 L465.62 341.21 L469.81 342.85 L473.82 345.33 L477.5 348.5 L480.67 352.18 L483.15 356.19 L484.79 360.38 L485.4 364.56 L484.81 368.56 L482.86 372.22 L479.38 375.37 L474.19 377.83 L467.12 379.43 L458 380" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M446 368 L446.57 358.88 L448.17 351.81 L450.63 346.62 L453.78 343.14 L457.44 341.19 L461.44 340.6 L465.62 341.21 L469.81 342.85 L473.82 345.33 L477.5 348.5 L480.67 352.18 L483.15 356.19 L484.79 360.38 L485.4 364.56 L484.81 368.56 L482.86 372.22 L479.38 375.37 L474.19 377.83 L467.12 379.43 L458 380" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
@@ -165,12 +165,12 @@
       </g>
     </g>
     <g data-layer="nodes">
-      <g transform="translate(338 184)" id="orn-ID-node-cls_alcohols" data-node-id="cls_alcohols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alcohols, class hub, Oxygen compounds, 8 reactions out, 7 reactions in">
+      <g transform="translate(338 184)" id="orn-ID-node-cls_alcohols" data-node-id="cls_alcohols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alcohols, class hub, Oxygen compounds, 6 reactions out, 7 reactions in">
         <title>Alcohols · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(338 368)" id="orn-ID-node-cls_aldehydes" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 4 reactions out, 3 reactions in, 2 reactions from and back to itself">
+      <g transform="translate(338 368)" id="orn-ID-node-cls_aldehydes" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 3 reactions out, 3 reactions in, 1 reaction from and back to itself">
         <title>Aldehydes · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
@@ -180,7 +180,7 @@
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(338 0)" id="orn-ID-node-cls_alkenes" data-node-id="cls_alkenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkenes, class hub, Hydrocarbons, 6 reactions out, 4 reactions in">
+      <g transform="translate(338 0)" id="orn-ID-node-cls_alkenes" data-node-id="cls_alkenes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkenes, class hub, Hydrocarbons, 4 reactions out, 3 reactions in">
         <title>Alkenes · Hydrocarbons</title>
         <rect class="_hubBlock_e97cec" data-tone="blue" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="blue" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
@@ -210,7 +210,7 @@
         <rect class="_hubBlock_e97cec" data-tone="violet" width="148" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="violet" width="4" height="40" clip-path="url(#orn-ID-hub-148x40)"></rect>
       </g>
-      <g transform="translate(668 552)" id="orn-ID-node-cls_esters" data-node-id="cls_esters" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Esters, class hub, Oxygen compounds, 2 reactions out, 1 reaction in">
+      <g transform="translate(668 552)" id="orn-ID-node-cls_esters" data-node-id="cls_esters" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Esters, class hub, Oxygen compounds, 1 reaction out, 1 reaction in">
         <title>Esters · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
@@ -220,7 +220,7 @@
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(4 184)" id="orn-ID-node-cls_haloalkanes" data-node-id="cls_haloalkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloalkanes, class hub, Halogen compounds, 3 reactions out, 6 reactions in">
+      <g transform="translate(4 184)" id="orn-ID-node-cls_haloalkanes" data-node-id="cls_haloalkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Haloalkanes, class hub, Halogen compounds, 2 reactions out, 4 reactions in">
         <title>Haloalkanes · Halogen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="amber" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="amber" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
@@ -230,7 +230,7 @@
         <rect class="_hubBlock_e97cec" data-tone="amber" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="amber" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(668 368)" id="orn-ID-node-cls_ketones" data-node-id="cls_ketones" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ketones, class hub, Oxygen compounds, 3 reactions out, 1 reaction in">
+      <g transform="translate(668 368)" id="orn-ID-node-cls_ketones" data-node-id="cls_ketones" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Ketones, class hub, Oxygen compounds, 2 reactions out, 1 reaction in">
         <title>Ketones · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
@@ -546,30 +546,30 @@
       </g>
     </g>
     <g data-layer="badges" aria-hidden="true">
-      <g transform="translate(205.66666666666666 102)" data-count-of="bnd_324d46034ec02b80" data-chip-width="20" data-chip-height="20" role="img" aria-label="4 reactions">
-        <title>4 reactions</title>
+      <g transform="translate(205.66666666666666 102)" data-count-of="bnd_324d46034ec02b80" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions">
+        <title>2 reactions</title>
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
-        <text class="_count_e97cec" x="10" y="14.2">4</text>
+        <text class="_count_e97cec" x="10" y="14.2">2</text>
       </g>
       <g transform="translate(374.66666666666663 286)" data-count-of="bnd_5b25a181afc93270" data-chip-width="20" data-chip-height="20" role="img" aria-label="3 reactions">
         <title>3 reactions</title>
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
         <text class="_count_e97cec" x="10" y="14.2">3</text>
       </g>
-      <g transform="translate(249.2 87.6)" data-count-of="bnd_a08c9dcf0ab7e7a8" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions">
-        <title>2 reactions</title>
+      <g transform="translate(249.2 87.6)" data-count-of="bnd_a08c9dcf0ab7e7a8" data-chip-width="20" data-chip-height="20" role="img" aria-label="1 reaction">
+        <title>1 reaction</title>
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
-        <text class="_count_e97cec" x="10" y="14.2">2</text>
+        <text class="_count_e97cec" x="10" y="14.2">1</text>
       </g>
       <g transform="translate(391.3333333333333 102)" data-count-of="bnd_c4d43e6b9551c256" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions">
         <title>2 reactions</title>
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
         <text class="_count_e97cec" x="10" y="14.2">2</text>
       </g>
-      <g transform="translate(495.39599999999996 343)" data-count-of="bnd_cb00d015a2f16f5e" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions">
-        <title>2 reactions</title>
+      <g transform="translate(495.39599999999996 343)" data-count-of="bnd_cb00d015a2f16f5e" data-chip-width="20" data-chip-height="20" role="img" aria-label="1 reaction">
+        <title>1 reaction</title>
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
-        <text class="_count_e97cec" x="10" y="14.2">2</text>
+        <text class="_count_e97cec" x="10" y="14.2">1</text>
       </g>
       <g transform="translate(389.6 314.8)" data-count-of="bnd_fed74b5163e7e8c0" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions">
         <title>2 reactions</title>

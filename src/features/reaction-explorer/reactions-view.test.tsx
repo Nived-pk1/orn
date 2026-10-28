@@ -218,4 +218,47 @@ describe('selecting', () => {
     fireEvent.click(screen.getByRole('button', { name: r.name }));
     expect(select).toHaveBeenCalledWith(r.id);
   });
+
+  it('Escape with a popover open closes ONLY the popover: no other layer hears that key press (step 7.2a, item 4)', () => {
+    setup();
+    const elsewhere = vi.fn();
+    document.addEventListener('keydown', elsewhere);
+    try {
+      const button = screen.getByRole('button', { name: 'Type' });
+      fireEvent.click(button);
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+      expect(elsewhere).not.toHaveBeenCalled();
+      // with no popover open, the key goes where it always went
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(elsewhere).toHaveBeenCalledTimes(1);
+    } finally {
+      document.removeEventListener('keydown', elsewhere);
+    }
+  });
+
+  describe('after a chip is removed the focus moves on (step 7.2a, item 5)', () => {
+    const typeIdsOf = (state: CanonicalState): string[] => [...new Set(Object.values(state.records.reaction).flatMap((r) => r.reactionTypes.map((t) => t.conceptId as string)))].slice(0, 3);
+    const chipButtons = (): HTMLElement[] => within(screen.getByRole('list', { name: 'Chosen filters' })).getAllByRole('button');
+
+    it('the next chip, else the previous one, else the filter button of that dimension', () => {
+      const state = demoState();
+      const ids = typeIdsOf(state);
+      expect(ids).toHaveLength(3);
+      setup(state, { typeIds: ids });
+      const names = chipButtons().map((b) => b.getAttribute('aria-label'));
+      fireEvent.click(chipButtons()[1] as HTMLElement); // the middle one: the next chip takes the focus
+      expect(document.activeElement?.getAttribute('aria-label')).toBe(names[2]);
+      fireEvent.click(chipButtons()[1] as HTMLElement); // now the last one: the previous chip
+      expect(document.activeElement?.getAttribute('aria-label')).toBe(names[0]);
+      fireEvent.click(chipButtons()[0] as HTMLElement); // the only one: the Type button
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Type' }));
+    });
+  });
+
+  it('the Substance picker says in words that only used substances are listed (step 7.2a, item 6)', () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Substance' }));
+    expect(screen.getByText('Only substances used in a reaction are listed.')).toBeTruthy();
+  });
 });

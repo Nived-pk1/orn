@@ -4,7 +4,7 @@
  * The same Scene feeds on-screen rendering and export, guaranteeing parity.
  */
 import type { ArrowText } from '@/core/graph/arrow-text';
-import type { EdgeSemantic, GraphEdge, Truncation } from '@/core/graph/contracts';
+import type { EdgeSemantic, GraphEdge, NodeReactionCounts, Truncation } from '@/core/graph/contracts';
 import type { AnchorTone, RecordRef } from '@/core/schema';
 import type { Point } from '@/layout/contracts';
 
@@ -75,6 +75,8 @@ export interface SceneNode {
   readonly minLod: LodLevel;
   /** Accessible name, e.g. "Ethanol, species, 3 reactions out, 1 hidden". */
   readonly ariaLabel: string;
+  /** Navigator only: the distinct reactions of the drawn arrows at this node (the List view's Families columns). */
+  readonly reactionCounts?: NodeReactionCounts;
 }
 
 export interface SceneEdge {

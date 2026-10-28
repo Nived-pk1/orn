@@ -13,7 +13,7 @@ import { Button, Dialog, LiveRegion, SegmentedControl } from '@/ui/primitives';
 import { isFilterSet, type ExplorerFilter } from '@/ui/state';
 import { PAGE_SIZE, type ExplorerPorts } from './contracts';
 import { FilterPopover, OptionList, type FilterOption } from './filter-popover';
-import { chipsOf, countLine, labelsOf, pruneFilter, toReactionFilter, type Labels } from './model';
+import { chipsOf, type Chip, countLine, labelsOf, pruneFilter, toReactionFilter, type Labels } from './model';
 import { Results } from './results';
 import { SubstancePicker } from './substance-picker';
 import styles from './reactions-view.module.css';
@@ -70,6 +70,21 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
   const set = (patch: Partial<ExplorerFilter>): void => ports.ui.explorer.getState().setFilter(patch);
   const clear = (): void => ports.ui.explorer.getState().clearFilter();
   const chips = chipsOf(filter, labels);
+  // after a chip goes the focus moves on: the next chip, else the previous one, else that dimension's filter button (step 7.2a)
+  const after = useRef<{ readonly keys: readonly string[]; readonly dimension: string } | null>(null);
+  const removeChip = (chip: Chip, index: number): void => {
+    after.current = { keys: [chips[index + 1]?.key, chips[index - 1]?.key].filter((key): key is string => key !== undefined), dimension: chip.dimension };
+    ports.ui.explorer.getState().replaceFilter(chip.without(filter));
+  };
+  useEffect(() => {
+    const target = after.current;
+    if (target === null) return;
+    after.current = null;
+    const root = document.querySelector<HTMLElement>('[data-reactions-view]');
+    const byKey = target.keys.map((key) => root?.querySelector<HTMLElement>(`[data-chip-key="${CSS.escape(key)}"]`)).find((one) => one !== null && one !== undefined);
+    const fallback = target.dimension === 'Name' ? root?.querySelector<HTMLElement>('input[type="search"]') : root?.querySelector<HTMLElement>(`[data-filter-title="${CSS.escape(target.dimension)}"]`);
+    (byKey ?? fallback ?? root?.querySelector<HTMLElement>('[data-filters-button]'))?.focus();
+  }, [filterKey]);
   const facets = result.facets;
   const substanceCounts = useMemo(() => new Map(facets.substance.map((option) => [option.id, option.count])), [facets]);
   const sections: { readonly title: string; readonly chosen: number; readonly body: React.ReactNode }[] = [
@@ -98,12 +113,12 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
   );
   const chosenCount = chips.length + (filter.onlyInScope ? 1 : 0);
   return (
-    <section className={styles.view} aria-label="Reactions" data-layout={phone ? 'phone' : 'desktop'}>
+    <section className={styles.view} aria-label="Reactions" data-reactions-view="" data-layout={phone ? 'phone' : 'desktop'}>
       <header className={styles.header}>
         <h2 className={styles.title}>Reactions</h2>
         <p className={styles.count}>{line}</p>
         <SegmentedControl label="Show as" options={[{ value: 'cards', label: 'Cards' }, { value: 'compact', label: 'Compact' }]} value={view} onChange={(next) => ports.ui.explorer.getState().setView(next)} />
-        {phone && !none ? <button type="button" className={styles.filtersButton} aria-haspopup="dialog" onClick={() => setSheet(true)}>{`Filters (${chosenCount})`}</button> : null}
+        {phone && !none ? <button type="button" className={styles.filtersButton} data-filters-button="" aria-haspopup="dialog" onClick={() => setSheet(true)}>{`Filters (${chosenCount})`}</button> : null}
         {filtered ? <button type="button" onClick={clear}>Clear all filters</button> : null}
       </header>
       {pruned ? <p className={styles.notice} role="status">{PRUNED_WORDS}</p> : null}
@@ -132,10 +147,10 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
       ) : null}
       {chips.length === 0 ? null : (
         <ul className={styles.chips} aria-label="Chosen filters">
-          {chips.map((chip) => (
+          {chips.map((chip, index) => (
             <li key={chip.key} className={styles.chip}>
               <span>{chip.label}</span>
-              <button type="button" aria-label={chip.removeName} onClick={() => ports.ui.explorer.getState().replaceFilter(chip.without(filter))}>
+              <button type="button" aria-label={chip.removeName} data-chip-key={chip.key} onClick={() => removeChip(chip, index)}>
                 ×
               </button>
             </li>

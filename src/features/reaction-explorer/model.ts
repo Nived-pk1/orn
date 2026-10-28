@@ -20,6 +20,21 @@ export interface CountFacts {
   readonly hiddenBy: string | undefined;
 }
 
+/**
+ * The compact row's equation in text (step 7.2a, A3): one part per outcome group, each with its heading when the reaction has several
+ * ("At 278 K: 2 Ethanal → 3-Hydroxybutanal (major); At 293 K: ..."), so no two parts read the same. A group with no equation is left out.
+ */
+export function compactEquationOf(groups: readonly { readonly heading: string; readonly equation?: { readonly text: string } | undefined }[]): string {
+  const several = groups.length > 1;
+  return groups
+    .flatMap((group) => {
+      const text = group.equation?.text ?? '';
+      if (text === '') return [];
+      return [several && group.heading !== '' ? `${group.heading}: ${text}` : text];
+    })
+    .join('; ');
+}
+
 const reactions = (n: number): string => (n === 1 ? '1 reaction' : `${n} reactions`);
 
 /** "24 reactions", "24 of 212 reactions", and " (5 outside JEE Main hidden)" while Only hides some. */
@@ -55,6 +70,8 @@ export interface Chip {
   readonly label: string;
   /** The name of its button: "Remove Type: Oxidation". */
   readonly removeName: string;
+  /** The title of the filter button this chip belongs to ("Type"); "Name" for the name box (step 7.2a: where the focus goes when the last chip of a filter is removed). */
+  readonly dimension: string;
   /** The filter without this chip. */
   without(filter: ExplorerFilter): ExplorerFilter;
 }
@@ -66,13 +83,13 @@ export function chipsOf(filter: ExplorerFilter, labels: Labels): readonly Chip[]
   const list = (key: ListKey, dimension: string, label: (id: string) => string): void => {
     for (const id of filter[key]) {
       const text = `${dimension}: ${label(id)}`;
-      out.push({ key: `${key}:${id}`, label: text, removeName: `Remove ${text}`, without: (f) => ({ ...f, [key]: f[key].filter((one) => one !== id) }) });
+      out.push({ key: `${key}:${id}`, label: text, removeName: `Remove ${text}`, dimension, without: (f) => ({ ...f, [key]: f[key].filter((one) => one !== id) }) });
     }
   };
   list('substanceIds', 'Substance', labels.substance);
   if (filter.substanceIds.length > 0 && filter.usedAs !== 'any') {
     const text = `Used as: ${USE_WORDS[filter.usedAs]}`;
-    out.push({ key: 'usedAs', label: text, removeName: `Remove ${text}`, without: (f) => ({ ...f, usedAs: 'any' }) });
+    out.push({ key: 'usedAs', label: text, removeName: `Remove ${text}`, dimension: 'Substance', without: (f) => ({ ...f, usedAs: 'any' }) });
   }
   list('fromFamilyIds', 'From family', labels.family);
   list('toFamilyIds', 'To family', labels.family);
@@ -81,7 +98,7 @@ export function chipsOf(filter: ExplorerFilter, labels: Labels): readonly Chip[]
   list('reviewStatuses', 'Review status', labels.status);
   if (filter.text !== '') {
     const text = `Name: ${filter.text}`;
-    out.push({ key: 'text', label: text, removeName: `Remove ${text}`, without: (f) => ({ ...f, text: '' }) });
+    out.push({ key: 'text', label: text, removeName: `Remove ${text}`, dimension: 'Name', without: (f) => ({ ...f, text: '' }) });
   }
   return out;
 }

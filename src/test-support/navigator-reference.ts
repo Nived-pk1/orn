@@ -9,7 +9,7 @@
 import { graphEdgeId } from '@/core/graph/ids';
 import { flagsOf, projectionKey, sortEdges, sortNodes, sortedUnique } from '@/core/graph/kit';
 import { DEFAULT_DEGREE_CAP } from '@/core/graph/contracts';
-import type { EdgeBundle, GraphEdge, GraphNode, Projection, ProjectionContext, ProjectionRequest, Truncation } from '@/core/graph/contracts';
+import type { EdgeBundle, GraphEdge, GraphNode, NodeReactionCounts, Projection, ProjectionContext, ProjectionRequest, Truncation } from '@/core/graph/contracts';
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph/navigator/hubs';
 import { arrangementsOf } from '@/core/graph/navigator/nodes';
 import { mainProducts, primarySubstrate, reactionFilter } from '@/core/graph/navigator/select';
@@ -214,21 +214,43 @@ export function navigatorReferenceBuild(ctx: ProjectionContext, request: Project
         selectivity: a.selectivity, conditionVariantIds: a.variants, inferred: a.inferred, layoutDirection: 'forward',
       });
     }
-    if (p.arrows.length >= 2) bundles.push({ id: `bnd_${hashParts(['bundle', p.from, p.to])}`, from: p.from, to: p.to, edgeIds: ids.sort(), total: p.arrows.length });
+    if (p.arrows.length >= 2) bundles.push({ id: `bnd_${hashParts(['bundle', p.from, p.to])}`, from: p.from, to: p.to, edgeIds: ids.sort(), total: p.arrows.length, reactions: new Set(p.arrows.map((a) => a.reaction.id)).size });
   }
+
+  // Step 7.2a: per node, the DISTINCT reactions of the drawn pairs that leave it, enter it and loop on it (stated again here, from the arrows).
+  const leaving = new Map<string, Set<string>>();
+  const entering = new Map<string, Set<string>>();
+  const looping = new Map<string, Set<string>>();
+  const into = (map: Map<string, Set<string>>, id: string): Set<string> => map.get(id) ?? map.set(id, new Set()).get(id) as Set<string>;
+  for (const p of admitted) {
+    for (const a of p.arrows) {
+      if (p.from === p.to) into(looping, p.from).add(a.reaction.id);
+      else {
+        into(leaving, p.from).add(a.reaction.id);
+        into(entering, p.to).add(a.reaction.id);
+      }
+    }
+  }
+  const countsOf = (id: string): { reactionCounts: NodeReactionCounts } | Record<string, never> => {
+    if (!leaving.has(id) && !entering.has(id) && !looping.has(id)) return {};
+    const out = leaving.get(id) ?? new Set<string>();
+    const inn = entering.get(id) ?? new Set<string>();
+    const loops = looping.get(id) ?? new Set<string>();
+    return { reactionCounts: { out: out.size, in: inn.size, loops: loops.size, outAll: new Set([...out, ...loops]).size, inAll: new Set([...inn, ...loops]).size } };
+  };
 
   // The arrangement (step 5.5c) is presentation, not hub resolution: the reference takes it from the same pure reading of the anchors.
   const arrangements = arrangementsOf(ctx);
   const nodes: GraphNode[] = realHubs
     .filter((ref) => hubIds.has(ref.id))
-    .map((ref): GraphNode => ({ id: ref.id, kind: KIND_OF[ref.kind] ?? 'virtual', record: ref, role: 'anchor', depth: 0, hidden: hidden.get(ref.id) ?? { outgoing: 0, incoming: 0 }, flags: flagsOf(ctx, ref), ...(arrangements.has(ref.id) ? { arrangement: arrangements.get(ref.id) } : {}) }));
+    .map((ref): GraphNode => ({ id: ref.id, kind: KIND_OF[ref.kind] ?? 'virtual', record: ref, role: 'anchor', depth: 0, hidden: hidden.get(ref.id) ?? { outgoing: 0, incoming: 0 }, flags: flagsOf(ctx, ref), ...(arrangements.has(ref.id) ? { arrangement: arrangements.get(ref.id) } : {}), ...countsOf(ref.id) }));
   if (hubIds.has(UNCLASSIFIED_HUB_ID)) {
-    nodes.push({ id: UNCLASSIFIED_HUB_ID, kind: 'virtual', role: 'unclassified', depth: 0, hidden: hidden.get(UNCLASSIFIED_HUB_ID) ?? { outgoing: 0, incoming: 0 }, flags: ['unanchored'] });
+    nodes.push({ id: UNCLASSIFIED_HUB_ID, kind: 'virtual', role: 'unclassified', depth: 0, hidden: hidden.get(UNCLASSIFIED_HUB_ID) ?? { outgoing: 0, incoming: 0 }, flags: ['unanchored'], ...countsOf(UNCLASSIFIED_HUB_ID) });
   }
   for (const [hub, ids] of membersOf) {
     for (const id of ids) {
       const ref = memberRefs.get(id) as RecordRef;
-      nodes.push({ id, kind: KIND_OF[ref.kind] ?? 'virtual', record: ref, role: 'member', depth: 1, hidden: hidden.get(id) ?? { outgoing: 0, incoming: 0 }, flags: flagsOf(ctx, ref) });
+      nodes.push({ id, kind: KIND_OF[ref.kind] ?? 'virtual', record: ref, role: 'member', depth: 1, hidden: hidden.get(id) ?? { outgoing: 0, incoming: 0 }, flags: flagsOf(ctx, ref), ...countsOf(id) });
       edges.push({ id: graphEdgeId({ view: VIEW, from: id, to: hub, semantic: 'membership' }), from: id, to: hub, semantic: 'membership', conditionVariantIds: [], inferred: hub !== UNCLASSIFIED_HUB_ID, layoutDirection: 'forward' });
     }
     const overflow = overflowOf.get(hub);

@@ -61,7 +61,9 @@ export function countsByNode(paths: readonly DrawnPath[]): ReadonlyMap<string, N
   return counts;
 }
 
-export function nodeAria(node: GraphNode, content: NodeContent, counts: NodeCounts | undefined): string {
+export function nodeAria(node: GraphNode, content: NodeContent, drawn: NodeCounts | undefined): string {
+  // the navigator says how many DISTINCT reactions touch the node; the other views count their paths
+  const counts = node.reactionCounts === undefined ? drawn : node.reactionCounts;
   const parts = [content.name, GLYPH_WORD[content.glyph]];
   if (node.arrangement?.group !== undefined) parts.push(node.arrangement.group);
   if (node.role === 'member') parts.push('member of a hub');

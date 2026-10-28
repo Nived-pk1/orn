@@ -137,6 +137,7 @@ export function buildScene(projection: Projection, layoutResult: LayoutResult, o
       state: { dimmed: node.flags.includes('outside_scope'), onPath: false },
       minLod: minLodOf(content),
       ariaLabel: nodeAria(node, content, counts.get(node.id)),
+      ...(node.reactionCounts === undefined ? {} : { reactionCounts: node.reactionCounts }),
     });
   }
   const boxes = new Map(nodes.map((node) => [node.id, node]));

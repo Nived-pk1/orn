@@ -56,6 +56,18 @@ export interface NodeArrangement {
   readonly tone?: AnchorTone;
 }
 
+/** Navigator nodes (step 7.2a): the DISTINCT reactions of the arrows drawn at a node; a reaction that leaves by two arrows is one. */
+export interface NodeReactionCounts {
+  /** Reactions on arrows that leave the node for another node. */
+  readonly out: number;
+  readonly in: number;
+  /** Reactions on arrows from the node back to itself. */
+  readonly loops: number;
+  /** Leaving, loops included (the List view's "Reactions out"). */
+  readonly outAll: number;
+  readonly inAll: number;
+}
+
 export interface GraphNode {
   /** Record ID, or "virtual:<purpose>:<key>" (e.g. the Unclassified hub, "+12 more" overflow). */
   readonly id: string;
@@ -71,6 +83,8 @@ export interface GraphNode {
   readonly flags: readonly NodeFlag[];
   /** Navigator hubs only: the arrangement of the hub's anchor, when it has one (step 5.5c). */
   readonly arrangement?: NodeArrangement;
+  /** Navigator only (step 7.2a): the distinct reactions of the drawn arrows at this node. */
+  readonly reactionCounts?: NodeReactionCounts;
 }
 
 export type EdgeSemantic =
@@ -114,8 +128,10 @@ export interface EdgeBundle {
   readonly to: string;
   /** The edges drawn for this pair: every arrow of the pair, or the best-ranked ones when `total` is larger. */
   readonly edgeIds: readonly string[];
-  /** How many arrows the pair has after the request's filters (step 5.4c); `edgeIds.length` for the other views. */
+  /** How many arrows (one per outcome and main product) the pair has after the request's filters (step 5.4c); `edgeIds.length` for the other views. INV-22 adds these up. */
   readonly total: number;
+  /** Navigator only (step 7.2a): how many DISTINCT reactions those arrows belong to; every number that says "reactions" is this one. Absent: `total`. */
+  readonly reactions?: number;
 }
 
 export interface Truncation {

@@ -107,7 +107,7 @@ function Canvas(props: {
   const empty = totalOf(props.counts) === 0;
   const showsNavigator = !empty && props.mode === NAVIGATOR_MODE;
   return (
-    <div className={showsNavigator ? styles.canvasFull : styles.canvas}>
+    <div className={showsNavigator ? styles.canvasFull : EDITING && props.mode === REVIEW_MODE ? styles.canvasFill : styles.canvas}>
       {empty && !startedEmpty ? (
         <FirstRun imports={imports} onStartEmpty={onStartEmpty} />
       ) : showsNavigator ? (

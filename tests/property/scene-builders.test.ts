@@ -49,7 +49,8 @@ function expectNothingDropped(projection: Projection, piped: Piped): void {
   const named = new Set(paths.flatMap((p) => p.edges.map((e) => e.id)));
   for (const edge of projection.edges) expect(named.has(edge.id), `edge ${edge.id} is in no path`).toBe(true);
   const drawnTotal = scene.edges.reduce((sum, e) => sum + (e.bundleSize ?? 1), 0);
-  const bundleTotal = projection.bundles.reduce((sum, b) => sum + b.total, 0);
+  // step 7.2a: the chip counts DISTINCT reactions (a bundle's `reactions`), not its arrows (`total`, which INV-22 adds up elsewhere)
+  const bundleTotal = projection.bundles.reduce((sum, b) => sum + (b.reactions ?? b.total), 0);
   const bundled = new Set(projection.bundles.flatMap((b) => b.edgeIds));
   expect(drawnTotal).toBe(bundleTotal + projection.edges.filter((e) => !bundled.has(e.id)).length);
   expect(scene.truncation).toEqual(projection.truncation);
@@ -109,7 +110,7 @@ describe('ADV-005, glyph part: a loop on a real projection', () => {
     const piped = pipe(projection, portsOf(parsed.state));
     const loop = piped.scene.edges.find((e) => e.from === e.to);
     expect(loop).toBeDefined();
-    expect(loop?.bundleSize).toBe(projection.bundles[0]?.total);
+    expect(loop?.bundleSize).toBe(projection.bundles[0]?.reactions);
     expect(piped.request.edges).toEqual([]);
     expect(piped.scene.nodes.map((n) => n.glyph)).toContain('unclassified');
     expectNothingDropped(projection, piped);
