@@ -41,3 +41,4 @@ export type {
   RestoreAnswer,
   UndoRefusal,
 } from './flow-types';
+export type { RouteSearch, RouteSearchAnswer } from './route-search';

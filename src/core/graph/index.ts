@@ -28,12 +28,13 @@ export type { RelatedGroup, RelatedGroupKey, RelatedItem } from './related';
 export type { ScopeOf } from './scope';
 export { navigatorProjection, UNCLASSIFIED_HUB_ID } from './navigator';
 export { reactionExplorerProjection } from './reaction-explorer';
-export { precursorExplorerProjection } from './precursor';
+export { directPrecursors, NO_STARTING_MATERIAL, precursorExplorerProjection } from './precursor';
+export type { DirectGroup, DirectPrecursors, DirectReaction } from './precursor';
 export { reagentExplorerProjection } from './reagent-explorer';
 export { namedReactionsProjection } from './named-reactions';
 export { mechanismsProjection } from './mechanisms';
 export { syllabusProjection } from './syllabus';
-export { searchRoutes } from './route';
+export { noRouteWords, routeCountWords, routeSizeWords, searchRoutes, stepWarningWords, truncationWords } from './route';
 export type { SearchRoutesOptions } from './route';
 export type {
   Step,

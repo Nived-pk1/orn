@@ -25,6 +25,7 @@ import { createDepictionService } from './depiction';
 import { lazyDraftChecks, lazyDuplicateCheck } from './lazy-editor-ports';
 import { EDITING } from '@/app/edition';
 import { createLazyDraftManager } from './lazy-drafts';
+import { createRouteSearch } from './route-search';
 import { createInertEditorServices } from './editor-services-inert';
 import { createDerivedIndexes } from './derived-indexes';
 import { startFollower } from './follower';
@@ -227,6 +228,7 @@ export async function createAppServices(env: AppEnv): Promise<AppServices> {
         if (adapter !== undefined && adapter.getStatus().state === 'saved') for (const sha of mine) held.delete(sha);
       },
     },
+    routes: createRouteSearch({ store, sync: () => replica.sync() }),
     draftChecks: EDITING ? lazyDraftChecks({ store, sync: () => replica.sync(), chem: chemPart.service }) : inert.draftChecks,
     duplicateCheck: EDITING ? lazyDuplicateCheck({ state: store.getState, indexes: () => indexes.current(), chem: chemPart.service, l4: l4.service }) : inert.duplicateCheck,
     async retryEngine(name) {

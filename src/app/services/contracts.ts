@@ -16,6 +16,7 @@ import type { ReplicaSync } from '@/workers/compute';
 import type { DepictionService } from './depiction';
 import type { AssetStagePort } from '@/io';
 import type { DraftChecksPort, DuplicateCheckPort } from '@/features/workbench';
+import type { RouteSearch } from './route-search';
 import type { DraftManager } from './drafts';
 import type { DerivedIndexes } from './derived-indexes';
 import type { Flows } from './flow-types';
@@ -124,6 +125,8 @@ export interface AppServices {
   readonly flows: Flows;
   /** The live panel's checks of a draft (step 6.2a): L1-L3 dry run in the compute worker, L4 of the structure in the chem worker. */
   readonly draftChecks: DraftChecksPort;
+  /** Route search in the compute worker (step 7.2a): cancellable, answers a value in words. Both editions. */
+  readonly routes: RouteSearch;
   /** The duplicate check on Save of a species (step 6.2a part 5): by folded name and by canonical structure. */
   readonly duplicateCheck: DuplicateCheckPort;
   /** What a picture needs to be saved at once (step 6.5b): see `AssetHost`. */
