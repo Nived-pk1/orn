@@ -104,3 +104,9 @@ visitors' data is in their own browsers and is not touched.
 
 The Cloudflare account signs in with Google, so Google 2-Step Verification protects it. Keep 2-Step Verification on for that Google
 account. Whoever can sign in can deploy or delete either site and change the Access policy.
+
+## Backup (GitHub, private)
+
+The remote `origin` is the private repository https://github.com/Nived-pk1/orn.git. At the END of every step, after its last
+commit, run `git push origin master` and `git push origin --tags`. Never force-push. The repository stays private: the source
+must not be public.

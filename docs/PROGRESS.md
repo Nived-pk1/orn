@@ -6322,3 +6322,6 @@ No product code. File:line for every fact; the numbers of item 11 were measured 
 **Study** deployed to `reaction-navigator` (commit d731964): version 294364b7-db8b-4c85-a10a-b48c1e4dcabe. Live specs (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, reaction-explorer; exact files, Chromium and WebKit): 61 passed, 19 skipped, 0 failed (Chromium 31 / 9, WebKit 30 / 10). A first live run with substring filters also matched the Studio-only phone editor specs; I stopped it and re-ran with exact file names.
 **Studio** deployed to `reaction-navigator-studio`: version af760cb4-bf75-4d0c-b1de-7d8908499eb1.
 **Access check (after the Studio deploy):** the unauthenticated Studio URL answered 302 to `tiny-base-dc3e.cloudflareaccess.com` (Www-Authenticate: Cloudflare-Access), not the app; the public URL answered 200.
+
+### Backup remote added (2026-10-28)
+Remote `origin` = private GitHub repo Nived-pk1/orn; master (7bcb9eb) and tags phase-0..phase-6 pushed. Checks: no secrets in tracked files or history (one false positive, `url.password === ''` in src/core/schema/primitives.ts); largest blob 1.6 MB (docs/PROGRESS.md); .gitignore keeps node_modules, dist, dist-studio, dist-study-e2e, .wrangler, screenshots, test-results, build-report out. `npm run check` skipped (docs only).
