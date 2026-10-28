@@ -30,6 +30,7 @@ import {
   type Selected,
 } from './navigator-stores';
 import { createExplorerStore, parseExplorer, type ParsedExplorer } from './explorer-state';
+import { createPrecursorsStore, parsePrecursors, type ParsedPrecursors } from './precursor-state';
 import { createRecentStore, createViewCommandsStore, MAX_RECENT_LENGTH, MAX_RECENT_SEARCHES } from './search-stores';
 import { SAVE_DEBOUNCE_MS, type PanelPersistence, type PanelsPort, type PanelsTimers } from './panels';
 
@@ -38,7 +39,7 @@ export const NAVIGATOR_UI_KEY = 'navigator';
 export const MAX_SAVED_EXPANDED = 1_000;
 const MAX_ID_LENGTH = 512;
 const MAX_COORDINATE = 1e7;
-const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'phoneTab', 'recentSearches', 'activeExam', 'explorer']);
+const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'phoneTab', 'recentSearches', 'activeExam', 'explorer', 'precursors']);
 
 /** The same shape as the panels port: the stored entry, whether this tab writes, and the write. */
 export type NavigatorUiPort = PanelsPort;
@@ -55,6 +56,8 @@ export interface ParsedNavigatorUi {
   readonly phoneTab: PhoneTab;
   /** The Reactions view's filter, view and last explorer (step 7.1b). */
   readonly explorer: ParsedExplorer;
+  /** The Precursors view's choices (step 7.2a). */
+  readonly precursors: ParsedPrecursors;
   /** The palette's recent searches, newest first (step 5.8). */
   readonly recent: readonly string[];
   /** The chosen exam version (step 5.8), or null: no exam scope. Not judged against the data here: the selector does that. */
@@ -81,7 +84,7 @@ function parseExpanded(value: unknown): ExpansionState['expanded'] | undefined {
 }
 
 export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
-  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', phoneTab: 'families', explorer: parseExplorer(undefined), recent: [], exam: null, damaged: [], extra: {} };
+  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', phoneTab: 'families', explorer: parseExplorer(undefined), precursors: parsePrecursors(undefined), recent: [], exam: null, damaged: [], extra: {} };
   if (raw === undefined) return empty;
   if (!isRecord(raw)) return { ...empty, damaged: ['navigator'] };
   const damaged: string[] = [];
@@ -120,6 +123,8 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
   }
   const explorer = parseExplorer(raw.explorer);
   damaged.push(...explorer.damaged);
+  const precursors = parsePrecursors(raw.precursors);
+  damaged.push(...precursors.damaged);
   let recent: string[] = [];
   const r = raw.recentSearches;
   if (r !== undefined) {
@@ -144,7 +149,7 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     } else damaged.push('viewports');
   }
   const extra = Object.fromEntries(Object.entries(raw).filter(([key]) => !KNOWN.has(key)));
-  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, phoneTab, explorer, recent, exam, damaged, extra };
+  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, phoneTab, explorer, precursors, recent, exam, damaged, extra };
 }
 
 export interface NavigatorUiStatus {
@@ -175,6 +180,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     family: createFamilyStore(parsed.openFamily),
     overview: createOverviewStore(parsed.overviewMode, parsed.phoneTab),
     explorer: createExplorerStore({ filter: parsed.explorer.filter, view: parsed.explorer.view, last: parsed.explorer.last }),
+    precursors: createPrecursorsStore({ target: parsed.precursors.target, startFrom: parsed.precursors.startFrom, maxSteps: parsed.precursors.maxSteps, onlyListed: parsed.precursors.onlyListed, onlyInScope: parsed.precursors.onlyInScope, searched: parsed.precursors.searched }),
     recent: createRecentStore(parsed.recent),
     viewCommands: createViewCommandsStore(),
   };
@@ -199,10 +205,11 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { open } = stores.family.getState();
     const { mode: overviewMode, phoneTab } = stores.overview.getState();
     const { filter, view, last } = stores.explorer.getState();
+    const { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } = stores.precursors.getState();
     const { items: recentSearches } = stores.recent.getState();
     const { active: activeExam } = stores.exam.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === 'families' ? {} : { phoneTab }), recentSearches, activeExam, explorer: { filter, view, last } });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === 'families' ? {} : { phoneTab }), recentSearches, activeExam, explorer: { filter, view, last }, precursors: { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -226,7 +233,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     });
   }
 
-  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.explorer.subscribe(schedule), stores.recent.subscribe(schedule), stores.exam.subscribe(schedule)];
+  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.explorer.subscribe(schedule), stores.precursors.subscribe(schedule), stores.recent.subscribe(schedule), stores.exam.subscribe(schedule)];
   // The removed expansion is written back empty, once.
   if (removedExpansion > 0) schedule();
   return {

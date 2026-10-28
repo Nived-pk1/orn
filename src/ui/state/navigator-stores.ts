@@ -4,6 +4,7 @@
  * IDs and numbers. Persistence is a separate wrapper (`persist.ts`) so the stores stay pure and testable without a port. The active exam version and the recent searches are saved (step 5.8); filters are in memory only.
  */
 import { createExplorerStore, type ExplorerStore } from './explorer-state';
+import { createPrecursorsStore, type PrecursorsStore } from './precursor-state';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { ExpansionState } from '@/core/graph/contracts';
 import type { ExamId, ExamVersionId, ViewFilters, ViewKey } from '@/core/schema';
@@ -241,6 +242,8 @@ export interface NavigatorUiStores {
   readonly overview: OverviewStore;
   /** The Reactions view: its filter, Cards or Compact, the last explorer (step 7.1b; saved). */
   readonly explorer: ExplorerStore;
+  /** The Precursors view: target, starting materials, steps, toggles (step 7.2a; saved). */
+  readonly precursors: PrecursorsStore;
   /** The palette's recent searches (step 5.8; saved). */
   readonly recent: RecentStore;
   /** What the map offers the palette (step 5.8; never saved). */
@@ -256,6 +259,7 @@ export const createNavigatorUiStores = (): NavigatorUiStores => ({
   family: createFamilyStore(),
   overview: createOverviewStore(),
   explorer: createExplorerStore(),
+  precursors: createPrecursorsStore(),
   recent: createRecentStore(),
   viewCommands: createViewCommandsStore(),
 });

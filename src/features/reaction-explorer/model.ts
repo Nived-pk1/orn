@@ -3,6 +3,7 @@
  * saved filter's ids that name nothing any more. Pure; the chemistry is the core filter's. Nothing here is stored.
  */
 import { STATUS_WORDS } from '@/core/editing';
+export { compactEquationOf } from '@/core/graph';
 import { UNCLASSIFIED_HUB_ID, UNCLASSIFIED_NAME, type ReactionFilter } from '@/core/graph';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState } from '@/core/schema';
@@ -18,21 +19,6 @@ export interface CountFacts {
   readonly hidden: number;
   /** The exam's name for the hidden words; absent: no exam scope. */
   readonly hiddenBy: string | undefined;
-}
-
-/**
- * The compact row's equation in text (step 7.2a, A3): one part per outcome group, each with its heading when the reaction has several
- * ("At 278 K: 2 Ethanal → 3-Hydroxybutanal (major); At 293 K: ..."), so no two parts read the same. A group with no equation is left out.
- */
-export function compactEquationOf(groups: readonly { readonly heading: string; readonly equation?: { readonly text: string } | undefined }[]): string {
-  const several = groups.length > 1;
-  return groups
-    .flatMap((group) => {
-      const text = group.equation?.text ?? '';
-      if (text === '') return [];
-      return [several && group.heading !== '' ? `${group.heading}: ${text}` : text];
-    })
-    .join('; ');
 }
 
 const reactions = (n: number): string => (n === 1 ? '1 reaction' : `${n} reactions`);

@@ -20,6 +20,8 @@ import { ArrowReactions } from './arrow-reactions';
 
 /** The records whose reactions the Reactions view can list (the same set the palette's Alt+Enter uses). */
 const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 'named_reaction'];
+/** A route ends at a species or a class. */
+const PRECURSOR_KINDS: readonly string[] = ['species', 'class'];
 import { ProvenanceLevel } from './provenance';
 import { LevelSection } from './levels';
 import { useBridge } from './use-bridge';
@@ -136,6 +138,13 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
           <div className={styles.actions}>
             <button type="button" onClick={() => { host.showReactions?.(props.refOf); if (phone) host.closePane?.(); }}>
               Show its reactions
+            </button>
+          </div>
+        )}
+        {host.showPrecursors === undefined || phone || !PRECURSOR_KINDS.includes(props.refOf.kind) ? null : (
+          <div className={styles.actions}>
+            <button type="button" onClick={() => host.showPrecursors?.(props.refOf)}>
+              How to make it
             </button>
           </div>
         )}

@@ -13,6 +13,8 @@ import type { StatusWriter } from '@/app/services/status';
 import type { ImportPlan, ImportPreview } from '@/io';
 import { createCanonicalStore, type StoreHandle } from '@/core/commands';
 import { createIdFactory } from '@/core/dataset';
+import { searchRoutes, type RouteQuery } from '@/core/graph';
+import { contextOf } from './graph-state';
 import type { StructureMode } from '@/chem/contracts';
 import type { CanonicalState } from '@/core/schema';
 import { createLocalTimeFormatter } from '@/app/window/local-time';
@@ -91,7 +93,8 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
   const search = { search: vi.fn(() => Promise.resolve({ ok: false, code: 'NOT_READY', message: 'the search index is not loaded' })), superseded: () => 0 };
   const ids = createIdFactory({ nowMs: () => 1_790_000_000_000 }, { next: () => 0.5 });
   const drafts = createDraftManager({ store, adapter: undefined, status, timers: { after: () => () => undefined }, ids, log: createEventLog(() => 0) });
-  const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine, search, drafts } as unknown as WindowServices;
+  const routes = (query: RouteQuery) => Promise.resolve({ ok: true as const, result: searchRoutes(contextOf(store.getState()), query) });
+  const services = { store, status, flows, saveEverythingNow, retryReplica, retryEngine, search, drafts, routes } as unknown as WindowServices;
   const panelSaves: Record<string, unknown>[] = [];
   const panels = createPanelsStore(
     { stored: undefined, mode: () => 'writable', save: (value) => (panelSaves.push({ ...value }), Promise.resolve()), ...options.panels },

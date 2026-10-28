@@ -13,7 +13,7 @@ import type { TimeFormatter } from './local-time';
 import type { DatasetInfo } from './dataset-types';
 
 /** What the window needs from the services (so a test can fake only these). */
-export type WindowServices = Pick<AppServices, 'store' | 'status' | 'flows' | 'saveEverythingNow' | 'retryReplica' | 'retryEngine' | 'search' | 'drafts'> & Partial<Pick<AppServices, 'searchSync' | 'draftChecks' | 'chem' | 'duplicateCheck' | 'assets' | 'persistence'>>;
+export type WindowServices = Pick<AppServices, 'store' | 'status' | 'flows' | 'saveEverythingNow' | 'retryReplica' | 'retryEngine' | 'search' | 'drafts' | 'routes'> & Partial<Pick<AppServices, 'searchSync' | 'draftChecks' | 'chem' | 'duplicateCheck' | 'assets' | 'persistence'>>;
 
 export type DemoLoad = { readonly ok: true; readonly blob: Blob; readonly fileName: string } | { readonly ok: false; readonly message: string };
 

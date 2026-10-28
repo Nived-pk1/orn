@@ -1,0 +1,230 @@
+/* The Precursors view (step 7.2a). Tokens only; no colour literals. */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  overflow: auto;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.view button {
+  min-height: 32px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-20);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-ink-2);
+}
+
+.notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-weight: 600;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-rule);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--text-16);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: var(--text-14);
+}
+
+.list,
+.fallback,
+.routes,
+.steps,
+.hits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardItem {
+  min-width: 0;
+}
+
+.compactRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.compactRow[data-selected] {
+  border-color: var(--color-accent);
+}
+
+.compactName {
+  font-weight: 600;
+}
+
+.compactEquation {
+  overflow-wrap: anywhere;
+}
+
+.outsideMark {
+  color: var(--color-ink-2);
+  font-style: italic;
+}
+
+.searchBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-13);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.primary {
+  font-weight: 600;
+}
+
+.resultLine {
+  margin: 0;
+  font-weight: 600;
+}
+
+.route {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.routeName {
+  margin: 0;
+  font-size: var(--text-16);
+}
+
+.routeHeading {
+  margin: 0;
+  color: var(--color-ink-2);
+}
+
+.steps {
+  padding-left: 0;
+}
+
+.step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.stepLine {
+  font-weight: 600;
+}
+
+.link {
+  text-decoration: underline;
+}
+
+.arrow {
+  color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.warning {
+  font-style: italic;
+}
+
+.stepCard {
+  flex-basis: 100%;
+  min-width: 0;
+}

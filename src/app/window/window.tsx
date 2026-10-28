@@ -4,11 +4,10 @@
  * and its result a Toast (import-panel.tsx); the inspector shows the record in focus (step 5.6a). Composition only: the frame is
  * `src/ui/shell` and knows nothing of `AppStatus`; chemistry never lives here.
  */
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { Inspector, placeOf, type InspectorHost } from "@/features/inspector";
 import {
-  NavigatorView,
   NavigatorProvider,
   PhoneTabs,
   NavigatorStatus,
@@ -26,19 +25,16 @@ import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels, type ExplorerFilter } from "@/ui/state";
 import { useApp } from "./context";
 import { LazyPalette, prefetchPalette } from "./lazy-palette";
-import { DatasetActions, ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
+import { ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
 import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
-import { FirstRun } from "./first-run";
-import { MODES, NAVIGATOR_MODE, REACTIONS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
-import { WorkbenchPage } from "./workbench-page";
+import { MODES, NAVIGATOR_MODE, REACTIONS_MODE } from "./modes";
+import { openPrecursors } from "./precursors-entry";
+import type { RecordRef } from "@/core/schema";
 import { filterFor, openReactions } from "./reactions-entry";
+import { Canvas, totalOf } from "./canvas";
 
-// the Reactions list: a lazy chunk in BOTH editions (step 7.1b)
-const ReactionsHost = lazy(() => import("./reactions-host").then((m) => ({ default: m.ReactionsHost })));
-// Studio only: the review queue is a lazy chunk (and a dropped one in Study, where EDITING is false)
-const ReviewHost = /* @__PURE__ */ lazy(() => import("./review-host").then((m) => ({ default: m.ReviewHost })));
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { EDITING, editionMarker } from "@/app/edition";
@@ -50,13 +46,11 @@ import { DatasetProvider, datasetWordsOf, useDatasetInfo } from "./dataset-info"
 import { StudyUpdateNotice, StudyUpdateProvider } from "./study-update";
 import { HistoryKeys } from "./history-keys";
 import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
-import { RecordCounts } from "./record-counts";
 import { TopBar } from "./top-bar";
-import styles from "./window.module.css";
 import { AboutDialog, AboutOpenContext } from "./about-preview";
 import { ExportOpenContext } from "./export-context";
-import { useExportActions, type ExportActions } from "./use-export-actions";
-import { useImportActions, type ImportActions } from "./use-import-actions";
+import { useExportActions } from "./use-export-actions";
+import { useImportActions } from "./use-import-actions";
 
 const countsOf = (
   state: CanonicalState,
@@ -65,81 +59,18 @@ const countsOf = (
     RECORD_KINDS.map((kind) => [kind, Object.keys(state.records[kind]).length]),
   ) as Record<RecordKind, number>;
 
-const totalOf = (counts: Readonly<Record<RecordKind, number>>): number =>
-  RECORD_KINDS.reduce((sum, kind) => sum + counts[kind], 0);
-
-function DatasetView(props: {
-  readonly counts: Readonly<Record<RecordKind, number>>;
-  readonly empty: boolean;
-  readonly imports: ImportActions;
-  readonly exports: ExportActions;
-  readonly onAskReplace: () => void;
-}) {
-  return (
-    <section aria-label="Dataset">
-      <h2>Dataset</h2>
-      <RecordCounts counts={props.counts} />
-      <DatasetActions imports={props.imports} exports={props.exports} onAskReplace={props.onAskReplace} />
-      {props.empty ? (
-        <p>
-          Started empty. Nothing can be added in this version; authoring comes
-          later.
-        </p>
-      ) : null}
-    </section>
-  );
-}
-
-function Canvas(props: {
-  readonly mode: string;
-  readonly counts: Readonly<Record<RecordKind, number>>;
-  readonly imports: ImportActions;
-  readonly exports: ExportActions;
-  readonly onAskReplace: () => void;
-}) {
-  const { panels } = useApp();
-  const { imports } = props;
-  const startedEmpty = usePanels(panels, (s) => s.startEmptyDismissed);
-  const onStartEmpty = useCallback(
-    () => panels.getState().dismissStartEmpty(),
-    [panels],
-  );
-  const empty = totalOf(props.counts) === 0;
-  const showsNavigator = !empty && props.mode === NAVIGATOR_MODE;
-  return (
-    <div className={showsNavigator ? styles.canvasFull : EDITING && props.mode === REVIEW_MODE ? styles.canvasFill : styles.canvas}>
-      {empty && !startedEmpty ? (
-        <FirstRun imports={imports} onStartEmpty={onStartEmpty} />
-      ) : showsNavigator ? (
-        <NavigatorView />
-      ) : !empty && props.mode === REACTIONS_MODE ? (
-        <Suspense fallback={null}>
-          <ReactionsHost />
-        </Suspense>
-      ) : EDITING && props.mode === WORKBENCH_MODE ? (
-        <WorkbenchPage />
-      ) : EDITING && props.mode === REVIEW_MODE ? (
-        <Suspense fallback={null}>
-          <ReviewHost />
-        </Suspense>
-      ) : (
-        <DatasetView counts={props.counts} empty={empty} imports={imports} exports={props.exports} onAskReplace={props.onAskReplace} />
-      )}
-    </div>
-  );
-}
-
 /** The inspector with what only the window knows: the arrows on the canvas, whether the navigator is shown, how to open the pane. */
 function InspectorPanel(props: {
   readonly navigatorShown: boolean;
   readonly openPane: () => void;
   readonly closePane: () => void;
   readonly onReactions: (filter: Partial<ExplorerFilter>) => void;
+  readonly onPrecursors: (ref: RecordRef) => void;
 }) {
   const { inspector } = useApp();
   const editors = useEditors();
   const { model } = useNavigator();
-  const { navigatorShown, openPane, closePane, onReactions } = props;
+  const { navigatorShown, openPane, closePane, onReactions, onPrecursors } = props;
   const host = useMemo<InspectorHost>(
     () => ({
       openPane,
@@ -149,6 +80,7 @@ function InspectorPanel(props: {
         const filter = filterFor(ref);
         if (filter !== undefined) onReactions(filter);
       },
+      showPrecursors: onPrecursors,
       showArrowReactions: (ends) => onReactions({ fromFamilyIds: [ends.from], toFamilyIds: [ends.to] }),
       ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.requestDelete === undefined ? {} : { remove: editors.requestDelete }), ...(editors.startFrom === undefined ? {} : { startFrom: editors.startFrom }), ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }), ...(editors.namesKinds === undefined ? {} : { namesKinds: editors.namesKinds }) } }),
       edgeEnds: (edgeId) => {
@@ -156,7 +88,7 @@ function InspectorPanel(props: {
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };
       },
     }),
-    [model, navigatorShown, openPane, closePane, editors, onReactions],
+    [model, navigatorShown, openPane, closePane, editors, onReactions, onPrecursors],
   );
   return <Inspector ports={inspector} host={host} />;
 }
@@ -230,6 +162,7 @@ function WindowContent() {
   const closePane = useCallback(() => setCloseRequest((n) => n + 1), []);
   // an entry point opens Reactions filtered (the palette's Alt+Enter, the inspector's buttons)
   const onReactions = useCallback((filter: Partial<ExplorerFilter>) => openReactions(navigator.ui, setMode, filter), [navigator]);
+  const onPrecursors = useCallback((ref: RecordRef) => openPrecursors(navigator.ui, setMode, ref), [navigator]);
   const hasData = totalOf(counts) > 0;
   // When the first-run screen closes (data arrived, or Start empty) the control that had the focus is gone: the focus goes to the page title,
   // so the next Tab starts from the top in every engine (UI_ARCHITECTURE §11).
@@ -364,6 +297,7 @@ function WindowContent() {
                 openPane={openPane}
                 closePane={closePane}
                 onReactions={onReactions}
+                onPrecursors={onPrecursors}
               />
             </ErrorBoundary>
           }
