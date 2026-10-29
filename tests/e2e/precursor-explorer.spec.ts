@@ -134,6 +134,9 @@ test.describe('Studio, desktop', () => {
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');
     // 7.2b A2: only the drawings fade, so the text keeps its contrast and axe runs on this screen too
     expect(await axeProblems(page)).toEqual([]);
+    await dismissToasts(page);
+    await view(page).locator('[data-outside]').first().scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${shotsDir()}/outside-card-1280x800.png` });
     await search(page).click();
     await expect(found(page).getByText('1 route found')).toBeVisible();
     await view(page).getByRole('checkbox', { name: /^Only .* reactions$/ }).check();
