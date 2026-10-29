@@ -331,3 +331,13 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 - **E9 Code:** the pure filter in core (7.1a Part D); the view in src/features/reaction-explorer, lazily loaded in both editions; Study ships the view with no editing code.
 - **E10** The filter runs on the main thread from the derived indexes when the design-tier timing is <= 50 ms; otherwise the reviewer decides (compute worker).
 **Not changed:** the schema, `DB_STORES`, the CSP, `_headers`, the SVG sanitiser.
+
+
+#### Addendum 2026-10-29 (step 7.2b, as built): Precursors, routes, the full-equation rule
+- **Precursors** is a second explorer beside Reactions (`ExplorerKind` = 'reactions' | 'precursors', saved in the navigator uiState under `explorer`). On the phone the Explore tab shows a "Reactions | Precursors" switch and opens the last one used.
+- **Routes.** A found route is a linear chain, first step first. "Save as route" (Studio only, a lazy module) opens a NEW route draft: name EMPTY and required, target and steps filled, `inputFromStepIds` derived from the chain, a condition variant set only when exactly one is named (else "Choose the condition variant"). The purpose is a required field of the schema; "user" ("Mine") is the value for a route the person made and is the default. A found route that equals a saved one says "Saved as <name>", a link to it.
+- **By-products.** A compound a reaction forms only as a by-product is listed in Precursors as "Also formed as a by-product in n reaction(s)" with a button that opens Reactions filtered to it as a Product.
+- **Full equation (A5).** "Show full equation" holds the WHOLE condition group (every outcome of the identical variant set), whichever section's card it is on; duplicate headings get the variant label prefix.
+- **Errors across the chunk boundary are values:** the lazy flows wrapper returns `{ ok: false, code: 'LOAD_FAILED' }` with "This part of the app could not load. Check your connection and reload the page."
+- **Generic labels (A7):** R', X and Ar drawn from the structure's CXSMILES labels; a reaction's instances read "Example of".
+**Not changed:** the schema, `DB_STORES`, the CSP, `_headers`.

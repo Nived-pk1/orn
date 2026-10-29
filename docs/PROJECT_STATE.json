@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-28",
+  "lastUpdated": "2026-10-29",
   "currentPhase": 7,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -119,7 +119,9 @@
     "7.1a",
     "7.1b",
     "7.1",
-    "7.2a"
+    "7.2a",
+    "7.2b",
+    "7.2"
   ],
   "nextPhase": 7,
   "outcomeGroupsStep": {
@@ -132,24 +134,24 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-27",
-    "commit": "d731964",
-    "version": "294364b7-db8b-4c85-a10a-b48c1e4dcabe",
-    "liveSpecs": "2026-10-27: 61 passed, 19 skipped, 0 failed (Chromium 31 passed / 9 skipped, WebKit 30 passed / 10 skipped); smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, reaction-explorer"
+    "deployedAt": "2026-10-29",
+    "commit": "df8113c",
+    "version": "be13f516-653f-46af-bd0e-0bf297be6fbd",
+    "liveSpecs": "2026-10-29, Chromium one pass: 36 passed, 9 skipped, 0 failed; WebKit one pass: 34 passed, 10 skipped, 1 failed (precursor-explorer 'choices survive a reload', a 30 s expect timeout; passed alone once, accepted by the timeout rule); smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, reaction-explorer, precursor-explorer. An earlier live run had a WebKit 'Page crashed' in study-edition (concept with a picture): passed alone 3 of 3, then absent from both full passes."
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-27",
-    "version": "af760cb4-bf75-4d0c-b1de-7d8908499eb1",
+    "deployedAt": "2026-10-29",
+    "version": "90a78860-69d0-4b6b-a1ee-2f953eea0eaf",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.1b deploy, 2026-10-27: an unauthenticated request got 302 to cloudflareaccess.com (Www-Authenticate: Cloudflare-Access) and not the app; the public Worker answered 200 with the app.",
-    "commit": "d731964",
-    "protectedCheckedAt": "2026-10-27"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.2b deploy, 2026-10-29: an unauthenticated request got 302 to tiny-base-dc3e.cloudflareaccess.com and not the app; the public Worker answered 200 with the app.",
+    "commit": "df8113c",
+    "protectedCheckedAt": "2026-10-29"
   },
-  "nextStep": "7.2b",
-  "nextStepTitle": "Route editor, save a found route, Precursors on the phone, row 7.2 close",
+  "nextStep": "7.3",
+  "nextStepTitle": "Reagent explorer",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -470,7 +472,7 @@
     "-> 6.7: duplicating a reaction and \"New specific reaction from this generic one\" (UI_ARCHITECTURE §7 templates) move to step 6.7 (step 6.3a decision D7, 2026-10-19).",
     "CLOSED (step 6.6c, 2026-10-21): the TOPIC editor (with its Mapped records), topic mapping, exam relevance and map family editors; Syllabus topics, Exam relevance and Relationships lists in every record editor; \"Map to a topic\", \"Mark exam relevance\", \"Make this a map family\" and \"New relationship from here\" open a NEW editor with a field filled in (OpenTarget.seed). Open: routes cannot be chosen as a mapping, relevance or relationship end until Phase 7.",
     "-> Exams step (2026-10-21, right after 6.6c): exam and exam_version editors (syllabus units, topic coverage, provisional status, CUR rules) with the user's request for CBSE, KCET and BITSAT: app wording exam-generic, scope selector grouped (Board exam / Entrance exams).",
-    "-> Phase 7 (2026-10-21): the ROUTE editor, with the precursor explorer and route search. -> 7.2 (2026-10-24). -> 7.2b (2026-10-28).",
+    "-> Phase 7 (2026-10-21): the ROUTE editor, with the precursor explorer and route search. -> 7.2 (2026-10-24). -> 7.2b (2026-10-28). CLOSED (step 7.2b, 2026-10-29): the route editor, Save as route from a found route, and Precursors on the phone are built and deployed.",
     "-> later: merging reagents moves A's profiles into B and rewrites the reactions' profile references (2026-10-23, step 6.8a: a reagent whose profiles reactions use is refused in words).",
     "NOTE (2026-10-21): reaction_scheme, view_preset and entity_display have no form editor; they are made by the views that own them (map arrangement, presets, display settings). asset has no stand-alone editor; deleting assets is 6.8.",
     "-> Phase 9: watch the Firefox 'downloadable font: download failed' console error in e2e; if it recurs, preload or self-check the font files",
@@ -480,7 +482,8 @@
     "NEW (step 6.9, Gate D findings): demo fields no editor can set - outcome label, outcome conceptIds, condition variant note, participants present only under a variant, stage and participant originalText, participant note, variant solvent character. Decide: add the editor field or keep read-only (docs/reviews/phase-6-close.md section 4).",
     "CLOSED (step 7.1b part F, 2026-10-24: live with the 7.1b deploy). Was: NEW (content track request, 2026-10-24): pictures on concepts and other records, not only mechanisms -> 7.1a (ADR-038 addendum 7.1a) -> built in 7.1a (commit e3ec005), live with the 7.1b deploy (2026-10-24).",
     "CLOSED (step 7.1b part A, 2026-10-24: io/publish.ts (and so npm run publish:dataset) refuses a file over 26,214,400 bytes in words and copies nothing; tests at LIMIT-1, LIMIT and LIMIT+1). Was: NEW (step 7.1a part B, 2026-10-24): publish:dataset and io/publish.ts have no 25 MiB check; Cloudflare serves at most 25 MiB per static file and a published .orn.json grows by 4/3 of every picture -> reviewer decides (Phase 9 or the first step that publishes pictures)",
-    "NEW (7.1b close, 2026-10-27): WebKit raises 'ResizeObserver loop completed with undelivered notifications' under load and the e2e page-error check fails on it (4 tests, one run); decide in Phase 9 whether the helper treats it as benign, with a test -> Phase 9"
+    "NEW (7.1b close, 2026-10-27): WebKit raises 'ResizeObserver loop completed with undelivered notifications' under load and the e2e page-error check fails on it (4 tests, one run); decide in Phase 9 whether the helper treats it as benign, with a test -> Phase 9",
+    "Phase 9 (watch): WebKit page crash under load in the live run, study-edition concept-with-a-picture test, 2026-10-29; passed alone; watch for a repeat."
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",
