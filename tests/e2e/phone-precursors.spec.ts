@@ -38,6 +38,8 @@ async function walk(page: Page, device: string): Promise<void> {
     const box = await switcher.getByRole('button', { name }).boundingBox();
     expect(box !== null && box.height >= 44).toBe(true);
   }
+  if (device === 'pixel7') await expect(page.getByRole('region', { name: 'Reactions', exact: true })).toBeVisible({ timeout: 60_000 });
+  if (device === 'pixel7') await expect(page.getByText(/^Drawing the structure/)).toHaveCount(0, { timeout: 60_000 });
   if (device === 'pixel7') await page.screenshot({ path: `${shotsDir()}/phone-explore-switch-pixel7.png` });
   await switcher.getByRole('button', { name: 'Precursors' }).tap();
   await expect(page.getByRole('heading', { name: 'Make a compound' })).toBeVisible();
