@@ -18,7 +18,7 @@ async function importOwnData(page: Page): Promise<void> {
   await chooseFile(page, DEMO_FILE);
   await expectPreview(page);
   await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
-  await expect(page.getByText(/^Imported d+ records from /)).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
 }
 
 /** The chunk files of the STUDIO build that hold editor modules (its build report): none may be requested. */

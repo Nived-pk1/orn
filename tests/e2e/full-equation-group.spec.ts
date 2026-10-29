@@ -37,9 +37,9 @@ test('"Show full equation" shows every product of the group on each of the two c
     await card.getByText('Show full equation').click();
     const scheme = card.locator('details[data-equation-panel]').getByRole('group', { name: 'Full equation' });
     await expect(scheme).toBeVisible();
-    await expect(scheme.locator('[data-substance-id="spc_2-bromopropane"]')).toHaveCount(1);
-    await expect(scheme.locator('[data-substance-id="spc_ethanol"]')).toHaveCount(1);
-    await expect(scheme.locator('[data-equation-term]')).toHaveCount(3);
+    await expect(scheme.getByRole('group', { name: '2-Bromopropane', exact: true })).toHaveCount(1);
+    await expect(scheme.getByRole('group', { name: 'Ethanol', exact: true })).toHaveCount(1);
+    await expect(scheme.getByRole('group', { name: 'Propene', exact: true })).toHaveCount(1);
   }
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/full-equation-all-products-1280x800.png` });

@@ -37,6 +37,7 @@ async function findAndAdd(root: ReturnType<Page['locator']>, label: string, text
 }
 
 async function newRoute(page: Page) {
+  await dismissToasts(page);
   await modes(page).getByRole('button', { name: /Workbench/ }).click();
   await page.getByRole('button', { name: 'New route', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'New route' });
@@ -78,7 +79,6 @@ test.describe('the route editor (Studio)', () => {
     await dialog.getByRole('checkbox', { name: 'Step 1' }).check();
     await expect(dialog.getByText('has no steps')).toHaveCount(0);
     expect(await axeProblems(page, 10)).toEqual([]);
-    await dismissToasts(page);
     await shot(page, 'route-editor-step-open');
     await dialog.getByRole('button', { name: 'Edit step 2' }).click();
     await shot(page, 'route-editor');
@@ -99,13 +99,13 @@ test.describe('the route editor (Studio)', () => {
     await expect(found.getByText('2 routes found')).toBeVisible();
     await expect(found.getByText(/Saved as/)).toHaveCount(1); // the demo saves one of the two
     await expect(found.getByRole('button', { name: 'Save as route' })).toHaveCount(1);
+    await dismissToasts(page);
     await found.getByRole('button', { name: 'Save as route' }).click();
     const dialog = page.getByRole('dialog', { name: 'New route' });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByLabel('Name (required)')).toHaveValue('');
     await expect(dialog.getByText('Choose a name.')).toBeVisible();
     await expect(dialog.getByRole('list', { name: 'Steps' }).locator(':scope > li')).toHaveCount(2);
-    await dismissToasts(page);
     await shot(page, 'save-as-route');
     await dialog.getByLabel('Name (required)').fill('Zz saved search result');
     await dialog.getByRole('button', { name: /^Save/ }).click();
@@ -121,12 +121,16 @@ test.describe('the route editor (Studio)', () => {
     test.setTimeout(600_000);
     const seen = await watch(page);
     await openDemo(page);
-    const dialog = await newRoute(page);
-    await dialog.getByLabel('Name (required)').fill('Zz route with a picture');
-    await dialog.getByRole('button', { name: /^Save/ }).click();
-    await expect(dialog).toBeHidden({ timeout: 60_000 });
+    await modes(page).getByRole('button', { name: 'Precursors' }).click();
+    await pick(page, 'Compound to make', 'propan-2-ol', 'Choose Propan-2-ol');
+    await pick(page, 'Start from (optional)', 'ethanol', 'Start from Ethanol');
+    await view(page).getByRole('button', { name: 'Search', exact: true }).click();
+    await view(page).getByRole('region', { name: 'Routes found' }).getByRole('button', { name: 'Ethanol → propan-2-ol' }).click();
+    const show = page.getByRole('button', { name: 'Show inspector' });
+    if (await show.isVisible()) await show.click();
+    await dismissToasts(page);
     await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
-    const editor = editorDialog(page, 'Zz route with a picture');
+    const editor = editorDialog(page, 'Ethanol → propan-2-ol');
     await expect(editor).toBeVisible();
     await editor.getByRole('button', { name: 'Add picture', exact: true }).click();
     const add = page.getByRole('dialog', { name: /Add picture/ });

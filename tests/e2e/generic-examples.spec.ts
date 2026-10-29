@@ -12,7 +12,8 @@ test('a generic reaction lists its examples; the example says "Example of"', asy
   const seen = await watch(page);
   await openDemo(page);
   await showRecord(page, 'r', '1° alcohol → aldehyde (PCC)', 'rxn_alcohol1-to-aldehyde-pcc');
-  for (const toggle of await record(page).getByRole('button', { name: /^Level/, expanded: false }).all()) await toggle.click();
+  const closed = record(page).getByRole('button', { name: /^Level/, expanded: false });
+  for (let left = await closed.count(); left > 0; left = await closed.count()) await closed.first().click();
   const examples = record(page).getByRole('region', { name: 'Examples' });
   await expect(examples.getByRole('heading', { name: 'Examples (1)' })).toBeVisible();
   expect(await axeProblems(page)).toEqual([]);
