@@ -32,6 +32,8 @@ export interface DirectPrecursors {
   readonly groups: readonly DirectGroup[];
   /** Distinct reactions in all the groups. */
   readonly reactionCount: number;
+  /** Reactions that form the target ONLY as a by-product (not listed in the groups; the view says how many and offers the list), sorted by ID. */
+  readonly byproductOnly: readonly string[];
 }
 
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -40,9 +42,16 @@ const NONE = 'none';
 export function directPrecursors(ctx: ProjectionContext, target: RecordRef, scopeOf: ProjectionContext['scopeOf']): DirectPrecursors {
   const describer = createDescriber(ctx.state);
   const seen = new Set<string>();
+  const madeIn = new Set<string>();
+  for (const production of ctx.indexes.productionsOf(target)) if (production.productRole !== 'byproduct') madeIn.add(production.reactionId);
+  const byproductOnly = new Set<string>();
   const byKey = new Map<string, { substrate: RecordRef | null; name: string; reactions: DirectReaction[] }>();
   for (const production of ctx.indexes.productionsOf(target)) {
     if (seen.has(production.reactionId)) continue;
+    if (!madeIn.has(production.reactionId)) {
+      if (ctx.state.records.reaction[production.reactionId] !== undefined) byproductOnly.add(production.reactionId);
+      continue;
+    }
     const reaction = ctx.state.records.reaction[production.reactionId] as Reaction | undefined;
     if (reaction === undefined) continue;
     seen.add(production.reactionId);
@@ -59,5 +68,5 @@ export function directPrecursors(ctx: ProjectionContext, target: RecordRef, scop
   const groups = [...byKey.entries()]
     .map(([key, group]): DirectGroup => ({ key, ...group, reactions: group.reactions.sort((a, b) => compare(fold(a.name), fold(b.name)) || compare(a.reactionId, b.reactionId)) }))
     .sort((a, b) => (a.key === NONE ? 1 : 0) - (b.key === NONE ? 1 : 0) || compare(fold(a.name), fold(b.name)) || compare(a.key, b.key));
-  return { target: { kind: target.kind, id: target.id }, groups, reactionCount: seen.size };
+  return { target: { kind: target.kind, id: target.id }, groups, reactionCount: seen.size, byproductOnly: [...byproductOnly].sort(compare) };
 }

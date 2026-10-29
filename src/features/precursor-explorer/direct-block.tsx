@@ -22,7 +22,7 @@ function CompactRow(props: { readonly reactionId: string; readonly name: string;
 }
 
 export function DirectBlock(props: {
-  readonly ports: Pick<PrecursorPorts, 'select' | 'renderCard'>;
+  readonly ports: Pick<PrecursorPorts, 'select' | 'renderCard' | 'showReactionsMaking'>;
   readonly ctx: ProjectionContext;
   readonly direct: DirectPrecursors;
   readonly targetName: string;
@@ -68,6 +68,14 @@ export function DirectBlock(props: {
           </ul>
         </div>
       ))}
+      {direct.byproductOnly.length === 0 ? null : (
+        <p className={styles.byproduct}>
+          <span>{`Also formed as a by-product in ${reactions(direct.byproductOnly.length)}`}</span>
+          <button type="button" className={styles.link} onClick={() => ports.showReactionsMaking(direct.target)}>
+            Show these reactions in Reactions
+          </button>
+        </p>
+      )}
     </section>
   );
 }

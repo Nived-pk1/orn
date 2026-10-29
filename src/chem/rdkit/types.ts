@@ -24,6 +24,8 @@ export interface RdkitMol extends RdkitHandle {
   get_substruct_matches?(query: RdkitMol): string;
   /** A molblock of a COPY with every hydrogen explicit (with 2D coordinates for the new ones). Optional: only the structures modes use it. */
   add_hs?(): string;
+  /** The CXSMILES, with the atom labels (`|$R';;;$|`) a generic structure carries. Optional: only the structures modes use it. */
+  get_cxsmiles?(): string;
 }
 
 export interface RdkitModule {

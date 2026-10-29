@@ -50,6 +50,8 @@ export interface PrecursorPorts {
   searchSubstances(text: string): Promise<SubstanceSearchAnswer>;
   /** Route search in the compute worker; cancellable by the signal. */
   findRoutes(query: RouteQuery, signal?: AbortSignal): Promise<RoutesAnswer>;
+  /** Opens the Reactions view filtered to this compound as a Product (the by-product line). */
+  showReactionsMaking(ref: RecordRef): void;
   /** Selects a reaction as a family-page card does: the inspector shows it. */
   select(reactionId: string): void;
   renderCard(args: CardArgs): ReactNode;

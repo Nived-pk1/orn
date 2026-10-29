@@ -10,6 +10,7 @@
  *              the new hydrogens) is read again and drawn. Heavy atoms keep their indexes, so a highlight by atom index still finds them.
  */
 import { withHandle } from './scope';
+import { outputOrder } from './smiles-atoms';
 import type { RdkitMol, RdkitModule } from './types';
 
 type Json = Record<string, unknown>;
@@ -45,6 +46,32 @@ export function condensedLabels(module: RdkitModule, mol: RdkitMol): Readonly<Re
     const odd = (finite(atom.chg) ?? finite(defaults.chg) ?? 0) !== 0 || (finite(atom.nRad) ?? finite(defaults.nRad) ?? 0) !== 0 || (finite(atom.isotope) ?? finite(defaults.isotope) ?? 0) !== 0;
     if (z !== 6 || hydrogens === undefined || odd) return;
     labels[index] = hydrogens === 0 ? 'C' : hydrogens === 1 ? 'CH' : `CH<sub>${hydrogens}</sub>`;
+  });
+  return labels;
+}
+
+/** A label a person wrote on a generic atom (R, R', R'', X, Ar, R1): letters, digits and primes only; anything else is left to RDKit. */
+const GROUP_LABEL = /^[A-Za-z][A-Za-z0-9'’]{0,7}$/;
+
+/**
+ * `atomLabels` for the atoms of a generic structure that carry a CXSMILES label (`|$R';;;$|`): atom index -> label. The copy that Show all
+ * atoms draws is read back from a molblock, which keeps only "R" for a dummy atom, so every label would come out as R (7.2b A7); the labels
+ * are read from the molecule itself (its CXSMILES lists them in the SMILES output order) and handed to the drawing. Empty when there are none.
+ */
+export function groupLabels(mol: RdkitMol): Readonly<Record<number, string>> {
+  if (mol.get_cxsmiles === undefined) return {};
+  const cx = mol.get_cxsmiles();
+  const bar = cx.indexOf('|');
+  const found = bar === -1 ? null : /\$([^$|]*)\$/.exec(cx.slice(bar));
+  if (found === null) return {};
+  mol.get_smiles(); // RDKit records the output order when it writes a SMILES; the CXSMILES lists its labels in that order
+  const order = outputOrder(mol.get_prop('_smilesAtomOutputOrder'));
+  const entries = (found[1] ?? '').split(';');
+  if (order === undefined || order.length < entries.length) return {};
+  const labels: Record<number, string> = {};
+  entries.forEach((label, position) => {
+    const index = order[position];
+    if (index !== undefined && GROUP_LABEL.test(label)) labels[index] = label;
   });
   return labels;
 }

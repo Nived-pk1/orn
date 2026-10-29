@@ -8,7 +8,7 @@
 import { FIXED_SCALE_FACTOR } from '../contracts';
 import type { DrawDetails } from '../depiction-options';
 import { isTrap } from './errors';
-import { condensedLabels, withExplicitHydrogens } from './modes';
+import { condensedLabels, groupLabels, withExplicitHydrogens } from './modes';
 import { withHandle } from './scope';
 import { indexesOfMaps, outputOrder, smilesAtoms } from './smiles-atoms';
 import type { RdkitMol, RdkitModule } from './types';
@@ -32,7 +32,9 @@ function svgOf(module: RdkitModule, mol: RdkitMol, details: DrawDetails, atoms: 
   const size = details.fixedScale ? { width: -1, height: -1, scalingFactor: FIXED_SCALE_FACTOR, clearBackground: false } : { width: details.width, height: details.height };
   const base = atoms.length === 0 ? size : { ...size, atoms };
   if (details.mode === 'full') {
-    const drawn = withExplicitHydrogens(module, mol, (withH) => withH.get_svg_with_highlights(JSON.stringify(base)));
+    const atomLabels = groupLabels(mol);
+    const options = Object.keys(atomLabels).length === 0 ? base : { ...base, atomLabels };
+    const drawn = withExplicitHydrogens(module, mol, (withH) => withH.get_svg_with_highlights(JSON.stringify(options)));
     return drawn.opened ? { ok: true, svg: drawn.value } : { ok: false, error: 'the structure could not be drawn with all its hydrogens' };
   }
   if (details.mode === 'condensed') {

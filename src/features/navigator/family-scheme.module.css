@@ -199,3 +199,10 @@
   min-height: 0;
   text-align: left;
 }
+
+/* A card outside the chosen exam scope: the drawings fade, the dashed border and the chip stay, and no word fades (colour contrast). */
+[data-outside] .structure img,
+[data-outside] .arrowLine,
+[data-outside] .downArrowShaft {
+  opacity: 0.55;
+}

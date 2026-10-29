@@ -152,12 +152,11 @@
   border-style: dashed;
 }
 
-/* Dimmed, not hidden: the scheme fades; the name and the words "outside <exam>" in the header keep full contrast. */
+/* Dimmed, not hidden: only the DRAWINGS fade (family-scheme.module.css); every word keeps full contrast (7.2b A2). */
 .dimmedScheme {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  opacity: 0.55;
 }
 
 .outsideChip {

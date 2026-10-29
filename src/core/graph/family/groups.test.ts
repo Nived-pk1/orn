@@ -181,6 +181,73 @@ describe('outcome groups on small states', () => {
   });
 });
 
+describe('the whole condition group on every card, and distinct headings (7.2b A5)', () => {
+  const rec = (r: { kind: RecordRef['kind']; id: string }): RecordRef => ({ kind: r.kind, id: r.id });
+  const hubs = ['hub-a', 'hub-b'].flatMap((h) => [chemClass(h, h, 'compound_class'), anchorOn(rec(cl(h)), h)]) as AnyRecord[];
+  const members = [species('hub-a-1', 'Start', { classes: ['hub-a'] }), species('hub-b-1', 'Amine', { classes: ['hub-b'] }), species('loose-1', 'Loose product', {}), species('salt-1', 'Salt', {})] as AnyRecord[];
+  const v = (label: string, kelvin: number) => ({ label, params: { temperature: { kind: 'value' as const, value: kelvin, unit: 'K' as const } } });
+  const rx = (over: Partial<Parameters<typeof reaction>[0]>): AnyRecord =>
+    reaction({ slug: 'amm', name: 'Ammonolysis', scope: 'specific', participants: [{ ref: sp('hub-a-1'), role: 'reactant' }], stages: [{ kind: 'reaction', members: [0] }], outcomes: [], ...over });
+  const study = (hub: string, ...records: AnyRecord[]): FamilyStudy => familyStudy(contextOf(stateOf(...hubs, ...members, ...records)), hub) as FamilyStudy;
+
+  it('"Show full equation" holds every product of the group, wherever it lands; the scheme keeps the products of its own section', () => {
+    const reactionRecord = rx({
+      outcomes: [
+        { sel: 'major', products: [{ ref: sp('hub-b-1') }, { ref: sp('salt-1'), role: 'byproduct' }] },
+        { sel: 'minor', products: [{ ref: sp('loose-1') }] },
+      ],
+    });
+    const s = study('cls_hub-a', reactionRecord);
+    const cards = s.reactionsOf.groups.map((g) => ({ name: g.name, card: g.cards.find((c) => c.name === 'Ammonolysis') as FamilyCard }));
+    expect(cards.map((c) => c.name).sort()).toEqual(['Amine'.replace('Amine', 'hub-b'), 'Unclassified'].sort());
+    for (const { card } of cards) {
+      expect(card.groups).toHaveLength(1);
+      expect(card.groups[0]?.equation?.products.map((t) => t.name)).toEqual(['Amine', 'Loose product', 'Salt']);
+      expect(card.groups[0]?.equation?.outcomeIds).toHaveLength(2);
+    }
+    // the scheme still shows only the section's products
+    const own = (name: string): string[] => (cards.find((c) => c.name === name)?.card.groups[0]?.outcomes ?? []).flatMap((o) => o.products.map((p) => p.ref.id));
+    expect(own('Unclassified')).toEqual(['spc_loose-1']);
+    expect(own('hub-b')).toEqual(['spc_hub-b-1']);
+  });
+
+  it('an outcome with other conditions is not in the equation of another group', () => {
+    const s = study(
+      'cls_hub-a',
+      rx({
+        variants: [v('Cold', 273), v('Hot', 373)],
+        outcomes: [
+          { variants: [0], sel: 'major', products: [{ ref: sp('hub-b-1') }] },
+          { variants: [1], sel: 'major', products: [{ ref: sp('loose-1') }] },
+        ],
+      }),
+    );
+    const names = s.reactionsOf.groups.flatMap((g) => g.cards.flatMap((c) => c.groups.map((group) => group.equation?.products.map((t) => t.name))));
+    expect(names).toEqual(expect.arrayContaining([['Amine'], ['Loose product']]));
+    expect(names).toHaveLength(2);
+  });
+
+  it('two groups that would read the same start with their variant labels', () => {
+    const s = study(
+      'cls_hub-a',
+      rx({
+        variants: [v('Limited NH3', 373), v('Excess NH3', 373)],
+        outcomes: [
+          { variants: [0], sel: 'major', products: [{ ref: sp('hub-b-1') }] },
+          { variants: [1], sel: 'major', products: [{ ref: sp('hub-b-1') }, { ref: sp('salt-1'), role: 'byproduct' }] },
+        ],
+      }),
+    );
+    const card = s.reactionsOf.groups.flatMap((g) => g.cards)[0] as FamilyCard;
+    expect(card.groups.map((g) => g.heading)).toEqual(['Limited NH3: 373 K', 'Excess NH3: 373 K']);
+  });
+
+  it('groups with different headings keep them as they were', () => {
+    const s = study('cls_hub-a', rx({ variants: [v('Limited NH3', 373), v('Excess NH3', 413)], outcomes: [{ variants: [0], sel: 'major', products: [{ ref: sp('hub-b-1') }] }, { variants: [1], sel: 'major', products: [{ ref: sp('hub-b-1') }] }] }));
+    expect((s.reactionsOf.groups.flatMap((g) => g.cards)[0] as FamilyCard).groups.map((g) => g.heading)).toEqual(['At 373 K', 'At 413 K']);
+  });
+});
+
 describe('headingOf', () => {
   const arrow = (...conditions: string[]) => ({ above: [], below: conditions.map((text) => ({ text, kind: 'condition' as const })) });
 

@@ -9,6 +9,7 @@ import {
   reactionCard,
   routeSizeWords,
   stepWarningWords,
+  type ArrowTextPart,
   type FoundRoute,
   type ProjectionContext,
   type RouteQuery,
@@ -58,6 +59,9 @@ export interface StepView {
   readonly to: string;
   /** The text on the arrow ("PCC, CH2Cl2"); empty when there is none. */
   readonly arrow: string;
+  /** The same text as parts, drawn with the card's formula typography (H₃O⁺). */
+  readonly arrowAbove: readonly ArrowTextPart[];
+  readonly arrowBelow: readonly ArrowTextPart[];
   /** Plain words, never the engine's text. */
   readonly warnings: readonly string[];
 }
@@ -70,24 +74,30 @@ export interface RouteView {
   readonly steps: readonly StepView[];
 }
 
-function arrowTextOf(ctx: ProjectionContext, reactionId: string, outcomeId: string | undefined): string {
+function arrowPartsOf(ctx: ProjectionContext, reactionId: string, outcomeId: string | undefined): { readonly above: readonly ArrowTextPart[]; readonly below: readonly ArrowTextPart[] } {
   const card = reactionCard(ctx, reactionId);
-  if ('missing' in card) return '';
+  if ('missing' in card) return { above: [], below: [] };
   const group = card.groups.find((one) => one.outcomes.some((outcome) => outcome.outcomeId === outcomeId)) ?? card.groups[0];
-  if (group === undefined) return '';
-  const side = (parts: readonly { readonly text: string; readonly kind: string }[]): string => parts.filter((part) => part.kind !== 'separator').map((part) => part.text.trim()).join(', ');
-  return [side(group.arrowText.above), side(group.arrowText.below)].filter((text) => text !== '').join('; ');
+  return group === undefined ? { above: [], below: [] } : group.arrowText;
+}
+
+function arrowTextOf(parts: { readonly above: readonly ArrowTextPart[]; readonly below: readonly ArrowTextPart[] }): string {
+  const side = (list: readonly ArrowTextPart[]): string => list.filter((part) => part.kind !== 'separator').map((part) => part.text.trim()).join(', ');
+  return [side(parts.above), side(parts.below)].filter((text) => text !== '').join('; ');
 }
 
 function stepOf(ctx: ProjectionContext, n: number, step: { readonly reactionId: string; readonly outcomeId?: string | undefined; readonly from: string; readonly to: string; readonly warnings?: readonly string[] }): StepView {
   const reaction = ctx.state.records.reaction[step.reactionId as never] as Reaction | undefined;
+  const parts = arrowPartsOf(ctx, step.reactionId, step.outcomeId);
   return {
     n,
     reactionId: step.reactionId,
     reactionName: reaction?.name ?? step.reactionId,
     from: step.from,
     to: step.to,
-    arrow: arrowTextOf(ctx, step.reactionId, step.outcomeId),
+    arrow: arrowTextOf(parts),
+    arrowAbove: parts.above,
+    arrowBelow: parts.below,
     warnings: (step.warnings ?? []).map(stepWarningWords),
   };
 }

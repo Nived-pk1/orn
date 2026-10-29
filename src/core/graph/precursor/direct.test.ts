@@ -9,7 +9,7 @@ import { chemClass, cl, contextOf, reaction, sp, species, stateOf } from '@/test
 import type { AnyRecord } from '../../schema';
 import { directPrecursors, NO_STARTING_MATERIAL } from './direct';
 
-const make = (slug: string, from: string | undefined, to: string, extra: { toRole?: 'main' | 'coproduct' } = {}): AnyRecord =>
+const make = (slug: string, from: string | undefined, to: string, extra: { toRole?: 'main' | 'coproduct' | 'byproduct' } = {}): AnyRecord =>
   reaction({
     slug,
     name: `Reaction ${slug}`,
@@ -77,11 +77,35 @@ describe('directPrecursors', () => {
     if (!parsed.ok) throw new Error('demo has duplicate IDs');
     const ctx = contextOf(parsed.state);
     for (const id of Object.keys(parsed.state.records.species)) {
-      const expected = new Set(ctx.indexes.productionsOf({ kind: 'species', id }).map((p) => p.reactionId));
+      const made = ctx.indexes.productionsOf({ kind: 'species', id });
+      const expected = new Set(made.filter((p) => p.productRole !== 'byproduct').map((p) => p.reactionId));
       const result = directPrecursors(ctx, { kind: 'species', id }, () => 'unmapped');
       const listed = result.groups.flatMap((g) => g.reactions.map((r) => r.reactionId));
       expect(listed.length, id).toBe(new Set(listed).size);
       expect(new Set(listed), id).toEqual(expected);
     }
+  });
+  it('a main product and a coproduct are listed; a reaction that forms the target only as a by-product is not, and is counted apart (7.2b A3)', () => {
+    const ctx = contextOf(stateOf(...base, make('main', 'alpha', 'target'), make('co', 'beta', 'target', { toRole: 'coproduct' }), make('by', 'gamma', 'target', { toRole: 'byproduct' })));
+    const result = directPrecursors(ctx, sp('target'), () => 'unmapped');
+    expect(result.groups.flatMap((g) => g.reactions.map((r) => r.name)).sort()).toEqual(['Reaction co', 'Reaction main']);
+    expect(result.reactionCount).toBe(2);
+    expect(result.byproductOnly).toEqual(['rxn_by']);
+  });
+
+  it('a reaction with the target as a by-product in one outcome and a main product in another is listed, not counted apart', () => {
+    const both = reaction({
+      slug: 'both',
+      name: 'Both',
+      scope: 'specific',
+      participants: [{ ref: sp('alpha'), role: 'reactant' }],
+      outcomes: [
+        { sel: 'major', products: [{ ref: sp('target'), role: 'byproduct' }] },
+        { sel: 'minor', products: [{ ref: sp('target'), role: 'main' }] },
+      ],
+    });
+    const result = directPrecursors(contextOf(stateOf(...base, both)), sp('target'), () => 'unmapped');
+    expect(result.reactionCount).toBe(1);
+    expect(result.byproductOnly).toEqual([]);
   });
 });

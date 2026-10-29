@@ -6,7 +6,7 @@ import { lazy, Suspense, useCallback } from "react";
 import { NavigatorView } from "@/features/navigator";
 import { RECORD_KINDS, type RecordKind } from "@/core/schema";
 import { EDITING } from "@/app/edition";
-import { usePanels } from "@/ui/state";
+import { usePanels, type ExplorerFilter } from "@/ui/state";
 import { useApp } from "./context";
 import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
@@ -54,6 +54,8 @@ export function Canvas(props: {
   readonly imports: ImportActions;
   readonly exports: ExportActions;
   readonly onAskReplace: () => void;
+  /** Opens Reactions with this filter (the Precursors view's by-product line). */
+  readonly onReactions: (filter: Partial<ExplorerFilter>) => void;
 }) {
   const { panels } = useApp();
   const { imports } = props;
@@ -76,7 +78,7 @@ export function Canvas(props: {
         </Suspense>
       ) : !empty && props.mode === PRECURSORS_MODE ? (
         <Suspense fallback={null}>
-          <PrecursorsHost />
+          <PrecursorsHost onReactions={props.onReactions} />
         </Suspense>
       ) : EDITING && props.mode === WORKBENCH_MODE ? (
         <WorkbenchPage />

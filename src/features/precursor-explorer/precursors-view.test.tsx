@@ -8,9 +8,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createCanonicalStore } from '@/core/commands';
 import { createScopeOf, directPrecursors, reactionCard, searchRoutes, type RouteQuery } from '@/core/graph';
-import type { CanonicalState, Reaction } from '@/core/schema';
+import { emptyRecordTables, type AnyRecord, type CanonicalState, type Reaction } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
-import { contextOf, sp } from '@/test-support/graph-state';
+import { contextOf, reaction, sp, species } from '@/test-support/graph-state';
 import { navigatorRig } from '@/test-support/navigator-kit';
 import { createExplorerStore, createPrecursorsStore, type PrecursorsState } from '@/ui/state';
 import type { PrecursorPorts, RoutesAnswer } from './contracts';
@@ -27,6 +27,7 @@ function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['
   const precursors = createPrecursorsStore(saved);
   const explorer = createExplorerStore();
   const select = vi.fn();
+  const openMaking = vi.fn();
   const asked: RouteQuery[] = [];
   const ctx = contextOf(state);
   const ports: PrecursorPorts = {
@@ -46,6 +47,7 @@ function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['
         return { ok: true, result: searchRoutes(ctx, query) };
       }),
     select,
+    showReactionsMaking: openMaking,
     renderCard: (args) => {
       const card = reactionCard(ctx, args.reactionId);
       if ('missing' in card) return args.fallback(card.reason);
@@ -60,7 +62,7 @@ function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['
     log: vi.fn(),
   };
   render(<PrecursorsView ports={ports} />);
-  return { ports, precursors, explorer, select, asked, rig, state, ctx };
+  return { ports, precursors, explorer, select, openMaking, asked, rig, state, ctx };
 }
 
 const PROPANOL = { kind: 'species', id: 'spc_propan-2-ol' } as const;
@@ -126,6 +128,33 @@ describe('Made directly from', () => {
     const { rig } = setup({ target: PROPANOL });
     expect(rig).toBeDefined();
     expect(document.querySelectorAll('[data-outside]')).toHaveLength(0);
+  });
+});
+
+describe('by-products (7.2b A3)', () => {
+  const made = (slug: string, role: 'main' | 'byproduct') =>
+    reaction({ slug, name: 'Reaction ' + slug, scope: 'specific', participants: [{ ref: sp('alpha'), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp('target'), role }] }] });
+  // the fixture loader of stateOf cannot run under jsdom: the demo's meta with only these records
+  const world = (...rxns: ReturnType<typeof made>[]): CanonicalState => {
+    const tables = emptyRecordTables() as unknown as Record<string, Record<string, AnyRecord>>;
+    for (const record of [species('alpha', 'Alpha'), species('target', 'Target'), ...rxns]) (tables[record.kind] as Record<string, AnyRecord>)[record.id] = record;
+    return { meta: demoState().meta, records: tables as unknown as CanonicalState['records'] };
+  };
+
+  it('says how many reactions form the target only as a by-product, with a button that opens Reactions filtered to it as Product', () => {
+    const { openMaking } = setup({ target: { kind: 'species', id: 'spc_target' } }, { state: world(made('mm', 'main'), made('bb1', 'byproduct'), made('bb2', 'byproduct')) });
+    expect(screen.getByText('Also formed as a by-product in 2 reactions')).toBeTruthy();
+    expect(screen.queryByText('Reaction bb1')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Show these reactions in Reactions' }));
+    expect(openMaking).toHaveBeenCalledWith({ kind: 'species', id: 'spc_target' });
+  });
+
+  it('one reaction reads in the singular, and no line appears when there is none', () => {
+    setup({ target: { kind: 'species', id: 'spc_target' } }, { state: world(made('mm', 'main'), made('bb1', 'byproduct')) });
+    expect(screen.getByText('Also formed as a by-product in 1 reaction')).toBeTruthy();
+    cleanup();
+    setup({ target: { kind: 'species', id: 'spc_target' } }, { state: world(made('mm', 'main')) });
+    expect(screen.queryByText(/Also formed as a by-product/)).toBeNull();
   });
 });
 

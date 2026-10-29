@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { PrecursorsView, type PrecursorPorts } from '@/features/precursor-explorer';
 import { ReactionCardHost, useNavigator } from '@/features/navigator';
 import type { RecordRef } from '@/core/schema';
+import type { ExplorerFilter } from '@/ui/state';
 import { useApp } from './context';
 
 /** A route ends at, and starts from, a species or a class (never a reagent). */
@@ -14,7 +15,8 @@ const SUBSTANCE_KINDS = ['species', 'class'] as const;
 const SUBSTANCE_LIMIT = 20;
 const CHANNEL = 'precursors';
 
-export function PrecursorsHost() {
+export function PrecursorsHost(props: { readonly onReactions: (filter: Partial<ExplorerFilter>) => void }) {
+  const { onReactions } = props;
   const { services } = useApp();
   const { ports } = useNavigator();
   const precursors = useMemo<PrecursorPorts>(
@@ -27,12 +29,13 @@ export function PrecursorsHost() {
         return answer.ok ? { ok: true, hits: answer.value.map((hit) => ({ ref: hit.ref as RecordRef, title: hit.title })) } : { ok: false, message: answer.message };
       },
       findRoutes: (query, signal) => services.routes(query, signal),
+      showReactionsMaking: (ref) => onReactions({ substanceIds: [ref.id], usedAs: 'product' }),
       select: (reactionId) => ports.ui.family.getState().selectReaction(reactionId),
       renderCard: (args) => <ReactionCardHost reactionId={args.reactionId} selected={args.selected} onSelect={args.onSelect} fallback={args.fallback} {...(args.outside === undefined ? {} : { outside: args.outside })} />,
       timers: ports.timers,
       log: ports.log,
     }),
-    [ports, services],
+    [ports, services, onReactions],
   );
   return <PrecursorsView ports={precursors} />;
 }

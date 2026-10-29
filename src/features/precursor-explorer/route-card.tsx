@@ -4,6 +4,8 @@
  * the step's warnings in words and "Show the reaction", which expands that step's card. Nothing here edits or saves a route.
  */
 import { useState, type ReactNode } from 'react';
+import { Runs } from '@/render/equation';
+import { partsToRuns } from '@/render/scene';
 import type { PrecursorPorts } from './contracts';
 import type { RouteView, StepView } from './model';
 import styles from './precursors-view.module.css';
@@ -13,19 +15,27 @@ function Step(props: { readonly step: StepView; readonly ports: Pick<PrecursorPo
   const [open, setOpen] = useState(false);
   return (
     <li className={styles.step} data-step={step.n}>
-      <span className={styles.stepLine}>{`${step.n}. ${step.from} → ${step.to}`}</span>
-      <button type="button" className={styles.link} onClick={() => ports.select(step.reactionId)}>
-        {step.reactionName}
-      </button>
-      {step.arrow === '' ? null : <span className={styles.arrow}>{step.arrow}</span>}
+      <span className={styles.stepLine} data-line="title">{`${step.n}. ${step.from} → ${step.to}`}</span>
+      <span className={styles.stepReaction} data-line="reaction">
+        <button type="button" className={styles.link} onClick={() => ports.select(step.reactionId)}>
+          {step.reactionName}
+        </button>
+        <button type="button" className={styles.showCard} aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+          Show the reaction
+        </button>
+      </span>
+      {step.arrowAbove.length + step.arrowBelow.length === 0 ? null : (
+        <span className={styles.arrow} data-line="conditions">
+          <Runs runs={partsToRuns(step.arrowAbove)} />
+          {step.arrowAbove.length > 0 && step.arrowBelow.length > 0 ? '; ' : null}
+          <Runs runs={partsToRuns(step.arrowBelow)} />
+        </span>
+      )}
       {step.warnings.map((words) => (
         <span key={words} className={styles.warning}>
           {words}
         </span>
       ))}
-      <button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-        Show the reaction
-      </button>
       {open ? <div className={styles.stepCard}>{ports.renderCard({ reactionId: step.reactionId, selected: props.selected === step.reactionId, onSelect: ports.select, fallback: (reason): ReactNode => <p className={styles.muted}>{reason}</p> })}</div> : null}
     </li>
   );
@@ -35,8 +45,8 @@ export function RouteCard(props: { readonly route: RouteView; readonly ports: Pi
   const { route } = props;
   return (
     <li className={styles.route} data-route={route.key}>
-      {route.name === undefined ? null : <h4 className={styles.routeName}>{route.name}</h4>}
-      <p className={styles.routeHeading}>{route.heading}</p>
+      <h4 className={styles.routeName}>{route.name ?? route.heading}</h4>
+      {route.name === undefined ? null : <p className={styles.routeHeading}>{route.heading}</p>}
       <ol className={styles.steps} aria-label={route.name === undefined ? 'Steps' : `Steps of ${route.name}`}>
         {route.steps.map((step) => (
           <Step key={step.n} step={step} ports={props.ports} selected={props.selected} />

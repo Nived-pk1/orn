@@ -286,7 +286,7 @@ function WindowContent() {
           }
           canvas={
             <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} />
+              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} />
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"

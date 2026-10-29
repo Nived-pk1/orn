@@ -11,6 +11,7 @@ import { useInspectorEnv } from './env';
 import { LABELS } from './labels';
 import { FactList, Facts, LevelSection } from './levels';
 import { parameterPhrases } from './model/conditions';
+import { ReactionExamples } from './reaction-examples';
 import { RelatedReactions } from './related';
 import { RecordLink } from './rich-text';
 import { CitationsAndTags, InlineNote, LinkFact, Links, NoteFact, TextFact, words } from './view-parts';
@@ -151,7 +152,7 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
         <FactList label="Reaction summary">
           <Facts label="Scope">{record.scope}</Facts>
           {record.instanceOfId === undefined ? null : (
-            <Facts label="Instance of">
+            <Facts label="Example of">
               <RecordLink kind="reaction" id={record.instanceOfId} />
             </Facts>
           )}
@@ -169,6 +170,7 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
             </Facts>
           )}
         </FactList>
+        <ReactionExamples record={record} />
         <h4>Participants</h4>
         {record.participants.length === 0 ? <Empty>No participants</Empty> : null}
         <ul aria-label="Participants">
