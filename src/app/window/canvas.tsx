@@ -6,7 +6,9 @@ import { lazy, Suspense, useCallback } from "react";
 import { NavigatorView } from "@/features/navigator";
 import { RECORD_KINDS, type RecordKind } from "@/core/schema";
 import { EDITING } from "@/app/edition";
+import { useLayoutMode } from "@/ui/hooks";
 import { usePanels, type ExplorerFilter } from "@/ui/state";
+import { ExploreSwitch } from "./explore-switch";
 import { useApp } from "./context";
 import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
@@ -65,9 +67,11 @@ export function Canvas(props: {
     [panels],
   );
   const empty = totalOf(props.counts) === 0;
+  const phoneExplorer = useLayoutMode() === 'phone' && !empty && (props.mode === REACTIONS_MODE || props.mode === PRECURSORS_MODE);
   const showsNavigator = !empty && props.mode === NAVIGATOR_MODE;
   return (
     <div className={showsNavigator ? styles.canvasFull : EDITING && props.mode === REVIEW_MODE ? styles.canvasFill : styles.canvas}>
+      {phoneExplorer ? <ExploreSwitch /> : null}
       {empty && !startedEmpty ? (
         <FirstRun imports={imports} onStartEmpty={onStartEmpty} />
       ) : showsNavigator ? (

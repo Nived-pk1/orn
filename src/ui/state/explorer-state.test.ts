@@ -16,7 +16,7 @@ describe('parseExplorer', () => {
   });
 
   it('each unusable part falls back alone and is named', () => {
-    const parsed = parseExplorer({ filter: { substanceIds: 'nope', usedAs: 'sideways', typeIds: ['ok', 7], text: 5, onlyInScope: 'yes', reviewStatuses: ['verified'] }, view: 'grid', last: 'precursors' });
+    const parsed = parseExplorer({ filter: { substanceIds: 'nope', usedAs: 'sideways', typeIds: ['ok', 7], text: 5, onlyInScope: 'yes', reviewStatuses: ['verified'] }, view: 'grid', last: 'banana' });
     expect(parsed.filter).toEqual({ ...EMPTY_EXPLORER_FILTER, reviewStatuses: ['verified'] });
     expect(parsed.view).toBe('cards');
     expect([...parsed.damaged].sort()).toEqual(['explorer.filter.onlyInScope', 'explorer.filter.substanceIds', 'explorer.filter.text', 'explorer.filter.typeIds', 'explorer.filter.usedAs', 'explorer.last', 'explorer.view'].sort());
@@ -54,5 +54,14 @@ describe('the explorer store', () => {
     const store = createExplorerStore();
     store.getState().setView('compact');
     expect(store.getState().view).toBe('compact');
+  });
+});
+
+describe('the last explorer (7.2b D1)', () => {
+  it('"precursors" is a known value, kept as it is; setLast changes it', () => {
+    expect(parseExplorer({ last: 'precursors' })).toMatchObject({ last: 'precursors', damaged: [] });
+    const store = createExplorerStore();
+    store.getState().setLast('precursors');
+    expect(store.getState().last).toBe('precursors');
   });
 });

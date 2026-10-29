@@ -29,7 +29,7 @@ import { ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
 import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
-import { MODES, NAVIGATOR_MODE, REACTIONS_MODE } from "./modes";
+import { MODES, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE } from "./modes";
 import { openPrecursors } from "./precursors-entry";
 import type { RecordRef } from "@/core/schema";
 import { filterFor, openReactions } from "./reactions-entry";
@@ -147,11 +147,12 @@ function WindowContent() {
   // the phone's Explore tab IS the Reactions mode (step 7.1b E1); the other tabs are the Navigator
   const layoutMode = useLayoutMode();
   const phoneTab = useStore(navigator.ui.overview, (s) => s.phoneTab);
+  const lastExplorer = useStore(navigator.ui.explorer, (s) => s.last);
   useEffect(() => {
     if (layoutMode !== 'phone') return;
-    if (phoneTab === 'explore') setMode(REACTIONS_MODE);
-    else setMode((current) => (current === REACTIONS_MODE ? NAVIGATOR_MODE : current));
-  }, [layoutMode, phoneTab]);
+    if (phoneTab === 'explore') setMode(lastExplorer === 'precursors' ? PRECURSORS_MODE : REACTIONS_MODE);
+    else setMode((current) => (current === REACTIONS_MODE || current === PRECURSORS_MODE ? NAVIGATOR_MODE : current));
+  }, [layoutMode, phoneTab, lastExplorer]);
   const [openRequest, setOpenRequest] = useState(0);
   const [closeRequest, setCloseRequest] = useState(0);
   // A pick on the canvas shows the record: the wide pane opens (its state is saved); the drawer or sheet is asked through the shell.

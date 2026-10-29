@@ -2,7 +2,8 @@
  * Test-only setup file of the main Vitest project (reviewer decision W1, step 6.6b): every window test file (src/app/window) pays the cold
  * editor render ONCE in its own `beforeAll`, before the file's hooks and tests, so no `findBy*` wait ever sees the first render of an
  * editor in a busy worker (the cause found in studio step G4). It needs the dialog and layout stubs the window tests use, so it sets them
- * up for the warm-up and puts the originals back afterwards: a test file's own setup is unchanged. No wait is raised anywhere.
+ * up for the warm-up and puts the originals back afterwards: a test file's own setup is unchanged. It also loads the lazy Reactions and Precursors
+ * hosts once (7.2b: `reactions-window` failed twice under a busy machine; alone it opens in 0.47 s before and after the step). No wait is raised anywhere.
  */
 import { beforeAll, expect } from 'vitest';
 
@@ -30,6 +31,8 @@ beforeAll(async () => {
     await prefetchPalette();
     await import('@/features/workbench/layer');
     await import('@/app/window/editor-session');
+    // the Reactions and Precursors hosts are lazy chunks (7.1b, 7.2a): their first load is paid here, not inside a `findBy*` wait (7.2b)
+    await Promise.all([import('@/app/window/reactions-host'), import('@/app/window/precursors-host')]);
     stubDialog();
     fakeLayout();
     (globalThis as { ResizeObserver?: unknown }).ResizeObserver ??= class {

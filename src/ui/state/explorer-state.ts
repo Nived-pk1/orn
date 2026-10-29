@@ -9,9 +9,9 @@ export type ExplorerUse = 'any' | 'reactant' | 'arrow' | 'product';
 export const EXPLORER_USES: readonly ExplorerUse[] = ['any', 'reactant', 'arrow', 'product'];
 export type ExplorerView = 'cards' | 'compact';
 export const EXPLORER_VIEWS: readonly ExplorerView[] = ['cards', 'compact'];
-/** The explorers the Explore tab can reopen; 7.1 has one. */
-export type ExplorerKind = 'reactions';
-export const EXPLORER_KINDS: readonly ExplorerKind[] = ['reactions'];
+/** The explorers the Explore tab can reopen (7.2b: Reactions and Precursors). */
+export type ExplorerKind = 'reactions' | 'precursors';
+export const EXPLORER_KINDS: readonly ExplorerKind[] = ['reactions', 'precursors'];
 
 const REVIEW_STATUSES: readonly string[] = ['unreviewed', 'review_required', 'verified'];
 const MAX_IDS = 200;
@@ -46,6 +46,7 @@ export interface ExplorerState {
   replaceFilter(filter: Partial<ExplorerFilter>): void;
   clearFilter(): void;
   setView(view: ExplorerView): void;
+  setLast(kind: ExplorerKind): void;
 }
 export type ExplorerStore = StoreApi<ExplorerState>;
 
@@ -57,6 +58,9 @@ export function createExplorerStore(initial: { readonly filter?: ExplorerFilter;
     setFilter: (patch) => set({ filter: { ...get().filter, ...patch } }),
     replaceFilter: (filter) => set({ filter: { ...EMPTY_EXPLORER_FILTER, ...filter } }),
     clearFilter: () => set({ filter: EMPTY_EXPLORER_FILTER }),
+    setLast: (kind) => {
+      if (get().last !== kind) set({ last: kind });
+    },
     setView: (view) => {
       if (get().view !== view) set({ view });
     },

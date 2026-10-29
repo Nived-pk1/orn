@@ -17,6 +17,7 @@ export function filterFor(ref: RecordRef): Partial<ExplorerFilter> | undefined {
 export function openReactions(ui: Pick<NavigatorUiStores, 'explorer' | 'overview' | 'family'>, setMode: (mode: string) => void, filter: Partial<ExplorerFilter>): void {
   ui.explorer.getState().replaceFilter(filter);
   ui.overview.getState().setPhoneTab('explore');
+  ui.explorer.getState().setLast('reactions');
   ui.family.getState().closeFamily();
   setMode(REACTIONS_MODE);
 }

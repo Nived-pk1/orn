@@ -11,10 +11,13 @@ import { PRECURSORS_MODE } from './modes';
 /** A species or a class is something a route can end at; every other kind is not. */
 export const precursorChoiceFor = (ref: RecordRef): SubstanceChoice | undefined => asChoice(ref);
 
-export function openPrecursors(ui: Pick<NavigatorUiStores, 'precursors' | 'family'>, setMode: (mode: string) => void, ref: RecordRef): void {
+export function openPrecursors(ui: Pick<NavigatorUiStores, 'precursors' | 'family' | 'overview' | 'explorer'>, setMode: (mode: string) => void, ref: RecordRef): void {
   const choice = precursorChoiceFor(ref);
   if (choice === undefined) return;
   ui.precursors.getState().replace({ target: choice, startFrom: [], maxSteps: 5, onlyListed: false, onlyInScope: false, searched: false });
   ui.family.getState().closeFamily();
+  // on a phone the Precursors mode lives behind the Explore tab: say which explorer that tab shows
+  ui.overview.getState().setPhoneTab('explore');
+  ui.explorer.getState().setLast('precursors');
   setMode(PRECURSORS_MODE);
 }

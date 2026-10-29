@@ -135,15 +135,15 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
           </div>
         )}
         {host.showReactions === undefined || !SHOW_REACTIONS_KINDS.includes(props.refOf.kind) ? null : (
-          <div className={styles.actions}>
+          <div className={styles.actions} data-sheet-full="">
             <button type="button" onClick={() => { host.showReactions?.(props.refOf); if (phone) host.closePane?.(); }}>
               Show its reactions
             </button>
           </div>
         )}
-        {host.showPrecursors === undefined || phone || !PRECURSOR_KINDS.includes(props.refOf.kind) ? null : (
-          <div className={styles.actions}>
-            <button type="button" onClick={() => host.showPrecursors?.(props.refOf)}>
+        {host.showPrecursors === undefined || !PRECURSOR_KINDS.includes(props.refOf.kind) ? null : (
+          <div className={styles.actions} data-sheet-full="">
+            <button type="button" onClick={() => { host.showPrecursors?.(props.refOf); if (phone) host.closePane?.(); }}>
               How to make it
             </button>
           </div>
