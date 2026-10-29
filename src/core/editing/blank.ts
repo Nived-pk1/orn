@@ -70,6 +70,10 @@ export function blankDraft(kind: RecordKind, ctx: CommandContext): Record<string
     // a caveat: the kind has no empty value (ABSENT until chosen, L1 refuses Save); the title and statement start empty, no targets
     return { kind: 'caveat', id: ctx.newId(RECORD_ID_PREFIX.caveat), title: '', statement: '', targets: [], conceptIds: [], ...startMeta(ctx.now()) };
   }
+  if (kind === 'route') {
+    // a route: the name starts empty (required); the purpose is "user", a route a person writes; no steps, no target
+    return { kind: 'route', id: ctx.newId(RECORD_ID_PREFIX.route), name: '', purpose: 'user', steps: [], conceptIds: [], ...startMeta(ctx.now()) };
+  }
   if (kind === 'relationship') {
     // a relationship: the type and both ends have no empty value (ABSENT until chosen, L1 refuses Save)
     return { kind: 'relationship', id: ctx.newId(RECORD_ID_PREFIX.relationship), ...startMeta(ctx.now()) };

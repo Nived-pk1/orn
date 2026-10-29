@@ -246,3 +246,34 @@
   margin: 0;
   color: var(--color-ink-2);
 }
+
+.savedAs {
+  margin: 0;
+}
+
+/* Phone (7.2b D2): one column, the pickers full width, 44 px targets, the route form stacked, the step's reaction line wraps. */
+.view[data-layout='phone'] {
+  padding: var(--space-3);
+}
+
+.view[data-layout='phone'] button,
+.view[data-layout='phone'] input,
+.view[data-layout='phone'] select {
+  min-height: 44px;
+}
+
+.view[data-layout='phone'] input[type='search'],
+.view[data-layout='phone'] select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.view[data-layout='phone'] .options,
+.view[data-layout='phone'] .actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.view[data-layout='phone'] .stepReaction {
+  flex-wrap: wrap;
+}

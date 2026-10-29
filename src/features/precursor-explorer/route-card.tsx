@@ -41,12 +41,34 @@ function Step(props: { readonly step: StepView; readonly ports: Pick<PrecursorPo
   );
 }
 
-export function RouteCard(props: { readonly route: RouteView; readonly ports: Pick<PrecursorPorts, 'select' | 'renderCard'>; readonly selected: string | null }) {
+export function RouteCard(props: {
+  readonly route: RouteView;
+  readonly ports: Pick<PrecursorPorts, 'select' | 'renderCard'>;
+  readonly selected: string | null;
+  /** A found route: "Save as route" (Studio only; absent otherwise). */
+  readonly onSave?: (() => void) | undefined;
+  /** A found route that equals a saved one: "Saved as <name>", a link to it. */
+  readonly savedAs?: { readonly name: string; readonly open: () => void } | undefined;
+}) {
   const { route } = props;
   return (
     <li className={styles.route} data-route={route.key}>
       <h4 className={styles.routeName}>{route.name ?? route.heading}</h4>
       {route.name === undefined ? null : <p className={styles.routeHeading}>{route.heading}</p>}
+      {props.savedAs !== undefined ? (
+        <p className={styles.savedAs}>
+          {'Saved as '}
+          <button type="button" className={styles.link} onClick={props.savedAs.open}>
+            {props.savedAs.name}
+          </button>
+        </p>
+      ) : props.onSave !== undefined ? (
+        <p className={styles.savedAs}>
+          <button type="button" onClick={props.onSave}>
+            Save as route
+          </button>
+        </p>
+      ) : null}
       <ol className={styles.steps} aria-label={route.name === undefined ? 'Steps' : `Steps of ${route.name}`}>
         {route.steps.map((step) => (
           <Step key={step.n} step={step} ports={props.ports} selected={props.selected} />

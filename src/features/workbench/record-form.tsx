@@ -22,6 +22,7 @@ import { TransformationForm } from './transformation-form';
 import { MechanismForm } from './mechanism-form';
 import type { MechanismLinksPort } from './mechanism-contracts';
 import { ReactionForm } from './reaction-form';
+import { RouteForm } from './route-form';
 import { RelationshipForm } from './relationship-form';
 import { RelationshipsList } from './relationships-list';
 import { SectionFrame } from './section-frame';
@@ -65,6 +66,7 @@ function KindForm(props: RecordFormProps) {
   if (kind === 'navigator_anchor') return <FamilyForm {...rest} />;
   if (kind === 'relationship') return <RelationshipForm {...rest} />;
   if (kind === 'caveat') return <CaveatForm {...rest} />;
+  if (kind === 'route') return <RouteForm {...rest} newId={newId} />;
   if (kind === 'concept') return <ConceptForm {...rest} />;
   if (kind === 'named_reaction') return <NamedReactionForm {...rest} openRecord={openRecord} />;
   if (kind === 'transformation') return <TransformationForm {...rest} openRecord={openRecord} />;

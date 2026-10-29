@@ -55,6 +55,8 @@ export interface StepView {
   readonly n: number;
   readonly reactionId: string;
   readonly reactionName: string;
+  /** The outcome the step uses; empty when it names none. */
+  readonly outcomeId: string;
   readonly from: string;
   readonly to: string;
   /** The text on the arrow ("PCC, CH2Cl2"); empty when there is none. */
@@ -72,6 +74,13 @@ export interface RouteView {
   readonly name?: string;
   readonly heading: string;
   readonly steps: readonly StepView[];
+  /** A found route: what "Save as route" hands over (the engine's own steps). */
+  readonly found?: readonly { readonly reactionId: string; readonly outcomeId: string; readonly conditionVariantIds: readonly string[] }[];
+}
+
+/** The saved route whose steps are the same reactions in the same order (and the same outcome where the saved step names one); undefined when none. */
+export function savedMatchOf(route: RouteView, saved: readonly RouteView[]): RouteView | undefined {
+  return saved.find((one) => one.steps.length === route.steps.length && one.steps.every((step, i) => step.reactionId === route.steps[i]?.reactionId && (step.outcomeId === '' || step.outcomeId === route.steps[i]?.outcomeId)));
 }
 
 function arrowPartsOf(ctx: ProjectionContext, reactionId: string, outcomeId: string | undefined): { readonly above: readonly ArrowTextPart[]; readonly below: readonly ArrowTextPart[] } {
@@ -93,6 +102,7 @@ function stepOf(ctx: ProjectionContext, n: number, step: { readonly reactionId: 
     n,
     reactionId: step.reactionId,
     reactionName: reaction?.name ?? step.reactionId,
+    outcomeId: step.outcomeId ?? '',
     from: step.from,
     to: step.to,
     arrow: arrowTextOf(parts),
@@ -109,6 +119,7 @@ export function routeViewOf(route: FoundRoute, ctx: ProjectionContext): RouteVie
   const first = route.steps[0];
   return {
     key: route.key,
+    found: route.steps.map((step) => ({ reactionId: step.reactionId, outcomeId: step.outcomeId, conditionVariantIds: [...step.conditionVariantIds] })),
     heading: routeSizeWords(route.steps.length, first === undefined ? undefined : nameOf(first.carriedIn)),
     steps: route.steps.map((step, index) => stepOf(ctx, index + 1, { reactionId: step.reactionId, outcomeId: step.outcomeId, from: nameOf(step.carriedIn), to: nameOf(step.carriedOut), warnings: step.warnings })),
   };

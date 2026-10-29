@@ -51,3 +51,12 @@ describe('blankDraft caveat (step 6.6b part 5)', () => {
     expect(String(draft?.id)).toMatch(/^cav/);
   });
 });
+
+describe('blankDraft route (7.2b C1)', () => {
+  it('has an empty name, the purpose "user", no steps, no target and no concepts', () => {
+    const draft = blankDraft('route', ctx);
+    expect(draft).toMatchObject({ kind: 'route', name: '', purpose: 'user', steps: [], conceptIds: [], tags: [], citations: [] });
+    expect(draft).not.toHaveProperty('target');
+    expect(String(draft?.id)).toMatch(/^rte/);
+  });
+});

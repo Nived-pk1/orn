@@ -110,7 +110,7 @@ test.describe('desktop', () => {
     const id = await card.getAttribute('data-reaction-id');
     await card.getByRole('button').first().click();
     await expect(record(page)).toHaveAttribute('data-record-id', id as string);
-    for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+    for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate', 'Save as route', 'New route']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
     const editors = editorChunkNames();
     expect(scripts.filter((name) => editors.includes(name) || /^(editor-host|editor-session)-/.test(name)), 'editor chunks requested').toEqual([]);
     expect(await axeProblems(page)).toEqual([]);

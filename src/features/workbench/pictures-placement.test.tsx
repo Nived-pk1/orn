@@ -25,6 +25,7 @@ const AFTER: Readonly<Record<string, string>> = {
   named_reaction: 'shared',
   concept: 'shared',
   caveat: 'statement',
+  route: 'description',
   mechanism: 'summary',
 };
 

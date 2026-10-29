@@ -4,6 +4,7 @@
  * result never; a saved search is made again when the view opens). Nothing here knows chemistry: route search, the card and the words are
  * the core's. Read-only: nothing edits a record, and a found route is not saved here.
  */
+import { useLayoutMode } from '@/ui/hooks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import { createDescriber, createScopeOf, directPrecursors, noRouteWords, routeCountWords, truncationWords, type ProjectionContext, type RouteSearchResult } from '@/core/graph';
@@ -12,7 +13,7 @@ import { LiveRegion } from '@/ui/primitives';
 import { asChoice } from '@/ui/state';
 import type { PrecursorPorts } from './contracts';
 import { DirectBlock } from './direct-block';
-import { outsideReactionIds, pruneChoices, queryOf, routeViewOf, savedRoutesFor } from './model';
+import { outsideReactionIds, pruneChoices, queryOf, routeViewOf, savedMatchOf, savedRoutesFor, type RouteView } from './model';
 import { RouteCard } from './route-card';
 import { RoutePanel } from './route-panel';
 import { SubstanceSearch } from './substance-search';
@@ -32,6 +33,7 @@ const reactions = (n: number): string => (n === 1 ? '1 reaction' : `${n} reactio
 
 export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
   const { ports } = props;
+  const phone = useLayoutMode() === 'phone';
   const store = ports.ui.precursors;
   const target = useStore(store, (s) => s.target);
   const startFrom = useStore(store, (s) => s.startFrom);
@@ -116,6 +118,13 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
   const direct = useMemo(() => (target === null ? null : directPrecursors(ctx, target, ctx.scopeOf)), [ctx, target]);
   const saved = useMemo(() => (target === null ? [] : savedRoutesFor(target, ctx)), [ctx, target]);
 
+  const foundExtras = (route: RouteView): { savedAs?: { name: string; open: () => void }; onSave?: () => void } => {
+    const match = savedMatchOf(route, saved);
+    if (match !== undefined && ports.openRoute !== undefined) return { savedAs: { name: match.name ?? match.key, open: () => ports.openRoute?.(match.key) } };
+    const steps = route.found;
+    if (ports.saveAsRoute !== undefined && target !== null && steps !== undefined) return { onSave: () => ports.saveAsRoute?.({ steps, target }) };
+    return {};
+  };
   const found = outcome.kind === 'done' ? outcome.result.routes.map((route) => routeViewOf(route, ctx)) : [];
   const resultLine =
     outcome.kind === 'done' ? (outcome.result.routes.length === 0 ? noRouteWords(outcome.targetName, outcome.maxSteps) : routeCountWords(outcome.result.routes.length)) : outcome.kind === 'failed' ? outcome.message : '';
@@ -124,7 +133,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
   useEffect(() => setSaid((was) => (was.message === line ? was : { message: line, serial: was.serial + 1 })), [line]);
 
   return (
-    <section className={styles.view} aria-label="Precursors">
+    <section className={styles.view} aria-label="Precursors" data-layout={phone ? 'phone' : 'desktop'}>
       <header className={styles.header}>
         <h2 className={styles.title}>Make a compound</h2>
       </header>
@@ -175,7 +184,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
               {found.length === 0 ? null : (
                 <ul className={styles.routes} aria-label="Routes">
                   {found.map((route) => (
-                    <RouteCard key={route.key} route={route} ports={ports} selected={selected} />
+                    <RouteCard key={route.key} route={route} ports={ports} selected={selected} {...foundExtras(route)} />
                   ))}
                 </ul>
               )}

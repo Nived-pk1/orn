@@ -75,6 +75,8 @@ export interface RecordPickerPort {
   componentRefusal?(owner: string, candidate: { readonly kind: PickKind; readonly id: string }): string | undefined;
   /** The profiles of a reagent (ID and label), in order, for a participant's profile choice; empty when the reagent has none or does not exist. */
   profilesOf?(reagentId: string): readonly { readonly id: string; readonly label: string }[];
+  /** The outcomes (in the card's words) and the condition variants of a reaction, in the record's order, for a route step's choices (7.2b); undefined when the reaction does not exist. */
+  partsOfReaction?(reactionId: string): { readonly outcomes: readonly { readonly id: string; readonly words: string }[]; readonly variants: readonly { readonly id: string; readonly label: string }[] } | undefined;
   /** Whether this species is assigned to this class (its `classIds`); a slot picker offers members first (step 6.7a). */
   memberOf?(classId: string, speciesId: string): boolean;
   /** How many records of this kind the dataset has ("No sources yet" needs it). */

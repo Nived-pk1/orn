@@ -10,6 +10,7 @@ import type { ParentKind, PickKind, RecordChoice, RecordPickerPort } from '@/fea
 import { hierarchyParentGuard, reagentComponentGuard } from '@/core/editing';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import { createScopeOf } from '@/core/graph/scope';
+import { selectivityWordOf } from '@/core/graph';
 import { RELATIONSHIP_TYPE_SPECS, type CanonicalState, type ChemicalClass } from '@/core/schema';
 import type { SearchService } from '@/workers/search';
 import type { ActiveExam } from '@/ui/state';
@@ -111,6 +112,25 @@ export function createRecordPicker(deps: RecordPickerDeps): RecordPickerPort {
     profilesOf(reagentId) {
       const reagent = deps.state().records.reagent[reagentId as never];
       return reagent === undefined ? [] : reagent.profiles.map((profile) => ({ id: profile.id, label: profile.label }));
+    },
+    partsOfReaction(reactionId) {
+      const reaction = deps.state().records.reaction[reactionId as never];
+      if (reaction === undefined) return undefined;
+      const state = deps.state();
+      const refName = (ref: { readonly kind: string; readonly id: string }): string => {
+        const table = state.records[ref.kind as 'species'] as Readonly<Record<string, { readonly names?: { readonly canonical: string }; readonly name?: string }>> | undefined;
+        const record = table !== undefined && Object.hasOwn(table, ref.id) ? table[ref.id] : undefined;
+        return record?.names?.canonical ?? record?.name ?? ref.id;
+      };
+      return {
+        outcomes: reaction.outcomes.map((outcome, index) => {
+          const mains = outcome.products.filter((product) => product.role === 'main').map((product) => refName(product.ref));
+          const word = selectivityWordOf(outcome.selectivity);
+          const products = mains.length === 0 ? (outcome.label ?? `Outcome ${index + 1}`) : mains.join(' + ');
+          return { id: outcome.id, words: word === null ? products : `${products} (${word})` };
+        }),
+        variants: reaction.conditionVariants.map((variant, index) => ({ id: variant.id, label: variant.label ?? `Variant ${index + 1}` })),
+      };
     },
     memberOf: (classId, speciesId) => deps.state().records.species[speciesId as never]?.classIds.includes(classId as never) === true,
     count: (kind) => Object.keys(deps.state().records[kind]).length,

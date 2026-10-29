@@ -132,8 +132,8 @@ test.describe('Studio, desktop', () => {
     await openPrecursors(page);
     await pick(page, 'Compound to make', 'caprolactam', 'Choose ε-Caprolactam');
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');
-    // axe is NOT run while the dimmed outside card is on screen: its faded scheme (opacity .55 in the navigator's card, as on the family page
-    // and in Reactions) fails color-contrast. 7.1b's Reactions spec only ran axe after "Only" had hidden those cards. REVIEW REQUIRED (7.2a).
+    // 7.2b A2: only the drawings fade, so the text keeps its contrast and axe runs on this screen too
+    expect(await axeProblems(page)).toEqual([]);
     await search(page).click();
     await expect(found(page).getByText('1 route found')).toBeVisible();
     await view(page).getByRole('checkbox', { name: /^Only .* reactions$/ }).check();

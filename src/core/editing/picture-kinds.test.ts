@@ -5,11 +5,11 @@ import { assetRoleOfPictureKind, isPictureKind, PICTURE_KINDS, picturesOf } from
 
 describe('PICTURE_KINDS', () => {
   it('is exactly the nine kinds the reviewer named, in one constant', () => {
-    expect([...PICTURE_KINDS]).toEqual(['species', 'class', 'reagent', 'reaction', 'transformation', 'named_reaction', 'concept', 'caveat', 'mechanism']);
+    expect([...PICTURE_KINDS]).toEqual(['species', 'class', 'reagent', 'reaction', 'transformation', 'named_reaction', 'concept', 'caveat', 'mechanism', 'route']);
   });
-  it('offers none of the other kinds (route is decided in 7.2)', () => {
+  it('offers none of the other kinds (route joined in 7.2b)', () => {
     for (const kind of RECORD_KINDS.filter((one) => !(PICTURE_KINDS as readonly string[]).includes(one))) expect(isPictureKind(kind)).toBe(false);
-    for (const kind of ['route', 'relationship', 'exam', 'exam_version', 'topic', 'topic_mapping', 'exam_relevance', 'reference', 'asset', 'navigator_anchor', 'reaction_scheme', 'view_preset', 'entity_display', 'banana']) expect(isPictureKind(kind)).toBe(false);
+    for (const kind of ['relationship', 'exam', 'exam_version', 'topic', 'topic_mapping', 'exam_relevance', 'reference', 'asset', 'navigator_anchor', 'reaction_scheme', 'view_preset', 'entity_display', 'banana']) expect(isPictureKind(kind)).toBe(false);
   });
 });
 
@@ -25,6 +25,7 @@ describe('the asset role of a picture', () => {
       named_reaction: 'reference_image',
       concept: 'reference_image',
       caveat: 'reference_image',
+      route: 'reference_image',
     };
     for (const kind of PICTURE_KINDS) expect(assetRoleOfPictureKind(kind)).toBe(expected[kind]);
   });

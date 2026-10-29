@@ -52,6 +52,10 @@ export interface PrecursorPorts {
   findRoutes(query: RouteQuery, signal?: AbortSignal): Promise<RoutesAnswer>;
   /** Opens the Reactions view filtered to this compound as a Product (the by-product line). */
   showReactionsMaking(ref: RecordRef): void;
+  /** Studio only: opens the route editor on a NEW draft filled from a found route (nothing is saved). Absent in Study: no "Save as route" button. */
+  saveAsRoute?(route: { readonly steps: readonly { readonly reactionId: string; readonly outcomeId: string; readonly conditionVariantIds: readonly string[] }[]; readonly target: RecordRef }): void;
+  /** Shows a saved route in the inspector. */
+  openRoute?(routeId: string): void;
   /** Selects a reaction as a family-page card does: the inspector shows it. */
   select(reactionId: string): void;
   renderCard(args: CardArgs): ReactNode;

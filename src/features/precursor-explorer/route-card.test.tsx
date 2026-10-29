@@ -13,7 +13,7 @@ import { RouteCard } from './route-card';
 afterEach(cleanup);
 
 const ports: Pick<PrecursorPorts, 'select' | 'renderCard'> = { select: vi.fn(), renderCard: () => null };
-const step = { n: 1, reactionId: 'rxn_x', reactionName: 'Hydration', from: 'Ethene', to: 'Ethanol', arrow: 'H3O+; 298 K', arrowAbove: [{ text: 'H3O+', kind: 'formula' as const }], arrowBelow: [{ text: '298 K', kind: 'condition' as const }], warnings: [] };
+const step = { n: 1, reactionId: 'rxn_x', reactionName: 'Hydration', outcomeId: '', from: 'Ethene', to: 'Ethanol', arrow: 'H3O+; 298 K', arrowAbove: [{ text: 'H3O+', kind: 'formula' as const }], arrowBelow: [{ text: '298 K', kind: 'condition' as const }], warnings: [] };
 const found: RouteView = { key: 'k1', heading: '1 step from Ethene', steps: [step] };
 const saved: RouteView = { key: 'rte_a', name: 'Ethene to ethanol', heading: '1 step', steps: [step] };
 

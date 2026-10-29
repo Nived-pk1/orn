@@ -8,7 +8,9 @@ import { PrecursorsView, type PrecursorPorts } from '@/features/precursor-explor
 import { ReactionCardHost, useNavigator } from '@/features/navigator';
 import type { RecordRef } from '@/core/schema';
 import type { ExplorerFilter } from '@/ui/state';
+import { EDITING } from '@/app/edition';
 import { useApp } from './context';
+import { useEditors } from './editors-access';
 
 /** A route ends at, and starts from, a species or a class (never a reagent). */
 const SUBSTANCE_KINDS = ['species', 'class'] as const;
@@ -17,7 +19,8 @@ const CHANNEL = 'precursors';
 
 export function PrecursorsHost(props: { readonly onReactions: (filter: Partial<ExplorerFilter>) => void }) {
   const { onReactions } = props;
-  const { services } = useApp();
+  const { services, inspector } = useApp();
+  const editors = useEditors();
   const { ports } = useNavigator();
   const precursors = useMemo<PrecursorPorts>(
     () => ({
@@ -30,12 +33,21 @@ export function PrecursorsHost(props: { readonly onReactions: (filter: Partial<E
       },
       findRoutes: (query, signal) => services.routes(query, signal),
       showReactionsMaking: (ref) => onReactions({ substanceIds: [ref.id], usedAs: 'product' }),
+      openRoute: (routeId) => inspector.ui.inspector.getState().open({ kind: 'route', id: routeId }),
+      // Studio only: the seed is made by a lazy module of the editing code, which the Study build never contains
+      ...(EDITING && editors !== null
+        ? {
+            saveAsRoute: (route) => {
+              void import('@/core/editing/route-seed').then(({ routeSeedOf }) => editors.startNew('route', routeSeedOf(route, (prefix) => services.drafts.newId(prefix))));
+            },
+          }
+        : {}),
       select: (reactionId) => ports.ui.family.getState().selectReaction(reactionId),
       renderCard: (args) => <ReactionCardHost reactionId={args.reactionId} selected={args.selected} onSelect={args.onSelect} fallback={args.fallback} {...(args.outside === undefined ? {} : { outside: args.outside })} />,
       timers: ports.timers,
       log: ports.log,
     }),
-    [ports, services, onReactions],
+    [ports, services, onReactions, inspector, editors],
   );
   return <PrecursorsView ports={precursors} />;
 }

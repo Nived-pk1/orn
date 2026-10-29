@@ -38,6 +38,7 @@ export const NEW_ENTRIES: readonly NewEntry[] = [
   entry('transformation', 'New transformation', ['create', 'add', 'conversion', 'functional group', 'class to class']),
   entry('relationship', 'New relationship', ['create', 'add', 'link', 'commonly confused', 'prerequisite', 'reverse of', 'competes']),
   entry('caveat', 'New caveat', ['create', 'add', 'exception', 'trap', 'limitation', 'common mistake', 'special case']),
+  entry('route', 'New route', ['create', 'add', 'synthesis', 'steps', 'multi-step', 'sequence', 'how to make']),
   entry('topic', 'New topic', ['create', 'add', 'syllabus', 'chapter', 'subject', 'section', 'curriculum']),
   entry('topic_mapping', 'New topic mapping', ['create', 'add', 'map', 'place', 'syllabus', 'topic', 'curriculum']),
   entry('exam_relevance', 'New exam relevance', ['create', 'add', 'exam', 'scope', 'official', 'outside', 'enrichment', 'syllabus']),

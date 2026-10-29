@@ -5,7 +5,7 @@
  */
 import type { Asset, AssetRole, CanonicalState, RecordRef } from '../schema';
 
-export const PICTURE_KINDS = ['species', 'class', 'reagent', 'reaction', 'transformation', 'named_reaction', 'concept', 'caveat', 'mechanism'] as const;
+export const PICTURE_KINDS = ['species', 'class', 'reagent', 'reaction', 'transformation', 'named_reaction', 'concept', 'caveat', 'mechanism', 'route'] as const;
 export type PictureKind = (typeof PICTURE_KINDS)[number];
 
 export const isPictureKind = (kind: string): kind is PictureKind => (PICTURE_KINDS as readonly string[]).includes(kind);
@@ -20,6 +20,7 @@ const ROLE_OF: Readonly<Record<PictureKind, AssetRole>> = {
   named_reaction: 'reference_image',
   concept: 'reference_image',
   caveat: 'reference_image',
+  route: 'reference_image',
 };
 
 export const assetRoleOfPictureKind = (kind: PictureKind): AssetRole => ROLE_OF[kind];

@@ -20,7 +20,7 @@ afterEach(cleanup);
 
 type Saved = Partial<Pick<PrecursorsState, 'target' | 'startFrom' | 'maxSteps' | 'onlyListed' | 'onlyInScope' | 'searched'>>;
 
-function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['findRoutes']; readonly state?: CanonicalState } = {}) {
+function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['findRoutes']; readonly state?: CanonicalState; readonly withSave?: boolean } = {}) {
   const state = over.state ?? demoState();
   const store = createCanonicalStore({ initial: state, validateInitial: false });
   const rig = navigatorRig(store);
@@ -28,6 +28,8 @@ function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['
   const explorer = createExplorerStore();
   const select = vi.fn();
   const openMaking = vi.fn();
+  const saveAsRoute = vi.fn();
+  const openRoute = vi.fn();
   const asked: RouteQuery[] = [];
   const ctx = contextOf(state);
   const ports: PrecursorPorts = {
@@ -48,6 +50,7 @@ function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['
       }),
     select,
     showReactionsMaking: openMaking,
+    ...(over.withSave === true ? { saveAsRoute, openRoute } : {}),
     renderCard: (args) => {
       const card = reactionCard(ctx, args.reactionId);
       if ('missing' in card) return args.fallback(card.reason);
@@ -62,7 +65,7 @@ function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['
     log: vi.fn(),
   };
   render(<PrecursorsView ports={ports} />);
-  return { ports, precursors, explorer, select, openMaking, asked, rig, state, ctx };
+  return { ports, precursors, explorer, select, openMaking, saveAsRoute, openRoute, asked, rig, state, ctx };
 }
 
 const PROPANOL = { kind: 'species', id: 'spc_propan-2-ol' } as const;
@@ -155,6 +158,40 @@ describe('by-products (7.2b A3)', () => {
     cleanup();
     setup({ target: { kind: 'species', id: 'spc_target' } }, { state: world(made('mm', 'main')) });
     expect(screen.queryByText(/Also formed as a by-product/)).toBeNull();
+  });
+});
+
+describe('Save as route and "Saved as" (7.2b C2, C3)', () => {
+  it('Studio: each found route that is not saved yet has "Save as route" (the demo saves one of the two); it hands the steps (reaction, outcome, variants) and the target over, and saves nothing itself', async () => {
+    const { saveAsRoute } = setup({ target: PROPANOL, startFrom: [ETHANOL] }, { withSave: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await screen.findByText('2 routes found');
+    const buttons = screen.getAllByRole('button', { name: 'Save as route' });
+    expect(buttons).toHaveLength(1);
+    expect(screen.getAllByText(/Saved as/)).toHaveLength(1);
+    fireEvent.click(buttons[0] as HTMLElement);
+    expect(saveAsRoute).toHaveBeenCalledTimes(1);
+    const arg = saveAsRoute.mock.calls[0]?.[0] as { target: unknown; steps: { reactionId: string; outcomeId: string; conditionVariantIds: string[] }[] };
+    expect(arg.target).toEqual(PROPANOL);
+    expect(arg.steps).toHaveLength(2);
+    expect(arg.steps.every((step) => step.reactionId.startsWith('rxn_') && step.outcomeId !== '' && Array.isArray(step.conditionVariantIds))).toBe(true);
+  });
+
+  it('Study (no such port): no Save as route button anywhere', async () => {
+    setup({ target: PROPANOL, startFrom: [ETHANOL] });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await screen.findByText('2 routes found');
+    expect(screen.queryByRole('button', { name: 'Save as route' })).toBeNull();
+  });
+
+  it('a found route with the same steps as a saved route says "Saved as <name>" (a link to it) instead of the button', async () => {
+    const { openRoute } = setup({ target: PHENOL, startFrom: [{ kind: 'species', id: 'spc_aniline' }] }, { withSave: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    const found = await screen.findByRole('region', { name: 'Routes found' });
+    const link = await within(found).findByRole('button', { name: 'Aniline → phenol' });
+    expect(within(found).getByText(/Saved as/)).toBeTruthy();
+    fireEvent.click(link);
+    expect(openRoute).toHaveBeenCalledWith('rte_aniline-to-phenol');
   });
 });
 

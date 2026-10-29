@@ -58,7 +58,7 @@ const undoDepth = (r: Rig): number => r.store.historyLabels().undo.length;
 
 describe('the asset role follows the kind of the record', () => {
   it('every PICTURE_KINDS kind takes a picture with its own role, attached to that record, and the record is not changed', async () => {
-    const expected: Record<string, string> = { mechanism: 'mechanism_image', reaction: 'reaction_image', reagent: 'reagent_image', species: 'structure_image', class: 'structure_image', transformation: 'reference_image', named_reaction: 'reference_image', concept: 'reference_image', caveat: 'reference_image' };
+    const expected: Record<string, string> = { mechanism: 'mechanism_image', reaction: 'reaction_image', reagent: 'reagent_image', species: 'structure_image', class: 'structure_image', transformation: 'reference_image', named_reaction: 'reference_image', concept: 'reference_image', caveat: 'reference_image', route: 'reference_image' };
     for (const kind of PICTURE_KINDS) {
       const r = rig();
       const table = r.store.getState().records[kind] as Record<string, { id: string }>;
