@@ -1,12 +1,16 @@
 /**
  * The data flows as the app sees them (7.2b A1). Every flow is an async function, so the services behind them (import, restore, export,
  * and the io and compute-flow code they pull in) live in `flows-core.ts`, a lazy chunk fetched by the first call and built once; nothing
- * of it is in the first paint. A chunk that cannot be fetched rejects that call (the next call tries again).
+ * of it is in the first paint. A chunk that cannot be fetched is a VALUE, not an exception (errors across module boundaries are values):
+ * the flow answers `{ ok: false, code: 'LOAD_FAILED', message }` in words, nothing is remembered, and the next call tries again.
  */
-import type { Flows } from './flow-types';
+import type { Flows, FlowRefusal } from './flow-types';
 import type { FlowsOptions } from './flows-core';
 
 export type { FlowsOptions } from './flows-core';
+
+export const LOAD_FAILED_WORDS = 'This part of the app could not load. Check your connection and reload the page.';
+const REFUSED: FlowRefusal = { ok: false, code: 'LOAD_FAILED', message: LOAD_FAILED_WORDS };
 
 export function createFlows(options: FlowsOptions): Flows {
   let loaded: Promise<Flows> | undefined;
@@ -20,14 +24,23 @@ export function createFlows(options: FlowsOptions): Flows {
     );
     return loaded;
   };
+  /** Runs `run` on the loaded flows, or answers `failed` when the chunk cannot be loaded. */
+  const through = async <T, F>(run: (flows: Flows) => Promise<T>, failed: F): Promise<T | F> => {
+    try {
+      return await run(await flows());
+    } catch (error) {
+      if (loaded !== undefined) throw error; // the chunk loaded: a real failure inside a flow is not hidden here
+      return failed;
+    }
+  };
   return {
-    preview: async (source, fileName, request, flow) => (await flows()).preview(source, fileName, request, flow),
-    revise: async (batchId, request, flow) => (await flows()).revise(batchId, request, flow),
-    cancel: async (batchId) => (await flows()).cancel(batchId),
-    apply: async (batchId, plan, flow) => (await flows()).apply(batchId, plan, flow),
-    undo: async (flow) => (await flows()).undo(flow),
-    lastImport: async () => (await flows()).lastImport(),
-    restore: async (snapshotId, flow) => (await flows()).restore(snapshotId, flow),
-    export: async (options, format, flow) => (await flows()).export(options, format, flow),
+    preview: (source, fileName, request, flow) => through((f) => f.preview(source, fileName, request, flow), REFUSED),
+    revise: (batchId, request, flow) => through((f) => f.revise(batchId, request, flow), REFUSED),
+    cancel: (batchId) => through((f) => f.cancel(batchId), { cancelled: false }),
+    apply: (batchId, plan, flow) => through((f) => f.apply(batchId, plan, flow), REFUSED),
+    undo: (flow) => through((f) => f.undo(flow), REFUSED),
+    lastImport: () => through((f) => f.lastImport(), undefined),
+    restore: (snapshotId, flow) => through((f) => f.restore(snapshotId, flow), REFUSED),
+    export: (options, format, flow) => through((f) => f.export(options, format, flow), REFUSED),
   };
 }

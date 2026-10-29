@@ -22,9 +22,9 @@ export interface FlowRefusal {
   readonly ok: false;
   /**
    * `BUSY`: another operation is running (`busyWith`). `READ_ONLY`: a follower or read-only tab (export still works).
-   * `WORKER_DOWN`: the compute worker cannot do it. `CANCELLED`: the signal was aborted before the commit.
+   * `LOAD_FAILED`: the part of the app that does the flow could not be loaded (7.2b). `WORKER_DOWN`: the compute worker cannot do it. `CANCELLED`: the signal was aborted before the commit.
    */
-  readonly code: 'BUSY' | 'READ_ONLY' | 'CANCELLED' | 'WORKER_DOWN';
+  readonly code: 'BUSY' | 'READ_ONLY' | 'CANCELLED' | 'WORKER_DOWN' | 'LOAD_FAILED';
   readonly message: string;
   readonly busyWith?: OperationKind;
   /** `WORKER_DOWN` only. */
