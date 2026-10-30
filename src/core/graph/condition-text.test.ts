@@ -230,8 +230,8 @@ describe('on the arrow: the demo, the variant rule, the cap and the single `more
       const scheme: ReactionScheme = { ...(Object.values(DEMO.records.reaction_scheme)[0] as ReactionScheme), id: 'rsc_x' as ReactionScheme['id'], reactionId: 'rxn_x' as Reaction['id'], placements: [], showStageNumbers: true };
       const reaction = reactionOf([participant(1, 'reagent'), participant(2, 'reagent')], [stage(1, [1], of({ anhydrous: true })), stage(2, [2], of({ medium: 'acidic' }), 'workup')]);
       const text = arrowTextOf(reaction, { ...ctx, schemes: [scheme] });
-      expect(parts(text.above)).toEqual(['separator:1.', 'name:name-rgt_x1', 'separator:2.', 'name:name-rgt_x2']);
-      expect(parts(text.below)).toEqual(['separator:1.', 'condition:anhydrous', 'separator:2.', 'condition:acidic medium']);
+      expect(parts(text.above)).toEqual(['separator:(i)', 'name:name-rgt_x1', 'separator:(ii)', 'name:name-rgt_x2']);
+      expect(parts(text.below)).toEqual(['separator:(i)', 'condition:anhydrous', 'separator:(ii)', 'condition:acidic medium']);
     });
 
     it('a reaction without stages writes no condition (a stage carries the parameters)', () => {

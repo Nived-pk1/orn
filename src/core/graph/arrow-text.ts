@@ -10,7 +10,10 @@
  * reagent in the arrow's eyes). Names (step 5.5a review, item e; replaces the 5.4a provisional choice): `originalText` wins; a
  * SOLVENT is written by its name; any other species, and a reagent backed by ONE species, by its formula when it has at most
  * `MAX_FORMULA_CHARS` characters, else by its name; a reagent without a species by its name. A length rule, never a name rule.
- * A stage number ("1.") is a separator part when the scheme says `showStageNumbers`.
+ * Stages (7.3a D1): a reaction with two or more stages numbers them "(i)", "(ii)" ... on each side, as a separator part before what that stage
+ * puts on the side; a stage with nothing on a side has no numeral there. The scheme's `showStageNumbers` is no longer read here. A reactant
+ * that is not the carried substrate is written above the arrow, first in its stage (D2): the card draws only the carried substrate, the
+ * full equation (`omitReactants`) draws every reactant itself.
  * Conditions (step 5.5a part 3, item l; the 5.4b review, decision 5): on the BELOW side, after the participant parts of the same stage;
  * the stage's own fields, overridden field by field by the arrow's condition variant only when the arrow has exactly ONE variant and it
  * overrides that stage (`condition-text.ts` has the wording). At most `MAX_CONDITION_PARTS` condition parts a side, and each side ends
@@ -43,7 +46,7 @@ export interface ArrowTextContext {
    * formula is present exactly when the reagent is backed by ONE species (that species' formula); a reagent's own display text is not it.
    */
   readonly describe: (ref: RecordRef) => { readonly name: string; readonly formula?: string } | undefined;
-  /** False for a record whose `entity_display` says it is never a node. */
+  /** False for a record whose `entity_display` says it is never a node. Kept for callers; since 7.3a a reactant is written on the arrow whenever it is not the carried substrate. */
   readonly shownAsNode: (ref: RecordRef) => boolean;
   /** True: a reactant is never written on the arrow (the full equation lists every reactant on the left, water included). */
   readonly omitReactants?: boolean;
@@ -58,6 +61,33 @@ export interface ArrowTextContext {
    */
   readonly omitFormulas?: readonly string[];
 }
+
+const ROMAN: readonly (readonly [number, string])[] = [[10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']];
+/** A stage's numeral: (i), (ii), (iii), (iv) ... in lower-case Roman, as a chemistry scheme writes them. */
+export function stageNumeral(index: number): string {
+  let rest = index;
+  let text = '';
+  for (const [value, letters] of ROMAN) {
+    while (rest >= value) {
+      text += letters;
+      rest -= value;
+    }
+  }
+  return `(${text})`;
+}
+
+/** What separates two neighbouring parts in text: a space around a stage numeral, else a comma. ONE rule for every caller. */
+export const joinerOf = (previous: ArrowTextPart, current: ArrowTextPart): string => (previous.kind === 'separator' || current.kind === 'separator' ? ' ' : ', ');
+
+/** One side of an arrow as plain text: "(i) CH3MgBr (ii) H3O+", "conc. H2SO4, 443 K". */
+export const arrowPartsText = (parts: readonly ArrowTextPart[]): string => parts.map((part, index) => `${index === 0 ? '' : joinerOf(parts[index - 1] as ArrowTextPart, part)}${part.text}`).join('');
+
+/**
+ * An arrow's two sides as ONE piece of text (7.3a D3): the route step's conditions line and the full equation's sentence. Each side is
+ * `arrowPartsText`; the sides are joined by `between` (", " in a sentence, "; " on a line). Numbered stages keep their numerals, so
+ * "(i) CH3MgBr (ii) H3O+; (i) diethyl ether (ii) acidic medium" reads as the card does.
+ */
+export const arrowWordsOf = (arrow: ArrowText, between: ', ' | '; ' = '; '): string => [arrowPartsText(arrow.above), arrowPartsText(arrow.below)].filter((text) => text !== '').join(between);
 
 /** A formula for comparing: subscript digits as digits, no spaces. */
 export function normalizeFormula(formula: string): string {
@@ -168,7 +198,7 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
     const at = reaction.stages.findIndex((s) => s.participantIds.includes(id));
     return at < 0 ? reaction.stages.length : at;
   };
-  const numbered = scheme?.showStageNumbers === true && reaction.stages.length > 1;
+  const numbered = reaction.stages.length > 1;
   const placed: Placed[] = [];
   for (const p of reaction.participants) {
     if (p.id === context.carriedParticipantId) continue;
@@ -179,7 +209,8 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
     if (position === 'hidden') continue;
     let side: Side | undefined = position === 'above_arrow' ? 'above' : position === 'below_arrow' ? 'below' : undefined;
     let rank = 1;
-    if (side === undefined && !context.shownAsNode(p.ref)) {
+    if (side === undefined) {
+      if (context.omitReactants === true) continue; // the full equation draws it on the left
       side = UNDRAWN_REACTANT_SIDE;
       rank = 0;
     }
@@ -191,7 +222,7 @@ export function arrowTextOf(reaction: Reaction, context: ArrowTextContext): Arro
   const sides: Record<Side, Sourced[]> = { above: [], below: [] };
   const lastStage: Record<Side, number> = { above: -1, below: -1 };
   const push = (side: Side, stage: number, entry: Sourced): void => {
-    if (numbered && stage < reaction.stages.length && stage !== lastStage[side]) sides[side].push({ part: { text: `${stage + 1}.`, kind: 'separator' }, from: entry.from });
+    if (numbered && stage < reaction.stages.length && stage !== lastStage[side]) sides[side].push({ part: { text: stageNumeral(stage + 1), kind: 'separator' }, from: entry.from });
     lastStage[side] = stage;
     sides[side].push(entry);
   };

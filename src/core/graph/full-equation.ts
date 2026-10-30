@@ -18,7 +18,7 @@ import type { CanonicalState, ConditionVariantId, Outcome, ParticipantId, Reacti
 import type { TermSubstance } from './equation-term';
 import { createDescriber } from './family/describe';
 import { selectivityWordOf, type SelectivityWord } from './selectivity-word';
-import { appliesTo, arrowTextOf, type ArrowText, type ArrowTextContext } from './arrow-text';
+import { appliesTo, arrowTextOf, arrowWordsOf, type ArrowText, type ArrowTextContext } from './arrow-text';
 import { groupOutcomes } from './outcome-groups';
 
 export interface EquationTerm {
@@ -80,10 +80,7 @@ const refKey = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
 const andList = (items: readonly string[]): string => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`);
 
 /** The arrow's words as the card joins them: ", " between parts, a space after a stage number. */
-const arrowWords = (arrow: ArrowText): string => {
-  const parts = [...arrow.above, ...arrow.below].filter((part) => part.kind !== 'more');
-  return parts.map((part, index) => `${index === 0 ? '' : parts[index - 1]?.kind === 'separator' ? ' ' : ', '}${part.text}`).join('');
-};
+const arrowWords = (arrow: ArrowText): string => arrowWordsOf({ above: arrow.above.filter((part) => part.kind !== 'more'), below: arrow.below.filter((part) => part.kind !== 'more') }, ', ');
 
 export type GroupContext = Omit<ArrowTextContext, 'conditionVariantIds' | 'carriedParticipantId' | 'omitReactants'> & { readonly substanceOf?: (ref: RecordRef) => TermSubstance };
 

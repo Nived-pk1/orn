@@ -3,7 +3,7 @@
  * Both are total functions that never throw. Neither is chemistry: typography only, so the characters are never
  * changed, added or dropped (the runs of `formulaRuns` joined equal the input exactly).
  */
-import type { ArrowTextPart } from '@/core/graph/arrow-text';
+import { joinerOf, type ArrowTextPart } from '@/core/graph/arrow-text';
 import type { RichNode } from '@/core/text';
 import type { FormattedText, TextRun } from './contracts';
 
@@ -178,7 +178,7 @@ export function partsToRuns(parts: readonly ArrowTextPart[]): FormattedText {
   const out: TextRun[] = [];
   parts.forEach((part, index) => {
     const previous = parts[index - 1];
-    if (previous !== undefined) push(out, previous.kind === 'separator' ? ' ' : ', ');
+    if (previous !== undefined) push(out, joinerOf(previous, part));
     for (const run of part.kind === 'formula' ? formulaRuns(part.text) : plainRuns(part.text)) push(out, run.text, run);
   });
   return out;

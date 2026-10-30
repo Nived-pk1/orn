@@ -3,6 +3,7 @@
  * and dropping saved choices that name nothing any more. Pure; the chemistry is the core's (route search, the card). Nothing here is stored.
  */
 import {
+  arrowWordsOf,
   createDescriber,
   DEFAULT_ROUTE_MAX_ROUTES,
   DEFAULT_TRAVERSAL_LIMITS,
@@ -90,10 +91,6 @@ function arrowPartsOf(ctx: ProjectionContext, reactionId: string, outcomeId: str
   return group === undefined ? { above: [], below: [] } : group.arrowText;
 }
 
-function arrowTextOf(parts: { readonly above: readonly ArrowTextPart[]; readonly below: readonly ArrowTextPart[] }): string {
-  const side = (list: readonly ArrowTextPart[]): string => list.filter((part) => part.kind !== 'separator').map((part) => part.text.trim()).join(', ');
-  return [side(parts.above), side(parts.below)].filter((text) => text !== '').join('; ');
-}
 
 function stepOf(ctx: ProjectionContext, n: number, step: { readonly reactionId: string; readonly outcomeId?: string | undefined; readonly from: string; readonly to: string; readonly warnings?: readonly string[] }): StepView {
   const reaction = ctx.state.records.reaction[step.reactionId as never] as Reaction | undefined;
@@ -105,7 +102,7 @@ function stepOf(ctx: ProjectionContext, n: number, step: { readonly reactionId: 
     outcomeId: step.outcomeId ?? '',
     from: step.from,
     to: step.to,
-    arrow: arrowTextOf(parts),
+    arrow: arrowWordsOf(parts),
     arrowAbove: parts.above,
     arrowBelow: parts.below,
     warnings: (step.warnings ?? []).map(stepWarningWords),

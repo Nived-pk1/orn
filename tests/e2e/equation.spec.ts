@@ -224,7 +224,7 @@ test('the other textbook equations: PCC, an equilibrium (ester hydrolysis) and a
   await page.getByRole('button', { name: /^Ketones\s*\d+\s*reactions?$/ }).first().click();
   const grignard = cardOf(page, /CH₃MgBr \+ propanone, then/); // the demo scheme with showStageNumbers is the propanone one
   const grignardScheme = await openEquation(grignard);
-  await expect(grignardScheme.locator('[data-equation-arrow] [data-equation-below]')).toContainText(/1\.[\s\S]*2\./); // the stages are numbered, as the card's arrow numbers them
+  await expect(grignardScheme.locator('[data-equation-arrow] [data-equation-below]')).toContainText(/\(i\)[\s\S]*\(ii\)/); // the stages are numbered (i), (ii), as the card's arrow numbers them (7.3a D1)
   await shot(page, grignard, 'equation-textbook-grignard-1280x800.png');
   await expectClean(seen);
 });

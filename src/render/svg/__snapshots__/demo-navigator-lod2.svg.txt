@@ -373,10 +373,12 @@
       </g>
       <g data-arrow-text-of="edg_1c182e6b0d66f2d2">
         <text class="_arrowText_e97cec" x="572.3333333333334" y="291.59999999999997" font-size="11" data-side="above">
-          <tspan>1. Diethyl ether</tspan>
+          <tspan>(i) CH</tspan>
+          <tspan class="_script_e97cec" dy="2.75">3</tspan>
+          <tspan dy="-2.75">MgBr, Diethyl ether</tspan>
         </text>
         <text class="_arrowText_e97cec" x="572.3333333333334" y="305.9" font-size="11" data-side="below">
-          <tspan>1. anhydrous, 2. H</tspan>
+          <tspan>(i) anhydrous (ii) H</tspan>
           <tspan class="_script_e97cec" dy="2.75">3</tspan>
           <tspan dy="-2.75">O</tspan>
           <tspan class="_script_e97cec" dy="-4.4">+</tspan>
@@ -439,7 +441,9 @@
       </g>
       <g data-arrow-text-of="edg_6f2e3faedc755975">
         <text class="_arrowText_e97cec" x="563" y="15.6" font-size="11" data-side="above">
-          <tspan>Lindlar's catalyst</tspan>
+          <tspan>H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">, Lindlar's catalyst</tspan>
         </text>
         <text class="_arrowText_e97cec" x="563" y="29.9" font-size="11" data-side="below">
           <tspan>H</tspan>
@@ -503,7 +507,9 @@
       </g>
       <g data-arrow-text-of="edg_a84f517db32c8b54">
         <text class="_arrowText_e97cec" x="1055.3333333333333" y="199.6" font-size="11" data-side="above">
-          <tspan>AlCl</tspan>
+          <tspan>CH</tspan>
+          <tspan class="_script_e97cec" dy="2.75">3</tspan>
+          <tspan dy="-2.75">COCl, AlCl</tspan>
           <tspan class="_script_e97cec" dy="2.75">3</tspan>
         </text>
         <text class="_arrowText_e97cec" x="1055.3333333333333" y="213.9" font-size="11" data-side="below">
@@ -512,7 +518,11 @@
       </g>
       <g data-arrow-text-of="edg_cb2550c19b809402">
         <text class="_arrowText_e97cec" x="572" y="561.6" font-size="11" data-side="above">
-          <tspan>H</tspan>
+          <tspan>C</tspan>
+          <tspan class="_script_e97cec" dy="2.75">2</tspan>
+          <tspan dy="-2.75">H</tspan>
+          <tspan class="_script_e97cec" dy="2.75">5</tspan>
+          <tspan dy="-2.75">OH, H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">SO</tspan>
           <tspan class="_script_e97cec" dy="2.75">4</tspan>
