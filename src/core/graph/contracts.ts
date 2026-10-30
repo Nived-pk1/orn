@@ -66,6 +66,10 @@ export interface NodeReactionCounts {
   /** Leaving, loops included (the List view's "Reactions out"). */
   readonly outAll: number;
   readonly inAll: number;
+  /** 7.3a C3: how many examples are folded under a general reaction in the same list (out, in, loops); absent: none. Every count above is CARDS. */
+  readonly outExamples?: number;
+  readonly inExamples?: number;
+  readonly loopExamples?: number;
 }
 
 export interface GraphNode {
@@ -132,6 +136,8 @@ export interface EdgeBundle {
   readonly total: number;
   /** Navigator only (step 7.2a): how many DISTINCT reactions those arrows belong to; every number that says "reactions" is this one. Absent: `total`. */
   readonly reactions?: number;
+  /** 7.3a C3: of the pair's reactions, how many are examples folded under their general reaction (not in `reactions`); absent: none. */
+  readonly examples?: number;
 }
 
 export interface Truncation {

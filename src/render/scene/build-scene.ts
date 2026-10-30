@@ -179,7 +179,7 @@ export function buildScene(projection: Projection, layoutResult: LayoutResult, o
       arrowHead: style.arrowHead,
       labelAt,
       ...arrowText(path, ports),
-      ...(path.bundled || (path.loop && !structural) ? { bundleSize: path.total } : {}),
+      ...(path.bundled || (path.loop && !structural) ? { bundleSize: path.total, ...(path.examples === undefined ? {} : { bundleExamples: path.examples }) } : {}),
       minLod: structural ? 1 : 0,
       ariaLabel: edgeAria(path, style.semantic, contents.get(path.from)?.name ?? path.from, contents.get(path.to)?.name ?? path.to, path.edges.length, style.viaMembership),
     });

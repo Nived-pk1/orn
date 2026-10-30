@@ -179,12 +179,12 @@ describe('the context menu (item g)', () => {
     const menu = await screen.findByRole('menu', { name: /^Alcohols/ });
     const items = within(menu).getAllByRole('menuitem').map((item) => item.textContent);
     expect(items.slice(0, 2)).toEqual(['Open family page', 'Show in inspector']);
-    expect(items).toContain('To Aldehydes (3 reactions)');
-    const arrow = within(menu).getByRole('menuitem', { name: 'To Aldehydes (3 reactions)' });
+    expect(items).toContain('To Aldehydes (2 reactions (+ 1 example))');
+    const arrow = within(menu).getByRole('menuitem', { name: 'To Aldehydes (2 reactions (+ 1 example))' });
     fireEvent.click(arrow);
     await waitFor(() => expect(app.navigator.ui.selection.getState().selected?.kind).toBe('edge'));
     const edgeId = app.navigator.ui.selection.getState().selected?.id as string;
-    expect(document.querySelector(`[data-edge-id="${edgeId}"]`)?.getAttribute('aria-label')).toMatch(/^Alcohols to Aldehydes, 3 reactions/);
+    expect(document.querySelector(`[data-edge-id="${edgeId}"]`)?.getAttribute('aria-label')).toMatch(/^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/);
   });
 
   it('the menu key and a right click open the menu too; a right click on an arrow offers Open at this group', async () => {

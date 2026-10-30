@@ -94,6 +94,8 @@ export interface SceneEdge {
   readonly below?: FormattedText;
   /** A bundle's TOTAL arrows (not only the drawn ones). A self-loop is an edge with `from === to`. */
   readonly bundleSize?: number;
+  /** 7.3a C3: of the reactions `bundleSize` counts as cards, how many examples are folded under them (said in words, never on the chip). */
+  readonly bundleExamples?: number;
   readonly minLod: LodLevel;
   readonly ariaLabel: string;
 }

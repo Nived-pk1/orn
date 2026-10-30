@@ -200,6 +200,24 @@
   font-size: var(--text-13);
 }
 
+/* Examples (7.3a): a closed disclosure under "Show full equation", the same look; each example is a card of its own inside it. */
+.examples {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+}
+.examples summary {
+  cursor: pointer;
+  color: var(--link, inherit);
+}
+.examples[open] > article {
+  margin-top: var(--space-2);
+}
+.exampleOf {
+  margin: 0;
+  font-size: var(--text-13);
+  color: var(--color-ink-2);
+}
+
 .equation {
   position: relative;
   container-type: inline-size;

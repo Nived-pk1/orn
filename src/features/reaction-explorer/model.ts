@@ -19,13 +19,16 @@ export interface CountFacts {
   readonly hidden: number;
   /** The exam's name for the hidden words; absent: no exam scope. */
   readonly hiddenBy: string | undefined;
+  /** 7.3a C3: how many examples are folded under the cards counted in `shown`; absent or 0: none. */
+  readonly examples?: number;
 }
 
 const reactions = (n: number): string => (n === 1 ? '1 reaction' : `${n} reactions`);
 
 /** "24 reactions", "24 of 212 reactions", and " (5 outside JEE Main hidden)" while Only hides some. */
 export function countLine(facts: CountFacts): string {
-  const base = facts.filtered ? `${facts.shown} of ${facts.total} reactions` : reactions(facts.shown);
+  const examples = facts.examples === undefined || facts.examples === 0 ? '' : ` (+ ${facts.examples} ${facts.examples === 1 ? 'example' : 'examples'})`;
+  const base = `${facts.filtered ? `${facts.shown} of ${facts.total} reactions` : reactions(facts.shown)}${examples}`;
   return facts.hidden > 0 && facts.hiddenBy !== undefined ? `${base} (${facts.hidden} outside ${facts.hiddenBy} hidden)` : base;
 }
 

@@ -44,8 +44,8 @@ describe('selection', () => {
 
   it('a click on an arrow selects the arrow', async () => {
     await opened();
-    tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 3 reactions/ }));
-    expect(within(inspector()).getByText(/^Selected: Alcohols to Aldehydes, 3 reactions/)).toBeTruthy();
+    tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ }));
+    expect(within(inspector()).getByText(/^Selected: Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/)).toBeTruthy();
   });
 
   it('a click on empty canvas clears the selection', async () => {
@@ -64,7 +64,7 @@ describe('selection', () => {
 
   it('an arrow has an invisible hit path wider than its stroke', async () => {
     await opened();
-    const edge = screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 3 reactions/ });
+    const edge = screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ });
     const [line, hit] = Array.from(edge.querySelectorAll('path'));
     expect(Number(hit?.getAttribute('stroke-width'))).toBeGreaterThan(Number(line?.getAttribute('stroke-width')));
     expect(hit?.getAttribute('aria-hidden')).toBe('true');
@@ -90,7 +90,7 @@ describe('the overview does not expand; a family opens as a page', () => {
 
   it('a selected arrow: Open family says to use Open, and Open opens the source family at the target group', async () => {
     const app = await opened();
-    tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 3 reactions/ }));
+    tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ }));
     expect(reasonOf('Open family')).toBe('an arrow is selected: use Open, or select a family');
     fireEvent.click(button('Open'));
     expect(app.navigator.ui.family.getState().open).toBe('cls_alcohols');
@@ -109,7 +109,7 @@ describe('the overview does not expand; a family opens as a page', () => {
 
   it('a selection that is not a family says so', async () => {
     await opened();
-    tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 3 reactions/ }));
+    tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ }));
     expect(button('Open family').getAttribute('aria-disabled')).toBe('true');
   });
 });

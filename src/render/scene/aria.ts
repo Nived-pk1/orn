@@ -2,12 +2,15 @@
  * Accessible names (docs/UI_ARCHITECTURE.md §11; step 5.3): "Ethanol, species, 3 reactions out, 1 reaction in, 2 hidden".
  * Plain text built from counts the projection already holds; no markup, so a hostile name is read as it is written.
  */
-import type { GraphNode, NodeFlag } from '@/core/graph/contracts';
+import type { GraphNode, NodeFlag, NodeReactionCounts } from '@/core/graph/contracts';
 import type { NodeGlyph, SceneEdge } from './contracts';
 import type { NodeContent } from './node-content';
 import type { DrawnPath } from './paths';
 
 export const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`;
+
+/** "2 reactions (+ 1 example)": the cards, then the examples folded under them (7.3a C3). */
+const reactionsWords = (cards: number, examples: number | undefined): string => `${plural(cards, 'reaction')}${examples === undefined || examples === 0 ? '' : ` (+ ${plural(examples, 'example')})`}`;
 
 const GLYPH_WORD: Readonly<Record<NodeGlyph, string>> = {
   class_hub: 'class hub',
@@ -72,9 +75,9 @@ export function nodeAria(node: GraphNode, content: NodeContent, drawn: NodeCount
     return parts.join(', ');
   }
   if (counts !== undefined) {
-    if (counts.out > 0) parts.push(`${plural(counts.out, 'reaction')} out`);
-    if (counts.in > 0) parts.push(`${plural(counts.in, 'reaction')} in`);
-    if (counts.loops > 0) parts.push(`${plural(counts.loops, 'reaction')} from and back to itself`);
+    if (counts.out > 0) parts.push(`${reactionsWords(counts.out, (counts as NodeReactionCounts).outExamples)} out`);
+    if (counts.in > 0) parts.push(`${reactionsWords(counts.in, (counts as NodeReactionCounts).inExamples)} in`);
+    if (counts.loops > 0) parts.push(`${reactionsWords(counts.loops, (counts as NodeReactionCounts).loopExamples)} from and back to itself`);
   }
   const hidden = node.hidden.outgoing + node.hidden.incoming;
   if (hidden > 0) parts.push(`${plural(hidden, 'hidden neighbour')}`);
@@ -85,9 +88,9 @@ export function nodeAria(node: GraphNode, content: NodeContent, drawn: NodeCount
 export function edgeAria(path: DrawnPath, semantic: SceneEdge['semantic'], fromName: string, toName: string, drawn: number, viaMembership = false): string {
   if (semantic === 'membership') return `${toName} is a member of ${fromName}`;
   if (semantic === 'overflow') return `${toName} stands for hidden members of ${fromName}`;
-  const count = path.bundled || path.total > 1 ? `${plural(path.total, 'reaction')}${drawn < path.total ? `, ${drawn} drawn` : ''}` : '1 reaction';
+  const count = path.bundled || path.total > 1 ? `${reactionsWords(path.total, path.examples)}${drawn < path.total ? `, ${drawn} drawn` : ''}` : '1 reaction';
   const through = viaMembership ? ', through class membership' : '';
   // a loop says what it means in words (step 5.5d, item c): the reactions whose two sides are in the same family
-  if (path.loop) return `${plural(path.total, 'reaction')} ${path.total === 1 ? 'that stays' : 'that stay'} within ${fromName}${drawn < path.total ? `, ${drawn} drawn` : ''}${through}`;
+  if (path.loop) return `${reactionsWords(path.total, path.examples)} ${path.total === 1 ? 'that stays' : 'that stay'} within ${fromName}${drawn < path.total ? `, ${drawn} drawn` : ''}${through}`;
   return `${fromName} to ${toName}, ${count}${through}`;
 }

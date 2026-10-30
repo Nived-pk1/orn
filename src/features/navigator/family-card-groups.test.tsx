@@ -46,7 +46,7 @@ function renderCard(card: FamilyCard, state: CanonicalState, layout: LayoutMode 
 const demo = demoState();
 const demoCard = (hub: string, name: string): FamilyCard => {
   const study = familyStudy(contextOf(demo), hub) as FamilyStudy;
-  const found = [...study.reactionsOf.groups, ...study.preparationOf.groups].flatMap((g) => g.cards).find((c) => c.name.includes(name));
+  const found = [...study.reactionsOf.groups, ...study.preparationOf.groups].flatMap((g) => g.cards.flatMap((c) => [c, ...(c.examples ?? [])])).find((c) => c.name.includes(name)); // a folded example (7.3a C1) is found too
   if (found === undefined) throw new Error(`no card ${name}`);
   return found;
 };

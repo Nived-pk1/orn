@@ -8,7 +8,7 @@
  * study says and decides nothing. The name is a button (the keyboard way to select the reaction); a click anywhere on the card
  * selects it too.
  */
-import { Fragment, memo, useId } from 'react';
+import { Fragment, memo, useId, type ReactNode } from 'react';
 import type { ArrowText, FamilyCard, FamilyOutcomeGroup } from '@/core/graph';
 import { FullEquationView } from './family-equation';
 import { useFamilyEnv } from './family-env';
@@ -110,19 +110,25 @@ export interface FamilyCardProps {
   readonly onGoToGroup: (hubId: string, reactionId: string) => void;
   /** Set when the reaction is outside the chosen exam scope: the words ("outside JEE Main"). The scheme is dimmed, the words are not. */
   readonly outside?: string;
+  /** The outside words of an example folded under this card (7.3a C5); undefined for one that is inside the scope or when no scope is chosen. */
+  readonly outsideOf?: (reactionId: string) => string | undefined;
+  /** The selected reaction, so an example inside the disclosure shows it is selected. */
+  readonly selectedId?: string | null;
+  /** An example drawn inside its general reaction's disclosure: its title is one level down. */
+  readonly nested?: boolean;
 }
 
-export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside }: FamilyCardProps) {
+export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside, outsideOf, selectedId, nested }: FamilyCardProps) {
   const titleId = useId();
   const review = REVIEW_MARK[card.reviewStatus];
   return (
     <article className={styles.card} aria-labelledby={titleId} data-reaction-id={card.reactionId} data-selected={selected ? '' : undefined} data-outside={outside === undefined ? undefined : ''} onClick={() => onSelect(card.reactionId)}>
       <header className={styles.cardHeader}>
-        <h4 id={titleId} className={styles.cardTitle}>
+        <Title id={titleId} nested={nested === true} className={styles.cardTitle}>
           <button type="button" aria-pressed={selected} onClick={(event) => (event.stopPropagation(), onSelect(card.reactionId))}>
             {card.name}
           </button>
-        </h4>
+        </Title>
         {selected ? <span className={styles.chip}>Selected</span> : null}
         {outside === undefined ? null : <span className={`${styles.chip} ${styles.outsideChip}`}>{outside}</span>}
         {card.namedReactions.map((named) => (
@@ -133,6 +139,14 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
         {review === undefined ? null : <span className={`${styles.chip} ${styles.reviewChip}`}>{review}</span>}
         {card.caveatCount === 0 ? null : <span className={styles.chip}>{plural(card.caveatCount, 'caveat', 'caveats')}</span>}
       </header>
+      {card.exampleOf === undefined ? null : (
+        <p className={styles.exampleOf}>
+          {'Example of '}
+          <button type="button" className={styles.link} onClick={(event) => (event.stopPropagation(), onSelect(card.exampleOf?.reactionId ?? ''))}>
+            {card.exampleOf.name}
+          </button>
+        </p>
+      )}
       <div className={outside === undefined ? undefined : styles.dimmedScheme}>
         {card.groups.length === 1 ? (
           card.groups.map((group) => <GroupScheme key={group.key} card={card} group={group} />)
@@ -157,6 +171,28 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
           ))}
         </p>
       )}
+      {(card.examples ?? []).length === 0 ? null : (
+        <details className={styles.examples} data-examples="" onClick={(event) => event.stopPropagation()}>
+          <summary>{`Examples (${card.examples?.length ?? 0})`}</summary>
+          {(card.examples ?? []).map((example) => {
+            const words = outsideOf?.(example.reactionId);
+            return <FamilyCardView key={example.key} card={example} nested selected={selectedId === example.reactionId} onSelect={onSelect} onGoToGroup={onGoToGroup} {...(words === undefined ? {} : { outside: words })} {...(selectedId === undefined ? {} : { selectedId })} />;
+          })}
+        </details>
+      )}
     </article>
   );
 });
+
+/** The card's title: an h4 on its own, an h5 inside a general reaction's "Examples" (7.3a C1). */
+function Title(props: { readonly id: string; readonly nested: boolean; readonly className: string | undefined; readonly children: ReactNode }) {
+  return props.nested ? (
+    <h5 id={props.id} className={props.className}>
+      {props.children}
+    </h5>
+  ) : (
+    <h4 id={props.id} className={props.className}>
+      {props.children}
+    </h4>
+  );
+}

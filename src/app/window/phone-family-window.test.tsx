@@ -51,7 +51,7 @@ async function openFamily(hubId: string, tab: 'families' | 'map' = 'families'): 
   return app;
 }
 const toolbar = (): HTMLElement => screen.getByRole('toolbar', { name: 'Family page tools' });
-const cardNamed = (name: string): HTMLElement => screen.getAllByRole('article').find((el) => el.querySelector('h4')?.textContent === name) as HTMLElement;
+const cardNamed = (name: string): HTMLElement => screen.getAllByRole('article').find((el) => el.querySelector('h4, h5')?.textContent === name) as HTMLElement;
 
 describe('the family page on a phone', () => {
   it('has a back button "< Families" when the visitor came from Families, "< Map" from the Map; no "Overview" and no "Selected:" line', async () => {

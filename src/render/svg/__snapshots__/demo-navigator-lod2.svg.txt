@@ -38,8 +38,8 @@
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M373.33 40 L58 184" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M373.33 40 L58 184" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
-      <g data-edge-id="bnd_5b25a181afc93270" data-from="cls_alcohols" data-to="cls_aldehydes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Aldehydes, 3 reactions, through class membership">
-        <title>Alcohols to Aldehydes, 3 reactions, through class membership</title>
+      <g data-edge-id="bnd_5b25a181afc93270" data-from="cls_alcohols" data-to="cls_aldehydes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Aldehydes, 2 reactions (+ 1 example), through class membership">
+        <title>Alcohols to Aldehydes, 2 reactions (+ 1 example), through class membership</title>
         <path class="_edge_e97cec _edgeHeavy_e97cec" d="M377.33 224 L392 368" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
         <path class="_edgeHit_e97cec" d="M377.33 224 L392 368" stroke-width="12" data-hit="true" aria-hidden="true"></path>
       </g>
@@ -165,12 +165,12 @@
       </g>
     </g>
     <g data-layer="nodes">
-      <g transform="translate(338 184)" id="orn-ID-node-cls_alcohols" data-node-id="cls_alcohols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alcohols, class hub, Oxygen compounds, 6 reactions out, 7 reactions in">
+      <g transform="translate(338 184)" id="orn-ID-node-cls_alcohols" data-node-id="cls_alcohols" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alcohols, class hub, Oxygen compounds, 5 reactions (+ 1 example) out, 7 reactions in">
         <title>Alcohols · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(338 368)" id="orn-ID-node-cls_aldehydes" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 3 reactions out, 3 reactions in, 1 reaction from and back to itself">
+      <g transform="translate(338 368)" id="orn-ID-node-cls_aldehydes" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 3 reactions out, 2 reactions (+ 1 example) in, 1 reaction from and back to itself">
         <title>Aldehydes · Oxygen compounds</title>
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
@@ -561,10 +561,10 @@
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
         <text class="_count_e97cec" x="10" y="14.2">2</text>
       </g>
-      <g transform="translate(374.66666666666663 286)" data-count-of="bnd_5b25a181afc93270" data-chip-width="20" data-chip-height="20" role="img" aria-label="3 reactions">
-        <title>3 reactions</title>
+      <g transform="translate(374.66666666666663 286)" data-count-of="bnd_5b25a181afc93270" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions">
+        <title>2 reactions</title>
         <rect class="_chipPill_e97cec" x="0.5" y="0.5" width="19" height="19" rx="9.5"></rect>
-        <text class="_count_e97cec" x="10" y="14.2">3</text>
+        <text class="_count_e97cec" x="10" y="14.2">2</text>
       </g>
       <g transform="translate(249.2 87.6)" data-count-of="bnd_a08c9dcf0ab7e7a8" data-chip-width="20" data-chip-height="20" role="img" aria-label="1 reaction">
         <title>1 reaction</title>

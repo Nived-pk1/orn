@@ -18,7 +18,7 @@ import { FamilyCardView } from './family-card';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
 import { FamilyHeader } from './family-header';
 import { StructuresControl, StructuresMenu } from './structures-control';
-import { cardKey, estimateOf, familyItems, groupKey, indexOfKey, type FamilyItem } from './family-items';
+import { cardKey, estimateOf, examplesWords, familyItems, groupKey, indexOfKey, type FamilyItem } from './family-items';
 import { useNavigator } from './navigator-context';
 import { createScenePorts } from './scene-ports';
 import { useScope } from './use-scope';
@@ -35,6 +35,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const { hubId } = props;
   const study = useFamilyStudy(ports, hubId);
   const scope = useScope(ports, study);
+  const outsideOf = useCallback((id: string): string | undefined => (scope.note !== undefined && scope.isOutside(id) ? scope.note : undefined), [scope]);
   const target = useStore(ports.ui.family, (s) => s.target);
   const selectedReaction = useStore(ports.ui.family, (s) => s.reaction);
   const list = useRef<VirtualListHandle>(null);
@@ -133,7 +134,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
           return (
             <div className={styles.sectionHead}>
               <h2 className={styles.sectionTitle}>{item.title}</h2>
-              <span className={styles.muted}>{plural(item.reactionCount, 'reaction', 'reactions')}</span>
+              <span className={styles.muted}>{`${plural(item.reactionCount, 'reaction', 'reactions')}${examplesWords(item.exampleCount)}`}</span>
             </div>
           );
         case 'empty':
@@ -142,14 +143,14 @@ export function FamilyPage(props: { readonly hubId: string }) {
           return (
             <div className={styles.groupHead} data-group-id={item.hubId}>
               <h3 className={styles.groupTitle}>{item.title}</h3>
-              <span className={styles.muted}>{plural(item.count, 'reaction', 'reactions')}</span>
+              <span className={styles.muted}>{`${plural(item.count, 'reaction', 'reactions')}${examplesWords(item.exampleCount)}`}</span>
             </div>
           );
         case 'card':
-          return <FamilyCardView card={item.card} selected={selectedReaction === item.card.reactionId} onSelect={selectReaction} onGoToGroup={goToGroup(item)} {...(scope.note !== undefined && scope.isOutside(item.card.reactionId) ? { outside: scope.note } : {})} />;
+          return <FamilyCardView card={item.card} selected={selectedReaction === item.card.reactionId} onSelect={selectReaction} onGoToGroup={goToGroup(item)} outsideOf={outsideOf} {...((item.card.examples ?? []).length === 0 ? {} : { selectedId: selectedReaction })} {...(scope.note !== undefined && scope.isOutside(item.card.reactionId) ? { outside: scope.note } : {})} />;
       }
     },
-    [goTo, goToGroup, selectReaction, selectedReaction, scope],
+    [goTo, goToGroup, selectReaction, selectedReaction, scope, outsideOf],
   );
   const renderItem = useCallback(
     (item: FamilyItem) => {

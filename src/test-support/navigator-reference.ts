@@ -174,6 +174,16 @@ export function navigatorReferenceBuild(ctx: ProjectionContext, request: Project
   between.sort((a, b) => b.arrows.length - a.arrows.length || cmp(a.from, b.from) || cmp(a.to, b.to));
   const budget = Math.max(0, limits.maxEdges - structural);
   const admitted = between.slice(0, budget);
+  // 7.3a C3, stated again here on its own: in one set of reactions an example whose general (generic) reaction is also in the set is folded
+  const cardsOf = (ids: Iterable<string>): { cards: number; folded: number } => {
+    const set = new Set(ids);
+    let folded = 0;
+    for (const id of set) {
+      const general = ctx.state.records.reaction[id as ReactionId]?.instanceOfId;
+      if (general !== undefined && set.has(general) && ctx.state.records.reaction[general]?.scope === 'generic') folded += 1;
+    }
+    return { cards: set.size - folded, folded };
+  };
   const rest = allPairs.filter((p) => !admitted.includes(p));
 
   // 5. Which arrows of an admitted pair are drawn.
@@ -214,7 +224,7 @@ export function navigatorReferenceBuild(ctx: ProjectionContext, request: Project
         selectivity: a.selectivity, conditionVariantIds: a.variants, inferred: a.inferred, layoutDirection: 'forward',
       });
     }
-    if (p.arrows.length >= 2) bundles.push({ id: `bnd_${hashParts(['bundle', p.from, p.to])}`, from: p.from, to: p.to, edgeIds: ids.sort(), total: p.arrows.length, reactions: new Set(p.arrows.map((a) => a.reaction.id)).size });
+    if (p.arrows.length >= 2) bundles.push({ id: `bnd_${hashParts(['bundle', p.from, p.to])}`, from: p.from, to: p.to, edgeIds: ids.sort(), total: p.arrows.length, reactions: cardsOf(p.arrows.map((a) => a.reaction.id)).cards, ...(cardsOf(p.arrows.map((a) => a.reaction.id)).folded === 0 ? {} : { examples: cardsOf(p.arrows.map((a) => a.reaction.id)).folded }) });
   }
 
   // Step 7.2a: per node, the DISTINCT reactions of the drawn pairs that leave it, enter it and loop on it (stated again here, from the arrows).
@@ -236,7 +246,9 @@ export function navigatorReferenceBuild(ctx: ProjectionContext, request: Project
     const out = leaving.get(id) ?? new Set<string>();
     const inn = entering.get(id) ?? new Set<string>();
     const loops = looping.get(id) ?? new Set<string>();
-    return { reactionCounts: { out: out.size, in: inn.size, loops: loops.size, outAll: new Set([...out, ...loops]).size, inAll: new Set([...inn, ...loops]).size } };
+    const [o, i, l, oa, ia] = [cardsOf(out), cardsOf(inn), cardsOf(loops), cardsOf(new Set([...out, ...loops])), cardsOf(new Set([...inn, ...loops]))];
+    const any = o.folded + i.folded + l.folded + oa.folded + ia.folded > 0;
+    return { reactionCounts: { out: o.cards, in: i.cards, loops: l.cards, outAll: oa.cards, inAll: ia.cards, ...(any ? { outExamples: o.folded, inExamples: i.folded, loopExamples: l.folded } : {}) } };
   };
 
   // The arrangement (step 5.5c) is presentation, not hub resolution: the reference takes it from the same pure reading of the anchors.

@@ -25,6 +25,14 @@
   font-size: var(--text-20);
 }
 
+.compactExamples {
+  flex: 1 1 100%;
+  font-size: var(--text-13);
+}
+.compactExamples summary {
+  cursor: pointer;
+}
+
 .muted {
   margin: 0;
   color: var(--color-ink-2);

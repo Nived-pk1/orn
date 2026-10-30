@@ -60,7 +60,7 @@ function familyEntries(scene: Scene, node: SceneNode, isHub: (id: string) => boo
 
 const arrow = (edge: SceneEdge, text: string): MenuEntry => ({
   id: `arrow-${edge.id}`,
-  label: `${text} (${reactionsWords(bundleOf(edge))})`,
+  label: `${text} (${reactionsWords(bundleOf(edge))}${edge.bundleExamples === undefined || edge.bundleExamples === 0 ? '' : ` (+ ${edge.bundleExamples} ${edge.bundleExamples === 1 ? 'example' : 'examples'})`})`,
   action: { type: 'inspect', hit: { kind: 'edge', id: edge.id } },
 });
 

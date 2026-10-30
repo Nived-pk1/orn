@@ -7,7 +7,6 @@ import { fold } from '@/core/text/normalizer';
 import type { Reaction } from '@/core/schema';
 import { useInspectorEnv } from './env';
 import { RecordList } from './record-list';
-import styles from './inspector.module.css';
 
 export function ReactionExamples(props: { readonly record: Reaction }) {
   const env = useInspectorEnv();
@@ -27,8 +26,10 @@ export function ReactionExamples(props: { readonly record: Reaction }) {
   if (examples.length === 0) return null;
   return (
     <section aria-label="Examples">
-      <h5 className={styles.subheading}>Examples ({examples.length})</h5>
-      <RecordList label="Examples" items={examples} />
+      <details>
+        <summary>{`Examples (${examples.length})`}</summary>
+        <RecordList label="Examples" items={examples} />
+      </details>
     </section>
   );
 }

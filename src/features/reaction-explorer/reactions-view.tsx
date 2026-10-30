@@ -7,7 +7,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
-import { createReactionFilterMemo, createScopeOf, filterReactions, type ReactionFacets } from '@/core/graph';
+import { createReactionFilterMemo, createScopeOf, exampleLookupOf, filterReactions, foldExamples, type ReactionFacets } from '@/core/graph';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, Dialog, LiveRegion, SegmentedControl } from '@/ui/primitives';
 import { isFilterSet, type ExplorerFilter } from '@/ui/state';
@@ -57,13 +57,21 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
 
   const scope = useMemo(() => (active === null ? undefined : createScopeOf(indexes, active.examId, active.examVersionId)), [indexes, active]);
   const result = useMemo(() => filterReactions(memo.inputFor(source), toReactionFilter(filter), scope), [memo, source, filter, scope]);
+  // 7.3a C1 to C3: an example folds under its general reaction's card when that card is in the result; the counts are cards
+  const lookup = useMemo(() => exampleLookupOf(state), [state]);
+  const folding = useMemo(() => foldExamples(result.rows.map((row) => row.id), lookup), [result, lookup]);
+  const cardRows = useMemo(() => {
+    const byId = new Map(result.rows.map((row) => [row.id, row]));
+    return folding.shown.map((id) => byId.get(id) as (typeof result.rows)[number]);
+  }, [result, folding]);
+  const totalCards = useMemo(() => foldExamples(Object.keys(state.records.reaction), lookup).shown.length, [state, lookup]);
   const filterKey = JSON.stringify(filter);
   useEffect(() => setLimit(PAGE_SIZE), [filterKey]);
 
   const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
   const versionName = active === null ? undefined : (state.records.exam_version[active.examVersionId]?.label ?? active.examVersionId);
   const filtered = isFilterSet(filter);
-  const line = countLine({ shown: result.rows.length, total: result.total, filtered, hidden: filter.onlyInScope ? result.hiddenByScope : 0, hiddenBy: examName });
+  const line = countLine({ shown: cardRows.length, total: totalCards, examples: folding.folded, filtered, hidden: filter.onlyInScope ? result.hiddenByScope : 0, hiddenBy: examName });
   const [said, setSaid] = useState({ message: line, serial: 0 });
   useEffect(() => setSaid((was) => (was.message === line ? was : { message: line, serial: was.serial + 1 })), [line]);
 
@@ -169,7 +177,9 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
           ports={ports}
           state={state}
           indexes={indexes}
-          rows={result.rows}
+          rows={cardRows}
+          allRows={result.rows}
+          folding={folding}
           total={result.total}
           view={view}
           limit={limit}

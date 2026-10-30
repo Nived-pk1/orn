@@ -43,7 +43,7 @@ export function PrecursorsHost(props: { readonly onReactions: (filter: Partial<E
           }
         : {}),
       select: (reactionId) => ports.ui.family.getState().selectReaction(reactionId),
-      renderCard: (args) => <ReactionCardHost reactionId={args.reactionId} selected={args.selected} onSelect={args.onSelect} fallback={args.fallback} {...(args.outside === undefined ? {} : { outside: args.outside })} />,
+      renderCard: (args) => <ReactionCardHost reactionId={args.reactionId} selected={args.selected} onSelect={args.onSelect} fallback={args.fallback} {...(args.outside === undefined ? {} : { outside: args.outside })} {...(args.examples === undefined ? {} : { examples: args.examples })} {...(args.exampleOf === undefined ? {} : { exampleOf: args.exampleOf })} {...(args.selectedId === undefined ? {} : { selectedId: args.selectedId })} {...(args.outsideOf === undefined ? {} : { outsideOf: args.outsideOf })} />,
       timers: ports.timers,
       log: ports.log,
     }),

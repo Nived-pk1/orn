@@ -12,7 +12,9 @@ import type { AnyRecord, RecordRef } from '../../schema';
 const demo = contextOf(demoState());
 const study = (hub: string): FamilyStudy => familyStudy(demo, hub) as FamilyStudy;
 const cardOf = (s: FamilyStudy, section: 'reactionsOf' | 'preparationOf', group: string, name: string): FamilyCard => {
-  const found = s[section].groups.find((g) => g.name === group)?.cards.find((c) => c.name.includes(name));
+  // an example folded under its general reaction (7.3a C1) is still found, inside its general card
+  const cards = s[section].groups.find((g) => g.name === group)?.cards.flatMap((c) => [c, ...(c.examples ?? [])]);
+  const found = cards?.find((c) => c.name.includes(name));
   if (found === undefined) throw new Error(`no card ${name} in ${group}`);
   return found;
 };
@@ -36,7 +38,7 @@ describe('familyStudy on the demo', () => {
   });
 
   it('Alcohols: header values', () => {
-    expect(alcohols).toMatchObject({ hubId: 'cls_alcohols', name: 'Alcohols', formula: 'R–OH', counts: { reactionsOf: 6, preparationOf: 7, total: 13 } });
+    expect(alcohols).toMatchObject({ hubId: 'cls_alcohols', name: 'Alcohols', formula: 'R–OH', counts: { reactionsOf: 5, preparationOf: 7, total: 12, examples: 1 } }); // 7.3a C3: counts are CARDS; the PCC example of the general alcohol oxidation is folded (+ 1 example)
     expect(alcohols.reactionTypes[0]).toMatchObject({ name: 'Oxidation', count: 6 });
     const counts = alcohols.reactionTypes.map((t) => t.count);
     expect(counts).toEqual([...counts].sort((a, b) => b - a));
@@ -104,7 +106,7 @@ describe('familyStudy on the demo', () => {
 
   it('a family with no reactions has empty sections and zero counts (Alkanes)', () => {
     const alkanes = study('cls_alkanes');
-    expect(alkanes.counts).toEqual({ reactionsOf: 0, preparationOf: 0, total: 0 });
+    expect(alkanes.counts).toEqual({ reactionsOf: 0, preparationOf: 0, total: 0, examples: 0 });
     expect(alkanes.reactionsOf.groups).toEqual([]);
     expect(alkanes.preparationOf.groups).toEqual([]);
     expect(alkanes.madeFrom).toEqual([]);
@@ -116,7 +118,7 @@ describe('familyStudy on the demo', () => {
       ['Alkenes', 1],
       ['Haloalkanes', 1],
       ['Ethers', 1],
-      ['Aldehydes', 3],
+      ['Aldehydes', 2], // 3 reactions, one of them folded under the general PCC oxidation (7.3a C3)
       ['Carboxylic acids', 1],
       [UNCLASSIFIED_NAME, 1],
     ]);
@@ -161,6 +163,6 @@ describe('familyStudy on small states', () => {
     const toB = s.reactionsOf.groups.find((g) => g.hubId === 'cls_hub-b');
     expect(toB?.cards.map((c) => c.name)).toEqual(['Alpha', 'alpha', 'bravo']);
     expect(toB?.cards[2]?.elsewhere).toEqual([{ hubId: 'cls_hub-a', name: 'hub-a', outcomeCount: 2, conditionText: '' }]);
-    expect(s.counts).toEqual({ reactionsOf: 3, preparationOf: 1, total: 3 });
+    expect(s.counts).toEqual({ reactionsOf: 3, preparationOf: 1, total: 3, examples: 0 });
   });
 });

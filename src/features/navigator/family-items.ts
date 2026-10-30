@@ -7,10 +7,13 @@ import type { FamilyCard, FamilySectionKind, FamilyStudy } from '@/core/graph';
 
 export type FamilyItem =
   | { readonly kind: 'header'; readonly key: 'header'; readonly study: FamilyStudy }
-  | { readonly kind: 'section'; readonly key: string; readonly section: FamilySectionKind; readonly title: string; readonly reactionCount: number }
+  | { readonly kind: 'section'; readonly key: string; readonly section: FamilySectionKind; readonly title: string; readonly reactionCount: number; readonly exampleCount: number }
   | { readonly kind: 'empty'; readonly key: string; readonly text: string }
-  | { readonly kind: 'group'; readonly key: string; readonly section: FamilySectionKind; readonly hubId: string; readonly title: string; readonly count: number }
+  | { readonly kind: 'group'; readonly key: string; readonly section: FamilySectionKind; readonly hubId: string; readonly title: string; readonly count: number; readonly exampleCount: number }
   | { readonly kind: 'card'; readonly key: string; readonly section: FamilySectionKind; readonly hubId: string; readonly card: FamilyCard };
+
+/** " (+ 1 example)" after a count of cards: the examples folded under them (7.3a C3); nothing when there are none. */
+export const examplesWords = (n: number): string => (n === 0 ? '' : ` (+ ${n} ${n === 1 ? 'example' : 'examples'})`);
 
 export const groupKey = (section: FamilySectionKind, hubId: string): string => `group:${section}:${hubId}`;
 
@@ -35,13 +38,13 @@ export function familyItems(study: FamilyStudy): FamilyItem[] {
   const items: FamilyItem[] = [{ kind: 'header', key: 'header', study }];
   if (study.counts.total === 0) items.push({ kind: 'empty', key: 'empty:family', text: noReactionsTextOf(study.name) });
   for (const section of [study.reactionsOf, study.preparationOf]) {
-    items.push({ kind: 'section', key: `section:${section.kind}`, section: section.kind, title: titleOf(section.kind, study.name), reactionCount: section.reactionCount });
+    items.push({ kind: 'section', key: `section:${section.kind}`, section: section.kind, title: titleOf(section.kind, study.name), reactionCount: section.reactionCount, exampleCount: section.exampleCount });
     if (section.groups.length === 0) {
       items.push({ kind: 'empty', key: `empty:${section.kind}`, text: emptyTextOf(section.kind, study.name) });
       continue;
     }
     for (const group of section.groups) {
-      items.push({ kind: 'group', key: groupKey(section.kind, group.hubId), section: section.kind, hubId: group.hubId, title: groupTitleOf(section.kind, group.name), count: group.cards.length });
+      items.push({ kind: 'group', key: groupKey(section.kind, group.hubId), section: section.kind, hubId: group.hubId, title: groupTitleOf(section.kind, group.name), count: group.cards.length, exampleCount: group.exampleCount });
       for (const card of group.cards) items.push({ kind: 'card', key: card.key, section: section.kind, hubId: group.hubId, card });
     }
   }

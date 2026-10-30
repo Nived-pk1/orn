@@ -76,7 +76,7 @@ describe('Studio: choosing items', () => {
     k.tap(hub(k, 'Aldehydes'), { shift: true });
     expect(line(k)).toMatch(/^1 family selected \(\d+ reactions?\)$/);
     k.tap(hub(k, 'Alcohols'), { shift: true });
-    k.tap(arrow(k, /^Alcohols to Aldehydes, 3 reactions/), { shift: true });
+    k.tap(arrow(k, /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/), { shift: true });
     expect(line(k)).toMatch(/^2 families and 1 arrow selected \(\d+ reactions?\)$/);
     k.tap(hub(k, 'Aldehydes'), { shift: true });
     expect(line(k)).toMatch(/^1 family and 1 arrow selected/);
@@ -137,7 +137,7 @@ describe('Studio: bulk actions on the reactions of the selection', () => {
   it('Delete (n) lists what blocks it (a route that uses a reaction) and stays unavailable', async () => {
     const k = loaded.studio;
     const app = await open(k);
-    k.tap(arrow(k, /^Alcohols to Aldehydes, 3 reactions/), { shift: true });
+    k.tap(arrow(k, /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/), { shift: true });
     const n = Number(/\((\d+)\)/.exec(k.screen.getByRole('button', { name: /^Delete \(\d+\)$/ }).textContent ?? '')?.[1]);
     k.fireEvent.click(k.screen.getByRole('button', { name: /^Delete \(\d+\)$/ }));
     const dialog = await k.screen.findByRole('dialog', { name: `Delete ${n} records?` }, { timeout: 10_000 });
@@ -154,7 +154,7 @@ describe('Studio: bulk actions on the reactions of the selection', () => {
     k.act(() => {
       app.store.dispatch({ label: 'drop routes', commands: routes.map((id) => ({ type: 'record.delete', ref: { kind: 'route', id }, mode: 'apply_cascade' }) as never) });
     });
-    k.tap(arrow(k, /^Alcohols to Aldehydes, 3 reactions/), { shift: true });
+    k.tap(arrow(k, /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/), { shift: true });
     const go = k.screen.getByRole('button', { name: /^Delete \(\d+\)$/ });
     const n = Number(/\((\d+)\)/.exec(go.textContent ?? '')?.[1]);
     const before = Object.keys(app.store.getState().records.reaction).length;

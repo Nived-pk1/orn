@@ -5,6 +5,7 @@
  */
 import type { FamilyPartner, FamilyStudy } from '@/core/graph';
 import { VisuallyHidden } from '@/ui/primitives';
+import { examplesWords } from './family-items';
 import { FormulaText } from './family-text';
 import styles from './family-header.module.css';
 
@@ -52,7 +53,10 @@ export function FamilyHeader({ study, onGoToMadeFrom, onGoToTurnsInto }: FamilyH
         )}
       </h1>
       <p className={styles.counts}>
-        {plural(counts.total, 'reaction', 'reactions')} in all: {plural(counts.reactionsOf, 'reaction', 'reactions')} of {study.name} and {plural(counts.preparationOf, 'reaction', 'reactions')} that make it
+        {plural(counts.total, 'reaction', 'reactions')}
+        {examplesWords(counts.examples)} in all: {plural(counts.reactionsOf, 'reaction', 'reactions')}
+        {examplesWords(study.reactionsOf.exampleCount)} of {study.name} and {plural(counts.preparationOf, 'reaction', 'reactions')}
+        {examplesWords(study.preparationOf.exampleCount)} that make it
         {counts.total < counts.reactionsOf + counts.preparationOf ? ' (a reaction of the family into itself is in both and counted once in the total)' : ''}.
       </p>
       {study.reactionTypes.length === 0 ? null : (

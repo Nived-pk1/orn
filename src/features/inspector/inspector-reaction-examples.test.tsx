@@ -58,7 +58,8 @@ describe('generic reactions and their examples', () => {
   it('a generic reaction lists its example as a link, with the count', () => {
     show(GENERIC);
     const examples = screen.getByRole('region', { name: 'Examples' });
-    expect(within(examples).getByRole('heading', { name: 'Examples (1)' })).toBeTruthy();
+    expect(within(examples).getByText('Examples (1)')).toBeTruthy(); // 7.3a C4: a disclosure, closed until opened
+    expect((examples.querySelector('details') as HTMLDetailsElement).open).toBe(false);
     expect(examples.querySelector(`[data-record-id="${EXAMPLE}"]`)).not.toBeNull();
   });
 
@@ -67,7 +68,7 @@ describe('generic reactions and their examples', () => {
     const more = (id: string, name: string): Reaction => ({ ...example, id: id as never, name });
     show(GENERIC, [more('rxn_zz-example', 'zebra addition'), more('rxn_aa-example', 'Apple addition')]);
     const examples = screen.getByRole('region', { name: 'Examples' });
-    expect(within(examples).getByRole('heading', { name: 'Examples (3)' })).toBeTruthy();
+    expect(within(examples).getByText('Examples (3)')).toBeTruthy();
     const names = [...examples.querySelectorAll('[data-record-id]')].map((a) => a.textContent?.toLowerCase());
     expect(names).toEqual([...names].sort());
     expect(names[0]).toContain('apple');

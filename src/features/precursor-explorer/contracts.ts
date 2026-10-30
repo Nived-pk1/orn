@@ -28,6 +28,11 @@ export interface CardArgs {
   readonly onSelect: (reactionId: string) => void;
   /** "outside JEE Main" when the reaction is outside the chosen exam scope. */
   readonly outside?: string;
+  /** 7.3a C1, C2, C5: the ids of this general reaction's folded examples, the general reaction this card is an example of, the selected reaction and the outside words of an example. */
+  readonly examples?: readonly string[];
+  readonly exampleOf?: { readonly id: string; readonly name: string };
+  readonly selectedId?: string | null;
+  readonly outsideOf?: (reactionId: string) => string | undefined;
   /** Drawn instead of a card when the reaction has none, with the reason in words. */
   readonly fallback: (reason: string) => ReactNode;
 }

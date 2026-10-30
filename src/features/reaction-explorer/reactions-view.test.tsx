@@ -65,8 +65,9 @@ describe('the header and the count line', () => {
     const { state } = setup();
     expect(screen.getByRole('heading', { name: 'Reactions' })).toBeTruthy();
     const total = Object.keys(state.records.reaction).length;
-    expect(screen.getAllByText(`${total} reactions`).length).toBeGreaterThan(0);
-    expect(document.querySelectorAll('[data-reaction-id]')).toHaveLength(total); // 26 cards and the one reaction with no card as a compact row
+    // 7.3a C3: the count is CARDS; the PCC example is folded under its general reaction ("+ 1 example")
+    expect(screen.getAllByText(`${total - 1} reactions (+ 1 example)`).length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('[data-reaction-id]')).toHaveLength(total - 1); // 25 cards and the one reaction with no card as a compact row
   });
 
   it('Clear all filters is shown only while a filter is set', () => {
@@ -89,11 +90,12 @@ describe('filters', () => {
     const box = within(panel).getByRole('checkbox', { name: /^Oxidation \(\d+\)$/ });
     const n = Number(/\((\d+)\)/.exec(box.parentElement?.textContent ?? '')?.[1]);
     fireEvent.click(box);
-    expect(screen.getAllByText(`${n} of ${total} reactions`).length).toBeGreaterThan(0);
-    expect(cards()).toHaveLength(n);
-    expect(screen.getByRole('status', { name: 'Announcements' }).textContent).toBe(`${n} of ${total} reactions`);
+    // the facet count (n) counts reactions; the list counts cards, with the folded PCC example in words (7.3a C3)
+    expect(screen.getAllByText(`${n - 1} of ${total - 1} reactions (+ 1 example)`).length).toBeGreaterThan(0);
+    expect(cards()).toHaveLength(n - 1);
+    expect(screen.getByRole('status', { name: 'Announcements' }).textContent).toBe(`${n - 1} of ${total - 1} reactions (+ 1 example)`);
     fireEvent.click(screen.getByRole('button', { name: 'Remove Type: Oxidation' }));
-    expect(screen.getAllByText(`${total} reactions`).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(`${total - 1} reactions (+ 1 example)`).length).toBeGreaterThan(0);
   });
 
   it('Escape closes a popover and the focus returns to its button', () => {
@@ -159,7 +161,7 @@ describe('Cards and Compact', () => {
 describe('30 at a time', () => {
   it('shows 30, says so, and Show 30 more adds the next 30', () => {
     setup(manyReactions(70));
-    const total = 70 + Object.keys(demoState().records.reaction).length;
+    const total = 70 + Object.keys(demoState().records.reaction).length - 1; // cards: the PCC example is folded (7.3a C1)
     expect(cards()).toHaveLength(30);
     expect(screen.getByText(`Showing 30 of ${total}`)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Show 30 more' }));

@@ -30,7 +30,8 @@ import { projectionKey, sortEdges, sortNodes, sortedUnique } from '../kit';
 import { arrowOf, movesArrows, NO_EXPANSION, planExpansion } from './expansion';
 import { UNCLASSIFIED_HUB_ID } from './hubs';
 import { arrangementsOf, expansionParts, hubNode, toEdge, unclassifiedNode, VIEW } from './nodes';
-import { byAdmission, groupPairs, materialise, nodeReactionCounts, reactionsOf, type Pair } from './pairs';
+import { exampleLookupOf } from '../family/examples';
+import { byAdmission, examplesInPair, groupPairs, materialise, nodeReactionCounts, reactionsOf, type Pair } from './pairs';
 import { isUnfiltered, reactionFilter } from './select';
 import { READS_KINDS } from './reads';
 
@@ -121,13 +122,14 @@ function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
     if (shown.has(pair.to)) addHidden(hidden, pair.to, 'incoming', n);
   }
 
+  const lookup = exampleLookupOf(ctx.state);
   const edges: GraphEdge[] = [];
   const bundles: EdgeBundle[] = [];
   for (const [pair, drawn] of materialise(admitted, edgeBudget)) {
     const pairEdges = drawn.map((candidate) => toEdge(candidate, pair.from, pair.to));
     edges.push(...pairEdges);
     if (pair.candidates.length >= 2) {
-      bundles.push({ id: `bnd_${hashParts(['bundle', pair.from, pair.to])}`, from: pair.from, to: pair.to, edgeIds: pairEdges.map((e) => e.id).sort(), total: pair.candidates.length, reactions: reactionsOf(pair.candidates) });
+      bundles.push({ id: `bnd_${hashParts(['bundle', pair.from, pair.to])}`, from: pair.from, to: pair.to, edgeIds: pairEdges.map((e) => e.id).sort(), total: pair.candidates.length, reactions: reactionsOf(pair.candidates, lookup), ...(examplesInPair(pair.candidates, lookup) === 0 ? {} : { examples: examplesInPair(pair.candidates, lookup) }) });
     }
   }
 
@@ -146,7 +148,7 @@ function build(ctx: ProjectionContext, request: ProjectionRequest): Projection {
   else if (notAdmitted.length > 0 || plan.unappliedBy === 'max_edges') truncation = { reason: 'max_edges', hiddenNodeEstimate: plan.unappliedMembers, ...counts };
   else if (aborted) truncation = { reason: 'aborted', hiddenNodeEstimate: 0, ...counts };
 
-  const reactionCounts = nodeReactionCounts(admitted);
+  const reactionCounts = nodeReactionCounts(admitted, lookup);
   const counted = nodes.map((node) => {
     const found = reactionCounts.get(node.id);
     return found === undefined ? node : { ...node, reactionCounts: found };

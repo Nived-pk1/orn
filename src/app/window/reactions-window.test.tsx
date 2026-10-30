@@ -27,7 +27,7 @@ describe('the Reactions mode', () => {
     expect(button.getAttribute('aria-disabled')).not.toBe('true');
     fireEvent.click(button);
     expect(await screen.findByRole('heading', { name: 'Reactions' })).toBeTruthy();
-    expect((await screen.findAllByText(/^\d+ reactions$/)).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText(/^\d+ reactions( \(\+ \d+ examples?\))?$/)).length).toBeGreaterThan(0);
   });
 
   it('a card selects its reaction: the inspector shows it', async () => {

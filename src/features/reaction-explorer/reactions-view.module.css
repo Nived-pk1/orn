@@ -172,6 +172,14 @@
 }
 
 .compactTypes,
+.compactExamples {
+  flex: 1 1 100%;
+  font-size: var(--text-13);
+}
+.compactExamples summary {
+  cursor: pointer;
+}
+
 .muted {
   color: var(--color-ink-2);
   font-size: var(--text-13);

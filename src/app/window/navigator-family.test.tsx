@@ -34,8 +34,8 @@ async function openFamily(hubId: string, app: FakeApp = fakeApp({ state: demoSta
 }
 
 const card = (name: string, within_?: HTMLElement): HTMLElement =>
-  (within_ === undefined ? screen : within(within_)).getAllByRole('article').find((el) => el.querySelector('h4')?.textContent === name) as HTMLElement;
-const cardsNamed = (name: string): HTMLElement[] => screen.getAllByRole('article').filter((el) => el.querySelector('h4')?.textContent === name);
+  (within_ === undefined ? screen : within(within_)).getAllByRole('article').find((el) => el.querySelector('h4, h5')?.textContent === name) as HTMLElement; // an example is an h5 inside its general card (7.3a C1)
+const cardsNamed = (name: string): HTMLElement[] => screen.getAllByRole('article').filter((el) => el.querySelector('h4, h5')?.textContent === name);
 
 describe('the family page', () => {
   it('shows the header, the strip and both sections with their groups', async () => {
@@ -43,11 +43,11 @@ describe('the family page', () => {
     expect(screen.getByRole('heading', { level: 1, name: /Alcohols/ }).textContent).toContain('R–OH');
     // one h1 per screen: the family name; the shell's title is a plain line here
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByText(/13 reactions in all: 6 reactions of Alcohols and 7 reactions that make it/)).toBeTruthy();
+    expect(screen.getByText(/12 reactions \(\+ 1 example\) in all: 5 reactions \(\+ 1 example\) of Alcohols and 7 reactions that make it/)).toBeTruthy();
     expect(within(screen.getByRole('list', { name: 'Reaction types in this family' })).getByText(/Oxidation/)).toBeTruthy();
     expect(screen.getByText('Made from')).toBeTruthy();
     expect(screen.getByText('Turns into')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ })[0]).toBeTruthy();
     expect(screen.getByRole('heading', { level: 2, name: 'Reactions of Alcohols' })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 2, name: 'Preparation of Alcohols' })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 3, name: 'To Aldehydes' })).toBeTruthy();
@@ -62,7 +62,7 @@ describe('the family page', () => {
     expect(header.getAttribute('data-tone')).toBe('green');
     expect(within(header).getByText('Oxygen compounds')).toBeTruthy();
     // Aldehydes and Ethers are Oxygen compounds too (green); Made-from Alkenes is a Hydrocarbon (blue): the button wears Alkenes' tone, not Alcohols'
-    expect(within(header).getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).getAttribute('data-tone')).toBe('green');
+    expect(within(header).getAllByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ })[0]?.getAttribute('data-tone')).toBe('green');
     expect(within(header).getByRole('button', { name: /^Ethers/ }).getAttribute('data-tone')).toBe('green');
     for (const button of within(header).getAllByRole('button', { name: /^Alkenes/ })) expect(button.getAttribute('data-tone')).toBe('blue');
     for (const button of within(header).getAllByRole('button', { name: /^Haloalkanes/ })) expect(button.getAttribute('data-tone')).toBe('amber');
@@ -128,7 +128,7 @@ describe('the family page', () => {
 
   it('the strip buttons and the links bring the reader to a group without leaving the page', async () => {
     const app = await openFamily('cls_alcohols');
-    expect(() => fireEvent.click(screen.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }))).not.toThrow();
+    expect(() => fireEvent.click(screen.getAllByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ })[0] as HTMLElement)).not.toThrow();
     expect(app.navigator.ui.family.getState().open).toBe('cls_alcohols');
   });
 

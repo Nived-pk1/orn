@@ -19,7 +19,7 @@ function familyCards(): Map<string, FamilyCard[]> {
   const out = new Map<string, FamilyCard[]>();
   for (const hub of [...demo.indexes.navigatorRollup().hubs.map((h) => h.id), UNCLASSIFIED_HUB_ID]) {
     const study = familyStudy(demo, hub);
-    for (const section of [study?.reactionsOf, study?.preparationOf]) for (const group of section?.groups ?? []) for (const card of group.cards) out.set(card.reactionId, [...(out.get(card.reactionId) ?? []), card]);
+    for (const section of [study?.reactionsOf, study?.preparationOf]) for (const group of section?.groups ?? []) for (const card of group.cards.flatMap((one) => [one, ...(one.examples ?? [])])) out.set(card.reactionId, [...(out.get(card.reactionId) ?? []), card]);
   }
   return out;
 }

@@ -45,7 +45,7 @@ describe('the Explore tab', () => {
     expect(await screen.findByRole('heading', { name: 'Reactions' })).toBeTruthy();
     expect(within(tabs()).getByRole('button', { name: 'Explore' }).getAttribute('aria-current')).toBe('page');
     expect(within(tabs()).getByRole('button', { name: 'Families' }).getAttribute('aria-current')).toBeNull();
-    expect((await screen.findAllByText(/^\d+ reactions$/)).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText(/^\d+ reactions( \(\+ \d+ examples?\))?$/)).length).toBeGreaterThan(0);
     expect(document.querySelectorAll('article[data-reaction-id]').length).toBeGreaterThan(10);
   });
 

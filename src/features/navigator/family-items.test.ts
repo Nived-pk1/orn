@@ -24,7 +24,8 @@ describe('familyItems', () => {
   it('every item has a unique key, and the card keys are the ones the links use', () => {
     const keys = items.map((i) => i.key);
     expect(new Set(keys).size).toBe(keys.length);
-    const pcc = items.find((i) => i.kind === 'card' && i.card.name === 'Ethanol → ethanal (PCC)');
+    // the PCC example is folded under the general oxidation (7.3a C1), so the general card is the one with a key of its own
+    const pcc = items.find((i) => i.kind === 'card' && i.hubId === 'cls_aldehydes' && i.section === 'reactions_of' && (i.card.examples ?? []).length > 0);
     expect(pcc?.key).toBe(cardKey('reactions_of', 'cls_aldehydes', pcc?.kind === 'card' ? pcc.card.reactionId : ''));
     expect(indexOfKey(items, pcc?.key ?? '')).toBeGreaterThan(0);
     expect(indexOfKey(items, 'nope')).toBe(-1);

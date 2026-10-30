@@ -17,6 +17,7 @@ import type { ProjectionContext } from '../contracts';
 import { UNCLASSIFIED_HUB_ID } from '../navigator/hubs';
 import { arrangementsOf } from '../navigator/nodes';
 import { cardOf, createCardKit, type CardKit, type GatheredOutcome } from './card';
+import { exampleLookupOf, foldExamples } from './examples';
 import type {
   FamilyCard,
   FamilyElsewhere,
@@ -75,6 +76,7 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
   const ranked = (id: string): Ranked => ({ hubId: id, info: hubInfo(id) });
   const hubRef = rollup.hubs.find((hub) => hub.id === hubId) ?? null;
   const seenReactions = new Map<string, Reaction>();
+  const lookup = exampleLookupOf(ctx.state);
 
   const buildSection = (kind: FamilySectionKind): FamilySection => {
     const candidates = kind === 'reactions_of' ? rollup.candidatesFrom(hubId) : rollup.candidatesTo(hubId);
@@ -102,6 +104,9 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
       if (!outcomes.has(c.outcomeId)) outcomes.set(c.outcomeId, { variantIds: c.conditionVariantIds, participantId: c.participantId });
     }
     const built: FamilyGroup[] = [];
+    const cardIds = new Set<string>();
+    const foldedIds = new Set<string>();
+    const onlyFolded = new Set<string>();
     for (const [group, reactions] of [...groups].sort((a, b) => compareGroups(ranked(a[0]), ranked(b[0])))) {
       const cards: FamilyCard[] = [];
       for (const [reactionId, gathered] of reactions) {
@@ -129,13 +134,28 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
         cards.push(cardOf(kit, reaction, `${kind}:${group}:${reactionId}`, gathered, elsewhere));
       }
       cards.sort((a, b) => compare(fold(a.name), fold(b.name)) || compare(a.reactionId, b.reactionId));
-      built.push({ hubId: group, name: hubInfo(group).name, cards });
+      // 7.3a C1, C2: an example folds under its general reaction's card in THIS group; otherwise it is a card with "Example of"
+      const folding = foldExamples(cards.map((card) => card.reactionId), lookup);
+      const byId = new Map(cards.map((card) => [card.reactionId as string, card]));
+      const shownCards = folding.shown.map((id): FamilyCard => {
+        const card = byId.get(id) as FamilyCard;
+        const examples = (folding.examplesOf.get(id) ?? []).map((one) => byId.get(one) as FamilyCard);
+        const general = folding.exampleOf.get(id);
+        return { ...card, ...(examples.length === 0 ? {} : { examples }), ...(general === undefined ? {} : { exampleOf: { reactionId: general, name: ctx.state.records.reaction[general]?.name ?? general } }) };
+      });
+      for (const card of shownCards) cardIds.add(card.reactionId);
+      for (const examples of folding.examplesOf.values()) for (const id of examples) foldedIds.add(id);
+      built.push({ hubId: group, name: hubInfo(group).name, cards: shownCards, exampleCount: folding.folded });
     }
-    return { kind, reactionCount: landing.size, groups: built };
+    for (const id of foldedIds) if (!cardIds.has(id as never)) onlyFolded.add(id);
+    return { kind, reactionCount: cardIds.size, exampleCount: onlyFolded.size, groups: built };
   };
 
   const reactionsOf = buildSection('reactions_of');
   const preparationOf = buildSection('preparation_of');
+  // distinct CARDS in the family and the examples that are folded and no card anywhere in it (7.3a C3)
+  const allCards = new Set<string>([...reactionsOf.groups, ...preparationOf.groups].flatMap((g) => g.cards.map((c) => c.reactionId as string)));
+  const allFolded = new Set<string>([...reactionsOf.groups, ...preparationOf.groups].flatMap((g) => g.cards.flatMap((c) => (c.examples ?? []).map((e) => e.reactionId as string))).filter((id) => !allCards.has(id)));
 
   const arrangements = arrangementsOf(ctx);
   const partners = (section: FamilySection): FamilyPartner[] =>
@@ -160,7 +180,7 @@ export function familyStudy(ctx: ProjectionContext, hubId: string): FamilyStudy 
     ...(described?.formula === undefined ? {} : { formula: described.formula }),
     ...(arrangement?.group === undefined ? {} : { group: arrangement.group }),
     ...(arrangement?.tone === undefined ? {} : { tone: arrangement.tone }),
-    counts: { reactionsOf: reactionsOf.reactionCount, preparationOf: preparationOf.reactionCount, total: seenReactions.size },
+    counts: { reactionsOf: reactionsOf.reactionCount, preparationOf: preparationOf.reactionCount, total: allCards.size, examples: allFolded.size },
     reactionTypes,
     madeFrom: partners(preparationOf),
     turnsInto: partners(reactionsOf),

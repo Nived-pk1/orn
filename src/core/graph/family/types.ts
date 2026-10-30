@@ -74,18 +74,28 @@ export interface FamilyCard {
   /** Outcome groups in the order of their first outcome in the record; one group: no header on the card. */
   readonly groups: readonly FamilyOutcomeGroup[];
   readonly elsewhere: readonly FamilyElsewhere[];
+  /** 7.3a C1: the examples of this GENERAL reaction that are folded under its card in this list (folded name, then id); absent: none. */
+  readonly examples?: readonly FamilyCard[];
+  /** 7.3a C2: this card's reaction is an example of a general reaction whose card is NOT in this list; absent: it is not (or is folded). */
+  readonly exampleOf?: { readonly reactionId: string; readonly name: string };
 }
 
 export interface FamilyGroup {
   /** The partner family: the hub of the main product (reactions of) or of the carried substrate (preparation of). */
   readonly hubId: string;
   readonly name: string;
+  /** The cards of the group: examples folded under their general reaction are not cards of their own (7.3a). */
   readonly cards: readonly FamilyCard[];
+  /** How many reactions are folded under cards of this group. */
+  readonly exampleCount: number;
 }
 
 export interface FamilySection {
   readonly kind: FamilySectionKind;
+  /** Distinct CARDS of the section (7.3a C3). */
   readonly reactionCount: number;
+  /** Distinct reactions that are folded examples and no card of this section: "(+ n examples)". */
+  readonly exampleCount: number;
   readonly groups: readonly FamilyGroup[];
 }
 
@@ -113,7 +123,7 @@ export interface FamilyStudy {
   /** The family group and tone of the hub's anchor (step 5.5c); absent for Unclassified and for a hub without them. */
   readonly group?: string;
   readonly tone?: AnchorTone;
-  readonly counts: { readonly reactionsOf: number; readonly preparationOf: number; readonly total: number };
+  readonly counts: { readonly reactionsOf: number; readonly preparationOf: number; readonly total: number; readonly examples: number };
   readonly reactionTypes: readonly FamilyReactionType[];
   /** Families this one is made from (preparation groups) and turns into (reaction groups), with reaction counts. */
   readonly madeFrom: readonly FamilyPartner[];

@@ -6,6 +6,8 @@
 import { compareRank, comparePairs } from '../../indexes/pair-table';
 import type { NavigatorCandidate } from '../../indexes/contracts';
 import { compareStrings } from '../../indexes/table';
+import type { ExampleLookup } from '../family/examples';
+import { foldExamples } from '../family/examples';
 import { DEFAULT_DEGREE_CAP, type NodeReactionCounts } from '../contracts';
 
 export { compareRank };
@@ -46,13 +48,23 @@ export function groupPairs(arrows: Iterable<Arrow>): Pair[] {
   return pairs;
 }
 
-/** How many DISTINCT reactions a pair's arrows belong to (a reaction with several outcomes into the same pair is one reaction; step 7.2a). */
-export function reactionsOf(candidates: readonly NavigatorCandidate[]): number {
-  return new Set(candidates.map((candidate) => candidate.reactionId)).size;
+const idsOf = (candidates: readonly NavigatorCandidate[]): string[] => candidates.map((candidate) => candidate.reactionId as string);
+
+/**
+ * How many DISTINCT CARDS a pair's arrows belong to (a reaction with several outcomes into the same pair is one reaction, step 7.2a; an
+ * example whose general reaction is in the same pair is folded under it and not counted, 7.3a C3). Without a lookup nothing is folded.
+ */
+export function reactionsOf(candidates: readonly NavigatorCandidate[], lookup?: ExampleLookup): number {
+  return lookup === undefined ? new Set(idsOf(candidates)).size : foldExamples(idsOf(candidates), lookup).shown.length;
+}
+
+/** How many reactions of the pair are folded examples (the "+ n examples" of the count in words). */
+export function examplesInPair(candidates: readonly NavigatorCandidate[], lookup: ExampleLookup): number {
+  return foldExamples(idsOf(candidates), lookup).folded;
 }
 
 /** Per node, the distinct reactions of the pairs that leave it, enter it and loop on it (step 7.2a). */
-export function nodeReactionCounts(admitted: readonly Pair[]): Map<string, NodeReactionCounts> {
+export function nodeReactionCounts(admitted: readonly Pair[], lookup?: ExampleLookup): Map<string, NodeReactionCounts> {
   const sets = new Map<string, { out: Set<string>; into: Set<string>; loops: Set<string> }>();
   const at = (id: string) => {
     let entry = sets.get(id);
@@ -68,8 +80,20 @@ export function nodeReactionCounts(admitted: readonly Pair[]): Map<string, NodeR
     }
   }
   const counts = new Map<string, NodeReactionCounts>();
+  // 7.3a C3: each list is folded on its own (examples under their general reaction when it is in the same list)
+  const cards = (ids: Iterable<string>): { readonly n: number; readonly folded: number } => {
+    const list = [...ids];
+    if (lookup === undefined) return { n: list.length, folded: 0 };
+    const fold = foldExamples(list, lookup);
+    return { n: fold.shown.length, folded: fold.folded };
+  };
   for (const [id, one] of sets) {
-    counts.set(id, { out: one.out.size, in: one.into.size, loops: one.loops.size, outAll: new Set([...one.out, ...one.loops]).size, inAll: new Set([...one.into, ...one.loops]).size });
+    const out = cards(one.out);
+    const into = cards(one.into);
+    const loops = cards(one.loops);
+    const outAll = cards(new Set([...one.out, ...one.loops]));
+    const inAll = cards(new Set([...one.into, ...one.loops]));
+    counts.set(id, { out: out.n, in: into.n, loops: loops.n, outAll: outAll.n, inAll: inAll.n, ...(outAll.folded + inAll.folded + out.folded + into.folded + loops.folded === 0 ? {} : { outExamples: out.folded, inExamples: into.folded, loopExamples: loops.folded }) });
   }
   return counts;
 }

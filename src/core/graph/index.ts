@@ -7,7 +7,7 @@ export { createProjectionRegistry } from './registry';
 export type { BuildProjectionResult, ProjectionRegistry } from './registry';
 export { bundleEdges, drawnAsNode, flagsOf, projectionKey, referencing, sortEdges, sortNodes } from './kit';
 export { createDefaultProjectionRegistry, defaultProjectionDefinitions } from './defaults';
-export { arrowTextOf, MAX_ARROW_PARTS, MAX_CONDITION_PARTS } from './arrow-text';
+export { arrowPartsText, arrowTextOf, arrowWordsOf, joinerOf, MAX_ARROW_PARTS, MAX_CONDITION_PARTS, stageNumeral } from './arrow-text';
 export { fullEquationOf, fullEquationOfGroup, fullEquationsOfReaction } from './full-equation';
 export { previewOfDraft } from './draft-preview';
 export type { DraftPreview, PreviewGroup } from './draft-preview';
@@ -44,7 +44,7 @@ export type {
   TraversedEdge,
   VisitedNode,
 } from './traversal';
-export { compactEquationOf, createDescriber, familyStudy, reactionCard, UNCLASSIFIED_NAME } from './family';
-export type { ReactionCardMissing, FamilyCard, FamilyCardOutcome, FamilyElsewhere, FamilyGroup, FamilyOutcomeGroup, FamilyPartner, FamilyProduct, FamilyReactionType, FamilySection, FamilySectionKind, FamilyStudy, SelectivityWord } from './family';
+export { compactEquationOf, createDescriber, exampleLookupOf, familyStudy, foldExamples, reactionCard, UNCLASSIFIED_NAME } from './family';
+export type { ExampleFold, ExampleLookup, ReactionCardMissing, FamilyCard, FamilyCardOutcome, FamilyElsewhere, FamilyGroup, FamilyOutcomeGroup, FamilyPartner, FamilyProduct, FamilyReactionType, FamilySection, FamilySectionKind, FamilyStudy, SelectivityWord } from './family';
 export { buildReactionFilterInput, createReactionFilterMemo, filterReactions } from './reaction-filter';
 export type { ReactionFilterMemo, FacetOption, ReactionFacets, ReactionFilter, ReactionFilterEntry, ReactionFilterInput, ReactionFilterResult, ReactionFilterRow, SubstanceUse } from './reaction-filter';

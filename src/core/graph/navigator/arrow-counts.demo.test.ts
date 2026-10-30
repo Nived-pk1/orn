@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { documentToState } from '@/core/dataset';
 import { contextOf, requestOf } from '@/test-support/graph-state';
 import { buildDemoDocument } from '@/test-support/demo';
-import { familyStudy } from '../family';
+import { exampleLookupOf, familyStudy, foldExamples } from '../family';
 import { buildReactionFilterInput, filterReactions } from '../reaction-filter';
 import { navigatorProjection } from '.';
 
@@ -17,6 +17,9 @@ if (!parsed.ok) throw new Error('demo dataset has duplicate IDs');
 const ctx = contextOf(parsed.state);
 const projection = navigatorProjection.build(ctx, requestOf('navigator'));
 const rollup = ctx.indexes.navigatorRollup();
+// 7.3a C3: every number that says "reactions" counts CARDS: an example folded under its general reaction in the same list is not counted
+const lookup = exampleLookupOf(parsed.state);
+const cardsOf = (ids: Iterable<string>): number => foldExamples([...ids], lookup).shown.length;
 
 describe('the demo overview: one number per arrow', () => {
   it('has arrows where several outcomes of one reaction share a pair (the case that was counted twice)', () => {
@@ -27,9 +30,9 @@ describe('the demo overview: one number per arrow', () => {
   it('every pair of the demo: chip = inspector count = Reactions view count = distinct reactions', () => {
     const input = buildReactionFilterInput(ctx);
     for (const pair of rollup.pairs()) {
-      const distinct = new Set(pair.candidates.map((c) => c.reactionId)).size;
-      const inspector = new Set(rollup.candidatesFrom(pair.from).filter((c) => c.toHub === pair.to).map((c) => c.reactionId)).size;
-      const view = filterReactions(input, { fromFamilyIds: [pair.from], toFamilyIds: [pair.to] }, undefined).rows.length;
+      const distinct = cardsOf(new Set(pair.candidates.map((c) => c.reactionId as string)));
+      const inspector = cardsOf(new Set(rollup.candidatesFrom(pair.from).filter((c) => c.toHub === pair.to).map((c) => c.reactionId as string)));
+      const view = cardsOf(filterReactions(input, { fromFamilyIds: [pair.from], toFamilyIds: [pair.to] }, undefined).rows.map((row) => row.id));
       expect(inspector, `${pair.from} → ${pair.to}`).toBe(distinct);
       expect(view, `${pair.from} → ${pair.to}`).toBe(distinct);
       const bundle = projection.bundles.find((b) => b.from === pair.from && b.to === pair.to);
@@ -51,10 +54,10 @@ describe("a family's \"reactions out / in\" counts each reaction once, however m
     const hubs = projection.nodes.filter((node) => node.reactionCounts !== undefined);
     expect(hubs.length).toBeGreaterThan(0);
     for (const node of hubs) {
-      const out = new Set(rollup.candidatesFrom(node.id).map((c) => c.reactionId));
-      const into = new Set(rollup.candidatesTo(node.id).map((c) => c.reactionId));
-      expect(node.reactionCounts?.outAll, `${node.id} out`).toBe(out.size);
-      expect(node.reactionCounts?.inAll, `${node.id} in`).toBe(into.size);
+      const out = new Set(rollup.candidatesFrom(node.id).map((c) => c.reactionId as string));
+      const into = new Set(rollup.candidatesTo(node.id).map((c) => c.reactionId as string));
+      expect(node.reactionCounts?.outAll, `${node.id} out`).toBe(cardsOf(out));
+      expect(node.reactionCounts?.inAll, `${node.id} in`).toBe(cardsOf(into));
     }
   });
 
@@ -75,9 +78,11 @@ describe('the family pages count distinct reactions too', () => {
       if (study === null) continue;
       const from = new Set(rollup.candidatesFrom(hub.id).map((c) => c.reactionId));
       const to = new Set(rollup.candidatesTo(hub.id).map((c) => c.reactionId));
-      expect(study.counts.reactionsOf, `${hub.id} of`).toBe(from.size);
-      expect(study.counts.preparationOf, `${hub.id} prep`).toBe(to.size);
-      expect(study.counts.total, `${hub.id} total`).toBe(new Set([...from, ...to]).size);
+      // 7.3a C3: the counts are CARDS; a folded example is counted apart ("+ n examples"), so nothing is lost
+      expect(study.reactionsOf.reactionCount + study.reactionsOf.exampleCount, `${hub.id} of`).toBe(from.size);
+      expect(study.preparationOf.reactionCount + study.preparationOf.exampleCount, `${hub.id} prep`).toBe(to.size);
+      expect(study.counts.total + study.counts.examples, `${hub.id} total`).toBe(new Set([...from, ...to]).size);
+      expect(study.counts.reactionsOf, `${hub.id} of cards`).toBe(study.reactionsOf.reactionCount);
       for (const section of [study.reactionsOf, study.preparationOf]) {
         for (const group of section.groups) expect(new Set(group.cards.map((card) => card.reactionId)).size, `${hub.id} ${group.hubId}`).toBe(group.cards.length);
       }

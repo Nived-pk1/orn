@@ -45,7 +45,7 @@ afterEach(() => {
 
 const pccReaction = (app: FakeApp): Reaction => app.store.getState().records.reaction[PCC as never] as Reaction;
 const e2Card = (): HTMLElement => screen.getAllByRole('article').find((el) => el.querySelector('h4')?.textContent?.includes('alc. KOH')) as HTMLElement;
-const pccCard = (): HTMLElement => screen.getAllByRole('article').find((el) => el.querySelector('h4')?.textContent === 'Ethanol → ethanal (PCC)') as HTMLElement;
+const pccCard = (): HTMLElement => screen.getAllByRole('article').find((el) => el.querySelector('h4, h5')?.textContent === 'Ethanol → ethanal (PCC)') as HTMLElement;
 
 describe('the reaction editor through the real window', () => {
   it('Edit in the inspector opens it; a coefficient is saved, the full equation shows it, and Undo restores it', async () => {

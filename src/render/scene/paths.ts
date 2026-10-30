@@ -17,6 +17,8 @@ export interface DrawnPath {
   /** Reactions the path stands for: a bundle's distinct reactions (its total when it has no count), 1 for a single edge. A path may draw more edges than that (one per outcome). */
   readonly total: number;
   readonly bundled: boolean;
+  /** Of the reactions above, how many are examples folded under their general reaction and not counted in `total` (7.3a C3); absent: none. */
+  readonly examples?: number;
 }
 
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -24,7 +26,7 @@ const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 function bundlePath(bundle: EdgeBundle, byId: ReadonlyMap<string, GraphEdge>): DrawnPath | undefined {
   const edges = bundle.edgeIds.flatMap((id) => byId.get(id) ?? []);
   if (edges.length === 0) return undefined;
-  return { id: bundle.id, from: bundle.from, to: bundle.to, loop: bundle.from === bundle.to, edges, total: bundle.reactions ?? Math.max(bundle.total, edges.length), bundled: true };
+  return { id: bundle.id, from: bundle.from, to: bundle.to, loop: bundle.from === bundle.to, edges, total: bundle.reactions ?? Math.max(bundle.total, edges.length), bundled: true, ...(bundle.examples === undefined ? {} : { examples: bundle.examples }) };
 }
 
 /** Every drawn path of `projection`, sorted by id. A bundle that names no edge of the projection is not a path (the projection harness refuses it). */
