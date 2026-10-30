@@ -31,10 +31,12 @@ async function addStepWith(text: string, name: string, n: number): Promise<void>
 }
 
 describe('a new route', () => {
-  it('starts with an empty name, the purpose "Mine", no target and no steps; "Choose a name." until it has one', () => {
+  it('starts with an empty name, NO purpose (7.3a A1), no target and no steps; "Choose a name." until it has one', () => {
     const shown = showKnowledge('route', { blank: true });
-    expect(shown.draft()).toMatchObject({ kind: 'route', name: '', purpose: 'user', steps: [] });
-    expect((screen.getByLabelText('What this route is') as HTMLSelectElement).value).toBe('user');
+    expect(shown.draft()).toMatchObject({ kind: 'route', name: '', purpose: '', steps: [] });
+    const purpose = screen.getByLabelText('What this route is') as HTMLSelectElement;
+    expect(purpose.value).toBe('');
+    expect(purpose.options[0]?.textContent).toBe('Choose what this route is');
     expect(screen.getByText('Choose a name.')).toBeTruthy();
     expect(screen.getByText('No steps yet (RTE-003).')).toBeTruthy();
   });
@@ -82,10 +84,16 @@ describe('findings and Save', () => {
     await screen.findByRole('heading', { name: 'Save was refused' });
     set('Name (required)', 'Zz new route');
     await settle(shown);
+    await waitFor(() => expect(document.body.textContent).toContain('Choose a purpose')); // 7.3a A1: no purpose chosen yet, in words
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByRole('heading', { name: 'Save was refused' });
+    expect(Object.values(shown.rig.store.getState().records.route).some((r) => r.name === 'Zz new route')).toBe(false);
+    set('What this route is', 'user');
+    await settle(shown);
     await waitFor(() => expect(document.body.textContent).toContain('has no steps'));
     await addStepWith('Cannizzaro', 'Cannizzaro reaction of benzaldehyde', 1);
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(Object.values(shown.rig.store.getState().records.route).some((r) => r.name === 'Zz new route' && r.steps.length === 1)).toBe(true));
+    await waitFor(() => expect(Object.values(shown.rig.store.getState().records.route).some((r) => r.name === 'Zz new route' && r.purpose === 'user' && r.steps.length === 1)).toBe(true));
   });
 });
 

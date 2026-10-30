@@ -62,6 +62,7 @@ const countsOf = (
 /** The inspector with what only the window knows: the arrows on the canvas, whether the navigator is shown, how to open the pane. */
 function InspectorPanel(props: {
   readonly navigatorShown: boolean;
+  readonly explorerShown: boolean;
   readonly openPane: () => void;
   readonly closePane: () => void;
   readonly onReactions: (filter: Partial<ExplorerFilter>) => void;
@@ -70,12 +71,13 @@ function InspectorPanel(props: {
   const { inspector } = useApp();
   const editors = useEditors();
   const { model } = useNavigator();
-  const { navigatorShown, openPane, closePane, onReactions, onPrecursors } = props;
+  const { navigatorShown, explorerShown, openPane, closePane, onReactions, onPrecursors } = props;
   const host = useMemo<InspectorHost>(
     () => ({
       openPane,
       closePane,
       navigatorShown,
+      explorerShown,
       showReactions: (ref) => {
         const filter = filterFor(ref);
         if (filter !== undefined) onReactions(filter);
@@ -88,7 +90,7 @@ function InspectorPanel(props: {
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };
       },
     }),
-    [model, navigatorShown, openPane, closePane, editors, onReactions, onPrecursors],
+    [model, navigatorShown, explorerShown, openPane, closePane, editors, onReactions, onPrecursors],
   );
   return <Inspector ports={inspector} host={host} />;
 }
@@ -295,6 +297,7 @@ function WindowContent() {
             <ErrorBoundary label="The inspector">
               <InspectorPanel
                 navigatorShown={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
+                explorerShown={mode === REACTIONS_MODE || mode === PRECURSORS_MODE}
                 openPane={openPane}
                 closePane={closePane}
                 onReactions={onReactions}

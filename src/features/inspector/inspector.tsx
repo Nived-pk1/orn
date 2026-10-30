@@ -105,7 +105,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
   const badges = severityBadges(findings);
   const l4 = l4Words(ports.l4.statusOf(props.refOf));
   const place = placeOf(props.refOf, name, ports.indexes.current(), ports.ui, host.navigatorShown);
-  const status = props.note ?? place.line;
+  const status = props.note ?? (host.explorerShown === true ? undefined : place.line);
   return (
     <>
       <header className={styles.header}>

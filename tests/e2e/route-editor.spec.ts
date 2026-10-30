@@ -62,9 +62,10 @@ test.describe('the route editor (Studio)', () => {
     const seen = await watch(page);
     await openDemo(page);
     const dialog = await newRoute(page);
-    await expect(dialog.getByLabel('What this route is')).toHaveValue('user');
+    await expect(dialog.getByLabel('What this route is')).toHaveValue(''); // 7.3a A1: nothing chosen yet
     await expect(dialog.getByText('Choose a name.')).toBeVisible();
     await dialog.getByLabel('Name (required)').fill('Zz e2e route');
+    await dialog.getByLabel('What this route is').selectOption('user');
     await findAndAdd(dialog, 'Find the target compound by name', 'propan-2-ol', 'Compounds found', 'Add Propan-2-ol');
     await expect(dialog.getByText('has no steps')).toBeVisible({ timeout: 60_000 });
     await dialog.getByRole('button', { name: 'Add a step' }).click();

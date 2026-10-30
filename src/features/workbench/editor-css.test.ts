@@ -24,3 +24,23 @@ describe('editor.module.css (K1)', () => {
     expect(bodyOf('.row > .field')).toMatch(/flex:\s*1 1 100%/);
   });
 });
+
+const stepCss = readFileSync(new URL('./route-steps.module.css', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const stepBody = (selector: string): string => {
+  const at = stepCss.indexOf(`\n${selector} {`);
+  return at < 0 ? '' : stepCss.slice(at, stepCss.indexOf('}', at));
+};
+
+describe('route-steps.module.css (7.3a A2)', () => {
+  it('the step summary takes its own line and the four buttons stay on ONE row that never wraps', () => {
+    expect(stepBody('.stepSummary')).toMatch(/flex:\s*1 1 100%/);
+    expect(stepBody('.stepActions')).toMatch(/flex-wrap:\s*nowrap/);
+  });
+  it('a question in the button row may wrap, so Keep and Remove are never cut off', () => {
+    expect(stepCss).toMatch(/\.stepActions\[data-asking='true'\]\s*\{[^}]*flex-wrap:\s*wrap/);
+  });
+  it('on a phone the buttons are stacked, 44 px high', () => {
+    expect(stepBody('.stepActionsPhone')).toMatch(/flex-direction:\s*column/);
+    expect(stepCss).toMatch(/\.stepActionsPhone button\s*\{[^}]*min-height:\s*44px/);
+  });
+});

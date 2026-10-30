@@ -71,6 +71,8 @@ export interface InspectorHost {
   showArrowReactions?(ends: { readonly from: string; readonly to: string }): void;
   /** True while the navigator is the view on the canvas (a record can then have a place in it). */
   readonly navigatorShown: boolean;
+  /** True while an explorer (Reactions, Precursors, later Reagents) is the view: the "no place in this view" line is about the navigator map and is not shown there (7.3a A3). */
+  readonly explorerShown?: boolean;
   /** Opens the names editor of a record (ADR-040, step 6.1a part 4). Absent: no "Edit names" button. `unavailable` is the reason it cannot be used now (a read-only tab). The inspector knows no editor: this is the whole port. */
   readonly editNames?: { readonly unavailable: string | undefined; open(ref: RecordRef): void; /** Kinds that open the full editor: their button says "Edit" (step 6.2a); the others say "Edit names". */ readonly fullEditorKinds?: readonly string[]; /** Kinds with the shared Names type, supplied by the editors (the inspector imports no editing module, H2). */ readonly namesKinds?: readonly string[]; /** Duplicate a reaction or start a specific one from a generic one (step 6.7a); absent: no such buttons. */ startFrom?(mode: 'duplicate' | 'specific', ref: RecordRef): void; /** Delete (step 6.8a): shows the impact dialog; absent: no Delete button. */ remove?(ref: RecordRef): void };
 }

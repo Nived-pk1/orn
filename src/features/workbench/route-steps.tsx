@@ -11,6 +11,7 @@ import { choiceLine, RecordPicker } from './record-picker';
 import type { RecordPickerPort } from './record-picker-contracts';
 import type { SectionProps } from './section-props';
 import styles from './editor.module.css';
+import stepStyles from './route-steps.module.css';
 
 export interface RouteStepsProps extends SectionProps {
   readonly picker?: RecordPickerPort | undefined;
@@ -91,7 +92,8 @@ export function RouteStepsSection(props: RouteStepsProps) {
       <ol aria-label="Steps" className={styles.chips}>
         {view.steps.map((step, index) => (
           <li key={step.id} className={props.phone === true ? `${styles.row} ${styles.rowPhone}` : styles.row} data-step-id={step.id}>
-            <span>{summaryOf(step, index, props.picker)}</span>
+            <span className={stepStyles.stepSummary}>{summaryOf(step, index, props.picker)}</span>
+            <div className={props.phone === true ? `${stepStyles.stepActions} ${stepStyles.stepActionsPhone}` : stepStyles.stepActions} data-asking={asking === step.id ? 'true' : undefined}>
             <Button aria-label={`Edit step ${index + 1}`} aria-expanded={open === step.id} onClick={() => setOpen(open === step.id ? null : step.id)}>
               {open === step.id ? 'Close' : 'Edit'}
             </Button>
@@ -120,6 +122,7 @@ export function RouteStepsSection(props: RouteStepsProps) {
                 Remove
               </Button>
             )}
+            </div>
             {open !== step.id ? null : <OpenStep {...props} step={step} index={index} earlier={view.steps.slice(0, index).map((from, i) => ({ step: from, number: i + 1 }))} />}
           </li>
         ))}

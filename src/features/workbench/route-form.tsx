@@ -36,6 +36,7 @@ function IdentitySection(props: SectionProps) {
       <div className={styles.field}>
         <label htmlFor="route-purpose">What this route is</label>
         <select id="route-purpose" value={view.purpose} disabled={locked} aria-invalid={bad(props, 'purpose')} data-field-path="purpose" onChange={(event) => props.onEdit(setPurpose(event.target.value))}>
+          <option value="">Choose what this route is</option>
           {ROUTE_PURPOSES.map((purpose) => (
             <option key={purpose} value={purpose}>
               {ROUTE_PURPOSES_WORDS[purpose]}
