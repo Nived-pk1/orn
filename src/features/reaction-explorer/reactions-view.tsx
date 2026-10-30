@@ -141,7 +141,7 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
         </div>
       )}
       {phone && sheet ? (
-        <Dialog open onClose={() => setSheet(false)} title="Filters" size="screen" footer={<Button variant="primary" onClick={() => setSheet(false)}>{`Show ${result.rows.length} ${result.rows.length === 1 ? 'reaction' : 'reactions'}`}</Button>}>
+        <Dialog open onClose={() => setSheet(false)} title="Filters" size="screen" footer={<Button variant="primary" onClick={() => setSheet(false)}>{`Show ${cardRows.length} ${cardRows.length === 1 ? 'reaction' : 'reactions'}${folding.folded === 0 ? '' : ` (+ ${folding.folded} ${folding.folded === 1 ? 'example' : 'examples'})`}`}</Button>}>
           <div className={styles.sheet}>
             {sections.map((section) => (
               <section key={section.title} className={styles.sheetSection}>

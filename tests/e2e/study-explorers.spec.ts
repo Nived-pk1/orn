@@ -8,14 +8,15 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, expectPreview, watch } from './kit';
 import { record } from './editor-kit';
+import { demoWithExamplesAndStages, GENERAL, THREE_STAGE } from './examples-kit';
 
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
 test.use({ baseURL: STUDY });
 const TITLE = 'Organic Reaction Navigator';
 const DEMO_FILE = { name: 'my-own-data.orn.json', mimeType: 'application/json', buffer: readFileSync(resolve(process.cwd(), 'data/seed/demo.orn.json')) };
 
-async function importOwnData(page: Page): Promise<void> {
-  await chooseFile(page, DEMO_FILE);
+async function importOwnData(page: Page, file: Parameters<typeof chooseFile>[1] = DEMO_FILE): Promise<void> {
+  await chooseFile(page, file);
   await expectPreview(page);
   await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
@@ -113,6 +114,28 @@ test.describe('desktop', () => {
     for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate', 'Save as route', 'New route']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
     const editors = editorChunkNames();
     expect(scripts.filter((name) => editors.includes(name) || /^(editor-host|editor-session)-/.test(name)), 'editor chunks requested').toEqual([]);
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+
+  test('examples fold and the stages are numbered in Study too, with no editing control (step 7.3a C1, D1)', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page, STUDY);
+    await openStudy(page);
+    await importOwnData(page, demoWithExamplesAndStages());
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions' }).click();
+    const view = page.getByRole('region', { name: 'Reactions', exact: true });
+    await expect(view.locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
+    await expect(view.getByText(/^27 reactions \(\+ 3 examples\)$/).first()).toBeVisible();
+    const box = view.getByRole('searchbox', { name: 'Find by name' });
+    await box.fill('PCC');
+    const general = view.locator('article[data-reaction-id]').filter({ has: page.getByRole('heading', { level: 4, name: GENERAL }) });
+    await expect(general.locator('details[data-examples] summary').first()).toHaveText('Examples (3)');
+    expect(await general.locator('details[data-examples]').evaluate((el) => (el as HTMLDetailsElement).open)).toBe(false);
+    await box.fill('Zz three-stage');
+    const three = view.locator('article[data-reaction-id]').filter({ has: page.getByRole('heading', { level: 4, name: THREE_STAGE }) });
+    await expect(three).toContainText(/\(i\)[\s\S]*\(ii\)[\s\S]*\(iii\)/, { timeout: 60_000 });
+    for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate', 'Save as route', 'New route']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
     expect(await axeProblems(page)).toEqual([]);
     await expectClean(seen);
   });

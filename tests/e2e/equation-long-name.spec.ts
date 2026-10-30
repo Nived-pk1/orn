@@ -7,7 +7,7 @@
  */
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { expectClean, openPhoneApp, watch } from './kit';
+import { expectClean, openPhoneApp, watch, exampleCard } from './kit';
 import { canonicalInput, editorDialog, openDemo, openNamesEditor, palette, record, searchFor, shotsDir, showSpecies } from './editor-kit';
 
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
@@ -15,7 +15,6 @@ const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 
 /** Exactly 60 characters, with spaces and a hyphen, like a real long name. */
 const LONG_NAME = 'Ethanol, a two-carbon alcohol made by fermenting sugar: EtOH';
-const cardOf = (page: Page, title: RegExp): Locator => page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: title }) });
 
 interface Overlap {
   readonly what: string;
@@ -87,7 +86,7 @@ test('desktop 1280 x 800: a 60-character name overlaps nothing in the full equat
   const dismiss = page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' });
   while ((await dismiss.count()) > 0) await dismiss.first().click();
   await page.getByRole('button', { name: /^Aldehydes\s*\d+\s*reactions?$/ }).last().click();
-  const card = cardOf(page, /ethanal \(PCC\)/);
+  const card = await exampleCard(page, /ethanal \(PCC\)/);
   const scheme = await openEquation(card, false);
   await expect(scheme.locator('[data-equation-name]').filter({ hasText: LONG_NAME })).toHaveCount(1);
   await expectNothingOverlaps(card);
@@ -132,7 +131,7 @@ async function phoneWalk(page: Page, device: 'pixel7' | 'iphone14'): Promise<voi
   await page.getByRole('button', { name: /^Alcohols/ }).tap();
   await expect(page.getByRole('region', { name: /^Family page: Alcohols/ })).toBeVisible();
   await page.getByRole('button', { name: /^Aldehydes\s*\d+\s*reactions?$/ }).last().tap();
-  const card = cardOf(page, /ethanal \(PCC\)/);
+  const card = await exampleCard(page, /ethanal \(PCC\)/);
   const scheme = await openEquation(card, true);
   await expect(scheme).toHaveAttribute('data-layout', 'stacked');
   await expect(scheme.locator('[data-equation-name]').filter({ hasText: LONG_NAME })).toHaveCount(1);

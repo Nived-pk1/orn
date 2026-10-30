@@ -9,7 +9,7 @@
  */
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
+import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard } from './kit';
 
 /** One bond in the chem module's own units (the nominal bond of the fixed scale, `FIXED_SCALE_BOND_UNITS`). */
 const NOMINAL_BOND = 54;
@@ -194,7 +194,7 @@ test('the other textbook equations: PCC, an equilibrium (ester hydrolysis) and a
   await openFamily(page, 'cls_alcohols', /^Family page: Alcohols/);
 
   await page.getByRole('button', { name: /^Aldehydes\s*\d+\s*reactions?$/ }).last().click();
-  const pcc = cardOf(page, /ethanal \(PCC\)/);
+  const pcc = await exampleCard(page, /ethanal \(PCC\)/);
   const pccScheme = await openEquation(pcc);
   await expect(pccScheme.locator('[data-equation-arrow] [data-equation-above]')).toContainText('PCC');
   await expect.poll(async () => (await bondLengths(pccScheme)).length, { timeout: 30_000 }).toBeGreaterThan(0);

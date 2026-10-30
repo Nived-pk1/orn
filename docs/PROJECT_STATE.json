@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-29",
+  "lastUpdated": "2026-10-30",
   "currentPhase": 7,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -150,7 +150,7 @@
     "commit": "df8113c",
     "protectedCheckedAt": "2026-10-29"
   },
-  "nextStep": "7.3",
+  "nextStep": "7.3b",
   "nextStepTitle": "Reagent explorer",
   "canonicalSchemaVersion": 2,
   "gates": {
@@ -531,5 +531,17 @@
       "lookAndPhone": "9762982",
       "close": "see git log (equation: close)"
     }
+  },
+  "step73a": {
+    "status": "code done 2026-10-30 (parts A to E committed, check green); full e2e, deploy and push pending (the user starts the e2e)",
+    "commits": {
+      "A": "3028599",
+      "B": "8aaa9a4",
+      "D": "6bb7ff2",
+      "C": "4fdf111",
+      "E": "7ee5a9a"
+    },
+    "summary": "route purpose and step rows, no place line in explorers, examples fold under their general reaction (counts are cards), numbered stages (i), (ii), the Review page grouped by chapter or kind, fact sheet docs/reviews/step-7-3a-fact-sheet.md",
+    "reviewRequired": "docs/PROGRESS.md, Step 7.3a: no grouping by import (records carry no import id)"
   }
 }

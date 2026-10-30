@@ -7,7 +7,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
-import { expect, type BrowserContext, type Page } from '@playwright/test';
+import { expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { documentToState, serializeDocument, stateToDocument } from '@/core/dataset';
 import { generateTier, type GeneratorShape, type GeneratorTier } from '@/test-support/generator';
 import { withNavigatorAnchors } from '@/test-support/perf-kit';
@@ -224,4 +224,14 @@ export async function inertProblems(page: Page): Promise<string[]> {
     }
     return problems;
   });
+}
+
+/**
+ * A reaction folded under its general reaction (7.3a C1): opens every closed "Examples (n)" on the page and returns that reaction's own card
+ * (a level-5 heading inside the general card). The demo's "Ethanol → ethanal (PCC)" is the example of "1° alcohol → aldehyde (PCC)".
+ */
+export async function exampleCard(page: Page, name: string | RegExp): Promise<Locator> {
+  const closed = page.locator('details[data-examples]:not([open]) > summary');
+  for (let n = await closed.count(); n > 0; n = await closed.count()) await closed.first().click();
+  return page.getByRole('article').filter({ has: page.getByRole('heading', { level: 5, name }) }).last();
 }

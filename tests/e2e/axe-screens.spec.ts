@@ -7,7 +7,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, chooseFileViaMenu, expectClean, expectPreview, importDialog, loadDemo, openApp, watch, type UploadFile } from './kit';
+import { axeProblems, chooseFileViaMenu, expectClean, expectPreview, importDialog, loadDemo, openApp, watch, type UploadFile, exampleCard } from './kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const record = (page: Page) => page.getByRole('complementary', { name: 'Inspector' }).getByRole('article', { name: 'Record' });
@@ -49,8 +49,8 @@ test.describe('axe on every screen', () => {
     await openFamily(page);
     await clean(page, 'a family page');
 
-    await page.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).click();
-    const card = page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: 'Ethanol → ethanal (PCC)' }) });
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await card.getByRole('button', { name: 'Ethanol → ethanal (PCC)' }).click();
     await expect(record(page)).toHaveAttribute('data-record-id', 'rxn_ethanol-to-ethanal-pcc');
     await clean(page, 'the inspector, as it opens');

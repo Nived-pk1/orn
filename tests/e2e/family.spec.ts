@@ -7,7 +7,7 @@
  */
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection } from '@/core/graph';
 import { documentToState } from '@/core/dataset';
@@ -15,7 +15,7 @@ import { indexEngine } from '@/core/indexes';
 import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/limits';
 import { generateTier } from '@/test-support/generator';
 import { withNavigatorAnchors } from '@/test-support/perf-kit';
-import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, watch } from './kit';
+import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, watch, exampleCard } from './kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
@@ -36,7 +36,6 @@ async function openAlcohols(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { level: 2, name: 'Reactions of Alcohols' })).toBeVisible();
 }
 
-const cardOf = (page: Page, name: string): Locator => page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name }) });
 
 const transformOf = async (page: Page): Promise<{ x: number; y: number; scale: number }> =>
   page.evaluate(() => {
@@ -64,8 +63,8 @@ test.describe('the family page of the demo', () => {
     await page.waitForTimeout(800);
     await shot(page, 'family-alcohols-top-1280x800.png');
     // the partner strip brings the reader to a group
-    await page.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).click();
-    const pcc = cardOf(page, 'Ethanol → ethanal (PCC)');
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    const pcc = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await expect(pcc).toBeVisible();
     const images = pcc.getByRole('img');
     await expect(images).toHaveCount(2, { timeout: 60_000 });

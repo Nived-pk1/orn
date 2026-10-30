@@ -5,7 +5,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
+import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard } from './kit';
 
 async function openAlcohols(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -17,10 +17,11 @@ async function showPccCard(page: Page): Promise<void> {
   await expect(page.getByRole('region', { name: /^Family page: Alcohols/ })).toBeVisible();
   // the PCC card is in the group "Aldehydes" (Turns into): the "Turns into" partner button (the last of the two) brings the reader to it
   await page.getByRole('button', { name: /^Aldehydes\s*\d+\s*reactions?$/ }).last().click();
+  await exampleCard(page, /ethanal \(PCC\)/); // the PCC reaction is folded under the general oxidation (7.3a C1): its disclosure is opened
   await expect(pccCard(page)).toBeVisible();
 }
 
-const pccCard = (page: Page) => page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: /ethanal \(PCC\)/ }) });
+const pccCard = (page: Page) => page.locator('details[data-examples]').getByRole('article').filter({ has: page.getByRole('heading', { level: 5, name: /ethanal \(PCC\)/ }) });
 
 /**
  * What the ethanol picture of the PCC card looks like: the picture is an `<img>` with a blob URL (the page policy lets no script fetch it), so

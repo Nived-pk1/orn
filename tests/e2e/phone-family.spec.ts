@@ -8,7 +8,7 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, openPhoneApp, watch } from './kit';
+import { axeProblems, expectClean, openPhoneApp, watch, exampleCard } from './kit';
 
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
@@ -64,8 +64,8 @@ async function walk(page: Page, device: string): Promise<void> {
   expect(await axeProblems(page, 10), 'axe on the family page').toEqual([]);
 
   // a reaction scheme from top to bottom
-  await page.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).tap();
-  const card = page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: 'Ethanol → ethanal (PCC)' }) });
+  await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).tap();
+  const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
   await expect(card).toBeVisible();
   const scheme = card.getByRole('group').first();
   const figures = scheme.locator('figure');

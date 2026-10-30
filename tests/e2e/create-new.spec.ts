@@ -13,7 +13,7 @@
 import { resolve } from 'node:path';
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, openPhoneApp, watch } from './kit';
+import { axeProblems, expectClean, openPhoneApp, watch, exampleCard } from './kit';
 import { openDemo, record, shotsDir, showRecord } from './editor-kit';
 
 test.use({ actionTimeout: 60_000 });
@@ -152,7 +152,8 @@ test.describe('duplicate and specific (desktop)', () => {
     const family = page.getByRole('region', { name: 'Family page: Alcohols' });
     if (!(await family.isVisible())) await page.locator('svg [data-node-id="cls_alcohols"]').dblclick({ timeout: 30_000 });
     await expect(family).toBeVisible();
-    await expect(family.getByRole('heading', { level: 4, name: 'Zz ethanol -> ethanal (PCC)' })).toBeVisible({ timeout: 60_000 });
+    // a specific reaction made from the generic one is its example, so it is folded under it (7.3a C1)
+    await expect(await exampleCard(page, 'Zz ethanol -> ethanal (PCC)')).toBeVisible({ timeout: 60_000 });
     await expectClean(seen);
   });
 });

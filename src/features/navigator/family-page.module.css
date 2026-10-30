@@ -320,3 +320,12 @@
   width: 100%;
   text-align: left;
 }
+
+/* a phone (the two phone queries of ADR-039): the Examples summary is a 44 px target */
+@media (max-width: 699px), (pointer: coarse) and (max-height: 499px) {
+  .examples > summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

@@ -8,7 +8,7 @@
  */
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { loadDemo, openApp, watch } from './kit';
+import { loadDemo, openApp, watch, exampleCard } from './kit';
 import { startHeaderServer, type HeaderServer } from './support/header-server';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -21,8 +21,8 @@ const DELIBERATE = /Content Security Policy|Content-Security-Policy|CSP|unsafe-e
 async function structureAppears(page: Page): Promise<Locator> {
   await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
   await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
-  await page.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).click();
-  const card = page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: 'Ethanol → ethanal (PCC)' }) });
+  await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+  const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
   await expect(card).toBeVisible();
   return card.getByRole('img');
 }

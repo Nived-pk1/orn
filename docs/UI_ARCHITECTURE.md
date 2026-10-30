@@ -78,6 +78,8 @@ Zustand stores are small and sliced (selection, viewport, panels, filters, palet
 
 *2026-10-24 (ADR-042):* the Reactions row is now a filterable LIST of every reaction (cards or compact rows) with substance, family, type, named-reaction, review-status and name filters and facet counts, not the bipartite canvas. Built in 7.1b (2026-10-24; the filter itself is core code from 7.1a). As built: the mode rail's Reactions is a lazy chunk in BOTH editions; the header has the count line, a Cards | Compact choice and "Clear all filters"; the filter bar has Substance (a search box, then "Used as"), From family, To family, Type, Named reaction, Review status, "Find by name" and, with an exam scope, "Only <exam version>"; chosen values are removable chips; results are 30 at a time. A card is the family card of the WHOLE reaction (the navigator feature's card host, injected by the app); a reaction with no card shows its compact row with the reason.
 
+**As built (7.3a, 2026-10-30):** a reaction that says `instanceOfId` = G, where G exists and is generic, is an EXAMPLE of G. In any list that shows G's card the example is not a card of its own: G's card has a CLOSED "Examples (n)" under "Show full equation" (the example's name is a link that selects it, then its own scheme); where G's card is not in the list the example is a card with "Example of <G>". Lists: a family page group, the Reactions view (Cards and Compact: the general row says "n examples"), one starting-material block of Precursors, an arrow's reaction list. Every count of cards says the folded examples in words: "27 reactions (+ 3 examples)". A reaction with two or more stages numbers them "(i)", "(ii)" over and under its arrow (one text function for the card, the full equation, the phone's downward arrow and a route step). The Review page groups by Chapter or Kind (§9 of ADR-042's addendum).
+
 **As built (7.2b):** Precursors and Reactions are two explorers, one at a time. The route editor (Studio only, lazy) is reached from Workbench > New route and from "Save as route" on a found route; the inspector's Edit opens it on a saved route. A found route that equals a saved one shows "Saved as <name>".
 
 ## 6. Rendering architecture
@@ -189,6 +191,8 @@ First run offers "Load demo dataset", "Import v6 export" and "Start empty". Load
 
 - *2026-10-13 (step 5.10a review, REVIEW REQUIRED 1).* After the first-run screen, and after any import ends, focus moves to the page title (the `h1`), not to a heading inside the main region. This is the one focus target for those two moments.
 
+- *2026-10-30 (ADR-042 addendum, step 7.3a):* the inspector's "Examples (n)" of a general reaction is a CLOSED disclosure; a specific one keeps "Example of <general>"; the inspector's place line ("has no place in this view") is about the navigator map and is not shown while Reactions or Precursors is the view.
+
 ## 13. Phone layout
 
 *2026-10-16 (ADR-039, reviewer decisions).* Supersedes the < 900 px rules of §2 for phones only; the desktop and tablets (>= 700 px wide) render exactly as before.
@@ -203,3 +207,5 @@ First run offers "Load demo dataset", "Import v6 export" and "Start empty". Load
 - *2026-10-24 (ADR-042, built in 7.1b):* the phone bottom tabs become "Families | Map | Explore | Search"; Explore opens the last explorer used (the Reactions list in 7.1); its filters are behind "Filters (n)" in a full-screen sheet; one column; 44 px targets. As built (7.1b): the Explore tab sets the Reactions mode on a phone, the full-screen sheet is titled "Filters" with one heading per filter and a "Show <n> reactions" button; Alt+Enter in the palette and "Show its reactions" / "Open these <n> reactions in Reactions" in the inspector open the view filtered.
 
 **As built (7.2b):** the Explore tab shows a "Reactions | Precursors" switch (44 px targets, the current one marked) and opens the last explorer used; the route card's step is three lines (title, reaction, conditions); "Show its reactions" and "How to make it" are in the inspector's full sheet.
+
+**As built (7.3a):** on a phone an example's disclosure summary is a 44 px target; the numbered stages sit beside and under the downward arrow; a route step's summary and its four buttons are stacked 44 px in the route editor; the Review page's filters would sit behind "Filters (n)" (44 px targets) but the page has no way in on a phone (no mode list).

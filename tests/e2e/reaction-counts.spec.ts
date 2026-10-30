@@ -12,7 +12,7 @@ import { openDemo, pane, shotsDir } from './editor-kit';
 
 test.use({ actionTimeout: 60_000 });
 
-const TOTAL = 27; // the reactions of the demo
+const TOTAL = 26; // the CARDS of the demo (27 reactions, one folded under its general reaction, 7.3a C1)
 const modes = (page: Page) => page.getByRole('navigation', { name: 'Modes' });
 const reactions = (page: Page) => page.getByRole('region', { name: 'Reactions', exact: true });
 
@@ -42,7 +42,7 @@ test.describe('Studio, desktop', () => {
       seenCounts[`${cells[0]} > ${cells[1]}`] = count;
       await row.click();
       const list = pane(page).getByRole('region', { name: 'Reactions on this arrow' });
-      if (count >= 2) await expect(list.getByRole('heading', { name: `Reactions on this arrow (${count})` })).toBeVisible();
+      if (count >= 2) await expect(list.getByRole('heading', { name: new RegExp(`^Reactions on this arrow \\(${count}\\)( \\(\\+ \\d+ examples?\\))?$`) })).toBeVisible();
       else await expect(list).toHaveCount(0);
     }
     // the three arrows that counted outcomes (the numbers before 7.2a were 4, 2 and 2)

@@ -82,13 +82,14 @@ describe('the Filters sheet', () => {
     for (const title of ['Substance', 'From family', 'To family', 'Type', 'Named reaction', 'Review status']) expect(within(sheet).getByRole('heading', { name: title })).toBeTruthy();
     const box = within(sheet).getAllByRole('checkbox', { name: /^Oxidation \(\d+\)$/ })[0] as HTMLElement;
     fireEvent.click(box);
-    const show = within(sheet).getByRole('button', { name: /^Show \d+ reactions?$/ });
+    const show = within(sheet).getByRole('button', { name: /^Show \d+ reactions?( \(\+ \d+ examples?\))?$/ });
     const n = Number(/\d+/.exec(show.textContent ?? '')?.[0]);
     expect(n).toBeGreaterThan(0);
     fireEvent.click(show);
     expect(screen.queryByRole('dialog', { name: 'Filters' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Filters (1)' })).toBeTruthy();
-    expect(document.querySelectorAll('[data-reaction-id]')).toHaveLength(n);
+    // the cards of the list; a folded example is inside its general card's closed disclosure (7.3a C1)
+    expect([...document.querySelectorAll('[data-reaction-id]')].filter((el) => el.closest('details') === null)).toHaveLength(n);
   });
 
   it('a chip removes a filter on the phone too', async () => {

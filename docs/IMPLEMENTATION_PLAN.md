@@ -190,7 +190,7 @@ Reaction explorer, precursor explorer with route-search panel, reagent explorer,
 |---|---|
 | 7.1 | **DONE 2026-10-24.** Reaction explorer. **7.1a:** pictures on any record (the content track's request) and the pure reaction filter in core. **7.1b:** the Reactions view on desktop and phone, its entry points (mode rail, palette Alt+Enter, inspector, an arrow's reactions = Phase 5's bundle fan-out), row close with the full e2e run and deploy. |
 | 7.2 | **DONE 2026-10-29.** Precursor explorer + route-search panel + the ROUTE editor in Studio. **7.2a:** the Precursors view (a target, what makes it, saved routes, a route search). **7.2b:** the route editor, "Save as route" on a found route, Precursors on the phone, the follow-ups of the 7.2a review. |
-| 7.3 | Reagent explorer (a profile's conditions shown BESIDE the reactions that use it, never merged into the arrow text). |
+| 7.3 | **Split 2026-10-30.** **7.3a (code done 2026-10-30; e2e, deploy and push pending):** content-readiness fixes: route purpose and step rows, the inspector's place line, examples fold under their general reaction (counts are cards), numbered stages (i), (ii) on the arrow, the Review page grouped by chapter or kind. **7.3b: Reagent explorer** (a profile's conditions shown BESIDE the reactions that use it, never merged into the arrow text), next. |
 | 7.4 | Named reactions view. |
 | 7.5 | Mechanisms view. |
 | 7.6 | Syllabus view with version diff. |

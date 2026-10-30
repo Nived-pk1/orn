@@ -9,7 +9,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, expectPreview, importDialog, inertProblems, openApp, watch } from './kit';
+import { axeProblems, expectClean, expectPreview, importDialog, inertProblems, openApp, watch, exampleCard } from './kit';
 import { ASSET_ID, HOSTILE_FILE_NAME, HOSTILE_REACTION, HOSTILE_REF_TITLE, HOSTILE_SPECIES, HOSTILE_WORD, REACTION_ID, REF_ID, SCRIPT_TEXT, hostileFile } from './support/hostile-file';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
@@ -58,10 +58,11 @@ test.describe('hostile data', () => {
     await inert('the overview');
     await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
     await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
-    await page.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).click();
-    const card = page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: HOSTILE_REACTION }) });
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    // the renamed reaction is the PCC example, folded under the general oxidation (7.3a C1): its card is inside the "Examples (1)" disclosure
+    const card = await exampleCard(page, HOSTILE_REACTION);
     await expect(card).toBeVisible();
-    await expect(card.getByRole('heading', { level: 4 })).toHaveText(HOSTILE_REACTION);
+    await expect(card.getByRole('heading', { level: 5 }).first()).toHaveText(HOSTILE_REACTION);
     await inert('the family page');
 
     // 3. the inspector, every level

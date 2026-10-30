@@ -19,12 +19,14 @@ test.use({ actionTimeout: 60_000 });
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 
-const TOTAL = 27; // the reactions of the demo
+const TOTAL = 26; // the CARDS of the demo: 27 reactions, one of them (the PCC example) folded under its general reaction (7.3a C1)
+const EXAMPLES = '\\(+ \\d+ examples?\\)'; // "(+ 1 example)" in words
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const modes = (page: Page) => page.getByRole('navigation', { name: 'Modes' });
 const view = (page: Page) => page.getByRole('region', { name: 'Reactions', exact: true });
 const countLine = (page: Page, text: string | RegExp) => view(page).getByText(text, { exact: typeof text === 'string' }).first();
-const rows = (page: Page) => view(page).locator('[data-reaction-id]');
+// the rows of the list; an example inside a closed "Examples (n)" is not a row of its own
+const rows = (page: Page) => view(page).locator('xpath=.//*[@data-reaction-id][not(ancestor::details)]');
 const chips = (page: Page) => view(page).getByRole('list', { name: 'Chosen filters' }).getByRole('listitem');
 
 async function openDemo(page: Page): Promise<void> {
@@ -54,7 +56,7 @@ test.describe('desktop', () => {
     const seen = await watch(page);
     await openDemo(page);
     await openReactions(page);
-    await expect(countLine(page, `${TOTAL} reactions`)).toBeVisible();
+    await expect(countLine(page, `${TOTAL} reactions (+ 1 example)`)).toBeVisible();
     expect(await rows(page).count()).toBe(TOTAL);
     await page.screenshot({ path: `${shotsDir()}/reactions-cards-1280x800.png` });
 
@@ -63,12 +65,12 @@ test.describe('desktop', () => {
       await tickFirst(page, filter);
       await expect(chips(page)).toHaveCount(1);
       expect(await rows(page).count(), filter).toBeLessThanOrEqual(TOTAL);
-      await expect(countLine(page, new RegExp(`^\\d+ of ${TOTAL} reactions$`))).toBeVisible();
+      await expect(countLine(page, new RegExp(`^\\d+ of ${TOTAL} reactions( ${EXAMPLES})?$`))).toBeVisible();
       if (filter === 'Type') await page.screenshot({ path: `${shotsDir()}/reactions-filter-open-1280x800.png` });
       await page.keyboard.press('Escape');
       await chips(page).first().getByRole('button', { name: /^Remove / }).click();
       await expect(chips(page)).toHaveCount(0);
-      await expect(countLine(page, `${TOTAL} reactions`)).toBeVisible();
+      await expect(countLine(page, `${TOTAL} reactions (+ 1 example)`)).toBeVisible();
     }
 
     // the Type filter again, by name, with the live region saying the count
@@ -78,7 +80,7 @@ test.describe('desktop', () => {
     const narrowed = await rows(page).count();
     expect(narrowed).toBeGreaterThan(0);
     expect(narrowed).toBeLessThan(TOTAL);
-    await expect(view(page).getByRole('status', { name: 'Announcements' })).toHaveText(`${narrowed} of ${TOTAL} reactions`);
+    await expect(view(page).getByRole('status', { name: 'Announcements' })).toHaveText(new RegExp(`^${narrowed} of ${TOTAL} reactions( ${EXAMPLES})?$`));
     await page.keyboard.press('Escape');
 
     // Substance: search, choose, Used as
@@ -97,7 +99,7 @@ test.describe('desktop', () => {
     // Cards and Compact
     await view(page).getByRole('radio', { name: 'Compact' }).check();
     await expect(view(page).locator('article[data-reaction-id]')).toHaveCount(0);
-    expect(await view(page).locator('li[data-reaction-id]').count()).toBe(TOTAL);
+    expect(await view(page).locator('li[data-reaction-id]').count()).toBe(TOTAL + 1); // every row, the folded example's too
     await page.screenshot({ path: `${shotsDir()}/reactions-compact-1280x800.png` });
 
     // empty state
@@ -185,7 +187,7 @@ test.describe('desktop', () => {
     await expect(chips(page)).toHaveCount(2);
     await expect(chips(page).nth(0)).toContainText('From family: ');
     await expect(chips(page).nth(1)).toContainText('To family: ');
-    await expect(countLine(page, `${n} of ${TOTAL} reactions`)).toBeVisible();
+    await expect(countLine(page, new RegExp(`^${n} of ${TOTAL} reactions( ${EXAMPLES})?$`))).toBeVisible();
     expect(await rows(page).count()).toBe(n);
     await expectClean(seen);
   });
@@ -201,8 +203,9 @@ test.describe('desktop', () => {
     expect(marked).toBeGreaterThan(0);
     expect(await rows(page).count()).toBe(TOTAL); // nothing is hidden by default
     await view(page).getByRole('checkbox', { name: /^Only / }).check();
-    await expect(countLine(page, new RegExp(`^${TOTAL - marked} of ${TOTAL} reactions \\(${marked} outside JEE Main hidden\\)$`))).toBeVisible();
-    expect(await rows(page).count()).toBe(TOTAL - marked);
+    // the marked reactions (cards and folded examples alike) are the hidden ones; what is left is counted as cards
+    await expect(countLine(page, new RegExp(`^\\d+ of ${TOTAL} reactions( ${EXAMPLES})? \\(${marked} outside JEE Main hidden\\)$`))).toBeVisible();
+    expect(await rows(page).count()).toBeLessThan(TOTAL);
     expect(await axeProblems(page)).toEqual([]);
     await expectClean(seen);
   });
@@ -252,12 +255,12 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   await sheet.getByRole('checkbox', { name: /^Oxidation \(\d+\)$/ }).first().check();
   await page.screenshot({ path: `${shotsDir()}/phone-reactions-filters-${device}.png` });
   expect(await axeProblems(page, 10)).toEqual([]);
-  const show = sheet.getByRole('button', { name: /^Show \d+ reactions?$/ });
+  const show = sheet.getByRole('button', { name: /^Show \d+ reactions?( \(\+ \d+ examples?\))?$/ });
   const n = Number(/\d+/.exec((await show.textContent()) ?? '')?.[0]);
   await show.tap();
   await expect(sheet).toBeHidden();
   await expect(view(page).getByRole('button', { name: 'Filters (1)' })).toBeVisible();
-  expect(await view(page).locator('[data-reaction-id]').count()).toBe(n);
+  expect(await rows(page).count()).toBe(n); // the rows of the list; a folded example is inside its general card
   // a card selects its reaction: the sheet shows it
   await view(page).locator('article[data-reaction-id]').first().getByRole('button').first().tap();
   await expect(page.getByRole('article', { name: 'Record' })).toBeVisible();

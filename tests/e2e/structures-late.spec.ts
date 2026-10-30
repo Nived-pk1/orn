@@ -6,7 +6,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { loadDemo, openApp } from './kit';
+import { loadDemo, openApp, exampleCard } from './kit';
 
 const WASM_HELD_MS = 14_000;
 
@@ -25,8 +25,8 @@ test.describe('structures asked for before the engine is ready', () => {
     await openApp(page);
     await loadDemo(page);
     await openAlcohols(page);
-    await page.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).click();
-    const card = page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: 'Ethanol → ethanal (PCC)' }) });
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await expect(card).toBeVisible();
     // not drawn yet: the wasm is held; the card says so, in words, without an error look
     await expect(card.getByText('Drawing the structure…').first()).toBeVisible();

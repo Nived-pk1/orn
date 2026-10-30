@@ -6,7 +6,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
+import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard } from './kit';
 
 const pane = (page: Page) => page.getByRole('complementary', { name: 'Inspector' });
 const record = (page: Page) => pane(page).getByRole('article', { name: 'Record' });
@@ -30,8 +30,8 @@ test.describe('the inspector', () => {
 
     await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
     await page.getByRole('region', { name: /^Family page: Alcohols/ }).waitFor();
-    await page.getByRole('button', { name: /^Aldehydes\s*3\s*reactions$/ }).click();
-    const pcc = page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: 'Ethanol → ethanal (PCC)' }) });
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    const pcc = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await pcc.getByRole('button', { name: 'Ethanol → ethanal (PCC)' }).click();
     await expect(record(page).getByRole('heading', { level: 3, name: 'Ethanol → ethanal (PCC)' })).toBeVisible();
     await expect(record(page).getByRole('list', { name: 'Participants' })).toBeVisible();
