@@ -4,7 +4,7 @@
  * a bulk change as ONE envelope, which is one Undo step.
  */
 import type { CommandEnvelope } from '@/core/commands';
-import type { FindingsOf } from '@/core/editing';
+import type { FindingsOf, GroupBy } from '@/core/editing';
 import type { CanonicalState, RecordRef } from '@/core/schema';
 
 export interface ReviewPort {
@@ -22,4 +22,6 @@ export interface ReviewPort {
   /** Why this record has no editor (a sentence), or undefined when "Edit" opens one. */
   editReason(ref: RecordRef): string | undefined;
   edit(ref: RecordRef): void;
+  /** The saved "Group by" choice (7.3a E1): what to open with (read tolerantly by the app) and how to keep a change. Absent: Kind, not kept. */
+  readonly grouping?: { readonly initial: GroupBy; save(value: GroupBy): void };
 }

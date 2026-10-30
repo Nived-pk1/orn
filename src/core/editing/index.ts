@@ -23,5 +23,7 @@ export { isMergeable, mergeEnvelope, mergePreview, MERGE_KINDS } from './merge';
 export type { MergePick, MergePreview, ScalarChoice } from './merge';
 export { kindWordsOf, markVerifiedEnvelope, needsReviewEnvelope, queueRows, STATUS_WORDS, verifyPlan } from './review-queue';
 export type { FindingsOf, QueueFilters, QueueFinding, QueueRow, ReviewStatus, VerifyPlan } from './review-queue';
+export { chapterIndexOf, facetCountsOf, groupByOf, groupQueueRows, NO_CHAPTER_TITLE, rowsMatching } from './review-groups';
+export type { Chapter, ChosenFacets, FacetOption, Facets, GroupBy, ReviewGroup } from './review-groups';
 export { assetRoleOfPictureKind, isPictureKind, PICTURE_KINDS, picturesOf } from './picture-kinds';
 export type { PictureKind } from './picture-kinds';

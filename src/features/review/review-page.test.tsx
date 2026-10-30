@@ -19,8 +19,13 @@ import { ReviewPage } from './review-page';
 // jsdom does no layout: the virtual list would see a 0 px window. Give elements a size.
 beforeAll(() => {
   stubDialog();
-  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => 84 });
-  HTMLElement.prototype.getBoundingClientRect = () => ({ x: 0, y: 0, top: 0, left: 0, right: 800, bottom: 84, width: 800, height: 84, toJSON: () => ({}) });
+  // group headings (7.3a) are items of the list too, so the scroll area is made tall: every item is rendered
+  const isScroller = (el: Element): boolean => el.hasAttribute('data-virtual-list');
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get(this: HTMLElement) { return isScroller(this) ? 20_000 : 84; } });
+  HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+    const height = isScroller(this) ? 20_000 : 84;
+    return { x: 0, y: 0, top: 0, left: 0, right: 800, bottom: height, width: 800, height, toJSON: () => ({}) };
+  };
 });
 afterEach(cleanup);
 
@@ -76,7 +81,8 @@ function show(port: ReviewPort) {
     </ToastProvider>,
   );
 }
-const rows = (): HTMLElement[] => within(screen.getByRole('list', { name: 'Records to review' })).getAllByRole('listitem');
+// the group headings (7.3a E1) are items of the same list; a row is an item without one
+const rows = (): HTMLElement[] => within(screen.getByRole('list', { name: 'Records to review' })).getAllByRole('listitem').filter((item) => item.querySelector('h3') === null);
 const rowOf = (name: string): HTMLElement => {
   const found = rows().find((row) => row.textContent?.includes(name));
   if (found === undefined) throw new Error(`no row for ${name}`);
@@ -119,12 +125,12 @@ describe('filters', () => {
     );
     show(r.port);
     expect(rows()).toHaveLength(3);
-    fireEvent.change(screen.getByLabelText('Kind'), { target: { value: 'species' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Kind' }), { target: { value: 'species' } });
     expect(rows()).toHaveLength(2);
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'review_required' } });
     expect(rows()).toHaveLength(1);
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText('Kind'), { target: { value: '' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Kind' }), { target: { value: '' } });
     fireEvent.click(screen.getByLabelText('Has errors'));
     expect(rows()).toHaveLength(1);
     fireEvent.click(screen.getByLabelText('Has errors'));

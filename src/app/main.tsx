@@ -18,6 +18,7 @@ import { createFactsPort } from './window/facts-port';
 import { createLocalTimeFormatter } from './window/local-time';
 import { createNavigatorPorts } from './window/navigator-port';
 import { createPanelsPort, createUiEntryPort } from './window/panels-port';
+import { createReviewUiPort } from './window/review-ui';
 
 /** The dataset this build ships, served from this origin: the published study dataset or the bundled demo (the import pipeline reads it like any file the user picks). */
 async function loadDemo(): Promise<DemoLoad> {
@@ -57,7 +58,7 @@ async function start(): Promise<void> {
   window.addEventListener('pagehide', () => void navigatorUi.flush());
   createRoot(rootElement).render(
     <StrictMode>
-      <App value={{ services, panels, navigator, inspector, loadDemo, dataset: createDatasetInfo(services, dataset.kind === 'published' ? dataset : null), nowMs: () => env.clock.nowMs(), formatTime: createLocalTimeFormatter(), reload: () => window.location.reload() }} />
+      <App value={{ services, panels, navigator, inspector, loadDemo, dataset: createDatasetInfo(services, dataset.kind === 'published' ? dataset : null), nowMs: () => env.clock.nowMs(), formatTime: createLocalTimeFormatter(), reviewUi: createReviewUiPort(services), reload: () => window.location.reload() }} />
     </StrictMode>,
   );
 }

@@ -11,6 +11,7 @@ import type { EditorEntries } from './editor-entries';
 import type { EditorsControllerType } from './editors-api';
 import type { TimeFormatter } from './local-time';
 import type { DatasetInfo } from './dataset-types';
+import type { ReviewUiPort } from './review-ui';
 
 /** What the window needs from the services (so a test can fake only these). */
 export type WindowServices = Pick<AppServices, 'store' | 'status' | 'flows' | 'saveEverythingNow' | 'retryReplica' | 'retryEngine' | 'search' | 'drafts' | 'routes'> & Partial<Pick<AppServices, 'searchSync' | 'draftChecks' | 'chem' | 'duplicateCheck' | 'assets' | 'persistence'>>;
@@ -29,6 +30,8 @@ export interface AppContextValue {
   readonly navigator: NavigatorPorts;
   /** What the inspector needs (step 5.6a): the store, findings, L4 checks, depictions and the UI stores. */
   readonly inspector: InspectorPorts;
+  /** The Review page's saved choices (7.3a E1). Absent: nothing is kept. */
+  readonly reviewUi?: ReviewUiPort;
   /** The injected clock in milliseconds (the export file name's date). Absent: 0, which a test never relies on. */
   nowMs?(): number;
   /** Local time for the words people read (a stored UTC time shown in their zone). Absent: the machine's own zone. */

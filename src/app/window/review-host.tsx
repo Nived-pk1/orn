@@ -4,6 +4,7 @@
  * No chemistry: it hands the feature the store's state, the findings and a way to dispatch ONE envelope.
  */
 import { useMemo } from 'react';
+import { groupByOf, type GroupBy } from '@/core/editing';
 import { ReviewPage, type ReviewPort } from '@/features/review/layer';
 import { useApp } from './context';
 import { useEditors } from './drafts-ui';
@@ -13,6 +14,8 @@ export function createReviewPort(args: {
   readonly nowMs: (() => number) | undefined;
   readonly open: ReviewPort['open'];
   readonly editors: ReturnType<typeof useEditors>;
+  /** The saved "Group by" choice and how to keep one (7.3a E1); absent: no grouping port (the bulk dialogs need none). */
+  readonly grouping?: { readonly stored: unknown; save(value: { readonly groupBy: GroupBy }): void };
 }): ReviewPort {
   const { store, nowMs, editors } = args;
   const editable = new Set([...(editors?.fullEditorKinds ?? []), ...(editors?.namesKinds ?? [])]);
@@ -36,11 +39,13 @@ export function createReviewPort(args: {
     open: args.open,
     editReason: (ref) => (editors === null ? 'Editing is not available here.' : editable.has(ref.kind) ? undefined : `${ref.kind.replace(/_/g, ' ')} has no editor of its own yet; use Open in the inspector.`),
     edit: (ref) => editors?.editNames(ref),
+    ...(args.grouping === undefined ? {} : { grouping: { initial: groupByOf(args.grouping.stored), save: (value: GroupBy) => args.grouping?.save({ groupBy: value }) } }),
   };
 }
 
 export function ReviewHost() {
   const { services, inspector, nowMs } = useApp();
+  const { reviewUi } = useApp();
   const editors = useEditors();
   const port = useMemo(
     () =>
@@ -48,12 +53,13 @@ export function ReviewHost() {
         store: services.store,
         nowMs,
         editors,
+        ...(reviewUi === undefined ? {} : { grouping: { stored: reviewUi.stored, save: (value: { readonly groupBy: GroupBy }) => reviewUi.save(value) } }),
         open: (ref) => {
           inspector.ui.inspector.getState().open(ref);
           inspector.ui.panels.getState().setInspectorOpen(true);
         },
       }),
-    [services, inspector, nowMs, editors],
+    [services, inspector, nowMs, editors, reviewUi],
   );
   return <ReviewPage port={port} />;
 }
