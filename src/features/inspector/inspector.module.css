@@ -10,6 +10,17 @@
 .badges li[data-severity='error'] { border-color: var(--color-error); }
 .badges li[data-severity='review_required'] { border-color: var(--color-review); }
 .actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 24px;
+}
+
 .status { margin: 0; color: var(--color-ink-2); font-size: var(--text-13); }
 .level { border-top: 1px solid var(--color-rule); padding-top: var(--space-2); }
 .levelHeading { margin: 0; font-size: var(--text-16); }

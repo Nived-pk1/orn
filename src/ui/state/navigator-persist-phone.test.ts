@@ -52,3 +52,27 @@ describe('the phone tab', () => {
     expect(second.saves.at(-1)).not.toHaveProperty('phoneTab');
   });
 });
+
+describe('the Chapters tab and the default tab (7.3b E1)', () => {
+  it('chapters is a known tab', () => {
+    expect(parseNavigatorUi({ phoneTab: 'chapters' })).toMatchObject({ phoneTab: 'chapters', damaged: [] });
+  });
+  it('the app adopts a default tab only while the visitor has not chosen one; a chosen Families is saved and wins', async () => {
+    const t = timers();
+    const first = port();
+    const ui = createNavigatorUi(first.value, t);
+    ui.stores.overview.getState().adoptDefaultTab('chapters');
+    expect(ui.stores.overview.getState().phoneTab).toBe('chapters');
+    t.fire();
+    await ui.flush();
+    expect(first.saves.at(-1)).not.toHaveProperty('phoneTab'); // the default is not saved
+    ui.stores.overview.getState().setPhoneTab('families');
+    t.fire();
+    await ui.flush();
+    const saved = first.saves.at(-1);
+    expect(saved).toMatchObject({ phoneTab: 'families' });
+    const again = createNavigatorUi(port({ stored: saved }).value, t);
+    again.stores.overview.getState().adoptDefaultTab('chapters');
+    expect(again.stores.overview.getState().phoneTab).toBe('families');
+  });
+});

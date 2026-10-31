@@ -188,10 +188,16 @@ describe('Studio on a phone', () => {
   });
 });
 
+/** Study opens on Chapters when the dataset has a chapter topic (7.3b D5); these tests are about the map, so the demo's chapters become sections. */
+const withoutChapters = (state: ReturnType<Loaded['demoState']>): ReturnType<Loaded['demoState']> => ({
+  ...state,
+  records: { ...state.records, topic: Object.fromEntries(Object.entries(state.records.topic).map(([id, t]) => [id, { ...t, topicKind: t.topicKind === 'chapter' ? 'section' : t.topicKind }])) },
+}) as ReturnType<Loaded['demoState']>;
+
 describe('Study has none of it', () => {
   it('Shift-click is a plain click: one selection, no multi-selection line, no bulk buttons', async () => {
     const k = loaded.study;
-    const app = k.fakeApp({ state: k.demoState(), navigator: { depictions: true } });
+    const app = k.fakeApp({ state: withoutChapters(k.demoState()), navigator: { depictions: true } });
     k.renderWithApp(app);
     await drawing(k);
     k.tap(hub(k, 'Aldehydes'), { shift: true });
@@ -202,7 +208,7 @@ describe('Study has none of it', () => {
   it('a Study phone has no Select toggle', async () => {
     const k = loaded.study;
     asPhone(k);
-    k.renderWithApp(k.fakeApp({ state: k.demoState(), navigator: { depictions: true } }));
+    k.renderWithApp(k.fakeApp({ state: withoutChapters(k.demoState()), navigator: { depictions: true } }));
     k.fireEvent.click(k.within(k.screen.getByRole('navigation', { name: 'Home' })).getByRole('button', { name: 'Map' }));
     await drawing(k);
     expect(k.screen.queryByRole('button', { name: 'Select' })).toBeNull();

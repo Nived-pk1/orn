@@ -138,23 +138,28 @@ function orderedSteps(route: Route): Route['steps'] {
   return out;
 }
 
+/** One stored route as a view: its steps in the order their inputs allow (read-only). */
+export function savedRouteView(route: Route, ctx: ProjectionContext): RouteView {
+  const describer = createDescriber(ctx.state);
+  return {
+    key: route.id,
+    name: route.name,
+    heading: routeSizeWords(route.steps.length, undefined),
+    steps: orderedSteps(route).map((step, index) => {
+      const reaction = ctx.state.records.reaction[step.reactionId] as Reaction | undefined;
+      const outcome = reaction?.outcomes.find((one) => one.id === step.outcomeId) ?? reaction?.outcomes[0];
+      const substrate = reaction === undefined ? undefined : primarySubstrateOf(ctx.indexes, reaction);
+      const product = outcome?.products.find((one) => one.role === 'main') ?? outcome?.products[0];
+      const nameOf = (ref: RecordRef | undefined): string => (ref === undefined ? '' : (describer.describe(ref)?.name ?? ref.id));
+      return stepOf(ctx, index + 1, { reactionId: step.reactionId, outcomeId: step.outcomeId, from: nameOf(substrate?.ref), to: nameOf(product?.ref) });
+    }),
+  };
+}
+
 /** The stored routes that end at the target, name first and read-only, in folded-name then ID order. */
 export function savedRoutesFor(target: SubstanceChoice, ctx: ProjectionContext): RouteView[] {
-  const describer = createDescriber(ctx.state);
   const routes = (Object.values(ctx.state.records.route) as Route[]).filter((route) => route.target?.kind === target.kind && route.target.id === target.id);
   return routes
     .sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.id < b.id ? -1 : 1))
-    .map((route) => ({
-      key: route.id,
-      name: route.name,
-      heading: routeSizeWords(route.steps.length, undefined),
-      steps: orderedSteps(route).map((step, index) => {
-        const reaction = ctx.state.records.reaction[step.reactionId] as Reaction | undefined;
-        const outcome = reaction?.outcomes.find((one) => one.id === step.outcomeId) ?? reaction?.outcomes[0];
-        const substrate = reaction === undefined ? undefined : primarySubstrateOf(ctx.indexes, reaction);
-        const product = outcome?.products.find((one) => one.role === 'main') ?? outcome?.products[0];
-        const nameOf = (ref: RecordRef | undefined): string => (ref === undefined ? '' : (describer.describe(ref)?.name ?? ref.id));
-        return stepOf(ctx, index + 1, { reactionId: step.reactionId, outcomeId: step.outcomeId, from: nameOf(substrate?.ref), to: nameOf(product?.ref) });
-      }),
-    }));
+    .map((route) => savedRouteView(route, ctx));
 }

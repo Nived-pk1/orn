@@ -13,6 +13,7 @@
  *  (3) phone (Pixel 7 in Chromium, iPhone 14 in WebKit): More has File and Undo import and no Workbench, New, Undo, Redo or Drafts.
  * Screenshots: study-desktop-1280x800.png, study-phone-pixel7.png, study-update-notice-1280x800.png (git-ignored).
  */
+import { chaptersFirstThenNavigator } from './chapters-kit';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -124,7 +125,7 @@ test.describe('desktop', () => {
     await expect(page).toHaveTitle(TITLE);
     await expect(page.locator('[data-edition-marker]')).toHaveCount(0);
     await importOwnData(page);
-    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
+    await chaptersFirstThenNavigator(page); // the Study first screen is Chapters when the dataset has chapter topics (7.3b D5)
 
     // navigation, header and top bar: no Workbench, no Undo / Redo, no Studio word
     const modes = page.getByRole('navigation', { name: 'Modes' });
@@ -274,7 +275,7 @@ test.describe('desktop', () => {
         .toBe(true);
       await page.reload();
       await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
-      await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 30_000 });
+      await chaptersFirstThenNavigator(page);
       await expect(page.getByRole('region', { name: 'Study dataset update' })).toHaveCount(0);
       await expectClean(seen);
     });
@@ -290,7 +291,7 @@ test.describe('desktop', () => {
     });
     await openStudy(page);
     await importOwnData(page, demoWithConceptPicture('cpt_carbocation-stability', ALT));
-    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
+    await chaptersFirstThenNavigator(page);
     await page.keyboard.press('Control+K');
     await expect(palette(page)).toBeVisible();
     await searchFor(page, 'Carbocation stability');

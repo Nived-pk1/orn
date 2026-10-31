@@ -272,7 +272,10 @@ describe('the shell frame around the window', () => {
     const rail = within(screen.getByRole('navigation', { name: 'Modes' }));
     expect(rail.getByRole('button', { name: 'Navigator' }).getAttribute('aria-current')).toBe('page');
     expect(rail.getByRole('button', { name: 'Workbench' }).getAttribute('aria-disabled')).toBeNull(); // a page since step 6.2a
-    for (const [name, phase] of [['Syllabus', 'Phase 7']] as const) {
+    expect(rail.getByRole('button', { name: 'Chapters' }).getAttribute('aria-disabled')).toBeNull(); // the Syllabus placeholder became Chapters (7.3b D1)
+    expect(rail.getAllByRole('button')[0]?.textContent).toContain('Chapters'); // at the top of the rail
+    expect(rail.queryByRole('button', { name: /Syllabus/ })).toBeNull();
+    for (const [name, phase] of [['Mechanisms', 'Phase 7']] as const) {
       const mode = rail.getByRole('button', { name: new RegExp(name) });
       expect(mode.getAttribute('aria-disabled')).toBe('true');
       expect(within(mode).getByText(phase)).toBeTruthy();

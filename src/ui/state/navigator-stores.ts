@@ -4,6 +4,7 @@
  * IDs and numbers. Persistence is a separate wrapper (`persist.ts`) so the stores stay pure and testable without a port. The active exam version and the recent searches are saved (step 5.8); filters are in memory only.
  */
 import { createExplorerStore, type ExplorerStore } from './explorer-state';
+import { createChaptersStore, type ChaptersStore } from './chapters-state';
 import { createPrecursorsStore, type PrecursorsStore } from './precursor-state';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { ExpansionState } from '@/core/graph/contracts';
@@ -207,26 +208,38 @@ export type OverviewMode = 'map' | 'list';
 export const OVERVIEW_MODES: readonly OverviewMode[] = ['map', 'list'];
 
 /** The phone's home tab (ADR-039): the families as cards, or the map. (Search is an action, not a place, so it is not remembered.) Saved in `uiState` only when it is not the default. */
-export type PhoneTab = 'families' | 'map' | 'explore';
-export const PHONE_TABS: readonly PhoneTab[] = ['families', 'map', 'explore'];
+export type PhoneTab = 'chapters' | 'families' | 'map' | 'explore';
+export const PHONE_TABS: readonly PhoneTab[] = ['chapters', 'families', 'map', 'explore'];
 
 export interface OverviewState {
   readonly mode: OverviewMode;
   setMode(mode: OverviewMode): void;
   readonly phoneTab: PhoneTab;
   setPhoneTab(tab: PhoneTab): void;
+  /** The tab the app starts on when the visitor has never chosen one (7.3b D5: Chapters in Study when the dataset has chapters). Not saved while it is the tab shown. */
+  readonly defaultTab: PhoneTab;
+  /** Whether the visitor has chosen a tab (a saved one, or a tap). */
+  readonly tabChosen: boolean;
+  /** Takes `tab` as the default and shows it, only while no tab was chosen. */
+  adoptDefaultTab(tab: PhoneTab): void;
 }
 export type OverviewStore = StoreApi<OverviewState>;
 
-export function createOverviewStore(initial: OverviewMode = 'map', initialTab: PhoneTab = 'families'): OverviewStore {
+export function createOverviewStore(initial: OverviewMode = 'map', initialTab: PhoneTab = 'families', tabSaved = false): OverviewStore {
   return createStore<OverviewState>((set, get) => ({
     mode: initial,
     setMode(mode) {
       if (get().mode !== mode) set({ mode });
     },
     phoneTab: initialTab,
+    defaultTab: 'families',
+    tabChosen: tabSaved,
     setPhoneTab(tab) {
-      if (get().phoneTab !== tab) set({ phoneTab: tab });
+      if (get().phoneTab !== tab || !get().tabChosen) set({ phoneTab: tab, tabChosen: true });
+    },
+    adoptDefaultTab(tab) {
+      if (get().tabChosen) return;
+      set({ defaultTab: tab, phoneTab: tab });
     },
   }));
 }
@@ -244,6 +257,8 @@ export interface NavigatorUiStores {
   readonly explorer: ExplorerStore;
   /** The Precursors view: target, starting materials, steps, toggles (step 7.2a; saved). */
   readonly precursors: PrecursorsStore;
+  /** The Chapters view: the open chapter and its filters (step 7.3b; saved). */
+  readonly chapters: ChaptersStore;
   /** The palette's recent searches (step 5.8; saved). */
   readonly recent: RecentStore;
   /** What the map offers the palette (step 5.8; never saved). */
@@ -260,6 +275,7 @@ export const createNavigatorUiStores = (): NavigatorUiStores => ({
   overview: createOverviewStore(),
   explorer: createExplorerStore(),
   precursors: createPrecursorsStore(),
+  chapters: createChaptersStore(),
   recent: createRecentStore(),
   viewCommands: createViewCommandsStore(),
 });

@@ -53,7 +53,7 @@ test.describe('desktop', () => {
     });
     await openStudy(page);
     await importOwnData(page);
-    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Chapters', exact: true })).toBeVisible({ timeout: 60_000 }); // Study opens on Chapters (7.3b D5)
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions' }).click();
     const view = page.getByRole('region', { name: 'Reactions', exact: true });
     await expect(page.getByRole('heading', { name: 'Reactions', exact: true })).toBeVisible();
@@ -87,7 +87,7 @@ test.describe('desktop', () => {
     });
     await openStudy(page);
     await importOwnData(page);
-    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Chapters', exact: true })).toBeVisible({ timeout: 60_000 }); // Study opens on Chapters (7.3b D5)
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Precursors' }).click();
     const view = page.getByRole('region', { name: 'Precursors', exact: true });
     await expect(page.getByRole('heading', { name: 'Make a compound' })).toBeVisible();

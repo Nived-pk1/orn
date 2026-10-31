@@ -29,7 +29,9 @@ import { ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
 import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
-import { MODES, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE } from "./modes";
+import { openChapter } from "./chapters-entry";
+import { useFirstScreen, hasChapterTopic } from "./first-screen";
+import { CHAPTERS_MODE, MODES, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE } from "./modes";
 import { openPrecursors } from "./precursors-entry";
 import type { RecordRef } from "@/core/schema";
 import { filterFor, openReactions } from "./reactions-entry";
@@ -67,11 +69,12 @@ function InspectorPanel(props: {
   readonly closePane: () => void;
   readonly onReactions: (filter: Partial<ExplorerFilter>) => void;
   readonly onPrecursors: (ref: RecordRef) => void;
+  readonly onChapter: (chapterId: string) => void;
 }) {
   const { inspector } = useApp();
   const editors = useEditors();
   const { model } = useNavigator();
-  const { navigatorShown, explorerShown, openPane, closePane, onReactions, onPrecursors } = props;
+  const { navigatorShown, explorerShown, openPane, closePane, onReactions, onPrecursors, onChapter } = props;
   const host = useMemo<InspectorHost>(
     () => ({
       openPane,
@@ -83,6 +86,7 @@ function InspectorPanel(props: {
         if (filter !== undefined) onReactions(filter);
       },
       showPrecursors: onPrecursors,
+      openChapter: onChapter,
       showArrowReactions: (ends) => onReactions({ fromFamilyIds: [ends.from], toFamilyIds: [ends.to] }),
       ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.requestDelete === undefined ? {} : { remove: editors.requestDelete }), ...(editors.startFrom === undefined ? {} : { startFrom: editors.startFrom }), ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }), ...(editors.namesKinds === undefined ? {} : { namesKinds: editors.namesKinds }) } }),
       edgeEnds: (edgeId) => {
@@ -90,7 +94,7 @@ function InspectorPanel(props: {
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };
       },
     }),
-    [model, navigatorShown, explorerShown, openPane, closePane, editors, onReactions, onPrecursors],
+    [model, navigatorShown, explorerShown, openPane, closePane, editors, onReactions, onPrecursors, onChapter],
   );
   return <Inspector ports={inspector} host={host} />;
 }
@@ -153,8 +157,10 @@ function WindowContent() {
   useEffect(() => {
     if (layoutMode !== 'phone') return;
     if (phoneTab === 'explore') setMode(lastExplorer === 'precursors' ? PRECURSORS_MODE : REACTIONS_MODE);
-    else setMode((current) => (current === REACTIONS_MODE || current === PRECURSORS_MODE ? NAVIGATOR_MODE : current));
+    else if (phoneTab === 'chapters') setMode(CHAPTERS_MODE);
+    else setMode((current) => (current === REACTIONS_MODE || current === PRECURSORS_MODE || current === CHAPTERS_MODE ? NAVIGATOR_MODE : current));
   }, [layoutMode, phoneTab, lastExplorer]);
+  const chapterTopics = useStoreSelector(services.store, hasChapterTopic);
   const [openRequest, setOpenRequest] = useState(0);
   const [closeRequest, setCloseRequest] = useState(0);
   // A pick on the canvas shows the record: the wide pane opens (its state is saved); the drawer or sheet is asked through the shell.
@@ -165,8 +171,10 @@ function WindowContent() {
   const closePane = useCallback(() => setCloseRequest((n) => n + 1), []);
   // an entry point opens Reactions filtered (the palette's Alt+Enter, the inspector's buttons)
   const onReactions = useCallback((filter: Partial<ExplorerFilter>) => openReactions(navigator.ui, setMode, filter), [navigator]);
+  const onChapter = useCallback((chapterId: string) => openChapter(navigator.ui, setMode, chapterId), [navigator]);
   const onPrecursors = useCallback((ref: RecordRef) => openPrecursors(navigator.ui, setMode, ref), [navigator]);
   const hasData = totalOf(counts) > 0;
+  useFirstScreen({ hasData, chapterTopics, phone: layoutMode === 'phone', overview: navigator.ui.overview, setMode });
   // When the first-run screen closes (data arrived, or Start empty) the control that had the focus is gone: the focus goes to the page title,
   // so the next Tab starts from the top in every engine (UI_ARCHITECTURE §11).
   const startedEmpty = usePanels(panels, (s) => s.startEmptyDismissed);
@@ -289,7 +297,7 @@ function WindowContent() {
           }
           canvas={
             <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} />
+              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} openPane={openPane} />
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"
@@ -297,11 +305,12 @@ function WindowContent() {
             <ErrorBoundary label="The inspector">
               <InspectorPanel
                 navigatorShown={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
-                explorerShown={mode === REACTIONS_MODE || mode === PRECURSORS_MODE}
+                explorerShown={mode === CHAPTERS_MODE || mode === REACTIONS_MODE || mode === PRECURSORS_MODE}
                 openPane={openPane}
                 closePane={closePane}
                 onReactions={onReactions}
                 onPrecursors={onPrecursors}
+                onChapter={onChapter}
               />
             </ErrorBoundary>
           }

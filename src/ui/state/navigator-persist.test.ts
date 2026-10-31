@@ -106,6 +106,7 @@ describe('createNavigatorUi', () => {
       activeExam: null,
       explorer: { filter: { substanceIds: [], usedAs: 'any', fromFamilyIds: [], toFamilyIds: [], typeIds: [], namedReactionIds: [], reviewStatuses: [], text: '', onlyInScope: false }, view: 'cards', last: 'reactions' },
       precursors: { target: null, startFrom: [], maxSteps: 5, onlyListed: false, onlyInScope: false, searched: false },
+      chapters: { chapterId: null, kinds: [], text: '', onlyInScope: false },
     });
   });
 

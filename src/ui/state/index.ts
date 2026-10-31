@@ -57,5 +57,7 @@ export { canBack, canForward, createInspectorStore, currentOf, MAX_HISTORY } fro
 export type { InspectorEntry, InspectorState, InspectorStore } from './inspector-store';
 export { createExplorerStore, EMPTY_EXPLORER_FILTER, EXPLORER_USES, isFilterSet, parseExplorer } from './explorer-state';
 export type { ExplorerFilter, ExplorerKind, ExplorerState, ExplorerStore, ExplorerUse, ExplorerView } from './explorer-state';
+export { createChaptersStore, parseChapters } from './chapters-state';
+export type { ChaptersState, ChaptersStore, ParsedChapters } from './chapters-state';
 export { asChoice, createPrecursorsStore, DEFAULT_PRECURSOR_STEPS, MIN_PRECURSOR_STEPS, parsePrecursors } from './precursor-state';
 export type { ParsedPrecursors, PrecursorsState, PrecursorsStore, SubstanceChoice, SubstanceKind } from './precursor-state';

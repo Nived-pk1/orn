@@ -9,6 +9,9 @@ export const NAVIGATOR_MODE = 'navigator';
 /** The record counts of step 5.1d, kept reachable beside the navigator (step 5.5a). */
 export const DATASET_MODE = 'dataset';
 
+/** The Chapters view (step 7.3b): the study order, one page per chapter. */
+export const CHAPTERS_MODE = 'chapters';
+
 /** The Reactions list (step 7.1b). */
 export const REACTIONS_MODE = 'reactions';
 
@@ -20,6 +23,7 @@ export const WORKBENCH_MODE = 'workbench';
 export const REVIEW_MODE = 'review';
 
 export const MODES: readonly ModeItem[] = [
+  { id: CHAPTERS_MODE, label: 'Chapters' },
   { id: NAVIGATOR_MODE, label: 'Navigator' },
   { id: DATASET_MODE, label: 'Dataset' },
   { id: REACTIONS_MODE, label: 'Reactions' },
@@ -27,6 +31,5 @@ export const MODES: readonly ModeItem[] = [
   { id: 'reagents', label: 'Reagents', unavailable: 'Phase 7' },
   { id: 'named', label: 'Named', unavailable: 'Phase 7' },
   { id: 'mechanisms', label: 'Mechanisms', unavailable: 'Phase 7' },
-  { id: 'syllabus', label: 'Syllabus', unavailable: 'Phase 7' },
   ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }, { id: REVIEW_MODE, label: 'Review' }] : []),
 ];

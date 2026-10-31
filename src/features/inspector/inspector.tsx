@@ -23,6 +23,7 @@ const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 
 /** A route ends at a species or a class. */
 const PRECURSOR_KINDS: readonly string[] = ['species', 'class'];
 import { ProvenanceLevel } from './provenance';
+import { InChapters } from './in-chapters';
 import { LevelSection } from './levels';
 import { useBridge } from './use-bridge';
 import { KindLevels } from './views';
@@ -162,6 +163,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
             {status}
           </p>
         )}
+        <InChapters refOf={props.refOf} />
         {props.note === undefined ? null : <ArrowReactions />}
       </header>
       <div data-sheet-full="">

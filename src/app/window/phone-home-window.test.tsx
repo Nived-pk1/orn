@@ -57,11 +57,13 @@ async function listRows(): Promise<{ ids: string[]; groups: Map<string, string> 
 }
 
 describe('the Families tab', () => {
-  it('is the default tab, with a tab bar of three labelled buttons and the current one marked', async () => {
+  it('has a tab bar of five labelled buttons; Families is current once chosen (the Study phone starts on Chapters, 7.3b E1)', async () => {
     phone();
     renderWithApp(demo());
+    await screen.findByRole('navigation', { name: 'Home' });
+    expect(within(tabs()).getAllByRole('button').map((button) => button.textContent)).toEqual(['Chapters', 'Families', 'Map', 'Explore', 'Search']);
+    fireEvent.click(tab('Families'));
     await screen.findByRole('region', { name: 'Families' });
-    expect(within(tabs()).getAllByRole('button').map((button) => button.textContent)).toEqual(['Families', 'Map', 'Explore', 'Search']);
     expect(tab('Families').getAttribute('aria-current')).toBe('page');
     expect(tab('Map').getAttribute('aria-current')).toBeNull();
     expect(screen.queryByRole('group', { name: NAVIGATOR })).toBeNull();

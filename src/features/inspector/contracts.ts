@@ -63,6 +63,8 @@ export interface InspectorHost {
   closePane?(): void;
   /** The two families an overview arrow joins; undefined when the arrow is not drawn now. */
   edgeEnds(edgeId: string): { readonly from: string; readonly to: string } | undefined;
+  /** Opens a chapter's page in the Chapters view (step 7.3b D4; the "In chapters" links). Absent: the chapters are named without links. */
+  openChapter?(chapterId: string): void;
   /** Opens the Reactions view filtered by this record (step 7.1b E3; species, class, reagent, named reaction). Absent: no "Show its reactions" button. */
   showReactions?(ref: RecordRef): void;
   /** Opens the Precursors view for this record (step 7.2a D7; species, class). Absent: no "How to make it" button. */
