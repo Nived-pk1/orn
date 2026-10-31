@@ -134,24 +134,24 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-29",
-    "commit": "df8113c",
-    "version": "be13f516-653f-46af-bd0e-0bf297be6fbd",
-    "liveSpecs": "2026-10-29, Chromium one pass: 36 passed, 9 skipped, 0 failed; WebKit one pass: 34 passed, 10 skipped, 1 failed (precursor-explorer 'choices survive a reload', a 30 s expect timeout; passed alone once, accepted by the timeout rule); smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, reaction-explorer, precursor-explorer. An earlier live run had a WebKit 'Page crashed' in study-edition (concept with a picture): passed alone 3 of 3, then absent from both full passes."
+    "deployedAt": "2026-10-31",
+    "commit": "9d95b5a",
+    "version": "3d42b310-bad6-464b-9b8f-75a869afa611",
+    "liveSpecs": "2026-10-31, Chromium: 39 passed, 9 skipped, 0 failed; WebKit: 38 passed, 10 skipped, 0 failed (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer); no retries needed",
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-29",
-    "version": "90a78860-69d0-4b6b-a1ee-2f953eea0eaf",
+    "deployedAt": "2026-10-31",
+    "version": "10c4bbc2-7b64-494f-acb2-7e54ef2066aa",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.2b deploy, 2026-10-29: an unauthenticated request got 302 to tiny-base-dc3e.cloudflareaccess.com and not the app; the public Worker answered 200 with the app.",
-    "commit": "df8113c",
-    "protectedCheckedAt": "2026-10-29"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.3a deploy, 2026-10-31: an unauthenticated request got 302 to tiny-base-dc3e.cloudflareaccess.com and not the app; the public Worker answered 200 with the app.",
+    "commit": "9d95b5a",
+    "protectedCheckedAt": "2026-10-31"
   },
   "nextStep": "7.3b",
-  "nextStepTitle": "Reagent explorer",
+  "nextStepTitle": "Chapters view (the study part of the Syllabus row moved forward); the Reagent explorer moves after it",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
