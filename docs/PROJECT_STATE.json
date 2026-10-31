@@ -137,7 +137,7 @@
     "deployedAt": "2026-10-31",
     "commit": "9d95b5a",
     "version": "3d42b310-bad6-464b-9b8f-75a869afa611",
-    "liveSpecs": "2026-10-31, Chromium: 39 passed, 9 skipped, 0 failed; WebKit: 38 passed, 10 skipped, 0 failed (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer); no retries needed",
+    "liveSpecs": "2026-10-31, Chromium: 39 passed, 9 skipped, 0 failed; WebKit: 38 passed, 10 skipped, 0 failed (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer); no retries needed"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
