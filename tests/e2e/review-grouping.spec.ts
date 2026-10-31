@@ -29,13 +29,12 @@ test('Group by Import (the default), Chapter and Kind; the choice is kept; filte
   await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Review' }).click();
   await expect(review(page)).toBeVisible();
 
-  // Import is the default: the demo's records came with the seed
+  // Import is the default: the demo was imported from its file
   await expect(groupBy(page).getByRole('radio')).toHaveCount(3);
   await expect(groupBy(page).getByRole('radio', { name: 'Import' })).toBeChecked();
-  await expect(headings(page).first()).toHaveText(/^Demo data · \d+ records?$/);
+  await expect(headings(page).first()).toHaveText(/^demo\.orn\.json · imported .+ · \d+ records?$/);
   expect(await axeProblems(page)).toEqual([]);
   await toastsAway(page);
-  await page.screenshot({ path: `${shotsDir()}/review-by-import-1280x800.png` });
 
   // Chapter: the chapter topics, with "No chapter yet" among the groups
   await groupBy(page).getByRole('radio', { name: 'Chapter' }).check();
@@ -63,6 +62,9 @@ test('Group by Import (the default), Chapter and Kind; the choice is kept; filte
   await expect(review(page).getByRole('button', { name: 'Clear all filters' })).toHaveCount(0);
   expect(await axeProblems(page)).toEqual([]);
   // screenshots last: a reload empties the page's count of the styles WebKit's inspector injects for them, which expectClean forgives
+  await groupBy(page).getByRole('radio', { name: 'Import' }).check();
+  await expect(headings(page).first()).toBeVisible();
+  await page.screenshot({ path: `${shotsDir()}/review-by-import-1280x800.png` });
   await groupBy(page).getByRole('radio', { name: 'Kind' }).check();
   await expect(headings(page).first()).toBeVisible();
   await page.screenshot({ path: `${shotsDir()}/review-by-kind-1280x800.png` });

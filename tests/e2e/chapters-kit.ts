@@ -12,7 +12,7 @@ import type { UploadFile } from './kit';
 export const CHAPTER_A = 'Alcohols, phenols and ethers';
 export const CHAPTER_B = 'Aldehydes, ketones and carboxylic acids';
 export const HINSBERG = 'Zz Hinsberg reaction (generic)';
-export const UNMAPPED = 'Zz unmapped idea';
+export const UNMAPPED = 'Aa unmapped idea';
 export const WRITTEN = 'C₆H₅–SO₂–NHR';
 
 type Loose = { id: string; kind?: string; name?: string; names?: { canonical: string }; generic?: { formulaText?: string }; participants?: { ref: { kind: string; id: string }; originalText?: string }[]; outcomes?: { products: { ref: { kind: string; id: string }; originalText?: string }[] }[] };

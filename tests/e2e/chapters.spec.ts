@@ -24,7 +24,7 @@ async function openChapters(page: Page): Promise<void> {
   await expect(view(page)).toBeVisible();
 }
 
-test('the list, a chapter page, selecting, the inspector line, the exam scope, No chapter yet, and a reload', async ({ page }) => {
+test('the list, a chapter page, selecting, the inspector line, the exam scope and No chapter yet', async ({ page }) => {
   test.setTimeout(480_000);
   const seen = await watch(page);
   await importOwn(page, chaptersDemo());
@@ -93,7 +93,15 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope, N
   await page.screenshot({ path: `${shotsDir()}/chapter-no-chapter-1280x800.png` });
   await view(page).getByRole('button', { name: 'All chapters' }).click();
 
-  // uiState: the open chapter and its filter come back after a reload
+  await expectClean(seen);
+});
+
+// a reload empties the page's count of the styles WebKit's inspector injects for screenshots, so the reload has a test of its own
+test('the open chapter and its filter come back after a reload (uiState)', async ({ page }) => {
+  test.setTimeout(300_000);
+  const seen = await watch(page);
+  await importOwn(page, chaptersDemo());
+  await openChapters(page);
   await rows(page).filter({ hasText: CHAPTER_A }).getByRole('button', { name: CHAPTER_A }).click();
   await view(page).getByLabel('Find in this chapter').fill('oxid');
   await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();

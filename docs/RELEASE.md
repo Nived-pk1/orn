@@ -32,7 +32,9 @@ server code, no database and no account system in the app. Everything a visitor 
    URLs do not change between deploys.
 3. Check Study: `curl -sI <url>/` and one `/assets/...` file and the chem worker file; then
    `ORN_BASE_URL=<url> npx playwright test tests/e2e/smoke.spec.ts tests/e2e/csp.spec.ts tests/e2e/phone.spec.ts`, and
-   `tests/e2e/study-edition.spec.ts` (no editing UI on the live site).
+   `tests/e2e/study-edition.spec.ts` (no editing UI on the live site). The live spec list, run by EXACT file names, one command per
+   browser: smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer,
+   precursor-explorer, and since step 7.3b `chapters.spec.ts` (the Chapters view on the live Study site).
 4. Check Studio, EVERY time (see "Access" below): an unauthenticated request must NOT get the app.
 5. Every row close deploys BOTH editions, Study first, then Studio, and re-runs the live Access check (below) after EACH Studio deploy.
    Record both Worker versions in `docs/PROJECT_STATE.json` (`releasePreview` for Study, `studioPreview` for Studio). Any failure in the

@@ -16,7 +16,7 @@ import { filterContents, kindWord, PAGE_SIZE } from './model';
 import { StudyCard } from './study-cards';
 import styles from './chapters-view.module.css';
 
-export const chipWords = (chip: ExamChip): string => `${chip.examName} ${chip.versionLabel}${chip.coverage === 'partial' ? ' (partial)' : ''}`;
+export const chipWords = (chip: ExamChip): string => `${chip.versionLabel}${chip.coverage === 'partial' ? ' (partial)' : ''}`;
 
 function GroupView(props: { readonly group: ChapterGroup; readonly ports: ChaptersPorts; readonly state: CanonicalState; readonly selected: string | null; readonly outsideOf: (ref: RecordRef) => string | undefined }) {
   const { group, ports, state } = props;

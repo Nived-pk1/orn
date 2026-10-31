@@ -82,6 +82,8 @@ Zustand stores are small and sliced (selection, viewport, panels, filters, palet
 
 **As built (7.2b):** Precursors and Reactions are two explorers, one at a time. The route editor (Studio only, lazy) is reached from Workbench > New route and from "Save as route" on a found route; the inspector's Edit opens it on a saved route. A found route that equals a saved one shows "Saved as <name>".
 
+**As built (7.3b, 2026-10-31): Chapters.** The `Syllabus` placeholder became **Chapters** and is the FIRST mode of the rail (both editions). Chapters are derived (`src/core/chapters`): the nearest topic of kind chapter at or above each topic a record is mapped to; counts per kind, exam chips, "No chapter yet" last. The list shows each chapter's title, the exam versions covering it (partial marked), and its counts in words; an exam scope hides the chapters that version does not cover (and says how many). A chapter page has the groups Concepts, Reactions, Named reactions, Mechanisms, Caveats and traps, Compounds and classes, Reagents, Routes, Transformations, each with "Also used here" (supporting) and "Extra" (enrichment) sub-headings, a STUDY CARD per record (text, rule and statement, pictures, the family card for a reaction), kind chips with counts, "Find in this chapter", "Only <exam version>", 30 cards per group. The Study first screen is Chapters when the dataset has a chapter topic (else the Navigator); Studio starts as before; the mode itself is not remembered across reloads (the phone's tab is).
+
 ## 6. Rendering architecture
 
 ```
@@ -193,6 +195,8 @@ First run offers "Load demo dataset", "Import v6 export" and "Start empty". Load
 
 - *2026-10-30 (ADR-042 addendum, step 7.3a):* the inspector's "Examples (n)" of a general reaction is a CLOSED disclosure; a specific one keeps "Example of <general>"; the inspector's place line ("has no place in this view") is about the navigator map and is not shown while Reactions or Precursors is the view.
 
+**As built (7.3b, inspector):** every study record's inspector has "In chapters: <links>" under its title (a link opens that chapter's page; a record mapped nowhere says "No chapter yet"). A class participant or product that has `originalText` shows that text in its box ("As written in this reaction"; the class name stays under it) on every card, in the full equation, and in the inspector ("as written: ...").
+
 ## 13. Phone layout
 
 *2026-10-16 (ADR-039, reviewer decisions).* Supersedes the < 900 px rules of §2 for phones only; the desktop and tablets (>= 700 px wide) render exactly as before.
@@ -209,3 +213,5 @@ First run offers "Load demo dataset", "Import v6 export" and "Start empty". Load
 **As built (7.2b):** the Explore tab shows a "Reactions | Precursors" switch (44 px targets, the current one marked) and opens the last explorer used; the route card's step is three lines (title, reaction, conditions); "Show its reactions" and "How to make it" are in the inspector's full sheet.
 
 **As built (7.3a):** on a phone an example's disclosure summary is a 44 px target; the numbered stages sit beside and under the downward arrow; a route step's summary and its four buttons are stacked 44 px in the route editor; the Review page's filters would sit behind "Filters (n)" (44 px targets) but the page has no way in on a phone (no mode list).
+
+**As built (7.3b, phone):** the bottom tabs are "Chapters | Families | Map | Explore | Search" (48 px each, fit 360 px). The Study phone starts on Chapters when the dataset has a chapter topic and the visitor has never chosen a tab (a saved tab wins; the default is not saved). One column; the chapter page's filters sit behind "Filters (n)"; "Read more" is a 44 px target.

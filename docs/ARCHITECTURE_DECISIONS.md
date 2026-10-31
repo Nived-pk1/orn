@@ -349,3 +349,12 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 - **Review grouping.** "Group by: Chapter | Kind" (uiState `review`, tolerant, default Kind). Chapter = "<exam version> › <unit>" from the record's own topic mappings (the topic and its ancestors against a unit's included or partial coverage), else for a concept the chapters of the records it is a prerequisite of (the exam scope's one-hop rule); a record in several chapters is listed in each; none = "No chapter yet", last. There is no grouping by import because a record carries no import id (REVIEW REQUIRED, docs/PROGRESS.md).
 **Not changed:** the schema, `DB_STORES`, the CSP, `_headers`, the import format.
 
+
+#### Addendum 2026-10-31 (step 7.3b): the Chapters view, import tracking, chapter = topic, as-written boxes
+
+- **Chapters view** (Syllabus row, study part): a pure derived module `src/core/chapters` (chapter index, list with counts and exam chips, a chapter's contents in a fixed group order); the feature `src/features/chapters` (lazy chunk in both editions) draws it and gets every renderer of another feature as an app-injected port (family card, substance box, inspector rich text and pictures, stored route). UI state `chapters` (open chapter, kind chips, name, "Only <exam version>") lives in the navigator's `uiState` entry, read tolerantly. The mode is first in the rail; Study starts on it when a chapter topic exists; the phone has a Chapters tab.
+- **Import tracking:** every record an import WRITES carries `provenance.importBatchId` (no schema change; the field already existed). The conflict identity check ignores it; user exports leave it out, snapshots keep it (the id names a row of this browser's import journal). The Review page groups by Import (default), Chapter or Kind.
+- **Chapter = the chapter TOPIC** (the nearest topic of kind chapter at or above a mapped topic; a top-level topic when none). A concept with no mapping of its own takes the chapters of what it is a prerequisite of, as supporting.
+- **As written in this reaction:** a class participant or product with `originalText` is drawn with that text in its box (card, full equation, inspector); the class name stays. Species and the arrow text are unchanged.
+
+**Not changed:** the schema, `DB_STORES`, the CSP, `_headers`, the import format.
