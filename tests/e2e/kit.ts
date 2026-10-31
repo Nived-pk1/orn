@@ -100,7 +100,24 @@ export async function openPhoneApp(page: Page): Promise<void> {
 export async function loadDemo(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Load demo dataset' }).click();
   await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
+  await leaveChapters(page);
 }
+
+/**
+ * Study opens on Chapters when the data has a chapter topic (step 7.3b D5); Studio does not. Specs written for the Navigator (desktop) or the
+ * Families tab (phone) call this after the data is in: it waits for the first screen to settle and, only when that is Chapters, goes on to the
+ * Navigator (rail) or the Families tab (phone). On Studio it does nothing.
+ */
+export async function leaveChapters(page: Page): Promise<void> {
+  const chapters = page.getByRole('region', { name: 'Chapters', exact: true });
+  const settled = page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ }).or(page.getByRole('region', { name: 'Families' })).or(page.getByRole('region', { name: /^Family page/ })).or(chapters);
+  await expect(settled.first()).toBeVisible({ timeout: 90_000 });
+  if (!(await chapters.isVisible())) return;
+  const tabs = page.getByRole('navigation', { name: 'Home' });
+  if (await tabs.isVisible()) await tabs.getByRole('button', { name: 'Families' }).click();
+  else await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Navigator' }).click();
+}
+
 
 /** Step 5.5a: with records the canvas shows the navigator; the record counts of 5.1d live under the Dataset mode. */
 export async function showDataset(page: Page): Promise<void> {

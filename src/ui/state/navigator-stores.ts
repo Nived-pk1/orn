@@ -220,7 +220,7 @@ export interface OverviewState {
   readonly defaultTab: PhoneTab;
   /** Whether the visitor has chosen a tab (a saved one, or a tap). */
   readonly tabChosen: boolean;
-  /** Takes `tab` as the default and shows it, only while no tab was chosen. */
+  /** Takes `tab` as the default; shows it only while no tab was chosen. */
   adoptDefaultTab(tab: PhoneTab): void;
 }
 export type OverviewStore = StoreApi<OverviewState>;
@@ -238,8 +238,9 @@ export function createOverviewStore(initial: OverviewMode = 'map', initialTab: P
       if (get().phoneTab !== tab || !get().tabChosen) set({ phoneTab: tab, tabChosen: true });
     },
     adoptDefaultTab(tab) {
-      if (get().tabChosen) return;
-      set({ defaultTab: tab, phoneTab: tab });
+      // the default is always recorded (what "left out when saved" is compared with); the tab shown changes only while none was chosen
+      if (get().tabChosen) set({ defaultTab: tab });
+      else set({ defaultTab: tab, phoneTab: tab });
     },
   }));
 }

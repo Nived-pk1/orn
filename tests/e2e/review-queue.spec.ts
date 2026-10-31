@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, chooseFile, expectClean, expectPreview, openApp, openPhoneApp, watch } from './kit';
+import { axeProblems, chooseFile, expectClean, expectPreview, openApp, openPhoneApp, watch, leaveChapters } from './kit';
 import { openDemo, shotsDir } from './editor-kit';
 import { chaptersFirstThenNavigator } from './chapters-kit';
 
@@ -180,6 +180,7 @@ async function walkPhone(page: Page, device: string): Promise<void> {
   const seen = await watch(page);
   await openPhoneApp(page);
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
+  await leaveChapters(page);
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
   await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Map' }).tap();
   await expect(drawing(page)).toBeVisible();

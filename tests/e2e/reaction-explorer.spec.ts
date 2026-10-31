@@ -12,7 +12,7 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, loadDemo, openApp, openPhoneApp, watch } from './kit';
+import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, loadDemo, openApp, openPhoneApp, watch, leaveChapters } from './kit';
 import { palette, pane, record, searchFor, shotsDir } from './editor-kit';
 
 test.use({ actionTimeout: 60_000 });
@@ -125,6 +125,7 @@ test.describe('desktop', () => {
     await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
     await page.waitForTimeout(1000);
     await page.reload();
+    await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
     await modes(page).getByRole('button', { name: 'Reactions' }).click();
     await expect(chips(page).first()).toContainText('Type: Oxidation');
@@ -237,6 +238,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   const seen = await watch(page);
   await openPhoneApp(page);
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
+  await leaveChapters(page);
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
   const tabs = page.getByRole('navigation', { name: 'Home' });
   await expect(tabs.getByRole('button')).toHaveText(['Chapters', 'Families', 'Map', 'Explore', 'Search']);

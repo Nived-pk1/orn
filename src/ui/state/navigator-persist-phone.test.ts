@@ -75,4 +75,20 @@ describe('the Chapters tab and the default tab (7.3b E1)', () => {
     again.stores.overview.getState().adoptDefaultTab('chapters');
     expect(again.stores.overview.getState().phoneTab).toBe('families');
   });
+
+  it('a visitor who had chosen Map and then chooses Families gets Families back after a reload (the default is Chapters)', async () => {
+    const t = timers();
+    const first = port({ stored: { phoneTab: 'map' } });
+    const ui = createNavigatorUi(first.value, t);
+    ui.stores.overview.getState().adoptDefaultTab('chapters'); // the app does this at every start in Study
+    expect(ui.stores.overview.getState().phoneTab).toBe('map'); // a saved choice wins over the default
+    ui.stores.overview.getState().setPhoneTab('families');
+    t.fire();
+    await ui.flush();
+    const saved = first.saves.at(-1);
+    expect(saved).toMatchObject({ phoneTab: 'families' });
+    const again = createNavigatorUi(port({ stored: saved }).value, t);
+    again.stores.overview.getState().adoptDefaultTab('chapters');
+    expect(again.stores.overview.getState().phoneTab).toBe('families');
+  });
 });

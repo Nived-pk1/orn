@@ -6,7 +6,7 @@
  */
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { expectClean, openPhoneApp, watch } from './kit';
+import { expectClean, openPhoneApp, watch, leaveChapters } from './kit';
 
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
@@ -98,6 +98,7 @@ async function walk(page: Page, device: 'pixel7' | 'iphone14'): Promise<void> {
   const seen = await watch(page);
   await openPhoneApp(page);
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
+  await leaveChapters(page);
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
 
   // Lindlar: three terms, hydrogen as text, the arrow's text right of the arrow

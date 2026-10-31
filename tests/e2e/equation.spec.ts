@@ -9,7 +9,7 @@
  */
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard } from './kit';
+import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard, leaveChapters } from './kit';
 
 /** One bond in the chem module's own units (the nominal bond of the fixed scale, `FIXED_SCALE_BOND_UNITS`). */
 const NOMINAL_BOND = 54;
@@ -155,6 +155,7 @@ test('Lindlar: three terms, hydrogen as the formula H2, the drawings at one bond
   await expect(hydrogen.locator('sub')).toHaveText('2'); // a formula-text term still shows its formula
   await page.waitForTimeout(1_000);
   await page.reload();
+  await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
   await expect(page.getByRole('region', { name: 'Family page: Alkenes' })).toBeVisible();
   await page.getByRole('button', { name: /^Alkynes\s*\d+\s*reactions?$/ }).first().click();
   const againCard = cardOf(page, /Lindlar/);
@@ -165,6 +166,7 @@ test('Lindlar: three terms, hydrogen as the formula H2, the drawings at one bond
   await expect(again.locator('[data-equation-name]')).toHaveCount(3);
   await page.waitForTimeout(1_000);
   await page.reload();
+  await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
   await expect(page.getByRole('region', { name: 'Family page: Alkenes' })).toBeVisible();
   await page.getByRole('button', { name: /^Alkynes\s*\d+\s*reactions?$/ }).first().click();
   const backCard = cardOf(page, /Lindlar/);

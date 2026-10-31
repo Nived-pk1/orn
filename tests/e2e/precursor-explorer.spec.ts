@@ -7,7 +7,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, watch } from './kit';
+import { axeProblems, expectClean, watch, leaveChapters } from './kit';
 import { openDemo, pane, record, shotsDir, showSpecies } from './editor-kit';
 
 test.use({ actionTimeout: 60_000 });
@@ -173,6 +173,7 @@ test.describe('Studio, desktop', () => {
     await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
     await page.waitForTimeout(1000);
     await page.reload();
+    await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
     await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
     await openPrecursors(page);
     await expect(view(page).getByText('Making: Phenol')).toBeVisible();

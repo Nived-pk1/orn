@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect } from './fixtures';
-import { chooseFile, expectPreview, openApp, type UploadFile } from './kit';
+import { chooseFile, expectPreview, leaveChapters, openApp, type UploadFile } from './kit';
 
 type Doc = { records: Record<string, unknown> };
 
@@ -29,5 +29,6 @@ export async function importOwn(page: Page, file: UploadFile): Promise<void> {
   await expectPreview(page);
   await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 90_000 });
+  await leaveChapters(page);
   await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 90_000 });
 }

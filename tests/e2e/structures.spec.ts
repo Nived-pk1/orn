@@ -5,7 +5,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard } from './kit';
+import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard, leaveChapters } from './kit';
 
 async function openAlcohols(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -78,6 +78,7 @@ test('Condensed changes the PCC card\'s ethanol drawing, the choice survives a r
   // saved (the panels entry is written after a short pause), and back after a reload
   await page.waitForTimeout(1_000);
   await page.reload(); // the family page is restored (it is saved with the rest of the navigator's state)
+  await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
   await showPccCard(page);
   await expect(page.getByRole('radiogroup', { name: 'Structures' }).getByRole('radio', { name: 'Condensed' })).toBeChecked();
   await expect.poll(async () => ethanolDrawing(page), { timeout: 30_000 }).toBe(condensed);
