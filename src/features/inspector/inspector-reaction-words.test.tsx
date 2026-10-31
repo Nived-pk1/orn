@@ -112,3 +112,18 @@ describe('empty sections and the mechanism place', () => {
     expect(screen.queryByText('No mechanism recorded for this reaction')).toBeNull();
   });
 });
+
+describe('the text the reaction writes for a participant or product is labelled "as written" (7.3b A5)', () => {
+  it('shows as written: for a participant and a product', () => {
+    const reaction = reactions.find((r) => r.outcomes.some((o) => o.products.length > 0) && r.participants.length > 0);
+    if (reaction === undefined) throw new Error('no fixture reaction');
+    show({
+      ...reaction,
+      participants: reaction.participants.map((p, i) => (i === 0 ? { ...p, originalText: 'R–CH₂OH' } : p)),
+      outcomes: reaction.outcomes.map((o) => ({ ...o, products: o.products.map((p, i) => (i === 0 ? { ...p, originalText: 'R–CHO' } : p)) })),
+    });
+    const text = visibleText();
+    expect(text).toContain('as written: R–CH₂OH');
+    expect(text).toContain('as written: R–CHO');
+  });
+});

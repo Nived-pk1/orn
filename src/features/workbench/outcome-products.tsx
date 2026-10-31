@@ -156,11 +156,11 @@ export function OutcomeProducts(props: OutcomeProductsProps) {
                       </select>
                     </div>
                     <div className={styles.field}>
-                      <label htmlFor={`pd-text-${index}-${at}`}>Source wording</label>
+                      <label htmlFor={`pd-text-${index}-${at}`}>{product.substance?.kind === 'class' ? 'As written in this reaction' : 'Source wording'}</label>
                       <input
                         id={`pd-text-${index}-${at}`}
                         type="text"
-                        aria-label={`Source wording of product ${n} of outcome ${on}`}
+                        aria-label={`${product.substance?.kind === 'class' ? 'As written in this reaction' : 'Source wording'} of product ${n} of outcome ${on}`}
                         value={product.originalText}
                         readOnly={locked !== undefined}
                         aria-invalid={bad(props, `${base}.originalText`)}

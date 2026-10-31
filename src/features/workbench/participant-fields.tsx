@@ -181,8 +181,8 @@ export function ParticipantFields(props: ParticipantFieldsProps) {
           )}
         </div>
         <div className={styles.field}>
-          <label htmlFor={`p-orig-${index}`}>Written in the source as</label>
-          <input id={`p-orig-${index}`} type="text" aria-label={`Written in the source as, participant ${n}`} value={p.originalText} readOnly={locked !== undefined} aria-invalid={bad(props, `${base}.originalText`)} data-field-path={`${base}.originalText`} autoComplete="off" onChange={(event) => onEdit(setParticipantText(index, 'originalText', event.target.value), `${base}.originalText`)} />
+          <label htmlFor={`p-orig-${index}`}>{p.substance?.kind === 'class' ? 'As written in this reaction' : 'Written in the source as'}</label>
+          <input id={`p-orig-${index}`} type="text" aria-label={`${p.substance?.kind === 'class' ? 'As written in this reaction' : 'Written in the source as'}, participant ${n}`} value={p.originalText} readOnly={locked !== undefined} aria-invalid={bad(props, `${base}.originalText`)} data-field-path={`${base}.originalText`} autoComplete="off" onChange={(event) => onEdit(setParticipantText(index, 'originalText', event.target.value), `${base}.originalText`)} />
         </div>
         <RichTextField id={`p-note-${index}`} label={`Note of participant ${n}`} path={`${base}.note`} value={p.note} invalid={bad(props, `${base}.note`) === true} unavailable={locked} phone={props.phone} rows={2} onChange={(value) => onEdit(setParticipantText(index, 'note', value), `${base}.note`)} />
       </details>

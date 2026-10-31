@@ -17,6 +17,8 @@ export interface FamilyProduct {
   readonly productId: ProductId;
   readonly ref: RecordRef;
   readonly selectivity: SelectivityWord | null;
+  /** The text the reaction writes for a CLASS product (its `originalText`), drawn in the box instead of the class's generic formula (7.3b A5); absent for a species or when none is stored. */
+  readonly writtenAs?: string;
 }
 
 /** One outcome of a reaction, as it lands in the card's family group: its main products that resolve to the group. */
@@ -71,6 +73,8 @@ export interface FamilyCard {
   readonly caveatCount: number;
   /** The carried substrate (a ref). */
   readonly substrate: RecordRef;
+  /** The text the reaction writes for a CLASS substrate (7.3b A5); absent for a species or when none is stored. */
+  readonly substrateWrittenAs?: string;
   /** Outcome groups in the order of their first outcome in the record; one group: no header on the card. */
   readonly groups: readonly FamilyOutcomeGroup[];
   readonly elsewhere: readonly FamilyElsewhere[];

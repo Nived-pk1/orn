@@ -104,9 +104,15 @@ export function fullEquationWithoutOutcome(reaction: Reaction, context: GroupCon
 
 function buildEquation(reaction: Reaction, outcomes: readonly Outcome[], variantIds: readonly ConditionVariantId[], context: GroupContext): EquationShape {
   const several = outcomes.length > 1;
-  const substanceOf = (ref: RecordRef, name: string): TermSubstance => context.substanceOf?.(ref) ?? { kind: 'missing', name };
+  const substanceOf = (ref: RecordRef, name: string, written?: string): TermSubstance => {
+    const found = context.substanceOf?.(ref);
+    if (ref.kind !== 'class' || written === undefined || written === '') return found ?? { kind: 'missing', name };
+    // "as written in this reaction": the text replaces the class's generic formula and drawing; the class name stays the name
+    return { kind: 'class', name: found?.name ?? name, formula: written };
+  };
   const nameOf = (ref: Parameters<ArrowTextContext['describe']>[0], written: string | undefined): string => {
-    if (written !== undefined && written !== '') return written;
+    // a CLASS keeps its own name; the text the reaction writes for it is its formula (7.3b A5)
+    if (ref.kind !== 'class' && written !== undefined && written !== '') return written;
     const described = context.describe(ref);
     return described === undefined || described.name === '' ? ref.id : described.name;
   };
@@ -123,7 +129,7 @@ function buildEquation(reaction: Reaction, outcomes: readonly Outcome[], variant
       regiochemistry: null,
       text: termText(coefficient, name, null),
       ref: p.ref,
-      substance: substanceOf(p.ref, name),
+      substance: substanceOf(p.ref, name, p.originalText),
     };
   });
   const termOf = (p: Outcome['products'][number], word: SelectivityWord | null, quantifier: SelectivityQuantifier | null, regiochemistry: string | null): EquationTerm => {
@@ -139,7 +145,7 @@ function buildEquation(reaction: Reaction, outcomes: readonly Outcome[], variant
       regiochemistry,
       text: termText(coefficient, name, word === null ? role : quantifier === null ? word : `${quantifier} ${word}`),
       ref: p.ref,
-      substance: substanceOf(p.ref, name),
+      substance: substanceOf(p.ref, name, p.originalText),
     };
   };
   // the main products of each outcome in turn; selectivity lives on the outcome (INV-08), so it is worded ONCE per outcome, after its last main product

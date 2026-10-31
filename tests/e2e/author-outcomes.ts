@@ -25,7 +25,7 @@ async function product(dialog: Locator, page: Page, demo: DemoRecords, o: number
   const optional = [['Coefficient', 'coefficient'], ['Phase', 'phase'], ['Source wording', 'originalText'], ['Note', 'note']] as const;
   for (const [label, key] of optional) {
     if (item[key] === undefined) continue;
-    const box = row.getByLabel(`${label} of product ${n} of outcome ${o}`, { exact: true });
+    const box = key === 'originalText' ? row.getByLabel(new RegExp(`^(Source wording|As written in this reaction) of product ${n} of outcome ${o}$`)) : row.getByLabel(`${label} of product ${n} of outcome ${o}`, { exact: true });
     if (key === 'phase') await box.selectOption(String(item[key]));
     else await box.fill(String(item[key]));
   }

@@ -11,11 +11,12 @@ import { useFamilyEnv } from './family-env';
 import { FormulaText } from './family-text';
 import scheme from './family-scheme.module.css';
 
-export function Structure(props: { readonly substance: RecordRef; readonly caption?: string }) {
+/** `writtenAs`: the text the reaction writes for a class (7.3b A5); the box shows it as a formula and no drawing is asked for. */
+export function Structure(props: { readonly substance: RecordRef; readonly caption?: string; readonly writtenAs?: string }) {
   const env = useFamilyEnv();
   const described = env.describe(props.substance);
   const name = described?.name ?? props.substance.id;
-  const key = env.keyOf(props.substance);
+  const key = props.writtenAs === undefined ? env.keyOf(props.substance) : undefined;
   const status = useRetryingDepiction(env.manager, key, env.timers);
   // a phone sizes the box in CSS (a share of the width, the same aspect); the desktop keeps its fixed pixels
   const boxStyle = env.layout === 'phone' ? undefined : { width: STRUCTURE_AREA.width, height: STRUCTURE_AREA.height };
@@ -30,7 +31,11 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
         ) : (
           <span className={scheme.structureName} {...(unavailable ? { title: 'The structure could not be drawn' } : {})}>
             {key !== undefined && !unavailable ? <span className={scheme.loadingMark}>Drawing the structure…</span> : null}
-            {described?.formula === undefined ? (
+            {props.writtenAs !== undefined ? (
+              <span className={scheme.formula} data-written-as="">
+                <FormulaText formula={props.writtenAs} />
+              </span>
+            ) : described?.formula === undefined ? (
               <span className={scheme.noStructure}>{key === undefined ? 'No structure' : unavailable ? 'Structure not available' : ''}</span>
             ) : (
               <span className={scheme.formula}>

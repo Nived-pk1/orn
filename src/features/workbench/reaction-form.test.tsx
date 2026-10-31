@@ -250,6 +250,13 @@ describe('the participant rows', () => {
     expect((within(row(1)).getByLabelText('Written in the source as, participant 1') as HTMLInputElement).value).toBe('alc. KOH');
   });
 
+  it('a species participant keeps "Written in the source as"; a class one says "As written in this reaction" (7.3b A5)', () => {
+    show({ target: 'rxn_alcohol1-to-aldehyde-pcc' });
+    expand(1);
+    expect(within(row(1)).queryByLabelText('Written in the source as, participant 1')).toBeNull();
+    expect(within(row(1)).getByText('As written in this reaction')).toBeTruthy();
+  });
+
   it('Save keeps every field the editor does not edit; Undo restores the coefficient', async () => {
     const { rig } = show({ target: GRIGNARD });
     const before = stored(rig, GRIGNARD);

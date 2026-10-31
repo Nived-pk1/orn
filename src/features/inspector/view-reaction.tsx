@@ -37,7 +37,7 @@ function ParticipantName(props: { readonly participant: Participant }) {
   return (
     <>
       <RecordLink kind={participant.ref.kind} id={participant.ref.id} />
-      {participant.originalText === undefined || participant.originalText === '' ? '' : ` (written "${participant.originalText}")`}
+      {participant.originalText === undefined || participant.originalText === '' ? '' : `, as written: ${participant.originalText}`}
     </>
   );
 }
@@ -132,7 +132,7 @@ function OutcomeDetail(props: { readonly outcome: Outcome; readonly record: Reac
       {outcome.products.map((product) => (
         <Facts key={product.id} label={`Product (${words(product.role)})`}>
           <RecordLink kind={product.ref.kind} id={product.ref.id} />
-          {[product.coefficient === undefined ? undefined : `coefficient ${product.coefficient}`, product.phase, product.originalText]
+          {[product.coefficient === undefined ? undefined : `coefficient ${product.coefficient}`, product.phase, product.originalText === undefined || product.originalText === '' ? undefined : `as written: ${product.originalText}`]
             .filter((x) => x !== undefined)
             .map((x) => `, ${String(x)}`)
             .join('')}

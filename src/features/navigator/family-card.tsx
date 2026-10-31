@@ -78,10 +78,10 @@ function GroupScheme(props: { readonly card: FamilyCard; readonly group: FamilyO
       <div className={scheme.scheme} role="group" aria-label={name} data-outcome-ids={group.outcomes.map((outcome) => outcome.outcomeId).join(' ')}>
         {env.layout === 'phone' ? (
           <div className={scheme.reactants}>
-            <Structure substance={card.substrate} />
+            <Structure substance={card.substrate} {...(card.substrateWrittenAs === undefined ? {} : { writtenAs: card.substrateWrittenAs })} />
           </div>
         ) : (
-          <Structure substance={card.substrate} />
+          <Structure substance={card.substrate} {...(card.substrateWrittenAs === undefined ? {} : { writtenAs: card.substrateWrittenAs })} />
         )}
         {env.layout === 'phone' ? <DownArrow arrowText={group.arrowText} /> : <Arrow arrowText={group.arrowText} />}
         <div className={scheme.products}>
@@ -90,7 +90,7 @@ function GroupScheme(props: { readonly card: FamilyCard; readonly group: FamilyO
               {outcome.products.map((product, index) => (
                 <Fragment key={product.productId}>
                   {index > 0 ? <span className={scheme.plus} aria-hidden="true">+</span> : null}
-                  <Structure substance={product.ref} {...(outcome.word === null ? {} : { caption: outcome.word })} />
+                  <Structure substance={product.ref} {...(outcome.word === null ? {} : { caption: outcome.word })} {...(product.writtenAs === undefined ? {} : { writtenAs: product.writtenAs })} />
                 </Fragment>
               ))}
             </div>

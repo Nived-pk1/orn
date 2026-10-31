@@ -67,7 +67,7 @@ async function participants(dialog: Locator, page: Page, demo: DemoRecords, rxn:
     if (p['strength'] !== undefined) await field('Strength').selectOption(String(p['strength']));
     const more = dialog.getByRole('group', { name: `Participant ${n}`, exact: true }).locator('details').first();
     if (!(await more.evaluate((element) => (element as HTMLDetailsElement).open))) await more.locator('summary').click();
-    if (typeof p['originalText'] === 'string') await dialog.getByLabel(`Written in the source as, participant ${n}`, { exact: true }).fill(p['originalText']);
+    if (typeof p['originalText'] === 'string') await dialog.getByLabel(new RegExp(`^(Written in the source as|As written in this reaction), participant ${n}$`)).fill(p['originalText']);
     if (typeof p['note'] === 'string') await dialog.getByLabel(`Note of participant ${n}`, { exact: true }).fill(p['note']);
     if (p['dry'] === true) await dialog.getByLabel(`Dry: participant ${n}`, { exact: true }).check();
     const primary = dialog.getByLabel(`Main substrate: participant ${n}`, { exact: true });

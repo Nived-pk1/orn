@@ -62,11 +62,14 @@ export function cardGroupsOf(kit: CardKit, reaction: Reaction, gathered: Gathere
   const entries = [...gathered.outcomes]
     .sort((a, b) => storedIndex(a[0]) - storedIndex(b[0]) || compare(a[0], b[0]))
     .map(([outcomeId, o]) => {
+      const stored = reaction.outcomes.find((x) => x.id === outcomeId);
       const products: FamilyProduct[] = o.products
         .slice()
         .sort((a, b) => compare(a.productId, b.productId))
-        .map((p) => ({ productId: p.productId, ref: p.product, selectivity: selectivityWordOf(p.selectivity) }));
-      const stored = reaction.outcomes.find((x) => x.id === outcomeId);
+        .map((p) => {
+          const writtenAs = p.product.kind === 'class' ? stored?.products.find((x) => x.id === p.productId)?.originalText : undefined;
+          return { productId: p.productId, ref: p.product, selectivity: selectivityWordOf(p.selectivity), ...(writtenAs === undefined || writtenAs === '' ? {} : { writtenAs }) };
+        });
       const card: OutcomeDraft = {
         outcomeId: outcomeId as FamilyCardOutcome['outcomeId'],
         conditionVariantIds: o.variantIds,
@@ -82,6 +85,8 @@ export function cardGroupsOf(kit: CardKit, reaction: Reaction, gathered: Gathere
 /** The card: what is the same wherever the reaction is shown. */
 export function cardOf(kit: CardKit, reaction: Reaction, key: string, gathered: Gathered, elsewhere: readonly FamilyElsewhere[]): FamilyCard {
   const { ctx } = kit;
+  const carried = gathered.substrate.kind === 'class' ? reaction.participants.find((x) => x.id === gathered.participantId)?.originalText : undefined;
+  const substrateWrittenAs = carried === undefined || carried === '' ? undefined : carried;
   return {
     key,
     reactionId: reaction.id,
@@ -90,6 +95,7 @@ export function cardOf(kit: CardKit, reaction: Reaction, key: string, gathered: 
     reviewStatus: reaction.review.status,
     caveatCount: ctx.indexes.caveatsFor({ kind: 'reaction', id: reaction.id } as RecordRef).length,
     substrate: gathered.substrate,
+    ...(substrateWrittenAs === undefined ? {} : { substrateWrittenAs }),
     groups: cardGroupsOf(kit, reaction, gathered),
     elsewhere,
   };

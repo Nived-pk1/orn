@@ -58,3 +58,19 @@ describe('Structure card while the chem engine is not ready (phone mode B, part 
     expect(screen.queryByText('Drawing the structure…')).toBeNull();
   });
 });
+
+describe('Structure of a class written in the reaction (7.3b A5)', () => {
+  it('shows the text as written in the box (no drawing asked), the class name stays under it', () => {
+    const timers = manualTimers();
+    const env = { describe: () => ({ name: 'Sulfonamide', formula: 'R–SO2–NH2' }), keyOf: () => 'key-a', manager: undefined, timers };
+    render(
+      <FamilyEnvContext.Provider value={env}>
+        <Structure substance={{ kind: 'class', id: 'cls-sulfonamide' } as never} writtenAs="C6H5–SO2–NHR" />
+      </FamilyEnvContext.Provider>,
+    );
+    expect(screen.getByText('Sulfonamide')).toBeTruthy();
+    expect(document.querySelector('[data-written-as]')?.textContent).toContain('C6H5');
+    expect(screen.queryByRole('img')).toBeNull();
+    expect(screen.queryByText('R–SO2–NH2')).toBeNull();
+  });
+});

@@ -6,8 +6,8 @@
  */
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { familyStudy, type FamilyCard, type FamilyStudy } from '@/core/graph';
-import type { CanonicalState, RecordRef } from '@/core/schema';
+import { familyStudy, reactionCard, type FamilyCard, type FamilyStudy } from '@/core/graph';
+import type { CanonicalState, Reaction, RecordRef } from '@/core/schema';
 import type { LayoutMode } from '@/ui/hooks';
 import { demoState } from '@/test-support/app-boot-kit';
 import { contextOf } from '@/test-support/graph-state';
@@ -144,5 +144,26 @@ describe('a card with one outcome', () => {
     const scheme = within(article).getByRole('group', { name: 'Full equation' });
     expect(article.querySelector('details[data-equation-panel]')).not.toBeNull();
     expect(document.getElementById(scheme.getAttribute('aria-describedby') as string)?.textContent).toContain(' → ');
+  });
+});
+
+describe('a class substrate and product written in the reaction (7.3b A5)', () => {
+  it.each<LayoutMode>(['desktop', 'phone'])('the boxes show the text as written and the class name stays under it (%s)', (layout) => {
+    const id = 'rxn_alcohol1-to-aldehyde-pcc';
+    const reaction = demo.records.reaction[id as keyof typeof demo.records.reaction] as Reaction;
+    const state = withRecords(demo, [
+      {
+        ...reaction,
+        participants: reaction.participants.map((p) => (p.ref.kind === 'class' ? { ...p, originalText: 'R–CH2OH(written)' } : p)),
+        outcomes: reaction.outcomes.map((o) => ({ ...o, products: o.products.map((p) => (p.ref.kind === 'class' ? { ...p, originalText: 'R–CHO(written)' } : p)) })),
+      } as AnyRecord,
+    ]);
+    const card = reactionCard(contextOf(state), id) as FamilyCard;
+    const article = renderCard(card, state, layout);
+    const boxes = [...article.querySelectorAll('[data-written-as]')].map((el) => el.textContent ?? '');
+    expect(boxes.join('|')).toContain('CH');
+    expect(boxes).toHaveLength(2);
+    expect(boxes[0]).toContain('written');
+    expect(captionsOf(article)).toEqual([expect.stringMatching(/lcohol/i), expect.stringMatching(/ldehyde/i)]);
   });
 });
