@@ -6,6 +6,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createBooter, demoState } from '@/test-support/app-boot-kit';
 import { newWorld, testEnv } from '@/test-support/app-env-kit';
+import { withoutBatchIds } from '@/test-support/import-kit';
 import { demoFile, importFile } from '@/test-support/app-flow-kit';
 import { spawnComputeWorker } from '@/test-support/rpc-node-port';
 
@@ -29,7 +30,7 @@ describe('the flows over a real compute thread', () => {
     const empty = services.store.getState();
     const applied = await importFile(services, await demoFile());
     expect(applied).toMatchObject({ saved: true, inProcess: false, revision: 1 });
-    expect(services.store.getState().records).toEqual(demoState().records);
+    expect(withoutBatchIds(services.store.getState().records)).toEqual(withoutBatchIds(demoState().records)); // 7.3b A1: only the import batch id differs
 
     const exported = await services.flows.export({ scope: 'full', includeDependencies: false, assets: 'none' }, 'orn.json');
     expect(exported).toMatchObject({ ok: true, inProcess: false });

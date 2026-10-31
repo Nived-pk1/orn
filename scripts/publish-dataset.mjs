@@ -30,6 +30,7 @@ const { checkForPublish } = await import('../src/io/publish.ts');
 const { createIdFactory } = await import('../src/core/dataset/index.ts');
 const { migrationRunner } = await import('../src/core/migrations/index.ts');
 const { emptyRecordTables } = await import('../src/core/schema/index.ts');
+const { manifestOf } = await import('../src/io/publish-manifest.ts');
 
 const nowText = process.env.ORN_NOW ?? new Date().toISOString();
 const nowMs = Date.parse(nowText);
@@ -73,19 +74,10 @@ printFindings(verdict.findings);
 console.log(`pictures stored with the file: ${verdict.assets.toStore}`);
 
 const dir = resolve(process.env.ORN_PUBLISH_DIR ?? join(root, 'data', 'published'));
-const name = verdict.format === 'orn.package' ? 'dataset.ornpkg' : 'dataset.orn.json';
-const other = verdict.format === 'orn.package' ? 'dataset.orn.json' : 'dataset.ornpkg';
 const sha256 = createHash('sha256').update(bytes).digest('hex');
-const manifest = {
-  manifestVersion: 1,
-  file: name,
-  format: verdict.format,
-  sha256,
-  bytes: bytes.length,
-  publishedAt: iso,
-  recordTotal: verdict.mergedRecordCount,
-  recordCounts: Object.fromEntries(kinds.map((kind) => [kind, verdict.counts[kind]])),
-};
+const manifest = manifestOf(verdict, bytes, sha256, iso); // pure and tested in process (tests/integration/publish-dataset.test.ts)
+const name = manifest.file;
+const other = name === 'dataset.ornpkg' ? 'dataset.orn.json' : 'dataset.ornpkg';
 mkdirSync(dir, { recursive: true });
 // write beside, then rename: a failure never leaves a dataset without its manifest
 writeFileSync(join(dir, `${name}.tmp`), bytes);

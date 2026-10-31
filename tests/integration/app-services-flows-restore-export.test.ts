@@ -8,6 +8,7 @@ import type { AppServices } from '@/app/services';
 import { createBooter, demoState, renameDataset, smallState, tamper } from '@/test-support/app-boot-kit';
 import { newWorld, testEnv, worldHolding, type TestEnv, type World } from '@/test-support/app-env-kit';
 import { ASSET_ID, demoFile, footprint, importFile, packageWithAsset } from '@/test-support/app-flow-kit';
+import { withoutBatchIds } from '@/test-support/import-kit';
 import type { ComputeWorkerApi } from '@/workers/rpc/contracts';
 
 const booter = createBooter();
@@ -40,7 +41,7 @@ describe('restore by snapshot id', () => {
 
     const again = await services.flows.restore(restored.preRestore.id); // undo the restore
     if (!again.ok) throw new Error(again.message);
-    expect(services.store.getState().records).toEqual(imported.records);
+    expect(withoutBatchIds(services.store.getState().records)).toEqual(withoutBatchIds(imported.records)); // 7.3b A1: only the import batch id differs
     expect((await footprint(services, world)).stored?.snapshots).toHaveLength(3);
   });
 
@@ -102,7 +103,7 @@ describe('the worker is down', () => {
     expect(preview.inProcess).toBe(true);
     const applied = await services.flows.apply(preview.plan.preview.batchId, preview.plan);
     expect(applied).toMatchObject({ ok: true, inProcess: true, saved: true });
-    expect(services.store.getState().records).toEqual(demoState().records);
+    expect(withoutBatchIds(services.store.getState().records)).toEqual(withoutBatchIds(demoState().records));
   });
 
   it('import: the in-process path ends in the same state and the same stored rows as the worker path', async () => {

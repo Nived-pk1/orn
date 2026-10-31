@@ -29,7 +29,7 @@ interface BatchMeta {
 const UNKNOWN = 'no such pending import: it was cancelled, replaced by a newer preview, already applied, or lost with a restarted worker';
 const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
-export type ImportService = Omit<ImportFlows, 'undo' | 'lastImport'>;
+export type ImportService = Omit<ImportFlows, 'undo' | 'lastImport' | 'importLog'>;
 
 export function createImportService(deps: FlowDeps): ImportService {
   const { store, gate, log, router, ids } = deps;

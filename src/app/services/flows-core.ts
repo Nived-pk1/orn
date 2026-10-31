@@ -76,5 +76,5 @@ export function createFlowsNow(options: FlowsOptions): Flows {
   const imports = createImportService(deps);
   const restores = createRestoreService(deps);
   const exports = createExportService(deps);
-  return { ...imports, undo: restores.undo, lastImport: restores.lastImport, restore: restores.restore, export: exports.export };
+  return { ...imports, undo: restores.undo, lastImport: restores.lastImport, importLog: restores.importLog, restore: restores.restore, export: exports.export };
 }

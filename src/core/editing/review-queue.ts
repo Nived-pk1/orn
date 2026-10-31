@@ -38,6 +38,8 @@ export interface QueueRow {
   readonly firstError: string | undefined;
   readonly firstWarning: string | undefined;
   readonly origin: Origin;
+  /** The import that wrote this record (7.3b A1); absent for a record made here or imported before the id was kept. */
+  readonly importBatchId?: string;
   readonly tags: readonly string[];
   readonly updatedAt: string;
 }
@@ -53,7 +55,7 @@ export interface QueueFilters {
 
 interface Reviewed {
   readonly review: { readonly lifecycle: string; readonly status: ReviewStatus; readonly reasons: readonly string[]; readonly reviewedAt?: string };
-  readonly provenance: { readonly origin: Origin; readonly updatedAt: string };
+  readonly provenance: { readonly origin: Origin; readonly updatedAt: string; readonly importBatchId?: string };
   readonly tags?: readonly string[];
 }
 const reviewed = (record: AnyRecord | undefined): (AnyRecord & Reviewed) | undefined => (record !== undefined && 'review' in record ? (record as AnyRecord & Reviewed) : undefined);
@@ -75,6 +77,7 @@ function rowOf(state: CanonicalState, record: AnyRecord & Reviewed, findings: Fi
     firstError: errors[0]?.message,
     firstWarning: warnings[0]?.message,
     origin: record.provenance.origin,
+    ...(record.provenance.importBatchId === undefined ? {} : { importBatchId: record.provenance.importBatchId }),
     tags: record.tags ?? [],
     updatedAt: record.provenance.updatedAt,
   };

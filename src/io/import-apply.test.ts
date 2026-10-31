@@ -77,7 +77,10 @@ describe('apply (INV-21 atomic after a snapshot; ADV-045 import part)', () => {
     const result = await session.apply(plan.preview.batchId, plan);
     expect(result.ok).toBe(true);
     expect(store.getState().meta).toEqual(base.meta);
-    expect(store.getState().records).toEqual(base.records);
+    // 7.3b A1: the only difference is the import batch id on each written record (import-batch-stamp.test.ts)
+    const unstamped = JSON.parse(JSON.stringify(store.getState().records), (key, value: unknown) => (key === 'importBatchId' ? undefined : value)) as unknown;
+    const expected = JSON.parse(JSON.stringify(base.records), (key, value: unknown) => (key === 'importBatchId' ? undefined : value)) as unknown;
+    expect(unstamped).toEqual(expected);
   });
 
   it('replace_all with no usable dataset meta in the file is refused as INVALID_META (nothing pending)', async () => {

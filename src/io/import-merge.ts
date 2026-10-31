@@ -33,6 +33,8 @@ export type MergeOutcome =
       /** Verified asset bytes to write with their records (final IDs), in record order. */
       readonly stagedAssets: readonly ParsedAsset[];
       readonly assets: ImportAssetSummary;
+      /** The records this merge wrote (added, replaced or copied), by their final IDs: the import's batch id is stamped on these (7.3b A1). */
+      readonly written: readonly { readonly kind: RecordKind; readonly id: string }[];
     }
   | { readonly ok: false; readonly code: 'INVALID_META'; readonly message: string };
 
@@ -100,7 +102,7 @@ export function buildMergedReplica(input: MergeInput): MergeOutcome {
   const state = freeze({ meta, records: tables } as unknown as CanonicalState, true);
   const { stagedAssets, assets } = planAssets(input, written);
   const copyIdMap = [...idMap].map(([from, to]) => ({ from, to })).sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
-  return { ok: true, state, copyIdMap, richTextLinksRewritten, stagedAssets, assets };
+  return { ok: true, state, copyIdMap, richTextLinksRewritten, stagedAssets, assets, written: written.map((entry) => ({ kind: entry.record.kind, id: entry.record.id })) };
 }
 
 function liveHas(live: CanonicalState, record: AnyRecord): boolean {

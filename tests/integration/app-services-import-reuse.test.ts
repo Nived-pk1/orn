@@ -71,4 +71,18 @@ describe('a legacy file imported a second time', () => {
     await services.flows.apply(first.plan.preview.batchId, first.plan);
     expect(await services.flows.lastImport()).toMatchObject({ fileName: 'v6.json', format: 'legacy_v6', mode: 'merge', undoable: true });
   });
+
+  it('importLog lists every import, newest first, and the records it added carry the batch id (7.3b A1)', async () => {
+    const { services } = await booter.boot({ world: newWorld() });
+    expect(await services.flows.importLog()).toEqual([]);
+    const first = await services.flows.preview(v6(), 'v6.json', { mode: 'merge' });
+    if (!first.ok) throw new Error(first.message);
+    await services.flows.apply(first.plan.preview.batchId, first.plan);
+    const log = await services.flows.importLog();
+    expect(log).toHaveLength(1);
+    expect(log[0]).toMatchObject({ id: first.plan.preview.batchId, fileName: 'v6.json' });
+    expect(typeof log[0]?.appliedAt).toBe('string');
+    const stamped = Object.values(services.store.getState().records.species).filter((record) => record.provenance.importBatchId === first.plan.preview.batchId);
+    expect(stamped.length).toBeGreaterThan(0);
+  });
 });

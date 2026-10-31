@@ -8,8 +8,10 @@ describe('createReviewPort grouping', () => {
   it('opens with the saved choice', () => {
     expect(createReviewPort({ ...base, grouping: { stored: { groupBy: 'chapter' }, save: vi.fn() } }).grouping?.initial).toBe('chapter');
   });
-  it('falls back to Kind for anything unusable', () => {
-    for (const stored of [undefined, 'chapter', { groupBy: 'import' }, null]) expect(createReviewPort({ ...base, grouping: { stored, save: vi.fn() } }).grouping?.initial).toBe('kind');
+  it('falls back to Import (7.3b A1) for anything unusable, and keeps Import and Kind when saved', () => {
+    for (const stored of [undefined, 'chapter', { groupBy: 'weeks' }, null]) expect(createReviewPort({ ...base, grouping: { stored, save: vi.fn() } }).grouping?.initial).toBe('import');
+    expect(createReviewPort({ ...base, grouping: { stored: { groupBy: 'kind' }, save: vi.fn() } }).grouping?.initial).toBe('kind');
+    expect(createReviewPort({ ...base, grouping: { stored: { groupBy: 'import' }, save: vi.fn() } }).grouping?.initial).toBe('import');
   });
   it('keeps a change through the saver, as an object with the one field', () => {
     const save = vi.fn();

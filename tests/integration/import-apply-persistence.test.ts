@@ -14,7 +14,7 @@ import type { AssetBlobWrite } from '@/persistence/contracts';
 import { restoreSnapshot } from '@/persistence/restore';
 import { attachWriteQueue } from '@/persistence/write-wiring';
 import { envelope, makeStore, mulberry32, mustCommit } from '@/test-support/command-kit';
-import { exportBytes, parseBytes } from '@/test-support/import-kit';
+import { exportBytes, parseBytes, withoutBatchIds } from '@/test-support/import-kit';
 import { freshAdapter, loadState, quotaError, seedChangeSet, type TestAdapter } from '@/test-support/persistence-kit';
 import { loadFixtureState } from '@/test-support/state-fixture';
 
@@ -170,7 +170,7 @@ describe('apply through the real adapter', () => {
     expect(applied.ok).toBe(true);
     await t.adapter.flush();
     expect(store.getState().meta).toEqual(replacement.meta);
-    expect(store.getState().records).toEqual(replacement.records);
+    expect(withoutBatchIds(store.getState().records)).toEqual(withoutBatchIds(replacement.records)); // 7.3b A1: only the import batch id differs
     expect((await loadState(t.adapter)).state).toEqual(store.getState());
   });
 });

@@ -38,6 +38,7 @@ export interface FakeFlows {
   readonly revise: Mock;
   readonly undo: Mock;
   readonly lastImport: Mock;
+  readonly importLog: Mock;
   readonly restore: Mock;
   readonly export: Mock;
 }
@@ -83,7 +84,7 @@ export function fakeApp(options: { state?: CanonicalState; status?: Partial<AppS
   const status = createStatusStore(() => undefined);
   status.update({ ...WRITER_STATUS, ...options.status });
   const store = createCanonicalStore({ initial: options.state ?? emptyStoreState(), revision: 0, validateInitial: false });
-  const flows: FakeFlows = { preview: vi.fn(), apply: vi.fn(), cancel: vi.fn(() => Promise.resolve({ cancelled: true })), revise: vi.fn(), undo: vi.fn(), lastImport: vi.fn(() => Promise.resolve({ batchId: 'b', fileName: 'earlier.orn.json', appliedAt: '2026-10-12T10:00:00.000Z', format: 'orn.dataset', mode: 'merge', undoable: true })), restore: vi.fn(), export: vi.fn() };
+  const flows: FakeFlows = { preview: vi.fn(), apply: vi.fn(), cancel: vi.fn(() => Promise.resolve({ cancelled: true })), revise: vi.fn(), undo: vi.fn(), lastImport: vi.fn(() => Promise.resolve({ batchId: 'b', fileName: 'earlier.orn.json', appliedAt: '2026-10-12T10:00:00.000Z', format: 'orn.dataset', mode: 'merge', undoable: true })), importLog: vi.fn(() => Promise.resolve([])), restore: vi.fn(), export: vi.fn() };
   const saveEverythingNow = vi.fn(() => Promise.resolve({ ok: true, revision: 1 }));
   const retryReplica = vi.fn(() => Promise.resolve({ ok: true }));
   const retryEngine = vi.fn(() => Promise.resolve({ ok: true }));

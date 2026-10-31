@@ -33,6 +33,16 @@ export interface ConflictAnalysis {
   readonly counts: Readonly<Partial<Record<RecordKind, KindCounts>>>;
 }
 
+/**
+ * 7.3b A1: an import stamps `provenance.importBatchId` on the records it writes, so the same file imported again must still read as identical:
+ * the batch id is a note about HOW a record arrived, not part of what it says.
+ */
+function withoutBatchId(record: AnyRecord): AnyRecord {
+  if (record.provenance.importBatchId === undefined) return record;
+  const { importBatchId: _batch, ...provenance } = record.provenance;
+  return { ...record, provenance } as AnyRecord;
+}
+
 export function analyzeConflicts(live: CanonicalState, parsed: ImportParseResult): ConflictAnalysis {
   const seen = new Set<string>();
   const kept: AnyRecord[] = [];
@@ -66,8 +76,8 @@ export function analyzeConflicts(live: CanonicalState, parsed: ImportParseResult
       entry.new += 1;
       continue;
     }
-    const left = canonicalJson(record);
-    const identical = left !== undefined && left === canonicalJson(liveRecord);
+    const left = canonicalJson(withoutBatchId(record));
+    const identical = left !== undefined && left === canonicalJson(withoutBatchId(liveRecord));
     if (identical) entry.identical += 1;
     else entry.conflicting += 1;
     conflicts.push({ incoming: record, live: liveRecord, identical });

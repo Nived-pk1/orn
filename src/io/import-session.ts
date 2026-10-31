@@ -19,6 +19,7 @@ import { applyImport, type ApplyBatch, type ImportApplyDeps } from './import-app
 import { prepareImportApply, type PrepareApplyOutcome } from './import-prepare';
 import { analyzeConflicts } from './import-conflicts';
 import { buildMergedReplica } from './import-merge';
+import { stampImportBatch } from './import-batch-stamp';
 import { assemblePlan } from './import-preview';
 import type { AssetStagePort, ImportBatchSink, ImportStorePort, SnapshotPort } from './import-ports';
 import { resolveRequest } from './import-request';
@@ -124,9 +125,10 @@ export function createImportSession(deps: ImportSessionDeps): ImportSession {
     task.onProgress?.(3, 4, 'validated');
 
     const batchId = deps.ids.newId('imp');
+    const stamped = stampImportBatch(merge.state, merge.written, batchId);
     const plan = assemblePlan({ batchId, parsed, analysis, request: resolved.value, merge, validation: validated.validation, ...(legacy === undefined ? {} : { legacy }) });
     task.onProgress?.(4, 4, 'planned');
-    return { ok: true, batch: { batchId, fileName, baseRevision, merged: merge.state, stagedAssets: merge.stagedAssets, plan, parsed: source, copyIds } };
+    return { ok: true, batch: { batchId, fileName, baseRevision, merged: stamped, stagedAssets: merge.stagedAssets, plan, parsed: source, copyIds } };
   }
 
   /** The pending batch when `batchId` names it and `plan` is the one that was previewed; otherwise the refusal as a value. */

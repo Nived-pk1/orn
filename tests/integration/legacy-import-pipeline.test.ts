@@ -137,6 +137,7 @@ describe('re-import of an applied fixture', () => {
         compared += 1;
       }
     }
+    paths.delete('provenance.importBatchId'); // 7.3b A1: the first import stamped its batch id on the live records
     expect([...paths].sort()).toEqual(['provenance.createdAt', 'provenance.updatedAt']);
     // so the default resolution is keep_current for all of them and nothing is lost, but nothing is recognised as identical either
     const again = planOf(await legacyPreview(legacyBytes(name), kind, { store: first.store, nowMs: 1_800_000_000_000 }));

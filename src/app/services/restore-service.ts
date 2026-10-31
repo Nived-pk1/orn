@@ -10,12 +10,13 @@ import type { FlowDeps } from './flow-deps';
 import { isRefusal, type Operation } from './flow-gate';
 import { durabilityOf, guardStore } from './flow-ports';
 import { cancelledRefusal, isRoute, readOnlyRefusal, routeOf } from './flow-route';
-import type { FlowOptions, LastImport, RestoreAnswer, UndoRefusal } from './flow-types';
+import type { FlowOptions, ImportLogLine, LastImport, RestoreAnswer, UndoRefusal } from './flow-types';
 
 export interface RestoreService {
   restore(snapshotId: string, options?: FlowOptions): Promise<RestoreAnswer>;
   undo(options?: FlowOptions): Promise<RestoreAnswer | UndoRefusal>;
   lastImport(): Promise<LastImport | undefined>;
+  importLog(): Promise<readonly ImportLogLine[]>;
 }
 
 export function createRestoreService(deps: FlowDeps): RestoreService {
@@ -85,6 +86,17 @@ export function createRestoreService(deps: FlowDeps): RestoreService {
         mode: text(report.mode, 'unknown'),
         undoable: typeof report.snapshotId === 'string',
       };
+    },
+    async importLog() {
+      const rows = await deps.durable.listImportBatches();
+      return rows.map((row) => {
+        const report = (typeof row.report === 'object' && row.report !== null && !Array.isArray(row.report) ? row.report : {}) as Record<string, unknown>;
+        return {
+          id: row.id,
+          fileName: typeof report.fileName === 'string' ? report.fileName : 'an earlier file',
+          appliedAt: typeof report.appliedAt === 'string' ? report.appliedAt : row.createdAt,
+        };
+      });
     },
     async undo(options) {
       const refused = readOnlyRefusal(store, 'undoing an import');

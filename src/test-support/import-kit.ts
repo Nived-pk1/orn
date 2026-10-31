@@ -25,6 +25,14 @@ import { mulberry32 } from './command-kit';
 
 export const EXPORT_DEPS: OrnJsonExportDeps = { exportedAt: '2026-09-29T00:00:00.000Z', generator: { app: 'orn-test', version: '1' }, assetBytes: async () => undefined };
 
+/**
+ * 7.3b A1: an import stamps `provenance.importBatchId` on the records it writes, so a state read back after an import differs from the file's
+ * records by that one field. Tests that compare the two compare these.
+ */
+export function withoutBatchIds<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value), (key: string, v: unknown) => (key === 'importBatchId' ? undefined : v)) as T;
+}
+
 export async function exportBytes(
   state: CanonicalState,
   format: 'json' | 'pkg' = 'json',

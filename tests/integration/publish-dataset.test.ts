@@ -11,6 +11,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { createIdFactory } from '@/core/dataset';
+import { migrationRunner } from '@/core/migrations';
+import { emptyRecordTables } from '@/core/schema';
+import { checkForPublish } from '@/io/publish';
+import { manifestOf } from '@/io/publish-manifest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { withSyntheticAssets } from '@/test-support/asset-kit';
 import { exportBytes } from '@/test-support/import-kit';
@@ -69,15 +74,27 @@ describe('scripts/publish-dataset.mjs', () => {
     expect(manifest.recordTotal).toBe(Object.values(manifest.recordCounts as Record<string, number>).reduce((a, b) => a + b, 0));
   });
 
-  it('the manifest is deterministic: the same file and the same injected clock give the same bytes; another clock changes only publishedAt', () => {
-    const a = run(valid);
-    const b = run(valid);
-    expect(readFileSync(join(a.dir, 'manifest.json'), 'utf8')).toBe(readFileSync(join(b.dir, 'manifest.json'), 'utf8'));
-    const later = run(valid, { now: '2027-01-02T03:04:05.000Z' });
-    const first = JSON.parse(readFileSync(join(a.dir, 'manifest.json'), 'utf8')) as Record<string, unknown>;
-    const second = JSON.parse(readFileSync(join(later.dir, 'manifest.json'), 'utf8')) as Record<string, unknown>;
-    expect({ ...second, publishedAt: first.publishedAt }).toEqual(first);
-    expect(second.publishedAt).toBe('2027-01-02T03:04:05.000Z');
+  it('the manifest is deterministic: the same file and the same injected clock give the same bytes; another clock changes only publishedAt', async () => {
+    // in process (7.3b A3): the script builds its manifest with `manifestOf`, so the property is checked on that function over the real
+    // verdict of the same pipeline, with no process spawned (three spawns made this test depend on how loaded the machine was)
+    const nowMs = Date.parse(NOW);
+    const iso = new Date(nowMs).toISOString();
+    const empty = { meta: { datasetId: 'orn-publish-check', title: 'Untitled dataset', createdAt: iso, updatedAt: iso }, records: emptyRecordTables() };
+    const verdictOf = async () => {
+      const verdict = await checkForPublish({ fileName: 'study.orn.json', bytes: valid }, { store: { getState: () => empty, getRevision: () => 0 }, ids: createIdFactory({ nowMs: () => nowMs }, { next: () => 0.5 }), runner: migrationRunner });
+      if (!verdict.ok) throw new Error(verdict.reasons.join('; '));
+      return verdict;
+    };
+    const a = manifestOf(await verdictOf(), valid, sha(valid), NOW);
+    const b = manifestOf(await verdictOf(), valid, sha(valid), NOW);
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+    expect(a).toMatchObject({ manifestVersion: 1, file: 'dataset.orn.json', format: 'orn.dataset', sha256: sha(valid), bytes: valid.length, publishedAt: NOW });
+    const later = manifestOf(await verdictOf(), valid, sha(valid), '2027-01-02T03:04:05.000Z');
+    expect({ ...later, publishedAt: a.publishedAt }).toEqual(a);
+    expect(later.publishedAt).toBe('2027-01-02T03:04:05.000Z');
+    // the real script still writes exactly this (one process, in the first test above)
+    const written = run(valid);
+    expect(JSON.parse(readFileSync(join(written.dir, 'manifest.json'), 'utf8'))).toEqual(a);
   });
 
   it('accepts pictures embedded in the file, and a package (.ornpkg: the file takes the format\'s own name)', () => {

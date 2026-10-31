@@ -17,6 +17,7 @@ const stripTimes = (record: AnyRecord): unknown => {
   const copy = structuredClone(record) as unknown as { provenance: { createdAt?: string; updatedAt?: string } };
   delete copy.provenance.createdAt;
   delete copy.provenance.updatedAt;
+  delete (copy.provenance as { importBatchId?: string }).importBatchId; // 7.3b A1: the import stamps its batch id
   return copy;
 };
 

@@ -5,7 +5,7 @@
  * core (`core/editing/review-queue.ts`); this file shows them. The app never verifies anything by itself.
  */
 import { useEffect, useId, useMemo, useReducer, useRef, useState, type ChangeEvent } from 'react';
-import { chapterIndexOf, facetCountsOf, groupQueueRows, queueRows, rowsMatching, type GroupBy, type QueueFilters, type QueueRow, type ReviewGroup } from '@/core/editing';
+import { chapterIndexOf, facetCountsOf, groupQueueRows, importIndexOf, queueRows, rowsMatching, type GroupBy, type GroupPlaces, type QueueFilters, type QueueRow, type ReviewGroup } from '@/core/editing';
 import type { RecordRef } from '@/core/schema';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, SegmentedControl, VirtualList } from '@/ui/primitives';
@@ -50,7 +50,8 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
   const [origin, setOrigin] = useState('');
   const [tag, setTag] = useState('');
   const [chapter, setChapter] = useState('');
-  const [groupBy, setGroupBy] = useState<GroupBy>(port.grouping?.initial ?? 'kind');
+  const [imported, setImported] = useState('');
+  const [groupBy, setGroupBy] = useState<GroupBy>(port.grouping?.initial ?? 'import');
   const phone = useLayoutMode() === 'phone';
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set());
@@ -68,24 +69,27 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
   const everything = useMemo(() => queueRows(state, port.findingsOf, {}), [state, port, bump]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- the filters are the values above
   const base = useMemo(() => queueRows(state, port.findingsOf, filters), [state, port, bump, errorsOnly, warningsOnly, origin, tag]);
-  const chaptersOf = useMemo(() => chapterIndexOf(state), [state]);
-  const chosenFacets = useMemo(() => ({ ...(kind === '' ? {} : { kind }), ...(status === '' ? {} : { status }), ...(chapter === '' ? {} : { chapter }) }), [kind, status, chapter]);
-  const shown = useMemo(() => rowsMatching(base, chaptersOf, chosenFacets), [base, chaptersOf, chosenFacets]);
-  const facets = useMemo(() => facetCountsOf(base, chaptersOf, chosenFacets), [base, chaptersOf, chosenFacets]);
+  const importLog = port.imports?.log;
+  const formatTime = port.imports?.formatTime;
+  const places = useMemo<GroupPlaces>(() => ({ chapters: chapterIndexOf(state), imports: importIndexOf(importLog ?? [], formatTime ?? ((iso) => iso)) }), [state, importLog, formatTime]);
+  const chosenFacets = useMemo(() => ({ ...(kind === '' ? {} : { kind }), ...(status === '' ? {} : { status }), ...(chapter === '' ? {} : { chapter }), ...(imported === '' ? {} : { import: imported }) }), [kind, status, chapter, imported]);
+  const shown = useMemo(() => rowsMatching(base, places, chosenFacets), [base, places, chosenFacets]);
+  const facets = useMemo(() => facetCountsOf(base, places, chosenFacets), [base, places, chosenFacets]);
   const withCount = (map: ReadonlyMap<string, { readonly title: string; readonly count: number }>, chosen: string): (readonly [string, string])[] => {
     const options = [...map.entries()].map(([value, one]) => [value, `${one.title} (${one.count})`] as const);
     return chosen === '' || map.has(chosen) ? options : [...options, [chosen, `${chosen} (0)`] as const];
   };
   // a chosen chapter shows its own group only (a record in two chapters would otherwise repeat under the other one)
-  const groups = useMemo(() => groupQueueRows(shown, groupBy, chaptersOf).filter((group) => chapter === '' || groupBy !== 'chapter' || group.key === `chapter:${chapter}`), [shown, groupBy, chaptersOf, chapter]);
+  const groups = useMemo(() => groupQueueRows(shown, groupBy, places).filter((group) => chapter === '' || groupBy !== 'chapter' || group.key === `chapter:${chapter}`), [shown, groupBy, places, chapter]);
   // the rows in the order they are listed, each once: a range (Shift-click) follows what the person sees
   const listed = useMemo(() => [...new Map(groups.flatMap((group) => group.rows).map((row) => [keyOf(row.ref), row])).values()], [groups]);
   const items = useMemo(() => itemsOf(groups), [groups]);
-  const setCount = [kind, status, chapter, origin, tag].filter((one) => one !== '').length + (errorsOnly ? 1 : 0) + (warningsOnly ? 1 : 0);
+  const setCount = [kind, status, chapter, imported, origin, tag].filter((one) => one !== '').length + (errorsOnly ? 1 : 0) + (warningsOnly ? 1 : 0);
   const clearAll = (): void => {
     setKind('');
     setStatus('');
     setChapter('');
+    setImported('');
     setOrigin('');
     setTag('');
     setErrorsOnly(false);
@@ -119,11 +123,12 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
     <section aria-label="Review" className={styles.page}>
       <h2>Review</h2>
       <p>Records that are not verified yet. Nothing is verified by itself: you mark each one, and one Undo takes a whole step back.</p>
-      <SegmentedControl<GroupBy> label="Group by" options={[{ value: 'chapter', label: 'Chapter' }, { value: 'kind', label: 'Kind' }]} value={groupBy} onChange={chooseGroupBy} />
+      <SegmentedControl<GroupBy> label="Group by" options={[{ value: 'import', label: 'Import' }, { value: 'chapter', label: 'Chapter' }, { value: 'kind', label: 'Kind' }]} value={groupBy} onChange={chooseGroupBy} />
       {phone ? (
         <Button aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}>{`Filters (${setCount})`}</Button>
       ) : null}
       <div className={styles.filters} role="group" aria-label="Filters" hidden={phone && !filtersOpen} data-phone={phone ? '' : undefined}>
+        <Select label="Import" value={imported} options={withCount(facets.imports, imported)} onChange={setImported} />
         <Select label="Chapter" value={chapter} options={withCount(facets.chapters, chapter)} onChange={setChapter} />
         <Select label="Kind" value={kind} options={withCount(facets.kinds, kind)} onChange={setKind} />
         <Select label="Status" value={status} options={withCount(facets.statuses, status)} onChange={setStatus} />
@@ -162,7 +167,7 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
           focusable
           renderItem={(item) =>
             item.kind === 'head' ? (
-              <h3 className={styles.groupHead}>{`${item.group.title} (${item.group.rows.length})`}</h3>
+              <h3 className={styles.groupHead}>{item.group.heading}</h3>
             ) : (
               <ReviewRow
                 row={item.row}

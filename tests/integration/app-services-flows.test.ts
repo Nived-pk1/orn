@@ -10,7 +10,7 @@ import { createBooter, demoState, renameDataset } from '@/test-support/app-boot-
 import { newWorld, testEnv, worldHolding } from '@/test-support/app-env-kit';
 import { engineKit, fakeMoleculesFor } from '@/test-support/app-engines-kit';
 import { ASSET_BYTES, ASSET_ID, blobOf, demoFile, fileOf, footprint, importFile, packageWithAsset, stateWithAsset } from '@/test-support/app-flow-kit';
-import { exportBytes } from '@/test-support/import-kit';
+import { exportBytes, withoutBatchIds } from '@/test-support/import-kit';
 import { freshDb } from '@/test-support/persistence-kit';
 import { smallState } from '@/test-support/app-boot-kit';
 
@@ -52,7 +52,7 @@ describe('the demo file into an empty store', () => {
     expect(await storedRevision(world)).toBe(1);
     expect(saveStates).toContain('saving');
     expect(services.status.get().operation).toBeNull();
-    expect(services.store.getState().records).toEqual(demoState().records);
+    expect(withoutBatchIds(services.store.getState().records)).toEqual(withoutBatchIds(demoState().records)); // 7.3b A1: only the import batch id differs
     expect(services.store.historyLabels()).toEqual({ undo: [], redo: [] });
   });
 
@@ -79,7 +79,7 @@ describe('the demo file into an empty store', () => {
     await importFile(services, await demoFile());
     await services.dispose();
     const again = await booter.bootEnv(testEnv({ world }));
-    expect(again.store.getState().records).toEqual(demoState().records);
+    expect(withoutBatchIds(again.store.getState().records)).toEqual(withoutBatchIds(demoState().records));
     expect(again.store.getRevision()).toBe(1);
   });
 });

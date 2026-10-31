@@ -88,6 +88,15 @@ export interface ImportFlows {
   undo(options?: FlowOptions): Promise<RestoreAnswer | UndoRefusal>;
   /** The newest import batch (undefined: none), for the words of Undo import. */
   lastImport(): Promise<LastImport | undefined>;
+  /** Every import in the journal, newest first (7.3b A1): the id is the `importBatchId` its records carry. */
+  importLog(): Promise<readonly ImportLogLine[]>;
+}
+
+/** 7.3b A1: one import in the journal, for naming a Review group ("<file> · imported <time>"). */
+export interface ImportLogLine {
+  readonly id: string;
+  readonly fileName: string;
+  readonly appliedAt: string;
 }
 
 export interface UndoRefusal {

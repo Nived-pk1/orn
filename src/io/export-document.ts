@@ -19,12 +19,22 @@ export interface ScopedDocumentResult {
   readonly missingReferences: readonly MissingReference[];
 }
 
+/**
+ * 7.3b A1: `provenance.importBatchId` names a row of THIS browser's import journal; it means nothing in another dataset, so an export leaves it
+ * out. That keeps export -> import -> export byte-identical (INV-19) although an import now stamps it. Snapshots keep it (restore is exact).
+ */
+function withoutBatchId(record: AnyRecord): AnyRecord {
+  if (record.provenance.importBatchId === undefined) return record;
+  const { importBatchId: _batch, ...provenance } = record.provenance;
+  return { ...record, provenance } as AnyRecord;
+}
+
 function filteredState(state: CanonicalState, included: ReadonlySet<string>): CanonicalState {
   const tables = {} as Record<RecordKind, Record<string, AnyRecord>>;
   for (const kind of RECORD_KINDS) {
     const table: Record<string, AnyRecord> = {};
     for (const [id, record] of Object.entries(state.records[kind] as Record<string, AnyRecord>)) {
-      if (included.has(id)) table[id] = record as AnyRecord;
+      if (included.has(id)) table[id] = withoutBatchId(record as AnyRecord);
     }
     tables[kind] = table;
   }

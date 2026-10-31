@@ -40,6 +40,7 @@ export function createFlows(options: FlowsOptions): Flows {
     apply: (batchId, plan, flow) => through((f) => f.apply(batchId, plan, flow), REFUSED),
     undo: (flow) => through((f) => f.undo(flow), REFUSED),
     lastImport: () => through((f) => f.lastImport(), undefined),
+    importLog: () => through((f) => f.importLog(), []),
     restore: (snapshotId, flow) => through((f) => f.restore(snapshotId, flow), REFUSED),
     export: (options, format, flow) => through((f) => f.export(options, format, flow), REFUSED),
   };
