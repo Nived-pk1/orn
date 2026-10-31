@@ -6521,3 +6521,25 @@ Re-runs: the failed specs plus full-equation-group and equation-long-name (their
 - **Changed tests (reason):** import-apply.test (replace_all compares the file with the batch id stripped), review-groups.test (rewritten: three groupings, chapter topic), review-grouping.test.tsx (rewritten), review-host-grouping.test (default is Import), window-kit fake flows (`importLog`), and nine tests that compared a state read back after an import with the file's records (`withoutBatchIds` in `import-kit.ts`: import-apply-persistence, app-services-flows (2), app-services-flows-restore-export (2), app-services-flows-threads, adv-043 (`stripTimes`), legacy-import-pipeline (the first import stamped the live records)).
 - **New tests, seen red:** `core/chapters/chapters.test.ts` (14): yes (module absent); `review-groups.test.ts`: yes (`importIndexOf` absent); `import-batch-stamp.test.ts` (5): the stamping cases yes (2 of 4 failed before the code); the "same file again reads identical" case was written after the first fix and the "export leaves the batch id out" case ran once with a syntax error in the test, then passed after the code (not seen red by assertion); `app-services-import-reuse` importLog case: red (method absent); `publish-dataset` deterministic case: yes (module absent); review-grouping.test.tsx: the old assertions failed against the new page, the rewritten ones were written after the code.
 - **`npm run check`** (default workers): 641 files, 7,561 tests, green. **Initial JS gzip:** Study 383.79 kB, Studio 387.69 kB (7.3a close: 383.73 / 387.68).
+
+**Reviewer decisions recorded (7.3b session 2):** (1) the conflict identity check ignoring `provenance.importBatchId` is ACCEPTED; (2) user exports omitting `importBatchId` while snapshots keep it is ACCEPTED; (3) the tests listed below as not seen red are ACCEPTED this once.
+
+**Parts A5, B, C, D, E (commits e8e906a, dfd06cd, 59a1408, bb697da).**
+- **A5 "As written in this reaction".** A class participant or product with `originalText` shows that text as the box formula (family card, full equation, inspector "as written:"); the class name stays. Editor labels for class refs say "As written in this reaction". No schema change.
+- **B** fact sheet: `docs/reviews/step-7-3b-fact-sheet.md` (docs only). **C** the chapters core matches the spec; no change was needed.
+- **D Chapters view** (`src/features/chapters/`, injected by `app/chapters-host.tsx`): "Chapters" is the first rail mode (the Syllabus placeholder is gone); list with counts in words and "No chapter yet" last; chapter page with groups in study order, "Also used here", study cards, kind chips, name box, 30 at a time; inspector "In chapters:" line links back; exam scope hides chapters a version does not cover and says how many; open chapter and filters saved in uiState (`chapters`, tolerant). Study opens on Chapters when a chapter topic exists (once per start).
+- **E phone:** a Chapters tab (first), the filters behind "Filters (n)"; the saved phone tab is omitted when it equals the default.
+- **Seen red:** chapters-state yes; chapters model.test yes; core as-written yes; family-structure written yes; inspector as-written yes; reaction-form labels yes; phone-tab default yes.
+- **NOT seen red (code first, accepted):** chapters-view.test, in-chapters.test, family-card-groups as-written, window.test rail, and the e2e specs (chapters, as-written, phone-chapters).
+- **Amendments:** none (no schema change, no import-format change).
+- **`npm run check`** (default workers, one command): 648 files, 7,599 tests, green at bb697da. **Initial JS gzip:** Study 387.72 kB, Studio 392.90 kB (the 395 kB line is not raised; Studio has 2.1 kB left).
+- **Single-spec e2e before the full run:** chapters, as-written, review-grouping green in Chromium, Firefox, WebKit; phone-chapters green in Pixel 7 Chromium and iPhone 14 WebKit. Screenshots viewed.
+- **Speed check:** not recorded at the start of this session (HEAD was clean).
+
+**REVIEW REQUIRED (decided here):**
+1. The desktop mode is not remembered across reloads, so the Study first-screen rule runs at every start.
+2. "No chapter yet" is always listed, also under an exam scope.
+3. Concept cards say "No text yet." when a concept has no summary.
+4. The editor label for class refs changed to "As written in this reaction".
+5. Studio initial JS is 392.90 kB, 2.1 kB under the 395 kB line.
+6. Part C needed no change.
