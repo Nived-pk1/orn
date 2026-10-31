@@ -15,7 +15,8 @@ test('a generic reaction lists its examples; the example says "Example of"', asy
   const closed = record(page).getByRole('button', { name: /^Level/, expanded: false });
   for (let left = await closed.count(); left > 0; left = await closed.count()) await closed.first().click();
   const examples = record(page).getByRole('region', { name: 'Examples' });
-  await expect(examples.getByRole('heading', { name: 'Examples (1)' })).toBeVisible();
+  await examples.getByText('Examples (1)').click(); // 7.3a: the list is a closed disclosure
+  await expect(examples.getByRole('link', { name: 'Ethanol → ethanal (PCC)' })).toBeVisible();
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/generic-examples-1280x800.png` });
   await examples.getByRole('link', { name: 'Ethanol → ethanal (PCC)' }).click();

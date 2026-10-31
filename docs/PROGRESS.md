@@ -6495,3 +6495,12 @@ Row 7.3 is split: **7.3a** = these fixes, **7.3b** = the Reagent explorer. State
 8. **What "a list" is for folding:** one group of a family-page section; the whole filtered result in the Reactions view (before paging, so 30 at a time pages cards); one starting-material block in Precursors; one arrow's list. A reaction can be a card in one list and folded in another.
 9. An example inside a card is a nested card (h5); on a phone the summary is a 44 px target (media query on the two ADR-039 phone queries).
 10. The `check` ran with 2 test workers (see above).
+
+**e2e, the ONE full run for 7.3a (2026-10-31): NOT clean, so NOT deployed.** 724 passed, 151 skipped, about 58 failed (1.9 h), across the three engines. No app code was at fault; every failure was a spec that assumed the old page (fixed in the commit after 83b84bb, specs and `kit.ts` only):
+- "Aldehydes 2 reactions" now names two partner buttons ("From Aldehydes" first, "To Aldehydes" second, which holds the PCC group): nine specs take `.last()`, keyboard-walk takes the second match (axe-screens, csp, family, hostile, inspector, phone, phone-family, structures-late, touch-walk).
+- `exampleCard` (kit.ts) waits for the "Examples (n)" disclosure to be drawn before it counts the closed ones (structures, structures-late, equation, family).
+- generic-examples: the inspector's "Examples (1)" is a closed summary, not a heading; the spec opens it.
+- reaction-explorer: the example-count pattern was malformed (`\(+ ` for `\(\+ `); the arrow list counts cards, so its "several reactions" threshold is 2.
+- review-queue / review-grouping: the Kind and Status selects carry counts in their option labels (select by value) and the "Group by Kind" radio shares the label "Kind" (select by role combobox); group headings are list items (rows exclude h3); the two screenshots moved after the reload because a reload empties the page's count of WebKit's injected screenshot styles that `expectClean` forgives.
+- phone-family: the PCC example is a nested h5 card, so the outer card must use the width and the example may be at most 32 px narrower; the tap uses its h5 button.
+Re-runs: the failed specs plus full-equation-group and equation-long-name (their timeouts) in all three engines: 160 passed, 75 skipped, 0 failed after the phone-family fix. No test was weakened or skipped. Waiting for the reviewer: deploy, PROJECT_STATE and push NOT done.

@@ -111,7 +111,8 @@ test.describe('the keyboard-only walk', () => {
     expect((await focusOf(page)).name).toBe('Overview');
 
     // 5. a group button, then a reaction card: its detail opens in the inspector
-    await tabTo(page, 'the Aldehydes group button', (f) => f.tag === 'button' && /^Aldehydes\s*2\s*reactions$/.test(f.name));
+    let aldehydeButtons = 0; // two partner buttons are named alike: "From Aldehydes" comes first, the second is "To Aldehydes" (the PCC group)
+    await tabTo(page, 'the Aldehydes group button (To)', (f) => f.tag === 'button' && /^Aldehydes\s*2\s*reactions$/.test(f.name) && (aldehydeButtons += 1) === 2);
     await page.keyboard.press('Enter');
     await expect(page.getByRole('heading', { level: 3, name: 'To Aldehydes' }), 'the Aldehydes group was brought into view').toBeInViewport();
     await tabTo(page, 'the general PCC card (its example is folded inside, 7.3a C1)', (f) => f.tag === 'button' && f.name === '1° alcohol → aldehyde (PCC)');

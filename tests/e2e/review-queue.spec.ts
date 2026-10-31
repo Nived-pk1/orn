@@ -23,7 +23,8 @@ const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
 const review = (page: Page) => page.getByRole('region', { name: 'Review' });
-const rows = (page: Page) => page.getByRole('list', { name: 'Records to review' }).getByRole('listitem');
+// 7.3a E: a group heading is a list item too (an h3); a record row is a list item without one
+const rows = (page: Page) => page.getByRole('list', { name: 'Records to review' }).getByRole('listitem').filter({ hasNot: page.getByRole('heading', { level: 3 }) });
 const header = (page: Page) => page.locator('header').first();
 
 async function dismissToasts(page: Page): Promise<void> {
@@ -69,12 +70,12 @@ test.describe('Studio, desktop', () => {
     expect(total).toBeGreaterThan(50);
     await expect(rows(page).first()).toBeVisible();
     // filters: kind species and status "Needs review" leave the species the demo marks so
-    await review(page).getByLabel('Kind', { exact: true }).selectOption({ label: 'species' });
-    await review(page).getByLabel('Status').selectOption({ label: 'Needs review' });
+    await review(page).getByRole('combobox', { name: 'Kind' }).selectOption('species');
+    await review(page).getByRole('combobox', { name: 'Status' }).selectOption('review_required');
     await expect(review(page).getByText(new RegExp(`^\\d+ of ${total} records shown$`))).toBeVisible();
     await expect(rows(page).first()).toContainText('Needs review');
-    await review(page).getByLabel('Kind', { exact: true }).selectOption('');
-    await review(page).getByLabel('Status').selectOption('');
+    await review(page).getByRole('combobox', { name: 'Kind' }).selectOption('');
+    await review(page).getByRole('combobox', { name: 'Status' }).selectOption('');
     expect(await axeProblems(page, 10)).toEqual([]);
     await dismissToasts(page);
     await page.screenshot({ path: resolve(shotsDir(), 'review-queue-1280x800.png') });
@@ -105,13 +106,13 @@ test.describe('Studio, desktop', () => {
     const seen = await watch(page);
     await openDemo(page);
     await openReview(page);
-    await review(page).getByLabel('Kind', { exact: true }).selectOption({ label: 'concept' });
+    await review(page).getByRole('combobox', { name: 'Kind' }).selectOption('concept');
     await review(page).getByRole('button', { name: 'Select all shown' }).click();
     const verified = await markVerified(page, review(page));
     expect(verified).toBeGreaterThan(0);
-    await review(page).getByLabel('Kind', { exact: true }).selectOption('');
+    await review(page).getByRole('combobox', { name: 'Kind' }).selectOption('');
     await header(page).getByRole('button', { name: `Undo mark verified (${verified})` }).click();
-    await review(page).getByLabel('Kind', { exact: true }).selectOption({ label: 'concept' });
+    await review(page).getByRole('combobox', { name: 'Kind' }).selectOption('concept');
     await expect(review(page).getByText(new RegExp(`^${verified} (record|records) to review$|^\\d+ of \\d+ records shown$`))).toBeVisible();
     await expectClean(seen);
   });

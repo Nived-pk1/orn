@@ -35,7 +35,6 @@ test('Group by Kind (the default) and Chapter; the choice is kept; filters carry
   await expect(headings(page).first()).toHaveText(/\(\d+\)$/);
   expect(await axeProblems(page)).toEqual([]);
   await toastsAway(page);
-  await page.screenshot({ path: `${shotsDir()}/review-by-kind-1280x800.png` });
 
   // Chapter
   await groupBy(page).getByRole('radio', { name: 'Chapter' }).check();
@@ -46,7 +45,6 @@ test('Group by Kind (the default) and Chapter; the choice is kept; filters carry
   expect(chapterOptions.filter((text) => /^JEE (Advanced|Main) 2026 \(provisional\) › Alcohols, phenols and ethers \(\d+\)$/.test(text))).toHaveLength(2);
   expect(chapterOptions.some((text) => /^No chapter yet \(\d+\)$/.test(text))).toBe(true);
   expect(await axeProblems(page)).toEqual([]);
-  await page.screenshot({ path: `${shotsDir()}/review-by-chapter-1280x800.png` });
 
   // kept through a reload (tolerant uiState)
   await page.reload();
@@ -65,5 +63,12 @@ test('Group by Kind (the default) and Chapter; the choice is kept; filters carry
   expect(await headings(page).count()).toBeGreaterThan(1);
   await expect(review(page).getByRole('button', { name: 'Clear all filters' })).toHaveCount(0);
   expect(await axeProblems(page)).toEqual([]);
+  // screenshots last: a reload empties the page's count of the styles WebKit's inspector injects for them, which expectClean forgives
+  await groupBy(page).getByRole('radio', { name: 'Kind' }).check();
+  await expect(headings(page).first()).toBeVisible();
+  await page.screenshot({ path: `${shotsDir()}/review-by-kind-1280x800.png` });
+  await groupBy(page).getByRole('radio', { name: 'Chapter' }).check();
+  await expect(headings(page).first()).toHaveText(/^JEE (Advanced|Main) 2026 \(provisional\) › .+ \(\d+\)$/);
+  await page.screenshot({ path: `${shotsDir()}/review-by-chapter-1280x800.png` });
   await expectClean(seen);
 });

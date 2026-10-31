@@ -58,7 +58,7 @@ test.describe('hostile data', () => {
     await inert('the overview');
     await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
     await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
-    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().click();
     // the renamed reaction is the PCC example, folded under the general oxidation (7.3a C1): its card is inside the "Examples (1)" disclosure
     const card = await exampleCard(page, HOSTILE_REACTION);
     await expect(card).toBeVisible();

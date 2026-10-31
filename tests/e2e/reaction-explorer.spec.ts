@@ -20,7 +20,7 @@ const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 
 const TOTAL = 26; // the CARDS of the demo: 27 reactions, one of them (the PCC example) folded under its general reaction (7.3a C1)
-const EXAMPLES = '\\(+ \\d+ examples?\\)'; // "(+ 1 example)" in words
+const EXAMPLES = '\\(\\+ \\d+ examples?\\)'; // "(+ 1 example)" in words
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const modes = (page: Page) => page.getByRole('navigation', { name: 'Modes' });
 const view = (page: Page) => page.getByRole('region', { name: 'Reactions', exact: true });
@@ -174,7 +174,7 @@ test.describe('desktop', () => {
     await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).click();
     const table = page.getByRole('table', { name: 'Arrows' });
     await expect(table).toBeVisible();
-    const wanted = await table.locator('[data-row-key]').evaluateAll((all) => all.findIndex((row) => Number(row.querySelectorAll('[role="cell"]')[2]?.textContent) >= 3));
+    const wanted = await table.locator('[data-row-key]').evaluateAll((all) => all.findIndex((row) => Number(row.querySelectorAll('[role="cell"]')[2]?.textContent) >= 2));
     expect(wanted).toBeGreaterThanOrEqual(0);
     await table.locator('[data-row-key]').nth(wanted).click();
     const region = pane(page).getByRole('region', { name: 'Reactions on this arrow' });

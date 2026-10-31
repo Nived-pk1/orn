@@ -64,7 +64,7 @@ async function walk(page: Page, device: string): Promise<void> {
   expect(await axeProblems(page, 10), 'axe on the family page').toEqual([]);
 
   // a reaction scheme from top to bottom
-  await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).tap();
+  await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().tap();
   const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
   await expect(card).toBeVisible();
   const scheme = card.getByRole('group').first();
@@ -78,13 +78,17 @@ async function walk(page: Page, device: string): Promise<void> {
   expect(down.y + down.height, 'the arrow is above the products').toBeLessThanOrEqual(product.y + 1);
   await expectArrowLayout(card, width);
   for (const figure of await figures.all()) expect((await box(figure)).width, 'a structure is at most 45% of the width').toBeLessThanOrEqual(width * 0.45 + 1);
-  expect((await box(card)).width, 'the card uses the width').toBeGreaterThanOrEqual(width - 40);
+  // the example is nested in its general card (7.3a C1): the outer card uses the width, the nested one is only the indent narrower
+  const outer = card.locator('xpath=ancestor::article[1]');
+  const outerWidth = (await box(outer)).width;
+  expect(outerWidth, 'the general card uses the width').toBeGreaterThanOrEqual(width - 40);
+  expect((await box(card)).width, 'the example card is at most an indent narrower than its general card').toBeGreaterThanOrEqual(outerWidth - 32);
   await card.scrollIntoViewIfNeeded();
   await card.screenshot({ path: `screenshots/phone4-${device}-pcc-card.png` });
   await shot(page, device, 2, 'scheme');
 
   // a tapped card: its top just under the bar, as much of it as possible above the peek (the PCC card fits), the page runs behind the sheet
-  await card.getByRole('heading', { level: 4 }).getByRole('button').tap();
+  await card.getByRole('heading', { level: 5 }).getByRole('button').tap();
   await expect(sheet(page)).toHaveAttribute('data-sheet', 'peek');
   await page.waitForTimeout(1_000);
   {

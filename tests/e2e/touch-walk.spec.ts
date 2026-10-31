@@ -47,7 +47,7 @@ test.describe('the touch walk', () => {
     await page.touchscreen.tap(again.x, again.y);
     await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
 
-    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).tap();
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().tap();
     const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await card.getByRole('button', { name: 'Ethanol → ethanal (PCC)' }).tap();
     await expect(record(page)).toHaveAttribute('data-record-id', 'rxn_ethanol-to-ethanal-pcc');

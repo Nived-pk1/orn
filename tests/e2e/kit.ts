@@ -231,6 +231,7 @@ export async function inertProblems(page: Page): Promise<string[]> {
  * (a level-5 heading inside the general card). The demo's "Ethanol → ethanal (PCC)" is the example of "1° alcohol → aldehyde (PCC)".
  */
 export async function exampleCard(page: Page, name: string | RegExp): Promise<Locator> {
+  await page.locator('details[data-examples] > summary').first().waitFor({ state: 'visible' }); // the list may not be drawn yet
   const closed = page.locator('details[data-examples]:not([open]) > summary');
   for (let n = await closed.count(); n > 0; n = await closed.count()) await closed.first().click();
   return page.getByRole('article').filter({ has: page.getByRole('heading', { level: 5, name }) }).last();

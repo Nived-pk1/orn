@@ -25,7 +25,7 @@ test.describe('structures asked for before the engine is ready', () => {
     await openApp(page);
     await loadDemo(page);
     await openAlcohols(page);
-    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().click();
     const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await expect(card).toBeVisible();
     // not drawn yet: the wasm is held; the card says so, in words, without an error look

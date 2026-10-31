@@ -49,7 +49,7 @@ test.describe('axe on every screen', () => {
     await openFamily(page);
     await clean(page, 'a family page');
 
-    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().click();
     const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await card.getByRole('button', { name: 'Ethanol → ethanal (PCC)' }).click();
     await expect(record(page)).toHaveAttribute('data-record-id', 'rxn_ethanol-to-ethanal-pcc');

@@ -21,7 +21,7 @@ const DELIBERATE = /Content Security Policy|Content-Security-Policy|CSP|unsafe-e
 async function structureAppears(page: Page): Promise<Locator> {
   await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
   await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
-  await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+  await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().click();
   const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
   await expect(card).toBeVisible();
   return card.getByRole('img');

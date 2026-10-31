@@ -244,7 +244,7 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
   await stop(page, device, 8, 'family-page');
 
   // a reaction card: the sheet at peek, swipe up to full, then closed
-  await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).tap();
+  await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().tap();
   const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
   await card.getByRole('button', { name: 'Ethanol → ethanal (PCC)' }).tap();
   await expect(sheet(page)).toHaveAttribute('data-sheet', 'peek');

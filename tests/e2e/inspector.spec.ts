@@ -30,7 +30,7 @@ test.describe('the inspector', () => {
 
     await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
     await page.getByRole('region', { name: /^Family page: Alcohols/ }).waitFor();
-    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().click();
     const pcc = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await pcc.getByRole('button', { name: 'Ethanol → ethanal (PCC)' }).click();
     await expect(record(page).getByRole('heading', { level: 3, name: 'Ethanol → ethanal (PCC)' })).toBeVisible();

@@ -63,7 +63,7 @@ test.describe('the family page of the demo', () => {
     await page.waitForTimeout(800);
     await shot(page, 'family-alcohols-top-1280x800.png');
     // the partner strip brings the reader to a group
-    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).click();
+    await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().click();
     const pcc = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await expect(pcc).toBeVisible();
     const images = pcc.getByRole('img');
@@ -72,7 +72,7 @@ test.describe('the family page of the demo', () => {
     await expect(pcc.getByText('Dichloromethane, anhydrous')).toBeVisible();
     // the Preparation section: back to the top, where the strip is
     await page.locator('[data-virtual-list]').evaluate((el) => el.scrollTo(0, 0));
-    await page.getByRole('button', { name: /^Alkenes\s*2\s*reactions$/ }).first().click();
+    await page.getByRole('button', { name: /^Alkenes\s*2\s*reactions$/ }).last().click();
     await expect(page.getByRole('heading', { level: 3, name: 'From Alkenes' })).toBeVisible();
     await page.waitForTimeout(800);
     await shot(page, 'family-alcohols-preparation-1280x800.png');
