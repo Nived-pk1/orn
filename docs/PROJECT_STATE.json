@@ -135,23 +135,23 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-10-31",
-    "commit": "9d95b5a",
-    "version": "3d42b310-bad6-464b-9b8f-75a869afa611",
-    "liveSpecs": "2026-10-31, Chromium: 39 passed, 9 skipped, 0 failed; WebKit: 38 passed, 10 skipped, 0 failed (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer); no retries needed"
+    "commit": "5ede066",
+    "version": "43126d5e-ccf5-4683-b9fc-9ee860da305e",
+    "liveSpecs": "2026-10-31, Chromium: 40 passed, 9 skipped, 1 timeout (equation, passed alone, accepted); WebKit: 40 passed, 10 skipped, 0 failed (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer, chapters)"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-10-31",
-    "version": "10c4bbc2-7b64-494f-acb2-7e54ef2066aa",
+    "version": "b726587a-27bc-40d2-b88d-7947f320872e",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.3a deploy, 2026-10-31: an unauthenticated request got 302 to tiny-base-dc3e.cloudflareaccess.com and not the app; the public Worker answered 200 with the app.",
-    "commit": "9d95b5a",
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.3b deploy, 2026-10-31: an unauthenticated request got 302 to tiny-base-dc3e.cloudflareaccess.com and not the app; the public Worker answered 200 with the app.",
+    "commit": "5ede066",
     "protectedCheckedAt": "2026-10-31"
   },
   "nextStep": "7.3c",
-  "nextStepTitle": "Chapters view (the study part of the Syllabus row moved forward); the Reagent explorer moves after it",
+  "nextStepTitle": "the Reagent explorer; first the initial JS size (Studio 392.92 kB of 395)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -545,8 +545,8 @@
     "reviewRequired": "docs/PROGRESS.md, Step 7.3a: no grouping by import (records carry no import id)"
   },
   "step73b": {
-    "status": "code done 2026-10-31 (parts A to E committed, check green); full e2e, deploy and push pending",
-    "commits": { "A": "5309e1d", "A5": "e8e906a", "B": "dfd06cd", "DE": "59a1408", "fixes": "bb697da" },
+    "status": "closed 2026-10-31 (5ede066), deployed both editions; awaiting review",
+    "commits": { "A": "5309e1d", "A5": "e8e906a", "B": "dfd06cd", "DE": "59a1408", "fixes": "bb697da", "closing": "5ede066" },
     "summary": "import tracking and Review by Import, chapter = chapter topic, class boxes as written, Chapters view (desktop and phone), fact sheet docs/reviews/step-7-3b-fact-sheet.md",
     "reviewRequired": "docs/PROGRESS.md, Step 7.3b: REVIEW REQUIRED 1 to 6"
   }
