@@ -317,7 +317,7 @@ test.describe('desktop', () => {
     const seen = await watch(page, STUDY);
     await openStudy(page);
     await importOwnData(page, generatedFileWithAnchors('tiny', 'chain'));
-    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
+    await chaptersFirstThenNavigator(page); // Study opens on Chapters when the data has a chapter topic (7.3b D5)
     await expectClean(seen);
   });
 });

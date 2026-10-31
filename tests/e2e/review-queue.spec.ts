@@ -15,6 +15,7 @@ import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, expectPreview, openApp, openPhoneApp, watch } from './kit';
 import { openDemo, shotsDir } from './editor-kit';
+import { chaptersFirstThenNavigator } from './chapters-kit';
 
 test.use({ actionTimeout: 60_000 });
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
@@ -237,7 +238,7 @@ test.describe('Study', () => {
     await expectPreview(page);
     await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
-    await expect(drawing(page)).toBeVisible();
+    await chaptersFirstThenNavigator(page); // Study opens on Chapters when the data has a chapter topic (7.3b D5)
     await page.waitForTimeout(700);
     await expect(page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Review' })).toHaveCount(0);
     const selection = page.getByRole('toolbar', { name: 'Canvas tools' }).locator('p').first();

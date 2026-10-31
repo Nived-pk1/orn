@@ -1,7 +1,7 @@
 /**
  * "In chapters: <links>" (step 7.3b D4): under the title of any study record, the chapters it is in (derived from the topic mappings by the
  * core, never stored). A link opens that chapter's page; a record in no chapter says so. Records that are not study records (topics,
- * mappings, exams, ...) have no such line.
+ * mappings, exams, ...) have no such line. On a phone the line is in the FULL part of the sheet (`data-sheet-full`), so the peek keeps its height.
  */
 import { useMemo } from 'react';
 import { buildChapterIndex, NO_CHAPTER_TITLE } from '@/core/chapters';
@@ -23,7 +23,7 @@ export function InChapters(props: { readonly refOf: RecordRef }) {
   }, [state, props.refOf]);
   if (found === undefined) return null;
   return (
-    <p className={styles.status} data-in-chapters="">
+    <p className={styles.status} data-in-chapters="" {...(phone ? { 'data-sheet-full': '' } : {})}>
       {'In chapters: '}
       {found.length === 0
         ? NO_CHAPTER_TITLE

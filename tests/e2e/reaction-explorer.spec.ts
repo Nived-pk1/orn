@@ -239,7 +239,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
   const tabs = page.getByRole('navigation', { name: 'Home' });
-  await expect(tabs.getByRole('button')).toHaveText(['Families', 'Map', 'Explore', 'Search']);
+  await expect(tabs.getByRole('button')).toHaveText(['Chapters', 'Families', 'Map', 'Explore', 'Search']);
   await tabs.getByRole('button', { name: 'Explore' }).tap();
   await expect(page.getByRole('heading', { name: 'Reactions', exact: true })).toBeVisible();
   await expect(tabs.getByRole('button', { name: 'Explore' })).toHaveAttribute('aria-current', 'page');

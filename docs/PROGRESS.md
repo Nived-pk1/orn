@@ -6543,3 +6543,9 @@ Re-runs: the failed specs plus full-equation-group and equation-long-name (their
 4. The editor label for class refs changed to "As written in this reaction".
 5. Studio initial JS is 392.90 kB, 2.1 kB under the 395 kB line.
 6. Part C needed no change.
+
+**e2e, the ONE full run for 7.3b (2026-10-31): NOT clean (781 passed, 155 skipped, 12 failed, 1.6 h).** The 12 failures were FOUR stale specs plus ONE layout change; no app code was wrong in the four:
+- shell.spec (the Syllabus button is gone: now checks the disabled Reagents button); reaction-explorer.spec (the phone Home tabs start with Chapters); study-edition.spec and review-queue.spec (after an import Study opens on Chapters when the data has a chapter topic: `chaptersFirstThenNavigator`).
+- Layout: the inspector's "In chapters:" line made the phone peek about 15 px taller, so on a Pixel 7 the PCC card no longer fitted above it (phone-family). Reviewer decision: the line moves OUT of the peek: on a phone it is in the FULL part of the sheet (`data-sheet-full`, like "How to make it"); desktop unchanged. The phone-family assertion is NOT changed. Test first, seen red: the phone case in `in-chapters.test.tsx` failed before the change (the desktop case passed).
+- The reviewer approved a targeted re-run instead of a second full run: every `phone-*` spec, chapters, inspector, inspector-views, shell, reaction-explorer, study-edition, review-queue, Chromium and WebKit: 109 passed, 37 skipped, 0 failed (Chromium 55, WebKit 54), no retries. No test was weakened or skipped.
+- `npm run check` (default workers, one command): 648 files, 7,601 tests, green. `build:smoke` green: initial JS gzip Study 387.73 kB, Studio 392.93 kB (the 395 line is not raised).

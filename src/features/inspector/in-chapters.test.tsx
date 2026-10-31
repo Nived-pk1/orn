@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** "In chapters: <links>" under the title of a study record (7.3b D4). */
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDerivedIndexes } from '@/app/services/derived-indexes';
 import { createCanonicalStore } from '@/core/commands';
 import { emptyRecordTables, type AnyRecord, type CanonicalState } from '@/core/schema';
@@ -9,11 +9,15 @@ import { demoState } from '@/test-support/app-boot-kit';
 import { topic, topicMapping } from '@/test-support/curriculum-kit';
 import { concept } from '@/test-support/graph-state';
 import { manualTimers } from '@/test-support/navigator-kit';
+import { PHONE_QUERIES } from '@/ui/hooks';
 import { createFamilyStore, createInspectorStore, createPanelsStore, createSelectionStore } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { Inspector } from './inspector';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 function stateOf(...records: readonly AnyRecord[]): CanonicalState {
   const tables = emptyRecordTables() as unknown as Record<string, Record<string, AnyRecord>>;
@@ -57,5 +61,18 @@ describe('In chapters', () => {
     cleanup();
     show(stateOf(...base), { kind: 'topic', id: 'top_chap-a' });
     expect(document.querySelector('[data-in-chapters]')).toBeNull();
+  });
+});
+
+describe('where the line sits (phone peek, 7.3b)', () => {
+  const rec = [...base, concept('c1', 'One', 'general'), topicMapping('m1', 'chap-a', { kind: 'concept', id: 'cpt_c1' } as never)];
+  it('on a phone it is in the FULL part of the sheet, hidden at peek, so the peek keeps its height', () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
+    show(stateOf(...rec), { kind: 'concept', id: 'cpt_c1' });
+    expect((document.querySelector('[data-in-chapters]') as HTMLElement).closest('[data-sheet-full]')).not.toBeNull();
+  });
+  it('on a desktop it stays under the title, outside the full part', () => {
+    show(stateOf(...rec), { kind: 'concept', id: 'cpt_c1' });
+    expect((document.querySelector('[data-in-chapters]') as HTMLElement).closest('[data-sheet-full]')).toBeNull();
   });
 });
