@@ -91,6 +91,19 @@ describe('the list (D1)', () => {
     expect(screen.queryByRole('button', { name: 'Potassium hydroxide' })).toBeNull();
   });
 
+  it('a family chip with a count of 0 is hidden unless it is chosen (7.4 A3)', () => {
+    const { reagents } = show(stateOf(...base));
+    expect(screen.queryByRole('button', { name: 'acid 0' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'oxidant 1' })).toBeTruthy();
+    act(() => reagents.getState().toggleFamily('oxidant'));
+    act(() => reagents.getState().setText('koh'));
+    const chip = screen.getByRole('button', { name: 'oxidant 0' });
+    expect(chip.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(chip);
+    expect(reagents.getState().families).toEqual([]);
+    expect(screen.queryByRole('button', { name: 'oxidant 0' })).toBeNull();
+  });
+
   it('says so in words when nothing matches, and when there are no reagents', () => {
     show(stateOf(...base), { text: 'zzz' });
     expect(screen.getByText('No reagent matches these filters.')).toBeTruthy();
@@ -124,7 +137,7 @@ describe('a reagent page (D2, D3)', () => {
     const { calls } = show(stateOf(...base), { reagentId: 'rgt_koh' });
     expect(screen.getByRole('heading', { level: 2, name: 'Potassium hydroxide' })).toBeTruthy();
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['Aqueous KOH (1 reaction)', 'Alcoholic KOH (1 reaction)', 'Molten KOH (0 reactions)', 'Used without a profile (1 reaction)']);
+    expect(headings).toEqual(['Aqueous KOH (1 reaction)', 'Alcoholic KOH (1 reaction)', 'Molten KOH', 'Used without a profile (1 reaction)']);
     const aq = screen.getByRole('region', { name: 'Aqueous KOH' });
     const box = within(aq).getByRole('complementary', { name: 'Usual conditions of this profile' });
     expect(box.textContent).toContain('basic medium');
@@ -138,9 +151,23 @@ describe('a reagent page (D2, D3)', () => {
     expect(calls).toEqual(['reactions rgt_koh']);
   });
 
-  it('a profile no reaction uses keeps its conditions and says so; a profile-less section has no conditions box', () => {
+  it('Study: an unused profile has no "(0 reactions)" and says "No reaction here uses this profile." (7.4 A5)', () => {
     show(stateOf(...base), { reagentId: 'rgt_koh' });
     const idle = screen.getByRole('region', { name: 'Molten KOH' });
+    expect(within(idle).getByRole('heading', { level: 3 }).textContent).toBe('Molten KOH');
+    expect(within(idle).getByText('No reaction here uses this profile.')).toBeTruthy();
+    expect(within(idle).getByRole('complementary', { name: 'Usual conditions of this profile' })).toBeTruthy();
+  });
+
+  it('the usage sentence agrees with the count', () => {
+    show(stateOf(...base), { reagentId: 'rgt_pcc' });
+    expect(screen.getByText('1 reaction uses this reagent.')).toBeTruthy();
+  });
+
+  it('a profile no reaction uses keeps its conditions and says so; a profile-less section has no conditions box', () => {
+    show(stateOf(...base), { reagentId: 'rgt_koh' }, { edit: () => undefined });
+    const idle = screen.getByRole('region', { name: 'Molten KOH' });
+    expect(within(idle).getByRole('heading', { level: 3 }).textContent).toBe('Molten KOH (0 reactions)');
     expect(within(idle).getByRole('complementary', { name: 'Usual conditions of this profile' })).toBeTruthy();
     expect(within(idle).getByText('No reaction uses this profile yet.')).toBeTruthy();
     expect(within(screen.getByRole('region', { name: 'Used without a profile' })).queryByRole('complementary')).toBeNull();

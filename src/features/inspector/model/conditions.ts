@@ -14,13 +14,22 @@ function measure(label: string, m: Measure | undefined): string | undefined {
   return `${label} ${words(m.value)}`;
 }
 
+/** A temperature as English (7.4 A4): the word alone ("cold"); a number or a range with the stored unit, Celsius as "80 °C" / "0–5 °C". */
+function temperature(m: Measure | undefined): string | undefined {
+  if (m === undefined) return undefined;
+  const unit = m.unit === 'C' ? '°C' : String(m.unit);
+  if (m.kind === 'value') return `${String(m.value)} ${unit}`;
+  if (m.kind === 'range') return `${String(m.min)}–${String(m.max)} ${unit}`;
+  return words(m.value);
+}
+
 export function parameterPhrases(p: ConditionParameters): string[] {
   const out: (string | undefined)[] = [
-    measure('temperature', p.temperature),
+    temperature(p.temperature),
     measure('pressure', p.pressure),
     measure('time', p.time),
     p.medium === undefined ? undefined : `${p.medium} medium`,
-    p.solventCharacter.length === 0 ? undefined : `solvent ${p.solventCharacter.map(words).join(', ')}`,
+    p.solventCharacter.length === 0 ? undefined : `${p.solventCharacter.map(words).join(', ')} solvent`,
     p.anhydrous === undefined ? undefined : p.anhydrous ? 'anhydrous' : 'not anhydrous',
     p.light === undefined ? undefined : `light ${words(p.light)}`,
     p.atmosphere === undefined ? undefined : `atmosphere ${words(p.atmosphere)}`,

@@ -137,7 +137,7 @@ test.describe('desktop', () => {
     await row.getByRole('button', { name: 'Potassium permanganate' }).click();
     const section = view.getByRole('region', { name: "Baeyer's reagent" });
     await expect(section.locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
-    await expect(section.getByRole('complementary', { name: 'Usual conditions of this profile' })).toContainText('temperature cold');
+    await expect(section.getByRole('complementary', { name: 'Usual conditions of this profile' })).toContainText('cold');
     await expect(view.getByRole('button', { name: 'Show these reactions in Reactions' })).toBeVisible();
     for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
     const editors = editorChunkNames();

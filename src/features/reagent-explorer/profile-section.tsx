@@ -5,6 +5,7 @@
  * outside the chosen exam scope keeps its card marked "outside <exam>", or is hidden by "Only <exam version>", and the section says how many.
  */
 import { useState } from 'react';
+import { plural, verbFor } from '@/core/text';
 import { howUsedWords, type UsageSection } from '@/core/reagents';
 import { PAGE_SIZE, type ReagentsPorts } from './contracts';
 import { reactionsWord } from './model';
@@ -24,10 +25,12 @@ export function ProfileSection(props: { readonly ports: ReagentsPorts; readonly 
   const left = section.reactions.length - kept.length;
   const shown = kept.slice(0, limit);
   const title = profile === undefined ? 'Used without a profile' : profile.label;
+  const study = ports.edit === undefined;
+  const unusedInStudy = study && profile !== undefined && section.count === 0;
   const phrases = profile === undefined ? [] : ports.conditionPhrases(profile.parameters);
   return (
     <section className={styles.section} aria-label={title} data-profile-id={section.profileId ?? 'none'}>
-      <h3 className={styles.sectionHeading}>{`${title} (${reactionsWord(section.count)})`}</h3>
+      <h3 className={styles.sectionHeading}>{unusedInStudy ? title : `${title} (${reactionsWord(section.count)})`}</h3>
       {profile === undefined || profile.aliases.length === 0 ? null : <p className={styles.muted}>{`also called ${profile.aliases.join(', ')}`}</p>}
       <div className={profile === undefined ? styles.sectionBodyPlain : styles.sectionBody}>
         {profile === undefined ? null : (
@@ -46,8 +49,8 @@ export function ProfileSection(props: { readonly ports: ReagentsPorts; readonly 
           </aside>
         )}
         <div className={styles.cards}>
-          {section.reactions.length === 0 ? <p className={styles.muted}>No reaction uses this profile yet.</p> : null}
-          {left > 0 ? <p className={styles.muted}>{`${left} ${left === 1 ? 'reaction is' : 'reactions are'} left out by the exam scope.`}</p> : null}
+          {section.reactions.length === 0 ? <p className={styles.muted}>{study ? 'No reaction here uses this profile.' : 'No reaction uses this profile yet.'}</p> : null}
+          {left > 0 ? <p className={styles.muted}>{`${plural(left, 'reaction', 'reactions')} ${verbFor(left, 'is', 'are')} left out by the exam scope.`}</p> : null}
           <ul className={styles.list}>
             {shown.map((id) => {
               const examples = (section.examplesOf.get(id) ?? []).filter((one) => !scope.onlyInScope || scope.outsideOf(one) === undefined);
@@ -74,7 +77,7 @@ export function ProfileSection(props: { readonly ports: ReagentsPorts; readonly 
           </ul>
           {kept.length > shown.length ? (
             <div className={styles.more}>
-              <p className={styles.muted} role="status">{`Showing ${shown.length} of ${kept.length} ${kept.length === 1 ? 'reaction' : 'reactions'}`}</p>
+              <p className={styles.muted} role="status">{`Showing ${shown.length} of ${plural(kept.length, 'reaction', 'reactions')}`}</p>
               <button type="button" onClick={() => setLimit((n) => n + PAGE_SIZE)}>{`Show ${PAGE_SIZE} more`}</button>
             </div>
           ) : null}

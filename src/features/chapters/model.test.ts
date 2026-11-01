@@ -34,8 +34,9 @@ describe('countsWords', () => {
   });
   it('concepts with no text are counted apart: "+ 3 not written" (Studio, 7.3c A3)', () => {
     expect(countsWords(counts({ concepts: { core: 5, other: 0 }, reactions: { core: 2, other: 0 } }), 3)).toBe('5 concepts + 3 not written · 2 reactions');
-    expect(countsWords(counts({ reactions: { core: 2, other: 0 } }), 3)).toBe('+ 3 not written · 2 reactions');
-    expect(countsWords(counts({}), 3)).toBe('+ 3 not written');
+    expect(countsWords(counts({ reactions: { core: 2, other: 0 } }), 3)).toBe('3 concepts not written · 2 reactions');
+    expect(countsWords(counts({}), 3)).toBe('3 concepts not written');
+    expect(countsWords(counts({}), 1)).toBe('1 concept not written');
   });
 });
 

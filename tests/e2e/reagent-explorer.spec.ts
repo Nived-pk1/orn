@@ -71,7 +71,7 @@ test('the list, the family chips, the name box (a profile label), and the KMnO4 
   const card = baeyers.locator('article[data-reaction-id]').first();
   await expect(card).toBeVisible({ timeout: 60_000 });
   const box = baeyers.getByRole('complementary', { name: 'Usual conditions of this profile' });
-  await expect(box).toContainText('temperature cold');
+  await expect(box).toContainText('cold');
   await expect(box).toContainText('basic medium');
   // beside the card on a desktop, never inside it: the box is to the right of the card and the card does not carry its words
   const cardBox = await card.boundingBox();
@@ -81,7 +81,9 @@ test('the list, the family chips, the name box (a profile label), and the KMnO4 
   expect((conditionsBox?.x ?? 0) >= (cardBox?.x ?? 0) + (cardBox?.width ?? 0) - 1).toBe(true);
   expect(await card.getByText('Usual conditions').count()).toBe(0);
   await expect(baeyers.locator('[data-how-used]')).toContainText('How it is used here: reagent');
-  await expect(section(page, 'Hot, concentrated')).toContainText('No reaction uses this profile yet.');
+  const studioEdition = (await page.locator('[data-edition-marker]').count()) > 0; // 7.4 A5: Study words it differently
+  await expect(section(page, 'Hot, concentrated')).toContainText(studioEdition ? 'No reaction uses this profile yet.' : 'No reaction here uses this profile.');
+  if (!studioEdition) await expect(section(page, 'Hot, concentrated').getByRole('heading', { level: 3 })).toHaveText('Hot, concentrated');
   await expect(section(page, 'Hot, concentrated').getByRole('complementary', { name: 'Usual conditions of this profile' })).toBeVisible();
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/reagent-page-kmno4-1280x800.png` });
@@ -95,7 +97,7 @@ test('the list, the family chips, the name box (a profile label), and the KMnO4 
   await expect(section(page, 'Alcoholic KOH')).toContainText('also called alc. KOH');
   await expect(section(page, 'Aqueous KOH').locator('[data-how-used]')).toContainText('aqueous');
   await expect(section(page, 'Alcoholic KOH').locator('[data-how-used]')).toContainText('alcoholic');
-  await expect(section(page, 'Alcoholic KOH').getByRole('complementary')).toContainText('temperature heat');
+  await expect(section(page, 'Alcoholic KOH').getByRole('complementary')).toContainText('heat');
   await expect(section(page, 'Alcoholic KOH').locator('article[data-reaction-id]')).toHaveCount(1, { timeout: 60_000 });
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/reagent-page-koh-1280x800.png` });

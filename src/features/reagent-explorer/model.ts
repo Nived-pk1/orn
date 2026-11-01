@@ -4,8 +4,8 @@
  */
 import type { Backing, ReagentRow } from '@/core/reagents';
 import type { ReagentFamily } from '@/core/schema';
+import { plural, verbFor } from '@/core/text';
 
-const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 
 /** "3 reactions · 2 profiles" (a reagent with no profile says so in the count: "0 profiles" is left out). */
 export function usedWords(row: Pick<ReagentRow, 'reactions' | 'profiles'>): string {
@@ -27,3 +27,6 @@ export function countLine(shown: number, total: number): string {
 }
 
 export const reactionsWord = (n: number): string => plural(n, 'reaction', 'reactions');
+
+/** "1 reaction uses this reagent." / "2 reactions use this reagent." */
+export const usesLine = (n: number): string => `${plural(n, 'reaction', 'reactions')} ${verbFor(n, 'uses', 'use')} this reagent.`;

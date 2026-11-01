@@ -29,8 +29,8 @@ export function countsWords(counts: KindCounts, unwritten = 0): string {
   const parts = CHAPTER_GROUPS.flatMap((group) => {
     const own = counts[group.key];
     const n = own.core + own.other;
-    const apart = group.key === 'concepts' && unwritten > 0 ? `+ ${unwritten} not written` : undefined;
     const words = n === 0 ? undefined : `${n} ${WORDS[group.key][n === 1 ? 0 : 1]}`;
+    const apart = group.key === 'concepts' && unwritten > 0 ? (words === undefined ? `${unwritten} ${WORDS.concepts[unwritten === 1 ? 0 : 1]} not written` : `+ ${unwritten} not written`) : undefined;
     const joined = words !== undefined && apart !== undefined ? `${words} ${apart}` : (words ?? apart);
     return joined === undefined ? [] : [joined];
   });

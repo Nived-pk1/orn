@@ -9,6 +9,7 @@ import { createScopeOf } from '@/core/graph';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import { REAGENT_FAMILIES, type CanonicalState } from '@/core/schema';
 import { Button, Dialog } from '@/ui/primitives';
+import { ListEntries, ListEntry } from '@/ui/primitives/list-entry'; // deep, not the barrel: keeps it out of the first-paint chunk (7.3c A1)
 import type { ActiveExam } from '@/ui/state';
 import { PAGE_SIZE, type ReagentsPorts } from './contracts';
 import { Formula } from './formula';
@@ -38,7 +39,7 @@ export function ReagentListView(props: { readonly ports: ReagentsPorts; readonly
         <input type="search" value={text} autoComplete="off" spellCheck={false} onChange={(event) => set.setText(event.target.value)} />
       </label>
       <div className={styles.bar} role="group" aria-label="Reagent family">
-        {REAGENT_FAMILIES.map((family) => (
+        {REAGENT_FAMILIES.filter((family) => list.familyCounts[family] > 0 || families.includes(family)).map((family) => (
           <button key={family} type="button" className={`${styles.chip} ${styles.familyChip}`} aria-pressed={families.includes(family)} onClick={() => set.toggleFamily(family)}>
             {`${familyWord(family)} ${list.familyCounts[family]}`}
           </button>
@@ -80,32 +81,22 @@ export function ReagentListView(props: { readonly ports: ReagentsPorts; readonly
             </Dialog>
           ) : null}
           {list.rows.length === 0 ? <p className={styles.muted}>No reagent matches these filters.</p> : null}
-          <ul className={styles.list} aria-label="Reagents">
+          <ListEntries label="Reagents">
             {shown.map((row) => (
-              <li key={row.id} className={styles.row} data-reagent-id={row.id}>
-                <button type="button" className={styles.rowName} onClick={() => set.open(row.id)}>
-                  {row.name}
-                </button>
-                {row.formula === undefined ? null : (
-                  <p className={styles.formula}>
-                    <Formula formula={row.formula} />
-                  </p>
-                )}
-                {row.backing?.kind === 'species' ? <p className={styles.muted}>{`Species: ${row.backing.name}`}</p> : null}
-                {mixtureWords(row.backing) === undefined ? null : <p className={styles.muted}>{mixtureWords(row.backing)}</p>}
-                {row.families.length === 0 ? null : (
-                  <ul className={styles.chips} aria-label={`Families of ${row.name}`}>
-                    {row.families.map((family) => (
-                      <li key={family} className={styles.chip}>
-                        {familyWord(family)}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className={styles.muted}>{usedWords(row)}</p>
-              </li>
+              <ListEntry
+                key={row.id}
+                id={row.id}
+                dataAttr={{ 'data-reagent-id': row.id }}
+                name={row.name}
+                onOpen={() => set.open(row.id)}
+                formula={row.formula === undefined ? undefined : <Formula formula={row.formula} />}
+                chips={row.families.map(familyWord)}
+                chipsLabel={`Families of ${row.name}`}
+                meta={usedWords(row)}
+                notes={[...(row.backing?.kind === 'species' ? [`Species: ${row.backing.name}`] : []), ...(mixtureWords(row.backing) === undefined ? [] : [mixtureWords(row.backing) ?? ''])]}
+              />
             ))}
-          </ul>
+          </ListEntries>
           {list.rows.length > shown.length ? (
             <div className={styles.more}>
               <p className={styles.muted} role="status">{`Showing ${shown.length} of ${list.rows.length} reagents`}</p>

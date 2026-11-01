@@ -12,7 +12,7 @@ import type { CanonicalState, RecordRef } from '@/core/schema';
 import { currentOf, type ActiveExam } from '@/ui/state';
 import type { ReagentsPorts } from './contracts';
 import { Formula } from './formula';
-import { familyWord, reactionsWord } from './model';
+import { familyWord, usesLine } from './model';
 import { ProfileSection } from './profile-section';
 import styles from './reagents-view.module.css';
 
@@ -111,7 +111,7 @@ export function ReagentPage(props: { readonly ports: ReagentsPorts; readonly sta
           </label>
         )}
       </div>
-      <p className={styles.muted}>{`${reactionsWord(usage.total)} use this reagent.`}</p>
+      <p className={styles.muted}>{usesLine(usage.total)}</p>
       {usage.sections.map((section) => (
         <ProfileSection key={section.profileId ?? 'none'} ports={ports} section={section} scope={{ outsideOf, onlyInScope }} selected={inspector === null ? null : inspector.id} />
       ))}
