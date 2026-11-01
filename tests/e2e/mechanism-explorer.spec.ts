@@ -96,6 +96,7 @@ test('Alt+Enter on a palette hit opens the page; the exam scope offers "Only"; t
   await page.keyboard.press('Alt+Enter');
   await expect(view(page).getByRole('heading', { level: 2, name: 'E2 elimination of a haloalkane' })).toBeVisible({ timeout: 60_000 });
 
+  await page.waitForTimeout(1000); // the saved state is written after a short pause (SAVE_DEBOUNCE_MS)
   await page.reload();
   await leaveChapters(page).catch(() => undefined);
   await rail(page).getByRole('button', { name: 'Mechanisms' }).click();

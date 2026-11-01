@@ -45,8 +45,10 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
   await expect(rowA).toContainText(/\d+ concepts?/);
   await expect(rowA).toContainText(/JEE (Advanced|Main) 2026/); // exam chips
   await (studio ? expect(rowA).toContainText(/\+ 1 not written/) : expect(rowA).not.toContainText(/not written/)); // 7.3c A3
+  if (studio) await expect(rows(page).filter({ hasText: /\d+ concepts? not written/ }).first()).not.toContainText(/\+ \d+ not written$/); // 7.4 A2: no leading "+" when none is written
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/chapters-list-1280x800.png` });
+  await page.screenshot({ path: `${shotsDir()}/chapters-list-not-written-1280x800.png` });
 
   // D3: the page
   await rowA.getByRole('button', { name: CHAPTER_A }).click();

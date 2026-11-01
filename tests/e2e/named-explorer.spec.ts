@@ -111,6 +111,7 @@ test('Alt+Enter on a palette hit opens the page; the exam scope offers "Only"; t
   await expect(view(page).getByRole('heading', { level: 2, name: 'Cannizzaro reaction' })).toBeVisible({ timeout: 60_000 });
 
   // the open page is saved: a reload opens the same page
+  await page.waitForTimeout(1000); // the saved state is written after a short pause (SAVE_DEBOUNCE_MS)
   await page.reload();
   await leaveChapters(page).catch(() => undefined);
   await rail(page).getByRole('button', { name: 'Named reactions' }).click();

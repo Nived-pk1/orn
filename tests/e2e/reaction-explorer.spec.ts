@@ -37,7 +37,7 @@ async function openDemo(page: Page): Promise<void> {
 }
 
 async function openReactions(page: Page): Promise<void> {
-  await modes(page).getByRole('button', { name: 'Reactions' }).click();
+  await modes(page).getByRole('button', { name: 'Reactions', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Reactions', exact: true })).toBeVisible();
   await expect(view(page).locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
 }
@@ -127,7 +127,7 @@ test.describe('desktop', () => {
     await page.reload();
     await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
-    await modes(page).getByRole('button', { name: 'Reactions' }).click();
+    await modes(page).getByRole('button', { name: 'Reactions', exact: true }).click();
     await expect(chips(page).first()).toContainText('Type: Oxidation');
     await expect(view(page).getByRole('radio', { name: 'Compact' })).toBeChecked();
     expect(await axeProblems(page)).toEqual([]);
@@ -222,7 +222,7 @@ test.describe('a long list', () => {
     await expectPreview(page);
     await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 90_000 });
-    await modes(page).getByRole('button', { name: 'Reactions' }).click();
+    await modes(page).getByRole('button', { name: 'Reactions', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Reactions', exact: true })).toBeVisible();
     const total = Number(/^(\d+) reactions$/.exec((await view(page).locator('p').first().textContent()) ?? '')?.[1]);
     expect(total).toBeGreaterThan(30);

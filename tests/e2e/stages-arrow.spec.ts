@@ -35,7 +35,7 @@ test('the arrow numbers the stages (i), (ii), (iii); the full equation numbers w
   test.setTimeout(480_000);
   const seen = await watch(page);
   await importOwn(page, demoWithExamplesAndStages());
-  await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions' }).click();
+  await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions', exact: true }).click();
   await expect(view(page).locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
 
   // (1) the demo Grignard, two stages

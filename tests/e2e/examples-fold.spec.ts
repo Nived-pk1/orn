@@ -58,7 +58,7 @@ test('the Reactions view: Cards and Compact fold, a filter that finds only an ex
   test.setTimeout(480_000);
   const seen = await watch(page);
   await importOwn(page, demoWithExamplesAndStages());
-  await modes(page).getByRole('button', { name: 'Reactions' }).click();
+  await modes(page).getByRole('button', { name: 'Reactions', exact: true }).click();
   const view = reactionsView(page);
   await expect(view.locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
   // 30 reactions: the demo's 27 and three new ones; three of them are examples of the general oxidation (the demo's own and the two new ones)

@@ -54,7 +54,7 @@ test.describe('desktop', () => {
     await openStudy(page);
     await importOwnData(page);
     await expect(page.getByRole('region', { name: 'Chapters', exact: true })).toBeVisible({ timeout: 60_000 }); // Study opens on Chapters (7.3b D5)
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions' }).click();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions', exact: true }).click();
     const view = page.getByRole('region', { name: 'Reactions', exact: true });
     await expect(page.getByRole('heading', { name: 'Reactions', exact: true })).toBeVisible();
     await expect(view.locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
@@ -180,7 +180,7 @@ test.describe('desktop', () => {
     const seen = await watch(page, STUDY);
     await openStudy(page);
     await importOwnData(page, demoWithExamplesAndStages());
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions' }).click();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions', exact: true }).click();
     const view = page.getByRole('region', { name: 'Reactions', exact: true });
     await expect(view.locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
     await expect(view.getByText(/^27 reactions \(\+ 3 examples\)$/).first()).toBeVisible();

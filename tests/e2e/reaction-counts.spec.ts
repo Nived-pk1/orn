@@ -80,7 +80,7 @@ test.describe('Studio, desktop', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    await modes(page).getByRole('button', { name: 'Reactions' }).click();
+    await modes(page).getByRole('button', { name: 'Reactions', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Reactions', exact: true })).toBeVisible();
     await expect(reactions(page).locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
     await reactions(page).getByRole('radio', { name: 'Compact' }).check();
