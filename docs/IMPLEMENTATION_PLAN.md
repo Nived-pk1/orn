@@ -193,7 +193,7 @@ Reaction explorer, precursor explorer with route-search panel, reagent explorer,
 | 7.3 | **Split 2026-10-30.** **7.3a DONE 2026-10-31 (e2e run, spec fixes, deployed):** content-readiness fixes: route purpose and step rows, the inspector's place line, examples fold under their general reaction (counts are cards), numbered stages (i), (ii) on the arrow, the Review page grouped by chapter or kind. **7.3b DONE 2026-10-31: Chapters view** (the study part of the Syllabus row; import tracking and Review by Import; chapter = chapter topic; as-written class boxes); **7.3c DONE 2026-11-01: the Reagent explorer** (Reagents view, a profile's conditions shown BESIDE the reactions that use it and never merged into the arrow text; 7.3b follow-ups); **row 7.3 DONE**. Next: 7.4 "Named reactions view". |
 | 7.4 | **DONE 2026-11-01 (merged with 7.5, one step):** Named reactions view (list, page, parent kinds, mechanism line; entry points: inspector, palette, Alt+Enter, the card badge, chapter cards). |
 | 7.5 | **DONE 2026-11-01 (merged into step 7.4):** Mechanisms view (pathways, numbered steps, species drawn, no curved arrows); phone Explore switch is one select "Show:". |
-| 7.6 | Syllabus view with version diff. |
+| 7.6 | **DONE 2026-11-01:** Syllabus view (version select, status, totals, units with official wording, topic tree with counts and gaps, comparison "What changed"); phone Explore select has a sixth choice; 7.4 follow-ups. |
 | 7.7 | Phase 7 close: full e2e, both sizes, the Phase 7 Definition of Done (§3). |
 
 Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)

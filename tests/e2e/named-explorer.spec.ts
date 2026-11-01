@@ -54,7 +54,8 @@ test('the list, the find box (an alias), the pages (reactions, kinds, mechanism)
   await expect(view(page).getByRole('heading', { level: 2, name: 'Aldol reaction' })).toBeVisible();
   await expect(view(page).locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
   await expect(view(page).getByRole('button', { name: 'Show these reactions in Reactions' })).toBeVisible();
-  await expect(view(page).locator('[data-in-chapters]')).toBeVisible();
+  // 7.6 A1: Studio says "No chapter yet"; Study leaves the line out when the record has no chapter (the demo's Aldol has none)
+  await expect(view(page).locator('[data-in-chapters]')).toHaveCount((await view(page).getByRole('button', { name: 'Edit', exact: true }).count()) > 0 ? 1 : 0);
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/named-page-1280x800.png` });
 

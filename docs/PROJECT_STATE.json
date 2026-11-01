@@ -135,8 +135,8 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-01",
-    "commit": "cd7cc53",
-    "version": "a0801c21-6c43-4924-ab8c-9c0346fc161f",
+    "commit": "aa44020",
+    "version": "c01f1a7a-d185-40fb-b244-d5bca0c209e4",
     "liveSpecs": "2026-11-01, Chromium: 49 passed, 9 skipped; WebKit: 48 passed, 10 skipped (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer, chapters, reagent-explorer, named-explorer, mechanism-explorer)"
   },
   "studioPreview": {
@@ -144,14 +144,14 @@
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-01",
-    "version": "1f560cce-c1d2-4c18-94e0-815409ff5fab",
+    "version": "97f296c7-da80-4940-ac9d-a1153c6d34f1",
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.4 deploy, 2026-11-01: an unauthenticated request got 302 (cloudflareaccess.com) and not the app; the public Worker answered 200 with the app.",
     "commit": "cd7cc53",
     "protectedCheckedAt": "2026-11-01"
   },
-  "nextStep": "7.6",
-  "nextStepTitle": "(see docs/IMPLEMENTATION_PLAN.md, next row after 7.5)",
+  "nextStep": "7.7",
+  "nextStepTitle": "Phase 7 close (see docs/IMPLEMENTATION_PLAN.md row 7.7)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -572,6 +572,12 @@
     },
     "summary": "7.3b follow-ups (initial JS by deep imports: Study 376.74, Studio 380.56 kB gzip; No chapter yet under a scope; empty concepts; as-written boxes), fact sheet docs/reviews/step-7-3c-fact-sheet.md, core/reagents, Reagents view (desktop and phone), three-way Explore switch",
     "reviewRequired": "docs/PROGRESS.md, Step 7.3c: REVIEW REQUIRED"
+  },
+  "step76": {
+    "status": "closed 2026-11-01, deployed both editions; awaiting review",
+    "commits": {"AB": "81343a5", "CD": "b3883dc", "specs": "aa44020"},
+    "summary": "7.4 decisions and follow-ups, fact sheet docs/reviews/step-7-6-fact-sheet.md, core/syllabus, Syllabus view (desktop and phone), sixth Explore choice, Chapters link, uiState syllabus",
+    "reviewRequired": "docs/PROGRESS.md, Step 7.6: REVIEW REQUIRED"
   },
   "step74": {
     "status": "closed 2026-11-01, deployed both editions; awaiting review",
