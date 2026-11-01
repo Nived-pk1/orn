@@ -275,6 +275,8 @@ describe('the shell frame around the window', () => {
     expect(rail.getByRole('button', { name: 'Chapters' }).getAttribute('aria-disabled')).toBeNull(); // the Syllabus placeholder became Chapters (7.3b D1)
     expect(rail.getAllByRole('button')[0]?.textContent).toContain('Chapters'); // at the top of the rail
     expect(rail.queryByRole('button', { name: /Syllabus/ })).toBeNull();
+    expect(rail.getByRole('button', { name: 'Reagents' }).getAttribute('aria-disabled')).toBeNull(); // live since 7.3c D1
+    expect(within(rail.getByRole('button', { name: 'Reagents' })).queryByText('Phase 7')).toBeNull();
     for (const [name, phase] of [['Mechanisms', 'Phase 7']] as const) {
       const mode = rail.getByRole('button', { name: new RegExp(name) });
       expect(mode.getAttribute('aria-disabled')).toBe('true');

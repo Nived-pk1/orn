@@ -49,6 +49,8 @@ export interface SearchPorts {
    * Opens the Reactions view filtered by this record (step 7.1b E2, Alt+Enter on a hit of SHOW_REACTIONS_KINDS). Absent: no such key and no hint.
    */
   showReactions?(ref: RecordRef, title: string): void;
+  /** Opens a reagent's page in the Reagents view (step 7.3c D4, Alt+Enter on a reagent hit). Absent: a reagent hit keeps the Reactions key. */
+  showReagent?(ref: RecordRef, title: string): void;
   /** The commands now (asked each time the palette opens and each time a command text changes, so availability is current). */
   commands(): readonly PaletteCommand[];
   readonly log: (type: string, message: string) => void;

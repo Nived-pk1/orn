@@ -46,3 +46,33 @@ describe('the explorer part of uiState', () => {
     expect(again.damaged).toEqual([]);
   });
 });
+
+describe('the reagents part of uiState (7.3c D5, E1)', () => {
+  it('nothing saved: defaults; a damaged part is named and the rest is read', () => {
+    expect(parseNavigatorUi(undefined).reagents).toEqual({ reagentId: null, families: [], text: '', onlyInScope: false, damaged: [] });
+    const parsed = parseNavigatorUi({ reagents: { families: 'x', text: 'ok' }, overviewMode: 'list' });
+    expect(parsed.damaged).toContain('reagents.families');
+    expect(parsed.reagents.text).toBe('ok');
+    expect(parsed.overviewMode).toBe('list');
+  });
+
+  it('"reagents" is a known explorer; an unknown one still falls back and is named', () => {
+    expect(parseNavigatorUi({ explorer: { last: 'reagents' } })).toMatchObject({ explorer: { last: 'reagents', damaged: [] }, damaged: [] });
+    expect(parseNavigatorUi({ explorer: { last: 'banana' } }).explorer).toMatchObject({ last: 'reactions', damaged: ['explorer.last'] });
+  });
+
+  it('is saved with the entry and read back', async () => {
+    const saves: Record<string, unknown>[] = [];
+    const port: NavigatorUiPort = { stored: undefined, mode: () => 'writable', save: (v) => (saves.push({ ...v }), Promise.resolve()) };
+    const ui = createNavigatorUi(port, timers());
+    ui.stores.reagents.getState().open('rgt_koh');
+    ui.stores.reagents.getState().toggleFamily('base');
+    ui.stores.explorer.getState().setLast('reagents');
+    await ui.flush();
+    const saved = saves.at(-1) as Record<string, unknown>;
+    expect(saved.reagents).toEqual({ reagentId: 'rgt_koh', families: ['base'], text: '', onlyInScope: false });
+    const again = parseNavigatorUi(saved);
+    expect(again.reagents).toMatchObject({ reagentId: 'rgt_koh', families: ['base'], damaged: [] });
+    expect(again.explorer.last).toBe('reagents');
+  });
+});

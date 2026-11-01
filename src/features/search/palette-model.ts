@@ -151,7 +151,8 @@ export function createPaletteModel(ports: SearchPorts): PaletteModel {
       if (row === undefined || row.type !== 'hit') return;
       const { parsed } = store.getState();
       if (parsed.mode === 'search' && parsed.text !== '') ports.recent.getState().add(store.getState().input.trim());
-      if (how === 'reactions' && ports.showReactions !== undefined && SHOW_REACTIONS_KINDS.includes(row.hit.ref.kind)) ports.showReactions(row.hit.ref, row.hit.title);
+      if (how === 'reactions' && row.hit.ref.kind === 'reagent' && ports.showReagent !== undefined) ports.showReagent(row.hit.ref, row.hit.title);
+      else if (how === 'reactions' && ports.showReactions !== undefined && SHOW_REACTIONS_KINDS.includes(row.hit.ref.kind)) ports.showReactions(row.hit.ref, row.hit.title);
       else ports.open(row.hit.ref, row.hit.title);
     },
     reset() {

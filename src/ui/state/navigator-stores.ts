@@ -5,6 +5,7 @@
  */
 import { createExplorerStore, type ExplorerStore } from './explorer-state';
 import { createChaptersStore, type ChaptersStore } from './chapters-state';
+import { createReagentsStore, type ReagentsStore } from './reagents-state';
 import { createPrecursorsStore, type PrecursorsStore } from './precursor-state';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { ExpansionState } from '@/core/graph/contracts';
@@ -260,6 +261,8 @@ export interface NavigatorUiStores {
   readonly precursors: PrecursorsStore;
   /** The Chapters view: the open chapter and its filters (step 7.3b; saved). */
   readonly chapters: ChaptersStore;
+  /** The Reagents view: the open reagent and its filters (step 7.3c; saved). */
+  readonly reagents: ReagentsStore;
   /** The palette's recent searches (step 5.8; saved). */
   readonly recent: RecentStore;
   /** What the map offers the palette (step 5.8; never saved). */
@@ -277,6 +280,7 @@ export const createNavigatorUiStores = (): NavigatorUiStores => ({
   explorer: createExplorerStore(),
   precursors: createPrecursorsStore(),
   chapters: createChaptersStore(),
+  reagents: createReagentsStore(),
   recent: createRecentStore(),
   viewCommands: createViewCommandsStore(),
 });

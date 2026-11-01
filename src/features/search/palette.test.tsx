@@ -31,6 +31,7 @@ function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = 
   const timers = manualTimers();
   const opened: [RecordRef, string][] = [];
   const shown: [RecordRef, string][] = [];
+  const pages: [RecordRef, string][] = [];
   const closed = vi.fn();
   const recent = createRecentStore(['old search']);
   const ports: SearchPorts = {
@@ -41,6 +42,7 @@ function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = 
     factsOf: () => ({}),
     open: (ref, title) => void opened.push([ref, title]),
     showReactions: (ref, title) => void shown.push([ref, title]),
+    showReagent: (ref, title) => void pages.push([ref, title]),
     commands: () => commands,
     log: () => undefined,
   };
@@ -55,7 +57,7 @@ function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = 
     });
   };
   const key = (name: string, extra: { altKey?: boolean } = {}): void => void fireEvent.keyDown(input, { key: name, ...extra });
-  return { ports, input, type, key, opened, shown, closed, recent, timers };
+  return { ports, input, type, key, opened, shown, pages, closed, recent, timers };
 }
 
 describe('the palette', () => {
@@ -144,7 +146,7 @@ describe('the palette', () => {
 });
 
 describe('Alt+Enter: show the reactions of a hit (step 7.1b E2)', () => {
-  it.each(['species', 'class', 'reagent', 'named_reaction'])('on a %s hit it opens Reactions filtered by it and closes, and the hint says so', async (kind) => {
+  it.each(['species', 'class', 'named_reaction'])('on a %s hit it opens Reactions filtered by it and closes, and the hint says so', async (kind) => {
     const r = rig({ ok: true, value: hits(2, kind) });
     await r.type('name');
     expect(screen.getByText('Alt+Enter: show its reactions')).toBeTruthy();
@@ -180,5 +182,29 @@ describe('Alt+Enter: show the reactions of a hit (step 7.1b E2)', () => {
     expect(screen.queryByText('Alt+Enter: show its reactions')).toBeNull();
     r.key('Enter', { altKey: true });
     expect(r.opened).toHaveLength(1);
+  });
+});
+
+describe('Alt+Enter on a reagent opens its page (step 7.3c D4)', () => {
+  it('a reagent hit: the hint says so and Alt+Enter opens the Reagents page, not Reactions', async () => {
+    const r = rig({ ok: true, value: hits(2, 'reagent') });
+    await r.type('name');
+    expect(screen.getByText('Alt+Enter: open its page')).toBeTruthy();
+    expect(screen.queryByText('Alt+Enter: show its reactions')).toBeNull();
+    r.key('ArrowDown');
+    r.key('Enter', { altKey: true });
+    expect(r.pages).toEqual([[{ kind: 'reagent', id: 'id_1' }, 'Name 1']]);
+    expect(r.shown).toEqual([]);
+    expect(r.opened).toEqual([]);
+    expect(r.closed).toHaveBeenCalledTimes(1);
+  });
+
+  it('with no showReagent port a reagent hit keeps the reactions key', async () => {
+    const r = rig({ ok: true, value: hits(1, 'reagent') });
+    delete (r.ports as { showReagent?: unknown }).showReagent;
+    await r.type('name');
+    expect(screen.getByText('Alt+Enter: show its reactions')).toBeTruthy();
+    r.key('Enter', { altKey: true });
+    expect(r.shown).toHaveLength(1);
   });
 });

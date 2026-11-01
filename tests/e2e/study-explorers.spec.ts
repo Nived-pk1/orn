@@ -118,6 +118,34 @@ test.describe('desktop', () => {
     await expectClean(seen);
   });
 
+  test('Reagents works in Study: the list, a profile label in the name box, the KMnO4 page with its conditions beside the cards, no editing control and no editor chunk requested (step 7.3c D2, E3)', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page, STUDY);
+    const scripts: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.endsWith('.js')) scripts.push(request.url().split('/').pop() as string);
+    });
+    await openStudy(page);
+    await importOwnData(page);
+    await expect(page.getByRole('region', { name: 'Chapters', exact: true })).toBeVisible({ timeout: 60_000 }); // Study opens on Chapters (7.3b D5)
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reagents' }).click();
+    const view = page.getByRole('region', { name: 'Reagents', exact: true });
+    await expect(view.getByRole('heading', { level: 2, name: 'Reagents' })).toBeVisible();
+    await view.getByLabel('Find by name').fill("Baeyer's reagent");
+    const row = view.getByRole('list', { name: 'Reagents' }).locator('[data-reagent-id]');
+    await expect(row).toHaveCount(1);
+    await row.getByRole('button', { name: 'Potassium permanganate' }).click();
+    const section = view.getByRole('region', { name: "Baeyer's reagent" });
+    await expect(section.locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
+    await expect(section.getByRole('complementary', { name: 'Usual conditions of this profile' })).toContainText('temperature cold');
+    await expect(view.getByRole('button', { name: 'Show these reactions in Reactions' })).toBeVisible();
+    for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+    const editors = editorChunkNames();
+    expect(scripts.filter((name) => editors.includes(name) || /^(editor-host|editor-session)-/.test(name)), 'editor chunks requested').toEqual([]);
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+
   test('examples fold and the stages are numbered in Study too, with no editing control (step 7.3a C1, D1)', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page, STUDY);

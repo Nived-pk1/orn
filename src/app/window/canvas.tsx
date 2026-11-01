@@ -12,7 +12,7 @@ import { ExploreSwitch } from "./explore-switch";
 import { useApp } from "./context";
 import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
-import { CHAPTERS_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
+import { CHAPTERS_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
 import { RecordCounts } from "./record-counts";
 import type { ExportActions } from "./use-export-actions";
 import type { ImportActions } from "./use-import-actions";
@@ -23,6 +23,8 @@ import styles from "./window.module.css";
 const ReactionsHost = lazy(() => import("./reactions-host").then((m) => ({ default: m.ReactionsHost })));
 // the Chapters view: a lazy chunk in BOTH editions (step 7.3b)
 const ChaptersHost = lazy(() => import("./chapters-host").then((m) => ({ default: m.ChaptersHost })));
+// the Reagents view: a lazy chunk in BOTH editions (step 7.3c)
+const ReagentsHost = lazy(() => import("./reagents-host").then((m) => ({ default: m.ReagentsHost })));
 // the Precursors view: a lazy chunk in BOTH editions (step 7.2a)
 const PrecursorsHost = lazy(() => import("./precursors-host").then((m) => ({ default: m.PrecursorsHost })));
 // Studio only: the review queue is a lazy chunk (and a dropped one in Study, where EDITING is false)
@@ -62,6 +64,8 @@ export function Canvas(props: {
   readonly onReactions: (filter: Partial<ExplorerFilter>) => void;
   /** Opens the inspector pane (a card of the Chapters view selects a record). */
   readonly openPane: () => void;
+  /** Opens Reactions with the Substance filter set to this reagent (the Reagents page's button). */
+  readonly onShowInReactions: (reagentId: string) => void;
 }) {
   const { panels } = useApp();
   const { imports } = props;
@@ -71,7 +75,7 @@ export function Canvas(props: {
     [panels],
   );
   const empty = totalOf(props.counts) === 0;
-  const phoneExplorer = useLayoutMode() === 'phone' && !empty && (props.mode === REACTIONS_MODE || props.mode === PRECURSORS_MODE);
+  const phoneExplorer = useLayoutMode() === 'phone' && !empty && (props.mode === REACTIONS_MODE || props.mode === PRECURSORS_MODE || props.mode === REAGENTS_MODE);
   const showsNavigator = !empty && props.mode === NAVIGATOR_MODE;
   return (
     <div className={showsNavigator ? styles.canvasFull : EDITING && props.mode === REVIEW_MODE ? styles.canvasFill : styles.canvas}>
@@ -87,6 +91,10 @@ export function Canvas(props: {
       ) : !empty && props.mode === REACTIONS_MODE ? (
         <Suspense fallback={null}>
           <ReactionsHost />
+        </Suspense>
+      ) : !empty && props.mode === REAGENTS_MODE ? (
+        <Suspense fallback={null}>
+          <ReagentsHost openPane={props.openPane} onShowInReactions={props.onShowInReactions} />
         </Suspense>
       ) : !empty && props.mode === PRECURSORS_MODE ? (
         <Suspense fallback={null}>

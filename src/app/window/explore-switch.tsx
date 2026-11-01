@@ -1,5 +1,5 @@
 /**
- * The Explore tab's switch (7.2b D1): "Reactions | Precursors", two 44 px choices, the current one marked, remembered as the last
+ * The Explore tab's switch (7.2b D1, 7.3c E1): "Reactions | Precursors | Reagents", three 44 px choices, the current one marked, remembered as the last
  * explorer in the UI state. Only the choice is made here; the window shows the mode that choice names.
  */
 import { useStore } from 'zustand';
@@ -10,6 +10,7 @@ import styles from './window.module.css';
 const CHOICES: readonly { readonly kind: ExplorerKind; readonly label: string }[] = [
   { kind: 'reactions', label: 'Reactions' },
   { kind: 'precursors', label: 'Precursors' },
+  { kind: 'reagents', label: 'Reagents' },
 ];
 
 export function ExploreSwitch() {

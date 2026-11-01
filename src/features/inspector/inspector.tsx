@@ -4,7 +4,7 @@
  * the view) and the levels. It reads the canonical state and never changes it. Every part is a function of one snapshot, taken again
  * when the store, the findings or the L4 checks change.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
 import type { RecordRef } from '@/core/schema';
 import { useLayoutMode } from '@/ui/hooks';
@@ -23,11 +23,13 @@ const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 
 /** A route ends at a species or a class. */
 const PRECURSOR_KINDS: readonly string[] = ['species', 'class'];
 import { ProvenanceLevel } from './provenance';
-import { InChapters } from './in-chapters';
 import { LevelSection } from './levels';
 import { useBridge } from './use-bridge';
 import { KindLevels } from './views';
 import styles from './inspector.module.css';
+
+/** "In chapters: ..." is its own chunk (7.3c A1); it shows after the other facts, so its arrival moves nothing above it. */
+const InChapters = lazy(() => import('./in-chapters').then((module) => ({ default: module.InChapters })));
 
 /** A number that changes whenever something the inspector shows may have changed. */
 function useRevision(ports: InspectorPorts): number {
@@ -142,6 +144,13 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
             </button>
           </div>
         )}
+        {host.showReagent === undefined || props.refOf.kind !== 'reagent' ? null : (
+          <div className={styles.actions} data-sheet-full="">
+            <button type="button" onClick={() => { host.showReagent?.(props.refOf); if (phone) host.closePane?.(); }}>
+              Show in Reagents
+            </button>
+          </div>
+        )}
         {host.showPrecursors === undefined || !PRECURSOR_KINDS.includes(props.refOf.kind) ? null : (
           <div className={styles.actions} data-sheet-full="">
             <button type="button" onClick={() => { host.showPrecursors?.(props.refOf); if (phone) host.closePane?.(); }}>
@@ -163,8 +172,10 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
             {status}
           </p>
         )}
-        <InChapters refOf={props.refOf} />
         {props.note === undefined ? null : <ArrowReactions />}
+        <Suspense fallback={null}>
+          <InChapters refOf={props.refOf} />
+        </Suspense>
       </header>
       <div data-sheet-full="">
         <KindLevels record={record} findings={findings} />

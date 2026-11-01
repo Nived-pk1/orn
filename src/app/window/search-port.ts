@@ -24,6 +24,7 @@ export interface SearchPortDeps {
   commands(): readonly PaletteCommand[];
   /** Alt+Enter on a hit: opens Reactions filtered by it (step 7.1b E2). */
   showReactions?(ref: RecordRef, title: string): void;
+  showReagent?(ref: RecordRef, title: string): void;
 }
 
 /** Has the search index followed the store? A change waiting to be sent, or an index at an older revision, is `catching_up`; a sync that failed is `failed`. */
@@ -49,6 +50,7 @@ export function createSearchPorts(deps: SearchPortDeps): SearchPorts {
     },
     open: (ref, title) => deps.show(ref, title),
     ...(deps.showReactions === undefined ? {} : { showReactions: deps.showReactions }),
+    ...(deps.showReagent === undefined ? {} : { showReagent: deps.showReagent }),
     commands: () => deps.commands(),
     log: deps.navigator.log,
   };

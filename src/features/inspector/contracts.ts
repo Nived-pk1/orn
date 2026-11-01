@@ -69,6 +69,8 @@ export interface InspectorHost {
   showReactions?(ref: RecordRef): void;
   /** Opens the Precursors view for this record (step 7.2a D7; species, class). Absent: no "How to make it" button. */
   showPrecursors?(ref: RecordRef): void;
+  /** Opens the reagent's page in the Reagents view (step 7.3c D4; reagents). Absent: no "Show in Reagents" button. */
+  showReagent?(ref: RecordRef): void;
   /** Opens the Reactions view for an overview arrow: From = its from family, To = its to family (a self-loop: the same family twice). Absent: no such button. */
   showArrowReactions?(ends: { readonly from: string; readonly to: string }): void;
   /** True while the navigator is the view on the canvas (a record can then have a place in it). */

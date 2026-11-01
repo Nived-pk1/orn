@@ -9,6 +9,7 @@ import type { NavigatorUiStores } from '@/ui/state';
 import { undoUnavailableReason } from './dataset-actions';
 import { ALL_LABEL, type ExamOptions } from './exam-scope';
 import { NAVIGATOR_MODE } from './modes';
+import { openReagentsList } from './reagents-entry';
 
 /** One "New <kind>" palette command. */
 export interface NewKindCommand {
@@ -133,6 +134,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
       },
       !deps.hasData ? 'there is no data' : navigatorShown && !familyOpen ? 'the overview is already shown' : undefined,
     ),
+    withReason({ id: 'open-reagents', title: 'Open Reagents', keywords: ['reagents', 'reagent', 'list', 'oxidant', 'base', 'profile'], run: () => openReagentsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'unanchored', title: 'Open the Unanchored reactions', keywords: ['unclassified', 'reactions', 'panel'], run: () => view?.openUnanchored() }, onMap ?? view?.unanchoredReason),
     ...scopeCommands,
   ];

@@ -13,6 +13,9 @@ import { prefetchPalette } from './lazy-palette';
 
 beforeAll(async () => {
   await prefetchPalette();
+  await import('./reactions-host'); // the lazy view chunks, loaded once so the first test's wait does not include their transform (7.3c)
+  await import('./precursors-host');
+  await import('./reagents-host');
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {
@@ -39,11 +42,12 @@ const explore = (app: FakeApp = fakeApp({ state: demoState() })): FakeApp => {
 const switchBox = (): HTMLElement => screen.getByRole('group', { name: 'Explorer' });
 
 describe('the Explore switch', () => {
-  it('two choices, Reactions marked first; Precursors shows Make a compound and is remembered as the last explorer', async () => {
+  it('three choices, Reactions marked first; Precursors shows Make a compound and is remembered as the last explorer', async () => {
     const app = explore();
     await screen.findByRole('heading', { name: 'Reactions' });
     const reactions = within(switchBox()).getByRole('button', { name: 'Reactions' });
     const precursors = within(switchBox()).getByRole('button', { name: 'Precursors' });
+    expect(within(switchBox()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Reactions', 'Precursors', 'Reagents']);
     expect(reactions.getAttribute('aria-pressed')).toBe('true');
     expect(precursors.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(precursors);
@@ -53,6 +57,26 @@ describe('the Explore switch', () => {
     fireEvent.click(within(switchBox()).getByRole('button', { name: 'Reactions' }));
     expect(await screen.findByRole('heading', { name: 'Reactions' })).toBeTruthy();
     expect(app.navigator.ui.explorer.getState().last).toBe('reactions');
+  });
+
+  it('Reagents is the third choice: its list shows, it is remembered, and the Explore tab reopens it (7.3c E1)', async () => {
+    const app = explore();
+    await screen.findByRole('heading', { name: 'Reactions' });
+    fireEvent.click(within(switchBox()).getByRole('button', { name: 'Reagents' }));
+    expect(await screen.findByRole('region', { name: 'Reagents' })).toBeTruthy();
+    expect(app.navigator.ui.explorer.getState().last).toBe('reagents');
+    expect(within(switchBox()).getByRole('button', { name: 'Reagents' }).getAttribute('aria-pressed')).toBe('true');
+    cleanup();
+    explore(app);
+    expect(await screen.findByRole('region', { name: 'Reagents' })).toBeTruthy();
+  });
+
+  it('a saved Reagents page opens on the phone', async () => {
+    const app = fakeApp({ state: demoState() });
+    app.navigator.ui.reagents.getState().open('rgt_koh');
+    app.navigator.ui.explorer.getState().setLast('reagents');
+    explore(app);
+    expect(await screen.findByRole('heading', { level: 2, name: 'Potassium hydroxide' })).toBeTruthy();
   });
 
   it('the Explore tab reopens the explorer last used', async () => {

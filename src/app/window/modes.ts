@@ -18,6 +18,9 @@ export const REACTIONS_MODE = 'reactions';
 /** The Precursors view (step 7.2a). */
 export const PRECURSORS_MODE = 'precursors';
 
+/** The Reagents view (step 7.3c): the list of reagents and one page per reagent. */
+export const REAGENTS_MODE = 'reagents';
+
 export const WORKBENCH_MODE = 'workbench';
 /** Studio's review queue (step 6.8b). */
 export const REVIEW_MODE = 'review';
@@ -28,7 +31,7 @@ export const MODES: readonly ModeItem[] = [
   { id: DATASET_MODE, label: 'Dataset' },
   { id: REACTIONS_MODE, label: 'Reactions' },
   { id: PRECURSORS_MODE, label: 'Precursors' },
-  { id: 'reagents', label: 'Reagents', unavailable: 'Phase 7' },
+  { id: REAGENTS_MODE, label: 'Reagents' },
   { id: 'named', label: 'Named', unavailable: 'Phase 7' },
   { id: 'mechanisms', label: 'Mechanisms', unavailable: 'Phase 7' },
   ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }, { id: REVIEW_MODE, label: 'Review' }] : []),
