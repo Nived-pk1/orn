@@ -2,7 +2,6 @@
  * Text runs in HTML (step 5.5b): the arrow text and formulas of a card. Sub and superscripts are elements, a run's text is always a
  * React child (never markup; SECURITY §2).
  */
-import { useLayoutEffect, useRef } from 'react';
 import type { ArrowTextPart } from '@/core/graph';
 import { Runs } from '@/render/equation';
 import { formulaRuns, partsToRuns } from '@/render/scene';
@@ -17,26 +16,24 @@ export const ArrowSide = (props: { readonly parts: readonly ArrowTextPart[] }) =
 /** The characters of one side of an arrow, for an accessible name. */
 export const sideText = (parts: readonly ArrowTextPart[]): string => partsToRuns(parts).map((run) => run.text).join('');
 
-/** The smallest the text of a box shrinks to when its formula does not fit on one line even in the widest box (7.3c A5). */
+/** The smallest the text of a box shrinks to when a formula is long (7.3c A5). */
 export const MIN_FORMULA_SCALE = 0.85;
 
 /**
- * A formula in a substance box (7.3c A5): it never breaks inside a word, only at spaces (a dash or a bracket is not a place to break). The
- * box widens up to the card's column (CSS); if the longest word still does not fit, the text shrinks, to no less than 85 %.
+ * How much a long formula shrinks, from the length of its longest word alone (no layout is measured: a measure on render made the virtual
+ * list re-measure in a loop in Firefox). The box widens first (CSS, up to the card's column); only a very long word shrinks, never below 85 %.
  */
+export function formulaScale(longestWord: number): number {
+  if (longestWord <= 14) return 1;
+  return longestWord >= 24 ? MIN_FORMULA_SCALE : 0.92;
+}
+
+/** A formula in a substance box (7.3c A5): it never breaks inside a word, only at spaces (a dash or a bracket is not a place to break). */
 export function BoxFormula(props: { readonly formula: string }) {
-  const box = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    const el = box.current;
-    if (el === null) return;
-    el.style.fontSize = '';
-    const room = el.clientWidth;
-    const need = el.scrollWidth;
-    if (room > 0 && need > room) el.style.fontSize = `${Math.max(MIN_FORMULA_SCALE, room / need)}em`;
-  });
   const words = props.formula.split(/\s+/).filter((word) => word !== '');
+  const scale = formulaScale(Math.max(0, ...words.map((word) => [...word].length)));
   return (
-    <span ref={box} data-box-formula="">
+    <span data-box-formula="" {...(scale === 1 ? {} : { style: { fontSize: `${scale}em` } })}>
       {words.map((word, i) => (
         <span key={i}>
           {i > 0 ? ' ' : null}

@@ -8,7 +8,7 @@ import type { RecordRef } from '@/core/schema';
 import { STRUCTURE_AREA } from '@/render/scene';
 import { drawingFailed, useRetryingDepiction } from '@/render/svg';
 import { useFamilyEnv } from './family-env';
-import { BoxFormula } from './family-text';
+import { BoxFormula, FormulaText } from './family-text';
 import scheme from './family-scheme.module.css';
 
 /** `writtenAs`: the text the reaction writes for a class (7.3b A5); the box shows it as a formula and no drawing is asked for. */
@@ -24,7 +24,7 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
   // a structure that failed only because the engine was not ready yet still reads "Drawing the structure…" (it is asked again when ready)
   const unavailable = key !== undefined && drawingFailed(status);
   return (
-    <figure className={scheme.substance} data-substance-id={props.substance.id} {...(url === undefined ? { 'data-text-box': '' } : {})}>
+    <figure className={scheme.substance} data-substance-id={props.substance.id} {...(props.writtenAs === undefined ? {} : { 'data-text-box': '' })}>
       <div className={scheme.structure} {...(boxStyle === undefined ? {} : { style: boxStyle })}>
         {url !== undefined ? (
           <img src={url} alt={`Structure of ${name}`} width={STRUCTURE_AREA.width} height={STRUCTURE_AREA.height} />
@@ -39,7 +39,7 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
               <span className={scheme.noStructure}>{key === undefined ? 'No structure' : unavailable ? 'Structure not available' : ''}</span>
             ) : (
               <span className={scheme.formula}>
-                <BoxFormula formula={described.formula} />
+                <FormulaText formula={described.formula} />
               </span>
             )}
           </span>
