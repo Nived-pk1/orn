@@ -65,7 +65,7 @@ test.describe('phone: Pixel 7 (Chromium)', () => {
     await page.getByRole('button', { name: 'Load demo dataset' }).tap();
     await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
     await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Explore' }).tap();
-    await page.getByRole('group', { name: 'Explorer' }).getByRole('button', { name: 'Precursors' }).tap();
+    await page.getByRole('combobox', { name: 'Show:' }).selectOption({ label: 'Precursors' });
     const link = await search(page, true);
     expect(await axeProblems(page, 10)).toEqual([]);
     const box = await link.boundingBox();

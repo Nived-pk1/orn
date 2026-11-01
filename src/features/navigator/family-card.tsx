@@ -8,10 +8,10 @@
  * study says and decides nothing. The name is a button (the keyboard way to select the reaction); a click anywhere on the card
  * selects it too.
  */
-import { Fragment, memo, useId, type ReactNode } from 'react';
+import { Fragment, memo, useContext, useId, type ReactNode } from 'react';
 import type { ArrowText, FamilyCard, FamilyOutcomeGroup } from '@/core/graph';
 import { FullEquationView } from './family-equation';
-import { useFamilyEnv } from './family-env';
+import { FamilyEnvContext, useFamilyEnv } from './family-env';
 import { Structure } from './family-structure';
 import { ArrowSide, sideText } from './family-text';
 import styles from './family-page.module.css';
@@ -121,6 +121,7 @@ export interface FamilyCardProps {
 export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside, outsideOf, selectedId, nested }: FamilyCardProps) {
   const titleId = useId();
   const review = REVIEW_MARK[card.reviewStatus];
+  const openNamed = useContext(FamilyEnvContext)?.openNamed;
   return (
     <article className={styles.card} aria-labelledby={titleId} data-reaction-id={card.reactionId} data-selected={selected ? '' : undefined} data-outside={outside === undefined ? undefined : ''} onClick={() => onSelect(card.reactionId)}>
       <header className={styles.cardHeader}>
@@ -132,9 +133,15 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
         {selected ? <span className={styles.chip}>Selected</span> : null}
         {outside === undefined ? null : <span className={`${styles.chip} ${styles.outsideChip}`}>{outside}</span>}
         {card.namedReactions.map((named) => (
-          <span key={named.id} className={styles.chip}>
-            {named.name}
-          </span>
+          openNamed === undefined ? (
+            <span key={named.id} className={styles.chip}>
+              {named.name}
+            </span>
+          ) : (
+            <button key={named.id} type="button" className={`${styles.chip} ${styles.chipButton}`} onClick={(event) => (event.stopPropagation(), openNamed(named.id))}>
+              {named.name}
+            </button>
+          )
         ))}
         {review === undefined ? null : <span className={`${styles.chip} ${styles.reviewChip}`}>{review}</span>}
         {card.caveatCount === 0 ? null : <span className={styles.chip}>{plural(card.caveatCount, 'caveat', 'caveats')}</span>}

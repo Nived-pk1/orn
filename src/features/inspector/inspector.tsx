@@ -151,6 +151,20 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
             </button>
           </div>
         )}
+        {host.showNamed === undefined || props.refOf.kind !== 'named_reaction' ? null : (
+          <div className={styles.actions} data-sheet-full="">
+            <button type="button" onClick={() => { host.showNamed?.(props.refOf); if (phone) host.closePane?.(); }}>
+              Show in Named reactions
+            </button>
+          </div>
+        )}
+        {host.showMechanism === undefined || props.refOf.kind !== 'mechanism' ? null : (
+          <div className={styles.actions} data-sheet-full="">
+            <button type="button" onClick={() => { host.showMechanism?.(props.refOf); if (phone) host.closePane?.(); }}>
+              Show in Mechanisms
+            </button>
+          </div>
+        )}
         {host.showPrecursors === undefined || !PRECURSOR_KINDS.includes(props.refOf.kind) ? null : (
           <div className={styles.actions} data-sheet-full="">
             <button type="button" onClick={() => { host.showPrecursors?.(props.refOf); if (phone) host.closePane?.(); }}>

@@ -1,8 +1,8 @@
 /**
  * The Reagents view on a phone (step 7.3c E1-E3), the STUDIO production build: Pixel 7 in Chromium, iPhone 14 in WebKit. The Explore tab's
- * switch is "Reactions | Precursors | Reagents", three buttons of 44 px or more that fit the width; the Reagents list is one column with its
+ * switch is ONE native select "Show:" of 44 px or more (7.4) that fits the width; at least 4 entries show above the tab bar (7.4 A6); the Reagents list is one column with its
  * filters behind "Filters (n)"; a reagent page puts the profile's conditions ABOVE its cards; every target is 44 px; no sideways scroll. Axe on
- * each state, zero CSP violations. Screenshots: phone-reagents-pixel7.png, phone-reagent-page-pixel7.png, phone-reagents-iphone14.png.
+ * each state, zero CSP violations. Screenshots: phone-reagents-compact-pixel7.png, phone-reagent-page-pixel7.png, phone-reagents-compact-iphone14.png, phone-explore-select-pixel7.png.
  */
 import { devices, expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
@@ -22,16 +22,17 @@ async function walk(page: Page, device: string, withPage: boolean): Promise<void
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible({ timeout: 90_000 });
   await tabs(page).getByRole('button', { name: 'Explore' }).tap();
 
-  // the switch: three choices, 44 px or more, inside the screen
-  const choices = page.getByRole('group', { name: 'Explorer' }).getByRole('button');
-  expect(await choices.allTextContents()).toEqual(['Reactions', 'Precursors', 'Reagents']);
+  // the switch (7.4): ONE native select "Show:" with five choices, 44 px or more, inside the screen
+  const choices = page.getByRole('combobox', { name: 'Show:' });
+  expect(await choices.locator('option').allTextContents()).toEqual(['Reactions', 'Precursors', 'Reagents', 'Named reactions', 'Mechanisms']);
   const width = page.viewportSize()?.width ?? 0;
-  for (const box of await choices.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON() as { x: number; width: number; height: number }))) {
-    expect(box.height).toBeGreaterThanOrEqual(44);
-    expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(width + 0.5);
-  }
-  await choices.filter({ hasText: 'Reagents' }).tap();
+  const box = await choices.boundingBox();
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width + 0.5);
+  await expect(choices).toHaveValue('reactions');
+  if (device === 'pixel7') await page.screenshot({ path: `${shotsDir()}/phone-explore-select-pixel7.png` });
+  await choices.selectOption({ label: 'Reagents' });
   await expect(view(page)).toBeVisible();
   await expect(view(page).locator('[data-reagent-id]').first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true); // one column, no sideways scroll
@@ -39,7 +40,11 @@ async function walk(page: Page, device: string, withPage: boolean): Promise<void
   await expect(view(page).getByLabel('Find by name')).toHaveCount(0);
   for (const box of await view(page).getByRole('list', { name: 'Reagents' }).getByRole('button').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height))) expect(box).toBeGreaterThanOrEqual(44);
   expect(await axeProblems(page, 10)).toEqual([]);
-  await page.screenshot({ path: `${shotsDir()}/phone-reagents-${device}.png` });
+  // A6 (7.4): at least 4 entries are visible above the tab bar with the filters closed
+  const tabTop = (await tabs(page).boundingBox())?.y ?? 0;
+  const visible = await view(page).locator('[data-reagent-id]').evaluateAll((els, limit) => els.filter((el) => el.getBoundingClientRect().top < limit).length, tabTop);
+  expect(visible).toBeGreaterThanOrEqual(4);
+  await page.screenshot({ path: `${shotsDir()}/phone-reagents-compact-${device}.png` });
 
   if (withPage) {
     await view(page).getByRole('button', { name: /^Filters \(\d+\)$/ }).tap();

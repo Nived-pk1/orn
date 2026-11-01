@@ -36,6 +36,8 @@ export interface ChaptersPorts {
   nameOf(ref: RecordRef): string;
   /** Shows the record in the inspector (the pane opens). */
   select(ref: RecordRef): void;
+  /** Opens the record's own page in the Named reactions or Mechanisms view (7.4; named reactions and mechanisms). Absent: no "Open page" button. */
+  openPage?(ref: RecordRef): void;
   /** Shows a reaction in the inspector, as a card on a family page does. */
   selectReaction(reactionId: string): void;
   /** The family card of a whole reaction (examples folded, "Show full equation", the boxes as written). */

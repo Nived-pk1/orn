@@ -1,0 +1,80 @@
+/* The steps of a mechanism (step 7.4 E). Tokens only; no colour literals. */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.stepHeading {
+  margin: 0;
+  font-size: var(--text-16);
+}
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-13);
+}
+
+.marks:empty {
+  display: none;
+}
+
+.mark {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.species {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.one {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-width: 10rem;
+  text-align: center;
+}
+
+.drawing {
+  display: block;
+  max-width: 100%;
+}
+
+.speciesName {
+  font-size: var(--text-13);
+  overflow-wrap: anywhere;
+}
+
+.role {
+  color: var(--color-ink-2);
+  font-size: var(--text-13);
+}

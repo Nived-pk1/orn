@@ -31,9 +31,10 @@ import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
 import { openChapter } from "./chapters-entry";
 import { useFirstScreen, hasChapterTopic } from "./first-screen";
-import { CHAPTERS_MODE, MODES, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE } from "./modes";
+import { CHAPTERS_MODE, EXPLORER_MODES, MODES, modeOfExplorer, NAVIGATOR_MODE } from "./modes";
 import { openPrecursors } from "./precursors-entry";
 import { openReagent } from "./reagents-entry";
+import { usePageEntries } from "./use-page-entries";
 import type { RecordRef } from "@/core/schema";
 import { filterFor, openReactions } from "./reactions-entry";
 import { Canvas, totalOf } from "./canvas";
@@ -72,11 +73,13 @@ function InspectorPanel(props: {
   readonly onPrecursors: (ref: RecordRef) => void;
   readonly onChapter: (chapterId: string) => void;
   readonly onReagent: (reagentId: string) => void;
+  readonly onNamed: (namedReactionId: string) => void;
+  readonly onMechanism: (mechanismId: string) => void;
 }) {
   const { inspector } = useApp();
   const editors = useEditors();
   const { model } = useNavigator();
-  const { navigatorShown, explorerShown, openPane, closePane, onReactions, onPrecursors, onChapter, onReagent } = props;
+  const { navigatorShown, explorerShown, openPane, closePane, onReactions, onPrecursors, onChapter, onReagent, onNamed, onMechanism } = props;
   const host = useMemo<InspectorHost>(
     () => ({
       openPane,
@@ -89,6 +92,8 @@ function InspectorPanel(props: {
       },
       showPrecursors: onPrecursors,
       showReagent: (ref) => onReagent(ref.id),
+      showNamed: (ref) => onNamed(ref.id),
+      showMechanism: (ref) => onMechanism(ref.id),
       openChapter: onChapter,
       showArrowReactions: (ends) => onReactions({ fromFamilyIds: [ends.from], toFamilyIds: [ends.to] }),
       ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.requestDelete === undefined ? {} : { remove: editors.requestDelete }), ...(editors.startFrom === undefined ? {} : { startFrom: editors.startFrom }), ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }), ...(editors.namesKinds === undefined ? {} : { namesKinds: editors.namesKinds }) } }),
@@ -97,7 +102,7 @@ function InspectorPanel(props: {
         return edge === undefined ? undefined : { from: edge.from, to: edge.to };
       },
     }),
-    [model, navigatorShown, explorerShown, openPane, closePane, editors, onReactions, onPrecursors, onChapter, onReagent],
+    [model, navigatorShown, explorerShown, openPane, closePane, editors, onReactions, onPrecursors, onChapter, onReagent, onNamed, onMechanism],
   );
   return <Inspector ports={inspector} host={host} />;
 }
@@ -159,9 +164,9 @@ function WindowContent() {
   const lastExplorer = useStore(navigator.ui.explorer, (s) => s.last);
   useEffect(() => {
     if (layoutMode !== 'phone') return;
-    if (phoneTab === 'explore') setMode(lastExplorer === 'precursors' ? PRECURSORS_MODE : lastExplorer === 'reagents' ? REAGENTS_MODE : REACTIONS_MODE);
+    if (phoneTab === 'explore') setMode(modeOfExplorer(lastExplorer));
     else if (phoneTab === 'chapters') setMode(CHAPTERS_MODE);
-    else setMode((current) => (current === REACTIONS_MODE || current === PRECURSORS_MODE || current === REAGENTS_MODE || current === CHAPTERS_MODE ? NAVIGATOR_MODE : current));
+    else setMode((current) => (EXPLORER_MODES.includes(current) || current === CHAPTERS_MODE ? NAVIGATOR_MODE : current));
   }, [layoutMode, phoneTab, lastExplorer]);
   const chapterTopics = useStoreSelector(services.store, hasChapterTopic);
   const [openRequest, setOpenRequest] = useState(0);
@@ -177,6 +182,9 @@ function WindowContent() {
   const onChapter = useCallback((chapterId: string) => openChapter(navigator.ui, setMode, chapterId), [navigator]);
   const onReagent = useCallback((reagentId: string) => openReagent(navigator.ui, setMode, reagentId), [navigator]);
   const onShowInReactions = useCallback((reagentId: string) => onReactions({ substanceIds: [reagentId], usedAs: 'any' }), [onReactions]);
+  const { onNamed, onMechanism, onShowNamedInReactions } = usePageEntries(navigator.ui, setMode, onReactions);
+  // the badge on a reaction card opens the named reaction's page (7.4 D): the navigator's ports carry the way
+  const navigatorPorts = useMemo(() => ({ ...navigator, openNamedReaction: onNamed }), [navigator, onNamed]);
   const onPrecursors = useCallback((ref: RecordRef) => openPrecursors(navigator.ui, setMode, ref), [navigator]);
   const hasData = totalOf(counts) > 0;
   useFirstScreen({ hasData, chapterTopics, phone: layoutMode === 'phone', overview: navigator.ui.overview, setMode });
@@ -231,6 +239,8 @@ function WindowContent() {
           if (filter !== undefined) onReactions(filter);
         },
         showReagent: (ref) => onReagent(ref.id),
+        showNamed: (ref) => onNamed(ref.id),
+        showMechanism: (ref) => onMechanism(ref.id),
         commands: () => (commandDeps.current === null ? [] : buildCommands({ ...commandDeps.current, exams: examOptions(services.store.getState()) })),
         show(ref, title) {
           setMode(NAVIGATOR_MODE);
@@ -241,7 +251,7 @@ function WindowContent() {
           placeOf(ref, title, navigator.indexes.current(), { selection: navigator.ui.selection, family: navigator.ui.family }, true).actions[0]?.run();
         },
       }),
-    [services, navigator, inspectorPorts, openPane, onReactions, onReagent],
+    [services, navigator, inspectorPorts, openPane, onReactions, onReagent, onNamed, onMechanism],
   );
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
@@ -272,7 +282,7 @@ function WindowContent() {
       {EDITING ? <HistoryKeys history={services.store} /> : null}
       <ExportOpenContext.Provider value={exports.open}>
       <AboutOpenContext.Provider value={() => setAbout(true)}>
-      <NavigatorProvider ports={navigator} active={totalOf(counts) > 0}>
+      <NavigatorProvider ports={navigatorPorts} active={totalOf(counts) > 0}>
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
           title="Organic Reaction Navigator"
@@ -303,7 +313,7 @@ function WindowContent() {
           }
           canvas={
             <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} openPane={openPane} />
+              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} openPane={openPane} />
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"
@@ -311,13 +321,15 @@ function WindowContent() {
             <ErrorBoundary label="The inspector">
               <InspectorPanel
                 navigatorShown={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
-                explorerShown={mode === CHAPTERS_MODE || mode === REACTIONS_MODE || mode === PRECURSORS_MODE || mode === REAGENTS_MODE}
+                explorerShown={mode === CHAPTERS_MODE || EXPLORER_MODES.includes(mode)}
                 openPane={openPane}
                 closePane={closePane}
                 onReactions={onReactions}
                 onPrecursors={onPrecursors}
                 onChapter={onChapter}
                 onReagent={onReagent}
+                onNamed={onNamed}
+                onMechanism={onMechanism}
               />
             </ErrorBoundary>
           }

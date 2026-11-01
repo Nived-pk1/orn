@@ -32,18 +32,16 @@ async function walk(page: Page, device: string): Promise<void> {
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
   await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Explore' }).tap();
-  const switcher = page.getByRole('group', { name: 'Explorer' });
-  await expect(switcher.getByRole('button', { name: 'Reactions' })).toHaveAttribute('aria-pressed', 'true');
-  for (const name of ['Reactions', 'Precursors']) {
-    const box = await switcher.getByRole('button', { name }).boundingBox();
-    expect(box !== null && box.height >= 44).toBe(true);
-  }
+  const switcher = page.getByRole('combobox', { name: 'Show:' });
+  await expect(switcher).toHaveValue('reactions');
+  const box = await switcher.boundingBox();
+  expect(box !== null && box.height >= 44).toBe(true);
   if (device === 'pixel7') await expect(page.getByRole('region', { name: 'Reactions', exact: true })).toBeVisible({ timeout: 60_000 });
   if (device === 'pixel7') await expect(page.getByText(/^Drawing the structure/)).toHaveCount(0, { timeout: 60_000 });
   if (device === 'pixel7') await page.screenshot({ path: `${shotsDir()}/phone-explore-switch-pixel7.png` });
-  await switcher.getByRole('button', { name: 'Precursors' }).tap();
+  await switcher.selectOption({ label: 'Precursors' });
   await expect(page.getByRole('heading', { name: 'Make a compound' })).toBeVisible();
-  await expect(switcher.getByRole('button', { name: 'Precursors' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(switcher).toHaveValue('precursors');
   await pick(page, 'Compound to make', 'propan-2-ol', 'Choose Propan-2-ol');
   await pick(page, 'Start from (optional)', 'ethanol', 'Start from Ethanol');
   for (const name of ['Search']) {
@@ -60,7 +58,7 @@ async function walk(page: Page, device: string): Promise<void> {
   expect(await axeProblems(page, 10)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/phone-precursors-${device}.png` });
   // Reactions comes back, remembered
-  await switcher.getByRole('button', { name: 'Reactions' }).tap();
+  await switcher.selectOption({ label: 'Reactions' });
   await expect(page.getByRole('heading', { name: 'Reactions', exact: true })).toBeVisible();
   await expectClean(seen);
 }

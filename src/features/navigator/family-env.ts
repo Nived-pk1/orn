@@ -17,6 +17,8 @@ export interface FamilyEnv {
   readonly timers: NavigatorPorts['timers'];
   /** The layout (the one `useLayoutMode` value, read by the page). Absent: desktop. A phone draws a reaction top to bottom. */
   readonly layout?: LayoutMode;
+  /** Opens a named reaction's page (7.4 D): the badge on the card becomes a button. Absent: the badge is plain text. */
+  readonly openNamed?: (namedReactionId: string) => void;
   /** What the textbook equation needs (equation step, part 5): its drawings' binding, the chem facts and the Names setting. Absent: formulas and names only. */
   readonly equation?: {
     readonly binding: DepictionBinding | undefined;

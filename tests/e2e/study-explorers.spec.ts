@@ -146,6 +146,35 @@ test.describe('desktop', () => {
     await expectClean(seen);
   });
 
+  test('Named reactions and Mechanisms work in Study: lists, a page with its cards and its steps, no editing control and no editor chunk requested (step 7.4)', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page, STUDY);
+    const scripts: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.endsWith('.js')) scripts.push(request.url().split('/').pop() as string);
+    });
+    await openStudy(page);
+    await importOwnData(page);
+    await expect(page.getByRole('region', { name: 'Chapters', exact: true })).toBeVisible({ timeout: 60_000 });
+    const rail = page.getByRole('navigation', { name: 'Modes' });
+    await rail.getByRole('button', { name: 'Named reactions' }).click();
+    const named = page.getByRole('region', { name: 'Named reactions', exact: true });
+    await expect(named.getByRole('heading', { level: 2, name: 'Named reactions' })).toBeVisible();
+    await expect(named.getByText(/^Not written yet/)).toHaveCount(0);
+    await named.getByRole('list', { name: 'Named reactions' }).locator('[data-named-id]').filter({ hasText: 'Grignard reaction' }).getByRole('button', { name: 'Grignard reaction' }).click();
+    await expect(named.locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
+    await rail.getByRole('button', { name: 'Mechanisms' }).click();
+    const mechanisms = page.getByRole('region', { name: 'Mechanisms', exact: true });
+    await expect(mechanisms.getByRole('heading', { level: 2, name: 'Mechanisms' })).toBeVisible();
+    await mechanisms.getByRole('button', { name: 'SN2 substitution of a haloalkane' }).click();
+    await expect(mechanisms.locator('[data-step]').first()).toBeVisible();
+    for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+    const editors = editorChunkNames();
+    expect(scripts.filter((name) => editors.includes(name) || /^(editor-host|editor-session)-/.test(name)), 'editor chunks requested').toEqual([]);
+    expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+
   test('examples fold and the stages are numbered in Study too, with no editing control (step 7.3a C1, D1)', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page, STUDY);

@@ -35,6 +35,17 @@ function Clamped(props: { readonly children: ReactNode; readonly label: string }
   );
 }
 
+/** "Open page": the named reaction's or mechanism's own page in its view (7.4); nothing when the app gives no way. */
+function OpenPage(props: { readonly ports: ChaptersPorts; readonly refOf: RecordRef; readonly name: string }) {
+  const { ports, refOf, name } = props;
+  if (ports.openPage === undefined) return null;
+  return (
+    <button type="button" aria-label={`Open page of ${name}`} onClick={(event) => (event.stopPropagation(), ports.openPage?.(refOf))}>
+      Open page
+    </button>
+  );
+}
+
 function BodyOf(props: { readonly record: Loose; readonly refOf: RecordRef; readonly ports: ChaptersPorts; readonly state: CanonicalState }) {
   const { record, refOf, ports } = props;
   const name = ports.nameOf(refOf);
@@ -47,6 +58,7 @@ function BodyOf(props: { readonly record: Loose; readonly refOf: RecordRef; read
         <>
           {source === undefined ? <p className={styles.muted}>No text yet.</p> : <Clamped label={name}>{ports.renderRichText(source)}</Clamped>}
           {ports.renderPictures(refOf)}
+          {refOf.kind === 'named_reaction' ? <OpenPage ports={ports} refOf={refOf} name={name} /> : null}
         </>
       );
     }
@@ -80,6 +92,7 @@ function BodyOf(props: { readonly record: Loose; readonly refOf: RecordRef; read
           <button type="button" aria-label={`Open ${name}`} onClick={(event) => (event.stopPropagation(), ports.select(refOf))}>
             Open
           </button>
+          <OpenPage ports={ports} refOf={refOf} name={name} />
         </>
       );
     }

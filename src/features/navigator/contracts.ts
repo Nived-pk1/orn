@@ -76,6 +76,8 @@ export interface NavigatorPorts {
   readonly structures?: NavigatorStructures;
   /** What the chem worker says about a structure (the textbook equation decides formula or drawing from it). Absent: the facts are unavailable. */
   readonly facts?: StructureFactsPort;
+  /** Opens a named reaction's page in the Named reactions view (7.4 D; the badge on a card). Absent: the badge is plain text. */
+  readonly openNamedReaction?: (namedReactionId: string) => void;
   readonly ui: NavigatorUiStores;
   /** What keeping the UI state is doing (saved, read-only, session-only, failed) and what was reset at start. */
   readonly uiStatus: StoreApi<NavigatorUiStatus>;

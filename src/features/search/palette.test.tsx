@@ -43,6 +43,8 @@ function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = 
     open: (ref, title) => void opened.push([ref, title]),
     showReactions: (ref, title) => void shown.push([ref, title]),
     showReagent: (ref, title) => void pages.push([ref, title]),
+    showNamed: (ref, title) => void pages.push([ref, title]),
+    showMechanism: (ref, title) => void pages.push([ref, title]),
     commands: () => commands,
     log: () => undefined,
   };
@@ -146,7 +148,7 @@ describe('the palette', () => {
 });
 
 describe('Alt+Enter: show the reactions of a hit (step 7.1b E2)', () => {
-  it.each(['species', 'class', 'named_reaction'])('on a %s hit it opens Reactions filtered by it and closes, and the hint says so', async (kind) => {
+  it.each(['species', 'class'])('on a %s hit it opens Reactions filtered by it and closes, and the hint says so', async (kind) => {
     const r = rig({ ok: true, value: hits(2, kind) });
     await r.type('name');
     expect(screen.getByText('Alt+Enter: show its reactions')).toBeTruthy();
@@ -158,7 +160,7 @@ describe('Alt+Enter: show the reactions of a hit (step 7.1b E2)', () => {
     expect(r.recent.getState().items[0]).toBe('name');
   });
 
-  it.each(['reaction', 'concept', 'mechanism'])('on a %s hit Alt+Enter does nothing special: no hint, a plain open', async (kind) => {
+  it.each(['reaction', 'concept'])('on a %s hit Alt+Enter does nothing special: no hint, a plain open', async (kind) => {
     const r = rig({ ok: true, value: hits(1, kind) });
     await r.type('name');
     expect(screen.queryByText('Alt+Enter: show its reactions')).toBeNull();
@@ -206,5 +208,35 @@ describe('Alt+Enter on a reagent opens its page (step 7.3c D4)', () => {
     expect(screen.getByText('Alt+Enter: show its reactions')).toBeTruthy();
     r.key('Enter', { altKey: true });
     expect(r.shown).toHaveLength(1);
+  });
+});
+
+describe.each([
+  ['named_reaction', 'showNamed'],
+  ['mechanism', 'showMechanism'],
+] as const)('Alt+Enter on a %s opens its page (step 7.4 RR3)', (kind, port) => {
+  it('the hint says so and Alt+Enter opens the page, not Reactions', async () => {
+    const r = rig({ ok: true, value: hits(2, kind) });
+    await r.type('name');
+    expect(screen.getByText('Alt+Enter: open its page')).toBeTruthy();
+    expect(screen.queryByText('Alt+Enter: show its reactions')).toBeNull();
+    r.key('ArrowDown');
+    r.key('Enter', { altKey: true });
+    expect(r.pages).toEqual([[{ kind, id: 'id_1' }, 'Name 1']]);
+    expect(r.shown).toEqual([]);
+    expect(r.opened).toEqual([]);
+    expect(r.closed).toHaveBeenCalledTimes(1);
+  });
+
+  it(`with no ${port} port a hit of this kind has no special key`, async () => {
+    const r = rig({ ok: true, value: hits(1, kind) });
+    if (port === 'showNamed') delete (r.ports as { showNamed?: unknown }).showNamed;
+    else delete (r.ports as { showMechanism?: unknown }).showMechanism;
+    if (kind === 'named_reaction') delete (r.ports as { showReactions?: unknown }).showReactions;
+    await r.type('name');
+    expect(screen.queryByText('Alt+Enter: open its page')).toBeNull();
+    r.key('Enter', { altKey: true });
+    expect(r.pages).toEqual([]);
+    expect(r.opened).toHaveLength(1);
   });
 });

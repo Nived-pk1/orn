@@ -108,6 +108,8 @@ describe('createNavigatorUi', () => {
       precursors: { target: null, startFrom: [], maxSteps: 5, onlyListed: false, onlyInScope: false, searched: false },
       chapters: { chapterId: null, kinds: [], text: '', onlyInScope: false },
       reagents: { reagentId: null, families: [], text: '', onlyInScope: false },
+      named: { id: null, text: '', onlyInScope: false },
+      mechanisms: { id: null, text: '', onlyInScope: false },
     });
   });
 

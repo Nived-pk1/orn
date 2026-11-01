@@ -9,6 +9,7 @@ import { emptyRecordTables, type AnyRecord, type CanonicalState, type RecordRef 
 import { demoState } from '@/test-support/app-boot-kit';
 import { examVersion, topic, topicMapping } from '@/test-support/curriculum-kit';
 import { concept as bareConcept, contextOf } from '@/test-support/graph-state';
+import { mecRef, mechanismRecord, mechStep, mechVariant, namedReaction, nrxRef } from '@/test-support/named-kit';
 import { createActiveExamStore, createChaptersStore, createInspectorStore } from '@/ui/state';
 import type { ChaptersPorts } from './contracts';
 import { ChaptersView } from './chapters-view';
@@ -39,7 +40,7 @@ const base: AnyRecord[] = [
   topicMapping('m3', 'chap-b', cpt('c2')),
 ];
 
-function show(state: CanonicalState, saved: Parameters<typeof createChaptersStore>[0] = {}, editing = true) {
+function show(state: CanonicalState, saved: Parameters<typeof createChaptersStore>[0] = {}, editing = true, extra: Partial<ChaptersPorts> = {}) {
   const context = contextOf(state);
   const chapters = createChaptersStore(saved);
   const exam = createActiveExamStore();
@@ -63,6 +64,7 @@ function show(state: CanonicalState, saved: Parameters<typeof createChaptersStor
     timers: { after: () => () => undefined },
     log: () => undefined,
     editing,
+    ...extra,
   };
   render(<ChaptersView ports={ports} />);
   return { chapters, exam, selected, ports };
@@ -178,5 +180,24 @@ describe('a chapter page', () => {
     show(stateOf(...base), { chapterId: 'none' });
     expect(screen.getByRole('heading', { level: 2, name: 'No chapter yet' })).toBeTruthy();
     expect(screen.getByRole('article', { name: 'Unmapped idea' })).toBeTruthy();
+  });
+});
+
+describe('named-reaction and mechanism cards open their pages (7.4)', () => {
+  const nrx = namedReaction('aldol', 'Aldol reaction', { summary: 'Two carbonyls join.' });
+  const mec = mechanismRecord('sn2', 'SN2 substitution', [mechVariant('vc', 'Concerted', [mechStep('s1')])], { summary: 'One step.' });
+  const state = stateOf(...base, nrx, mec, topicMapping('mn', 'chap-a', nrxRef('aldol')), topicMapping('mm', 'chap-a', mecRef('sn2')));
+
+  it('"Open page" on each card asks the app to open the page of that record', () => {
+    const opened: string[] = [];
+    show(state, { chapterId: 'top_chap-a' }, true, { openPage: (ref) => void opened.push(`${ref.kind}:${ref.id}`) });
+    fireEvent.click(within(screen.getByRole('article', { name: 'Aldol reaction' })).getByRole('button', { name: 'Open page of Aldol reaction' }));
+    fireEvent.click(within(screen.getByRole('article', { name: 'SN2 substitution' })).getByRole('button', { name: 'Open page of SN2 substitution' }));
+    expect(opened).toEqual(['named_reaction:nrx_aldol', 'mechanism:mec_sn2']);
+  });
+
+  it('without the port there is no such button', () => {
+    show(state, { chapterId: 'top_chap-a' });
+    expect(screen.queryByRole('button', { name: /^Open page of/ })).toBeNull();
   });
 });

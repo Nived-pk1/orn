@@ -59,7 +59,7 @@ export function ReactionCardHost(props: ReactionCardHostProps) {
   const binding = depictionBindingOf(ports);
   const env = useMemo<FamilyEnv>(() => {
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
-    return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers, layout, equation: { binding: equationBindingOf(ports), facts: ports.facts, structures: ports.structures } };
+    return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers, layout, ...(ports.openNamedReaction === undefined ? {} : { openNamed: ports.openNamedReaction }), equation: { binding: equationBindingOf(ports), facts: ports.facts, structures: ports.structures } };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `structureMode` is read through the binding; it only has to make a new env; `version` re-makes it when the data moved
   }, [ports, binding, layout, structureMode, version]);
   if ('missing' in card) return <>{props.fallback(card.reason)}</>;

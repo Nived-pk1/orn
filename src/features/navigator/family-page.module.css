@@ -78,6 +78,13 @@
   font-size: var(--text-13);
 }
 
+.chipButton {
+  font: inherit;
+  font-size: var(--text-13);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .reviewChip {
   border-color: var(--color-review);
   color: var(--color-review);

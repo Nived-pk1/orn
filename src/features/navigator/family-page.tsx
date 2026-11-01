@@ -63,6 +63,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
       manager: binding?.manager,
       timers: ports.timers,
       layout,
+      ...(ports.openNamedReaction === undefined ? {} : { openNamed: ports.openNamedReaction }),
       equation: { binding: equationBindingOf(ports), facts: ports.facts, structures: ports.structures },
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `structureMode` is read through the binding; it only has to make a new env

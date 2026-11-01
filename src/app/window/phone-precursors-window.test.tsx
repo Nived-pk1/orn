@@ -39,36 +39,39 @@ const explore = (app: FakeApp = fakeApp({ state: demoState() })): FakeApp => {
   fireEvent.click(within(screen.getByRole('navigation', { name: 'Home' })).getByRole('button', { name: 'Explore' }));
   return app;
 };
-const switchBox = (): HTMLElement => screen.getByRole('group', { name: 'Explorer' });
+const switcher = (): HTMLSelectElement => screen.getByRole('combobox', { name: 'Show:' }) as HTMLSelectElement;
+const choose = (label: string): void => void fireEvent.change(switcher(), { target: { value: Array.from(switcher().options).find((o) => o.textContent === label)?.value ?? '' } });
+const chosen = (): string | undefined => switcher().selectedOptions[0]?.textContent ?? undefined;
 
 describe('the Explore switch', () => {
-  it('three choices, Reactions marked first; Precursors shows Make a compound and is remembered as the last explorer', async () => {
+  it('one native select "Show:" with five choices, Reactions chosen first; Precursors shows Make a compound and is remembered as the last explorer (7.4)', async () => {
     const app = explore();
     await screen.findByRole('heading', { name: 'Reactions' });
-    const reactions = within(switchBox()).getByRole('button', { name: 'Reactions' });
-    const precursors = within(switchBox()).getByRole('button', { name: 'Precursors' });
-    expect(within(switchBox()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Reactions', 'Precursors', 'Reagents']);
-    expect(reactions.getAttribute('aria-pressed')).toBe('true');
-    expect(precursors.getAttribute('aria-pressed')).toBe('false');
-    fireEvent.click(precursors);
+    expect(Array.from(switcher().options).map((o) => o.textContent)).toEqual(['Reactions', 'Precursors', 'Reagents', 'Named reactions', 'Mechanisms']);
+    expect(chosen()).toBe('Reactions');
+    choose('Precursors');
     expect(await screen.findByRole('heading', { name: 'Make a compound' })).toBeTruthy();
     expect(app.navigator.ui.explorer.getState().last).toBe('precursors');
-    expect(within(switchBox()).getByRole('button', { name: 'Precursors' }).getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(within(switchBox()).getByRole('button', { name: 'Reactions' }));
+    expect(chosen()).toBe('Precursors');
+    choose('Reactions');
     expect(await screen.findByRole('heading', { name: 'Reactions' })).toBeTruthy();
     expect(app.navigator.ui.explorer.getState().last).toBe('reactions');
   });
 
-  it('Reagents is the third choice: its list shows, it is remembered, and the Explore tab reopens it (7.3c E1)', async () => {
+  it.each([
+    ['Reagents', 'reagents'],
+    ['Named reactions', 'named'],
+    ['Mechanisms', 'mechanisms'],
+  ] as const)('%s is a choice: its list shows, it is remembered, and the Explore tab reopens it (7.3c E1, 7.4)', async (label, kind) => {
     const app = explore();
     await screen.findByRole('heading', { name: 'Reactions' });
-    fireEvent.click(within(switchBox()).getByRole('button', { name: 'Reagents' }));
-    expect(await screen.findByRole('region', { name: 'Reagents' })).toBeTruthy();
-    expect(app.navigator.ui.explorer.getState().last).toBe('reagents');
-    expect(within(switchBox()).getByRole('button', { name: 'Reagents' }).getAttribute('aria-pressed')).toBe('true');
+    choose(label);
+    expect(await screen.findByRole('region', { name: label })).toBeTruthy();
+    expect(app.navigator.ui.explorer.getState().last).toBe(kind);
+    expect(chosen()).toBe(label);
     cleanup();
     explore(app);
-    expect(await screen.findByRole('region', { name: 'Reagents' })).toBeTruthy();
+    expect(await screen.findByRole('region', { name: label })).toBeTruthy();
   });
 
   it('a saved Reagents page opens on the phone', async () => {
@@ -100,6 +103,6 @@ describe('the Explore switch', () => {
     explore();
     await screen.findByRole('heading', { name: 'Reactions' });
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Home' })).getByRole('button', { name: 'Families' }));
-    await waitFor(() => expect(screen.queryByRole('group', { name: 'Explorer' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('combobox', { name: 'Show:' })).toBeNull());
   });
 });

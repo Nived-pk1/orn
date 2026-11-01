@@ -12,7 +12,7 @@ import { ExploreSwitch } from "./explore-switch";
 import { useApp } from "./context";
 import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
-import { CHAPTERS_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
+import { CHAPTERS_MODE, EXPLORER_MODES, MECHANISMS_MODE, NAMED_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
 import { RecordCounts } from "./record-counts";
 import type { ExportActions } from "./use-export-actions";
 import type { ImportActions } from "./use-import-actions";
@@ -25,6 +25,9 @@ const ReactionsHost = lazy(() => import("./reactions-host").then((m) => ({ defau
 const ChaptersHost = lazy(() => import("./chapters-host").then((m) => ({ default: m.ChaptersHost })));
 // the Reagents view: a lazy chunk in BOTH editions (step 7.3c)
 const ReagentsHost = lazy(() => import("./reagents-host").then((m) => ({ default: m.ReagentsHost })));
+// the Named reactions and Mechanisms views: lazy chunks in BOTH editions (step 7.4)
+const NamedHost = lazy(() => import("./named-host").then((m) => ({ default: m.NamedHost })));
+const MechanismsHost = lazy(() => import("./mechanisms-host").then((m) => ({ default: m.MechanismsHost })));
 // the Precursors view: a lazy chunk in BOTH editions (step 7.2a)
 const PrecursorsHost = lazy(() => import("./precursors-host").then((m) => ({ default: m.PrecursorsHost })));
 // Studio only: the review queue is a lazy chunk (and a dropped one in Study, where EDITING is false)
@@ -66,6 +69,12 @@ export function Canvas(props: {
   readonly openPane: () => void;
   /** Opens Reactions with the Substance filter set to this reagent (the Reagents page's button). */
   readonly onShowInReactions: (reagentId: string) => void;
+  /** Opens Reactions with the Named reaction filter set to this record (the Named reactions page's button). */
+  readonly onShowNamedInReactions: (namedReactionId: string) => void;
+  /** Opens a named reaction's or a mechanism's page (the links between the pages) and a chapter's page. */
+  readonly onNamed: (namedReactionId: string) => void;
+  readonly onMechanism: (mechanismId: string) => void;
+  readonly onChapter: (chapterId: string) => void;
 }) {
   const { panels } = useApp();
   const { imports } = props;
@@ -75,7 +84,7 @@ export function Canvas(props: {
     [panels],
   );
   const empty = totalOf(props.counts) === 0;
-  const phoneExplorer = useLayoutMode() === 'phone' && !empty && (props.mode === REACTIONS_MODE || props.mode === PRECURSORS_MODE || props.mode === REAGENTS_MODE);
+  const phoneExplorer = useLayoutMode() === 'phone' && !empty && EXPLORER_MODES.includes(props.mode);
   const showsNavigator = !empty && props.mode === NAVIGATOR_MODE;
   return (
     <div className={showsNavigator ? styles.canvasFull : EDITING && props.mode === REVIEW_MODE ? styles.canvasFill : styles.canvas}>
@@ -86,7 +95,7 @@ export function Canvas(props: {
         <NavigatorView />
       ) : !empty && props.mode === CHAPTERS_MODE ? (
         <Suspense fallback={null}>
-          <ChaptersHost openPane={props.openPane} />
+          <ChaptersHost openPane={props.openPane} onNamed={props.onNamed} onMechanism={props.onMechanism} />
         </Suspense>
       ) : !empty && props.mode === REACTIONS_MODE ? (
         <Suspense fallback={null}>
@@ -95,6 +104,14 @@ export function Canvas(props: {
       ) : !empty && props.mode === REAGENTS_MODE ? (
         <Suspense fallback={null}>
           <ReagentsHost openPane={props.openPane} onShowInReactions={props.onShowInReactions} />
+        </Suspense>
+      ) : !empty && props.mode === NAMED_MODE ? (
+        <Suspense fallback={null}>
+          <NamedHost openPane={props.openPane} onShowInReactions={props.onShowNamedInReactions} onMechanism={props.onMechanism} onChapter={props.onChapter} />
+        </Suspense>
+      ) : !empty && props.mode === MECHANISMS_MODE ? (
+        <Suspense fallback={null}>
+          <MechanismsHost openPane={props.openPane} onChapter={props.onChapter} />
         </Suspense>
       ) : !empty && props.mode === PRECURSORS_MODE ? (
         <Suspense fallback={null}>

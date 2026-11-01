@@ -267,7 +267,7 @@ describe('a dataset with data', () => {
 });
 
 describe('the shell frame around the window', () => {
-  it('Navigator, Dataset, Reactions and Workbench are the enabled modes; the others are listed with the phase that brings them', () => {
+  it('every mode of the rail is enabled (Named reactions and Mechanisms are live since 7.4)', () => {
     renderWithApp(app());
     const rail = within(screen.getByRole('navigation', { name: 'Modes' }));
     expect(rail.getByRole('button', { name: 'Navigator' }).getAttribute('aria-current')).toBe('page');
@@ -277,10 +277,10 @@ describe('the shell frame around the window', () => {
     expect(rail.queryByRole('button', { name: /Syllabus/ })).toBeNull();
     expect(rail.getByRole('button', { name: 'Reagents' }).getAttribute('aria-disabled')).toBeNull(); // live since 7.3c D1
     expect(within(rail.getByRole('button', { name: 'Reagents' })).queryByText('Phase 7')).toBeNull();
-    for (const [name, phase] of [['Mechanisms', 'Phase 7']] as const) {
-      const mode = rail.getByRole('button', { name: new RegExp(name) });
-      expect(mode.getAttribute('aria-disabled')).toBe('true');
-      expect(within(mode).getByText(phase)).toBeTruthy();
+    for (const name of ['Named reactions', 'Mechanisms']) {
+      const mode = rail.getByRole('button', { name }); // live since 7.4: no mode is left unavailable
+      expect(mode.getAttribute('aria-disabled')).toBeNull();
+      expect(within(mode).queryByText('Phase 7')).toBeNull();
     }
   });
 

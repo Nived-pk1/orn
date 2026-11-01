@@ -51,6 +51,10 @@ export interface SearchPorts {
   showReactions?(ref: RecordRef, title: string): void;
   /** Opens a reagent's page in the Reagents view (step 7.3c D4, Alt+Enter on a reagent hit). Absent: a reagent hit keeps the Reactions key. */
   showReagent?(ref: RecordRef, title: string): void;
+  /** Opens a named reaction's page in the Named reactions view (step 7.4, Alt+Enter on a named-reaction hit). Absent: the hit keeps the Reactions key. */
+  showNamed?(ref: RecordRef, title: string): void;
+  /** Opens a mechanism's page in the Mechanisms view (step 7.4, Alt+Enter on a mechanism hit). Absent: no special key. */
+  showMechanism?(ref: RecordRef, title: string): void;
   /** The commands now (asked each time the palette opens and each time a command text changes, so availability is current). */
   commands(): readonly PaletteCommand[];
   readonly log: (type: string, message: string) => void;
@@ -89,4 +93,9 @@ export const kindName = (kind: RecordKind): string => `${kind.charAt(0).toUpperC
 export const kindTitle = (kind: RecordKind): string => KIND_TITLES[kind] ?? `${kind.charAt(0).toUpperCase()}${kind.slice(1).replaceAll('_', ' ')}`;
 
 /** The hits whose reactions can be listed: a species, a class, a reagent (Used as: Any) or a named reaction. */
+/** The port that opens a hit's own page in an explorer (Alt+Enter), by the kind of the hit; undefined when its kind has none or the app gave none. */
+export function pageOpenerOf(ports: Pick<SearchPorts, 'showReagent' | 'showNamed' | 'showMechanism'>, kind: RecordKind): SearchPorts['showReagent'] {
+  return kind === 'reagent' ? ports.showReagent : kind === 'named_reaction' ? ports.showNamed : kind === 'mechanism' ? ports.showMechanism : undefined;
+}
+
 export const SHOW_REACTIONS_KINDS: readonly RecordKind[] = ['species', 'class', 'reagent', 'named_reaction'];

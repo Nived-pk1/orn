@@ -9,9 +9,9 @@ export type ExplorerUse = 'any' | 'reactant' | 'arrow' | 'product';
 export const EXPLORER_USES: readonly ExplorerUse[] = ['any', 'reactant', 'arrow', 'product'];
 export type ExplorerView = 'cards' | 'compact';
 export const EXPLORER_VIEWS: readonly ExplorerView[] = ['cards', 'compact'];
-/** The explorers the Explore tab can reopen (7.2b: Reactions and Precursors; 7.3c: Reagents). */
-export type ExplorerKind = 'reactions' | 'precursors' | 'reagents';
-export const EXPLORER_KINDS: readonly ExplorerKind[] = ['reactions', 'precursors', 'reagents'];
+/** The explorers the Explore tab can reopen (7.2b: Reactions and Precursors; 7.3c: Reagents; 7.4: Named reactions and Mechanisms). */
+export type ExplorerKind = 'reactions' | 'precursors' | 'reagents' | 'named' | 'mechanisms';
+export const EXPLORER_KINDS: readonly ExplorerKind[] = ['reactions', 'precursors', 'reagents', 'named', 'mechanisms'];
 
 const REVIEW_STATUSES: readonly string[] = ['unreviewed', 'review_required', 'verified'];
 const MAX_IDS = 200;

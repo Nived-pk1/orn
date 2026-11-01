@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useStore } from 'zustand';
 import { useLayoutMode } from '@/ui/hooks';
 import { Dialog } from '@/ui/primitives';
-import { kindName, kindTitle, SHOW_REACTIONS_KINDS, type PaletteCommand, type SearchPorts } from './contracts';
+import { kindName, kindTitle, pageOpenerOf, SHOW_REACTIONS_KINDS, type PaletteCommand, type SearchPorts } from './contracts';
 import { createPaletteModel } from './palette-model';
 import { HEADER_ROW_HEIGHT, LIST_HEIGHT, nextHit, scrollToShow, windowOf, type PaletteRow } from './rows';
 import { matchWords } from './words';
@@ -105,7 +105,7 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
 
   const selectedHit = state.rows.find((row) => row.type === 'hit' && row.key === selected);
   const canShowReactions = ports.showReactions !== undefined && selectedHit?.type === 'hit' && SHOW_REACTIONS_KINDS.includes(selectedHit.hit.ref.kind);
-  const opensPage = canShowReactions && selectedHit?.type === 'hit' && selectedHit.hit.ref.kind === 'reagent' && ports.showReagent !== undefined;
+  const opensPage = selectedHit?.type === 'hit' && pageOpenerOf(ports, selectedHit.hit.ref.kind) !== undefined;
   const win = windowOf(state.rows, scrollTop, LIST_HEIGHT);
   const hitPosition = new Map<string, number>();
   for (const row of state.rows) if (row.type === 'hit') hitPosition.set(row.key, hitPosition.size + 1);
@@ -132,7 +132,7 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
       />
       <p id="palette-hint" className={styles.hint}>
         {HINT}
-        {canShowReactions ? <span> <span>{opensPage ? 'Alt+Enter: open its page' : 'Alt+Enter: show its reactions'}</span></span> : null}
+        {canShowReactions || opensPage ? <span> <span>{opensPage ? 'Alt+Enter: open its page' : 'Alt+Enter: show its reactions'}</span></span> : null}
       </p>
       <p className={styles.status} role="status" aria-live="polite" data-palette-status="">
         {statusText}

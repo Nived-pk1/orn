@@ -1,4 +1,5 @@
 import { EDITING } from '@/app/edition';
+import type { ExplorerKind } from '@/ui/state';
 import type { ModeItem } from '@/ui/shell';
 
 /**
@@ -21,9 +22,23 @@ export const PRECURSORS_MODE = 'precursors';
 /** The Reagents view (step 7.3c): the list of reagents and one page per reagent. */
 export const REAGENTS_MODE = 'reagents';
 
+/** The Named reactions view (step 7.4): the list of named reactions and one page per named reaction. */
+export const NAMED_MODE = 'named';
+
+/** The Mechanisms view (step 7.4): the list of mechanisms and one page per mechanism. */
+export const MECHANISMS_MODE = 'mechanisms';
+
 export const WORKBENCH_MODE = 'workbench';
 /** Studio's review queue (step 6.8b). */
 export const REVIEW_MODE = 'review';
+
+/** The Explore tab's modes (the phone's Explore switch chooses among them). */
+export const EXPLORER_MODES: readonly string[] = [REACTIONS_MODE, PRECURSORS_MODE, REAGENTS_MODE, NAMED_MODE, MECHANISMS_MODE];
+
+/** The mode a remembered explorer names. */
+export function modeOfExplorer(kind: ExplorerKind): string {
+  return kind === 'precursors' ? PRECURSORS_MODE : kind === 'reagents' ? REAGENTS_MODE : kind === 'named' ? NAMED_MODE : kind === 'mechanisms' ? MECHANISMS_MODE : REACTIONS_MODE;
+}
 
 export const MODES: readonly ModeItem[] = [
   { id: CHAPTERS_MODE, label: 'Chapters' },
@@ -32,7 +47,7 @@ export const MODES: readonly ModeItem[] = [
   { id: REACTIONS_MODE, label: 'Reactions' },
   { id: PRECURSORS_MODE, label: 'Precursors' },
   { id: REAGENTS_MODE, label: 'Reagents' },
-  { id: 'named', label: 'Named', unavailable: 'Phase 7' },
-  { id: 'mechanisms', label: 'Mechanisms', unavailable: 'Phase 7' },
+  { id: NAMED_MODE, label: 'Named reactions' },
+  { id: MECHANISMS_MODE, label: 'Mechanisms' },
   ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }, { id: REVIEW_MODE, label: 'Review' }] : []),
 ];

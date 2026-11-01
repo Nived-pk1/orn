@@ -76,3 +76,36 @@ describe('the reagents part of uiState (7.3c D5, E1)', () => {
     expect(again.explorer.last).toBe('reagents');
   });
 });
+
+describe('the named and mechanisms parts of uiState (7.4)', () => {
+  it('nothing saved: defaults; a damaged part is named and the rest is read', () => {
+    expect(parseNavigatorUi(undefined).named).toEqual({ openId: null, text: '', onlyInScope: false, damaged: [] });
+    expect(parseNavigatorUi(undefined).mechanisms).toEqual({ openId: null, text: '', onlyInScope: false, damaged: [] });
+    const parsed = parseNavigatorUi({ named: { id: 5, text: 'ok' }, mechanisms: [], overviewMode: 'list' });
+    expect(parsed.damaged).toEqual(expect.arrayContaining(['named.id', 'mechanisms']));
+    expect(parsed.named.text).toBe('ok');
+    expect(parsed.overviewMode).toBe('list');
+  });
+
+  it('"named" and "mechanisms" are known explorers', () => {
+    expect(parseNavigatorUi({ explorer: { last: 'named' } })).toMatchObject({ explorer: { last: 'named', damaged: [] }, damaged: [] });
+    expect(parseNavigatorUi({ explorer: { last: 'mechanisms' } })).toMatchObject({ explorer: { last: 'mechanisms', damaged: [] }, damaged: [] });
+  });
+
+  it('is saved with the entry and read back', async () => {
+    const saves: Record<string, unknown>[] = [];
+    const port: NavigatorUiPort = { stored: undefined, mode: () => 'writable', save: (v) => (saves.push({ ...v }), Promise.resolve()) };
+    const ui = createNavigatorUi(port, timers());
+    ui.stores.named.getState().open('nrx_aldol');
+    ui.stores.mechanisms.getState().setText('sn2');
+    ui.stores.explorer.getState().setLast('mechanisms');
+    await ui.flush();
+    const saved = saves.at(-1) as Record<string, unknown>;
+    expect(saved.named).toEqual({ id: 'nrx_aldol', text: '', onlyInScope: false });
+    expect(saved.mechanisms).toEqual({ id: null, text: 'sn2', onlyInScope: false });
+    const again = parseNavigatorUi(saved);
+    expect(again.named).toMatchObject({ openId: 'nrx_aldol', damaged: [] });
+    expect(again.mechanisms).toMatchObject({ text: 'sn2', damaged: [] });
+    expect(again.explorer.last).toBe('mechanisms');
+  });
+});

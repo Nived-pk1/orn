@@ -66,7 +66,8 @@ test('the list, the family chips, the name box (a profile label), and the KMnO4 
   // D2, D3: the KMnO4 page
   await rows(page).first().getByRole('button', { name: 'Potassium permanganate' }).click();
   await expect(view(page).getByRole('heading', { level: 2, name: 'Potassium permanganate' })).toBeVisible();
-  await expect(view(page).getByRole('heading', { level: 3 })).toHaveText(["Baeyer's reagent (1 reaction)", 'Hot, concentrated (0 reactions)']);
+  const studioEdition = (await page.locator('[data-edition-marker]').count()) > 0; // 7.4 A5: Study words an unused profile differently
+  await expect(view(page).getByRole('heading', { level: 3 })).toHaveText(["Baeyer's reagent (1 reaction)", studioEdition ? 'Hot, concentrated (0 reactions)' : 'Hot, concentrated']);
   const baeyers = section(page, "Baeyer's reagent");
   const card = baeyers.locator('article[data-reaction-id]').first();
   await expect(card).toBeVisible({ timeout: 60_000 });
@@ -81,7 +82,6 @@ test('the list, the family chips, the name box (a profile label), and the KMnO4 
   expect((conditionsBox?.x ?? 0) >= (cardBox?.x ?? 0) + (cardBox?.width ?? 0) - 1).toBe(true);
   expect(await card.getByText('Usual conditions').count()).toBe(0);
   await expect(baeyers.locator('[data-how-used]')).toContainText('How it is used here: reagent');
-  const studioEdition = (await page.locator('[data-edition-marker]').count()) > 0; // 7.4 A5: Study words it differently
   await expect(section(page, 'Hot, concentrated')).toContainText(studioEdition ? 'No reaction uses this profile yet.' : 'No reaction here uses this profile.');
   if (!studioEdition) await expect(section(page, 'Hot, concentrated').getByRole('heading', { level: 3 })).toHaveText('Hot, concentrated');
   await expect(section(page, 'Hot, concentrated').getByRole('complementary', { name: 'Usual conditions of this profile' })).toBeVisible();

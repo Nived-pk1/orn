@@ -59,6 +59,8 @@ export { createExplorerStore, EMPTY_EXPLORER_FILTER, EXPLORER_USES, isFilterSet,
 export type { ExplorerFilter, ExplorerKind, ExplorerState, ExplorerStore, ExplorerUse, ExplorerView } from './explorer-state';
 export { createChaptersStore, parseChapters } from './chapters-state';
 export type { ChaptersState, ChaptersStore, ParsedChapters } from './chapters-state';
+export { createPageListStore, parsePageList } from './page-list-state';
+export type { PageListState, PageListStore, ParsedPageList } from './page-list-state';
 export { createReagentsStore, parseReagents } from './reagents-state';
 export type { ParsedReagents, ReagentsState, ReagentsStore } from './reagents-state';
 export { asChoice, createPrecursorsStore, DEFAULT_PRECURSOR_STEPS, MIN_PRECURSOR_STEPS, parsePrecursors } from './precursor-state';

@@ -4,7 +4,8 @@
  * inspector. Nothing is edited here.
  */
 import type { ReactNode } from 'react';
-import type { RecordRef } from '@/core/schema';
+import type { RecordRef, StructureRep } from '@/core/schema';
+import { Depiction } from './depiction';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { InspectorEnvContext, makeEnv } from './env';
 import { RichText } from './rich-text';
@@ -34,6 +35,15 @@ export function InspectorPictures(props: { readonly ports: InspectorPorts; reado
   return (
     <Scope ports={props.ports} openPane={props.openPane}>
       <RecordPictures target={props.target} />
+    </Scope>
+  );
+}
+
+/** A step species' inline structure drawn small, as the inspector draws it (7.4 B5): the drawing, or its text while it is drawn or when it cannot be. */
+export function InspectorStructure(props: { readonly ports: InspectorPorts; readonly openPane: () => void; readonly structure: StructureRep; readonly name: string }) {
+  return (
+    <Scope ports={props.ports} openPane={props.openPane}>
+      <Depiction compact structure={props.structure} name={props.name} fallback={props.structure.value} />
     </Scope>
   );
 }
