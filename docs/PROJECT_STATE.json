@@ -135,23 +135,23 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-01",
-    "commit": "abc7676",
-    "version": "751455c3-144c-43d3-976d-882c9cfa0cb8",
-    "liveSpecs": "2026-11-01, Chromium: 43 passed, 9 skipped, chapters fixed and re-run (2 passed); WebKit: 42 passed, 10 skipped, chapters re-run (2 passed) (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer, chapters, reagent-explorer)"
+    "commit": "cd7cc53",
+    "version": "a0801c21-6c43-4924-ab8c-9c0346fc161f",
+    "liveSpecs": "2026-11-01, Chromium: 49 passed, 9 skipped; WebKit: 48 passed, 10 skipped (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer, chapters, reagent-explorer, named-explorer, mechanism-explorer)"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-01",
-    "version": "50b69715-c1bc-4b7e-85cc-e507439b2b76",
+    "version": "1f560cce-c1d2-4c18-94e0-815409ff5fab",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.3c deploy, 2026-11-01: an unauthenticated request got 302 (cloudflareaccess.com) and not the app; the public Worker answered 200 with the app.",
-    "commit": "abc7676",
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.4 deploy, 2026-11-01: an unauthenticated request got 302 (cloudflareaccess.com) and not the app; the public Worker answered 200 with the app.",
+    "commit": "cd7cc53",
     "protectedCheckedAt": "2026-11-01"
   },
-  "nextStep": "7.4",
-  "nextStepTitle": "Named reactions view",
+  "nextStep": "7.6",
+  "nextStepTitle": "(see docs/IMPLEMENTATION_PLAN.md, next row after 7.5)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -284,6 +284,7 @@
     "exportEndToEnd": "step 5.9b, Chromium against the production build: P-02 in a real browser (the demo exported, imported into a fresh context through the import screen, exported again: SHA-256 equal), INV-19 (two exports of the same state identical), a package with a 1x1 PNG re-imports and exports again with its image byte for byte, Cancel gives no download, axe, zero policy violations; the three-engine smoke gains \"an export downloads a file\". Full run: 116 passed, 1 skipped (the 5.1d fixme), 0 failed (Chromium 102, Firefox 7, WebKit 7)"
   },
   "openItems": [
+    "-> Phase 9 (watch): Tests close to their timeouts under load: review-grouping phone 3.3 s of 5 s; first lazy-view test in four window files ~0.9 s of 1 s.",
     "-> Phase 9 (performance hardening): 'navigator overview, every hub expanded' (dense) sits at the 16 ms budget (16.11 at 6.9).",
     "-> Phase 7 (reagent explorer): show a reagent profile's conditions BESIDE a reaction that uses the profile, never merged into the stage's arrow text (6.6a review V1). -> 7.3 (2026-10-24).",
     "-> later (schema v3 candidate): pictures on a single mechanism step need a schema change (asset attachment to a step): a RecordRef cannot name a step; 6.5b builds mechanism pictures only (ADR-038 addendum).",
@@ -569,5 +570,11 @@
     },
     "summary": "7.3b follow-ups (initial JS by deep imports: Study 376.74, Studio 380.56 kB gzip; No chapter yet under a scope; empty concepts; as-written boxes), fact sheet docs/reviews/step-7-3c-fact-sheet.md, core/reagents, Reagents view (desktop and phone), three-way Explore switch",
     "reviewRequired": "docs/PROGRESS.md, Step 7.3c: REVIEW REQUIRED"
+  },
+  "step74": {
+    "status": "closed 2026-11-01, deployed both editions; awaiting review",
+    "commits": {"A": "73da8c7", "B": "a8985e4", "CDE": "226da13", "specs": "cd7cc53"},
+    "summary": "7.3c review decisions RR1-RR5 and follow-ups A1-A7, fact sheet docs/reviews/step-7-4-fact-sheet.md, core/named-reactions, core/mechanisms, Named reactions and Mechanisms views (desktop and phone), one select Show: on the phone; rows 7.4 and 7.5 merged; initial JS Study 377.84, Studio 381.72 kB gzip",
+    "reviewRequired": "docs/PROGRESS.md, Step 7.4: REVIEW REQUIRED"
   }
 }
