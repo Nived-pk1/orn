@@ -10,7 +10,8 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, watch, leaveChapters } from './kit';
-import { openDemo, shotsDir } from './editor-kit';
+import { shotsDir } from './editor-kit';
+import { changedDemo, importOwn } from './own-data-kit';
 
 test.use({ actionTimeout: 60_000 });
 const rail = (page: Page) => page.getByRole('navigation', { name: 'Modes' });
@@ -28,7 +29,7 @@ async function openReagents(page: Page): Promise<void> {
 test('the list, the family chips, the name box (a profile label), and the KMnO4 and KOH pages', async ({ page }) => {
   test.setTimeout(480_000);
   const seen = await watch(page);
-  await openDemo(page);
+  await importOwn(page, changedDemo(() => undefined)); // the demo as the visitor's own data: the same records on the Studio build and on the live Study site
 
   // the rail: live, no "Phase 7" under it
   await expect(rail(page).getByRole('button', { name: /^Reagents/ })).not.toContainText('Phase 7');
@@ -110,7 +111,7 @@ test('the list, the family chips, the name box (a profile label), and the KMnO4 
 test('the exam scope marks and hides outside reactions; the open reagent comes back after a reload', async ({ page }) => {
   test.setTimeout(480_000);
   const seen = await watch(page);
-  await openDemo(page);
+  await importOwn(page, changedDemo(() => undefined)); // the demo as the visitor's own data: the same records on the Studio build and on the live Study site
   await openReagents(page);
   await rows(page).filter({ hasText: 'Potassium hydroxide' }).getByRole('button', { name: 'Potassium hydroxide' }).click();
   await expect(section(page, 'Aqueous KOH').locator('article[data-reaction-id]')).toHaveCount(1, { timeout: 60_000 });
