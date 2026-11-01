@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-10-31",
+  "lastUpdated": "2026-11-01",
   "currentPhase": 7,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -134,24 +134,24 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-31",
-    "commit": "5ede066",
-    "version": "43126d5e-ccf5-4683-b9fc-9ee860da305e",
-    "liveSpecs": "2026-10-31, Chromium: 40 passed, 9 skipped, 1 timeout (equation, passed alone, accepted); WebKit: 40 passed, 10 skipped, 0 failed (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer, chapters)"
+    "deployedAt": "2026-11-01",
+    "commit": "abc7676",
+    "version": "751455c3-144c-43d3-976d-882c9cfa0cb8",
+    "liveSpecs": "2026-11-01, Chromium: 43 passed, 9 skipped, chapters fixed and re-run (2 passed); WebKit: 42 passed, 10 skipped, chapters re-run (2 passed) (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer, chapters, reagent-explorer)"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-10-31",
-    "version": "b726587a-27bc-40d2-b88d-7947f320872e",
+    "deployedAt": "2026-11-01",
+    "version": "50b69715-c1bc-4b7e-85cc-e507439b2b76",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.3b deploy, 2026-10-31: an unauthenticated request got 302 to tiny-base-dc3e.cloudflareaccess.com and not the app; the public Worker answered 200 with the app.",
-    "commit": "5ede066",
-    "protectedCheckedAt": "2026-10-31"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.3c deploy, 2026-11-01: an unauthenticated request got 302 (cloudflareaccess.com) and not the app; the public Worker answered 200 with the app.",
+    "commit": "abc7676",
+    "protectedCheckedAt": "2026-11-01"
   },
-  "nextStep": "7.3c",
-  "nextStepTitle": "the Reagent explorer; first the initial JS size (Studio 392.92 kB of 395)",
+  "nextStep": "7.4",
+  "nextStepTitle": "Named reactions view",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -546,8 +546,28 @@
   },
   "step73b": {
     "status": "closed 2026-10-31 (5ede066), deployed both editions; awaiting review",
-    "commits": { "A": "5309e1d", "A5": "e8e906a", "B": "dfd06cd", "DE": "59a1408", "fixes": "bb697da", "closing": "5ede066" },
+    "commits": {
+      "A": "5309e1d",
+      "A5": "e8e906a",
+      "B": "dfd06cd",
+      "DE": "59a1408",
+      "fixes": "bb697da",
+      "closing": "5ede066"
+    },
     "summary": "import tracking and Review by Import, chapter = chapter topic, class boxes as written, Chapters view (desktop and phone), fact sheet docs/reviews/step-7-3b-fact-sheet.md",
     "reviewRequired": "docs/PROGRESS.md, Step 7.3b: REVIEW REQUIRED 1 to 6"
+  },
+  "step73c": {
+    "status": "closed 2026-11-01, deployed both editions; awaiting review",
+    "commits": {
+      "A": "a7dce0a",
+      "B": "1a89dc3",
+      "C": "a13487c",
+      "DE": "1029ac9",
+      "specs": "b04584e",
+      "fix": "abc7676"
+    },
+    "summary": "7.3b follow-ups (initial JS by deep imports: Study 376.74, Studio 380.56 kB gzip; No chapter yet under a scope; empty concepts; as-written boxes), fact sheet docs/reviews/step-7-3c-fact-sheet.md, core/reagents, Reagents view (desktop and phone), three-way Explore switch",
+    "reviewRequired": "docs/PROGRESS.md, Step 7.3c: REVIEW REQUIRED"
   }
 }

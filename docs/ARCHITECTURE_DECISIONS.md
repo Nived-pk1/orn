@@ -349,6 +349,13 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 - **Review grouping.** "Group by: Chapter | Kind" (uiState `review`, tolerant, default Kind). Chapter = "<exam version> › <unit>" from the record's own topic mappings (the topic and its ancestors against a unit's included or partial coverage), else for a concept the chapters of the records it is a prerequisite of (the exam scope's one-hop rule); a record in several chapters is listed in each; none = "No chapter yet", last. There is no grouping by import because a record carries no import id (REVIEW REQUIRED, docs/PROGRESS.md).
 **Not changed:** the schema, `DB_STORES`, the CSP, `_headers`, the import format.
 
+#### Addendum 2026-11-01 (step 7.3c): the Reagents view
+
+- **Reagents view** (Reagents row): a pure derived module `src/core/reagents` (`filterReagents`, `reagentUsage` per profile with DISTINCT reactions and examples folded, `howUsedWords`); the feature `src/features/reagent-explorer` (lazy chunk in both editions) with `src/app/window/reagents-host.tsx` injecting the card, the condition words, rich text and, in Studio only, Edit. A reaction names a reagent by a DIRECT reference (`byReagent`); the backing species and the components are not followed. A participant's `profileId` places a reaction in a profile's section; the profile's `parameters` are shown in their own box, never in a card.
+- **UI state:** sibling `uiState` key `reagents` (open reagent, families, name box, "Only <exam>"), tolerant; `ExplorerKind` gains `reagents`.
+- **Follow-ups:** a barrel's static path pulls modules into the first load (rollup assigns by static reachability): `core/editing`, `workers/compute` and `core/chapters` barrels are reached by deep imports from first-load modules (tests pin it); the inspector's "In chapters" is a lazy chunk. Concepts with no text are set apart; "No chapter yet" is Studio-only under a scope.
+- **Not changed:** the schema, `DB_STORES`, the CSP, `_headers`, the import format.
+
 
 #### Addendum 2026-10-31 (step 7.3b): the Chapters view, import tracking, chapter = topic, as-written boxes
 
