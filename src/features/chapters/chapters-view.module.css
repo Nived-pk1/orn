@@ -210,3 +210,14 @@
 .view[data-layout='phone'] .kindChip {
   min-height: 44px;
 }
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 24px;
+}

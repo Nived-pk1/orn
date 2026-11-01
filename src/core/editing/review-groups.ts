@@ -6,7 +6,9 @@
  *    is listed in each; a record in none is under "No chapter yet", last.
  *  - KIND: the kind in words.
  */
-import { buildChapterIndex, NO_CHAPTER, NO_CHAPTER_TITLE } from '../chapters';
+// deep imports, not the barrel: the barrel's static path would pull the chapter list code into the first paint (7.3c A1)
+import { buildChapterIndex } from '../chapters/build-index';
+import { NO_CHAPTER, NO_CHAPTER_TITLE } from '../chapters/types';
 import type { CanonicalState, RecordRef } from '../schema';
 import type { QueueRow } from './review-queue';
 

@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { emptyRecordTables, type AnyRecord, type CanonicalState, type RecordRef } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { examVersion, topic, topicMapping } from '@/test-support/curriculum-kit';
-import { concept, contextOf } from '@/test-support/graph-state';
+import { concept as bareConcept, contextOf } from '@/test-support/graph-state';
 import { createActiveExamStore, createChaptersStore, createInspectorStore } from '@/ui/state';
 import type { ChaptersPorts } from './contracts';
 import { ChaptersView } from './chapters-view';
@@ -22,6 +22,8 @@ function stateOf(...records: readonly AnyRecord[]): CanonicalState {
   return { meta: demoState().meta, records: tables as unknown as CanonicalState['records'] };
 }
 
+/** A concept with text; the empty ones are set apart (7.3c A3). */
+const concept = (body: string, name: string, kind: Parameters<typeof bareConcept>[2]) => bareConcept(body, name, kind, { summary: 'Some text.' });
 const cpt = (body: string): RecordRef => ({ kind: 'concept', id: `cpt_${body}` }) as RecordRef;
 const manyConcepts = (n: number): AnyRecord[] => Array.from({ length: n }, (_, i) => [concept(`m${i}`, `Many ${String(i).padStart(2, '0')}`, 'general'), topicMapping(`mm${i}`, 'chap-a', cpt(`m${i}`))]).flat();
 
@@ -37,7 +39,7 @@ const base: AnyRecord[] = [
   topicMapping('m3', 'chap-b', cpt('c2')),
 ];
 
-function show(state: CanonicalState, saved: Parameters<typeof createChaptersStore>[0] = {}) {
+function show(state: CanonicalState, saved: Parameters<typeof createChaptersStore>[0] = {}, editing = true) {
   const context = contextOf(state);
   const chapters = createChaptersStore(saved);
   const exam = createActiveExamStore();
@@ -60,6 +62,7 @@ function show(state: CanonicalState, saved: Parameters<typeof createChaptersStor
     renderRoute: (id) => <span>{id}</span>,
     timers: { after: () => () => undefined },
     log: () => undefined,
+    editing,
   };
   render(<ChaptersView ports={ports} />);
   return { chapters, exam, selected, ports };
@@ -98,6 +101,48 @@ describe('the list', () => {
     const names = within(screen.getByRole('list', { name: 'Chapters' })).getAllByRole('button').map((b) => b.textContent);
     expect(names).toEqual(['Bravo chapter', 'No chapter yet']);
     expect(screen.getByText(/1 chapter is hidden/)).toBeTruthy();
+  });
+});
+
+describe('"No chapter yet" under an exam scope (7.3c A2)', () => {
+  const state = stateOf(...base, examVersion('v1', 'jee', [{ topic: 'chap-b', coverage: 'included' }]));
+  const names = (): (string | null)[] => within(screen.getByRole('list', { name: 'Chapters' })).getAllByRole('button').map((b) => b.textContent);
+  it('Study: listed without a scope, left out with one', () => {
+    const { exam } = show(state, {}, false);
+    expect(names()).toEqual(['Alpha chapter', 'Bravo chapter', 'No chapter yet']);
+    act(() => exam.getState().setActive({ examId: 'exm_jee', examVersionId: 'exv_v1' } as never));
+    expect(names()).toEqual(['Bravo chapter']);
+  });
+  it('Studio: listed with a scope too', () => {
+    const { exam } = show(state, {}, true);
+    act(() => exam.getState().setActive({ examId: 'exm_jee', examVersionId: 'exv_v1' } as never));
+    expect(names()).toEqual(['Bravo chapter', 'No chapter yet']);
+  });
+});
+
+describe('concepts with no text (7.3c A3)', () => {
+  const empties = [...base, bareConcept('e1', 'Empty one', 'general'), bareConcept('e2', 'Empty two', 'general'), topicMapping('me1', 'chap-a', cpt('e1')), topicMapping('me2', 'chap-a', cpt('e2'))];
+  it('Study: not a card, not counted, no line', () => {
+    show(stateOf(...empties), { chapterId: 'top_chap-a' }, false);
+    expect(screen.queryByRole('article', { name: 'Empty one' })).toBeNull();
+    expect(screen.getByRole('heading', { level: 3, name: 'Concepts (2)' })).toBeTruthy();
+    expect(screen.queryByText(/Not written yet/)).toBeNull();
+  });
+  it('Studio: one quiet line at the end of the Concepts group with links, counted apart in the list', () => {
+    show(stateOf(...empties), { chapterId: 'top_chap-a' }, true);
+    expect(screen.queryByRole('article', { name: 'Empty one' })).toBeNull();
+    expect(screen.getByRole('heading', { level: 3, name: 'Concepts (2)' })).toBeTruthy();
+    const line = document.querySelector('[data-unwritten]') as HTMLElement;
+    expect(line.textContent).toBe('Not written yet: Empty one, Empty two');
+    fireEvent.click(within(line).getByRole('button', { name: 'Empty two' }));
+    expect(screen.getAllByRole('article').length).toBe(2);
+  });
+  it('the list says "+ 2 not written" in Studio only', () => {
+    show(stateOf(...empties), {}, true);
+    expect(screen.getByText(/2 concepts \+ 2 not written/)).toBeTruthy();
+    cleanup();
+    show(stateOf(...empties), {}, false);
+    expect(screen.queryByText(/not written/)).toBeNull();
   });
 });
 

@@ -12,7 +12,7 @@ import { expect, test } from './fixtures';
 import { axeProblems, expectClean, watch } from './kit';
 import { record, shotsDir } from './editor-kit';
 import { importOwn } from './own-data-kit';
-import { CHAPTER_A, CHAPTER_B, chaptersDemo, UNMAPPED } from './chapters-kit';
+import { CHAPTER_A, CHAPTER_B, chaptersDemo, EMPTY_IDEA, UNMAPPED } from './chapters-kit';
 
 test.use({ actionTimeout: 60_000 });
 const view = (page: Page) => page.getByRole('region', { name: 'Chapters', exact: true });
@@ -42,6 +42,7 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
   const rowA = rows(page).filter({ hasText: CHAPTER_A });
   await expect(rowA).toContainText(/\d+ concepts?/);
   await expect(rowA).toContainText(/JEE (Advanced|Main) 2026/); // exam chips
+  await expect(rowA).toContainText(/\+ 1 not written/); // 7.3c A3: Studio counts the concepts with no text apart
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/chapters-list-1280x800.png` });
 
@@ -55,6 +56,9 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
   await expect(view(page).locator('article[data-reaction-id]').first()).toBeVisible({ timeout: 60_000 });
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/chapter-page-1280x800.png` });
+  // 7.3c A3: the concept with no text is not a card; one quiet line ends the Concepts group
+  await expect(view(page).getByRole('article', { name: EMPTY_IDEA })).toHaveCount(0);
+  await expect(view(page).locator('[data-unwritten]')).toHaveText(`Not written yet: ${EMPTY_IDEA}`);
   await view(page).getByRole('heading', { level: 4, name: 'Also used here' }).first().scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${shotsDir()}/chapter-page-supporting-1280x800.png` });
 
@@ -82,6 +86,7 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
   await scope.selectOption({ label: 'JEE Main, provisional, not verified' });
   await expect(view(page).getByText(/chapters? (is|are) hidden: not in/)).toBeVisible();
   await expect(rows(page).filter({ hasText: 'Molecular rearrangements' })).toHaveCount(0);
+  await expect(rows(page).filter({ hasText: 'No chapter yet' })).toHaveCount(1); // 7.3c A2: Studio lists it under a scope too
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/chapters-exam-scope-1280x800.png` });
   await scope.selectOption({ value: '' });

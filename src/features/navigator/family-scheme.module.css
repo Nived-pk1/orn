@@ -32,6 +32,20 @@
   display: block;
 }
 
+/* A box that holds text (a formula, as written) may widen up to the card's column; the text breaks only at spaces (7.3c A5). */
+.substance[data-text-box] {
+  width: auto;
+  min-width: 8rem;
+  max-width: 100%;
+}
+
+.substance[data-text-box] .structure {
+  width: max-content;
+  min-width: 128px;
+  max-width: min(100%, 22rem);
+}
+
+
 .structureName {
   display: flex;
   flex-direction: column;

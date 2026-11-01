@@ -32,6 +32,11 @@ describe('countsWords', () => {
   it('an empty chapter says so', () => {
     expect(countsWords(counts({}))).toBe('Nothing mapped yet');
   });
+  it('concepts with no text are counted apart: "+ 3 not written" (Studio, 7.3c A3)', () => {
+    expect(countsWords(counts({ concepts: { core: 5, other: 0 }, reactions: { core: 2, other: 0 } }), 3)).toBe('5 concepts + 3 not written · 2 reactions');
+    expect(countsWords(counts({ reactions: { core: 2, other: 0 } }), 3)).toBe('+ 3 not written · 2 reactions');
+    expect(countsWords(counts({}), 3)).toBe('+ 3 not written');
+  });
 });
 
 describe('filterContents', () => {
@@ -52,6 +57,13 @@ describe('filterContents', () => {
     const outside = (r: { id: string }): boolean => r.id === 'cpt_2' || r.id === 'rxn_2';
     expect(filterContents(contents, { ...none, onlyInScope: true }, nameOf, outside as never).groups.map((g) => g.count)).toEqual([1, 1]);
     expect(filterContents(contents, none, nameOf, outside as never).groups.map((g) => g.count)).toEqual([2, 2]);
+  });
+  it('the concepts with no text follow the name box and the scope too, and keep their group alive', () => {
+    const withUnwritten: ChapterContents = { chapterId: 'top_a', groups: [{ key: 'concepts', title: 'Concepts', count: 0, parts: [], unwritten: [ref('concept', 'cpt_1'), ref('concept', 'cpt_2')] }] };
+    const out = filterContents(withUnwritten, { ...none, text: 'reson' }, nameOf, undefined);
+    expect(out.groups[0]?.unwritten?.map((r) => r.id)).toEqual(['cpt_2']);
+    expect(filterContents(withUnwritten, { ...none, kinds: ['reactions'] }, nameOf, undefined).groups).toEqual([]);
+    expect(filterContents(withUnwritten, { ...none, text: 'zzz' }, nameOf, undefined).groups).toEqual([]);
   });
   it('reports how many records were left out by the filter', () => {
     expect(filterContents(contents, { ...none, text: 'reson' }, nameOf, undefined).hidden).toBe(3);

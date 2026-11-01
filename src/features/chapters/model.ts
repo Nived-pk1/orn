@@ -21,12 +21,18 @@ const WORDS: Readonly<Record<GroupKey, readonly [string, string]>> = {
   transformations: ['transformation', 'transformations'],
 };
 
-/** "8 concepts · 24 reactions · 5 caveats": every kind that has records, core and the others together, in the page's order. */
-export function countsWords(counts: KindCounts): string {
+/**
+ * "8 concepts · 24 reactions · 5 caveats": every kind that has records, core and the others together, in the page's order. Studio adds
+ * the concepts with no text apart, "8 concepts + 3 not written" (7.3c A3).
+ */
+export function countsWords(counts: KindCounts, unwritten = 0): string {
   const parts = CHAPTER_GROUPS.flatMap((group) => {
     const own = counts[group.key];
     const n = own.core + own.other;
-    return n === 0 ? [] : [`${n} ${WORDS[group.key][n === 1 ? 0 : 1]}`];
+    const apart = group.key === 'concepts' && unwritten > 0 ? `+ ${unwritten} not written` : undefined;
+    const words = n === 0 ? undefined : `${n} ${WORDS[group.key][n === 1 ? 0 : 1]}`;
+    const joined = words !== undefined && apart !== undefined ? `${words} ${apart}` : (words ?? apart);
+    return joined === undefined ? [] : [joined];
   });
   return parts.length === 0 ? 'Nothing mapped yet' : parts.join(' · ');
 }
@@ -62,6 +68,7 @@ export function filterContents(
       hidden += group.count;
       continue;
     }
+    const unwritten = (group.unwritten ?? []).filter((ref) => (needle === '' || fold(nameOf(ref)).includes(needle)) && !(filter.onlyInScope && outside?.(ref) === true));
     const parts = group.parts
       .map((part) => ({
         ...part,
@@ -72,8 +79,9 @@ export function filterContents(
         }),
       }))
       .filter((part) => part.refs.length > 0);
-    if (parts.length === 0) continue;
-    groups.push({ ...group, parts, count: parts.reduce((sum, part) => sum + part.refs.length, 0) });
+    if (parts.length === 0 && unwritten.length === 0) continue;
+    const { unwritten: _all, ...rest } = group;
+    groups.push({ ...rest, parts, count: parts.reduce((sum, part) => sum + part.refs.length, 0), ...(unwritten.length === 0 ? {} : { unwritten }) });
   }
   return { groups, hidden };
 }

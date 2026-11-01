@@ -14,7 +14,9 @@ import { createLocalTimeFormatter } from './local-time';
 import { EditorsContext, type EditorsApi } from './drafts-ui';
 import type { EditorEntries } from './editor-entries';
 import type { TemplateMode } from './template-dialog';
-import { duplicateSeed, picturesOf, specificSeed } from '@/core/editing';
+// deep imports, not the barrel: its static path would pull the draft machinery into the first paint (7.3c A1)
+import { picturesOf } from '@/core/editing/picture-kinds';
+import { duplicateSeed, specificSeed } from '@/core/editing/templates';
 
 // /* @__PURE__ */: an unused lazy() is dropped with its import() in Study, where nothing mounts EditorsProvider (ADR-041)
 const DraftsDialog = /* @__PURE__ */ lazy(() => import('@/features/workbench/layer').then((m) => ({ default: m.DraftsDialog })));

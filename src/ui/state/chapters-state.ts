@@ -5,11 +5,11 @@
  * view, which says so once.
  */
 import { createStore, type StoreApi } from 'zustand/vanilla';
-import { CHAPTER_GROUPS, type GroupKey } from '@/core/chapters';
+import { CHAPTER_GROUP_KEYS, type GroupKey } from '@/core/chapters/group-keys';
 
 const MAX_ID_LENGTH = 512;
 const MAX_TEXT_LENGTH = 200;
-const KEYS: readonly GroupKey[] = CHAPTER_GROUPS.map((group) => group.key);
+const KEYS: readonly GroupKey[] = CHAPTER_GROUP_KEYS;
 const inPageOrder = (kinds: readonly GroupKey[]): GroupKey[] => KEYS.filter((key) => kinds.includes(key));
 
 type Choices = Partial<Pick<ChaptersState, 'chapterId' | 'kinds' | 'text' | 'onlyInScope'>>;

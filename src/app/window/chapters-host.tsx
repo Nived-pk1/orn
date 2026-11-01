@@ -10,6 +10,7 @@ import { InspectorPictures, InspectorRichText, nameOfRecord } from '@/features/i
 import { ReactionCardHost, SubstanceHost, useNavigator } from '@/features/navigator';
 import { SavedRouteCard } from '@/features/precursor-explorer';
 import type { RecordRef } from '@/core/schema';
+import { EDITING } from '@/app/edition';
 import { useApp } from './context';
 
 export function ChaptersHost(props: { readonly openPane: () => void }) {
@@ -50,6 +51,7 @@ export function ChaptersHost(props: { readonly openPane: () => void }) {
       ),
       timers: ports.timers,
       log: ports.log,
+      editing: EDITING,
     };
   }, [ports, inspector, openPane]);
   return <ChaptersView ports={chapters} />;

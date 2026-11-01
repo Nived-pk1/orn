@@ -7,7 +7,7 @@
  * text, never a broken image icon. Nothing is drawn as arrows (Phase 8).
  */
 import { useEffect, useState } from 'react';
-import { isPictureKind, picturesOf } from '@/core/editing';
+import { isPictureKind, picturesOf } from '@/core/editing/picture-kinds'; // deep, not the barrel: see chapters-lazy.test.ts (7.3c A1)
 import type { Asset, RecordRef } from '@/core/schema';
 import { revokeWhenUnused } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';

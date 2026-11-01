@@ -2,7 +2,7 @@
  * The Reactions view's words and bookkeeping (step 7.1b D1, D2, D5): the count line, the labels of ids, the removable chips, and dropping a
  * saved filter's ids that name nothing any more. Pure; the chemistry is the core filter's. Nothing here is stored.
  */
-import { STATUS_WORDS } from '@/core/editing';
+import { STATUS_WORDS } from '@/core/editing/review-queue'; // deep, not the barrel (7.3c A1)
 export { compactEquationOf } from '@/core/graph';
 import { UNCLASSIFIED_HUB_ID, UNCLASSIFIED_NAME, type ReactionFilter } from '@/core/graph';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';

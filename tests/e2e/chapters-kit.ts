@@ -14,6 +14,8 @@ export const CHAPTER_B = 'Aldehydes, ketones and carboxylic acids';
 export const HINSBERG = 'Zz Hinsberg reaction (generic)';
 export const UNMAPPED = 'Aa unmapped idea';
 export const WRITTEN = 'C₆H₅–SO₂–NHR';
+/** A concept with no summary and no notes: Study hides it, Studio sets it apart (7.3c A3). */
+export const EMPTY_IDEA = 'Zz empty idea';
 
 type Loose = { id: string; kind?: string; name?: string; names?: { canonical: string }; generic?: { formulaText?: string }; participants?: { ref: { kind: string; id: string }; originalText?: string }[]; outcomes?: { products: { ref: { kind: string; id: string }; originalText?: string }[] }[] };
 
@@ -70,10 +72,15 @@ export function chaptersDemo(): UploadFile {
         product.originalText = WRITTEN;
       }
     (records['reaction'] as Loose[]).push(hinsberg);
+    // the concepts a study card is made of need text (a concept with none is not a card, 7.3c A3)
+    for (const one of recordsOf<Loose & { summary?: string }>(records, 'concept')) if (one.id === 'cpt_oxidation' || one.id === 'cpt_addition') one.summary = `${one.name ?? one.id} is explained here.`;
     const unmapped = { ...JSON.parse(JSON.stringify(idea)), id: 'cpt_zz-unmapped-idea', name: UNMAPPED } as Loose;
-    (records['concept'] as Loose[]).push(unmapped);
+    const empty = { ...JSON.parse(JSON.stringify(idea)), id: 'cpt_zz-empty-idea', name: EMPTY_IDEA } as Loose & { summary?: string };
+    delete empty.summary;
+    (records['concept'] as Loose[]).push(unmapped, empty);
     const maps = records['topic_mapping'] as object[];
     CORE.forEach((target, i) => maps.push(mapping(i, 'top_alcohols-phenols-ethers', target, 'core')));
+    maps.push(mapping(300, 'top_alcohols-phenols-ethers', ['concept', 'cpt_zz-empty-idea'], 'core'));
     SUPPORTING.forEach((target, i) => maps.push(mapping(100 + i, 'top_alcohols-phenols-ethers', target, 'supporting')));
     CORE.slice(0, 4).forEach((target, i) => maps.push(mapping(200 + i, 'top_carbonyl-acids', target, 'supporting')));
   });

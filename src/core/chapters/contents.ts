@@ -6,12 +6,15 @@
 import { foldExamples } from '../graph/family/examples';
 import { fold } from '../text/normalizer';
 import type { CanonicalState, RecordRef } from '../schema';
+import { isUnwrittenConcept } from './written';
 import type { ChapterContents, ChapterGroup, ChapterIndex, ChapterPart, MappingRole } from './types';
 import { CHAPTER_GROUPS, NO_CHAPTER } from './types';
 
 export interface ContentsOptions {
   /** The record's display name (the app knows how names are shown); used for the order inside a part. */
   readonly nameOf: (ref: RecordRef) => string;
+  /** Studio: keep the concepts with no text apart in `unwritten`. Study (the default): they are left out altogether. */
+  readonly showUnwritten?: boolean;
 }
 
 const PARTS: readonly { readonly part: MappingRole; readonly title: string | undefined }[] = [
@@ -32,21 +35,25 @@ export function chapterContents(state: CanonicalState, index: ChapterIndex, chap
   const groups: ChapterGroup[] = [];
   for (const group of CHAPTER_GROUPS) {
     const entries: Entry[] = [];
+    const unwritten: Entry[] = [];
     for (const kind of group.kinds) {
       for (const id of Object.keys(state.records[kind] as Record<string, unknown>)) {
         const ref = { kind, id } as RecordRef;
         const memberships = index.membershipsOf(ref);
+        const into = isUnwrittenConcept(state, ref) ? unwritten : entries;
         if (chapterId === NO_CHAPTER) {
-          if (memberships.length === 0) entries.push({ ref, role: 'core', sectionPos: 0 });
+          if (memberships.length === 0) into.push({ ref, role: 'core', sectionPos: 0 });
           continue;
         }
         const mine = memberships.find((membership) => membership.chapterId === chapterId);
-        if (mine !== undefined) entries.push({ ref, role: mine.role, sectionPos: mine.sectionPos });
+        if (mine !== undefined) into.push({ ref, role: mine.role, sectionPos: mine.sectionPos });
       }
     }
-    if (entries.length === 0) continue;
-    const names = new Map(entries.map((entry) => [entry.ref.id, fold(options.nameOf(entry.ref))]));
-    const ordered = [...entries].sort((a, b) => a.sectionPos - b.sectionPos || ((names.get(a.ref.id) ?? '') < (names.get(b.ref.id) ?? '') ? -1 : (names.get(a.ref.id) ?? '') > (names.get(b.ref.id) ?? '') ? 1 : a.ref.id < b.ref.id ? -1 : a.ref.id > b.ref.id ? 1 : 0));
+    const kept = options.showUnwritten === true ? unwritten : [];
+    if (entries.length === 0 && kept.length === 0) continue;
+    const names = new Map([...entries, ...kept].map((entry) => [entry.ref.id, fold(options.nameOf(entry.ref))]));
+    const inOrder = (list: readonly Entry[]): Entry[] => [...list].sort((a, b) => a.sectionPos - b.sectionPos || ((names.get(a.ref.id) ?? '') < (names.get(b.ref.id) ?? '') ? -1 : (names.get(a.ref.id) ?? '') > (names.get(b.ref.id) ?? '') ? 1 : a.ref.id < b.ref.id ? -1 : a.ref.id > b.ref.id ? 1 : 0));
+    const ordered = inOrder(entries);
 
     let shown: ReadonlySet<string> | undefined;
     let folding: ReturnType<typeof foldExamples> | undefined;
@@ -69,6 +76,7 @@ export function chapterContents(state: CanonicalState, index: ChapterIndex, chap
       title: group.title,
       count,
       parts,
+      ...(kept.length === 0 ? {} : { unwritten: inOrder(kept).map((entry) => entry.ref) }),
       ...(folding === undefined ? {} : { examplesOf: folding.examplesOf, exampleOf: folding.exampleOf, exampleCount: folding.folded }),
     });
   }

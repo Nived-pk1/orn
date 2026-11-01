@@ -8,7 +8,8 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp } from '@/test-support/window-kit';
 
-beforeAll(() => {
+beforeAll(async () => {
+  await import('./reactions-host'); // the lazy view chunk, loaded once so the first test's wait does not include its transform (7.3c)
   globalThis.ResizeObserver ??= class {
     observe(): void {}
     unobserve(): void {}

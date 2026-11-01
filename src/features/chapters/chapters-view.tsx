@@ -29,7 +29,7 @@ export function ChaptersView(props: { readonly ports: ChaptersPorts }) {
   const source = useMemo(() => ({ state: ports.store.getState(), indexes: ports.indexes.current() }), [ports, version]);
   const { state, indexes } = source;
   const chapters = useMemo(() => buildChapterIndex(state), [state]);
-  const list = useMemo(() => chaptersOf(state, chapters, active === null ? {} : { examVersionId: active.examVersionId }), [state, chapters, active]);
+  const list = useMemo(() => chaptersOf(state, chapters, { showUnwritten: ports.editing, ...(active === null ? {} : { examVersionId: active.examVersionId }) }), [state, chapters, active, ports.editing]);
 
   const unknown = chapterId !== null && chapterId !== NO_CHAPTER && !chapters.chapters.some((chapter) => chapter.id === chapterId);
   useEffect(() => {

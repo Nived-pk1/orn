@@ -2,6 +2,7 @@
  * The Chapters view's core types (7.3b A2, C1, C2). Everything here is derived from the canonical state; nothing is stored.
  */
 import type { RecordKind, RecordRef } from '../schema';
+import type { GroupKey } from './group-keys';
 
 export type MappingRole = 'core' | 'supporting' | 'enrichment';
 export type CoverageWord = 'included' | 'partial';
@@ -10,7 +11,7 @@ export type CoverageWord = 'included' | 'partial';
 export const NO_CHAPTER = 'none';
 export const NO_CHAPTER_TITLE = 'No chapter yet';
 
-export type GroupKey = 'concepts' | 'reactions' | 'named' | 'mechanisms' | 'caveats' | 'compounds' | 'reagents' | 'routes' | 'transformations';
+export type { GroupKey };
 
 /** The fixed study order of a chapter page, with the record kinds each group holds. */
 export const CHAPTER_GROUPS: readonly { readonly key: GroupKey; readonly title: string; readonly kinds: readonly RecordKind[] }[] = [
@@ -67,6 +68,8 @@ export interface ChapterSummary {
   readonly counts: KindCounts;
   /** Records in the chapter, each counted once. */
   readonly total: number;
+  /** Concepts with no text (7.3c A3): not in `counts` or `total`; counted only when the caller asks to show them (Studio), else 0. */
+  readonly unwritten: number;
   readonly exams: readonly ExamChip[];
   /** With an exam scope: how the scoped version covers the chapter. */
   readonly scopeCoverage?: CoverageWord;
@@ -74,7 +77,7 @@ export interface ChapterSummary {
 
 export interface ChaptersList {
   readonly chapters: readonly ChapterSummary[];
-  readonly noChapter: { readonly counts: KindCounts; readonly total: number };
+  readonly noChapter: { readonly counts: KindCounts; readonly total: number; readonly unwritten: number };
   /** With an exam scope: the number of chapters it hides. */
   readonly hiddenByExam: number;
 }
@@ -96,6 +99,8 @@ export interface ChapterGroup {
   readonly examplesOf?: ReadonlyMap<string, readonly string[]>;
   readonly exampleOf?: ReadonlyMap<string, string>;
   readonly exampleCount?: number;
+  /** Concepts group only, when asked: the concepts with no text, kept apart (7.3c A3). Not in `count` or `parts`. */
+  readonly unwritten?: readonly RecordRef[];
 }
 
 export interface ChapterContents {

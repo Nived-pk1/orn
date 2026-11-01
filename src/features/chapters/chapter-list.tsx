@@ -14,6 +14,8 @@ export const MAX_CHAPTERS_SHOWN = 200;
 
 export function ChapterList(props: { readonly ports: ChaptersPorts; readonly list: ChaptersList; readonly examName: string | undefined }) {
   const { ports, list } = props;
+  // "No chapter yet" is not a chapter any exam covers: under an exam scope only Studio lists it (7.3c A2)
+  const listNone = (list.noChapter.total > 0 || list.noChapter.unwritten > 0) && (props.examName === undefined || ports.editing);
   const shown = list.chapters.slice(0, MAX_CHAPTERS_SHOWN);
   const open = (id: string): void => ports.ui.chapters.getState().open(id);
   return (
@@ -21,7 +23,7 @@ export function ChapterList(props: { readonly ports: ChaptersPorts; readonly lis
       {props.examName !== undefined && list.hiddenByExam > 0 ? (
         <p className={styles.muted}>{`${list.hiddenByExam} ${list.hiddenByExam === 1 ? 'chapter is' : 'chapters are'} hidden: not in ${props.examName}.`}</p>
       ) : null}
-      {list.chapters.length === 0 && list.noChapter.total === 0 ? <p className={styles.muted}>No chapters yet.</p> : null}
+      {list.chapters.length === 0 && !listNone ? <p className={styles.muted}>No chapters yet.</p> : null}
       <ul className={styles.list} aria-label="Chapters">
         {shown.map((chapter) => (
           <li key={chapter.id} className={styles.chapterRow} data-chapter-id={chapter.id}>
@@ -37,15 +39,15 @@ export function ChapterList(props: { readonly ports: ChaptersPorts; readonly lis
                 ))}
               </ul>
             )}
-            <p className={styles.muted}>{countsWords(chapter.counts)}</p>
+            <p className={styles.muted}>{countsWords(chapter.counts, chapter.unwritten)}</p>
           </li>
         ))}
-        {list.noChapter.total === 0 ? null : (
+        {!listNone ? null : (
           <li className={styles.chapterRow} data-chapter-id={NO_CHAPTER}>
             <button type="button" className={styles.chapterName} onClick={() => open(NO_CHAPTER)}>
               {NO_CHAPTER_TITLE}
             </button>
-            <p className={styles.muted}>{countsWords(list.noChapter.counts)}</p>
+            <p className={styles.muted}>{countsWords(list.noChapter.counts, list.noChapter.unwritten)}</p>
           </li>
         )}
       </ul>

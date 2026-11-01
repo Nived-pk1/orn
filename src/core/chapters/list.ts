@@ -6,12 +6,15 @@
  */
 import { foldExamples } from '../graph/family/examples';
 import type { CanonicalState, RecordRef } from '../schema';
+import { isUnwrittenConcept } from './written';
 import type { ChapterIndex, ChapterSummary, ChaptersList, CoverageWord, ExamChip, GroupKey, KindCounts, MappingRole } from './types';
 import { CHAPTER_GROUPS } from './types';
 
 export interface ChaptersOptions {
   /** Only the chapters this exam version covers, in its units' order. */
   readonly examVersionId?: string;
+  /** Studio: count the concepts with no text apart (`unwritten`). Study (the default): they are not counted at all. */
+  readonly showUnwritten?: boolean;
 }
 
 const GROUP_OF = new Map(CHAPTER_GROUPS.flatMap((group) => group.kinds.map((kind) => [kind, group.key] as const)));
@@ -54,6 +57,8 @@ export function chaptersOf(state: CanonicalState, index: ChapterIndex, options: 
   const totals = new Map<string, number>();
   const none = emptyCounts();
   let noneTotal = 0;
+  let noneUnwritten = 0;
+  const unwrittenIn = new Map<string, number>();
   const reactionsIn = new Map<string, { id: string; role: MappingRole }[]>();
   const addReaction = (chapterId: string, entry: { id: string; role: MappingRole }): void => {
     const list = reactionsIn.get(chapterId);
@@ -64,6 +69,13 @@ export function chaptersOf(state: CanonicalState, index: ChapterIndex, options: 
   for (const ref of studyRecords(state)) {
     const key = GROUP_OF.get(ref.kind) as GroupKey;
     const memberships = index.membershipsOf(ref);
+    if (isUnwrittenConcept(state, ref)) {
+      if (options.showUnwritten === true) {
+        if (memberships.length === 0) noneUnwritten += 1;
+        for (const membership of memberships) unwrittenIn.set(membership.chapterId, (unwrittenIn.get(membership.chapterId) ?? 0) + 1);
+      }
+      continue;
+    }
     if (memberships.length === 0) {
       if (key === 'reactions') addReaction('', { id: ref.id, role: 'core' });
       else none[key].core += 1;
@@ -115,6 +127,7 @@ export function chaptersOf(state: CanonicalState, index: ChapterIndex, options: 
     order: chapter.order,
     counts: counts.get(chapter.id) as KindCounts,
     total: totals.get(chapter.id) ?? 0,
+    unwritten: unwrittenIn.get(chapter.id) ?? 0,
     exams: chipsOf(chapter.id),
     ...(scoped?.get(chapter.id) === undefined ? {} : { scopeCoverage: scoped.get(chapter.id)?.coverage as CoverageWord }),
   }));
@@ -124,5 +137,5 @@ export function chaptersOf(state: CanonicalState, index: ChapterIndex, options: 
     hiddenByExam = chapters.length - kept.length;
     chapters = kept.sort((a, b) => (scoped?.get(a.id)?.order ?? 0) - (scoped?.get(b.id)?.order ?? 0));
   }
-  return { chapters, noChapter: { counts: none, total: noneTotal }, hiddenByExam };
+  return { chapters, noChapter: { counts: none, total: noneTotal, unwritten: noneUnwritten }, hiddenByExam };
 }

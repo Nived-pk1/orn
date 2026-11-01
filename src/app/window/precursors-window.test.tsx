@@ -11,7 +11,8 @@ import { precursorChoiceFor, openPrecursors } from './precursors-entry';
 import { PRECURSORS_MODE } from './modes';
 import { createNavigatorUiStores } from '@/ui/state';
 
-beforeAll(() => {
+beforeAll(async () => {
+  await import('./precursors-host'); // the lazy view chunk, loaded once so the first test's wait does not include its transform (7.3c)
   globalThis.ResizeObserver ??= class {
     observe(): void {}
     unobserve(): void {}

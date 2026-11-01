@@ -7,7 +7,9 @@
  */
 import { checkPrecomputed, type CanonicalStore, type PrecomputedFindings } from '@/core/commands';
 import type { CanonicalState } from '@/core/schema';
-import { createBootReplica, createReplicaSync, type BootReplica, type ReplicaSync } from '@/workers/compute';
+// deep imports, not the barrel: its static path would pull the import code into the first paint (7.3c A1)
+import { createBootReplica, type BootReplica } from '@/workers/compute/boot-port';
+import { createReplicaSync, type ReplicaSync } from '@/workers/compute/sync';
 import type { WorkerEvent, WorkerFactory } from '@/workers/rpc/contracts';
 import type { RetryReplicaResult } from './contracts';
 import type { EventLogWriter, StatusWriter } from './status';

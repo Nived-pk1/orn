@@ -56,6 +56,19 @@ function GroupView(props: { readonly group: ChapterGroup; readonly ports: Chapte
           </div>
         );
       })}
+      {group.unwritten === undefined ? null : (
+        <p className={styles.muted} data-unwritten="">
+          {'Not written yet: '}
+          {group.unwritten.map((ref, i) => (
+            <span key={ref.id}>
+              {i > 0 ? ', ' : null}
+              <button type="button" className={styles.linkButton} onClick={() => ports.select(ref)}>
+                {ports.nameOf(ref)}
+              </button>
+            </span>
+          ))}
+        </p>
+      )}
       {total > limit ? (
         <div className={styles.more}>
           <p className={styles.muted}>{`Showing ${Math.min(limit, total)} of ${total} ${kindWord(group.key, total)}`}</p>
@@ -86,7 +99,7 @@ export function ChapterPage(props: {
   const set = ports.ui.chapters.getState();
   const title = chapterId === NO_CHAPTER ? NO_CHAPTER_TITLE : (props.chapters.chapters.find((c) => c.id === chapterId)?.title ?? chapterId);
   const chips = useMemo(() => (chapterId === NO_CHAPTER ? [] : (chaptersOf(state, props.chapters).chapters.find((c) => c.id === chapterId)?.exams ?? [])), [state, props.chapters, chapterId]);
-  const contents = useMemo(() => chapterContents(state, props.chapters, chapterId, { nameOf: ports.nameOf }), [state, props.chapters, chapterId, ports]);
+  const contents = useMemo(() => chapterContents(state, props.chapters, chapterId, { nameOf: ports.nameOf, showUnwritten: ports.editing }), [state, props.chapters, chapterId, ports]);
   const scopeOf = useMemo(() => (active === null ? undefined : createScopeOf(indexes, active.examId, active.examVersionId)), [indexes, active]);
   const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
   const versionName = active === null ? undefined : (state.records.exam_version[active.examVersionId]?.label ?? active.examVersionId);

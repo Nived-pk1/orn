@@ -14,6 +14,7 @@ import { prefetchPalette } from './lazy-palette';
 
 beforeAll(async () => {
   await prefetchPalette();
+  await import('./reactions-host'); // the lazy view chunk, loaded once so the first test's wait does not include its transform (7.3c)
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

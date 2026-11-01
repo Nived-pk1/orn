@@ -6,9 +6,11 @@
 import { describe, expect, it } from 'vitest';
 import type { AnyRecord, CanonicalState, RecordRef } from '@/core/schema';
 import { examVersion, prerequisiteOf, topic, topicMapping } from '@/test-support/curriculum-kit';
-import { concept, reaction, sp, species, stateOf } from '@/test-support/graph-state';
+import { concept as bareConcept, reaction, sp, species, stateOf } from '@/test-support/graph-state';
 import { buildChapterIndex, chapterContents, chaptersOf, NO_CHAPTER } from './index';
 
+/** A concept with text: most tests are about concepts that are study cards (7.3c A3 sets the empty ones apart). */
+const concept = (body: string, name: string, kind: Parameters<typeof bareConcept>[2], o: Parameters<typeof bareConcept>[3] = {}) => bareConcept(body, name, kind, { summary: 'Some text.', ...o });
 const rec = (kind: RecordRef['kind'], id: string): RecordRef => ({ kind, id }) as RecordRef;
 const cpt = (body: string): RecordRef => rec('concept', `cpt_${body}`);
 const nameOf = (state: CanonicalState) => (ref: RecordRef): string => {
@@ -173,5 +175,53 @@ describe('chapterContents: one chapter in the fixed study order (C2)', () => {
   it('an unknown chapter id has no groups', () => {
     const contents = chapterContents(state, buildChapterIndex(state), 'top_nope', { nameOf: nameOf(state) });
     expect(contents.groups).toEqual([]);
+  });
+});
+
+describe('concepts with no text (7.3c A3)', () => {
+  const empty = (body: string, name: string) => bareConcept(body, name, 'general');
+  const state = stateWith(
+    concept('w1', 'Written', 'general'),
+    empty('e1', 'Empty one'),
+    empty('e2', 'Empty two'),
+    { ...bareConcept('n1', 'Only notes', 'general'), notes: 'Some notes.' },
+    bareConcept('s1', 'Only study notes', 'general', { studyNotes: 'Study this.' }),
+    empty('e3', 'Empty loose'),
+    topicMapping('m1', 'chap-a', cpt('w1')),
+    topicMapping('m2', 'chap-a', cpt('e1')),
+    topicMapping('m3', 'chap-a', cpt('e2'), 'supporting'),
+    topicMapping('m4', 'chap-a', cpt('n1')),
+    topicMapping('m5', 'chap-a', cpt('s1')),
+  );
+
+  it('Study: an empty concept is hidden and not counted (page, list, "No chapter yet")', () => {
+    const index = buildChapterIndex(state);
+    const contents = chapterContents(state, index, 'top_chap-a', { nameOf: nameOf(state) });
+    expect(contents.groups[0]?.parts.flatMap((p) => p.refs.map((r) => r.id))).toEqual(['cpt_n1', 'cpt_s1', 'cpt_w1']);
+    expect(contents.groups[0]?.count).toBe(3);
+    expect(contents.groups[0]?.unwritten).toBeUndefined();
+    const list = chaptersOf(state, index);
+    expect(list.chapters[0]?.counts.concepts).toEqual({ core: 3, other: 0 });
+    expect(list.chapters[0]?.total).toBe(3);
+    expect(list.chapters[0]?.unwritten).toBe(0);
+    expect(list.noChapter.total).toBe(0);
+    expect(list.noChapter.unwritten).toBe(0);
+    const loose = chapterContents(state, index, NO_CHAPTER, { nameOf: nameOf(state) });
+    expect(loose.groups).toEqual([]);
+  });
+
+  it('Studio: they are kept apart at the end of the group and counted separately', () => {
+    const index = buildChapterIndex(state);
+    const contents = chapterContents(state, index, 'top_chap-a', { nameOf: nameOf(state), showUnwritten: true });
+    const group = contents.groups[0];
+    expect(group?.count).toBe(3);
+    expect(group?.unwritten?.map((r) => r.id)).toEqual(['cpt_e1', 'cpt_e2']);
+    const list = chaptersOf(state, index, { showUnwritten: true });
+    expect(list.chapters[0]?.counts.concepts).toEqual({ core: 3, other: 0 });
+    expect(list.chapters[0]?.unwritten).toBe(2);
+    expect(list.noChapter.unwritten).toBe(1);
+    expect(list.noChapter.total).toBe(0);
+    const loose = chapterContents(state, index, NO_CHAPTER, { nameOf: nameOf(state), showUnwritten: true });
+    expect(loose.groups.map((g) => `${g.key}:${g.count}:${g.unwritten?.length}`)).toEqual(['concepts:0:1']);
   });
 });
