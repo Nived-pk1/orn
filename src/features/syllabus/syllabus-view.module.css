@@ -74,8 +74,7 @@
 .official summary {
   cursor: pointer;
   min-height: 32px;
-  display: flex;
-  align-items: center;
+  line-height: 32px;
 }
 
 .rows {

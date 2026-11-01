@@ -33,7 +33,7 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
 
   // D1: the first mode of the rail, and no Syllabus placeholder
   await expect(rail(page).getByRole('button').first()).toHaveText(/^Chapters/);
-  await expect(rail(page).getByRole('button', { name: /Syllabus/ })).toHaveCount(0);
+  await expect(rail(page).getByRole('button', { name: /Syllabus/ })).toHaveCount(1); // the Syllabus view is live since 7.6 (it was a placeholder before 7.3b)
   await openChapters(page);
 
   // D2: the list

@@ -22,9 +22,9 @@ async function walk(page: Page, device: string, withPage: boolean): Promise<void
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible({ timeout: 90_000 });
   await tabs(page).getByRole('button', { name: 'Explore' }).tap();
 
-  // the switch (7.4): ONE native select "Show:" with five choices, 44 px or more, inside the screen
+  // the switch (7.6): ONE native select "Show:" with six choices, 44 px or more, inside the screen
   const choices = page.getByRole('combobox', { name: 'Show:' });
-  expect(await choices.locator('option').allTextContents()).toEqual(['Reactions', 'Precursors', 'Reagents', 'Named reactions', 'Mechanisms']);
+  expect(await choices.locator('option').allTextContents()).toEqual(['Reactions', 'Precursors', 'Reagents', 'Named reactions', 'Mechanisms', 'Syllabus']);
   const width = page.viewportSize()?.width ?? 0;
   const box = await choices.boundingBox();
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);

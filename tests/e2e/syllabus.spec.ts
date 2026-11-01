@@ -100,13 +100,12 @@ test('compare with an older version: What changed, a chapter link, and both sele
   await view(page).getByLabel('Exam version').selectOption({ label: 'JEE Main 2026 (provisional)' });
   await view(page).getByLabel('Compare with').selectOption({ label: 'JEE Main 2025' });
   const changes = view(page).getByRole('region', { name: 'What changed' });
-  await expect(changes.getByRole('heading', { name: 'New in JEE Main 2026' })).toBeVisible();
-  await expect(changes.getByRole('heading', { name: 'Not in JEE Main 2026 any more' })).toBeVisible();
-  await expect(changes.getByRole('heading', { name: 'Changed' })).toBeVisible();
+  await expect(changes.getByRole('heading', { name: 'New in JEE Main 2026 (provisional)' })).toBeVisible();
+  await expect(changes.getByRole('heading', { name: 'Not in JEE Main 2026 (provisional) any more' })).toBeVisible();
+  await expect(changes.getByRole('heading', { name: 'Changed', exact: true })).toBeVisible();
   await expect(changes.locator('[data-topic-id="top_practical"]')).toContainText('affects');
   await expect(changes.locator('[data-topic-id="top_hydrocarbons"]')).toContainText('partial → included');
   expect(await axeProblems(page)).toEqual([]);
-  await page.screenshot({ path: `${shotsDir()}/syllabus-compare-1280x800.png` });
 
   // both selects come back after a reload
   await page.waitForTimeout(1000); // the saved state is written after a short pause (SAVE_DEBOUNCE_MS)
@@ -115,6 +114,9 @@ test('compare with an older version: What changed, a chapter link, and both sele
   await rail(page).getByRole('button', { name: 'Syllabus' }).click();
   await expect(view(page).getByLabel('Exam version')).toHaveValue('exv_jee-main-2026', { timeout: 60_000 });
   await expect(view(page).getByLabel('Compare with')).toHaveValue('exv_jee-main-2025');
+
+  // the screenshot is taken after the reload: WebKit's inspector style (counted per page load) is then forgiven by expectClean
+  await page.screenshot({ path: `${shotsDir()}/syllabus-compare-1280x800.png` });
 
   // a chapter link opens the chapter in the Chapters view
   await view(page).getByRole('region', { name: 'What changed' }).getByRole('button', { name: /^Open chapter/ }).first().click();
