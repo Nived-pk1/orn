@@ -13,8 +13,8 @@ import type { RecordRef } from '@/core/schema';
 import { EDITING } from '@/app/edition';
 import { useApp } from './context';
 
-export function ChaptersHost(props: { readonly openPane: () => void; readonly onNamed: (namedReactionId: string) => void; readonly onMechanism: (mechanismId: string) => void }) {
-  const { openPane, onNamed, onMechanism } = props;
+export function ChaptersHost(props: { readonly openPane: () => void; readonly onNamed: (namedReactionId: string) => void; readonly onMechanism: (mechanismId: string) => void; readonly onSyllabus: () => void }) {
+  const { openPane, onNamed, onMechanism, onSyllabus } = props;
   const { inspector } = useApp();
   const { ports } = useNavigator();
   const chapters = useMemo<ChaptersPorts>(() => {
@@ -32,6 +32,7 @@ export function ChaptersHost(props: { readonly openPane: () => void; readonly on
       ui: { chapters: ports.ui.chapters, exam: ports.ui.exam, inspector: inspector.ui.inspector },
       nameOf,
       select,
+      openSyllabus: onSyllabus,
       openPage: (ref) => (ref.kind === 'named_reaction' ? onNamed(ref.id) : onMechanism(ref.id)),
       selectReaction: (reactionId) => ports.ui.family.getState().selectReaction(reactionId),
       renderCard: (args) => <ReactionCardHost reactionId={args.reactionId} selected={args.selected} onSelect={args.onSelect} fallback={args.fallback} {...(args.outside === undefined ? {} : { outside: args.outside })} {...(args.examples === undefined ? {} : { examples: args.examples })} {...(args.selectedId === undefined ? {} : { selectedId: args.selectedId })} {...(args.outsideOf === undefined ? {} : { outsideOf: args.outsideOf })} />,
@@ -54,6 +55,6 @@ export function ChaptersHost(props: { readonly openPane: () => void; readonly on
       log: ports.log,
       editing: EDITING,
     };
-  }, [ports, inspector, openPane, onNamed, onMechanism]);
+  }, [ports, inspector, openPane, onNamed, onMechanism, onSyllabus]);
   return <ChaptersView ports={chapters} />;
 }

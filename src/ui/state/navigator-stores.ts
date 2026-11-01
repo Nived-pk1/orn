@@ -6,6 +6,7 @@
 import { createExplorerStore, type ExplorerStore } from './explorer-state';
 import { createChaptersStore, type ChaptersStore } from './chapters-state';
 import { createPageListStore, type PageListStore } from './page-list-state';
+import { createSyllabusStore, type SyllabusStore } from './syllabus-state';
 import { createReagentsStore, type ReagentsStore } from './reagents-state';
 import { createPrecursorsStore, type PrecursorsStore } from './precursor-state';
 import { createStore, type StoreApi } from 'zustand/vanilla';
@@ -268,6 +269,8 @@ export interface NavigatorUiStores {
   readonly named: PageListStore;
   /** The Mechanisms view: the open record and its filters (step 7.4; saved). */
   readonly mechanisms: PageListStore;
+  /** The Syllabus view: the chosen version, the one compared with, Gaps only (step 7.6; saved). */
+  readonly syllabus: SyllabusStore;
   /** The palette's recent searches (step 5.8; saved). */
   readonly recent: RecentStore;
   /** What the map offers the palette (step 5.8; never saved). */
@@ -288,6 +291,7 @@ export const createNavigatorUiStores = (): NavigatorUiStores => ({
   reagents: createReagentsStore(),
   named: createPageListStore(),
   mechanisms: createPageListStore(),
+  syllabus: createSyllabusStore(),
   recent: createRecentStore(),
   viewCommands: createViewCommandsStore(),
 });

@@ -1,0 +1,196 @@
+/* The Syllabus view (step 7.6). Tokens only; no colour literals. */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  overflow: auto;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-20);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-ink-2);
+}
+
+.notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-13);
+}
+
+.field select {
+  min-height: 32px;
+  max-width: 100%;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+}
+
+.view button {
+  min-height: 32px;
+}
+
+.unit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.unitHeading {
+  margin: 0;
+  font-size: var(--text-16);
+}
+
+.official summary {
+  cursor: pointer;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--color-rule);
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.rowName {
+  font-weight: 600;
+}
+
+.gapRow .rowName,
+.gapRow .counts {
+  color: var(--color-ink-2);
+}
+
+.counts {
+  color: var(--color-ink-2);
+}
+
+.noteLine {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-13);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border: 1px dashed var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  font-size: var(--text-13);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: var(--text-13);
+  text-align: left;
+}
+
+.changes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.groupHeading {
+  margin: 0;
+  font-size: var(--text-16);
+}
+
+.more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.excluded {
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-13);
+}
+
+/* phone: one column, full-width 44 px controls and rows */
+.phone .field {
+  width: 100%;
+}
+
+.phone .field select {
+  width: 100%;
+  min-height: 44px;
+}
+
+.phone .option,
+.phone .official summary {
+  min-height: 44px;
+}
+
+.phone button,
+.phone .row {
+  min-height: 44px;
+}
+
+.phone .link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}

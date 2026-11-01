@@ -24,6 +24,7 @@ export function MechanismsHost(props: { readonly openPane: () => void; readonly 
       ui: { mechanisms: ports.ui.mechanisms, exam: ports.ui.exam, inspector: inspector.ui.inspector },
       renderRichText: (source) => <InspectorRichText ports={inspector} openPane={openPane} source={source} />,
       renderPictures: (target) => <InspectorPictures ports={inspector} openPane={openPane} target={target} />,
+      ...(ports.facts === undefined ? {} : { facts: ports.facts }),
       renderStructure: (structure, name) => <InspectorStructure ports={inspector} openPane={openPane} structure={structure} name={name} />,
       select: (ref) => {
         inspector.ui.inspector.getState().open(ref);

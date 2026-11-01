@@ -44,10 +44,10 @@ const choose = (label: string): void => void fireEvent.change(switcher(), { targ
 const chosen = (): string | undefined => switcher().selectedOptions[0]?.textContent ?? undefined;
 
 describe('the Explore switch', () => {
-  it('one native select "Show:" with five choices, Reactions chosen first; Precursors shows Make a compound and is remembered as the last explorer (7.4)', async () => {
+  it('one native select "Show:" with six choices, Reactions chosen first; Precursors shows Make a compound and is remembered as the last explorer (7.4)', async () => {
     const app = explore();
     await screen.findByRole('heading', { name: 'Reactions' });
-    expect(Array.from(switcher().options).map((o) => o.textContent)).toEqual(['Reactions', 'Precursors', 'Reagents', 'Named reactions', 'Mechanisms']);
+    expect(Array.from(switcher().options).map((o) => o.textContent)).toEqual(['Reactions', 'Precursors', 'Reagents', 'Named reactions', 'Mechanisms', 'Syllabus']);
     expect(chosen()).toBe('Reactions');
     choose('Precursors');
     expect(await screen.findByRole('heading', { name: 'Make a compound' })).toBeTruthy();
@@ -62,6 +62,7 @@ describe('the Explore switch', () => {
     ['Reagents', 'reagents'],
     ['Named reactions', 'named'],
     ['Mechanisms', 'mechanisms'],
+    ['Syllabus', 'syllabus'],
   ] as const)('%s is a choice: its list shows, it is remembered, and the Explore tab reopens it (7.3c E1, 7.4)', async (label, kind) => {
     const app = explore();
     await screen.findByRole('heading', { name: 'Reactions' });

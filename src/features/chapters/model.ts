@@ -3,41 +3,21 @@
  * themselves are the core's (`@/core/chapters`). No chemistry here: the filter reads names and the exam scope the app hands in.
  */
 import type { ChapterContents, ChapterGroup, KindCounts } from '@/core/chapters';
-import { CHAPTER_GROUPS, type GroupKey } from '@/core/chapters';
+import { CHAPTER_GROUPS, countWords, kindWord, type GroupKey } from '@/core/chapters';
 import type { RecordRef } from '@/core/schema';
 
 /** A group is drawn this many cards at a time. */
 export const PAGE_SIZE = 30;
 
-const WORDS: Readonly<Record<GroupKey, readonly [string, string]>> = {
-  concepts: ['concept', 'concepts'],
-  reactions: ['reaction', 'reactions'],
-  named: ['named reaction', 'named reactions'],
-  mechanisms: ['mechanism', 'mechanisms'],
-  caveats: ['caveat', 'caveats'],
-  compounds: ['compound or class', 'compounds and classes'],
-  reagents: ['reagent', 'reagents'],
-  routes: ['route', 'routes'],
-  transformations: ['transformation', 'transformations'],
-};
-
 /**
- * "8 concepts · 24 reactions · 5 caveats": every kind that has records, core and the others together, in the page's order. Studio adds
- * the concepts with no text apart, "8 concepts + 3 not written" (7.3c A3).
+ * "8 concepts · 24 reactions · 5 caveats": every kind that has records, core and the others together, in the page's order (the core's
+ * `countWords`, shared with the Syllabus view). Studio adds the concepts with no text apart, "8 concepts + 3 not written" (7.3c A3).
  */
 export function countsWords(counts: KindCounts, unwritten = 0): string {
-  const parts = CHAPTER_GROUPS.flatMap((group) => {
-    const own = counts[group.key];
-    const n = own.core + own.other;
-    const words = n === 0 ? undefined : `${n} ${WORDS[group.key][n === 1 ? 0 : 1]}`;
-    const apart = group.key === 'concepts' && unwritten > 0 ? (words === undefined ? `${unwritten} ${WORDS.concepts[unwritten === 1 ? 0 : 1]} not written` : `+ ${unwritten} not written`) : undefined;
-    const joined = words !== undefined && apart !== undefined ? `${words} ${apart}` : (words ?? apart);
-    return joined === undefined ? [] : [joined];
-  });
-  return parts.length === 0 ? 'Nothing mapped yet' : parts.join(' · ');
+  return countWords(Object.fromEntries(CHAPTER_GROUPS.map((group) => [group.key, counts[group.key].core + counts[group.key].other])) as Record<GroupKey, number>, unwritten);
 }
 
-export const kindWord = (key: GroupKey, n: number): string => WORDS[key][n === 1 ? 0 : 1];
+export { kindWord };
 
 export interface PageFilter {
   readonly kinds: readonly GroupKey[];

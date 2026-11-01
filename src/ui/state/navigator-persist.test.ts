@@ -110,6 +110,7 @@ describe('createNavigatorUi', () => {
       reagents: { reagentId: null, families: [], text: '', onlyInScope: false },
       named: { id: null, text: '', onlyInScope: false },
       mechanisms: { id: null, text: '', onlyInScope: false },
+      syllabus: { versionId: null, compareId: null, gapsOnly: false },
     });
   });
 

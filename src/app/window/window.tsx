@@ -182,7 +182,7 @@ function WindowContent() {
   const onChapter = useCallback((chapterId: string) => openChapter(navigator.ui, setMode, chapterId), [navigator]);
   const onReagent = useCallback((reagentId: string) => openReagent(navigator.ui, setMode, reagentId), [navigator]);
   const onShowInReactions = useCallback((reagentId: string) => onReactions({ substanceIds: [reagentId], usedAs: 'any' }), [onReactions]);
-  const { onNamed, onMechanism, onShowNamedInReactions } = usePageEntries(navigator.ui, setMode, onReactions);
+  const { onNamed, onMechanism, onShowNamedInReactions, onSyllabus } = usePageEntries(navigator.ui, setMode, onReactions);
   // the badge on a reaction card opens the named reaction's page (7.4 D): the navigator's ports carry the way
   const navigatorPorts = useMemo(() => ({ ...navigator, openNamedReaction: onNamed }), [navigator, onNamed]);
   const onPrecursors = useCallback((ref: RecordRef) => openPrecursors(navigator.ui, setMode, ref), [navigator]);
@@ -313,7 +313,7 @@ function WindowContent() {
           }
           canvas={
             <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} openPane={openPane} />
+              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onSyllabus={onSyllabus} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} openPane={openPane} />
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"

@@ -4,11 +4,12 @@
  */
 import { useCallback } from 'react';
 import type { ExplorerFilter, NavigatorUiStores } from '@/ui/state';
-import { openMechanism, openNamed } from './page-entries';
+import { openMechanism, openNamed, openSyllabus } from './page-entries';
 
 export function usePageEntries(ui: NavigatorUiStores, setMode: (mode: string) => void, onReactions: (filter: Partial<ExplorerFilter>) => void) {
   const onNamed = useCallback((namedReactionId: string) => openNamed(ui, setMode, namedReactionId), [ui, setMode]);
   const onMechanism = useCallback((mechanismId: string) => openMechanism(ui, setMode, mechanismId), [ui, setMode]);
   const onShowNamedInReactions = useCallback((namedReactionId: string) => onReactions({ namedReactionIds: [namedReactionId] }), [onReactions]);
-  return { onNamed, onMechanism, onShowNamedInReactions };
+  const onSyllabus = useCallback(() => openSyllabus(ui, setMode), [ui, setMode]);
+  return { onNamed, onMechanism, onShowNamedInReactions, onSyllabus };
 }

@@ -9,7 +9,7 @@ import type { NavigatorUiStores } from '@/ui/state';
 import { undoUnavailableReason } from './dataset-actions';
 import { ALL_LABEL, type ExamOptions } from './exam-scope';
 import { NAVIGATOR_MODE } from './modes';
-import { openMechanismsList, openNamedList } from './page-entries';
+import { openMechanismsList, openNamedList, openSyllabus } from './page-entries';
 import { openReagentsList } from './reagents-entry';
 
 /** One "New <kind>" palette command. */
@@ -138,6 +138,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     withReason({ id: 'open-reagents', title: 'Open Reagents', keywords: ['reagents', 'reagent', 'list', 'oxidant', 'base', 'profile'], run: () => openReagentsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'open-named', title: 'Open Named reactions', keywords: ['named', 'named reactions', 'reaction', 'name reaction', 'aldol', 'grignard'], run: () => openNamedList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'open-mechanisms', title: 'Open Mechanisms', keywords: ['mechanisms', 'mechanism', 'steps', 'sn1', 'sn2', 'e2'], run: () => openMechanismsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-syllabus', title: 'Open Syllabus', keywords: ['syllabus', 'exam', 'coverage', 'gaps', 'units', 'topics', 'compare'], run: () => openSyllabus(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'unanchored', title: 'Open the Unanchored reactions', keywords: ['unclassified', 'reactions', 'panel'], run: () => view?.openUnanchored() }, onMap ?? view?.unanchoredReason),
     ...scopeCommands,
   ];

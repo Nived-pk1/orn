@@ -274,10 +274,11 @@ describe('the shell frame around the window', () => {
     expect(rail.getByRole('button', { name: 'Workbench' }).getAttribute('aria-disabled')).toBeNull(); // a page since step 6.2a
     expect(rail.getByRole('button', { name: 'Chapters' }).getAttribute('aria-disabled')).toBeNull(); // the Syllabus placeholder became Chapters (7.3b D1)
     expect(rail.getAllByRole('button')[0]?.textContent).toContain('Chapters'); // at the top of the rail
-    expect(rail.queryByRole('button', { name: /Syllabus/ })).toBeNull();
+    const names = rail.getAllByRole('button').map((b) => b.textContent ?? '');
+    expect(names.findIndex((n) => n.startsWith('Syllabus'))).toBe(names.findIndex((n) => n.startsWith('Mechanisms')) + 1); // 7.6: after Mechanisms
     expect(rail.getByRole('button', { name: 'Reagents' }).getAttribute('aria-disabled')).toBeNull(); // live since 7.3c D1
     expect(within(rail.getByRole('button', { name: 'Reagents' })).queryByText('Phase 7')).toBeNull();
-    for (const name of ['Named reactions', 'Mechanisms']) {
+    for (const name of ['Named reactions', 'Mechanisms', 'Syllabus']) {
       const mode = rail.getByRole('button', { name }); // live since 7.4: no mode is left unavailable
       expect(mode.getAttribute('aria-disabled')).toBeNull();
       expect(within(mode).queryByText('Phase 7')).toBeNull();

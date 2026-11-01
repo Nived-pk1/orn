@@ -13,7 +13,7 @@ const keyOf = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
 const compareTopics = (a: Topic, b: Topic): number => (a.order !== b.order ? a.order - b.order : a.name < b.name ? -1 : a.name > b.name ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /** Pre-order position of every topic: roots by sibling order, then each root's children, depth first. */
-function treeOrder(topics: readonly Topic[]): Map<string, number> {
+export function treeOrder(topics: readonly Topic[]): Map<string, number> {
   const known = new Set(topics.map((t) => t.id as string));
   const children = new Map<string | undefined, Topic[]>();
   for (const topic of topics) {
@@ -31,6 +31,16 @@ function treeOrder(topics: readonly Topic[]): Map<string, number> {
   };
   visit(undefined, 0);
   return position;
+}
+
+/** concept id -> the records it is a prerequisite of (one hop): a field of a reaction or named reaction, or a `prerequisite_of` relationship. */
+export function prerequisiteDependents(state: CanonicalState): ReadonlyMap<string, readonly RecordRef[]> {
+  const dependents = new Map<string, RecordRef[]>();
+  const add = (conceptId: string, ref: RecordRef): void => void dependents.set(conceptId, [...(dependents.get(conceptId) ?? []), ref]);
+  for (const reaction of Object.values(state.records.reaction)) for (const id of reaction.prerequisiteConceptIds ?? []) add(id, { kind: 'reaction', id: reaction.id });
+  for (const named of Object.values(state.records.named_reaction)) for (const id of named.prerequisiteConceptIds ?? []) add(id, { kind: 'named_reaction', id: named.id } as RecordRef);
+  for (const relation of Object.values(state.records.relationship)) if (relation.type === 'prerequisite_of' && relation.from.kind === 'concept') add(relation.from.id, relation.to);
+  return dependents;
 }
 
 export function buildChapterIndex(state: CanonicalState): ChapterIndex {
@@ -71,12 +81,7 @@ export function buildChapterIndex(state: CanonicalState): ChapterIndex {
   const orderOf = new Map(chapters.map((c) => [c.id as string, c.order]));
   const byChapterOrder = (a: Membership, b: Membership): number => (orderOf.get(a.chapterId) ?? 0) - (orderOf.get(b.chapterId) ?? 0);
 
-  // concept -> the records it is a prerequisite of (one hop)
-  const dependents = new Map<string, RecordRef[]>();
-  const add = (conceptId: string, ref: RecordRef): void => void dependents.set(conceptId, [...(dependents.get(conceptId) ?? []), ref]);
-  for (const reaction of Object.values(state.records.reaction)) for (const id of reaction.prerequisiteConceptIds ?? []) add(id, { kind: 'reaction', id: reaction.id });
-  for (const named of Object.values(state.records.named_reaction)) for (const id of named.prerequisiteConceptIds ?? []) add(id, { kind: 'named_reaction', id: named.id } as RecordRef);
-  for (const relation of Object.values(state.records.relationship)) if (relation.type === 'prerequisite_of' && relation.from.kind === 'concept') add(relation.from.id, relation.to);
+  const dependents = prerequisiteDependents(state);
 
   const own = (ref: RecordRef): Membership[] => {
     const per = direct.get(keyOf(ref));

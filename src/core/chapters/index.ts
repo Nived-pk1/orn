@@ -1,4 +1,6 @@
-export { buildChapterIndex } from './build-index';
+export { buildChapterIndex, prerequisiteDependents, treeOrder } from './build-index';
+export { isUnwrittenConcept } from './written';
+export { countWords, kindWord } from './words';
 export { chaptersOf, studyRecords } from './list';
 export type { ChaptersOptions } from './list';
 export { chapterContents } from './contents';

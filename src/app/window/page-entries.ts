@@ -5,15 +5,15 @@
  * page and switches the mode. The `...List` forms open the list as it was left.
  */
 import type { NavigatorUiStores } from '@/ui/state';
-import { MECHANISMS_MODE, NAMED_MODE } from './modes';
+import { MECHANISMS_MODE, NAMED_MODE, SYLLABUS_MODE } from './modes';
 
 type Stores = Pick<NavigatorUiStores, 'named' | 'mechanisms' | 'overview' | 'family' | 'explorer'>;
 
-function enter(ui: Stores, setMode: (mode: string) => void, kind: 'named' | 'mechanisms'): void {
+function enter(ui: Stores, setMode: (mode: string) => void, kind: 'named' | 'mechanisms' | 'syllabus'): void {
   ui.family.getState().closeFamily();
   ui.overview.getState().setPhoneTab('explore');
   ui.explorer.getState().setLast(kind);
-  setMode(kind === 'named' ? NAMED_MODE : MECHANISMS_MODE);
+  setMode(kind === 'named' ? NAMED_MODE : kind === 'syllabus' ? SYLLABUS_MODE : MECHANISMS_MODE);
 }
 
 export function openNamed(ui: Stores, setMode: (mode: string) => void, namedReactionId: string): void {
@@ -32,4 +32,9 @@ export function openMechanism(ui: Stores, setMode: (mode: string) => void, mecha
 
 export function openMechanismsList(ui: Stores, setMode: (mode: string) => void): void {
   enter(ui, setMode, 'mechanisms');
+}
+
+/** Opens the Syllabus view (7.6) as it was left: from the palette and the quiet link in the Chapters header. */
+export function openSyllabus(ui: Stores, setMode: (mode: string) => void): void {
+  enter(ui, setMode, 'syllabus');
 }

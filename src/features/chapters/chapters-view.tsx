@@ -48,6 +48,11 @@ export function ChaptersView(props: { readonly ports: ChaptersPorts }) {
           <header className={styles.header}>
             <h2 className={styles.title}>Chapters</h2>
             <p className={styles.muted}>{line}</p>
+            {ports.openSyllabus === undefined ? null : (
+              <button type="button" className={styles.quietLink} onClick={() => ports.openSyllabus?.()}>
+                Syllabus
+              </button>
+            )}
           </header>
           {gone ? <p className={styles.notice} role="status">{GONE_WORDS}</p> : null}
           <ChapterList ports={ports} list={list} examName={examName} />

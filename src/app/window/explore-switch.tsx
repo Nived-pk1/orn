@@ -15,6 +15,7 @@ const CHOICES: readonly { readonly kind: ExplorerKind; readonly label: string }[
   { kind: 'reagents', label: 'Reagents' },
   { kind: 'named', label: 'Named reactions' },
   { kind: 'mechanisms', label: 'Mechanisms' },
+  { kind: 'syllabus', label: 'Syllabus' },
 ];
 
 export function ExploreSwitch() {

@@ -183,6 +183,19 @@ describe('a chapter page', () => {
   });
 });
 
+describe('the quiet link to the Syllabus (7.6)', () => {
+  it('is in the header of the list when the app gives a way, and opens the Syllabus', () => {
+    const calls: string[] = [];
+    show(stateOf(...base), {}, true, { openSyllabus: () => void calls.push('syllabus') });
+    fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Syllabus' }));
+    expect(calls).toEqual(['syllabus']);
+  });
+  it('is absent without the port', () => {
+    show(stateOf(...base));
+    expect(screen.queryByRole('button', { name: 'Syllabus' })).toBeNull();
+  });
+});
+
 describe('named-reaction and mechanism cards open their pages (7.4)', () => {
   const nrx = namedReaction('aldol', 'Aldol reaction', { summary: 'Two carbonyls join.' });
   const mec = mechanismRecord('sn2', 'SN2 substitution', [mechVariant('vc', 'Concerted', [mechStep('s1')])], { summary: 'One step.' });

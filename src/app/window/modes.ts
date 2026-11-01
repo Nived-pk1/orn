@@ -28,16 +28,19 @@ export const NAMED_MODE = 'named';
 /** The Mechanisms view (step 7.4): the list of mechanisms and one page per mechanism. */
 export const MECHANISMS_MODE = 'mechanisms';
 
+/** The Syllabus view (step 7.6): one exam version's units, topics, content and gaps. */
+export const SYLLABUS_MODE = 'syllabus';
+
 export const WORKBENCH_MODE = 'workbench';
 /** Studio's review queue (step 6.8b). */
 export const REVIEW_MODE = 'review';
 
 /** The Explore tab's modes (the phone's Explore switch chooses among them). */
-export const EXPLORER_MODES: readonly string[] = [REACTIONS_MODE, PRECURSORS_MODE, REAGENTS_MODE, NAMED_MODE, MECHANISMS_MODE];
+export const EXPLORER_MODES: readonly string[] = [REACTIONS_MODE, PRECURSORS_MODE, REAGENTS_MODE, NAMED_MODE, MECHANISMS_MODE, SYLLABUS_MODE];
 
 /** The mode a remembered explorer names. */
 export function modeOfExplorer(kind: ExplorerKind): string {
-  return kind === 'precursors' ? PRECURSORS_MODE : kind === 'reagents' ? REAGENTS_MODE : kind === 'named' ? NAMED_MODE : kind === 'mechanisms' ? MECHANISMS_MODE : REACTIONS_MODE;
+  return kind === 'precursors' ? PRECURSORS_MODE : kind === 'reagents' ? REAGENTS_MODE : kind === 'named' ? NAMED_MODE : kind === 'mechanisms' ? MECHANISMS_MODE : kind === 'syllabus' ? SYLLABUS_MODE : REACTIONS_MODE;
 }
 
 export const MODES: readonly ModeItem[] = [
@@ -49,5 +52,6 @@ export const MODES: readonly ModeItem[] = [
   { id: REAGENTS_MODE, label: 'Reagents' },
   { id: NAMED_MODE, label: 'Named reactions' },
   { id: MECHANISMS_MODE, label: 'Mechanisms' },
+  { id: SYLLABUS_MODE, label: 'Syllabus' },
   ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }, { id: REVIEW_MODE, label: 'Review' }] : []),
 ];

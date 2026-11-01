@@ -221,3 +221,13 @@
   cursor: pointer;
   min-height: 24px;
 }
+
+.quietLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: var(--text-13);
+}

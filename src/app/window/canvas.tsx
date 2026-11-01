@@ -13,7 +13,7 @@ import { LoadingLine } from "./loading-line";
 import { useApp } from "./context";
 import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
-import { CHAPTERS_MODE, EXPLORER_MODES, MECHANISMS_MODE, NAMED_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
+import { CHAPTERS_MODE, EXPLORER_MODES, MECHANISMS_MODE, NAMED_MODE, SYLLABUS_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
 import { RecordCounts } from "./record-counts";
 import type { ExportActions } from "./use-export-actions";
 import type { ImportActions } from "./use-import-actions";
@@ -28,6 +28,7 @@ const ChaptersHost = lazy(() => import("./chapters-host").then((m) => ({ default
 const ReagentsHost = lazy(() => import("./reagents-host").then((m) => ({ default: m.ReagentsHost })));
 // the Named reactions and Mechanisms views: lazy chunks in BOTH editions (step 7.4)
 const NamedHost = lazy(() => import("./named-host").then((m) => ({ default: m.NamedHost })));
+const SyllabusHost = lazy(() => import("./syllabus-host").then((m) => ({ default: m.SyllabusHost })));
 const MechanismsHost = lazy(() => import("./mechanisms-host").then((m) => ({ default: m.MechanismsHost })));
 // the Precursors view: a lazy chunk in BOTH editions (step 7.2a)
 const PrecursorsHost = lazy(() => import("./precursors-host").then((m) => ({ default: m.PrecursorsHost })));
@@ -76,6 +77,8 @@ export function Canvas(props: {
   readonly onNamed: (namedReactionId: string) => void;
   readonly onMechanism: (mechanismId: string) => void;
   readonly onChapter: (chapterId: string) => void;
+  /** Opens the Syllabus view (the quiet link in the Chapters header). */
+  readonly onSyllabus: () => void;
 }) {
   const { panels } = useApp();
   const { imports } = props;
@@ -96,7 +99,7 @@ export function Canvas(props: {
         <NavigatorView />
       ) : !empty && props.mode === CHAPTERS_MODE ? (
         <Suspense fallback={<LoadingLine />}>
-          <ChaptersHost openPane={props.openPane} onNamed={props.onNamed} onMechanism={props.onMechanism} />
+          <ChaptersHost onSyllabus={props.onSyllabus} openPane={props.openPane} onNamed={props.onNamed} onMechanism={props.onMechanism} />
         </Suspense>
       ) : !empty && props.mode === REACTIONS_MODE ? (
         <Suspense fallback={<LoadingLine />}>
@@ -113,6 +116,10 @@ export function Canvas(props: {
       ) : !empty && props.mode === MECHANISMS_MODE ? (
         <Suspense fallback={<LoadingLine />}>
           <MechanismsHost openPane={props.openPane} onChapter={props.onChapter} />
+        </Suspense>
+      ) : !empty && props.mode === SYLLABUS_MODE ? (
+        <Suspense fallback={<LoadingLine />}>
+          <SyllabusHost openPane={props.openPane} onChapter={props.onChapter} />
         </Suspense>
       ) : !empty && props.mode === PRECURSORS_MODE ? (
         <Suspense fallback={<LoadingLine />}>
