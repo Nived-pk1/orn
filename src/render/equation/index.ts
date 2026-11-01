@@ -4,4 +4,5 @@ export { EQUATION_AREA, EQUATION_BOND_PX, MAX_DRAWING_HEIGHT, MAX_DRAWING_WIDTH,
 export type { StructureFactsAnswer, StructureFactsPort } from './contracts';
 export { drawingSizeOf } from './drawing-size';
 export { Runs } from './runs';
+export { useFactsInput } from './use-facts';
 export { NamesSwitch } from './names-switch';

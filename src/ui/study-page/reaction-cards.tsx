@@ -19,6 +19,8 @@ export interface CardArgs {
   readonly examples?: readonly string[];
   readonly selectedId?: string | null;
   readonly outsideOf?: (reactionId: string) => string | undefined;
+  /** The named reaction whose page these cards are on: a card's badge to it is left out (7.6 A3). */
+  readonly hideNamedId?: string;
   readonly fallback: (reason: string) => ReactNode;
 }
 
@@ -32,6 +34,7 @@ export interface ReactionCardsProps {
   readonly renderCard: (args: CardArgs) => ReactNode;
   readonly onSelect: (reactionId: string) => void;
   readonly emptyWords: string;
+  readonly hideNamedId?: string;
 }
 
 export function ReactionCards(props: ReactionCardsProps) {
@@ -55,6 +58,7 @@ export function ReactionCards(props: ReactionCardsProps) {
                 selected: props.selectedId === id,
                 onSelect: props.onSelect,
                 ...(outside === undefined ? {} : { outside }),
+                ...(props.hideNamedId === undefined ? {} : { hideNamedId: props.hideNamedId }),
                 ...(examples.length === 0 ? {} : { examples, selectedId: props.selectedId, outsideOf }),
                 fallback: (reason) => <p className={styles.muted}>{`${id}: ${reason}`}</p>,
               })}

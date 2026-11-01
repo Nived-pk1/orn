@@ -9,6 +9,7 @@ import { EDITING } from "@/app/edition";
 import { useLayoutMode } from "@/ui/hooks";
 import { usePanels, type ExplorerFilter } from "@/ui/state";
 import { ExploreSwitch } from "./explore-switch";
+import { LoadingLine } from "./loading-line";
 import { useApp } from "./context";
 import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
@@ -94,33 +95,33 @@ export function Canvas(props: {
       ) : showsNavigator ? (
         <NavigatorView />
       ) : !empty && props.mode === CHAPTERS_MODE ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingLine />}>
           <ChaptersHost openPane={props.openPane} onNamed={props.onNamed} onMechanism={props.onMechanism} />
         </Suspense>
       ) : !empty && props.mode === REACTIONS_MODE ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingLine />}>
           <ReactionsHost />
         </Suspense>
       ) : !empty && props.mode === REAGENTS_MODE ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingLine />}>
           <ReagentsHost openPane={props.openPane} onShowInReactions={props.onShowInReactions} />
         </Suspense>
       ) : !empty && props.mode === NAMED_MODE ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingLine />}>
           <NamedHost openPane={props.openPane} onShowInReactions={props.onShowNamedInReactions} onMechanism={props.onMechanism} onChapter={props.onChapter} />
         </Suspense>
       ) : !empty && props.mode === MECHANISMS_MODE ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingLine />}>
           <MechanismsHost openPane={props.openPane} onChapter={props.onChapter} />
         </Suspense>
       ) : !empty && props.mode === PRECURSORS_MODE ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingLine />}>
           <PrecursorsHost onReactions={props.onReactions} />
         </Suspense>
       ) : EDITING && props.mode === WORKBENCH_MODE ? (
         <WorkbenchPage />
       ) : EDITING && props.mode === REVIEW_MODE ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingLine />}>
           <ReviewHost />
         </Suspense>
       ) : (

@@ -196,6 +196,19 @@ describe('named-reaction and mechanism cards open their pages (7.4)', () => {
     expect(opened).toEqual(['named_reaction:nrx_aldol', 'mechanism:mec_sn2']);
   });
 
+  it('a mechanism card with both buttons says "Quick look" (inspector) and "Open page"; alone it says "Open" (7.6 RR5)', () => {
+    const calls: string[] = [];
+    show(state, { chapterId: 'top_chap-a' }, true, { openPage: () => undefined, select: (ref) => void calls.push(ref.id) });
+    const card = within(screen.getByRole('article', { name: 'SN2 substitution' }));
+    expect(card.queryByRole('button', { name: 'Open SN2 substitution' })).toBeNull();
+    fireEvent.click(card.getByRole('button', { name: 'Quick look at SN2 substitution' }));
+    expect(card.getByRole('button', { name: 'Open page of SN2 substitution' })).toBeTruthy();
+    expect(calls).toContain('mec_sn2');
+    cleanup();
+    show(state, { chapterId: 'top_chap-a' });
+    expect(within(screen.getByRole('article', { name: 'SN2 substitution' })).getByRole('button', { name: 'Open SN2 substitution' })).toBeTruthy();
+  });
+
   it('without the port there is no such button', () => {
     show(state, { chapterId: 'top_chap-a' });
     expect(screen.queryByRole('button', { name: /^Open page of/ })).toBeNull();

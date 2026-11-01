@@ -107,3 +107,8 @@
   color: var(--color-ink);
   font: inherit;
 }
+
+.loadingLine {
+  margin: var(--space-4);
+  color: var(--color-ink-2);
+}

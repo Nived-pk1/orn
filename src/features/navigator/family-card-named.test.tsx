@@ -19,12 +19,12 @@ const aldehydes = (familyStudy(contextOf(state), 'cls_alcohols') as FamilyStudy)
 const base = aldehydes?.cards[0] as FamilyCard;
 const card: FamilyCard = { ...base, namedReactions: [{ id: 'nrx_aldol', name: 'Aldol reaction' }] as never };
 
-function show(openNamed?: (id: string) => void) {
+function show(openNamed?: (id: string) => void, hideNamedId?: string) {
   const env: FamilyEnv = { describe: () => undefined, keyOf: () => undefined, manager: undefined, timers: manualTimers(), layout: 'desktop', ...(openNamed === undefined ? {} : { openNamed }) };
   const onSelect = vi.fn();
   render(
     <FamilyEnvContext.Provider value={env}>
-      <FamilyCardView card={card} selected={false} onSelect={onSelect} onGoToGroup={() => undefined} />
+      <FamilyCardView card={card} selected={false} onSelect={onSelect} onGoToGroup={() => undefined} {...(hideNamedId === undefined ? {} : { hideNamedId })} />
     </FamilyEnvContext.Provider>,
   );
   return { onSelect, article: screen.getAllByRole('article')[0] as HTMLElement };
@@ -37,6 +37,13 @@ describe('the named-reaction badge', () => {
     fireEvent.click(within(article).getByRole('button', { name: 'Aldol reaction' }));
     expect(open).toHaveBeenCalledWith('nrx_aldol');
     expect(onSelect).not.toHaveBeenCalled();
+  });
+  it('is left out when it points to the page the card is on, and other named reactions stay (7.6 A3)', () => {
+    const { article } = show(vi.fn(), 'nrx_aldol');
+    expect(within(article).queryByText('Aldol reaction')).toBeNull();
+    cleanup();
+    const other = show(vi.fn(), 'nrx_other');
+    expect(within(other.article).getByRole('button', { name: 'Aldol reaction' })).toBeTruthy();
   });
   it('is plain text without one', () => {
     const { article } = show();

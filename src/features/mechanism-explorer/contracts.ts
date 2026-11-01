@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef, StructureRep } from '@/core/schema';
+import type { StructureFactsPort } from '@/render/equation';
 import type { ActiveExamStore, InspectorStore, PageListStore } from '@/ui/state';
 import type { CardArgs } from '@/ui/study-page';
 
@@ -29,6 +30,8 @@ export interface MechanismPorts {
   renderPictures(ref: RecordRef): ReactNode;
   /** A step species' inline structure, drawn small as the inspector draws it (a drawing, or its text while it is drawn). */
   renderStructure(structure: StructureRep, name: string): ReactNode;
+  /** The chem facts of a structure (7.6 A2): a small molecule or ion in a step is written as its formula, as the card boxes do. Absent: every structure is drawn. */
+  readonly facts?: StructureFactsPort;
   /** Shows a record in the inspector (the pane opens). */
   select(ref: RecordRef): void;
   /** Shows a reaction in the inspector, as a card on a family page does. */

@@ -116,9 +116,11 @@ export interface FamilyCardProps {
   readonly selectedId?: string | null;
   /** An example drawn inside its general reaction's disclosure: its title is one level down. */
   readonly nested?: boolean;
+  /** A named reaction whose badge is left out: the card is drawn on that named reaction's own page (7.6 A3). */
+  readonly hideNamedId?: string;
 }
 
-export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside, outsideOf, selectedId, nested }: FamilyCardProps) {
+export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside, outsideOf, selectedId, nested, hideNamedId }: FamilyCardProps) {
   const titleId = useId();
   const review = REVIEW_MARK[card.reviewStatus];
   const openNamed = useContext(FamilyEnvContext)?.openNamed;
@@ -132,7 +134,7 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
         </Title>
         {selected ? <span className={styles.chip}>Selected</span> : null}
         {outside === undefined ? null : <span className={`${styles.chip} ${styles.outsideChip}`}>{outside}</span>}
-        {card.namedReactions.map((named) => (
+        {card.namedReactions.filter((named) => named.id !== hideNamedId).map((named) => (
           openNamed === undefined ? (
             <span key={named.id} className={styles.chip}>
               {named.name}

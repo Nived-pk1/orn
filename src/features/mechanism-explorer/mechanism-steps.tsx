@@ -5,10 +5,44 @@
  */
 import type { ReactNode } from 'react';
 import type { StepView, VariantView } from '@/core/mechanisms';
+import { termRepresentationOf } from '@/core/graph';
+import { Runs, useFactsInput } from '@/render/equation';
+import { formulaRuns } from '@/render/scene';
 import { studyPageStyles as page } from '@/ui/study-page';
 import type { MechanismPorts } from './contracts';
 import { stepHeading } from './model';
 import styles from './mechanism-view.module.css';
+
+type StepSpecies = StepView['species'][number];
+
+/**
+ * One species of a step. The SAME rule the equation's terms use (`termRepresentationOf`, 7.6 A2): a small molecule or ion (no carbon, or one
+ * carbon and at most 3 heavy atoms) is written as its label in formula typography at the normal text size, never as a huge drawing; a larger
+ * one stays drawn. While the engine has not answered the label is shown; if it cannot say, the drawing is kept (nothing is guessed).
+ */
+function Species(props: { readonly ports: MechanismPorts; readonly species: StepSpecies }) {
+  const { ports, species } = props;
+  const { structure, label } = species;
+  const facts = useFactsInput(ports.facts, structure, structure !== undefined && label !== undefined && ports.facts !== undefined);
+  const representation =
+    structure === undefined || label === undefined ? undefined : termRepresentationOf({ kind: 'species', name: label, structure, formula: label }, facts);
+  // the engine's answer decides; "cannot say" keeps the drawing (the label is not an entered formula, so nothing is guessed)
+  const asFormula = (representation?.kind === 'formula' && facts.state === 'ready') || (representation?.kind === 'pending' && label !== undefined);
+  const drawn = structure !== undefined && facts.state !== 'pending' && !asFormula;
+  const drawnAnyway = structure !== undefined && label === undefined;
+  return (
+    <>
+      {drawn || drawnAnyway ? <span className={styles.drawing}>{ports.renderStructure(structure, label ?? species.role)}</span> : null}
+      {label === undefined ? null : asFormula ? (
+        <span className={styles.speciesFormula} data-species-formula="">
+          <Runs runs={formulaRuns(label)} />
+        </span>
+      ) : (
+        <span className={styles.speciesName}>{label}</span>
+      )}
+    </>
+  );
+}
 
 function Step(props: { readonly ports: MechanismPorts; readonly step: StepView }) {
   const { ports, step } = props;
@@ -25,8 +59,7 @@ function Step(props: { readonly ports: MechanismPorts; readonly step: StepView }
         <ul className={styles.species} aria-label={`Species of step ${step.number}`}>
           {step.species.map((one, i) => (
             <li key={`${one.role}-${i}`} className={styles.one}>
-              {one.structure === undefined ? null : <span className={styles.drawing}>{ports.renderStructure(one.structure, one.label ?? one.role)}</span>}
-              {one.label === undefined ? null : <span className={styles.speciesName}>{one.label}</span>}
+              <Species ports={ports} species={one} />
               <span className={styles.role}>{one.role}</span>
             </li>
           ))}

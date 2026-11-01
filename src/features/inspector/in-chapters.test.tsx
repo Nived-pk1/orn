@@ -60,11 +60,16 @@ describe('In chapters', () => {
     expect(opened).toEqual(['top_chap-b']);
   });
 
-  it('a study record in no chapter says so; a topic has no such line', async () => {
-    await show(stateOf(...base, concept('c1', 'One', 'general')), { kind: 'concept', id: 'cpt_c1' });
+  it('Studio (an editor is wired): a study record in no chapter says so; a topic has no such line', async () => {
+    await show(stateOf(...base, concept('c1', 'One', 'general')), { kind: 'concept', id: 'cpt_c1' }, { editNames: { unavailable: undefined, open: () => undefined } });
     expect((document.querySelector('[data-in-chapters]') as HTMLElement).textContent).toBe('In chapters: No chapter yet');
     cleanup();
     await show(stateOf(...base), { kind: 'topic', id: 'top_chap-a' });
+    expect(document.querySelector('[data-in-chapters]')).toBeNull();
+  });
+
+  it('Study (no editor): a study record in no chapter has no "In chapters" line at all (7.6 A1)', async () => {
+    await show(stateOf(...base, concept('c1', 'One', 'general')), { kind: 'concept', id: 'cpt_c1' });
     expect(document.querySelector('[data-in-chapters]')).toBeNull();
   });
 });

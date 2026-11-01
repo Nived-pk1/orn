@@ -89,8 +89,8 @@ function BodyOf(props: { readonly record: Loose; readonly refOf: RecordRef; read
       return (
         <>
           <p className={styles.muted}>{`${variants.length} ${variants.length === 1 ? 'variant' : 'variants'} · ${steps} ${steps === 1 ? 'step' : 'steps'}`}</p>
-          <button type="button" aria-label={`Open ${name}`} onClick={(event) => (event.stopPropagation(), ports.select(refOf))}>
-            Open
+          <button type="button" aria-label={ports.openPage === undefined ? `Open ${name}` : `Quick look at ${name}`} onClick={(event) => (event.stopPropagation(), ports.select(refOf))}>
+            {ports.openPage === undefined ? 'Open' : 'Quick look'}
           </button>
           <OpenPage ports={ports} refOf={refOf} name={name} />
         </>

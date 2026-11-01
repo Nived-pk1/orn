@@ -4,7 +4,7 @@
  * page with one pathway (no variant heading) or several (a section each), the numbered steps with kinds, roles, "slow step" and "reversible"
  * marks, the rate law, species drawn or named, the reactions that use it, a saved record that is gone, and no curved-arrow text anywhere.
  */
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { emptyRecordTables, type AnyRecord, type CanonicalState } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
@@ -73,6 +73,52 @@ function show(state: CanonicalState, saved: Parameters<typeof createPageListStor
   render(<MechanismsView ports={ports} />);
   return { mechanisms, calls };
 }
+
+describe('In chapters on a page with no chapter (7.6 A1)', () => {
+  it('Study leaves the line out; Studio says "No chapter yet"', () => {
+    show(stateOf(...base), { openId: 'mec_aldol' });
+    expect(document.querySelector('[data-in-chapters]')).toBeNull();
+    cleanup();
+    show(stateOf(...base), { openId: 'mec_aldol' }, { edit: () => undefined });
+    expect((document.querySelector('[data-in-chapters]') as HTMLElement).textContent).toBe('In chapters: No chapter yet');
+  });
+});
+
+describe('small molecules and ions in a step (7.6 A2)', () => {
+  const small = mechanismRecord('small', 'Small species', [
+    mechVariant('only', 'Only', [
+      mechStep('s1', {
+        title: 'Attack',
+        species: [
+          { role: 'reagent', label: 'HO⁻', structure: { format: 'smiles', value: '[OH-]' } },
+          { role: 'reactant', label: 'Bromoethane', structure: { format: 'smiles', value: 'CCBr' } },
+          { role: 'leaving_group', label: 'Br⁻', structure: { format: 'smiles', value: '[Br-]' } },
+        ],
+      }),
+    ]),
+  ]);
+  const facts = {
+    factsOf: (structure: { value: string }) =>
+      Promise.resolve(structure.value === 'CCBr' ? { ok: true as const, heavyAtomCount: 3, carbonCount: 2 } : { ok: true as const, heavyAtomCount: 1, carbonCount: 0 }),
+  };
+
+  it('are written as their formula in the box text size; larger molecules stay drawn', async () => {
+    show(stateOf(small), { openId: 'mec_small' }, { facts });
+    const list = screen.getByRole('list', { name: 'Species of step 1' });
+    await waitFor(() => expect(within(list).queryByText('Bromoethane')).not.toBeNull());
+    await waitFor(() => expect(list.querySelectorAll('[data-species-formula]').length).toBe(2));
+    expect(Array.from(list.querySelectorAll('[data-species-formula]')).map((el) => el.textContent)).toEqual(['HO⁻', 'Br⁻']);
+    expect(list.querySelectorAll('[data-drawing]').length).toBe(1);
+    expect(list.querySelector('[data-drawing="Bromoethane"]')).not.toBeNull();
+  });
+
+  it('are drawn when the engine cannot say (nothing is guessed)', async () => {
+    show(stateOf(small), { openId: 'mec_small' }, { facts: { factsOf: () => Promise.resolve({ ok: false as const }) } });
+    const list = screen.getByRole('list', { name: 'Species of step 1' });
+    await waitFor(() => expect(list.querySelectorAll('[data-drawing]').length).toBe(3));
+    expect(list.querySelector('[data-species-formula]')).toBeNull();
+  });
+});
 
 describe('the list', () => {
   it('lists written mechanisms with classes as words and "n reactions · n steps"; Study leaves the empty one out', () => {

@@ -62,7 +62,7 @@ export function MechanismPage(props: { readonly ports: MechanismPorts; readonly 
         />
       </section>
       <CaveatSection caveats={page.caveats} renderRichText={ports.renderRichText} onOpen={(caveatId) => ports.select({ kind: 'caveat', id: caveatId } as RecordRef)} />
-      <ChaptersLine chapters={page.chapters} onOpen={ports.openChapter} none={NO_CHAPTER_TITLE} />
+      <ChaptersLine chapters={page.chapters} onOpen={ports.openChapter} none={ports.edit === undefined ? undefined : NO_CHAPTER_TITLE} />
       {page.studyNotes === undefined ? null : (
         <section className={styles.section} aria-label="Study notes">
           <h3 className={styles.sectionHeading}>Study notes</h3>

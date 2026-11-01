@@ -358,6 +358,14 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 - **Wording:** `parameterPhrases` reads as English ("cold", "80 °C", "0–5 °C", "aqueous solvent"); one plural helper (`@/core/text`); Study words an unused profile "No reaction here uses this profile."
 - **Not changed:** the schema, `DB_STORES`, the CSP, `_headers`, the import format.
 
+#### Addendum 2026-11-01 (step 7.6): decisions on the 7.4 review items, and the Syllabus view
+
+- **Decisions on the 7.4 REVIEW REQUIRED items (reviewer):** RR1 accepted: a parent named reaction counts, and shows, the reactions of its kinds. RR2 accepted: the named-reaction badge on a card opens that named reaction's page. RR3 accepted: Alt+Enter on a named reaction opens its page. RR4 accepted: the compact Reagents list shows 4 entries on a Pixel 7 and 3 on an iPhone 14. RR5 CHANGED: on a chapter-page card that has both buttons, "Open" is now "Quick look" (it opens the inspector) and "Open page" stays; the same wording on every card kind that has both. RR6 noted (the rule on tests written with the code is tightened: view and window tests are also written and run red first). RR7: openItem. RR8 fine.
+- **A1** In Study the "In chapters:" line is left out when a record has no chapter (named reaction, mechanism and reagent pages, the inspector); Studio keeps "No chapter yet".
+- **A2** A step species that is a small molecule or ion (no carbon, or one carbon and at most 3 heavy atoms) is written as its label in formula typography at normal text size, by the SAME rule as the equation's terms (`termRepresentationOf`); larger ones stay drawn; if the engine cannot say, the drawing is kept.
+- **A3** On a named reaction's own page a card's badge to that same page is hidden; badges to other named reactions stay.
+- **A4** Every lazy view of the canvas shows a "Loading…" line (role status) while its chunk loads.
+
 #### Addendum 2026-11-01 (step 7.3c): the Reagents view
 
 - **Reagents view** (Reagents row): a pure derived module `src/core/reagents` (`filterReagents`, `reagentUsage` per profile with DISTINCT reactions and examples folded, `howUsedWords`); the feature `src/features/reagent-explorer` (lazy chunk in both editions) with `src/app/window/reagents-host.tsx` injecting the card, the condition words, rich text and, in Studio only, Edit. A reaction names a reagent by a DIRECT reference (`byReagent`); the backing species and the components are not followed. A participant's `profileId` places a reaction in a profile's section; the profile's `parameters` are shown in their own box, never in a card.

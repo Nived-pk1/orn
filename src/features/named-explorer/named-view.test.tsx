@@ -54,7 +54,7 @@ function show(state: CanonicalState, saved: Parameters<typeof createPageListStor
     indexes: { current: () => context.indexes },
     ui: { named, exam, inspector },
     renderCard: (args) => (
-      <div data-card={args.reactionId} data-examples={(args.examples ?? []).join(',')}>
+      <div data-card={args.reactionId} data-hide-named={args.hideNamedId} data-examples={(args.examples ?? []).join(',')}>
         {args.reactionId}
       </div>
     ),
@@ -72,6 +72,25 @@ function show(state: CanonicalState, saved: Parameters<typeof createPageListStor
   render(<NamedView ports={ports} />);
   return { named, exam, calls };
 }
+
+describe('In chapters on a page with no chapter (7.6 A1)', () => {
+  it('Study leaves the line out; Studio says "No chapter yet"', () => {
+    show(stateOf(...base), { openId: 'nrx_fc' });
+    expect(document.querySelector('[data-in-chapters]')).toBeNull();
+    cleanup();
+    show(stateOf(...base), { openId: 'nrx_fc' }, { edit: () => undefined });
+    expect((document.querySelector('[data-in-chapters]') as HTMLElement).textContent).toBe('In chapters: No chapter yet');
+  });
+});
+
+describe('cards on a named reaction page (7.6 A3)', () => {
+  it('are told to leave out the badge that points to this very page', () => {
+    show(stateOf(...base), { openId: 'nrx_fca' });
+    const cards = Array.from(document.querySelectorAll('[data-card]'));
+    expect(cards.length).toBeGreaterThan(0);
+    for (const card of cards) expect(card.getAttribute('data-hide-named')).toBe('nrx_fca');
+  });
+});
 
 describe('the list', () => {
   it('lists written records by name with aliases (two), parent and counts; Study leaves the empty one out', () => {

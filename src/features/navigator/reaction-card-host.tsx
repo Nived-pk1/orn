@@ -31,6 +31,8 @@ export interface ReactionCardHostProps {
   /** The selected reaction (an example shows it) and the outside words of an example (7.3a C5). */
   readonly selectedId?: string | null;
   readonly outsideOf?: (reactionId: string) => string | undefined;
+  /** 7.6 A3: the named reaction whose own page this card is on; its badge is left out. */
+  readonly hideNamedId?: string;
 }
 
 const NO_JUMP = (): void => undefined;
@@ -73,6 +75,7 @@ export function ReactionCardHost(props: ReactionCardHostProps) {
         {...(props.outside === undefined ? {} : { outside: props.outside })}
         {...(props.outsideOf === undefined ? {} : { outsideOf: props.outsideOf })}
         {...(props.selectedId === undefined ? {} : { selectedId: props.selectedId })}
+        {...(props.hideNamedId === undefined ? {} : { hideNamedId: props.hideNamedId })}
       />
     </FamilyEnvContext.Provider>
   );

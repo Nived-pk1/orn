@@ -22,6 +22,8 @@ export function InChapters(props: { readonly refOf: RecordRef }) {
     return index.membershipsOf(props.refOf).map((membership) => ({ id: membership.chapterId, title: titles.get(membership.chapterId) ?? membership.chapterId }));
   }, [state, props.refOf]);
   if (found === undefined) return null;
+  // Study (no editor wired) leaves the line out when the record is in no chapter (7.6 A1)
+  if (found.length === 0 && host.editNames === undefined) return null;
   return (
     <p className={styles.status} data-in-chapters="" {...(phone ? { 'data-sheet-full': '' } : {})}>
       {'In chapters: '}

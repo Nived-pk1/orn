@@ -31,6 +31,8 @@ async function walk(page: Page, device: string, withPage: boolean): Promise<void
   expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
   expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width + 0.5);
   await expect(choices).toHaveValue('reactions');
+  // 7.6 A4: the screenshot is taken only after the Reactions list is on the page (its chunk is lazy)
+  await expect(page.getByRole('region', { name: 'Reactions', exact: true }).locator('[data-reaction-id]').first()).toBeVisible({ timeout: 30_000 });
   if (device === 'pixel7') await page.screenshot({ path: `${shotsDir()}/phone-explore-select-pixel7.png` });
   await choices.selectOption({ label: 'Reagents' });
   await expect(view(page)).toBeVisible();

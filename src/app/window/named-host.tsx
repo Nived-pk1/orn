@@ -29,7 +29,7 @@ export function NamedHost(props: { readonly openPane: () => void; readonly onSho
         openPane();
       },
       selectReaction: (reactionId) => ports.ui.family.getState().selectReaction(reactionId),
-      renderCard: (args) => <ReactionCardHost reactionId={args.reactionId} selected={args.selected} onSelect={args.onSelect} fallback={args.fallback} {...(args.outside === undefined ? {} : { outside: args.outside })} {...(args.examples === undefined ? {} : { examples: args.examples })} {...(args.selectedId === undefined ? {} : { selectedId: args.selectedId })} {...(args.outsideOf === undefined ? {} : { outsideOf: args.outsideOf })} />,
+      renderCard: (args) => <ReactionCardHost reactionId={args.reactionId} selected={args.selected} onSelect={args.onSelect} fallback={args.fallback} {...(args.outside === undefined ? {} : { outside: args.outside })} {...(args.examples === undefined ? {} : { examples: args.examples })} {...(args.selectedId === undefined ? {} : { selectedId: args.selectedId })} {...(args.outsideOf === undefined ? {} : { outsideOf: args.outsideOf })} {...(args.hideNamedId === undefined ? {} : { hideNamedId: args.hideNamedId })} />,
       showInReactions: onShowInReactions,
       openMechanism: onMechanism,
       openChapter: onChapter,

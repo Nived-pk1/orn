@@ -47,7 +47,9 @@ export function CaveatSection(props: { readonly caveats: readonly { readonly id:
   );
 }
 
-export function ChaptersLine(props: { readonly chapters: readonly LinkItem[]; readonly onOpen: (id: string) => void; readonly none: string }) {
+export function ChaptersLine(props: { readonly chapters: readonly LinkItem[]; readonly onOpen: (id: string) => void; readonly none: string | undefined }) {
+  // Study leaves the line out when the record has no chapter (7.6 A1); Studio says so
+  if (props.chapters.length === 0 && props.none === undefined) return null;
   return (
     <p className={styles.facts} data-in-chapters="">
       {'In chapters: '}
