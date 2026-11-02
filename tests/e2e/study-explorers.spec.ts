@@ -9,6 +9,8 @@ import { expect, test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, expectPreview, watch } from './kit';
 import { record } from './editor-kit';
 import { demoWithExamplesAndStages, GENERAL, THREE_STAGE } from './examples-kit';
+import { shotsDir } from './editor-kit';
+import { longChapterDemo } from './dod-kit';
 
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
 test.use({ baseURL: STUDY });
@@ -194,6 +196,40 @@ test.describe('desktop', () => {
     await expect(three).toContainText(/\(i\)[\s\S]*\(ii\)[\s\S]*\(iii\)/, { timeout: 60_000 });
     for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate', 'Save as route', 'New route']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
     expect(await axeProblems(page)).toEqual([]);
+    await expectClean(seen);
+  });
+
+
+  test('Syllabus and Chapters work in Study: a gap row has a dash and no chapter link, a unit of one topic of its own name shows its facts on the heading line, lists are cut with a notice (step 7.7)', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page, STUDY);
+    await openStudy(page);
+    await importOwnData(page, longChapterDemo());
+    const chapters = page.getByRole('region', { name: 'Chapters', exact: true });
+    await expect(chapters).toBeVisible({ timeout: 60_000 });
+    await chapters.getByRole('list', { name: 'Chapters' }).getByRole('button', { name: 'Hydrocarbons' }).click();
+    await expect(chapters.getByText(/^Showing 30 of \d+ concepts$/)).toBeVisible();
+    await chapters.getByRole('button', { name: 'Show 30 more' }).click();
+    await expect(chapters.getByText(/^Showing 30 of \d+ concepts$/)).toHaveCount(0);
+    expect(await axeProblems(page)).toEqual([]);
+
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Syllabus', exact: true }).click();
+    const syllabus = page.getByRole('region', { name: 'Syllabus', exact: true });
+    await expect(syllabus.getByRole('heading', { level: 2, name: 'Syllabus' })).toBeVisible();
+    await syllabus.getByLabel('Exam version').selectOption({ label: 'JEE Main 2026 (provisional)' });
+    const gap = syllabus.locator('[data-unit-id][aria-label="Biomolecules"] [data-gap]');
+    await expect(gap).toBeVisible();
+    await expect(gap).toContainText('—');
+    await expect(gap.getByRole('button')).toHaveCount(0); // Study: a gap leads nowhere, so no link
+    const hydro = syllabus.locator('[data-unit-head][data-topic-id="top_hydrocarbons"]');
+    await expect(hydro).toContainText(/\d+ concepts?/);
+    await expect(hydro.getByRole('button', { name: 'Open chapter Hydrocarbons' })).toBeVisible();
+    await expect(syllabus.locator('[data-unit-id][aria-label="Hydrocarbons"] li[data-topic-id]')).toHaveCount(0); // no repeated row
+    const unit = syllabus.locator('[data-unit-id="unt_zz-long"]');
+    await expect(unit.getByText(/^Showing 60 of 65 topics$/)).toBeVisible();
+    await page.screenshot({ path: `${shotsDir()}/syllabus-gap-study-1280x800.png` });
+    expect(await axeProblems(page)).toEqual([]);
+    for (const name of ['Edit', 'Add picture', 'Delete...', 'Duplicate']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
     await expectClean(seen);
   });
 

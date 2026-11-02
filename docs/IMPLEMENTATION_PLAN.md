@@ -200,6 +200,12 @@ Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)
 
 ### Phase 8 — Export and visual polish
 
+| Row | What |
+|---|---|
+| 8.1 | Study inspector redesign (user request, 2026-11-01): the inspector reads like a wall of text; a student should not have to read it. Make it visual and quick to take in: picture or structure first, the one-line idea, key facts as chips, linked records as small visual cards, smooth opening and expanding; author-only levels (provenance, findings, raw record) stay in Studio. Same care for the phone sheet. Reviewer designs the step. |
+
+Also under Phase 8: mechanism steps: before → after layout of a step's species (with arrow-pushing, row 8.x).
+
 Also here (moved from 5.5d by the 5.5c review): 200 ms layout transitions (none with reduced motion); the overview no longer expands, so a layout changes only with the data.
 SVG/PNG export from Scene, print stylesheet, empty states, visual QA pass against UI_ARCHITECTURE.md §3, accessibility fixes.
 
