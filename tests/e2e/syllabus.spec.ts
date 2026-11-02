@@ -101,7 +101,7 @@ test('compare with an older version: What changed, a chapter link, and both sele
   await view(page).getByLabel('Compare with').selectOption({ label: 'JEE Main 2025' });
   const changes = view(page).getByRole('region', { name: 'What changed' });
   await expect(changes.getByRole('heading', { name: 'New in JEE Main 2026 (provisional)' })).toBeVisible();
-  await expect(changes.getByRole('heading', { name: 'Not in JEE Main 2026 (provisional) any more' })).toBeVisible();
+  await expect(changes.getByRole('heading', { name: 'Not in JEE Main 2026 (provisional) any more' })).toHaveCount(0); // an empty group is left out (7.7 A3)
   await expect(changes.getByRole('heading', { name: 'Changed', exact: true })).toBeVisible();
   await expect(changes.locator('[data-topic-id="top_practical"]')).not.toContainText('affects');
   await expect(changes.locator('[data-topic-id="top_hydrocarbons"]')).toContainText('partly → fully');

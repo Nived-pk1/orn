@@ -80,6 +80,7 @@ async function walk(page: Page, device: string, compare: boolean): Promise<void>
     expect(await noSideways(page)).toBe(true);
     for (const height of await changes.getByRole('button').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height))) expect(height).toBeGreaterThanOrEqual(44);
     expect(await axeProblems(page, 10)).toEqual([]);
+    await changes.scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${shotsDir()}/phone-syllabus-compare-${device}.png` });
   }
   await expectClean(seen);

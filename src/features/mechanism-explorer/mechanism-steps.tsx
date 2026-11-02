@@ -20,6 +20,10 @@ type StepSpecies = StepView['species'][number];
  * carbon and at most 3 heavy atoms) is written as its label in formula typography at the normal text size, never as a huge drawing; a larger
  * one stays drawn. While the engine has not answered the label is shown; if it cannot say, the drawing is kept (nothing is guessed).
  */
+/** The engine's formula has no charge ("HO"): the charge is written after it ("HO-", "Cu2+"), and the typography makes it a superscript. */
+const withCharge = (formula: string, charge: number | undefined): string =>
+  charge === undefined || charge === 0 ? formula : `${formula}${Math.abs(charge) === 1 ? '' : Math.abs(charge)}${charge > 0 ? '+' : '-'}`;
+
 function Species(props: { readonly ports: MechanismPorts; readonly species: StepSpecies }) {
   const { ports, species } = props;
   const { structure, label } = species;
@@ -38,7 +42,7 @@ function Species(props: { readonly ports: MechanismPorts; readonly species: Step
       {asFormula && formula !== undefined ? (
         <span className={styles.speciesBox} data-species-box="">
           <span className={styles.speciesFormula} data-species-formula="">
-            <Runs runs={formulaRuns(formula, charge)} />
+            <Runs runs={formulaRuns(withCharge(formula, charge), charge)} />
           </span>
         </span>
       ) : pending ? (

@@ -103,8 +103,8 @@ describe('small molecules and ions in a step (7.6 A2)', () => {
         structure.value === 'CCBr'
           ? { ok: true as const, heavyAtomCount: 3, carbonCount: 2, formula: 'C2H5Br', charge: 0 }
           : structure.value === '[OH-]'
-            ? { ok: true as const, heavyAtomCount: 1, carbonCount: 0, formula: 'HO-', charge: -1 }
-            : { ok: true as const, heavyAtomCount: 1, carbonCount: 0, formula: 'Br-', charge: -1 },
+            ? { ok: true as const, heavyAtomCount: 1, carbonCount: 0, formula: 'HO', charge: -1 }
+            : { ok: true as const, heavyAtomCount: 1, carbonCount: 0, formula: 'Br', charge: -1 },
       ),
   };
 
