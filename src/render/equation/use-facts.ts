@@ -18,7 +18,7 @@ export function useFactsInput(port: StructureFactsPort | undefined, structure: S
     let live = true;
     port.factsOf(structure).then(
       (result) => {
-        if (live) setAnswer({ key, facts: result.ok ? { state: 'ready', ...(result.heavyAtomCount === undefined ? {} : { heavyAtomCount: result.heavyAtomCount }), ...(result.carbonCount === undefined ? {} : { carbonCount: result.carbonCount }) } : { state: 'unavailable' } });
+        if (live) setAnswer({ key, facts: result.ok ? { state: 'ready', ...(result.heavyAtomCount === undefined ? {} : { heavyAtomCount: result.heavyAtomCount }), ...(result.carbonCount === undefined ? {} : { carbonCount: result.carbonCount }), ...(result.formula === undefined ? {} : { formula: result.formula }), ...(result.charge === undefined ? {} : { charge: result.charge }) } : { state: 'unavailable' } });
       },
       () => {
         if (live) setAnswer({ key, facts: { state: 'unavailable' } });

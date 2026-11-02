@@ -23,23 +23,28 @@ type StepSpecies = StepView['species'][number];
 function Species(props: { readonly ports: MechanismPorts; readonly species: StepSpecies }) {
   const { ports, species } = props;
   const { structure, label } = species;
-  const facts = useFactsInput(ports.facts, structure, structure !== undefined && label !== undefined && ports.facts !== undefined);
+  const facts = useFactsInput(ports.facts, structure, structure !== undefined && ports.facts !== undefined);
+  // the engine's formula and counts decide; when it cannot say (or gave no formula) the drawing is kept: nothing is guessed
+  const formula = facts.state === 'ready' ? facts.formula : undefined;
   const representation =
-    structure === undefined || label === undefined ? undefined : termRepresentationOf({ kind: 'species', name: label, structure, formula: label }, facts);
-  // the engine's answer decides; "cannot say" keeps the drawing (the label is not an entered formula, so nothing is guessed)
-  const asFormula = (representation?.kind === 'formula' && facts.state === 'ready') || (representation?.kind === 'pending' && label !== undefined);
-  const drawn = structure !== undefined && facts.state !== 'pending' && !asFormula;
-  const drawnAnyway = structure !== undefined && label === undefined;
+    structure === undefined || formula === undefined ? undefined : termRepresentationOf({ kind: 'species', name: label ?? '', structure, formula, ...(facts.state === 'ready' && facts.charge !== undefined ? { charge: facts.charge } : {}) }, facts);
+  const asFormula = representation?.kind === 'formula';
+  const pending = structure !== undefined && facts.state === 'pending';
+  const drawn = structure !== undefined && !asFormula && !pending;
+  const charge = facts.state === 'ready' ? facts.charge : undefined;
   return (
     <>
-      {drawn || drawnAnyway ? <span className={styles.drawing}>{ports.renderStructure(structure, label ?? species.role)}</span> : null}
-      {label === undefined ? null : asFormula ? (
-        <span className={styles.speciesFormula} data-species-formula="">
-          <Runs runs={formulaRuns(label)} />
+      {drawn ? <span className={styles.drawing}>{ports.renderStructure(structure, label ?? species.role)}</span> : null}
+      {asFormula && formula !== undefined ? (
+        <span className={styles.speciesBox} data-species-box="">
+          <span className={styles.speciesFormula} data-species-formula="">
+            <Runs runs={formulaRuns(formula, charge)} />
+          </span>
         </span>
-      ) : (
-        <span className={styles.speciesName}>{label}</span>
-      )}
+      ) : pending ? (
+        <span className={styles.speciesBox} aria-hidden="true" />
+      ) : null}
+      {label === undefined ? null : <span className={styles.speciesName}>{label}</span>}
     </>
   );
 }

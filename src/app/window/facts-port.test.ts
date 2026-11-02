@@ -13,9 +13,14 @@ function rig(answer: (value: string) => ParseOutcome) {
 }
 
 describe('the facts port of the textbook equation', () => {
-  it('answers the two counts the formula-or-drawing rule needs (heavy atoms, carbons), and nothing else', async () => {
+  it('answers the two counts the formula-or-drawing rule needs (heavy atoms, carbons), and nothing else when the engine gave no formula', async () => {
     const { port } = rig(() => good(3, 3));
     expect(await port.factsOf(smiles('C1CC1'))).toEqual({ ok: true, heavyAtomCount: 3, carbonCount: 3 });
+  });
+
+  it('also passes the formula and charge when it gave them (7.7 A4: a small species in a mechanism step is written as its formula)', async () => {
+    const { port } = rig(() => ({ ok: true, facts: { heavyAtomCount: 1, carbonCount: 0, formula: 'HO-', charge: -1, atomMaps: [], warnings: [] } }));
+    expect(await port.factsOf(smiles('[OH-]'))).toEqual({ ok: true, heavyAtomCount: 1, carbonCount: 0, formula: 'HO-', charge: -1 });
   });
 
   it('leaves out a count the toolkit did not give (never a guess)', async () => {

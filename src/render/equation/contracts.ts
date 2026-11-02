@@ -5,7 +5,7 @@
 import type { StructureRep } from '@/core/schema';
 
 /** What the chem worker says about one structure, as far as the equation uses it. `ok: false`: the engine could not say (nothing is guessed). */
-export type StructureFactsAnswer = { readonly ok: true; readonly heavyAtomCount?: number; readonly carbonCount?: number } | { readonly ok: false };
+export type StructureFactsAnswer = { readonly ok: true; readonly heavyAtomCount?: number; readonly carbonCount?: number; readonly formula?: string; readonly charge?: number } | { readonly ok: false };
 
 export interface StructureFactsPort {
   factsOf(structure: StructureRep): Promise<StructureFactsAnswer>;

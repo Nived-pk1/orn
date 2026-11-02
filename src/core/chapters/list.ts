@@ -4,6 +4,7 @@
  * in the order of its units, the partial ones marked. Reactions are counted as CARDS (examples fold under their general reaction, as in
  * every other list since 7.3a).
  */
+import { coverageOfTopic, strongestCoverage } from '../coverage';
 import { foldExamples } from '../graph/family/examples';
 import type { CanonicalState, RecordRef } from '../schema';
 import { isUnwrittenConcept } from './written';
@@ -18,7 +19,6 @@ export interface ChaptersOptions {
 }
 
 const GROUP_OF = new Map(CHAPTER_GROUPS.flatMap((group) => group.kinds.map((kind) => [kind, group.key] as const)));
-const RANK: Readonly<Record<CoverageWord, number>> = { included: 0, partial: 1 };
 
 const emptyCounts = (): Record<GroupKey, { core: number; other: number }> =>
   Object.fromEntries(CHAPTER_GROUPS.map((group) => [group.key, { core: 0, other: 0 }])) as Record<GroupKey, { core: number; other: number }>;
@@ -30,23 +30,32 @@ export function studyRecords(state: CanonicalState): readonly RecordRef[] {
   return out;
 }
 
-/** The coverage each exam version gives each chapter: the best of its units' entries; `order` is where the version first mentions it. */
+/**
+ * The coverage each exam version gives each chapter, by the ONE rule (`coverage/`, 7.7 A): the chapter topic's own coverage (the nearest listed
+ * topic at or above it; the strongest of its entries). `order` is where the version first mentions a topic of the chapter (a chapter covered
+ * only by inheritance goes after those, in tree order).
+ */
 function coverageOf(state: CanonicalState, index: ChapterIndex): Map<string, Map<string, { coverage: CoverageWord; order: number }>> {
   const out = new Map<string, Map<string, { coverage: CoverageWord; order: number }>>();
+  const parentOf = (id: string): string | undefined => state.records.topic[id]?.parentId;
   for (const version of Object.values(state.records.exam_version)) {
-    const per = new Map<string, { coverage: CoverageWord; order: number }>();
+    const strongest = strongestCoverage(version);
+    const firstMention = new Map<string, number>();
     let order = 0;
     for (const unit of version.units) {
       for (const entry of unit.topicCoverage) {
         order += 1;
         if (entry.coverage === 'excluded') continue;
         const chapterId = index.chapterOfTopic(entry.topicId);
-        if (chapterId === undefined) continue;
-        const coverage: CoverageWord = entry.coverage === 'partial' ? 'partial' : 'included';
-        const before = per.get(chapterId);
-        per.set(chapterId, { coverage: before === undefined || RANK[coverage] < RANK[before.coverage] ? coverage : before.coverage, order: before?.order ?? order });
+        if (chapterId !== undefined && !firstMention.has(chapterId)) firstMention.set(chapterId, order);
       }
     }
+    const per = new Map<string, { coverage: CoverageWord; order: number }>();
+    index.chapters.forEach((chapter, at) => {
+      const level = coverageOfTopic(strongest, chapter.id, parentOf);
+      if (level === undefined || level === 'excluded') return;
+      per.set(chapter.id, { coverage: level, order: firstMention.get(chapter.id) ?? order + 1 + at });
+    });
     out.set(version.id, per);
   }
   return out;

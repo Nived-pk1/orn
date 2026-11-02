@@ -19,27 +19,37 @@ export function ChapterLink(props: { readonly chapterId: string | undefined; rea
   );
 }
 
-export function TopicRow(props: {
+interface FactsProps {
   readonly node: TopicNode;
-  readonly depth: number;
   readonly editing: boolean;
-  readonly phone: boolean;
   readonly chapterName: (id: string) => string;
   readonly openChapter: (id: string) => void;
-}) {
-  const { node, depth, editing, phone } = props;
+}
+
+/** The chip, the counts and the link of a topic (a row, or the heading line of a unit that is that one topic). Study leaves the link off a gap (it leads to an empty page). */
+export function TopicFacts(props: FactsProps) {
+  const { node, editing } = props;
   const partial = node.coverage === 'partial';
   return (
-    <li className={`${styles.row} ${node.gap ? styles.gapRow : ''}`} data-topic-id={node.topicId} {...(node.gap ? { 'data-gap': '' } : {})} style={depth === 0 ? undefined : { paddingLeft: `${depth * 1.25}rem` }}>
-      <span className={styles.rowName}>{node.name}</span>
+    <>
       {partial ? (
         <span className={styles.chip} {...(node.note === undefined ? {} : { title: node.note })}>
           partly
         </span>
       ) : null}
       <span className={styles.counts}>{node.gap ? (editing ? 'Nothing here yet' : '—') : countWords(node.counts)}</span>
-      <ChapterLink chapterId={node.chapterId} isChapter={node.chapterId === node.topicId} chapterName={props.chapterName} open={props.openChapter} />
-      {phone && partial && node.note !== undefined ? <p className={styles.noteLine}>{node.note}</p> : null}
+      {node.gap && !editing ? null : <ChapterLink chapterId={node.chapterId} isChapter={node.chapterId === node.topicId} chapterName={props.chapterName} open={props.openChapter} />}
+    </>
+  );
+}
+
+export function TopicRow(props: FactsProps & { readonly depth: number; readonly phone: boolean }) {
+  const { node, depth, phone } = props;
+  return (
+    <li className={`${styles.row} ${node.gap ? styles.gapRow : ''}`} data-topic-id={node.topicId} {...(node.gap ? { 'data-gap': '' } : {})} style={depth === 0 ? undefined : { paddingLeft: `${depth * 1.25}rem` }}>
+      <span className={styles.rowName}>{node.name}</span>
+      <TopicFacts node={node} editing={props.editing} chapterName={props.chapterName} openChapter={props.openChapter} />
+      {phone && node.coverage === 'partial' && node.note !== undefined ? <p className={styles.noteLine}>{node.note}</p> : null}
     </li>
   );
 }

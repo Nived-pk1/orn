@@ -22,7 +22,8 @@ export interface TopicRecords {
   distinctIn(topicIds: readonly string[]): number;
 }
 
-export function topicRecords(state: CanonicalState): TopicRecords {
+/** `startCounts(topicId)` false = a mapping at that topic does not count (the topic is not covered in the version being shown, 7.7 A). */
+export function topicRecords(state: CanonicalState, startCounts: (topicId: string) => boolean = () => true): TopicRecords {
   const parentOf = new Map(Object.values(state.records.topic).map((t) => [t.id as string, t.parentId as string | undefined]));
   const own = new Map<string, Set<string>>();
   for (const mapping of Object.values(state.records.topic_mapping)) {
@@ -46,6 +47,7 @@ export function topicRecords(state: CanonicalState): TopicRecords {
     if (isUnwrittenConcept(state, ref)) continue;
     const closure = new Set<string>();
     for (const start of topicsOf(ref)) {
+      if (!startCounts(start)) continue;
       let id: string | undefined = start;
       for (let depth = 0; id !== undefined && depth < MAX_DEPTH && !closure.has(id); depth += 1) {
         closure.add(id);

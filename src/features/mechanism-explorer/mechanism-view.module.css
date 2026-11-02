@@ -74,6 +74,19 @@
   overflow-wrap: anywhere;
 }
 
+.speciesBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 7rem;
+  min-height: 5rem;
+  padding: var(--space-2);
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
 .speciesFormula {
   font-size: var(--text-16, 1rem);
   overflow-wrap: anywhere;

@@ -23,7 +23,8 @@ type Version = { id: string; label: string; year?: number; units: Unit[] };
 function withSecondVersion(records: Record<string, unknown>): void {
   const versions = recordsOf<Version>(records, 'exam_version');
   const main = versions.find((v) => v.id === 'exv_jee-main-2026') as Version;
-  main.units.find((u) => u.topicCoverage[0]?.topicId === 'top_polymers')!.topicCoverage[0]!.note = 'Only the basic ideas';
+  const polymers = main.units.find((u) => u.topicCoverage[0]?.topicId === 'top_polymers');
+  if (polymers?.topicCoverage[0] !== undefined) polymers.topicCoverage[0].note = 'Only the basic ideas';
   const older = JSON.parse(JSON.stringify(main)) as Version;
   older.id = 'exv_jee-main-2025';
   older.label = 'JEE Main 2025';

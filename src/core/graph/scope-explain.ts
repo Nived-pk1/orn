@@ -5,6 +5,7 @@
  */
 import type { ExamRelevance, ExamScope, ExamVersion, RecordRef, TopicMapping } from '../schema';
 import type { ReadonlyIndexes } from '../indexes/contracts';
+import { coverageOfTopic, strongestCoverage } from '../coverage';
 import { referencing } from './kit';
 import { createScopeOf, explicitOverride } from './scope';
 
@@ -33,14 +34,17 @@ export function explainScope(indexes: ReadonlyIndexes, ref: RecordRef, version: 
   const mappings = referencing(indexes, ref, 'target', 'topic_mapping')
     .map((owner) => indexes.get(owner.id))
     .filter((m): m is TopicMapping => m?.kind === 'topic_mapping');
-  const coverage = new Map<string, 'included' | 'partial' | 'excluded'>();
-  for (const unit of version.units) for (const tc of unit.topicCoverage) coverage.set(tc.topicId, tc.coverage);
+  const strongest = strongestCoverage(version);
+  const parentOf = (id: string): string | undefined => {
+    const t = indexes.get(id);
+    return t?.kind === 'topic' ? t.parentId : undefined;
+  };
   const topics: ScopeTopic[] = [];
   const seen = new Set<string>();
   const add = (topicId: string, mapped: boolean): void => {
     if (seen.has(topicId)) return;
     seen.add(topicId);
-    topics.push({ topicId, coverage: coverage.get(topicId) ?? 'not listed', mapped });
+    topics.push({ topicId, coverage: coverageOfTopic(strongest, topicId, parentOf) ?? 'not listed', mapped });
   };
   for (const m of mappings) add(m.topicId, true);
   for (const m of mappings) for (const ancestor of indexes.ancestorsOf('topic', m.topicId)) add(ancestor, false);

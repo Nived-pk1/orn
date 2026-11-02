@@ -24,8 +24,8 @@ export function createFactsPort(chem: Pick<ChemService, 'parse'>): StructureFact
       const asked = chem.parse(structure).then(
         (outcome): StructureFactsAnswer => {
           if (!outcome.ok) return { ok: false };
-          const { heavyAtomCount, carbonCount } = outcome.facts;
-          const answer: StructureFactsAnswer = { ok: true, ...(heavyAtomCount === undefined ? {} : { heavyAtomCount }), ...(carbonCount === undefined ? {} : { carbonCount }) };
+          const { heavyAtomCount, carbonCount, formula, charge } = outcome.facts;
+          const answer: StructureFactsAnswer = { ok: true, ...(heavyAtomCount === undefined ? {} : { heavyAtomCount }), ...(carbonCount === undefined ? {} : { carbonCount }), ...(formula === undefined ? {} : { formula }), ...(charge === undefined ? {} : { charge }) };
           kept.set(key, answer);
           return answer;
         },

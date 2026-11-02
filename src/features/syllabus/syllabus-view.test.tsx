@@ -221,22 +221,23 @@ describe('the comparison', () => {
     const changes = screen.getByRole('region', { name: 'What changed' });
     expect(changes.compareDocumentPosition(screen.getAllByRole('region', { name: /unit$/i })[0] as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(changes).getByRole('heading', { name: 'New in main-2026' })).toBeTruthy();
-    expect(within(changes).getByRole('heading', { name: 'Not in main-2026 any more' })).toBeTruthy();
-    expect(within(changes).getByRole('heading', { name: 'Changed' })).toBeTruthy();
-    // new: Alpha section one, Charlie chapter; changed: none at the same level (Alpha partial both); removed: none
+    // new: Charlie chapter; changed: Alpha section one (partly in 2025 by its chapter, fully in 2026 by its own row: the ONE coverage rule); removed: none
     expect(changes.textContent).toContain('Charlie chapter');
-    expect(changes.textContent).toContain('affects 0 records');
+    expect(changes.textContent).toContain('Nothing mapped yet');
+    expect(changes.textContent).not.toMatch(/affects/);
     expect(changes.textContent).toContain('Alpha section one');
-    expect(changes.textContent).toContain('affects 1 record');
+    expect(changes.textContent).toContain('partly → fully');
+    expect(changes.textContent).toContain('1 concept');
     fireEvent.click(within(changes).getAllByRole('button', { name: /^Open chapter/ })[0] as HTMLElement);
-    expect(opened).toEqual(['top_chap-a']);
+    expect(opened).toEqual(['top_chap-c']);
   });
 
   it('a compared version at another level shows "Changed" with the two levels', () => {
     const edited = version('main-2025', 'main', [{ title: 'Old unit', coverage: [{ topic: 'chap-a', coverage: 'included' }] }], { year: 2025 });
     show(stateOf(...base, edited, v2026), { versionId: 'exv_main-2026', compareId: 'exv_main-2025' });
     const changes = screen.getByRole('region', { name: 'What changed' });
-    expect(changes.textContent).toContain('included → partial');
+    expect(changes.textContent).toContain('fully → partly');
+    expect(changes.textContent).not.toMatch(/included|partial/);
   });
 
   it('an empty difference says "No change in topics"', () => {
@@ -245,12 +246,55 @@ describe('the comparison', () => {
     expect(within(screen.getByRole('region', { name: 'What changed' })).getByText('No change in topics')).toBeTruthy();
   });
 
+  it('an empty group is left out (no "None" line); the groups that have rows stay', () => {
+    show(stateOf(...all), { versionId: 'exv_main-2026', compareId: 'exv_main-2025' });
+    const changes = screen.getByRole('region', { name: 'What changed' });
+    expect(within(changes).queryByRole('heading', { name: 'Not in main-2026 any more' })).toBeNull();
+    expect(within(changes).getByRole('heading', { name: 'Changed' })).toBeTruthy();
+    expect(within(changes).getByRole('heading', { name: 'New in main-2026' })).toBeTruthy();
+    expect(changes.textContent).not.toContain('None');
+  });
+
   it('choosing a version to compare with is saved; "No comparison" clears it', () => {
     const { syllabus } = show(stateOf(...all), { versionId: 'exv_main-2026' });
     fireEvent.change(screen.getByLabelText('Compare with'), { target: { value: 'exv_main-2025' } });
     expect(syllabus.getState().compareId).toBe('exv_main-2025');
     fireEvent.change(screen.getByLabelText('Compare with'), { target: { value: '' } });
     expect(syllabus.getState().compareId).toBeNull();
+  });
+});
+
+describe('a unit that is one topic with its own name (7.7 A1)', () => {
+  const named = version('named', 'main', [{ title: 'Alpha chapter', coverage: [{ topic: 'chap-a', coverage: 'partial', note: 'Basics' }] }, { title: 'Lonely', coverage: [{ topic: 'chap-c', coverage: 'included' }] }], { year: 2031 });
+
+  it('puts the counts, the chip and the link on the heading line and draws no repeated row', () => {
+    const { opened } = show(stateOf(...base, named), { versionId: 'exv_named' });
+    const unit = screen.getByRole('region', { name: 'Alpha chapter' });
+    expect(within(unit).getAllByText('Alpha chapter')).toHaveLength(1);
+    expect(within(unit).queryAllByRole('listitem')).toHaveLength(0);
+    const line = unit.querySelector('[data-unit-head]') as HTMLElement;
+    expect(line.textContent).toContain('Alpha chapter');
+    expect(line.textContent).toContain('partly');
+    expect(line.textContent).toContain('2 concepts');
+    fireEvent.click(within(line).getByRole('button', { name: 'Open chapter Alpha chapter' }));
+    expect(opened).toEqual(['top_chap-a']);
+  });
+
+  it('a unit whose one topic has another name keeps its row', () => {
+    show(stateOf(...base, named), { versionId: 'exv_named' });
+    expect(within(screen.getByRole('region', { name: 'Lonely' })).getAllByRole('listitem')).toHaveLength(1);
+  });
+});
+
+describe('a gap row link (7.7 A2)', () => {
+  it('Study: no "Open chapter" link on a gap row (it leads to an empty page); a row with records keeps it', () => {
+    show(stateOf(...all), { versionId: 'exv_main-2026' });
+    expect(within(document.querySelector('[data-topic-id="top_chap-c"]') as HTMLElement).queryByRole('button')).toBeNull();
+    expect(within(document.querySelector('[data-topic-id="top_chap-a"]') as HTMLElement).getByRole('button')).toBeTruthy();
+  });
+  it('Studio keeps the link on a gap row', () => {
+    show(stateOf(...all), { versionId: 'exv_main-2026' }, { editing: true });
+    expect(within(document.querySelector('[data-topic-id="top_chap-c"]') as HTMLElement).getByRole('button', { name: 'Open chapter Charlie chapter' })).toBeTruthy();
   });
 });
 

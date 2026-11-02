@@ -70,6 +70,8 @@ export interface DiffRow {
   readonly chapterId: string | undefined;
   /** Records at the topic and below: what the change affects. */
   readonly records: number;
+  /** The same records per kind group (the words the rows use). */
+  readonly counts: TopicCounts;
 }
 
 export interface ChangedRow extends DiffRow {

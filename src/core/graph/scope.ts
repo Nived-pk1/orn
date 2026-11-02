@@ -16,6 +16,7 @@ import type {
 } from '../schema';
 import type { ReadonlyIndexes } from '../indexes/contracts';
 import type { ProjectionContext } from './contracts';
+import { coverageOfTopic, strongestCoverage } from '../coverage';
 import { referencing } from './kit';
 
 export type ScopeOf = ProjectionContext['scopeOf'];
@@ -35,34 +36,23 @@ export function explicitOverride(indexes: ReadonlyIndexes, ref: RecordRef, examI
   return applicable.length === 0 ? undefined : bestOf(applicable.map((r) => r.scope));
 }
 
-/** Every topic ID any unit of `examVersion` assigns coverage to; a topic in two units keeps the later entry (CUR-002). */
-function coverageMap(examVersion: ExamVersion): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const unit of examVersion.units) for (const tc of unit.topicCoverage) map.set(tc.topicId, tc.coverage);
-  return map;
-}
-
-/** §4.2: topics `ref` maps to, plus their ancestors, checked against `examVersion`'s coverage. */
+/** §4.2: each topic `ref` maps to is checked against `examVersion` by the ONE coverage rule (`coverage/topic-coverage.ts`, 7.7 A). */
 export function mappedScope(indexes: ReadonlyIndexes, examVersion: ExamVersion, ref: RecordRef): ExamScope | undefined {
   const mappings = referencing(indexes, ref, 'target', 'topic_mapping')
     .map((owner) => indexes.get(owner.id))
     .filter((m): m is TopicMapping => m?.kind === 'topic_mapping');
   if (mappings.length === 0) return undefined;
-  const topics = new Set<string>();
-  for (const m of mappings) {
-    topics.add(m.topicId);
-    for (const ancestor of indexes.ancestorsOf('topic', m.topicId)) topics.add(ancestor);
-  }
-  const coverage = coverageMap(examVersion);
-  let anyIncludedOrPartial = false;
-  let anyExcludedOrAbsent = false;
-  for (const topicId of topics) {
-    const level = coverage.get(topicId);
-    if (level === 'included' || level === 'partial') anyIncludedOrPartial = true;
-    else anyExcludedOrAbsent = true;
-  }
-  if (anyIncludedOrPartial) return mappings.every((m) => m.role === 'enrichment') ? 'enrichment' : 'official';
-  return anyExcludedOrAbsent ? 'outside' : undefined;
+  const strongest = strongestCoverage(examVersion);
+  const parentOf = (id: string): string | undefined => {
+    const t = indexes.get(id);
+    return t?.kind === 'topic' ? t.parentId : undefined;
+  };
+  const covered = mappings.some((m) => {
+    const level = coverageOfTopic(strongest, m.topicId, parentOf);
+    return level === 'included' || level === 'partial';
+  });
+  if (covered) return mappings.every((m) => m.role === 'enrichment') ? 'enrichment' : 'official';
+  return 'outside';
 }
 
 /** §4.3: an unmapped/outside concept that is a prerequisite (one hop) of a record whose *direct* scope is official. */

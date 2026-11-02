@@ -5,7 +5,7 @@
  */
 import { buildChapterIndex } from '../chapters';
 import type { CanonicalState, ExamVersion, Topic } from '../schema';
-import { coverageOfVersion, positionsOf } from './coverage';
+import { coverageOfVersion, coveredIn, positionsOf } from './coverage';
 import { MAX_DEPTH, topicRecords } from './topic-records';
 import type { CoveredLevel, ExcludedTopic, SyllabusPage, SyllabusTotals, TopicNode, UnitView } from './types';
 
@@ -14,7 +14,7 @@ export function syllabusPage(state: CanonicalState, versionId: string): Syllabus
   if (version === undefined) return undefined;
   const coverage = coverageOfVersion(version);
   const position = positionsOf(state);
-  const records = topicRecords(state);
+  const records = topicRecords(state, coveredIn(state, version));
   const chapters = buildChapterIndex(state);
   const topicOf = (id: string): Topic | undefined => state.records.topic[id];
   const nameOf = (id: string): string => topicOf(id)?.name ?? id;

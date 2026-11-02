@@ -90,26 +90,41 @@ describe('small molecules and ions in a step (7.6 A2)', () => {
       mechStep('s1', {
         title: 'Attack',
         species: [
-          { role: 'reagent', label: 'HO⁻', structure: { format: 'smiles', value: '[OH-]' } },
+          { role: 'reagent', label: 'Hydroxide', structure: { format: 'smiles', value: '[OH-]' } },
           { role: 'reactant', label: 'Bromoethane', structure: { format: 'smiles', value: 'CCBr' } },
-          { role: 'leaving_group', label: 'Br⁻', structure: { format: 'smiles', value: '[Br-]' } },
+          { role: 'leaving_group', label: 'Bromide', structure: { format: 'smiles', value: '[Br-]' } },
         ],
       }),
     ]),
   ]);
   const facts = {
     factsOf: (structure: { value: string }) =>
-      Promise.resolve(structure.value === 'CCBr' ? { ok: true as const, heavyAtomCount: 3, carbonCount: 2 } : { ok: true as const, heavyAtomCount: 1, carbonCount: 0 }),
+      Promise.resolve(
+        structure.value === 'CCBr'
+          ? { ok: true as const, heavyAtomCount: 3, carbonCount: 2, formula: 'C2H5Br', charge: 0 }
+          : structure.value === '[OH-]'
+            ? { ok: true as const, heavyAtomCount: 1, carbonCount: 0, formula: 'HO-', charge: -1 }
+            : { ok: true as const, heavyAtomCount: 1, carbonCount: 0, formula: 'Br-', charge: -1 },
+      ),
   };
 
-  it('are written as their formula in the box text size; larger molecules stay drawn', async () => {
+  it('are written as their formula INSIDE the box the drawn species use, the name and the role under it; larger molecules stay drawn', async () => {
     show(stateOf(small), { openId: 'mec_small' }, { facts });
     const list = screen.getByRole('list', { name: 'Species of step 1' });
     await waitFor(() => expect(within(list).queryByText('Bromoethane')).not.toBeNull());
     await waitFor(() => expect(list.querySelectorAll('[data-species-formula]').length).toBe(2));
-    expect(Array.from(list.querySelectorAll('[data-species-formula]')).map((el) => el.textContent)).toEqual(['HO⁻', 'Br⁻']);
+    expect(Array.from(list.querySelectorAll('[data-species-formula]')).map((el) => el.textContent)).toEqual(['HO-', 'Br-']);
     expect(list.querySelectorAll('[data-drawing]').length).toBe(1);
     expect(list.querySelector('[data-drawing="Bromoethane"]')).not.toBeNull();
+    const first = list.querySelector('[data-species-formula]') as HTMLElement;
+    const box = first.closest('[data-species-box]') as HTMLElement;
+    expect(box).not.toBeNull();
+    const item = box.closest('li') as HTMLElement;
+    expect(box.textContent).toBe('HO-');
+    expect(box.querySelector('sup')?.textContent).toBe('-'); // the charge is a superscript, as in the equation
+    expect(item.textContent).toContain('Hydroxide');
+    expect(item.textContent).toContain('reagent');
+    expect(box.textContent).not.toContain('Hydroxide');
   });
 
   it('are drawn when the engine cannot say (nothing is guessed)', async () => {

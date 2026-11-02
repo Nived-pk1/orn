@@ -30,7 +30,7 @@ export interface TermSubstance {
 export type FactsInput =
   | { readonly state: 'pending' }
   | { readonly state: 'unavailable' }
-  | { readonly state: 'ready'; readonly heavyAtomCount?: number; readonly carbonCount?: number };
+  | { readonly state: 'ready'; readonly heavyAtomCount?: number; readonly carbonCount?: number; readonly formula?: string; readonly charge?: number };
 
 export type FormulaRepresentation = { readonly kind: 'formula'; readonly text: string; readonly charge?: number };
 

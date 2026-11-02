@@ -23,17 +23,17 @@ type Version = { id: string; label: string; year?: number; status: string; units
 function withSecondVersion(records: Record<string, unknown>): void {
   const versions = recordsOf<Version>(records, 'exam_version');
   const main = versions.find((v) => v.id === 'exv_jee-main-2026') as Version;
-  main.units[0]!.officialText = 'As the board published it.';
+  (main.units[0] as Version['units'][number]).officialText = 'As the board published it.';
   const older = JSON.parse(JSON.stringify(main)) as Version;
   older.id = 'exv_jee-main-2025';
   older.label = 'JEE Main 2025';
   older.year = 2025;
   older.units.forEach((unit, i) => (unit.id = `unt_jee-main-2025-u${i + 1}`));
-  older.units[0]!.officialText = undefined;
+  (older.units[0] as Version['units'][number]).officialText = undefined;
   // new in 2026: Practical organic chemistry (absent in 2025); changed: Hydrocarbons was partial; gone: Polymers was included, Biomolecules stays
   older.units = older.units.filter((unit) => unit.topicCoverage[0]?.topicId !== 'top_practical');
   const hydro = older.units.find((unit) => unit.topicCoverage[0]?.topicId === 'top_hydrocarbons');
-  if (hydro) hydro.topicCoverage[0]!.coverage = 'partial';
+  if (hydro) (hydro.topicCoverage[0] as Version['units'][number]['topicCoverage'][number]).coverage = 'partial';
   const table = records.exam_version;
   if (Array.isArray(table)) table.push(older);
   else (table as Record<string, unknown>)[older.id] = older;
@@ -103,8 +103,8 @@ test('compare with an older version: What changed, a chapter link, and both sele
   await expect(changes.getByRole('heading', { name: 'New in JEE Main 2026 (provisional)' })).toBeVisible();
   await expect(changes.getByRole('heading', { name: 'Not in JEE Main 2026 (provisional) any more' })).toBeVisible();
   await expect(changes.getByRole('heading', { name: 'Changed', exact: true })).toBeVisible();
-  await expect(changes.locator('[data-topic-id="top_practical"]')).toContainText('affects');
-  await expect(changes.locator('[data-topic-id="top_hydrocarbons"]')).toContainText('partial → included');
+  await expect(changes.locator('[data-topic-id="top_practical"]')).not.toContainText('affects');
+  await expect(changes.locator('[data-topic-id="top_hydrocarbons"]')).toContainText('partly → fully');
   expect(await axeProblems(page)).toEqual([]);
 
   // both selects come back after a reload
