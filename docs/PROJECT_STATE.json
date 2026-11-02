@@ -1,9 +1,9 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-01",
+  "lastUpdated": "2026-11-02",
   "currentPhase": 7,
-  "currentPhaseStatus": "in_progress",
+  "currentPhaseStatus": "done",
   "completedPhases": [
     0,
     1,
@@ -11,7 +11,8 @@
     3,
     4,
     5,
-    6
+    6,
+    7
   ],
   "completedSteps": [
     "0",
@@ -123,7 +124,7 @@
     "7.2b",
     "7.2"
   ],
-  "nextPhase": 7,
+  "nextPhase": 8,
   "outcomeGroupsStep": {
     "closed": "2026-10-19",
     "summary": "Outcomes of a reaction are grouped by condition-variant set (src/core/graph/outcome-groups.ts); the family card draws one scheme per group and the full equation is one per group in a bordered panel; presentation only, no schema change.",
@@ -134,24 +135,24 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-01",
-    "commit": "aa44020",
-    "version": "c01f1a7a-d185-40fb-b244-d5bca0c209e4",
-    "liveSpecs": "2026-11-01, Chromium: 49 passed, 9 skipped; WebKit: 48 passed, 10 skipped (smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer, precursor-explorer, chapters, reagent-explorer, named-explorer, mechanism-explorer)"
+    "deployedAt": "2026-11-02",
+    "commit": "68cfa2d",
+    "version": "d3176607-423e-4390-8ba2-9a12d1951f2d",
+    "liveSpecs": "2026-11-02, Chromium: 53 passed, 10 skipped; WebKit: 51 passed, 11 skipped, 1 failed (reagent-explorer: WebKit logged an aborted wasm fetch on the live site; alone 4 of 5 re-runs pass after the spec waits for chem ok before its reload)"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-01",
-    "version": "97f296c7-da80-4940-ac9d-a1153c6d34f1",
+    "deployedAt": "2026-11-02",
+    "version": "9ddc31de-3d14-4e70-840b-0d6a89609b31",
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 7.4 deploy, 2026-11-01: an unauthenticated request got 302 (cloudflareaccess.com) and not the app; the public Worker answered 200 with the app.",
     "commit": "cd7cc53",
     "protectedCheckedAt": "2026-11-01"
   },
-  "nextStep": "7.7",
-  "nextStepTitle": "Phase 7 close (see docs/IMPLEMENTATION_PLAN.md row 7.7)",
+  "nextStep": "8.1",
+  "nextStepTitle": "Study inspector redesign (user request; the reviewer designs the step in the 8.1 prompt), see docs/IMPLEMENTATION_PLAN.md Phase 8",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -486,7 +487,13 @@
     "NEW (7.1b close, 2026-10-27): WebKit raises 'ResizeObserver loop completed with undelivered notifications' under load and the e2e page-error check fails on it (4 tests, one run); decide in Phase 9 whether the helper treats it as benign, with a test -> Phase 9",
     "Phase 9 (watch): WebKit page crash under load in the live run, study-edition concept-with-a-picture test, 2026-10-29; passed alone; watch for a repeat.",
     "Phase 9 (watch): full-equation-group times out in Firefox under full-run load (7.3c and 7.4 runs), passes alone in seconds; if it happens in the 7.7 run, find the cause (7.6 RR7).",
-    "-> Phase 8: Mechanism steps show their species in one row with role words; a before -> after layout comes with arrow-pushing drawings (7.6 A5)."
+    "-> Phase 8: Mechanism steps show their species in one row with role words; a before -> after layout comes with arrow-pushing drawings (7.6 A5).",
+    "-> Phase 8 (7.7 DoD audit G2): the Precursors truncation notice cannot be reached from the screen with test-size data (the step limit the screen offers never triggers max_depth; a budget must run out); it stays unit-tested only (precursors-view.test.tsx, route/words.test.ts). Decide: an e2e with a dataset that exhausts a budget, or accept.",
+    "-> Phase 8 (7.7 DoD audit G7): Chapters, Reactions and Precursors have no \"Open <view>\" palette command (Reagents, Named reactions, Mechanisms and Syllabus have). A feature, not built.",
+    "-> Phase 8 (7.7 DoD audit G8): the inspector buttons \"Show in Reagents\" and \"Show in Named reactions\" have no e2e (unit tests only).",
+    "-> Phase 9 (watch, 7.7): on the LIVE Study site WebKit sometimes logs \"wasm streaming compile failed: Load failed\" (a network error on the chem worker wasm); seen in reagent-explorer.spec, 2 of 3 re-runs before and 1 of 5 after the spec waits for \"chem ok\" before its reload. Not seen on the local Studio build in the full run. If it shows up in another spec, find the cause (aborted fetch, or the live site).",
+    "-> Phase 9 (watch, 7.7): full-equation-group did NOT time out in Firefox in the 7.7 full run (it did in the 7.3c, 7.4 and 7.6 runs); the older watch item stays open until it has stayed away for another run.",
+    "7.7 (REVIEW REQUIRED, reviewer to confirm): a chapter is covered only when the ONE coverage rule says so for the chapter topic itself; a chapter whose coverage is listed only on a section no longer gets a chip or an \"Only <exam>\" place (the demo lists chapters only)."
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",
@@ -575,14 +582,34 @@
   },
   "step76": {
     "status": "closed 2026-11-01, deployed both editions; awaiting review",
-    "commits": {"AB": "81343a5", "CD": "b3883dc", "specs": "aa44020"},
+    "commits": {
+      "AB": "81343a5",
+      "CD": "b3883dc",
+      "specs": "aa44020"
+    },
     "summary": "7.4 decisions and follow-ups, fact sheet docs/reviews/step-7-6-fact-sheet.md, core/syllabus, Syllabus view (desktop and phone), sixth Explore choice, Chapters link, uiState syllabus",
     "reviewRequired": "docs/PROGRESS.md, Step 7.6: REVIEW REQUIRED"
   },
   "step74": {
     "status": "closed 2026-11-01, deployed both editions; awaiting review",
-    "commits": {"A": "73da8c7", "B": "a8985e4", "CDE": "226da13", "specs": "cd7cc53"},
+    "commits": {
+      "A": "73da8c7",
+      "B": "a8985e4",
+      "CDE": "226da13",
+      "specs": "cd7cc53"
+    },
     "summary": "7.3c review decisions RR1-RR5 and follow-ups A1-A7, fact sheet docs/reviews/step-7-4-fact-sheet.md, core/named-reactions, core/mechanisms, Named reactions and Mechanisms views (desktop and phone), one select Show: on the phone; rows 7.4 and 7.5 merged; initial JS Study 377.84, Studio 381.72 kB gzip",
     "reviewRequired": "docs/PROGRESS.md, Step 7.4: REVIEW REQUIRED"
+  },
+  "step77": {
+    "status": "closed 2026-11-02, deployed both editions, tag phase-7-done; awaiting review",
+    "commits": {
+      "A": "7037b13",
+      "BCD": "814bc77",
+      "fix": "68cfa2d",
+      "close": "the commit tagged phase-7-done"
+    },
+    "summary": "one coverage rule (src/core/coverage), Syllabus A1-A3, mechanism species as engine formula in the box (A4), Phase 7 DoD audit docs/reviews/phase-7-dod.md, e2e gap tests (phase-7-dod.spec.ts), Phase 8 plan rows",
+    "reviewRequired": "docs/PROGRESS.md, Step 7.7: REVIEW REQUIRED"
   }
 }

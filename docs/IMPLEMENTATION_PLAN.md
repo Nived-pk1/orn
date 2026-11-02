@@ -194,7 +194,7 @@ Reaction explorer, precursor explorer with route-search panel, reagent explorer,
 | 7.4 | **DONE 2026-11-01 (merged with 7.5, one step):** Named reactions view (list, page, parent kinds, mechanism line; entry points: inspector, palette, Alt+Enter, the card badge, chapter cards). |
 | 7.5 | **DONE 2026-11-01 (merged into step 7.4):** Mechanisms view (pathways, numbered steps, species drawn, no curved arrows); phone Explore switch is one select "Show:". |
 | 7.6 | **DONE 2026-11-01:** Syllabus view (version select, status, totals, units with official wording, topic tree with counts and gaps, comparison "What changed"); phone Explore select has a sixth choice; 7.4 follow-ups. |
-| 7.7 | Phase 7 close: full e2e, both sizes, the Phase 7 Definition of Done (§3). |
+| 7.7 | **DONE 2026-11-02:** Phase 7 close: one coverage rule, 7.6 follow-ups, Definition of Done audit (docs/reviews/phase-7-dod.md) and its test gaps, full e2e, both editions deployed, tag `phase-7-done`. |
 
 Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)
 

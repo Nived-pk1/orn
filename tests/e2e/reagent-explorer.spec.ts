@@ -129,7 +129,9 @@ test('the exam scope marks and hides outside reactions; the open reagent comes b
   await scope.selectOption({ value: '' });
   await expect(view(page).getByLabel(/^Only /)).toHaveCount(0);
 
-  // the choice is saved: a reload opens the same page
+  // the choice is saved: a reload opens the same page (not while the chem worker is still fetching its wasm: WebKit logs the aborted fetch)
+  await expect(page.getByText(/Workers: .*chem ok/)).toBeVisible({ timeout: 60_000 });
+  await page.waitForTimeout(1000); // the saved state is written after a short pause (SAVE_DEBOUNCE_MS)
   await page.reload();
   await leaveChapters(page).catch(() => undefined);
   await rail(page).getByRole('button', { name: 'Reagents' }).click();
