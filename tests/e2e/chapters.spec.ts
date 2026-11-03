@@ -78,7 +78,7 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
   await view(page).getByRole('article', { name: 'Oxidation' }).first().click();
   await expect(record(page)).toHaveAttribute('data-record-id', 'cpt_oxidation');
   const line = record(page).locator('[data-in-chapters]');
-  await expect(line).toContainText('In chapters:');
+  await expect(line).toContainText('In the syllabus');
   await expect(line).toContainText(CHAPTER_A);
   await page.screenshot({ path: `${shotsDir()}/inspector-in-chapters-1280x800.png` });
   await line.getByRole('button', { name: CHAPTER_B }).click();

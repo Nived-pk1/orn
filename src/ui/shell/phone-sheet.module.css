@@ -80,3 +80,38 @@
 .sheet[data-sheet='peek'] [data-sheet-full] {
   display: none;
 }
+
+/*
+ * Motion (step 8.1 Part D): opening and snapping are 200 ms of transform and opacity. Nothing moves under prefers-reduced-motion (the
+ * rules are inside the no-preference query, so a reduce setting gets `animation: none` by default).
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .sheet[data-sheet='peek'] {
+    animation: sheet-peek-in 200ms ease-out;
+  }
+  .sheet[data-sheet='full'] {
+    animation: sheet-full-in 200ms ease-out;
+  }
+}
+
+@keyframes sheet-peek-in {
+  from {
+    transform: translateY(12%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-full-in {
+  from {
+    transform: translateY(8%);
+    opacity: 0.6;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}

@@ -47,6 +47,7 @@ describe('editing a reagent profile', () => {
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Edit / })).toBeNull());
     const saved = app.store.getState().records.reagent[KMNO4 as never] as Reagent;
     expect(saved.profiles[1]?.parameters.temperature).toEqual({ kind: 'value', value: 95, unit: 'C' });
+    fireEvent.click(await within(screen.getByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: /For authors/ }));
     fireEvent.click(await within(screen.getByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: /Level 3/ }));
     await waitFor(() => expect(screen.getByRole('complementary', { name: 'Inspector' }).textContent).toContain('95'));
     act(() => void app.store.undo());

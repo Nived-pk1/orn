@@ -2,7 +2,7 @@
  * A rig for the inspector's component tests (step 5.6b): the ports over a store made from a state (the demo, the maximal fixture or any
  * generated state), and helpers to open a record and every closed level.
  */
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { loadOtherViews } from '@/features/inspector/lazy-views';
@@ -24,6 +24,8 @@ export function maximalState(): CanonicalState {
 
 export interface InspectorRigOptions {
   readonly depictions?: InspectorPorts['depictions'];
+  /** 8.1: true = the Study layout (no "For authors" section); the default is the Studio layout, where the old levels live. */
+  readonly studyView?: boolean;
 }
 
 export function inspectorRig(state: CanonicalState, options: InspectorRigOptions = {}) {
@@ -42,23 +44,32 @@ export function inspectorRig(state: CanonicalState, options: InspectorRigOptions
     ui: { inspector, selection: createSelectionStore(), family: createFamilyStore(), panels },
     log: () => undefined,
   };
-  const host: InspectorHost = { openPane: () => undefined, edgeEnds: () => undefined, navigatorShown: false };
+  const host: InspectorHost = { openPane: () => undefined, edgeEnds: () => undefined, navigatorShown: false, authorSections: options.studyView === true ? false : true };
   return { ports, host, inspector, state, store, timers };
 }
 
-/** Opens every closed level and the raw record until nothing more opens. */
-export function openEverything(): void {
-  for (let round = 0; round < 8; round += 1) {
+/** Lets the lazily loaded parts (the views, "For authors") arrive: a few turns of the microtask queue inside act. */
+export async function settle(): Promise<void> {
+  for (let turn = 0; turn < 4; turn += 1) await act(async () => { await new Promise<void>((resolve) => setTimeout(resolve, 0)); });
+}
+
+/** Opens every closed level and the raw record until nothing more opens (8.1: the sections arrive lazily, so this waits for them). */
+export async function openEverything(): Promise<void> {
+  for (let round = 0; round < 10; round += 1) {
+    await settle();
     const closed = [...document.querySelectorAll('button[aria-expanded="false"]')];
     if (closed.length === 0) return;
-    for (const button of closed) fireEvent.click(button);
+    await act(async () => { for (const button of closed) fireEvent.click(button); });
   }
 }
 
-/** Opens the levels (their headings are buttons whose text has "Level N") and nothing else. */
-export function openLevels(): void {
-  for (const button of [...document.querySelectorAll('button[aria-expanded="false"]')]) {
-    if (/Level \d/.test(button.textContent ?? '')) fireEvent.click(button);
+/** Opens "For authors" and the levels (their headings are buttons whose text has "Level N") and nothing else. */
+export async function openLevels(): Promise<void> {
+  for (let round = 0; round < 8; round += 1) {
+    await settle();
+    const closed = [...document.querySelectorAll('button[aria-expanded="false"]')].filter((button) => /Level \d|For authors/.test(button.textContent ?? ''));
+    if (closed.length === 0 && round > 2) return;
+    await act(async () => { for (const button of closed) fireEvent.click(button); });
   }
 }
 
@@ -72,4 +83,5 @@ export function fakeLayout(): void {
 export async function preloadViews(): Promise<void> {
   const answer = await loadOtherViews();
   if (!answer.ok) throw new Error(answer.message);
+  await import('@/features/inspector/authors-section');
 }

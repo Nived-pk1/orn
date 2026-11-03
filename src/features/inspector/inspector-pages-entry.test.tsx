@@ -50,13 +50,13 @@ describe.each([
     expect(screen.queryByRole('button', { name: label })).toBeNull();
   });
 
-  it('on a phone it is in the FULL part of the sheet, and opening it closes the sheet', () => {
+  it('on a phone it is a main action in the peek of the sheet (8.1: the first two go-next buttons), and opening it closes the sheet', () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
     const closePane = vi.fn();
     const ref = first(kind);
     const calls = show(ref, true, { closePane });
     const button = screen.getByRole('button', { name: label });
-    expect(button.closest('[data-sheet-full]')).not.toBeNull();
+    expect(button.closest('[data-sheet-full]')).toBeNull();
     fireEvent.click(button);
     expect(calls[port]).toHaveBeenCalledWith(ref);
     expect(closePane).toHaveBeenCalled();

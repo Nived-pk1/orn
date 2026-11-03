@@ -12,7 +12,7 @@ import { resolve } from 'node:path';
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, openPhoneApp, watch } from './kit';
-import { editorDialog, openDemo, openNamesEditor, pane, record, shotsDir, showRecord, showSpecies } from './editor-kit';
+import { editorDialog, openAuthors, openDemo, openNamesEditor, pane, record, shotsDir, showRecord, showSpecies } from './editor-kit';
 
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
@@ -23,6 +23,7 @@ const openSection = async (page: Page, name: RegExp | string): Promise<void> => 
 };
 /** Opens an inspector level section if it is closed (the open state is remembered between records). */
 const openLevel = async (page: Page, level: RegExp): Promise<void> => {
+  await openAuthors(page);
   const toggle = record(page).getByRole('button', { name: level });
   if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
 };

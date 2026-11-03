@@ -12,13 +12,14 @@ import { resolve } from 'node:path';
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, openPhoneApp, watch } from './kit';
-import { editorDialog, openDemo, openNamesEditor, pane, palette, record, searchFor, shotsDir, showRecord } from './editor-kit';
+import { editorDialog, openAuthors, openDemo, openNamesEditor, pane, palette, record, searchFor, shotsDir, showRecord } from './editor-kit';
 
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 
 const shot = (page: Page, name: string): Promise<Buffer> => page.screenshot({ path: resolve(shotsDir(), `${name}-1280x800.png`) });
 const openLevel = async (page: Page, level: RegExp): Promise<void> => {
+  await openAuthors(page);
   const toggle = record(page).getByRole('button', { name: level });
   if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
 };

@@ -48,11 +48,11 @@ const withAssets = (...list: Asset[]): CanonicalState =>
     for (const record of list) (draft.records.asset as Record<string, Asset>)[record.id] = record;
   });
 
-function show(state: CanonicalState, target: RecordRef, open: InspectorPorts['assets'] = { open: async (id) => ({ ok: true, url: `blob:pic/${id}` }), revoke: vi.fn() }) {
+async function show(state: CanonicalState, target: RecordRef, open: InspectorPorts['assets'] = { open: async (id) => ({ ok: true, url: `blob:pic/${id}` }), revoke: vi.fn() }) {
   const rig = inspectorRig(state);
   render(<Inspector ports={{ ...rig.ports, assets: open }} host={rig.host} />);
   act(() => rig.inspector.getState().open(target));
-  openLevels();
+  await openLevels();
   return rig;
 }
 
@@ -60,7 +60,7 @@ describe('the pictures of a concept', () => {
   const concept = firstOf(demoState(), 'concept');
 
   it('shows the picture before the first level, with alt text, caption, a blob URL and "Open full size"', async () => {
-    show(withAssets(asset('ast_one', concept, { altText: 'A drawing of the idea', caption: 'The *idea* in a picture.' })), concept);
+    await show(withAssets(asset('ast_one', concept, { altText: 'A drawing of the idea', caption: 'The *idea* in a picture.' })), concept);
     const region = screen.getByRole('region', { name: 'Pictures of this concept' });
     const img = await within(region).findByRole('img', { name: 'A drawing of the idea' });
     expect(img.getAttribute('src')).toBe('blob:pic/ast_one');
@@ -73,7 +73,7 @@ describe('the pictures of a concept', () => {
 
   it('bytes missing in this browser are said in words with the alt text', async () => {
     const missing: AssetImage = { ok: false, reason: 'missing', message: 'The bytes of this image are not stored (finding AST-002).' };
-    show(withAssets(asset('ast_one', concept, { altText: 'A drawing' })), concept, { open: async () => missing, revoke: vi.fn() });
+    await show(withAssets(asset('ast_one', concept, { altText: 'A drawing' })), concept, { open: async () => missing, revoke: vi.fn() });
     const region = screen.getByRole('region', { name: 'Pictures of this concept' });
     expect(await within(region).findByText('Picture missing: its file is not stored in this browser')).toBeTruthy();
     expect(within(region).getByText('A drawing')).toBeTruthy();
@@ -82,7 +82,7 @@ describe('the pictures of a concept', () => {
 
   it('is oldest first, and shows only the pictures attached to THIS concept', async () => {
     const other = { kind: 'concept', id: Object.keys(demoState().records.concept)[1] } as RecordRef;
-    show(
+    await show(
       withAssets(
         asset('ast_new', concept, { altText: 'second', provenance: { origin: 'user', createdAt: '2026-10-24T11:00:00.000Z', updatedAt: '2026-10-24T11:00:00.000Z' } } as Partial<Asset>),
         asset('ast_old', concept, { altText: 'first', provenance: { origin: 'user', createdAt: '2026-10-24T09:00:00.000Z', updatedAt: '2026-10-24T09:00:00.000Z' } } as Partial<Asset>),
@@ -95,8 +95,8 @@ describe('the pictures of a concept', () => {
     expect(within(region).getAllByRole('img').map((img) => img.getAttribute('alt'))).toEqual(['first', 'second']);
   });
 
-  it('a concept with no picture has no pictures region', () => {
-    show(demoState(), concept);
+  it('a concept with no picture has no pictures region', async () => {
+    await show(demoState(), concept);
     expect(screen.queryByRole('region', { name: /^Pictures of this/ })).toBeNull();
   });
 });
@@ -104,14 +104,14 @@ describe('the pictures of a concept', () => {
 describe('every PICTURE_KINDS kind and no other', () => {
   it.each([...PICTURE_KINDS])('a %s with a picture names its own kind word', async (kind) => {
     const target = firstOf(demoState(), kind);
-    show(withAssets(asset('ast_one', target, { altText: 'pic' })), target);
+    await show(withAssets(asset('ast_one', target, { altText: 'pic' })), target);
     const word = kind.replace(/_/g, ' ');
     expect(await screen.findByRole('region', { name: `Pictures of this ${word}` })).toBeTruthy();
   });
 
-  it('a topic (not a picture kind) shows none, even when an asset names it', () => {
+  it('a topic (not a picture kind) shows none, even when an asset names it', async () => {
     const topic = firstOf(demoState(), 'topic');
-    show(withAssets(asset('ast_one', topic, { altText: 'pic' })), topic);
+    await show(withAssets(asset('ast_one', topic, { altText: 'pic' })), topic);
     expect(screen.queryByRole('region', { name: /^Pictures of this/ })).toBeNull();
   });
 });

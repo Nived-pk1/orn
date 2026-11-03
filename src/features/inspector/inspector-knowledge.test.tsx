@@ -15,17 +15,18 @@ afterEach(cleanup);
 beforeAll(fakeLayout);
 beforeAll(preloadViews);
 
-function show(state: ReturnType<typeof demoState>, ref: RecordRef, at?: string) {
+async function show(state: ReturnType<typeof demoState>, ref: RecordRef, at?: string) {
   const rig = inspectorRig(state);
   render(<Inspector ports={rig.ports} host={rig.host} />);
   act(() => rig.inspector.getState().open(ref, at));
+  await openLevels();
   return rig;
 }
 
 describe('a reaction: related reactions (demo)', () => {
-  it('Cannizzaro lists the stored "commonly confused with" Aldol reaction, and the derived groups', () => {
-    show(demoState(), { kind: 'reaction', id: 'rxn_benzaldehyde-cannizzaro' } as RecordRef);
-    openEverything();
+  it('Cannizzaro lists the stored "commonly confused with" Aldol reaction, and the derived groups', async () => {
+    await show(demoState(), { kind: 'reaction', id: 'rxn_benzaldehyde-cannizzaro' } as RecordRef);
+    await openEverything();
     const related = screen.getByRole('region', { name: 'Related reactions' });
     const stored = within(related).getByRole('region', { name: 'Relationships written by a person' });
     expect(within(stored).getByText(/commonly confused with/)).toBeTruthy();
@@ -35,10 +36,10 @@ describe('a reaction: related reactions (demo)', () => {
     expect(within(related).getByText(/None found for: .*Same transformation/)).toBeTruthy();
   });
 
-  it('a group of more than 12 shows 12 and "+N more" opens the whole list as a virtual list', () => {
-    show(demoState(), { kind: 'reaction', id: 'rxn_ethanal-aldol' } as RecordRef);
-    openLevels();
-    const group = screen.getByRole('region', { name: 'Same reagent family' });
+  it('a group of more than 12 shows 12 and "+N more" opens the whole list as a virtual list', async () => {
+    await show(demoState(), { kind: 'reaction', id: 'rxn_ethanal-aldol' } as RecordRef);
+    await openLevels();
+    const group = within(screen.getByRole('region', { name: 'Related reactions' })).getByRole('region', { name: 'Same reagent family' });
     expect(within(group).getAllByRole('link')).toHaveLength(12);
     const more = within(group).getByRole('button', { name: /^\+\d+ more$/ });
     fireEvent.click(more);
@@ -50,10 +51,10 @@ describe('a reaction: related reactions (demo)', () => {
     expect(within(group).getAllByRole('link')).toHaveLength(12);
   });
 
-  it('following a related reaction opens it, and Back returns', () => {
-    const rig = show(demoState(), { kind: 'reaction', id: 'rxn_aniline-diazotisation' } as RecordRef);
-    openEverything();
-    const leads = screen.getByRole('region', { name: 'Leads on to' });
+  it('following a related reaction opens it, and Back returns', async () => {
+    const rig = await show(demoState(), { kind: 'reaction', id: 'rxn_aniline-diazotisation' } as RecordRef);
+    await openEverything();
+    const leads = within(screen.getByRole('region', { name: 'Related reactions' })).getByRole('region', { name: 'Leads on to' });
     fireEvent.click(within(leads).getAllByRole('link')[0] as HTMLElement);
     expect(rig.inspector.getState().history.at(-1)?.id).toBe('rxn_benzenediazonium-sandmeyer');
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
@@ -64,9 +65,9 @@ describe('a reaction: related reactions (demo)', () => {
 describe('the maximal fixture: knowledge kinds', () => {
   const state = maximalState();
 
-  it('a mechanism: variants as sections, steps as ordered rows with bonds and electron movements', () => {
-    show(state, { kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef);
-    openEverything();
+  it('a mechanism: variants as sections, steps as ordered rows with bonds and electron movements', async () => {
+    await show(state, { kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef);
+    await openEverything();
     expect(screen.getByRole('list', { name: 'Variants' })).toBeTruthy();
     const steps = screen.getByRole('list', { name: 'Steps of Polar (two-electron) addition' });
     const first = within(steps).getAllByRole('listitem')[0] as HTMLElement;
@@ -92,7 +93,7 @@ describe('the maximal fixture: knowledge kinds', () => {
     const rig = inspectorRig(state, { depictions });
     render(<Inspector ports={rig.ports} host={rig.host} />);
     act(() => rig.inspector.getState().open({ kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef));
-    openEverything();
+    await openEverything();
     await act(async () => {
       await Promise.resolve();
     });
@@ -103,20 +104,20 @@ describe('the maximal fixture: knowledge kinds', () => {
     }
   });
 
-  it('opened at a variant, that variant is open and marked', () => {
-    show(state, { kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef, 'mvr_max-grignard-set');
+  it('opened at a variant, that variant is open and marked', async () => {
+    await show(state, { kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef, 'mvr_max-grignard-set');
     const block = document.querySelector('[data-variant-id="mvr_max-grignard-set"]') as HTMLElement;
     expect(block.hasAttribute('data-focused')).toBe(true);
     expect(within(block).getByRole('button', { name: /Single-electron transfer/ }).getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('an outcome\'s mechanism link opens the mechanism at its variant', () => {
+  it('an outcome\'s mechanism link opens the mechanism at its variant', async () => {
     const reactions = Object.values(state.records.reaction) as Reaction[];
     const reaction = reactions.find((r) => r.outcomes.some((o) => o.mechanism?.variantId !== undefined));
     expect(reaction).toBeDefined();
     const variantId = reaction?.outcomes.find((o) => o.mechanism?.variantId !== undefined)?.mechanism?.variantId as string;
-    const rig = show(state, { kind: 'reaction', id: (reaction as Reaction).id } as RecordRef);
-    openEverything();
+    const rig = await show(state, { kind: 'reaction', id: (reaction as Reaction).id } as RecordRef);
+    await openEverything();
     const link = [...document.querySelectorAll('[aria-label^="Outcome"] [data-record-id^="mec_"]')].find((el) => el.parentElement?.textContent?.includes('at its variant')) as HTMLElement;
     fireEvent.click(link);
     const entry = rig.inspector.getState().history.at(-1);
@@ -130,17 +131,17 @@ describe('the maximal fixture: knowledge kinds', () => {
     ['concept', 'Concept'],
     ['transformation', 'Transformation'],
     ['caveat', 'Caveat'],
-  ] as const)('%s has its own readable view', (kind, label) => {
+  ] as const)('%s has its own readable view', async (kind, label) => {
     const record = Object.values(state.records[kind] as Record<string, { id: string }>)[0];
     expect(record).toBeDefined();
-    show(state, { kind, id: (record as { id: string }).id } as RecordRef);
-    openEverything();
+    await show(state, { kind, id: (record as { id: string }).id } as RecordRef);
+    await openEverything();
     expect(document.querySelector(`dl[aria-label="${label}"]`)).not.toBeNull();
   });
 
-  it('a caveat lists every target with its role as a link', () => {
-    show(state, { kind: 'caveat', id: 'cav_max-grignard-protic' } as RecordRef);
-    openEverything();
+  it('a caveat lists every target with its role as a link', async () => {
+    await show(state, { kind: 'caveat', id: 'cav_max-grignard-protic' } as RecordRef);
+    await openEverything();
     const targets = screen.getByRole('list', { name: /^Targets \(\d+\)$/ });
     expect(within(targets).getAllByRole('link').length).toBeGreaterThan(0);
     expect(within(targets).getAllByRole('listitem')[0]?.textContent).toMatch(/affected|context/);

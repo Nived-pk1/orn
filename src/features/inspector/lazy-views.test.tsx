@@ -25,12 +25,14 @@ async function open(ref: RecordRef, state = maximalState()) {
   const rig = inspectorRig(state);
   render(<Inspector ports={rig.ports} host={rig.host} />);
   act(() => rig.inspector.getState().open(ref));
+  // 8.1: the kind views live in the closed "For authors" section
+  fireEvent.click(await screen.findByRole('button', { name: /For authors/ }));
 }
 
 describe('lazy kind views', () => {
   it('a skeleton shows while the chunk loads, then the view', async () => {
     await open(mechanism);
-    expect(screen.getByRole('status', { name: 'Loading this view' })).toBeTruthy();
+    expect(await screen.findByRole('status', { name: /^Loading (this view|the author view)$/ })).toBeTruthy(); // 8.1: the author section's own skeleton comes first
     await screen.findByRole('list', { name: 'Variants' });
     expect(screen.queryByRole('status', { name: 'Loading this view' })).toBeNull();
   });
@@ -55,7 +57,7 @@ describe('lazy kind views', () => {
     const state = demoState();
     const reaction = Object.values(state.records.reaction)[0] as { id: string };
     await open({ kind: 'reaction', id: reaction.id } as RecordRef, state);
-    expect(screen.getByRole('status', { name: 'Loading this view' })).toBeTruthy();
+    expect(await screen.findByRole('status', { name: /^Loading (this view|the author view)$/ })).toBeTruthy(); // 8.1: the author section's own skeleton comes first
     await vi.waitFor(() => expect(document.querySelector('[data-view="reaction"] section[data-level="2"]')).not.toBeNull());
     expect(screen.queryByRole('alert')).toBeNull();
   });

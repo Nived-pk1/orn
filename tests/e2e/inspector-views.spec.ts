@@ -15,6 +15,7 @@ import { indexEngine } from '@/core/indexes';
 import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/limits';
 import { generateTier } from '@/test-support/generator';
 import { withNavigatorAnchors } from '@/test-support/perf-kit';
+import { openAuthors } from './editor-kit';
 import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, watch } from './kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -25,6 +26,7 @@ const record = (page: Page) => pane(page).getByRole('article', { name: 'Record' 
 
 /** Opens a level only when it is closed (the deepest level opened is remembered for the next record). */
 async function openLevel(page: Page, level: number): Promise<void> {
+  await openAuthors(page);
   const button = record(page).getByRole('button', { name: new RegExp(`Level ${level}`) });
   if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
   await expect(button).toHaveAttribute('aria-expanded', 'true');
@@ -116,6 +118,7 @@ test.describe('the inspector, remaining kinds', () => {
       await page.keyboard.press('Alt+ArrowLeft');
       await expect(record(page)).toHaveAttribute('data-record-id', 'cls_alcohols');
       expect(await axeProblems(page)).toEqual([]);
+      await openAuthors(page);
       await record(page).getByRole('button', { name: /Level 3/ }).focus();
       await page.keyboard.press('Escape');
       await expect(pane(page)).toHaveCount(0);

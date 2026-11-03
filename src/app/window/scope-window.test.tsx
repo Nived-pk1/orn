@@ -149,7 +149,10 @@ describe('the inspector', () => {
     await screen.findByRole('group', { name: /^Navigator:/ });
     const reaction = (demoState().records.reaction as Record<string, Reaction>)[BECKMANN] as Reaction;
     act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: reaction.id }));
-    for (let round = 0; round < 6; round += 1) for (const button of [...document.querySelectorAll('button[aria-expanded="false"]')]) fireEvent.click(button);
+    for (let round = 0; round < 8; round += 1) {
+      await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+      for (const button of [...document.querySelectorAll('button[aria-expanded="false"]')]) fireEvent.click(button);
+    }
     const chosen = document.querySelector('[data-chosen]') as HTMLElement;
     expect(chosen.textContent).toContain('JEE Main');
     expect(chosen.textContent).toContain('the chosen exam scope');

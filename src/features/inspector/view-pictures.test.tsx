@@ -49,19 +49,19 @@ const withAssets = (...list: Asset[]): CanonicalState =>
     for (const record of list) (draft.records.asset as Record<string, Asset>)[record.id] = record;
   });
 
-function show(state: CanonicalState, open: InspectorPorts['assets'] | 'none' = { open: async (id) => ({ ok: true, url: `blob:pic/${id}` }), revoke: vi.fn() }) {
+async function show(state: CanonicalState, open: InspectorPorts['assets'] | 'none' = { open: async (id) => ({ ok: true, url: `blob:pic/${id}` }), revoke: vi.fn() }) {
   const rig = inspectorRig(state);
   const ports: InspectorPorts = open === 'none' ? rig.ports : { ...rig.ports, assets: open };
   render(<Inspector ports={ports} host={rig.host} />);
   act(() => rig.inspector.getState().open({ kind: 'mechanism', id: SN2 }));
-  openLevels();
+  await openLevels();
   return rig;
 }
 const pictures = () => screen.getByRole('region', { name: 'Pictures of this mechanism' });
 
 describe('the pictures of a mechanism', () => {
   it('come FIRST: before the summary and the variants', async () => {
-    show(withAssets(asset('ast_one', { altText: 'Backside attack' })));
+    await show(withAssets(asset('ast_one', { altText: 'Backside attack' })));
     const img = await within(pictures()).findByRole('img', { name: 'Backside attack' });
     const root = pictures().closest('article') ?? document.body;
     // document order: the pictures region precedes the first level section
@@ -71,14 +71,14 @@ describe('the pictures of a mechanism', () => {
   });
 
   it('are shown with the alt text from the record and the caption under each (rich text)', async () => {
-    show(withAssets(asset('ast_one', { altText: 'Backside attack', caption: 'The *nucleophile* arrives.' })));
+    await show(withAssets(asset('ast_one', { altText: 'Backside attack', caption: 'The *nucleophile* arrives.' })));
     const figure = (await within(pictures()).findByRole('img', { name: 'Backside attack' })).closest('figure') as HTMLElement;
     expect(within(figure).getByText('nucleophile').tagName).toBe('EM');
     expect(figure.querySelector('figcaption')?.textContent).toBe('The nucleophile arrives.');
   });
 
   it('are in the order they were added: oldest first; other mechanisms and detached pictures are not shown', async () => {
-    show(
+    await show(
       withAssets(
         asset('ast_new', { altText: 'second', createdAt: '2026-10-20T11:00:00.000Z' }),
         asset('ast_old', { altText: 'first', createdAt: '2026-10-20T09:00:00.000Z' }),
@@ -90,13 +90,13 @@ describe('the pictures of a mechanism', () => {
     expect(within(pictures()).getAllByRole('img').map((img) => img.getAttribute('alt'))).toEqual(['first', 'second']);
   });
 
-  it('a mechanism with no picture has no pictures region', () => {
-    show(demoState());
+  it('a mechanism with no picture has no pictures region', async () => {
+    await show(demoState());
     expect(screen.queryByRole('region', { name: 'Pictures of this mechanism' })).toBeNull();
   });
 
   it('uses <img> only, at its natural size at most: no width is set on the element and the style never enlarges it', async () => {
-    show(withAssets(asset('ast_one', { altText: 'x' })));
+    await show(withAssets(asset('ast_one', { altText: 'x' })));
     const img = await within(pictures()).findByRole('img', { name: 'x' });
     expect(img.hasAttribute('width') || img.hasAttribute('style')).toBe(false);
     expect(pictures().querySelector('object, embed, iframe, svg, canvas')).toBeNull();
@@ -109,7 +109,7 @@ describe('the pictures of a mechanism', () => {
 
   it('makes its blob URL through the assets port and revokes it when the view goes', async () => {
     const revoke = vi.fn();
-    show(withAssets(asset('ast_one', { altText: 'x' })), { open: async () => ({ ok: true, url: 'blob:pic/1' }), revoke });
+    await show(withAssets(asset('ast_one', { altText: 'x' })), { open: async () => ({ ok: true, url: 'blob:pic/1' }), revoke });
     await within(pictures()).findByRole('img', { name: 'x' });
     cleanup();
     expect(revoke).toHaveBeenCalledWith('blob:pic/1');
@@ -118,14 +118,14 @@ describe('the pictures of a mechanism', () => {
 
   it('bytes missing in this browser: said in words with the alt text, never a broken image', async () => {
     const missing: AssetImage = { ok: false, reason: 'missing', message: 'The bytes of this image are not stored (finding AST-002).' };
-    show(withAssets(asset('ast_one', { altText: 'Backside attack' })), { open: async () => missing, revoke: vi.fn() });
+    await show(withAssets(asset('ast_one', { altText: 'Backside attack' })), { open: async () => missing, revoke: vi.fn() });
     expect(await within(pictures()).findByText('Picture missing: its file is not stored in this browser')).toBeTruthy();
     expect(within(pictures()).getByText('Backside attack')).toBeTruthy();
     expect(within(pictures()).queryByRole('img')).toBeNull();
   });
 
   it('a window with no way to read bytes says so, with the alt text', async () => {
-    show(withAssets(asset('ast_one', { altText: 'Backside attack' })), 'none');
+    await show(withAssets(asset('ast_one', { altText: 'Backside attack' })), 'none');
     expect(await within(pictures()).findByText(/no way to read/)).toBeTruthy();
     expect(within(pictures()).getByText('Backside attack')).toBeTruthy();
   });
@@ -133,7 +133,7 @@ describe('the pictures of a mechanism', () => {
 
 describe('Open full size', () => {
   it('opens a modal dialog with the picture; Close and Esc close it; focus returns to the button', async () => {
-    show(withAssets(asset('ast_one', { altText: 'Backside attack' })));
+    await show(withAssets(asset('ast_one', { altText: 'Backside attack' })));
     const open = await within(pictures()).findByRole('button', { name: 'Open full size' });
     open.focus();
     fireEvent.click(open);
@@ -152,7 +152,7 @@ describe('Open full size', () => {
 
 describe('Open full size: fitted to the screen (follow-up G1)', () => {
   async function bigImage(natural: { width: number; height: number }): Promise<HTMLElement> {
-    show(withAssets(asset('ast_one', { altText: 'Backside attack' })));
+    await show(withAssets(asset('ast_one', { altText: 'Backside attack' })));
     fireEvent.click(await within(pictures()).findByRole('button', { name: 'Open full size' }));
     const dialog = await screen.findByRole('dialog', { name: 'Backside attack' });
     const big = within(dialog).getByRole('img', { name: 'Backside attack' });

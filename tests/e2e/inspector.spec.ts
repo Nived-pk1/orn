@@ -6,6 +6,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { openAuthors } from './editor-kit';
 import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard } from './kit';
 
 const pane = (page: Page) => page.getByRole('complementary', { name: 'Inspector' });
@@ -37,7 +38,8 @@ test.describe('the inspector', () => {
     await expect(record(page).getByRole('list', { name: 'Participants' })).toBeVisible();
     await expect(record(page).getByRole('list', { name: 'Outcomes' })).toBeVisible();
 
-    // a link focuses its record; Back (and Alt+Left) returns
+    // a link focuses its record; Back (and Alt+Left) returns (8.1: the participants are in "For authors")
+    await openAuthors(page);
     const link = record(page).getByRole('list', { name: 'Participants' }).getByRole('link').first();
     const target = await link.getAttribute('data-record-id');
     await link.click();
@@ -54,6 +56,7 @@ test.describe('the inspector', () => {
     // the open family page comes back with the saved view: return to the overview, then pick a family
     await page.getByRole('button', { name: 'Overview' }).click();
     await page.locator('svg [data-node-id="cls_alcohols"]').click();
+    await openAuthors(page); // the saved level is open again once "For authors" is
     await expect(record(page).getByRole('button', { name: /Level 3/ })).toHaveAttribute('aria-expanded', 'true');
     await expectClean(seen);
   });

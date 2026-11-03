@@ -28,3 +28,6 @@ export function useInspectorEnv(): InspectorEnv {
 export function makeEnv(ports: InspectorPorts, host: InspectorHost, state: CanonicalState, open: (ref: RecordRef, at?: string) => void): InspectorEnv {
   return { ports, host, state, open, exists: (ref) => recordOf(state, ref) !== undefined, name: (ref) => nameOf(state, ref) };
 }
+
+/** Studio (8.1): the inspector shows "For authors" and the author lines. A host that sets nothing is an author view exactly when it wires the editors. */
+export const isAuthorView = (host: InspectorHost): boolean => host.authorSections ?? host.editNames !== undefined;

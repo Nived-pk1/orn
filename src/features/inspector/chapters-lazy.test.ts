@@ -8,10 +8,10 @@ import { describe, expect, it } from 'vitest';
 const valueImports = (source: string): string[] => [...source.matchAll(/^import\s+(?!type\b)[^;]*from\s+'([^']+)'/gm)].map((m) => m[1] ?? '');
 
 describe('chapters are lazy', () => {
-  const inspector = readFileSync(new URL('./inspector.tsx', import.meta.url), 'utf8');
+  const inspector = readFileSync(new URL('./study-inspector.tsx', import.meta.url), 'utf8'); // 8.1: the layout, not inspector.tsx, places the line
   const state = readFileSync(new URL('../../ui/state/chapters-state.ts', import.meta.url), 'utf8');
 
-  it('the inspector imports neither in-chapters nor the chapters core by value', () => {
+  it('the inspector layout imports neither in-chapters nor the chapters core by value', () => {
     expect(valueImports(inspector).filter((from) => /in-chapters|core\/chapters/.test(from))).toEqual([]);
   });
 

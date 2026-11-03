@@ -10,7 +10,7 @@
 import { resolve } from 'node:path';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, watch } from './kit';
-import { editorDialog, openDemo, openNamesEditor, palette, pane, record, searchFor, shotsDir, showRecord, showSpecies } from './editor-kit';
+import { editorDialog, openAuthors, openDemo, openNamesEditor, palette, pane, record, searchFor, shotsDir, showRecord, showSpecies } from './editor-kit';
 import type { Page } from '@playwright/test';
 
 const newSpeciesDialog = (page: Page) => page.getByRole('dialog', { name: 'New species' });
@@ -84,6 +84,7 @@ test.describe('the species editor', () => {
     await searchFor(page, 'c: alcohols');
     await palette(page).getByRole('option', { name: /^Alcohols/ }).first().click();
     await expect(record(page).getByRole('heading', { level: 3, name: 'Alcohols', exact: true })).toBeVisible();
+    await openAuthors(page);
     await record(page).getByRole('button', { name: /^.? ?Level 3/ }).click();
     await expect(record(page)).toContainText('Propan-1-ol');
 

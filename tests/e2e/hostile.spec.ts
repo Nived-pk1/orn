@@ -9,6 +9,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { openAuthors } from './editor-kit';
 import { axeProblems, expectClean, expectPreview, importDialog, inertProblems, openApp, watch, exampleCard } from './kit';
 import { ASSET_ID, HOSTILE_FILE_NAME, HOSTILE_REACTION, HOSTILE_REF_TITLE, HOSTILE_SPECIES, HOSTILE_WORD, REACTION_ID, REF_ID, SCRIPT_TEXT, hostileFile } from './support/hostile-file';
 
@@ -19,6 +20,7 @@ const escaped = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\
 
 /** Opens every level of the open record that has a button, then asserts the page is still inert. */
 async function openLevels(page: Page, where: string): Promise<void> {
+  await openAuthors(page);
   for (const level of [1, 2, 3, 4, 5]) {
     const button = record(page).getByRole('button', { name: new RegExp(`Level ${level}`) });
     if ((await button.count()) > 0 && (await button.getAttribute('aria-expanded')) === 'false') await button.click();

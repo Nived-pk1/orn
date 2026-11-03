@@ -47,13 +47,13 @@ describe('Show in Reagents', () => {
     expect(screen.queryByRole('button', { name: 'Show in Reagents' })).toBeNull();
   });
 
-  it('on a phone it is in the FULL part of the sheet, and opening it closes the sheet', () => {
+  it('on a phone it is a main action in the peek of the sheet (8.1), and opening it closes the sheet', () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
     const closePane = vi.fn();
     const ref = first('reagent');
     const { showReagent } = show(ref, true, { closePane });
     const button = screen.getByRole('button', { name: 'Show in Reagents' });
-    expect(button.closest('[data-sheet-full]')).not.toBeNull();
+    expect(button.closest('[data-sheet-full]')).toBeNull();
     fireEvent.click(button);
     expect(showReagent).toHaveBeenCalledWith(ref);
     expect(closePane).toHaveBeenCalled();

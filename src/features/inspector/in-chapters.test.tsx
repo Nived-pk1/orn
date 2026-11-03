@@ -55,14 +55,14 @@ describe('In chapters', () => {
     const opened: string[] = [];
     await show(stateOf(...base, concept('c1', 'One', 'general'), topicMapping('m1', 'chap-a', { kind: 'concept', id: 'cpt_c1' } as never), topicMapping('m2', 'chap-b', { kind: 'concept', id: 'cpt_c1' } as never, 'supporting')), { kind: 'concept', id: 'cpt_c1' }, { openChapter: (id) => void opened.push(id) });
     const line = document.querySelector('[data-in-chapters]') as HTMLElement;
-    expect(line.textContent).toBe('In chapters: Alpha chapter, Bravo chapter');
+    expect(line.textContent).toBe('In the syllabusAlpha chapterBravo chapter');
     fireEvent.click(screen.getByRole('button', { name: 'Bravo chapter' }));
     expect(opened).toEqual(['top_chap-b']);
   });
 
   it('Studio (an editor is wired): a study record in no chapter says so; a topic has no such line', async () => {
     await show(stateOf(...base, concept('c1', 'One', 'general')), { kind: 'concept', id: 'cpt_c1' }, { editNames: { unavailable: undefined, open: () => undefined } });
-    expect((document.querySelector('[data-in-chapters]') as HTMLElement).textContent).toBe('In chapters: No chapter yet');
+    expect((document.querySelector('[data-in-chapters]') as HTMLElement).textContent).toBe('In the syllabusNo chapter yet');
     cleanup();
     await show(stateOf(...base), { kind: 'topic', id: 'top_chap-a' });
     expect(document.querySelector('[data-in-chapters]')).toBeNull();

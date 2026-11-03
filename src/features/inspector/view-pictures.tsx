@@ -12,7 +12,7 @@ import type { Asset, RecordRef } from '@/core/schema';
 import { revokeWhenUnused } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import { FullPicture } from './full-picture';
-import { useInspectorEnv } from './env';
+import { isAuthorView, useInspectorEnv } from './env';
 import { kindWord } from './model/describe';
 import { RichText } from './rich-text';
 import styles from './inspector.module.css';
@@ -97,6 +97,19 @@ export function RecordPictures(props: { readonly target: RecordRef }) {
       {pictures.map((asset) => (
         <PictureFigure key={asset.id} asset={asset} />
       ))}
+    </section>
+  );
+}
+
+/** The hero of a record (step 8.1): its first picture only, with "Open full size". Its own lazy chunk with the rest of this file. */
+export function HeroPicture(props: { readonly target: RecordRef }) {
+  const { state, host } = useInspectorEnv();
+  const first = isPictureKind(props.target.kind) ? picturesOf(state, props.target)[0] : undefined;
+  if (first === undefined) return null;
+  // Study: this IS the record's picture ("Pictures of this ..."); Studio also lists every picture under "For authors", so this one is named differently there
+  return (
+    <section data-hero-picture="" aria-label={isAuthorView(host) ? `Main picture of this ${kindWord(props.target.kind)}` : `Pictures of this ${kindWord(props.target.kind)}`}>
+      <PictureFigure asset={first} />
     </section>
   );
 }

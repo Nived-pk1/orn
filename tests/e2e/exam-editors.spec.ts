@@ -144,6 +144,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   await palette(page).locator('[role="option"][data-record-id="rxn_aniline-diazotisation"]').tap();
   await page.getByRole('button', { name: 'Show the whole record' }).tap();
   // the reaction's exam facts link to the demo version; its record has Edit
+  await page.getByRole('button', { name: /For authors/ }).tap();
   await page.getByRole('button', { name: /^Level 4/ }).tap();
   await page.getByRole('link', { name: 'JEE Main 2026 (provisional)' }).first().tap();
   await page.getByRole('button', { name: 'Edit', exact: true }).tap();

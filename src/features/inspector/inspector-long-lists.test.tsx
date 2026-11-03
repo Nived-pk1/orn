@@ -25,11 +25,11 @@ describe('a class with 1,000 reactions', () => {
   const rollup = indexEngine.build(state).navigatorRollup();
   const hub = [...rollup.hubs].sort((a, b) => rollup.candidatesFrom(b.id).length - rollup.candidatesFrom(a.id).length)[0] as RecordRef;
 
-  it('lists its reactions in a virtual list: at most 60 rows in the DOM, the whole size in aria-setsize', () => {
+  it('lists its reactions in a virtual list: at most 60 rows in the DOM, the whole size in aria-setsize', async () => {
     const rig = inspectorRig(state);
     render(<Inspector ports={rig.ports} host={rig.host} />);
     act(() => rig.inspector.getState().open({ kind: hub.kind, id: hub.id } as RecordRef));
-    openLevels();
+    await openLevels();
     const list = screen.getByRole('list', { name: /^Reactions of this class \(\d+\)$/ });
     const total = Number(/\((\d+)\)/.exec(list.getAttribute('aria-label') ?? '')?.[1]);
     expect(total).toBeGreaterThanOrEqual(1000);

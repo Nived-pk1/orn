@@ -13,14 +13,31 @@ import { usePanels } from '@/ui/state';
 import { useInspectorEnv } from './env';
 import styles from './inspector.module.css';
 
-export function FullEquations(props: { readonly record: Reaction }) {
+function useEquations(record: Reaction) {
   const env = useInspectorEnv();
-  const { record } = props;
-  const [open, setOpen] = useState(false);
   const { ports } = env;
   const equations = useMemo(() => fullEquationsOfReaction(env.state, ports.indexes.current(), record), [env, ports, record]);
   const binding = useMemo(() => (ports.depictions === undefined ? undefined : createDepictionBinding(ports.depictions, ports.timers, EQUATION_AREA)), [ports]);
   const names = usePanels(ports.ui.panels, (state) => state.equationNames);
+  return { ports, equations, binding, names };
+}
+
+/** The picture first (step 8.1 hero): the reaction's first full equation, drawn like the one under "Show full equation". */
+export function HeroEquation(props: { readonly record: Reaction }) {
+  const { ports, equations, binding, names } = useEquations(props.record);
+  const first = equations[0];
+  if (first === undefined) return null;
+  return (
+    <div data-hero-equation="">
+      <EquationScheme equation={first} binding={binding} timers={ports.timers} facts={ports.facts} names={names} label="Equation of this reaction" />
+    </div>
+  );
+}
+
+export function FullEquations(props: { readonly record: Reaction }) {
+  const { record } = props;
+  const [open, setOpen] = useState(false);
+  const { ports, equations, binding, names } = useEquations(record);
   if (equations.length === 0) return null;
   return (
     <details className={styles.equationPanel} data-equation-panel="" onToggle={(event) => setOpen(event.currentTarget.open)}>

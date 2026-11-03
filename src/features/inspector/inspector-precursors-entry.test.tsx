@@ -52,7 +52,7 @@ describe('on a phone (7.2b D3)', () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
   };
 
-  it('"How to make it" is in the FULL sheet part (hidden at peek), and opening it closes the sheet', () => {
+  it('"How to make it" is one of the first two go-next buttons, so it shows at peek (8.1), and opening it closes the sheet', () => {
     onPhone();
     const ref = first('species');
     const rig = inspectorRig(state);
@@ -61,7 +61,7 @@ describe('on a phone (7.2b D3)', () => {
     render(<Inspector ports={rig.ports} host={{ ...rig.host, showPrecursors, closePane }} />);
     act(() => rig.inspector.getState().open(ref));
     const button = screen.getByRole('button', { name: 'How to make it' });
-    expect(button.closest('[data-sheet-full]')).not.toBeNull();
+    expect(button.closest('[data-sheet-full]')).toBeNull();
     fireEvent.click(button);
     expect(showPrecursors).toHaveBeenCalledWith(ref);
     expect(closePane).toHaveBeenCalled();
@@ -72,6 +72,6 @@ describe('on a phone (7.2b D3)', () => {
     const rig = inspectorRig(state);
     render(<Inspector ports={rig.ports} host={{ ...rig.host, showReactions: vi.fn() }} />);
     act(() => rig.inspector.getState().open(first('species')));
-    expect(screen.getByRole('button', { name: 'Show its reactions' }).closest('[data-sheet-full]')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Show its reactions' }).closest('[data-sheet-full]')).toBeNull();
   });
 });

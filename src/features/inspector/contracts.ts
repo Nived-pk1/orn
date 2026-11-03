@@ -77,6 +77,8 @@ export interface InspectorHost {
   showMechanism?(ref: RecordRef): void;
   /** Opens the Reactions view for an overview arrow: From = its from family, To = its to family (a self-loop: the same family twice). Absent: no such button. */
   showArrowReactions?(ends: { readonly from: string; readonly to: string }): void;
+  /** Studio (8.1): the inspector adds the closed "For authors" section and the author lines. Absent: true exactly when `editNames` is wired. */
+  readonly authorSections?: boolean;
   /** True while the navigator is the view on the canvas (a record can then have a place in it). */
   readonly navigatorShown: boolean;
   /** True while an explorer (Reactions, Precursors, later Reagents) is the view: the "no place in this view" line is about the navigator map and is not shown there (7.3a A3). */

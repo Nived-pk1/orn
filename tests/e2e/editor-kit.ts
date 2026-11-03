@@ -36,6 +36,13 @@ export async function showSpecies(page: Page, id: string, name: string): Promise
   await expect(record(page)).toHaveAttribute('data-record-id', id);
 }
 
+/** Step 8.1: the old levels of the inspector live in the closed "For authors" section (Studio). Opens it when it is closed. */
+export async function openAuthors(page: Page): Promise<void> {
+  const toggle = record(page).getByRole('button', { name: /For authors/ });
+  if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+
 export async function openNamesEditor(page: Page, name: string): Promise<void> {
   await pane(page).getByRole('button', { name: 'Edit', exact: true }).click();
   await expect(editorDialog(page, name)).toBeVisible();

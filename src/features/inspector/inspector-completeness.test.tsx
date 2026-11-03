@@ -4,7 +4,7 @@
  * all levels opened, the raw record shown at L5 parses back to exactly the stored record, so no leaf is omitted; the kind views add no
  * script, image or link of their own from hostile text; a `javascript:` URL is never a link; a link to a missing record says so.
  */
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
@@ -12,6 +12,7 @@ import { createDerivedIndexes } from '@/app/services/derived-indexes';
 import { createCanonicalStore } from '@/core/commands';
 import { deserializeDocument, documentToState } from '@/core/dataset';
 import { RECORD_KINDS, type AnyRecord, type CanonicalState, type RecordRef } from '@/core/schema';
+import { openEverything } from '@/test-support/inspector-kit';
 import { manualTimers } from '@/test-support/navigator-kit';
 import { createFamilyStore, createInspectorStore, createPanelsStore, createSelectionStore } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
@@ -46,17 +47,8 @@ function rig(state: CanonicalState = loaded.ok ? loaded.state : (undefined as ne
     ui: { inspector, selection: createSelectionStore(), family: createFamilyStore(), panels },
     log: () => undefined,
   };
-  const host: InspectorHost = { openPane: () => undefined, edgeEnds: () => undefined, navigatorShown: false };
+  const host: InspectorHost = { openPane: () => undefined, edgeEnds: () => undefined, navigatorShown: false, authorSections: true };
   return { ports, host, inspector, state };
-}
-
-/** Opens every closed level and the raw record until nothing more opens. */
-function openEverything(): void {
-  for (let round = 0; round < 8; round += 1) {
-    const closed = [...document.querySelectorAll('button[aria-expanded="false"]')];
-    if (closed.length === 0) return;
-    for (const button of closed) fireEvent.click(button);
-  }
 }
 
 describe('every record of the maximal fixture', () => {
@@ -66,11 +58,11 @@ describe('every record of the maximal fixture', () => {
     expect(records.length).toBeGreaterThan(20);
   });
 
-  it.each(records.map((record) => [record.kind, record.id] as const))('%s %s: the raw record at L5 is the stored record, nothing omitted', (kind, id) => {
+  it.each(records.map((record) => [record.kind, record.id] as const))('%s %s: the raw record at L5 is the stored record, nothing omitted', async (kind, id) => {
     const { ports, host, inspector, state } = rig();
     render(<Inspector ports={ports} host={host} />);
     act(() => inspector.getState().open({ kind, id } as RecordRef));
-    openEverything();
+    await openEverything();
     const raw = screen.getByLabelText('Raw record');
     const stored = (state.records[kind] as unknown as Record<string, AnyRecord>)[id];
     expect(JSON.parse(raw.textContent ?? '')).toEqual(JSON.parse(JSON.stringify(stored)));

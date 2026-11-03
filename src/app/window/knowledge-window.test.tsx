@@ -171,6 +171,7 @@ describe('relationships (step 6.6b part 4)', () => {
     for (const [id, other] of [['rxn_aniline-diazotisation', /1° alcohol/], ['rxn_alcohol1-to-aldehyde-pcc', /Diazotisation of aniline/]] as const) {
       act(() => app.inspectorStore.getState().open({ kind: 'reaction', id }));
       const pane = await screen.findByRole('complementary', { name: 'Inspector' });
+      fireEvent.click(await within(pane).findByRole('button', { name: /For authors/ })); // 8.1: the old levels are in the closed section
       const level3 = await within(pane).findByRole('button', { name: /Level 3/ }); // a reaction's related reactions are at Level 3
       if (level3.getAttribute('aria-expanded') === 'false') fireEvent.click(level3);
       expect((await within(pane).findAllByText(other)).length).toBeGreaterThan(0);
@@ -231,8 +232,7 @@ describe('caveats (step 6.6b part 5)', () => {
     expect(app.store.historyLabels().undo.at(-1)).toBe('Create caveat Zz window caveat');
     act(() => app.inspectorStore.getState().open({ kind: 'reaction', id: 'rxn_aniline-diazotisation' }));
     const pane = await screen.findByRole('complementary', { name: 'Inspector' });
-    const level4 = await within(pane).findByRole('button', { name: /Level 4/ });
-    if (level4.getAttribute('aria-expanded') === 'false') fireEvent.click(level4);
+    // 8.1: a caveat that targets the reaction is the "Watch out" callout under the lead (it was Level 4)
     expect(await within(pane).findByText('Zz window caveat')).toBeTruthy();
     act(() => void app.store.undo());
     expect(Object.keys(app.store.getState().records.caveat)).toHaveLength(before);

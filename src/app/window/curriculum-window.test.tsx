@@ -100,6 +100,7 @@ describe('mapping a demo reaction to a demo topic', () => {
     expect(app.store.getState().records.reaction[reaction as never]?.name).toBe('Diazotisation of aniline');
     act(() => app.inspectorStore.getState().open({ kind: 'topic', id: topic }));
     const pane = await screen.findByRole('complementary', { name: 'Inspector' });
+    fireEvent.click(await within(pane).findByRole('button', { name: /For authors/ })); // 8.1: the old levels are in the closed section
     const level3 = await within(pane).findByRole('button', { name: /Level 3/ });
     if (level3.getAttribute('aria-expanded') === 'false') fireEvent.click(level3);
     const mapped = Object.values(app.store.getState().records.topic_mapping).filter((m) => m.topicId === topic).length;

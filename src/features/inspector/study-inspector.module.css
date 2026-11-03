@@ -1,0 +1,56 @@
+/* The Study inspector (step 8.1): calm cards on the existing tokens; no colour literals, no new fonts. Motion is opt-in: nothing moves under prefers-reduced-motion. */
+.head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.headText { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; flex: 1 1 12rem; }
+.kindChip { align-self: flex-start; padding: 0 var(--space-2); border-radius: var(--radius-control); border: 1px solid var(--color-rule); background: var(--color-surface); color: var(--color-ink-2); font-size: var(--text-12); line-height: 20px; }
+.kindChip[data-tone='blue'] { background: var(--color-tone-blue-tint); border-color: var(--color-tone-blue-border); color: var(--color-tone-blue-ink); }
+.kindChip[data-tone='green'] { background: var(--color-tone-green-tint); border-color: var(--color-tone-green-border); color: var(--color-tone-green-ink); }
+.kindChip[data-tone='amber'] { background: var(--color-tone-amber-tint); border-color: var(--color-tone-amber-border); color: var(--color-tone-amber-ink); }
+.kindChip[data-tone='violet'] { background: var(--color-tone-violet-tint); border-color: var(--color-tone-violet-border); color: var(--color-tone-violet-ink); }
+.kindChip[data-tone='teal'] { background: var(--color-tone-teal-tint); border-color: var(--color-tone-teal-border); color: var(--color-tone-teal-ink); }
+.kindChip[data-tone='rose'] { background: var(--color-tone-rose-tint); border-color: var(--color-tone-rose-border); color: var(--color-tone-rose-ink); }
+.history { display: flex; gap: var(--space-1); }
+.iconButton { min-width: var(--hit-min); min-height: var(--hit-min); border: 1px solid var(--color-rule); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-ink); font-size: var(--text-20); line-height: 1; }
+.iconButton:disabled { color: var(--color-ink-2); opacity: 0.6; }
+.hero { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper); overflow: auto; max-width: 100%; }
+.formula { margin: 0; font-size: var(--text-20); text-align: center; overflow-wrap: anywhere; }
+.stepRow { flex-direction: row; flex-wrap: wrap; justify-content: center; margin: 0; list-style: none; }
+.stepRow li { display: flex; flex-direction: column; align-items: center; }
+.stepLabel { font-size: var(--text-12); color: var(--color-ink-2); }
+.leadBox { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+.lead { font-size: var(--text-16); line-height: 1.5; overflow: hidden; max-height: 80em; }
+/* four lines of 1.5em; a height transition (150 to 200 ms, none under reduced motion) opens it in place */
+.clamped { max-height: 6em; }
+.more { min-height: var(--hit-min); padding: 0 var(--space-2); border: 0; background: none; color: var(--color-accent); font: inherit; cursor: pointer; text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.chip { display: inline-flex; align-items: center; padding: 0 var(--space-3); min-height: 28px; border: 1px solid var(--color-rule); border-radius: 999px; background: var(--color-surface); color: var(--color-ink); font: inherit; font-size: var(--text-13); }
+.chipLink { color: var(--color-accent); cursor: pointer; }
+.watch { display: flex; flex-direction: column; gap: var(--space-2); }
+.callout { padding: var(--space-3); border: 1px solid var(--color-tone-amber-border); border-radius: var(--radius-card); background: var(--color-tone-amber-tint); color: var(--color-tone-amber-ink); }
+.callout p { margin: 0; }
+.calloutTitle { display: block; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-align: left; cursor: pointer; min-height: 24px; }
+.goNext { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.goNext button { min-height: var(--hit-min); padding: 0 var(--space-3); border: 1px solid var(--color-rule); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-ink); font: inherit; cursor: pointer; }
+[data-sheet='peek'] .goNext button { flex: 1 1 40%; font-size: var(--text-16); }
+.connected { display: flex; flex-direction: column; gap: var(--space-3); }
+.group { display: flex; flex-direction: column; gap: var(--space-1); }
+.groupHeading { margin: 0; font-size: var(--text-14); color: var(--color-ink-2); }
+.cards { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.cardsRow { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: var(--space-1); }
+.cardsRow li { scroll-snap-align: start; flex: 0 0 auto; }
+.card { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: var(--hit-min); max-width: 16rem; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper); color: var(--color-ink); font: inherit; text-align: left; cursor: pointer; }
+.cardTitle { font-weight: 600; overflow-wrap: anywhere; }
+.cardLine { font-size: var(--text-12); color: var(--color-ink-2); overflow-wrap: anywhere; }
+.note { margin: 0; color: var(--color-ink-2); font-size: var(--text-12); }
+.chapters { display: flex; flex-direction: column; gap: var(--space-1); }
+.disclosure { border-top: 1px solid var(--color-rule); padding-top: var(--space-2); }
+.disclosureHeading { margin: 0; font-size: var(--text-14); }
+.disclosureHeading button { min-height: var(--hit-min); width: 100%; text-align: left; border: 0; background: transparent; color: var(--color-ink); font: inherit; cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) {
+  .lead { transition: max-height 180ms ease-out; }
+  .card, .chip, .iconButton { transition: opacity 150ms ease-out; }
+}
+.titleText { margin: 0; font-size: var(--text-20); overflow-wrap: anywhere; }
+/* Phone peek (step 8.1 Part D): the hero is compact, at most 40% of the peek (35dvh); the rest of the layout is marked data-sheet-full and hidden by the sheet. */
+[data-sheet='peek'] .hero { max-height: 14dvh; overflow: hidden; padding: var(--space-2); }
+[data-sheet='peek'] .hero img { max-height: 11dvh; width: auto; max-width: 100%; object-fit: contain; }
+[data-sheet='peek'] .head { flex-wrap: nowrap; }

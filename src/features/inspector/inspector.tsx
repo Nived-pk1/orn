@@ -4,7 +4,7 @@
  * the view) and the levels. It reads the canonical state and never changes it. Every part is a function of one snapshot, taken again
  * when the store, the findings or the L4 checks change.
  */
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
 import type { RecordRef } from '@/core/schema';
 import { useLayoutMode } from '@/ui/hooks';
@@ -12,9 +12,12 @@ import { Button } from '@/ui/primitives';
 import { SHEET_TITLE_ID } from '@/ui/shell';
 import { canBack, canForward, currentOf } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
-import { InspectorEnvContext, makeEnv, useInspectorEnv, type InspectorEnv } from './env';
-import { kindWord, nameOfRecord, recordOf } from './model/describe';
+import { InspectorEnvContext, isAuthorView, makeEnv, useInspectorEnv, type InspectorEnv } from './env';
+import { nameOfRecord, recordOf } from './model/describe';
 import { l4Words, severityBadges } from './model/findings';
+import { StudyInspector } from './study-inspector';
+import study from './study-inspector.module.css';
+import type { GoNextAction } from './study-parts';
 import { placeOf } from './model/places';
 import { ArrowReactions } from './arrow-reactions';
 
@@ -22,14 +25,8 @@ import { ArrowReactions } from './arrow-reactions';
 const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 'named_reaction'];
 /** A route ends at a species or a class. */
 const PRECURSOR_KINDS: readonly string[] = ['species', 'class'];
-import { ProvenanceLevel } from './provenance';
-import { LevelSection } from './levels';
 import { useBridge } from './use-bridge';
-import { KindLevels } from './views';
 import styles from './inspector.module.css';
-
-/** "In chapters: ..." is its own chunk (7.3c A1); it shows after the other facts, so its arrival moves nothing above it. */
-const InChapters = lazy(() => import('./in-chapters').then((module) => ({ default: module.InChapters })));
 
 /** A number that changes whenever something the inspector shows may have changed. */
 function useRevision(ports: InspectorPorts): number {
@@ -78,14 +75,6 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   return (
     <InspectorEnvContext.Provider value={env}>
       <article className={styles.root} aria-label="Record" data-record-id={current.id}>
-        <div className={styles.nav} role="group" aria-label="History" data-sheet-full="">
-          <button type="button" disabled={!canBack({ index })} onClick={() => inspector.getState().back()} aria-keyshortcuts="Alt+ArrowLeft">
-            Back
-          </button>
-          <button type="button" disabled={!canForward({ history, index })} onClick={() => inspector.getState().forward()} aria-keyshortcuts="Alt+ArrowRight">
-            Forward
-          </button>
-        </div>
         {record === undefined ? (
           <p role="status" className={styles.missing}>
             Missing record {current.id}: it is not in this dataset (it may have been removed or replaced).
@@ -101,102 +90,80 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
 function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | undefined }) {
   const { ports, host, state } = useInspectorEnv();
   const phone = useLayoutMode() === 'phone';
+  const inspector = ports.ui.inspector;
+  const history = useStore(inspector, (s) => s.history);
+  const index = useStore(inspector, (s) => s.index);
   const record = recordOf(state, props.refOf);
   if (record === undefined) return null;
+  const authors = isAuthorView(host);
   const name = nameOfRecord(record);
   const findings = ports.findings.bySubject(props.refOf);
   const badges = severityBadges(findings);
   const l4 = l4Words(ports.l4.statusOf(props.refOf));
   const place = placeOf(props.refOf, name, ports.indexes.current(), ports.ui, host.navigatorShown);
   const status = props.note ?? (host.explorerShown === true ? undefined : place.line);
+  const after = (run: () => void) => (): void => {
+    run();
+    if (phone) host.closePane?.();
+  };
+  const kind = props.refOf.kind;
+  const goNext: GoNextAction[] = [
+    ...place.actions.map((action) => ({ label: action.label, run: after(action.run) })),
+    ...(host.showReagent === undefined || kind !== 'reagent' ? [] : [{ label: 'Show in Reagents', run: after(() => host.showReagent?.(props.refOf)) }]),
+    ...(host.showNamed === undefined || kind !== 'named_reaction' ? [] : [{ label: 'Show in Named reactions', run: after(() => host.showNamed?.(props.refOf)) }]),
+    ...(host.showMechanism === undefined || kind !== 'mechanism' ? [] : [{ label: 'Show in Mechanisms', run: after(() => host.showMechanism?.(props.refOf)) }]),
+    ...(host.showReactions === undefined || !SHOW_REACTIONS_KINDS.includes(kind) ? [] : [{ label: 'Show its reactions', run: after(() => host.showReactions?.(props.refOf)) }]),
+    ...(host.showPrecursors === undefined || !PRECURSOR_KINDS.includes(kind) ? [] : [{ label: 'How to make it', run: after(() => host.showPrecursors?.(props.refOf)) }]),
+  ];
+  const editable = host.editNames !== undefined && (host.editNames.namesKinds?.includes(record.kind) === true || host.editNames.fullEditorKinds?.includes(record.kind) === true);
+  const headerExtras = (
+    <>
+      <div className={study.history} role="group" aria-label="History">
+        <button type="button" className={study.iconButton} aria-label="Back" disabled={!canBack({ index })} onClick={() => inspector.getState().back()} aria-keyshortcuts="Alt+ArrowLeft">
+          <span aria-hidden="true">‹</span>
+        </button>
+        <button type="button" className={study.iconButton} aria-label="Forward" disabled={!canForward({ history, index })} onClick={() => inspector.getState().forward()} aria-keyshortcuts="Alt+ArrowRight">
+          <span aria-hidden="true">›</span>
+        </button>
+      </div>
+      {!editable ? null : (
+        // on a phone the buttons show in the FULL sheet, not in the peek (authoring is desktop-first, ADR-039 addendum)
+        <div className={styles.actions} data-sheet-full="">
+          <Button {...(host.editNames?.unavailable === undefined ? { onClick: () => host.editNames?.open(props.refOf) } : { unavailable: host.editNames.unavailable })}>{host.editNames?.fullEditorKinds?.includes(record.kind) === true ? 'Edit' : 'Edit names'}</Button>
+          {host.editNames?.remove === undefined ? null : <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.remove?.(props.refOf) } : { unavailable: host.editNames.unavailable })}>Delete...</Button>}
+          {record.kind !== 'reaction' || host.editNames?.startFrom === undefined ? null : (
+            <>
+              <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.startFrom?.('duplicate', props.refOf) } : { unavailable: host.editNames.unavailable })}>Duplicate</Button>
+              {record.scope !== 'generic' ? null : <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.startFrom?.('specific', props.refOf) } : { unavailable: host.editNames.unavailable })}>New specific reaction from this one</Button>}
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
+  const authorLines = !authors ? null : (
+    <>
+      {badges.length === 0 && l4 === undefined ? null : (
+        <ul className={styles.badges} aria-label="Findings and checks">
+          {badges.map((badge) => (
+            <li key={badge.severity} data-severity={badge.severity}>
+              {badge.text}
+            </li>
+          ))}
+          {l4 === undefined ? null : <li data-severity="l4">{l4}</li>}
+        </ul>
+      )}
+      {status === undefined ? null : (
+        <p role="status" className={styles.status}>
+          {status}
+        </p>
+      )}
+    </>
+  );
   return (
     <>
-      <header className={styles.header}>
-        <h3 className={styles.title} id={SHEET_TITLE_ID}>{name}</h3>
-        <span className={styles.kind}>{kindWord(props.refOf.kind)}</span>
-        {badges.length === 0 && l4 === undefined ? null : (
-          <ul className={styles.badges} aria-label="Findings and checks">
-            {badges.map((badge) => (
-              <li key={badge.severity} data-severity={badge.severity}>
-                {badge.text}
-              </li>
-            ))}
-            {l4 === undefined ? null : <li data-severity="l4">{l4}</li>}
-          </ul>
-        )}
-        {host.editNames === undefined || !(host.editNames.namesKinds?.includes(record.kind) === true || host.editNames.fullEditorKinds?.includes(record.kind) === true) ? null : (
-          // on a phone the button shows in the FULL sheet, not in the peek (authoring is desktop-first, ADR-039 addendum)
-          <div className={styles.actions} data-sheet-full="">
-            <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.open(props.refOf) } : { unavailable: host.editNames.unavailable })}>{host.editNames.fullEditorKinds?.includes(record.kind) === true ? 'Edit' : 'Edit names'}</Button>
-            {host.editNames.remove === undefined ? null : <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.remove?.(props.refOf) } : { unavailable: host.editNames.unavailable })}>Delete...</Button>}
-            {record.kind !== 'reaction' || host.editNames.startFrom === undefined ? null : (
-              <>
-                <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.startFrom?.('duplicate', props.refOf) } : { unavailable: host.editNames.unavailable })}>Duplicate</Button>
-                {record.scope !== 'generic' ? null : <Button {...(host.editNames.unavailable === undefined ? { onClick: () => host.editNames?.startFrom?.('specific', props.refOf) } : { unavailable: host.editNames.unavailable })}>New specific reaction from this one</Button>}
-              </>
-            )}
-          </div>
-        )}
-        {host.showReactions === undefined || !SHOW_REACTIONS_KINDS.includes(props.refOf.kind) ? null : (
-          <div className={styles.actions} data-sheet-full="">
-            <button type="button" onClick={() => { host.showReactions?.(props.refOf); if (phone) host.closePane?.(); }}>
-              Show its reactions
-            </button>
-          </div>
-        )}
-        {host.showReagent === undefined || props.refOf.kind !== 'reagent' ? null : (
-          <div className={styles.actions} data-sheet-full="">
-            <button type="button" onClick={() => { host.showReagent?.(props.refOf); if (phone) host.closePane?.(); }}>
-              Show in Reagents
-            </button>
-          </div>
-        )}
-        {host.showNamed === undefined || props.refOf.kind !== 'named_reaction' ? null : (
-          <div className={styles.actions} data-sheet-full="">
-            <button type="button" onClick={() => { host.showNamed?.(props.refOf); if (phone) host.closePane?.(); }}>
-              Show in Named reactions
-            </button>
-          </div>
-        )}
-        {host.showMechanism === undefined || props.refOf.kind !== 'mechanism' ? null : (
-          <div className={styles.actions} data-sheet-full="">
-            <button type="button" onClick={() => { host.showMechanism?.(props.refOf); if (phone) host.closePane?.(); }}>
-              Show in Mechanisms
-            </button>
-          </div>
-        )}
-        {host.showPrecursors === undefined || !PRECURSOR_KINDS.includes(props.refOf.kind) ? null : (
-          <div className={styles.actions} data-sheet-full="">
-            <button type="button" onClick={() => { host.showPrecursors?.(props.refOf); if (phone) host.closePane?.(); }}>
-              How to make it
-            </button>
-          </div>
-        )}
-        {place.actions.length === 0 ? null : (
-          <div className={styles.actions}>
-            {place.actions.map((action) => (
-              <button key={action.label} type="button" onClick={() => { action.run(); if (phone) host.closePane?.(); }}>
-                {action.label}
-              </button>
-            ))}
-          </div>
-        )}
-        {status === undefined ? null : (
-          <p role="status" className={styles.status}>
-            {status}
-          </p>
-        )}
-        {props.note === undefined ? null : <ArrowReactions />}
-        <Suspense fallback={null}>
-          <InChapters refOf={props.refOf} />
-        </Suspense>
-      </header>
-      <div data-sheet-full="">
-        <KindLevels record={record} findings={findings} />
-        <LevelSection level={5} title="Provenance, findings and raw record">
-          <ProvenanceLevel record={record} findings={findings} />
-        </LevelSection>
-      </div>
+      <StudyInspector refOf={props.refOf} record={record} findings={findings} authors={authors} headerExtras={headerExtras} goNext={goNext} titleId={SHEET_TITLE_ID} authorLines={authorLines} authorsOpen={history[index]?.at !== undefined} />
+      {props.note === undefined ? null : <ArrowReactions />}
     </>
   );
 }

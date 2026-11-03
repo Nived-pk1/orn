@@ -141,6 +141,7 @@ describe('a tag and a citation on a demo species', () => {
     const saved = app.store.getState().records.species[species.id] as Species;
     expect(saved.tags).toEqual([...species.tags, 'jee-main']);
     expect(saved.citations.at(-1)).toEqual({ referenceId: SOURCE.id, locator: 'ch. 4' });
+    fireEvent.click(await within(screen.getByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: /For authors/ }));
     fireEvent.click(await within(screen.getByRole('complementary', { name: 'Inspector' })).findByRole('button', { name: /Level 4: Notes and sources/ }));
     await waitFor(() => expect(screen.getByRole('complementary', { name: 'Inspector' }).textContent).toContain('jee-main'));
     expect(screen.getByRole('complementary', { name: 'Inspector' }).textContent).toContain('ch. 4');

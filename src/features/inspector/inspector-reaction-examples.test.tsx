@@ -12,6 +12,7 @@ import { createCanonicalStore } from '@/core/commands';
 import { deserializeDocument, documentToState } from '@/core/dataset';
 import type { CanonicalState, Reaction } from '@/core/schema';
 import { fakeLayout } from '@/test-support/inspector-kit';
+import { openLevels } from '@/test-support/inspector-kit';
 import { manualTimers } from '@/test-support/navigator-kit';
 import { createFamilyStore, createInspectorStore, createPanelsStore, createSelectionStore } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
@@ -32,7 +33,7 @@ const base: CanonicalState = loaded.state;
 const GENERIC = 'rxn_max-grignard-ketone-generic';
 const EXAMPLE = 'rxn_max-grignard-propanone';
 
-function show(id: string, extra: readonly Reaction[] = []): void {
+async function show(id: string, extra: readonly Reaction[] = []): Promise<void> {
   const reaction = { ...base.records.reaction } as Record<string, Reaction>;
   for (const one of extra) reaction[one.id] = one;
   const state = { ...base, records: { ...base.records, reaction } } as CanonicalState;
@@ -49,39 +50,40 @@ function show(id: string, extra: readonly Reaction[] = []): void {
     ui: { inspector, selection: createSelectionStore(), family: createFamilyStore(), panels },
     log: () => undefined,
   };
-  const host: InspectorHost = { openPane: () => undefined, edgeEnds: () => undefined, navigatorShown: false };
+  const host: InspectorHost = { openPane: () => undefined, edgeEnds: () => undefined, navigatorShown: false, authorSections: true };
   render(<Inspector ports={ports} host={host} />);
   act(() => inspector.getState().open({ kind: 'reaction', id }));
+  await openLevels();
 }
 
 describe('generic reactions and their examples', () => {
-  it('a generic reaction lists its example as a link, with the count', () => {
-    show(GENERIC);
-    const examples = screen.getByRole('region', { name: 'Examples' });
+  it('a generic reaction lists its example as a link, with the count', async () => {
+    await show(GENERIC);
+    const examples = screen.getAllByRole('region', { name: 'Examples' }).find((r) => r.querySelector('details') !== null) as HTMLElement; // the author section's disclosure (8.1: the cards group has the same name)
     expect(within(examples).getByText('Examples (1)')).toBeTruthy(); // 7.3a C4: a disclosure, closed until opened
     expect((examples.querySelector('details') as HTMLDetailsElement).open).toBe(false);
     expect(examples.querySelector(`[data-record-id="${EXAMPLE}"]`)).not.toBeNull();
   });
 
-  it('several examples come in folded-name order', () => {
+  it('several examples come in folded-name order', async () => {
     const example = base.records.reaction[EXAMPLE as never] as Reaction;
     const more = (id: string, name: string): Reaction => ({ ...example, id: id as never, name });
-    show(GENERIC, [more('rxn_zz-example', 'zebra addition'), more('rxn_aa-example', 'Apple addition')]);
-    const examples = screen.getByRole('region', { name: 'Examples' });
+    await show(GENERIC, [more('rxn_zz-example', 'zebra addition'), more('rxn_aa-example', 'Apple addition')]);
+    const examples = screen.getAllByRole('region', { name: 'Examples' }).find((r) => r.querySelector('details') !== null) as HTMLElement; // the author section's disclosure (8.1: the cards group has the same name)
     expect(within(examples).getByText('Examples (3)')).toBeTruthy();
     const names = [...examples.querySelectorAll('[data-record-id]')].map((a) => a.textContent?.toLowerCase());
     expect(names).toEqual([...names].sort());
     expect(names[0]).toContain('apple');
   });
 
-  it('a specific reaction shows "Example of" its generic one and has no Examples list', () => {
-    show(EXAMPLE);
-    expect(screen.queryByRole('region', { name: 'Examples' })).toBeNull();
+  it('a specific reaction shows "Example of" its generic one and has no Examples list', async () => {
+    await show(EXAMPLE);
+    expect(screen.queryAllByRole('region', { name: 'Examples' })).toHaveLength(0);
     expect(screen.getByText('Example of')).toBeTruthy();
   });
 
-  it('a generic reaction nothing points at has no Examples list', () => {
-    show('rxn_max-isobutene-hydration');
-    expect(screen.queryByRole('region', { name: 'Examples' })).toBeNull();
+  it('a generic reaction nothing points at has no Examples list', async () => {
+    await show('rxn_max-isobutene-hydration');
+    expect(screen.queryAllByRole('region', { name: 'Examples' })).toHaveLength(0);
   });
 });

@@ -20,10 +20,11 @@ beforeAll(preloadViews);
 
 const state = maximalState();
 
-function show(ref: RecordRef, withState: CanonicalState = state, options: Parameters<typeof inspectorRig>[1] = {}) {
+async function show(ref: RecordRef, withState: CanonicalState = state, options: Parameters<typeof inspectorRig>[1] = {}) {
   const rig = inspectorRig(withState, options);
   render(<Inspector ports={rig.ports} host={rig.host} />);
   act(() => rig.inspector.getState().open(ref));
+  await openLevels();
   return rig;
 }
 const all = RECORD_KINDS.flatMap((kind) => Object.values(state.records[kind] as Record<string, AnyRecord>));
@@ -35,10 +36,10 @@ describe('all 22 kinds', () => {
     for (const kind of RECORD_KINDS) expect(Object.keys(state.records[kind]).length, kind).toBeGreaterThan(0);
   });
 
-  it.each(all.map((record) => [record.kind, record.id] as const))('%s %s has its own view with facts, and renders cleanly with everything open', (kind, id) => {
+  it.each(all.map((record) => [record.kind, record.id] as const))('%s %s has its own view with facts, and renders cleanly with everything open', async (kind, id) => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    show({ kind, id } as RecordRef);
-    openEverything();
+    await show({ kind, id } as RecordRef);
+    await openEverything();
     const view = document.querySelector('[data-view]') as HTMLElement;
     expect(view.getAttribute('data-view')).toBe(kind);
     expect(view.querySelectorAll('dl, ul, ol').length).toBeGreaterThan(0);
@@ -49,9 +50,9 @@ describe('all 22 kinds', () => {
 });
 
 describe('route, topic, relationship, reference', () => {
-  it('a route lists its steps in order with the reaction as a link', () => {
+  it('a route lists its steps in order with the reaction as a link', async () => {
     const route = Object.values(state.records.route)[0] as { id: string; steps: { reactionId: string }[] };
-    show({ kind: 'route', id: route.id } as RecordRef);
+    await show({ kind: 'route', id: route.id } as RecordRef);
     const steps = screen.getByRole('list', { name: 'Steps of the route' });
     const items = within(steps).getAllByRole('listitem');
     expect(items).toHaveLength(route.steps.length);
@@ -59,55 +60,55 @@ describe('route, topic, relationship, reference', () => {
     expect(within(items[0] as HTMLElement).getByRole('link')).toBeTruthy();
   });
 
-  it('a relationship names both ends and reads both ways', () => {
+  it('a relationship names both ends and reads both ways', async () => {
     const rel = Object.values(state.records.relationship)[0] as { id: string };
-    show({ kind: 'relationship', id: rel.id } as RecordRef);
+    await show({ kind: 'relationship', id: rel.id } as RecordRef);
     expect(screen.getByText('From')).toBeTruthy();
     expect(screen.getByText('To')).toBeTruthy();
     expect(screen.getByText('Read both ways')).toBeTruthy();
   });
 
-  it('a topic shows its parent or children and its mapped records', () => {
+  it('a topic shows its parent or children and its mapped records', async () => {
     const topics = Object.values(state.records.topic) as { id: string; parentId?: string }[];
     const parent = topics.find((t) => topics.some((c) => c.parentId === t.id)) as { id: string };
-    show({ kind: 'topic', id: parent.id } as RecordRef);
-    openLevels();
+    await show({ kind: 'topic', id: parent.id } as RecordRef);
+    await openLevels();
     expect(screen.getByRole('list', { name: /^Children \(\d+\)$/ })).toBeTruthy();
     expect(screen.getByText(/^Mapped records \(\d+\)$/)).toBeTruthy();
   });
 
-  it('a reference lists who cites it', () => {
+  it('a reference lists who cites it', async () => {
     const refs = Object.values(state.records.reference) as { id: string }[];
-    show({ kind: 'reference', id: (refs[0] as { id: string }).id } as RecordRef);
-    openLevels();
+    await show({ kind: 'reference', id: (refs[0] as { id: string }).id } as RecordRef);
+    await openLevels();
     expect(screen.getByText(/^Cited by \(\d+\)$/)).toBeTruthy();
   });
 });
 
 describe('exam and exam version, and the curriculum at L4', () => {
-  it('an exam version says its status in words and shows the coverage of every unit', () => {
+  it('an exam version says its status in words and shows the coverage of every unit', async () => {
     const version = Object.values(state.records.exam_version)[0] as { id: string; status: string; units: { title: string }[] };
-    show({ kind: 'exam_version', id: version.id } as RecordRef);
-    openLevels();
+    await show({ kind: 'exam_version', id: version.id } as RecordRef);
+    await openLevels();
     expect(screen.getByText('Status').nextElementSibling?.textContent).toMatch(version.status === 'official' ? /^official$/ : /not verified$/);
     const units = screen.getByRole('list', { name: 'Units' });
     expect(within(units).getAllByRole('listitem').length).toBeGreaterThanOrEqual(version.units.length);
   });
 
-  it('a provisional version says "provisional, not verified"', () => {
+  it('a provisional version says "provisional, not verified"', async () => {
     const version = Object.values(state.records.exam_version)[0] as { id: string };
     const changed: CanonicalState = {
       ...state,
       records: { ...state.records, exam_version: { ...state.records.exam_version, [version.id]: { ...(state.records.exam_version as Record<string, object>)[version.id], status: 'provisional' } } },
     } as CanonicalState;
-    show({ kind: 'exam_version', id: version.id } as RecordRef, changed);
+    await show({ kind: 'exam_version', id: version.id } as RecordRef, changed);
     expect(screen.getByText('provisional, not verified')).toBeTruthy();
   });
 
-  it('a chemistry record at L4 shows its topic mappings and, for every exam version, its scope with the reason', () => {
+  it('a chemistry record at L4 shows its topic mappings and, for every exam version, its scope with the reason', async () => {
     const mapping = Object.values(state.records.topic_mapping)[0] as { target: RecordRef };
-    show(mapping.target);
-    openLevels();
+    await show(mapping.target);
+    await openLevels();
     const curriculum = screen.getByRole('region', { name: 'Curriculum' });
     expect(within(curriculum).getByRole('list', { name: 'Topic mappings' })).toBeTruthy();
     const scopes = within(curriculum).getByRole('list', { name: 'Scope under each exam version' });
@@ -117,11 +118,11 @@ describe('exam and exam version, and the curriculum at L4', () => {
     expect(rows[0]?.getAttribute('data-scope')).toMatch(/^(official|prerequisite|enrichment|outside|unmapped)$/);
   });
 
-  it('a record with no mapping says so, and is unmapped under every version', () => {
+  it('a record with no mapping says so, and is unmapped under every version', async () => {
     const mapped = new Set((Object.values(state.records.topic_mapping) as { target: RecordRef }[]).map((m) => m.target.id));
     const lone = (Object.values(state.records.species) as { id: string }[]).find((s) => !mapped.has(s.id)) as { id: string };
-    show({ kind: 'species', id: lone.id } as RecordRef);
-    openLevels();
+    await show({ kind: 'species', id: lone.id } as RecordRef);
+    await openLevels();
     expect(screen.getByText('This record is not mapped to any topic.')).toBeTruthy();
     for (const row of within(screen.getByRole('list', { name: 'Scope under each exam version' })).getAllByRole('listitem')) expect(['unmapped', 'official', 'prerequisite', 'enrichment', 'outside']).toContain(row.getAttribute('data-scope'));
   });
@@ -157,6 +158,7 @@ describe('the asset image (ADV-033 asset part, AST-002)', () => {
     const ports = { ...rig.ports, assets: port.assets };
     const view = render(<Inspector ports={ports} host={rig.host} />);
     act(() => rig.inspector.getState().open({ kind: 'asset', id: asset.id } as RecordRef));
+    await openLevels();
     const img = (await screen.findByRole('img')) as HTMLImageElement;
     expect(img.getAttribute('src')).toBe('blob:http://localhost/abc');
     expect(img.getAttribute('alt')).toBe('Reaction scheme image (1×1 placeholder).');
@@ -171,19 +173,20 @@ describe('the asset image (ADV-033 asset part, AST-002)', () => {
     const rig = inspectorRig(state);
     render(<Inspector ports={{ ...rig.ports, assets: port.assets }} host={rig.host} />);
     act(() => rig.inspector.getState().open({ kind: 'asset', id: asset.id } as RecordRef));
+    await openLevels();
     expect(await screen.findByText(/not stored \(finding AST-002\)/)).toBeTruthy();
     expect(screen.queryByRole('img')).toBeNull();
   });
 
   it('without an assets port the view says it cannot show the image', async () => {
-    show({ kind: 'asset', id: asset.id } as RecordRef);
+    await show({ kind: 'asset', id: asset.id } as RecordRef);
     expect(await screen.findByText(/no way to read image bytes/)).toBeTruthy();
     expect(screen.queryByRole('img')).toBeNull();
   });
 
-  it('shows what it is attached to and its metadata', () => {
-    show({ kind: 'asset', id: asset.id } as RecordRef);
-    openLevels();
+  it('shows what it is attached to and its metadata', async () => {
+    await show({ kind: 'asset', id: asset.id } as RecordRef);
+    await openLevels();
     expect(screen.getByRole('list', { name: /^Attached to \(1\)$/ })).toBeTruthy();
     expect(screen.getByText('Media type')).toBeTruthy();
     expect(screen.getByText('SHA-256')).toBeTruthy();
@@ -196,19 +199,19 @@ describe('the presentation records are plain readable rows', () => {
     ['reaction_scheme', 'Reaction scheme', ['Reaction', 'Stage numbers']],
     ['view_preset', 'Saved view', ['View']],
     ['entity_display', 'Display choice', ['Record', 'As a node']],
-  ] as const)('%s', (kind, label, terms) => {
+  ] as const)('%s', async (kind, label, terms) => {
     const record = Object.values(state.records[kind] as Record<string, { id: string }>)[0] as { id: string };
-    show({ kind, id: record.id } as RecordRef);
+    await show({ kind, id: record.id } as RecordRef);
     const facts = document.querySelector(`dl[aria-label="${label}"]`) as HTMLElement;
     expect(facts).not.toBeNull();
     for (const term of terms) expect(within(facts).getByText(term)).toBeTruthy();
   });
 
-  it('a navigator anchor with no cell says the map places it by itself', () => {
+  it('a navigator anchor with no cell says the map places it by itself', async () => {
     const anchors = Object.values(state.records.navigator_anchor) as { id: string; cell?: unknown }[];
     const noCell = anchors.find((a) => a.cell === undefined);
     if (noCell === undefined) return;
-    show({ kind: 'navigator_anchor', id: noCell.id } as RecordRef);
+    await show({ kind: 'navigator_anchor', id: noCell.id } as RecordRef);
     fireEvent.click(document.body);
     expect(screen.getByText(/the map places it by itself/)).toBeTruthy();
   });
@@ -230,10 +233,10 @@ describe('hostile text in the new views is inert (ADV-033, inspector part)', () 
     ['topic', { summary: evil }],
     ['route', { description: evil }],
     ['reference', { notes: evil, url: 'javascript:alert(1)' }],
-  ] as const)('%s: markup is text, a javascript: URL is not a link, a missing record is said in words', (kind, fields) => {
+  ] as const)('%s: markup is text, a javascript: URL is not a link, a missing record is said in words', async (kind, fields) => {
     const { state: hostile, id } = patch(kind, fields);
-    show({ kind, id } as RecordRef, hostile);
-    openEverything();
+    await show({ kind, id } as RecordRef, hostile);
+    await openEverything();
     expect(document.querySelector('script, iframe, object, embed, img')).toBeNull();
     expect([...document.querySelectorAll('a')].some((a) => (a.getAttribute('href') ?? '').toLowerCase().startsWith('javascript:'))).toBe(false);
     expect(document.body.textContent).toContain('<img src=x onerror=alert(1)>');
