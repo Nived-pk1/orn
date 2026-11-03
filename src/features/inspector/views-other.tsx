@@ -13,6 +13,7 @@ import { MechanismLevels } from './view-mechanism';
 import { ReferenceLevels, RelationshipLevels, RouteLevels, TopicLevels } from './view-organisation';
 import { EntityDisplayLevels, NavigatorAnchorLevels, ReactionSchemeLevels, ViewPresetLevels } from './view-presentation';
 import { RecordPictures } from './view-pictures';
+export { StudyInspector } from './study-inspector'; // 8.1: the new layout is in this chunk too (loaded when a record is first opened)
 
 /** The levels of a kind, with the record's own pictures FIRST when its kind takes them (step 7.1a, ADR-038 addendum Q5): the one place they are drawn. */
 export function OtherView(props: { readonly record: AnyRecord; readonly findings: readonly Finding[] }) {

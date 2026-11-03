@@ -4,24 +4,27 @@
  * the view) and the levels. It reads the canonical state and never changes it. Every part is a function of one snapshot, taken again
  * when the store, the findings or the L4 checks change.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
 import type { RecordRef } from '@/core/schema';
 import { useLayoutMode } from '@/ui/hooks';
-import { Button } from '@/ui/primitives';
+import { Button, Skeleton } from '@/ui/primitives';
 import { SHEET_TITLE_ID } from '@/ui/shell';
 import { canBack, canForward, currentOf } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { InspectorEnvContext, isAuthorView, makeEnv, useInspectorEnv, type InspectorEnv } from './env';
 import { nameOfRecord, recordOf } from './model/describe';
 import { l4Words, severityBadges } from './model/findings';
-import { StudyInspector } from './study-inspector';
+import { LazyStudyInspector } from './lazy-views';
 import study from './study-inspector.module.css';
 import type { GoNextAction } from './study-parts';
 import { placeOf } from './model/places';
 import { ArrowReactions } from './arrow-reactions';
 
 /** The records whose reactions the Reactions view can list (the same set the palette's Alt+Enter uses). */
+/** "For authors" is its own chunk: nothing of it loads until an author opens the section (Studio). */
+const AuthorsSection = lazy(() => import('./authors-section').then((module) => ({ default: module.AuthorsSection })));
+
 const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 'named_reaction'];
 /** A route ends at a species or a class. */
 const PRECURSOR_KINDS: readonly string[] = ['species', 'class'];
@@ -162,7 +165,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
   );
   return (
     <>
-      <StudyInspector refOf={props.refOf} record={record} findings={findings} authors={authors} headerExtras={headerExtras} goNext={goNext} titleId={SHEET_TITLE_ID} authorLines={authorLines} authorsOpen={history[index]?.at !== undefined} />
+      <LazyStudyInspector refOf={props.refOf} record={record} authors={authors} headerExtras={headerExtras} goNext={goNext} titleId={SHEET_TITLE_ID} authorLines={authorLines} authorsPanel={<Suspense fallback={<Skeleton label="Loading the author view" lines={3} />}><AuthorsSection record={record} findings={findings} /></Suspense>} authorsOpen={history[index]?.at !== undefined} />
       {props.note === undefined ? null : <ArrowReactions />}
     </>
   );

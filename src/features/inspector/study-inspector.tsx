@@ -6,8 +6,6 @@
 import { lazy, Suspense, useMemo, type ReactNode } from 'react';
 import type { AnyRecord, Reaction, RecordRef } from '@/core/schema';
 import { FullEquations } from './equation';
-import type { Finding } from '@/core/validation';
-import { Skeleton } from '@/ui/primitives';
 import { useInspectorEnv } from './env';
 import { studyInspectorModel } from './model/study-model';
 import { StudyHero } from './study-hero';
@@ -15,13 +13,11 @@ import { Chips, Connected, Disclosure, GoNext, Lead, WatchOuts, type GoNextActio
 import { RichText } from './rich-text';
 import styles from './study-inspector.module.css';
 
-const AuthorsSection = lazy(() => import('./authors-section').then((module) => ({ default: module.AuthorsSection })));
 const InChapters = lazy(() => import('./in-chapters').then((module) => ({ default: module.InChapters })));
 
 export interface StudyInspectorProps {
   readonly refOf: RecordRef;
   readonly record: AnyRecord;
-  readonly findings: readonly Finding[];
   readonly authors: boolean;
   /** The back / forward buttons and the Studio buttons, drawn on the header line. */
   readonly headerExtras: ReactNode;
@@ -29,6 +25,8 @@ export interface StudyInspectorProps {
   readonly titleId: string;
   /** Studio only: lines about the author's view (place line, badges). */
   readonly authorLines: ReactNode;
+  /** Studio: the body of "For authors" (the host of the layout makes it, so this file does not reach the views that load it). */
+  readonly authorsPanel: ReactNode;
   /** True when the record was opened AT something (a mechanism variant): the author section starts open so the target is shown. */
   readonly authorsOpen: boolean;
 }
@@ -73,9 +71,7 @@ export function StudyInspector(props: StudyInspectorProps) {
       )}
       {!props.authors ? null : (
         <Disclosure title="For authors" full open={props.authorsOpen}>
-          <Suspense fallback={<Skeleton label="Loading the author view" lines={3} />}>
-            <AuthorsSection record={props.record} findings={props.findings} />
-          </Suspense>
+          {props.authorsPanel}
         </Disclosure>
       )}
     </>

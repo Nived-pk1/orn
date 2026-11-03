@@ -43,12 +43,16 @@ describe('lazy kind views', () => {
       if (fails) throw new Error('Failed to fetch dynamically imported module');
       return vi.importActual('./views-other');
     });
-    await open(mechanism);
+    const { Inspector } = await import('./inspector');
+    const rig = inspectorRig(maximalState());
+    render(<Inspector ports={rig.ports} host={rig.host} />);
+    act(() => rig.inspector.getState().open(mechanism));
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toMatch(/could not be shown because part of the app did not load/);
     expect(alert.textContent).toMatch(/did not load \(.+\)/);
     fails = false;
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    fireEvent.click(await screen.findByRole('button', { name: /For authors/ }));
     await screen.findByRole('list', { name: 'Variants' });
     expect(screen.queryByRole('alert')).toBeNull();
   });

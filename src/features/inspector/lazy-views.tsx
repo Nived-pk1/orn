@@ -7,23 +7,25 @@ import type { Finding } from '@/core/validation';
 import { useCallback, useEffect, useState } from 'react';
 import type { AnyRecord } from '@/core/schema';
 import { ErrorBoundary, Skeleton } from '@/ui/primitives';
-import type { OtherView as OtherViewValue } from './views-other';
+import type { OtherView as OtherViewValue, StudyInspector as StudyInspectorValue } from './views-other';
+import type { StudyInspectorProps } from './study-inspector';
 import styles from './inspector.module.css';
 
 type OtherView = typeof OtherViewValue;
+type StudyView = typeof StudyInspectorValue;
 
-export type ViewsLoad = { readonly ok: true; readonly OtherView: OtherView } | { readonly ok: false; readonly message: string };
+export type ViewsLoad = { readonly ok: true; readonly OtherView: OtherView; readonly StudyInspector: StudyView } | { readonly ok: false; readonly message: string };
 
-let loaded: OtherView | undefined;
+let loaded: { readonly OtherView: OtherView; readonly StudyInspector: StudyView } | undefined;
 let pending: Promise<ViewsLoad> | undefined;
 
 /** Loads the chunk once; a failure is not remembered, so Retry asks again. */
 export function loadOtherViews(): Promise<ViewsLoad> {
-  if (loaded !== undefined) return Promise.resolve({ ok: true, OtherView: loaded });
+  if (loaded !== undefined) return Promise.resolve({ ok: true, ...loaded });
   pending ??= import('./views-other').then(
     (module): ViewsLoad => {
-      loaded = module.OtherView;
-      return { ok: true, OtherView: module.OtherView };
+      loaded = { OtherView: module.OtherView, StudyInspector: module.StudyInspector };
+      return { ok: true, ...loaded };
     },
     (error: unknown): ViewsLoad => ({
       ok: false,
@@ -37,7 +39,7 @@ export function loadOtherViews(): Promise<ViewsLoad> {
 }
 
 function Loader(props: { readonly record: AnyRecord; readonly findings: readonly Finding[] }) {
-  const [answer, setAnswer] = useState<ViewsLoad | undefined>(loaded === undefined ? undefined : { ok: true, OtherView: loaded });
+  const [answer, setAnswer] = useState<ViewsLoad | undefined>(loaded === undefined ? undefined : { ok: true, ...loaded });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     if (answer?.ok === true) return;
@@ -71,6 +73,42 @@ export function LazyOtherView(props: { readonly record: AnyRecord; readonly find
   return (
     <ErrorBoundary label="This view">
       <Loader record={props.record} findings={props.findings} />
+    </ErrorBoundary>
+  );
+}
+
+function StudyLoader(props: StudyInspectorProps) {
+  const [answer, setAnswer] = useState<ViewsLoad | undefined>(loaded === undefined ? undefined : { ok: true, ...loaded });
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    if (answer?.ok === true) return;
+    let live = true;
+    void loadOtherViews().then((next) => {
+      if (live) setAnswer(next);
+    });
+    return () => {
+      live = false;
+    };
+  }, [attempt, answer?.ok]);
+  if (answer === undefined) return <Skeleton label="Loading this record" lines={4} />;
+  if (!answer.ok) {
+    return (
+      <div role="alert" className={styles.muted}>
+        <p>{answer.message}</p>
+        <button type="button" onClick={() => { setAnswer(undefined); setAttempt((n) => n + 1); }}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+  return <answer.StudyInspector {...props} />;
+}
+
+/** The new inspector layout (step 8.1) from the views chunk, so it is not in the first paint. */
+export function LazyStudyInspector(props: StudyInspectorProps) {
+  return (
+    <ErrorBoundary label="This record">
+      <StudyLoader {...props} />
     </ErrorBoundary>
   );
 }

@@ -13,6 +13,7 @@ import { PHONE_QUERIES } from '@/ui/hooks';
 import { createFamilyStore, createInspectorStore, createPanelsStore, createSelectionStore } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { Inspector } from './inspector';
+import { loadOtherViews } from './lazy-views';
 
 // the line is a lazy chunk (7.3c A1): load it once, so every show() settles in one act
 beforeAll(async () => {
@@ -46,9 +47,14 @@ async function show(state: CanonicalState, ref: { kind: string; id: string }, ho
   };
   render(<Inspector ports={ports} host={{ openPane: () => undefined, edgeEnds: () => undefined, navigatorShown: false, ...host }} />);
   await act(async () => inspector.getState().open(ref as never));
+  await act(async () => { await new Promise((r) => setTimeout(r, 0)); }); // 8.1: the layout comes from the views chunk
 }
 
 const base = [topic('subj', 'Organic', { kind: 'subject', order: 1 }), topic('chap-a', 'Alpha chapter', { kind: 'chapter', parent: 'subj', order: 1 }), topic('chap-b', 'Bravo chapter', { kind: 'chapter', parent: 'subj', order: 2 })];
+
+beforeAll(async () => {
+  await loadOtherViews();
+});
 
 describe('In chapters', () => {
   it('names the chapters of the record as links that open the chapter page', async () => {
