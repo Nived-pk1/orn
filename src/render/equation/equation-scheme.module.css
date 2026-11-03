@@ -43,6 +43,11 @@
   padding-bottom: var(--hang);
 }
 
+.rowNoWrap {
+  flex-wrap: nowrap;
+  width: max-content;
+}
+
 .term {
   display: flex;
   align-items: center;

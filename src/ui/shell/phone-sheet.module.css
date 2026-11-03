@@ -64,6 +64,11 @@
   background: var(--color-ink-2);
 }
 
+.body:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
 .body {
   flex: 1;
   min-height: 0;
@@ -110,4 +115,15 @@
   to {
     transform: none;
   }
+}
+
+/* the compact hero of a record is for the peek only; the full hero is for the full sheet and the desktop pane (step 8.1 review decision 1) */
+[data-sheet-peek-only] {
+  display: none;
+}
+.sheet[data-sheet='peek'] [data-sheet-peek-only] {
+  display: block;
+}
+.sheet[data-sheet='peek'] [data-hero-main] {
+  display: none;
 }

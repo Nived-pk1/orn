@@ -3,6 +3,8 @@ export type { EquationSchemeProps } from './equation-scheme';
 export { EQUATION_AREA, EQUATION_BOND_PX, MAX_DRAWING_HEIGHT, MAX_DRAWING_WIDTH, STACKED_MAX_DRAWING_WIDTH } from './contracts';
 export type { StructureFactsAnswer, StructureFactsPort } from './contracts';
 export { drawingSizeOf } from './drawing-size';
+export { fitHero, MIN_DRAWING_PX, PEEK_MAX_HEIGHT } from './hero-fit';
+export type { HeroFit, HeroMeasure } from './hero-fit';
 export { Runs } from './runs';
 export { useFactsInput } from './use-facts';
 export { NamesSwitch } from './names-switch';

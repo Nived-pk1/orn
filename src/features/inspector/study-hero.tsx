@@ -24,7 +24,13 @@ export function StudyHero(props: { readonly hero: Hero | undefined }) {
       const record = recordOf(state, { kind: 'reaction', id: hero.reactionId });
       return record === undefined ? null : (
         <div className={styles.hero} data-hero="reaction">
-          <HeroEquation record={record as Reaction} />
+          {/* the sheet's peek shows the compact one (one row, at most 120 px, or the text); the full sheet and the desktop pane the other */}
+          <div data-hero-main="" style={{ width: '100%' }}>
+            <HeroEquation record={record as Reaction} />
+          </div>
+          <div data-sheet-peek-only="" style={{ width: '100%' }}>
+            <HeroEquation record={record as Reaction} compact />
+          </div>
         </div>
       );
     }

@@ -35,6 +35,8 @@ export interface EquationSchemeProps {
   readonly maxDrawingWidth?: number;
   /** `row` (default): terms and arrow in one wrapping row. `stacked` (the phone): reactants, the down arrow, products, one above the other. */
   readonly layout?: 'row' | 'stacked';
+  /** The row never wraps (the inspector's hero measures it and scales or stacks it instead, step 8.1). */
+  readonly nowrap?: boolean;
   /** Said in place of "nothing listed" on the products side (a reaction with no outcome yet); absent: "nothing listed". */
   readonly noProducts?: string;
 }
@@ -90,7 +92,7 @@ export function EquationScheme(props: EquationSchemeProps) {
           </div>
         </div>
       ) : (
-        <div className={styles.row}>
+        <div className={props.nowrap === true ? `${styles.row} ${styles.rowNoWrap}` : styles.row} {...(props.nowrap === true ? { 'data-nowrap': '' } : {})}>
           <Side terms={equation.reactants} names={names} ports={ports} empty="nothing listed" />
           <span className={styles.arrowCell}>
             <SchemeArrow arrow={equation.arrow} equilibrium={equation.equilibrium} />

@@ -52,6 +52,14 @@ describe('the Study layout', () => {
     expect(within(watch).getByText('PCC stops at the aldehyde')).toBeTruthy();
   });
 
+  it('the hero equation is one nowrap row (the full one and the compact one for the sheet); the geometry is proved by the e2e', async () => {
+    await show(REACTION);
+    expect(document.querySelectorAll('[data-hero-equation]')).toHaveLength(2);
+    expect(document.querySelector('[data-hero-main] [data-equation-scheme] [data-nowrap]')).not.toBeNull();
+    expect(document.querySelector('[data-sheet-peek-only] [data-hero-equation][data-compact]')).not.toBeNull();
+    expect(document.querySelector('[data-hero-equation] [data-layout="row"]')).not.toBeNull();
+  });
+
   it('a record with nothing to draw has no empty hero box', async () => {
     const t = Object.values(state.records.transformation)[0] as { id: string };
     await show(ref('transformation', t.id));

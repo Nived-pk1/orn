@@ -11,6 +11,7 @@ import { devices, expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, expectPreview, watch } from './kit';
 import { shotsDir } from './editor-kit';
+import { expectHeroNeverWraps } from './hero-geometry';
 
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
 test.use({ baseURL: STUDY, actionTimeout: 60_000 });
@@ -53,12 +54,16 @@ async function walk(page: Page, device: string, withPeek: boolean, query: string
     expect(await buttons.evaluateAll((els) => els.filter((el) => (el as HTMLElement).offsetParent !== null).length)).toBeLessThanOrEqual(2);
     await expect(sheet(page).getByRole('list', { name: 'Key facts' })).toBeHidden();
     await expect(sheet(page).locator('section[data-group]').first()).toBeHidden();
+    const compact = await sheet(page).locator('[data-sheet-peek-only] [data-hero-equation]').boundingBox(); // review decision 1: one row, at most 120 px
+    expect(compact?.height ?? 999, 'the compact hero is at most 120 px high').toBeLessThanOrEqual(121);
+    await expectHeroNeverWraps(page, 'the peek');
     for (const box of await sheet(page).getByRole('button').evaluateAll((els) => els.filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.getBoundingClientRect().toJSON() as { height: number }))) expect(box.height).toBeGreaterThanOrEqual(44 - 1);
     expect(await axeProblems(page, 10), 'axe at peek').toEqual([]);
     await page.screenshot({ path: `${shotsDir()}/phone-inspector-peek-${device}.png` });
   }
   await page.getByRole('button', { name: 'Show the whole record' }).tap();
   await expect(sheet(page)).toHaveAttribute('data-sheet', 'full');
+  if (chip === 'Reaction') await expectHeroNeverWraps(page, 'the full sheet');
   const group = sheet(page).locator('section[data-group]').first();
   await expect(group).toBeVisible();
   const row = group.locator('ul');
@@ -100,5 +105,14 @@ test.describe('phone: a compound on the Pixel 7', () => {
     test.skip(browserName !== 'chromium', 'the Pixel 7 profile is Chromium');
     test.setTimeout(400_000);
     await walk(page, 'pixel7', false, 's: Ethanol', 'spc_ethanol', 'phone-inspector-compound-full', 'Compound');
+  });
+});
+
+test.describe('phone: the hero equation at 360 px (Pixel 7 profile, Chromium)', () => {
+  test.use({ ...PIXEL, viewport: { width: 360, height: 740 } });
+  test('one row or the vertical layout, never wrapped; no sideways scroll', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'the Pixel 7 profile is Chromium');
+    test.setTimeout(400_000);
+    await walk(page, 'pixel7-360', false, 'r: Ethanol → ethanal (PCC)', 'rxn_ethanol-to-ethanal-pcc', 'phone-inspector-hero-360', 'Reaction');
   });
 });

@@ -51,6 +51,7 @@
 }
 .titleText { margin: 0; font-size: var(--text-20); overflow-wrap: anywhere; }
 /* Phone peek (step 8.1 Part D): the hero is compact, at most 40% of the peek (35dvh); the rest of the layout is marked data-sheet-full and hidden by the sheet. */
-[data-sheet='peek'] .hero { max-height: 14dvh; overflow: hidden; padding: var(--space-2); }
-[data-sheet='peek'] .hero img { max-height: 11dvh; width: auto; max-width: 100%; object-fit: contain; }
+[data-sheet='peek'] .hero { max-height: 120px; overflow: hidden; padding: var(--space-1) var(--space-2); gap: var(--space-1); }
+[data-sheet='peek'] .hero img { max-height: 96px; width: auto; max-width: 100%; object-fit: contain; }
+[data-sheet='peek'] .formula { font-size: var(--text-16); }
 [data-sheet='peek'] .head { flex-wrap: nowrap; }

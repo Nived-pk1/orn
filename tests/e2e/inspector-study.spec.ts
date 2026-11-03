@@ -10,6 +10,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, expectPreview, watch } from './kit';
 import { palette, record, searchFor, shotsDir } from './editor-kit';
+import { expectHeroNeverWraps } from './hero-geometry';
 
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
 test.use({ baseURL: STUDY, actionTimeout: 60_000 });
@@ -59,6 +60,7 @@ test('one record of each kind: chip, hero, no author words, axe, no CSP violatio
     const article = record(page);
     await expect(article.locator('header')).toContainText(one.chip);
     if (one.hero) await expect(article.locator('[data-hero], [data-hero-equation], [data-hero-picture]').first()).toBeVisible({ timeout: 30_000 });
+    if (one.id.startsWith('rxn_')) await expectHeroNeverWraps(page, 'the desktop panel width'); // review decision 0
     await expect(article.getByRole('button', { name: 'Back' })).toBeVisible();
     await expect(article.getByRole('button', { name: /For authors/ })).toHaveCount(0);
     const text = await article.innerText();

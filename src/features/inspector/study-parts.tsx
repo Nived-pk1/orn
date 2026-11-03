@@ -147,7 +147,7 @@ function CardGroupView(props: { readonly group: CardGroup }) {
   return (
     <section aria-label={group.heading} className={styles.group} data-group={group.key}>
       <h4 className={styles.groupHeading}>{group.heading}</h4>
-      <ul className={`${styles.cards} ${phone ? styles.cardsRow : ''}`}>
+      <ul className={`${styles.cards} ${phone ? styles.cardsRow : ''}`} {...(phone ? { 'data-scroll-row': '' } : {})}>
         {shown.map((card) => (
           <li key={`${card.ref.kind}:${card.ref.id}`}>
             <button type="button" className={styles.card} data-record-id={card.ref.id} onClick={() => openRecord(card.ref)}>

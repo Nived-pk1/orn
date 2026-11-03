@@ -209,3 +209,14 @@ describe('PhoneSheet: the title, and the room it takes (phone mode B, part 2)', 
     }
   });
 });
+
+describe('the scrollable body is keyboard-focusable (step 8.1 review decision 3)', () => {
+  it('is a focusable region named "Details" (axe: scrollable-region-focusable)', () => {
+    render(<Harness />);
+    open();
+    const body = screen.getByRole('region', { name: 'Details' });
+    expect(body.getAttribute('tabindex')).toBe('0');
+    body.focus();
+    expect(document.activeElement).toBe(body);
+  });
+});
