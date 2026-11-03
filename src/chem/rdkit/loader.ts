@@ -6,6 +6,7 @@
  * parse failure to the console, and the failure is already a value.
  */
 import type { RdkitModule } from './types';
+import { browserWasmDeps, instantiateWithFallback } from './wasm-instantiate';
 
 export interface RdkitLoadOptions {
   /** Where the browser gets `RDKit_minimal.wasm` from. Omit under Node. */
@@ -25,7 +26,24 @@ function factoryOf(imported: unknown): Factory {
 export async function loadRdkit(options: RdkitLoadOptions = {}): Promise<RdkitModule> {
   const factory = factoryOf(await import('@rdkit/rdkit'));
   const wasmUrl = options.wasmUrl;
-  const module = (await factory(wasmUrl === undefined ? undefined : { locateFile: (file: string) => (file.endsWith('.wasm') ? wasmUrl : file) })) as RdkitModule;
+  if (wasmUrl === undefined) return finish((await factory()) as RdkitModule);
+  // RR1: the browser compiles the WASM itself, streaming first and ONCE from plain bytes if that fails; a second failure rejects.
+  let fail: (reason: Error) => void = () => undefined;
+  const failed = new Promise<never>((_, reject) => {
+    fail = reject;
+  });
+  const instantiateWasm = (imports: WebAssembly.Imports, receive: (instance: WebAssembly.Instance, module: WebAssembly.Module) => void): Record<string, never> => {
+    void instantiateWithFallback(wasmUrl, imports, browserWasmDeps()).then((result) => {
+      if (result.ok) receive(result.instance, result.module);
+      else fail(new Error(`the structure engine could not start: ${result.reason}`));
+    });
+    return {};
+  };
+  const options2 = { locateFile: (file: string) => (file.endsWith('.wasm') ? wasmUrl : file), instantiateWasm };
+  return finish((await Promise.race([factory(options2), failed])) as RdkitModule);
+}
+
+function finish(module: RdkitModule): RdkitModule {
   module.disable_logging?.();
   return module;
 }

@@ -225,3 +225,36 @@ describe('concepts with no text (7.3c A3)', () => {
     expect(loose.groups.map((g) => `${g.key}:${g.count}:${g.unwritten?.length}`)).toEqual(['concepts:0:1']);
   });
 });
+
+describe('RR5 (8.1): a chapter with a covered descendant but no coverage of its own', () => {
+  const state = stateWith(
+    concept('c1', 'One', 'general'),
+    topicMapping('m1', 'a-s1', cpt('c1')),
+    examVersion('v-sec', 'cbse', [{ topic: 'a-s1', coverage: 'included' }]),
+    examVersion('v-deep', 'cbse2', [{ topic: 'a-s2-t', coverage: 'partial' }]),
+    examVersion('v-ex', 'cbse3', [{ topic: 'a-s1', coverage: 'excluded' }]),
+  );
+
+  it('shows the chip "partly" for that version', () => {
+    const alpha = chaptersOf(state, buildChapterIndex(state)).chapters.find((c) => c.title === 'Alpha chapter');
+    const by = Object.fromEntries((alpha?.exams ?? []).map((e) => [e.examVersionId, e.coverage]));
+    expect(by['exv_v-sec']).toBe('partial');
+    expect(by['exv_v-deep']).toBe('partial');
+    expect(by['exv_v-ex']).toBeUndefined();
+  });
+
+  it('is listed under "Only <exam>" with the scope word "partial"', () => {
+    const list = chaptersOf(state, buildChapterIndex(state), { examVersionId: 'exv_v-sec' });
+    expect(list.chapters.map((c) => `${c.title}:${c.scopeCoverage}`)).toEqual(['Alpha chapter:partial']);
+  });
+
+  it('a chapter with its own coverage keeps it', () => {
+    const own = stateWith(
+      concept('c1', 'One', 'general'),
+      topicMapping('m1', 'a-s1', cpt('c1')),
+      examVersion('v-own', 'e-own', [{ topic: 'chap-a', coverage: 'included' }, { topic: 'a-s1', coverage: 'partial' }]),
+    );
+    const alpha = chaptersOf(own, buildChapterIndex(own)).chapters.find((c) => c.title === 'Alpha chapter');
+    expect(alpha?.exams[0]?.coverage).toBe('included');
+  });
+});

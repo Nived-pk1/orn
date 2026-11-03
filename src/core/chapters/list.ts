@@ -4,7 +4,7 @@
  * in the order of its units, the partial ones marked. Reactions are counted as CARDS (examples fold under their general reaction, as in
  * every other list since 7.3a).
  */
-import { coverageOfTopic, strongestCoverage } from '../coverage';
+import { MAX_COVERAGE_DEPTH, coverageOfTopic, strongestCoverage } from '../coverage';
 import { foldExamples } from '../graph/family/examples';
 import type { CanonicalState, RecordRef } from '../schema';
 import { isUnwrittenConcept } from './written';
@@ -30,6 +30,20 @@ export function studyRecords(state: CanonicalState): readonly RecordRef[] {
   return out;
 }
 
+/** Every topic above a topic this version covers (included or partial), bounded; used for RR5. */
+function chaptersAboveCovered(strongest: ReadonlyMap<string, 'included' | 'partial' | 'excluded'>, parentOf: (id: string) => string | undefined): Set<string> {
+  const above = new Set<string>();
+  for (const [topicId, level] of strongest) {
+    if (level === 'excluded') continue;
+    let at = parentOf(topicId);
+    for (let depth = 0; at !== undefined && depth < MAX_COVERAGE_DEPTH; depth += 1) {
+      above.add(at);
+      at = parentOf(at);
+    }
+  }
+  return above;
+}
+
 /**
  * The coverage each exam version gives each chapter, by the ONE rule (`coverage/`, 7.7 A): the chapter topic's own coverage (the nearest listed
  * topic at or above it; the strongest of its entries). `order` is where the version first mentions a topic of the chapter (a chapter covered
@@ -50,9 +64,12 @@ function coverageOf(state: CanonicalState, index: ChapterIndex): Map<string, Map
         if (chapterId !== undefined && !firstMention.has(chapterId)) firstMention.set(chapterId, order);
       }
     }
+    const partlyCovered = chaptersAboveCovered(strongest, parentOf);
     const per = new Map<string, { coverage: CoverageWord; order: number }>();
     index.chapters.forEach((chapter, at) => {
-      const level = coverageOfTopic(strongest, chapter.id, parentOf);
+      const own = coverageOfTopic(strongest, chapter.id, parentOf);
+      // RR5 (8.1): no coverage of its own but a covered section or topic below it: "partial" (display only; record scope follows the rule per topic).
+      const level = own === undefined && partlyCovered.has(chapter.id) ? 'partial' : own;
       if (level === undefined || level === 'excluded') return;
       per.set(chapter.id, { coverage: level, order: firstMention.get(chapter.id) ?? order + 1 + at });
     });

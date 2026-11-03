@@ -202,7 +202,12 @@ Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)
 
 | Row | What |
 |---|---|
-| 8.1 | Study inspector redesign (user request, 2026-11-01): the inspector reads like a wall of text; a student should not have to read it. Make it visual and quick to take in: picture or structure first, the one-line idea, key facts as chips, linked records as small visual cards, smooth opening and expanding; author-only levels (provenance, findings, raw record) stay in Studio. Same care for the phone sheet. Reviewer designs the step. |
+| 8.1 | Study inspector redesign (this step) + 7.7 follow-ups. |
+| 8.2 | Study is a student app: hide author/developer chrome on the public site (status bar details, Dataset counts, storage warning unless the visitor imported own data, "Exam scope" jargon, raw labels), rename desktop "Navigator" to "Map" to match the phone, review badges as the user decides; Studio unchanged. |
+| 8.3 | Visual polish pass: one type scale and spacing scale, one card style, buttons and chips unified, family-page summary line shortened, empty states, 200 ms transitions (none with reduced motion); a screenshot-led QA pass of every view on desktop and phone. |
+| 8.4 | Arrow-pushing mechanism drawings (ADR-038) and the before → after step layout. |
+| 8.5 | Export pictures (SVG/PNG from a card, family page and map) and a print stylesheet. |
+| 8.6 | Phase 8 close: full e2e, both sizes, Definition of Done. |
 
 Also under Phase 8: mechanism steps: before → after layout of a step's species (with arrow-pushing, row 8.x).
 
@@ -230,7 +235,7 @@ All ADV rows green, property suite at higher run counts, v6 end-to-end audit (MI
 | 5 | Gate E; the navigator with the demo dataset is usable by keyboard only and by touch |
 | 6 | Gate D; no authoring path writes invalid data to the canonical store |
 | 7 | Each view has e2e coverage and respects scope filters and truncation notices |
-| 8 | Exported SVG equals the on-screen scene (snapshot test); no a11y violations at "serious" or above |
+| 8 | Exported SVG equals the on-screen scene (snapshot test); no a11y violations at "serious" or above; Study shows no author or developer wording; every view passes the screenshot QA list; motion respects reduced-motion; exports open in a browser |
 | 9 | Stress tier usable; PWA works offline after first load; Diagnostics complete |
 | 10 | Gate F |
 

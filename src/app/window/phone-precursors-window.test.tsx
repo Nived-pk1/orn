@@ -16,6 +16,9 @@ beforeAll(async () => {
   await import('./reactions-host'); // the lazy view chunks, loaded once so the first test's wait does not include their transform (7.3c)
   await import('./precursors-host');
   await import('./reagents-host');
+  await import('./named-host'); // 8.1: the three 7.4 / 7.6 views were not warmed and timed out on a cold transform (the same pattern)
+  await import('./mechanisms-host');
+  await import('./syllabus-host');
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

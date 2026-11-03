@@ -10,6 +10,7 @@ import { undoUnavailableReason } from './dataset-actions';
 import { ALL_LABEL, type ExamOptions } from './exam-scope';
 import { NAVIGATOR_MODE } from './modes';
 import { openMechanismsList, openNamedList, openSyllabus } from './page-entries';
+import { openChaptersList, openPrecursorsList, openReactionsList } from './list-entries';
 import { openReagentsList } from './reagents-entry';
 
 /** One "New <kind>" palette command. */
@@ -135,6 +136,9 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
       },
       !deps.hasData ? 'there is no data' : navigatorShown && !familyOpen ? 'the overview is already shown' : undefined,
     ),
+    withReason({ id: 'open-chapters', title: 'Open Chapters', keywords: ['chapters', 'chapter', 'units', 'syllabus', 'topics'], run: () => openChaptersList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-reactions', title: 'Open Reactions', keywords: ['reactions', 'reaction', 'list', 'explore', 'filters'], run: () => openReactionsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-precursors', title: 'Open Precursors', keywords: ['precursors', 'precursor', 'how to make', 'routes', 'synthesis'], run: () => openPrecursorsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'open-reagents', title: 'Open Reagents', keywords: ['reagents', 'reagent', 'list', 'oxidant', 'base', 'profile'], run: () => openReagentsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'open-named', title: 'Open Named reactions', keywords: ['named', 'named reactions', 'reaction', 'name reaction', 'aldol', 'grignard'], run: () => openNamedList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'open-mechanisms', title: 'Open Mechanisms', keywords: ['mechanisms', 'mechanism', 'steps', 'sn1', 'sn2', 'e2'], run: () => openMechanismsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
