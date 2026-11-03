@@ -35,11 +35,10 @@ test.describe('the inspector', () => {
     const pcc = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
     await pcc.getByRole('button', { name: 'Ethanol → ethanal (PCC)' }).click();
     await expect(record(page).getByRole('heading', { level: 3, name: 'Ethanol → ethanal (PCC)' })).toBeVisible();
-    await expect(record(page).getByRole('list', { name: 'Participants' })).toBeVisible();
-    await expect(record(page).getByRole('list', { name: 'Outcomes' })).toBeVisible();
-
     // a link focuses its record; Back (and Alt+Left) returns (8.1: the participants are in "For authors")
     await openAuthors(page);
+    await expect(record(page).getByRole('list', { name: 'Participants' })).toBeVisible();
+    await expect(record(page).getByRole('list', { name: 'Outcomes' })).toBeVisible();
     const link = record(page).getByRole('list', { name: 'Participants' }).getByRole('link').first();
     const target = await link.getAttribute('data-record-id');
     await link.click();
@@ -50,6 +49,7 @@ test.describe('the inspector', () => {
     await expect(record(page)).toHaveAttribute('data-record-id', target ?? '');
 
     // opening Level 3 is remembered
+    await openAuthors(page);
     await record(page).getByRole('button', { name: /^.? ?Level 3/ }).click();
     expect(await axeProblems(page)).toEqual([]);
     await page.reload();

@@ -20,7 +20,7 @@ async function startPhone(page: Page): Promise<void> {
 }
 
 async function moreNew(page: Page, what: string): Promise<void> {
-  await page.getByRole('button', { name: 'More' }).tap();
+  await page.getByRole('button', { name: 'More', exact: true }).tap();
   await page.getByRole('dialog', { name: 'More' }).getByRole('button', { name: what }).tap();
 }
 

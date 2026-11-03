@@ -78,6 +78,7 @@ test.describe('hostile data', () => {
     // 4. the scripted SVG: a record link in the notes opens the asset, which is only an <img> from a blob: URL
     await record(page).locator(`a[data-record-id="${ASSET_ID}"]`).first().click();
     await expect(record(page)).toHaveAttribute('data-record-id', ASSET_ID);
+    await openAuthors(page); // 8.1: an asset is not a study record; its image is in "For authors"
     const image = record(page).getByRole('img').first();
     await expect(image).toHaveAttribute('src', /^blob:/);
     await expect(image).toHaveAttribute('alt', new RegExp(`A hostile picture ${escaped(SCRIPT_TEXT)}`));

@@ -35,7 +35,7 @@ const focusOf = (page: Page): Promise<Focus> =>
       role: el.getAttribute('role'),
       name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 80),
       canvas,
-      recordLink: el.matches('a[data-record-id]'),
+      recordLink: el.matches('a[data-record-id], button[data-record-id]'), // 8.1: the connected cards and chips are buttons that carry the record id
       family: active === null ? null : (document.getElementById(active)?.getAttribute('data-node-id') ?? null),
     };
   });

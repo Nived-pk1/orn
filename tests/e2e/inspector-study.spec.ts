@@ -1,7 +1,7 @@
 /**
  * The Study inspector on a desktop (step 8.1 Part F), the STUDY build: one record of each kind shows the kind chip, the hero where the kind has
  * one, no author words, axe clean, zero CSP violations; the reaction has its watch-out; connected cards show 4 and "Show all"; a long lead is
- * clamped with "Read more". Screenshots (all 1280x800): inspector-reaction, -compound, -class, -reagent, -concept, -named, -mechanism,
+ * clamped with "Read more". Screenshots (all 1280x800, named inspector-study-<kind> because older specs own the inspector-<kind> names): reaction, compound, class, reagent, concept, named, mechanism,
  * -caveat, -lead-expanded.
  */
 import { readFileSync } from 'node:fs';
@@ -40,14 +40,14 @@ async function open(page: Page, query: string, id: string): Promise<void> {
 const FORBIDDEN = [/Level \d/, /Findings and checks/, /Formula \(entered\)/, /Formula \(derived/, /Provenance/, /Raw record/, /None found for/, /has no place in this view/, /\b(spc|rxn|cls|cpt|rgt|nrx|mec|cav)_[a-z0-9-]+/];
 
 const CASES: { shot: string; query: string; id: string; chip: string; hero: boolean }[] = [
-  { shot: 'inspector-reaction', query: 'r: Ethanol → ethanal (PCC)', id: 'rxn_ethanol-to-ethanal-pcc', chip: 'Reaction', hero: true },
-  { shot: 'inspector-compound', query: 's: Ethanol', id: 'spc_ethanol', chip: 'Compound', hero: true },
-  { shot: 'inspector-class', query: 'c: Aldehydes', id: 'cls_aldehydes', chip: 'Class', hero: true },
-  { shot: 'inspector-reagent', query: 'g: Potassium permanganate', id: 'rgt_potassium-permanganate', chip: 'Reagent', hero: true },
-  { shot: 'inspector-concept', query: 'Oxidation', id: 'cpt_oxidation', chip: 'Idea', hero: false },
-  { shot: 'inspector-named', query: 'n: Aldol reaction', id: 'nrx_aldol', chip: 'Named reaction', hero: true },
-  { shot: 'inspector-mechanism', query: 'm: Aldol addition of ethanal', id: 'mec_aldol-ethanal', chip: 'Mechanism', hero: true },
-  { shot: 'inspector-caveat', query: 'PCC stops at the aldehyde', id: 'cav_pcc-stops-at-aldehyde', chip: 'Watch out', hero: false },
+  { shot: 'inspector-study-reaction', query: 'r: Ethanol → ethanal (PCC)', id: 'rxn_ethanol-to-ethanal-pcc', chip: 'Reaction', hero: true },
+  { shot: 'inspector-study-compound', query: 's: Ethanol', id: 'spc_ethanol', chip: 'Compound', hero: true },
+  { shot: 'inspector-study-class', query: 'c: Aldehydes', id: 'cls_aldehydes', chip: 'Class', hero: true },
+  { shot: 'inspector-study-reagent', query: 'g: Potassium permanganate', id: 'rgt_potassium-permanganate', chip: 'Reagent', hero: true },
+  { shot: 'inspector-study-concept', query: 'Oxidation', id: 'cpt_oxidation', chip: 'Idea', hero: false },
+  { shot: 'inspector-study-named', query: 'n: Aldol reaction', id: 'nrx_aldol', chip: 'Named reaction', hero: false },
+  { shot: 'inspector-study-mechanism', query: 'm: Aldol addition of ethanal', id: 'mec_aldol-ethanal', chip: 'Mechanism', hero: true },
+  { shot: 'inspector-study-caveat', query: 'PCC stops at the aldehyde', id: 'cav_pcc-stops-at-aldehyde', chip: 'Watch out', hero: false },
 ];
 
 test('one record of each kind: chip, hero, no author words, axe, no CSP violation', async ({ page }) => {
@@ -105,6 +105,6 @@ test('a long lead is clamped to four lines with "Read more", which opens it in p
   await record(page).getByRole('button', { name: 'Read more' }).click();
   await expect(lead).toHaveAttribute('data-lead', 'open');
   await expect.poll(async () => (await lead.boundingBox())?.height ?? 0).toBeGreaterThan(clamped + 20);
-  await page.screenshot({ path: `${shotsDir()}/inspector-lead-expanded-1280x800.png` });
+  await page.screenshot({ path: `${shotsDir()}/inspector-study-lead-expanded-1280x800.png` });
   await expectClean(seen);
 });

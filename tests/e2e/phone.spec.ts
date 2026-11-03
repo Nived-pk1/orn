@@ -174,7 +174,7 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
   await stop(page, device, 2, 'families');
 
   // More: File items, Exam scope, Dataset counts, About, Status
-  await page.getByRole('button', { name: 'More' }).tap();
+  await page.getByRole('button', { name: 'More', exact: true }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
   await expect(more.getByRole('button', { name: 'Import a file...' })).toBeVisible();
   await expect(more.getByRole('button', { name: 'Status' })).toBeVisible();

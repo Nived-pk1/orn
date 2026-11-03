@@ -60,7 +60,7 @@ test.describe('the class editor', () => {
     // in search, and the inspector shows its parent
     await showRecord(page, 'c', 'diols');
     await expect(record(page).getByRole('heading', { level: 3, name: 'Diols' })).toBeVisible();
-    await expect(record(page)).toContainText('Parents');
+    await expect(record(page)).toContainText('A kind of Alcohols');
     await expect(record(page)).toContainText('Alcohols');
 
     // Undo removes it (one global entry)

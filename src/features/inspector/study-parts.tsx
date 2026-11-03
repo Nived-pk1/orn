@@ -64,7 +64,7 @@ export function Chips(props: { readonly chips: readonly Chip[] }) {
           {chip.ref === undefined ? (
             <span className={styles.chip}>{chip.label}</span>
           ) : (
-            <button type="button" className={`${styles.chip} ${styles.chipLink}`} onClick={() => openRecord(chip.ref as NonNullable<Chip['ref']>)}>
+            <button type="button" className={`${styles.chip} ${styles.chipLink}`} data-record-id={chip.ref.id} onClick={() => openRecord(chip.ref as NonNullable<Chip['ref']>)}>
               {chip.label}
             </button>
           )}
@@ -150,7 +150,7 @@ function CardGroupView(props: { readonly group: CardGroup }) {
       <ul className={`${styles.cards} ${phone ? styles.cardsRow : ''}`}>
         {shown.map((card) => (
           <li key={`${card.ref.kind}:${card.ref.id}`}>
-            <button type="button" className={styles.card} onClick={() => openRecord(card.ref)}>
+            <button type="button" className={styles.card} data-record-id={card.ref.id} onClick={() => openRecord(card.ref)}>
               <span className={styles.cardTitle}>{card.title}</span>
               <span className={styles.cardLine}>{card.line}</span>
             </button>

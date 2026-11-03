@@ -5,7 +5,6 @@
  */
 import type { Outcome, Reaction } from '@/core/schema';
 import type { Finding } from '@/core/validation';
-import { FullEquations } from './equation';
 import { Connections } from './connections';
 import { useInspectorEnv } from './env';
 import { LABELS } from './labels';
@@ -147,7 +146,7 @@ export function ReactionLevels(props: { readonly record: Reaction; readonly find
   const { record } = props;
   return (
     <>
-      <FullEquations record={record} />
+      {/* 8.1: "Show full equation" is part of the new layout above (under the hero), not of the author section */}
       <LevelSection level={2} title="What happens">
         <FactList label="Reaction summary">
           <Facts label="Scope">{record.scope}</Facts>

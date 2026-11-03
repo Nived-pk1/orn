@@ -203,7 +203,7 @@ async function walkPhone(page: Page, device: string): Promise<void> {
   await page.screenshot({ path: resolve(shotsDir(), `phone-select-mode-${device}.png`) });
   const n = await markVerified(page, bar, true);
   expect(n).toBeGreaterThan(0);
-  await page.getByRole('button', { name: 'More' }).tap();
+  await page.getByRole('button', { name: 'More', exact: true }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
   await more.getByRole('button', { name: `Undo mark verified (${n})` }).tap();
   await expect(more.getByRole('button', { name: `Undo mark verified (${n})` })).toHaveCount(0);

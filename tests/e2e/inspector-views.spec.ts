@@ -110,7 +110,7 @@ test.describe('the inspector, remaining kinds', () => {
       expect(await page.locator('aside').evaluate((el) => getComputedStyle(el).position)).toMatch(width === 1100 ? /fixed/ : /fixed|absolute|sticky|relative/);
       expect(await page.locator('body').evaluate((b) => b.scrollWidth <= window.innerWidth)).toBe(true);
       // the keyboard reaches a record link in the pane and follows it
-      const link = record(page).getByRole('link').first();
+      const link = record(page).locator('button[data-record-id], a[data-record-id]').first();
       await link.focus();
       await expect(link).toBeFocused();
       await page.keyboard.press('Enter');

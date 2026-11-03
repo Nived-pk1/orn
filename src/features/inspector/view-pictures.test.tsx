@@ -57,7 +57,7 @@ async function show(state: CanonicalState, open: InspectorPorts['assets'] | 'non
   await openLevels();
   return rig;
 }
-const pictures = () => screen.getByRole('region', { name: 'Pictures of this mechanism' });
+const pictures = () => screen.getByRole('region', { name: 'All pictures of this mechanism' });
 
 describe('the pictures of a mechanism', () => {
   it('come FIRST: before the summary and the variants', async () => {
@@ -92,7 +92,7 @@ describe('the pictures of a mechanism', () => {
 
   it('a mechanism with no picture has no pictures region', async () => {
     await show(demoState());
-    expect(screen.queryByRole('region', { name: 'Pictures of this mechanism' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'All pictures of this mechanism' })).toBeNull();
   });
 
   it('uses <img> only, at its natural size at most: no width is set on the element and the style never enlarges it', async () => {

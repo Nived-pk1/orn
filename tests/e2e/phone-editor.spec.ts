@@ -60,7 +60,7 @@ async function walk(page: Page, device: string): Promise<void> {
 
   // More: the global history is there, not on the bar
   await expect(page.getByRole('banner').getByRole('button', { name: /^Undo/ })).toHaveCount(0);
-  await page.getByRole('button', { name: 'More' }).tap();
+  await page.getByRole('button', { name: 'More', exact: true }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
   await expect(more.getByRole('button', { name: 'Undo Edit species Ethanol' })).toBeVisible();
   await more.getByRole('button', { name: 'Undo Edit species Ethanol' }).tap();

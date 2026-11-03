@@ -12,15 +12,13 @@ test('a generic reaction lists its examples; the example says "Example of"', asy
   const seen = await watch(page);
   await openDemo(page);
   await showRecord(page, 'r', '1° alcohol → aldehyde (PCC)', 'rxn_alcohol1-to-aldehyde-pcc');
-  const closed = record(page).getByRole('button', { name: /^Level/, expanded: false });
-  for (let left = await closed.count(); left > 0; left = await closed.count()) await closed.first().click();
+  // 8.1: the examples are a group of cards under the lead ("Examples"), not a closed disclosure in the author section
   const examples = record(page).getByRole('region', { name: 'Examples' });
-  await examples.getByText('Examples (1)').click(); // 7.3a: the list is a closed disclosure
-  await expect(examples.getByRole('link', { name: 'Ethanol → ethanal (PCC)' })).toBeVisible();
+  await expect(examples.getByRole('button', { name: /Ethanol → ethanal \(PCC\)/ })).toBeVisible();
   expect(await axeProblems(page)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/generic-examples-1280x800.png` });
-  await examples.getByRole('link', { name: 'Ethanol → ethanal (PCC)' }).click();
+  await examples.getByRole('button', { name: /Ethanol → ethanal \(PCC\)/ }).first().click();
   await expect(record(page)).toHaveAttribute('data-record-id', 'rxn_ethanol-to-ethanal-pcc');
-  await expect(record(page).getByText('Example of')).toBeVisible();
+  await expect(record(page).getByRole('list', { name: 'Key facts' })).toContainText('Example of');
   await expectClean(seen);
 });

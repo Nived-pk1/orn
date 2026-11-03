@@ -18,7 +18,7 @@ async function walk(page: Page, device: string): Promise<void> {
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'More' }).tap();
+  await page.getByRole('button', { name: 'More', exact: true }).tap();
   await page.getByRole('dialog', { name: 'More' }).getByRole('button', { name: 'New species' }).tap();
   const dialog = page.getByRole('dialog', { name: 'New species' });
   await expect(dialog).toBeVisible();

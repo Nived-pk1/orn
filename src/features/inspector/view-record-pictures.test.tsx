@@ -61,7 +61,7 @@ describe('the pictures of a concept', () => {
 
   it('shows the picture before the first level, with alt text, caption, a blob URL and "Open full size"', async () => {
     await show(withAssets(asset('ast_one', concept, { altText: 'A drawing of the idea', caption: 'The *idea* in a picture.' })), concept);
-    const region = screen.getByRole('region', { name: 'Pictures of this concept' });
+    const region = screen.getByRole('region', { name: 'All pictures of this concept' });
     const img = await within(region).findByRole('img', { name: 'A drawing of the idea' });
     expect(img.getAttribute('src')).toBe('blob:pic/ast_one');
     expect(region.querySelector('figcaption')?.textContent).toBe('The idea in a picture.');
@@ -74,7 +74,7 @@ describe('the pictures of a concept', () => {
   it('bytes missing in this browser are said in words with the alt text', async () => {
     const missing: AssetImage = { ok: false, reason: 'missing', message: 'The bytes of this image are not stored (finding AST-002).' };
     await show(withAssets(asset('ast_one', concept, { altText: 'A drawing' })), concept, { open: async () => missing, revoke: vi.fn() });
-    const region = screen.getByRole('region', { name: 'Pictures of this concept' });
+    const region = screen.getByRole('region', { name: 'All pictures of this concept' });
     expect(await within(region).findByText('Picture missing: its file is not stored in this browser')).toBeTruthy();
     expect(within(region).getByText('A drawing')).toBeTruthy();
     expect(within(region).queryByRole('img')).toBeNull();
@@ -90,14 +90,14 @@ describe('the pictures of a concept', () => {
       ),
       concept,
     );
-    const region = screen.getByRole('region', { name: 'Pictures of this concept' });
+    const region = screen.getByRole('region', { name: 'All pictures of this concept' });
     await waitFor(() => expect(within(region).getAllByRole('img')).toHaveLength(2));
     expect(within(region).getAllByRole('img').map((img) => img.getAttribute('alt'))).toEqual(['first', 'second']);
   });
 
   it('a concept with no picture has no pictures region', async () => {
     await show(demoState(), concept);
-    expect(screen.queryByRole('region', { name: /^Pictures of this/ })).toBeNull();
+    expect(screen.queryByRole('region', { name: /pictures of this/i })).toBeNull();
   });
 });
 
@@ -106,12 +106,12 @@ describe('every PICTURE_KINDS kind and no other', () => {
     const target = firstOf(demoState(), kind);
     await show(withAssets(asset('ast_one', target, { altText: 'pic' })), target);
     const word = kind.replace(/_/g, ' ');
-    expect(await screen.findByRole('region', { name: `Pictures of this ${word}` })).toBeTruthy();
+    expect(await screen.findByRole('region', { name: `All pictures of this ${word}` })).toBeTruthy();
   });
 
   it('a topic (not a picture kind) shows none, even when an asset names it', async () => {
     const topic = firstOf(demoState(), 'topic');
     await show(withAssets(asset('ast_one', topic, { altText: 'pic' })), topic);
-    expect(screen.queryByRole('region', { name: /^Pictures of this/ })).toBeNull();
+    expect(screen.queryByRole('region', { name: /pictures of this/i })).toBeNull();
   });
 });

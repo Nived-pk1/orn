@@ -123,8 +123,8 @@ test.describe('desktop', () => {
     await expectPictureShown(region);
     await expect(region.locator('figcaption em')).toHaveText('backside');
     const first = await region.boundingBox();
-    const summary = await pane(page).locator('section[data-level="2"]').first().boundingBox();
-    expect((first?.y ?? 1e9) < (summary?.y ?? 0), 'the pictures come before the level sections').toBe(true);
+    const summary = await pane(page).getByRole('button', { name: /For authors/ }).boundingBox();
+    expect((first?.y ?? 1e9) < (summary?.y ?? 0), 'the pictures come before the author section').toBe(true);
     await dismissToasts(page);
     await region.scrollIntoViewIfNeeded();
     await page.screenshot({ path: resolve(shotsDir(), 'inspector-mechanism-pictures-1280x800.png') });

@@ -89,6 +89,7 @@ test.describe('the knowledge editors (Studio)', () => {
     await save(reaction);
     await expect(record(page)).toHaveAttribute('data-record-id', 'rxn_benzene-nitration-draft');
     await expect(record(page)).toContainText('Zz e2e named reaction');
+    await openAuthors(page); // 8.1: the reversibility is a labelled fact in "For authors"
     await expect(record(page)).toContainText('irreversible');
 
     // (2) a new transformation with a from class

@@ -12,7 +12,7 @@ import type { Asset, RecordRef } from '@/core/schema';
 import { revokeWhenUnused } from '@/ui/hooks';
 import { Button, Dialog } from '@/ui/primitives';
 import { FullPicture } from './full-picture';
-import { isAuthorView, useInspectorEnv } from './env';
+import { useInspectorEnv } from './env';
 import { kindWord } from './model/describe';
 import { RichText } from './rich-text';
 import styles from './inspector.module.css';
@@ -93,7 +93,7 @@ export function RecordPictures(props: { readonly target: RecordRef }) {
   const pictures = isPictureKind(target.kind) ? picturesOf(state, target) : [];
   if (pictures.length === 0) return null;
   return (
-    <section className={styles.pictures} aria-label={`Pictures of this ${kindWord(target.kind)}`}>
+    <section className={styles.pictures} aria-label={`All pictures of this ${kindWord(target.kind)}`}>
       {pictures.map((asset) => (
         <PictureFigure key={asset.id} asset={asset} />
       ))}
@@ -103,12 +103,12 @@ export function RecordPictures(props: { readonly target: RecordRef }) {
 
 /** The hero of a record (step 8.1): its first picture only, with "Open full size". Its own lazy chunk with the rest of this file. */
 export function HeroPicture(props: { readonly target: RecordRef }) {
-  const { state, host } = useInspectorEnv();
+  const { state } = useInspectorEnv();
   const first = isPictureKind(props.target.kind) ? picturesOf(state, props.target)[0] : undefined;
   if (first === undefined) return null;
-  // Study: this IS the record's picture ("Pictures of this ..."); Studio also lists every picture under "For authors", so this one is named differently there
+  // the record's first picture, shown first in both editions; Studio also lists every picture under "For authors" ("All pictures of this ...")
   return (
-    <section data-hero-picture="" aria-label={isAuthorView(host) ? `Main picture of this ${kindWord(props.target.kind)}` : `Pictures of this ${kindWord(props.target.kind)}`}>
+    <section data-hero-picture="" aria-label={`Pictures of this ${kindWord(props.target.kind)}`}>
       <PictureFigure asset={first} />
     </section>
   );

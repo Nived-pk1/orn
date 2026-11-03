@@ -337,7 +337,7 @@ for (const [label, profile, engine, shot] of [
       await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
       await expect(page.locator('header').getByText('Studio')).toHaveCount(0);
       await importOwnData(page, generatedFileWithAnchors('tiny', 'chain'));
-      await page.getByRole('button', { name: 'More' }).click();
+      await page.getByRole('button', { name: 'More', exact: true }).click();
       const more = page.getByRole('dialog', { name: 'More' });
       await expect(more.getByRole('button', { name: 'Undo import' })).toBeVisible();
       await expect(more.getByRole('button', { name: /^Import a file/ })).toBeVisible();

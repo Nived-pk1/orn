@@ -233,7 +233,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   await openPhoneApp(page);
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
-  await page.getByRole('button', { name: 'More' }).tap();
+  await page.getByRole('button', { name: 'More', exact: true }).tap();
   await page.getByRole('dialog', { name: 'More' }).getByRole('button', { name: 'New reaction' }).tap();
   const dialog = newDialog(page, 'reaction');
   await expect(dialog).toBeVisible();

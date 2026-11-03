@@ -7,7 +7,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, watch } from './kit';
-import { record, shotsDir } from './editor-kit';
+import { openAuthors, record, shotsDir } from './editor-kit';
 import { importOwn } from './own-data-kit';
 import { CHAPTER_A, chaptersDemo, HINSBERG, WRITTEN } from './chapters-kit';
 
@@ -38,6 +38,8 @@ test('the class boxes show the text as written, the class name stays, the inspec
   // the inspector lists it as written
   await card.getByRole('button', { name: HINSBERG }).click();
   await expect(record(page)).toHaveAttribute('data-record-id', 'rxn_zz-hinsberg');
+  await openAuthors(page); // 8.1: the participants are in "For authors"
+  await expect(record(page).getByRole('button', { name: /^Level 2/ })).toBeVisible(); // the sections arrive after the chunk
   const closed = record(page).getByRole('button', { name: /^Level/, expanded: false });
   for (let left = await closed.count(); left > 0; left = await closed.count()) await closed.first().click();
   await expect(record(page)).toContainText(`as written: ${WRITTEN}`);

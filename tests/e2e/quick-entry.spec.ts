@@ -41,7 +41,7 @@ async function imagesSettled(dialog: Locator): Promise<void> {
 
 async function openQuickEntry(page: Page, tap = false): Promise<Locator> {
   if (tap) {
-    await page.getByRole('button', { name: 'More' }).tap();
+    await page.getByRole('button', { name: 'More', exact: true }).tap();
     await page.getByRole('dialog', { name: 'More' }).getByRole('button', { name: 'Quick entry', exact: true }).tap();
   } else {
     await modes(page).getByRole('button', { name: /Workbench/ }).click();

@@ -198,7 +198,7 @@ async function walkPhone(page: Page, device: string): Promise<void> {
   await page.screenshot({ path: resolve(shotsDir(), `phone-delete-impact-${device}.png`) });
   await dialog.getByRole('button', { name: 'Delete', exact: true }).tap();
   await expect(dialog).toBeHidden();
-  await page.getByRole('button', { name: 'More' }).tap();
+  await page.getByRole('button', { name: 'More', exact: true }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
   await more.getByRole('button', { name: 'Undo delete Palmitic acid' }).tap();
   await expect(more.getByRole('button', { name: 'Undo delete Palmitic acid' })).toHaveCount(0);

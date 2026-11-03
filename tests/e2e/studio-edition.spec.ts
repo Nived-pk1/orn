@@ -41,7 +41,7 @@ test.describe('phone: Pixel 7 (Chromium)', () => {
     await expect(page).toHaveTitle('ORN Studio');
     await expect(page.getByText('Starting up', { exact: true })).toHaveCount(0);
     await expect(page.locator('header').locator('[data-edition-marker]')).toHaveText('Studio');
-    await page.getByRole('button', { name: 'More' }).click();
+    await page.getByRole('button', { name: 'More', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'More' }).getByRole('region', { name: 'Workbench' })).toBeVisible();
   });
 });

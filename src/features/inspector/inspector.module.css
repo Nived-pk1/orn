@@ -64,3 +64,5 @@
   border-radius: var(--radius-control);
   background: var(--color-surface);
 }
+
+.equationPanel > summary { display: list-item; min-height: 24px; padding: var(--space-1) 0; cursor: pointer; }

@@ -57,7 +57,7 @@ async function walk(page: Page, device: string): Promise<void> {
   await expect(dialog).toBeHidden();
   await expect(sheet(page).getByRole('heading', { level: 3, name: 'Alcohols phone' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'More' }).tap();
+  await page.getByRole('button', { name: 'More', exact: true }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
   await expect(more.getByRole('button', { name: 'Undo Edit class Alcohols' })).toBeVisible();
   await more.getByRole('button', { name: 'Undo Edit class Alcohols' }).tap();

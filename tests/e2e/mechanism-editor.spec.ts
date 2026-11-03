@@ -12,7 +12,7 @@ import { resolve } from 'node:path';
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, openPhoneApp, watch } from './kit';
-import { openDemo, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
+import { openAuthors, openDemo, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
 
 test.use({ actionTimeout: 60_000 });
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
@@ -136,6 +136,7 @@ test.describe('the mechanism editor', () => {
     await page.screenshot({ path: resolve(shotsDir(), 'outcome-mechanism-link-1280x800.png') });
     await editor.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(editor).toBeHidden();
+    await openAuthors(page); // 8.1: a reaction's mechanism link is in "For authors"
     await expect(record(page)).toContainText(NAME, { timeout: 60_000 });
     await page.getByRole('button', { name: new RegExp(`^Undo Edit reaction ${PCC_REACTION.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`) }).click();
     await expect(record(page)).not.toContainText(NAME, { timeout: 60_000 });
