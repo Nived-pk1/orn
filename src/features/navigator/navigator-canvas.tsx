@@ -31,12 +31,15 @@ import { NavigatorSelection } from './navigator-selection';
 import { PhoneMapControls } from './phone-map-controls';
 import { emptinessOf, truncationNoticeOf } from './notices';
 import { UnanchoredPanel } from './unanchored-panel';
+import { boxesRect } from './map-geometry';
+import { createPairFacts } from './pair-facts';
 import { useMapView } from './use-map-view';
 import styles from './navigator.module.css';
 
 // Studio only (the legend's link): a lazy chunk, never loaded in Study (nothing there mounts it)
 const UnclassifiedDialog = /* @__PURE__ */ lazy(() => import('./unclassified-dialog').then((m) => ({ default: m.UnclassifiedDialog })));
 const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
+const busyLine = (n: number): string => `This chapter has ${n} arrows. Tap or click a family to see its part.`;
 const NO_IDS: ReadonlySet<string> = new Set();
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
@@ -86,9 +89,13 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   // step 8.2a (ADR-044): the map draws a focus, not every arrow; the chapter choice and the focus are the map store's
   const chapters = useMemo(() => (scene === null ? [] : buildChapterIndex(ports.store.getState()).chapters.map((chapter) => ({ id: chapter.id, title: chapter.title }))), [scene, ports]);
   const chapterIds = useMemo(() => chapters.map((chapter) => chapter.id), [chapters]);
-  const map = useMapView({ ui: ports.ui, timers: ports.timers, scene, isHub, selected, chapters: chapterIds, announce });
+  const facts = useMemo(() => createPairFacts(ports), [ports]);
+  const map = useMapView({ ui: ports.ui, timers: ports.timers, scene, isHub, selected, chapters: chapterIds, announce, facts });
   const { view } = map;
   const drawn = view === null ? scene : view.scene;
+  // step 8.2b (B1): on a wide screen Fit and the first view fill the area with the visible boxes; the phone keeps its zoom
+  const fitBox = useMemo(() => (phone || drawn === null ? undefined : boxesRect(drawn.nodes)), [phone, drawn]);
+  const fitKey = phone ? undefined : `${state.chapterId ?? ''}|${map.showUnclassified}`;
   const hubs = drawn === null ? 0 : drawn.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
   const setChapter = useCallback((id: string | null): void => ports.ui.map.getState().setChapter(id), [ports]);
   const toggleUnclassified = useCallback((): void => ports.ui.map.getState().setShowUnclassified(!ports.ui.map.getState().showUnclassified), [ports]);
@@ -211,8 +218,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       ) : null}
       {/* the line keeps its height when it has nothing to say, so a click that focuses a family does not move the map under the pointer (a double click's second press would miss) */}
       {view !== null && !listing ? (
-        <p className={styles.quiet} {...(view.quiet ? { 'data-map-quiet': '' } : { 'aria-hidden': 'true' })}>
-          {view.quiet ? QUIET_LINE : ' '}
+        <p className={styles.quiet} {...(view.quiet ? { 'data-map-quiet': '' } : view.busy > 0 ? { 'data-map-busy': '' } : { 'aria-hidden': 'true' })}>
+          {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : ' '}
         </p>
       ) : null}
       <div className={styles.drawing} aria-busy={state.working}>
@@ -238,6 +245,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             ariaLabel={`Navigator: ${hubs} ${hubs === 1 ? 'hub' : 'hubs'}, ${(drawn ?? scene).edges.length} ${(drawn ?? scene).edges.length === 1 ? 'arrow' : 'arrows'}`}
             onController={setController}
             {...(phone ? { minScale: FIT_FLOOR } : {})}
+            {...(fitBox === undefined ? {} : { fitBox })}
+            {...(fitKey === undefined ? {} : { fitKey })}
             {...(depictions === undefined ? {} : { depictions })}
             onLayerCommit={onLayerCommit}
             pointer={input.pointer}

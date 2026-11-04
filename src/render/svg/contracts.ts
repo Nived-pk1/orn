@@ -46,7 +46,9 @@ export interface EdgeMark {
   readonly tone?: AnchorTone;
   readonly startHead?: boolean;
   /** The count chip of the reverse direction of a pair, near the start head. */
-  readonly extraChip?: { readonly at: Point; readonly size: number };
+  readonly extraChip?: { readonly at: Point; readonly size: number; readonly text?: string; readonly name?: string };
+  /** Step 8.2b: the chip of the arrow when it shows words or a step number instead of the count (a lone arrow gets a chip too). `name` is its accessible name and tooltip. */
+  readonly chip?: { readonly text: string; readonly name: string };
 }
 
 /** The derived marks of one map view (step 8.2a): arrows in focus, boxes shown faded, and a small caption under a box. */

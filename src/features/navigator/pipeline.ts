@@ -47,6 +47,8 @@ export interface NavigatorState {
   readonly unanchored: readonly string[];
   /** How many reactions the dataset holds (the empty states, step 5.5d item j). */
   readonly reactions: number;
+  /** The chapter the current Scene was built for (null: all chapters, or the "From A to B" panel is open). The map fits its view again when it changes (step 8.2b). */
+  readonly chapterId: string | null;
 }
 
 export interface PipelineStats {
@@ -70,7 +72,7 @@ const hubIdsOf = (projection: Projection): string[] => projection.nodes.filter((
 
 const NO_EXPANSION: ProjectionRequest['expansion'] = { expanded: [], collapsedEdgeIds: [] };
 
-const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [], layout: null, unanchored: [], reactions: 0 };
+const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [], layout: null, unanchored: [], reactions: 0, chapterId: null };
 
 /** `layoutAlgorithm` forces the layout of the overview (the tests that are about the layered path use it); the app leaves it unset. */
 export interface NavigatorModelOptions {
@@ -102,11 +104,13 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
     set({ error: { code, message }, working: false });
   };
 
+  // while the "From A to B" panel is open the chapter does not apply (a chain runs across all chapters)
+  const chapterOf = (): string | null => (ports.ui.map.getState().chainOpen ? null : ports.ui.map.getState().chapterId);
   const requestOf = (): ProjectionRequest => ({
     view: 'navigator',
     focus: [],
     expansion: NO_EXPANSION,
-    filters: chapterFilters(ports.ui.filters.getState().filters, ports.ui.map.getState().chapterId),
+    filters: chapterFilters(ports.ui.filters.getState().filters, chapterOf()),
     limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES },
   });
 
@@ -195,7 +199,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
         ports.ui.selection.getState().select(null);
         ports.log('selection_cleared', `the selected ${selected.kind} ${selected.id} is not in the drawing any more`);
       }
-      set({ scene: scene.scene, error: null, skeleton: false, working: false, hubIds, layout: result.engine, unanchored: current.unanchoredReactionIds, reactions: Object.keys(ports.store.getState().records.reaction).length });
+      set({ scene: scene.scene, error: null, skeleton: false, working: false, hubIds, layout: result.engine, unanchored: current.unanchoredReactionIds, reactions: Object.keys(ports.store.getState().records.reaction).length, chapterId: chapterOf() });
     } catch (error) {
       if (mine !== token) return;
       const message = error instanceof Error ? error.message : String(error);
@@ -235,7 +239,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
       if (running) return;
       running = true;
       // a change of the Structures setting rebuilds the scene (the nodes' depiction keys carry the mode); the layout is the same request, so it is reused
-      offs = [ports.store.subscribe(onChange), ports.ui.filters.subscribe(onRequest), ports.ui.map.subscribe((now, before) => (now.chapterId !== before.chapterId ? onRequest() : undefined)), ports.ui.exam.subscribe(onRequest), ...(ports.depictions?.onMode === undefined ? [] : [ports.depictions.onMode(schedule)])];
+      offs = [ports.store.subscribe(onChange), ports.ui.filters.subscribe(onRequest), ports.ui.map.subscribe((now, before) => (now.chapterId !== before.chapterId || now.chainOpen !== before.chainOpen ? onRequest() : undefined)), ports.ui.exam.subscribe(onRequest), ...(ports.depictions?.onMode === undefined ? [] : [ports.depictions.onMode(schedule)])];
       dirtyProjection = true;
       if (state.scene === null) startSkeletonTimer();
       void ports.measurer.ready().then(() => {

@@ -52,9 +52,9 @@ export function keyOf(view: MapView | null): LegendKey {
   if (view === null) return NO_KEY;
   const marks = [...view.marks.edges.values()];
   return {
-    lines: view.scene.nodes.some((node) => node.box === 'hub'),
-    // always explained with the two line styles: a legend that grew when a family was focused would move the map under the pointer
-    chip: view.scene.nodes.some((node) => node.box === 'hub'),
+    // step 8.2b (B3): the rows about arrows show only while an arrow is drawn
+    lines: view.scene.edges.length > 0,
+    chip: view.scene.edges.length > 0,
     pair: marks.some((mark) => mark.role === 'pair'),
     within: view.marks.captions.size > 0,
     unclassified: view.unclassified.present ? { shown: view.unclassified.shown, reactions: view.unclassified.reactions } : undefined,

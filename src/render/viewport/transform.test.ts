@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LOD_THRESHOLDS } from '@/render/scene';
 import { FIT_PADDING, LOD_HYSTERESIS, SCALE_MAX, SCALE_MIN } from './contracts';
 import { lodWithHysteresis } from './lod';
-import { clampScale, FIT_FLOOR, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout, keepScreenPoint, toScreen } from './transform';
+import { clampScale, FIT_FLOOR, fitBox, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout, keepScreenPoint, toScreen } from './transform';
 
 const size = { width: 1000, height: 600 };
 
@@ -86,5 +86,23 @@ describe('keeping a world point on the screen (step 5.5a: a toggled hub stays wh
 
   it('clamps the scale like every other command', () => {
     expect(keepScreenPoint(100, { x: 0, y: 0 }, { x: 5, y: 5 }).scale).toBe(SCALE_MAX);
+  });
+});
+
+describe('fitBox (step 8.2b, B1): the visible boxes fill the map area with the 24 px margin', () => {
+  it('fills the area on the tighter side, centred, with FIT_PADDING on every side', () => {
+    const view = fitBox({ x0: 100, y0: 50, x1: 600, y1: 250 }, size); // 500 x 200: the width gives 952 / 500, the height 552 / 200
+    expect(view.scale).toBeCloseTo(Math.min(SCALE_MAX, 952 / 500));
+    expect(toScreen(view, { x: 100, y: 50 }).x).toBeGreaterThanOrEqual(FIT_PADDING - 1e-9);
+    expect(toScreen(view, { x: 600, y: 250 }).x).toBeLessThanOrEqual(1000 - FIT_PADDING + 1e-9);
+    expect(toScreen(view, { x: 350, y: 150 })).toEqual({ x: 500, y: 300 });
+  });
+  it('never goes above the maximum zoom', () => {
+    expect(fitBox({ x0: 0, y0: 0, x1: 40, y1: 20 }, size).scale).toBe(SCALE_MAX);
+  });
+  it('a box too big for the name floor starts at its top-left corner inside the padding, at the floor', () => {
+    const view = fitBox({ x0: 200, y0: 100, x1: 20_200, y1: 10_100 }, size);
+    expect(view.scale).toBe(FIT_FLOOR);
+    expect(toScreen(view, { x: 200, y: 100 })).toEqual({ x: FIT_PADDING, y: FIT_PADDING });
   });
 });

@@ -44,11 +44,21 @@ describe('legendOf: each family group of the drawing once, from the data', () =>
 
 describe('keyOf: what the map needs explained, only when it draws it (step 5.5d item d; reworked in 8.2a)', () => {
   const quiet = { focusId: null, chapter: false, showUnclassified: false } as const;
-  it('the quiet demo map explains its line styles, the chip (so the legend does not change height when a family is focused), the within-the-family line and Unclassified, but no pair', () => {
-    expect(keyOf(mapView(demoNavigatorScene(false), quiet))).toEqual({ lines: true, chip: true, pair: false, within: true, unclassified: { shown: false, reactions: expect.any(Number) } });
+  it('the quiet demo map explains only within-the-family and Unclassified: no arrow is drawn, so no line style and no chip (step 8.2b, B3)', () => {
+    expect(keyOf(mapView(demoNavigatorScene(false), quiet))).toEqual({ lines: false, chip: false, pair: false, within: true, unclassified: { shown: false, reactions: expect.any(Number) } });
   });
-  it('a chapter draws arrows with chips, and the demo has a two-way pair', () => {
-    const key = keyOf(mapView(demoNavigatorScene(false), { ...quiet, chapter: true }));
+  it('a focused family draws arrows, so the line styles and the chip are explained again', () => {
+    const scene = demoNavigatorScene(false);
+    const key = keyOf(mapView(scene, { ...quiet, focusId: (scene.edges.find((e) => e.from !== e.to) as { from: string }).from }));
+    expect(key.lines).toBe(true);
+    expect(key.chip).toBe(true);
+  });
+  it('a chapter with a two-way pair draws it as one line, and the pair is explained', () => {
+    const scene = demoNavigatorScene(false);
+    const one = scene.edges.find((e) => e.from !== e.to && scene.edges.some((r) => r.from === e.to && r.to === e.from));
+    expect(one).toBeTruthy();
+    const pair = scene.edges.filter((e) => e === one || (e.from === one?.to && e.to === one?.from));
+    const key = keyOf(mapView({ ...scene, edges: pair }, { ...quiet, chapter: true }));
     expect(key.chip).toBe(true);
     expect(key.pair).toBe(true);
   });

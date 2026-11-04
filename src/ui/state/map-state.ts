@@ -14,9 +14,12 @@ export interface MapState {
   readonly showUnclassified: boolean;
   /** The focused family (a node id), or null. Not saved. */
   readonly focusId: string | null;
+  /** The "From A to B" panel is open (step 8.2b): the map is built across ALL chapters while it is. Not saved. */
+  readonly chainOpen: boolean;
   setChapter(chapterId: string | null): void;
   setShowUnclassified(shown: boolean): void;
   setFocus(id: string | null): void;
+  setChainOpen(open: boolean): void;
 }
 export type MapStore = StoreApi<MapState>;
 
@@ -25,10 +28,12 @@ export function createMapStore(initial: { readonly chapterId?: string | null; re
     chapterId: initial.chapterId ?? null,
     showUnclassified: initial.showUnclassified ?? false,
     focusId: null,
+    chainOpen: false,
     // another chapter is another set of arrows: a focus from the old set would mislead
     setChapter: (chapterId) => set({ chapterId, focusId: null }),
     setShowUnclassified: (showUnclassified) => set({ showUnclassified }),
     setFocus: (focusId) => set({ focusId }),
+    setChainOpen: (chainOpen) => set({ chainOpen }),
   }));
 }
 

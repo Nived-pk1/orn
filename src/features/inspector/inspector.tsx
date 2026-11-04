@@ -23,6 +23,8 @@ import { ArrowReactions } from './arrow-reactions';
 
 /** The records whose reactions the Reactions view can list (the same set the palette's Alt+Enter uses). */
 /** "For authors" is its own chunk: nothing of it loads until an author opens the section (Studio). */
+// the map's Unclassified box (step 8.2b): a small view of its own, loaded when it is first selected
+const UnclassifiedPane = lazy(() => import('./unclassified-view').then((module) => ({ default: module.UnclassifiedPane })));
 const AuthorsSection = lazy(() => import('./authors-section').then((module) => ({ default: module.AuthorsSection })));
 
 const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 'named_reaction'];
@@ -51,6 +53,7 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   const history = useStore(inspector, (s) => s.history);
   const index = useStore(inspector, (s) => s.index);
   const current = currentOf({ history, index });
+  const virtual = useStore(inspector, (s) => s.virtual);
   const open = useCallback(
     (ref: RecordRef, at?: string) => {
       inspector.getState().open(ref, at);
@@ -61,6 +64,15 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   const state = ports.store.getState();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `revision` is the snapshot's identity: the env is made again when it moves
   const env: InspectorEnv = useMemo(() => makeEnv(ports, host, state, open), [ports, host, state, open, revision]);
+  if (virtual === 'unclassified') {
+    return (
+      <section className={styles.root} data-virtual="unclassified">
+        <Suspense fallback={<Skeleton label="Loading" lines={3} />}>
+          <UnclassifiedPane ports={ports} open={open} />
+        </Suspense>
+      </section>
+    );
+  }
   if (current === null) {
     return (
       <section aria-label="Inspector empty state" className={styles.root}>

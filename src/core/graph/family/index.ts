@@ -4,6 +4,7 @@ export { compactEquationOf } from './compact';
 export { exampleLookupOf, foldExamples } from './examples';
 export type { ExampleFold, ExampleLookup } from './examples';
 export { createDescriber } from './describe';
+export { createReagentWords, reagentWordsOf } from './reagent-words';
 export type { RecordDescriber } from './describe';
 export type { ReactionCardMissing } from './card';
 export type {

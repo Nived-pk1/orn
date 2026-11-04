@@ -84,8 +84,15 @@ describe('the map with a focus', () => {
     fireEvent.change(select, { target: { value: 'top_chapter-1' } });
     expect(rig.ui.map.getState().chapterId).toBe('top_chapter-1');
     await screen.findByRole('group', { name: NAVIGATOR });
-    await vi_waitFor(() => expect(edges(drawing)).toBeGreaterThan(5));
+    // this chapter has more than 15 arrows: it is busy, so no arrow is drawn until a family is chosen (step 8.2b, B2)
+    await vi_waitFor(() => expect(document.querySelector('[data-map-busy]')).not.toBeNull());
+    expect((document.querySelector('[data-map-busy]') as Element).textContent).toMatch(/^This chapter has [0-9]+ arrows\. Tap or click a family to see its part\.$/);
+    expect(edges(drawing)).toBe(0);
     expect(screen.queryByText(QUIET)).toBeNull();
+    act(() => rig.ui.map.getState().setFocus('cls_family-01'));
+    await vi_waitFor(() => expect(edges(drawing)).toBeGreaterThan(0));
+    expect(document.querySelector('[data-map-busy]')).toBeNull();
+    act(() => rig.ui.map.getState().setFocus(null));
     fireEvent.change(select, { target: { value: '' } });
     await vi_waitFor(() => expect(edges(drawing)).toBe(0));
     expect(screen.getByText(QUIET)).toBeTruthy();
@@ -93,6 +100,9 @@ describe('the map with a focus', () => {
 
   it('the legend says what the lines mean and how many reactions lead to compounds in no family; Show brings Unclassified in', async () => {
     const { rig, drawing } = await show();
+    // no arrow is drawn on the quiet map, so the rows about arrows are not there (step 8.2b, B3); a focus draws arrows and they come
+    expect(screen.queryByText(/solid line in the family's colour/)).toBeNull();
+    act(() => rig.ui.map.getState().setFocus('cls_family-01'));
     const legend = screen.getByRole('list', { name: 'What the marks mean' });
     expect(within(legend).getByText(/solid line in the family's colour: what the family makes/)).toBeTruthy();
     expect(within(legend).getByText(/dashed dark line: what the family is made from/)).toBeTruthy();
@@ -110,6 +120,7 @@ describe('the map with a focus', () => {
     const spoken = [...drawing.querySelectorAll('[data-node-id]')].filter((g) => /, \d+ within the family$/.test(g.getAttribute('aria-label') ?? ''));
     expect(spoken.length).toBeGreaterThanOrEqual(4);
     act(() => rig.ui.map.getState().setChapter('top_chapter-1'));
+    act(() => rig.ui.map.getState().setFocus('cls_family-01'));
     await vi_waitFor(() => expect(edges(drawing)).toBeGreaterThan(0));
     expect([...drawing.querySelectorAll('[data-layer="edges"] [data-edge-id]')].some((g) => g.getAttribute('data-from') === g.getAttribute('data-to'))).toBe(false);
   });

@@ -7,6 +7,7 @@
  * call it at once). The bridge keeps no timer of its own.
  */
 import { useEffect, useRef, useState } from 'react';
+import { UNCLASSIFIED_HUB_ID } from '@/core/graph';
 import { currentOf, type Selected } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { focusOfSelection } from './model/focus';
@@ -17,6 +18,8 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
   const [note, setNote] = useState<string | undefined>(undefined);
   const hostRef = useRef(host);
   hostRef.current = host;
+  // true while what the inspector shows was put there by the selection (a pick on the map); then a selection that is gone empties it (step 8.2b, B4)
+  const owned = useRef(false);
   useEffect(() => {
     const { inspector, selection, family } = ports.ui;
     let selectionPicks = selection.getState().picks;
@@ -27,13 +30,31 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
         selectionReveals = state.reveals;
         if (family.getState().open === null) hostRef.current.openPane();
       }
+      if (state.selected === null && owned.current) {
+        owned.current = false;
+        inspector.getState().clear();
+        setNote(undefined);
+      }
       if (state.picks === selectionPicks) return;
       selectionPicks = state.picks;
       const selected: Selected | null = state.selected;
       if (selected === null) return;
+      if (selected.kind === 'node' && selected.id === UNCLASSIFIED_HUB_ID) {
+        owned.current = true;
+        inspector.getState().openUnclassified();
+        setNote(undefined);
+        return;
+      }
       const focus = focusOfSelection(selected, (id) => hostRef.current.edgeEnds(id), ports.store.getState(), ports.indexes.current());
-      if (focus === undefined) return;
+      if (focus === undefined) {
+        // nothing to show for it: the old record must not stay up as if it were this one
+        owned.current = false;
+        inspector.getState().clear();
+        setNote(undefined);
+        return;
+      }
       // open first: moving the focus clears an old note, then this pick's own note is set (the last call wins)
+      owned.current = true;
       inspector.getState().open(focus.ref);
       setNote(focus.note);
     });
@@ -41,6 +62,7 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
       if (state.picks === familyPicks) return;
       familyPicks = state.picks;
       if (state.reaction === null) return;
+      owned.current = false;
       inspector.getState().open({ kind: 'reaction', id: state.reaction });
       setNote(undefined);
       hostRef.current.openPane();
@@ -56,6 +78,7 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
       const store = ports.ui.inspector.getState();
       const moved = event.key === 'ArrowLeft' ? store.back() : event.key === 'ArrowRight' ? store.forward() : undefined;
       if (moved === undefined) return;
+      owned.current = false;
       event.preventDefault();
       if (moved) setNote(undefined);
     };

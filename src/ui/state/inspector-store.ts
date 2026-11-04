@@ -13,12 +13,16 @@ export const MAX_HISTORY = 100;
 export type InspectorEntry = RecordRef & { readonly at?: string };
 
 export interface InspectorState {
+  /** Step 8.2b: the view of a virtual box (the map's Unclassified box, which has no record) shown instead of the record; null: the record. Never saved. */
+  readonly virtual: 'unclassified' | null;
   /** Oldest first. */
   readonly history: readonly InspectorEntry[];
   /** Index of the shown record in `history`; -1 when nothing was opened. */
   readonly index: number;
   /** Shows `ref` (pushed on the history), at `at` inside it when given. */
   open(ref: RecordRef, at?: string): void;
+  /** Shows the Unclassified view (the history is kept; opening a record leaves it). */
+  openUnclassified(): void;
   back(): boolean;
   forward(): boolean;
   /** Forgets every entry (the record is gone, or a replace of the dataset). */
@@ -34,28 +38,33 @@ const same = (a: InspectorEntry | null, b: RecordRef, at: string | undefined): b
 
 export function createInspectorStore(): InspectorStore {
   return createStore<InspectorState>((set, get) => ({
+    virtual: null,
     history: [],
     index: -1,
+    openUnclassified: () => set({ virtual: 'unclassified' }),
     open(ref, at) {
       const state = get();
-      if (same(currentOf(state), ref, at)) return;
+      if (same(currentOf(state), ref, at)) {
+        if (state.virtual !== null) set({ virtual: null });
+        return;
+      }
       const entry = (at === undefined ? { kind: ref.kind, id: ref.id } : { kind: ref.kind, id: ref.id, at }) as InspectorEntry;
       const kept = [...state.history.slice(0, state.index + 1), entry];
       const history = kept.length > MAX_HISTORY ? kept.slice(kept.length - MAX_HISTORY) : kept;
-      set({ history, index: history.length - 1 });
+      set({ history, index: history.length - 1, virtual: null });
     },
     back() {
       if (!canBack(get())) return false;
-      set({ index: get().index - 1 });
+      set({ index: get().index - 1, virtual: null });
       return true;
     },
     forward() {
       if (!canForward(get())) return false;
-      set({ index: get().index + 1 });
+      set({ index: get().index + 1, virtual: null });
       return true;
     },
     clear() {
-      if (get().history.length > 0) set({ history: [], index: -1 });
+      if (get().history.length > 0 || get().virtual !== null) set({ history: [], index: -1, virtual: null });
     },
   }));
 }

@@ -36,3 +36,19 @@ export const shifted = (points: readonly Point[], by: Point): Point[] => points.
 export const distance = length;
 
 export const reactionsWord = (n: number): string => `${n} ${n === 1 ? 'reaction' : 'reactions'}`;
+
+/** The smallest rectangle holding every box (the boxes Fit fills the area with); undefined when there is none. */
+export function boxesRect(boxes: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[]): { readonly x0: number; readonly y0: number; readonly x1: number; readonly y1: number } | undefined {
+  if (boxes.length === 0) return undefined;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const box of boxes) {
+    x0 = Math.min(x0, box.x);
+    y0 = Math.min(y0, box.y);
+    x1 = Math.max(x1, box.x + box.width);
+    y1 = Math.max(y1, box.y + box.height);
+  }
+  return { x0, y0, x1, y1 };
+}

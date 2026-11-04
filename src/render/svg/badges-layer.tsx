@@ -6,7 +6,7 @@
  */
 import { memo } from 'react';
 import type { MapMarks } from './contracts';
-import { CHIP_HEIGHT, chipWidth, countWidth, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
+import { CHIP_HEIGHT, chipTextWidth, chipWidth, countWidth, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
 import type { LayerName } from './contracts';
 import { BADGE_GAP, BADGE_MARK, BADGE_SIZE, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
@@ -56,29 +56,35 @@ function NodeBadges(props: { readonly node: SceneNode }) {
   );
 }
 
-function BundleCount(props: { readonly edge: SceneEdge; readonly size: number }) {
-  const { edge, size } = props;
-  const width = chipWidth(size);
-  const name = `${size} ${size === 1 ? 'reaction' : 'reactions'}`;
+/** The width of a chip's text: a plain number as before, words or a step by the length of the text (step 8.2b). */
+const widthOfText = (text: string): number => (/^[0-9]+$/.test(text) ? chipWidth(Number(text)) : chipTextWidth(text));
+
+function BundleCount(props: { readonly edge: SceneEdge; readonly size: number; readonly chip?: { readonly text: string; readonly name: string } | undefined }) {
+  const { edge, size, chip } = props;
+  const text = chip?.text ?? String(size);
+  const width = widthOfText(text);
+  const name = chip?.name ?? `${size} ${size === 1 ? 'reaction' : 'reactions'}`;
   return (
     <g transform={`translate(${edge.labelAt.x - width / 2} ${edge.labelAt.y - CHIP_HEIGHT / 2})`} data-count-of={edge.id} data-chip-width={width} data-chip-height={CHIP_HEIGHT} role="img" aria-label={name}>
       <title>{name}</title>
       <rect className={styles.chipPill} x={0.5} y={0.5} width={width - 1} height={CHIP_HEIGHT - 1} rx={CHIP_HEIGHT / 2 - 0.5} />
       <text className={styles.count} x={width / 2} y={CHIP_HEIGHT / 2 + 4.2}>
-        {size}
+        {text}
       </text>
     </g>
   );
 }
 
 /** The count chip of the OTHER direction of a two-way pair (step 8.2a), near the start head. The pair's one spoken name is on its line. */
-function ExtraChip(props: { readonly edgeId: string; readonly at: { readonly x: number; readonly y: number }; readonly size: number }) {
-  const width = chipWidth(props.size);
+function ExtraChip(props: { readonly edgeId: string; readonly at: { readonly x: number; readonly y: number }; readonly size: number; readonly text?: string | undefined; readonly name?: string | undefined }) {
+  const text = props.text ?? String(props.size);
+  const width = widthOfText(text);
   return (
     <g transform={`translate(${props.at.x - width / 2} ${props.at.y - CHIP_HEIGHT / 2})`} data-count-extra-of={props.edgeId} data-chip-width={width} data-chip-height={CHIP_HEIGHT} aria-hidden="true">
       <rect className={styles.chipPill} x={0.5} y={0.5} width={width - 1} height={CHIP_HEIGHT - 1} rx={CHIP_HEIGHT / 2 - 0.5} />
+      {props.name === undefined ? null : <title>{props.name}</title>}
       <text className={styles.count} x={width / 2} y={CHIP_HEIGHT / 2 + 4.2}>
-        {props.size}
+        {text}
       </text>
     </g>
   );
@@ -91,12 +97,16 @@ export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Sc
     <g data-layer="badges" aria-hidden="true">
       {lod >= 2 ? scene.nodes.filter((node) => node.badges.length > 0 && visibleAt(node, lod)).map((node) => <NodeBadges key={node.id} node={node} />) : null}
       {lod >= 1
-        ? scene.edges.filter((edge) => edge.bundleSize !== undefined && visibleAt(edge, lod)).map((edge) => <BundleCount key={edge.id} edge={edge} size={edge.bundleSize as number} />)
+        ? scene.edges.flatMap((edge) => {
+            const chip = props.marks?.edges.get(edge.id)?.chip;
+            if (!visibleAt(edge, lod) || (edge.bundleSize === undefined && chip === undefined)) return [];
+            return [<BundleCount key={edge.id} edge={edge} size={edge.bundleSize ?? 1} chip={chip} />];
+          })
         : null}
       {lod >= 1 && props.marks !== undefined
         ? scene.edges.flatMap((edge) => {
             const chip = props.marks?.edges.get(edge.id)?.extraChip;
-            return chip === undefined || !visibleAt(edge, lod) ? [] : [<ExtraChip key={`extra-${edge.id}`} edgeId={edge.id} at={chip.at} size={chip.size} />];
+            return chip === undefined || !visibleAt(edge, lod) ? [] : [<ExtraChip key={`extra-${edge.id}`} edgeId={edge.id} at={chip.at} size={chip.size} text={chip.text} name={chip.name} />];
           })
         : null}
     </g>

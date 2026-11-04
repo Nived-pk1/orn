@@ -149,7 +149,8 @@ describe('the Map tab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Legend' }));
     const legend = screen.getByRole('dialog', { name: 'Legend' });
     expect(within(legend).getByRole('list', { name: 'Family groups' })).toBeTruthy();
-    expect(within(legend).getByText(/solid line in the family's colour: what the family makes/)).toBeTruthy();
+    // the quiet map draws no arrow, so the legend has no row about arrows (step 8.2b, B3)
+    expect(within(legend).queryByText(/solid line in the family's colour: what the family makes/)).toBeNull();
     expect(within(legend).getByText(/reactions? leads? to compounds that are in no family yet/)).toBeTruthy();
   });
 

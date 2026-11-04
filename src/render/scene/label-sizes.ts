@@ -63,3 +63,6 @@ export function labelSizes(projection: Projection, ports: ScenePorts, measure: T
   }
   return sizes;
 }
+
+/** The width of a chip that carries words (step 8.2b): the same padding as a number chip, about 7 px a character at the chip's text size. */
+export const chipTextWidth = (text: string): number => 12 + 7 * [...text].length;

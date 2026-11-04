@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { LodLevel, Scene } from '@/render/scene';
 import { SceneSvg } from '@/render/svg';
 import type { DepictionSource, LayerName, MapMarks, SceneHit, SceneSvgProps } from '@/render/svg';
-import { VIEWPORT_SETTLE_MS, type Viewport } from './contracts';
+import { VIEWPORT_SETTLE_MS, type Rect, type Viewport } from './contracts';
 import { createViewportController } from './controller';
 import type { ViewportController } from './controller';
 import { createDepictionQueue } from './depiction-queue';
@@ -53,6 +53,10 @@ export interface ViewportSceneProps {
   readonly onSvg?: (svg: SVGSVGElement | null) => void;
   /** Keyboard focus on the drawing (see `SceneSvgProps.keyboard`). */
   readonly keyboard?: SceneSvgProps['keyboard'];
+  /** Step 8.2b: the world rectangle Fit and the first view fill the area with (the visible boxes). Absent: the whole drawing (the phone). */
+  readonly fitBox?: Rect;
+  /** Changes when the drawing is a different one to look at (another chapter, Unclassified shown): the view is fitted again. Absent: never. */
+  readonly fitKey?: string;
 }
 
 /** What the layers get: the same statuses, but `request` does nothing (the queue decides what is asked for). */
@@ -75,6 +79,10 @@ export function ViewportScene(props: ViewportSceneProps) {
   const pointerRef = useRef(props.pointer);
   pointerRef.current = props.pointer;
   const hasPointer = props.pointer !== undefined;
+  const fitBoxRef = useRef(props.fitBox);
+  fitBoxRef.current = props.fitBox;
+  const refit = useRef<(() => void) | undefined>(undefined);
+  const keyRef = useRef(props.fitKey);
   const { pointerTimers, onSvg, minScale } = props;
 
   useEffect(() => {
@@ -112,6 +120,12 @@ export function ViewportScene(props: ViewportSceneProps) {
       autoView = controller.current();
       autoViews.push(autoView);
       if (autoViews.length > MAX_AUTO_VIEWS) autoViews.shift();
+    };
+    controller.setFitBox(fitBoxRef.current);
+    refit.current = () => {
+      controller.setFitBox(fitBoxRef.current);
+      controller.fit();
+      markAutomatic();
     };
     const measure = (): void => {
       const box = svg.getBoundingClientRect();
@@ -158,6 +172,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       if (still !== undefined) window.clearTimeout(still);
       settle();
       onController?.(null);
+      refit.current = undefined;
       observer?.disconnect();
       bound.binding?.destroy();
       queue?.dispose();
@@ -168,7 +183,15 @@ export function ViewportScene(props: ViewportSceneProps) {
 
   useEffect(() => {
     controllerRef.current?.setScene(scene);
+    controllerRef.current?.setFitBox(fitBoxRef.current);
   }, [scene]);
+
+  const { fitKey } = props;
+  useEffect(() => {
+    if (keyRef.current === fitKey) return;
+    keyRef.current = fitKey;
+    refit.current?.();
+  }, [fitKey]);
 
   useEffect(() => {
     onSvg?.(svgRef.current);

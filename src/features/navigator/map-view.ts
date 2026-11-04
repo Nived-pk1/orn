@@ -7,15 +7,21 @@
  *  - a chapter and no focus: every arrow of the chapter, a two-way pair as ONE line with a head and a count chip at each end;
  *  - a self-loop is never drawn: the box carries "n within the family" instead;
  *  - Unclassified is hidden unless shown; the reactions that lead there are counted for the legend;
+ *  - a busy chapter (more than BUSY_CHAPTER_ARROWS arrows after pair merging) draws none until a family is chosen (`busy` says how many);
+ *  - a chain ("From A to B") draws only the chain's arrows, heavy and solid in the first family's colour, numbered at their chips;
+ *  - an arrow of ONE reaction shows that reaction's reagent words on its chip (`facts`), unless the chip would overlap another;
  *  - the selected arrow stays drawn. Boxes that are not the focus, not at an end of a drawn arrow (in a chapter also: with no reaction inside)
  *    fade (they stay clickable).
  */
-import type { MapMarks, EdgeMark } from '@/render/svg';
+import type { MapMarks } from '@/render/svg';
 import type { Scene, SceneEdge, SceneNode } from '@/render/scene';
+import { withChips, type Drawn, type PairFacts } from './map-chips';
 import { distance, pointAlong, reactionsWord, shifted, sideOffset } from './map-geometry';
 
 /** The least distance between the two lines of a pair in a family focus (px). */
 export const PAIR_GAP = 6;
+/** A chapter with more arrows than this (after pair merging) draws none until a family is chosen (step 8.2b, B2). */
+export const BUSY_CHAPTER_ARROWS = 15;
 /** Where along a merged pair the count chips sit: near their own heads. */
 const NEAR_HEAD = 0.78;
 
@@ -27,7 +33,13 @@ export interface MapViewOptions {
   readonly showUnclassified: boolean;
   /** The selected arrow, which stays drawn. */
   readonly selectedEdgeId?: string | undefined;
+  /** "From A to B": the steps of the chosen chain, in order; only these arrows are drawn. */
+  readonly chain?: readonly { readonly from: string; readonly to: string }[] | undefined;
+  /** What one family-to-family arrow carries (distinct reactions, and the reagent words when it is one). Absent: no words on chips. */
+  readonly facts?: ((from: string, to: string) => PairFacts | undefined) | undefined;
 }
+
+export type { PairFacts } from './map-chips';
 
 export interface MapView {
   /** What is drawn: the Scene's boxes (without a hidden Unclassified) and only the arrows in view. */
@@ -37,6 +49,8 @@ export interface MapView {
   readonly marks: MapMarks;
   /** Nothing focused, no chapter, no selected arrow: the quiet map (the line "Tap or click a family ..." shows). */
   readonly quiet: boolean;
+  /** A busy chapter: how many arrows it has (nothing is drawn until a family is chosen); 0 when it is not busy. */
+  readonly busy: number;
   /** `present`: the Scene has an Unclassified box; `reactions`: how many reactions lead there (counted from the arrows, shown or not). */
   readonly unclassified: { readonly present: boolean; readonly shown: boolean; readonly reactions: number };
 }
@@ -44,11 +58,6 @@ export interface MapView {
 const countOf = (edge: SceneEdge): number => edge.bundleSize ?? 1;
 const nameOf = (node: SceneNode | undefined, fallback: string): string => (node === undefined ? fallback : node.label.map((run) => run.text).join('') || fallback);
 const within = (n: number): string => `${n} within the family`;
-
-interface Drawn {
-  readonly edge: SceneEdge;
-  readonly mark: EdgeMark;
-}
 
 function roleOf(edge: SceneEdge, focus: string | null, nodes: ReadonlyMap<string, SceneNode>): Drawn {
   if (focus !== null && edge.to === focus && edge.from !== focus) return { edge: { ...edge, stroke: 'dashed' }, mark: { role: 'madeFrom' } };
@@ -108,20 +117,27 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
   const focus = options.focusId !== null && nodes.has(options.focusId) ? options.focusId : null;
   const usable = scene.edges.filter((edge) => edge.from !== edge.to && nodes.has(edge.from) && nodes.has(edge.to));
 
-  const chosen = focus !== null ? usable.filter((edge) => edge.from === focus || edge.to === focus) : options.chapter ? usable : [];
+  const chain = options.chain !== undefined && options.chain.length > 0 ? options.chain : undefined;
+  const chainTone = chain === undefined ? undefined : nodes.get((chain[0] as { from: string }).from)?.tone;
+  const chainEdges = chain === undefined ? [] : chain.flatMap((step) => usable.find((edge) => edge.from === step.from && edge.to === step.to) ?? []);
+  const chosen = chain !== undefined ? chainEdges : focus !== null ? usable.filter((edge) => edge.from === focus || edge.to === focus) : options.chapter ? usable : [];
   const selected = options.selectedEdgeId === undefined || chosen.some((edge) => edge.id === options.selectedEdgeId) ? undefined : usable.find((edge) => edge.id === options.selectedEdgeId);
-  const base = [...chosen, ...(selected === undefined ? [] : [selected])].map((edge) => roleOf(edge, focus, nodes));
-  const drawn = focus !== null ? separatePairs(base) : options.chapter ? mergePairs(base, nodes) : base;
+  const base = [...chosen, ...(selected === undefined ? [] : [selected])].map((edge) => roleOf(edge, chain === undefined ? focus : null, nodes));
+  const asChain = (d: Drawn): Drawn => ({ edge: { ...d.edge, weight: 'heavy', stroke: 'solid' }, mark: { role: 'makes', ...(chainTone === undefined ? {} : { tone: chainTone }) } });
+  const drawn = chain !== undefined ? base.map(asChain) : focus !== null ? separatePairs(base) : options.chapter ? mergePairs(base, nodes) : base;
+  // a busy chapter draws nothing until a family is chosen (its families stay at full strength); the selected arrow stays
+  const busy = chain === undefined && focus === null && options.chapter && drawn.length > BUSY_CHAPTER_ARROWS ? drawn.length : 0;
+  const shown = withChips(busy > 0 ? drawn.filter((d) => d.edge.id === options.selectedEdgeId) : drawn, options.facts, chain !== undefined);
 
   const ends = new Set<string>();
   for (const d of drawn) {
     ends.add(d.edge.from);
     ends.add(d.edge.to);
   }
-  const fading = focus !== null || options.chapter;
+  const fading = focus !== null || options.chapter || chain !== undefined;
   const full = new Set(ends);
   if (focus !== null) full.add(focus);
-  else if (options.chapter) for (const node of visibleNodes) if ((node.reactionCounts?.loops ?? 0) > 0) full.add(node.id);
+  else if (options.chapter && chain === undefined) for (const node of visibleNodes) if ((node.reactionCounts?.loops ?? 0) > 0) full.add(node.id);
   const faded = new Set(fading ? visibleNodes.filter((node) => !full.has(node.id)).map((node) => node.id) : []);
 
   const captions = new Map<string, string>();
@@ -133,10 +149,11 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
   });
 
   return {
-    scene: { ...scene, nodes: described, edges: drawn.map((d) => d.edge) },
+    scene: { ...scene, nodes: described, edges: shown.map((d) => d.edge) },
     navigation: { ...scene, nodes: visibleNodes, edges: scene.edges.filter((edge) => nodes.has(edge.from) && nodes.has(edge.to)) },
-    marks: { edges: new Map(drawn.map((d) => [d.edge.id, d.mark])), faded, captions },
-    quiet: focus === null && !options.chapter && drawn.length === 0,
+    marks: { edges: new Map(shown.map((d) => [d.edge.id, d.mark])), faded, captions },
+    quiet: focus === null && !options.chapter && chain === undefined && shown.length === 0,
+    busy,
     unclassified: { present, shown: present && options.showUnclassified, reactions: leading },
   };
 }

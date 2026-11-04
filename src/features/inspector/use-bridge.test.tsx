@@ -78,3 +78,44 @@ describe('opening the pane from a pick', () => {
     expect(r.opened()).toBe(1);
   });
 });
+
+describe('the inspector shows only the current selection (step 8.2b, B4)', () => {
+  const UNCLASSIFIED = 'virtual:unclassified:hub';
+  it('select a family, then Unclassified: the inspector shows Unclassified and not the family', () => {
+    const r = rig();
+    act(() => r.selection.getState().select({ kind: 'node', id: 'cls_alcohols' }));
+    expect(r.ports.ui.inspector.getState().virtual).toBeNull();
+    act(() => r.selection.getState().select({ kind: 'node', id: UNCLASSIFIED }));
+    expect(r.ports.ui.inspector.getState().virtual).toBe('unclassified');
+    act(() => r.selection.getState().reveal());
+    expect(r.opened()).toBe(1);
+  });
+  it('opening a record leaves the Unclassified view', () => {
+    const r = rig();
+    act(() => r.selection.getState().select({ kind: 'node', id: UNCLASSIFIED }));
+    act(() => r.selection.getState().select({ kind: 'node', id: 'cls_alcohols' }));
+    expect(r.ports.ui.inspector.getState().virtual).toBeNull();
+    expect(r.ports.ui.inspector.getState().history.at(-1)?.id).toBe('cls_alcohols');
+  });
+  it('an arrow that names no record (no ends) empties the inspector instead of keeping the old record', () => {
+    const r = rig();
+    act(() => r.selection.getState().select({ kind: 'node', id: 'cls_alcohols' }));
+    act(() => r.selection.getState().select({ kind: 'edge', id: 'edge-without-ends' }));
+    expect(r.ports.ui.inspector.getState().history).toEqual([]);
+  });
+  it('nothing selected after a selection: the inspector is empty', () => {
+    const r = rig();
+    act(() => r.selection.getState().select({ kind: 'node', id: 'cls_alcohols' }));
+    act(() => r.selection.getState().select(null));
+    expect(r.ports.ui.inspector.getState().history).toEqual([]);
+    expect(r.ports.ui.inspector.getState().virtual).toBeNull();
+  });
+  it('a record opened by something else than the selection (a card on a family page) is not emptied by a deselect', () => {
+    const r = rig();
+    const reactionId = Object.keys(r.ports.store.getState().records.reaction)[0] as string;
+    act(() => r.selection.getState().select({ kind: 'node', id: 'cls_alcohols' }));
+    act(() => r.family.getState().selectReaction(reactionId));
+    act(() => r.selection.getState().select(null));
+    expect(r.ports.ui.inspector.getState().history.at(-1)?.id).toBe(reactionId);
+  });
+});

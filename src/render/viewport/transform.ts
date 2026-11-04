@@ -72,3 +72,13 @@ export const toScreen = (view: Viewport, world: { readonly x: number; readonly y
 export const sameViewport = (a: Viewport, b: Viewport): boolean => a.x === b.x && a.y === b.y && a.scale === b.scale;
 
 export const toTransformAttribute = (view: Viewport): string => `translate(${view.x} ${view.y}) scale(${view.scale})`;
+
+/**
+ * The viewport that fills the map area with `box` (the visible boxes; step 8.2b, B1): `FIT_PADDING` on every side, never above the maximum
+ * zoom, centred. Below the name floor (a drawing too big to read) it starts at the box's top-left corner inside the padding, like `fitScene`.
+ */
+export function fitBox(box: Rect, size: Size): Viewport {
+  const fitted = fitRect(box, size);
+  if (fitted.scale >= FIT_FLOOR) return fitted;
+  return { scale: FIT_FLOOR, x: FIT_PADDING - box.x0 * FIT_FLOOR, y: FIT_PADDING - box.y0 * FIT_FLOOR };
+}

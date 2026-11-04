@@ -45,7 +45,7 @@ export type {
   TraversedEdge,
   VisitedNode,
 } from './traversal';
-export { compactEquationOf, createDescriber, exampleLookupOf, familyStudy, foldExamples, reactionCard, UNCLASSIFIED_NAME } from './family';
+export { compactEquationOf, createDescriber, createReagentWords, exampleLookupOf, familyStudy, foldExamples, reactionCard, UNCLASSIFIED_NAME } from './family';
 export type { ExampleFold, ExampleLookup, ReactionCardMissing, FamilyCard, FamilyCardOutcome, FamilyElsewhere, FamilyGroup, FamilyOutcomeGroup, FamilyPartner, FamilyProduct, FamilyReactionType, FamilySection, FamilySectionKind, FamilyStudy, SelectivityWord } from './family';
 export { buildReactionFilterInput, createReactionFilterMemo, filterReactions } from './reaction-filter';
 export type { ReactionFilterMemo, FacetOption, ReactionFacets, ReactionFilter, ReactionFilterEntry, ReactionFilterInput, ReactionFilterResult, ReactionFilterRow, SubstanceUse } from './reaction-filter';
