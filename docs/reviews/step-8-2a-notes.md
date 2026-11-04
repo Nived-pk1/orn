@@ -12,3 +12,4 @@ Part D code done and committed (see git log, "phase-8.2a: part D"); STOPPED ther
 Part D committed 73e8a6d (check green 693 files 7948 tests default workers). Stopped per user.
 Speed before e2e: 0.590 s median
 E2E Chromium round 1 fixed: quiet line keeps its height (a double click moved the map), legend always explains the chip, map store open() opens the pane, specs updated (hub_explosion biggest pair is a within-family line now). Next: remaining screenshots, sizes (E), docs (F), 3-engine affected + full Chromium (G).
+Full Chromium e2e started; unit check green 693 files 7948 tests at default workers (5th run); sizes Study 383.05 / Studio 386.97 (targets 380.5/384.3 missed)

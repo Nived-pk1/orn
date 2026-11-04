@@ -114,7 +114,7 @@ test.describe('the curriculum editors (Studio)', () => {
     const hub = page.locator('[data-node-id="cls_acyl-halides"]');
     await expect(hub).toHaveAttribute('aria-label', /^Acyl halides, class hub, Oxygen compounds/, { timeout: 60_000 });
     await expect(hub.locator('rect').first()).toHaveAttribute('data-tone', 'green');
-    await expect(page.getByRole('group', { name: /^Navigator: 17 hubs/ })).toBeVisible();
+    await expect(page.getByRole('group', { name: /^Navigator: 16 hubs/ })).toBeVisible();
     await quiet(page);
     await expect(page.getByRole('status').filter({ hasText: 'Saved' })).toHaveCount(0);
     await page.screenshot({ path: resolve(shotsDir(), 'overview-new-family-1280x800.png') });
