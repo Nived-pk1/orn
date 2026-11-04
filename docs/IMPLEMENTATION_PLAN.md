@@ -202,7 +202,7 @@ Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)
 
 | Row | What |
 |---|---|
-| 8.1 | Study inspector redesign (this step) + 7.7 follow-ups. |
+| 8.1 | Study inspector redesign + 7.7 follow-ups. **DONE 2026-11-04** (docs/PROGRESS.md "Step 8.1", ADR-043). |
 | 8.2 | Study is a student app: hide author/developer chrome on the public site (status bar details, Dataset counts, storage warning unless the visitor imported own data, "Exam scope" jargon, raw labels), rename desktop "Navigator" to "Map" to match the phone, review badges as the user decides; Studio unchanged. |
 | 8.3 | Visual polish pass: one type scale and spacing scale, one card style, buttons and chips unified, family-page summary line shortened, empty states, 200 ms transitions (none with reduced motion); a screenshot-led QA pass of every view on desktop and phone. |
 | 8.4 | Arrow-pushing mechanism drawings (ADR-038) and the before → after step layout. |
