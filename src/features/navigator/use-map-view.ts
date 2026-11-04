@@ -30,6 +30,8 @@ export interface MapViewArgs {
 export interface MapViewState {
   readonly view: MapView | null;
   readonly chapterId: string | null;
+  /** The "From A to B" panel is open. */
+  readonly chainOpen: boolean;
   readonly showUnclassified: boolean;
   /** The family whose arrows are drawn now (locked or previewed), or null. */
   readonly focusId: string | null;
@@ -41,6 +43,7 @@ export function useMapView(args: MapViewArgs): MapViewState {
   const { ui, timers, scene, selected, chapters, announce, facts, chain } = args;
   const chapterId = useStore(ui.map, (s) => s.chapterId);
   const showUnclassified = useStore(ui.map, (s) => s.showUnclassified);
+  const chainOpen = useStore(ui.map, (s) => s.chainOpen);
   const locked = useStore(ui.map, (s) => s.focusId);
   const [hover, setHover] = useState<string | undefined>(undefined);
   const live = useRef({ timers, isHub: args.isHub });
@@ -77,8 +80,8 @@ export function useMapView(args: MapViewArgs): MapViewState {
   const focusId = hover ?? locked;
   const selectedEdgeId = selected !== null && selected.kind === 'edge' ? selected.id : undefined;
   const view = useMemo(
-    () => (scene === null ? null : mapView(scene, { focusId, chapter: chapterId !== null && !unknown, showUnclassified, selectedEdgeId, facts, chain })),
-    [scene, focusId, chapterId, unknown, showUnclassified, selectedEdgeId, facts, chain],
+    () => (scene === null ? null : mapView(scene, { focusId, chapter: chapterId !== null && !unknown && !chainOpen, showUnclassified, selectedEdgeId, facts, chain: chainOpen ? chain : undefined })),
+    [scene, focusId, chapterId, unknown, showUnclassified, selectedEdgeId, facts, chain, chainOpen],
   );
-  return { view, chapterId: unknown ? null : chapterId, showUnclassified, focusId, onNodeHover };
+  return { view, chainOpen, chapterId: unknown ? null : chapterId, showUnclassified, focusId, onNodeHover };
 }

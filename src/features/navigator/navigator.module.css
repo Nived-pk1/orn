@@ -140,10 +140,51 @@
   background: var(--color-tone-slate-tint);
 }
 
+.mapRow {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 .drawing {
   position: relative;
   flex: 1;
+  min-width: 0;
   min-height: 0;
+}
+
+.findBox {
+  min-height: 32px;
+  width: 11rem;
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  padding: 0 var(--space-2);
+}
+
+.findBox[data-phone] {
+  min-height: 44px;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 0;
+  box-sizing: border-box;
+}
+
+.phoneButton {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.phoneButton[aria-pressed='true'] {
+  border-color: var(--color-ink);
 }
 
 .message {
@@ -360,6 +401,9 @@
 /* The phone map's chapter select and quiet line sit above the drawing (step 8.2a). */
 .phoneBar {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-rule);
 }

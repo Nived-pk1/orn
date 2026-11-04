@@ -18,6 +18,8 @@ import { Banner, Button, ContextMenu, Skeleton } from '@/ui/primitives';
 import { FIT_FLOOR } from '@/render/viewport';
 import { buildChapterIndex } from '@/core/chapters/build-index';
 import { ChapterSelect } from './chapter-select';
+import { FindFamily } from './find-family';
+import { viewportToReveal } from './reveal';
 import { useMapCompounds } from './compounds-context';
 import { depictionBindingOf } from './depictions';
 import { ListView } from './list-view';
@@ -38,6 +40,8 @@ import styles from './navigator.module.css';
 
 // Studio only (the legend's link): a lazy chunk, never loaded in Study (nothing there mounts it)
 const UnclassifiedDialog = /* @__PURE__ */ lazy(() => import('./unclassified-dialog').then((m) => ({ default: m.UnclassifiedDialog })));
+// "From A to B" (step 8.2b): a lazy chunk, loaded when the panel is first opened
+const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanel })));
 const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
 const busyLine = (n: number): string => `This chapter has ${n} arrows. Tap or click a family to see its part.`;
 const NO_IDS: ReadonlySet<string> = new Set();
@@ -90,7 +94,35 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const chapters = useMemo(() => (scene === null ? [] : buildChapterIndex(ports.store.getState()).chapters.map((chapter) => ({ id: chapter.id, title: chapter.title }))), [scene, ports]);
   const chapterIds = useMemo(() => chapters.map((chapter) => chapter.id), [chapters]);
   const facts = useMemo(() => createPairFacts(ports), [ports]);
-  const map = useMapView({ ui: ports.ui, timers: ports.timers, scene, isHub, selected, chapters: chapterIds, announce, facts });
+  const [svg, setSvg] = useState<SVGSVGElement | null>(null);
+  const [chain, setChain] = useState<readonly { readonly from: string; readonly to: string }[] | undefined>(undefined);
+  const map = useMapView({ ui: ports.ui, timers: ports.timers, scene, isHub, selected, chapters: chapterIds, announce, facts, chain });
+  const familyList = useMemo(() => (scene === null ? [] : scene.nodes.filter((node) => node.box === 'hub').map((node) => ({ id: node.id, name: node.label.map((run) => run.text).join('') }))), [scene]);
+  const toggleChain = useCallback((): void => ports.ui.map.getState().setChainOpen(!ports.ui.map.getState().chainOpen), [ports]);
+  const closeChain = useCallback((): void => ports.ui.map.getState().setChainOpen(false), [ports]);
+  const pairs = useCallback(() => ports.indexes.current().navigatorRollup().pairs(), [ports]);
+  // a step opens its arrow's reactions exactly as selecting the arrow does
+  const openStep = useCallback(
+    (from: string, to: string): void => {
+      const edge = sceneRef.current?.edges.find((one) => one.from === from && one.to === to);
+      if (edge === undefined) return;
+      ports.ui.selection.getState().select({ kind: 'edge', id: edge.id });
+      ports.ui.selection.getState().reveal();
+    },
+    [ports],
+  );
+  // Find a family: focus it as a click would and pan (no zoom change) so it is in view
+  const findFamily = useCallback(
+    (id: string): void => {
+      ports.ui.selection.getState().select({ kind: 'node', id });
+      ports.ui.map.getState().setFocus(id);
+      const node = sceneRef.current?.nodes.find((one) => one.id === id);
+      const area = svg?.getBoundingClientRect();
+      const view = controllerRef.current === null || node === undefined || area === undefined ? undefined : viewportToReveal(controllerRef.current.current(), { width: area.width, height: area.height }, node);
+      if (view !== undefined) controllerRef.current?.setViewport(view);
+    },
+    [ports, svg],
+  );
   const { view } = map;
   const drawn = view === null ? scene : view.scene;
   // step 8.2b (B1): on a wide screen Fit and the first view fill the area with the visible boxes; the phone keeps its zoom
@@ -100,7 +132,6 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const setChapter = useCallback((id: string | null): void => ports.ui.map.getState().setChapter(id), [ports]);
   const toggleUnclassified = useCallback((): void => ports.ui.map.getState().setShowUnclassified(!ports.ui.map.getState().showUnclassified), [ports]);
   const openFamily = useCallback((hubId: string): void => ports.ui.family.getState().openFamily(hubId), [ports]);
-  const [svg, setSvg] = useState<SVGSVGElement | null>(null);
   // Studio's window provides the multi-selection shell; Study's provides none and the map has no multi-selection (step 6.8b, Y1)
   const useMulti = useMapBulk()?.useMulti ?? useNoMulti;
   const multi = useMulti({ scene: drawn ?? scene, svg, controller, isHub, announce });
@@ -181,6 +212,10 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           Fit
         </Button>
         <ChapterSelect chapters={chapters} value={map.chapterId} onChange={setChapter} />
+        <FindFamily families={familyList} onChoose={findFamily} />
+        <Button aria-pressed={map.chainOpen} onClick={toggleChain} {...nothing}>
+          From A to B
+        </Button>
         <Button onClick={() => selectedHub !== undefined && openFamily(selectedHub)} {...(scene === null ? nothing : openReason === undefined ? {} : { unavailable: openReason })}>
           Open family
         </Button>
@@ -214,6 +249,10 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       {phone && scene !== null && !listing ? (
         <div className={styles.phoneBar}>
           <ChapterSelect chapters={chapters} value={map.chapterId} onChange={setChapter} phone />
+          <FindFamily families={familyList} onChoose={findFamily} phone />
+          <button type="button" className={styles.phoneButton} aria-pressed={map.chainOpen} onClick={toggleChain}>
+            From A to B
+          </button>
         </div>
       ) : null}
       {/* the line keeps its height when it has nothing to say, so a click that focuses a family does not move the map under the pointer (a double click's second press would miss) */}
@@ -222,6 +261,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : ' '}
         </p>
       ) : null}
+      <div className={styles.mapRow}>
       <div className={styles.drawing} aria-busy={state.working}>
         {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => setCompoundsOpen(true) })} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} /> : null}
         {phone ? selectBar : null}
@@ -259,6 +299,12 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             {...(initialViewport === undefined ? {} : { initialViewport })}
           />
         )}
+      </div>
+      {map.chainOpen && scene !== null && !listing ? (
+        <Suspense fallback={null}>
+          <ChainPanel families={familyList} pairs={pairs} facts={facts} onChain={setChain} onOpenStep={openStep} onClose={closeChain} {...(phone ? { phone: true } : {})} />
+        </Suspense>
+      ) : null}
       </div>
       {compounds === undefined || !compoundsOpen ? null : (
         <Suspense fallback={null}>

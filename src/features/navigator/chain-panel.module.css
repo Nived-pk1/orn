@@ -1,0 +1,132 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  width: 22rem;
+  max-width: 40%;
+  padding: var(--space-3);
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-rule);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-16);
+}
+
+.note {
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
+.selects {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-14);
+  color: var(--color-ink-2);
+}
+
+.field select {
+  min-height: 36px;
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.chains,
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chain {
+  padding: var(--space-1);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.chain[data-picked] {
+  border-color: var(--color-ink);
+}
+
+.chainRow,
+.step {
+  width: 100%;
+  min-height: var(--hit-min);
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  text-align: left;
+  color: var(--color-ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.chainRow {
+  font-weight: 600;
+}
+
+.step {
+  font-size: var(--text-14);
+  color: var(--color-ink-2);
+}
+
+/* Phone: a sheet over the bottom of the map at peek height (selects and the first row); "Show all" opens it to full height. */
+.panel[data-phone] {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  width: auto;
+  max-width: none;
+  max-height: 42dvh;
+  border-top: 1px solid var(--color-rule);
+  border-left: 0;
+}
+
+.panel[data-phone][data-expanded] {
+  max-height: 80dvh;
+}
+
+.panel[data-phone] .selects {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.panel[data-phone] .field {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.panel[data-phone] .field select {
+  min-height: 44px;
+}
+
+.panel[data-phone] button {
+  min-height: 44px;
+}
