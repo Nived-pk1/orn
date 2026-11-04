@@ -92,8 +92,7 @@ at or above each topic the record is mapped to (`chapterOfTopic`, :56), else its
 The Chapters view records the open chapter in `ui.chapters` (`ui/state/chapters-state.ts`: `open(chapterId)` sets `chapterId`; saved as
 `navigator.chapters.chapterId`; "none" = No chapter yet). That `open` call is the hook for D7.
 Difference to note: a `topicIds` filter (`recordsInTopic` transitive) equals the 7.3b rule except where a chapter topic sits inside another
-chapter (then the outer chapter's filter also takes the inner chapter's reactions). The chapter filter will use an exact reaction set from a
-new core function `reactionIdsOfChapter` (7.3b rule) passed to the projection as the allowed set (see design note in the report).
+chapter (then the outer chapter's filter also takes the inner chapter's reactions). DECISION: the chapter filter uses `ViewFilters.topicIds = [chapterId]` (no contract or schema change); a unit test checks it equals the 7.3b membership on a flat tree; the nested case is a REVIEW REQUIRED item.
 
 ## 8. Phase 5 map budgets and readability
 
