@@ -134,3 +134,25 @@ Nitrogen compounds); no code names them.
    decorative flag), `fadedIds`, `onNodeHover`. The `Scene` / `SceneEdge` contract is untouched.
 3. Chapter: a `map` store (chapter id, show-Unclassified), saved in `navigator.map`; the pipeline merges the chapter into the request filters (`topicIds`); chapter list from `chaptersOf`.
 4. "See those compounds": core function over `candidatesTo(UNCLASSIFIED)`; Studio-only lazy dialog.
+
+## 8.2b addendum (read from the code, 2026-11-04, HEAD 73233f3)
+
+1. Family edge list. The Scene edge has NO reaction ids (`SceneEdge`, `render/scene`). The data is the roll-up: `indexes.navigatorRollup().pairs()`
+   (`core/indexes/navigator-rollup.ts:248`) = one `NavigatorPair {from, to, candidates}` per ordered hub pair (`core/indexes/pair-table.ts:28`);
+   a candidate has `reactionId`, `participantId`, `conditionVariantIds`, `fromHub`, `toHub`. Hub ids equal Scene node ids. The exam scope does NOT
+   remove edges (`features/navigator/scope-lens.ts:3`: it dims and marks; the default request stays unfiltered), so the chain edges are the
+   pairs with `from !== to` and neither end the Unclassified hub, optionally passed through `reactionFilter` (`core/graph/navigator/select.ts:54`)
+   with the person's filters but NOT the chapter. Shape used: `{from, to, reactionIds: string[]}` (distinct, sorted).
+2. Reagent words. There is no ready "short words" function. The card arrow's text is `arrowTextOf(reaction, ctx).above`
+   (`core/graph/arrow-text.ts:194`; parts of kind name / formula, `originalText` wins, e.g. "PCC"); the context comes from `createCardKit(ctx)`
+   (`core/graph/family/card.ts:41`: describer, schemesOf, shownAsNode). New pure `reagentWordsOf` reuses exactly those two.
+3. Fit. `controller.fit()` = `fitScene(scene.bounds, size)` (`render/viewport/controller.ts:104`, `transform.ts:55`): the WHOLE Scene bounds
+   (hidden Unclassified and layout padding included), `fitRect` with padding `FIT_PADDING` 24, max zoom `SCALE_MAX` 4, floor `FIT_FLOOR`
+   (about 0.65). The first view is set in `viewport-scene.tsx` `measure()` (fit unless a saved `initialViewport`); a new Scene does not re-fit.
+4. Selecting an arrow: `ui.selection.select({kind:'edge', id})` (+ `reveal()` after 300 ms) -> `use-bridge.ts` -> `focusOfSelection`
+   (`features/inspector/model/focus.ts`): one reaction = that record, several = the source family with a note; the toolbar "Open" opens
+   `openFamily(from, {section:'reactions_of', hubId: to})`. A chain step reuses `select` + `reveal` on the same edge id.
+5. No combobox in `src/ui/primitives`. "Find a family" is a native input with a datalist.
+6. Cause of the stale inspector (B4): `focusOfSelection` answers `undefined` for the virtual Unclassified node (`isVirtual`), and
+   `use-bridge.ts` returns early on `undefined`, so the inspector store keeps the OLD record while the pane opens.
+No STOP: no new layout engine and no schema change is needed.
