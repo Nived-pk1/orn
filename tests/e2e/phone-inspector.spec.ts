@@ -116,3 +116,16 @@ test.describe('phone: the hero equation at 360 px (Pixel 7 profile, Chromium)', 
     await walk(page, 'pixel7-360', false, 'r: Ethanol → ethanal (PCC)', 'rxn_ethanol-to-ethanal-pcc', 'phone-inspector-hero-360', 'Reaction');
   });
 });
+
+test.describe('phone: the hero equation when the drawings arrive late (slow network, Pixel 7 profile at 360 px, Chromium)', () => {
+  test.use({ ...PIXEL, viewport: { width: 360, height: 740 } });
+  test('it settles into one row or the vertical layout, never stuck unscaled', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'the Pixel 7 profile is Chromium');
+    test.setTimeout(400_000);
+    await page.route('**/*.wasm', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await route.continue();
+    });
+    await walk(page, 'pixel7-360-slow', false, 'r: Ethanol → ethanal (PCC)', 'rxn_ethanol-to-ethanal-pcc', 'phone-inspector-hero-360-slow', 'Reaction');
+  });
+});

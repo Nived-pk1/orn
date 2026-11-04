@@ -46,12 +46,16 @@ export function HeroEquation(props: { readonly record: Reaction; readonly compac
       const outer = box.current;
       const row = natural.current;
       if (outer === null || row === null || row.offsetWidth === 0) return; // hidden (the other sheet height): measured again when it is shown
-      const scaleNow = row.getBoundingClientRect().height / (row.offsetHeight || 1) || 1;
+      // the height is the scheme's own: the hidden copy kept for measuring has a wrapper of height 0, which once read as "not measured" and flipped the mode back and forth
+      const content = (row.firstElementChild as HTMLElement | null) ?? row;
+      const naturalHeight = content.offsetHeight;
+      if (naturalHeight === 0) return;
+      const scaleNow = content.getBoundingClientRect().height / naturalHeight || 1;
       const drawings = [...row.querySelectorAll('img')].map((img) => img.getBoundingClientRect().height / scaleNow);
       // the tallest drawing ever seen counts: a copy whose drawings have not arrived yet must not read as "formulas only" and flip the mode back
       drawingSeen.current = Math.max(drawingSeen.current, ...drawings);
-      const next = fitHero({ available: outer.clientWidth, width: row.offsetWidth, height: row.offsetHeight, drawingHeight: drawingSeen.current }, compact ? { peek: true, reactants, products } : undefined);
-      setHeight(row.offsetHeight);
+      const next = fitHero({ available: outer.clientWidth, width: row.offsetWidth, height: naturalHeight, drawingHeight: drawingSeen.current }, compact ? { peek: true, reactants, products } : undefined);
+      setHeight(naturalHeight);
       setFit((before) => {
         if (before.mode === next.mode && (before.mode !== 'row' || (next.mode === 'row' && Math.abs(before.scale - next.scale) < 0.005))) return before;
         // a runaway guard: more than 6 changes (mode or scale) in half a second means two measurements
