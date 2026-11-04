@@ -5,7 +5,9 @@
  * `familyChains` (core); this only chooses and lists. Not saved.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { CHAIN_MAX_STEPS, familyChains, familyEdgesOf, UNCLASSIFIED_HUB_ID, type FamilyChain } from '@/core/graph';
+// deep import: the chain search is only for this lazy chunk (a barrel would pull it into the first load)
+import { CHAIN_MAX_STEPS, familyChains, familyEdgesOf, type FamilyChain } from '@/core/graph/navigator/chains';
+import { UNCLASSIFIED_HUB_ID } from '@/core/graph/navigator/hubs';
 import { Button } from '@/ui/primitives';
 import type { NamedFamily } from './find-family-match';
 import type { PairFacts } from './map-chips';
