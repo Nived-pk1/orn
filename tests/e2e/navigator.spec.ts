@@ -145,13 +145,13 @@ test.describe('pan and zoom', () => {
     const box = await drawing(page).boundingBox();
     if (box === null) throw new Error('the drawing has no box');
     // step 8.2a: resting on a family previews its arrows (a DOM change by design), so the gesture starts on an empty point of the drawing
-    const free = await page.evaluate(([x0, y0, w, h]) => {
+    const free = await page.evaluate(({ x0, y0, w, h }) => {
       for (let y = y0 + h - 20; y > y0 + 20; y -= 20) for (let x = x0 + 20; x < x0 + w - 20; x += 20) {
         const hit = document.elementFromPoint(x, y);
         if (hit !== null && hit.closest('[data-node-id], [data-edge-id]') === null && hit.closest('svg[role="group"]') !== null) return { x, y };
       }
       return null;
-    }, [box.x, box.y, box.width, box.height]);
+    }, { x0: box.x, y0: box.y, w: box.width, h: box.height });
     if (free === null) throw new Error('no empty point on the drawing');
     const cx = free.x;
     const cy = free.y;

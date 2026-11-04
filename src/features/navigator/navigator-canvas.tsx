@@ -16,7 +16,7 @@ import type { Scene } from '@/render/scene';
 import { useLayoutMode } from '@/ui/hooks';
 import { Banner, Button, ContextMenu, Skeleton } from '@/ui/primitives';
 import { FIT_FLOOR } from '@/render/viewport';
-import { buildChapterIndex } from '@/core/chapters';
+import { buildChapterIndex } from '@/core/chapters/build-index';
 import { ChapterSelect } from './chapter-select';
 import { useMapCompounds } from './compounds-context';
 import { depictionBindingOf } from './depictions';

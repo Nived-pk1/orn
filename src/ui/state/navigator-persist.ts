@@ -31,7 +31,7 @@ import {
 } from './navigator-stores';
 import { createExplorerStore, parseExplorer, type ParsedExplorer } from './explorer-state';
 import { createChaptersStore, parseChapters, type ParsedChapters } from './chapters-state';
-import { NO_CHAPTER } from '@/core/chapters';
+import { NO_CHAPTER } from '@/core/chapters/types';
 import { createMapStore, parseMap, type ParsedMap } from './map-state';
 import { createSyllabusStore, parseSyllabus, type ParsedSyllabus } from './syllabus-state';
 import { createPageListStore, parsePageList, type ParsedPageList } from './page-list-state';
