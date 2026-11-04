@@ -53,6 +53,8 @@ async function open(k: Loaded) {
   });
   k.renderWithApp(app);
   await drawing(k);
+  // step 8.2a: the map draws arrows only for a focused family; these tests pick arrows of Alcohols
+  k.act(() => app.navigator.ui.map.getState().setFocus('cls_alcohols'));
   return app;
 }
 /** The same on a phone: the map is the Map tab. */
@@ -65,6 +67,8 @@ async function openPhone(k: Loaded) {
   k.renderWithApp(app);
   k.fireEvent.click(k.within(k.screen.getByRole('navigation', { name: 'Home' })).getByRole('button', { name: 'Map' }));
   await drawing(k);
+  // step 8.2a: the map draws arrows only for a focused family; these tests pick arrows of Alcohols
+  k.act(() => app.navigator.ui.map.getState().setFocus('cls_alcohols'));
   return app;
 }
 const reviews = (app: Awaited<ReturnType<typeof open>>): string[] => Object.values(app.store.getState().records.reaction).map((one) => (one as unknown as { review: { status: string } }).review.status);

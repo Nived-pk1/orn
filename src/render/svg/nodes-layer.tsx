@@ -7,7 +7,7 @@
 import { memo } from 'react';
 import type { LodLevel, Scene, SceneNode } from '@/render/scene';
 import type { DefIds } from './defs';
-import type { DepictionSource, DepictionStatus, LayerName } from './contracts';
+import type { DepictionSource, DepictionStatus, LayerName, MapMarks } from './contracts';
 import { BOX_DASH, HUB_RADIUS, HUB_RULE_WIDTH, structureArea, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
 import { plainText } from './text';
@@ -53,14 +53,17 @@ function StructureImage(props: { readonly node: SceneNode; readonly url: string 
   return <image className={styles.depiction} href={props.url} x={area.x} y={area.y} width={area.width} height={area.height} preserveAspectRatio="xMidYMid meet" />;
 }
 
-function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; readonly source: DepictionSource | undefined; readonly ids: DefIds }) {
-  const { node, lod } = props;
+function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; readonly source: DepictionSource | undefined; readonly ids: DefIds; readonly marks?: MapMarks | undefined }) {
+  const { node, lod, marks } = props;
+  const faded = marks?.faded.has(node.id) === true;
+  const className = [node.state.dimmed ? styles.dimmed : undefined, marks === undefined ? undefined : styles.mapNode, faded ? styles.faded : undefined].filter((name): name is string => name !== undefined).join(' ');
   const status = useDepiction(props.source, wantedDepiction(node, lod));
   const full = [plainText(node.label), node.sublabel === undefined ? '' : plainText(node.sublabel)].filter((text) => text !== '').join(' · ');
   return (
     <g
       transform={`translate(${node.x} ${node.y})`}
-      className={node.state.dimmed ? styles.dimmed : undefined}
+      className={className === '' ? undefined : className}
+      {...(faded ? { 'data-faded': 'true' } : {})}
       id={props.ids.node(node.id)}
       data-node-id={node.id}
       data-glyph={node.glyph}
@@ -75,12 +78,12 @@ function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; re
   );
 }
 
-export const NodesLayer = memo(function NodesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly onCommit?: (layer: LayerName) => void }) {
+export const NodesLayer = memo(function NodesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('nodes', props.onCommit);
   return (
     <g data-layer="nodes">
       {props.scene.nodes.filter((node) => visibleAt(node, props.lod)).map((node) => (
-        <NodeGroup key={node.id} node={node} lod={props.lod} source={props.depictions} ids={props.ids} />
+        <NodeGroup key={node.id} node={node} lod={props.lod} source={props.depictions} ids={props.ids} marks={props.marks} />
       ))}
     </g>
   );

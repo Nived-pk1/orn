@@ -7,7 +7,7 @@ export { createDepictionBinding, MAX_DEPICTION_LOOKUP } from './depiction-bindin
 export type { DepictionBinding, DepictionPort } from './depiction-binding';
 export { useStructureMode } from './use-structure-mode';
 export { LAYER_NAMES } from './contracts';
-export type { DepictionSource, DepictionStatus, LayerName, SceneHit, SceneSvgProps } from './contracts';
+export type { DepictionSource, DepictionStatus, EdgeMark, LayerName, MapMarks, SceneHit, SceneSvgProps } from './contracts';
 export { STROKE_DASH, WEIGHT_WIDTH } from './geometry';
 export { hitOf } from './hit';
 export { plainText } from './text';

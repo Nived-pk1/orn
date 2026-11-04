@@ -24,27 +24,40 @@ export function SceneSvg(props: SceneSvgProps) {
   const doubleClick = onSceneDoubleClick === undefined ? undefined : (event: MouseEvent): void => onSceneDoubleClick(hitOf(event.target));
   // hover: the arrow under the pointer, reported when it changes; ignored while a button is held (a drag pans)
   const hovered = useRef<string | null>(null);
-  const { onSceneHover } = props;
+  const { onSceneHover, onNodeHover, marks } = props;
+  const nodeHovered = useRef<string | null>(null);
+  const reportNode = (id: string | null): void => {
+    if (nodeHovered.current === id) return;
+    nodeHovered.current = id;
+    onNodeHover?.(id);
+  };
   const report = (id: string | null): void => {
     if (hovered.current === id) return;
     hovered.current = id;
     onSceneHover?.(id === null ? null : { kind: 'edge', id });
   };
-  const move = onSceneHover === undefined ? undefined : (event: PointerEvent): void => {
-    if (event.buttons !== 0) return report(null);
+  const move = onSceneHover === undefined && onNodeHover === undefined ? undefined : (event: PointerEvent): void => {
+    if (event.buttons !== 0) {
+      report(null);
+      return reportNode(null);
+    }
     const hit = hitOf(event.target);
     report(hit !== null && hit.kind === 'edge' ? hit.id : null);
+    reportNode(hit !== null && hit.kind === 'node' ? hit.id : null);
   };
-  const leave = onSceneHover === undefined ? undefined : (): void => report(null);
+  const leave = onSceneHover === undefined && onNodeHover === undefined ? undefined : (): void => {
+    report(null);
+    reportNode(null);
+  };
   const { keyboard } = props;
   return (
     <svg ref={props.svgRef} onClick={click} onPointerMove={move} onPointerLeave={leave} onDoubleClick={doubleClick} className={props.interactive === true ? `${styles.root} ${styles.interactive}` : styles.root} role="group" aria-label={props.ariaLabel} {...(keyboard === undefined ? {} : { tabIndex: 0, onKeyDown: keyboard.onKeyDown, onFocus: keyboard.onFocus, onBlur: keyboard.onBlur, ...(keyboard.activeId === undefined ? {} : { 'aria-activedescendant': ids.node(keyboard.activeId) }) })} data-lod={lod} data-scene-width={scene.bounds.width} data-scene-height={scene.bounds.height} xmlns="http://www.w3.org/2000/svg">
-      <SceneDefs scene={scene} ids={ids} />
+      <SceneDefs scene={scene} ids={ids} marks={marks} />
       <g ref={worldRef} data-world="true">
-        <EdgesLayer scene={scene} lod={lod} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
-        <NodesLayer scene={scene} lod={lod} depictions={depictions} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
-        <LabelsLayer scene={scene} lod={lod} depictions={depictions} ids={ids} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
-        <BadgesLayer scene={scene} lod={lod} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
+        <EdgesLayer scene={scene} lod={lod} ids={ids} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
+        <NodesLayer scene={scene} lod={lod} depictions={depictions} ids={ids} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
+        <LabelsLayer scene={scene} lod={lod} depictions={depictions} ids={ids} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
+        <BadgesLayer scene={scene} lod={lod} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
         <OverlayLayer scene={scene} lod={lod} ids={ids} selectedIds={selectedIds} focusedId={focusedId} hoveredId={props.hoveredId} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
       </g>
     </svg>

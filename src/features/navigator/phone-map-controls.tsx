@@ -14,6 +14,9 @@ export function PhoneMapControls(props: {
   readonly items: readonly LegendItem[];
   readonly keys: LegendKey;
   readonly outsideNote?: string;
+  /** The legend's Unclassified Show / Hide and Studio's "See those compounds" (step 8.2a). */
+  readonly onToggleUnclassified?: () => void;
+  readonly onSeeCompounds?: () => void;
   /** Studio's Select toggle (step 6.8b): a tap toggles instead of selecting. Absent in Study. */
   readonly extra?: ReactNode;
   /** The Select bar is shown at the bottom: the buttons move to the top so none is half covered (step 6.9, Z2). */
@@ -32,7 +35,7 @@ export function PhoneMapControls(props: {
         </button>
       </div>
       <Dialog open={legend} onClose={() => setLegend(false)} title="Legend">
-        <NavigatorLegend items={props.items} keys={props.keys} {...(props.outsideNote === undefined ? {} : { outsideNote: props.outsideNote })} />
+        <NavigatorLegend items={props.items} keys={props.keys} {...(props.onToggleUnclassified === undefined ? {} : { onToggleUnclassified: props.onToggleUnclassified })} {...(props.onSeeCompounds === undefined ? {} : { onSeeCompounds: props.onSeeCompounds })} {...(props.outsideNote === undefined ? {} : { outsideNote: props.outsideNote })} />
       </Dialog>
     </>
   );

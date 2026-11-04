@@ -10,7 +10,8 @@ import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, showDataset, watch } from './kit';
-import { chipsOffMiddle, linesThroughBoxes, measure, problemsOf } from './readability';
+import { eachFocus, eachFocusByKeyboard, joined, showUnclassified } from './map-focus-kit';
+import { chipsOffMiddle, linesThroughBoxes, problemsOf, type Measured } from './readability';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
@@ -68,23 +69,32 @@ test.describe('the demo overview is arranged on the grid', () => {
     const seen = await watch(page);
     await openDemo(page);
     const report: Record<string, unknown> = {};
+    // step 8.2a: the map draws a focus, so every family is focused in turn and what is drawn is measured (the arrows that leave and enter a family)
+    await showUnclassified(page);
     for (const at of ['fitted', 'lod2'] as const) {
       if (at === 'lod2') await zoomInTo(page, 2);
-      const measured = await measure(page);
-      const problems = problemsOf(measured);
-      expect(linesThroughBoxes(measured), `lines through a box (${at})`).toEqual([]);
-      expect(problems.labelOverLabel, `chip over chip (${at})`).toEqual([]);
-      expect(problems.labelOverNode, `chip over a box (${at})`).toEqual([]);
-      expect(problems.outside, `chip outside the bounds (${at})`).toEqual([]);
+      const parts: Measured[] = [];
+      let labels = 0;
+      const check = (id: string, drawn: Measured): void => {
+        const one = problemsOf(drawn);
+        expect(linesThroughBoxes(drawn), `lines through a box (${at}, ${id} in focus)`).toEqual([]);
+        expect(one.labelOverLabel, `chip over chip (${at}, ${id})`).toEqual([]);
+        expect(one.labelOverNode, `chip over a box (${at}, ${id})`).toEqual([]);
+        expect(one.outside, `chip outside the bounds (${at}, ${id})`).toEqual([]);
+        labels += one.labels;
+        parts.push(drawn);
+      };
+      await (at === 'fitted' ? eachFocus(page, check) : eachFocusByKeyboard(page, check));
+      const measured = joined(parts);
+      const problems = { labels };
       // the count chips are drawn from LOD 2 on; at the fitted view only the lines are measured
-      if (at === 'lod2') report['chipsOffMiddle'] = await Promise.all(chipsOffMiddle(measured).map(async (id) => (await page.locator(`[data-edge-id="${id}"]`).getAttribute('aria-label')) ?? id));
+      if (at === 'lod2') report['chipsOffMiddle'] = chipsOffMiddle(measured);
       if (at === 'lod2') expect(problems.labels, 'the chips were measured').toBeGreaterThanOrEqual(5);
       if (at === 'fitted') {
         const parts = new Map<string, number>();
         for (const s of measured.segments) parts.set(s.id, (parts.get(s.id) ?? 0) + 1);
         report['edges'] = parts.size;
-        const nameOf = async (id: string): Promise<string> => (await page.locator(`[data-edge-id="${id}"]`).getAttribute('aria-label')) ?? id;
-        report['arcs'] = await Promise.all([...parts].filter(([, n]) => n > 1).map(([id]) => nameOf(id)));
+        report['arcs'] = [...parts].filter(([, n]) => n > 1).map(([id]) => id);
         report['nodes'] = measured.nodes.map((n) => ({ id: n.id, x: Math.round(n.x), y: Math.round(n.y), width: n.width, height: n.height }));
         report['bounds'] = measured.bounds;
       }
@@ -148,9 +158,10 @@ test.describe('an overview without cells gets an automatic arrangement', () => {
     await expect(page.getByRole('list', { name: 'Family groups' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Fit' }).click();
     await page.waitForTimeout(500);
-    const measured = await measure(page);
-    expect(linesThroughBoxes(measured), 'lines through a box').toEqual([]);
-    expect(problemsOf(measured).labelOverNode, 'chip over a box').toEqual([]);
+    await eachFocus(page, (id, drawn) => {
+      expect(linesThroughBoxes(drawn), `lines through a box (${id} in focus)`).toEqual([]);
+      expect(problemsOf(drawn).labelOverNode, `chip over a box (${id})`).toEqual([]);
+    });
     const path = await shot(page, 'overview-automatic-1280x800.png');
     test.info().annotations.push({ type: 'screenshot', description: path });
     expect(await axeProblems(page)).toEqual([]);

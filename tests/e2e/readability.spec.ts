@@ -9,7 +9,8 @@ import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { expectClean, loadDemo, openApp, watch } from './kit';
-import { measure, problemsOf } from './readability';
+import { eachFocusByKeyboard, focusFamily, joined, showUnclassified } from './map-focus-kit';
+import { problemsOf, type Measured } from './readability';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
@@ -42,10 +43,15 @@ test.describe('the demo overview is readable', () => {
     const seen = await watch(page);
     await openDemo(page);
     await zoomInTo(page, 2);
-    const measured = await measure(page);
-    const problems = problemsOf(measured);
+    // step 8.2a: the map draws a focus, so every family is focused in turn (by keyboard: at LOD 2 some are out of the window) and what is drawn is measured
+    await showUnclassified(page);
+    const parts: Measured[] = [];
+    await eachFocusByKeyboard(page, (_id, drawn) => void parts.push(drawn));
+    const measured = joined(parts);
+    const each = parts.map(problemsOf);
+    const problems = { labelOverLabel: each.flatMap((p) => p.labelOverLabel), labelOverNode: each.flatMap((p) => p.labelOverNode), outside: each.flatMap((p) => p.outside), linesCrossingText: each.reduce((n, p) => n + p.linesCrossingText, 0), labels: each.reduce((n, p) => n + p.labels, 0) };
     mkdirSync(SHOTS, { recursive: true });
-    writeFileSync(resolve(SHOTS, 'readability-overview-lod2.json'), JSON.stringify({ ...problems, nodes: measured.nodes.length, segments: measured.segments.length, bounds: measured.bounds }, null, 1));
+    writeFileSync(resolve(SHOTS, 'readability-overview-lod2.json'), JSON.stringify({ ...problems, focuses: parts.length, nodes: measured.nodes.length, segments: measured.segments.length, bounds: measured.bounds }, null, 1));
     expect(problems.labels, 'text rectangles were measured').toBeGreaterThan(5);
     test.info().annotations.push({ type: 'text rectangles', description: String(problems.labels) });
     test.info().annotations.push({ type: 'text rectangles a line crosses (reported, not asserted)', description: String(problems.linesCrossingText) });
@@ -59,6 +65,7 @@ test.describe('the demo overview is readable', () => {
     const seen = await watch(page);
     await openDemo(page);
     await zoomInTo(page, 2);
+    await focusFamily(page, 'cls_alcohols'); // the chips are of the arrows in focus
     await expect(page.locator('svg [data-arrow-text-of]')).toHaveCount(0);
     await expect(page.locator('svg [data-count-of]').first()).toBeAttached();
     await expectClean(seen);

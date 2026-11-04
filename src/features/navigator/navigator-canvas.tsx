@@ -8,7 +8,7 @@
  * the choice is saved in `uiState`.
  * The legend of the family groups (step 5.5c) sits under the toolbar. The layer commit count is written to a data attribute by hand (no React state) so a test can prove pan and zoom render nothing.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
 import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
@@ -16,6 +16,9 @@ import type { Scene } from '@/render/scene';
 import { useLayoutMode } from '@/ui/hooks';
 import { Banner, Button, ContextMenu, Skeleton } from '@/ui/primitives';
 import { FIT_FLOOR } from '@/render/viewport';
+import { buildChapterIndex } from '@/core/chapters';
+import { ChapterSelect } from './chapter-select';
+import { useMapCompounds } from './compounds-context';
 import { depictionBindingOf } from './depictions';
 import { ListView } from './list-view';
 import { keyOf, legendOf } from './legend';
@@ -28,8 +31,12 @@ import { NavigatorSelection } from './navigator-selection';
 import { PhoneMapControls } from './phone-map-controls';
 import { emptinessOf, truncationNoticeOf } from './notices';
 import { UnanchoredPanel } from './unanchored-panel';
+import { useMapView } from './use-map-view';
 import styles from './navigator.module.css';
 
+// Studio only (the legend's link): a lazy chunk, never loaded in Study (nothing there mounts it)
+const UnclassifiedDialog = /* @__PURE__ */ lazy(() => import('./unclassified-dialog').then((m) => ({ default: m.UnclassifiedDialog })));
+const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
 const NO_IDS: ReadonlySet<string> = new Set();
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
@@ -53,6 +60,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const [controller, setController] = useState<ViewportController | null>(null);
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
   const [unanchoredOpen, setUnanchoredOpen] = useState(false);
+  const [compoundsOpen, setCompoundsOpen] = useState(false);
+  const compounds = useMapCompounds();
   const root = useRef<HTMLDivElement>(null);
   const commits = useRef(0);
   // Written imperatively: a layer that commits bumps a data attribute, React state is not involved.
@@ -73,15 +82,23 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const selectedIds = useMemo(() => (picked.length > 0 ? new Set(picked.map((one) => one.id)) : selected === null ? NO_IDS : new Set([selected.id])), [selected, picked]);
   const initialViewport = useMemo<Viewport | undefined>(() => ports.ui.viewports.getState().views[VIEW], [ports]);
   const depictions = useMemo(() => depictionBindingOf(ports)?.manager, [ports]);
-  const hubs = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
   const isHub = useCallback((id: string): boolean => state.hubIds.includes(id), [state.hubIds]);
+  // step 8.2a (ADR-044): the map draws a focus, not every arrow; the chapter choice and the focus are the map store's
+  const chapters = useMemo(() => (scene === null ? [] : buildChapterIndex(ports.store.getState()).chapters.map((chapter) => ({ id: chapter.id, title: chapter.title }))), [scene, ports]);
+  const chapterIds = useMemo(() => chapters.map((chapter) => chapter.id), [chapters]);
+  const map = useMapView({ ui: ports.ui, timers: ports.timers, scene, isHub, selected, chapters: chapterIds, announce });
+  const { view } = map;
+  const drawn = view === null ? scene : view.scene;
+  const hubs = drawn === null ? 0 : drawn.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
+  const setChapter = useCallback((id: string | null): void => ports.ui.map.getState().setChapter(id), [ports]);
+  const toggleUnclassified = useCallback((): void => ports.ui.map.getState().setShowUnclassified(!ports.ui.map.getState().showUnclassified), [ports]);
   const openFamily = useCallback((hubId: string): void => ports.ui.family.getState().openFamily(hubId), [ports]);
   const [svg, setSvg] = useState<SVGSVGElement | null>(null);
   // Studio's window provides the multi-selection shell; Study's provides none and the map has no multi-selection (step 6.8b, Y1)
   const useMulti = useMapBulk()?.useMulti ?? useNoMulti;
-  const multi = useMulti({ scene, svg, controller, isHub, announce });
+  const multi = useMulti({ scene: drawn ?? scene, svg, controller, isHub, announce });
   const selectBar = phone ? multi?.actions(true) : null;
-  const input = useCanvasInput({ ui: ports.ui, scene, isHub, controller, svg, announce, multi, ...(props.returnTo === undefined ? {} : { returnTo: props.returnTo }) });
+  const input = useCanvasInput({ ui: ports.ui, scene: map.view?.navigation ?? scene, isHub, controller, svg, announce, multi, ...(props.returnTo === undefined ? {} : { returnTo: props.returnTo }) });
   // Back from a family page the focus returns to the overview: the drawing (on the family just left), or the list's tab stop.
   const returning = useRef(props.returnTo !== undefined);
   useEffect(() => {
@@ -113,7 +130,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const activeExam = useStore(ports.ui.exam, (s) => s.active);
   const outsideNote = useMemo(() => (scene === null || !scene.nodes.some((node) => node.state.dimmed) ? undefined : outsideNoteOf(ports.store.getState(), activeExam)), [scene, ports, activeExam]);
   const legend = useMemo(() => legendOf(scene), [scene]);
-  const legendKeys = useMemo(() => keyOf(scene), [scene]);
+  const legendKeys = useMemo(() => keyOf(view), [view]);
   const nothing = scene === null ? { unavailable: NOTHING_DRAWN } : {};
   const cut = truncationNoticeOf(scene?.truncation ?? null);
   const families = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub').length;
@@ -156,6 +173,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         <Button onClick={() => controller?.fit()} {...(listing ? { unavailable: 'the List view has no zoom' } : nothing)}>
           Fit
         </Button>
+        <ChapterSelect chapters={chapters} value={map.chapterId} onChange={setChapter} />
         <Button onClick={() => selectedHub !== undefined && openFamily(selectedHub)} {...(scene === null ? nothing : openReason === undefined ? {} : { unavailable: openReason })}>
           Open family
         </Button>
@@ -185,9 +203,19 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         </Banner>
       )}
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
-      {listing || phone ? null : <NavigatorLegend items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} />}
+      {listing || phone ? null : <NavigatorLegend items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => setCompoundsOpen(true) })} {...(outsideNote === undefined ? {} : { outsideNote })} />}
+      {phone && scene !== null && !listing ? (
+        <div className={styles.phoneBar}>
+          <ChapterSelect chapters={chapters} value={map.chapterId} onChange={setChapter} phone />
+        </div>
+      ) : null}
+      {view?.quiet === true && !listing ? (
+        <p className={styles.quiet} data-map-quiet="">
+          {QUIET_LINE}
+        </p>
+      ) : null}
       <div className={styles.drawing} aria-busy={state.working}>
-        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} /> : null}
+        {phone && scene !== null && !listing ? <PhoneMapControls controller={controller} items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => setCompoundsOpen(true) })} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} /> : null}
         {phone ? selectBar : null}
         {multi?.marquee == null ? null : <div className={styles.marquee} aria-hidden="true" style={{ left: multi.marquee.left, top: multi.marquee.top, width: multi.marquee.width, height: multi.marquee.height }} />}
         {state.error !== null ? (
@@ -201,10 +229,12 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           <ListView scene={scene} ui={ports.ui} isHub={isHub} />
         ) : (
           <ViewportScene
-            scene={scene}
+            scene={drawn ?? scene}
+            {...(view === null ? {} : { marks: view.marks })}
+            {...(phone ? {} : { onNodeHover: map.onNodeHover })}
             selectedIds={selectedIds}
             {...(hoveredId === undefined ? {} : { hoveredId })}
-            ariaLabel={`Navigator: ${hubs} ${hubs === 1 ? 'hub' : 'hubs'}, ${scene.edges.length} ${scene.edges.length === 1 ? 'arrow' : 'arrows'}`}
+            ariaLabel={`Navigator: ${hubs} ${hubs === 1 ? 'hub' : 'hubs'}, ${(drawn ?? scene).edges.length} ${(drawn ?? scene).edges.length === 1 ? 'arrow' : 'arrows'}`}
             onController={setController}
             {...(phone ? { minScale: FIT_FLOOR } : {})}
             {...(depictions === undefined ? {} : { depictions })}
@@ -220,6 +250,11 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           />
         )}
       </div>
+      {compounds === undefined || !compoundsOpen ? null : (
+        <Suspense fallback={null}>
+          <UnclassifiedDialog open onClose={() => setCompoundsOpen(false)} />
+        </Suspense>
+      )}
       <ContextMenu
         at={input.menu?.at ?? null}
         label={input.menu?.menu.label ?? 'Canvas'}

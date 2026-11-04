@@ -203,11 +203,12 @@ Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)
 | Row | What |
 |---|---|
 | 8.1 | Study inspector redesign + 7.7 follow-ups. **DONE 2026-11-04** (docs/PROGRESS.md "Step 8.1", ADR-043). |
-| 8.2 | Study is a student app: hide author/developer chrome on the public site (status bar details, Dataset counts, storage warning unless the visitor imported own data, "Exam scope" jargon, raw labels), rename desktop "Navigator" to "Map" to match the phone, review badges as the user decides; Studio unchanged. |
-| 8.3 | Visual polish pass: one type scale and spacing scale, one card style, buttons and chips unified, family-page summary line shortened, empty states, 200 ms transitions (none with reduced motion); a screenshot-led QA pass of every view on desktop and phone. |
-| 8.4 | Arrow-pushing mechanism drawings (ADR-038) and the before → after step layout. |
-| 8.5 | Export pictures (SVG/PNG from a card, family page and map) and a print stylesheet. |
-| 8.6 | Phase 8 close: full e2e, both sizes, Definition of Done. |
+| 8.2 | Map clean-up (ADR-044). **8.2a DONE 2026-11-04** (docs/PROGRESS.md "Step 8.2a"): the map draws a focus, not every arrow (quiet by default, one family's arrows on click or tap, hover preview), the Chapter select, two-way pairs as one line, "n within the family" instead of loops, Unclassified hidden with Show and a Studio list. **8.2b:** "Get from A to B" family chains, reagent words on single-reaction arrows, group bands, a "Find a family" box; the full 3-engine e2e run (Firefox and WebKit are owed from 8.2a). |
+| 8.3 | Study is a student app: hide author/developer chrome on the public site (status bar details, Dataset counts, storage warning unless the visitor imported own data, "Exam scope" jargon, raw labels), rename desktop "Navigator" to "Map" to match the phone; Studio unchanged. **Review mark (user decision, 2026-11-04):** in Study a record that is genuinely not reviewed shows a small quiet mark (small grey text or a dot with the accessible label "Not yet reviewed"), never the purple pill; normally students see none, because the user publishes only reviewed chemistry; Studio keeps today's pill. |
+| 8.4 | Visual polish pass: one type scale and spacing scale, one card style, buttons and chips unified, family-page summary line shortened, empty states, 200 ms transitions (none with reduced motion); a screenshot-led QA pass of every view on desktop and phone; the NOTICE toast must not cover the inspector. |
+| 8.5 | Arrow-pushing mechanism drawings (ADR-038) and the before → after step layout. |
+| 8.6 | Export pictures (SVG/PNG from a card, family page and map) and a print stylesheet. |
+| 8.7 | Phase 8 close: full e2e, both sizes, Definition of Done. |
 
 Also under Phase 8: mechanism steps: before → after layout of a step's species (with arrow-pushing, row 8.x).
 

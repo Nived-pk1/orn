@@ -149,7 +149,8 @@ describe('the Map tab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Legend' }));
     const legend = screen.getByRole('dialog', { name: 'Legend' });
     expect(within(legend).getByRole('list', { name: 'Family groups' })).toBeTruthy();
-    expect(within(legend).getByText(/number of reactions on this arrow/)).toBeTruthy();
+    expect(within(legend).getByText(/solid line in the family's colour: what the family makes/)).toBeTruthy();
+    expect(within(legend).getByText(/reactions? leads? to compounds that are in no family yet/)).toBeTruthy();
   });
 
   it('the Map tab shows the map and remembers the choice in the UI store', async () => {

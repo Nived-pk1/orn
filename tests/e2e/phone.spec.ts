@@ -169,7 +169,7 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
 
   // Legend: a sheet with the legend's content
   await page.getByRole('button', { name: 'Legend' }).tap();
-  await expect(page.getByRole('dialog', { name: 'Legend' })).toContainText('number of reactions on this arrow');
+  await expect(page.getByRole('dialog', { name: 'Legend' })).toContainText("solid line in the family's colour: what the family makes"); // step 8.2a: the quiet map draws no chip yet
   await stop(page, device, 5, 'legend');
   await page.getByRole('dialog', { name: 'Legend' }).getByRole('button', { name: 'Close' }).first().tap();
   await expect(page.getByRole('dialog', { name: 'Legend' })).toBeHidden();
@@ -177,6 +177,10 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
   // a tap on an arrow: the sheet opens with that arrow's reactions (one reaction: the reaction; several: a list)
   // arrows that carry several (chip 2 or more) first. The sheet opens at peek for every tap and shows the arrow's reactions: a list when the
   // arrow joins several different reactions (an arrow's chip also counts outcomes, so its reaction may be one), that one reaction otherwise.
+  // step 8.2a: the map draws a focus: a tap on a family draws its arrows; the sheet is closed again so the map is whole
+  await tapFamily(page, 'cls_alcohols', 'Alcohols');
+  await page.getByRole('button', { name: 'Close inspector' }).tap();
+  await expect(sheet(page)).toBeHidden();
   const points = (await arrowPoints(page)).sort((x, y) => Number(y.several) - Number(x.several));
   expect(points.length, 'arrows are on the screen').toBeGreaterThan(0);
   const tapped = points.slice(0, 5);

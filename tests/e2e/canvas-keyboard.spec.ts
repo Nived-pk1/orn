@@ -185,6 +185,9 @@ test.describe('the overview map with the keyboard', () => {
     await expect(page.getByRole('menu', { name: /^Aldehydes/ })).toBeVisible();
     await page.mouse.up();
     await page.keyboard.press('Escape');
+    // step 8.2a: arrows are drawn for a focused family only
+    await page.locator('svg [data-node-id="cls_aldehydes"]').click();
+    await expect(page.locator('svg [data-edge-id]').first()).toBeAttached();
     await page.locator('svg [data-edge-id] path[data-hit]').first().click({ button: 'right', force: true });
     await expect(page.getByRole('menuitem', { name: 'Open at this group' })).toBeVisible();
     await page.getByRole('menuitem', { name: 'Open at this group' }).click();

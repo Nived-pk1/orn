@@ -3,6 +3,7 @@
 // 6 reactions into compounds that are in no family, reactions spread over 3 chapters with arrows that cross chapters.
 // Deterministic (a small LCG, no clock). Run: node tests/fixtures/map-layout/generate.mjs
 import { writeFileSync } from 'node:fs';
+import process from 'node:process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -111,4 +112,5 @@ const document = {
 };
 const here = dirname(fileURLToPath(import.meta.url));
 writeFileSync(join(here, 'map-layout.orn.json'), `${JSON.stringify(document, null, 1)}\n`);
-console.log(`families ${families.length}, pairs ${pairs.size}, reactions ${reactions.length}`);
+process.stdout.write(`families ${families.length}, pairs ${pairs.size}, reactions ${reactions.length}
+`);

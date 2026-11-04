@@ -4,10 +4,8 @@
  * tint, border and ink from the tokens; the name is always written (colour is never the only carrier). A sample is decoration
  * (aria-hidden): the words carry the meaning.
  */
-import type { LegendItem, LegendKey } from './legend';
+import { NO_KEY, type LegendItem, type LegendKey } from './legend';
 import styles from './navigator.module.css';
-
-const NO_KEY: LegendKey = { chip: false, loop: false, unclassified: false };
 
 function ChipSample() {
   return (
@@ -20,12 +18,23 @@ function ChipSample() {
   );
 }
 
-function LoopSample() {
+function LineSample(props: { readonly dashed: boolean; readonly both?: boolean }) {
   return (
-    <svg className={styles.sample} width="28" height="24" viewBox="0 0 28 24" aria-hidden="true" data-sample="loop">
-      <rect x="0.5" y="12.5" width="16" height="11" rx="2" className={styles.sampleBox} />
-      <path d="M5 12.5 C5 -3 27 2 16.5 15" className={styles.sampleLine} fill="none" />
-      <path d="M19 14.5 L12.5 12.5 L17.5 18.5 Z" className={styles.sampleHead} transform="rotate(-18 16.5 15)" />
+    <svg className={styles.sample} width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" data-sample={props.dashed ? 'madeFrom' : props.both === true ? 'pair' : 'makes'}>
+      <line x1={props.both === true ? 7 : 2} y1="8" x2="29" y2="8" className={props.dashed ? styles.sampleLine : styles.sampleMakes} {...(props.dashed ? { strokeDasharray: '6 4' } : {})} />
+      <path d="M34 8 L27 4.5 L27 11.5 Z" className={styles.sampleHead} />
+      {props.both === true ? <path d="M2 8 L9 4.5 L9 11.5 Z" className={styles.sampleHead} /> : null}
+    </svg>
+  );
+}
+
+function WithinSample() {
+  return (
+    <svg className={styles.sample} width="28" height="24" viewBox="0 0 28 24" aria-hidden="true" data-sample="within">
+      <rect x="0.5" y="2.5" width="27" height="13" rx="2" className={styles.sampleBox} />
+      <text x="14" y="22" textAnchor="middle" className={styles.sampleCaption}>
+        n
+      </text>
     </svg>
   );
 }
@@ -49,10 +58,19 @@ function OutsideSample() {
   );
 }
 
-export function NavigatorLegend(props: { readonly items: readonly LegendItem[]; readonly keys?: LegendKey; readonly outsideNote?: string }) {
+export function NavigatorLegend(props: {
+  readonly items: readonly LegendItem[];
+  readonly keys?: LegendKey;
+  readonly outsideNote?: string;
+  /** Show or hide the Unclassified box (saved). */
+  readonly onToggleUnclassified?: () => void;
+  /** Studio only: open the list of compounds that are in no family (step 8.2a, D5). */
+  readonly onSeeCompounds?: () => void;
+}) {
   const keys = props.keys ?? NO_KEY;
-  const explained = keys.chip || keys.loop || keys.unclassified || props.outsideNote !== undefined;
+  const explained = keys.lines || keys.chip || keys.pair || keys.within || keys.unclassified !== undefined || props.outsideNote !== undefined;
   if (props.items.length === 0 && !explained) return null;
+  const unclassified = keys.unclassified;
   return (
     <div className={styles.legend}>
       {props.items.length === 0 ? null : (
@@ -67,16 +85,34 @@ export function NavigatorLegend(props: { readonly items: readonly LegendItem[]; 
       )}
       {!explained ? null : (
         <ul className={styles.legendList} aria-label="What the marks mean">
+          {!keys.lines ? null : (
+            <>
+              <li className={styles.legendItem} data-key="makes">
+                <LineSample dashed={false} />
+                solid line in the family's colour: what the family makes
+              </li>
+              <li className={styles.legendItem} data-key="madeFrom">
+                <LineSample dashed />
+                dashed dark line: what the family is made from
+              </li>
+            </>
+          )}
           {!keys.chip ? null : (
             <li className={styles.legendItem} data-key="chip">
               <ChipSample />
               number of reactions on this arrow
             </li>
           )}
-          {!keys.loop ? null : (
-            <li className={styles.legendItem} data-key="loop">
-              <LoopSample />
-              reactions within the same family
+          {!keys.pair ? null : (
+            <li className={styles.legendItem} data-key="pair">
+              <LineSample dashed={false} both />
+              one line with a head at each end: reactions both ways, a number near each head
+            </li>
+          )}
+          {!keys.within ? null : (
+            <li className={styles.legendItem} data-key="within">
+              <WithinSample />
+              n within the family: reactions that start and end in the same family (no loop is drawn)
             </li>
           )}
           {props.outsideNote === undefined ? null : (
@@ -85,10 +121,22 @@ export function NavigatorLegend(props: { readonly items: readonly LegendItem[]; 
               {props.outsideNote}: faded and marked in words, every reaction of the family is outside the chosen exam scope (nothing is hidden)
             </li>
           )}
-          {!keys.unclassified ? null : (
+          {unclassified === undefined ? null : (
             <li className={styles.legendItem} data-key="unclassified">
               <UnclassifiedSample />
-              Unclassified: compounds not in any family yet
+              {unclassified.shown
+                ? 'Unclassified: compounds not in any family yet'
+                : `${unclassified.reactions} ${unclassified.reactions === 1 ? 'reaction leads' : 'reactions lead'} to compounds that are in no family yet`}
+              {props.onToggleUnclassified === undefined ? null : (
+                <button type="button" className={styles.legendButton} onClick={props.onToggleUnclassified}>
+                  {unclassified.shown ? 'Hide' : 'Show'}
+                </button>
+              )}
+              {props.onSeeCompounds === undefined ? null : (
+                <button type="button" className={styles.legendButton} onClick={props.onSeeCompounds}>
+                  See those compounds
+                </button>
+              )}
             </li>
           )}
         </ul>

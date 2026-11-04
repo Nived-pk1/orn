@@ -5,11 +5,14 @@
  */
 import { memo } from 'react';
 import type { Scene } from '@/render/scene';
+import type { MapMarks } from './contracts';
 import { ARROW_SIZE, HUB_RADIUS } from './geometry';
 import styles from './scene-svg.module.css';
 
 export interface DefIds {
   readonly filled: string;
+  /** The same head for the START of a line (a two-way pair, step 8.2a): the marker turns to point backwards there. */
+  readonly start: string;
   readonly open: string;
   /** The accent arrowhead of a hovered or selected arrow (step 5.5d). */
   readonly accent: string;
@@ -25,6 +28,7 @@ const token = (value: number): string => String(value).replace(/[^0-9a-z]/gi, '_
 /** `prefix` must be unique per drawing on the page and made of letters, digits, `-` and `_`. */
 export const defIds = (prefix: string): DefIds => ({
   filled: `${prefix}-arrow-filled`,
+  start: `${prefix}-arrow-start`,
   open: `${prefix}-arrow-open`,
   accent: `${prefix}-arrow-accent`,
   clip: (width, height) => `${prefix}-clip-${token(width)}x${token(height)}`,
@@ -34,8 +38,10 @@ export const defIds = (prefix: string): DefIds => ({
 
 const half = ARROW_SIZE / 2;
 
-export const SceneDefs = memo(function SceneDefs(props: { readonly scene: Scene; readonly ids: DefIds }) {
+export const SceneDefs = memo(function SceneDefs(props: { readonly scene: Scene; readonly ids: DefIds; readonly marks?: MapMarks | undefined }) {
   const { scene, ids } = props;
+  // the start head is defined only when a pair needs it (the drawing without marks is unchanged)
+  const needsStart = props.marks !== undefined && [...props.marks.edges.values()].some((mark) => mark.startHead === true);
   const sizes = new Map<string, { width: number; height: number }>();
   const hubs = new Map<string, { width: number; height: number }>();
   for (const node of scene.nodes) {
@@ -47,6 +53,11 @@ export const SceneDefs = memo(function SceneDefs(props: { readonly scene: Scene;
       <marker id={ids.filled} markerUnits="userSpaceOnUse" markerWidth={ARROW_SIZE} markerHeight={ARROW_SIZE} refX={ARROW_SIZE} refY={half} orient="auto">
         <path className={styles.markerFilled} d={`M0 0 L${ARROW_SIZE} ${half} L0 ${ARROW_SIZE} Z`} />
       </marker>
+      {needsStart ? (
+        <marker id={ids.start} markerUnits="userSpaceOnUse" markerWidth={ARROW_SIZE} markerHeight={ARROW_SIZE} refX={ARROW_SIZE} refY={half} orient="auto-start-reverse">
+          <path className={styles.markerFilled} d={`M0 0 L${ARROW_SIZE} ${half} L0 ${ARROW_SIZE} Z`} />
+        </marker>
+      ) : null}
       <marker id={ids.accent} markerUnits="userSpaceOnUse" markerWidth={ARROW_SIZE} markerHeight={ARROW_SIZE} refX={ARROW_SIZE} refY={half} orient="auto">
         <path className={styles.markerAccent} d={`M0 0 L${ARROW_SIZE} ${half} L0 ${ARROW_SIZE} Z`} />
       </marker>

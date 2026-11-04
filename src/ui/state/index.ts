@@ -59,6 +59,8 @@ export { createExplorerStore, EMPTY_EXPLORER_FILTER, EXPLORER_USES, isFilterSet,
 export type { ExplorerFilter, ExplorerKind, ExplorerState, ExplorerStore, ExplorerUse, ExplorerView } from './explorer-state';
 export { createChaptersStore, parseChapters } from './chapters-state';
 export type { ChaptersState, ChaptersStore, ParsedChapters } from './chapters-state';
+export { createMapStore, parseMap } from './map-state';
+export type { MapState, MapStore, ParsedMap } from './map-state';
 export { createSyllabusStore, parseSyllabus } from './syllabus-state';
 export type { ParsedSyllabus, SyllabusState, SyllabusStore } from './syllabus-state';
 export { createPageListStore, parsePageList } from './page-list-state';

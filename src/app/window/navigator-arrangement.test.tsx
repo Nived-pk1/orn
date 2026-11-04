@@ -4,7 +4,7 @@
  * the data; a hub's accessible name carries its group (colour is never the only carrier); a file with no arrangement has no legend and
  * the names are as before. The grid itself and the pixels are proved by the unit tests of `src/layout/grid` and the e2e.
  */
-import { cleanup, screen, within } from '@testing-library/react';
+import { act, cleanup, screen, within } from '@testing-library/react';
 import { produce } from 'immer';
 import { afterEach, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
@@ -57,7 +57,9 @@ describe('the legend', () => {
 
 describe('hubs on the arranged overview', () => {
   it('a hub\'s accessible name includes its group, and a hub without one keeps its old name', async () => {
-    renderWithApp(fakeApp({ state: demoState() }));
+    const app = fakeApp({ state: demoState() });
+    app.navigator.ui.map.getState().setShowUnclassified(true); // Unclassified is hidden unless shown (step 8.2a, D5)
+    renderWithApp(app);
     await drawing();
     expect(screen.getByRole('graphics-symbol', { name: /^Alcohols, class hub, Oxygen compounds, / })).toBeTruthy();
     expect(screen.getByRole('graphics-symbol', { name: /^Amines, class hub, Nitrogen compounds, / })).toBeTruthy();
@@ -65,10 +67,13 @@ describe('hubs on the arranged overview', () => {
     expect(unclassified?.getAttribute('aria-label')).not.toContain('compounds');
   });
 
-  it('every hub is drawn once on the arranged overview, 15 hubs and the Unclassified hub', async () => {
-    renderWithApp(fakeApp({ state: demoState() }));
+  it('every hub is drawn once on the arranged overview, 15 hubs; the Unclassified hub only when shown (step 8.2a, D5)', async () => {
+    const app = fakeApp({ state: demoState() });
+    renderWithApp(app);
     const svg = await drawing();
     expect(svg.querySelectorAll('[data-box="hub"]')).toHaveLength(15);
+    expect(svg.querySelectorAll('[data-box="unclassified"]')).toHaveLength(0);
+    act(() => app.navigator.ui.map.getState().setShowUnclassified(true));
     expect(svg.querySelectorAll('[data-box="unclassified"]')).toHaveLength(1);
     expect(svg.querySelectorAll('[data-box="hub"][data-glyph="class_hub"]')).toHaveLength(15);
   });

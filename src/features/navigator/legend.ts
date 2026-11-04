@@ -5,6 +5,7 @@
  */
 import type { AnchorTone } from '@/core/schema';
 import type { Scene } from '@/render/scene';
+import type { MapView } from './map-view';
 
 export interface LegendItem {
   readonly group: string;
@@ -31,21 +32,30 @@ export function legendOf(scene: Scene | null): readonly LegendItem[] {
     .map(([group, entry]) => ({ group, tone: entry.tone, hubs: entry.hubs }));
 }
 
-/** What the drawing needs explained besides its family groups (step 5.5d, item d). Each is true only when the Scene draws it. */
+/** What the drawing needs explained besides its family groups (step 5.5d, item d; reworked in 8.2a for the focus map). Each is true only when the map draws it. */
 export interface LegendKey {
+  /** The two line styles are explained: solid in the group's colour = what the family makes, dashed dark = what it is made from. */
+  readonly lines: boolean;
   /** A count chip sits on an arrow. */
   readonly chip: boolean;
-  /** A loop leaves and re-enters one family. */
-  readonly loop: boolean;
-  /** The Unclassified box is drawn. */
-  readonly unclassified: boolean;
+  /** A two-way pair is drawn as one line with a head at each end. */
+  readonly pair: boolean;
+  /** A box says "n within the family" (no loop is drawn any more). */
+  readonly within: boolean;
+  /** The Scene has an Unclassified box: whether it is shown and how many reactions lead to it. Undefined: none. */
+  readonly unclassified: { readonly shown: boolean; readonly reactions: number } | undefined;
 }
 
-export function keyOf(scene: Scene | null): LegendKey {
-  if (scene === null) return { chip: false, loop: false, unclassified: false };
+export const NO_KEY: LegendKey = { lines: false, chip: false, pair: false, within: false, unclassified: undefined };
+
+export function keyOf(view: MapView | null): LegendKey {
+  if (view === null) return NO_KEY;
+  const marks = [...view.marks.edges.values()];
   return {
-    chip: scene.edges.some((edge) => edge.bundleSize !== undefined && edge.from !== edge.to),
-    loop: scene.edges.some((edge) => edge.from === edge.to && edge.bundleSize !== undefined),
-    unclassified: scene.nodes.some((node) => node.box === 'unclassified'),
+    lines: view.scene.nodes.some((node) => node.box === 'hub'),
+    chip: view.scene.edges.some((edge) => edge.bundleSize !== undefined),
+    pair: marks.some((mark) => mark.role === 'pair'),
+    within: view.marks.captions.size > 0,
+    unclassified: view.unclassified.present ? { shown: view.unclassified.shown, reactions: view.unclassified.reactions } : undefined,
   };
 }

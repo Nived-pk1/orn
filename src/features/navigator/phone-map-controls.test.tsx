@@ -6,7 +6,7 @@ import { PhoneMapControls } from './phone-map-controls';
 
 afterEach(cleanup);
 
-const show = (barShown?: boolean) => render(<PhoneMapControls controller={null} items={[]} keys={{} as never} {...(barShown === undefined ? {} : { barShown })} />);
+const show = (barShown?: boolean) => render(<PhoneMapControls controller={null} items={[]} keys={{ lines: false, chip: false, pair: false, within: false, unclassified: undefined }} {...(barShown === undefined ? {} : { barShown })} />);
 
 describe('PhoneMapControls', () => {
   it('Z2: the floating buttons move to the top while the Select bar is shown', () => {

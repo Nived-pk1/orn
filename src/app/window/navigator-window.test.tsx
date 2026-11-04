@@ -12,7 +12,7 @@ afterEach(cleanup);
 describe('the window with records', () => {
   it('shows the navigator in the canvas, with a toolbar of Zoom in, Zoom out and Fit', async () => {
     renderWithApp(fakeApp({ state: demoState() }));
-    const drawing = await screen.findByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ });
+    const drawing = await screen.findByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ });
     expect(drawing.getAttribute('data-lod')).not.toBeNull();
     const toolbar = screen.getByRole('toolbar', { name: 'Canvas tools' });
     for (const name of ['Zoom in', 'Zoom out', 'Fit']) expect(within(toolbar).getByRole('button', { name })).toBeTruthy();

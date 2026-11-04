@@ -67,6 +67,17 @@
   stroke-width: 2;
 }
 
+.sampleMakes {
+  stroke: var(--color-tone-blue-ink);
+  stroke-width: 2;
+}
+
+.sampleCaption {
+  fill: var(--color-ink-2);
+  font-size: 10px;
+  font-family: var(--font-sans);
+}
+
 .sampleHead {
   fill: var(--color-ink);
 }
@@ -255,4 +266,95 @@
   flex: 1 0 100%;
   margin: 0;
   color: var(--color-ink-2);
+}
+
+/* The map's quiet line, the chapter select and the legend's Show / Hide buttons (step 8.2a). */
+.quiet {
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
+.chapter,
+.chapterPhone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-ink-2);
+}
+
+.chapterPhone {
+  padding: var(--space-1) var(--space-3);
+}
+
+.chapterSelect {
+  min-height: 32px;
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  padding: 0 var(--space-2);
+}
+
+.chapterSelect[data-phone] {
+  min-height: 44px;
+  flex: 1;
+  min-width: 0;
+}
+
+.legendButton {
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+/* "See those compounds" (step 8.2a, Studio): a plain list, one button per row. */
+.dialogLine {
+  margin: 0 0 var(--space-2);
+  color: var(--color-ink-2);
+}
+
+.compoundList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compoundRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--hit-min);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  text-align: left;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.compoundKind {
+  color: var(--color-ink-2);
+  font-size: var(--text-12);
+}
+
+/* The phone map's chapter select and quiet line sit above the drawing (step 8.2a). */
+.phoneBar {
+  display: flex;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-rule);
 }

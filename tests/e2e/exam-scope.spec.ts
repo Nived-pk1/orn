@@ -18,7 +18,7 @@ async function openDemo(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   await loadDemo(page);
-  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+  await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
 }
 
 test.describe('the exam scope', () => {
@@ -38,7 +38,7 @@ test.describe('the exam scope', () => {
     await expect(panel.locator('[data-reaction-id]')).toHaveCount(2); // nothing is hidden
     await expect(panel.locator('[data-outside]')).toHaveCount(1);
     await expect(panel.locator('[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]')).toContainText('outside JEE Main');
-    await expect(page.locator('svg [data-node-id]')).toHaveCount(16);
+    await expect(page.locator('svg [data-node-id]')).toHaveCount(15); // Unclassified is hidden unless shown (step 8.2a)
     expect(await axeProblems(page)).toEqual([]);
     mkdirSync(SHOTS, { recursive: true });
     await panel.getByRole('button', { name: 'Close' }).click();
@@ -47,12 +47,13 @@ test.describe('the exam scope', () => {
     await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
     await page.waitForTimeout(800);
     await page.reload();
-    await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+    await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
     await expect(selector(page)).toHaveValue('exv_jee-main-2026');
     // taken after the reload (the same overview, the scope restored): WebKit's screenshot makes the page report a style the inspector injects, and a reload would lose the kit's count of those
     await page.screenshot({ path: resolve(SHOTS, 'overview-scope-main.png') });
 
     // the Unclassified family page: the Beckmann card is marked, no card is hidden
+    await page.getByRole('button', { name: 'Show', exact: true }).click(); // step 8.2a: Unclassified is hidden unless shown
     await page.locator('svg [data-box="unclassified"]').dblclick();
     await page.getByRole('region', { name: /^Family page: Unclassified/ }).waitFor();
     const beckmann = page.locator('article[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]').first();

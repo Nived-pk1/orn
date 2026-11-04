@@ -92,6 +92,8 @@ export function useCanvasInput(args: Args): CanvasInput {
     (hit: SceneHit): void => {
       ui.selection.getState().select(hit);
       ui.selection.getState().reveal();
+      // step 8.2a: a family that is inspected (Enter, the menu) is the focus: its arrows are drawn
+      if (hit.kind === 'node' && live.current.isHub(hit.id)) ui.map.getState().setFocus(hit.id);
     },
     [ui],
   );
@@ -204,10 +206,11 @@ export function useCanvasInput(args: Args): CanvasInput {
           live.current.multi.clear();
           return announce('Selection cleared');
         }
-        if (selected === null) return; // nothing of ours to close: Esc goes on to the layers around the canvas
+        if (selected === null && ui.map.getState().focusId === null) return; // nothing of ours to close: Esc goes on to the layers around the canvas
         handled();
         armed.current = undefined;
         ui.selection.getState().select(null);
+        ui.map.getState().setFocus(null);
         return announce('Selection cleared');
       case 'menu': {
         handled();
@@ -245,6 +248,9 @@ export function useCanvasInput(args: Args): CanvasInput {
         ui.selection.getState().select(hit);
         element?.focus({ preventScroll: true });
         const id = hit !== null && hit.kind === 'node' ? familyId(hit.id, current) : undefined;
+        // step 8.2a: a family (box) in focus; empty map leaves it; an arrow keeps it
+        if (hit === null) ui.map.getState().setFocus(null);
+        else if (id !== undefined) ui.map.getState().setFocus(id);
         if (id === undefined) return;
         last.current = id;
         setFocus({ id, ring: false, inside: true });
@@ -261,6 +267,7 @@ export function useCanvasInput(args: Args): CanvasInput {
         const { scene: current, isHub: hub } = live.current;
         if (current === null) return;
         if (hit !== null) ui.selection.getState().select(hit);
+        if (hit !== null && hit.kind === 'node' && hub(hit.id)) ui.map.getState().setFocus(hit.id);
         setMenu({ at: point, menu: canvasMenuOf(current, hit, hub) });
       },
       ...(enabled

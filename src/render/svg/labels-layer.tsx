@@ -9,15 +9,17 @@
 import { memo } from 'react';
 import type { LodLevel, Scene, SceneEdge, SceneNode } from '@/render/scene';
 import type { DefIds } from './defs';
-import type { DepictionSource, LayerName } from './contracts';
+import type { DepictionSource, LayerName, MapMarks } from './contracts';
 import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, textSlots, visibleAt } from './geometry';
+
+const CAPTION_SIZE = 11;
 import styles from './scene-svg.module.css';
 import { Runs } from './text';
 import { useCommitProbe } from './use-commit-probe';
 import { useDepiction } from './use-depiction';
 import { showsDepiction, wantedDepiction } from './nodes-layer';
 
-function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; readonly source: DepictionSource | undefined; readonly ids: DefIds }) {
+function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; readonly source: DepictionSource | undefined; readonly ids: DefIds; readonly faded?: boolean }) {
   const { node } = props;
   const status = useDepiction(props.source, wantedDepiction(node, props.lod));
   // A node with a structure area keeps its name when the structure is drawn (the formula gives way); any other node shows nothing then.
@@ -25,7 +27,7 @@ function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; re
   if (drawn && node.depictionKey === undefined) return null;
   const slots = textSlots(node);
   return (
-    <g transform={`translate(${node.x} ${node.y})`} data-label-of={node.id}>
+    <g transform={`translate(${node.x} ${node.y})`} data-label-of={node.id} {...(props.faded === true ? { className: styles.faded } : {})}>
       <g clipPath={`url(#${props.ids.clip(node.width, node.height)})`}>
         <text className={`${styles.label}${node.box === 'hub' || node.box === 'unclassified' ? ` ${styles.strong}` : ''}`} x={slots.x} y={slots.labelY} fontSize={slots.labelSize}>
           <Runs runs={node.label} size={slots.labelSize} />
@@ -42,6 +44,16 @@ function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; re
         )}
       </g>
     </g>
+  );
+}
+
+/** The small second line of a family box (step 8.2a): "4 within the family", written just under the box, as text. */
+function Caption(props: { readonly node: SceneNode; readonly text: string; readonly faded: boolean }) {
+  const { node } = props;
+  return (
+    <text className={`${styles.caption}${props.faded ? ` ${styles.faded}` : ''}`} data-caption-of={node.id} x={node.x + node.width / 2} y={node.y + node.height + CAPTION_SIZE + 2} fontSize={CAPTION_SIZE} textAnchor="middle">
+      {props.text}
+    </text>
   );
 }
 
@@ -65,12 +77,13 @@ function ArrowText(props: { readonly edge: SceneEdge }) {
   );
 }
 
-export const LabelsLayer = memo(function LabelsLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly onCommit?: (layer: LayerName) => void }) {
+export const LabelsLayer = memo(function LabelsLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('labels', props.onCommit);
   const { scene, lod } = props;
   return (
     <g data-layer="labels" aria-hidden="true">
-      {lod >= 1 ? scene.nodes.filter((node) => visibleAt(node, lod)).map((node) => <NodeLabel key={node.id} node={node} lod={lod} source={props.depictions} ids={props.ids} />) : null}
+      {lod >= 1 ? scene.nodes.filter((node) => visibleAt(node, lod)).map((node) => <NodeLabel key={node.id} node={node} lod={lod} source={props.depictions} ids={props.ids} faded={props.marks?.faded.has(node.id) === true} />) : null}
+      {lod >= 1 && props.marks !== undefined ? scene.nodes.filter((node) => props.marks?.captions.has(node.id) === true && visibleAt(node, lod)).map((node) => <Caption key={node.id} node={node} text={props.marks?.captions.get(node.id) ?? ''} faded={props.marks?.faded.has(node.id) === true} />) : null}
       {lod >= 2 ? scene.edges.filter((edge) => visibleAt(edge, lod)).map((edge) => <ArrowText key={edge.id} edge={edge} />) : null}
     </g>
   );

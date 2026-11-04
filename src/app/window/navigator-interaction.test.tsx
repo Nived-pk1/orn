@@ -31,6 +31,8 @@ const saved = (app: FakeApp): Record<string, unknown> | undefined => app.navigat
 async function opened(app: FakeApp = fakeApp({ state: demoState() })): Promise<FakeApp> {
   renderWithApp(app);
   await drawing();
+  // step 8.2a: the map draws arrows only for a focused family; the arrows these tests use leave Alcohols
+  act(() => app.navigator.ui.map.getState().setFocus('cls_alcohols'));
   return app;
 }
 

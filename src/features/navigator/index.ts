@@ -19,3 +19,5 @@ export { MapBulkContext } from './bulk-context';
 export type { MapBulk } from './multi-types';
 export { useMultiSelect } from './use-multi-select';
 export { loadMultiEngine, warmMultiEngine } from './multi-entry';
+export { MapCompoundsContext } from './compounds-context';
+export type { MapCompounds } from './compounds-context';

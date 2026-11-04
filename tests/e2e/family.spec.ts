@@ -121,6 +121,7 @@ test.describe('the family page of the demo', () => {
   test('a selected arrow opens its source family at the target group', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
+    await page.locator('svg [data-node-id="cls_alcohols"]').click(); // step 8.2a: arrows are drawn for a focused family
     await page.locator('svg [data-edge-id][aria-label^="Alcohols to Aldehydes"]').first().locator('path').last().evaluate((path) => {
       // a real press (pointerdown on the arrow, pointerup on the page): the map classifies pointer events and has no click handler
       const init = { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', button: 0, clientX: 5, clientY: 5 };

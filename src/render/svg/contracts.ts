@@ -3,6 +3,8 @@
  * depiction source. No data access, no services, no chemistry: the renderer draws what the Scene says.
  */
 import type { FocusEvent, KeyboardEvent, Ref } from 'react';
+import type { AnchorTone } from '@/core/schema';
+import type { Point } from '@/layout/contracts';
 import type { LodLevel, Scene } from '@/render/scene';
 
 export const LAYER_NAMES = ['edges', 'nodes', 'labels', 'badges', 'overlay'] as const;
@@ -33,6 +35,27 @@ export interface SceneHit {
   readonly id: string;
 }
 
+/**
+ * How the map shows an arrow in focus (step 8.2a, an additive amendment: the Scene itself is unchanged). The line style (solid or dashed) is the
+ * SceneEdge's own `stroke`; the mark adds the colour of the family group (`tone`; a 'made from' line carries none), a head at the start too
+ * (a two-way pair is ONE line), and the count chip of the other direction.
+ */
+export interface EdgeMark {
+  /** What the arrow is for the focused family; a pair is one line with a head and a chip at each end. */
+  readonly role: 'makes' | 'madeFrom' | 'pair';
+  readonly tone?: AnchorTone;
+  readonly startHead?: boolean;
+  /** The count chip of the reverse direction of a pair, near the start head. */
+  readonly extraChip?: { readonly at: Point; readonly size: number };
+}
+
+/** The derived marks of one map view (step 8.2a): arrows in focus, boxes shown faded, and a small caption under a box. */
+export interface MapMarks {
+  readonly edges: ReadonlyMap<string, EdgeMark>;
+  readonly faded: ReadonlySet<string>;
+  readonly captions: ReadonlyMap<string, string>;
+}
+
 export interface SceneSvgProps {
   readonly scene: Scene;
   readonly lod: LodLevel;
@@ -40,6 +63,10 @@ export interface SceneSvgProps {
   readonly selectedIds: ReadonlySet<string>;
   /** The arrow under the pointer (step 5.5d, item b), drawn like a selected arrow by the overlay only. */
   readonly hoveredId?: string;
+  /** Step 8.2a: the map's focus marks (arrow colour, pair heads, faded boxes, captions). Absent: the drawing is as before. */
+  readonly marks?: MapMarks;
+  /** Step 8.2a: the box (node) under the pointer, reported when it changes (desktop hover preview). Keep it stable. */
+  readonly onNodeHover?: (id: string | null) => void;
   /** The node or edge that has the keyboard focus (the ring is drawn by the overlay only). */
   readonly focusedId?: string;
   readonly depictions?: DepictionSource;

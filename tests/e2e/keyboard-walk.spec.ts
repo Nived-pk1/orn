@@ -189,14 +189,16 @@ test.describe('the keyboard-only walk', () => {
     await expect(page.getByText(/^Imported \d+ records from generated-/)).toBeVisible({ timeout: 90_000 });
     const drawing = page.getByRole('group', { name: NAVIGATOR });
     await expect(drawing).toBeVisible({ timeout: 90_000 });
+    // step 8.2a: Unclassified is hidden and no arrow is drawn until a family is focused: show Unclassified; the Arrows table lists every arrow
+    const show = page.getByRole('button', { name: 'Show', exact: true });
+    if ((await show.count()) > 0) await show.click();
     const mapNodes = await page.locator('svg [data-box="hub"], svg [data-box="unclassified"]').count();
-    const mapEdges = await page.locator('svg [data-edge-id]').count();
     await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).click();
     const families = page.getByRole('table', { name: 'Families' });
     const arrows = page.getByRole('table', { name: 'Arrows' });
     await expect(families).toBeVisible();
     expect(Number(await families.getAttribute('aria-rowcount'))).toBe(mapNodes + 1);
-    expect(Number(await arrows.getAttribute('aria-rowcount'))).toBe(mapEdges + 1);
+    expect(Number(await arrows.getAttribute('aria-rowcount'))).toBeGreaterThan(1);
     const inDom = await families.locator('[data-row-key]').count();
     expect(inDom).toBeGreaterThan(0);
     expect(inDom).toBeLessThan(mapNodes);

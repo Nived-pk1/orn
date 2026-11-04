@@ -5,6 +5,7 @@
  */
 import { createExplorerStore, type ExplorerStore } from './explorer-state';
 import { createChaptersStore, type ChaptersStore } from './chapters-state';
+import { createMapStore, type MapStore } from './map-state';
 import { createPageListStore, type PageListStore } from './page-list-state';
 import { createSyllabusStore, type SyllabusStore } from './syllabus-state';
 import { createReagentsStore, type ReagentsStore } from './reagents-state';
@@ -263,6 +264,8 @@ export interface NavigatorUiStores {
   readonly precursors: PrecursorsStore;
   /** The Chapters view: the open chapter and its filters (step 7.3b; saved). */
   readonly chapters: ChaptersStore;
+  /** The overview map: its chapter and Unclassified choices (saved) and the focus (never saved) (step 8.2a). */
+  readonly map: MapStore;
   /** The Reagents view: the open reagent and its filters (step 7.3c; saved). */
   readonly reagents: ReagentsStore;
   /** The Named reactions view: the open record and its filters (step 7.4; saved). */
@@ -288,6 +291,7 @@ export const createNavigatorUiStores = (): NavigatorUiStores => ({
   explorer: createExplorerStore(),
   precursors: createPrecursorsStore(),
   chapters: createChaptersStore(),
+  map: createMapStore(),
   reagents: createReagentsStore(),
   named: createPageListStore(),
   mechanisms: createPageListStore(),

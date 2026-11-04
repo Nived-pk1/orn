@@ -30,7 +30,7 @@ test.describe('windows that cannot keep data (step 5.10a)', () => {
     await expect(page.getByText(/^Saved \(revision/)).toHaveCount(0);
 
     await loadDemoUnsaved(page);
-    await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+    await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
     // Undo import works in memory: the data from before the import (none) is back.
     await page.getByRole('button', { name: 'Undo import' }).last().click();
     await expect(page.getByText(/Import undone: the data from before it is back\./).last()).toBeVisible({ timeout: 90_000 });

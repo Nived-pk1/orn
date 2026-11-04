@@ -5,6 +5,7 @@
  * words), so the layer is hidden from assistive technology.
  */
 import { memo } from 'react';
+import type { MapMarks } from './contracts';
 import { CHIP_HEIGHT, chipWidth, countWidth, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
 import type { LayerName } from './contracts';
 import { BADGE_GAP, BADGE_MARK, BADGE_SIZE, visibleAt } from './geometry';
@@ -70,7 +71,20 @@ function BundleCount(props: { readonly edge: SceneEdge; readonly size: number })
   );
 }
 
-export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly onCommit?: (layer: LayerName) => void }) {
+/** The count chip of the OTHER direction of a two-way pair (step 8.2a), near the start head. The pair's one spoken name is on its line. */
+function ExtraChip(props: { readonly edgeId: string; readonly at: { readonly x: number; readonly y: number }; readonly size: number }) {
+  const width = chipWidth(props.size);
+  return (
+    <g transform={`translate(${props.at.x - width / 2} ${props.at.y - CHIP_HEIGHT / 2})`} data-count-extra-of={props.edgeId} data-chip-width={width} data-chip-height={CHIP_HEIGHT} aria-hidden="true">
+      <rect className={styles.chipPill} x={0.5} y={0.5} width={width - 1} height={CHIP_HEIGHT - 1} rx={CHIP_HEIGHT / 2 - 0.5} />
+      <text className={styles.count} x={width / 2} y={CHIP_HEIGHT / 2 + 4.2}>
+        {props.size}
+      </text>
+    </g>
+  );
+}
+
+export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('badges', props.onCommit);
   const { scene, lod } = props;
   return (
@@ -78,6 +92,12 @@ export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Sc
       {lod >= 2 ? scene.nodes.filter((node) => node.badges.length > 0 && visibleAt(node, lod)).map((node) => <NodeBadges key={node.id} node={node} />) : null}
       {lod >= 1
         ? scene.edges.filter((edge) => edge.bundleSize !== undefined && visibleAt(edge, lod)).map((edge) => <BundleCount key={edge.id} edge={edge} size={edge.bundleSize as number} />)
+        : null}
+      {lod >= 1 && props.marks !== undefined
+        ? scene.edges.flatMap((edge) => {
+            const chip = props.marks?.edges.get(edge.id)?.extraChip;
+            return chip === undefined || !visibleAt(edge, lod) ? [] : [<ExtraChip key={`extra-${edge.id}`} edgeId={edge.id} at={chip.at} size={chip.size} />];
+          })
         : null}
     </g>
   );

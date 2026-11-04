@@ -1,5 +1,6 @@
 /**
- * Clearer arrows on the arranged overview (step 5.5d, Part 1), Chromium against the PRODUCTION build with real fonts and the real layout
+ * Clearer arrows on the arranged overview (step 5.5d, Part 1; since 8.2a measured family by family, because the map draws a focus and not every
+ * arrow: each family is clicked in turn and what is drawn for it is measured), Chromium against the PRODUCTION build with real fonts and the real layout
  * worker, the demo in 1280 x 800: arrows meet a box on the side that faces the other box, the end points on one side are at least
  * 12 px apart and clear of the rounded corners, an arrow and its reverse run apart, zero lines through a box, zero chip overlaps,
  * a hovered arrow is drawn by the overlay, the legend explains the marks; axe and zero CSP violations. The numbers go to
@@ -10,7 +11,8 @@ import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
-import { linesThroughBoxes, measure, problemsOf, type Measured } from './readability';
+import { eachFocus, focusFamily, joined, showUnclassified } from './map-focus-kit';
+import { linesThroughBoxes, problemsOf, type Measured } from './readability';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
@@ -75,7 +77,10 @@ test.describe('the arrows of the arranged demo overview', () => {
   test('ends on the facing side, at least 12 px apart and clear of the corners; an arrow and its reverse run apart', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
-    const m = await measure(page);
+    await showUnclassified(page);
+    const parts: Measured[] = [];
+    await eachFocus(page, (_id, drawn) => void parts.push(drawn));
+    const m = joined(parts);
     const { ends, offBorder } = endsOf(m);
     expect(offBorder, 'every end point lies on the border of its box').toEqual([]);
     expect(ends.length).toBeGreaterThan(10);
@@ -111,15 +116,19 @@ test.describe('the arrows of the arranged demo overview', () => {
     await expectClean(seen);
   });
 
-  test('zero lines through a box and zero chip overlaps at the fitted view; the chips are drawn at LOD 1 or more', async ({ page }) => {
+  test('for every family in focus: zero lines through a box and zero chip overlaps at the fitted view; the chips are drawn at LOD 1 or more', async ({ page }) => {
     await openDemo(page);
-    const m = await measure(page);
-    const problems = problemsOf(m);
-    expect(linesThroughBoxes(m)).toEqual([]);
-    expect(problems.labelOverLabel).toEqual([]);
-    expect(problems.labelOverNode).toEqual([]);
-    expect(problems.outside).toEqual([]);
-    expect(problems.labels, 'the chips were measured').toBeGreaterThanOrEqual(5);
+    await showUnclassified(page);
+    let chips = 0;
+    await eachFocus(page, (id, m) => {
+      const problems = problemsOf(m);
+      expect(linesThroughBoxes(m), `lines through a box with ${id} in focus`).toEqual([]);
+      expect(problems.labelOverLabel, `${id}`).toEqual([]);
+      expect(problems.labelOverNode, `${id}`).toEqual([]);
+      expect(problems.outside, `${id}`).toEqual([]);
+      chips += problems.labels;
+    });
+    expect(chips, 'the chips were measured').toBeGreaterThanOrEqual(5);
     const sizes = await page.evaluate(() => [...document.querySelectorAll('[data-count-of]')].map((g) => ({ name: g.getAttribute('aria-label'), text: getComputedStyle(g.querySelector('text') as Element).fontSize, height: g.getAttribute('data-chip-height') })));
     for (const chip of sizes) {
       expect(chip.name).toMatch(/^\d+ reactions?$/);
@@ -130,6 +139,7 @@ test.describe('the arrows of the arranged demo overview', () => {
 
   test('a hovered arrow is drawn by the overlay in the accent with its two families outlined; moving away clears it', async ({ page }) => {
     await openDemo(page);
+    await focusFamily(page, 'cls_haloalkanes');
     const edge = page.locator('[data-layer="edges"] [data-edge-id][data-from="cls_haloalkanes"][data-to="cls_alkenes"]');
     await expect(edge).toHaveCount(1);
     const at = await edge.locator('path:not([data-hit])').evaluate((path) => {
@@ -154,40 +164,32 @@ test.describe('the arrows of the arranged demo overview', () => {
     await expect(page.locator('[data-overlay="end"]')).toHaveCount(0);
   });
 
-  test('ADV-005: reactions from a family into itself are a loop with an arrowhead, named "N reactions that stay within <family>", with its count chip; the legend explains it', async ({ page }) => {
+  test('a family with reactions inside says "n within the family" and draws NO loop (ADR-044, D4); the legend says so', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
-    const loops = await page.locator('svg g[data-edge-id]').evaluateAll((groups) =>
-      groups
-        .filter((g) => g.getAttribute('data-from') === g.getAttribute('data-to'))
-        .map((g) => ({
-          id: g.getAttribute('data-edge-id') ?? '',
-          label: g.getAttribute('aria-label') ?? '',
-          arrowhead: g.querySelector('path')?.getAttribute('marker-end') ?? '',
-          chip: document.querySelector(`[data-count-of="${g.getAttribute('data-edge-id')}"]`)?.getAttribute('aria-label') ?? '',
-        })),
-    );
-    expect(loops.length, 'the demo overview has at least one family with reactions into itself').toBeGreaterThan(0);
-    for (const loop of loops) {
-      expect(loop.label).toMatch(/^\d+ reactions? that stays? within \S/);
-      expect(loop.arrowhead, `an arrowhead on the loop ${loop.id}`).toMatch(/^url\(#/);
-      // the count chip beside the loop carries the number (its own name is "N reactions"; the loop's name says where they stay)
-      expect(loop.chip, `a count chip on the loop ${loop.id}`).toMatch(/^\d+ reactions?$/);
-    }
-    // the legend explains the loop, in words
-    const marks = page.getByRole('list', { name: 'What the marks mean' });
-    await expect(marks).toContainText('reactions within the same family');
+    const captions = await page.locator('[data-caption-of]').evaluateAll((texts) => texts.map((t) => ({ of: t.getAttribute('data-caption-of') ?? '', text: t.textContent ?? '' })));
+    expect(captions.length, 'the demo overview has at least one family with reactions inside it').toBeGreaterThan(0);
+    for (const caption of captions) expect(caption.text, caption.of).toMatch(/^\d+ within the family$/);
+    // no loop is drawn, whichever family is in focus
+    await eachFocus(page, async (id) => {
+      const loops = await page.locator('svg g[data-edge-id]').evaluateAll((groups) => groups.filter((g) => g.getAttribute('data-from') === g.getAttribute('data-to')).length);
+      expect(loops, `a loop with ${id} in focus`).toBe(0);
+    });
+    await expect(page.getByRole('list', { name: 'What the marks mean' })).toContainText('n within the family');
     await expectClean(seen);
   });
 
-  test('the legend explains the chip, the loop and Unclassified in words; axe; zero CSP violations; screenshot', async ({ page }) => {
+  test('the legend explains the two line styles, the within-the-family line and Unclassified in words (and the chip once an arrow is drawn); axe; zero CSP violations; screenshot', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
     const marks = page.getByRole('list', { name: 'What the marks mean' });
-    await expect(marks.getByRole('listitem')).toHaveCount(3);
+    await expect(marks.getByRole('listitem')).toHaveCount(4);
+    await expect(marks).toContainText("solid line in the family's colour: what the family makes");
+    await expect(marks).toContainText('dashed dark line: what the family is made from');
+    await expect(marks).toContainText('n within the family');
+    await expect(marks).toContainText('lead to compounds that are in no family yet');
+    await focusFamily(page, 'cls_alcohols');
     await expect(marks).toContainText('number of reactions on this arrow');
-    await expect(marks).toContainText('reactions within the same family');
-    await expect(marks).toContainText('compounds not in any family yet');
     expect(await axeProblems(page)).toEqual([]);
     mkdirSync(SHOTS, { recursive: true });
     const path = resolve(SHOTS, 'overview-arrows-1280x800.png');

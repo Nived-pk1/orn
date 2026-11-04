@@ -6,7 +6,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection } from '@/core/graph';
+import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection, UNCLASSIFIED_HUB_ID } from '@/core/graph';
 import { indexEngine } from '@/core/indexes';
 import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/limits';
 import { documentToState } from '@/core/dataset';
@@ -20,13 +20,14 @@ const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
 
 /** What the projection of the demo (no expansion, no filter, the navigator's limits) says should be drawn. */
-function expectedCounts(): { nodes: number; paths: number } {
+function expectedCounts(): { nodes: number; paths: number; ends: readonly { from: string; to: string }[] } {
   const state = demoState();
   const projection = navigatorProjection.build(
     { state, indexes: indexEngine.build(state, 1), scopeOf: () => 'unmapped' },
     { view: 'navigator', focus: [], expansion: { expanded: [], collapsedEdgeIds: [] }, filters: { scopes: [], topicIds: [], reagentFamilies: [] }, limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES } },
   );
-  return { nodes: projection.nodes.length, paths: drawnPaths(projection).length };
+  const paths = drawnPaths(projection);
+  return { nodes: projection.nodes.length, paths: paths.length, ends: paths.map((p) => ({ from: p.from, to: p.to })) };
 }
 
 async function openNavigator(page: Page): Promise<void> {
@@ -54,13 +55,24 @@ const transformOf = async (page: Page): Promise<{ x: number; y: number; scale: n
   });
 
 test.describe('the demo navigator', () => {
-  test('shows its hubs and arrows; the counts equal the projection; nothing leaves the origin', async ({ page }) => {
+  test('shows its hubs; the quiet map draws no arrow, a focused family draws its own; the counts equal the projection; nothing leaves the origin', async ({ page }) => {
     const seen = await watch(page);
     await openNavigator(page);
     const expected = expectedCounts();
-    await expect(page.locator('svg [data-node-id]')).toHaveCount(expected.nodes);
-    await expect(page.locator('svg [data-edge-id]')).toHaveCount(expected.paths);
     expect(expected.nodes).toBe(16);
+    // step 8.2a: Unclassified is hidden unless shown, and nothing is focused, so no arrow is drawn
+    await expect(page.locator('svg [data-node-id]')).toHaveCount(expected.nodes - 1);
+    await expect(page.locator('svg [data-edge-id]')).toHaveCount(0);
+    await expect(page.getByText('Tap or click a family to see what it makes and what it is made from.')).toBeVisible();
+    // a focused family draws the arrows that leave it and enter it, as many as the projection has paths at it (no loop, none to Unclassified)
+    await hubGroup(page, 'cls_alcohols').click();
+    const own = expected.ends.filter((e) => e.from !== e.to && e.from !== UNCLASSIFIED_HUB_ID && e.to !== UNCLASSIFIED_HUB_ID && (e.from === 'cls_alcohols' || e.to === 'cls_alcohols')).length;
+    expect(own).toBeGreaterThan(0);
+    await expect(page.locator('svg [data-edge-id]')).toHaveCount(own);
+    await expect(page.getByText('Tap or click a family to see what it makes and what it is made from.')).toHaveCount(0);
+    // Show brings Unclassified in
+    await page.getByRole('button', { name: 'Show', exact: true }).click();
+    await expect(page.locator('svg [data-node-id]')).toHaveCount(expected.nodes);
     await expect(page.getByRole('toolbar', { name: 'Canvas tools' })).toBeVisible();
     await expectClean(seen);
   });
@@ -208,7 +220,7 @@ test.describe('selection and opening a family', () => {
     await expect(page.getByRole('button', { name: 'Expand' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Collapse' })).toHaveCount(0);
     const before = await nodeCount(page);
-    expect(before).toBe(16);
+    expect(before).toBe(15); // Unclassified is hidden unless shown (step 8.2a)
     await hubGroup(page, 'cls_aldehydes').dblclick();
     await expect(page.getByRole('region', { name: 'Family page: Aldehydes' })).toBeVisible();
     await page.getByRole('button', { name: 'Overview' }).click();
@@ -287,6 +299,9 @@ test.describe('ADV-012 part 1: a hub with 1,000 reactions', () => {
       expect(await page.locator('svg [data-edge-id]').count()).toBeLessThanOrEqual(800);
     };
     await checkBudget();
+    // step 8.2a: arrows are drawn for a focused family; the biggest pair is one of its arrows
+    await page.getByRole('button', { name: 'Fit' }).click();
+    await page.locator(`svg [data-node-id="${biggest.from}"]`).click({ force: true });
     await expect(page.locator(`svg [data-edge-id][aria-label*="${biggest.total} reactions"]`).first()).toBeAttached();
     await expect(page.getByRole('alert')).toHaveCount(0);
     await expectClean(seen);

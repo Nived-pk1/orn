@@ -121,15 +121,15 @@ describe('outside the scope: dimmed, marked in words, never hidden', () => {
     const state = { ...base, records: { ...base.records, exam_relevance: { ...base.records.exam_relevance, ...overrides } } } as unknown as CanonicalState;
     const app = fakeApp({ state });
     renderWithApp(app);
-    await screen.findByRole('group', { name: /^Navigator: 16 hubs/ });
-    expect(document.querySelectorAll('svg [data-node-id]')).toHaveLength(16);
+    await screen.findByRole('group', { name: /^Navigator: 15 hubs/ });
+    expect(document.querySelectorAll('svg [data-node-id]')).toHaveLength(15);
     const node = () => document.querySelector(`svg [data-node-id="${hub.id}"]`) as SVGElement;
     expect(node().getAttribute('aria-label')).not.toContain('outside');
 
     act(() => app.navigator.ui.exam.getState().setActive(MAIN));
     await waitFor(() => expect(node().getAttribute('aria-label'), [...hub.reactions].join(',')).toContain('outside JEE Main'));
     expect(node().getAttribute('class') ?? '').toMatch(/dimmed/);
-    expect(document.querySelectorAll('svg [data-node-id]')).toHaveLength(16); // nothing is hidden
+    expect(document.querySelectorAll('svg [data-node-id]')).toHaveLength(15); // nothing is hidden
     expect(node().querySelector('title')?.textContent).toContain('outside JEE Main'); // the words are in the box's text, too
     const legend = screen.getByRole('list', { name: 'What the marks mean' });
     expect(within(legend).getByText(/outside JEE Main: faded and marked in words/)).toBeTruthy();

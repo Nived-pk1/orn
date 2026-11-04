@@ -179,6 +179,52 @@
   stroke-width: 2;
 }
 
+/* The map's focus marks (step 8.2a, ADR-044). A "makes" arrow is solid in its family group's colour; a "made from" arrow keeps the ink and is dashed
+   (the dash is the Scene's own, so the two are never told apart by colour alone). A faded box stays a hit target. */
+.edge[data-tone='blue'] {
+  stroke: var(--color-tone-blue-ink);
+}
+
+.edge[data-tone='green'] {
+  stroke: var(--color-tone-green-ink);
+}
+
+.edge[data-tone='amber'] {
+  stroke: var(--color-tone-amber-ink);
+}
+
+.edge[data-tone='violet'] {
+  stroke: var(--color-tone-violet-ink);
+}
+
+.edge[data-tone='teal'] {
+  stroke: var(--color-tone-teal-ink);
+}
+
+.edge[data-tone='rose'] {
+  stroke: var(--color-tone-rose-ink);
+}
+
+.edge[data-tone='slate'] {
+  stroke: var(--color-tone-slate-ink);
+}
+
+.faded {
+  opacity: 0.35;
+}
+
+/* a map box fades in 150 ms, unless the visitor asked for less motion (then it changes at once) */
+@media (prefers-reduced-motion: no-preference) {
+  .mapNode {
+    transition: opacity 150ms ease-out;
+  }
+}
+
+.caption {
+  fill: var(--color-ink-2);
+  font-family: var(--font-sans);
+}
+
 .dimmed {
   opacity: 0.5;
 }

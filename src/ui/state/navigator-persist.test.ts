@@ -107,6 +107,7 @@ describe('createNavigatorUi', () => {
       explorer: { filter: { substanceIds: [], usedAs: 'any', fromFamilyIds: [], toFamilyIds: [], typeIds: [], namedReactionIds: [], reviewStatuses: [], text: '', onlyInScope: false }, view: 'cards', last: 'reactions' },
       precursors: { target: null, startFrom: [], maxSteps: 5, onlyListed: false, onlyInScope: false, searched: false },
       chapters: { chapterId: null, kinds: [], text: '', onlyInScope: false },
+      map: { chapterId: null, showUnclassified: false },
       reagents: { reagentId: null, families: [], text: '', onlyInScope: false },
       named: { id: null, text: '', onlyInScope: false },
       mechanisms: { id: null, text: '', onlyInScope: false },

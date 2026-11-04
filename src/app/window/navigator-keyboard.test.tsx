@@ -188,7 +188,8 @@ describe('the context menu (item g)', () => {
   });
 
   it('the menu key and a right click open the menu too; a right click on an arrow offers Open at this group', async () => {
-    const { svg } = await opened();
+    const { app, svg } = await opened();
+    act(() => app.navigator.ui.map.getState().setFocus('cls_alcohols')); // step 8.2a: arrows are drawn for a focused family only
     focusCanvas(svg);
     press(svg, 'ContextMenu');
     expect(await screen.findByRole('menu')).toBeTruthy();

@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { LodLevel, Scene } from '@/render/scene';
 import { SceneSvg } from '@/render/svg';
-import type { DepictionSource, LayerName, SceneHit, SceneSvgProps } from '@/render/svg';
+import type { DepictionSource, LayerName, MapMarks, SceneHit, SceneSvgProps } from '@/render/svg';
 import { VIEWPORT_SETTLE_MS, type Viewport } from './contracts';
 import { createViewportController } from './controller';
 import type { ViewportController } from './controller';
@@ -38,6 +38,9 @@ export interface ViewportSceneProps {
   readonly onSceneDoubleClick?: (hit: SceneHit | null) => void;
   /** The arrow under the pointer (see `SceneSvgProps.onSceneHover`). Keep it stable. */
   readonly onSceneHover?: (hit: SceneHit | null) => void;
+  /** The map's focus marks and the box under the pointer (step 8.2a; see `SceneSvgProps`). Keep them stable. */
+  readonly marks?: MapMarks;
+  readonly onNodeHover?: (id: string | null) => void;
   /**
    * The pointer state machine's outcomes (step 5.7): click, double click, confirmed click, context menu. When given, they replace
    * the delegated `onSceneClick` / `onSceneDoubleClick` (the machine decides what a press was). Read at the time of each event, so
@@ -209,6 +212,8 @@ export function ViewportScene(props: ViewportSceneProps) {
       {...(props.keyboard === undefined ? {} : { keyboard: props.keyboard })}
       {...(props.onSceneClick === undefined ? {} : { onSceneClick: props.onSceneClick })}
       {...(props.onSceneHover === undefined ? {} : { onSceneHover: props.onSceneHover })}
+      {...(props.marks === undefined ? {} : { marks: props.marks })}
+      {...(props.onNodeHover === undefined ? {} : { onNodeHover: props.onNodeHover })}
       {...(props.onSceneDoubleClick === undefined ? {} : { onSceneDoubleClick: props.onSceneDoubleClick })}
       {...(props.onLayerCommit === undefined ? {} : { onLayerCommit: props.onLayerCommit })}
     />

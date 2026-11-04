@@ -19,6 +19,7 @@ import type { LayoutAlgorithm, LayoutRequest, LayoutResult, Point } from '@/layo
 import { buildLayoutRequest, buildScene, labelSizes, nodeSizes } from '@/render/scene';
 import type { LabelSizes, NodeSizes, Scene } from '@/render/scene';
 import type { NavigatorError, NavigatorPorts } from './contracts';
+import { chapterFilters } from './chapter-filters';
 import { depictionBindingOf } from './depictions';
 import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from './limits';
 import { touchOf } from './reads';
@@ -105,7 +106,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
     view: 'navigator',
     focus: [],
     expansion: NO_EXPANSION,
-    filters: ports.ui.filters.getState().filters,
+    filters: chapterFilters(ports.ui.filters.getState().filters, ports.ui.map.getState().chapterId),
     limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES },
   });
 
@@ -234,7 +235,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
       if (running) return;
       running = true;
       // a change of the Structures setting rebuilds the scene (the nodes' depiction keys carry the mode); the layout is the same request, so it is reused
-      offs = [ports.store.subscribe(onChange), ports.ui.filters.subscribe(onRequest), ports.ui.exam.subscribe(onRequest), ...(ports.depictions?.onMode === undefined ? [] : [ports.depictions.onMode(schedule)])];
+      offs = [ports.store.subscribe(onChange), ports.ui.filters.subscribe(onRequest), ports.ui.map.subscribe((now, before) => (now.chapterId !== before.chapterId ? onRequest() : undefined)), ports.ui.exam.subscribe(onRequest), ...(ports.depictions?.onMode === undefined ? [] : [ports.depictions.onMode(schedule)])];
       dirtyProjection = true;
       if (state.scene === null) startSkeletonTimer();
       void ports.measurer.ready().then(() => {

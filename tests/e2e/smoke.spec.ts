@@ -15,8 +15,8 @@ test('the app boots and loads the demo; its counts are shown', async ({ page }) 
   await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
   await loadDemo(page);
   // step 5.5a: after the demo loads the navigator shows its hubs (Chromium, Firefox, WebKit)
-  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
-  await expect(page.locator('svg [data-node-id]')).toHaveCount(16);
+  await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
+  await expect(page.locator('svg [data-node-id]')).toHaveCount(15); // Unclassified is hidden unless shown (step 8.2a)
   await showDataset(page);
   expect(await recordCount(page, 'reaction')).toBe(27);
   expect(await recordCount(page, 'species')).toBe(66);
@@ -28,13 +28,13 @@ test('the family page of a demo family opens (step 5.5b): a double click on Alco
   const seen = await watch(page);
   await openApp(page);
   await loadDemo(page);
-  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+  await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
   await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
   await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 2, name: 'Reactions of Alcohols' })).toBeVisible();
   await expect(page.getByRole('article').first()).toBeVisible();
   await page.getByRole('button', { name: 'Overview' }).click();
-  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+  await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
   await expectClean(seen);
 });
 
@@ -111,7 +111,7 @@ test('Ctrl K finds "ethanol" (step 5.8): the palette opens and lists records', a
   const seen = await watch(page);
   await openApp(page);
   await loadDemo(page);
-  await expect(page.getByRole('group', { name: /^Navigator: 16 hubs, \d+ arrows$/ })).toBeVisible();
+  await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
   await page.keyboard.press('Control+K');
   const palette = page.getByRole('dialog', { name: 'Search' });
   await expect(palette).toBeVisible();

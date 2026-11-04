@@ -128,6 +128,9 @@ test.describe('touch on the overview map', () => {
     const seen = await watch(page);
     await openDemo(page);
     expect(await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches)).toBe(true);
+    // step 8.2a: arrows are drawn for a focused family only: tap one
+    await page.locator('svg [data-node-id="cls_aldehydes"]').tap();
+    await expect(page.locator('svg [data-edge-id]').first()).toBeAttached();
     const style = await page.evaluate(() => {
       const hit = document.querySelector('[data-edge-id] path[data-hit]') as SVGPathElement;
       const computed = getComputedStyle(hit);

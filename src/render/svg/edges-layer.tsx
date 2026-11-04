@@ -6,18 +6,18 @@
 import { memo } from 'react';
 import type { LodLevel, Scene, SceneEdge } from '@/render/scene';
 import type { DefIds } from './defs';
-import type { LayerName } from './contracts';
+import type { EdgeMark, LayerName, MapMarks } from './contracts';
 import { EDGE_HIT_WIDTH, pathData, STROKE_DASH, visibleAt, WEIGHT_WIDTH } from './geometry';
 import styles from './scene-svg.module.css';
 import { useCommitProbe } from './use-commit-probe';
 
-function EdgeGroup(props: { readonly edge: SceneEdge; readonly ids: DefIds }) {
-  const { edge, ids } = props;
+function EdgeGroup(props: { readonly edge: SceneEdge; readonly ids: DefIds; readonly mark?: EdgeMark | undefined }) {
+  const { edge, ids, mark } = props;
   const dash = STROKE_DASH[edge.stroke];
   const classes = [styles.edge, edge.weight === 'heavy' ? styles.edgeHeavy : undefined, edge.stroke === 'dotted' ? styles.edgeDotted : undefined].filter((name): name is string => name !== undefined).join(' ');
   const marker = edge.arrowHead === 'filled' ? `url(#${ids.filled})` : edge.arrowHead === 'open' ? `url(#${ids.open})` : undefined;
   return (
-    <g data-edge-id={edge.id} data-from={edge.from} data-to={edge.to} data-semantic={edge.semantic} data-stroke={edge.stroke} data-weight={edge.weight} role="graphics-symbol" aria-label={edge.ariaLabel}>
+    <g data-edge-id={edge.id} data-from={edge.from} data-to={edge.to} data-semantic={edge.semantic} data-stroke={edge.stroke} data-weight={edge.weight} {...(mark === undefined ? {} : { 'data-role': mark.role })} role="graphics-symbol" aria-label={edge.ariaLabel}>
       <title>{edge.ariaLabel}</title>
       <path
         className={classes}
@@ -25,18 +25,20 @@ function EdgeGroup(props: { readonly edge: SceneEdge; readonly ids: DefIds }) {
         strokeWidth={WEIGHT_WIDTH[edge.weight]}
         {...(dash === undefined ? {} : { strokeDasharray: dash })}
         {...(marker === undefined ? {} : { markerEnd: marker })}
+        {...(mark?.startHead === true ? { markerStart: `url(#${ids.start})` } : {})}
+        {...(mark?.tone === undefined ? {} : { 'data-tone': mark.tone })}
       />
       <path className={styles.edgeHit} d={pathData(edge.points)} strokeWidth={EDGE_HIT_WIDTH} data-hit="true" aria-hidden="true" />
     </g>
   );
 }
 
-export const EdgesLayer = memo(function EdgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly ids: DefIds; readonly onCommit?: (layer: LayerName) => void }) {
+export const EdgesLayer = memo(function EdgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('edges', props.onCommit);
   return (
     <g data-layer="edges">
       {props.scene.edges.filter((edge) => visibleAt(edge, props.lod)).map((edge) => (
-        <EdgeGroup key={edge.id} edge={edge} ids={props.ids} />
+        <EdgeGroup key={edge.id} edge={edge} ids={props.ids} mark={props.marks?.edges.get(edge.id)} />
       ))}
     </g>
   );
