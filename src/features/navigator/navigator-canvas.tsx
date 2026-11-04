@@ -37,6 +37,7 @@ import { boxesRect } from './map-geometry';
 import { createPairFacts } from './pair-facts';
 import { useMapView } from './use-map-view';
 import styles from './navigator.module.css';
+import controls from './map-controls.module.css';
 
 // Studio only (the legend's link): a lazy chunk, never loaded in Study (nothing there mounts it)
 const UnclassifiedDialog = /* @__PURE__ */ lazy(() => import('./unclassified-dialog').then((m) => ({ default: m.UnclassifiedDialog })));
@@ -250,7 +251,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         <div className={styles.phoneBar}>
           <ChapterSelect chapters={chapters} value={map.chapterId} onChange={setChapter} phone />
           <FindFamily families={familyList} onChoose={findFamily} phone />
-          <button type="button" className={styles.phoneButton} aria-pressed={map.chainOpen} onClick={toggleChain}>
+          <button type="button" className={controls.phoneButton} aria-pressed={map.chainOpen} onClick={toggleChain}>
             From A to B
           </button>
         </div>

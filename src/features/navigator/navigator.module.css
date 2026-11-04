@@ -154,39 +154,6 @@
   min-height: 0;
 }
 
-.findBox {
-  min-height: 32px;
-  width: 11rem;
-  font: inherit;
-  color: var(--color-ink);
-  background: var(--color-paper);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  padding: 0 var(--space-2);
-}
-
-.findBox[data-phone] {
-  min-height: 44px;
-  flex: 1 1 0;
-  min-width: 0;
-  width: 0;
-  box-sizing: border-box;
-}
-
-.phoneButton {
-  min-height: 44px;
-  padding: 0 var(--space-3);
-  font: inherit;
-  color: var(--color-ink);
-  background: var(--color-paper);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
-}
-
-.phoneButton[aria-pressed='true'] {
-  border-color: var(--color-ink);
-}
-
 .message {
   margin: 0;
   padding: var(--space-4);

@@ -5,7 +5,7 @@
  */
 import { useId, useState, type KeyboardEvent } from 'react';
 import { matchFamilies, type NamedFamily } from './find-family-match';
-import styles from './navigator.module.css';
+import styles from './map-controls.module.css';
 
 export function FindFamily(props: { readonly families: readonly NamedFamily[]; readonly onChoose: (id: string) => void; readonly phone?: boolean }) {
   const [text, setText] = useState('');
