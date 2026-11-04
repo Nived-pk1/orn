@@ -285,6 +285,9 @@
 }
 
 .chapterPhone {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
   padding: var(--space-1) var(--space-3);
 }
 
@@ -300,8 +303,10 @@
 
 .chapterSelect[data-phone] {
   min-height: 44px;
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
+  width: 0; /* WebKit sizes a select by its longest option: the row, not the option, sets the width */
+  box-sizing: border-box;
 }
 
 .legendButton {

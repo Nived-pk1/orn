@@ -98,13 +98,15 @@ test.describe('the map on a desktop', () => {
     await select.selectOption({ label: 'Chapter 2' });
     await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
     await page.waitForTimeout(900);
+    await expectClean(seen); // a reload loses the watcher's count of the styles the inspector injects (see exam-scope.spec.ts): a new watcher after it
     await page.reload();
+    const afterReload = await watch(page);
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible({ timeout: 90_000 });
     await expect(page.getByRole('combobox', { name: 'Chapter' })).toHaveValue('top_chapter-2');
     await page.getByRole('combobox', { name: 'Chapter' }).selectOption({ label: 'All chapters' });
     await expect(edges(page)).toHaveCount(0);
     await expect(page.getByText(QUIET)).toBeVisible();
-    await expectClean(seen);
+    await expectClean(afterReload);
   });
 
   test('Unclassified is hidden and counted in the legend; Show brings it in; Studio lists those compounds and a row opens in the inspector', async ({ page }) => {
@@ -123,16 +125,23 @@ test.describe('the map on a desktop', () => {
     await expect(rows.first()).toContainText('Orphan compound');
     await page.screenshot({ path: `${shotsDir()}/map-studio-unclassified-list-1280x800.png` });
     expect(await axeProblems(page, 10)).toEqual([]);
-    await rows.first().getByRole('button').click();
+    // the list is closed first (Esc), so the map shows whole in the screenshot
+    await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole('article', { name: 'Record' }).first()).toContainText('Orphan compound');
     // Show / Hide
     await marks.getByRole('button', { name: 'Show', exact: true }).click();
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(1);
     await expect(marks).toContainText('Unclassified: compounds not in any family yet');
+    await page.getByRole('button', { name: 'Fit' }).click(); // the inspector pane took width: fit the whole drawing so the Unclassified box is on the screen
+    await page.waitForTimeout(600);
     await page.screenshot({ path: `${shotsDir()}/map-after-unclassified-shown-1280x800.png` });
     await marks.getByRole('button', { name: 'Hide', exact: true }).click();
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(0);
+    // a row of the list opens that record in the inspector
+    await page.getByRole('button', { name: 'See those compounds' }).click();
+    await rows.first().getByRole('button').click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole('article', { name: 'Record' }).first()).toContainText('Orphan compound');
     await expectClean(seen);
   });
 });
