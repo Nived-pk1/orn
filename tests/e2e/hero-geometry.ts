@@ -41,6 +41,8 @@ export async function heroGeometry(page: Page): Promise<HeroGeometry> {
 export async function expectHeroNeverWraps(page: Page, where: string): Promise<HeroGeometry> {
   // the hero is measured after it is shown (a sheet that has just been dragged open): wait until it has its terms
   await expect.poll(async () => (await heroGeometry(page)).terms, { message: `the hero equation at ${where} is drawn`, timeout: 15_000 }).toBeGreaterThan(0);
+  // the scale is applied a frame or two after the images arrive: it must settle, and then it must be right
+  await expect.poll(async () => (await heroGeometry(page)).problems, { message: `the hero equation at ${where} settles without a wrap or an overflow`, timeout: 10_000 }).toEqual([]);
   const geometry = await heroGeometry(page);
   expect(geometry.problems, `the hero equation at ${where} (${geometry.mode}, ${geometry.terms} terms)`).toEqual([]);
   expect(geometry.terms, `the hero equation at ${where} has its terms`).toBeGreaterThan(0);

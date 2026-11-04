@@ -49,7 +49,7 @@ export function StudyInspector(props: StudyInspectorProps) {
         </div>
         {props.headerExtras}
       </header>
-      {props.authorLines}
+      {props.authorLines === null ? null : <div data-sheet-full="">{props.authorLines}</div>}
       <StudyHero hero={model.hero} />
       {props.refOf.kind === 'reaction' ? (
         <div data-sheet-full="">

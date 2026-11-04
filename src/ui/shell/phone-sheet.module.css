@@ -78,7 +78,7 @@
 
 /* at peek the sheet is as high as its content: a smaller bottom margin leaves the page more room */
 .sheet[data-sheet='peek'] .body {
-  padding-bottom: var(--space-2);
+  padding-bottom: 0;
 }
 
 /* at peek the part marked data-sheet-full is not shown; the main actions are large buttons */
@@ -117,13 +117,23 @@
   }
 }
 
-/* the compact hero of a record is for the peek only; the full hero is for the full sheet and the desktop pane (step 8.1 review decision 1) */
+/*
+ * The compact hero of a record is for the peek only; the full hero is for the full sheet and the desktop pane (step 8.1 review decision 1).
+ * The one not shown is kept laid out at full width (visibility hidden, no height), NOT display none: a hero that is measured while it has no
+ * box would be scaled wrongly when it is shown.
+ */
 [data-sheet-peek-only] {
-  display: none;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
 }
 .sheet[data-sheet='peek'] [data-sheet-peek-only] {
-  display: block;
+  visibility: visible;
+  height: auto;
+  overflow: visible;
 }
 .sheet[data-sheet='peek'] [data-hero-main] {
-  display: none;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
 }

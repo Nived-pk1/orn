@@ -34,6 +34,8 @@ export function HeroEquation(props: { readonly record: Reaction; readonly compac
   const natural = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState<HeroFit>({ mode: 'row', scale: 1 });
   const [height, setHeight] = useState(0);
+  const drawingSeen = useRef(0);
+  const changes = useRef<number[]>([]);
   const compact = props.compact === true;
   const reactants = first?.reactants.length ?? 0;
   const products = first?.products.length ?? 0;
@@ -46,24 +48,53 @@ export function HeroEquation(props: { readonly record: Reaction; readonly compac
       if (outer === null || row === null || row.offsetWidth === 0) return; // hidden (the other sheet height): measured again when it is shown
       const scaleNow = row.getBoundingClientRect().height / (row.offsetHeight || 1) || 1;
       const drawings = [...row.querySelectorAll('img')].map((img) => img.getBoundingClientRect().height / scaleNow);
-      const next = fitHero({ available: outer.clientWidth, width: row.offsetWidth, height: row.offsetHeight, drawingHeight: Math.max(0, ...drawings) }, compact ? { peek: true, reactants, products } : undefined);
+      // the tallest drawing ever seen counts: a copy whose drawings have not arrived yet must not read as "formulas only" and flip the mode back
+      drawingSeen.current = Math.max(drawingSeen.current, ...drawings);
+      const next = fitHero({ available: outer.clientWidth, width: row.offsetWidth, height: row.offsetHeight, drawingHeight: drawingSeen.current }, compact ? { peek: true, reactants, products } : undefined);
       setHeight(row.offsetHeight);
-      setFit((before) => (before.mode === next.mode && (before.mode !== 'row' || (next.mode === 'row' && Math.abs(before.scale - next.scale) < 0.005)) ? before : next));
+      setFit((before) => {
+        if (before.mode === next.mode && (before.mode !== 'row' || (next.mode === 'row' && Math.abs(before.scale - next.scale) < 0.005))) return before;
+        // a runaway guard: more than 6 changes (mode or scale) in half a second means two measurements
+        // disagree, so keep what is shown for now and measure once more later (never an update loop, never a stale scale)
+        const now = performance.now();
+        changes.current = [...changes.current.filter((t) => now - t < 500), now];
+        if (changes.current.length > 6) {
+          retry = window.setTimeout(measure, 600);
+          return before;
+        }
+        return next;
+      });
     };
-    measure();
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(measure);
+    // a drawing that arrives or a web font that swaps in changes the natural width after the first measurement: measure again then, and once
+    // more on the next frame, so the scale never goes stale (a stale scale clips the products)
+    const again = (): void => {
+      measure();
+      frame = requestAnimationFrame(measure);
+    };
+    let frame = 0;
+    let retry = 0;
+    const node = natural.current;
+    again();
+    node?.addEventListener('load', again, true);
+    void document.fonts?.ready.then(again);
+    if (typeof ResizeObserver === 'undefined') return () => { node?.removeEventListener('load', again, true); cancelAnimationFrame(frame); };
+    const observer = new ResizeObserver(again);
     if (box.current !== null) observer.observe(box.current);
     if (natural.current !== null) observer.observe(natural.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      node?.removeEventListener('load', again, true);
+      cancelAnimationFrame(frame);
+      window.clearTimeout(retry);
+    };
   }, [compact, reactants, products, first, mode]);
   if (first === undefined) return null;
-  const scheme = (layout: 'row' | 'stacked') => <EquationScheme equation={first} binding={binding} timers={ports.timers} facts={ports.facts} names={names} label="Equation of this reaction" layout={layout} nowrap={layout === 'row'} />;
+  const scheme = (layout: 'row' | 'stacked') => <EquationScheme equation={first} binding={binding} timers={ports.timers} facts={ports.facts} names={compact ? false : names} label="Equation of this reaction" layout={layout} nowrap={layout === 'row'} />; // the peek has no room for the name lines
   const scale = fit.mode === 'row' ? fit.scale : 1;
   return (
-    <div ref={box} data-hero-equation="" data-fit={fit.mode} {...(compact ? { 'data-compact': '' } : {})} style={{ width: '100%', minWidth: 0, position: 'relative', overflow: 'hidden' }}>
+    <div ref={box} data-hero-equation="" data-fit={fit.mode} {...(compact ? { 'data-compact': '' } : {})} style={{ width: '100%', minWidth: 0, position: 'relative', contain: 'paint' }}>
       {fit.mode === 'row' ? (
-        <div style={{ height: height * scale, overflow: 'hidden' }}>
+        <div style={{ height: height * scale, contain: 'paint' }}>
           <div ref={natural} style={{ width: 'max-content', transform: scale < 1 ? `scale(${scale})` : undefined, transformOrigin: '0 0' }}>
             {scheme('row')}
           </div>

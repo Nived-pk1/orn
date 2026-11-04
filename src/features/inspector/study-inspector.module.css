@@ -55,3 +55,8 @@
 [data-sheet='peek'] .hero img { max-height: 96px; width: auto; max-width: 100%; object-fit: contain; }
 [data-sheet='peek'] .formula { font-size: var(--text-16); }
 [data-sheet='peek'] .head { flex-wrap: nowrap; }
+/* the peek is about as high as it ever was (the PCC card still fits above it on a Pixel 7): chip and title on one line, tight gaps, one-line title */
+[data-sheet='peek'] .headText { flex-direction: row; align-items: center; gap: var(--space-2); flex-basis: 0; }
+[data-sheet='peek'] .titleText { font-size: var(--text-18, var(--text-16)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+[data-sheet='peek'] [aria-label='Record'] { gap: 2px; }
+[data-sheet='peek'] .hero { padding: 0; }
