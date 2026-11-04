@@ -124,7 +124,8 @@
     "7.2b",
     "7.2",
     "8.1",
-    "8.2a"
+    "8.2a",
+    "8.2b"
   ],
   "nextPhase": 8,
   "outcomeGroupsStep": {
@@ -153,8 +154,8 @@
     "commit": "794a0be",
     "protectedCheckedAt": "2026-11-04"
   },
-  "nextStep": "8.2b",
-  "nextStepTitle": "Map clean-up, part 2: \"Get from A to B\" family chains, reagent words on single-reaction arrows, group bands, a \"Find a family\" box; the full 3-engine e2e run (docs/IMPLEMENTATION_PLAN.md row 8.2)",
+  "nextStep": "8.3",
+  "nextStepTitle": "Study is a student app: hide author/developer chrome on the public site; rename desktop \"Navigator\" to \"Map\"; the Study review mark (docs/IMPLEMENTATION_PLAN.md row 8.3). BEFORE it: the reviewer approves the 8.2b deploy (not deployed: the full e2e run had product failures, fixed and re-run green)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
