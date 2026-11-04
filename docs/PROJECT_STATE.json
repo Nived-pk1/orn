@@ -123,7 +123,8 @@
     "7.2a",
     "7.2b",
     "7.2",
-    "8.1"
+    "8.1",
+    "8.2a"
   ],
   "nextPhase": 8,
   "outcomeGroupsStep": {
@@ -137,23 +138,23 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-04",
-    "commit": "b228d7b",
-    "version": "23a228ca-c8a7-42e5-9a13-4ce7940c6500",
-    "liveSpecs": "2026-11-04, Chromium: 60 passed, 11 skipped; WebKit: 56 passed, 15 skipped; reagent-explorer live in WebKit 5 of 5 passed (RR1 closed). An earlier 8.1 deploy (13fa40ed) failed two phone-inspector specs on a slow network and was replaced."
+    "commit": "794a0be",
+    "version": "7e6e5fce-774c-4ee4-85fa-18ad5e110766",
+    "liveSpecs": "2026-11-04 (8.2a), Chromium: 46 passed, 9 skipped; WebKit: 45 passed, 10 skipped; reagent-explorer once per engine."
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-04",
-    "version": "aaddb92c-899b-47f9-8c12-f89ddb2fe3b9",
+    "version": "0c09b069-04b5-4d08-a7f1-55c8b3bb3e7c",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.1 deploy, 2026-11-04: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
-    "commit": "cd7cc53",
-    "protectedCheckedAt": "2026-11-01"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.2a deploy, 2026-11-04: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
+    "commit": "794a0be",
+    "protectedCheckedAt": "2026-11-04"
   },
-  "nextStep": "8.2",
-  "nextStepTitle": "Study is a student app: hide author and developer chrome on the public site, rename desktop \"Navigator\" to \"Map\" (docs/IMPLEMENTATION_PLAN.md row 8.2)",
+  "nextStep": "8.2b",
+  "nextStepTitle": "Map clean-up, part 2: \"Get from A to B\" family chains, reagent words on single-reaction arrows, group bands, a \"Find a family\" box; the full 3-engine e2e run (docs/IMPLEMENTATION_PLAN.md row 8.2)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -286,7 +287,7 @@
     "exportEndToEnd": "step 5.9b, Chromium against the production build: P-02 in a real browser (the demo exported, imported into a fresh context through the import screen, exported again: SHA-256 equal), INV-19 (two exports of the same state identical), a package with a 1x1 PNG re-imports and exports again with its image byte for byte, Cancel gives no download, axe, zero policy violations; the three-engine smoke gains \"an export downloads a file\". Full run: 116 passed, 1 skipped (the 5.1d fixme), 0 failed (Chromium 102, Firefox 7, WebKit 7)"
   },
   "openItems": [
-    "-> Phase 9 (watch): Tests close to their timeouts under load: review-grouping phone 3.3 s of 5 s; first lazy-view test in four window files ~0.9 s of 1 s.",
+    "-> Phase 9 (watch): Tests close to their timeouts under load: review-grouping phone 3.3 s of 5 s; first lazy-view test in four window files ~0.9 s of 1 s. 8.2a (reviewer, 2026-11-04): the three load-marginal tests are review-grouping, phone-precursors-window and reactions-window; run npm run check at default workers and only if those alone fail, ORN_TEST_WORKERS=2 npm run check (fully green), reporting both. 8.2a: default workers were green (693 files, 7,948 tests).",
     "-> Phase 9 (performance hardening): 'navigator overview, every hub expanded' (dense) sits at the 16 ms budget (16.11 at 6.9).",
     "-> Phase 7 (reagent explorer): show a reagent profile's conditions BESIDE a reaction that uses the profile, never merged into the stage's arrow text (6.6a review V1). -> 7.3 (2026-10-24).",
     "-> later (schema v3 candidate): pictures on a single mechanism step need a schema change (asset attachment to a step): a RecordRef cannot name a step; 6.5b builds mechanism pictures only (ADR-038 addendum).",
@@ -494,7 +495,11 @@
     "-> Phase 8 (7.7 DoD audit G8): the inspector buttons \"Show in Reagents\" and \"Show in Named reactions\" have no e2e (unit tests only).",
     "-> Phase 9 (watch, 7.7): on the LIVE Study site WebKit sometimes logs \"wasm streaming compile failed: Load failed\" (a network error on the chem worker wasm); seen in reagent-explorer.spec, 2 of 3 re-runs before and 1 of 5 after the spec waits for \"chem ok\" before its reload. Not seen on the local Studio build in the full run. If it shows up in another spec, find the cause (aborted fetch, or the live site).",
     "-> Phase 9 (watch, 7.7): full-equation-group did NOT time out in Firefox in the 7.7 full run (it did in the 7.3c, 7.4 and 7.6 runs); the older watch item stays open until it has stayed away for another run.",
-    "7.7 (REVIEW REQUIRED, reviewer to confirm): a chapter is covered only when the ONE coverage rule says so for the chapter topic itself; a chapter whose coverage is listed only on a section no longer gets a chip or an \"Only <exam>\" place (the demo lists chapters only)."
+    "7.7 (REVIEW REQUIRED, reviewer to confirm): a chapter is covered only when the ONE coverage rule says so for the chapter topic itself; a chapter whose coverage is listed only on a section no longer gets a chip or an \"Only <exam>\" place (the demo lists chapters only).",
+    "-> Phase 8.3 (user decision, 2026-11-04): in Study a record that is genuinely not reviewed shows a small quiet mark (small grey text or a dot with the accessible label \"Not yet reviewed\"), never the purple pill; normally students see none because the user publishes only reviewed chemistry; Studio keeps today's pill. Not built.",
+    "-> 8.2b: Firefox and WebKit FULL e2e runs are owed (8.2a ran the affected specs in all three engines and one full Chromium run).",
+    "NEW (8.2a, REVIEW REQUIRED): initial JS Study 383.05 kB and Studio 386.97 kB miss the 8.2a targets (380.5 / 384.3); the 395 kB line holds. Accept or split lazily in 8.2b.",
+    "-> Phase 8.4: the NOTICE toast covers the bottom of the inspector on desktop; the chapter map (about 40 arrows) is still busy; the phone map opens cut at the right edge."
   ],
   "phoneMode": {
     "status": "closed 2026-10-16: parts 0-4, B and C done and deployed",
