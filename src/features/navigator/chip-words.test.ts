@@ -49,6 +49,13 @@ describe('resolveChips: words unless they would overlap another chip', () => {
   });
 });
 
+describe('resolveChips: words never cover a box', () => {
+  it('a words chip that would overlap a box keeps its number', () => {
+    const out = resolveChips([{ key: 'a', at: { x: 0, y: 0 }, count: 1, words: 'PCC' }], [{ x: 14, y: -10, width: 100, height: 20 }]);
+    expect(out.get('a')?.text).toBe('1');
+  });
+});
+
 describe('resolveChips in a chain: numbered chips', () => {
   it('a step shows "2" or "2: PCC", and the name says the step', () => {
     const out = resolveChips([

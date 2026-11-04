@@ -103,9 +103,12 @@ describe('the map with a focus', () => {
     // no arrow is drawn on the quiet map, so the rows about arrows are not there (step 8.2b, B3); a focus draws arrows and they come
     expect(screen.queryByText(/solid line in the family's colour/)).toBeNull();
     act(() => rig.ui.map.getState().setFocus('cls_family-01'));
+    // the arrow rows sit in the map's line row, not in the legend, so the legend does not change height (a double click's second press must hit the family)
+    const key = screen.getByRole('list', { name: 'What the arrows mean' });
+    expect(within(key).getByText(/solid line in the family's colour: what the family makes/)).toBeTruthy();
+    expect(within(key).getByText(/dashed dark line: what the family is made from/)).toBeTruthy();
     const legend = screen.getByRole('list', { name: 'What the marks mean' });
-    expect(within(legend).getByText(/solid line in the family's colour: what the family makes/)).toBeTruthy();
-    expect(within(legend).getByText(/dashed dark line: what the family is made from/)).toBeTruthy();
+    expect(legend.textContent).not.toMatch(/solid line/);
     expect(legend.textContent).toMatch(/\d+ reactions lead to compounds that are in no family yet/);
     expect(drawing.querySelector('[data-box="unclassified"]')).toBeNull();
     fireEvent.click(within(legend).getByRole('button', { name: 'Show' }));

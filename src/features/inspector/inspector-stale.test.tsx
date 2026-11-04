@@ -32,7 +32,7 @@ function rig() {
   };
   const host: InspectorHost = { openPane: () => undefined, edgeEnds: () => undefined, navigatorShown: true };
   render(<Inspector ports={ports} host={host} />);
-  return { selection };
+  return { selection, panels: ports.ui.panels };
 }
 
 describe('Inspector: no stale record (B4)', () => {
@@ -51,6 +51,7 @@ describe('Inspector: no stale record (B4)', () => {
     const r = rig();
     act(() => r.selection.getState().select({ kind: 'node', id: 'cls_alcohols' }));
     act(() => r.selection.getState().select(null));
+    act(() => r.panels.getState().setInspectorOpen(true));
     expect(screen.getByLabelText('Inspector empty state')).toBeTruthy();
   });
 });

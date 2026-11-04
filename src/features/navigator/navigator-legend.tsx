@@ -58,6 +58,43 @@ function OutsideSample() {
   );
 }
 
+/**
+ * The rows about arrows (step 8.2b, B3). On a wide screen they sit in the map's line row (which keeps its height), NOT in the legend: a legend that
+ * grew when a family was focused would move the map under the pointer and a double click's second press would miss the family.
+ */
+export function ArrowKey(props: { readonly keys: LegendKey }) {
+  const { keys } = props;
+  if (!keys.lines && !keys.chip && !keys.pair) return null;
+  return (
+    <ul className={styles.arrowKey} aria-label="What the arrows mean">
+      {!keys.lines ? null : (
+        <>
+          <li className={styles.legendItem} data-key="makes">
+            <LineSample dashed={false} />
+            solid line in the family's colour: what the family makes
+          </li>
+          <li className={styles.legendItem} data-key="madeFrom">
+            <LineSample dashed />
+            dashed dark line: what the family is made from
+          </li>
+        </>
+      )}
+      {!keys.chip ? null : (
+        <li className={styles.legendItem} data-key="chip">
+          <ChipSample />
+          number of reactions on this arrow
+        </li>
+      )}
+      {!keys.pair ? null : (
+        <li className={styles.legendItem} data-key="pair">
+          <LineSample dashed={false} both />
+          one line with a head at each end: reactions both ways, a number near each head
+        </li>
+      )}
+    </ul>
+  );
+}
+
 export function NavigatorLegend(props: {
   readonly items: readonly LegendItem[];
   readonly keys?: LegendKey;

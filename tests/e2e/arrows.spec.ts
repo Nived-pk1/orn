@@ -131,7 +131,8 @@ test.describe('the arrows of the arranged demo overview', () => {
     expect(chips, 'the chips were measured').toBeGreaterThanOrEqual(5);
     const sizes = await page.evaluate(() => [...document.querySelectorAll('[data-count-of]')].map((g) => ({ name: g.getAttribute('aria-label'), text: getComputedStyle(g.querySelector('text') as Element).fontSize, height: g.getAttribute('data-chip-height') })));
     for (const chip of sizes) {
-      expect(chip.name).toMatch(/^\d+ reactions?$/);
+      // a chip says its number, or (step 8.2b) the reagent words of a one-card arrow
+      expect(chip.name).toMatch(/^(\d+ reactions?|[^\s].*)$/);
       expect(chip.text).toBe('12px');
       expect(chip.height).toBe('20');
     }
@@ -182,14 +183,22 @@ test.describe('the arrows of the arranged demo overview', () => {
   test('the legend explains the two line styles, the within-the-family line and Unclassified in words (and the chip once an arrow is drawn); axe; zero CSP violations; screenshot', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
+    // step 8.2b (B3): the legend holds the within-the-family line and Unclassified; the rows about arrows come, in the line row below it, once an arrow is drawn
     const marks = page.getByRole('list', { name: 'What the marks mean' });
-    await expect(marks.getByRole('listitem')).toHaveCount(5);
-    await expect(marks).toContainText("solid line in the family's colour: what the family makes");
-    await expect(marks).toContainText('dashed dark line: what the family is made from');
+    await expect(marks.getByRole('listitem')).toHaveCount(2);
     await expect(marks).toContainText('n within the family');
     await expect(marks).toContainText('lead to compounds that are in no family yet');
-    await expect(marks).toContainText('number of reactions on this arrow');
+    await expect(page.getByRole('list', { name: 'What the arrows mean' })).toHaveCount(0);
+    const legendTop = (await marks.boundingBox())?.y ?? 0;
+    const mapTop = (await page.getByRole('group', { name: /^Navigator:/ }).boundingBox())?.y ?? 0;
     await focusFamily(page, 'cls_alcohols');
+    const key = page.getByRole('list', { name: 'What the arrows mean' });
+    await expect(key).toContainText("solid line in the family's colour: what the family makes");
+    await expect(key).toContainText('dashed dark line: what the family is made from');
+    await expect(key).toContainText('number of reactions on this arrow');
+    // (the selection line above may wrap differently, so the legend itself can move; what matters is the height between the legend and the map)
+    const gap = ((await page.getByRole('group', { name: /^Navigator:/ }).boundingBox())?.y ?? 0) - ((await marks.boundingBox())?.y ?? 0);
+    expect(Math.abs(gap - (mapTop - legendTop)), 'the legend did not grow when the arrows were drawn (under 1 px)').toBeLessThan(1);
     expect(await axeProblems(page)).toEqual([]);
     mkdirSync(SHOTS, { recursive: true });
     const path = resolve(SHOTS, 'overview-arrows-1280x800.png');

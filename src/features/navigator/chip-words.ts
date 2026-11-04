@@ -53,8 +53,9 @@ interface Box {
 const boxAt = (at: { readonly x: number; readonly y: number }, width: number): Box => ({ x0: at.x - width / 2, x1: at.x + width / 2, y0: at.y - CHIP_HEIGHT / 2, y1: at.y + CHIP_HEIGHT / 2 });
 const overlap = (a: Box, b: Box): boolean => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 
-/** The chip each wish gets: its words where they fit among the other chips (as they are now), else its number, else none. Decided in key order. */
-export function resolveChips(wishes: readonly ChipWish[]): Map<string, ChipText> {
+/** The chip each wish gets: its words where they fit among the other chips (as they are now) and clear of every box, else its number, else none. Decided in key order. */
+export function resolveChips(wishes: readonly ChipWish[], obstacles: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[] = []): Map<string, ChipText> {
+  const boxesOfNodes: Box[] = obstacles.map((n) => ({ x0: n.x, x1: n.x + n.width, y0: n.y, y1: n.y + n.height }));
   const ordered = [...wishes].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
   const out = new Map<string, ChipText>();
   const boxes = new Map<string, Box>();
@@ -71,6 +72,7 @@ export function resolveChips(wishes: readonly ChipWish[]): Map<string, ChipText>
     const box = boxAt(wish.at, widthOf(chip));
     let clear = true;
     for (const [key, other] of boxes) if (key !== wish.key && overlap(box, other)) clear = false;
+    for (const node of boxesOfNodes) if (overlap(box, node)) clear = false;
     if (!clear) continue;
     out.set(wish.key, chip);
     boxes.set(wish.key, box);

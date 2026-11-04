@@ -103,10 +103,14 @@ describe('the inspector shows only the current selection (step 8.2b, B4)', () =>
     act(() => r.selection.getState().select({ kind: 'edge', id: 'edge-without-ends' }));
     expect(r.ports.ui.inspector.getState().history).toEqual([]);
   });
-  it('nothing selected after a selection: the inspector is empty', () => {
+  it('opening the pane with nothing selected, after a selection, shows the empty state; a deselect alone leaves the open record', () => {
     const r = rig();
     act(() => r.selection.getState().select({ kind: 'node', id: 'cls_alcohols' }));
+    act(() => r.ports.ui.panels.getState().setInspectorOpen(true));
     act(() => r.selection.getState().select(null));
+    expect(r.ports.ui.inspector.getState().history).toHaveLength(1);
+    act(() => r.ports.ui.panels.getState().setInspectorOpen(false));
+    act(() => r.ports.ui.panels.getState().setInspectorOpen(true));
     expect(r.ports.ui.inspector.getState().history).toEqual([]);
     expect(r.ports.ui.inspector.getState().virtual).toBeNull();
   });

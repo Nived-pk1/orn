@@ -127,7 +127,7 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
   const drawn = chain !== undefined ? base.map(asChain) : focus !== null ? separatePairs(base) : options.chapter ? mergePairs(base, nodes) : base;
   // a busy chapter draws nothing until a family is chosen (its families stay at full strength); the selected arrow stays
   const busy = chain === undefined && focus === null && options.chapter && drawn.length > BUSY_CHAPTER_ARROWS ? drawn.length : 0;
-  const shown = withChips(busy > 0 ? drawn.filter((d) => d.edge.id === options.selectedEdgeId) : drawn, options.facts, chain !== undefined);
+  const shown = withChips(busy > 0 ? drawn.filter((d) => d.edge.id === options.selectedEdgeId) : drawn, options.facts, chain !== undefined, visibleNodes);
 
   const ends = new Set<string>();
   for (const d of drawn) {

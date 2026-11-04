@@ -277,6 +277,28 @@
 }
 
 /* The map's quiet line, the chapter select and the legend's Show / Hide buttons (step 8.2a). */
+/* The line row has one height whatever it shows (the quiet line, the busy line or the key of the drawn arrows): both children share one cell. */
+.lineRow {
+  display: grid;
+  min-height: 3.25rem;
+  align-content: start;
+}
+
+.lineRow > * {
+  grid-area: 1 / 1;
+}
+
+.arrowKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-6);
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  list-style: none;
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
 .quiet {
   margin: 0;
   padding: var(--space-1) var(--space-3);

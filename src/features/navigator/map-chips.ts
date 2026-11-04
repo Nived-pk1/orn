@@ -22,7 +22,7 @@ type Facts = ((from: string, to: string) => PairFacts | undefined) | undefined;
 const wordsOf = (facts: Facts, from: string, to: string): string | undefined => facts?.(from, to)?.words;
 
 /** The same arrows with the chip marks added. `chain`: every arrow is a numbered step (in the order given) and has a chip. */
-export function withChips(drawn: readonly Drawn[], facts: Facts, chain: boolean): Drawn[] {
+export function withChips(drawn: readonly Drawn[], facts: Facts, chain: boolean, nodes: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[] = []): Drawn[] {
   if (facts === undefined && !chain) return [...drawn];
   const wishes: ChipWish[] = [];
   drawn.forEach((d, at) => {
@@ -38,7 +38,7 @@ export function withChips(drawn: readonly Drawn[], facts: Facts, chain: boolean)
     });
     if (mark.extraChip !== undefined) wishes.push({ key: `${edge.id}:back`, at: mark.extraChip.at, count: mark.extraChip.size, words: wordsOf(facts, edge.to, edge.from) });
   });
-  const chips = resolveChips(wishes);
+  const chips = resolveChips(wishes, nodes);
   return drawn.map((d) => {
     const own = chips.get(d.edge.id);
     const back = chips.get(`${d.edge.id}:back`);

@@ -169,7 +169,9 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
 
   // Legend: a sheet with the legend's content
   await page.getByRole('button', { name: 'Legend' }).tap();
-  await expect(page.getByRole('dialog', { name: 'Legend' })).toContainText("solid line in the family's colour: what the family makes");
+  // the quiet map draws no arrow, so the sheet has no row about arrows (step 8.2b, B3); it has the groups, the within-the-family line and Unclassified
+  await expect(page.getByRole('dialog', { name: 'Legend' })).toContainText('n within the family');
+  await expect(page.getByRole('dialog', { name: 'Legend' })).not.toContainText("solid line in the family's colour");
   await stop(page, device, 5, 'legend');
   await page.getByRole('dialog', { name: 'Legend' }).getByRole('button', { name: 'Close' }).first().tap();
   await expect(page.getByRole('dialog', { name: 'Legend' })).toBeHidden();

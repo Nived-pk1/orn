@@ -28,7 +28,7 @@ import { useMapBulk, useNoMulti } from './bulk-context';
 import { useCanvasInput } from './use-canvas-input';
 import { outsideNoteOf } from './scope-lens';
 import { useNavigator, useNavigatorState } from './navigator-context';
-import { NavigatorLegend } from './navigator-legend';
+import { ArrowKey, NavigatorLegend } from './navigator-legend';
 import { NavigatorSelection } from './navigator-selection';
 import { PhoneMapControls } from './phone-map-controls';
 import { emptinessOf, truncationNoticeOf } from './notices';
@@ -170,6 +170,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const outsideNote = useMemo(() => (scene === null || !scene.nodes.some((node) => node.state.dimmed) ? undefined : outsideNoteOf(ports.store.getState(), activeExam)), [scene, ports, activeExam]);
   const legend = useMemo(() => legendOf(scene), [scene]);
   const legendKeys = useMemo(() => keyOf(view), [view]);
+  // wide screen: the arrow rows are in the line row below the legend, so the legend never changes height when a family is focused
+  const barKeys = useMemo(() => ({ ...legendKeys, lines: false, chip: false, pair: false }), [legendKeys]);
   const nothing = scene === null ? { unavailable: NOTHING_DRAWN } : {};
   const cut = truncationNoticeOf(scene?.truncation ?? null);
   const families = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub').length;
@@ -246,7 +248,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         </Banner>
       )}
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
-      {listing || phone ? null : <NavigatorLegend items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => setCompoundsOpen(true) })} {...(outsideNote === undefined ? {} : { outsideNote })} />}
+      {listing || phone ? null : <NavigatorLegend items={legend} keys={barKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => setCompoundsOpen(true) })} {...(outsideNote === undefined ? {} : { outsideNote })} />}
       {phone && scene !== null && !listing ? (
         <div className={styles.phoneBar}>
           <ChapterSelect chapters={chapters} value={map.chapterId} onChange={setChapter} phone />
@@ -258,9 +260,12 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       ) : null}
       {/* the line keeps its height when it has nothing to say, so a click that focuses a family does not move the map under the pointer (a double click's second press would miss) */}
       {view !== null && !listing ? (
-        <p className={styles.quiet} {...(view.quiet ? { 'data-map-quiet': '' } : view.busy > 0 ? { 'data-map-busy': '' } : { 'aria-hidden': 'true' })}>
-          {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : ' '}
-        </p>
+        <div className={styles.lineRow}>
+          <p className={styles.quiet} {...(view.quiet ? { 'data-map-quiet': '' } : view.busy > 0 ? { 'data-map-busy': '' } : { 'aria-hidden': 'true' })}>
+            {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : ' '}
+          </p>
+          {phone ? null : <ArrowKey keys={legendKeys} />}
+        </div>
       ) : null}
       <div className={styles.mapRow}>
       <div className={styles.drawing} aria-busy={state.working}>

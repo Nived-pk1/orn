@@ -30,11 +30,6 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
         selectionReveals = state.reveals;
         if (family.getState().open === null) hostRef.current.openPane();
       }
-      if (state.selected === null && owned.current) {
-        owned.current = false;
-        inspector.getState().clear();
-        setNote(undefined);
-      }
       if (state.picks === selectionPicks) return;
       selectionPicks = state.picks;
       const selected: Selected | null = state.selected;
@@ -58,6 +53,14 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
       inspector.getState().open(focus.ref);
       setNote(focus.note);
     });
+    // opening the pane with nothing selected shows the empty state, never the record of a selection that is gone (step 8.2b, B4). Not on every
+    // deselect: the drawing drops a selection by itself when a family leaves the map, and the open record must stay then.
+    const offPane = ports.ui.panels.subscribe((now, before) => {
+      if (!now.inspectorOpen || before.inspectorOpen || selection.getState().selected !== null || !owned.current) return;
+      owned.current = false;
+      inspector.getState().clear();
+      setNote(undefined);
+    });
     const offFamily = family.subscribe((state) => {
       if (state.picks === familyPicks) return;
       familyPicks = state.picks;
@@ -69,6 +72,7 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
     });
     return () => {
       offSelection();
+      offPane();
       offFamily();
     };
   }, [ports]);

@@ -106,7 +106,7 @@ test.describe('the map on a desktop (part 2)', () => {
     await expect(line).toBeVisible();
     await expect(line).toHaveText(/^This chapter has \d+ arrows\. Tap or click a family to see its part\.$/);
     await expect(edges(page)).toHaveCount(0);
-    await expect(page.getByRole('list', { name: 'What the marks mean' })).not.toContainText('solid line');
+    await expect(page.getByRole('list', { name: 'What the arrows mean' })).toHaveCount(0);
     await page.screenshot({ path: `${shotsDir()}/map-busy-chapter-1280x800.png` });
     await family(page, FAMILY_ONE).click();
     await expect.poll(() => edges(page).count()).toBeGreaterThan(0);
