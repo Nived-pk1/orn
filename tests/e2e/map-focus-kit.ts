@@ -64,7 +64,18 @@ export function joined(parts: readonly Measured[]): Measured {
  */
 export async function eachFocusByKeyboard(page: Page, each: (id: string, drawn: Measured) => void | Promise<void>): Promise<void> {
   const total = (await familyIds(page)).length;
-  await page.locator('svg[role="group"]').focus();
+  const svg = page.locator('svg[role="group"]');
+  // a key press tells the drawing the next focus is the keyboard's (after a mouse press it names no family and draws no ring)
+  await svg.focus();
+  await page.keyboard.press('Shift');
+  await svg.blur();
+  await svg.focus();
+  // go back to the first family (the drawing may remember the last one a click focused): Shift+Tab until it leaves the drawing, then take the focus again
+  for (let i = 0; i < total + 1; i += 1) {
+    if ((await svg.getAttribute('aria-activedescendant')) === null) break;
+    await page.keyboard.press('Shift+Tab');
+  }
+  await svg.focus();
   for (let i = 0; i < total; i += 1) {
     if (i > 0) await page.keyboard.press('Tab');
     await page.keyboard.press('Enter');

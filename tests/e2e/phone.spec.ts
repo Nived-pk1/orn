@@ -169,7 +169,7 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
 
   // Legend: a sheet with the legend's content
   await page.getByRole('button', { name: 'Legend' }).tap();
-  await expect(page.getByRole('dialog', { name: 'Legend' })).toContainText("solid line in the family's colour: what the family makes"); // step 8.2a: the quiet map draws no chip yet
+  await expect(page.getByRole('dialog', { name: 'Legend' })).toContainText("solid line in the family's colour: what the family makes");
   await stop(page, device, 5, 'legend');
   await page.getByRole('dialog', { name: 'Legend' }).getByRole('button', { name: 'Close' }).first().tap();
   await expect(page.getByRole('dialog', { name: 'Legend' })).toBeHidden();
@@ -191,7 +191,7 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
     await expect(sheet(page)).toHaveAttribute('data-sheet', 'peek');
     const list = page.getByRole('region', { name: 'Reactions on this arrow' });
     const record = page.getByRole('article', { name: 'Record' });
-    await expect(list.or(record), 'the sheet shows the reactions of the arrow').toBeVisible();
+    await expect(list.or(record).first(), 'the sheet shows the reactions of the arrow').toBeVisible();
     if (await list.isVisible()) {
       listed = true;
       break;

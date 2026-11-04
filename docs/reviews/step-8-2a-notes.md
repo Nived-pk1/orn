@@ -10,3 +10,5 @@ Part D code done and committed (see git log, "phase-8.2a: part D"); STOPPED ther
 - Review-required decisions so far: chapter filter uses topicIds (exact unless chapters are nested); a merged pair selects its A->B arrow; focus is a map-store field set by click/tap/Enter/context menu (Esc and empty click clear it; closing the inspector does not); keyboard/menu navigation uses the visible boxes and all arrows; "See those compounds" opens the record via inspector.open (the pane is not force-opened); Amendment: additive MapMarks/onNodeHover on render/svg contracts.
 - Speed checks: start 0.596 s; the one before e2e is still to take.
 Part D committed 73e8a6d (check green 693 files 7948 tests default workers). Stopped per user.
+Speed before e2e: 0.590 s median
+E2E Chromium round 1 fixed: quiet line keeps its height (a double click moved the map), legend always explains the chip, map store open() opens the pane, specs updated (hub_explosion biggest pair is a within-family line now). Next: remaining screenshots, sizes (E), docs (F), 3-engine affected + full Chromium (G).

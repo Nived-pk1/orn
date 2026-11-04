@@ -183,13 +183,13 @@ test.describe('the arrows of the arranged demo overview', () => {
     const seen = await watch(page);
     await openDemo(page);
     const marks = page.getByRole('list', { name: 'What the marks mean' });
-    await expect(marks.getByRole('listitem')).toHaveCount(4);
+    await expect(marks.getByRole('listitem')).toHaveCount(5);
     await expect(marks).toContainText("solid line in the family's colour: what the family makes");
     await expect(marks).toContainText('dashed dark line: what the family is made from');
     await expect(marks).toContainText('n within the family');
     await expect(marks).toContainText('lead to compounds that are in no family yet');
-    await focusFamily(page, 'cls_alcohols');
     await expect(marks).toContainText('number of reactions on this arrow');
+    await focusFamily(page, 'cls_alcohols');
     expect(await axeProblems(page)).toEqual([]);
     mkdirSync(SHOTS, { recursive: true });
     const path = resolve(SHOTS, 'overview-arrows-1280x800.png');

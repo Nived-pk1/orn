@@ -44,8 +44,8 @@ describe('legendOf: each family group of the drawing once, from the data', () =>
 
 describe('keyOf: what the map needs explained, only when it draws it (step 5.5d item d; reworked in 8.2a)', () => {
   const quiet = { focusId: null, chapter: false, showUnclassified: false } as const;
-  it('the quiet demo map explains its two line styles, the within-the-family line and Unclassified, but no chip or pair (no arrow is drawn)', () => {
-    expect(keyOf(mapView(demoNavigatorScene(false), quiet))).toEqual({ lines: true, chip: false, pair: false, within: true, unclassified: { shown: false, reactions: expect.any(Number) } });
+  it('the quiet demo map explains its line styles, the chip (so the legend does not change height when a family is focused), the within-the-family line and Unclassified, but no pair', () => {
+    expect(keyOf(mapView(demoNavigatorScene(false), quiet))).toEqual({ lines: true, chip: true, pair: false, within: true, unclassified: { shown: false, reactions: expect.any(Number) } });
   });
   it('a chapter draws arrows with chips, and the demo has a two-way pair', () => {
     const key = keyOf(mapView(demoNavigatorScene(false), { ...quiet, chapter: true }));

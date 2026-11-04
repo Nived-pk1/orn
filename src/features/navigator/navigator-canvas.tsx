@@ -209,9 +209,10 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           <ChapterSelect chapters={chapters} value={map.chapterId} onChange={setChapter} phone />
         </div>
       ) : null}
-      {view?.quiet === true && !listing ? (
-        <p className={styles.quiet} data-map-quiet="">
-          {QUIET_LINE}
+      {/* the line keeps its height when it has nothing to say, so a click that focuses a family does not move the map under the pointer (a double click's second press would miss) */}
+      {view !== null && !listing ? (
+        <p className={styles.quiet} {...(view.quiet ? { 'data-map-quiet': '' } : { 'aria-hidden': 'true' })}>
+          {view.quiet ? QUIET_LINE : ' '}
         </p>
       ) : null}
       <div className={styles.drawing} aria-busy={state.working}>

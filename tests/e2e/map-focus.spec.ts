@@ -122,7 +122,7 @@ test.describe('the map on a desktop', () => {
     await expect(rows).toHaveCount(3);
     await expect(rows.first()).toContainText('Orphan compound');
     await page.screenshot({ path: `${shotsDir()}/map-studio-unclassified-list-1280x800.png` });
-    expect(await axeProblems(page)).toEqual([]);
+    expect(await axeProblems(page, 10)).toEqual([]);
     await rows.first().getByRole('button').click();
     await expect(dialog).toBeHidden();
     await expect(page.getByRole('article', { name: 'Record' }).first()).toContainText('Orphan compound');

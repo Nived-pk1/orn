@@ -144,8 +144,17 @@ test.describe('pan and zoom', () => {
     const lodBefore = await lodOf(page);
     const box = await drawing(page).boundingBox();
     if (box === null) throw new Error('the drawing has no box');
-    const cx = box.x + box.width / 2;
-    const cy = box.y + box.height / 2;
+    // step 8.2a: resting on a family previews its arrows (a DOM change by design), so the gesture starts on an empty point of the drawing
+    const free = await page.evaluate(([x0, y0, w, h]) => {
+      for (let y = y0 + h - 20; y > y0 + 20; y -= 20) for (let x = x0 + 20; x < x0 + w - 20; x += 20) {
+        const hit = document.elementFromPoint(x, y);
+        if (hit !== null && hit.closest('[data-node-id], [data-edge-id]') === null && hit.closest('svg[role="group"]') !== null) return { x, y };
+      }
+      return null;
+    }, [box.x, box.y, box.width, box.height]);
+    if (free === null) throw new Error('no empty point on the drawing');
+    const cx = free.x;
+    const cy = free.y;
     await page.mouse.move(cx, cy);
     for (let i = 0; i < 3; i += 1) {
       await page.mouse.wheel(0, -40);
@@ -299,10 +308,9 @@ test.describe('ADV-012 part 1: a hub with 1,000 reactions', () => {
       expect(await page.locator('svg [data-edge-id]').count()).toBeLessThanOrEqual(800);
     };
     await checkBudget();
-    // step 8.2a: arrows are drawn for a focused family; the biggest pair is one of its arrows
-    await page.getByRole('button', { name: 'Fit' }).click();
-    await page.locator(`svg [data-node-id="${biggest.from}"]`).click({ force: true });
-    await expect(page.locator(`svg [data-edge-id][aria-label*="${biggest.total} reactions"]`).first()).toBeAttached();
+    // step 8.2a: the biggest pair is a family's reactions inside itself, which no loop draws any more: the box says it in words, with the full total
+    expect(biggest.from, 'the biggest pair of the generated file is a family with itself').toBe(biggest.to);
+    await expect(page.locator(`svg [data-node-id="${biggest.from}"]`)).toHaveAttribute('aria-label', new RegExp(`, ${biggest.total} within the family$`));
     await expect(page.getByRole('alert')).toHaveCount(0);
     await expectClean(seen);
   });

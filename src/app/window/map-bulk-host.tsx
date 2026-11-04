@@ -18,9 +18,14 @@ export function MapBulkProvider(props: { readonly children: ReactNode; /** The e
   const load = props.load ?? loadMultiEngine;
   const editors = useEditors();
   const [pending, setPending] = useState<Pending | null>(null);
-  const { inspector } = useApp();
+  const { inspector, panels } = useApp();
   // step 8.2a: Studio's legend link "See those compounds" opens a record in the inspector
-  const compounds = useMemo<MapCompounds>(() => ({ open: (ref) => inspector.ui.inspector.getState().open(ref) }), [inspector]);
+  const compounds = useMemo<MapCompounds>(() => ({
+    open: (ref) => {
+      inspector.ui.inspector.getState().open(ref);
+      panels.getState().setInspectorOpen(true); // the wide pane shows it (the phone's sheet opens with the record)
+    },
+  }), [inspector, panels]);
   const reason = editors === null ? 'Editing is not available here.' : editors.editReason;
   const value = useMemo<MapBulk>(
     () => ({

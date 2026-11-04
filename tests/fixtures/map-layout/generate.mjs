@@ -96,7 +96,9 @@ let pairNo = 0;
 for (const [a, b] of pairs.values()) {
   pairNo += 1;
   const many = pairNo % 7 === 0 ? 4 : pairNo % 3 === 0 ? 2 : 1;
-  for (let k = 0; k < many; k += 1) addReaction(clsId(a), clsId(b), 1 + ((pairNo + k) % 3)); // the arrows of one pair can sit in different chapters
+  // the first arrow of every two-way couple sits in chapter 1 (so a chapter shows merged pairs); the others of a pair can sit in other chapters
+  const coupled = COUPLES.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+  for (let k = 0; k < many; k += 1) addReaction(clsId(a), clsId(b), coupled && k === 0 ? 1 : 1 + ((pairNo + k) % 3));
 }
 for (const f of LOOPS) for (let k = 0; k < f % 4 + 1; k += 1) addReaction(clsId(f), clsId(f), 1 + ((f + k) % 3));
 for (let k = 0; k < 6; k += 1) addReaction(clsId(1 + next(20)), `cls_orphan-${ORPHANS[k % 3]}`, 1 + (k % 3));

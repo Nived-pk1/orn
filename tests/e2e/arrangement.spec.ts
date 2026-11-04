@@ -123,6 +123,7 @@ test.describe('the demo overview is arranged on the grid', () => {
       return { green: tint('cls_alcohols'), violet: tint('cls_amines'), blue: tint('cls_alkenes'), amber: tint('cls_haloalkanes') };
     });
     expect(new Set(Object.values(fills)).size).toBe(4);
+    await showUnclassified(page); // hidden unless shown (step 8.2a)
     await expect(page.locator('[data-box="unclassified"] rect').first()).not.toHaveAttribute('data-tone', /.+/);
   });
 });

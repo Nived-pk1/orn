@@ -53,7 +53,8 @@ export function keyOf(view: MapView | null): LegendKey {
   const marks = [...view.marks.edges.values()];
   return {
     lines: view.scene.nodes.some((node) => node.box === 'hub'),
-    chip: view.scene.edges.some((edge) => edge.bundleSize !== undefined),
+    // always explained with the two line styles: a legend that grew when a family was focused would move the map under the pointer
+    chip: view.scene.nodes.some((node) => node.box === 'hub'),
     pair: marks.some((mark) => mark.role === 'pair'),
     within: view.marks.captions.size > 0,
     unclassified: view.unclassified.present ? { shown: view.unclassified.shown, reactions: view.unclassified.reactions } : undefined,
