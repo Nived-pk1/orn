@@ -11,6 +11,7 @@ import { EQUATION_AREA, EquationScheme, fitHero, type HeroFit } from '@/render/e
 import { createDepictionBinding } from '@/render/svg';
 import { usePanels } from '@/ui/state';
 import { useInspectorEnv } from './env';
+import { HeroTextCard } from './hero-text-card';
 import styles from './inspector.module.css';
 
 function useEquations(record: Reaction) {
@@ -109,7 +110,7 @@ export function HeroEquation(props: { readonly record: Reaction; readonly compac
           <div ref={natural} aria-hidden="true" style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none', height: 0, overflow: 'hidden', width: 'max-content' }}>
             {scheme('row')}
           </div>
-          {fit.mode === 'stacked' ? scheme('stacked') : <p data-hero-text="" style={{ margin: 0, overflowWrap: 'anywhere' }}>{first.text}</p>}
+          {fit.mode === 'stacked' ? scheme('stacked') : <HeroTextCard text={first.text} />}
         </>
       )}
     </div>
