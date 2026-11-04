@@ -78,16 +78,34 @@ test.describe('the map on a desktop', () => {
     await openMapDesktop(page);
     const select = page.getByRole('combobox', { name: 'Chapter' });
     await expect(select.locator('option')).toHaveText(['All chapters', 'Chapter 1', 'Chapter 2', 'Chapter 3']);
+    // step 8.2b (B2): a chapter with more than 15 arrows is busy and draws none until a family is chosen; the pair checks run on a chapter that is not
+    let calm = '';
+    for (const label of ['Chapter 1', 'Chapter 2', 'Chapter 3']) {
+      await select.selectOption({ label });
+      await page.waitForTimeout(1500);
+      const n = await edges(page).count();
+      console.log(`${label}: ${n} arrows drawn, busy line ${await page.locator('[data-map-busy]').count()}`);
+      if (n > 0) {
+        calm = label;
+        break;
+      }
+    }
     await select.selectOption({ label: 'Chapter 1' });
-    await expect.poll(() => edges(page).count()).toBeGreaterThan(5);
     await expect(page.getByText(QUIET)).toHaveCount(0);
+    if (calm === '') {
+      test.info().annotations.push({ type: 'note', description: 'every chapter of the fixture is busy: the merged pair line is covered by the map-view unit test' });
+    } else await select.selectOption({ label: calm });
+    if (calm !== '') {
     expect(await edges(page).evaluateAll((gs) => gs.some((g) => g.getAttribute('data-from') === g.getAttribute('data-to')))).toBe(false); // no loop
     await expect.poll(() => page.locator('svg [data-edge-id][data-role="pair"]').count(), { message: 'a two-way pair is one line' }).toBeGreaterThan(0);
     const pair = page.locator('svg [data-edge-id][data-role="pair"]').first();
     expect(((await pair.getAttribute('aria-label')) ?? '')).toMatch(/^.+ to .+: \d+ reactions?; .+ to .+: \d+ reactions?$/);
     expect(await pair.locator('path:not([data-hit])').getAttribute('marker-start')).toMatch(/^url\(/);
     await expect(page.locator('svg [data-count-extra-of]').first()).toBeAttached();
-    expect(await page.locator('svg [data-node-id][data-faded]').count()).toBeGreaterThanOrEqual(0);
+    }
+    await select.selectOption({ label: 'Chapter 1' });
+    await expect(page.locator('[data-map-busy]')).toBeVisible();
+    await expect(edges(page)).toHaveCount(0);
     await page.screenshot({ path: `${shotsDir()}/map-after-chapter-desktop-1280x800.png` });
     // a family inside the chapter focuses among that chapter's arrows
     await family(page, FAMILY_ONE).click();
@@ -167,7 +185,9 @@ async function phoneWalk(page: Page, device: string, withChapter: boolean): Prom
     const height = (await select.boundingBox())?.height ?? 0;
     expect(height, 'the phone chapter select is at least 44 px high').toBeGreaterThanOrEqual(44);
     await select.selectOption({ label: 'Chapter 1' });
-    await expect.poll(() => edges(page).count()).toBeGreaterThan(5);
+    // a busy chapter draws nothing until a family is chosen (step 8.2b, B2)
+    await expect(page.locator('[data-map-busy]')).toBeVisible();
+    await expect(edges(page)).toHaveCount(0);
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${shotsDir()}/map-after-chapter-${device}.png` });
     await select.selectOption({ label: 'All chapters' });
