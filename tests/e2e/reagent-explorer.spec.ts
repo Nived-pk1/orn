@@ -119,7 +119,7 @@ test('the exam scope marks and hides outside reactions; the open reagent comes b
   await expect(section(page, 'Aqueous KOH').locator('article[data-reaction-id]')).toHaveCount(1, { timeout: 60_000 });
 
   // the exam scope: the checkbox appears, and ticking it leaves only the reactions inside the version (it may leave none; it says so)
-  const scope = page.getByRole('combobox', { name: /Exam scope/ });
+  const scope = page.getByRole('combobox', { name: /^Exam$/ });
   await scope.selectOption({ label: 'JEE Main, provisional, not verified' });
   const only = view(page).getByLabel(/^Only /);
   await expect(only).toBeVisible();

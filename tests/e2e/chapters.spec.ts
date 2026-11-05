@@ -86,7 +86,7 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
   await view(page).getByRole('button', { name: 'All chapters' }).click();
 
   // the exam scope: the chapters a version does not cover are hidden, and said
-  const scope = page.getByRole('combobox', { name: /Exam scope/ });
+  const scope = page.getByRole('combobox', { name: /^Exam$/ });
   await scope.selectOption({ label: 'JEE Main, provisional, not verified' });
   await expect(view(page).getByText(/chapters? (is|are) hidden: not in/)).toBeVisible();
   await expect(rows(page).filter({ hasText: 'Molecular rearrangements' })).toHaveCount(0);

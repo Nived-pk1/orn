@@ -4,8 +4,9 @@
  * under it, every product with the card's own selectivity word. A species already written on the left is not repeated on the arrow (the
  * core does it). Which terms are drawn and which are formulas is decided by the core from the chem facts; this only passes the page's ports.
  */
-import { useContext, useState, useSyncExternalStore } from 'react';
-import type { FullEquation } from '@/core/graph';
+import { useContext, useMemo, useState, useSyncExternalStore } from 'react';
+import { withoutExclusive, type FullEquation } from '@/core/graph';
+import { useStudyChrome } from '@/ui/study-chrome';
 import { EquationScheme, NamesSwitch } from '@/render/equation';
 import { FamilyEnvContext } from './family-env';
 import styles from './family-page.module.css';
@@ -13,6 +14,8 @@ import styles from './family-page.module.css';
 const never = (): (() => void) => () => undefined;
 
 export function FullEquationView(props: { readonly equation: FullEquation }) {
+  const { exclusiveWord } = useStudyChrome();
+  const equation = useMemo(() => (exclusiveWord ? props.equation : withoutExclusive(props.equation)), [props.equation, exclusiveWord]);
   const [open, setOpen] = useState(false);
   const env = useContext(FamilyEnvContext);
   const structures = env?.equation?.structures;
@@ -27,7 +30,7 @@ export function FullEquationView(props: { readonly equation: FullEquation }) {
       ) : null}
       {open ? (
         <EquationScheme
-          equation={props.equation}
+          equation={equation}
           binding={env?.equation?.binding}
           timers={env?.timers ?? { after: () => () => undefined }}
           facts={env?.equation?.facts}

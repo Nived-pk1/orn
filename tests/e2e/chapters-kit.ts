@@ -89,6 +89,6 @@ export function chaptersDemo(): UploadFile {
 /** Study opens on Chapters when the dataset has chapter topics (7.3b D5): check that, then go to the Navigator by its mode. */
 export async function chaptersFirstThenNavigator(page: Page): Promise<void> {
   await expect(page.getByRole('region', { name: 'Chapters', exact: true })).toBeVisible({ timeout: 60_000 });
-  await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Navigator' }).click();
+  await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
   await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 60_000 });
 }

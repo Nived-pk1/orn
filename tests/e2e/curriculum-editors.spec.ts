@@ -108,7 +108,7 @@ test.describe('the curriculum editors (Studio)', () => {
     expect(await axeProblems(page)).toEqual([]);
     await shot(page, 'map-family-editor');
     await save(family);
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Navigator' }).click();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
     const back = page.getByRole('button', { name: 'Overview', exact: true }); // a family page is open (the reaction was shown from it)
     if ((await back.count()) > 0) await back.click();
     const hub = page.locator('[data-node-id="cls_acyl-halides"]');

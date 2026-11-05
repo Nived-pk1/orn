@@ -8,6 +8,7 @@ import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useStore } from 'zustand';
 import { useLayoutMode } from '@/ui/hooks';
 import { LiveRegion } from '@/ui/primitives';
+import { useStudyChrome } from '@/ui/study-chrome';
 import { FamiliesTab } from './families-tab';
 import { FamilyPage } from './family-page';
 import { NavigatorCanvas } from './navigator-canvas';
@@ -20,7 +21,7 @@ export function NavigatorView() {
   const phone = useLayoutMode() === 'phone';
   const tab = useStore(ports.ui.overview, (s) => s.phoneTab);
   const { scene } = useNavigatorState();
-  useAnnouncements(ports, announcer, scene);
+  useAnnouncements(ports, announcer, scene, useStudyChrome().selectionLine);
   const said = useSyncExternalStore(announcer.subscribe, announcer.get, announcer.get);
   // Coming back from a family page, the overview takes the keyboard focus on the family just left (a page that was closed by the keyboard).
   const previous = useRef<string | null>(open);

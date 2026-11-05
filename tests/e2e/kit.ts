@@ -115,7 +115,7 @@ export async function leaveChapters(page: Page): Promise<void> {
   if (!(await chapters.isVisible())) return;
   const tabs = page.getByRole('navigation', { name: 'Home' });
   if (await tabs.isVisible()) await tabs.getByRole('button', { name: 'Families' }).click();
-  else await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Navigator' }).click();
+  else await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
 }
 
 

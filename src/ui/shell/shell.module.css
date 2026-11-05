@@ -328,3 +328,17 @@
   text-transform: uppercase;
   line-height: 1.6;
 }
+
+/* No status bar (the student edition, step 8.3): the desktop row goes; on a phone the row is as tall as the alert line, if there is one. */
+@media (min-width: 900px) {
+  .shell[data-status-bar='none'] {
+    --status-bar-height: 0px;
+  }
+}
+
+@media (max-width: 899px) {
+  .shell[data-status-bar='none'],
+  .shell[data-status-bar='none'][data-inspector='closed'] {
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  }
+}

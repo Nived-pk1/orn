@@ -17,6 +17,7 @@ export type { EquationShape, EquationTerm, FullEquation, ProductRoleWord, Select
 export { MAX_FORMULA_HEAVY_ATOMS, needsFacts, termRepresentationOf } from './equation-term';
 export type { FactsInput, FormulaRepresentation, TermRepresentation, TermSubstance } from './equation-term';
 export { selectivityWordOf } from './selectivity-word';
+export { shownWordOf, withoutExclusive } from './quiet-words';
 export { conditionPartsOf, MAX_TEXT_CHARS, MINUS, overrideParameters } from './condition-text';
 export type { ConditionPart } from './condition-text';
 export type { ArrowText, ArrowTextContext, ArrowTextPart, ArrowTextPartKind } from './arrow-text';

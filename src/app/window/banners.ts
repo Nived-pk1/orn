@@ -4,6 +4,7 @@
  */
 import type { AppStatus, BootNotices, EngineName, WorkerName } from '@/app/services';
 import type { NoticeKind } from '@/ui/primitives';
+import { STUDIO_CHROME, type StudyChrome } from '@/ui/study-chrome';
 import type { TimeFormatter } from './local-time';
 
 export type BannerAction = 'reload' | 'save_everything' | 'retry_replica' | 'retry_chem' | 'retry_layout' | 'dismiss_storage' | 'export';
@@ -53,13 +54,18 @@ const WORKER_WORDS: Record<WorkerName, string> = { chem: 'structure-check', layo
 const ENGINE_NOUN: Record<EngineName, string> = { chem: 'structure checker', layout: 'layout engine' };
 
 /** What the banners need besides the status: the choices the user saved (step 5.5d, item k). */
+export const STUDY_STORAGE_TEXT = 'This browser may clear your imported data when space is short. Export a backup to keep it.';
+
 export interface BannerChoices {
+  /** What this reader sees (step 8.3). Absent: Studio's, everything. */
+  readonly chrome?: StudyChrome;
   /** The storage warning was dismissed: its banner is not shown; the status line keeps `Storage: not persistent`. */
   readonly storageNoticeDismissed?: boolean;
 }
 
 export function bannersOf(status: AppStatus, choices: BannerChoices = {}): readonly Banner[] {
   const banners: Banner[] = [];
+  const chrome = choices.chrome ?? STUDIO_CHROME;
   const reload = { label: 'Reload', kind: 'reload' } as const;
 
   if (status.mode === 'follower' && status.promotion !== 'refused') {
@@ -123,7 +129,7 @@ export function bannersOf(status: AppStatus, choices: BannerChoices = {}): reado
     banners.push({ id: `engine_${name}`, text, action: { label: 'Retry', kind: name === 'chem' ? 'retry_chem' : 'retry_layout' } });
   }
   const chemBannerShown = banners.some((b) => b.id === 'engine_chem' || b.id === 'worker_down_chem');
-  if (status.layoutNotice !== null) banners.push({ id: 'layout_notice', text: `Layout note: ${status.layoutNotice}.` });
+  if (status.layoutNotice !== null && chrome.layoutNotice) banners.push({ id: 'layout_notice', text: `Layout note: ${status.layoutNotice}.` });
   if (status.l4.state === 'unavailable' && !chemBannerShown) {
     banners.push({ id: 'l4_unavailable', text: `Check unavailable: ${status.l4.message ?? 'structures are not being checked'}.` });
   }
@@ -133,11 +139,11 @@ export function bannersOf(status: AppStatus, choices: BannerChoices = {}): reado
   if (status.search.state === 'down' && status.workers.search.state !== 'down') {
     banners.push({ id: 'search_down', text: `Search is unavailable (${status.search.reason}).` });
   }
-  if (status.storage.persistence === 'asking') {
+  if (status.storage.persistence === 'asking' && chrome.storageWarning !== 'none') {
     banners.push({ id: 'storage_asking', text: 'Waiting for the browser to answer the request for persistent storage. Your data is saved; you can keep working.' });
   }
-  if (status.storage.persistence === 'refused' && choices.storageNoticeDismissed !== true) {
-    banners.push({ id: 'storage_refused', action: { label: 'Dismiss', kind: 'dismiss_storage' }, also: { label: 'Export a backup', kind: 'export' }, text: status.storage.message === null ? 'The browser did not grant persistent storage. It may delete this data when disk space runs low.' : `${status.storage.message.charAt(0).toUpperCase()}${status.storage.message.slice(1)}.` });
+  if (status.storage.persistence === 'refused' && choices.storageNoticeDismissed !== true && chrome.storageWarning !== 'none') {
+    banners.push({ id: 'storage_refused', action: { label: 'Dismiss', kind: 'dismiss_storage' }, also: { label: 'Export a backup', kind: 'export' }, text: chrome.storageWarning === 'visitor' ? STUDY_STORAGE_TEXT : status.storage.message === null ? 'The browser did not grant persistent storage. It may delete this data when disk space runs low.' : `${status.storage.message.charAt(0).toUpperCase()}${status.storage.message.slice(1)}.` });
   }
   return banners;
 }

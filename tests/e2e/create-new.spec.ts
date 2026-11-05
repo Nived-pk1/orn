@@ -148,7 +148,7 @@ test.describe('duplicate and specific (desktop)', () => {
     await expect(dialog.locator('[data-slot]')).toHaveCount(0);
     await dialog.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(dialog).toBeHidden();
-    await modes(page).getByRole('button', { name: 'Navigator' }).click();
+    await modes(page).getByRole('button', { name: 'Map' }).click();
     const family = page.getByRole('region', { name: 'Family page: Alcohols' });
     if (!(await family.isVisible())) await page.locator('svg [data-node-id="cls_alcohols"]').dblclick({ timeout: 30_000 });
     await expect(family).toBeVisible();

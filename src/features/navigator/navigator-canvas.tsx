@@ -14,6 +14,7 @@ import type { LayerName, SceneHit } from '@/render/svg';
 import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
 import type { Scene } from '@/render/scene';
 import { useLayoutMode } from '@/ui/hooks';
+import { useStudyChrome } from '@/ui/study-chrome';
 import { Banner, Button, ContextMenu, Skeleton } from '@/ui/primitives';
 import { FIT_FLOOR } from '@/render/viewport';
 import { buildChapterIndex } from '@/core/chapters/build-index';
@@ -76,6 +77,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const [controller, setController] = useState<ViewportController | null>(null);
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
   const [unanchoredOpen, setUnanchoredOpen] = useState(false);
+  const chrome = useStudyChrome();
   // Studio's "See those compounds" selects the bucket: the inspector lists them (one view, step 8.2b-fix, S3)
   const seeCompounds = (): void => {
     ports.ui.selection.getState().select({ kind: 'node', id: UNCLASSIFIED_HUB_ID });
@@ -259,9 +261,11 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             Open
           </Button>
         )}
-        <Button onClick={() => setUnanchoredOpen((open) => !open)} aria-expanded={unanchoredOpen && unanchoredReason === undefined} {...(unanchoredReason === undefined ? {} : { unavailable: unanchoredReason })}>
-          Unanchored reactions ({unanchored.length})
-        </Button>
+        {chrome.unanchored ? (
+          <Button onClick={() => setUnanchoredOpen((open) => !open)} aria-expanded={unanchoredOpen && unanchoredReason === undefined} {...(unanchoredReason === undefined ? {} : { unavailable: unanchoredReason })}>
+            Unanchored reactions ({unanchored.length})
+          </Button>
+        ) : null}
         <NavigatorSelection {...(multi !== null && multi.items.length > 0 ? { multiLine: multi.line } : {})} />
         {multi?.actions(false)}
       </div>

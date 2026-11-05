@@ -9,19 +9,14 @@
  * selects it too.
  */
 import { Fragment, memo, useContext, useId, type ReactNode } from 'react';
-import type { ArrowText, FamilyCard, FamilyOutcomeGroup } from '@/core/graph';
+import { shownWordOf, type ArrowText, type FamilyCard, type FamilyOutcomeGroup } from '@/core/graph';
+import { ReviewMark, useStudyChrome } from '@/ui/study-chrome';
 import { FullEquationView } from './family-equation';
 import { FamilyEnvContext, useFamilyEnv } from './family-env';
 import { Structure } from './family-structure';
 import { ArrowSide, sideText } from './family-text';
 import styles from './family-page.module.css';
 import scheme from './family-scheme.module.css';
-
-const REVIEW_MARK: Readonly<Record<FamilyCard['reviewStatus'], string | undefined>> = {
-  verified: undefined,
-  review_required: 'Review required',
-  unreviewed: 'Not yet reviewed',
-};
 
 const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
 
@@ -68,6 +63,7 @@ function Arrow(props: { readonly arrowText: ArrowText }) {
  */
 function GroupScheme(props: { readonly card: FamilyCard; readonly group: FamilyOutcomeGroup }) {
   const env = useFamilyEnv();
+  const { exclusiveWord } = useStudyChrome();
   const { card, group } = props;
   const substrate = env.describe(card.substrate)?.name ?? card.substrate.id;
   const products = group.outcomes.flatMap((outcome) => outcome.products).map((p) => env.describe(p.ref)?.name ?? p.ref.id);
@@ -90,7 +86,7 @@ function GroupScheme(props: { readonly card: FamilyCard; readonly group: FamilyO
               {outcome.products.map((product, index) => (
                 <Fragment key={product.productId}>
                   {index > 0 ? <span className={scheme.plus} aria-hidden="true">+</span> : null}
-                  <Structure substance={product.ref} {...(outcome.word === null ? {} : { caption: outcome.word })} {...(product.writtenAs === undefined ? {} : { writtenAs: product.writtenAs })} />
+                  <Structure substance={product.ref} {...(shownWordOf(outcome.word, exclusiveWord) === null ? {} : { caption: shownWordOf(outcome.word, exclusiveWord) as string })} {...(product.writtenAs === undefined ? {} : { writtenAs: product.writtenAs })} />
                 </Fragment>
               ))}
             </div>
@@ -122,7 +118,6 @@ export interface FamilyCardProps {
 
 export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside, outsideOf, selectedId, nested, hideNamedId }: FamilyCardProps) {
   const titleId = useId();
-  const review = REVIEW_MARK[card.reviewStatus];
   const openNamed = useContext(FamilyEnvContext)?.openNamed;
   return (
     <article className={styles.card} aria-labelledby={titleId} data-reaction-id={card.reactionId} data-selected={selected ? '' : undefined} data-outside={outside === undefined ? undefined : ''} onClick={() => onSelect(card.reactionId)}>
@@ -145,7 +140,7 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
             </button>
           )
         ))}
-        {review === undefined ? null : <span className={`${styles.chip} ${styles.reviewChip}`}>{review}</span>}
+        <ReviewMark status={card.reviewStatus} />
         {card.caveatCount === 0 ? null : <span className={styles.chip}>{plural(card.caveatCount, 'caveat', 'caveats')}</span>}
       </header>
       {card.exampleOf === undefined ? null : (

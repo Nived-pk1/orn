@@ -170,7 +170,7 @@ describe('commands', () => {
     const input = await open(app);
     await type(app, input, '>');
     const titles = screen.getAllByRole('option').map((option) => option.textContent ?? '');
-    for (const wanted of ['Replace with the demo dataset', 'Undo import', 'Fit', 'Zoom in', 'Zoom out', 'Show the List view', 'Overview', 'Open the Unanchored reactions', 'Choose the exam scope: All (no exam scope)']) {
+    for (const wanted of ['Replace with the demo dataset', 'Undo import', 'Fit', 'Zoom in', 'Zoom out', 'Show the List view', 'Overview', 'Open the Unanchored reactions', 'Choose the exam scope: All exams']) {
       expect(titles.some((t) => t.startsWith(wanted)), wanted).toBe(true);
     }
     // the overview is already shown: said, not hidden

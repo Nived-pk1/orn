@@ -78,7 +78,7 @@ test('Alt+Enter on a palette hit opens the page; the exam scope offers "Only"; t
   await importOwn(page, changedDemo(() => undefined));
   await openMechanisms(page);
 
-  const scope = page.getByRole('combobox', { name: /Exam scope/ });
+  const scope = page.getByRole('combobox', { name: /^Exam$/ });
   await scope.selectOption({ label: 'JEE Main, provisional, not verified' });
   const only = view(page).getByLabel(/^Only /);
   await expect(only).toBeVisible();

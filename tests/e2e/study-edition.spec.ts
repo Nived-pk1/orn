@@ -56,10 +56,11 @@ async function importOwnData(page: Page, file: UploadFile = DEMO_FILE): Promise<
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
 }
 
+/** A student has no Dataset page (step 8.3): the size of the data is the number of boxes on the Map. */
 const recordTotal = async (page: Page): Promise<number> => {
-  await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Dataset' }).click();
-  const items = await page.getByRole('list', { name: 'Record counts' }).getByRole('listitem').allTextContents();
-  return items.reduce((sum, text) => sum + Number(/(\d+)$/.exec(text)?.[1] ?? 0), 0);
+  await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
+  await page.waitForTimeout(500);
+  return page.locator('svg [data-node-id]').count();
 };
 
 /** The demo with ONE picture attached to a concept, its bytes inside the file (what a Studio export with the pictures embedded holds; step 7.1a). */
@@ -129,7 +130,7 @@ test.describe('desktop', () => {
 
     // navigation, header and top bar: no Workbench, no Undo / Redo, no Studio word
     const modes = page.getByRole('navigation', { name: 'Modes' });
-    await expect(modes.getByRole('button', { name: 'Navigator' })).toBeVisible();
+    await expect(modes.getByRole('button', { name: 'Map' })).toBeVisible();
     await expect(modes.getByText('Workbench')).toHaveCount(0);
     const banner = page.locator('header');
     await expect(banner.getByRole('button', { name: /^(Undo|Redo)/ })).toHaveCount(0);
@@ -165,7 +166,7 @@ test.describe('desktop', () => {
     await page.keyboard.press('Escape');
 
     // the exam scope, the Structures setting, the export screen, the import screen
-    const scope = page.getByRole('combobox', { name: /Exam scope/ });
+    const scope = page.getByRole('combobox', { name: /^Exam$/ });
     await expect(scope).toBeVisible();
     await page.getByRole('radiogroup', { name: 'Structures' }).getByRole('radio', { name: 'Condensed' }).check({ force: true });
     await banner.getByRole('button', { name: 'File' }).click();
@@ -177,7 +178,7 @@ test.describe('desktop', () => {
     await expect(page.getByRole('button', { name: /^Replace with the (demo|study) dataset$/ })).toBeVisible();
 
     expect(await axeProblems(page)).toEqual([]);
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Navigator' }).click();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
     await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible(); // the family page is still the open one
     await showRecord(page, 's', 'ethanol', 'spc_ethanol');
     await page.screenshot({ path: resolve(shotsDir(), 'study-desktop-1280x800.png') });
@@ -200,7 +201,8 @@ test.describe('desktop', () => {
       await expect(page.getByRole('button', { name: 'Load demo dataset' })).toHaveCount(0);
       await page.getByRole('button', { name: 'Load the study dataset' }).click();
       await expect(page.getByText(/^Imported \d+ records from dataset\.orn\.json\./)).toBeVisible({ timeout: 60_000 });
-      expect(await recordTotal(page)).toBeGreaterThan(0);
+      await expect(page.getByRole('region', { name: 'First run' })).toHaveCount(0);
+      await expect(page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' })).toBeVisible();
       await expect(page.getByText(NOTICE)).toHaveCount(0);
       await page.reload();
       await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
@@ -322,6 +324,39 @@ test.describe('desktop', () => {
   });
 });
 
+test.describe('what a student sees (step 8.3)', () => {
+  test('own data: the notice with Undo, the quiet saved line, the review dot, no "exclusive", no status bar, no Dataset, Map in the rail', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page, STUDY);
+    await openStudy(page);
+    await expect(page.getByRole('contentinfo')).toHaveCount(0);
+    await expect(page.getByText(/Findings: E|Saved (revision|Workers:|Storage: not persistent|Layout note/)).toHaveCount(0);
+    await importOwnData(page);
+    await expect(page.getByRole('button', { name: 'Undo import' })).toBeVisible(); // the notice of the visitor's own import
+    await expect(page.getByText('Your data is saved in this browser', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Findings: E|Saved (revision|Workers:/)).toHaveCount(0);
+    const modes = page.getByRole('navigation', { name: 'Modes' });
+    await expect(modes.getByRole('button', { name: 'Map' })).toBeVisible();
+    await expect(modes.getByRole('button', { name: 'Dataset' })).toHaveCount(0);
+    await expect(modes.getByRole('button', { name: 'Navigator' })).toHaveCount(0);
+    // the storage warning appears after an own import where the browser did not grant persistent storage, in the student wording
+    const warning = page.getByText('This browser may clear your imported data when space is short. Export a backup to keep it.');
+    if ((await warning.count()) > 0) await expect(page.getByRole('button', { name: 'Export a backup' })).toBeVisible();
+    await chaptersFirstThenNavigator(page);
+    await expect(page.getByRole('button', { name: /Unanchored reactions/ })).toHaveCount(0);
+    await page.locator('svg [data-node-id="cls_alcohols"]').click();
+    await expect(page.getByText('Selected: Alcohols.', { exact: true })).toBeVisible();
+    await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
+    const family = page.getByRole('region', { name: 'Family page: Alcohols' });
+    await expect(family).toBeVisible();
+    await expect(family.locator('[data-review-mark="dot"]').first()).toBeVisible();
+    await expect(family.locator('[data-review-mark="pill"]')).toHaveCount(0);
+    await expect(family.getByText('exclusive', { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel('Exam', { exact: true })).toBeVisible();
+    await expectClean(seen);
+  });
+});
+
 for (const [label, profile, engine, shot] of [
   ['Pixel 7 (Chromium)', PIXEL, 'chromium', 'study-phone-pixel7.png'],
   ['iPhone 14 (WebKit)', IPHONE, 'webkit', undefined],
@@ -336,12 +371,15 @@ for (const [label, profile, engine, shot] of [
       await openStudy(page);
       await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
       await expect(page.locator('header').getByText('Studio')).toHaveCount(0);
+      await expect(page.getByText(/d+ notices?/)).toHaveCount(0);
       await importOwnData(page, generatedFileWithAnchors('tiny', 'chain'));
       await page.getByRole('button', { name: 'More', exact: true }).click();
       const more = page.getByRole('dialog', { name: 'More' });
       await expect(more.getByRole('button', { name: 'Undo import' })).toBeVisible();
       await expect(more.getByRole('button', { name: /^Import a file/ })).toBeVisible();
       await expect(more.getByText('Workbench')).toHaveCount(0);
+      await expect(more.getByRole('region', { name: 'Dataset' })).toHaveCount(0);
+      await expect(more.getByRole('region', { name: 'Exam' })).toBeVisible();
       await expect(more.getByRole('button', { name: /^New / })).toHaveCount(0);
       await expect(more.getByRole('button', { name: /^(Undo|Redo)$/ })).toHaveCount(0);
       await expect(more.getByRole('button', { name: /^Drafts/ })).toHaveCount(0);

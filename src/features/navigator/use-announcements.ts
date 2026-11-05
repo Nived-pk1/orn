@@ -8,8 +8,9 @@ import type { Scene } from '@/render/scene';
 import { nameOf } from './canvas-menu';
 import type { Announcer } from './announcer';
 import type { NavigatorPorts } from './contracts';
+import { selectionWordsOf, type SelectionMode } from './selection-words';
 
-export function useAnnouncements(ports: NavigatorPorts, announcer: Announcer, scene: Scene | null): void {
+export function useAnnouncements(ports: NavigatorPorts, announcer: Announcer, scene: Scene | null, selectionLine: SelectionMode = 'full'): void {
   useEffect(() => {
     const { selection, family } = ports.ui;
     let selected = selection.getState().selected;
@@ -23,7 +24,7 @@ export function useAnnouncements(ports: NavigatorPorts, announcer: Announcer, sc
       if (next === selected || (next !== null && selected !== null && next.id === selected.id && next.kind === selected.kind)) return;
       selected = next;
       if (next === null) return announcer.say('Selection cleared');
-      const label = next.kind === 'node' ? scene?.nodes.find((node) => node.id === next.id)?.ariaLabel : scene?.edges.find((edge) => edge.id === next.id)?.ariaLabel;
+      const label = selectionWordsOf(scene, next, selectionLine);
       announcer.say(`Selected ${label ?? next.id}`);
     });
     const offFamily = family.subscribe((state) => {
@@ -35,5 +36,5 @@ export function useAnnouncements(ports: NavigatorPorts, announcer: Announcer, sc
       offSelection();
       offFamily();
     };
-  }, [ports, announcer, scene]);
+  }, [ports, announcer, scene, selectionLine]);
 }

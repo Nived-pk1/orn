@@ -30,7 +30,7 @@ const cardOf = (page: Page, name: string): Locator => page.getByRole('article').
 
 /** Showing a reaction in the inspector already opens the family page of its source; otherwise a double click on the hub does. */
 async function openFamily(page: Page, hub: string, name: string): Promise<void> {
-  await modes(page).getByRole('button', { name: 'Navigator' }).click();
+  await modes(page).getByRole('button', { name: 'Map' }).click();
   const region = page.getByRole('region', { name: `Family page: ${name}` });
   if (!(await region.isVisible())) await hubGroup(page, hub).dblclick({ timeout: 30_000 });
   await expect(region).toBeVisible();

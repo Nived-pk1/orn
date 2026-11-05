@@ -20,6 +20,7 @@ import { NavigatorStatus, StructuresControl, type NavigatorStructures } from '@/
 import { PanelsStatus } from './panels-status';
 import { BootLines, Banners, StatusLine } from './status-parts';
 import { usePanels } from '@/ui/state';
+import { useStudyChrome } from '@/ui/study-chrome';
 import styles from './phone-parts.module.css';
 
 export function PhoneBar(props: {
@@ -36,6 +37,7 @@ export function PhoneBar(props: {
   const [more, setMore] = useState(false);
   const file = useFileWithDrafts(props.file);
   const editors = useEditors();
+  const chrome = useStudyChrome();
   // a choice that opens another dialog closes this one first (two modal dialogs are never open together)
   const then = (run: () => void) => (): void => {
     setMore(false);
@@ -85,19 +87,23 @@ export function PhoneBar(props: {
             <StructuresControl structures={props.structures} />
           </section>
         )}
-        <section aria-label="Exam scope" className={styles.section}>
-          <h3>Exam scope</h3>
+        <section aria-label="Exam" className={styles.section}>
+          <h3>Exam</h3>
           <ExamScopeSelector binding={props.exam} />
         </section>
-        <section aria-label="Dataset" className={styles.section}>
-          <h3>Dataset</h3>
-          <RecordCounts counts={props.counts} />
-        </section>
-        <section aria-label="Status" className={styles.section}>
-          <Button className={styles.wide} onClick={then(props.onStatus)}>
-            Status
-          </Button>
-        </section>
+        {chrome.datasetCounts ? (
+          <section aria-label="Dataset" className={styles.section}>
+            <h3>Dataset</h3>
+            <RecordCounts counts={props.counts} />
+          </section>
+        ) : null}
+        {chrome.datasetCounts ? (
+          <section aria-label="Status" className={styles.section}>
+            <Button className={styles.wide} onClick={then(props.onStatus)}>
+              Status
+            </Button>
+          </section>
+        ) : null}
       </Dialog>
     </>
   );
@@ -128,6 +134,7 @@ function HistorySection(props: { readonly history: HistoryBinding }) {
 /** The notices fold into ONE line that expands on tap (the Phase 8 openItem for narrow screens). */
 export function PhoneNotices() {
   const { services, panels } = useApp();
+  const chrome = useStudyChrome();
   const status = useSubscribable(services.status);
   const storageNoticeDismissed = usePanels(panels, (s) => s.storageNoticeDismissed);
   const [open, setOpen] = useState(false);
@@ -135,7 +142,7 @@ export function PhoneNotices() {
   const toastCount = useToastView()?.items.length ?? 0;
   const draftsCount = draftsLineOf(useDraftsView().count) === null ? 0 : 1;
   const updateCount = useStudyUpdateDue() ? 1 : 0;
-  const count = bannersOf(status, { storageNoticeDismissed }).length + bootLinesOf(status.notices).length + draftsCount + updateCount + toastCount;
+  const count = bannersOf(status, { storageNoticeDismissed, chrome }).length + bootLinesOf(status.notices).length + draftsCount + updateCount + toastCount;
   if (count === 0) return null;
   return (
     <div className={styles.notices}>
@@ -157,7 +164,7 @@ export function PhoneNotices() {
 /** The one-line alert (nothing when nothing needs the user); a tap opens Status. */
 export function PhoneAlert(props: { readonly onStatus: () => void }) {
   const { services } = useApp();
-  const text = alertOf(useSubscribable(services.status));
+  const text = alertOf(useSubscribable(services.status), useStudyChrome());
   if (text === null) return null;
   return (
     <button type="button" className={styles.alert} onClick={props.onStatus}>

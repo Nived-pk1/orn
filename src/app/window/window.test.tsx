@@ -270,7 +270,7 @@ describe('the shell frame around the window', () => {
   it('every mode of the rail is enabled (Named reactions and Mechanisms are live since 7.4)', () => {
     renderWithApp(app());
     const rail = within(screen.getByRole('navigation', { name: 'Modes' }));
-    expect(rail.getByRole('button', { name: 'Navigator' }).getAttribute('aria-current')).toBe('page');
+    expect(rail.getByRole('button', { name: 'Map' }).getAttribute('aria-current')).toBe('page');
     expect(rail.getByRole('button', { name: 'Workbench' }).getAttribute('aria-disabled')).toBeNull(); // a page since step 6.2a
     expect(rail.getByRole('button', { name: 'Chapters' }).getAttribute('aria-disabled')).toBeNull(); // the Syllabus placeholder became Chapters (7.3b D1)
     expect(rail.getAllByRole('button')[0]?.textContent).toContain('Chapters'); // at the top of the rail
@@ -292,7 +292,7 @@ describe('the shell frame around the window', () => {
     for (const [name, reason] of [['Undo', 'Nothing to undo'], ['Redo', 'Nothing to redo']] as const) {
       expect(screen.getByRole('button', { name, description: reason }).getAttribute('aria-disabled')).toBe('true');
     }
-    expect(screen.getByRole('combobox', { name: /Exam scope/ })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: /^Exam$/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'File' })).toBeTruthy();
   });
 

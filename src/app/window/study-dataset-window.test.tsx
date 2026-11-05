@@ -162,12 +162,10 @@ describe('the update notice (Study only)', () => {
 });
 
 describe('the dataset view words follow the dataset', () => {
-  it('study, published: "Replace with the study dataset"; demo: unchanged', () => {
-    const k = loaded.study;
-    show(k, published(SHA_B), { withData: true });
-    k.fireEvent.click(k.screen.getByRole('button', { name: /Dataset/ }));
-    expect(k.screen.getByRole('button', { name: 'Replace with the study dataset' })).toBeTruthy();
-    k.cleanup();
+  it('study, published: "Replace with the study dataset" (a student has no Dataset page since 8.3, so the words are checked where they are made); demo: unchanged on the Dataset page', async () => {
+    const { datasetWordsOf } = await import('./dataset-info');
+    expect(datasetWordsOf(published(SHA_B)).replaceTitle).toBe('Replace with the study dataset');
+    const k = loaded.studio;
     show(k, { kind: 'demo' }, { withData: true });
     k.fireEvent.click(k.screen.getByRole('button', { name: /Dataset/ }));
     expect(k.screen.getByRole('button', { name: 'Replace with the demo dataset' })).toBeTruthy();

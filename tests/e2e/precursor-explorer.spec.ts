@@ -128,7 +128,7 @@ test.describe('Studio, desktop', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    await page.getByRole('combobox', { name: /Exam scope/ }).selectOption({ label: 'JEE Main, provisional, not verified' });
+    await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: 'JEE Main, provisional, not verified' });
     await openPrecursors(page);
     await pick(page, 'Compound to make', 'caprolactam', 'Choose ε-Caprolactam');
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');

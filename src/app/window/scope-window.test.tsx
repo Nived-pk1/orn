@@ -29,14 +29,14 @@ beforeAll(async () => {
 
 const MAIN = { examId: 'exm_jee-main', examVersionId: 'exv_jee-main-2026' } as never;
 const BECKMANN = 'rxn_cyclohexanone-oxime-beckmann';
-const selector = () => screen.getByRole('combobox', { name: /Exam scope/ }) as HTMLSelectElement;
+const selector = () => screen.getByRole('combobox', { name: /^Exam$/ }) as HTMLSelectElement;
 
 describe('the selector', () => {
   it('lists All and every exam version, each with its exam and status in words', async () => {
     const app = fakeApp({ state: demoState() });
     renderWithApp(app);
     await screen.findByRole('group', { name: /^Navigator:/ });
-    expect([...selector().options].map((o) => o.textContent)).toEqual(['All (no exam scope)', 'JEE Advanced, provisional, not verified', 'JEE Main, provisional, not verified']);
+    expect([...selector().options].map((o) => o.textContent)).toEqual(['All exams', 'JEE Advanced, provisional, not verified', 'JEE Main, provisional, not verified']);
     expect(selector().value).toBe('');
     fireEvent.change(selector(), { target: { value: 'exv_jee-main-2026' } });
     expect(app.navigator.ui.exam.getState().active).toEqual(MAIN);

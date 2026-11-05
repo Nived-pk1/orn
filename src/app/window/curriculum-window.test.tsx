@@ -187,7 +187,7 @@ describe('making a class a map family', () => {
     const arrangement = arrangementsOf({ indexes: indexEngine.build(app.store.getState()) } as never).get(cls);
     expect(arrangement).toEqual({ cell: { column: 0, row: 2 }, group: 'Oxygen compounds', tone: 'green' });
     // the overview map draws it, in its group
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Modes' })).getByRole('button', { name: /Overview|Navigator/ }));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Modes' })).getByRole('button', { name: /Overview|Map/ }));
     const svg = await screen.findByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ });
     expect(svg.querySelectorAll('[data-box="hub"]')).toHaveLength(16);
     expect(screen.getByRole('graphics-symbol', { name: /^Acyl halides, class hub, Oxygen compounds/ })).toBeTruthy();

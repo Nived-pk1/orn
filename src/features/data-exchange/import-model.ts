@@ -79,6 +79,8 @@ interface Source {
   readonly blob: Blob;
   readonly fileName: string;
   readonly auto: boolean;
+  /** True when the data was empty at the start: a first load. */
+  readonly firstLoad?: boolean;
   /** Called once when this file's import was applied (the window remembers which study dataset a browser loaded). */
   readonly onApplied?: (() => void) | undefined;
 }
@@ -86,7 +88,15 @@ interface Source {
 const CLOSED: ImportState = { phase: 'closed', fileName: '', inProcess: false, revising: false, cancellable: false };
 const isFailure = (answer: PreviewAnswer): answer is FlowFailure => !answer.ok;
 
-export function createImportModel(ports: DataExchangePorts, options?: { readonly clock?: PaceClock }): ImportModel {
+export interface ImportModelOptions {
+  readonly clock?: PaceClock;
+  /** A student edition: the first load of the shipped dataset into an EMPTY dataset says nothing (step 8.3, C3); a warning is still said. */
+  readonly quietAuto?: boolean;
+  /** Called once when a file the visitor chose was applied (not an automatic load): the browser now holds their own data. */
+  readonly onOwnDataApplied?: () => void;
+}
+
+export function createImportModel(ports: DataExchangePorts, options?: ImportModelOptions): ImportModel {
   const store = createStore<ImportState>(() => CLOSED);
   const pace = createApplyPace(options?.clock ?? realPaceClock, ({ long, progress }) => {
     if (store.getState().phase === 'applying') store.setState({ long, progress });
@@ -146,6 +156,9 @@ export function createImportModel(ports: DataExchangePorts, options?: { readonly
       const extra = [...answer.notes, ...(answer.reportSaved ? [] : [`The import report could not be stored${answer.reportError === undefined ? '' : ` (${answer.reportError})`}.`])];
       set({ phase: 'closed' });
       source?.onApplied?.();
+      if (source?.auto === false) options?.onOwnDataApplied?.();
+      const quiet = options?.quietAuto === true && source?.auto === true && source.firstLoad === true && words.kind === 'info' && extra.length === 0;
+      if (quiet) return;
       announce(words.kind === 'info' && extra.length > 0 ? 'warning' : words.kind, [words.text, ...extra.map((line) => (/[.!?]$/.test(line) ? line : `${line}.`))].join(' '), true);
       return;
     }
@@ -283,7 +296,7 @@ export function createImportModel(ports: DataExchangePorts, options?: { readonly
       announce('warning', `The file ${shownName(from.fileName)} was not opened: ${reason ?? 'an import is already open'}.`);
       return;
     }
-    source = from;
+    source = { ...from, firstLoad: ports.recordCount() === 0 };
     retry = undefined;
     // The bundled demo replaces; an empty dataset has nothing to merge into, so the file's own dataset information is kept (replace_all).
     // Anything else starts as merge, which keeps everything you have.

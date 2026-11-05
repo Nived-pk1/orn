@@ -170,7 +170,7 @@ test.describe('desktop', () => {
     await expect(chips(page).first()).toContainText('Substance: Ethanol');
 
     // an overview arrow of several reactions
-    await modes(page).getByRole('button', { name: 'Navigator' }).click();
+    await modes(page).getByRole('button', { name: 'Map' }).click();
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
     await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).click();
     const table = page.getByRole('table', { name: 'Arrows' });
@@ -197,7 +197,7 @@ test.describe('desktop', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    await page.getByRole('combobox', { name: /Exam scope/ }).selectOption({ label: 'JEE Main, provisional, not verified' });
+    await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: 'JEE Main, provisional, not verified' });
     await openReactions(page);
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');
     const marked = await view(page).locator('[data-outside]').count();

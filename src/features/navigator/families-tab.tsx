@@ -5,6 +5,7 @@
  */
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/ui/primitives';
+import { useStudyChrome } from '@/ui/study-chrome';
 import { familyCardsOf } from './family-cards';
 import { Runs } from './family-text';
 import { useNavigator, useNavigatorState } from './navigator-context';
@@ -18,6 +19,7 @@ export function FamiliesTab() {
   const state = useNavigatorState();
   const groups = useMemo(() => familyCardsOf(state.scene), [state.scene]);
   const [unanchoredOpen, setUnanchoredOpen] = useState(false);
+  const chrome = useStudyChrome();
   const unanchored = state.unanchored;
   const open = useCallback(
     (id: string): void => {
@@ -59,6 +61,7 @@ export function FamiliesTab() {
           </ul>
         </section>
       ))}
+      {chrome.unanchored ? (
       <section className={styles.group} aria-label="Unanchored reactions">
         <Button
           className={styles.unanchored}
@@ -70,6 +73,7 @@ export function FamiliesTab() {
         </Button>
         {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
       </section>
+      ) : null}
     </section>
   );
 }

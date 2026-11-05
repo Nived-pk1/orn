@@ -46,7 +46,8 @@ export interface ShellProps {
   readonly closeRequest?: number;
   /** A number that goes up when the page asks for the focus to go to its title (the first-run screen closed: the button that had it is gone). */
   readonly focusTitleRequest?: number;
-  readonly statusBar: ReactNode;
+  /** The status bar's content; undefined: no status bar at all (no footer, no reserved row; step 8.3, C1). */
+  readonly statusBar?: ReactNode;
   /** The phone layout's own regions (ADR-039): used instead of the top bar controls, the banners, the mode rail and the status bar when the layout mode is phone. */
   readonly phone?: PhoneRegions;
 }
@@ -99,6 +100,7 @@ export function Shell(props: ShellProps) {
       className={styles.shell}
       data-breakpoint={breakpoint}
       data-layout={phone === undefined ? 'desktop' : 'phone'}
+      {...(props.statusBar === undefined ? { 'data-status-bar': 'none' } : {})}
       data-inspector={inspectorOpen ? 'open' : 'closed'}
       {...(phone !== undefined && sheetSpace > 0 ? { 'data-sheet-room': '' } : {})}
       style={{ ['--inspector-width' as string]: `${pane.width}px`, ['--sheet-space' as string]: `${sheetSpace}px` }}
@@ -146,7 +148,7 @@ export function Shell(props: ShellProps) {
         </PhoneSheet>
       )}
       {phone?.tabs ?? null}
-      {phone === undefined ? <footer className={styles.statusBar} tabIndex={0}>{props.statusBar}</footer> : <div className={styles.phoneAlert}>{phone.alert}</div>}
+      {phone === undefined ? (props.statusBar === undefined ? null : <footer className={styles.statusBar} tabIndex={0}>{props.statusBar}</footer>) : <div className={styles.phoneAlert}>{phone.alert}</div>}
     </div>
   );
 }

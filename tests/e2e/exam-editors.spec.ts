@@ -16,7 +16,7 @@ import { editorDialog, openDemo, palette, searchFor, shotsDir } from './editor-k
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 
-const selector = (page: Page) => page.getByRole('combobox', { name: /Exam scope/ });
+const selector = (page: Page) => page.getByRole('combobox', { name: /^Exam$/ });
 const NEW_EXAM = 'Zz e2e board exam';
 
 /** Dismisses every toast first, so a screenshot shows the editor and not the "Saved" of the step before. */
@@ -85,7 +85,7 @@ test.describe('the exam editors (Studio)', () => {
 
     // chosen in the selector: Beckmann (a rearrangement) is outside JEE Main and not outside the new version
     const NEW_LABEL = `${NEW_EXAM}, draft, not verified`;
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Navigator' }).click();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
     await expect(selector(page).locator('option', { hasText: NEW_LABEL })).toHaveCount(1, { timeout: 60_000 });
     await page.getByRole('button', { name: /^Unanchored reactions/ }).click();
     const panel = page.getByRole('region', { name: 'Unanchored reactions' });

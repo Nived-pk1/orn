@@ -34,7 +34,7 @@ describe('the window with records', () => {
     const counts = await screen.findByRole('list', { name: 'Record counts' });
     expect(within(counts).getByText('reaction: 27')).toBeTruthy();
     expect(screen.queryByRole('group', { name: /^Navigator:/ })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Navigator' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Map' }));
     expect(await screen.findByRole('group', { name: /^Navigator:/ })).toBeTruthy();
   });
 

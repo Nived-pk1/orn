@@ -10,7 +10,8 @@ import type { CanonicalState, ExamVersion } from '@/core/schema';
 import { useStoreSelector, type StateSource } from '@/ui/hooks';
 import { useToasts } from '@/ui/primitives';
 import type { ActiveExamStore } from '@/ui/state';
-import { ALL_LABEL, examOptions, labelOfChoice } from './exam-scope';
+import { useStudyChrome } from '@/ui/study-chrome';
+import { ALL_LABEL, EXAM_LABEL, examOptions, labelOfChoice } from './exam-scope';
 import styles from './window.module.css';
 
 export interface ExamScopeBinding {
@@ -27,10 +28,11 @@ const versionsOf = (state: CanonicalState) => state.records.exam_version;
 
 export function ExamScopeSelector(props: { readonly binding: ExamScopeBinding }) {
   const { exam, store, hasData, log } = props.binding;
+  const chrome = useStudyChrome();
   const active = useStore(exam, (s) => s.active);
   const versions = useStoreSelector(store, versionsOf) as Readonly<Record<string, ExamVersion>>;
   const exams = useStoreSelector(store, examsOf);
-  const { options, omitted } = useMemo(() => examOptions({ records: { exam: exams, exam_version: versions } } as unknown as CanonicalState), [exams, versions]);
+  const { options, omitted } = useMemo(() => examOptions({ records: { exam: exams, exam_version: versions } } as unknown as CanonicalState, { statusWords: chrome.examStatusWords }), [exams, versions, chrome.examStatusWords]);
   const toasts = useToasts();
   const chosen = active === null ? undefined : labelOfChoice(options, active.examVersionId);
   const missing = active !== null && chosen === undefined;
@@ -44,7 +46,7 @@ export function ExamScopeSelector(props: { readonly binding: ExamScopeBinding })
   return (
     <span className={styles.examScope}>
       <label>
-        <span className={styles.examLabel}>Exam scope </span>
+        <span className={styles.examLabel}>{EXAM_LABEL} </span>
         <select
           value={active === null || chosen === undefined ? ALL : active.examVersionId}
           onChange={(event) => {

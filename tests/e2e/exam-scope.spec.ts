@@ -11,7 +11,7 @@ import { expect, test } from './fixtures';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
-const selector = (page: Page) => page.getByRole('combobox', { name: /Exam scope/ });
+const selector = (page: Page) => page.getByRole('combobox', { name: /^Exam$/ });
 const MAIN = 'JEE Main, provisional, not verified';
 
 async function openDemo(page: Page): Promise<void> {
@@ -27,7 +27,7 @@ test.describe('the exam scope', () => {
     const seen = await watch(page);
     await openDemo(page);
     await expect(selector(page)).toHaveValue('');
-    await expect(selector(page).locator('option')).toHaveText(['All (no exam scope)', 'JEE Advanced, provisional, not verified', MAIN]);
+    await expect(selector(page).locator('option')).toHaveText(['All exams', 'JEE Advanced, provisional, not verified', MAIN]);
 
     await page.getByRole('button', { name: /^Unanchored reactions \(2\)/ }).click();
     const panel = page.getByRole('region', { name: 'Unanchored reactions' });
@@ -59,7 +59,7 @@ test.describe('the exam scope', () => {
     const beckmann = page.locator('article[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]').first();
     await expect(beckmann).toHaveAttribute('data-outside', '');
     await expect(beckmann.getByText('outside JEE Main')).toBeVisible();
-    await selector(page).selectOption({ label: 'All (no exam scope)' });
+    await selector(page).selectOption({ label: 'All exams' });
     await expect(page.locator('article[data-outside]')).toHaveCount(0);
     await expectClean(seen);
   });

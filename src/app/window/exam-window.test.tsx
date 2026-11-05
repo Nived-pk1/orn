@@ -67,8 +67,8 @@ describe('a new exam and version made in the Workbench', () => {
     await waitFor(() => expect(Object.values(app.store.getState().records.exam_version).some((v) => v.label === 'Test board exam 2027')).toBe(true));
     const versionId = Object.values(app.store.getState().records.exam_version).find((v) => v.label === 'Test board exam 2027')?.id as string;
 
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Modes' })).getByRole('button', { name: /Navigator/ }));
-    const selector = (await screen.findByRole('combobox', { name: /Exam scope/ })) as HTMLSelectElement;
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Modes' })).getByRole('button', { name: /^Map$/ }));
+    const selector = (await screen.findByRole('combobox', { name: /^Exam$/ })) as HTMLSelectElement;
     expect([...selector.options].map((o) => o.textContent)).toContain('Test board exam, draft, not verified');
     fireEvent.change(selector, { target: { value: versionId } });
     expect(app.navigator.ui.exam.getState().active).toEqual({ examId, examVersionId: versionId });

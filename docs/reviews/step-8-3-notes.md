@@ -5,3 +5,6 @@ Speed check at start: `node -e 1` 0.07 s (normal). Ports 4173, 4174, 8787, 9333 
 
 Part A code done (uncommitted until the check passes); Part B fact sheet written; Part D new unit tests written; Part C code next.
 Part A done, commit pending next: Part C
+Part C code written, typechecking
+Part C code + unit tests done (uncommitted, check running); next: e2e spec updates, Part E
+Part C done (check green 720 files / 8152 tests), commit next: Part E e2e + screenshots

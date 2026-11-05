@@ -23,3 +23,9 @@
   padding: var(--space-2) var(--space-3) 0 var(--space-6);
   color: var(--color-ink-2);
 }
+
+.savedLine {
+  margin: 0;
+  font-size: var(--text-13);
+  color: var(--color-ink-2);
+}

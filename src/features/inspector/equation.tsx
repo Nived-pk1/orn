@@ -5,11 +5,12 @@
  * chem facts. The "Names" switch (one setting, saved with the panels) is in the first scheme; the text is always a React child, never markup.
  */
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { fullEquationsOfReaction } from '@/core/graph';
+import { fullEquationsOfReaction, withoutExclusive } from '@/core/graph';
 import type { Reaction } from '@/core/schema';
 import { EQUATION_AREA, EquationScheme, fitHero, type HeroFit } from '@/render/equation';
 import { createDepictionBinding } from '@/render/svg';
 import { usePanels } from '@/ui/state';
+import { useStudyChrome } from '@/ui/study-chrome';
 import { useInspectorEnv } from './env';
 import { HeroTextCard } from './hero-text-card';
 import styles from './inspector.module.css';
@@ -17,7 +18,12 @@ import styles from './inspector.module.css';
 function useEquations(record: Reaction) {
   const env = useInspectorEnv();
   const { ports } = env;
-  const equations = useMemo(() => fullEquationsOfReaction(env.state, ports.indexes.current(), record), [env, ports, record]);
+  const { exclusiveWord } = useStudyChrome();
+  // a student does not read "exclusive" (step 8.3, C8): one function decides, the memo keeps the objects steady for the measuring effects
+  const equations = useMemo(() => {
+    const all = fullEquationsOfReaction(env.state, ports.indexes.current(), record);
+    return exclusiveWord ? all : all.map(withoutExclusive);
+  }, [env, ports, record, exclusiveWord]);
   const binding = useMemo(() => (ports.depictions === undefined ? undefined : createDepictionBinding(ports.depictions, ports.timers, EQUATION_AREA)), [ports]);
   const names = usePanels(ports.ui.panels, (state) => state.equationNames);
   return { ports, equations, binding, names };

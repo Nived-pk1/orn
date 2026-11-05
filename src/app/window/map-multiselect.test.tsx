@@ -206,7 +206,7 @@ describe('Study has none of it', () => {
     await drawing(k);
     k.tap(hub(k, 'Aldehydes'), { shift: true });
     k.tap(hub(k, 'Alcohols'), { shift: true });
-    expect(line(k)).toMatch(/^Selected: Alcohols, class hub/);
+    expect(line(k)).toMatch(/^Selected: Alcohols.$/); // Study says the name only (step 8.3, C6)
     expect(k.screen.queryByRole('button', { name: /^Mark verified|^Delete \(/ })).toBeNull();
   });
   it('a Study phone has no Select toggle', async () => {

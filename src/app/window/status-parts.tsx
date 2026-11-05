@@ -5,6 +5,7 @@
 import { useCounts, useSubscribable } from '@/ui/hooks';
 import { Banner, Button } from '@/ui/primitives';
 import { usePanels } from '@/ui/state';
+import { useStudyChrome } from '@/ui/study-chrome';
 import { bannersOf, bannerKindOf, bootLinesOf, draftsLineOf, layoutCacheTextOf, operationTextOf, periodicTextOf, quarantineTextOf, saveTextOf, storageTextOf, workersTextOf, type BannerAction } from './banners';
 import { useApp } from './context';
 import { createLocalTimeFormatter } from './local-time';
@@ -14,7 +15,23 @@ import styles from './status-parts.module.css';
 
 const localTime = createLocalTimeFormatter();
 
+/** The one quiet line a student with own imported data sees (step 8.3, C1). */
+export const SAVED_LINE = 'Your data is saved in this browser';
+
 export function StatusLine() {
+  const chrome = useStudyChrome();
+  if (chrome.statusBar === 'none') return null;
+  if (chrome.statusBar === 'saved-line') {
+    return (
+      <section aria-label="Status">
+        <p className={styles.savedLine}>{SAVED_LINE}</p>
+      </section>
+    );
+  }
+  return <FullStatusLine />;
+}
+
+function FullStatusLine() {
   const { services, formatTime } = useApp();
   const status = useSubscribable(services.status);
   const counts = useCounts(services.store.findings);
@@ -50,7 +67,8 @@ export function Banners() {
   const status = useSubscribable(services.status);
   const storageNoticeDismissed = usePanels(panels, (s) => s.storageNoticeDismissed);
   const openExport = useExportOpen();
-  const banners = bannersOf(status, { storageNoticeDismissed });
+  const chrome = useStudyChrome();
+  const banners = bannersOf(status, { storageNoticeDismissed, chrome });
   if (banners.length === 0) return null;
   const run = (kind: BannerAction): void => {
     if (kind === 'reload') reload();

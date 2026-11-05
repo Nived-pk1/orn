@@ -24,7 +24,7 @@ test('Named reactions, Mechanisms and Reagents: a list of more than 30 is cut at
   test.setTimeout(480_000);
   const seen = await watch(page);
   await importOwn(page, longListsDemo());
-  const scope = page.getByRole('combobox', { name: /Exam scope/ });
+  const scope = page.getByRole('combobox', { name: /^Exam$/ });
   for (const [mode, noun, entry] of [['Named reactions', 'named reactions', '[data-named-id]'], ['Mechanisms', 'mechanisms', '[data-mechanism-id]']] as const) {
     await openMode(page, mode);
     const view = region(page, mode);
@@ -66,7 +66,7 @@ test('Chapters: a group of 35 concepts is cut at 30; Syllabus: a unit of 65 topi
   expect(await axeProblems(page)).toEqual([]);
 
   // the exam scope picks the version the Syllabus opens with; choosing a version there leaves the scope alone
-  const scope = page.getByRole('combobox', { name: /Exam scope/ });
+  const scope = page.getByRole('combobox', { name: /^Exam$/ });
   await scope.selectOption({ label: 'JEE Advanced, provisional, not verified' });
   await rail(page).getByRole('button', { name: 'Syllabus' }).click();
   const syllabus = region(page, 'Syllabus');

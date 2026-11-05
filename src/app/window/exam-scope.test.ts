@@ -13,7 +13,7 @@ const stateOf = (exams: object[], versions: object[]) =>
   }) as unknown as CanonicalState;
 
 describe('the exam scope choices', () => {
-  it('are a flat list by exam name, then year; "All (no exam scope)" is not among them (the selector puts it first)', () => {
+  it('are a flat list by exam name, then year; "All exams" is not among them (the selector puts it first)', () => {
     const state = stateOf(
       [exam('z', 'Zeta entrance test'), exam('a', 'Alpha board exam')],
       [version('z1', 'z', 'Zeta 2026', 'official', 2026), version('a2', 'a', 'Alpha 2027', 'draft', 2027), version('a1', 'a', 'Alpha 2026', 'official', 2026)],

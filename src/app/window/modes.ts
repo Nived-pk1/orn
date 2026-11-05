@@ -1,6 +1,7 @@
 import { EDITING } from '@/app/edition';
 import type { ExplorerKind } from '@/ui/state';
 import type { ModeItem } from '@/ui/shell';
+import type { StudyChrome } from '@/ui/study-chrome';
 
 /**
  * The modes of UI_ARCHITECTURE §5 (note E8: Phase 5 builds the Navigator view only; the others are listed, disabled, with the phase
@@ -45,7 +46,7 @@ export function modeOfExplorer(kind: ExplorerKind): string {
 
 export const MODES: readonly ModeItem[] = [
   { id: CHAPTERS_MODE, label: 'Chapters' },
-  { id: NAVIGATOR_MODE, label: 'Navigator' },
+  { id: NAVIGATOR_MODE, label: 'Map' },
   { id: DATASET_MODE, label: 'Dataset' },
   { id: REACTIONS_MODE, label: 'Reactions' },
   { id: PRECURSORS_MODE, label: 'Precursors' },
@@ -55,3 +56,6 @@ export const MODES: readonly ModeItem[] = [
   { id: SYLLABUS_MODE, label: 'Syllabus' },
   ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }, { id: REVIEW_MODE, label: 'Review' }] : []),
 ];
+
+/** The rail for this reader: a student does not get the Dataset page (step 8.3, C4). */
+export const modesFor = (chrome: StudyChrome): readonly ModeItem[] => (chrome.datasetRail ? MODES : MODES.filter((item) => item.id !== DATASET_MODE));

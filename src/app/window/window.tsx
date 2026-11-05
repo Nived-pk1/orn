@@ -31,7 +31,10 @@ import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
 import { openChapter } from "./chapters-entry";
 import { useFirstScreen, hasChapterTopic } from "./first-screen";
-import { CHAPTERS_MODE, EXPLORER_MODES, MODES, modeOfExplorer, NAVIGATOR_MODE } from "./modes";
+import { CHAPTERS_MODE, EXPLORER_MODES, modesFor, modeOfExplorer, NAVIGATOR_MODE } from "./modes";
+import { studyChrome, StudyChromeProvider, useStudyChrome } from '@/ui/study-chrome';
+import { useHasOwnData } from './own-data-hooks';
+import { EDITION } from '@/app/edition';
 import { openPrecursors } from "./precursors-entry";
 import { openReagent } from "./reagents-entry";
 import { usePageEntries } from "./use-page-entries";
@@ -117,7 +120,10 @@ function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
 /** The window: the toast provider and the editors' entry points (ADR-040) around the content. */
 export function Window() {
   const layout = useLayoutMode();
+  const ownData = useHasOwnData();
+  const chrome = useMemo(() => studyChrome(EDITION, { ownData }), [ownData]);
   return (
+    <StudyChromeProvider value={chrome}>
     <ToastProvider folded={layout === 'phone'}>
       <DatasetProvider>
       {EDITING ? (
@@ -131,11 +137,13 @@ export function Window() {
       )}
       </DatasetProvider>
     </ToastProvider>
+    </StudyChromeProvider>
   );
 }
 
 function WindowContent() {
   const { panels, services, navigator, inspector: inspectorPorts } = useApp();
+  const chrome = useStudyChrome();
   const editors = useEditors();
   const { actions: imports, element: importElement } = useImportActions();
   const { actions: exports, element: exportElement } = useExportActions();
@@ -301,7 +309,7 @@ function WindowContent() {
             alert: <PhoneAlert onStatus={openStatus} />,
             tabs: <PhoneTabs onSearch={() => setSearching(true)} searching={searching} />,
           }}
-          modes={MODES}
+          modes={modesFor(chrome)}
           activeMode={mode}
           onModeChange={setMode}
           banners={
@@ -337,13 +345,17 @@ function WindowContent() {
           openRequest={openRequest}
           closeRequest={closeRequest}
           focusTitleRequest={titleRequest}
-          statusBar={
-            <ErrorBoundary label="The status panel">
-              <StatusLine />
-              <PanelsStatus />
-              <NavigatorStatus />
-            </ErrorBoundary>
-          }
+          {...(chrome.statusBar === 'none'
+            ? {}
+            : {
+                statusBar: (
+                  <ErrorBoundary label="The status panel">
+                    <StatusLine />
+                    {chrome.statusBar === 'full' ? <PanelsStatus /> : null}
+                    {chrome.statusBar === 'full' ? <NavigatorStatus /> : null}
+                  </ErrorBoundary>
+                ),
+              })}
         />
         <ReplaceDialog open={asking} onClose={() => setAsking(false)} imports={imports} />
         {importElement}
