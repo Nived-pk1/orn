@@ -1,28 +1,26 @@
 /**
- * The inspector's inputs from the canvas and the keyboard (step 5.6a): a click on a card, a family, an arrow or a Unanchored row focuses
- * its record and OPENS the pane when it is closed (closing stays the user's choice and is saved by the shell); Alt+Left and Alt+Right
- * move through the history. Each pick is one event of its store (`picks`), also a repeat of what was already selected.
- * Step 5.7: a pick on the MAP focuses the record at once but opens the pane only on `reveal()` of the selection store, which the
- * pointer state machine calls when the click's 300 ms double-click window has passed with no second click (Enter and the context menu
- * call it at once). The bridge keeps no timer of its own.
+ * The inspector's inputs from the canvas and the keyboard (step 5.6a, rebuilt in step 8.2b-fix, S1). The map has ONE selection and the
+ * inspector's history holds it: a pick on the map selects a record (a family), the bucket (the derived "Not in a family yet" node) or an
+ * arrow (from node, to node); an empty-map click or Esc selects nothing; a reaction picked in a list opens that record. Each pick is one
+ * event of its store (`picks`, `clears`), also a repeat of what was already selected. The inspector SHOWS the current entry and nothing
+ * else (`mapInspectorView`), so closing the pane never changes it and reopening it shows exactly it. Alt+Left and Alt+Right walk the
+ * history. A pick on the MAP opens the pane only on `reveal()` of the selection store (step 5.7: the pointer state machine calls it when
+ * the click's 300 ms double-click window has passed; Enter and the context menu call it at once). The bridge keeps no timer of its own.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph';
-import { currentOf, type Selected } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
-import { focusOfSelection } from './model/focus';
+import { refOfId } from './model/describe';
 
 const typing = (target: EventTarget | null): boolean => target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
 
-export function useBridge(ports: InspectorPorts, host: InspectorHost): string | undefined {
-  const [note, setNote] = useState<string | undefined>(undefined);
+export function useBridge(ports: InspectorPorts, host: InspectorHost): void {
   const hostRef = useRef(host);
   hostRef.current = host;
-  // true while what the inspector shows was put there by the selection (a pick on the map); then a selection that is gone empties it (step 8.2b, B4)
-  const owned = useRef(false);
   useEffect(() => {
     const { inspector, selection, family } = ports.ui;
     let selectionPicks = selection.getState().picks;
+    let clears = selection.getState().clears;
     let familyPicks = family.getState().picks;
     let selectionReveals = selection.getState().reveals;
     const offSelection = selection.subscribe((state) => {
@@ -30,49 +28,36 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
         selectionReveals = state.reveals;
         if (family.getState().open === null) hostRef.current.openPane();
       }
+      if (state.clears !== clears) {
+        clears = state.clears;
+        inspector.getState().select({ kind: 'none' });
+      }
       if (state.picks === selectionPicks) return;
       selectionPicks = state.picks;
-      const selected: Selected | null = state.selected;
+      const selected = state.selected;
       if (selected === null) return;
-      if (selected.kind === 'node' && selected.id === UNCLASSIFIED_HUB_ID) {
-        owned.current = true;
-        inspector.getState().openUnclassified();
-        setNote(undefined);
+      if (selected.kind === 'edge') {
+        const ends = hostRef.current.edgeEnds(selected.id);
+        inspector.getState().select(ends === undefined ? { kind: 'none' } : { kind: 'arrow', from: ends.from, to: ends.to });
         return;
       }
-      const focus = focusOfSelection(selected, (id) => hostRef.current.edgeEnds(id), ports.store.getState(), ports.indexes.current());
-      if (focus === undefined) {
-        // nothing to show for it: the old record must not stay up as if it were this one
-        owned.current = false;
-        inspector.getState().clear();
-        setNote(undefined);
+      if (selected.id === UNCLASSIFIED_HUB_ID) {
+        inspector.getState().select({ kind: 'bucket' });
         return;
       }
-      // open first: moving the focus clears an old note, then this pick's own note is set (the last call wins)
-      owned.current = true;
-      inspector.getState().open(focus.ref);
-      setNote(focus.note);
-    });
-    // opening the pane with nothing selected shows the empty state, never the record of a selection that is gone (step 8.2b, B4). Not on every
-    // deselect: the drawing drops a selection by itself when a family leaves the map, and the open record must stay then.
-    const offPane = ports.ui.panels.subscribe((now, before) => {
-      if (!now.inspectorOpen || before.inspectorOpen || selection.getState().selected !== null || !owned.current) return;
-      owned.current = false;
-      inspector.getState().clear();
-      setNote(undefined);
+      const ref = refOfId(selected.id);
+      if (ref === undefined) inspector.getState().select({ kind: 'none' });
+      else inspector.getState().open(ref);
     });
     const offFamily = family.subscribe((state) => {
       if (state.picks === familyPicks) return;
       familyPicks = state.picks;
       if (state.reaction === null) return;
-      owned.current = false;
       inspector.getState().open({ kind: 'reaction', id: state.reaction });
-      setNote(undefined);
       hostRef.current.openPane();
     });
     return () => {
       offSelection();
-      offPane();
       offFamily();
     };
   }, [ports]);
@@ -82,21 +67,9 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): string | 
       const store = ports.ui.inspector.getState();
       const moved = event.key === 'ArrowLeft' ? store.back() : event.key === 'ArrowRight' ? store.forward() : undefined;
       if (moved === undefined) return;
-      owned.current = false;
       event.preventDefault();
-      if (moved) setNote(undefined);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [ports]);
-  // a note belongs to the record it was made for: it goes when the focus moves elsewhere
-  useEffect(
-    () => ports.ui.inspector.subscribe((state, before) => {
-      const now = currentOf(state);
-      const was = currentOf(before);
-      if (now !== was && (now?.id !== was?.id || now?.kind !== was?.kind)) setNote((value) => (value === undefined ? value : undefined));
-    }),
-    [ports],
-  );
-  return note;
 }

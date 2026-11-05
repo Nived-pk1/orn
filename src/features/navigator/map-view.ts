@@ -15,7 +15,7 @@
  */
 import type { MapMarks } from '@/render/svg';
 import type { Scene, SceneEdge, SceneNode } from '@/render/scene';
-import { withChips, type Drawn, type PairFacts } from './map-chips';
+import type { withChips, Drawn, PairFacts } from './map-chips';
 import { distance, pointAlong, reactionsWord, shifted, sideOffset } from './map-geometry';
 
 /** The least distance between the two lines of a pair in a family focus (px). */
@@ -37,6 +37,8 @@ export interface MapViewOptions {
   readonly chain?: readonly { readonly from: string; readonly to: string }[] | undefined;
   /** What one family-to-family arrow carries (distinct reactions, and the reagent words when it is one). Absent: no words on chips. */
   readonly facts?: ((from: string, to: string) => PairFacts | undefined) | undefined;
+  /** The function that adds the chip marks (words, step numbers). It is its own chunk and arrives just after the first paint: until then the arrows keep their plain count chips. */
+  readonly chips?: typeof withChips | undefined;
 }
 
 export type { PairFacts } from './map-chips';
@@ -61,7 +63,9 @@ const within = (n: number): string => `${n} within the family`;
 
 function roleOf(edge: SceneEdge, focus: string | null, nodes: ReadonlyMap<string, SceneNode>): Drawn {
   if (focus !== null && edge.to === focus && edge.from !== focus) return { edge: { ...edge, stroke: 'dashed' }, mark: { role: 'madeFrom' } };
-  const tone = nodes.get(edge.from)?.tone;
+  // the bucket has no family colour: what leaves it stays in neutral ink (step 8.2b-fix, S4)
+  const source = nodes.get(edge.from);
+  const tone = source?.box === 'unclassified' ? undefined : source?.tone;
   return { edge, mark: { role: 'makes', ...(tone === undefined ? {} : { tone }) } };
 }
 
@@ -127,7 +131,8 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
   const drawn = chain !== undefined ? base.map(asChain) : focus !== null ? separatePairs(base) : options.chapter ? mergePairs(base, nodes) : base;
   // a busy chapter draws nothing until a family is chosen (its families stay at full strength); the selected arrow stays
   const busy = chain === undefined && focus === null && options.chapter && drawn.length > BUSY_CHAPTER_ARROWS ? drawn.length : 0;
-  const shown = withChips(busy > 0 ? drawn.filter((d) => d.edge.id === options.selectedEdgeId) : drawn, options.facts, chain !== undefined, visibleNodes);
+  const drawable = busy > 0 ? drawn.filter((d) => d.edge.id === options.selectedEdgeId) : drawn;
+  const shown = options.chips === undefined ? drawable : options.chips(drawable, options.facts, chain !== undefined, visibleNodes);
 
   const ends = new Set<string>();
   for (const d of drawn) {

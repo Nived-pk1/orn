@@ -53,8 +53,8 @@ export type {
 } from './navigator-stores';
 export { createNavigatorUi, MAX_SAVED_EXPANDED, NAVIGATOR_UI_KEY, parseNavigatorUi } from './navigator-persist';
 export type { NavigatorUi, NavigatorUiPort, NavigatorUiStatus, ParsedNavigatorUi } from './navigator-persist';
-export { canBack, canForward, createInspectorStore, currentOf, MAX_HISTORY } from './inspector-store';
-export type { InspectorEntry, InspectorState, InspectorStore } from './inspector-store';
+export { canBack, canForward, createInspectorStore, currentOf, MAX_HISTORY, selectionOf } from './inspector-store';
+export type { InspectorEntry, InspectorState, InspectorStore, RecordEntry, VirtualEntry } from './inspector-store';
 export { createExplorerStore, EMPTY_EXPLORER_FILTER, EXPLORER_USES, isFilterSet, parseExplorer } from './explorer-state';
 export type { ExplorerFilter, ExplorerKind, ExplorerState, ExplorerStore, ExplorerUse, ExplorerView } from './explorer-state';
 export { createChaptersStore, parseChapters } from './chapters-state';

@@ -7,11 +7,11 @@ const timers = () => ({ after: (_ms: number, _run: () => void) => () => undefine
 
 describe('parseMap', () => {
   it('nothing saved: all chapters, Unclassified hidden, no damage', () => {
-    expect(parseMap(undefined)).toEqual({ chapterId: null, showUnclassified: false, damaged: [] });
+    expect(parseMap(undefined)).toEqual({ chapterId: null, showUnclassified: false, fitRule: null, damaged: [] });
   });
 
   it('reads a good part and names a damaged field without touching the other', () => {
-    expect(parseMap({ chapterId: 'top_a', showUnclassified: true })).toEqual({ chapterId: 'top_a', showUnclassified: true, damaged: [] });
+    expect(parseMap({ chapterId: 'top_a', showUnclassified: true })).toEqual({ chapterId: 'top_a', showUnclassified: true, fitRule: null, damaged: [] });
     const bad = parseMap({ chapterId: 7, showUnclassified: true });
     expect(bad).toMatchObject({ chapterId: null, showUnclassified: true });
     expect(bad.damaged).toEqual(['map.chapterId']);
@@ -47,7 +47,7 @@ describe('the map part of uiState', () => {
     ui.stores.map.getState().setFocus('hub-a');
     await ui.flush();
     const saved = saves.at(-1) as Record<string, unknown>;
-    expect(saved.map).toEqual({ chapterId: 'top_a', showUnclassified: true });
+    expect(saved.map).toEqual({ chapterId: 'top_a', showUnclassified: true, fitRule: 2 });
     const again = createNavigatorUi({ stored: saved, mode: () => 'writable', save: () => Promise.resolve() }, timers());
     expect(again.stores.map.getState()).toMatchObject({ chapterId: 'top_a', showUnclassified: true, focusId: null });
     ui.dispose();
@@ -64,7 +64,7 @@ describe('the map part of uiState', () => {
   });
 
   it('a stored part is read tolerantly by the whole entry parser', () => {
-    expect(parseNavigatorUi({ map: { chapterId: 'top_c' } }).map).toEqual({ chapterId: 'top_c', showUnclassified: false, damaged: [] });
+    expect(parseNavigatorUi({ map: { chapterId: 'top_c' } }).map).toEqual({ chapterId: 'top_c', showUnclassified: false, fitRule: null, damaged: [] });
     expect(parseNavigatorUi({ map: { showUnclassified: 'yes' } }).damaged).toContain('map.showUnclassified');
   });
 });

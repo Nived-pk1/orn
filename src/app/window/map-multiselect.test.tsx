@@ -177,7 +177,7 @@ describe('Studio on a phone', () => {
     const k = loaded.studio;
     asPhone(k);
     const app = await openPhone(k);
-    const select = k.screen.getByRole('button', { name: 'Select' });
+    const select = await k.screen.findByRole('button', { name: 'Select' });
     expect(select.getAttribute('aria-pressed')).toBe('false');
     k.fireEvent.click(select);
     expect(select.getAttribute('aria-pressed')).toBe('true');

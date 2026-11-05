@@ -37,16 +37,21 @@ export function createMapStore(initial: { readonly chapterId?: string | null; re
   }));
 }
 
+/** The fit rule this build writes (step 8.2b-fix, C4): a viewport saved under an older rule (or none) was made for smaller boxes and is ignored once. */
+export const FIT_RULE = 2;
+
 export interface ParsedMap {
   readonly chapterId: string | null;
   readonly showUnclassified: boolean;
+  /** The fit rule the saved viewport was made under; null: before the rule existed (or unreadable). */
+  readonly fitRule: number | null;
   readonly damaged: readonly string[];
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 export function parseMap(raw: unknown): ParsedMap {
-  const defaults: ParsedMap = { chapterId: null, showUnclassified: false, damaged: [] };
+  const defaults: ParsedMap = { chapterId: null, showUnclassified: false, fitRule: null, damaged: [] };
   if (raw === undefined) return defaults;
   if (!isRecord(raw)) return { ...defaults, damaged: ['map'] };
   const damaged: string[] = [];
@@ -60,5 +65,7 @@ export function parseMap(raw: unknown): ParsedMap {
     if (typeof raw.showUnclassified === 'boolean') showUnclassified = raw.showUnclassified;
     else damaged.push('map.showUnclassified');
   }
-  return { chapterId, showUnclassified, damaged };
+  // tolerant: only the rule this build knows counts; anything else is read as missing
+  const fitRule = raw.fitRule === FIT_RULE ? FIT_RULE : null;
+  return { chapterId, showUnclassified, fitRule, damaged };
 }

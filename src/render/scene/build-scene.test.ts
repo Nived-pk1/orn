@@ -211,7 +211,7 @@ describe('nodes', () => {
     expect(at('spc_m')).toMatchObject({ glyph: 'species', emphasis: 'normal', minLod: 1, depictionKey: 'key:spc_m' });
     expect(at('spc_m')?.sublabel).toEqual([{ text: 'C' }, { text: '2', script: 'sub' }, { text: 'H' }, { text: '6', script: 'sub' }, { text: 'O' }]);
     expect(at('spc_f')).toMatchObject({ glyph: 'species', emphasis: 'target' });
-    expect(at('virtual:unclassified')).toMatchObject({ glyph: 'unclassified', label: [{ text: 'Unclassified' }], minLod: 0 });
+    expect(at('virtual:unclassified')).toMatchObject({ glyph: 'unclassified', label: [{ text: 'Not in a family yet' }], minLod: 0 });
     expect(at('virtual:overflow:cls_a')).toMatchObject({ glyph: 'overflow', label: [{ text: '+5 more' }], sublabel: [{ text: '9 arrows' }], minLod: 1 });
     expect(at('cls_a')?.depictionKey).toBeUndefined();
   });
@@ -234,8 +234,8 @@ describe('nodes', () => {
     expect(at('cls_a')?.ariaLabel).toBe('Alkenes, class hub, 1 reaction out, 3 hidden neighbours, has a caveat, review required, outside the exam scope, no structure');
     expect(at('spc_m')?.ariaLabel).toBe('Ethanol, species, member of a hub');
     expect(at('virtual:overflow:cls_a')?.ariaLabel).toBe('+5 more, hidden members, 9 arrows');
-    expect(at('virtual:unclassified')?.ariaLabel).toContain('Unclassified');
-    expect(edgeOf(scene, 'e1')?.ariaLabel).toBe('Alkenes to Unclassified, 1 reaction');
+    expect(at('virtual:unclassified')?.ariaLabel).toContain('Not in a family yet');
+    expect(edgeOf(scene, 'e1')?.ariaLabel).toBe('Alkenes to Not in a family yet, 1 reaction');
     expect(edgeOf(scene, 'e2')?.ariaLabel).toBe('Ethanol is a member of Alkenes');
     expect([...scene.nodes, ...scene.edges].every((x) => x.ariaLabel.length > 0)).toBe(true);
   });
@@ -341,5 +341,27 @@ describe('the family group and tone of a hub (step 5.5c)', () => {
       expect('group' in (found ?? {})).toBe(false);
     }
     expect(scene.nodes.find((n) => n.id === 'cls_c')?.ariaLabel).toBe('Haloalkanes, class hub');
+  });
+});
+
+describe('the box scale of the layout (step 8.2b-fix, C1)', () => {
+  const base = pipe(projectionOf({ nodes: hubs, edges: [edge('e1', 'cls_a', 'cls_b')] }), ports);
+  const scaled = (factor: number): LayoutResult => ({ ...base.layout, boxScale: factor });
+  const build = (layout: LayoutResult) => {
+    const built = buildScene(projectionOf({ nodes: hubs, edges: [edge('e1', 'cls_a', 'cls_b')] }), layout, { sizes: base.sizes, labelSizes: base.labels }, ports);
+    if (!built.ok) throw new Error(built.message);
+    return built.scene;
+  };
+  it('a box scale makes every box that much bigger at the position the layout gave, and says so on the node', () => {
+    const plain = build(base.layout);
+    const grown = build(scaled(1.5));
+    for (const node of plain.nodes) {
+      const bigger = grown.nodes.find((n) => n.id === node.id);
+      expect(bigger?.width).toBeCloseTo(node.width * 1.5, 6);
+      expect(bigger?.height).toBeCloseTo(node.height * 1.5, 6);
+      expect(bigger?.x).toBe(node.x);
+      expect(bigger?.scale).toBe(1.5);
+      expect(node.scale).toBeUndefined();
+    }
   });
 });

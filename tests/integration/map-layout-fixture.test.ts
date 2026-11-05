@@ -39,12 +39,12 @@ describe('map layout fixture', () => {
     expect(projection.truncation).toBeNull();
   });
 
-  it('has reactions into no family and reactions in three chapters, with arrows that cross chapters', () => {
+  it('has reactions into no family and reactions in four chapters (three busy, one small), with arrows that cross chapters', () => {
     const projection = navigatorProjection.build(contextOf(state), requestOf('navigator'));
     const intoNone = projection.edges.filter((e) => e.to.includes('unclassified') || projection.nodes.find((n) => n.id === e.to)?.role === 'unclassified');
     expect(new Set(intoNone.map((e) => e.reactionId)).size).toBeGreaterThanOrEqual(5);
     const index = buildChapterIndex(state);
-    expect(index.chapters.length).toBe(3);
+    expect(index.chapters.length).toBe(4);
     const chaptersOfPair = new Map<string, Set<string>>();
     for (const edge of projection.edges) {
       if (edge.reactionId === undefined) continue;
@@ -53,5 +53,17 @@ describe('map layout fixture', () => {
       chaptersOfPair.set(`${edge.from}>${edge.to}`, set);
     }
     expect([...chaptersOfPair.values()].some((s) => s.size >= 2)).toBe(true);
+  });
+
+  it('Chapter 4 is small (step 8.2b-fix, E5): three arrows once the two-way pair is one line, so it is not a busy chapter', () => {
+    const projection = navigatorProjection.build(contextOf(state), requestOf('navigator'));
+    const index = buildChapterIndex(state);
+    const pairs = new Set<string>();
+    for (const edge of projection.edges) {
+      if (edge.reactionId === undefined || !index.membershipsOf({ kind: 'reaction', id: edge.reactionId }).some((m) => m.chapterId === 'top_chapter-4')) continue;
+      pairs.add(edge.from < edge.to ? `${edge.from}|${edge.to}` : `${edge.to}|${edge.from}`);
+    }
+    expect(pairs.size).toBe(3);
+    expect(pairs.has('cls_family-08|cls_family-13')).toBe(true);
   });
 });

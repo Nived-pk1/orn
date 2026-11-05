@@ -1,6 +1,7 @@
 // Generates map-layout.orn.json: a LAYOUT fixture (step 8.2a Part C), not chemistry. About the size of the user's real data:
 // 20 families in 4 groups, 88 family-to-family arrows (ordered pairs), 8 two-way pairs, 5 families with reactions inside the family,
-// 6 reactions into compounds that are in no family, reactions spread over 3 chapters with arrows that cross chapters.
+// 6 reactions into compounds that are in no family, reactions spread over 3 chapters with arrows that cross chapters, and a 4th small chapter
+// (not busy: one two-way pair and two one-way arrows).
 // Deterministic (a small LCG, no clock). Run: node tests/fixtures/map-layout/generate.mjs
 import { writeFileSync } from 'node:fs';
 import process from 'node:process';
@@ -41,7 +42,7 @@ for (const o of ORPHANS) classes.push({ id: `cls_orphan-${o}`, kind: 'class', na
 
 // ---- topics: one subject, three chapters, one section each
 const topics = [{ id: 'top_layout', kind: 'topic', name: 'Layout fixture', aliases: [], topicKind: 'subject', order: 1, tags: [], citations: [], provenance: prov, review }];
-const CHAPTERS = [1, 2, 3];
+const CHAPTERS = [1, 2, 3, 4];
 for (const c of CHAPTERS) {
   topics.push({ id: `top_chapter-${c}`, kind: 'topic', name: `Chapter ${c}`, aliases: [], parentId: 'top_layout', topicKind: 'chapter', order: c, tags: [], citations: [], provenance: prov, review });
   topics.push({ id: `top_section-${c}`, kind: 'topic', name: `Section ${c}`, aliases: [], parentId: `top_chapter-${c}`, topicKind: 'section', order: 1, tags: [], citations: [], provenance: prov, review });
@@ -102,6 +103,12 @@ for (const [a, b] of pairs.values()) {
 }
 for (const f of LOOPS) for (let k = 0; k < f % 4 + 1; k += 1) addReaction(clsId(f), clsId(f), 1 + ((f + k) % 3));
 for (let k = 0; k < 6; k += 1) addReaction(clsId(1 + next(20)), `cls_orphan-${ORPHANS[k % 3]}`, 1 + (k % 3));
+
+// ---- Chapter 4 (step 8.2b-fix, E5): a SMALL chapter that is not busy (3 arrows after merging): one two-way pair (8 and 13, both ways) and two one-way arrows
+// on pairs that already exist, so the whole map still has 88 arrows
+addReaction(clsId(8), clsId(13), 4);
+addReaction(clsId(13), clsId(8), 4);
+for (const [a, b] of [...pairs.values()].filter(([x, y]) => x < y && ![x, y].some((n) => [8, 13].includes(n))).slice(0, 2)) addReaction(clsId(a), clsId(b), 4);
 
 const document = {
   format: 'orn.dataset',

@@ -171,3 +171,24 @@ describe('the arranged overview (step 5.5c; automatic cells since 5.5d): always 
     expect(result.request.nodes.every((n) => n.cell === undefined)).toBe(true);
   });
 });
+
+describe('growing the boxes (step 8.2b-fix, C1)', () => {
+  const projection = projectionOf({
+    nodes: [node('cls_a', { arrangement: { cell: { column: 0, row: 0 } } }), node('cls_b', { arrangement: { cell: { column: 1, row: 0 } } })],
+    edges: [edge('e1', 'cls_a', 'cls_b')],
+  });
+  const sizes = sizesFor(['cls_a', 'cls_b']);
+  it('asked for on an arranged overview, the request says so; otherwise it does not', () => {
+    const asked = buildLayoutRequest(projection, sizes, { growBoxes: true });
+    const plain = buildLayoutRequest(projection, sizes, {});
+    if (!asked.ok || !plain.ok) throw new Error('refused');
+    expect(asked.request.growBoxes).toBe(true);
+    expect('growBoxes' in plain.request).toBe(false);
+    expect(checkRequest(asked.request)).toBeUndefined();
+  });
+  it('the layered layout never grows boxes, also when asked', () => {
+    const layered = buildLayoutRequest(projection, sizes, { algorithm: 'layered', growBoxes: true });
+    if (!layered.ok) throw new Error('refused');
+    expect('growBoxes' in layered.request).toBe(false);
+  });
+});

@@ -152,7 +152,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
         counts.sizes += 1;
       }
       const previous: Record<string, Point> = last === null ? {} : { ...last.result.positions };
-      const built = buildLayoutRequest(current, sizes.value, { previous, labelSizes: sizes.labels, ...(modelOptions.layoutAlgorithm === undefined ? {} : { algorithm: modelOptions.layoutAlgorithm }) });
+      const built = buildLayoutRequest(current, sizes.value, { previous, labelSizes: sizes.labels, growBoxes: true, ...(modelOptions.layoutAlgorithm === undefined ? {} : { algorithm: modelOptions.layoutAlgorithm }) });
       counts.requests += 1;
       if (!built.ok) return fail(built.code, built.message);
       let result: LayoutResult;
@@ -173,7 +173,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
           // A layout computed without previous positions differs from one that is given its own result as previous (ELK's interactive
           // crossing minimisation), so the first interaction would move the view. Ask once more with the result as previous and show
           // only that answer (step 5.5a, item b). Bounded: once per request, and the second request has previous positions.
-          const again = buildLayoutRequest(current, sizes.value, { previous: result.positions, labelSizes: sizes.labels, ...(modelOptions.layoutAlgorithm === undefined ? {} : { algorithm: modelOptions.layoutAlgorithm }) });
+          const again = buildLayoutRequest(current, sizes.value, { previous: result.positions, labelSizes: sizes.labels, growBoxes: true, ...(modelOptions.layoutAlgorithm === undefined ? {} : { algorithm: modelOptions.layoutAlgorithm }) });
           counts.requests += 1;
           if (!again.ok) return fail(again.code, again.message);
           counts.layoutCalls += 1;
@@ -196,7 +196,7 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
       const hubIds = hubIdsOf(current);
       const selected = ports.ui.selection.getState().selected;
       if (selected !== null && !(selected.kind === 'node' ? scene.scene.nodes.some((n) => n.id === selected.id) : scene.scene.edges.some((e) => e.id === selected.id))) {
-        ports.ui.selection.getState().select(null);
+        ports.ui.selection.getState().drop();
         ports.log('selection_cleared', `the selected ${selected.kind} ${selected.id} is not in the drawing any more`);
       }
       set({ scene: scene.scene, error: null, skeleton: false, working: false, hubIds, layout: result.engine, unanchored: current.unanchoredReactionIds, reactions: Object.keys(ports.store.getState().records.reaction).length, chapterId: chapterOf() });

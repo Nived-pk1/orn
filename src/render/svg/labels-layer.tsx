@@ -50,8 +50,9 @@ function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; re
 /** The small second line of a family box (step 8.2a): "4 within the family", written just under the box, as text. */
 function Caption(props: { readonly node: SceneNode; readonly text: string; readonly faded: boolean }) {
   const { node } = props;
+  const size = CAPTION_SIZE * (node.scale ?? 1);
   return (
-    <text className={`${styles.caption}${props.faded ? ` ${styles.faded}` : ''}`} data-caption-of={node.id} x={node.x + node.width / 2} y={node.y + node.height + CAPTION_SIZE + 2} fontSize={CAPTION_SIZE} textAnchor="middle">
+    <text className={`${styles.caption}${props.faded ? ` ${styles.faded}` : ''}`} data-caption-of={node.id} x={node.x + node.width / 2} y={node.y + node.height + size + 2} fontSize={size} textAnchor="middle">
       {props.text}
     </text>
   );

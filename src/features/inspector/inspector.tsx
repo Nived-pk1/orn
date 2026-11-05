@@ -10,21 +10,19 @@ import type { RecordRef } from '@/core/schema';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, Skeleton } from '@/ui/primitives';
 import { SHEET_TITLE_ID } from '@/ui/shell';
-import { canBack, canForward, currentOf } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { InspectorEnvContext, isAuthorView, makeEnv, useInspectorEnv, type InspectorEnv } from './env';
 import { nameOfRecord, recordOf } from './model/describe';
 import { l4Words, severityBadges } from './model/findings';
+import { HistoryButtons } from './history-buttons';
 import { LazyStudyInspector } from './lazy-views';
-import study from './study-inspector.module.css';
 import type { GoNextAction } from './study-parts';
 import { placeOf } from './model/places';
-import { ArrowReactions } from './arrow-reactions';
 
 /** The records whose reactions the Reactions view can list (the same set the palette's Alt+Enter uses). */
 /** "For authors" is its own chunk: nothing of it loads until an author opens the section (Studio). */
-// the map's Unclassified box (step 8.2b): a small view of its own, loaded when it is first selected
-const UnclassifiedPane = lazy(() => import('./unclassified-view').then((module) => ({ default: module.UnclassifiedPane })));
+// the map's arrow and bucket views (step 8.2b-fix): their own chunk, loaded when one is first selected
+const MapPane = lazy(() => import('./map-pane').then((module) => ({ default: module.MapPane })));
 const AuthorsSection = lazy(() => import('./authors-section').then((module) => ({ default: module.AuthorsSection })));
 
 const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 'named_reaction'];
@@ -48,12 +46,9 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   const { ports, host } = props;
   const revision = useRevision(ports);
   const phone = useLayoutMode() === 'phone';
-  const note = useBridge(ports, host);
+  useBridge(ports, host);
   const inspector = ports.ui.inspector;
-  const history = useStore(inspector, (s) => s.history);
-  const index = useStore(inspector, (s) => s.index);
-  const current = currentOf({ history, index });
-  const virtual = useStore(inspector, (s) => s.virtual);
+  const entry = useStore(inspector, (s) => s.history[s.index] ?? null);
   const open = useCallback(
     (ref: RecordRef, at?: string) => {
       inspector.getState().open(ref, at);
@@ -64,28 +59,32 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   const state = ports.store.getState();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `revision` is the snapshot's identity: the env is made again when it moves
   const env: InspectorEnv = useMemo(() => makeEnv(ports, host, state, open), [ports, host, state, open, revision]);
-  if (virtual === 'unclassified') {
+  const edition = isAuthorView(host) ? 'studio' : 'study';
+  const empty = (
+    <section aria-label="Inspector empty state" className={styles.root}>
+      <p>Select a family, an arrow or a reaction card to see the record here.</p>
+      {phone ? null : (
+        <>
+          <p className={styles.muted}>Alt+Left and Alt+Right move through the records you have looked at.</p>
+          <p className={styles.muted}>The record counts of the dataset are under Dataset in the mode list on the left.</p>
+        </>
+      )}
+    </section>
+  );
+  // the arrow and bucket views (and the pure answer behind them) are their own chunk; an arrow that is gone shows the empty state from there
+  if (entry !== null && (entry.kind === 'arrow' || entry.kind === 'bucket')) {
     return (
-      <section className={styles.root} data-virtual="unclassified">
-        <Suspense fallback={<Skeleton label="Loading" lines={3} />}>
-          <UnclassifiedPane ports={ports} open={open} />
-        </Suspense>
+      <section className={styles.root} data-subject={entry.kind}>
+        <InspectorEnvContext.Provider value={env}>
+          <Suspense fallback={<Skeleton label="Loading" lines={3} />}>
+            <MapPane entry={entry} state={state} ports={ports} open={open} edition={edition} empty={empty} />
+          </Suspense>
+        </InspectorEnvContext.Provider>
       </section>
     );
   }
-  if (current === null) {
-    return (
-      <section aria-label="Inspector empty state" className={styles.root}>
-        <p>Select a family, an arrow or a reaction card to see the record here.</p>
-        {phone ? null : (
-          <>
-            <p className={styles.muted}>Alt+Left and Alt+Right move through the records you have looked at.</p>
-            <p className={styles.muted}>The record counts of the dataset are under Dataset in the mode list on the left.</p>
-          </>
-        )}
-      </section>
-    );
-  }
+  if (entry === null || entry.kind === 'none') return empty;
+  const current: RecordRef = { kind: entry.kind, id: entry.id } as RecordRef;
   const record = recordOf(state, current);
   return (
     <InspectorEnvContext.Provider value={env}>
@@ -95,14 +94,14 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
             Missing record {current.id}: it is not in this dataset (it may have been removed or replaced).
           </p>
         ) : (
-          <RecordBody key={`${current.kind}:${current.id}`} refOf={current} note={note} />
+          <RecordBody key={`${current.kind}:${current.id}`} refOf={current} />
         )}
       </article>
     </InspectorEnvContext.Provider>
   );
 }
 
-function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | undefined }) {
+function RecordBody(props: { readonly refOf: RecordRef }) {
   const { ports, host, state } = useInspectorEnv();
   const phone = useLayoutMode() === 'phone';
   const inspector = ports.ui.inspector;
@@ -116,7 +115,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
   const badges = severityBadges(findings);
   const l4 = l4Words(ports.l4.statusOf(props.refOf));
   const place = placeOf(props.refOf, name, ports.indexes.current(), ports.ui, host.navigatorShown);
-  const status = props.note ?? (host.explorerShown === true ? undefined : place.line);
+  const status = host.explorerShown === true ? undefined : place.line;
   const after = (run: () => void) => (): void => {
     run();
     if (phone) host.closePane?.();
@@ -133,14 +132,7 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
   const editable = host.editNames !== undefined && (host.editNames.namesKinds?.includes(record.kind) === true || host.editNames.fullEditorKinds?.includes(record.kind) === true);
   const headerExtras = (
     <>
-      <div className={study.history} role="group" aria-label="History">
-        <button type="button" className={study.iconButton} aria-label="Back" disabled={!canBack({ index })} onClick={() => inspector.getState().back()} aria-keyshortcuts="Alt+ArrowLeft">
-          <span aria-hidden="true">‹</span>
-        </button>
-        <button type="button" className={study.iconButton} aria-label="Forward" disabled={!canForward({ history, index })} onClick={() => inspector.getState().forward()} aria-keyshortcuts="Alt+ArrowRight">
-          <span aria-hidden="true">›</span>
-        </button>
-      </div>
+      <HistoryButtons inspector={inspector} />
       {!editable ? null : (
         // on a phone the buttons show in the FULL sheet, not in the peek (authoring is desktop-first, ADR-039 addendum)
         <div className={styles.actions} data-sheet-full="">
@@ -178,7 +170,6 @@ function RecordBody(props: { readonly refOf: RecordRef; readonly note: string | 
   return (
     <>
       <LazyStudyInspector refOf={props.refOf} record={record} authors={authors} headerExtras={headerExtras} goNext={goNext} titleId={SHEET_TITLE_ID} authorLines={authorLines} authorsPanel={<Suspense fallback={<Skeleton label="Loading the author view" lines={3} />}><AuthorsSection record={record} findings={findings} /></Suspense>} authorsOpen={history[index]?.at !== undefined} />
-      {props.note === undefined ? null : <ArrowReactions />}
     </>
   );
 }

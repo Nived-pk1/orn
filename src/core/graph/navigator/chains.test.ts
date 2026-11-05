@@ -4,6 +4,20 @@ import { CHAIN_MAX_CHAINS, CHAIN_PATH_BUDGET, familyChains, familyEdgesOf, type 
 const e = (from: string, to: string, n = 1): FamilyEdge => ({ from, to, reactionIds: Array.from({ length: n }, (_, i) => `${from}${to}${i}`) });
 const names = (r: ReturnType<typeof familyChains>): string[] => (r.ok ? r.chains.map((c) => c.families.join('>')) : []);
 
+describe('familyEdgesOf: the exam scope (step 8.2b-fix, E4)', () => {
+  const pairs = [
+    { from: 'a', to: 'b', candidates: [{ reactionId: 'in1' }, { reactionId: 'out1' }] },
+    { from: 'b', to: 'c', candidates: [{ reactionId: 'out2' }] },
+  ];
+  const inside = (id: string): boolean => id.startsWith('in');
+  it('keeps only the reactions inside the scope, and drops an arrow left with none', () => {
+    expect(familyEdgesOf(pairs, new Set(), inside)).toEqual([{ from: 'a', to: 'b', reactionIds: ['in1'] }]);
+  });
+  it('no scope function: every reaction counts (All exams)', () => {
+    expect(familyEdgesOf(pairs, new Set()).map((edge) => edge.reactionIds)).toEqual([['in1', 'out1'], ['out2']]);
+  });
+});
+
 describe('familyEdgesOf', () => {
   it('drops within-family pairs, the excluded family and empty pairs; reactions once each, sorted', () => {
     const edges = familyEdgesOf(

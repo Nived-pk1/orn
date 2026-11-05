@@ -43,6 +43,18 @@ describe('the arranged overview on the demo dataset (step 5.5c): the grid layout
     model.stop();
   });
 
+  it('the overview asks for bigger boxes and draws them: every family box carries its scale (step 8.2b-fix, C1)', async () => {
+    const { model, rig } = await started();
+    expect(rig.layout.requests[0]?.growBoxes).toBe(true);
+    const nodes = model.getState().scene?.nodes ?? [];
+    expect(nodes.length).toBeGreaterThan(0);
+    for (const node of nodes) {
+      expect(node.scale, node.id).toBeGreaterThan(1);
+      expect(node.scale).toBeLessThanOrEqual(1.8);
+    }
+    model.stop();
+  });
+
   it('a filter that changes the drawing asks again, still the grid and still without previous positions', async () => {
     const { model, rig } = await started();
     filterBy(rig, NARROW);

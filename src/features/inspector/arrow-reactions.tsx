@@ -1,23 +1,18 @@
 /**
- * The reactions of the arrow that was picked on the map (ADR-039: a tap on an arrow opens the sheet with that arrow's reactions). An arrow of
- * several reactions is not one record, so the inspector shows its source family and says so; this list names every reaction the arrow
- * carries, each a button that shows that reaction. Nothing is added: the same roll-up the family page and the arrow's count come from.
+ * The reactions of an arrow, as the rows of the arrow view (ADR-039; step 8.2b-fix, S2): each a button that shows that reaction, with the
+ * reagent words under it; an example folds under its general reaction (7.3a). The same roll-up the family page and the arrow's count come from.
  */
-import { useStore } from 'zustand';
 import { exampleLookupOf, foldExamples } from '@/core/graph';
 import { arrowReactionIds } from './model/focus';
 import { nameOfRecord, recordOf } from './model/describe';
 import { useInspectorEnv } from './env';
 import styles from './inspector.module.css';
 
-export function ArrowReactions() {
+export function ArrowReactions(props: { readonly ends: { readonly from: string; readonly to: string }; readonly words: ReadonlyMap<string, string> }) {
   const { ports, host, state, open } = useInspectorEnv();
-  const selected = useStore(ports.ui.selection, (s) => s.selected);
-  if (selected === null || selected.kind !== 'edge') return null;
-  const ends = host.edgeEnds(selected.id);
-  if (ends === undefined) return null;
+  const { ends } = props;
   const ids = arrowReactionIds(ends, ports.indexes.current());
-  if (ids.length < 2) return null;
+  if (ids.length < 1) return null;
   // 7.3a C3: the rows are CARDS; an example folds under its general reaction (a closed "Examples (n)"), and the count says so in words
   const folding = foldExamples(ids, exampleLookupOf(state));
   const row = (id: string) => {
@@ -28,6 +23,10 @@ export function ArrowReactions() {
         {record === undefined ? id : nameOfRecord(record)}
       </button>
     );
+  };
+  const wordsOf = (id: string) => {
+    const text = props.words.get(id);
+    return text === undefined || text === '' ? null : <span className={styles.arrowTitle}>{text}</span>;
   };
   const generalName = (id: string): string => {
     const record = recordOf(state, { kind: 'reaction', id });
@@ -49,6 +48,7 @@ export function ArrowReactions() {
           return (
             <li key={id}>
               {row(id)}
+              {wordsOf(id)}
               {general === undefined ? null : <span className={styles.arrowTitle}>{`Example of ${generalName(general)}`}</span>}
               {mine.length === 0 ? null : (
                 <details>

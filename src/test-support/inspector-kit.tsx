@@ -84,4 +84,5 @@ export async function preloadViews(): Promise<void> {
   const answer = await loadOtherViews();
   if (!answer.ok) throw new Error(answer.message);
   await import('@/features/inspector/authors-section');
+  await import('@/features/inspector/map-pane');
 }

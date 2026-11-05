@@ -48,7 +48,7 @@ describe('Show its reactions', () => {
 });
 
 describe('an arrow of several reactions', () => {
-  it('"Open these <n> reactions in Reactions" gives the host the arrow\'s two families', () => {
+  it('"Open these <n> reactions in Reactions" gives the host the arrow\'s two families', async () => {
     const rig = inspectorRig(state);
     const pair = rig.ports.indexes
       .current()
@@ -64,7 +64,7 @@ describe('an arrow of several reactions', () => {
       rig.ports.ui.selection.getState().reveal();
     });
     const n = new Set(pair.candidates.map((c) => c.reactionId)).size;
-    const region = screen.getByRole('region', { name: 'Reactions on this arrow' });
+    const region = await screen.findByRole('region', { name: 'Reactions on this arrow' });
     fireEvent.click(within(region).getByRole('button', { name: `Open these ${n} reactions in Reactions` }));
     expect(showArrowReactions).toHaveBeenCalledWith({ from: pair.from, to: pair.to });
   });

@@ -1,6 +1,7 @@
 /** The map's derived view (step 8.2a, D1 to D5): which arrows are drawn, their style, merged pairs, faded boxes, captions, Unclassified. Pure. */
 import { describe, expect, it } from 'vitest';
 import type { Scene, SceneEdge, SceneNode } from '@/render/scene';
+import { withChips } from './map-chips';
 import { mapView } from './map-view';
 
 const text = (s: string) => [{ text: s }];
@@ -103,5 +104,38 @@ describe('mapView', () => {
     expect(view.scene.edges.map((e) => e.id).sort()).toEqual(['ab', 'ba', 'cd']);
     expect(view.marks.faded.has('c')).toBe(false);
     expect(view.marks.faded.has('d')).toBe(false);
+  });
+});
+
+describe('mapView: the bucket in focus (step 8.2b-fix, S4, B2)', () => {
+  const withBucketOut = (): Scene => {
+    const scene = sceneOf();
+    return { ...scene, edges: [...scene.edges, edge('ub', 'u', 'b', 2)] };
+  };
+  it('arrows INTO the bucket are dashed and tone-free; arrows OUT of it are solid, tone-free (neutral ink), never a family colour', () => {
+    const view = mapView(withBucketOut(), { ...quiet, focusId: 'u', showUnclassified: true });
+    const byId = new Map(view.scene.edges.map((e) => [e.id, e]));
+    expect([...byId.keys()].sort()).toEqual(['au', 'du', 'ub']);
+    for (const id of ['au', 'du']) {
+      expect(byId.get(id)?.stroke).toBe('dashed');
+      expect(view.marks.edges.get(id)).toMatchObject({ role: 'madeFrom' });
+    }
+    expect(byId.get('ub')?.stroke).toBe('solid');
+    expect(view.marks.edges.get('ub')?.role).toBe('makes');
+    expect(view.marks.edges.get('ub')?.tone).toBeUndefined();
+  });
+});
+
+describe('mapView: the chip module arrives later (step 8.2b-fix, D)', () => {
+  const facts = (from: string, to: string) => (from === 'c' && to === 'd' ? { reactions: 1, words: 'PCC' } : undefined);
+  const lone = (): Scene => {
+    const scene = sceneOf();
+    return { ...scene, edges: [...scene.edges, { ...edge('cx', 'c', 'd', undefined, [{ x: 500, y: 20 }, { x: 600, y: 20 }]), labelAt: { x: 550, y: 20 } }] };
+  };
+  it('without the chips function (not loaded yet) the arrows are drawn with no chip mark; with it the words appear', () => {
+    const before = mapView(lone(), { ...quiet, focusId: 'c', facts });
+    expect(before.marks.edges.get('cx')?.chip).toBeUndefined();
+    const after = mapView(lone(), { ...quiet, focusId: 'c', facts, chips: withChips });
+    expect(after.marks.edges.get('cx')?.chip?.text).toBe('PCC');
   });
 });

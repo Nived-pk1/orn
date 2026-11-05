@@ -80,7 +80,7 @@ describe('the map with a focus', () => {
   it('a chapter draws all of its arrows and hides the quiet line; All chapters puts the quiet map back', async () => {
     const { rig, drawing } = await show();
     const select = screen.getByRole('combobox', { name: 'Chapter' });
-    expect([...(select as HTMLSelectElement).options].map((o) => o.text)).toEqual(['All chapters', 'Chapter 1', 'Chapter 2', 'Chapter 3']);
+    expect([...(select as HTMLSelectElement).options].map((o) => o.text)).toEqual(['All chapters', 'Chapter 1', 'Chapter 2', 'Chapter 3', 'Chapter 4']);
     fireEvent.change(select, { target: { value: 'top_chapter-1' } });
     expect(rig.ui.map.getState().chapterId).toBe('top_chapter-1');
     await screen.findByRole('group', { name: NAVIGATOR });
@@ -104,7 +104,7 @@ describe('the map with a focus', () => {
     expect(screen.queryByText(/solid line in the family's colour/)).toBeNull();
     act(() => rig.ui.map.getState().setFocus('cls_family-01'));
     // the arrow rows sit in the map's line row, not in the legend, so the legend does not change height (a double click's second press must hit the family)
-    const key = screen.getByRole('list', { name: 'What the arrows mean' });
+    const key = await screen.findByRole('list', { name: 'What the arrows mean' });
     expect(within(key).getByText(/solid line in the family's colour: what the family makes/)).toBeTruthy();
     expect(within(key).getByText(/dashed dark line: what the family is made from/)).toBeTruthy();
     const legend = screen.getByRole('list', { name: 'What the marks mean' });

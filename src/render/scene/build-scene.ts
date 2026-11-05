@@ -107,6 +107,7 @@ export function buildScene(projection: Projection, layoutResult: LayoutResult, o
   const paths = drawnPaths(projection);
   const layout = lifted(layoutResult, paths.filter((path) => path.loop).map((path) => path.from));
   const counts = countsByNode(paths);
+  const grown = layout.boxScale !== undefined && layout.boxScale > 1 ? layout.boxScale : 1;
   const contents = new Map<string, NodeContent>();
   const nodes: SceneNode[] = [];
   const missing: string[] = [];
@@ -125,8 +126,9 @@ export function buildScene(projection: Projection, layoutResult: LayoutResult, o
       box: content.box,
       x: at.x,
       y: at.y,
-      width: size.width,
-      height: size.height,
+      width: size.width * grown,
+      height: size.height * grown,
+      ...(grown > 1 ? { scale: grown } : {}),
       label: content.label,
       ...(content.sublabel === undefined ? {} : { sublabel: content.sublabel }),
       ...(content.depictionKey === undefined ? {} : { depictionKey: content.depictionKey }),

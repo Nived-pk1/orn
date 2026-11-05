@@ -7,7 +7,7 @@
 import { NO_KEY, type LegendItem, type LegendKey } from './legend';
 import styles from './navigator.module.css';
 
-function ChipSample() {
+export function ChipSample() {
   return (
     <svg className={styles.sample} width="28" height="20" viewBox="0 0 28 20" aria-hidden="true" data-sample="chip">
       <rect x="0.5" y="0.5" width="27" height="19" rx="9.5" className={styles.sampleChip} />
@@ -18,7 +18,7 @@ function ChipSample() {
   );
 }
 
-function LineSample(props: { readonly dashed: boolean; readonly both?: boolean }) {
+export function LineSample(props: { readonly dashed: boolean; readonly both?: boolean }) {
   return (
     <svg className={styles.sample} width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" data-sample={props.dashed ? 'madeFrom' : props.both === true ? 'pair' : 'makes'}>
       <line x1={props.both === true ? 7 : 2} y1="8" x2="29" y2="8" className={props.dashed ? styles.sampleLine : styles.sampleMakes} {...(props.dashed ? { strokeDasharray: '6 4' } : {})} />
@@ -58,42 +58,6 @@ function OutsideSample() {
   );
 }
 
-/**
- * The rows about arrows (step 8.2b, B3). On a wide screen they sit in the map's line row (which keeps its height), NOT in the legend: a legend that
- * grew when a family was focused would move the map under the pointer and a double click's second press would miss the family.
- */
-export function ArrowKey(props: { readonly keys: LegendKey }) {
-  const { keys } = props;
-  if (!keys.lines && !keys.chip && !keys.pair) return null;
-  return (
-    <ul className={styles.arrowKey} aria-label="What the arrows mean">
-      {!keys.lines ? null : (
-        <>
-          <li className={styles.legendItem} data-key="makes">
-            <LineSample dashed={false} />
-            solid line in the family's colour: what the family makes
-          </li>
-          <li className={styles.legendItem} data-key="madeFrom">
-            <LineSample dashed />
-            dashed dark line: what the family is made from
-          </li>
-        </>
-      )}
-      {!keys.chip ? null : (
-        <li className={styles.legendItem} data-key="chip">
-          <ChipSample />
-          number of reactions on this arrow
-        </li>
-      )}
-      {!keys.pair ? null : (
-        <li className={styles.legendItem} data-key="pair">
-          <LineSample dashed={false} both />
-          one line with a head at each end: reactions both ways, a number near each head
-        </li>
-      )}
-    </ul>
-  );
-}
 
 export function NavigatorLegend(props: {
   readonly items: readonly LegendItem[];

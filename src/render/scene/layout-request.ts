@@ -26,6 +26,8 @@ export interface LayoutRequestOptions {
   readonly labelSizes?: LabelSizes;
   /** Default: derived from the projection key, so the same inputs give the same request. */
   readonly requestId?: string;
+  /** Step 8.2b-fix (C1): the map asks the grid layout to draw the boxes bigger about their centres. Only an arranged (grid) request carries it. */
+  readonly growBoxes?: boolean;
 }
 
 export type LayoutRequestResult =
@@ -83,6 +85,7 @@ export function buildLayoutRequest(projection: Projection, sizes: NodeSizes, opt
       spacing: options.spacing ?? DEFAULT_SPACING,
       ...(Object.keys(previous).length === 0 || arranged ? {} : { previous }),
       seed: LAYOUT_SEED,
+      ...(options.growBoxes === true && (options.algorithm ?? (arranged ? 'grid' : 'layered')) === 'grid' ? { growBoxes: true as const } : {}),
     },
   };
 }

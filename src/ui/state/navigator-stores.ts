@@ -36,7 +36,11 @@ export interface SelectionState {
    * at once. Never saved.
    */
   readonly reveals: number;
+  /** Counts every `select(null)`: the person emptied the selection (an empty-map click, Esc). The drawing's own `drop()` does not count (step 8.2b-fix, S1). Never saved. */
+  readonly clears: number;
   select(next: Selected | null): void;
+  /** The drawing no longer has the selected item (a family left the map): the selection goes, silently for the inspector, which keeps what it shows. */
+  drop(): void;
   reveal(): void;
   /** Adds the item, or removes it when it is in. */
   toggle(item: Selected): void;
@@ -53,11 +57,16 @@ export function createSelectionStore(initial: Selected | null = null): Selection
     multi: [],
     picks: 0,
     reveals: 0,
+    clears: 0,
+    drop: () => {
+      if (get().selected !== null) set({ selected: null });
+    },
     reveal: () => set({ reveals: get().reveals + 1 }),
     select(next) {
+      const clears = next === null ? get().clears + 1 : get().clears;
       const picks = next === null ? get().picks : get().picks + 1;
       const multi = get().multi.length === 0 ? get().multi : [];
-      if (!sameSelected(get().selected, next) || picks !== get().picks || multi !== get().multi) set({ selected: next, picks, multi });
+      if (!sameSelected(get().selected, next) || picks !== get().picks || clears !== get().clears || multi !== get().multi) set({ selected: next, picks, multi, clears });
     },
     toggle(item) {
       const has = get().multi.some((one) => sameSelected(one, item));

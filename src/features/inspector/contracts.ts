@@ -9,7 +9,7 @@ import type { CanonicalState, RecordRef } from '@/core/schema';
 import type { Finding } from '@/core/validation';
 import type { StructureFactsPort } from '@/render/equation';
 import type { DepictionPort } from '@/render/svg';
-import type { ActiveExamStore, FamilyStore, InspectorStore, PanelsStore, SelectionStore } from '@/ui/state';
+import type { ActiveExamStore, FamilyStore, InspectorStore, MapStore, PanelsStore, SelectionStore } from '@/ui/state';
 import type { SubjectStatus } from '@/workers/chem';
 
 /** What an asset's bytes are, as an image address the page may use: a blob URL the caller must give back through `revoke`. */
@@ -50,6 +50,8 @@ export interface InspectorPorts {
     readonly panels: PanelsStore;
     /** The chosen exam scope (step 5.8, additive): the curriculum section marks the chosen version. Absent: none is chosen. */
     readonly exam?: ActiveExamStore;
+    /** The map's store (step 8.2b-fix): a family chip in the arrow or bucket view focuses that family on the map. Absent: it only selects. */
+    readonly map?: MapStore;
   };
   /** One line to the app's event log (nothing silent). */
   readonly log: (type: string, message: string) => void;

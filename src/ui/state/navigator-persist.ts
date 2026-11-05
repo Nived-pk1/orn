@@ -32,7 +32,7 @@ import {
 import { createExplorerStore, parseExplorer, type ParsedExplorer } from './explorer-state';
 import { createChaptersStore, parseChapters, type ParsedChapters } from './chapters-state';
 import { NO_CHAPTER } from '@/core/chapters/types';
-import { createMapStore, parseMap, type ParsedMap } from './map-state';
+import { createMapStore, FIT_RULE, parseMap, type ParsedMap } from './map-state';
 import { createSyllabusStore, parseSyllabus, type ParsedSyllabus } from './syllabus-state';
 import { createPageListStore, parsePageList, type ParsedPageList } from './page-list-state';
 import { createReagentsStore, parseReagents, type ParsedReagents } from './reagents-state';
@@ -196,6 +196,11 @@ export interface NavigatorUi {
   dispose(): void;
 }
 
+const withoutNavigator = (views: ParsedNavigatorUi['views']): ParsedNavigatorUi['views'] => {
+  const { navigator: _ignored, ...rest } = views;
+  return rest;
+};
+
 export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, log: (type: string, message: string) => void = () => undefined): NavigatorUi {
   const parsed = parseNavigatorUi(port.stored);
   const mode = port.mode();
@@ -205,7 +210,8 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     expansion: createExpansionStore(),
     filters: createFiltersStore(),
     exam: createActiveExamStore(parsed.exam),
-    viewports: createViewportsStore(parsed.views),
+    // a viewport saved under an older fit rule was made for smaller boxes: ignored once (step 8.2b-fix, C4); every save below marks the new rule
+    viewports: createViewportsStore(parsed.map.fitRule === FIT_RULE ? parsed.views : withoutNavigator(parsed.views)),
     family: createFamilyStore(parsed.openFamily),
     overview: createOverviewStore(parsed.overviewMode, parsed.phoneTab, parsed.phoneTabSaved),
     explorer: createExplorerStore({ filter: parsed.explorer.filter, view: parsed.explorer.view, last: parsed.explorer.last }),
@@ -250,7 +256,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { items: recentSearches } = stores.recent.getState();
     const { active: activeExam } = stores.exam.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === defaultTab ? {} : { phoneTab }), chapters: { chapterId, kinds, text: chapterText, onlyInScope: chaptersScoped }, map: { chapterId: mapChapter, showUnclassified }, reagents: { reagentId, families: reagentFamilies, text: reagentText, onlyInScope: reagentsScoped }, named: { id: named.openId, text: named.text, onlyInScope: named.onlyInScope }, mechanisms: { id: mechanisms.openId, text: mechanisms.text, onlyInScope: mechanisms.onlyInScope }, syllabus: { versionId: syllabus.versionId, compareId: syllabus.compareId, gapsOnly: syllabus.gapsOnly }, recentSearches, activeExam, explorer: { filter, view, last }, precursors: { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === defaultTab ? {} : { phoneTab }), chapters: { chapterId, kinds, text: chapterText, onlyInScope: chaptersScoped }, map: { chapterId: mapChapter, showUnclassified, fitRule: FIT_RULE }, reagents: { reagentId, families: reagentFamilies, text: reagentText, onlyInScope: reagentsScoped }, named: { id: named.openId, text: named.text, onlyInScope: named.onlyInScope }, mechanisms: { id: mechanisms.openId, text: mechanisms.text, onlyInScope: mechanisms.onlyInScope }, syllabus: { versionId: syllabus.versionId, compareId: syllabus.compareId, gapsOnly: syllabus.gapsOnly }, recentSearches, activeExam, explorer: { filter, view, last }, precursors: { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -274,7 +280,9 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     });
   }
 
-  const offs = [stores.selection.subscribe(schedule), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.explorer.subscribe(schedule), stores.chapters.subscribe(schedule), stores.reagents.subscribe(schedule), stores.named.subscribe(schedule), stores.mechanisms.subscribe(schedule), stores.syllabus.subscribe(schedule), stores.precursors.subscribe(schedule), stores.recent.subscribe(schedule), stores.exam.subscribe(schedule)];
+  const offs = [stores.selection.subscribe((now, before) => {
+    if (now.selected !== before.selected) schedule();
+  }), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.explorer.subscribe(schedule), stores.chapters.subscribe(schedule), stores.reagents.subscribe(schedule), stores.named.subscribe(schedule), stores.mechanisms.subscribe(schedule), stores.syllabus.subscribe(schedule), stores.precursors.subscribe(schedule), stores.recent.subscribe(schedule), stores.exam.subscribe(schedule)];
   // The map saves only what is saved (the chapter and the Unclassified choice); the focus changes with every click and is never written.
   offs.push(stores.map.subscribe((now, before) => (now.chapterId !== before.chapterId || now.showUnclassified !== before.showUnclassified ? schedule() : undefined)));
   // D7 (step 8.2a): opening a chapter's page in the Chapters view makes it the map's chapter. "No chapter yet" is not a chapter.

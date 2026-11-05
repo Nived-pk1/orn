@@ -8,6 +8,7 @@ import { useStore } from 'zustand';
 import type { Scene } from '@/render/scene';
 import type { NavigatorUiStores } from '@/ui/state';
 import { mapView, type MapView, type PairFacts } from './map-view';
+import type { withChips } from './map-chips';
 
 /** How long the pointer rests on a family before its arrows are previewed. */
 export const HOVER_FOCUS_MS = 150;
@@ -23,6 +24,8 @@ export interface MapViewArgs {
   readonly announce: (message: string) => void;
   /** What an arrow carries (its reactions and reagent words), for the words on its chip (step 8.2b, D). */
   readonly facts?: (from: string, to: string) => PairFacts | undefined;
+  /** The chip function, once its chunk has arrived (see map-view.ts). */
+  readonly chips?: typeof withChips;
   /** The steps of the chain chosen in "From A to B", or none (step 8.2b, C). */
   readonly chain?: readonly { readonly from: string; readonly to: string }[] | undefined;
 }
@@ -40,7 +43,7 @@ export interface MapViewState {
 }
 
 export function useMapView(args: MapViewArgs): MapViewState {
-  const { ui, timers, scene, selected, chapters, announce, facts, chain } = args;
+  const { ui, timers, scene, selected, chapters, announce, facts, chain, chips } = args;
   const chapterId = useStore(ui.map, (s) => s.chapterId);
   const showUnclassified = useStore(ui.map, (s) => s.showUnclassified);
   const chainOpen = useStore(ui.map, (s) => s.chainOpen);
@@ -80,8 +83,8 @@ export function useMapView(args: MapViewArgs): MapViewState {
   const focusId = hover ?? locked;
   const selectedEdgeId = selected !== null && selected.kind === 'edge' ? selected.id : undefined;
   const view = useMemo(
-    () => (scene === null ? null : mapView(scene, { focusId, chapter: chapterId !== null && !unknown && !chainOpen, showUnclassified, selectedEdgeId, facts, chain: chainOpen ? chain : undefined })),
-    [scene, focusId, chapterId, unknown, showUnclassified, selectedEdgeId, facts, chain, chainOpen],
+    () => (scene === null ? null : mapView(scene, { focusId, chapter: chapterId !== null && !unknown && !chainOpen, showUnclassified, selectedEdgeId, facts, chips, chain: chainOpen ? chain : undefined })),
+    [scene, focusId, chapterId, unknown, showUnclassified, selectedEdgeId, facts, chips, chain, chainOpen],
   );
   return { view, chainOpen, chapterId: unknown ? null : chapterId, showUnclassified, focusId, onNodeHover };
 }

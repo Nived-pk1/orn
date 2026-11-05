@@ -76,3 +76,20 @@ describe('the navigator UI stores', () => {
     expect(store.getState().selected).toBeNull();
   });
 });
+
+describe('the selection store: a deselect by the person and a drop by the drawing (step 8.2b-fix, S1)', () => {
+  it('select(null) is the person emptying the selection: it counts, even when nothing was selected', () => {
+    const store = createSelectionStore();
+    store.getState().select(null);
+    store.getState().select({ kind: 'node', id: 'n' });
+    store.getState().select(null);
+    expect(store.getState().clears).toBe(2);
+    expect(store.getState().selected).toBeNull();
+  });
+  it('drop() removes a selection the drawing no longer has and is NOT a deselect', () => {
+    const store = createSelectionStore({ kind: 'node', id: 'n' });
+    store.getState().drop();
+    expect(store.getState().selected).toBeNull();
+    expect(store.getState().clears).toBe(0);
+  });
+});

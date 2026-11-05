@@ -136,8 +136,8 @@ describe('the Map tab', () => {
     expect(tab('Map').getAttribute('aria-current')).toBe('page');
     expect(screen.queryByRole('toolbar', { name: 'Canvas tools' })).toBeNull();
     expect(screen.queryByRole('list', { name: 'Family groups' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Fit' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Legend' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Fit' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Legend' })).toBeTruthy();
   });
 
   it('Legend opens a sheet with the legend, and it closes again', async () => {

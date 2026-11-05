@@ -117,9 +117,9 @@ describe('glyphs (UI_ARCHITECTURE §3)', () => {
     for (const solid of [species, member, chip]) expect(solid.hasAttribute('stroke-dasharray')).toBe(false);
   });
 
-  it('shows the words of the glyph: the overflow box says "+N more", Unclassified its fixed word', () => {
+  it('shows the words of the glyph: the overflow box says "+N more", the bucket its fixed words', () => {
     expect(container.textContent).toContain('+12 more');
-    expect(container.textContent).toContain('Unclassified');
+    expect(container.textContent).toContain('Not in a family yet');
   });
 
   it('uses the font sizes of the node box kind', () => {

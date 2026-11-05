@@ -25,6 +25,10 @@ export interface ChainPanelProps {
   readonly onOpenStep: (from: string, to: string) => void;
   readonly onClose: () => void;
   readonly phone?: boolean;
+  /** The active exam scope (step 8.2b-fix, E4): only a reaction it accepts can be a step. Absent: All exams, every reaction counts. */
+  readonly inScope?: ((reactionId: string) => boolean) | undefined;
+  /** The exam's name for the words when the only chains are outside the scope. */
+  readonly scopeName?: string | undefined;
 }
 
 export function ChainPanel(props: ChainPanelProps) {
@@ -35,8 +39,14 @@ export function ChainPanel(props: ChainPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const names = useMemo(() => new Map(families.map((f) => [f.id, f.name])), [families]);
   const nameOf = (id: string): string => names.get(id) ?? id;
-  const edges = useMemo(() => familyEdgesOf(props.pairs(), new Set([UNCLASSIFIED_HUB_ID])), [props]);
+  const edges = useMemo(() => familyEdgesOf(props.pairs(), new Set([UNCLASSIFIED_HUB_ID]), props.inScope), [props.pairs, props.inScope]); // eslint-disable-line react-hooks/exhaustive-deps -- `pairs` and `inScope` are the inputs
   const result = useMemo(() => (from === '' || to === '' ? undefined : familyChains(edges, from, to, { maxSteps: CHAIN_MAX_STEPS, nameOf })), [edges, from, to, names]); // eslint-disable-line react-hooks/exhaustive-deps -- nameOf reads `names`
+  // under a scope with no chain: is there one outside it? Then the words say so (and show nothing of it)
+  const outside = useMemo(() => {
+    if (props.inScope === undefined || result === undefined || !result.ok || result.chains.length > 0) return false;
+    const all = familyChains(familyEdgesOf(props.pairs(), new Set([UNCLASSIFIED_HUB_ID])), from, to, { maxSteps: CHAIN_MAX_STEPS, nameOf });
+    return all.ok && all.chains.length > 0;
+  }, [result, from, to]); // eslint-disable-line react-hooks/exhaustive-deps -- recomputed with the result
   const chains: readonly FamilyChain[] = result?.ok === true ? result.chains : [];
   const chosen = chains[Math.min(picked, chains.length - 1)];
   const steps: Steps | undefined = chosen?.steps.map((s) => ({ from: s.from, to: s.to }));
@@ -99,7 +109,7 @@ export function ChainPanel(props: ChainPanelProps) {
       {result === undefined ? null : !result.ok ? (
         <p role="status">{result.reason}</p>
       ) : chains.length === 0 ? (
-        <p role="status">No chain of {CHAIN_MAX_STEPS} steps or fewer.</p>
+        <p role="status">{outside && props.scopeName !== undefined ? `No chain within ${props.scopeName} in ${CHAIN_MAX_STEPS} steps or fewer.` : `No chain of ${CHAIN_MAX_STEPS} steps or fewer.`}</p>
       ) : (
         <>
           <ol className={styles.chains} aria-label="Chains">
@@ -108,6 +118,7 @@ export function ChainPanel(props: ChainPanelProps) {
                 <button type="button" className={styles.chainRow} aria-pressed={at === picked} onClick={() => setPicked(at)}>
                   {chain.families.map(nameOf).join(' → ')}
                 </button>
+                {props.phone === true && !expanded ? null : (
                 <ul className={styles.steps}>
                   {chain.steps.map((step) => (
                     <li key={`${step.from}>${step.to}`}>
@@ -117,6 +128,7 @@ export function ChainPanel(props: ChainPanelProps) {
                     </li>
                   ))}
                 </ul>
+                )}
               </li>
             ))}
           </ol>

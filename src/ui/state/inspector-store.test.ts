@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RecordRef } from '@/core/schema';
-import { canBack, canForward, createInspectorStore, currentOf, MAX_HISTORY } from './inspector-store';
+import { canBack, canForward, createInspectorStore, currentOf, MAX_HISTORY, selectionOf } from './inspector-store';
 
 const ref = (id: string): RecordRef => ({ kind: 'species', id }) as RecordRef;
 
@@ -61,5 +61,39 @@ describe('the inspector store', () => {
     expect(currentOf(store.getState())?.at).toBe('mvr_1');
     store.getState().back();
     expect(currentOf(store.getState())?.at).toBeUndefined();
+  });
+});
+
+describe('the inspector store holds the map selection (step 8.2b-fix, S1)', () => {
+  it('a bucket, an arrow and "nothing" are entries of the same history: Back and Forward walk them', () => {
+    const store = createInspectorStore();
+    store.getState().open(ref('spc_a'));
+    store.getState().select({ kind: 'bucket' });
+    store.getState().select({ kind: 'arrow', from: 'a', to: 'b' });
+    store.getState().select({ kind: 'none' });
+    expect(selectionOf(store.getState())).toEqual({ kind: 'none' });
+    store.getState().back();
+    expect(selectionOf(store.getState())).toEqual({ kind: 'arrow', from: 'a', to: 'b' });
+    store.getState().back();
+    expect(selectionOf(store.getState())).toEqual({ kind: 'bucket' });
+    store.getState().back();
+    expect(selectionOf(store.getState())).toEqual(ref('spc_a'));
+    store.getState().forward();
+    expect(selectionOf(store.getState())).toEqual({ kind: 'bucket' });
+  });
+  it('currentOf answers only a record (page code reads .id), null on a bucket, an arrow or nothing', () => {
+    const store = createInspectorStore();
+    store.getState().open(ref('spc_a'));
+    store.getState().select({ kind: 'bucket' });
+    expect(currentOf(store.getState())).toBeNull();
+  });
+  it('selecting what is already selected changes nothing; the same arrow the other way round is another arrow', () => {
+    const store = createInspectorStore();
+    store.getState().select({ kind: 'arrow', from: 'a', to: 'b' });
+    const before = store.getState();
+    store.getState().select({ kind: 'arrow', from: 'a', to: 'b' });
+    expect(store.getState()).toBe(before);
+    store.getState().select({ kind: 'arrow', from: 'b', to: 'a' });
+    expect(store.getState().history).toHaveLength(2);
   });
 });

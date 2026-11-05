@@ -65,6 +65,8 @@ export interface LayoutRequest {
   /** Previous positions, used as ordering hints so expansion does not reshuffle the view. */
   readonly previous?: Readonly<Record<string, Point>>;
   readonly seed: number;
+  /** Step 8.2b-fix (additive; grid only): draw the boxes bigger about their own centres (`LayoutResult.boxScale`). Absent: the boxes keep their size. */
+  readonly growBoxes?: true;
 }
 
 /** Why the in-house layout answered instead of ELK (Phase 4 contract decisions Q7). */
@@ -86,6 +88,11 @@ export interface LayoutResult {
   readonly edgeRoutes: Readonly<Record<string, readonly Point[]>>;
   /** Top-left corner of the label box of each edge that asked for one (step 5.5a, item a; additive). Absent: no engine placed labels. */
   readonly labelPositions?: Readonly<Record<string, Point>>;
+  /**
+   * Step 8.2b-fix (additive; grid only): the factor the boxes were drawn bigger by, about their own centres (1 to 1.8). `positions` are the top-left
+   * corners of the SCALED boxes and the routes end on them. Absent: 1 (no scaling; the other engines never set it).
+   */
+  readonly boxScale?: number;
   readonly bounds: { readonly width: number; readonly height: number };
   readonly durationMs: number;
   /**

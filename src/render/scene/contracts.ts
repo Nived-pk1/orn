@@ -61,6 +61,8 @@ export interface SceneNode {
   readonly y: number;
   readonly width: number;
   readonly height: number;
+  /** Step 8.2b-fix (additive): the box was drawn this much bigger (1 to 1.8) about its centre; width, height and the text follow. Absent: 1. */
+  readonly scale?: number;
   readonly label: FormattedText;
   readonly sublabel?: FormattedText;
   /** Key into the depiction cache (structure drawing), when the node shows a structure. */

@@ -30,12 +30,15 @@ interface PairLike {
   readonly candidates: readonly { readonly reactionId: string }[];
 }
 
-/** The family edges of the roll-up's pairs: no within-family pair, nothing touching `exclude` (the Unclassified hub), no empty pair. */
-export function familyEdgesOf(pairs: readonly PairLike[], exclude: ReadonlySet<string>): FamilyEdge[] {
+/**
+ * The family edges of the roll-up's pairs: no within-family pair, nothing touching `exclude` (the Unclassified hub), no empty pair. With
+ * `inScope` (step 8.2b-fix, E4) only the reactions it accepts count, and an arrow left with none is dropped.
+ */
+export function familyEdgesOf(pairs: readonly PairLike[], exclude: ReadonlySet<string>, inScope?: (reactionId: string) => boolean): FamilyEdge[] {
   const out: FamilyEdge[] = [];
   for (const pair of pairs) {
     if (pair.from === pair.to || exclude.has(pair.from) || exclude.has(pair.to)) continue;
-    const ids = [...new Set(pair.candidates.map((c) => c.reactionId))].sort(compareStrings);
+    const ids = [...new Set(pair.candidates.map((c) => c.reactionId).filter((id) => inScope === undefined || inScope(id)))].sort(compareStrings);
     if (ids.length > 0) out.push({ from: pair.from, to: pair.to, reactionIds: ids });
   }
   return out;

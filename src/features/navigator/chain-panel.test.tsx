@@ -84,6 +84,33 @@ describe('ChainPanel', () => {
     choose('alk', 'iso');
     expect(screen.getByText('No chain of 3 steps or fewer.')).toBeTruthy();
   });
+  it('with an exam scope only chains whose reactions are inside it are listed (step 8.2b-fix, E4)', () => {
+    // r5 (the direct Alkenes → Aldehydes arrow) is outside; only the two-step chain remains
+    setup({ inScope: (id) => id !== 'r5', scopeName: 'JEE Main' });
+    choose('alk', 'ald');
+    const rows = [...screen.getByRole('list', { name: 'Chains' }).children];
+    expect(rows.map((row) => row.querySelector('button')?.textContent)).toEqual(['Alkenes → Alcohols → Aldehydes']);
+  });
+  it('when the only chain is outside the scope the panel says so and shows no chain', () => {
+    setup({ inScope: (id) => id !== 'r1' && id !== 'r5', scopeName: 'JEE Main' });
+    choose('alk', 'ald');
+    expect(screen.getByText('No chain within JEE Main in 3 steps or fewer.')).toBeTruthy();
+    expect(screen.queryByRole('list', { name: 'Chains' })).toBeNull();
+    expect(screen.queryByText(/Alkenes → /)).toBeNull();
+  });
+  it('with no chain anywhere the old words stay, also under a scope', () => {
+    setup({ inScope: () => true, scopeName: 'JEE Main' });
+    choose('alk', 'iso');
+    expect(screen.getByText('No chain of 3 steps or fewer.')).toBeTruthy();
+  });
+  it('on a phone the peek shows the selects, the first chain row and "Show all" - no step lists; Show all opens the rest (step 8.2b-fix, E2)', () => {
+    setup({ phone: true });
+    choose('alk', 'ald');
+    expect(screen.getAllByRole('listitem').filter((li) => li.closest('ul') !== null && li.closest('ul')?.getAttribute('class')?.includes('steps'))).toHaveLength(0);
+    expect(screen.getAllByRole('button', { name: /→/ })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Show all 2' }));
+    expect(screen.getAllByRole('button', { name: /→/ }).length).toBeGreaterThan(2);
+  });
   it('Esc and Close close the panel, and closing clears the chain', () => {
     const { onClose, onChain } = setup();
     fireEvent.keyDown(document, { key: 'Escape' });

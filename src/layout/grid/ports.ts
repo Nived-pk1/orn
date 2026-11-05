@@ -2,8 +2,10 @@
  * Where an arrow meets a box (step 5.5d, item a). An arrow leaves and enters a box on the side that faces the other box. Arrows that
  * use one side of a box are spread evenly along it, ordered by where their other end lies (so they do not cross near the box), at
  * least `PORT_GAP` apart and `CORNER_CLEAR` from the ends of the side (clear of the rounded corner). The arrows between the same two
- * boxes (an arrow and its reverse) form a cluster: they run `PORT_GAP` apart, in edge id order, at both ends. A side too short for
- * its arrows keeps the `PORT_GAP` and the result counts it (never silent). Pure and deterministic.
+ * boxes (an arrow and its reverse) form a cluster: they run `PORT_GAP` apart, in edge id order, at both ends. A side that holds more
+ * arrows than fit `PORT_GAP` apart does NOT let their ends run past the box (step 8.2b-fix, B1): the slots are spread evenly along the
+ * usable length and the arrows share the nearest slot (they end at the same point, in order), and the result counts that side (never
+ * silent). Pure and deterministic.
  */
 import type { LayoutEdgeInput, Point } from '../contracts';
 import { centreOf, type Rect } from './geometry';
@@ -26,6 +28,26 @@ export interface PortAssignment {
   readonly ends: ReadonlyMap<string, EdgeEnds>;
   /** Sides whose arrows cannot keep both `PORT_GAP` and `CORNER_CLEAR`. */
   readonly crowded: number;
+}
+
+/**
+ * The offsets (px from the start of a side of `length`) at which `count` arrows meet it, in the arrows' order. Always inside the usable
+ * length (`CORNER_CLEAR` from each end). Arrows that fit get a slot each, at least `PORT_GAP` apart and centred; when more arrows come
+ * than slots fit `PORT_GAP` apart, the slots are spread evenly over the usable length and each arrow takes the nearest slot, so arrows
+ * share slots and keep their order. A side with no usable length puts every arrow in its middle.
+ */
+export function shareSlots(length: number, count: number): number[] {
+  if (count <= 0) return [];
+  const usable = length - 2 * CORNER_CLEAR;
+  if (count === 1 || usable <= 0) return new Array<number>(count).fill(length / 2);
+  const most = Math.floor(usable / PORT_GAP) + 1;
+  if (count <= most) {
+    const step = Math.max(PORT_GAP, usable / (count + 1));
+    const start = (length - (count - 1) * step) / 2;
+    return Array.from({ length: count }, (_, i) => start + i * step);
+  }
+  const step = usable / (most - 1);
+  return Array.from({ length: count }, (_, i) => CORNER_CLEAR + Math.round((i * (most - 1)) / (count - 1)) * step);
 }
 
 const OPPOSITE: Readonly<Record<Side, Side>> = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
@@ -81,22 +103,21 @@ function spreadSide(ends: readonly End[], rect: Rect, boxes: ReadonlyMap<string,
   const extents = ordered.map(([, members]) => (members.length - 1) * PORT_GAP);
   const total = extents.reduce((sum, e) => sum + e, 0);
   const usable = length - 2 * CORNER_CLEAR;
-  let gap = (usable - total) / (ordered.length + 1);
+  const gap = (usable - total) / (ordered.length + 1);
   let cursor = CORNER_CLEAR + gap;
-  let crowded = false;
   if (gap < PORT_GAP) {
-    // too short: keep the least gap and centre the run (it may reach into the corner clearance, and is counted)
-    gap = PORT_GAP;
-    const run = total + (ordered.length - 1) * PORT_GAP;
-    cursor = (length - run) / 2;
-    crowded = run > usable;
+    // too many for PORT_GAP apart: the arrows share evenly spread slots, in their order, and stay on the side (B1)
+    const flat = ordered.flatMap(([, members]) => [...members].sort((a, b) => (a.edgeId < b.edgeId ? -1 : 1)));
+    const slots = shareSlots(length, flat.length);
+    flat.forEach((end, i) => along.set(end.key, slots[i] as number));
+    return flat.length > Math.floor(usable / PORT_GAP) + 1;
   }
   ordered.forEach(([, members], i) => {
     const sorted = [...members].sort((a, b) => (a.edgeId < b.edgeId ? -1 : 1));
     sorted.forEach((end, j) => along.set(end.key, cursor + j * PORT_GAP));
     cursor += (extents[i] as number) + gap;
   });
-  return crowded;
+  return false;
 }
 
 export function assignPorts(edges: readonly LayoutEdgeInput[], boxes: ReadonlyMap<string, Rect>): PortAssignment {

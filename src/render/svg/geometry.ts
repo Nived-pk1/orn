@@ -53,17 +53,18 @@ export interface TextSlots {
 
 /** Where the text of a node starts, from its box: left padding, and the baselines of the label and the sublabel. */
 export function textSlots(node: SceneNode): TextSlots {
+  const k = node.scale ?? 1; // a box drawn bigger (step 8.2b-fix) carries its text with it
   const spec = BOXES[node.box];
-  const labelSize = spec.label.size;
-  const sublabelSize = spec.sublabel.size;
+  const labelSize = spec.label.size * k;
+  const sublabelSize = spec.sublabel.size * k;
   const labelHeight = labelSize * 1.3;
-  const inset = node.box === 'hub' ? HUB_RULE_WIDTH : 0;
+  const inset = node.box === 'hub' ? HUB_RULE_WIDTH * k : 0;
   if (node.depictionKey !== undefined) {
     // The name sits on the bottom line, the same at every LOD; the formula takes the middle of the structure area.
     const area = structureArea(node);
     return {
-      x: spec.padX,
-      labelY: node.height - spec.padY - labelHeight + labelSize * 0.9,
+      x: spec.padX * k,
+      labelY: node.height - spec.padY * k - labelHeight + labelSize * 0.9,
       sublabelY: area.y + area.height / 2 + sublabelSize * 0.35,
       sublabelCentreX: node.width / 2,
       labelSize,
@@ -71,9 +72,9 @@ export function textSlots(node: SceneNode): TextSlots {
     };
   }
   return {
-    x: spec.padX + inset,
-    labelY: spec.padY + labelSize * 0.9,
-    sublabelY: spec.padY + labelHeight + spec.gap + sublabelSize * 0.9,
+    x: spec.padX * k + inset,
+    labelY: spec.padY * k + labelSize * 0.9,
+    sublabelY: spec.padY * k + labelHeight + spec.gap * k + sublabelSize * 0.9,
     labelSize,
     sublabelSize,
   };

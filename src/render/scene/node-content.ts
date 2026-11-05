@@ -22,7 +22,7 @@ export interface NodeContent {
   readonly outsideNote?: string;
 }
 
-export const UNCLASSIFIED_LABEL = 'Unclassified';
+export const UNCLASSIFIED_LABEL = 'Not in a family yet';
 
 const GLYPH_OF_KIND: Readonly<Record<Exclude<GraphNode['kind'], 'virtual'>, NodeGlyph>> = {
   class: 'class_hub',

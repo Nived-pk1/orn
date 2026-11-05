@@ -12,11 +12,14 @@ import { placeChips } from './chips';
 import type { Rect } from './geometry';
 import { assignPorts, PORT_GAP } from './ports';
 import { ARC_OFFSETS, routeEdge } from './route';
+import { boxScaleFor, scaleAbout } from './scale';
 
 export { ARC_OFFSETS, ARC_SAMPLES, CLEARANCE } from './route';
 export { CORNER_CLEAR, PORT_GAP } from './ports';
 export { CHIP_MARGIN, SLIDES } from './chips';
 
+/** A scale below this is no scale (a layout that is exactly 16 px apart): the boxes keep their size. */
+const MIN_VISIBLE_SCALE = 1.02;
 const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 
 function ignoredHints(request: LayoutRequest): string[] {
@@ -36,8 +39,15 @@ export interface GridOptions {
   readonly cacheKey?: string;
 }
 
-export function layoutGrid(request: LayoutRequest, durationMs: () => number, options: GridOptions = {}): LayoutResult {
-  const { boxes, sharedCells } = arrange(request);
+interface Solved {
+  readonly ports: ReturnType<typeof assignPorts>;
+  readonly routes: Map<string, readonly Point[]>;
+  readonly blocked: number;
+  readonly chips: ReturnType<typeof placeChips>;
+}
+
+/** Ports, routes and chip places for these boxes. */
+function solve(request: LayoutRequest, boxes: ReadonlyMap<string, Rect>): Solved {
   const ports = assignPorts(request.edges, boxes);
   const routes = new Map<string, readonly Point[]>();
   let blocked = 0;
@@ -47,7 +57,23 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number, opt
     routes.set(edge.id, routed.route);
     if (routed.kind === 'blocked') blocked += 1;
   }
-  const chips = placeChips(request.edges, routes, boxes);
+  return { ports, routes, blocked, chips: placeChips(request.edges, routes, boxes) };
+}
+
+export function layoutGrid(request: LayoutRequest, durationMs: () => number, options: GridOptions = {}): LayoutResult {
+  const { boxes: plain, sharedCells } = arrange(request);
+  // pass 1: the unscaled drawing, to learn where its chips are; the box scale keeps clear of them (step 8.2b-fix, C1)
+  const first = solve(request, plain);
+  const chipRects: Rect[] = [];
+  for (const edge of request.edges) {
+    const at = first.chips.positions[edge.id];
+    if (at !== undefined && edge.label !== undefined) chipRects.push({ x: at.x, y: at.y, width: edge.label.width, height: edge.label.height });
+  }
+  const grown = request.growBoxes === true ? boxScaleFor([...plain.values()], chipRects) : 1;
+  const factor = grown < MIN_VISIBLE_SCALE ? 1 : grown;
+  // pass 2: the same centres, bigger boxes: ports and routes use the scaled boxes (C2)
+  const boxes = factor > 1 ? new Map([...plain].map(([id, rect]) => [id, scaleAbout(rect, factor)] as const)) : plain;
+  const { ports, routes, blocked, chips } = factor > 1 ? solve(request, boxes) : first;
   // an arc may bow over the top or left edge: shift everything so that every coordinate is at least 0
   let minX = 0;
   let minY = 0;
@@ -83,7 +109,7 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number, opt
     ...ignoredHints(request),
     ...(blocked === 0 ? [] : [`${count(blocked, 'arrow crosses', 'arrows cross')} a box: no arc of ${ARC_OFFSETS[0]} to ${ARC_OFFSETS[ARC_OFFSETS.length - 1]} px clears the boxes, so the line stays straight`]),
     ...(chips.kept === 0 ? [] : [`${count(chips.kept, 'count chip overlaps', 'count chips overlap')} a box or another chip: no place along its line is free`]),
-    ...(ports.crowded === 0 ? [] : [`${count(ports.crowded, 'side holds', 'sides hold')} more arrows than fit ${PORT_GAP} px apart clear of the corners: the arrows keep ${PORT_GAP} px apart and reach into the corner`]),
+    ...(ports.crowded === 0 ? [] : [`${count(ports.crowded, 'side holds', 'sides hold')} more arrows than fit ${PORT_GAP} px apart clear of the corners: the arrows share end points on the side, in order, and none reaches past the box`]),
     ...(sharedCells === 0 ? [] : [`${count(sharedCells, 'cell holds', 'cells hold')} more than one box: the boxes are stacked in the cell`]),
   ];
   return {
@@ -93,6 +119,7 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number, opt
     positions,
     edgeRoutes,
     labelPositions,
+    ...(factor > 1 ? { boxScale: factor } : {}),
     bounds: { width: maxX - minX, height: maxY - minY },
     durationMs: durationMs(),
     cacheKey: options.cacheKey ?? layoutCacheKey(request),
