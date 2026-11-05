@@ -5,7 +5,6 @@
 import { useEffect, type RefObject } from 'react';
 import type { Scene } from '@/render/scene';
 import type { ViewportController } from '@/render/viewport';
-import { viewportAboveSheet } from './reveal';
 
 export function useChainReveal(args: {
   readonly phone: boolean;
@@ -22,8 +21,14 @@ export function useChainReveal(args: {
     const boxes = scene.nodes.filter((node) => ids.has(node.id));
     const area = svg.getBoundingClientRect();
     const sheet = root.current?.querySelector('[aria-label="From A to B"]')?.getBoundingClientRect().height ?? 0;
-    const moved = viewportAboveSheet(controller.current(), { width: area.width, height: area.height }, sheet, boxes);
-    if (moved !== undefined) controller.setViewport(moved);
+    let live = true;
+    void import('./chain-reveal').then(({ viewportAboveSheet }) => {
+      const moved = live ? viewportAboveSheet(controller.current(), { width: area.width, height: area.height }, sheet, boxes) : undefined;
+      if (moved !== undefined) controller.setViewport(moved);
+    });
+    return () => {
+      live = false;
+    };
     // only a different chain moves the drawing: not every redraw of the same one
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the chain's identity is its steps
   }, [phone, chain, svg, controller]);

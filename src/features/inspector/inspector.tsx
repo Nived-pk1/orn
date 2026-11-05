@@ -14,7 +14,6 @@ import type { InspectorHost, InspectorPorts } from './contracts';
 import { InspectorEnvContext, isAuthorView, makeEnv, useInspectorEnv, type InspectorEnv } from './env';
 import { nameOfRecord, recordOf } from './model/describe';
 import { l4Words, severityBadges } from './model/findings';
-import { HistoryButtons } from './history-buttons';
 import { LazyStudyInspector } from './lazy-views';
 import type { GoNextAction } from './study-parts';
 import { placeOf } from './model/places';
@@ -23,6 +22,8 @@ import { placeOf } from './model/places';
 /** "For authors" is its own chunk: nothing of it loads until an author opens the section (Studio). */
 // the map's arrow and bucket views (step 8.2b-fix): their own chunk, loaded when one is first selected
 const MapPane = lazy(() => import('./map-pane').then((module) => ({ default: module.MapPane })));
+// Back and Forward are drawn from their own small chunk (they only matter once something has been looked at)
+const HistoryButtons = lazy(() => import('./history-buttons').then((module) => ({ default: module.HistoryButtons })));
 const AuthorsSection = lazy(() => import('./authors-section').then((module) => ({ default: module.AuthorsSection })));
 
 const SHOW_REACTIONS_KINDS: readonly string[] = ['species', 'class', 'reagent', 'named_reaction'];
@@ -132,7 +133,9 @@ function RecordBody(props: { readonly refOf: RecordRef }) {
   const editable = host.editNames !== undefined && (host.editNames.namesKinds?.includes(record.kind) === true || host.editNames.fullEditorKinds?.includes(record.kind) === true);
   const headerExtras = (
     <>
-      <HistoryButtons inspector={inspector} />
+      <Suspense fallback={null}>
+        <HistoryButtons inspector={inspector} />
+      </Suspense>
       {!editable ? null : (
         // on a phone the buttons show in the FULL sheet, not in the peek (authoring is desktop-first, ADR-039 addendum)
         <div className={styles.actions} data-sheet-full="">

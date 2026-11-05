@@ -1,6 +1,6 @@
 /** Keeping a family, or a chain, on screen (step 5.7 f; step 8.2b-fix E2). */
 import { describe, expect, it } from 'vitest';
-import { viewportAboveSheet } from './reveal';
+import { viewportAboveSheet } from './chain-reveal';
 
 describe('viewportAboveSheet (step 8.2b-fix, E2): the chain sits in the map area above the phone sheet', () => {
   const area = { width: 400, height: 800 };

@@ -5,11 +5,15 @@
  * `familyChains` (core); this only chooses and lists. Not saved.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { useStore } from 'zustand';
+import type { RecordRef } from '@/core/schema';
 // deep import: the chain search is only for this lazy chunk (a barrel would pull it into the first load)
 import { CHAIN_MAX_STEPS, familyChains, familyEdgesOf, type FamilyChain } from '@/core/graph/navigator/chains';
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph/navigator/hubs';
 import { Button } from '@/ui/primitives';
+import type { NavigatorPorts } from './contracts';
 import type { NamedFamily } from './find-family-match';
+import { scopeLens, scopeNameOf } from './scope-lens';
 import type { PairFacts } from './map-chips';
 import styles from './chain-panel.module.css';
 
@@ -138,4 +142,17 @@ export function ChainPanel(props: ChainPanelProps) {
       )}
     </aside>
   );
+}
+
+/** The panel with the active exam scope read from the map's ports (the scope code stays out of the first load with the panel). */
+export function ChainPanelInScope(props: Omit<ChainPanelProps, 'inScope' | 'scopeName'> & { readonly ports: NavigatorPorts }) {
+  const { ports, ...rest } = props;
+  const active = useStore(ports.ui.exam, (s) => s.active);
+  const inScope = useMemo(() => {
+    if (active === null) return undefined;
+    const scopeOf = scopeLens(ports.indexes.current(), active);
+    return (id: string): boolean => scopeOf({ kind: 'reaction', id } as RecordRef) !== 'outside';
+  }, [ports, active]);
+  const scopeName = useMemo(() => scopeNameOf(ports.store.getState(), active), [ports, active]);
+  return <ChainPanel {...rest} inScope={inScope} scopeName={scopeName} />;
 }

@@ -4,8 +4,8 @@
  * at most `MAX_HISTORY` entries (the oldest is dropped). Opening the record that is already shown changes nothing; opening another
  * one drops what was ahead (a new branch), as a browser does.
  */
-import { createStore, type StoreApi } from 'zustand/vanilla';
-import type { RecordRef } from '@/core/schema';
+import { createStore, type StoreApi } from "zustand/vanilla";
+import type { RecordRef } from "@/core/schema";
 
 export const MAX_HISTORY = 100;
 
@@ -18,10 +18,22 @@ export type RecordEntry = RecordRef & { readonly at?: string };
 export type InspectorEntry = RecordEntry | VirtualEntry;
 /** (`id` and `at` are declared absent so code that reads `history[i].id` still compiles; only a record has them.) */
 export type VirtualEntry =
-  | { readonly kind: 'bucket'; readonly id?: undefined; readonly at?: undefined }
-  | { readonly kind: 'arrow'; readonly from: string; readonly to: string; readonly id?: undefined; readonly at?: undefined }
-  | { readonly kind: 'none'; readonly id?: undefined; readonly at?: undefined };
-const isVirtual = (entry: InspectorEntry | undefined): entry is VirtualEntry => entry !== undefined && (entry.kind === 'bucket' || entry.kind === 'arrow' || entry.kind === 'none');
+  | {
+      readonly kind: "bucket";
+      readonly id?: undefined;
+      readonly at?: undefined;
+    }
+  | {
+      readonly kind: "arrow";
+      readonly from: string;
+      readonly to: string;
+      readonly id?: undefined;
+      readonly at?: undefined;
+    }
+  | { readonly kind: "none"; readonly id?: undefined; readonly at?: undefined };
+const isVirtual = (entry: InspectorEntry | undefined): entry is VirtualEntry =>
+  entry !== undefined &&
+  (entry.kind === "bucket" || entry.kind === "arrow" || entry.kind === "none");
 
 export interface InspectorState {
   /** Oldest first. */
@@ -40,53 +52,71 @@ export interface InspectorState {
 export type InspectorStore = StoreApi<InspectorState>;
 
 /** The record shown, or null (nothing, the bucket or an arrow): page code reads `.id` of it. */
-export const currentOf = (state: Pick<InspectorState, 'history' | 'index'>): RecordEntry | null => {
+export const currentOf = (
+  state: Pick<InspectorState, "history" | "index">,
+): RecordEntry | null => {
   const entry = state.history[state.index];
   return entry === undefined || isVirtual(entry) ? null : entry;
 };
 /** The whole current selection (a record or a virtual entry), or null when nothing was ever selected. */
-export const selectionOf = (state: Pick<InspectorState, 'history' | 'index'>): InspectorEntry | null => state.history[state.index] ?? null;
-export const canBack = (state: Pick<InspectorState, 'index'>): boolean => state.index > 0;
-export const canForward = (state: Pick<InspectorState, 'history' | 'index'>): boolean => state.index >= 0 && state.index < state.history.length - 1;
+export const selectionOf = (
+  state: Pick<InspectorState, "history" | "index">,
+): InspectorEntry | null => state.history[state.index] ?? null;
+export const canBack = (state: Pick<InspectorState, "index">): boolean =>
+  state.index > 0;
+export const canForward = (
+  state: Pick<InspectorState, "history" | "index">,
+): boolean => state.index >= 0 && state.index < state.history.length - 1;
 
-const same = (a: InspectorEntry | null, b: InspectorEntry, at: string | undefined): boolean => {
+const same = (
+  a: InspectorEntry | null,
+  b: InspectorEntry,
+  at: string | undefined,
+): boolean => {
   if (a === null || a.kind !== b.kind) return false;
-  if (a.kind === 'arrow' && b.kind === 'arrow') return a.from === b.from && a.to === b.to;
+  if (a.kind === "arrow" && b.kind === "arrow")
+    return a.from === b.from && a.to === b.to;
   if (isVirtual(a) || isVirtual(b)) return true;
   return a.id === b.id && a.at === at;
 };
 
 export function createInspectorStore(): InspectorStore {
-  return createStore<InspectorState>((set, get) => ({
-    history: [],
-    index: -1,
-    select(entry) {
+  return createStore<InspectorState>((set, get) => {
+    /** Pushes an entry on the history (a new branch drops what was ahead; the entry already shown changes nothing). */
+    const push = (entry: InspectorEntry, at: string | undefined): void => {
       const state = get();
-      if (same(selectionOf(state), entry, undefined)) return;
+      if (same(selectionOf(state), entry, at)) return;
       const kept = [...state.history.slice(0, state.index + 1), entry];
-      const history = kept.length > MAX_HISTORY ? kept.slice(kept.length - MAX_HISTORY) : kept;
+      const history =
+        kept.length > MAX_HISTORY
+          ? kept.slice(kept.length - MAX_HISTORY)
+          : kept;
       set({ history, index: history.length - 1 });
-    },
-    open(ref, at) {
-      const state = get();
-      if (same(selectionOf(state), ref, at)) return;
-      const entry = (at === undefined ? { kind: ref.kind, id: ref.id } : { kind: ref.kind, id: ref.id, at }) as InspectorEntry;
-      const kept = [...state.history.slice(0, state.index + 1), entry];
-      const history = kept.length > MAX_HISTORY ? kept.slice(kept.length - MAX_HISTORY) : kept;
-      set({ history, index: history.length - 1 });
-    },
-    back() {
-      if (!canBack(get())) return false;
-      set({ index: get().index - 1 });
-      return true;
-    },
-    forward() {
-      if (!canForward(get())) return false;
-      set({ index: get().index + 1 });
-      return true;
-    },
-    clear() {
-      if (get().history.length > 0) set({ history: [], index: -1 });
-    },
-  }));
+    };
+    return {
+      history: [],
+      index: -1,
+      select: (entry) => push(entry, undefined),
+      open: (ref, at) =>
+        push(
+          at === undefined
+            ? { kind: ref.kind, id: ref.id }
+            : { kind: ref.kind, id: ref.id, at },
+          at,
+        ),
+      back() {
+        if (!canBack(get())) return false;
+        set({ index: get().index - 1 });
+        return true;
+      },
+      forward() {
+        if (!canForward(get())) return false;
+        set({ index: get().index + 1 });
+        return true;
+      },
+      clear() {
+        if (get().history.length > 0) set({ history: [], index: -1 });
+      },
+    };
+  });
 }

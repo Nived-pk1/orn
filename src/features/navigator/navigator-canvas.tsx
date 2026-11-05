@@ -27,8 +27,7 @@ import { ListView } from './list-view';
 import { keyOf, legendOf } from './legend';
 import { useMapBulk, useNoMulti } from './bulk-context';
 import { useCanvasInput } from './use-canvas-input';
-import { outsideNoteOf, scopeLens, scopeNameOf } from './scope-lens';
-import type { RecordRef } from '@/core/schema';
+import { outsideNoteOf } from './scope-lens';
 import type { withChips as WithChipsFn } from './map-chips';
 import type { createPairFacts as CreatePairFactsFn } from './pair-facts';
 import { useNavigator, useNavigatorState } from './navigator-context';
@@ -51,7 +50,7 @@ type WithChips = typeof WithChipsFn;
 type CreatePairFacts = typeof CreatePairFactsFn;
 const noFacts = (): undefined => undefined;
 const FindFamily = /* @__PURE__ */ lazy(() => import('./find-family').then((m) => ({ default: m.FindFamily })));
-const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanel })));
+const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanelInScope })));
 const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
 const busyLine = (n: number): string => `This chapter has ${n} arrows. Tap or click a family to see its part.`;
 const NO_IDS: ReadonlySet<string> = new Set();
@@ -195,13 +194,6 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const selectedArrow = selected !== null && selected.kind === 'edge' && scene !== null ? scene.edges.find((edge) => edge.id === selected.id) : undefined;
   const arrowOpens = selectedArrow !== undefined && isHub(selectedArrow.from) && isHub(selectedArrow.to) ? selectedArrow : undefined;
   const activeExam = useStore(ports.ui.exam, (s) => s.active);
-  // "From A to B" uses only reactions inside the chosen exam scope (step 8.2b-fix, E4); All exams: every reaction
-  const inScope = useMemo(() => {
-    if (activeExam === null) return undefined;
-    const scopeOf = scopeLens(ports.indexes.current(), activeExam);
-    return (id: string): boolean => scopeOf({ kind: 'reaction', id } as RecordRef) !== 'outside';
-  }, [ports, activeExam]);
-  const scopeName = useMemo(() => scopeNameOf(ports.store.getState(), activeExam), [ports, activeExam]);
   const outsideNote = useMemo(() => (scene === null || !scene.nodes.some((node) => node.state.dimmed) ? undefined : outsideNoteOf(ports.store.getState(), activeExam)), [scene, ports, activeExam]);
   const legend = useMemo(() => legendOf(scene), [scene]);
   const legendKeys = useMemo(() => keyOf(view), [view]);
@@ -349,7 +341,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       </div>
       {map.chainOpen && scene !== null && !listing ? (
         <Suspense fallback={null}>
-          <ChainPanel families={familyList} pairs={pairs} facts={facts ?? noFacts} onChain={setChain} onOpenStep={openStep} onClose={closeChain} inScope={inScope} scopeName={scopeName} {...(phone ? { phone: true } : {})} />
+          <ChainPanel families={familyList} pairs={pairs} facts={facts ?? noFacts} onChain={setChain} onOpenStep={openStep} onClose={closeChain} ports={ports} {...(phone ? { phone: true } : {})} />
         </Suspense>
       ) : null}
       </div>
