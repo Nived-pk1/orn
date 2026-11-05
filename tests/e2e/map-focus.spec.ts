@@ -77,10 +77,10 @@ test.describe('the map on a desktop', () => {
     const seen = await watch(page);
     await openMapDesktop(page);
     const select = page.getByRole('combobox', { name: 'Chapter' });
-    await expect(select.locator('option')).toHaveText(['All chapters', 'Chapter 1', 'Chapter 2', 'Chapter 3']);
+    await expect(select.locator('option')).toHaveText(['All chapters', 'Chapter 1', 'Chapter 2', 'Chapter 3', 'Chapter 4']);
     // step 8.2b (B2): a chapter with more than 15 arrows is busy and draws none until a family is chosen; the pair checks run on a chapter that is not
     let calm = '';
-    for (const label of ['Chapter 1', 'Chapter 2', 'Chapter 3']) {
+    for (const label of ['Chapter 4', 'Chapter 1', 'Chapter 2', 'Chapter 3']) {
       await select.selectOption({ label });
       await page.waitForTimeout(1500);
       const n = await edges(page).count();
@@ -134,18 +134,14 @@ test.describe('the map on a desktop', () => {
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(0);
     const marks = page.getByRole('list', { name: 'What the marks mean' });
     await expect(marks).toContainText('6 reactions lead to compounds that are in no family yet');
-    // Studio: the list of the compounds
+    // Studio: "See those compounds" selects the bucket and the inspector lists them (one view, step 8.2b-fix, S3)
     await page.getByRole('button', { name: 'See those compounds' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Compounds in no family yet' });
-    await expect(dialog).toBeVisible();
-    const rows = dialog.getByRole('list', { name: 'Compounds in no family' }).getByRole('listitem');
+    const rows = page.getByRole('list', { name: 'Compounds in no family' }).locator(':scope > li');
+    await expect(page.getByRole('heading', { level: 3, name: 'Compounds not in a family yet' })).toBeVisible();
     await expect(rows).toHaveCount(3);
     await expect(rows.first()).toContainText('Orphan compound');
     await page.screenshot({ path: `${shotsDir()}/map-studio-unclassified-list-1280x800.png` });
     expect(await axeProblems(page, 10)).toEqual([]);
-    // the list is closed first (Esc), so the map shows whole in the screenshot
-    await page.keyboard.press('Escape');
-    await expect(dialog).toBeHidden();
     // Show / Hide
     await marks.getByRole('button', { name: 'Show', exact: true }).click();
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(1);
@@ -157,8 +153,7 @@ test.describe('the map on a desktop', () => {
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(0);
     // a row of the list opens that record in the inspector
     await page.getByRole('button', { name: 'See those compounds' }).click();
-    await rows.first().getByRole('button').click();
-    await expect(dialog).toBeHidden();
+    await rows.first().getByRole('button').first().click();
     await expect(page.getByRole('article', { name: 'Record' }).first()).toContainText('Orphan compound');
     await expectClean(seen);
   });

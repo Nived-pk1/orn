@@ -104,6 +104,9 @@ for (const [a, b] of pairs.values()) {
 for (const f of LOOPS) for (let k = 0; k < f % 4 + 1; k += 1) addReaction(clsId(f), clsId(f), 1 + ((f + k) % 3));
 for (let k = 0; k < 6; k += 1) addReaction(clsId(1 + next(20)), `cls_orphan-${ORPHANS[k % 3]}`, 1 + (k % 3));
 
+// ---- arrows OUT of the bucket (step 8.2b-fix): three orphan compounds go on to a family
+for (let k = 0; k < 3; k += 1) addReaction(`cls_orphan-${ORPHANS[k]}`, clsId(2 + k * 5), 1 + (k % 3));
+
 // ---- Chapter 4 (step 8.2b-fix, E5): a SMALL chapter that is not busy (3 arrows after merging): one two-way pair (8 and 13, both ways) and two one-way arrows
 // on pairs that already exist, so the whole map still has 88 arrows
 addReaction(clsId(8), clsId(13), 4);

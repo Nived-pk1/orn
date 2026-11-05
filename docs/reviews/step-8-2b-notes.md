@@ -12,3 +12,4 @@ fix Part B code (shareSlots + S4 label/tone) done; next: C box scale, D lazy, E,
 fix Part C code (boxScale layout/scene/text, fitRule) done; next D lazy, E, F
 fix Part D done (383.99/387.97), E1 done; next E2,E4,E5 then check, e2e, docs, deploy
 fix Parts E2,E4,E5 code done; running full check; next e2e specs
+fix: e2e specs written/updated; running affected specs in chromium

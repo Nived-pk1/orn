@@ -164,7 +164,7 @@ test.describe('the overview map with the keyboard', () => {
     await expect(drawing(page)).toBeFocused();
     await page.keyboard.press('Shift+F10');
     await page.getByRole('menuitem', { name: 'To Aldehydes (2 reactions (+ 1 example))' }).click();
-    await expect(pane(page).getByRole('article', { name: 'Record' })).toHaveAttribute('data-record-id', /./);
+    await expect(pane(page).getByRole('article', { name: 'Arrow' })).toHaveAttribute('data-from', /./); // an arrow is an arrow in the inspector (step 8.2b-fix, S2)
     await expect(live(page)).toContainText('Selected Alcohols to Aldehydes, 2 reactions (+ 1 example)');
     await expect(drawing(page)).toBeFocused();
     await expectClean(seen);

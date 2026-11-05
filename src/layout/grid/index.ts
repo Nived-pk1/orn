@@ -73,7 +73,20 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number, opt
   const factor = grown < MIN_VISIBLE_SCALE ? 1 : grown;
   // pass 2: the same centres, bigger boxes: ports and routes use the scaled boxes (C2)
   const boxes = factor > 1 ? new Map([...plain].map(([id, rect]) => [id, scaleAbout(rect, factor)] as const)) : plain;
-  const { ports, routes, blocked, chips } = factor > 1 ? solve(request, boxes) : first;
+  let used = factor;
+  let solved = factor > 1 ? solve(request, boxes) : first;
+  // bigger boxes may close a gap an arrow used: no more lines may be blocked than in the plain drawing, so back off until that holds (C2)
+  for (let tries = 0; used > 1 && solved.blocked > first.blocked && tries < 12; tries += 1) {
+    used = 1 + (used - 1) * 0.75;
+    if (used < MIN_VISIBLE_SCALE) used = 1;
+    solved = used > 1 ? solve(request, new Map([...plain].map(([id, rect]) => [id, scaleAbout(rect, used)] as const))) : first;
+  }
+  if (solved.blocked > first.blocked) {
+    used = 1; // no scale kept every line clear: the boxes keep their size
+    solved = first;
+  }
+  const finalBoxes = used > 1 ? new Map([...plain].map(([id, rect]) => [id, scaleAbout(rect, used)] as const)) : plain;
+  const { ports, routes, blocked, chips } = solved;
   // an arc may bow over the top or left edge: shift everything so that every coordinate is at least 0
   let minX = 0;
   let minY = 0;
@@ -85,7 +98,7 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number, opt
     maxX = Math.max(maxX, x);
     maxY = Math.max(maxY, y);
   };
-  for (const rect of boxes.values()) {
+  for (const rect of finalBoxes.values()) {
     reach(rect.x, rect.y);
     reach(rect.x + rect.width, rect.y + rect.height);
   }
@@ -99,7 +112,7 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number, opt
   }
   const shift = (p: Point): Point => ({ x: p.x - minX, y: p.y - minY });
   const positions: Record<string, Point> = {};
-  for (const node of request.nodes) positions[node.id] = shift(boxes.get(node.id) as Rect);
+  for (const node of request.nodes) positions[node.id] = shift(finalBoxes.get(node.id) as Rect);
   const edgeRoutes: Record<string, readonly Point[]> = {};
   for (const [id, route] of routes) edgeRoutes[id] = route.map(shift);
   const labelPositions: Record<string, Point> = {};
@@ -119,7 +132,7 @@ export function layoutGrid(request: LayoutRequest, durationMs: () => number, opt
     positions,
     edgeRoutes,
     labelPositions,
-    ...(factor > 1 ? { boxScale: factor } : {}),
+    ...(used > 1 ? { boxScale: used } : {}),
     bounds: { width: maxX - minX, height: maxY - minY },
     durationMs: durationMs(),
     cacheKey: options.cacheKey ?? layoutCacheKey(request),

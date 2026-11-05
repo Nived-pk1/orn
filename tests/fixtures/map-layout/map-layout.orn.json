@@ -14094,7 +14094,7 @@
       "id": "prt_layout-171-1",
       "ref": {
        "kind": "class",
-       "id": "cls_family-08"
+       "id": "cls_orphan-a"
       },
       "role": "reactant",
       "isPrimarySubstrate": true
@@ -14127,7 +14127,7 @@
         "id": "pdt_layout-171-1-1",
         "ref": {
          "kind": "class",
-         "id": "cls_family-13"
+         "id": "cls_family-02"
         },
         "role": "main"
        }
@@ -14173,7 +14173,7 @@
       "id": "prt_layout-172-1",
       "ref": {
        "kind": "class",
-       "id": "cls_family-13"
+       "id": "cls_orphan-b"
       },
       "role": "reactant",
       "isPrimarySubstrate": true
@@ -14206,7 +14206,7 @@
         "id": "pdt_layout-172-1-1",
         "ref": {
          "kind": "class",
-         "id": "cls_family-08"
+         "id": "cls_family-07"
         },
         "role": "main"
        }
@@ -14252,7 +14252,7 @@
       "id": "prt_layout-173-1",
       "ref": {
        "kind": "class",
-       "id": "cls_family-01"
+       "id": "cls_orphan-c"
       },
       "role": "reactant",
       "isPrimarySubstrate": true
@@ -14285,7 +14285,7 @@
         "id": "pdt_layout-173-1-1",
         "ref": {
          "kind": "class",
-         "id": "cls_family-06"
+         "id": "cls_family-12"
         },
         "role": "main"
        }
@@ -14331,7 +14331,7 @@
       "id": "prt_layout-174-1",
       "ref": {
        "kind": "class",
-       "id": "cls_family-02"
+       "id": "cls_family-08"
       },
       "role": "reactant",
       "isPrimarySubstrate": true
@@ -14362,6 +14362,243 @@
       "products": [
        {
         "id": "pdt_layout-174-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_family-13"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_layout-175",
+    "kind": "reaction",
+    "name": "Layout reaction 175",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_layout-175-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_family-13"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_layout-175-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_layout-175-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_layout-175-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_layout-175-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_family-08"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_layout-176",
+    "kind": "reaction",
+    "name": "Layout reaction 176",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_layout-176-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_family-01"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_layout-176-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_layout-176-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_layout-176-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_layout-176-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_family-06"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_layout-177",
+    "kind": "reaction",
+    "name": "Layout reaction 177",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_layout-177-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_family-02"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_layout-177-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_layout-177-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_layout-177-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_layout-177-1-1",
         "ref": {
          "kind": "class",
          "id": "cls_family-11"
@@ -18332,7 +18569,7 @@
    {
     "id": "tmp_layout-171",
     "kind": "topic_mapping",
-    "topicId": "top_section-4",
+    "topicId": "top_section-1",
     "target": {
      "kind": "reaction",
      "id": "rxn_layout-171"
@@ -18354,7 +18591,7 @@
    {
     "id": "tmp_layout-172",
     "kind": "topic_mapping",
-    "topicId": "top_section-4",
+    "topicId": "top_section-2",
     "target": {
      "kind": "reaction",
      "id": "rxn_layout-172"
@@ -18376,7 +18613,7 @@
    {
     "id": "tmp_layout-173",
     "kind": "topic_mapping",
-    "topicId": "top_section-4",
+    "topicId": "top_section-3",
     "target": {
      "kind": "reaction",
      "id": "rxn_layout-173"
@@ -18402,6 +18639,72 @@
     "target": {
      "kind": "reaction",
      "id": "rxn_layout-174"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_layout-175",
+    "kind": "topic_mapping",
+    "topicId": "top_section-4",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_layout-175"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_layout-176",
+    "kind": "topic_mapping",
+    "topicId": "top_section-4",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_layout-176"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_layout-177",
+    "kind": "topic_mapping",
+    "topicId": "top_section-4",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_layout-177"
     },
     "role": "core",
     "tags": [],

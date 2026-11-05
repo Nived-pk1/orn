@@ -192,3 +192,27 @@ describe('the box scale in the layout (step 8.2b-fix, C1, C2)', () => {
     expect(run(request([node('a', 0, 0), node('b', 3, 0)], [])).boxScale).toBeUndefined(); // not asked for: never scaled
   });
 });
+
+describe('growing boxes never makes a line cross a box that it cleared before (step 8.2b-fix, C2)', () => {
+  const crossings = (out: LayoutResult): number => Number(/(\d+) arrows? cross/.exec(out.notes.find((n) => n.includes('cross a box')) ?? '')?.[1] ?? 0);
+  it('on seeded layouts the grown drawing has no more blocked lines than the plain one', () => {
+    let seed = 7;
+    const next = (n: number): number => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0), (seed >>> 8) % n);
+    for (let round = 0; round < 12; round += 1) {
+      const nodes: LayoutNodeInput[] = [];
+      for (let c = 0; c < 5; c += 1) for (let r = 0; r < 4; r += 1) if (next(4) > 0) nodes.push(node(`n${c}${r}`, c, r));
+      const ids = nodes.map((n) => n.id);
+      const edges: LayoutEdgeInput[] = [];
+      const seen = new Set<string>();
+      for (let k = 0; k < 40; k += 1) {
+        const a = ids[next(ids.length)] as string;
+        const b = ids[next(ids.length)] as string;
+        if (a === b || seen.has(`${a}>${b}`)) continue;
+        seen.add(`${a}>${b}`);
+        edges.push(edge(`e${edges.length}`, a, b));
+      }
+      const r = request(nodes, edges);
+      expect(crossings(layoutGrid({ ...r, growBoxes: true }, () => 0)), `round ${round}`).toBeLessThanOrEqual(crossings(run(r)));
+    }
+  });
+});

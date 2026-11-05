@@ -44,7 +44,8 @@ async function findTwoStepChain(page: Page): Promise<boolean> {
       await to.selectOption(b);
       const first = page.getByRole('list', { name: 'Chains' }).locator('> li').first();
       if ((await first.count()) === 0) continue;
-      if ((await first.getByRole('listitem').count()) === 2) return true;
+      // the chain row reads "A → B → C" (a phone's peek shows no step list): two steps = three families
+      if ((((await first.getByRole('button').first().textContent()) ?? '').split('→').length) === 3) return true;
     }
   }
   return false;
@@ -136,7 +137,7 @@ test.describe('the map on a desktop (part 2)', () => {
     await page.screenshot({ path: `${shotsDir()}/map-a-to-b-desktop-1280x800.png` });
     // a step opens that arrow's reactions in the inspector, as selecting the arrow does
     await panel.getByRole('list', { name: 'Chains' }).locator('> li').first().getByRole('button').nth(1).click();
-    await expect(page.getByRole('article', { name: 'Record' }).first()).toBeVisible();
+    await expect(page.getByRole('article', { name: 'Arrow' }).first()).toBeVisible(); // an arrow is an arrow in the inspector (step 8.2b-fix, S2)
     await panel.getByRole('combobox', { name: 'From' }).focus();
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
@@ -175,6 +176,10 @@ test.describe('phone: Pixel 7 (part 2)', () => {
     await openMapPhone(page);
     const button = page.getByRole('button', { name: 'From A to B' });
     expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // Find is a 44 px search button that opens the box over the controls row (step 8.2b-fix, E1)
+    const find = page.getByRole('button', { name: 'Find a family' });
+    expect((await find.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await find.tap();
     const box = page.getByRole('combobox', { name: 'Find a family' });
     expect((await box.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     const name = ((await page.locator(`svg [data-label-of="${FAMILY_ONE}"] text`).first().textContent()) ?? '').trim();
@@ -182,7 +187,6 @@ test.describe('phone: Pixel 7 (part 2)', () => {
     await expect.poll(() => edges(page).count()).toBeGreaterThan(0);
     await page.waitForTimeout(400);
     await page.screenshot({ path: `${shotsDir()}/map-find-family-pixel7.png` });
-    await box.fill('');
     await button.tap();
     const panel = page.getByRole('complementary', { name: 'From A to B' });
     await expect(panel).toBeVisible();
@@ -190,6 +194,21 @@ test.describe('phone: Pixel 7 (part 2)', () => {
     await expect(edges(page)).toHaveCount(2);
     await page.waitForTimeout(400);
     await page.screenshot({ path: `${shotsDir()}/map-a-to-b-pixel7.png` });
+    // layout guard (step 8.2b-fix, E2): at peek nothing of the sheet is clipped ("Show all n" is whole) and the chain's boxes sit ABOVE the sheet
+    const sheet = await panel.boundingBox();
+    if (sheet === null) throw new Error('no sheet');
+    expect(await panel.evaluate((el) => el.scrollHeight <= el.clientHeight + 1), 'the peek shows its whole content').toBe(true);
+    const showAll = panel.getByRole('button', { name: /^Show all d+$/ });
+    if ((await showAll.count()) > 0) {
+      const at = await showAll.boundingBox();
+      expect((at?.y ?? 0) + (at?.height ?? 0)).toBeLessThanOrEqual(sheet.y + sheet.height + 1);
+    }
+    const chainIds = await edges(page).evaluateAll((gs) => [...new Set(gs.flatMap((g) => [g.getAttribute('data-from') ?? '', g.getAttribute('data-to') ?? '']))]);
+    expect(chainIds.length).toBeGreaterThanOrEqual(3);
+    for (const id of chainIds) {
+      const box = await family(page, id).boundingBox();
+      expect((box?.y ?? 0) + (box?.height ?? 0), `the chain's family ${id} is above the sheet`).toBeLessThanOrEqual(sheet.y + 1);
+    }
     const more = panel.getByRole('button', { name: /^Show all/ });
     if ((await more.count()) > 0) await more.tap();
     await page.waitForTimeout(300);
