@@ -6,10 +6,10 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { expectClean, watch } from './kit';
+import { expectClean, leaveChapters, loadDemo, watch } from './kit';
 import { shotsDir } from './editor-kit';
 import { showUnclassified } from './map-focus-kit';
-import { FAMILY_ONE, openMapDesktop, openMapPhone } from './map-layout-kit';
+import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone } from './map-layout-kit';
 
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 const BUCKET_ID = 'virtual:unclassified:hub';
@@ -144,8 +144,56 @@ async function sequences(page: Page, phone: boolean, shots: { arrow: string; arr
   await page.screenshot({ path: shots.arrow });
 }
 
+/** Every arrow that ends with a head ends ON the side of its box (step 8.2b-fix, B1, B3): the end point is within 3 px of the target box. */
+async function expectHeadsTouchBoxes(page: Page): Promise<void> {
+  const loose = await page.evaluate(() => {
+    const out: string[] = [];
+    for (const g of document.querySelectorAll('svg [data-layer="edges"] [data-edge-id]')) {
+      const path = g.querySelector('path:not([data-hit])') as SVGPathElement;
+      const m = path.getScreenCTM() as DOMMatrix;
+      const end = path.getPointAtLength(path.getTotalLength());
+      const x = end.x * m.a + end.y * m.c + m.e;
+      const y = end.x * m.b + end.y * m.d + m.f;
+      const box = document.querySelector(`svg [data-node-id="${g.getAttribute('data-to')}"]`)?.getBoundingClientRect();
+      if (box === undefined) continue;
+      const near = x >= box.left - 3 && x <= box.right + 3 && y >= box.top - 3 && y <= box.bottom + 3;
+      if (!near) out.push(`${g.getAttribute('data-edge-id')} ends at ${Math.round(x)},${Math.round(y)} outside ${g.getAttribute('data-to')}`);
+    }
+    return out;
+  });
+  expect(loose, 'every arrowhead touches its box').toEqual([]);
+}
+
 test.describe('the map selection on a desktop', () => {
   test.use({ actionTimeout: 60_000 });
+
+  test('the bucket in focus: every arrow ends on a box (demo and fixture)', async ({ page }) => {
+    test.setTimeout(400_000);
+    const seen = await watch(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/');
+    await loadDemo(page);
+    await leaveChapters(page);
+    await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible({ timeout: 90_000 });
+    await showUnclassified(page);
+    await pickNode(page, BUCKET_ID, false);
+    await expect.poll(() => edges(page).count()).toBeGreaterThan(0);
+    await expectHeadsTouchBoxes(page);
+    await page.screenshot({ path: `${shotsDir()}/map-unclassified-focus-1280x800.png` });
+    await expectClean(seen);
+  });
+
+  test('the bucket in focus on the 8.2a fixture: every arrow ends on a box', async ({ page }) => {
+    test.setTimeout(400_000);
+    const seen = await watch(page);
+    await openMapDesktop(page);
+    await showUnclassified(page);
+    await pickNode(page, BUCKET_ID, false);
+    await expect.poll(() => edges(page).count()).toBeGreaterThan(0);
+    await expectHeadsTouchBoxes(page);
+    await page.screenshot({ path: `${shotsDir()}/map-unclassified-focus-fixture-1280x800.png` });
+    await expectClean(seen);
+  });
 
   test('the three sequences: the inspector names the arrow or the bucket that was picked last', async ({ page }) => {
     test.setTimeout(400_000);

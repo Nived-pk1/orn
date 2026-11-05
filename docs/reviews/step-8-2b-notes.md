@@ -14,3 +14,4 @@ fix Part D done (383.99/387.97), E1 done; next E2,E4,E5 then check, e2e, docs, d
 fix Parts E2,E4,E5 code done; running full check; next e2e specs
 fix: e2e specs written/updated; running affected specs in chromium
 fix: check green 706/8065; committed e2e; next: full chromium e2e, firefox/webkit affected, sizes recheck, docs, deploy
+fix: sizes 383.96/387.96, committed; running affected specs 3 engines

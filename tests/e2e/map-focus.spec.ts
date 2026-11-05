@@ -50,7 +50,9 @@ test.describe('the map on a desktop', () => {
     await expect(family(page, fadedId)).not.toHaveAttribute('data-faded', 'true');
     await expect.poll(() => edges(page).evaluateAll((gs, id) => gs.length > 0 && gs.every((g) => g.getAttribute('data-from') === id || g.getAttribute('data-to') === id), fadedId)).toBe(true);
 
-    // Esc leaves the focus: the quiet map is back
+    // Esc leaves the focus: the quiet map is back (the pointer is moved off the box first: a pointer resting on a family previews it again, by design, in Firefox and WebKit)
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(400);
     await page.locator('svg[role="group"]').focus();
     await page.keyboard.press('Escape');
     await expect(edges(page)).toHaveCount(0);
