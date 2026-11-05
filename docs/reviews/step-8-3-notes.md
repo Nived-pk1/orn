@@ -8,3 +8,4 @@ Part A done, commit pending next: Part C
 Part C code written, typechecking
 Part C code + unit tests done (uncommitted, check running); next: e2e spec updates, Part E
 Part C done (check green 720 files / 8152 tests), commit next: Part E e2e + screenshots
+Part C/D committed 4d84e26; study-edition chromium green; full chromium run started

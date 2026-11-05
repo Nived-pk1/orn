@@ -174,8 +174,8 @@ test.describe('desktop', () => {
     await expect(page.getByRole('dialog', { name: 'Export your data' })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog', { name: 'Export your data' })).toBeHidden();
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Dataset' }).click();
-    await expect(page.getByRole('button', { name: /^Replace with the (demo|study) dataset$/ })).toBeVisible();
+    // a student has no Dataset page (step 8.3, C4); replacing the data stays reachable as a palette command
+    await expect(page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Dataset' })).toHaveCount(0);
 
     expect(await axeProblems(page)).toEqual([]);
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
@@ -200,8 +200,11 @@ test.describe('desktop', () => {
       await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Load demo dataset' })).toHaveCount(0);
       await page.getByRole('button', { name: 'Load the study dataset' }).click();
-      await expect(page.getByText(/^Imported \d+ records from dataset\.orn\.json\./)).toBeVisible({ timeout: 60_000 });
-      await expect(page.getByRole('region', { name: 'First run' })).toHaveCount(0);
+      // the first load of the published chemistry is quiet for a student (step 8.3, C3): no notice, no status bar, no storage warning
+      await expect(page.getByRole('region', { name: 'First run' })).toHaveCount(0, { timeout: 60_000 });
+      await expect(page.getByText(/^Imported \d+ records from /)).toHaveCount(0);
+      await expect(page.getByRole('contentinfo')).toHaveCount(0);
+      await expect(page.getByText(/persistent storage|Export a backup|Layout note|Findings: E/)).toHaveCount(0);
       await expect(page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' })).toBeVisible();
       await expect(page.getByText(NOTICE)).toHaveCount(0);
       await page.reload();
@@ -235,7 +238,7 @@ test.describe('desktop', () => {
       await expect(page.getByRole('region', { name: 'Study dataset update' })).toHaveCount(0);
       const replaced = await recordTotal(page);
       expect(replaced).not.toBe(own);
-      await page.getByRole('region', { name: 'Replace the data' }).getByRole('button', { name: 'Undo import' }).click();
+      await page.getByRole('button', { name: 'Undo import' }).first().click(); // the notice of the replacing load (the Dataset page is not a student's)
       await expect(page.getByText('Import undone: the data from before it is back.')).toBeVisible({ timeout: 60_000 });
       await expect.poll(() => recordTotal(page)).toBe(own);
       expect(await axeProblems(page)).toEqual([]);
@@ -330,11 +333,11 @@ test.describe('what a student sees (step 8.3)', () => {
     const seen = await watch(page, STUDY);
     await openStudy(page);
     await expect(page.getByRole('contentinfo')).toHaveCount(0);
-    await expect(page.getByText(/Findings: E|Saved (revision|Workers:|Storage: not persistent|Layout note/)).toHaveCount(0);
+    await expect(page.getByText(/Findings: E|Saved \(revision|Workers:|Storage: not persistent|Layout note/)).toHaveCount(0);
     await importOwnData(page);
     await expect(page.getByRole('button', { name: 'Undo import' })).toBeVisible(); // the notice of the visitor's own import
     await expect(page.getByText('Your data is saved in this browser', { exact: true })).toBeVisible();
-    await expect(page.getByText(/Findings: E|Saved (revision|Workers:/)).toHaveCount(0);
+    await expect(page.getByText(/Findings: E|Saved \(revision|Workers:/)).toHaveCount(0);
     const modes = page.getByRole('navigation', { name: 'Modes' });
     await expect(modes.getByRole('button', { name: 'Map' })).toBeVisible();
     await expect(modes.getByRole('button', { name: 'Dataset' })).toHaveCount(0);
@@ -344,6 +347,7 @@ test.describe('what a student sees (step 8.3)', () => {
     if ((await warning.count()) > 0) await expect(page.getByRole('button', { name: 'Export a backup' })).toBeVisible();
     await chaptersFirstThenNavigator(page);
     await expect(page.getByRole('button', { name: /Unanchored reactions/ })).toHaveCount(0);
+    await expect(page.getByRole('combobox', { name: /^Exam$/ })).toBeVisible();
     await page.locator('svg [data-node-id="cls_alcohols"]').click();
     await expect(page.getByText('Selected: Alcohols.', { exact: true })).toBeVisible();
     await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
@@ -352,7 +356,6 @@ test.describe('what a student sees (step 8.3)', () => {
     await expect(family.locator('[data-review-mark="dot"]').first()).toBeVisible();
     await expect(family.locator('[data-review-mark="pill"]')).toHaveCount(0);
     await expect(family.getByText('exclusive', { exact: true })).toHaveCount(0);
-    await expect(page.getByLabel('Exam', { exact: true })).toBeVisible();
     await expectClean(seen);
   });
 });
@@ -371,7 +374,7 @@ for (const [label, profile, engine, shot] of [
       await openStudy(page);
       await expect(page.getByRole('region', { name: 'First run' })).toBeVisible();
       await expect(page.locator('header').getByText('Studio')).toHaveCount(0);
-      await expect(page.getByText(/d+ notices?/)).toHaveCount(0);
+      await expect(page.getByText(/\d+ notices?/)).toHaveCount(0);
       await importOwnData(page, generatedFileWithAnchors('tiny', 'chain'));
       await page.getByRole('button', { name: 'More', exact: true }).click();
       const more = page.getByRole('dialog', { name: 'More' });
