@@ -92,7 +92,7 @@ async function sequences(page: Page, phone: boolean, shots: { arrow: string; arr
   await expect(heading(page, familyName(FAMILY_ONE))).toBeVisible();
   await closeInspector(page, phone);
   await pickNode(page, BUCKET_ID, phone);
-  await expect(heading(page, 'Compounds not in a family yet')).toBeVisible();
+  await expect(heading(page, 'Not in a family yet')).toBeVisible();
   await expect(heading(page, familyName(FAMILY_ONE))).toHaveCount(0);
   await page.screenshot({ path: shots.bucket });
 
@@ -119,7 +119,7 @@ async function sequences(page: Page, phone: boolean, shots: { arrow: string; arr
   await pickNode(page, outTo as string, phone);
   await expect(heading(page, familyName(outTo as string))).toBeVisible();
   await pickNode(page, BUCKET_ID, phone);
-  await expect(heading(page, 'Compounds not in a family yet')).toBeVisible();
+  await expect(heading(page, 'Not in a family yet')).toBeVisible();
   const row = page.getByRole('list', { name: 'Compounds in no family' }).getByRole('button').first();
   if (phone) await row.tap();
   else await row.click();
@@ -222,7 +222,7 @@ test.describe('the map selection on a desktop', () => {
     await chip.click();
     await expect(heading(page, chipFamily)).toBeVisible();
     await page.getByRole('group', { name: 'History' }).getByRole('button', { name: 'Back' }).click();
-    await expect(heading(page, 'Compounds not in a family yet')).toBeVisible();
+    await expect(heading(page, 'Not in a family yet')).toBeVisible();
     await expectClean(seen);
   });
 

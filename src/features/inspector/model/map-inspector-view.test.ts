@@ -36,7 +36,6 @@ describe('mapInspectorView', () => {
     expect(view.from).toMatchObject({ id: AMINES, name: 'Amines', bucket: false });
     expect(view.to).toMatchObject({ id: ALKYNES, name: 'Alkynes', bucket: false });
     expect(view.reactions.map((row) => row.id)).toEqual(['rxn_r4']);
-    expect(view.count).toBe('1 reaction');
   });
   it('an arrow into the bucket names it in words, never "Unclassified"', () => {
     const view = mapInspectorView({ kind: 'arrow', from: AMINES, to: UNCLASSIFIED_HUB_ID }, snapshot(), 'study');
@@ -44,7 +43,6 @@ describe('mapInspectorView', () => {
     expect(view.title).toBe(`Amines → ${NOT_IN_A_FAMILY}`);
     expect(view.to.bucket).toBe(true);
     expect(view.reactions.map((row) => row.id)).toEqual(['rxn_r1', 'rxn_r2', 'rxn_r5']);
-    expect(view.count).toBe('3 reactions');
   });
   it('an arrow out of the bucket', () => {
     const view = mapInspectorView({ kind: 'arrow', from: UNCLASSIFIED_HUB_ID, to: ALKYNES }, snapshot(), 'study');
@@ -59,8 +57,8 @@ describe('mapInspectorView', () => {
   it('the bucket: chip, title, lead, one row per compound with made-from and goes-on-to chips, most reactions first then name', () => {
     const view = mapInspectorView({ kind: 'bucket' }, snapshot(), 'study');
     if (view.kind !== 'bucket') throw new Error('not a bucket view');
-    expect(view.chip).toBe(NOT_IN_A_FAMILY);
-    expect(view.title).toBe('Compounds not in a family yet');
+    expect(view.chip).toBe('Compounds');
+    expect(view.title).toBe(NOT_IN_A_FAMILY);
     expect(view.lead).toBe('These compounds appear in reactions, but no family covers them yet.');
     expect(view.rows.map((row) => [row.name, row.reactions])).toEqual([['Loner', 4], ['Other', 2]]);
     const loner = view.rows[0];
@@ -74,5 +72,26 @@ describe('mapInspectorView', () => {
     const studio = mapInspectorView({ kind: 'bucket' }, snapshot(), 'studio');
     expect(study.kind === 'bucket' && study.authorsLine).toBeUndefined();
     expect(studio.kind === 'bucket' && studio.authorsLine).toBe('Give these compounds a family in the content data');
+  });
+});
+
+describe('the arrow reagent words carry their parts (step 8.3, A3)', () => {
+  const written = stateOf(
+    chemClass('amines', 'Amines', 'compound_class'), anchorOn({ kind: 'class', id: cl('amines').id }, 'amines'),
+    chemClass('alkynes', 'Alkynes', 'compound_class'), anchorOn({ kind: 'class', id: cl('alkynes').id }, 'alkynes'),
+    species('a1', 'A one', { classes: ['amines'] }), species('b1', 'B one', { classes: ['alkynes'] }),
+    species('acid', 'Sulfuric acid', { formula: 'H2SO4' }), species('ammonia', 'Ammonia', { formula: 'H3N' }),
+    reaction({
+      slug: 'w1', name: 'R w1', scope: 'specific',
+      participants: [{ ref: sp('a1'), role: 'reactant' }, { ref: sp('acid'), role: 'reagent' }, { ref: sp('ammonia'), role: 'reagent', text: 'NH3' }],
+      outcomes: [{ sel: 'major', products: [{ ref: sp('b1') }] }],
+    }),
+  );
+  it('a formula is a formula part and a written label wins over the species formula (NH3, never H3N); text is the parts joined', () => {
+    const view = mapInspectorView({ kind: 'arrow', from: AMINES, to: ALKYNES }, { state: written, indexes: contextOf(written).indexes }, 'study');
+    if (view.kind !== 'arrow') throw new Error('not an arrow view');
+    const row = view.reactions[0];
+    expect(row?.parts).toEqual([{ text: 'H2SO4', kind: 'formula' }, { text: 'NH3', kind: 'name' }]);
+    expect(row?.words).toBe('H2SO4, NH3');
   });
 });

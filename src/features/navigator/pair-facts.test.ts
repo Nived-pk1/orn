@@ -40,7 +40,19 @@ describe('createPairFacts', () => {
     const aldehydes = 'cls_aldehydes';
     expect(both.facts(alcohols, aldehydes)).toEqual({ reactions: 3 });
     const folded = rig(['rxn_ethanol-to-ethanal-dichromate']);
-    expect(folded.facts(alcohols, aldehydes)).toEqual({ reactions: 2, words: 'PCC' });
+    expect(folded.facts(alcohols, aldehydes)).toMatchObject({ reactions: 2, words: 'PCC' });
+  });
+  it('carries the parts of the words (a name or a formula), which join to the same words (step 8.3, A3)', () => {
+    const r = rig();
+    const found = r.indexes
+      .current()
+      .navigatorRollup()
+      .pairs()
+      .map((pair) => r.facts(pair.from, pair.to))
+      .filter((facts) => facts?.words !== undefined);
+    expect(found.length).toBeGreaterThan(0);
+    for (const facts of found) expect(facts?.parts?.map((part) => part.text).join(', ')).toBe(facts?.words);
+    expect(found.some((facts) => facts?.parts?.some((part) => part.kind === 'formula'))).toBe(true);
   });
   it('is undefined for two families with no arrow between them', () => {
     expect(rig().facts('cls_nothing', 'cls_nowhere')).toBeUndefined();

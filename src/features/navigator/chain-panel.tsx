@@ -4,7 +4,9 @@
  * that arrow's reactions like selecting the arrow does. Esc and Close close it, and closing clears the chain. The search is
  * `familyChains` (core); this only chooses and lists. Not saved.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Runs } from '@/render/equation';
+import { partsToRuns } from '@/render/scene';
 import { useStore } from 'zustand';
 import type { RecordRef } from '@/core/schema';
 // deep import: the chain search is only for this lazy chunk (a barrel would pull it into the first load)
@@ -71,9 +73,10 @@ export function ChainPanel(props: ChainPanelProps) {
     setter(value);
     setPicked(0);
   };
-  const stepWords = (a: string, b: string): string => {
+  const stepWords = (a: string, b: string): ReactNode => {
     const found = facts(a, b);
     if (found === undefined) return '';
+    if (found.parts !== undefined && found.parts.length > 0) return <Runs runs={partsToRuns(found.parts)} />;
     return found.words ?? `${found.reactions} ${found.reactions === 1 ? 'reaction' : 'reactions'}`;
   };
   const select = (label: string, value: string, set: (v: string) => void) => (
@@ -127,7 +130,7 @@ export function ChainPanel(props: ChainPanelProps) {
                   {chain.steps.map((step) => (
                     <li key={`${step.from}>${step.to}`}>
                       <button type="button" className={styles.step} onClick={() => props.onOpenStep(step.from, step.to)}>
-                        {`${nameOf(step.from)} → ${nameOf(step.to)}: ${stepWords(step.from, step.to)}`}
+                        {`${nameOf(step.from)} → ${nameOf(step.to)}: `}{stepWords(step.from, step.to)}
                       </button>
                     </li>
                   ))}

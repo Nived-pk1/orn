@@ -190,6 +190,17 @@ describe('ViewportScene', () => {
 
 describe('the automatic fit follows the drawing size until the view is touched (step 5.10a)', () => {
   const rect = (height: number) => ({ x: 0, y: 0, left: 0, top: 0, right: 1000, bottom: height, width: 1000, height, toJSON: () => ({}) });
+  /** The observer now measures on the next frame (step 8.3, A2): run what it asked for, right away. */
+  function notifyAndMeasure(notify: (() => void) | undefined): void {
+    const asked: FrameRequestCallback[] = [];
+    const spy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => asked.push(callback));
+    try {
+      notify?.();
+    } finally {
+      spy.mockRestore();
+    }
+    for (const callback of asked) callback(0);
+  }
   function observed(): { resize: (height: number) => void; resizeHeight: (height: number, drawn: boolean) => void } {
     let notify: (() => void) | undefined;
     vi.stubGlobal(
@@ -206,7 +217,7 @@ describe('the automatic fit follows the drawing size until the view is touched (
       resize(height) {
         vi.mocked(SVGSVGElement.prototype.getBoundingClientRect).mockReturnValue(rect(height));
         act(() => {
-          notify?.();
+          notifyAndMeasure(notify);
           frames.run();
         });
       },
@@ -214,7 +225,7 @@ describe('the automatic fit follows the drawing size until the view is touched (
       resizeHeight(height, drawn) {
         vi.mocked(SVGSVGElement.prototype.getBoundingClientRect).mockReturnValue(rect(height));
         act(() => {
-          notify?.();
+          notifyAndMeasure(notify);
           if (drawn) vi.advanceTimersByTime(50);
         });
       },

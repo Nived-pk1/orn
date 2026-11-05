@@ -145,7 +145,13 @@ export function ViewportScene(props: ViewportSceneProps) {
       }
     };
     measure();
-    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+    // measured on the next frame, never inside the observer's own callback: a change made there is reported by WebKit as an uncaught
+    // "ResizeObserver loop completed with undelivered notifications" (step 8.3, A2)
+    let measureFrame = 0;
+    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => {
+      window.cancelAnimationFrame(measureFrame);
+      measureFrame = window.requestAnimationFrame(measure);
+    });
     observer?.observe(svg);
     onController?.(controller);
     // The viewport is reported once it has been still; the store's first frames (fit, restore) count as moves like any other.
@@ -174,6 +180,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       onController?.(null);
       refit.current = undefined;
       observer?.disconnect();
+      window.cancelAnimationFrame(measureFrame);
       bound.binding?.destroy();
       queue?.dispose();
       controller.dispose();

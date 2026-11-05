@@ -42,9 +42,9 @@ describe('Inspector: no stale record (B4)', () => {
     act(() => r.selection.getState().select({ kind: 'node', id: 'cls_alcohols' }));
     expect(await screen.findByRole('article', { name: 'Record' })).toBeTruthy();
     act(() => r.selection.getState().select({ kind: 'node', id: 'virtual:unclassified:hub' }));
-    expect(await screen.findByRole('heading', { name: 'Compounds not in a family yet' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Not in a family yet' })).toBeTruthy();
     expect(screen.queryByRole('article', { name: 'Record' })).toBeNull();
-    expect(screen.getByText('Not in a family yet')).toBeTruthy();
+    expect(screen.getByText('Compounds')).toBeTruthy();
   });
   it('select a family, then nothing: the empty state', async () => {
     await loadOtherViews();

@@ -38,7 +38,7 @@ export function MapPane(props: {
   );
   if (view.kind === 'empty' || view.kind === 'record') return <>{props.empty}</>;
   if (view.kind === 'bucket') return <BucketPane view={view} actions={base} />;
-  const words = new Map(view.reactions.map((row) => [row.id, row.words]));
+  const words = new Map(view.reactions.map((row) => [row.id, row.parts]));
   const actions: MapViewActions = { ...base, reactionsList: <ArrowReactions ends={{ from: view.from.id, to: view.to.id }} words={words} /> };
   return <ArrowPane view={view} actions={actions} />;
 }

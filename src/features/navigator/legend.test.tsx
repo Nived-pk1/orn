@@ -93,7 +93,7 @@ describe('NavigatorLegend explains the marks in words next to small samples', ()
     hidden.unmount();
     render(<NavigatorLegend items={[]} keys={{ ...NO_KEY, unclassified: { shown: true, reactions: 1 } }} onToggleUnclassified={onToggle} />);
     expect(screen.getByRole('button', { name: 'Hide' })).toBeTruthy();
-    expect(screen.getByText(/Unclassified: compounds not in any family yet/)).toBeTruthy();
+    expect(screen.getByText(/Not in a family yet: compounds that no family covers yet/)).toBeTruthy();
   });
   it('singular for one reaction; the Studio link only when given', () => {
     const { container } = render(<NavigatorLegend items={[]} keys={{ ...NO_KEY, unclassified: { shown: false, reactions: 1 } }} onToggleUnclassified={() => undefined} />);

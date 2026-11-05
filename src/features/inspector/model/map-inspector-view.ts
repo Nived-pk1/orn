@@ -4,7 +4,7 @@
  * none, a record (a family or anything opened from a list), the bucket (the map's "Not in a family yet" box, a derived node that is not
  * a record) or an arrow (from node, to node). Derived, never stored.
  */
-import { createReagentWords, UNCLASSIFIED_HUB_ID } from '@/core/graph';
+import { createReagentWords, UNCLASSIFIED_HUB_ID, type ArrowTextPart, type ReagentWords } from '@/core/graph';
 import type { NavigatorCandidate, ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
 import { nameOf, refOfId } from './describe';
@@ -33,6 +33,8 @@ export interface ArrowRow {
   readonly id: string;
   readonly name: string;
   readonly words: string;
+  /** The same words as parts (a name or a formula), to set in the card's typography. */
+  readonly parts: readonly ArrowTextPart[];
 }
 export interface ChipCount {
   readonly id: string;
@@ -50,10 +52,9 @@ export interface BucketRow {
 export type MapInspectorView =
   | { readonly kind: 'empty' }
   | { readonly kind: 'record'; readonly ref: RecordRef }
-  | { readonly kind: 'arrow'; readonly chip: 'Arrow'; readonly title: string; readonly from: ArrowEnd; readonly to: ArrowEnd; readonly count: string; readonly reactions: readonly ArrowRow[] }
+  | { readonly kind: 'arrow'; readonly chip: 'Arrow'; readonly title: string; readonly from: ArrowEnd; readonly to: ArrowEnd; readonly reactions: readonly ArrowRow[] }
   | { readonly kind: 'bucket'; readonly chip: string; readonly title: string; readonly lead: string; readonly rows: readonly BucketRow[]; readonly authorsLine?: string };
 
-const reactionsWord = (n: number): string => `${n} ${n === 1 ? 'reaction' : 'reactions'}`;
 const refKey = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
 
 function endOf(id: string, state: CanonicalState): ArrowEnd | undefined {
@@ -61,6 +62,8 @@ function endOf(id: string, state: CanonicalState): ArrowEnd | undefined {
   const ref = refOfId(id);
   return ref === undefined ? undefined : { id, name: nameOf(state, ref), bucket: false };
 }
+
+const reagent = (found: ReagentWords): { readonly words: string; readonly parts: readonly ArrowTextPart[] } => ({ words: found.text, parts: found.parts });
 
 function arrowView(from: string, to: string, snapshot: MapSnapshot): MapInspectorView {
   const a = endOf(from, snapshot.state);
@@ -73,9 +76,9 @@ function arrowView(from: string, to: string, snapshot: MapSnapshot): MapInspecto
   const reactions = [...carried.values()].map((candidate): ArrowRow => ({
     id: candidate.reactionId,
     name: nameOf(snapshot.state, { kind: 'reaction', id: candidate.reactionId } as RecordRef),
-    words: words(candidate.reactionId, candidate),
+    ...reagent(words(candidate.reactionId, candidate)),
   }));
-  return { kind: 'arrow', chip: 'Arrow', title: `${a.name} → ${b.name}`, from: a, to: b, count: reactionsWord(reactions.length), reactions };
+  return { kind: 'arrow', chip: 'Arrow', title: `${a.name} → ${b.name}`, from: a, to: b, reactions };
 }
 
 function chipsOf(groups: ReadonlyMap<string, Set<string>>, state: CanonicalState): readonly ChipCount[] {
@@ -121,8 +124,8 @@ function bucketView(snapshot: MapSnapshot, edition: 'study' | 'studio'): MapInsp
     .sort((x, y) => y.reactions - x.reactions || x.name.localeCompare(y.name) || (refKey(x.ref) < refKey(y.ref) ? -1 : 1));
   return {
     kind: 'bucket',
-    chip: NOT_IN_A_FAMILY,
-    title: 'Compounds not in a family yet',
+    chip: 'Compounds',
+    title: NOT_IN_A_FAMILY,
     lead: 'These compounds appear in reactions, but no family covers them yet.',
     rows,
     ...(edition === 'studio' ? { authorsLine: 'Give these compounds a family in the content data' } : {}),

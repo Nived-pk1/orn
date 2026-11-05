@@ -139,7 +139,7 @@ test.describe('the map on a desktop', () => {
     // Studio: "See those compounds" selects the bucket and the inspector lists them (one view, step 8.2b-fix, S3)
     await page.getByRole('button', { name: 'See those compounds' }).click();
     const rows = page.getByRole('list', { name: 'Compounds in no family' }).locator(':scope > li');
-    await expect(page.getByRole('heading', { level: 3, name: 'Compounds not in a family yet' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: 'Not in a family yet' })).toBeVisible();
     await expect(rows).toHaveCount(3);
     await expect(rows.first()).toContainText('Orphan compound');
     await page.screenshot({ path: `${shotsDir()}/map-studio-unclassified-list-1280x800.png` });

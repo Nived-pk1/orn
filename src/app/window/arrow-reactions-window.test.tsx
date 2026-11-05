@@ -63,7 +63,7 @@ describe('the reactions of an arrow in the inspector', () => {
     fireEvent.click((one as { row: HTMLElement }).row);
     const view = await within(pane()).findByRole('article', { name: 'Arrow' });
     expect(within(view).getByText('Arrow')).toBeTruthy();
-    expect(within(view).getByText('1 reaction')).toBeTruthy();
+    expect(within(view).queryByText('1 reaction')).toBeNull(); // the count is only in the list heading (step 8.3, A5)
     expect(within(within(view).getByRole('region', { name: 'Reactions on this arrow' })).getAllByRole('button').length).toBeGreaterThanOrEqual(1);
   });
 });

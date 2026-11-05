@@ -42,6 +42,18 @@ describe('an arrow with a mark', () => {
   });
 });
 
+describe('a chip with words in the card typography (step 8.3, A3)', () => {
+  it('draws the runs as tspans: the formula digits are subscripts, the text is the same characters', () => {
+    const runs = [{ text: 'H' }, { text: '2', script: 'sub' as const }, { text: 'SO' }, { text: '4', script: 'sub' as const }];
+    const { container } = draw(scene, { lod: 2, marks: marks({ edges: new Map([[arrow.id, { role: 'makes', chip: { text: 'H2SO4', name: 'H2SO4', runs } }]]) }) });
+    const chip = container.querySelector(`[data-count-of="${arrow.id}"]`) as Element;
+    expect(chip.querySelector('text')?.textContent).toBe('H2SO4');
+    expect(chip.querySelectorAll('tspan').length).toBe(4);
+    expect(chip.querySelectorAll('tspan[dy]').length).toBeGreaterThan(0);
+    expect(chip.getAttribute('aria-label')).toBe('H2SO4');
+  });
+});
+
 describe('boxes and captions', () => {
   it('a faded box is marked and stays a hit target', () => {
     const { container } = draw(scene, { lod: 2, marks: marks({ faded: new Set([hub.id]) }) });

@@ -76,6 +76,29 @@ describe('partsToRuns', () => {
   it('is empty for no parts', () => expect(partsToRuns([])).toEqual([]));
 });
 
+describe('formulaRuns: general formulas (step 8.3, A4)', () => {
+  const table: readonly (readonly [string, string])[] = [
+    ['CnH2n+1OH', 'C_n_H_2n+1_OH'],
+    ['CnH2n+2', 'C_n_H_2n+2_'],
+    ['CnH2n-2', 'C_n_H_2n-2_'],
+    ['CnH2n−2', 'C_n_H_2n−2_'],
+    ['CnH2n', 'C_n_H_2n_'],
+    ['CnH2n+1X', 'C_n_H_2n+1_X'],
+    ['CmH2m+1COOH', 'C_m_H_2m+1_COOH'],
+    ['CnH2nO', 'C_n_H_2n_O'],
+    ['CnH2n+1CHO', 'C_n_H_2n+1_CHO'],
+    // ordinary formulas and charges are unchanged
+    ['H2O', 'H_2_O'],
+    ['H3O+', 'H_3_O^+^'],
+    ['SO4 2-', 'SO_4_ 2-'],
+    ['H2-', 'H2-'],
+    ['Mn2O7', 'Mn_2_O_7_'],
+    ['SnCl2', 'SnCl_2_'],
+    ['ZnSO4', 'ZnSO_4_'],
+  ];
+  it.each(table)('%s', (input, expected) => expect(shown(formulaRuns(input))).toBe(expected));
+});
+
 describe('formulaRuns: odd formulas stay as they are', () => {
   const table: readonly (readonly [string, string])[] = [
     ['', ''],
@@ -83,8 +106,6 @@ describe('formulaRuns: odd formulas stay as they are', () => {
     ['-', '-'],
     ['2', '2'],
     ['2H2O', '2H_2_O'], // a leading coefficient stays
-    ['CnH2n+2', 'CnH_2_n+2'], // a general formula: only the digit after H
-    ['CnH2n-2', 'CnH_2_n-2'],
     ['R–CH2OH', 'R–CH_2_OH'],
     ['R2C=CR2', 'R_2_C=CR_2_'],
     ['K2Cr2O7 / H⁺', 'K_2_Cr_2_O_7_ / H⁺'], // Unicode scripts are not touched

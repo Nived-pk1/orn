@@ -5,7 +5,7 @@
 import type { FocusEvent, KeyboardEvent, Ref } from 'react';
 import type { AnchorTone } from '@/core/schema';
 import type { Point } from '@/layout/contracts';
-import type { LodLevel, Scene } from '@/render/scene';
+import type { FormattedText, LodLevel, Scene } from '@/render/scene';
 
 export const LAYER_NAMES = ['edges', 'nodes', 'labels', 'badges', 'overlay'] as const;
 export type LayerName = (typeof LAYER_NAMES)[number];
@@ -46,9 +46,9 @@ export interface EdgeMark {
   readonly tone?: AnchorTone;
   readonly startHead?: boolean;
   /** The count chip of the reverse direction of a pair, near the start head. */
-  readonly extraChip?: { readonly at: Point; readonly size: number; readonly text?: string; readonly name?: string };
+  readonly extraChip?: { readonly at: Point; readonly size: number; readonly text?: string; readonly name?: string; readonly runs?: FormattedText };
   /** Step 8.2b: the chip of the arrow when it shows words or a step number instead of the count (a lone arrow gets a chip too). `name` is its accessible name and tooltip. */
-  readonly chip?: { readonly text: string; readonly name: string };
+  readonly chip?: { readonly text: string; readonly name: string; readonly runs?: FormattedText };
 }
 
 /** The derived marks of one map view (step 8.2a): arrows in focus, boxes shown faded, and a small caption under a box. */

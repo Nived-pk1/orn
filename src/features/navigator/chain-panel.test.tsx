@@ -62,6 +62,15 @@ describe('ChainPanel', () => {
     expect(screen.getByRole('button', { name: 'Alkenes → Alcohols: PCC' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Alcohols → Aldehydes: 3 reactions' })).toBeTruthy();
   });
+  it('a step whose words hold a formula sets it in subscripts, as the reaction card does (step 8.3, A3)', () => {
+    const withFormula = (from: string, to: string) =>
+      from === 'alk' && to === 'alc' ? { reactions: 1, words: 'H2SO4', parts: [{ text: 'H2SO4', kind: 'formula' as const }] } : facts(from, to);
+    setup({ facts: withFormula });
+    choose('alk', 'ald');
+    fireEvent.click(screen.getByRole('button', { name: 'Alkenes → Alcohols → Aldehydes' }));
+    const step = screen.getByRole('button', { name: 'Alkenes → Alcohols: H2SO4' });
+    expect([...step.querySelectorAll('sub')].map((sub) => sub.textContent)).toEqual(['2', '4']);
+  });
   it('tapping a step opens that arrow', () => {
     const { onOpenStep } = setup();
     choose('alk', 'ald');

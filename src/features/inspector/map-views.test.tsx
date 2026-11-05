@@ -9,8 +9,8 @@ afterEach(cleanup);
 
 const bucket: Extract<MapInspectorView, { kind: 'bucket' }> = {
   kind: 'bucket',
-  chip: 'Not in a family yet',
-  title: 'Compounds not in a family yet',
+  chip: 'Compounds',
+  title: 'Not in a family yet',
   lead: 'These compounds appear in reactions, but no family covers them yet.',
   authorsLine: 'Give these compounds a family in the content data',
   rows: [
@@ -24,15 +24,14 @@ const arrow: Extract<MapInspectorView, { kind: 'arrow' }> = {
   title: 'Amines → Not in a family yet',
   from: { id: 'cls_amines', name: 'Amines', bucket: false },
   to: { id: 'virtual:unclassified:hub', name: 'Not in a family yet', bucket: true },
-  count: '2 reactions',
   reactions: [],
 };
 
 describe('BucketPane', () => {
   it('shows the chip, the title, the lead, the authors line and a row per compound with its chips', () => {
     render(<BucketPane view={bucket} actions={{ focusEnd: () => undefined, open: () => undefined, titleId: 't' }} />);
-    expect(screen.getByText('Not in a family yet')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Compounds not in a family yet' })).toBeTruthy();
+    expect(screen.getByText('Compounds')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Not in a family yet' })).toBeTruthy();
     expect(screen.getByText('These compounds appear in reactions, but no family covers them yet.')).toBeTruthy();
     expect(screen.getByText('Give these compounds a family in the content data')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Made from: Amines (2)' })).toBeTruthy();
@@ -61,7 +60,7 @@ describe('ArrowPane', () => {
     render(<ArrowPane view={arrow} actions={{ focusEnd: () => undefined, open: () => undefined, titleId: 't' }} />);
     expect(screen.getByText('Arrow')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Amines → Not in a family yet' })).toBeTruthy();
-    expect(screen.getByText('2 reactions')).toBeTruthy();
+    expect(screen.queryByText('2 reactions')).toBeNull(); // the count is only in the list heading (step 8.3, A5)
   });
   it('tapping an end focuses that family or the bucket', () => {
     const focusEnd = vi.fn();

@@ -43,8 +43,8 @@ export function createPairFacts(ports: PairFactsPorts): (from: string, to: strin
       const ids = [...new Set(candidates.map((c) => c.reactionId))];
       const cards = foldExamples(ids, lookup).shown;
       const card = cards.length === 1 ? candidates.find((c) => c.reactionId === cards[0]) : undefined;
-      const text = card === undefined ? '' : words(card.reactionId, card);
-      facts = { reactions: ids.length, ...(text === '' ? {} : { words: text }) };
+      const found = card === undefined ? undefined : words(card.reactionId, card);
+      facts = { reactions: ids.length, ...(found === undefined || found.text === '' ? {} : { words: found.text, parts: found.parts }) };
     }
     cache.set(key, facts);
     return facts;

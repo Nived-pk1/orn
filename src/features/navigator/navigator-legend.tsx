@@ -126,7 +126,7 @@ export function NavigatorLegend(props: {
             <li className={styles.legendItem} data-key="unclassified">
               <UnclassifiedSample />
               {unclassified.shown
-                ? 'Unclassified: compounds not in any family yet'
+                ? 'Not in a family yet: compounds that no family covers yet'
                 : `${unclassified.reactions} ${unclassified.reactions === 1 ? 'reaction leads' : 'reactions lead'} to compounds that are in no family yet`}
               {props.onToggleUnclassified === undefined ? null : (
                 <button type="button" className={styles.legendButton} onClick={props.onToggleUnclassified}>

@@ -14,6 +14,25 @@ const isUpper = (c: string): boolean => c >= 'A' && c <= 'Z';
 const isLower = (c: string): boolean => c >= 'a' && c <= 'z';
 const isClosing = (c: string): boolean => c === ')' || c === ']';
 const isSign = (c: string): boolean => c === '+' || c === '-' || c === '−';
+const isCountLetter = (c: string): boolean => c === 'n' || c === 'm' || c === 'x';
+/** The one-letter elements after which n, m or x is a count (a general formula), not the second letter of an element. */
+const COUNTED = 'CHNO';
+
+/** The end of the count that starts at `from`: digits, n/m/x, and a sign only between letters or digits of a count that has a letter ("2n+1"). */
+function countEnd(body: string, from: number): number {
+  let j = from;
+  let lettered = false;
+  while (j < body.length) {
+    const c = body[j] as string;
+    if (isDigit(c)) j += 1;
+    else if (isCountLetter(c)) {
+      lettered = true;
+      j += 1;
+    } else if (lettered && isSign(c) && j + 1 < body.length && (isDigit(body[j + 1] as string) || isCountLetter(body[j + 1] as string))) j += 1;
+    else break;
+  }
+  return j;
+}
 
 /** Appends a run, merging it into the previous one when the style is the same. Empty text adds nothing. */
 function push(out: TextRun[], text: string, style: Pick<TextRun, 'script' | 'emphasis'> = {}): void {
@@ -134,7 +153,9 @@ function tailOf(text: string, charge: number | undefined): Tail | undefined {
  * Formula typography: digits that follow an element symbol (an upper-case letter and at most one lower-case letter) or a closing
  * bracket become subscripts, a trailing charge becomes a superscript (see `tailOf`: the record's `charge` decides when it is
  * given), everything else stays as it is (a leading coefficient, a digit after a dot or a dash, text that is not a formula).
- * Not a parser: `CnH2n+2` gets only the subscript after H.
+ * A general formula counts with letters: after an element the count is the whole run of digits, the letters n, m and x and the signs
+ * between them up to the next element (`CnH2n+1OH`: n, 2n+1). The letters n/m/x are read as a count only after C, H, N or O, so tin,
+ * manganese and zinc (`Sn`, `Mn`, `Zn`) stay elements. Not a parser: typography only.
  */
 export function formulaRuns(text: string, charge?: number): FormattedText {
   const out: TextRun[] = [];
@@ -145,9 +166,9 @@ export function formulaRuns(text: string, charge?: number): FormattedText {
   let i = 0;
   while (i < body.length) {
     const c = body[i] as string;
-    if (isDigit(c)) {
-      let j = i;
-      while (j < body.length && isDigit(body[j] as string)) j += 1;
+    const counted = afterSymbol && lowers === 0 && isCountLetter(c) && COUNTED.includes(body[i - 1] as string);
+    if (isDigit(c) || counted) {
+      const j = afterSymbol ? countEnd(body, i) : (() => { let k = i; while (k < body.length && isDigit(body[k] as string)) k += 1; return k; })();
       push(out, body.slice(i, j), afterSymbol ? { script: 'sub' } : {});
       afterSymbol = false;
       lowers = 0;

@@ -57,7 +57,6 @@ export function ArrowPane(props: { readonly view: ArrowView; readonly actions: M
         </li>
         {end(view.to)}
       </ul>
-      <p className={styles.line}>{view.count}</p>
       {actions.reactionsList}
     </article>
   );

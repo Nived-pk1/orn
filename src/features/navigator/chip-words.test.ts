@@ -1,6 +1,11 @@
 /** The words on an arrow's chip (step 8.2b, D): one reaction shows its reagent words, more show the number; a chip that would overlap keeps the number. Pure. */
 import { describe, expect, it } from 'vitest';
-import { chipTextOf, clipWords, resolveChips, type ChipWish } from './chip-words';
+import type { ArrowTextPart } from '@/core/graph';
+import { chipTextOf, clipRuns, clipWords, resolveChips, type ChipWish } from './chip-words';
+
+const formula = (text: string): ArrowTextPart => ({ text, kind: 'formula' });
+const name = (text: string): ArrowTextPart => ({ text, kind: 'name' });
+const written = (runs: readonly { readonly text: string }[] | undefined): string => (runs ?? []).map((run) => run.text).join('');
 
 describe('clipWords', () => {
   it('keeps 14 characters or fewer as they are and cuts longer words at 14 with an ellipsis', () => {
@@ -64,5 +69,33 @@ describe('resolveChips in a chain: numbered chips', () => {
     ]);
     expect(out.get('a')).toEqual({ text: '1', name: 'step 1: 3 reactions' });
     expect(out.get('b')).toEqual({ text: '2: PCC', name: 'step 2: PCC' });
+  });
+});
+
+describe('chip words in the reaction card typography (step 8.3, A3)', () => {
+  it('a formula part gets subscripts and a name stays plain, as on the reaction card; the name and the tooltip stay the plain words', () => {
+    const chip = chipTextOf(1, 'H2SO4, Pd/C', [formula('H2SO4'), name('Pd/C')]);
+    expect(chip.text).toBe('H2SO4, Pd/C');
+    expect(chip.name).toBe('H2SO4, Pd/C');
+    expect(chip.runs).toEqual([{ text: 'H' }, { text: '2', script: 'sub' }, { text: 'SO' }, { text: '4', script: 'sub' }, { text: ', Pd/C' }]);
+  });
+  it('the cut counts visible characters: 14 of them, then an ellipsis; the subscripts survive in the part that is kept', () => {
+    const parts = [formula('CH3MgBr'), name('Diethyl ether')];
+    const chip = chipTextOf(1, 'CH3MgBr, Diethyl ether', parts);
+    expect(chip.text).toBe('CH3MgBr, Dieth…');
+    expect(written(chip.runs)).toBe('CH3MgBr, Dieth…');
+    expect(chip.runs).toContainEqual({ text: '3', script: 'sub' });
+    expect(written(clipRuns([{ text: '12345678901234' }])).length).toBe(14);
+    expect(written(clipRuns([{ text: '1234567' }, { text: '89', script: 'sub' }, { text: '0123456' }]))).toBe('12345678901234…');
+  });
+  it('no parts, or several reactions: no runs (the number, or plain words)', () => {
+    expect(chipTextOf(1, 'PCC').runs).toBeUndefined();
+    expect(chipTextOf(3, 'H2O', [formula('H2O')]).runs).toBeUndefined();
+  });
+  it('a chain step keeps the subscripts after its number: "2: H2O"', () => {
+    const out = resolveChips([{ key: 'a', at: { x: 0, y: 0 }, count: 1, words: 'H2O', parts: [formula('H2O')], step: 2 }]);
+    expect(out.get('a')?.text).toBe('2: H2O');
+    expect(written(out.get('a')?.runs)).toBe('2: H2O');
+    expect(out.get('a')?.runs).toContainEqual({ text: '2', script: 'sub' });
   });
 });

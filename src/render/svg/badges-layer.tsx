@@ -6,10 +6,11 @@
  */
 import { memo } from 'react';
 import type { MapMarks } from './contracts';
-import { CHIP_HEIGHT, chipTextWidth, chipWidth, countWidth, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
+import { CHIP_HEIGHT, chipTextWidth, chipWidth, countWidth, type FormattedText, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
 import type { LayerName } from './contracts';
 import { BADGE_GAP, BADGE_MARK, BADGE_SIZE, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
+import { Runs } from './text';
 import { useCommitProbe } from './use-commit-probe';
 
 const SHAPE_CLASS: Readonly<Partial<Record<SceneBadge['kind'], string>>> = { review: styles.badgeShapeReview, warning: styles.badgeShapeWarning, error: styles.badgeShapeError };
@@ -57,9 +58,11 @@ function NodeBadges(props: { readonly node: SceneNode }) {
 }
 
 /** The width of a chip's text: a plain number as before, words or a step by the length of the text (step 8.2b). */
+/** The chip's font size (scene-svg.module.css, .count): the subscript shift is a fraction of it. */
+const CHIP_FONT = 12;
 const widthOfText = (text: string): number => (/^[0-9]+$/.test(text) ? chipWidth(Number(text)) : chipTextWidth(text));
 
-function BundleCount(props: { readonly edge: SceneEdge; readonly size: number; readonly chip?: { readonly text: string; readonly name: string } | undefined }) {
+function BundleCount(props: { readonly edge: SceneEdge; readonly size: number; readonly chip?: { readonly text: string; readonly name: string; readonly runs?: FormattedText } | undefined }) {
   const { edge, size, chip } = props;
   const text = chip?.text ?? String(size);
   const width = widthOfText(text);
@@ -69,14 +72,14 @@ function BundleCount(props: { readonly edge: SceneEdge; readonly size: number; r
       <title>{name}</title>
       <rect className={styles.chipPill} x={0.5} y={0.5} width={width - 1} height={CHIP_HEIGHT - 1} rx={CHIP_HEIGHT / 2 - 0.5} />
       <text className={styles.count} x={width / 2} y={CHIP_HEIGHT / 2 + 4.2}>
-        {text}
+        {chip?.runs === undefined ? text : <Runs runs={chip.runs} size={CHIP_FONT} />}
       </text>
     </g>
   );
 }
 
 /** The count chip of the OTHER direction of a two-way pair (step 8.2a), near the start head. The pair's one spoken name is on its line. */
-function ExtraChip(props: { readonly edgeId: string; readonly at: { readonly x: number; readonly y: number }; readonly size: number; readonly text?: string | undefined; readonly name?: string | undefined }) {
+function ExtraChip(props: { readonly edgeId: string; readonly at: { readonly x: number; readonly y: number }; readonly size: number; readonly text?: string | undefined; readonly name?: string | undefined; readonly runs?: FormattedText | undefined }) {
   const text = props.text ?? String(props.size);
   const width = widthOfText(text);
   return (
@@ -84,7 +87,7 @@ function ExtraChip(props: { readonly edgeId: string; readonly at: { readonly x: 
       <rect className={styles.chipPill} x={0.5} y={0.5} width={width - 1} height={CHIP_HEIGHT - 1} rx={CHIP_HEIGHT / 2 - 0.5} />
       {props.name === undefined ? null : <title>{props.name}</title>}
       <text className={styles.count} x={width / 2} y={CHIP_HEIGHT / 2 + 4.2}>
-        {text}
+        {props.runs === undefined ? text : <Runs runs={props.runs} size={CHIP_FONT} />}
       </text>
     </g>
   );
@@ -106,7 +109,7 @@ export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Sc
       {lod >= 1 && props.marks !== undefined
         ? scene.edges.flatMap((edge) => {
             const chip = props.marks?.edges.get(edge.id)?.extraChip;
-            return chip === undefined || !visibleAt(edge, lod) ? [] : [<ExtraChip key={`extra-${edge.id}`} edgeId={edge.id} at={chip.at} size={chip.size} text={chip.text} name={chip.name} />];
+            return chip === undefined || !visibleAt(edge, lod) ? [] : [<ExtraChip key={`extra-${edge.id}`} edgeId={edge.id} at={chip.at} size={chip.size} text={chip.text} name={chip.name} runs={chip.runs} />];
           })
         : null}
     </g>
