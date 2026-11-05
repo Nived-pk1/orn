@@ -8,7 +8,7 @@
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, openApp, watch } from './kit';
+import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, openApp, watch, expectDemoLoaded } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -81,7 +81,7 @@ test.describe('the keyboard-only walk', () => {
     // 1. the first-run screen: Tab to "Load demo dataset" and press Enter
     await tabTo(page, 'first-run: Load demo dataset', (f) => f.tag === 'button' && f.name === 'Load demo dataset');
     await page.keyboard.press('Enter');
-    await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
+    await expectDemoLoaded(page);
 
     // 2. the map takes the focus as one tab stop; the first family holds it
     const map = await tabTo(page, 'the map', (f) => f.canvas);

@@ -9,3 +9,4 @@ Part C code written, typechecking
 Part C code + unit tests done (uncommitted, check running); next: e2e spec updates, Part E
 Part C done (check green 720 files / 8152 tests), commit next: Part E e2e + screenshots
 Part C/D committed 4d84e26; study-edition chromium green; full chromium run started
+Step 8.3 closed: deployed (Study d5b994b7, Studio 9fe8f550), live specs green after spec fixes; push next

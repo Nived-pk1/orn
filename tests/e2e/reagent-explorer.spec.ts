@@ -9,7 +9,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, watch, leaveChapters } from './kit';
+import { axeProblems, expectClean, watch, leaveChapters, examWord, LIVE } from './kit';
 import { shotsDir } from './editor-kit';
 import { changedDemo, importOwn } from './own-data-kit';
 
@@ -120,7 +120,7 @@ test('the exam scope marks and hides outside reactions; the open reagent comes b
 
   // the exam scope: the checkbox appears, and ticking it leaves only the reactions inside the version (it may leave none; it says so)
   const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  await scope.selectOption({ label: 'JEE Main, provisional, not verified' });
+  await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
   const only = view(page).getByLabel(/^Only /);
   await expect(only).toBeVisible();
   await only.check();
@@ -130,7 +130,7 @@ test('the exam scope marks and hides outside reactions; the open reagent comes b
   await expect(view(page).getByLabel(/^Only /)).toHaveCount(0);
 
   // the choice is saved: a reload opens the same page (not while the chem worker is still fetching its wasm: WebKit logs the aborted fetch)
-  await expect(page.getByText(/Workers: .*chem ok/)).toBeVisible({ timeout: 60_000 });
+  if (!LIVE) await expect(page.getByText(/Workers: .*chem ok/)).toBeVisible({ timeout: 60_000 }); // Studio's status bar; a student has none (step 8.3)
   await page.waitForTimeout(1000); // the saved state is written after a short pause (SAVE_DEBOUNCE_MS)
   await page.reload();
   await leaveChapters(page).catch(() => undefined);

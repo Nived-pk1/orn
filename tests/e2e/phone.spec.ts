@@ -11,7 +11,7 @@
 import { devices, type CDPSession, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { layoutProblems } from './layout-guard';
-import { axeProblems, expectClean, openPhoneApp, watch, exampleCard, leaveChapters } from './kit';
+import { axeProblems, expectClean, openPhoneApp, watch, exampleCard, leaveChapters, expectDemoLoaded, LIVE } from './kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 /** FIT_FLOOR of src/render/viewport/transform.ts (LOD 1 entry with hysteresis, 0.35 x 1.05, plus 0.01): the smallest scale a phone map reaches. */
@@ -128,7 +128,7 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
 
   // the demo: the phone opens on the Families tab (cards), with no status line and no toolbar
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
-  await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
+  await expectDemoLoaded(page);
   await leaveChapters(page); // Study opens on the Chapters tab (7.3b); Studio on Families
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
   await expect(tabs(page).getByRole('button', { name: 'Families' })).toHaveAttribute('aria-current', 'page');
@@ -140,7 +140,7 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
   await page.getByRole('button', { name: 'More', exact: true }).tap();
   const more = page.getByRole('dialog', { name: 'More' });
   await expect(more.getByRole('button', { name: 'Import a file...' })).toBeVisible();
-  await expect(more.getByRole('button', { name: 'Status' })).toBeVisible();
+  if (!LIVE) await expect(more.getByRole('button', { name: 'Status' })).toBeVisible(); // a student has no Status (step 8.3)
   await stop(page, device, 3, 'more');
   await more.getByRole('button', { name: 'Close' }).first().tap();
   await expect(more).toBeHidden();

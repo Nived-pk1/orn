@@ -9,7 +9,7 @@
  */
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard, leaveChapters } from './kit';
+import { axeProblems, expectClean, loadDemo, openApp, watch, exampleCard, leaveChapters, LIVE } from './kit';
 
 /** One bond in the chem module's own units (the nominal bond of the fixed scale, `FIXED_SCALE_BOND_UNITS`). */
 const NOMINAL_BOND = 54;
@@ -20,7 +20,7 @@ async function openFamily(page: Page, node: string, name: RegExp): Promise<void>
   await loadDemo(page);
   await page.locator(`svg [data-node-id="${node}"]`).dblclick();
   await expect(page.getByRole('region', { name })).toBeVisible();
-  await page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' }).click(); // the import notice would cover the card
+  if (!LIVE) await page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' }).click(); // the import notice would cover the card
 }
 
 const cardOf = (page: Page, title: RegExp): Locator => page.getByRole('article').filter({ has: page.getByRole('heading', { level: 4, name: title }) });
@@ -122,7 +122,7 @@ test('Lindlar: three terms, hydrogen as the formula H2, the drawings at one bond
   await loadDemo(page);
   await page.locator('svg [data-node-id="cls_alkenes"]').dblclick();
   await expect(page.getByRole('region', { name: 'Family page: Alkenes' })).toBeVisible();
-  await page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' }).click();
+  if (!LIVE) await page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' }).click();
   await page.getByRole('button', { name: /^Alkynes\s*\d+\s*reactions?$/ }).first().click();
   const card = cardOf(page, /Lindlar/);
   const scheme = await openEquation(card);
@@ -181,8 +181,11 @@ test('Cannizzaro: "(both exclusive)" once, the coefficient 2 before benzaldehyde
   await openFamily(page, 'cls_aldehydes', /^Family page: Aldehydes/);
   const card = cardOf(page, /Cannizzaro/);
   const scheme = await openEquation(card);
-  await expect(scheme.locator('[data-equation-word]')).toHaveCount(1);
-  await expect(scheme.locator('[data-equation-word]')).toHaveText('(both exclusive)');
+  // a student does not read "exclusive" (step 8.3, C8): the live site is the student edition, the local build is Studio
+  if (process.env.ORN_BASE_URL === undefined) {
+    await expect(scheme.locator('[data-equation-word]')).toHaveCount(1);
+    await expect(scheme.locator('[data-equation-word]')).toHaveText('(both exclusive)');
+  } else await expect(scheme.locator('[data-equation-word]')).toHaveCount(0);
   await expect(scheme.locator('[data-equation-coefficient]')).toHaveText('2');
   await expect(scheme.getByRole('group', { name: '2 Benzaldehyde' })).toBeVisible();
   if (browserName === 'chromium') await shot(page, card, 'equation-textbook-cannizzaro-1280x800.png');

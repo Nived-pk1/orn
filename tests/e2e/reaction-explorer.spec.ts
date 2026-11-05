@@ -12,7 +12,7 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, loadDemo, openApp, openPhoneApp, watch, leaveChapters } from './kit';
+import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, loadDemo, openApp, openPhoneApp, watch, leaveChapters, examWord, expectSaved } from './kit';
 import { palette, pane, record, searchFor, shotsDir } from './editor-kit';
 
 test.use({ actionTimeout: 60_000 });
@@ -122,7 +122,7 @@ test.describe('desktop', () => {
     await view(page).getByRole('button', { name: /^Type/ }).click();
     await view(page).getByRole('group', { name: 'Type filter' }).getByRole('checkbox', { name: /^Oxidation/ }).check();
     await page.keyboard.press('Escape');
-    await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
+    await expectSaved(page);
     await page.waitForTimeout(1000);
     await page.reload();
     await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
@@ -197,7 +197,7 @@ test.describe('desktop', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: 'JEE Main, provisional, not verified' });
+    await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: examWord('JEE Main, provisional, not verified') });
     await openReactions(page);
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');
     const marked = await view(page).locator('[data-outside]').count();

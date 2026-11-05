@@ -5,7 +5,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, leaveChapters, watch } from './kit';
+import { axeProblems, expectClean, leaveChapters, watch, examWord } from './kit';
 import { palette, shotsDir } from './editor-kit';
 import { changedDemo, importOwn } from './own-data-kit';
 import { longChapterDemo, longListsDemo } from './dod-kit';
@@ -34,7 +34,7 @@ test('Named reactions, Mechanisms and Reagents: a list of more than 30 is cut at
     await view.getByRole('button', { name: 'Show 30 more' }).click();
     expect(await list.locator(entry).count()).toBeGreaterThan(30);
     // "Only <exam version>": the clones have no reaction, so they are hidden and the count line says how many are left
-    await scope.selectOption({ label: 'JEE Main, provisional, not verified' });
+    await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
     await view.getByLabel(/^Only /).check();
     await expect(view.getByText(new RegExp(`^\\d+ of \\d+ ${noun}$`))).toBeVisible();
     expect(await list.locator(entry).count()).toBeLessThan(30);
@@ -67,7 +67,7 @@ test('Chapters: a group of 35 concepts is cut at 30; Syllabus: a unit of 65 topi
 
   // the exam scope picks the version the Syllabus opens with; choosing a version there leaves the scope alone
   const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  await scope.selectOption({ label: 'JEE Advanced, provisional, not verified' });
+  await scope.selectOption({ label: examWord('JEE Advanced, provisional, not verified') });
   await rail(page).getByRole('button', { name: 'Syllabus' }).click();
   const syllabus = region(page, 'Syllabus');
   await expect(syllabus.getByLabel('Exam version')).toHaveValue('exv_jee-advanced-2026');

@@ -85,7 +85,8 @@ export async function expectClean(seen: Watch): Promise<void> {
 export async function openApp(page: Page): Promise<void> {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Status' })).toBeVisible();
+  // the student edition has no status line (step 8.3): the rail is the sign that the window is up
+  await expect(page.getByRole('navigation', { name: 'Modes' })).toBeVisible();
   await expect(page.getByText('Starting up', { exact: true })).toHaveCount(0);
 }
 
@@ -99,7 +100,7 @@ export async function openPhoneApp(page: Page): Promise<void> {
 
 export async function loadDemo(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Load demo dataset' }).click();
-  await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
+  await expectDemoLoaded(page);
   await leaveChapters(page);
 }
 
@@ -252,4 +253,20 @@ export async function exampleCard(page: Page, name: string | RegExp): Promise<Lo
   const closed = page.locator('details[data-examples]:not([open]) > summary');
   for (let n = await closed.count(); n > 0; n = await closed.count()) await closed.first().click();
   return page.getByRole('article').filter({ has: page.getByRole('heading', { level: 5, name }) }).last();
+}
+
+/** After the first load of the shipped dataset: Studio says "Imported n records", the student edition (the live site) says nothing (step 8.3, C3). */
+export async function expectDemoLoaded(page: Page): Promise<void> {
+  if (process.env.ORN_BASE_URL === undefined) await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
+  else await expect(page.getByRole('region', { name: 'First run' })).toHaveCount(0, { timeout: 60_000 });
+}
+
+/** True against a deployed site: the student edition, which has no status bar, no Dataset page and no status words in the exam select (step 8.3). */
+export const LIVE = process.env.ORN_BASE_URL !== undefined;
+/** An exam option as the edition writes it: Studio adds the status words ("JEE Main, provisional, not verified"), the student edition does not. */
+export const examWord = (label: string): string => (LIVE ? label.replace(/, (provisional|draft|official)(, not verified)?$/, '') : label);
+/** The data is saved: Studio says so in its status line; the student edition has none, so the window being up is the sign. */
+export async function expectSaved(page: Page): Promise<void> {
+  if (LIVE) await expect(page.getByRole('navigation', { name: 'Modes' })).toBeVisible();
+  else await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
 }

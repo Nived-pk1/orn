@@ -8,7 +8,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { expectClean, openApp, watch, exampleCard } from './kit';
+import { expectClean, openApp, watch, exampleCard, expectDemoLoaded } from './kit';
 
 test.use({ hasTouch: true, viewport: { width: 1280, height: 800 } });
 
@@ -36,7 +36,7 @@ test.describe('the touch walk', () => {
     const seen = await watch(page);
     await openApp(page);
     await page.getByRole('button', { name: 'Load demo dataset' }).tap();
-    await expect(page.getByText(/^Imported \d+ records from demo\.orn\.json\./)).toBeVisible();
+    await expectDemoLoaded(page);
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
 
     const alcohols = await centreOf(page, 'cls_alcohols');

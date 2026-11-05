@@ -7,7 +7,7 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { expect, test } from './fixtures';
-import { expectClean, findingsText, loadDemo, openApp, recordCount, showDataset, watch } from './kit';
+import { expectClean, findingsText, loadDemo, openApp, recordCount, showDataset, watch, expectSaved, LIVE } from './kit';
 
 test('the app boots and loads the demo; its counts are shown', async ({ page }) => {
   const seen = await watch(page);
@@ -17,10 +17,13 @@ test('the app boots and loads the demo; its counts are shown', async ({ page }) 
   // step 5.5a: after the demo loads the navigator shows its hubs (Chromium, Firefox, WebKit)
   await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
   await expect(page.locator('svg [data-node-id]')).toHaveCount(15); // Unclassified is hidden unless shown (step 8.2a)
-  await showDataset(page);
-  expect(await recordCount(page, 'reaction')).toBe(27);
-  expect(await recordCount(page, 'species')).toBe(66);
-  await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
+  if (!LIVE) {
+    // a student has no Dataset page (step 8.3): the 15 boxes above are the check on the live site
+    await showDataset(page);
+    expect(await recordCount(page, 'reaction')).toBe(27);
+    expect(await recordCount(page, 'species')).toBe(66);
+  }
+  await expectSaved(page);
   await expectClean(seen);
 });
 
@@ -39,6 +42,7 @@ test('the family page of a demo family opens (step 5.5b): a double click on Alco
 });
 
 test('the chem worker parses: the demo has one CHEM-001 warning in the counts', async ({ page }) => {
+  test.skip(LIVE, 'the findings counts are in the status bar, which a student does not have (step 8.3); the student edition is checked by csp.spec and study-edition.spec');
   await openApp(page);
   await loadDemo(page);
   // L1-L3 findings of the demo: one planted RXN-002 warning (E 0 / W 1 / I 17 / Review 38). L4 (chem worker) adds one CHEM-001 warning for the invalid structure.
@@ -47,6 +51,7 @@ test('the chem worker parses: the demo has one CHEM-001 warning in the counts', 
 });
 
 test('the status shows the compute, chem and search workers as ok after the demo loads', async ({ page }) => {
+  test.skip(LIVE, 'the status bar is Studio only (step 8.3)');
   await openApp(page);
   await loadDemo(page);
   await expect(findingsText(page)).toHaveText('Findings: E 0 / W 2 / I 17 / Review 38', { timeout: 60_000 });

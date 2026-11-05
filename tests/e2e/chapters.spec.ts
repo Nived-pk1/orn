@@ -9,7 +9,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, watch } from './kit';
+import { axeProblems, expectClean, watch, examWord, expectSaved } from './kit';
 import { record, shotsDir } from './editor-kit';
 import { importOwn } from './own-data-kit';
 import { CHAPTER_A, CHAPTER_B, chaptersDemo, EMPTY_IDEA, UNMAPPED } from './chapters-kit';
@@ -87,7 +87,7 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
 
   // the exam scope: the chapters a version does not cover are hidden, and said
   const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  await scope.selectOption({ label: 'JEE Main, provisional, not verified' });
+  await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
   await expect(view(page).getByText(/chapters? (is|are) hidden: not in/)).toBeVisible();
   await expect(rows(page).filter({ hasText: 'Molecular rearrangements' })).toHaveCount(0);
   await expect(rows(page).filter({ hasText: 'No chapter yet' })).toHaveCount(studio ? 1 : 0); // 7.3c A2: only Studio lists it under a scope
@@ -113,7 +113,7 @@ test('the open chapter and its filter come back after a reload (uiState)', async
   await openChapters(page);
   await rows(page).filter({ hasText: CHAPTER_A }).getByRole('button', { name: CHAPTER_A }).click();
   await view(page).getByLabel('Find in this chapter').fill('oxid');
-  await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
+  await expectSaved(page);
   await page.waitForTimeout(1_000);
   await page.reload();
   await openChapters(page);

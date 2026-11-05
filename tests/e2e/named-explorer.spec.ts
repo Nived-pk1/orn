@@ -7,7 +7,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, leaveChapters, watch } from './kit';
+import { axeProblems, expectClean, leaveChapters, watch, examWord } from './kit';
 import { shotsDir } from './editor-kit';
 import { changedDemo, importOwn } from './own-data-kit';
 
@@ -91,7 +91,7 @@ test('Alt+Enter on a palette hit opens the page; the exam scope offers "Only"; t
   await openNamed(page);
 
   const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  await scope.selectOption({ label: 'JEE Main, provisional, not verified' });
+  await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
   const only = view(page).getByLabel(/^Only /);
   await expect(only).toBeVisible();
   await only.check();

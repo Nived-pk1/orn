@@ -7,7 +7,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, expectClean, watch, leaveChapters } from './kit';
+import { axeProblems, expectClean, watch, leaveChapters, examWord, expectSaved } from './kit';
 import { openDemo, pane, record, shotsDir, showSpecies } from './editor-kit';
 
 test.use({ actionTimeout: 60_000 });
@@ -128,7 +128,7 @@ test.describe('Studio, desktop', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: 'JEE Main, provisional, not verified' });
+    await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: examWord('JEE Main, provisional, not verified') });
     await openPrecursors(page);
     await pick(page, 'Compound to make', 'caprolactam', 'Choose ε-Caprolactam');
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');
@@ -170,7 +170,7 @@ test.describe('Studio, desktop', () => {
     await view(page).getByRole('combobox', { name: 'Up to' }).selectOption('3');
     await search(page).click();
     await expect(found(page).getByText(/^\d+ routes? found$/)).toBeVisible();
-    await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
+    await expectSaved(page);
     await page.waitForTimeout(1000);
     await page.reload();
     await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)

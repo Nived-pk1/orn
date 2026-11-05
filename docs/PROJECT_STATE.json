@@ -139,16 +139,16 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-05",
-    "commit": "fe08283",
-    "version": "4657a058-8a33-4146-8b0e-7a6b0f77265b",
-    "liveSpecs": "2026-11-05 (8.2b fix round), Chromium + WebKit by exact names: 91 passed, 19 skipped."
+    "commit": "8122d0b",
+    "version": "d5b994b7-d7c0-4b1e-9c5a-63d46f633f5d",
+    "liveSpecs": "2026-11-05 (step 8.3), Chromium 43 passed + the two fixed specs re-run 6 passed; WebKit 44 passed, 12 skipped, by exact names."
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-05",
-    "version": "b305401a-5a2d-43b1-9cf0-1448d1ac5c6e",
+    "version": "9fe8f550-a72b-45d4-8573-2066058de1bf",
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.2b fix-round deploy, 2026-11-05: an unauthenticated request got 302 and not the app; the Study site answered 200.",
     "commit": "fe08283",
@@ -636,6 +636,7 @@
       "studio": 389.49
     },
     "adr": "ADR-045",
-    "summary": "studyChrome rule, no status bar, own-data line, Map/Exam words, review dot, quiet exclusive"
+    "summary": "studyChrome rule, no status bar, own-data line, Map/Exam words, review dot, quiet exclusive",
+    "deployed": "2026-11-05"
   }
 }

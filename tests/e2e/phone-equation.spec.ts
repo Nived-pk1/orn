@@ -139,7 +139,9 @@ async function walk(page: Page, device: 'pixel7' | 'iphone14'): Promise<void> {
   await expect(page.getByRole('region', { name: 'Family page: Aldehydes' })).toBeVisible();
   const cannizzaro = cardOf(page, /Cannizzaro/);
   const cannizzaroScheme = await openEquation(cannizzaro);
-  await expect(cannizzaroScheme.locator('[data-equation-word]')).toHaveText('(both exclusive)');
+  // the student edition (the live site) does not write "exclusive" (step 8.3, C8)
+  if (process.env.ORN_BASE_URL === undefined) await expect(cannizzaroScheme.locator('[data-equation-word]')).toHaveText('(both exclusive)');
+  else await expect(cannizzaroScheme.locator('[data-equation-word]')).toHaveCount(0);
   await expect(cannizzaroScheme.locator('[data-equation-coefficient]')).toHaveText('2');
   await expectFits(page, cannizzaro, cannizzaroScheme);
   await expectArrowText(cannizzaroScheme);

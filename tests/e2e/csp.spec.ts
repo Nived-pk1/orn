@@ -8,7 +8,7 @@
  */
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { loadDemo, openApp, watch, exampleCard } from './kit';
+import { loadDemo, openApp, watch, exampleCard, LIVE } from './kit';
 import { startHeaderServer, type HeaderServer } from './support/header-server';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -24,7 +24,7 @@ async function structureAppears(page: Page): Promise<Locator> {
   await page.getByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ }).last().click();
   const card = await exampleCard(page, 'Ethanol → ethanal (PCC)'); // folded under the general oxidation (7.3a C1)
   await expect(card).toBeVisible();
-  return card.getByRole('img');
+  return card.locator('img'); // the structure drawings only: the student edition's review dot is a role=img too (step 8.3)
 }
 
 interface Injected {
@@ -79,7 +79,7 @@ test.describe('the page policy (the <meta> tag of the production build)', () => 
     expect(violations.length, 'violations raised').toBeGreaterThanOrEqual(3);
 
     // The app is unharmed: the chem worker starts and parses (the demo's invalid structure is one CHEM-001 warning) and a structure is drawn.
-    await expect(page.getByText(FINDINGS)).toBeVisible({ timeout: 60_000 });
+    if (!LIVE) await expect(page.getByText(FINDINGS)).toBeVisible({ timeout: 60_000 }); // the status bar is Studio only (step 8.3)
     await expect(page.getByText(/Check unavailable/)).toHaveCount(0);
     const images = await structureAppears(page);
     await expect(images).toHaveCount(2, { timeout: 60_000 });
@@ -154,11 +154,13 @@ for (const kind of ['same', 'chem-allowance'] as const) {
       await openApp(page);
       await loadDemo(page);
       await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
-      await expect(page.getByText(/^Workers: compute ok, /)).toBeVisible({ timeout: 60_000 });
-      // wait until the chem worker has had its say: the findings settle, or the unavailable banner shows
-      await expect
-        .poll(async () => (await page.getByText(FINDINGS).count()) + (await page.getByText(/Check unavailable/).count()), { timeout: 90_000 })
-        .toBeGreaterThan(0);
+      if (!LIVE) {
+        await expect(page.getByText(/^Workers: compute ok, /)).toBeVisible({ timeout: 60_000 });
+        // wait until the chem worker has had its say: the findings settle, or the unavailable banner shows
+        await expect
+          .poll(async () => (await page.getByText(FINDINGS).count()) + (await page.getByText(/Check unavailable/).count()), { timeout: 90_000 })
+          .toBeGreaterThan(0);
+      } else await page.waitForTimeout(5_000); // the student edition has no status bar: give the chem worker time to answer
 
       // the header is on every response, the document included; the chem entry differs only in case B
       expect(server.served.length).toBeGreaterThan(5);
