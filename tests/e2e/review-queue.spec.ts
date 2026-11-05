@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { axeProblems, chooseFile, expectClean, expectPreview, openApp, openPhoneApp, watch, leaveChapters } from './kit';
+import { axeProblems, chooseFile, expectClean, expectPreview, openPhoneApp, watch, leaveChapters } from './kit';
 import { openDemo, shotsDir } from './editor-kit';
 import { chaptersFirstThenNavigator } from './chapters-kit';
 
@@ -234,7 +234,10 @@ test.describe('Study', () => {
   test('Shift-click does nothing extra: the single selection stays, no selection actions, no Review page', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page, STUDY);
-    await openApp(page);
+    // a student has no status line to wait for (step 8.3): the title and the end of start-up are the signal
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
+    await expect(page.getByText('Starting up', { exact: true })).toHaveCount(0);
     await chooseFile(page, { name: 'my-own-data.orn.json', mimeType: 'application/json', buffer: readFileSync(resolve(process.cwd(), 'data/seed/demo.orn.json')) });
     await expectPreview(page);
     await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();

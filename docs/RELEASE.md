@@ -39,6 +39,7 @@ server code, no database and no account system in the app. Everything a visitor 
 5. Every row close deploys BOTH editions, Study first, then Studio, and re-runs the live Access check (below) after EACH Studio deploy.
    Record both Worker versions in `docs/PROJECT_STATE.json` (`releasePreview` for Study, `studioPreview` for Studio). Any failure in the
    full e2e run means NO deploy until the reviewer approves, even after a fix.
+   **E2E policy (from step 8.3, to keep runs short):** each row closes with the AFFECTED specs in all 3 engines plus ONE full Chromium run (the Studio build, then study-edition, study-explorers and live-valid on the Study build). The full 3-engine run happens once, at the Phase 8 close (row 8.7).
 
 Never rename either Worker (`name` in the config file) and never change a URL: a new name is a new site at a new address, and the old address
 would keep serving the old build until it is deleted by hand.

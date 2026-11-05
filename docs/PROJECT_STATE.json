@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-04",
+  "lastUpdated": "2026-11-05",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -154,8 +154,8 @@
     "commit": "fe08283",
     "protectedCheckedAt": "2026-11-05"
   },
-  "nextStep": "8.3",
-  "nextStepTitle": "Study is a student app: hide author/developer chrome on the public site; rename desktop \"Navigator\" to \"Map\"; the Study review mark (docs/IMPLEMENTATION_PLAN.md row 8.3). BEFORE it: the reviewer approves the 8.2b deploy (not deployed: the full e2e run had product failures, fixed and re-run green)",
+  "nextStep": "8.4",
+  "nextStepTitle": "Phase 8 row 8.4 (docs/IMPLEMENTATION_PLAN.md). Step 8.3 done; awaiting review",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -628,5 +628,14 @@
     },
     "check": "ORN_TEST_WORKERS=2: 680 files, 7885 tests green; at default workers review-grouping, phone-precursors-window (Reagents) and reactions-window time out under load (they pass alone; review-grouping also failed before any 8.1 UI change)",
     "adr": "ADR-043"
+  },
+  "step83": {
+    "closed": "2026-11-05",
+    "initialJsGzipKb": {
+      "study": 385.55,
+      "studio": 389.49
+    },
+    "adr": "ADR-045",
+    "summary": "studyChrome rule, no status bar, own-data line, Map/Exam words, review dot, quiet exclusive"
   }
 }

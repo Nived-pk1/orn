@@ -147,7 +147,7 @@ test.describe('the map on a desktop', () => {
     // Show / Hide
     await marks.getByRole('button', { name: 'Show', exact: true }).click();
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(1);
-    await expect(marks).toContainText('Unclassified: compounds not in any family yet');
+    await expect(marks).toContainText('Not in a family yet: compounds that no family covers yet');
     await page.getByRole('button', { name: 'Fit' }).click(); // the inspector pane took width: fit the whole drawing so the Unclassified box is on the screen
     await page.waitForTimeout(600);
     await page.screenshot({ path: `${shotsDir()}/map-after-unclassified-shown-1280x800.png` });
