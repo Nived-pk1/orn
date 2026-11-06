@@ -35,9 +35,10 @@ Package sections **#9 JEE Ontology** and **#10 Syllabus Versioning**. Schema: `s
 ## 3. Syllabus versioning (#10)
 
 - Adding a year: duplicate the previous `exam_version` (new ID, new units/coverage IDs) → edit coverage → cite the syllabus document → set `official` when verified. The Syllabus view offers a **derived diff** between two versions: topics added, removed, changed coverage, and the count of records whose derived scope changes.
-- Superseded versions stay; `effectiveTo` closes them. The exam-scope selector (top bar) chooses the active version; default is the latest `official`, else the latest `provisional` with a visible "provisional" label.
+- Superseded versions stay; `effectiveTo` closes them. The exam selector (top bar) chooses an EXAM (step 8.3b, ADR-046); the version used is the exam's current one: the newest `official`, else the newest `provisional` with a visible "provisional" word. Studio also has a Version select (any version, drafts too).
 - Records never change when a syllabus changes; only derived scope does.
-- 2026-10-12 (5.8 review): the selector starts at "All (no exam scope)" on a first run and then keeps the user's choice. Which exam a student sits is theirs to choose; the app does not guess. This replaces the default above (latest `official`, else latest `provisional`) for the first run; the "provisional" label rule still applies to any version shown.
+- 2026-11-06 (8.3b): the first run of Study asks once, in a card, which exam the student is preparing for (or "Just exploring" = All exams); the app still never guesses. Earlier note follows.
+- 2026-10-12 (5.8 review): the selector starts at "All exams" on a first run and then keeps the user's choice. Which exam a student sits is theirs to choose; the app does not guess. This replaces the default above (latest `official`, else latest `provisional`) for the first run; the "provisional" label rule still applies to any version shown.
 
 ## 4. Derived exam scope
 
@@ -48,9 +49,9 @@ For record R and active version V of exam E, `scopeOf(R)` returns `official | pr
 3. **Prerequisite**: an unmapped or outside concept that is a prerequisite (`prerequisiteConceptIds`, `prerequisite_of`) of an `official` record, one hop only → `prerequisite`.
 4. Otherwise `unmapped`.
 
-Family scope rule (2026-10-12, 5.8 review; approved): a family (hub) is outside the active version when it has at least one reaction (leaving or arriving) and every one of them is `outside`. The family's own record is not used, and a family without reactions is never outside. Such a family is faded and marked in words, never hidden.
+Family scope rule (2026-10-12, 5.8 review; approved): a family (hub) is outside the active version when it has at least one reaction (leaving or arriving) and every one of them is `outside`. The family's own record is not used, and a family without reactions is never outside. Such a family is faded and marked in words, never hidden or removed (ADR-046: the records and arrows of the outside reactions may be hidden under "Only <exam>", the family's box stays).
 
-Scope filters in every view: *Official*, *Official + prerequisites*, *All* (outside-scope records dimmed, not hidden, with a scope badge). Filters never hide unanchored or unmapped content from the Diagnostics counts.
+Scope in every view (ADR-046, step 8.3b, superseding the earlier line "Official, Official + prerequisites, All"): with an exam chosen one switch says "Only <exam>" (records whose derived scope is `outside` are hidden, with one quiet line saying how many) or "Everything" (outside-scope records dimmed and marked "outside <exam>"). `unmapped` records stay shown; `enrichment` shows a chip "Extra", `prerequisite` a chip "Background". Families fade, they are never removed. Filters never hide unanchored or unmapped content from the Diagnostics counts.
 
 ## 5. Named-reaction coverage checklist (candidate; REVIEW REQUIRED)
 

@@ -15,6 +15,7 @@ import { kindName, kindTitle, pageOpenerOf, SHOW_REACTIONS_KINDS, type PaletteCo
 import { createPaletteModel } from './palette-model';
 import { HEADER_ROW_HEIGHT, LIST_HEIGHT, nextHit, scrollToShow, windowOf, type PaletteRow } from './rows';
 import { matchWords } from './words';
+import { HiddenLine } from '@/ui/study-page';
 import styles from './palette.module.css';
 
 type Entry = { readonly key: string; readonly row?: number };
@@ -137,6 +138,7 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
       <p className={styles.status} role="status" aria-live="polite" data-palette-status="">
         {statusText}
       </p>
+      {state.hidden === undefined ? null : <HiddenLine count={state.hidden.count} noun={['result', 'results']} examName={state.hidden.examName} onShow={model.showEverything} />}
       <Command.List ref={list} className={styles.list} label="Results" onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)} aria-busy={state.status === 'searching'}>
         {mode === 'command' ? (
           state.commands.map((command, index) => (

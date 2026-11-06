@@ -7,3 +7,5 @@ export { useScopeLens } from './scope';
 export type { ScopeLens } from './scope';
 export { LIST_PAGE_SIZE, ListShell } from './list-shell';
 export type { ListShellProps } from './list-shell';
+export { HiddenLine } from './hidden-line-view';
+export { hiddenLineOf } from './hidden-line';

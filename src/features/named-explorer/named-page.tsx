@@ -10,13 +10,13 @@ import { namedReactionPage } from '@/core/named-reactions';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import { NO_CHAPTER_TITLE } from '@/core/chapters';
 import type { CanonicalState, RecordRef } from '@/core/schema';
-import { currentOf, type ActiveExam } from '@/ui/state';
-import { CaveatSection, ChaptersLine, LinkLine, PageHeader, ReactionCards, ScopeBox, studyPageStyles as styles, useScopeLens } from '@/ui/study-page';
+import { currentOf, useScopeOnly, type ActiveExam } from '@/ui/state';
+import { CaveatSection, ChaptersLine, LinkLine, PageHeader, ReactionCards, studyPageStyles as styles, useScopeLens } from '@/ui/study-page';
 import type { NamedPorts } from './contracts';
 
 export function NamedPage(props: { readonly ports: NamedPorts; readonly state: CanonicalState; readonly indexes: ReadonlyIndexes; readonly id: string; readonly active: ActiveExam | null }) {
   const { ports, state, indexes, id, active } = props;
-  const onlyInScope = useStore(ports.ui.named, (s) => s.onlyInScope);
+  const onlyInScope = useScopeOnly(ports.ui.exam);
   const inspector = useStore(ports.ui.inspector, (s) => currentOf(s));
   const set = ports.ui.named.getState();
   const page = useMemo(() => namedReactionPage(state, indexes, id), [state, indexes, id]);
@@ -46,7 +46,6 @@ export function NamedPage(props: { readonly ports: NamedPorts; readonly state: C
             Edit
           </button>
         )}
-        <ScopeBox versionName={lens.versionName} checked={onlyInScope} onChange={set.setOnlyInScope} />
       </div>
       <section className={styles.section} aria-label="Reactions">
         <h3 className={styles.sectionHeading}>{`Reactions (${page.reactions.count})`}</h3>
@@ -62,6 +61,8 @@ export function NamedPage(props: { readonly ports: NamedPorts; readonly state: C
             examplesOf={page.reactions.examplesOf}
             outsideOf={lens.outsideWords}
             onlyInScope={onlyInScope}
+            examName={lens.examName}
+            onShowAll={() => ports.ui.exam.getState().setMode('everything')}
             selectedId={inspector === null ? null : inspector.id}
             renderCard={ports.renderCard}
             onSelect={ports.selectReaction}

@@ -8,7 +8,7 @@ import { filterNamedReactions } from '@/core/named-reactions';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState } from '@/core/schema';
 import { ListEntries, ListEntry } from '@/ui/primitives/list-entry'; // deep, not the barrel (7.3c A1)
-import type { ActiveExam } from '@/ui/state';
+import { useScopeOnly, type ActiveExam } from '@/ui/state';
 import { ListShell, useScopeLens } from '@/ui/study-page';
 import type { NamedPorts } from './contracts';
 import { alsoCalledWords, partOfWords, usedWords } from './model';
@@ -16,10 +16,13 @@ import { alsoCalledWords, partOfWords, usedWords } from './model';
 export function NamedList(props: { readonly ports: NamedPorts; readonly state: CanonicalState; readonly indexes: ReadonlyIndexes; readonly active: ActiveExam | null; readonly phone: boolean }) {
   const { ports, state, indexes, active, phone } = props;
   const text = useStore(ports.ui.named, (s) => s.text);
-  const onlyInScope = useStore(ports.ui.named, (s) => s.onlyInScope);
+  const only = useScopeOnly(ports.ui.exam);
   const set = ports.ui.named.getState();
-  const lens = useScopeLens(state, indexes, active, onlyInScope);
+  const lens = useScopeLens(state, indexes, active, only);
   const list = useMemo(() => filterNamedReactions(state, indexes, { text, ...(lens.outside === undefined ? {} : { outside: lens.outside }) }), [state, indexes, text, lens.outside]);
+  // how many entries "Only <exam>" hides: the same list without the scope
+  const unscoped = useMemo(() => (lens.outside === undefined ? list : filterNamedReactions(state, indexes, { text })), [state, indexes, text, lens.outside, list]);
+  const hidden = lens.outside === undefined ? 0 : unscoped.rows.length - list.rows.length;
   const studio = ports.edit !== undefined;
   return (
     <ListShell
@@ -31,9 +34,7 @@ export function NamedList(props: { readonly ports: NamedPorts; readonly state: C
       count={list.rows.length}
       text={text}
       onText={set.setText}
-      versionName={lens.versionName}
-      onlyInScope={onlyInScope}
-      onScope={set.setOnlyInScope}
+      {...(hidden > 0 ? { hidden: { count: hidden, examName: lens.examName, onShow: () => ports.ui.exam.getState().setMode('everything') } } : {})}
       onClear={set.clearFilters}
       phone={phone}
       {...(studio ? { unwritten: list.empty.map((row) => row.name) } : {})}

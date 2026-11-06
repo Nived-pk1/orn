@@ -112,3 +112,10 @@
   margin: var(--space-4);
   color: var(--color-ink-2);
 }
+
+/* The small word beside the select when the exam's current syllabus is provisional (step 8.3b, B1). */
+.provisional {
+  color: var(--color-ink-2);
+  font-size: var(--text-12);
+  cursor: help;
+}

@@ -12,6 +12,8 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useStore } from 'zustand';
 import { useStructureMode } from '@/render/svg';
 import { useLayoutMode } from '@/ui/hooks';
+import { useScopeOnly } from '@/ui/state';
+import { HiddenLine } from '@/ui/study-page';
 import { Button, Skeleton, VirtualList, type VirtualListHandle } from '@/ui/primitives';
 import { depictionBindingOf, equationBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
@@ -22,6 +24,7 @@ import { cardKey, estimateOf, examplesWords, familyItems, groupKey, indexOfKey, 
 import { useNavigator } from './navigator-context';
 import { createScenePorts } from './scene-ports';
 import { useScope } from './use-scope';
+import type { ScopeChip } from './scope-chip';
 import { useFamilyStudy } from './use-family-study';
 import styles from './family-page.module.css';
 
@@ -52,7 +55,9 @@ export function FamilyPage(props: { readonly hubId: string }) {
   const binding = depictionBindingOf(ports);
   // a change of the Structures setting makes every key again, in the new mode (the binding reads the mode when it makes a key)
   const structureMode = useStructureMode(ports.depictions);
-  const items = useMemo(() => (study === undefined || study === null ? [] : familyItems(study)), [study]);
+  // "Only <exam>" (step 8.3b, B2): the cards of reactions outside the exam are left out, with one quiet line saying how many
+  const only = useScopeOnly(ports.ui.exam);
+  const items = useMemo(() => (study === undefined || study === null ? [] : familyItems(study, only && scope.note !== undefined ? scope.isOutside : undefined)), [study, only, scope]);
   // The names and keys a card reads come from the snapshot the study was computed from.
   const env = useMemo<FamilyEnv | null>(() => {
     if (study === undefined || study === null) return null;
@@ -126,6 +131,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
     [goTo],
   );
 
+  const showEverything = useCallback((): void => ports.ui.exam.getState().setMode('everything'), [ports]);
   const renderBody = useCallback(
     (item: FamilyItem) => {
       switch (item.kind) {
@@ -140,6 +146,8 @@ export function FamilyPage(props: { readonly hubId: string }) {
           );
         case 'empty':
           return <p className={styles.empty}>{item.text}.</p>;
+        case 'hidden':
+          return <HiddenLine count={item.count} noun={['reaction', 'reactions']} examName={scope.examName} onShow={showEverything} />;
         case 'group':
           return (
             <div className={styles.groupHead} data-group-id={item.hubId}>
@@ -148,10 +156,10 @@ export function FamilyPage(props: { readonly hubId: string }) {
             </div>
           );
         case 'card':
-          return <FamilyCardView card={item.card} selected={selectedReaction === item.card.reactionId} onSelect={selectReaction} onGoToGroup={goToGroup(item)} outsideOf={outsideOf} {...((item.card.examples ?? []).length === 0 ? {} : { selectedId: selectedReaction })} {...(scope.note !== undefined && scope.isOutside(item.card.reactionId) ? { outside: scope.note } : {})} />;
+          return <FamilyCardView card={item.card} selected={selectedReaction === item.card.reactionId} onSelect={selectReaction} onGoToGroup={goToGroup(item)} outsideOf={outsideOf} {...(scope.chipOf(item.card.reactionId) === undefined ? {} : { scopeChip: scope.chipOf(item.card.reactionId) as ScopeChip })} {...((item.card.examples ?? []).length === 0 ? {} : { selectedId: selectedReaction })} {...(scope.note !== undefined && scope.isOutside(item.card.reactionId) ? { outside: scope.note } : {})} />;
       }
     },
-    [goTo, goToGroup, selectReaction, selectedReaction, scope, outsideOf],
+    [goTo, goToGroup, selectReaction, selectedReaction, scope, outsideOf, showEverything],
   );
   const renderItem = useCallback(
     (item: FamilyItem) => {

@@ -17,6 +17,7 @@ import type { NavigatorPorts } from './contracts';
 import { chainCardsOf } from './chain-card';
 import type { NamedFamily } from './find-family-match';
 import { scopeLens, scopeNameOf } from './scope-lens';
+import { useScopeOnly } from '@/ui/state';
 import type { PairFacts } from './map-chips';
 import styles from './chain-panel.module.css';
 
@@ -164,11 +165,12 @@ export function ChainPanel(props: ChainPanelProps) {
 export function ChainPanelInScope(props: Omit<ChainPanelProps, 'inScope' | 'scopeName'> & { readonly ports: NavigatorPorts }) {
   const { ports, ...rest } = props;
   const active = useStore(ports.ui.exam, (s) => s.active);
+  const only = useScopeOnly(ports.ui.exam); // under Everything every reaction can be a step
   const inScope = useMemo(() => {
-    if (active === null) return undefined;
+    if (active === null || !only) return undefined;
     const scopeOf = scopeLens(ports.indexes.current(), active);
     return (id: string): boolean => scopeOf({ kind: 'reaction', id } as RecordRef) !== 'outside';
-  }, [ports, active]);
+  }, [ports, active, only]);
   const scopeName = useMemo(() => scopeNameOf(ports.store.getState(), active), [ports, active]);
   return <ChainPanel {...rest} inScope={inScope} scopeName={scopeName} />;
 }

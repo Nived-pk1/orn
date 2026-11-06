@@ -213,19 +213,23 @@ describe('Find a route: the panel', () => {
     expect(precursors.getState().startFrom).toEqual([]);
   });
 
-  it('"Only <exam version> reactions" appears only when an exam scope is chosen, and then excludes the outside reactions through the engine', async () => {
+  it('with an exam chosen the outside reactions are excluded through the engine (step 8.3b, B2); the per-view checkbox is gone and Show them lifts it', async () => {
     const { rig, state, asked, precursors } = setup({ target: PROPANOL, startFrom: [ETHANOL] });
     expect(screen.queryByRole('checkbox', { name: /^Only .* reactions$/ })).toBeNull();
     const version = Object.values(state.records.exam_version).find((one) => /JEE Main/.test(one.label));
     if (version === undefined) throw new Error('the demo has a JEE Main version');
     act(() => rig.ui.exam.getState().setActive({ examId: version.examId, examVersionId: version.id }));
-    const only = await screen.findByRole('checkbox', { name: `Only ${version.label} reactions` });
-    fireEvent.click(only);
-    expect(precursors.getState().onlyInScope).toBe(true);
+    expect(screen.queryByRole('checkbox', { name: /^Only .* reactions$/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await screen.findByText(/routes? found|No route/);
     const outside = Object.keys(state.records.reaction).filter((id) => createScopeOf(rig.ports.indexes.current(), version.examId, version.id)({ kind: 'reaction', id }) === 'outside').sort();
     expect(asked[0]?.excludeReactionIds).toEqual(outside.length === 0 ? undefined : outside);
+    expect(document.querySelector('[data-hidden-line]')?.textContent).toMatch(/^\d+ reactions? outside .+ (are|is) hidden · Show (them|it)$/);
+    void precursors;
+    act(() => rig.ui.exam.getState().setMode('everything'));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await waitFor(() => expect(asked.length).toBe(2));
+    expect(asked[1]?.excludeReactionIds).toBeUndefined();
   });
 
   it('nothing searches until Search is pressed', async () => {

@@ -55,6 +55,27 @@ describe('familyItems', () => {
     expect(familyItems(study('cls_alcohols')).some((i) => i.key === 'empty:family')).toBe(false);
   });
 
+  it('"Only <exam>" (step 8.3b, B2): the cards of hidden reactions are left out, a group left empty goes, and one "hidden" item counts them', () => {
+    const all = familyItems(study('cls_alcohols'));
+    const firstCard = all.find((i) => i.kind === 'card');
+    if (firstCard?.kind !== 'card') throw new Error('the demo family has cards');
+    const hidden = new Set<string>([firstCard.card.reactionId]);
+    const some = familyItems(study('cls_alcohols'), (id) => hidden.has(id));
+    expect(some.filter((i) => i.kind === 'card').length).toBeLessThan(all.filter((i) => i.kind === 'card').length);
+    expect(some.some((i) => i.kind === 'card' && hidden.has(i.card.reactionId))).toBe(false);
+    const line = some.find((i) => i.kind === 'hidden');
+    expect(line).toMatchObject({ kind: 'hidden', key: 'hidden' });
+    expect(some[1]).toBe(line); // right after the header
+    expect(new Set(some.map((i) => i.key)).size).toBe(some.length);
+    // every group that is listed still has a card after it
+    some.forEach((item, at) => {
+      if (item.kind === 'group') expect(some[at + 1]?.kind).toBe('card');
+    });
+  });
+  it('hiding nothing changes nothing: the same items, no hidden item', () => {
+    expect(familyItems(study('cls_alcohols'), () => false).map((i) => i.key)).toEqual(items.map((i) => i.key));
+  });
+
   it('titles are plain words', () => {
     expect(titleOf('reactions_of', 'X')).toBe('Reactions of X');
     expect(titleOf('preparation_of', 'X')).toBe('Preparation of X');

@@ -9,6 +9,8 @@ export type FamilyItem =
   | { readonly kind: 'header'; readonly key: 'header'; readonly study: FamilyStudy }
   | { readonly kind: 'section'; readonly key: string; readonly section: FamilySectionKind; readonly title: string; readonly reactionCount: number; readonly exampleCount: number }
   | { readonly kind: 'empty'; readonly key: string; readonly text: string }
+  /** "Only <exam>" (step 8.3b, B2): how many reactions the page leaves out, right after the header. */
+  | { readonly kind: 'hidden'; readonly key: 'hidden'; readonly count: number }
   | { readonly kind: 'group'; readonly key: string; readonly section: FamilySectionKind; readonly hubId: string; readonly title: string; readonly count: number; readonly exampleCount: number }
   | { readonly kind: 'card'; readonly key: string; readonly section: FamilySectionKind; readonly hubId: string; readonly card: FamilyCard };
 
@@ -34,8 +36,15 @@ export function groupTitleOf(section: FamilySectionKind, partner: string): strin
 export const noReactionsTextOf = (family: string): string =>
   `${family} has no reactions in this dataset: none starts from it and none makes it. A reaction is listed here when its substrate or its product belongs to the family, so import reactions that involve its members, or check that the compounds you expect are members of it`;
 
-export function familyItems(study: FamilyStudy): FamilyItem[] {
+/** `hide` (optional): a reaction the page leaves out under "Only <exam>"; its cards go, a group left empty goes, and one `hidden` item counts the reactions. */
+export function familyItems(study: FamilyStudy, hide?: (reactionId: FamilyCard['reactionId']) => boolean): FamilyItem[] {
   const items: FamilyItem[] = [{ kind: 'header', key: 'header', study }];
+  const hiddenIds = new Set<string>();
+  const hidden = (card: FamilyCard): boolean => {
+    const gone = hide !== undefined && hide(card.reactionId);
+    if (gone) hiddenIds.add(card.reactionId);
+    return gone;
+  };
   if (study.counts.total === 0) items.push({ kind: 'empty', key: 'empty:family', text: noReactionsTextOf(study.name) });
   for (const section of [study.reactionsOf, study.preparationOf]) {
     items.push({ kind: 'section', key: `section:${section.kind}`, section: section.kind, title: titleOf(section.kind, study.name), reactionCount: section.reactionCount, exampleCount: section.exampleCount });
@@ -43,11 +52,17 @@ export function familyItems(study: FamilyStudy): FamilyItem[] {
       items.push({ kind: 'empty', key: `empty:${section.kind}`, text: emptyTextOf(section.kind, study.name) });
       continue;
     }
+    let shownGroups = 0;
     for (const group of section.groups) {
-      items.push({ kind: 'group', key: groupKey(section.kind, group.hubId), section: section.kind, hubId: group.hubId, title: groupTitleOf(section.kind, group.name), count: group.cards.length, exampleCount: group.exampleCount });
-      for (const card of group.cards) items.push({ kind: 'card', key: card.key, section: section.kind, hubId: group.hubId, card });
+      const cards = hide === undefined ? group.cards : group.cards.filter((card) => !hidden(card));
+      if (cards.length === 0) continue;
+      items.push({ kind: 'group', key: groupKey(section.kind, group.hubId), section: section.kind, hubId: group.hubId, title: groupTitleOf(section.kind, group.name), count: cards.length, exampleCount: group.exampleCount });
+      shownGroups += 1;
+      for (const card of cards) items.push({ kind: 'card', key: card.key, section: section.kind, hubId: group.hubId, card });
     }
+    if (shownGroups === 0) items.push({ kind: 'empty', key: `empty:${section.kind}`, text: emptyTextOf(section.kind, study.name) });
   }
+  if (hiddenIds.size > 0) items.splice(1, 0, { kind: 'hidden', key: 'hidden', count: hiddenIds.size });
   return items;
 }
 
@@ -70,6 +85,8 @@ export function estimateOf(item: FamilyItem): number {
       return 48;
     case 'empty':
       return 56;
+    case 'hidden':
+      return 32;
     case 'card':
       return 120 + item.card.groups.reduce((count, group) => count + group.outcomes.length, 0) * 150 + (item.card.elsewhere.length > 0 ? 36 : 0);
   }

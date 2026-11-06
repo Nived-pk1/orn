@@ -10,7 +10,8 @@ import { useStore } from 'zustand';
 import { createReactionFilterMemo, createScopeOf, exampleLookupOf, filterReactions, foldExamples, type ReactionFacets } from '@/core/graph';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, Dialog, LiveRegion, SegmentedControl } from '@/ui/primitives';
-import { isFilterSet, type ExplorerFilter } from '@/ui/state';
+import { isFilterSet, useScopeOnly, type ExplorerFilter } from '@/ui/state';
+import { HiddenLine } from '@/ui/study-page';
 import { PAGE_SIZE, type ExplorerPorts } from './contracts';
 import { FilterPopover, OptionList, type FilterOption } from './filter-popover';
 import { chipsOf, type Chip, countLine, labelsOf, pruneFilter, toReactionFilter, type Labels } from './model';
@@ -28,7 +29,10 @@ const toggled = (list: readonly string[], id: string): string[] => (list.include
 
 export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
   const { ports } = props;
-  const filter = useStore(ports.ui.explorer, (s) => s.filter);
+  const stored = useStore(ports.ui.explorer, (s) => s.filter);
+  // the old per-view "Only <exam version>" is gone (step 8.3b, B2): the one switch of the top bar replaces it; a saved `onlyInScope` is not read
+  const filter = useMemo(() => (stored.onlyInScope ? { ...stored, onlyInScope: false } : stored), [stored]);
+  const only = useScopeOnly(ports.ui.exam);
   const view = useStore(ports.ui.explorer, (s) => s.view);
   const active = useStore(ports.ui.exam, (s) => s.active);
   const selected = useStore(ports.ui.family, (s) => s.reaction);
@@ -56,7 +60,7 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
   }, [filter, state, indexes, ports]);
 
   const scope = useMemo(() => (active === null ? undefined : createScopeOf(indexes, active.examId, active.examVersionId)), [indexes, active]);
-  const result = useMemo(() => filterReactions(memo.inputFor(source), toReactionFilter(filter), scope), [memo, source, filter, scope]);
+  const result = useMemo(() => filterReactions(memo.inputFor(source), toReactionFilter({ ...filter, onlyInScope: only }), scope), [memo, source, filter, scope, only]);
   // 7.3a C1 to C3: an example folds under its general reaction's card when that card is in the result; the counts are cards
   const lookup = useMemo(() => exampleLookupOf(state), [state]);
   const folding = useMemo(() => foldExamples(result.rows.map((row) => row.id), lookup), [result, lookup]);
@@ -69,9 +73,8 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
   useEffect(() => setLimit(PAGE_SIZE), [filterKey]);
 
   const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
-  const versionName = active === null ? undefined : (state.records.exam_version[active.examVersionId]?.label ?? active.examVersionId);
   const filtered = isFilterSet(filter);
-  const line = countLine({ shown: cardRows.length, total: totalCards, examples: folding.folded, filtered, hidden: filter.onlyInScope ? result.hiddenByScope : 0, hiddenBy: examName });
+  const line = countLine({ shown: cardRows.length, total: totalCards, examples: folding.folded, filtered, hidden: only ? result.hiddenByScope : 0, hiddenBy: examName });
   const [said, setSaid] = useState({ message: line, serial: 0 });
   useEffect(() => setSaid((was) => (was.message === line ? was : { message: line, serial: was.serial + 1 })), [line]);
 
@@ -111,15 +114,9 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
         <span>Find by name</span>
         <input type="search" value={filter.text} autoComplete="off" spellCheck={false} onChange={(event) => set({ text: event.target.value })} />
       </label>
-      {versionName === undefined ? null : (
-        <label className={styles.option}>
-          <input type="checkbox" checked={filter.onlyInScope} onChange={(event) => set({ onlyInScope: event.target.checked })} />
-          <span>{`Only ${versionName}`}</span>
-        </label>
-      )}
     </>
   );
-  const chosenCount = chips.length + (filter.onlyInScope ? 1 : 0);
+  const chosenCount = chips.length;
   return (
     <section className={styles.view} aria-label="Reactions" data-reactions-view="" data-layout={phone ? 'phone' : 'desktop'}>
       <header className={styles.header}>
@@ -130,6 +127,7 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
         {filtered ? <button type="button" onClick={clear}>Clear all filters</button> : null}
       </header>
       {pruned ? <p className={styles.notice} role="status">{PRUNED_WORDS}</p> : null}
+      {only ? <HiddenLine count={result.hiddenByScope} noun={['reaction', 'reactions']} examName={examName} onShow={() => ports.ui.exam.getState().setMode('everything')} /> : null}
       {none || phone ? null : (
         <div className={styles.bar} role="group" aria-label="Filters">
           {sections.map((section) => (

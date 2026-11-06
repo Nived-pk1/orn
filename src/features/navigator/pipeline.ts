@@ -26,6 +26,8 @@ import { touchOf } from './reads';
 import { sameRequest } from './same-request';
 import { createScenePorts } from './scene-ports';
 import { outsideNoteOf, scopeLens } from './scope-lens';
+import { keepUnmapped, onlyFilters } from './scope-filters';
+import { effectiveOnly } from '@/ui/state';
 
 export const SKELETON_DELAY_MS = 300;
 /** The service's view key: one navigator drawing, so a newer request replaces the older one. */
@@ -106,18 +108,20 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
 
   // while the "From A to B" panel is open the chapter does not apply (a chain runs across all chapters)
   const chapterOf = (): string | null => (ports.ui.map.getState().chainOpen ? null : ports.ui.map.getState().chapterId);
+  // "Only <exam>" (step 8.3b, B2): an exam is chosen and the switch says Only
+  const onlyNow = (): boolean => effectiveOnly(ports.ui.exam.getState());
   const requestOf = (): ProjectionRequest => ({
     view: 'navigator',
     focus: [],
     expansion: NO_EXPANSION,
-    filters: chapterFilters(ports.ui.filters.getState().filters, chapterOf()),
+    filters: onlyFilters(chapterFilters(ports.ui.filters.getState().filters, chapterOf()), onlyNow()),
     limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES },
   });
 
   function buildOnce(): Projection {
     const exam = ports.ui.exam.getState().active;
     const indexes = ports.indexes.current();
-    const scopeOf = scopeLens(indexes, exam);
+    const scopeOf = keepUnmapped(scopeLens(indexes, exam), onlyNow());
     const built = navigatorProjection.build({ state: ports.store.getState(), indexes, scopeOf }, requestOf());
     counts.projections += 1;
     return built;

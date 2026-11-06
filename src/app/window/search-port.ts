@@ -9,6 +9,7 @@ import type { InspectorPorts } from '@/features/inspector';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef, Species } from '@/core/schema';
 import type { SearchQuery } from '@/search/contracts';
+import { effectiveOnly } from '@/ui/state';
 import type { SearchService, SearchSyncStatus } from '@/workers/search';
 
 export interface SearchPortDeps {
@@ -44,6 +45,13 @@ export function createSearchPorts(deps: SearchPortDeps): SearchPorts {
     recent: deps.navigator.ui.recent,
     indexState: () => indexStateOf(deps.syncStatus(), deps.store.getRevision()),
     examVersionId: () => deps.navigator.ui.exam.getState().active?.examVersionId,
+    // "Only <exam>" (step 8.3b, B2): the palette leaves out results outside the exam and says how many
+    scopeOnly: () => effectiveOnly(deps.navigator.ui.exam.getState()),
+    examName: () => {
+      const active = deps.navigator.ui.exam.getState().active;
+      return active === null ? undefined : (deps.store.getState().records.exam[active.examId as never]?.name ?? active.examId);
+    },
+    showEverything: () => deps.navigator.ui.exam.getState().setMode('everything'),
     factsOf(ref) {
       const derived = deps.l4.derivedFormulaOf(ref);
       const record = deps.store.getState().records[ref.kind as 'species'][ref.id as never] as Species | undefined;

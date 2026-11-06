@@ -121,14 +121,18 @@ describe('the list (D1)', () => {
     expect(screen.getAllByRole('listitem').filter((li) => li.hasAttribute('data-reagent-id'))).toHaveLength(35);
   });
 
-  it('"Only <exam version>" appears with a scope and keeps the reagents with an in-scope reaction', () => {
+  it('with an exam chosen the reagents with no in-scope reaction are hidden, the line says how many, and Show them brings them back (step 8.3b, B2)', () => {
     const state = stateOf(...base, topic('subj', 'Organic', { kind: 'subject', order: 1 }), topic('chap', 'Chapter', { kind: 'chapter', parent: 'subj', order: 1 }), topic('chap-x', 'Other chapter', { kind: 'chapter', parent: 'subj', order: 2 }), topicMapping('m1', 'chap', { kind: 'reaction', id: 'rxn_r-pcc' } as never), ...excludedKoh, examVersion('v1', 'jee', [{ topic: 'chap', coverage: 'included' }, { topic: 'chap-x', coverage: 'excluded' }]));
     const { exam, reagents } = show(state);
     expect(screen.queryByLabelText(/^Only /)).toBeNull();
+    expect(document.querySelector('[data-hidden-line]')).toBeNull();
     act(() => exam.getState().setActive({ examId: 'exm_jee', examVersionId: 'exv_v1' } as never));
-    fireEvent.click(screen.getByLabelText(/^Only /));
-    expect(reagents.getState().onlyInScope).toBe(true);
     expect(screen.getByText('1 of 3 reagents')).toBeTruthy();
+    expect(document.querySelector('[data-hidden-line]')?.textContent).toMatch(/^2 reagents outside .+ are hidden · Show them$/);
+    fireEvent.click(screen.getByRole('button', { name: 'Show them' }));
+    expect(exam.getState().mode).toBe('everything');
+    expect(screen.queryByText('1 of 3 reagents')).toBeNull();
+    void reagents;
   });
 });
 
@@ -210,14 +214,15 @@ describe('a reagent page (D2, D3)', () => {
     expect(aq.querySelectorAll('[data-card]')).toHaveLength(33);
   });
 
-  it('under an exam scope the outside reactions are marked, and "Only <exam>" hides them with a notice', () => {
+  it('under an exam scope the outside reactions are hidden with a quiet line (Only); on Everything they are marked "outside" (step 8.3b, B2)', () => {
     const state = stateOf(...base, topic('subj', 'Organic', { kind: 'subject', order: 1 }), topic('chap', 'Chapter', { kind: 'chapter', parent: 'subj', order: 1 }), topic('chap-x', 'Other chapter', { kind: 'chapter', parent: 'subj', order: 2 }), topicMapping('m1', 'chap', { kind: 'reaction', id: 'rxn_r-aq' } as never), topicMapping('m2', 'chap-x', { kind: 'reaction', id: 'rxn_r-alc' } as never), examVersion('v1', 'jee', [{ topic: 'chap', coverage: 'included' }, { topic: 'chap-x', coverage: 'excluded' }]));
     const cards: string[] = [];
     const { exam, reagents } = show(state, { reagentId: 'rgt_koh' }, { renderCard: (args) => (cards.push(`${args.reactionId}:${args.outside ?? ''}`), <div data-card={args.reactionId} />) });
     act(() => exam.getState().setActive({ examId: 'exm_jee', examVersionId: 'exv_v1' } as never));
-    expect(cards.some((c) => c.startsWith('rxn_r-alc:outside'))).toBe(true);
-    act(() => reagents.getState().setOnlyInScope(true));
     expect(screen.getByRole('region', { name: 'Alcoholic KOH' }).querySelector('[data-card]')).toBeNull();
-    expect(screen.getByText('1 reaction is left out by the exam scope.', { exact: false })).toBeTruthy();
+    expect(document.querySelector('[data-hidden-line]')?.textContent).toMatch(/^1 reaction outside .+ is hidden · Show it$/);
+    act(() => exam.getState().setMode('everything'));
+    expect(cards.some((c) => c.startsWith('rxn_r-alc:outside'))).toBe(true);
+    void reagents;
   });
 });

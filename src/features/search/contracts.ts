@@ -40,6 +40,12 @@ export interface SearchPorts {
   readonly recent: RecentStore;
   /** The active exam version (for the ranking tie-break), or undefined: no exam scope. */
   examVersionId(): string | undefined;
+  /** "Only <exam>" is on (step 8.3b, B2): results outside the exam are left out. Absent: false. */
+  scopeOnly?(): boolean;
+  /** The exam's display name, for the quiet line about what is hidden. */
+  examName?(): string | undefined;
+  /** "Show them": switches to Everything. */
+  showEverything?(): void;
   /** Whether the index has followed the latest committed change. Absent: always current. An answer from an index that is catching up is never final. */
   indexState?(): IndexState;
   factsOf(ref: RecordRef): HitFacts;

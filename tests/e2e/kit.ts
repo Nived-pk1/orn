@@ -263,8 +263,8 @@ export async function expectDemoLoaded(page: Page): Promise<void> {
 
 /** True against a deployed site: the student edition, which has no status bar, no Dataset page and no status words in the exam select (step 8.3). */
 export const LIVE = process.env.ORN_BASE_URL !== undefined;
-/** An exam option as the edition writes it: Studio adds the status words ("JEE Main, provisional, not verified"), the student edition does not. */
-export const examWord = (label: string): string => (LIVE ? label.replace(/, (provisional|draft|official)(, not verified)?$/, '') : label);
+/** An exam option as both editions write it since step 8.3b: the exam's display name only ("JEE Main"); a version's status words are on Studio's Version select. */
+export const examWord = (label: string): string => label.replace(/, (provisional|draft|official)(, not verified)?$/, '');
 /** The data is saved: Studio says so in its status line; the student edition has none, so the window being up is the sign. */
 export async function expectSaved(page: Page): Promise<void> {
   if (LIVE) await expect(page.getByRole('navigation', { name: 'Modes' })).toBeVisible();

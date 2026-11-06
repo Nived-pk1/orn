@@ -10,7 +10,7 @@ import { useStore } from 'zustand';
 import { createDescriber, createScopeOf, directPrecursors, noRouteWords, routeCountWords, truncationWords, type ProjectionContext, type RouteSearchResult } from '@/core/graph';
 import type { RecordRef } from '@/core/schema';
 import { LiveRegion } from '@/ui/primitives';
-import { asChoice } from '@/ui/state';
+import { asChoice, useScopeOnly } from '@/ui/state';
 import type { PrecursorPorts } from './contracts';
 import { DirectBlock } from './direct-block';
 import { outsideReactionIds, pruneChoices, queryOf, routeViewOf, savedMatchOf, savedRoutesFor, type RouteView } from './model';
@@ -40,6 +40,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
   const searched = useStore(store, (s) => s.searched);
   const view = useStore(ports.ui.explorer, (s) => s.view);
   const active = useStore(ports.ui.exam, (s) => s.active);
+  const only = useScopeOnly(ports.ui.exam); // step 8.3b, B2: the top bar's switch replaces the old "Only <exam version> reactions" box
   const selected = useStore(ports.ui.family, (s) => s.reaction);
   const [version, setVersion] = useState(0);
   const [pruned, setPruned] = useState(false);
@@ -67,7 +68,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
   }, [target, startFrom, state, store, ports]);
 
   const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
-  const versionName = active === null ? undefined : (state.records.exam_version[active.examVersionId]?.label ?? active.examVersionId);
+  const hiddenCount = useMemo(() => (scopeOf === undefined ? 0 : outsideReactionIds(state, scopeOf).length), [state, scopeOf]);
   const targetName = target === null ? '' : nameOf(target.kind, target.id);
 
   const stop = useCallback((): void => {
@@ -83,7 +84,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
     const abort = new AbortController();
     controller.current = abort;
     const outside = outsideReactionIds(state, scopeOf);
-    const query = queryOf({ ...now, target: now.target }, outside);
+    const query = queryOf({ ...now, target: now.target, onlyInScope: only }, outside);
     const name = nameOf(now.target.kind, now.target.id);
     setOutcome({ kind: 'running' });
     store.getState().setSearched(true);
@@ -93,7 +94,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
       if (answer.ok) setOutcome({ kind: 'done', result: answer.result, targetName: name, maxSteps: now.maxSteps });
       else setOutcome({ kind: 'failed', message: answer.cancelled === true ? STOPPED : answer.message });
     });
-  }, [ports, state, scopeOf, store, stop, nameOf]);
+  }, [ports, state, scopeOf, store, stop, nameOf, only]);
   const cancel = useCallback((): void => {
     stop();
     setOutcome({ kind: 'failed', message: STOPPED });
@@ -166,7 +167,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
       {target === null || direct === null ? null : (
         <>
           <DirectBlock ports={ports} ctx={ctx} direct={direct} targetName={targetName} view={view} selected={selected} outsideNote={examName === undefined ? undefined : `outside ${examName}`} />
-          <RoutePanel ports={ports} store={store} nameOf={nameOf} versionName={versionName} running={outcome.kind === 'running'} onSearch={search} onCancel={cancel} />
+          <RoutePanel ports={ports} store={store} nameOf={nameOf} hidden={only ? { count: hiddenCount, examName, onShow: () => ports.ui.exam.getState().setMode('everything') } : undefined} running={outcome.kind === 'running'} onSearch={search} onCancel={cancel} />
           {saved.length === 0 ? null : (
             <section className={styles.section} aria-label="Saved routes">
               <h3 className={styles.sectionTitle}>Saved routes</h3>

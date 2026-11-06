@@ -10,7 +10,8 @@ import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import { REAGENT_FAMILIES, type CanonicalState } from '@/core/schema';
 import { Button, Dialog } from '@/ui/primitives';
 import { ListEntries, ListEntry } from '@/ui/primitives/list-entry'; // deep, not the barrel: keeps it out of the first-paint chunk (7.3c A1)
-import type { ActiveExam } from '@/ui/state';
+import { useScopeOnly, type ActiveExam } from '@/ui/state';
+import { HiddenLine } from '@/ui/study-page';
 import { PAGE_SIZE, type ReagentsPorts } from './contracts';
 import { Formula } from './formula';
 import { countLine, familyWord, mixtureWords, usedWords } from './model';
@@ -20,17 +21,20 @@ export function ReagentListView(props: { readonly ports: ReagentsPorts; readonly
   const { ports, state, indexes, active, phone } = props;
   const families = useStore(ports.ui.reagents, (s) => s.families);
   const text = useStore(ports.ui.reagents, (s) => s.text);
-  const onlyInScope = useStore(ports.ui.reagents, (s) => s.onlyInScope);
+  const onlyInScope = useScopeOnly(ports.ui.exam);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [sheet, setSheet] = useState(false);
   const set = ports.ui.reagents.getState();
-  const versionName = active === null ? undefined : (state.records.exam_version[active.examVersionId]?.label ?? active.examVersionId);
+  const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
   const scopeOf = useMemo(() => (active === null ? undefined : createScopeOf(indexes, active.examId, active.examVersionId)), [indexes, active]);
   const list = useMemo(
     () => filterReagents(state, indexes, { text, families, ...(onlyInScope && scopeOf !== undefined ? { outside: (id: string) => scopeOf({ kind: 'reaction', id } as never) === 'outside' } : {}) }),
     [state, indexes, text, families, onlyInScope, scopeOf],
   );
-  const chosen = families.length + (text.trim() === '' ? 0 : 1) + (onlyInScope ? 1 : 0);
+  // how many reagents "Only <exam>" hides: the same list without the scope (step 8.3b, B2)
+  const unscoped = useMemo(() => (onlyInScope && scopeOf !== undefined ? filterReagents(state, indexes, { text, families }) : list), [state, indexes, text, families, onlyInScope, scopeOf, list]);
+  const hidden = onlyInScope && scopeOf !== undefined ? unscoped.rows.length - list.rows.length : 0;
+  const chosen = families.length + (text.trim() === '' ? 0 : 1);
   const shown = list.rows.slice(0, limit);
   const controls = (
     <>
@@ -45,12 +49,6 @@ export function ReagentListView(props: { readonly ports: ReagentsPorts; readonly
           </button>
         ))}
       </div>
-      {versionName === undefined ? null : (
-        <label className={styles.option}>
-          <input type="checkbox" checked={onlyInScope} onChange={(event) => set.setOnlyInScope(event.target.checked)} />
-          <span>{`Only ${versionName}`}</span>
-        </label>
-      )}
     </>
   );
   return (
@@ -80,6 +78,7 @@ export function ReagentListView(props: { readonly ports: ReagentsPorts; readonly
               <div className={styles.sheet}>{controls}</div>
             </Dialog>
           ) : null}
+          <HiddenLine count={hidden} noun={['reagent', 'reagents']} examName={examName} onShow={() => ports.ui.exam.getState().setMode('everything')} />
           {list.rows.length === 0 ? <p className={styles.muted}>No reagent matches these filters.</p> : null}
           <ListEntries label="Reagents">
             {shown.map((row) => (

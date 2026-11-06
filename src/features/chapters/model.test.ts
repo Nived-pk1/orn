@@ -59,6 +59,13 @@ describe('filterContents', () => {
     expect(filterContents(contents, { ...none, onlyInScope: true }, nameOf, outside as never).groups.map((g) => g.count)).toEqual([1, 1]);
     expect(filterContents(contents, none, nameOf, outside as never).groups.map((g) => g.count)).toEqual([2, 2]);
   });
+  it('hiddenByScope counts only what the scope alone hides (step 8.3b, B2): not the name box, not a kind chip', () => {
+    const outside = (r: { id: string }): boolean => r.id === 'cpt_2' || r.id === 'rxn_2';
+    expect(filterContents(contents, { ...none, onlyInScope: true }, nameOf, outside as never).hiddenByScope).toBe(2);
+    expect(filterContents(contents, none, nameOf, outside as never).hiddenByScope).toBe(0);
+    expect(filterContents(contents, { ...none, text: 'HINSBERG' }, nameOf, undefined).hiddenByScope).toBe(0);
+    expect(filterContents(contents, { ...none, onlyInScope: true, kinds: ['reactions'] }, nameOf, outside as never).hiddenByScope).toBe(1);
+  });
   it('the concepts with no text follow the name box and the scope too, and keep their group alive', () => {
     const withUnwritten: ChapterContents = { chapterId: 'top_a', groups: [{ key: 'concepts', title: 'Concepts', count: 0, parts: [], unwritten: [ref('concept', 'cpt_1'), ref('concept', 'cpt_2')] }] };
     const out = filterContents(withUnwritten, { ...none, text: 'reson' }, nameOf, undefined);

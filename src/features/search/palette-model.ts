@@ -37,6 +37,8 @@ export interface PaletteState {
   readonly commands: readonly PaletteCommand[];
   /** Words for the status a person must be told (starting, failed, no results, a cut query); '' when there is nothing to say. */
   readonly message: string;
+  /** "Only <exam>" (step 8.3b, B2): how many results the exam leaves out; undefined when nothing is. */
+  readonly hidden: { readonly count: number; readonly examName: string | undefined } | undefined;
   /** Counts every list the palette shows, so a test (and the live region) can tell a new list from a repeat. */
   readonly serial: number;
 }
@@ -50,12 +52,14 @@ export interface PaletteModel {
   openHit(index: number, how?: 'record' | 'reactions'): void;
   /** Shows the recent searches / the command list afresh (the palette was opened). */
   reset(): void;
+  /** "Show them": switches the exam to Everything and asks again. */
+  showEverything(): void;
   dispose(): void;
 }
 
 const EMPTY: PaletteQuery = { mode: 'search', text: '', truncated: false };
 
-const initial = (): PaletteState => ({ input: '', parsed: EMPTY, status: 'idle', rows: [], commands: [], message: '', serial: 0 });
+const initial = (): PaletteState => ({ input: '', parsed: EMPTY, status: 'idle', rows: [], commands: [], message: '', hidden: undefined, serial: 0 });
 
 const cutNote = (parsed: PaletteQuery): string => (parsed.truncated ? 'Only the first 16 words (1,000 characters) of the text were used. ' : '');
 
@@ -73,9 +77,12 @@ export function createPaletteModel(ports: SearchPorts): PaletteModel {
     const parsed = store.getState().parsed;
     if (parsed.mode !== 'search') return;
     const examVersionId = ports.examVersionId();
+    // "Only <exam>" (step 8.3b, B2): every scope but outside; a record with no mapping stays (unmapped)
+    const only = examVersionId !== undefined && ports.scopeOnly?.() === true;
+    const query = { text: parsed.text, ...(parsed.kinds === undefined ? {} : { kinds: parsed.kinds }), ...(examVersionId === undefined ? {} : { examVersionId }), limit: PALETTE_LIMIT };
     patch({ status: 'searching' });
     void ports
-      .search(PALETTE_CHANNEL, { text: parsed.text, ...(parsed.kinds === undefined ? {} : { kinds: parsed.kinds }), ...(examVersionId === undefined ? {} : { examVersionId }), limit: PALETTE_LIMIT })
+      .search(PALETTE_CHANNEL, only ? { ...query, facets: { scopes: ['official', 'prerequisite', 'enrichment', 'unmapped'] } } : query)
       .then((answer) => {
         if (mine !== token) return; // a newer input replaced this one: its answer is never shown
         if (answer.ok) {
@@ -95,7 +102,15 @@ export function createPaletteModel(ports: SearchPorts): PaletteModel {
             ports.log('search_index_behind', 'the search index had not followed the latest change after the palette waited for it');
           } else if (index.state === 'failed') warning = `Search could not follow your latest change (${index.reason}); the results may be out of date.`;
           const note = cutNote(parsed);
-          patch({ status: 'results', rows, message: answer.value.length === 0 ? `${note}No results for “${parsed.text}”.${warning === '' ? '' : ` ${warning}`}` : `${note}${warning}`.trim() });
+          if (only) {
+            // how many the exam leaves out: the same search without the scope facet (its answer counts, it is not listed)
+            void ports.search(PALETTE_CHANNEL, query).then((all) => {
+              if (mine !== token || !all.ok) return;
+              const left = all.value.length - answer.value.length;
+              patch({ hidden: left > 0 ? { count: left, examName: ports.examName?.() } : undefined });
+            });
+          }
+          patch({ hidden: undefined, status: 'results', rows, message: answer.value.length === 0 ? `${note}No results for “${parsed.text}”.${warning === '' ? '' : ` ${warning}`}` : `${note}${warning}`.trim() });
           return;
         }
         if (answer.code === 'CANCELLED') return;
@@ -156,6 +171,11 @@ export function createPaletteModel(ports: SearchPorts): PaletteModel {
       if (page !== undefined) page(row.hit.ref, row.hit.title);
       else if (how === 'reactions' && ports.showReactions !== undefined && SHOW_REACTIONS_KINDS.includes(row.hit.ref.kind)) ports.showReactions(row.hit.ref, row.hit.title);
       else ports.open(row.hit.ref, row.hit.title);
+    },
+    showEverything() {
+      ports.showEverything?.();
+      const text = store.getState().input;
+      if (text !== '') setInput(text);
     },
     reset() {
       token += 1;

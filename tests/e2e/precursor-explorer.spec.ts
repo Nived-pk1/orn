@@ -129,6 +129,7 @@ test.describe('Studio, desktop', () => {
     const seen = await watch(page);
     await openDemo(page);
     await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: examWord('JEE Main, provisional, not verified') });
+    await page.getByRole('radio', { name: 'Everything' }).check(); // the outside reaction is marked, not left out (step 8.3b, B2)
     await openPrecursors(page);
     await pick(page, 'Compound to make', 'caprolactam', 'Choose ε-Caprolactam');
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');
@@ -139,7 +140,8 @@ test.describe('Studio, desktop', () => {
     await page.screenshot({ path: `${shotsDir()}/outside-card-1280x800.png` });
     await search(page).click();
     await expect(found(page).getByText('1 route found')).toBeVisible();
-    await view(page).getByRole('checkbox', { name: /^Only .* reactions$/ }).check();
+    await expect(view(page).getByRole('checkbox', { name: /^Only .* reactions$/ })).toHaveCount(0); // the top bar's switch replaces it (step 8.3b, B2)
+    await page.getByRole('radio', { name: 'Only JEE Main' }).check();
     await search(page).click();
     await expect(found(page).getByText('No route to ε-Caprolactam within 5 steps.')).toBeVisible();
     await expectClean(seen);

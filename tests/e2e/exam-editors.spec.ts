@@ -85,13 +85,14 @@ test.describe('the exam editors (Studio)', () => {
     await save(version);
 
     // chosen in the selector: Beckmann (a rearrangement) is outside JEE Main and not outside the new version
-    const NEW_LABEL = `${NEW_EXAM}, draft, not verified`;
+    const NEW_LABEL = NEW_EXAM; // the select lists exams by name (step 8.3b, B1)
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
     await expect(selector(page).locator('option', { hasText: NEW_LABEL })).toHaveCount(1, { timeout: 60_000 });
     await clickToolbar(page, /^Unanchored reactions/);
     const panel = page.getByRole('region', { name: 'Unanchored reactions' });
     const beckmann = panel.locator('[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]');
-    await selector(page).selectOption({ label: 'JEE Main, provisional, not verified' });
+    await selector(page).selectOption({ label: 'JEE Main' });
+    await page.getByRole('radio', { name: 'Everything' }).check(); // Only would leave the outside reaction out of the panel (step 8.3b, B2)
     await expect(beckmann).toHaveAttribute('data-outside', '');
     await selector(page).selectOption({ label: NEW_LABEL });
     await expect(beckmann).toBeVisible();
@@ -116,7 +117,8 @@ test.describe('the exam editors (Studio)', () => {
     await expect(copy.getByRole('list', { name: 'Syllabus units' }).getByRole('listitem')).toHaveCount(11);
     await expect(copy.getByRole('button', { name: /^Copy its units and coverage/ })).toHaveAttribute('aria-disabled', 'true'); // nothing is replaced silently
     await save(copy);
-    await expect(selector(page).locator('option', { hasText: 'JEE Main 2027 (e2e), draft, not verified' })).toHaveCount(1, { timeout: 60_000 });
+    await selector(page).selectOption({ label: 'JEE Main' });
+    await expect(page.getByRole('combobox', { name: 'Version' }).locator('option', { hasText: 'JEE Main 2027 (e2e), draft, not verified' })).toHaveCount(1, { timeout: 60_000 }); // Studio's Version select
     await expectClean(seen);
   });
 

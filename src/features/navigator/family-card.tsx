@@ -15,6 +15,7 @@ import { FullEquationView } from './family-equation';
 import { FamilyEnvContext, useFamilyEnv } from './family-env';
 import { Structure } from './family-structure';
 import { ArrowSide, sideText } from './family-text';
+import type { ScopeChip } from './scope-chip';
 import styles from './family-page.module.css';
 import scheme from './family-scheme.module.css';
 
@@ -106,6 +107,8 @@ export interface FamilyCardProps {
   readonly onGoToGroup: (hubId: string, reactionId: string) => void;
   /** Set when the reaction is outside the chosen exam scope: the words ("outside JEE Main"). The scheme is dimmed, the words are not. */
   readonly outside?: string;
+  /** "Extra" or "Background" (step 8.3b, B2): the reaction is enrichment or prerequisite for the chosen exam. */
+  readonly scopeChip?: ScopeChip;
   /** The outside words of an example folded under this card (7.3a C5); undefined for one that is inside the scope or when no scope is chosen. */
   readonly outsideOf?: (reactionId: string) => string | undefined;
   /** The selected reaction, so an example inside the disclosure shows it is selected. */
@@ -116,7 +119,7 @@ export interface FamilyCardProps {
   readonly hideNamedId?: string;
 }
 
-export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside, outsideOf, selectedId, nested, hideNamedId }: FamilyCardProps) {
+export const FamilyCardView = memo(function FamilyCardView({ card, selected, onSelect, onGoToGroup, outside, scopeChip, outsideOf, selectedId, nested, hideNamedId }: FamilyCardProps) {
   const titleId = useId();
   const openNamed = useContext(FamilyEnvContext)?.openNamed;
   return (
@@ -129,6 +132,7 @@ export const FamilyCardView = memo(function FamilyCardView({ card, selected, onS
         </Title>
         {selected ? <span className={styles.chip}>Selected</span> : null}
         {outside === undefined ? null : <span className={`${styles.chip} ${styles.outsideChip}`}>{outside}</span>}
+        {scopeChip === undefined ? null : <span className={styles.chip} data-scope-chip="">{scopeChip}</span>}
         {card.namedReactions.filter((named) => named.id !== hideNamedId).map((named) => (
           openNamed === undefined ? (
             <span key={named.id} className={styles.chip}>

@@ -5,6 +5,7 @@
  */
 import { useState, type ReactNode } from 'react';
 import { plural, verbFor } from '@/core/text';
+import { HiddenLine } from './hidden-line-view';
 import styles from './study-page.module.css';
 
 export const CARDS_PAGE_SIZE = 30;
@@ -35,6 +36,9 @@ export interface ReactionCardsProps {
   readonly onSelect: (reactionId: string) => void;
   readonly emptyWords: string;
   readonly hideNamedId?: string;
+  /** "Only <exam>" (step 8.3b, B2): the exam's name and the way to switch to Everything, for the quiet line about what is hidden. */
+  readonly examName?: string | undefined;
+  readonly onShowAll?: (() => void) | undefined;
 }
 
 export function ReactionCards(props: ReactionCardsProps) {
@@ -46,7 +50,8 @@ export function ReactionCards(props: ReactionCardsProps) {
   return (
     <div className={styles.cards}>
       {props.reactions.length === 0 ? <p className={styles.muted}>{props.emptyWords}</p> : null}
-      {left > 0 ? <p className={styles.muted}>{`${plural(left, 'reaction', 'reactions')} ${verbFor(left, 'is', 'are')} left out by the exam scope.`}</p> : null}
+      {left > 0 && props.examName !== undefined && props.onShowAll !== undefined ? <HiddenLine count={left} noun={['reaction', 'reactions']} examName={props.examName} onShow={props.onShowAll} /> : null}
+      {left > 0 && (props.examName === undefined || props.onShowAll === undefined) ? <p className={styles.muted}>{`${plural(left, 'reaction', 'reactions')} ${verbFor(left, 'is', 'are')} left out by the exam scope.`}</p> : null}
       <ul className={styles.cardList}>
         {shown.map((id) => {
           const examples = (props.examplesOf.get(id) ?? []).filter((one) => !onlyInScope || outsideOf(one) === undefined);

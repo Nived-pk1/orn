@@ -200,11 +200,15 @@ test.describe('desktop', () => {
     await openDemo(page);
     await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: examWord('JEE Main, provisional, not verified') });
     await openReactions(page);
+    // step 8.3b, B2: with an exam chosen "Only JEE Main" is on: the outside reactions are HIDDEN and one quiet line says how many
+    await expect(view(page).locator('[data-hidden-line]')).toContainText(/reactions? outside JEE Main (is|are) hidden/);
+    expect(await rows(page).count()).toBeLessThan(TOTAL);
+    await view(page).getByRole('button', { name: /^Show (them|it)$/ }).click(); // Everything: today's behaviour, marked and dimmed
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');
     const marked = await view(page).locator('[data-outside]').count();
     expect(marked).toBeGreaterThan(0);
-    expect(await rows(page).count()).toBe(TOTAL); // nothing is hidden by default
-    await view(page).getByRole('checkbox', { name: /^Only / }).check();
+    expect(await rows(page).count()).toBe(TOTAL); // nothing is hidden under Everything
+    await page.getByRole('radio', { name: 'Only JEE Main' }).check();
     // the marked reactions (cards and folded examples alike) are the hidden ones; what is left is counted as cards
     await expect(countLine(page, new RegExp(`^\\d+ of ${TOTAL} reactions( ${EXAMPLES})? \\(${marked} outside JEE Main hidden\\)$`))).toBeVisible();
     expect(await rows(page).count()).toBeLessThan(TOTAL);

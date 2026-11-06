@@ -9,7 +9,7 @@ import { createScopeOf } from '@/core/graph';
 import { reagentUsage } from '@/core/reagents';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
-import { currentOf, type ActiveExam } from '@/ui/state';
+import { currentOf, useScopeOnly, type ActiveExam } from '@/ui/state';
 import type { ReagentsPorts } from './contracts';
 import { Formula } from './formula';
 import { familyWord, usesLine } from './model';
@@ -21,7 +21,7 @@ const roleWord = (role: string): string => role.replaceAll('_', ' ');
 export function ReagentPage(props: { readonly ports: ReagentsPorts; readonly state: CanonicalState; readonly indexes: ReadonlyIndexes; readonly reagentId: string; readonly active: ActiveExam | null }) {
   const { ports, state, indexes, reagentId, active } = props;
   const reagent = state.records.reagent[reagentId];
-  const onlyInScope = useStore(ports.ui.reagents, (s) => s.onlyInScope);
+  const onlyInScope = useScopeOnly(ports.ui.exam);
   const inspector = useStore(ports.ui.inspector, (s) => currentOf(s));
   const set = ports.ui.reagents.getState();
   const heading = useRef<HTMLHeadingElement>(null);
@@ -29,7 +29,6 @@ export function ReagentPage(props: { readonly ports: ReagentsPorts; readonly sta
   const usage = useMemo(() => reagentUsage(state, indexes, reagentId), [state, indexes, reagentId]);
   const scopeOf = useMemo(() => (active === null ? undefined : createScopeOf(indexes, active.examId, active.examVersionId)), [indexes, active]);
   const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
-  const versionName = active === null ? undefined : (state.records.exam_version[active.examVersionId]?.label ?? active.examVersionId);
   const outsideOf = (reactionId: string): string | undefined => (examName !== undefined && scopeOf?.({ kind: 'reaction', id: reactionId } as RecordRef) === 'outside' ? `outside ${examName}` : undefined);
   if (reagent === undefined) return null;
   const link = (ref: RecordRef, label?: string) => (
@@ -104,16 +103,10 @@ export function ReagentPage(props: { readonly ports: ReagentsPorts; readonly sta
             Edit
           </button>
         )}
-        {versionName === undefined ? null : (
-          <label className={styles.option}>
-            <input type="checkbox" checked={onlyInScope} onChange={(event) => set.setOnlyInScope(event.target.checked)} />
-            <span>{`Only ${versionName}`}</span>
-          </label>
-        )}
       </div>
       <p className={styles.muted}>{usesLine(usage.total)}</p>
       {usage.sections.map((section) => (
-        <ProfileSection key={section.profileId ?? 'none'} ports={ports} section={section} scope={{ outsideOf, onlyInScope }} selected={inspector === null ? null : inspector.id} />
+        <ProfileSection key={section.profileId ?? 'none'} ports={ports} section={section} scope={{ outsideOf, onlyInScope, examName, onShowAll: () => ports.ui.exam.getState().setMode('everything') }} selected={inspector === null ? null : inspector.id} />
       ))}
     </>
   );

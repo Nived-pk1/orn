@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { plural, verbFor } from '@/core/text';
 import { howUsedWords, type UsageSection } from '@/core/reagents';
+import { HiddenLine } from '@/ui/study-page';
 import { PAGE_SIZE, type ReagentsPorts } from './contracts';
 import { reactionsWord } from './model';
 import styles from './reagents-view.module.css';
@@ -15,6 +16,9 @@ export interface ScopeWords {
   /** "outside JEE Main" for a reaction outside the scope; undefined otherwise. */
   readonly outsideOf: (reactionId: string) => string | undefined;
   readonly onlyInScope: boolean;
+  /** For the quiet line "n reactions outside JEE Main are hidden · Show them" (step 8.3b, B2). */
+  readonly examName?: string | undefined;
+  readonly onShowAll?: (() => void) | undefined;
 }
 
 export function ProfileSection(props: { readonly ports: ReagentsPorts; readonly section: UsageSection; readonly scope: ScopeWords; readonly selected: string | null }) {
@@ -50,7 +54,8 @@ export function ProfileSection(props: { readonly ports: ReagentsPorts; readonly 
         )}
         <div className={styles.cards}>
           {section.reactions.length === 0 ? <p className={styles.muted}>{study ? 'No reaction here uses this profile.' : 'No reaction uses this profile yet.'}</p> : null}
-          {left > 0 ? <p className={styles.muted}>{`${plural(left, 'reaction', 'reactions')} ${verbFor(left, 'is', 'are')} left out by the exam scope.`}</p> : null}
+          {left > 0 && scope.examName !== undefined && scope.onShowAll !== undefined ? <HiddenLine count={left} noun={['reaction', 'reactions']} examName={scope.examName} onShow={scope.onShowAll} /> : null}
+          {left > 0 && (scope.examName === undefined || scope.onShowAll === undefined) ? <p className={styles.muted}>{`${plural(left, 'reaction', 'reactions')} ${verbFor(left, 'is', 'are')} left out by the exam scope.`}</p> : null}
           <ul className={styles.list}>
             {shown.map((id) => {
               const examples = (section.examplesOf.get(id) ?? []).filter((one) => !scope.onlyInScope || scope.outsideOf(one) === undefined);

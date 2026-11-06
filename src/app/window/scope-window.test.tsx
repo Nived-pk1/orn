@@ -37,9 +37,9 @@ describe('the selector', () => {
     const app = fakeApp({ state: demoState() });
     renderWithApp(app);
     await screen.findByRole('group', { name: /^Navigator:/ });
-    expect([...selector().options].map((o) => o.textContent)).toEqual(['All exams', 'JEE Advanced, provisional, not verified', 'JEE Main, provisional, not verified']);
+    expect([...selector().options].map((o) => o.textContent)).toEqual(['All exams', 'JEE Advanced', 'JEE Main']); // exams by name (step 8.3b, B1)
     expect(selector().value).toBe('');
-    fireEvent.change(selector(), { target: { value: 'exv_jee-main-2026' } });
+    fireEvent.change(selector(), { target: { value: 'exm_jee-main' } });
     expect(app.navigator.ui.exam.getState().active).toEqual(MAIN);
     fireEvent.change(selector(), { target: { value: '' } });
     expect(app.navigator.ui.exam.getState().active).toBeNull();
@@ -50,7 +50,7 @@ describe('the selector', () => {
     app.navigator.ui.exam.getState().setActive(MAIN);
     renderWithApp(app);
     await screen.findByRole('group', { name: /^Navigator:/ });
-    expect(selector().value).toBe('exv_jee-main-2026');
+    expect(selector().value).toBe('exm_jee-main');
 
     cleanup();
     const gone = fakeApp({ state: demoState() });
@@ -58,7 +58,7 @@ describe('the selector', () => {
     renderWithApp(gone);
     await screen.findByRole('group', { name: /^Navigator:/ });
     await waitFor(() => expect(gone.navigator.ui.exam.getState().active).toBeNull());
-    expect(screen.getByText(/The exam scope you had chosen is not in this data, so all records are shown\./)).toBeTruthy();
+    expect(screen.getByText(/The exam you had chosen is not in this data, so all records are shown\./)).toBeTruthy();
     expect(gone.navigator.logs.some((line) => line.type === 'exam_scope_reset')).toBe(true);
   });
 });
@@ -73,7 +73,11 @@ describe('outside the scope: dimmed, marked in words, never hidden', () => {
     expect(panel.querySelectorAll('[data-reaction-id]')).toHaveLength(2);
     expect(panel.querySelectorAll('[data-outside]')).toHaveLength(0);
 
-    act(() => app.navigator.ui.exam.getState().setActive(MAIN));
+    // under Everything the outside reaction is marked; under Only (the default with an exam) the panel lists the reactions inside the exam (step 8.3b, B2)
+    act(() => {
+      app.navigator.ui.exam.getState().setMode('everything');
+      app.navigator.ui.exam.getState().setActive(MAIN);
+    });
     await waitFor(() => expect(panel.querySelectorAll('[data-outside]')).toHaveLength(1));
     expect(panel.querySelectorAll('[data-reaction-id]')).toHaveLength(2);
     const row = panel.querySelector(`[data-reaction-id="${BECKMANN}"]`) as HTMLElement;
@@ -94,7 +98,11 @@ describe('outside the scope: dimmed, marked in words, never hidden', () => {
     const before = document.querySelectorAll('article[data-reaction-id]').length;
     expect(document.querySelectorAll('article[data-outside]')).toHaveLength(0);
 
+    // Only (the default with an exam): the outside card is HIDDEN and one quiet line says so; Everything: dashed, dimmed, marked
     act(() => app.navigator.ui.exam.getState().setActive(MAIN));
+    await waitFor(() => expect(document.querySelector(`article[data-reaction-id="${BECKMANN}"]`)).toBeNull());
+    expect(document.querySelector('[data-hidden-line]')?.textContent).toMatch(/outside JEE Main (is|are) hidden · Show (it|them)$/);
+    act(() => app.navigator.ui.exam.getState().setMode('everything'));
     await waitFor(() => expect(document.querySelectorAll('article[data-outside]').length).toBeGreaterThan(0));
     await act(async () => app.navigator.timers.advance(0));
     const cardOf = document.querySelector(`article[data-reaction-id="${BECKMANN}"]`) as HTMLElement;

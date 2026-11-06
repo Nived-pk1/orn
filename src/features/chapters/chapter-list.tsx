@@ -7,12 +7,13 @@ import { NO_CHAPTER, NO_CHAPTER_TITLE, type ChaptersList } from '@/core/chapters
 import type { ChaptersPorts } from './contracts';
 import { chipWords } from './chapter-page';
 import { countsWords } from './model';
+import { HiddenLine } from '@/ui/study-page';
 import styles from './chapters-view.module.css';
 
 /** The most chapters drawn at once; a dataset with more says so. */
 export const MAX_CHAPTERS_SHOWN = 200;
 
-export function ChapterList(props: { readonly ports: ChaptersPorts; readonly list: ChaptersList; readonly examName: string | undefined }) {
+export function ChapterList(props: { readonly ports: ChaptersPorts; readonly list: ChaptersList; readonly examName: string | undefined; readonly onShowAll: () => void }) {
   const { ports, list } = props;
   // "No chapter yet" is not a chapter any exam covers: under an exam scope only Studio lists it (7.3c A2)
   const listNone = (list.noChapter.total > 0 || list.noChapter.unwritten > 0) && (props.examName === undefined || ports.editing);
@@ -21,7 +22,7 @@ export function ChapterList(props: { readonly ports: ChaptersPorts; readonly lis
   return (
     <>
       {props.examName !== undefined && list.hiddenByExam > 0 ? (
-        <p className={styles.muted}>{`${list.hiddenByExam} ${list.hiddenByExam === 1 ? 'chapter is' : 'chapters are'} hidden: not in ${props.examName}.`}</p>
+        <HiddenLine count={list.hiddenByExam} noun={['chapter', 'chapters']} examName={props.examName} onShow={props.onShowAll} />
       ) : null}
       {list.chapters.length === 0 && !listNone ? <p className={styles.muted}>No chapters yet.</p> : null}
       <ul className={styles.list} aria-label="Chapters">

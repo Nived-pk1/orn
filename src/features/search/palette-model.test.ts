@@ -18,7 +18,7 @@ interface Call {
   resolve(answer: PaletteSearchAnswer): void;
 }
 
-function rig(options: { commands?: readonly PaletteCommand[]; exam?: string } = {}) {
+function rig(options: { commands?: readonly PaletteCommand[]; exam?: string; only?: boolean; examName?: string } = {}) {
   const index: { state: IndexState } = { state: { state: 'current' } };
   const timers = manualTimers();
   const calls: Call[] = [];
@@ -33,6 +33,7 @@ function rig(options: { commands?: readonly PaletteCommand[]; exam?: string } = 
     timers,
     recent,
     examVersionId: () => options.exam,
+    ...(options.only === undefined ? {} : { scopeOnly: () => options.only === true, examName: () => options.examName, showEverything: () => void (options.only = false) }),
     indexState: () => index.state,
     factsOf: () => ({}),
     open: (ref, title) => void opened.push([ref, title]),
@@ -45,6 +46,55 @@ function rig(options: { commands?: readonly PaletteCommand[]; exam?: string } = 
   };
   return { model, timers, calls, opened, logs, recent, flush, index, state: () => model.store.getState() };
 }
+
+describe('"Only <exam>" (step 8.3b, B2)', () => {
+  const SCOPES = ['official', 'prerequisite', 'enrichment', 'unmapped'];
+  it('asks for every scope but outside, then asks once more without it to count what is hidden', async () => {
+    const r = rig({ exam: 'exv_x', only: true, examName: 'JEE Main' });
+    r.model.setInput('ethanol');
+    r.timers.advance(PALETTE_DEBOUNCE_MS);
+    expect(r.calls[0]?.query).toEqual({ text: 'ethanol', examVersionId: 'exv_x', facets: { scopes: SCOPES }, limit: PALETTE_LIMIT });
+    r.calls[0]?.resolve({ ok: true, value: [hit('a'), hit('b')] });
+    await r.flush();
+    expect(r.calls[1]?.query).toEqual({ text: 'ethanol', examVersionId: 'exv_x', limit: PALETTE_LIMIT });
+    r.calls[1]?.resolve({ ok: true, value: [hit('a'), hit('b'), hit('c'), hit('d')] });
+    await r.flush();
+    expect(r.state().rows.length).toBeGreaterThan(0);
+    expect(r.state().hidden).toEqual({ count: 2, examName: 'JEE Main' });
+  });
+  it('nothing hidden: no line', async () => {
+    const r = rig({ exam: 'exv_x', only: true, examName: 'JEE Main' });
+    r.model.setInput('ethanol');
+    r.timers.advance(PALETTE_DEBOUNCE_MS);
+    r.calls[0]?.resolve({ ok: true, value: [hit('a')] });
+    await r.flush();
+    r.calls[1]?.resolve({ ok: true, value: [hit('a')] });
+    await r.flush();
+    expect(r.state().hidden).toBeUndefined();
+  });
+  it('Everything (or no exam): one query, no scope facet, no line', async () => {
+    const r = rig({ exam: 'exv_x', only: false, examName: 'JEE Main' });
+    r.model.setInput('ethanol');
+    r.timers.advance(PALETTE_DEBOUNCE_MS);
+    expect(r.calls[0]?.query).toEqual({ text: 'ethanol', examVersionId: 'exv_x', limit: PALETTE_LIMIT });
+    r.calls[0]?.resolve({ ok: true, value: [hit('a')] });
+    await r.flush();
+    expect(r.calls).toHaveLength(1);
+    expect(r.state().hidden).toBeUndefined();
+  });
+  it('showEverything switches the port and asks again', async () => {
+    const r = rig({ exam: 'exv_x', only: true, examName: 'JEE Main' });
+    r.model.setInput('ethanol');
+    r.timers.advance(PALETTE_DEBOUNCE_MS);
+    r.calls[0]?.resolve({ ok: true, value: [hit('a')] });
+    await r.flush();
+    r.calls[1]?.resolve({ ok: true, value: [hit('a'), hit('b')] });
+    await r.flush();
+    r.model.showEverything();
+    r.timers.advance(PALETTE_DEBOUNCE_MS);
+    expect(r.calls.at(-1)?.query).toEqual({ text: 'ethanol', examVersionId: 'exv_x', limit: PALETTE_LIMIT });
+  });
+});
 
 describe('the grammar parser is wired', () => {
   it('plain text, a kind prefix, the exam version and the limit reach the query', async () => {

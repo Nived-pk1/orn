@@ -6,7 +6,7 @@
 import { useState, type ReactNode } from 'react';
 import { plural } from '@/core/text';
 import { Button, Dialog } from '@/ui/primitives';
-import { ScopeBox } from './parts';
+import { HiddenLine } from './hidden-line-view';
 import styles from './study-page.module.css';
 
 export const LIST_PAGE_SIZE = 30;
@@ -20,9 +20,8 @@ export interface ListShellProps {
   readonly shown: number;
   readonly text: string;
   readonly onText: (text: string) => void;
-  readonly versionName: string | undefined;
-  readonly onlyInScope: boolean;
-  readonly onScope: (on: boolean) => void;
+  /** "Only <exam>" (step 8.3b, B2): how many entries it hides, the exam's name and the way to switch to Everything. */
+  readonly hidden?: { readonly count: number; readonly examName: string | undefined; readonly onShow: () => void };
   readonly onClear: () => void;
   readonly phone: boolean;
   /** Renders the entries `0 ... count`; the shell cuts the list 30 at a time. */
@@ -36,7 +35,7 @@ export function ListShell(props: ListShellProps) {
   const [limit, setLimit] = useState(LIST_PAGE_SIZE);
   const [sheet, setSheet] = useState(false);
   const [one, many] = props.noun;
-  const chosen = (props.text.trim() === '' ? 0 : 1) + (props.onlyInScope ? 1 : 0);
+  const chosen = props.text.trim() === '' ? 0 : 1;
   const countLine = props.shown === props.total ? plural(props.total, one, many) : `${props.shown} of ${plural(props.total, one, many)}`;
   const controls = (
     <>
@@ -44,7 +43,6 @@ export function ListShell(props: ListShellProps) {
         <span>Find by name</span>
         <input type="search" value={props.text} autoComplete="off" spellCheck={false} onChange={(event) => props.onText(event.target.value)} />
       </label>
-      <ScopeBox versionName={props.versionName} checked={props.onlyInScope} onChange={props.onScope} />
     </>
   );
   return (
@@ -74,6 +72,7 @@ export function ListShell(props: ListShellProps) {
               <div className={styles.sheet}>{controls}</div>
             </Dialog>
           ) : null}
+          {props.hidden === undefined ? null : <HiddenLine count={props.hidden.count} noun={props.noun} examName={props.hidden.examName} onShow={props.hidden.onShow} />}
           {props.shown === 0 && (props.unwritten ?? []).length === 0 ? <p className={styles.muted}>{`No ${one} matches these filters.`}</p> : null}
           {props.renderEntries(limit)}
           {props.count > limit ? (

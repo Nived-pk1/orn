@@ -69,8 +69,9 @@ describe('a new exam and version made in the Workbench', () => {
 
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Modes' })).getByRole('button', { name: /^Map$/ }));
     const selector = (await screen.findByRole('combobox', { name: /^Exam$/ })) as HTMLSelectElement;
-    expect([...selector.options].map((o) => o.textContent)).toContain('Test board exam, draft, not verified');
-    fireEvent.change(selector, { target: { value: versionId } });
+    expect([...selector.options].map((o) => o.textContent)).toContain('Test board exam'); // the select lists exams by name (step 8.3b, B1); Studio lists a draft-only exam too
+    fireEvent.change(selector, { target: { value: examId } }); // the exam's only version is its current one (Studio's Version select can pick any)
+    expect(((await screen.findByRole('combobox', { name: 'Version' })) as HTMLSelectElement).value).toBe(versionId);
     expect(app.navigator.ui.exam.getState().active).toEqual({ examId, examVersionId: versionId });
 
     const scopeIn = (e: string, v: string) => createScopeOf(indexEngine.build(app.store.getState()), e as never, v as never)(mapping.target as never);

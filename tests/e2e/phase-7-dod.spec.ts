@@ -35,11 +35,10 @@ test('Named reactions, Mechanisms and Reagents: a list of more than 30 is cut at
     expect(await list.locator(entry).count()).toBeGreaterThan(30);
     // "Only <exam version>": the clones have no reaction, so they are hidden and the count line says how many are left
     await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
-    await view.getByLabel(/^Only /).check();
     await expect(view.getByText(new RegExp(`^\\d+ of \\d+ ${noun}$`))).toBeVisible();
     expect(await list.locator(entry).count()).toBeLessThan(30);
     expect(await axeProblems(page)).toEqual([]);
-    await view.getByLabel(/^Only /).uncheck();
+    await page.getByRole('radio', { name: 'Everything' }).check(); // the top bar's switch (step 8.3b, B2)
     await scope.selectOption({ value: '' });
   }
   await openMode(page, 'Reagents');
@@ -72,7 +71,7 @@ test('Chapters: a group of 35 concepts is cut at 30; Syllabus: a unit of 65 topi
   const syllabus = region(page, 'Syllabus');
   await expect(syllabus.getByLabel('Exam version')).toHaveValue('exv_jee-advanced-2026');
   await syllabus.getByLabel('Exam version').selectOption({ value: 'exv_jee-main-2026' });
-  await expect(scope.locator('option:checked')).toHaveText('JEE Advanced, provisional, not verified');
+  await expect(scope.locator('option:checked')).toHaveText('JEE Advanced');
   const unit = syllabus.locator('[data-unit-id="unt_zz-long"]');
   await expect(unit.getByText(/^Showing 60 of 65 topics$/)).toBeVisible();
   await unit.getByRole('button', { name: 'Show 60 more' }).click();

@@ -10,7 +10,8 @@ import { createScopeOf } from '@/core/graph';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
 import { Button, Dialog } from '@/ui/primitives';
-import { currentOf, type ActiveExam } from '@/ui/state';
+import { currentOf, useScopeOnly, type ActiveExam } from '@/ui/state';
+import { HiddenLine } from '@/ui/study-page';
 import type { ChaptersPorts } from './contracts';
 import { filterContents, kindWord, PAGE_SIZE } from './model';
 import { StudyCard } from './study-cards';
@@ -91,7 +92,7 @@ export function ChapterPage(props: {
   const { ports, state, indexes, chapterId, active, phone } = props;
   const kinds = useStore(ports.ui.chapters, (s) => s.kinds);
   const text = useStore(ports.ui.chapters, (s) => s.text);
-  const onlyInScope = useStore(ports.ui.chapters, (s) => s.onlyInScope);
+  const onlyInScope = useScopeOnly(ports.ui.exam);
   const inspector = useStore(ports.ui.inspector, (s) => currentOf(s));
   const [sheet, setSheet] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -102,7 +103,6 @@ export function ChapterPage(props: {
   const contents = useMemo(() => chapterContents(state, props.chapters, chapterId, { nameOf: ports.nameOf, showUnwritten: ports.editing }), [state, props.chapters, chapterId, ports]);
   const scopeOf = useMemo(() => (active === null ? undefined : createScopeOf(indexes, active.examId, active.examVersionId)), [indexes, active]);
   const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
-  const versionName = active === null ? undefined : (state.records.exam_version[active.examVersionId]?.label ?? active.examVersionId);
   const isOutside = (ref: RecordRef): boolean => scopeOf?.(ref) === 'outside';
   const outsideOf = (ref: RecordRef): string | undefined => (examName !== undefined && isOutside(ref) ? `outside ${examName}` : undefined);
   const filtered = useMemo(
@@ -110,7 +110,7 @@ export function ChapterPage(props: {
     [contents, kinds, text, onlyInScope, scopeOf, ports],
   );
   const countOf = (key: ChapterGroup['key']): number => contents.groups.find((g) => g.key === key)?.count ?? 0;
-  const chosen = kinds.length + (text.trim() === '' ? 0 : 1) + (onlyInScope ? 1 : 0);
+  const chosen = kinds.length + (text.trim() === '' ? 0 : 1);
   const controls = (
     <>
       <div className={styles.bar} role="group" aria-label="Kinds">
@@ -124,12 +124,6 @@ export function ChapterPage(props: {
         <span>Find in this chapter</span>
         <input type="search" value={text} autoComplete="off" spellCheck={false} onChange={(event) => set.setText(event.target.value)} />
       </label>
-      {versionName === undefined ? null : (
-        <label className={styles.option}>
-          <input type="checkbox" checked={onlyInScope} onChange={(event) => set.setOnlyInScope(event.target.checked)} />
-          <span>{`Only ${versionName}`}</span>
-        </label>
-      )}
       {chosen === 0 ? null : (
         <button type="button" onClick={() => set.clearFilters()}>
           Clear filters
@@ -173,7 +167,8 @@ export function ChapterPage(props: {
               <div className={styles.sheet}>{controls}</div>
             </Dialog>
           ) : null}
-          {filtered.hidden > 0 ? <p className={styles.muted}>{`${filtered.hidden} ${filtered.hidden === 1 ? 'record is' : 'records are'} left out by the filters.`}</p> : null}
+          {filtered.hiddenByScope > 0 && examName !== undefined ? <HiddenLine count={filtered.hiddenByScope} noun={['record', 'records']} examName={examName} onShow={() => ports.ui.exam.getState().setMode('everything')} /> : null}
+          {filtered.hidden - filtered.hiddenByScope > 0 ? <p className={styles.muted}>{`${filtered.hidden - filtered.hiddenByScope} ${filtered.hidden - filtered.hiddenByScope === 1 ? 'record is' : 'records are'} left out by the filters.`}</p> : null}
           {filtered.groups.length === 0 ? <p className={styles.muted}>No record matches these filters.</p> : null}
           {filtered.groups.map((group) => (
             <GroupView key={group.key} group={group} ports={ports} state={state} selected={inspector === null ? null : inspector.id} outsideOf={outsideOf} />

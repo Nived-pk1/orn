@@ -102,7 +102,7 @@ describe('the list', () => {
     act(() => exam.getState().setActive({ examId: 'exm_jee', examVersionId: 'exv_v1' } as never));
     const names = within(screen.getByRole('list', { name: 'Chapters' })).getAllByRole('button').map((b) => b.textContent);
     expect(names).toEqual(['Bravo chapter', 'No chapter yet']);
-    expect(screen.getByText(/1 chapter is hidden/)).toBeTruthy();
+    expect(document.querySelector('[data-hidden-line]')?.textContent).toMatch(/^1 chapter outside .+ is hidden · Show it$/);
   });
 });
 

@@ -14,6 +14,7 @@ import { EDITING } from '@/app/edition';
 import { StudyUpdateNotice, useStudyUpdateDue } from './study-update';
 import { useDraftsView, useEditors } from './editors-access';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
+import { LazyExamChip } from './lazy-exam-first-run';
 import { alertOf, STUDY_STORAGE_ALERT } from './phone-alert';
 import { RecordCounts } from './record-counts';
 import { fileItems, historyLabelOf, historyReason, historySnapshot, stepHistory, useFileWithDrafts, type FileBinding, type HistoryBinding } from './top-bar';
@@ -46,6 +47,7 @@ export function PhoneBar(props: {
   };
   return (
     <>
+      {EDITING ? null : <LazyExamChip binding={props.exam} />}
       <IconButton label="Search" icon="search" onClick={props.onSearch} />
       <Button onClick={() => setMore(true)} aria-haspopup="dialog">
         More

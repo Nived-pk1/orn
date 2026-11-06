@@ -120,11 +120,17 @@ describe('the list', () => {
     expect(named.getState().text).toBe('');
   });
 
-  it('under an exam scope "Only <exam version>" hides what has no reaction inside', () => {
+  it('under an exam scope the named reactions with no reaction inside are hidden, one line says how many, and Show them lists them again (step 8.3b, B2)', () => {
     const state = stateOf(...base, topicMapping('mx', 'chap-x', { kind: 'reaction', id: 'rxn_gen' } as never), topicMapping('mx2', 'chap-x', { kind: 'reaction', id: 'rxn_ex' } as never), examVersion('v1', 'jee', [{ topic: 'chap-a', coverage: 'included' }]));
     const { exam } = show(state);
+    expect(screen.queryByLabelText(/^Only /)).toBeNull();
+    const before = screen.getAllByRole('listitem').length;
     act(() => exam.getState().setActive({ examId: 'exm_jee', examVersionId: 'exv_v1' } as never));
-    expect(screen.getByLabelText(/^Only /)).toBeTruthy();
+    const line = document.querySelector('[data-hidden-line]');
+    expect(line?.textContent).toMatch(/^\d+ named reactions? outside .+ (are|is) hidden · Show (them|it)$/);
+    expect(screen.queryAllByRole('listitem').length).toBeLessThan(before);
+    fireEvent.click(screen.getByRole('button', { name: /^Show (them|it)$/ }));
+    expect(screen.getAllByRole('listitem').length).toBe(before);
   });
 
   it('says so in words when nothing matches and when there are none', () => {

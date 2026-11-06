@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
 import { buildChapterIndex, chaptersOf, NO_CHAPTER } from '@/core/chapters';
 import { useLayoutMode } from '@/ui/hooks';
+import { useScopeOnly } from '@/ui/state';
 import type { ChaptersPorts } from './contracts';
 import { ChapterList } from './chapter-list';
 import { ChapterPage } from './chapter-page';
@@ -19,6 +20,7 @@ export function ChaptersView(props: { readonly ports: ChaptersPorts }) {
   const { ports } = props;
   const chapterId = useStore(ports.ui.chapters, (s) => s.chapterId);
   const active = useStore(ports.ui.exam, (s) => s.active);
+  const only = useScopeOnly(ports.ui.exam); // step 8.3b, B2: "Only <exam>" hides the chapters the exam does not cover; Everything lists them all
   const phone = useLayoutMode() === 'phone';
   const [version, setVersion] = useState(0);
   const [gone, setGone] = useState(false);
@@ -29,7 +31,7 @@ export function ChaptersView(props: { readonly ports: ChaptersPorts }) {
   const source = useMemo(() => ({ state: ports.store.getState(), indexes: ports.indexes.current() }), [ports, version]);
   const { state, indexes } = source;
   const chapters = useMemo(() => buildChapterIndex(state), [state]);
-  const list = useMemo(() => chaptersOf(state, chapters, { showUnwritten: ports.editing, ...(active === null ? {} : { examVersionId: active.examVersionId }) }), [state, chapters, active, ports.editing]);
+  const list = useMemo(() => chaptersOf(state, chapters, { showUnwritten: ports.editing, ...(active === null || !only ? {} : { examVersionId: active.examVersionId }) }), [state, chapters, active, only, ports.editing]);
 
   const unknown = chapterId !== null && chapterId !== NO_CHAPTER && !chapters.chapters.some((chapter) => chapter.id === chapterId);
   useEffect(() => {
@@ -39,7 +41,7 @@ export function ChaptersView(props: { readonly ports: ChaptersPorts }) {
     ports.log('chapters_chapter_pruned', 'a saved chapter named a topic that is no longer a chapter; the list is shown');
   }, [unknown, ports]);
 
-  const examName = active === null ? undefined : (state.records.exam_version[active.examVersionId]?.label ?? state.records.exam[active.examId]?.name ?? active.examId);
+  const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
   const line = chapterId === null || unknown ? `${list.chapters.length} ${list.chapters.length === 1 ? 'chapter' : 'chapters'}` : '';
   return (
     <section className={styles.view} aria-label="Chapters" data-chapters-view="" data-layout={phone ? 'phone' : 'desktop'}>
@@ -55,7 +57,7 @@ export function ChaptersView(props: { readonly ports: ChaptersPorts }) {
             )}
           </header>
           {gone ? <p className={styles.notice} role="status">{GONE_WORDS}</p> : null}
-          <ChapterList ports={ports} list={list} examName={examName} />
+          <ChapterList ports={ports} list={list} examName={only ? examName : undefined} onShowAll={() => ports.ui.exam.getState().setMode('everything')} />
         </>
       ) : (
         <ChapterPage ports={ports} state={state} indexes={indexes} chapters={chapters} chapterId={chapterId} active={active} phone={phone} />

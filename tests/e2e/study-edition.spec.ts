@@ -55,6 +55,19 @@ async function importOwnData(page: Page, file: UploadFile = DEMO_FILE): Promise<
   await expectPreview(page);
   await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
+  await answerExamCard(page);
+}
+
+/** Step 8.3b, B3: the first time a student has data with exams a card asks which exam; these specs are about other things, so they answer "Just exploring". */
+async function answerExamCard(page: Page): Promise<void> {
+  const card = page.getByRole('dialog', { name: 'Which exam are you preparing for?' });
+  try {
+    await card.waitFor({ state: 'visible', timeout: 8_000 });
+  } catch {
+    return; // no exam in the data: no card
+  }
+  await card.getByRole('button', { name: 'Just exploring' }).click();
+  await expect(card).toHaveCount(0);
 }
 
 /** A student has no Dataset page (step 8.3): the size of the data is the number of boxes on the Map. */

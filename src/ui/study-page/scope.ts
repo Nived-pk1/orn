@@ -10,6 +10,8 @@ import type { CanonicalState, RecordRef } from '@/core/schema';
 import type { ActiveExam } from '@/ui/state';
 
 export interface ScopeLens {
+  /** The exam's display name ("JEE Main"), or undefined with no exam chosen. */
+  readonly examName: string | undefined;
   readonly versionName: string | undefined;
   readonly outside: ((reactionId: string) => boolean) | undefined;
   readonly outsideWords: (reactionId: string) => string | undefined;
@@ -21,6 +23,7 @@ export function useScopeLens(state: CanonicalState, indexes: ReadonlyIndexes, ac
   const versionName = active === null ? undefined : (state.records.exam_version[active.examVersionId as never]?.label ?? active.examVersionId);
   const isOutside = (reactionId: string): boolean => scopeOf?.({ kind: 'reaction', id: reactionId } as RecordRef) === 'outside';
   return {
+    examName,
     versionName,
     outside: onlyInScope && scopeOf !== undefined ? isOutside : undefined,
     outsideWords: (reactionId) => (examName !== undefined && isOutside(reactionId) ? `outside ${examName}` : undefined),

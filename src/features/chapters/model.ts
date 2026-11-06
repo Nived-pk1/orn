@@ -29,6 +29,8 @@ export interface FilteredContents {
   readonly groups: readonly ChapterGroup[];
   /** Records the filter left out (examples folded under a card are not counted). */
   readonly hidden: number;
+  /** Of those, the records "Only <exam>" alone hides (they pass the kind chips and the name box): the count of the quiet line (step 8.3b, B2). */
+  readonly hiddenByScope: number;
 }
 
 const fold = (text: string): string => text.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
@@ -42,6 +44,7 @@ export function filterContents(
 ): FilteredContents {
   const needle = fold(filter.text.trim());
   let hidden = 0;
+  let hiddenByScope = 0;
   const groups: ChapterGroup[] = [];
   for (const group of contents.groups) {
     if (filter.kinds.length > 0 && !filter.kinds.includes(group.key)) {
@@ -53,8 +56,11 @@ export function filterContents(
       .map((part) => ({
         ...part,
         refs: part.refs.filter((ref) => {
-          const keep = (needle === '' || fold(nameOf(ref)).includes(needle)) && !(filter.onlyInScope && outside?.(ref) === true);
+          const named = needle === '' || fold(nameOf(ref)).includes(needle);
+          const left = filter.onlyInScope && outside?.(ref) === true;
+          const keep = named && !left;
           if (!keep) hidden += 1;
+          if (named && left) hiddenByScope += 1;
           return keep;
         }),
       }))
@@ -63,5 +69,5 @@ export function filterContents(
     const { unwritten: _all, ...rest } = group;
     groups.push({ ...rest, parts, count: parts.reduce((sum, part) => sum + part.refs.length, 0), ...(unwritten.length === 0 ? {} : { unwritten }) });
   }
-  return { groups, hidden };
+  return { groups, hidden, hiddenByScope };
 }

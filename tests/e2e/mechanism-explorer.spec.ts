@@ -80,10 +80,11 @@ test('Alt+Enter on a palette hit opens the page; the exam scope offers "Only"; t
 
   const scope = page.getByRole('combobox', { name: /^Exam$/ });
   await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
-  const only = view(page).getByLabel(/^Only /);
-  await expect(only).toBeVisible();
-  await only.check();
-  await only.uncheck();
+  // "Only <exam>" is one switch in the top bar now (step 8.3b, B2): the per-view box is gone
+  await expect(view(page).getByLabel(/^Only /)).toHaveCount(0);
+  await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
+  await page.getByRole('radio', { name: 'Everything' }).check();
+  await page.getByRole('radio', { name: 'Only JEE Main' }).check();
   await scope.selectOption({ value: '' });
 
   await page.keyboard.press('Control+k');

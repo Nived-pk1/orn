@@ -88,7 +88,7 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
   // the exam scope: the chapters a version does not cover are hidden, and said
   const scope = page.getByRole('combobox', { name: /^Exam$/ });
   await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
-  await expect(view(page).getByText(/chapters? (is|are) hidden: not in/)).toBeVisible();
+  await expect(view(page).locator('[data-hidden-line]')).toContainText(/chapters? outside JEE Main (is|are) hidden/); // step 8.3b, B2
   await expect(rows(page).filter({ hasText: 'Molecular rearrangements' })).toHaveCount(0);
   await expect(rows(page).filter({ hasText: 'No chapter yet' })).toHaveCount(studio ? 1 : 0); // 7.3c A2: only Studio lists it under a scope
   expect(await axeProblems(page)).toEqual([]);

@@ -9,14 +9,14 @@ import { NO_CHAPTER_TITLE } from '@/core/chapters';
 import { mechanismPage } from '@/core/mechanisms';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
-import { currentOf, type ActiveExam } from '@/ui/state';
-import { CaveatSection, ChaptersLine, LinkLine, PageHeader, ReactionCards, ScopeBox, studyPageStyles as styles, useScopeLens } from '@/ui/study-page';
+import { currentOf, useScopeOnly, type ActiveExam } from '@/ui/state';
+import { CaveatSection, ChaptersLine, LinkLine, PageHeader, ReactionCards, studyPageStyles as styles, useScopeLens } from '@/ui/study-page';
 import type { MechanismPorts } from './contracts';
 import { VariantSteps } from './mechanism-steps';
 
 export function MechanismPage(props: { readonly ports: MechanismPorts; readonly state: CanonicalState; readonly indexes: ReadonlyIndexes; readonly id: string; readonly active: ActiveExam | null }) {
   const { ports, state, indexes, id, active } = props;
-  const onlyInScope = useStore(ports.ui.mechanisms, (s) => s.onlyInScope);
+  const onlyInScope = useScopeOnly(ports.ui.exam);
   const inspector = useStore(ports.ui.inspector, (s) => currentOf(s));
   const set = ports.ui.mechanisms.getState();
   const page = useMemo(() => mechanismPage(state, indexes, id), [state, indexes, id]);
@@ -41,7 +41,6 @@ export function MechanismPage(props: { readonly ports: MechanismPorts; readonly 
             Edit
           </button>
         )}
-        <ScopeBox versionName={lens.versionName} checked={onlyInScope} onChange={set.setOnlyInScope} />
       </div>
       {page.variants.length === 0 ? <p className={styles.muted}>No step is written for this mechanism yet.</p> : null}
       {page.variants.map((variant) => (
@@ -55,6 +54,8 @@ export function MechanismPage(props: { readonly ports: MechanismPorts; readonly 
           examplesOf={page.reactions.examplesOf}
           outsideOf={lens.outsideWords}
           onlyInScope={onlyInScope}
+          examName={lens.examName}
+          onShowAll={() => ports.ui.exam.getState().setMode('everything')}
           selectedId={inspector === null ? null : inspector.id}
           renderCard={ports.renderCard}
           onSelect={ports.selectReaction}

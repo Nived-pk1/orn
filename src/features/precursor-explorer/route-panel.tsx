@@ -4,6 +4,7 @@
  */
 import { useStore } from 'zustand';
 import { MIN_PRECURSOR_STEPS, DEFAULT_PRECURSOR_STEPS, type PrecursorsStore } from '@/ui/state';
+import { HiddenLine } from '@/ui/study-page';
 import type { PrecursorPorts } from './contracts';
 import { SubstanceSearch } from './substance-search';
 import styles from './precursors-view.module.css';
@@ -15,7 +16,8 @@ export function RoutePanel(props: {
   readonly store: PrecursorsStore;
   readonly nameOf: (kind: string, id: string) => string;
   /** The exam version's name when an exam scope is chosen ("JEE Main 2026"), else absent: no such toggle. */
-  readonly versionName: string | undefined;
+  /** "Only <exam>" (step 8.3b, B2): the reactions it leaves out of the search, for the quiet line. */
+  readonly hidden?: { readonly count: number; readonly examName: string | undefined; readonly onShow: () => void } | undefined;
   readonly running: boolean;
   readonly onSearch: () => void;
   readonly onCancel: () => void;
@@ -24,7 +26,6 @@ export function RoutePanel(props: {
   const startFrom = useStore(store, (s) => s.startFrom);
   const maxSteps = useStore(store, (s) => s.maxSteps);
   const onlyListed = useStore(store, (s) => s.onlyListed);
-  const onlyInScope = useStore(store, (s) => s.onlyInScope);
   const chosen = new Set(startFrom.map((one) => one.id));
   return (
     <section className={styles.section} aria-labelledby="route-heading">
@@ -62,12 +63,7 @@ export function RoutePanel(props: {
           <input type="checkbox" checked={onlyListed} disabled={startFrom.length === 0} onChange={(event) => store.getState().setOnlyListed(event.target.checked)} />
           <span>Only the listed starting materials</span>
         </label>
-        {props.versionName === undefined ? null : (
-          <label className={styles.option}>
-            <input type="checkbox" checked={onlyInScope} onChange={(event) => store.getState().setOnlyInScope(event.target.checked)} />
-            <span>{`Only ${props.versionName} reactions`}</span>
-          </label>
-        )}
+        {props.hidden === undefined ? null : <HiddenLine count={props.hidden.count} noun={['reaction', 'reactions']} examName={props.hidden.examName} onShow={props.hidden.onShow} />}
       </div>
       <div className={styles.actions}>
         <button type="button" className={styles.primary} disabled={props.running} onClick={props.onSearch}>

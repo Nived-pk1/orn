@@ -14,7 +14,7 @@ import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
 const selector = (page: Page) => page.getByRole('combobox', { name: /^Exam$/ });
-const MAIN = 'JEE Main, provisional, not verified';
+const MAIN = 'JEE Main'; // the select lists exams by name since step 8.3b
 
 async function openDemo(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -29,7 +29,7 @@ test.describe('the exam scope', () => {
     const seen = await watch(page);
     await openDemo(page);
     await expect(selector(page)).toHaveValue('');
-    await expect(selector(page).locator('option')).toHaveText(['All exams', 'JEE Advanced, provisional, not verified', MAIN]);
+    await expect(selector(page).locator('option')).toHaveText(['All exams', 'JEE Advanced', MAIN]);
 
     await clickToolbar(page, /^Unanchored reactions \(2\)/);
     const panel = page.getByRole('region', { name: 'Unanchored reactions' });
@@ -37,6 +37,9 @@ test.describe('the exam scope', () => {
     await expect(panel.locator('[data-outside]')).toHaveCount(0);
 
     await selector(page).selectOption({ label: MAIN });
+    // with an exam chosen "Only JEE Main" is on: the panel lists what is inside it; Everything marks the outside reaction in words (step 8.3b, B2)
+    await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
+    await page.getByRole('radio', { name: 'Everything' }).check();
     await expect(panel.locator('[data-reaction-id]')).toHaveCount(2); // nothing is hidden
     await expect(panel.locator('[data-outside]')).toHaveCount(1);
     await expect(panel.locator('[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]')).toContainText('outside JEE Main');
@@ -50,7 +53,7 @@ test.describe('the exam scope', () => {
     await page.waitForTimeout(800);
     await page.reload();
     await expect(page.getByRole('group', { name: /^Navigator: 15 hubs, \d+ arrows$/ })).toBeVisible();
-    await expect(selector(page)).toHaveValue('exv_jee-main-2026');
+    await expect(selector(page)).toHaveValue('exm_jee-main');
     // taken after the reload (the same overview, the scope restored): WebKit's screenshot makes the page report a style the inspector injects, and a reload would lose the kit's count of those
     await page.screenshot({ path: resolve(SHOTS, 'overview-scope-main.png') });
 
@@ -76,7 +79,7 @@ test.describe('the exam scope', () => {
     await dialog.getByRole('combobox').fill('> exam main');
     await expect(dialog.getByRole('option', { name: new RegExp(`Choose the exam scope: ${MAIN}`) })).toBeVisible();
     await page.keyboard.press('Enter');
-    await expect(selector(page)).toHaveValue('exv_jee-main-2026');
+    await expect(selector(page)).toHaveValue('exm_jee-main');
     await expectClean(seen);
   });
 });

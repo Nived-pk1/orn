@@ -92,13 +92,13 @@ test('Alt+Enter on a palette hit opens the page; the exam scope offers "Only"; t
 
   const scope = page.getByRole('combobox', { name: /^Exam$/ });
   await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
-  const only = view(page).getByLabel(/^Only /);
-  await expect(only).toBeVisible();
-  await only.check();
-  expect(await axeProblems(page)).toEqual([]);
-  await only.uncheck();
-  await scope.selectOption({ value: '' });
+  // "Only <exam>" is the top bar's one switch (step 8.3b, B2): on by default with an exam, no box in the view
   await expect(view(page).getByLabel(/^Only /)).toHaveCount(0);
+  await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
+  expect(await axeProblems(page)).toEqual([]);
+  await page.getByRole('radio', { name: 'Everything' }).check();
+  await scope.selectOption({ value: '' });
+  await expect(page.getByRole('radiogroup', { name: 'Show' })).toHaveCount(0);
 
   // the palette: Alt+Enter on the Cannizzaro named-reaction hit opens its page
   await page.keyboard.press('Control+k');

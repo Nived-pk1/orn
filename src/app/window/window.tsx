@@ -25,6 +25,7 @@ import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels, type ExplorerFilter } from "@/ui/state";
 import { useApp } from "./context";
 import { LazyPalette, prefetchPalette } from "./lazy-palette";
+import { LazyExamFirstRun } from "./lazy-exam-first-run";
 import { ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
 import { examOptions } from "./exam-scope";
 import { buildCommands, type CommandDeps } from "./palette-commands";
@@ -364,6 +365,7 @@ function WindowContent() {
         <AboutDialog open={about} onClose={() => setAbout(false)} />
 
         <LazyPalette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
+        {EDITING ? null : <LazyExamFirstRun binding={exam} />}
       </NavigatorProvider>
       </AboutOpenContext.Provider>
       </ExportOpenContext.Provider>

@@ -188,19 +188,24 @@ describe('empty states', () => {
 });
 
 describe('exam scope', () => {
-  it('without an exam scope there is no Only checkbox; with one, Only hides the outside reactions and the count says how many', () => {
-    const { rig, state } = setup();
-    expect(screen.queryByRole('checkbox', { name: /^Only / })).toBeNull();
+  it('with an exam chosen the reactions outside it are HIDDEN, one quiet line says how many, and "Show them" brings them back (step 8.3b, B2)', () => {
+    const { state } = setup();
+    expect(document.querySelector('[data-hidden-line]')).toBeNull();
+    expect(screen.queryByRole('checkbox', { name: /^Only / })).toBeNull(); // the per-view checkbox is gone: the top bar's switch replaces it
+    const everything = cards().length;
     cleanup();
-    const exam = Object.values(state.records.exam)[0];
-    const version = Object.values(state.records.exam_version)[0];
-    if (exam === undefined || version === undefined) throw new Error('the demo has an exam and a version');
+    const exam = state.records.exam['exm_jee-main' as never];
+    const version = state.records.exam_version['exv_jee-main-2026' as never];
+    if (exam === undefined || version === undefined) throw new Error('the demo has JEE Main and its 2026 version');
     const again = setup();
     act(() => again.rig.ui.exam.getState().setActive({ examId: exam.id, examVersionId: version.id } as never));
-    const box = screen.getByRole('checkbox', { name: `Only ${version.label}` });
-    fireEvent.click(box);
-    expect(again.explorer.getState().filter.onlyInScope).toBe(true);
-    void rig;
+    const line = document.querySelector('[data-hidden-line]');
+    expect(line?.textContent).toMatch(/^\d+ reactions? outside .+ (are|is) hidden · Show (them|it)$/);
+    expect(cards().length).toBeLessThan(everything);
+    fireEvent.click(screen.getByRole('button', { name: /^Show (them|it)$/ }));
+    expect(again.rig.ui.exam.getState().mode).toBe('everything');
+    expect(document.querySelector('[data-hidden-line]')).toBeNull();
+    expect(cards().length).toBe(everything);
   });
 });
 
