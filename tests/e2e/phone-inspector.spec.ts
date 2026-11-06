@@ -10,6 +10,7 @@ import { resolve } from 'node:path';
 import { devices, expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, expectPreview, watch } from './kit';
+import { answerExamCard } from './exam-kit';
 import { shotsDir } from './editor-kit';
 import { expectHeroNeverWraps } from './hero-geometry';
 
@@ -39,6 +40,7 @@ async function walk(page: Page, device: string, withPeek: boolean, query: string
   await expectPreview(page);
   await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).tap();
   await expect(page.getByRole('navigation', { name: 'Home' })).toBeVisible({ timeout: 90_000 });
+  await answerExamCard(page); // step 8.3b, B3
 
   await openRecord(page, query, id);
   const viewport = page.viewportSize();

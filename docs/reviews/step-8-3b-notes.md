@@ -30,3 +30,4 @@ Speed check before e2e: see time above
 Part B select red: exam-scope-selector.test.tsx AssertionError: expected 'everything' to be 'only' (a fresh exam choice must turn Only on)
 Part B2.1 reveal red: use-chain-reveal.test.tsx AssertionError: expected vi.fn() to be called 2 times, but got 1 times
 Part 0.1 sizes + e2e fixes committed f96bd91 (check green 735 files / 8241 tests); next: e2e 3 engines on the affected list, full Chromium, deploy
+Final: check green 735 files / 8241 tests; e2e: phone-inspector peek open; NOT deployed, NOT pushed

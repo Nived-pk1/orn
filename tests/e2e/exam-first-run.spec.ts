@@ -41,7 +41,7 @@ test.describe('desktop', () => {
     await importDemo(page, false);
     await answerExamCard(page);
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map', exact: true }).click();
-    await expect(page.getByRole('group', { name: /^Navigator: d+ hubs?/ })).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByRole('group', { name: /^Navigator: [0-9]+ hubs?/ })).toBeVisible({ timeout: 60_000 });
     await page.waitForTimeout(1000);
     const small = await boxTitlePx(page);
     console.log(`demo 1280x800 Study: box title ${small.toFixed(2)} px`);

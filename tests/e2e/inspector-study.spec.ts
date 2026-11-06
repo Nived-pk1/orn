@@ -9,6 +9,7 @@ import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, chooseFile, expectClean, expectPreview, watch } from './kit';
+import { answerExamCard } from './exam-kit';
 import { palette, record, searchFor, shotsDir } from './editor-kit';
 import { expectHeroNeverWraps } from './hero-geometry';
 
@@ -24,6 +25,7 @@ async function start(page: Page, buffer: Buffer = DEMO): Promise<void> {
   await expectPreview(page);
   await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
+  await answerExamCard(page); // step 8.3b, B3
   await expect(page.getByRole('region', { name: 'Chapters', exact: true })).toBeVisible({ timeout: 60_000 });
 }
 

@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { answerExamCard } from './exam-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, watch } from './kit';
 import { record } from './editor-kit';
 import { demoWithExamplesAndStages, GENERAL, THREE_STAGE } from './examples-kit';
@@ -22,6 +23,7 @@ async function importOwnData(page: Page, file: Parameters<typeof chooseFile>[1] 
   await expectPreview(page);
   await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
+  await answerExamCard(page); // step 8.3b, B3
 }
 
 /** The chunk files of the STUDIO build that hold editor modules (its build report): none may be requested. */

@@ -55,8 +55,6 @@ const KeyPopover = /* @__PURE__ */ lazy(() => import('./key-popover').then((m) =
 const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanelInScope })));
 const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
 const busyLine = (n: number): string => `This chapter has ${n} arrows. Tap or click a family to see its part.`;
-/** On a phone the drawing may zoom out further than Fit goes, so a chain of the bigger boxes (step 8.3b, A5) still fits above the "From A to B" sheet. A constant: a new floor would rebuild the controller. */
-const PHONE_FLOOR_FACTOR = 0.6;
 const NO_IDS: ReadonlySet<string> = new Set();
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
@@ -320,7 +318,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             {...(hoveredId === undefined ? {} : { hoveredId })}
             ariaLabel={`Navigator: ${hubs} ${hubs === 1 ? 'hub' : 'hubs'}, ${(drawn ?? scene).edges.length} ${(drawn ?? scene).edges.length === 1 ? 'arrow' : 'arrows'}`}
             onController={setController}
-            {...(phone ? { minScale: FIT_FLOOR * PHONE_FLOOR_FACTOR } : {})}
+            {...(phone ? { minScale: FIT_FLOOR } : {})}
             {...(fitBox === undefined ? {} : { fitBox })}
             {...(fitKey === undefined ? {} : { fitKey })}
             {...(depictions === undefined ? {} : { depictions })}

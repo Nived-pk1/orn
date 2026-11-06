@@ -103,7 +103,7 @@
   z-index: 3;
   width: auto;
   max-width: none;
-  max-height: 42dvh;
+  max-height: 39dvh;
   border-top: 1px solid var(--color-rule);
   border-left: 0;
 }
@@ -218,4 +218,9 @@
 
 .panel[data-phone] .note {
   font-size: var(--text-12);
+}
+
+/* at peek the line "Across all chapters" waits for the full height: the sheet stays low and the chain's boxes above it */
+.panel[data-phone]:not([data-expanded]) .note {
+  display: none;
 }
