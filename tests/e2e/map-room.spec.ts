@@ -90,6 +90,20 @@ test.describe('more room for the map (Studio)', () => {
     await expectClean(seen);
   });
 
+  test('the exam select shows exams by name, with the Version select beside it in Studio; screenshot', async ({ page }) => {
+    test.setTimeout(300_000);
+    const seen = await watch(page);
+    await openDemoAt(page, 1280, 800);
+    const exam = page.getByRole('combobox', { name: /^Exam$/ });
+    await expect(exam.locator('option')).toHaveText(['All exams', 'JEE Advanced', 'JEE Main']);
+    await expect(page.getByRole('combobox', { name: 'Version' })).toHaveCount(0);
+    await exam.selectOption({ label: 'JEE Main' });
+    await expect(page.getByRole('combobox', { name: 'Version' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
+    await page.screenshot({ path: `${shotsDir()}/exam-select-studio-1280x800.png`, clip: { x: 0, y: 0, width: 1280, height: 140 } });
+    await expectClean(seen);
+  });
+
   test('the Key popover holds the legend, closes with Esc and returns the focus to the Key button', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page);

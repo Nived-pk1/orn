@@ -10,6 +10,8 @@ import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { chooseFile, expectClean, expectPreview, watch } from './kit';
 import { shotsDir } from './editor-kit';
+import { answerExamCard } from './exam-kit';
+import { boxTitlePx } from './box-text';
 
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
 test.use({ baseURL: STUDY });
@@ -32,6 +34,29 @@ async function importDemo(page: Page, phone: boolean): Promise<void> {
 }
 
 test.describe('desktop', () => {
+  test('the Study map: box titles at least 12 px at 1280 x 800 and 13 px at 1920 x 1000 (the demo as own data); screenshots', async ({ page }) => {
+    test.setTimeout(240_000);
+    const seen = await watch(page, STUDY);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await importDemo(page, false);
+    await answerExamCard(page);
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map', exact: true }).click();
+    await expect(page.getByRole('group', { name: /^Navigator: d+ hubs?/ })).toBeVisible({ timeout: 60_000 });
+    await page.waitForTimeout(1000);
+    const small = await boxTitlePx(page);
+    console.log(`demo 1280x800 Study: box title ${small.toFixed(2)} px`);
+    expect(small).toBeGreaterThanOrEqual(12);
+    await page.screenshot({ path: `${shotsDir()}/map-room-study-1280x800.png` });
+    await page.setViewportSize({ width: 1920, height: 1000 });
+    await page.getByRole('button', { name: 'Fit' }).click();
+    await page.waitForTimeout(900);
+    const large = await boxTitlePx(page);
+    console.log(`demo 1920x1000 Study: box title ${large.toFixed(2)} px`);
+    expect(large).toBeGreaterThanOrEqual(13);
+    await page.screenshot({ path: `${shotsDir()}/map-room-study-1920x1000.png` });
+    await expectClean(seen);
+  });
+
   test('the card asks once; JEE Main hides what is outside it in Reactions; Show them brings it back; a reload does not ask again', async ({ page }) => {
     test.setTimeout(240_000);
     const seen = await watch(page, STUDY);
@@ -59,12 +84,14 @@ test.describe('desktop', () => {
     await expect(page.getByRole('combobox', { name: 'Version' })).toHaveCount(0);
 
     await page.waitForTimeout(1200); // the saved state is written after a short pause
+    await expectClean(seen); // a reload loses the watcher's count of the styles WebKit's screenshot injects: a new watcher after it
     await page.reload();
+    const afterReload = await watch(page, STUDY);
     await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
     await page.waitForTimeout(1500);
     await expect(card(page)).toHaveCount(0); // never again
     await expect(page.getByRole('combobox', { name: /^Exam$/ })).toHaveValue('exm_jee-main');
-    await expectClean(seen);
+    await expectClean(afterReload);
   });
 
   test('"Just exploring" means All exams, and the card does not come back', async ({ page }) => {
@@ -76,10 +103,12 @@ test.describe('desktop', () => {
     await expect(page.getByRole('combobox', { name: /^Exam$/ })).toHaveValue('');
     await expect(page.getByRole('radiogroup', { name: 'Show' })).toHaveCount(0);
     await page.waitForTimeout(1200);
+    await expectClean(seen);
     await page.reload();
+    const afterReload = await watch(page, STUDY);
     await page.waitForTimeout(1500);
     await expect(card(page)).toHaveCount(0);
-    await expectClean(seen);
+    await expectClean(afterReload);
   });
 });
 
@@ -107,10 +136,12 @@ for (const [label, options, engine, phoneShot] of [['Pixel 7 (Chromium)', PIXEL,
       await page.getByRole('dialog', { name: 'Change exam' }).getByRole('button', { name: 'Just exploring' }).tap();
       await expect(page.getByRole('button', { name: 'All exams', exact: true })).toBeVisible();
       await page.waitForTimeout(1200);
+      await expectClean(seen);
       await page.reload();
+      const afterReload = await watch(page, STUDY);
       await page.waitForTimeout(1500);
       await expect(card(page)).toHaveCount(0);
-      await expectClean(seen);
+      await expectClean(afterReload);
     });
   });
 }

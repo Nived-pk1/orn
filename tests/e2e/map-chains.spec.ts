@@ -249,6 +249,7 @@ test.describe('phone: Pixel 7 (part 2)', () => {
     await expect(edges(page)).toHaveCount(2);
     await page.waitForTimeout(400);
     await page.screenshot({ path: `${shotsDir()}/map-a-to-b-pixel7.png` });
+    await page.screenshot({ path: `${shotsDir()}/a-to-b-chain-cards-pixel7.png` }); // the chosen card with its step rows at peek (step 8.3b, B2.1)
     // layout guard (step 8.2b-fix, E2): at peek nothing of the sheet is clipped ("Show all n" is whole) and the chain's boxes sit ABOVE the sheet
     const sheet = await panel.boundingBox();
     if (sheet === null) throw new Error('no sheet');
