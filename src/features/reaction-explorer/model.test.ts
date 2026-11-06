@@ -30,7 +30,7 @@ describe('countLine', () => {
 
 describe('labels', () => {
   it('name a family by its record and Unclassified by its word; a type, a named reaction, a substance by their records', () => {
-    expect(labels.family(UNCLASSIFIED_HUB_ID)).toBe('Unclassified');
+    expect(labels.family(UNCLASSIFIED_HUB_ID)).toBe('Not in a family yet');
     expect(labels.family('cls_alcohols')).toBe('Alcohols');
     const type = some(ctx.state.records.concept);
     expect(labels.type(type)).toBe((ctx.state.records.concept as Record<string, { name: string }>)[type]?.name);

@@ -29,7 +29,7 @@ import type {
   FamilyStudy,
 } from './types';
 
-export const UNCLASSIFIED_NAME = 'Unclassified';
+export const UNCLASSIFIED_NAME = 'Not in a family yet';
 
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 

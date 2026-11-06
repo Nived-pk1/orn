@@ -26,7 +26,7 @@ export interface FamilyCardGroup {
 }
 
 export const NO_GROUP_TITLE = 'No group';
-export const UNCLASSIFIED_TITLE = 'Unclassified';
+export const UNCLASSIFIED_TITLE = 'Not in a family yet';
 
 export function familyCardsOf(scene: Scene | null): readonly FamilyCardGroup[] {
   if (scene === null) return [];

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_STATUS, type AppStatus } from '@/app/services';
 import { studyChrome, STUDIO_CHROME } from '@/ui/study-chrome';
-import { alertOf } from './phone-alert';
+import { alertOf, STUDY_STORAGE_ALERT } from './phone-alert';
 
 const status = (patch: Partial<AppStatus>): AppStatus => ({ ...INITIAL_STATUS, stage: 'ready', mode: 'writer', ...patch });
 const refused = status({ storage: { persistence: 'refused', message: null } });
@@ -15,8 +15,8 @@ describe('alertOf with the chrome rule', () => {
   it('Study without own data: no storage line', () => {
     expect(alertOf(refused, studyChrome('study', { ownData: false }))).toBeNull();
   });
-  it('Study with own data: the storage line is back', () => {
-    expect(alertOf(refused, studyChrome('study', { ownData: true }))).toBe('Storage: not persistent');
+  it('Study with own data: the storage line is back, in the student words (8.3b, 0.3)', () => {
+    expect(alertOf(refused, studyChrome('study', { ownData: true }))).toBe(STUDY_STORAGE_ALERT);
   });
   it('a failed save is told in Study too', () => {
     const failed = status({ save: { state: 'failed', lastSavedRevision: 1, pendingRevisions: 1, lastError: 'x', failureReason: null, deletablePeriodicSnapshotIds: [] } });

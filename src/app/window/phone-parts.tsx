@@ -9,11 +9,12 @@ import { useSubscribable } from '@/ui/hooks';
 import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView, useToasts } from '@/ui/primitives';
 import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
+import { useExportOpen } from './export-context';
 import { EDITING } from '@/app/edition';
 import { StudyUpdateNotice, useStudyUpdateDue } from './study-update';
 import { useDraftsView, useEditors } from './editors-access';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
-import { alertOf } from './phone-alert';
+import { alertOf, STUDY_STORAGE_ALERT } from './phone-alert';
 import { RecordCounts } from './record-counts';
 import { fileItems, historyLabelOf, historyReason, historySnapshot, stepHistory, useFileWithDrafts, type FileBinding, type HistoryBinding } from './top-bar';
 import { NavigatorStatus, StructuresControl, type NavigatorStructures } from '@/features/navigator';
@@ -165,9 +166,11 @@ export function PhoneNotices() {
 export function PhoneAlert(props: { readonly onStatus: () => void }) {
   const { services } = useApp();
   const text = alertOf(useSubscribable(services.status), useStudyChrome());
+  const openExport = useExportOpen();
   if (text === null) return null;
+  const backup = text === STUDY_STORAGE_ALERT && openExport !== undefined;
   return (
-    <button type="button" className={styles.alert} onClick={props.onStatus}>
+    <button type="button" className={styles.alert} onClick={backup ? openExport : props.onStatus}>
       {text}
     </button>
   );

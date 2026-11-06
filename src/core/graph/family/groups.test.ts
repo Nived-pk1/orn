@@ -199,7 +199,7 @@ describe('the whole condition group on every card, and distinct headings (7.2b A
     });
     const s = study('cls_hub-a', reactionRecord);
     const cards = s.reactionsOf.groups.map((g) => ({ name: g.name, card: g.cards.find((c) => c.name === 'Ammonolysis') as FamilyCard }));
-    expect(cards.map((c) => c.name).sort()).toEqual(['Amine'.replace('Amine', 'hub-b'), 'Unclassified'].sort());
+    expect(cards.map((c) => c.name).sort()).toEqual(['Amine'.replace('Amine', 'hub-b'), 'Not in a family yet'].sort());
     for (const { card } of cards) {
       expect(card.groups).toHaveLength(1);
       expect(card.groups[0]?.equation?.products.map((t) => t.name)).toEqual(['Amine', 'Loose product', 'Salt']);
@@ -207,7 +207,7 @@ describe('the whole condition group on every card, and distinct headings (7.2b A
     }
     // the scheme still shows only the section's products
     const own = (name: string): string[] => (cards.find((c) => c.name === name)?.card.groups[0]?.outcomes ?? []).flatMap((o) => o.products.map((p) => p.ref.id));
-    expect(own('Unclassified')).toEqual(['spc_loose-1']);
+    expect(own('Not in a family yet')).toEqual(['spc_loose-1']);
     expect(own('hub-b')).toEqual(['spc_hub-b-1']);
   });
 

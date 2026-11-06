@@ -93,7 +93,7 @@ describe('the Families tab', () => {
       for (const id of ids) {
         const named = list.groups.get(id) ?? '';
         if (title === 'No group') expect(named).toBe('');
-        else if (title !== 'Unclassified') expect(named, `the group of ${id}`).toBe(title);
+        else if (title !== 'Not in a family yet') expect(named, `the group of ${id}`).toBe(title);
       }
     }
   });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_STATUS, type AppStatus } from '@/app/services';
-import { alertOf } from './phone-alert';
+import { STUDIO_CHROME, studyChrome } from '@/ui/study-chrome';
+import { alertOf, STUDY_STORAGE_ALERT } from './phone-alert';
 
 const status = (patch: Partial<AppStatus>): AppStatus => ({ ...INITIAL_STATUS, stage: 'ready', mode: 'writer', ...patch });
 const save = (patch: Partial<NonNullable<AppStatus['save']>>): NonNullable<AppStatus['save']> => ({
@@ -22,6 +23,14 @@ describe('alertOf (the phone status alert line, ADR-039)', () => {
     ['a session that keeps nothing', { mode: 'session_only', reason: 'indexeddb_unavailable' } as Partial<AppStatus>, /Nothing is saved/],
   ])('%s', (_name, patch, text) => {
     expect(alertOf(status({ save: save({}), ...patch }))).toMatch(text);
+  });
+
+  it('a student with their own data gets the student words, not the author status words (8.3b 0.3)', () => {
+    const refused = status({ save: save({}), storage: { persistence: 'refused', message: null } });
+    expect(alertOf(refused, studyChrome('study', { ownData: true }))).toBe(STUDY_STORAGE_ALERT);
+    expect(STUDY_STORAGE_ALERT).toBe('This browser may clear your imported data. Export a backup to keep it.');
+    expect(alertOf(refused, STUDIO_CHROME)).toBe('Storage: not persistent');
+    expect(alertOf(refused, studyChrome('study', { ownData: false }))).toBeNull();
   });
 
   it('says the most important thing first: a failed save before storage', () => {
