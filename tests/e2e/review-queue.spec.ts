@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { selectionLine } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, openPhoneApp, watch, leaveChapters } from './kit';
 import { openDemo, shotsDir } from './editor-kit';
 import { chaptersFirstThenNavigator } from './chapters-kit';
@@ -151,7 +152,7 @@ test.describe('Studio, desktop', () => {
     await page.waitForTimeout(700); // the first view settles
     const svg = await drawing(page).boundingBox();
     if (svg === null) throw new Error('no drawing');
-    const selection = page.getByRole('toolbar', { name: 'Canvas tools' }).locator('p').first();
+    const selection = selectionLine(page); // the visually hidden live region (step 8.3b, A2)
     // one Shift-click first: a single family, then the marquee adds the rest
     await page.locator('svg [data-node-id]').first().click({ modifiers: ['Shift'] });
     await expect(selection).toHaveText(/^1 family selected \(\d+ reactions?\)$/);
@@ -245,7 +246,7 @@ test.describe('Study', () => {
     await chaptersFirstThenNavigator(page); // Study opens on Chapters when the data has a chapter topic (7.3b D5)
     await page.waitForTimeout(700);
     await expect(page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Review' })).toHaveCount(0);
-    const selection = page.getByRole('toolbar', { name: 'Canvas tools' }).locator('p').first();
+    const selection = selectionLine(page); // the visually hidden live region (step 8.3b, A2)
     const hubs = page.locator('svg [data-node-id]');
     await hubs.nth(0).click({ modifiers: ['Shift'] });
     await hubs.nth(1).click({ modifiers: ['Shift'] });

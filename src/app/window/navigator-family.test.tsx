@@ -10,6 +10,7 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { tap } from '@/test-support/pointer-kit';
 import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
+import { toolbarAction } from '@/test-support/map-toolbar-kit';
 
 afterEach(cleanup);
 
@@ -155,7 +156,7 @@ describe('the family page', () => {
     renderWithApp(app);
     const aldehydes = await screen.findByRole('graphics-symbol', { name: /^Aldehydes, class hub/ });
     tap(aldehydes);
-    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name: 'Open family' }));
+    fireEvent.click(await toolbarAction('Open family'));
     await screen.findByRole('region', { name: /^Family page/ });
     act(() => app.navigator.timers.advance(0));
     await screen.findByRole('heading', { level: 2, name: /^Reactions of / });

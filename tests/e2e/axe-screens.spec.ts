@@ -7,6 +7,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { clickToolbar } from './map-toolbar-kit';
 import { axeProblems, chooseFileViaMenu, expectClean, expectPreview, importDialog, loadDemo, openApp, watch, type UploadFile, exampleCard } from './kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -33,16 +34,15 @@ test.describe('axe on every screen', () => {
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
     await clean(page, 'the overview');
 
-    const list = page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' });
-    await list.click();
+    await clickToolbar(page, 'List');
     await expect(page.getByRole('table', { name: /families/i }).first()).toBeVisible();
     await clean(page, 'the List view');
-    await list.click(); // the same button toggles back to the map
+    await clickToolbar(page, /^Show the map$/); // the same item toggles back to the map
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
-    await page.getByRole('button', { name: /^Unanchored reactions \(\d+\)$/ }).click();
+    await clickToolbar(page, /^Unanchored reactions \(\d+\)/);
     await expect(page.getByRole('region', { name: 'Unanchored reactions' })).toBeVisible();
     await clean(page, 'the Unanchored panel');
-    await page.getByRole('button', { name: /^Unanchored reactions \(\d+\)$/ }).click();
+    await clickToolbar(page, /^Unanchored reactions \(\d+\)/);
 
     await page.locator('svg [data-node-id="cls_alcohols"]').click();
     await expect(record(page)).toHaveAttribute('data-record-id', 'cls_alcohols');

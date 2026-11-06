@@ -5,6 +5,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect } from './fixtures';
+import { closeKey, openKey } from './map-toolbar-kit';
 import { measure, type Measured } from './readability';
 
 /** The ids of the family boxes that are drawn (Unclassified included when it is shown). */
@@ -14,8 +15,9 @@ export async function familyIds(page: Page): Promise<string[]> {
 
 /** Shows the Unclassified box (the legend's Show), so its arrows can be focused too. */
 export async function showUnclassified(page: Page): Promise<void> {
-  const show = page.getByRole('button', { name: 'Show', exact: true });
+  const show = (await openKey(page)).getByRole('button', { name: 'Show', exact: true }); // the legend is the Key popover (step 8.3b, A3)
   if ((await show.count()) > 0) await show.click();
+  await closeKey(page);
   await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(1);
 }
 

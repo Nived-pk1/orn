@@ -6,6 +6,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { selectionLine, toolbarAction } from './map-toolbar-kit';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -57,7 +58,7 @@ test.describe('the Unanchored panel', () => {
   test('lists every unanchored reaction of the demo, a click selects one; axe; zero CSP violations', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
-    const button = page.getByRole('button', { name: /^Unanchored reactions \(\d+\)$/ });
+    const button = await toolbarAction(page, /^Unanchored reactions \(\d+\)/); // an item of More (step 8.3b, A1)
     await expect(button).toBeVisible();
     const total = Number(/\((\d+)\)/.exec((await button.textContent()) ?? '')?.[1]);
     expect(total, 'the demo has reactions no family holds (their arrows end on Unclassified)').toBeGreaterThan(0);
@@ -83,7 +84,7 @@ test.describe('the Unanchored panel', () => {
     await panel.locator('[data-virtual-list]').evaluate((scroller) => void (scroller.scrollTop = 0));
     await first.click();
     await expect(first).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByText(/^Selected: reaction /)).toBeVisible();
+    await expect(selectionLine(page)).toHaveText(/^Selected: reaction /);
     await panel.getByRole('button', { name: 'Close' }).click();
     await expect(panel).toHaveCount(0);
     await expectClean(seen);

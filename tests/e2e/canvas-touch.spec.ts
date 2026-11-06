@@ -5,6 +5,7 @@
  */
 import { devices, type CDPSession, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { selectionLine } from './map-toolbar-kit';
 import { expectClean, loadDemo, openApp, watch } from './kit';
 
 test.use({ ...devices['Pixel 5'], viewport: { width: 1280, height: 800 } });
@@ -69,7 +70,7 @@ test.describe('touch on the overview map', () => {
     await openDemo(page);
     const at = await centreOf(page, 'cls_alcohols');
     await page.touchscreen.tap(at.x, at.y);
-    await expect(page.getByText(/^Selected: Alcohols/)).toBeVisible();
+    await expect(selectionLine(page)).toHaveText(/^Selected: Alcohols/);
     await expect(page.getByRole('status', { name: 'Navigator announcements' })).toContainText('Selected Alcohols');
     // the pane opens when the 300 ms window has passed and moves the drawing; the next tap is aimed after it has
     await expect(page.getByRole('complementary', { name: 'Inspector' }).getByRole('article', { name: 'Record' })).toHaveAttribute('data-record-id', 'cls_alcohols');
@@ -109,7 +110,7 @@ test.describe('touch on the overview map', () => {
     const panned = await worldOf(page);
     expect(Math.abs(panned.x - before.x) + Math.abs(panned.y - before.y)).toBeGreaterThan(20);
     expect(panned.scale).toBeCloseTo(before.scale, 5);
-    await expect(page.getByText('Nothing is selected.')).toBeVisible();
+    await expect(selectionLine(page)).toHaveText('Nothing is selected.');
 
     const centre = await emptyPoint(page);
     await touch(cdp, 'touchStart', [{ x: centre.x - 20, y: centre.y, id: 1 }, { x: centre.x + 20, y: centre.y, id: 2 }]);
@@ -120,7 +121,7 @@ test.describe('touch on the overview map', () => {
     await page.waitForTimeout(100);
     const zoomed = await worldOf(page);
     expect(zoomed.scale).toBeGreaterThan(panned.scale * 1.3);
-    await expect(page.getByText('Nothing is selected.')).toBeVisible();
+    await expect(selectionLine(page)).toHaveText('Nothing is selected.');
     await expectClean(seen);
   });
 

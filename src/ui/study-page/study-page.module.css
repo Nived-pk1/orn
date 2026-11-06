@@ -201,3 +201,20 @@
   flex-direction: column;
   gap: var(--space-3);
 }
+
+/* The quiet line of "Only <exam>" (step 8.3b, B2). */
+.hiddenLine {
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
+.linkButton {
+  padding: 0;
+  font: inherit;
+  color: var(--color-accent);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}

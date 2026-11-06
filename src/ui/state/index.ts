@@ -69,3 +69,6 @@ export { createReagentsStore, parseReagents } from './reagents-state';
 export type { ParsedReagents, ReagentsState, ReagentsStore } from './reagents-state';
 export { asChoice, createPrecursorsStore, DEFAULT_PRECURSOR_STEPS, MIN_PRECURSOR_STEPS, parsePrecursors } from './precursor-state';
 export type { ParsedPrecursors, PrecursorsState, PrecursorsStore, SubstanceChoice, SubstanceKind } from './precursor-state';
+export { effectiveOnly, parseExamChoice } from './exam-state';
+export type { ParsedExamChoice, ScopeMode } from './exam-state';
+export { useScopeOnly } from './use-scope-only';

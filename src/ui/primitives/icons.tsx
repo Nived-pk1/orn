@@ -1,5 +1,5 @@
 /** A few monochrome line icons (UI_ARCHITECTURE §3: no emoji icons). Decorative: `aria-hidden`; the control carries the name. */
-export type IconName = 'close' | 'menu' | 'inspector' | 'undo' | 'redo' | 'search' | 'import' | 'chevron-down' | 'families' | 'map' | 'fit' | 'info' | 'explore' | 'chapters';
+export type IconName = 'close' | 'menu' | 'inspector' | 'undo' | 'redo' | 'search' | 'import' | 'chevron-down' | 'families' | 'map' | 'fit' | 'info' | 'explore' | 'chapters' | 'zoom-in' | 'zoom-out';
 
 const PATHS: Readonly<Record<IconName, string>> = {
   close: 'M4 4l8 8M12 4l-8 8',
@@ -16,6 +16,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
   explore: 'M2.5 3.5h11M2.5 8h11M2.5 12.5h11M5 2v3M10 6.5v3M7 11v3',
   chapters: 'M3 2.5h8.5a1.5 1.5 0 011.5 1.5v9.5H4.5A1.5 1.5 0 013 12zM3 12a1.5 1.5 0 011.5-1.5H13M6 5.5h4.5',
   info: 'M8 2a6 6 0 100 12A6 6 0 008 2zM8 7.2V11M8 5v.2',
+  'zoom-in': 'M3 8h10M8 3v10',
+  'zoom-out': 'M3 8h10',
 };
 
 export function Icon(props: { readonly name: IconName; readonly size?: number }) {

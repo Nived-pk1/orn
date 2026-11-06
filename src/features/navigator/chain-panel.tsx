@@ -14,6 +14,7 @@ import { CHAIN_MAX_STEPS, familyChains, familyEdgesOf, type FamilyChain } from '
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph/navigator/hubs';
 import { Button } from '@/ui/primitives';
 import type { NavigatorPorts } from './contracts';
+import { chainCardsOf } from './chain-card';
 import type { NamedFamily } from './find-family-match';
 import { scopeLens, scopeNameOf } from './scope-lens';
 import type { PairFacts } from './map-chips';
@@ -22,7 +23,7 @@ import styles from './chain-panel.module.css';
 type Steps = readonly { readonly from: string; readonly to: string }[];
 
 export interface ChainPanelProps {
-  readonly families: readonly NamedFamily[];
+  readonly families: readonly (NamedFamily & { readonly tone?: string | undefined })[];
   /** The roll-up's pairs (asked when the panel needs them). */
   readonly pairs: () => readonly { readonly from: string; readonly to: string; readonly candidates: readonly { readonly reactionId: string }[] }[];
   readonly facts: (from: string, to: string) => PairFacts | undefined;
@@ -45,6 +46,8 @@ export function ChainPanel(props: ChainPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const names = useMemo(() => new Map(families.map((f) => [f.id, f.name])), [families]);
   const nameOf = (id: string): string => names.get(id) ?? id;
+  const tones = useMemo(() => new Map(families.map((f) => [f.id, f.tone] as const)), [families]);
+  const toneOf = (id: string): string | undefined => tones.get(id);
   const edges = useMemo(() => familyEdgesOf(props.pairs(), new Set([UNCLASSIFIED_HUB_ID]), props.inScope), [props.pairs, props.inScope]); // eslint-disable-line react-hooks/exhaustive-deps -- `pairs` and `inScope` are the inputs
   const result = useMemo(() => (from === '' || to === '' ? undefined : familyChains(edges, from, to, { maxSteps: CHAIN_MAX_STEPS, nameOf })), [edges, from, to, names]); // eslint-disable-line react-hooks/exhaustive-deps -- nameOf reads `names`
   // under a scope with no chain: is there one outside it? Then the words say so (and show nothing of it)
@@ -54,6 +57,8 @@ export function ChainPanel(props: ChainPanelProps) {
     return all.ok && all.chains.length > 0;
   }, [result, from, to]); // eslint-disable-line react-hooks/exhaustive-deps -- recomputed with the result
   const chains: readonly FamilyChain[] = result?.ok === true ? result.chains : [];
+  const counts = useMemo(() => new Map(edges.map((edge) => [`${edge.from}>${edge.to}`, edge.reactionIds.length] as const)), [edges]);
+  const cards = chainCardsOf(chains, picked, { nameOf, reactionsOf: (a, b) => counts.get(`${a}>${b}`) ?? 0 });
   const chosen = chains[Math.min(picked, chains.length - 1)];
   const steps: Steps | undefined = chosen?.steps.map((s) => ({ from: s.from, to: s.to }));
   const key = steps === undefined ? '' : steps.map((s) => `${s.from}>${s.to}`).join(',');
@@ -92,7 +97,7 @@ export function ChainPanel(props: ChainPanelProps) {
       </select>
     </label>
   );
-  const shown = props.phone === true && !expanded ? chains.slice(0, 1) : chains;
+  const shown = props.phone === true && !expanded ? cards.slice(0, 1) : cards;
   return (
     <aside className={styles.panel} aria-label="From A to B" data-phone={props.phone === true ? '' : undefined} data-expanded={expanded ? '' : undefined}>
       <div className={styles.head}>
@@ -120,21 +125,29 @@ export function ChainPanel(props: ChainPanelProps) {
       ) : (
         <>
           <ol className={styles.chains} aria-label="Chains">
-            {shown.map((chain, at) => (
-              <li key={chain.families.join('>')} className={styles.chain} data-picked={at === picked ? '' : undefined}>
-                <button type="button" className={styles.chainRow} aria-pressed={at === picked} onClick={() => setPicked(at)}>
-                  {chain.families.map(nameOf).join(' → ')}
+            {shown.map((card, at) => (
+              // one card per chain (step 8.3b, B2.1): a click anywhere on it chooses it; only the chosen card shows its step rows, each its own button
+              <li key={card.key} className={styles.chain} data-picked={card.chosen ? '' : undefined} data-tone={card.chosen ? toneOf(card.key.split('>')[0] ?? '') : undefined} onClick={() => setPicked(at)}>
+                <button type="button" className={styles.chainRow} aria-pressed={card.chosen} onClick={(event) => { event.stopPropagation(); setPicked(at); }}>
+                  <span className={styles.chainTitle}>{card.title}</span>{' '}
+                  {card.chosen ? <span className={styles.onMap}>On the map</span> : null}{' '}
+                  <span className={styles.chainSummary}>{card.summary}</span>
                 </button>
-                {props.phone === true && !expanded ? null : (
-                <ul className={styles.steps}>
-                  {chain.steps.map((step) => (
-                    <li key={`${step.from}>${step.to}`}>
-                      <button type="button" className={styles.step} onClick={() => props.onOpenStep(step.from, step.to)}>
-                        {`${nameOf(step.from)} → ${nameOf(step.to)}: `}{stepWords(step.from, step.to)}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                {card.steps === undefined ? null : (
+                  <ul className={styles.steps}>
+                    {card.steps.map((step) => (
+                      <li key={`${step.from}>${step.to}`}>
+                        <button type="button" className={styles.step} onClick={(event) => { event.stopPropagation(); props.onOpenStep(step.from, step.to); }}>
+                          <span>
+                            {step.title}
+                            {' · '}
+                            {stepWords(step.from, step.to)}
+                          </span>
+                          <span aria-hidden="true" className={styles.stepGo}>›</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </li>
             ))}

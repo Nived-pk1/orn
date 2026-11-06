@@ -8,6 +8,7 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { closeKey, openKey } from './map-toolbar-kit';
 import { axeProblems, expectClean, watch } from './kit';
 import { shotsDir } from './editor-kit';
 import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone } from './map-layout-kit';
@@ -134,10 +135,12 @@ test.describe('the map on a desktop', () => {
     const seen = await watch(page);
     await openMapDesktop(page);
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(0);
-    const marks = page.getByRole('list', { name: 'What the marks mean' });
+    // the legend is the Key popover (step 8.3b, A3)
+    const marks = (await openKey(page)).getByRole('list', { name: 'What the marks mean' });
     await expect(marks).toContainText('6 reactions lead to compounds that are in no family yet');
     // Studio: "See those compounds" selects the bucket and the inspector lists them (one view, step 8.2b-fix, S3)
     await page.getByRole('button', { name: 'See those compounds' }).click();
+    await closeKey(page);
     const rows = page.getByRole('list', { name: 'Compounds in no family' }).locator(':scope > li');
     await expect(page.getByRole('heading', { level: 3, name: 'Not in a family yet' })).toBeVisible();
     await expect(rows).toHaveCount(3);
@@ -145,16 +148,20 @@ test.describe('the map on a desktop', () => {
     await page.screenshot({ path: `${shotsDir()}/map-studio-unclassified-list-1280x800.png` });
     expect(await axeProblems(page, 10)).toEqual([]);
     // Show / Hide
+    await openKey(page);
     await marks.getByRole('button', { name: 'Show', exact: true }).click();
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(1);
     await expect(marks).toContainText('Not in a family yet: compounds that no family covers yet');
+    await closeKey(page);
     await page.getByRole('button', { name: 'Fit' }).click(); // the inspector pane took width: fit the whole drawing so the Unclassified box is on the screen
     await page.waitForTimeout(600);
     await page.screenshot({ path: `${shotsDir()}/map-after-unclassified-shown-1280x800.png` });
+    await openKey(page);
     await marks.getByRole('button', { name: 'Hide', exact: true }).click();
     await expect(page.locator('svg [data-box="unclassified"]')).toHaveCount(0);
     // a row of the list opens that record in the inspector
     await page.getByRole('button', { name: 'See those compounds' }).click();
+    await closeKey(page);
     await rows.first().getByRole('button').first().click();
     await expect(page.getByRole('article', { name: 'Record' }).first()).toContainText('Orphan compound');
     await expectClean(seen);

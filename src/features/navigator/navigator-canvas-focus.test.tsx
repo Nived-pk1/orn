@@ -10,6 +10,7 @@ import { resolve } from 'node:path';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createCanonicalStore } from '@/core/commands';
 import { documentToState } from '@/core/dataset';
+import { openKey } from '@/test-support/map-toolbar-kit';
 import { navigatorRig } from '@/test-support/navigator-kit';
 import { NavigatorCanvas } from './navigator-canvas';
 import { NavigatorProvider } from './navigator-context';
@@ -101,14 +102,15 @@ describe('the map with a focus', () => {
   it('the legend says what the lines mean and how many reactions lead to compounds in no family; Show brings Unclassified in', async () => {
     const { rig, drawing } = await show();
     // no arrow is drawn on the quiet map, so the rows about arrows are not there (step 8.2b, B3); a focus draws arrows and they come
-    expect(screen.queryByText(/solid line in the family's colour/)).toBeNull();
+    expect(screen.queryByRole('list', { name: 'What the arrows mean' })).toBeNull();
     act(() => rig.ui.map.getState().setFocus('cls_family-01'));
-    // the arrow rows sit in the map's line row, not in the legend, so the legend does not change height (a double click's second press must hit the family)
+    // step 8.3b (A3): a small key sits INSIDE the map (two lines at most); the full words are in the Key popover
     const key = await screen.findByRole('list', { name: 'What the arrows mean' });
-    expect(within(key).getByText(/solid line in the family's colour: what the family makes/)).toBeTruthy();
-    expect(within(key).getByText(/dashed dark line: what the family is made from/)).toBeTruthy();
-    const legend = screen.getByRole('list', { name: 'What the marks mean' });
-    expect(legend.textContent).not.toMatch(/solid line/);
+    expect(within(key).getByText('makes')).toBeTruthy();
+    expect(within(key).getByText('made from')).toBeTruthy();
+    const legend = within(await openKey()).getByRole('list', { name: 'What the marks mean' });
+    expect(within(legend).getByText(/solid line in the family's colour: what the family makes/)).toBeTruthy();
+    expect(within(legend).getByText(/dashed dark line: what the family is made from/)).toBeTruthy();
     expect(legend.textContent).toMatch(/\d+ reactions lead to compounds that are in no family yet/);
     expect(drawing.querySelector('[data-box="unclassified"]')).toBeNull();
     fireEvent.click(within(legend).getByRole('button', { name: 'Show' }));

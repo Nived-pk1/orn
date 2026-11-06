@@ -60,7 +60,9 @@ describe('desktop', () => {
     expect(rail.getByText('Dataset')).toBeTruthy();
     expect(rail.getByText('Map')).toBeTruthy();
     expect(k.within(k.screen.getByRole('contentinfo')).getByText(/Findings: E/)).toBeTruthy();
-    expect(await k.screen.findByRole('button', { name: /Unanchored reactions/ })).toBeTruthy();
+    await k.screen.findByRole('group', { name: /^Navigator:/ });
+    k.fireEvent.pointerDown(k.screen.getByRole('button', { name: 'More' }), { button: 0, ctrlKey: false });
+    expect(await k.screen.findByRole('menuitem', { name: /Unanchored reactions/ })).toBeTruthy();
     expect(k.screen.getByLabelText('Exam')).toBeTruthy();
     expect(k.screen.getByRole('option', { name: 'All exams' })).toBeTruthy();
   });

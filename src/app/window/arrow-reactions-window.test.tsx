@@ -7,6 +7,7 @@
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
+import { toolbarAction } from '@/test-support/map-toolbar-kit';
 import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
 
 beforeAll(() => {
@@ -26,7 +27,7 @@ async function arrows(): Promise<{ app: FakeApp; rows: { id: string; count: numb
   const app = fakeApp({ state: demoState() });
   renderWithApp(app);
   await screen.findByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ });
-  fireEvent.click(within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name: 'List' }));
+  fireEvent.click(await toolbarAction('List'));
   const table = await screen.findByRole('table', { name: 'Arrows' });
   const rows = [...table.querySelectorAll<HTMLElement>('[data-row-key]')].map((row) => ({ id: row.getAttribute('data-row-key') as string, count: Number(within(row).getAllByRole('cell')[2]?.textContent), row }));
   return { app, rows };

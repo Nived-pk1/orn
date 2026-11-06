@@ -41,7 +41,7 @@ const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const hub = (k: Loaded, name: string): HTMLElement => k.screen.getByRole('graphics-symbol', { name: new RegExp(`^${name}, class hub`) });
 const arrow = (k: Loaded, name: RegExp): HTMLElement => k.screen.getByRole('graphics-symbol', { name });
 const drawing = (k: Loaded): Promise<HTMLElement> => k.screen.findByRole('group', { name: NAVIGATOR });
-const line = (k: Loaded): string => (k.screen.getByRole('toolbar', { name: 'Canvas tools' }).querySelector('p')?.textContent ?? '');
+const line = (_k: Loaded): string => document.querySelector('[data-selection-line]')?.textContent ?? ''; // the selection is a visually hidden live region (8.3b, A2)
 const asPhone = (k: Loaded) => vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === k.PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
 
 /** The demo with every reaction "not reviewed", so a bulk Mark verified has something to do. */

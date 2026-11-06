@@ -7,6 +7,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { clickToolbar } from './map-toolbar-kit';
 import { axeProblems, expectClean, watch } from './kit';
 import { openDemo, pane, shotsDir } from './editor-kit';
 
@@ -28,7 +29,7 @@ test.describe('Studio, desktop', () => {
     await openDemo(page);
     await dismissToasts(page);
     await page.screenshot({ path: `${shotsDir()}/overview-counts-1280x800.png` });
-    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).click();
+    await clickToolbar(page, 'List');
     const arrows = page.getByRole('table', { name: 'Arrows' });
     await expect(arrows).toBeVisible();
     const rows = arrows.locator('[role="row"]').filter({ has: page.locator('[role="cell"], [role="gridcell"]') });
@@ -58,7 +59,7 @@ test.describe('Studio, desktop', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).click();
+    await clickToolbar(page, 'List');
     const arrows = page.getByRole('table', { name: 'Arrows' });
     await expect(arrows).toBeVisible();
     const rows = arrows.locator('[role="row"]').filter({ has: page.locator('[role="cell"], [role="gridcell"]') });

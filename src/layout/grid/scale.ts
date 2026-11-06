@@ -1,7 +1,7 @@
 /**
  * The box scale of the grid layout (step 8.2b-fix, C1). The boxes of the overview are small for the space between them, so they are
  * drawn bigger about their own centres: the largest factor from 1 to `BOX_SCALE_MAX` such that no two boxes come closer than
- * `BOX_SCALE_MIN_GAP` px and no box covers a chip of the unscaled drawing. The centres stay (the arrangement is unchanged). Pure and
+ * `BOX_SCALE_MIN_GAP` px (step 8.3b, A5: the boxes only; the `chips` argument is kept for callers and tests). The centres stay (the arrangement is unchanged). Pure and
  * deterministic; bounded (more than `BOX_SCALE_MAX_BOXES` boxes: no scaling, the pair test is quadratic).
  */
 import type { Rect } from './geometry';

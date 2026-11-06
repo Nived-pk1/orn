@@ -130,3 +130,74 @@
 .panel[data-phone] button {
   min-height: 44px;
 }
+
+/* Chain cards (step 8.3b, B2.1): one card per chain; the chosen one has a 2 px border in the From family's colour, an "On the map" chip and its step rows. */
+.chain {
+  cursor: pointer;
+}
+
+.chain[data-picked] {
+  border-width: 2px;
+  padding: calc(var(--space-1) - 1px);
+}
+
+.chain[data-picked][data-tone='blue'] { border-color: var(--color-tone-blue-ink); }
+.chain[data-picked][data-tone='green'] { border-color: var(--color-tone-green-ink); }
+.chain[data-picked][data-tone='amber'] { border-color: var(--color-tone-amber-ink); }
+.chain[data-picked][data-tone='violet'] { border-color: var(--color-tone-violet-ink); }
+.chain[data-picked][data-tone='teal'] { border-color: var(--color-tone-teal-ink); }
+.chain[data-picked][data-tone='rose'] { border-color: var(--color-tone-rose-ink); }
+.chain[data-picked][data-tone='slate'] { border-color: var(--color-tone-slate-ink); }
+
+.chainRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+}
+
+.chainTitle {
+  flex: 1 1 auto;
+}
+
+.chainSummary {
+  flex: 1 0 100%;
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+  font-weight: 400;
+}
+
+.onMap {
+  padding: 0 var(--space-2);
+  color: var(--color-ink);
+  font-size: var(--text-12);
+  font-weight: 400;
+  background: var(--color-hover);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+}
+
+.step:hover {
+  background: var(--color-hover);
+  border-color: var(--color-ink-2);
+}
+
+.step:focus-visible,
+.chainRow:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.stepGo {
+  color: var(--color-ink-2);
+}

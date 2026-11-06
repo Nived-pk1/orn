@@ -6,7 +6,8 @@
 import type { Scene } from '@/render/scene';
 import { nameOf } from './canvas-menu';
 
-export type SelectionMode = 'full' | 'name';
+/** `corner` (step 8.3b, B2.2): the name as `name` says it, an arrow as "A → B", for the label inside the map. */
+export type SelectionMode = 'full' | 'name' | 'corner';
 
 export function selectionWordsOf(scene: Scene | null, selected: { readonly kind: string; readonly id: string }, mode: SelectionMode): string | undefined {
   if (scene === null) return undefined;
@@ -21,5 +22,5 @@ export function selectionWordsOf(scene: Scene | null, selected: { readonly kind:
     const node = scene.nodes.find((candidate) => candidate.id === id);
     return node === undefined ? id : nameOf(node);
   };
-  return `${end(edge.from)} to ${end(edge.to)}`;
+  return `${end(edge.from)} ${mode === 'corner' ? '→' : 'to'} ${end(edge.to)}`;
 }

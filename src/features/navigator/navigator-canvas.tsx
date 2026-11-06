@@ -15,11 +15,10 @@ import { ViewportScene, type ViewportController, type Viewport } from '@/render/
 import type { Scene } from '@/render/scene';
 import { useLayoutMode } from '@/ui/hooks';
 import { useStudyChrome } from '@/ui/study-chrome';
-import { Banner, Button, ContextMenu, Skeleton } from '@/ui/primitives';
+import { Banner, ContextMenu, Skeleton } from '@/ui/primitives';
 import { FIT_FLOOR } from '@/render/viewport';
 import { buildChapterIndex } from '@/core/chapters/build-index';
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph';
-import { ChapterSelect } from './chapter-select';
 import { viewportToReveal } from './reveal';
 import { useChainReveal } from './use-chain-reveal';
 import { useMapCompounds } from './compounds-context';
@@ -32,7 +31,10 @@ import { outsideNoteOf } from './scope-lens';
 import type { withChips as WithChipsFn } from './map-chips';
 import type { createPairFacts as CreatePairFactsFn } from './pair-facts';
 import { useNavigator, useNavigatorState } from './navigator-context';
-import { NavigatorLegend } from './navigator-legend';
+import { keyPlacement, type ScreenRect } from './key-placement';
+import { MapHint } from './map-hint';
+import { MapToolbar } from './map-toolbar';
+import { selectionWordsOf } from './selection-words';
 import { NavigatorSelection } from './navigator-selection';
 import { emptinessOf, truncationNoticeOf } from './notices';
 import { UnanchoredPanel } from './unanchored-panel';
@@ -50,10 +52,11 @@ const ArrowKey = /* @__PURE__ */ lazy(() => import('./arrow-key').then((m) => ({
 type WithChips = typeof WithChipsFn;
 type CreatePairFacts = typeof CreatePairFactsFn;
 const noFacts = (): undefined => undefined;
-const FindFamily = /* @__PURE__ */ lazy(() => import('./find-family').then((m) => ({ default: m.FindFamily })));
+const KeyPopover = /* @__PURE__ */ lazy(() => import('./key-popover').then((m) => ({ default: m.KeyPopover })));
 const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanelInScope })));
 const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
 const busyLine = (n: number): string => `This chapter has ${n} arrows. Tap or click a family to see its part.`;
+const KEY_SIZE = { width: 300, height: 48 };
 const NO_IDS: ReadonlySet<string> = new Set();
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
@@ -77,6 +80,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const [controller, setController] = useState<ViewportController | null>(null);
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
   const [unanchoredOpen, setUnanchoredOpen] = useState(false);
+  const [keyOpen, setKeyOpen] = useState(false);
+  const [settled, setSettled] = useState<Viewport | undefined>(undefined);
   const chrome = useStudyChrome();
   // Studio's "See those compounds" selects the bucket: the inspector lists them (one view, step 8.2b-fix, S3)
   const seeCompounds = (): void => {
@@ -126,7 +131,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const [svg, setSvg] = useState<SVGSVGElement | null>(null);
   const [chain, setChain] = useState<readonly { readonly from: string; readonly to: string }[] | undefined>(undefined);
   const map = useMapView({ ui: ports.ui, timers: ports.timers, scene, isHub, selected, chapters: chapterIds, announce, facts, chips, chain });
-  const familyList = useMemo(() => (scene === null ? [] : scene.nodes.filter((node) => node.box === 'hub').map((node) => ({ id: node.id, name: node.label.map((run) => run.text).join('') }))), [scene]);
+  const familyList = useMemo(() => (scene === null ? [] : scene.nodes.filter((node) => node.box === 'hub').map((node) => ({ id: node.id, name: node.label.map((run) => run.text).join(''), tone: node.tone }))), [scene]);
   const toggleChain = useCallback((): void => ports.ui.map.getState().setChainOpen(!ports.ui.map.getState().chainOpen), [ports]);
   const closeChain = useCallback((): void => ports.ui.map.getState().setChainOpen(false), [ports]);
   const pairs = useCallback(() => ports.indexes.current().navigatorRollup().pairs(), [ports]);
@@ -182,6 +187,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const onSettled = useCallback(
     (view: Viewport, automatic: boolean): void => {
       ports.ui.viewports.getState().setViewport(VIEW, view);
+      setSettled(view);
       const percent = Math.round(view.scale * 100);
       // an automatic fit (the first one, or the re-fit when the drawing's size settles) is not something the person did
       if (!automatic && said.current !== undefined && said.current !== percent) announce(`Zoom ${percent} percent`);
@@ -199,9 +205,16 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const outsideNote = useMemo(() => (scene === null || !scene.nodes.some((node) => node.state.dimmed) ? undefined : outsideNoteOf(ports.store.getState(), activeExam)), [scene, ports, activeExam]);
   const legend = useMemo(() => legendOf(scene), [scene]);
   const legendKeys = useMemo(() => keyOf(view), [view]);
-  // wide screen: the arrow rows are in the line row below the legend, so the legend never changes height when a family is focused
-  const barKeys = useMemo(() => ({ ...legendKeys, lines: false, chip: false, pair: false }), [legendKeys]);
-  const nothing = scene === null ? { unavailable: NOTHING_DRAWN } : {};
+  // step 8.3b (A3, A4, B2.2): the key, the hint and the selection sit INSIDE the map; the key takes the bottom-left corner unless that covers a box
+  const keyCorner = useMemo(() => {
+    const area = svg?.getBoundingClientRect();
+    if (phone || drawn === null || settled === undefined || area === undefined) return 'bottom-left' as const;
+    const boxes: ScreenRect[] = drawn.nodes.map((node) => ({ x: node.x * settled.scale + settled.x, y: node.y * settled.scale + settled.y, width: node.width * settled.scale, height: node.height * settled.scale }));
+    return keyPlacement(boxes, KEY_SIZE, { width: area.width, height: area.height });
+  }, [phone, drawn, settled, svg]);
+  const selectedWords = selected === null || (multi !== null && multi.items.length > 0) ? undefined : selectionWordsOf(scene, selected, 'corner');
+  const clearSelection = useCallback((): void => ports.ui.selection.getState().select(null), [ports]);
+  const hint = view === null ? undefined : view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : undefined;
   const cut = truncationNoticeOf(scene?.truncation ?? null);
   const families = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub').length;
   const empty = scene === null ? null : emptinessOf(state.reactions, families);
@@ -224,52 +237,38 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   return (
     <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
       {phone ? null : (
-      <div className={styles.toolbar} role="toolbar" aria-label="Canvas tools">
-        <Button
-          aria-pressed={listing}
-          onClick={() => {
+        <MapToolbar
+          listing={listing}
+          noScene={scene === null}
+          onToggleList={() => {
             ports.ui.overview.getState().setMode(listing ? 'map' : 'list');
             announce(listing ? 'Showing the map' : 'Showing the list of families and arrows');
           }}
-        >
-          List
-        </Button>
-        <Button onClick={() => controller?.zoomIn()} {...(listing ? { unavailable: 'the List view has no zoom' } : nothing)}>
-          Zoom in
-        </Button>
-        <Button onClick={() => controller?.zoomOut()} {...(listing ? { unavailable: 'the List view has no zoom' } : nothing)}>
-          Zoom out
-        </Button>
-        <Button onClick={() => controller?.fit()} {...(listing ? { unavailable: 'the List view has no zoom' } : nothing)}>
-          Fit
-        </Button>
-        <ChapterSelect chapters={chapters} value={map.chapterId} onChange={setChapter} />
-        <Suspense fallback={<input className={controls.findBox} disabled aria-label="Loading" />}>
-          <FindFamily families={familyList} onChoose={findFamily} />
-        </Suspense>
-        <Button aria-pressed={map.chainOpen} onClick={toggleChain} {...nothing}>
-          From A to B
-        </Button>
-        <Button onClick={() => selectedHub !== undefined && openFamily(selectedHub)} {...(scene === null ? nothing : openReason === undefined ? {} : { unavailable: openReason })}>
-          Open family
-        </Button>
-        {selectedArrow === undefined ? null : (
-          <Button
-            onClick={() => arrowOpens !== undefined && ports.ui.family.getState().openFamily(arrowOpens.from, { section: 'reactions_of', hubId: arrowOpens.to })}
-            {...(arrowOpens === undefined ? { unavailable: 'the arrow does not run between two families' } : {})}
-          >
-            Open
-          </Button>
-        )}
-        {chrome.unanchored ? (
-          <Button onClick={() => setUnanchoredOpen((open) => !open)} aria-expanded={unanchoredOpen && unanchoredReason === undefined} {...(unanchoredReason === undefined ? {} : { unavailable: unanchoredReason })}>
-            Unanchored reactions ({unanchored.length})
-          </Button>
-        ) : null}
-        <NavigatorSelection {...(multi !== null && multi.items.length > 0 ? { multiLine: multi.line } : {})} />
-        {multi?.actions(false)}
-      </div>
+          onZoomIn={() => controller?.zoomIn()}
+          onZoomOut={() => controller?.zoomOut()}
+          onFit={() => controller?.fit()}
+          chapters={chapters}
+          chapterId={map.chapterId}
+          onChapter={setChapter}
+          families={familyList}
+          onFind={findFamily}
+          chainOpen={map.chainOpen}
+          onToggleChain={toggleChain}
+          openReason={openReason}
+          onOpenFamily={() => selectedHub !== undefined && openFamily(selectedHub)}
+          {...(selectedArrow === undefined ? {} : { arrowOpen: { onOpen: () => arrowOpens !== undefined && ports.ui.family.getState().openFamily(arrowOpens.from, { section: 'reactions_of', hubId: arrowOpens.to }), ...(arrowOpens === undefined ? { unavailable: 'the arrow does not run between two families' } : {}) } })}
+          {...(chrome.unanchored ? { unanchored: { count: unanchored.length, expanded: unanchoredOpen && unanchoredReason === undefined, reason: unanchoredReason, onToggle: () => setUnanchoredOpen((open) => !open) } } : {})}
+          keyOpen={keyOpen}
+          onToggleKey={() => setKeyOpen((open) => !open)}
+          keyPopover={
+            <Suspense fallback={null}>
+              <KeyPopover items={legend} keys={legendKeys} onClose={() => setKeyOpen(false)} {...(compounds === undefined ? {} : { onSeeCompounds: () => seeCompounds() })} onToggleUnclassified={toggleUnclassified} {...(outsideNote === undefined ? {} : { outsideNote })} />
+            </Suspense>
+          }
+          extra={multi?.actions(false)}
+        />
       )}
+      {phone ? null : <NavigatorSelection {...(multi !== null && multi.items.length > 0 ? { multiLine: multi.line } : {})} />}
       {cut === null ? null : (
         <Banner kind="warning">
           {cut.cut} {cut.more}
@@ -281,23 +280,17 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         </Banner>
       )}
       {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
-      {listing || phone ? null : <NavigatorLegend items={legend} keys={barKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => seeCompounds() })} {...(outsideNote === undefined ? {} : { outsideNote })} />}
       {phone && scene !== null && !listing ? (
         <Suspense fallback={<div className={styles.phoneBar}><span className={controls.iconButton} aria-hidden="true" /></div>}>
           <PhoneMapBar chapters={chapters} chapterId={map.chapterId} onChapter={setChapter} families={familyList} onFind={findFamily} chainOpen={map.chainOpen} onToggleChain={toggleChain} />
         </Suspense>
       ) : null}
       {/* the line keeps its height when it has nothing to say, so a click that focuses a family does not move the map under the pointer (a double click's second press would miss) */}
-      {view !== null && !listing ? (
+      {phone && view !== null && !listing ? (
         <div className={styles.lineRow}>
           <p className={styles.quiet} {...(view.quiet ? { 'data-map-quiet': '' } : view.busy > 0 ? { 'data-map-busy': '' } : { 'aria-hidden': 'true' })}>
             {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : ' '}
           </p>
-          {phone ? null : (
-            <Suspense fallback={null}>
-              <ArrowKey keys={legendKeys} />
-            </Suspense>
-          )}
         </div>
       ) : null}
       <div className={styles.mapRow}>
@@ -308,6 +301,14 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           </Suspense>
         ) : null}
         {phone ? selectBar : null}
+        {phone || listing || scene === null ? null : (
+          <>
+            <MapHint selected={selectedWords === undefined ? undefined : `Selected: ${selectedWords}`} onClear={clearSelection} hint={hint} hintKind={view?.quiet === true ? 'quiet' : 'busy'} />
+            <Suspense fallback={null}>
+              <ArrowKey keys={legendKeys} corner={keyCorner} />
+            </Suspense>
+          </>
+        )}
         {multi?.marquee == null ? null : <div className={styles.marquee} aria-hidden="true" style={{ left: multi.marquee.left, top: multi.marquee.top, width: multi.marquee.width, height: multi.marquee.height }} />}
         {state.error !== null ? (
           <div className={styles.error} role="alert">

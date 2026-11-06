@@ -47,7 +47,7 @@ describe('the map part of uiState', () => {
     ui.stores.map.getState().setFocus('hub-a');
     await ui.flush();
     const saved = saves.at(-1) as Record<string, unknown>;
-    expect(saved.map).toEqual({ chapterId: 'top_a', showUnclassified: true, fitRule: 2 });
+    expect(saved.map).toEqual({ chapterId: 'top_a', showUnclassified: true, fitRule: 3 });
     const again = createNavigatorUi({ stored: saved, mode: () => 'writable', save: () => Promise.resolve() }, timers());
     expect(again.stores.map.getState()).toMatchObject({ chapterId: 'top_a', showUnclassified: true, focusId: null });
     ui.dispose();

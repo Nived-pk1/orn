@@ -10,6 +10,7 @@ import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection } from '@/core/graph';
 import { indexEngine } from '@/core/indexes';
 import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/limits';
 import { PHONE_QUERIES } from '@/ui/hooks';
+import { toolbarAction } from '@/test-support/map-toolbar-kit';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
@@ -48,7 +49,7 @@ const cards = (): HTMLElement[] => [...document.querySelectorAll<HTMLElement>('[
 async function listRows(): Promise<{ ids: string[]; groups: Map<string, string> }> {
   renderWithApp(demo());
   await screen.findByRole('group', { name: NAVIGATOR });
-  fireEvent.click(within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name: 'List' }));
+  fireEvent.click(await toolbarAction('List'));
   const table = await screen.findByRole('table', { name: 'Families' });
   const rows = [...table.querySelectorAll<HTMLElement>('[data-row-key]')];
   const groups = new Map(rows.map((row) => [row.getAttribute('data-row-key') as string, (within(row).getAllByRole('cell')[1]?.textContent ?? '').replace(/^No group$/, '')]));

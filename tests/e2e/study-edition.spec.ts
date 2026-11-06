@@ -19,6 +19,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { selectionLine } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, watch, type UploadFile } from './kit';
 import { palette, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
 import { makePng } from './png-kit';
@@ -349,7 +350,8 @@ test.describe('what a student sees (step 8.3)', () => {
     await expect(page.getByRole('button', { name: /Unanchored reactions/ })).toHaveCount(0);
     await expect(page.getByRole('combobox', { name: /^Exam$/ })).toBeVisible();
     await page.locator('svg [data-node-id="cls_alcohols"]').click();
-    await expect(page.getByText('Selected: Alcohols.', { exact: true })).toBeVisible();
+    await expect(selectionLine(page)).toHaveText('Selected: Alcohols.');
+    await expect(page.locator('[data-map-selected]')).toHaveText('Selected: Alcohols'); // the label inside the map (step 8.3b, B2.2)
     await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
     const family = page.getByRole('region', { name: 'Family page: Alcohols' });
     await expect(family).toBeVisible();

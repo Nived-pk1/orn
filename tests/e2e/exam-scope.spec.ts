@@ -8,6 +8,8 @@ import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { clickToolbar } from './map-toolbar-kit';
+import { showUnclassified } from './map-focus-kit';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
@@ -29,7 +31,7 @@ test.describe('the exam scope', () => {
     await expect(selector(page)).toHaveValue('');
     await expect(selector(page).locator('option')).toHaveText(['All exams', 'JEE Advanced, provisional, not verified', MAIN]);
 
-    await page.getByRole('button', { name: /^Unanchored reactions \(2\)/ }).click();
+    await clickToolbar(page, /^Unanchored reactions \(2\)/);
     const panel = page.getByRole('region', { name: 'Unanchored reactions' });
     await expect(panel.locator('[data-reaction-id]')).toHaveCount(2);
     await expect(panel.locator('[data-outside]')).toHaveCount(0);
@@ -53,7 +55,7 @@ test.describe('the exam scope', () => {
     await page.screenshot({ path: resolve(SHOTS, 'overview-scope-main.png') });
 
     // the Unclassified family page: the Beckmann card is marked, no card is hidden
-    await page.getByRole('button', { name: 'Show', exact: true }).click(); // step 8.2a: Unclassified is hidden unless shown
+    await showUnclassified(page); // step 8.2a: Unclassified is hidden unless shown (the legend is the Key popover, 8.3b)
     await page.locator('svg [data-box="unclassified"]').dblclick();
     await page.getByRole('region', { name: /^Family page: Unclassified/ }).waitFor();
     const beckmann = page.locator('article[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]').first();

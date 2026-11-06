@@ -1,0 +1,135 @@
+/* More room for the map (step 8.3b, ADR-044 addendum): one toolbar row, the Key popover, and the hint, the selection and the key INSIDE the map. */
+.row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-surface);
+}
+
+.row > * {
+  flex: 0 0 auto;
+}
+
+.row button {
+  min-height: 36px;
+}
+
+.row .chapterBox {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 260px;
+}
+
+.row .findBox {
+  flex: 0 1 200px;
+  min-width: 0;
+  max-width: 200px;
+}
+
+.zoomButton {
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+}
+
+.keyWrap {
+  position: relative;
+}
+
+.popover {
+  position: absolute;
+  z-index: var(--z-menu);
+  top: calc(100% + var(--space-1));
+  right: 0;
+  width: min(560px, 90vw);
+  max-height: 70vh;
+  overflow: auto;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+.spacer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Inside the map: a soft background so the boxes under it stay readable; the pointer goes through everything but the buttons. */
+.corner {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  max-width: min(60%, 28rem);
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-ink-2);
+  font-size: var(--text-12);
+  background: color-mix(in srgb, var(--color-paper) 85%, transparent);
+  border-radius: var(--radius-control);
+  pointer-events: none;
+}
+
+.cornerTop {
+  top: var(--space-2);
+  left: var(--space-2);
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 1.75rem; /* a fixed size: the label appearing on a click moves nothing */
+}
+
+.cornerSelected {
+  color: var(--color-ink);
+}
+
+.cornerClear {
+  pointer-events: auto;
+  min-height: 24px;
+  min-width: 24px;
+  padding: 0 var(--space-1);
+  font: inherit;
+  color: var(--color-ink);
+  background: transparent;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.cornerKey {
+  bottom: var(--space-2);
+  margin: 0;
+  list-style: none;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+  width: max-content;
+  max-width: min(60%, 24rem);
+}
+
+.cornerKey[data-corner='bottom-left'] {
+  left: var(--space-2);
+}
+
+.cornerKey[data-corner='bottom-right'] {
+  right: var(--space-2);
+}
+
+.cornerKey li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* the live region of the selection stays for screen readers only */
+.liveOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

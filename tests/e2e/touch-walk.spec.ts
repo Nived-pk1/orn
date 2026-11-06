@@ -54,10 +54,11 @@ test.describe('the touch walk', () => {
 
     await page.getByRole('button', { name: 'Overview' }).tap();
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
-    const list = page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' });
-    await list.tap();
+    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'More' }).tap();
+    await page.getByRole('menuitem', { name: 'List' }).tap(); // List lives in More (step 8.3b, A1)
     await expect(page.getByRole('table', { name: 'Families' })).toBeVisible();
-    await list.tap();
+    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'More' }).tap();
+    await page.getByRole('menuitem', { name: 'Show the map' }).tap();
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
 
     await page.getByRole('button', { name: 'Search' }).tap();

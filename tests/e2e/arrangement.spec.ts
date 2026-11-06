@@ -9,6 +9,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { closeKey, openKey } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, showDataset, watch } from './kit';
 import { eachFocus, eachFocusByKeyboard, joined, showUnclassified } from './map-focus-kit';
 import { chipsOffMiddle, linesThroughBoxes, problemsOf, type Measured } from './readability';
@@ -44,8 +45,9 @@ test.describe('the demo overview is arranged on the grid', () => {
     const seen = await watch(page);
     await openDemo(page);
     await expect(page.locator('[data-layout-engine]')).toHaveAttribute('data-layout-engine', 'grid');
-    const legend = page.getByRole('list', { name: 'Family groups' });
+    const legend = (await openKey(page)).getByRole('list', { name: 'Family groups' }); // the legend is the Key popover (step 8.3b, A3)
     await expect(legend.getByRole('listitem')).toHaveText(['Hydrocarbons', 'Halogen compounds', 'Oxygen compounds', 'Nitrogen compounds']);
+    await closeKey(page);
     await page.getByRole('button', { name: 'Fit' }).click();
     await page.waitForTimeout(500);
     expect(Number(await drawing(page).getAttribute('data-lod'))).toBeGreaterThanOrEqual(1);
@@ -156,7 +158,9 @@ test.describe('an overview without cells gets an automatic arrangement', () => {
     await expect(drawing(page)).toBeVisible({ timeout: 60_000 });
     await expect(page.locator('[data-layout-engine]')).toHaveAttribute('data-layout-engine', 'grid');
     await expect(page.getByText(/automatic arrangement: \d+ boxes? (has|have) no cell in the data/)).toBeVisible();
+    await openKey(page);
     await expect(page.getByRole('list', { name: 'Family groups' })).toHaveCount(0);
+    await closeKey(page);
     await page.getByRole('button', { name: 'Fit' }).click();
     await page.waitForTimeout(500);
     await eachFocus(page, (id, drawn) => {

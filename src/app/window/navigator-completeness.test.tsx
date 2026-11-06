@@ -8,6 +8,7 @@ import { produce } from 'immer';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp } from '@/test-support/window-kit';
+import { selectionLine, toolbarAction } from '@/test-support/map-toolbar-kit';
 
 afterEach(cleanup);
 
@@ -24,8 +25,9 @@ beforeAll(() => {
 });
 
 const drawing = (): Promise<HTMLElement> => screen.findByRole('group', { name: /^Navigator:/ });
-const unanchoredButton = (): HTMLElement => screen.getByRole('button', { name: /^Unanchored reactions \(\d+\)$/ });
-const countOf = (): number => Number(/\((\d+)\)/.exec(unanchoredButton().textContent ?? '')?.[1]);
+// the button is an item of the More menu of the one-row toolbar (step 8.3b, A1); its words are the menu item's
+const unanchoredButton = (): Promise<HTMLElement> => toolbarAction(/^Unanchored reactions \(\d+\)/);
+const countOf = async (): Promise<number> => Number(/\((\d+)\)/.exec((await unanchoredButton()).textContent ?? '')?.[1]);
 
 /** The demo with its navigator anchors removed: no family is set up, so every reaction is unanchored. */
 const withoutAnchors = () =>
@@ -40,8 +42,8 @@ describe('the Unanchored panel', () => {
     const app = fakeApp({ state });
     renderWithApp(app);
     await drawing();
-    await waitFor(() => expect(countOf()).toBe(total));
-    fireEvent.click(unanchoredButton());
+    await waitFor(async () => expect(await countOf()).toBe(total));
+    fireEvent.click(await unanchoredButton());
     const panel = await screen.findByRole('region', { name: 'Unanchored reactions' });
     expect(within(panel).getByText(`${total} reactions are not in any family`)).toBeTruthy();
     const list = within(panel).getByRole('list', { name: 'Unanchored reactions' });
@@ -54,8 +56,7 @@ describe('the Unanchored panel', () => {
     fireEvent.click(first);
     const picked = first.getAttribute('data-reaction-id') as string;
     expect(app.navigator.ports.ui.family.getState().reaction).toBe(picked);
-    const line = within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByText(/^Selected: reaction /);
-    expect(line.getAttribute('title')).toBe(line.textContent); // the line is one line on screen (it may be cut with an ellipsis): its title carries all of it
+    expect(selectionLine()).toMatch(/^Selected: reaction /); // the visually hidden live region (8.3b, A2)
     expect(first.getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(within(panel).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('region', { name: 'Unanchored reactions' })).toBeNull();
@@ -64,9 +65,9 @@ describe('the Unanchored panel', () => {
   it('the demo has 2 reactions no family holds: the button says 2 and the panel lists both', async () => {
     renderWithApp(fakeApp({ state: demoState() }));
     await drawing();
-    await waitFor(() => expect(countOf()).toBe(2));
-    expect(unanchoredButton().getAttribute('aria-disabled')).toBeNull();
-    fireEvent.click(unanchoredButton());
+    await waitFor(async () => expect(await countOf()).toBe(2));
+    expect((await unanchoredButton()).getAttribute('aria-disabled')).toBeNull();
+    fireEvent.click(await unanchoredButton());
     const panel = await screen.findByRole('region', { name: 'Unanchored reactions' });
     expect(within(panel).getByText('2 reactions are not in any family')).toBeTruthy();
     expect(within(panel).getAllByRole('listitem')).toHaveLength(2);
@@ -78,10 +79,10 @@ describe('the Unanchored panel', () => {
     });
     renderWithApp(fakeApp({ state }));
     await drawing();
-    await waitFor(() => expect(countOf()).toBe(0));
-    const button = unanchoredButton();
+    await waitFor(async () => expect(await countOf()).toBe(0));
+    const button = await unanchoredButton();
     expect(button.getAttribute('aria-disabled')).toBe('true');
-    expect(button.getAttribute('aria-describedby')).not.toBeNull();
+    expect(button.textContent).toContain('every reaction is in a family'); // the menu item carries its reason in its words
     expect(screen.getByText('every reaction is in a family')).toBeTruthy();
     fireEvent.click(button);
     expect(screen.queryByRole('region', { name: 'Unanchored reactions' })).toBeNull();

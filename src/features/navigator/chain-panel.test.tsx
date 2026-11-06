@@ -47,36 +47,38 @@ describe('ChainPanel', () => {
     choose('alk', 'ald');
     const rows = [...screen.getByRole('list', { name: 'Chains' }).children];
     expect(rows).toHaveLength(2);
-    expect(within(rows[0] as HTMLElement).getByRole('button', { name: 'Alkenes → Aldehydes' })).toBeTruthy();
-    expect(within(rows[1] as HTMLElement).getByRole('button', { name: 'Alkenes → Alcohols → Aldehydes' })).toBeTruthy();
+    // each chain is ONE card (step 8.3b, B2.1): its title and a summary line
+    expect(within(rows[0] as HTMLElement).getByRole('button', { name: /^Alkenes → Aldehydes\b.*1 step · 1 reaction$/ })).toBeTruthy();
+    expect(within(rows[1] as HTMLElement).getByRole('button', { name: /^Alkenes → Alcohols → Aldehydes\b.*2 steps · 4 reactions$/ })).toBeTruthy();
     expect(onChain).toHaveBeenLastCalledWith([{ from: 'alk', to: 'ald' }]);
   });
   it('choosing the second row draws that chain; its steps say the reagent words or the number of reactions', () => {
     const { onChain } = setup();
     choose('alk', 'ald');
-    fireEvent.click(screen.getByRole('button', { name: 'Alkenes → Alcohols → Aldehydes' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Alkenes → Alcohols → Aldehydes/ }));
     expect(onChain).toHaveBeenLastCalledWith([
       { from: 'alk', to: 'alc' },
       { from: 'alc', to: 'ald' },
     ]);
-    expect(screen.getByRole('button', { name: 'Alkenes → Alcohols: PCC' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Alcohols → Aldehydes: 3 reactions' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Alkenes → Alcohols · PCC/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Alcohols → Aldehydes · 3 reactions/ })).toBeTruthy();
   });
   it('a step whose words hold a formula sets it in subscripts, as the reaction card does (step 8.3, A3)', () => {
     const withFormula = (from: string, to: string) =>
       from === 'alk' && to === 'alc' ? { reactions: 1, words: 'H2SO4', parts: [{ text: 'H2SO4', kind: 'formula' as const }] } : facts(from, to);
     setup({ facts: withFormula });
     choose('alk', 'ald');
-    fireEvent.click(screen.getByRole('button', { name: 'Alkenes → Alcohols → Aldehydes' }));
-    const step = screen.getByRole('button', { name: 'Alkenes → Alcohols: H2SO4' });
+    fireEvent.click(screen.getByRole('button', { name: /^Alkenes → Alcohols → Aldehydes/ }));
+    const step = screen.getByRole('button', { name: /^Alkenes → Alcohols · H2SO4/ });
     expect([...step.querySelectorAll('sub')].map((sub) => sub.textContent)).toEqual(['2', '4']);
   });
   it('tapping a step opens that arrow', () => {
-    const { onOpenStep } = setup();
+    const { onOpenStep, onChain } = setup();
     choose('alk', 'ald');
-    fireEvent.click(screen.getByRole('button', { name: 'Alkenes → Alcohols → Aldehydes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Alcohols → Aldehydes: 3 reactions' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Alkenes → Alcohols → Aldehydes/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Alcohols → Aldehydes · 3 reactions/ }));
     expect(onOpenStep).toHaveBeenCalledWith('alc', 'ald');
+    expect(onChain).toHaveBeenLastCalledWith([{ from: 'alk', to: 'alc' }, { from: 'alc', to: 'ald' }]); // a step row opens its reactions; the chosen chain stays
   });
   it('Swap exchanges the two families', () => {
     setup();
@@ -98,7 +100,7 @@ describe('ChainPanel', () => {
     setup({ inScope: (id) => id !== 'r5', scopeName: 'JEE Main' });
     choose('alk', 'ald');
     const rows = [...screen.getByRole('list', { name: 'Chains' }).children];
-    expect(rows.map((row) => row.querySelector('button')?.textContent)).toEqual(['Alkenes → Alcohols → Aldehydes']);
+    expect(rows.map((row) => row.querySelector('button')?.textContent)).toEqual(['Alkenes → Alcohols → Aldehydes On the map 2 steps · 4 reactions']);
   });
   it('when the only chain is outside the scope the panel says so and shows no chain', () => {
     setup({ inScope: (id) => id !== 'r1' && id !== 'r5', scopeName: 'JEE Main' });
@@ -112,13 +114,27 @@ describe('ChainPanel', () => {
     choose('alk', 'iso');
     expect(screen.getByText('No chain of 3 steps or fewer.')).toBeTruthy();
   });
-  it('on a phone the peek shows the selects, the first chain row and "Show all" - no step lists; Show all opens the rest (step 8.2b-fix, E2)', () => {
+  it('a card that is not chosen shows no step rows; choosing it shows them; one card is chosen at a time (step 8.3b, B2.1)', () => {
+    setup();
+    choose('alk', 'ald');
+    const cards = [...screen.getByRole('list', { name: 'Chains' }).children] as HTMLElement[];
+    expect(cards[0]?.getAttribute('data-picked')).not.toBeNull(); // the first by default
+    expect(within(cards[0] as HTMLElement).getAllByRole('button')).toHaveLength(2); // its card button and its one step row
+    expect(within(cards[1] as HTMLElement).getAllByRole('button')).toHaveLength(1); // not chosen: the card only, no step rows
+    expect(within(cards[1] as HTMLElement).getByText('2 steps · 4 reactions')).toBeTruthy();
+    fireEvent.click(within(cards[1] as HTMLElement).getByText('2 steps · 4 reactions')); // a click anywhere on the summary line chooses it
+    expect(cards[1]?.getAttribute('data-picked')).not.toBeNull();
+    expect(cards[0]?.getAttribute('data-picked')).toBeNull();
+    expect(within(cards[1] as HTMLElement).getAllByRole('button')).toHaveLength(3); // the card button and two step rows
+    expect(within(cards[1] as HTMLElement).getByText('On the map')).toBeTruthy();
+    expect(within(cards[0] as HTMLElement).getAllByRole('button')).toHaveLength(1);
+  });
+  it('on a phone the peek shows the selects, the first chain card (with its steps, as on a wide screen) and "Show all"; Show all opens the rest (step 8.3b, B2.1)', () => {
     setup({ phone: true });
     choose('alk', 'ald');
-    expect(screen.getAllByRole('listitem').filter((li) => li.closest('ul') !== null && li.closest('ul')?.getAttribute('class')?.includes('steps'))).toHaveLength(0);
-    expect(screen.getAllByRole('button', { name: /→/ })).toHaveLength(1);
+    expect(screen.getAllByRole('list', { name: 'Chains' })[0]?.children).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Show all 2' }));
-    expect(screen.getAllByRole('button', { name: /→/ }).length).toBeGreaterThan(2);
+    expect(screen.getAllByRole('list', { name: 'Chains' })[0]?.children).toHaveLength(2);
   });
   it('Esc and Close close the panel, and closing clears the chain', () => {
     const { onClose, onChain } = setup();

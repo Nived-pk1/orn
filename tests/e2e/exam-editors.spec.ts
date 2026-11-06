@@ -10,6 +10,7 @@
 import { resolve } from 'node:path';
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { clickToolbar } from './map-toolbar-kit';
 import { axeProblems, expectClean, openPhoneApp, watch } from './kit';
 import { editorDialog, openDemo, palette, searchFor, shotsDir } from './editor-kit';
 
@@ -87,7 +88,7 @@ test.describe('the exam editors (Studio)', () => {
     const NEW_LABEL = `${NEW_EXAM}, draft, not verified`;
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
     await expect(selector(page).locator('option', { hasText: NEW_LABEL })).toHaveCount(1, { timeout: 60_000 });
-    await page.getByRole('button', { name: /^Unanchored reactions/ }).click();
+    await clickToolbar(page, /^Unanchored reactions/);
     const panel = page.getByRole('region', { name: 'Unanchored reactions' });
     const beckmann = panel.locator('[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]');
     await selector(page).selectOption({ label: 'JEE Main, provisional, not verified' });

@@ -104,10 +104,11 @@ describe('createNavigatorUi', () => {
       overviewMode: 'map',
       recentSearches: [],
       activeExam: null,
+      examChoice: { mode: 'only', asked: false },
       explorer: { filter: { substanceIds: [], usedAs: 'any', fromFamilyIds: [], toFamilyIds: [], typeIds: [], namedReactionIds: [], reviewStatuses: [], text: '', onlyInScope: false }, view: 'cards', last: 'reactions' },
       precursors: { target: null, startFrom: [], maxSteps: 5, onlyListed: false, onlyInScope: false, searched: false },
       chapters: { chapterId: null, kinds: [], text: '', onlyInScope: false },
-      map: { chapterId: null, showUnclassified: false, fitRule: 2 },
+      map: { chapterId: null, showUnclassified: false, fitRule: 3 },
       reagents: { reagentId: null, families: [], text: '', onlyInScope: false },
       named: { id: null, text: '', onlyInScope: false },
       mechanisms: { id: null, text: '', onlyInScope: false },
@@ -232,24 +233,24 @@ describe('the saved viewport and the fit rule (step 8.2b-fix, C4)', () => {
     const ui = createNavigatorUi(value, timers());
     expect(ui.stores.viewports.getState().views.navigator).toBeUndefined();
   });
-  it('a viewport saved under fit rule 2 wins over the first fit, as built in 8.2b', () => {
-    const { value } = port({ stored: { viewports: { navigator: view }, map: { fitRule: 2 } } });
+  it('a viewport saved under the current fit rule wins over the first fit, as built in 8.2b', () => {
+    const { value } = port({ stored: { viewports: { navigator: view }, map: { fitRule: 3 } } });
     const ui = createNavigatorUi(value, timers());
     expect(ui.stores.viewports.getState().views.navigator).toEqual(view);
   });
-  it('a new save marks itself with fitRule 2', async () => {
+  it('a new save marks itself with fitRule 3', async () => {
     const t = timers();
     const { value, saves } = port({ stored: { viewports: { navigator: view } } });
     const ui = createNavigatorUi(value, t);
     ui.stores.viewports.getState().setViewport('navigator', { x: 1, y: 2, scale: 3 });
     t.fire();
     await Promise.resolve();
-    expect((saves[0]?.map as { fitRule?: number }).fitRule).toBe(2);
+    expect((saves[0]?.map as { fitRule?: number }).fitRule).toBe(3);
     expect((saves[0]?.viewports as Record<string, unknown>).navigator).toEqual({ x: 1, y: 2, scale: 3 });
   });
   it('a bad fitRule is read as missing, without damage (tolerant)', () => {
     expect(parseNavigatorUi({ map: { fitRule: 'two' } }).damaged).toEqual([]);
-    expect(parseNavigatorUi({ map: { fitRule: 2 } }).map.fitRule).toBe(2);
+    expect(parseNavigatorUi({ map: { fitRule: 3 } }).map.fitRule).toBe(3);
     expect(parseNavigatorUi({ map: { fitRule: 7 } }).map.fitRule).toBeNull();
   });
 });

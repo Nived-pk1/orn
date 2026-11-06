@@ -1,37 +1,39 @@
 /**
- * What the arrows mean, in the map's line row (step 8.2b, B3): only the rows for what is drawn. Its own chunk: the first view draws no arrow.
+ * The small key INSIDE the map (step 8.3b, A3; a lazy chunk): only the marks of what is drawn, in two lines at most (solid = makes, dashed =
+ * made from, chip = count, two-way line). The full sentences are in the Key popover.
  */
 import type { LegendKey } from './legend';
 import { ChipSample, LineSample } from './navigator-legend';
-import styles from './navigator.module.css';
+import styles from './map-room.module.css';
+import { type KeyCorner } from './key-placement';
 
-export function ArrowKey(props: { readonly keys: LegendKey }) {
+export function ArrowKey(props: { readonly keys: LegendKey; readonly corner: KeyCorner }) {
   const { keys } = props;
   if (!keys.lines && !keys.chip && !keys.pair) return null;
   return (
-    <ul className={styles.arrowKey} aria-label="What the arrows mean">
+    <ul className={`${styles.corner} ${styles.cornerKey}`} data-corner={props.corner} aria-label="What the arrows mean" data-arrow-key="">
       {!keys.lines ? null : (
         <>
-          <li className={styles.legendItem} data-key="makes">
+          <li data-key="makes">
             <LineSample dashed={false} />
-            solid line in the family's colour: what the family makes
+            makes
           </li>
-          <li className={styles.legendItem} data-key="madeFrom">
+          <li data-key="madeFrom">
             <LineSample dashed />
-            dashed dark line: what the family is made from
+            made from
           </li>
         </>
       )}
       {!keys.chip ? null : (
-        <li className={styles.legendItem} data-key="chip">
+        <li data-key="chip">
           <ChipSample />
-          number of reactions on this arrow
+          number of reactions
         </li>
       )}
       {!keys.pair ? null : (
-        <li className={styles.legendItem} data-key="pair">
+        <li data-key="pair">
           <LineSample dashed={false} both />
-          one line with a head at each end: reactions both ways, a number near each head
+          both ways
         </li>
       )}
     </ul>

@@ -12,6 +12,7 @@ import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/l
 import { drawnPaths } from '@/render/scene';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
+import { toolbarAction } from '@/test-support/map-toolbar-kit';
 
 beforeAll(() => {
   globalThis.ResizeObserver ??= class {
@@ -38,7 +39,8 @@ function projectionOfDemo() {
 }
 
 const toolbar = (): HTMLElement => screen.getByRole('toolbar', { name: 'Canvas tools' });
-const listToggle = (): HTMLElement => within(toolbar()).getByRole('button', { name: 'List' });
+// the List / Map toggle is an item of the More menu (step 8.3b, A1); while the list shows, the item says "Show the map"
+const listToggle = (): Promise<HTMLElement> => toolbarAction(/^(List|Show the map)$/);
 const table = (name: string): HTMLElement => screen.getByRole('table', { name });
 const bodyRows = (name: string): HTMLElement[] => [...table(name).querySelectorAll<HTMLElement>('[data-row-key]')];
 const keysOf = (name: string): string[] => bodyRows(name).map((row) => row.getAttribute('data-row-key') as string);
@@ -48,7 +50,7 @@ const stop = (name: string): string | null | undefined => table(name).querySelec
 async function listed(app: FakeApp = fakeApp({ state: demoState() })): Promise<FakeApp> {
   renderWithApp(app);
   await screen.findByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ });
-  fireEvent.click(listToggle());
+  fireEvent.click(await listToggle());
   await screen.findByRole('table', { name: 'Families' });
   return app;
 }
@@ -168,7 +170,7 @@ describe('opening from a row', () => {
 describe('Map / List is saved', () => {
   it('the choice is written to uiState and a new window comes back in the List view; the zoom buttons say why they are off', async () => {
     const app = await listed();
-    expect(listToggle().getAttribute('aria-pressed')).toBe('true');
+    expect((await listToggle()).textContent).toBe('Show the map'); // the list is showing
     expect(screen.queryByRole('group', { name: /^Navigator:/ })).toBeNull();
     expect(within(toolbar()).getByRole('button', { name: 'Zoom in' }).getAttribute('aria-disabled')).toBe('true');
     act(() => app.navigator.timers.advance(300));
@@ -178,7 +180,7 @@ describe('Map / List is saved', () => {
     const second = fakeApp({ state: demoState(), navigator: { uiPort: { stored } } });
     renderWithApp(second);
     expect(await screen.findByRole('table', { name: 'Families' })).toBeTruthy();
-    fireEvent.click(listToggle());
+    fireEvent.click(await listToggle());
     expect(await screen.findByRole('group', { name: /^Navigator:/ })).toBeTruthy();
     expect(second.navigator.ui.overview.getState().mode).toBe('map');
   });

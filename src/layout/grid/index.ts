@@ -62,30 +62,12 @@ function solve(request: LayoutRequest, boxes: ReadonlyMap<string, Rect>): Solved
 
 export function layoutGrid(request: LayoutRequest, durationMs: () => number, options: GridOptions = {}): LayoutResult {
   const { boxes: plain, sharedCells } = arrange(request);
-  // pass 1: the unscaled drawing, to learn where its chips are; the box scale keeps clear of them (step 8.2b-fix, C1)
-  const first = solve(request, plain);
-  const chipRects: Rect[] = [];
-  for (const edge of request.edges) {
-    const at = first.chips.positions[edge.id];
-    if (at !== undefined && edge.label !== undefined) chipRects.push({ x: at.x, y: at.y, width: edge.label.width, height: edge.label.height });
-  }
-  const grown = request.growBoxes === true ? boxScaleFor([...plain.values()], chipRects) : 1;
-  const factor = grown < MIN_VISIBLE_SCALE ? 1 : grown;
-  // pass 2: the same centres, bigger boxes: ports and routes use the scaled boxes (C2)
-  const boxes = factor > 1 ? new Map([...plain].map(([id, rect]) => [id, scaleAbout(rect, factor)] as const)) : plain;
-  let used = factor;
-  let solved = factor > 1 ? solve(request, boxes) : first;
-  // bigger boxes may close a gap an arrow used: no more lines may be blocked than in the plain drawing, so back off until that holds (C2)
-  for (let tries = 0; used > 1 && solved.blocked > first.blocked && tries < 12; tries += 1) {
-    used = 1 + (used - 1) * 0.75;
-    if (used < MIN_VISIBLE_SCALE) used = 1;
-    solved = used > 1 ? solve(request, new Map([...plain].map(([id, rect]) => [id, scaleAbout(rect, used)] as const))) : first;
-  }
-  if (solved.blocked > first.blocked) {
-    used = 1; // no scale kept every line clear: the boxes keep their size
-    solved = first;
-  }
+  // the box scale comes from the BOXES ONLY (step 8.3b, A5): the largest factor up to 1.8 with at least 16 px between any two boxes. Arrows are then
+  // routed against the scaled boxes; a line that cannot clear stays straight and the notes below say so.
+  const grown = request.growBoxes === true ? boxScaleFor([...plain.values()], []) : 1;
+  const used = grown < MIN_VISIBLE_SCALE ? 1 : grown;
   const finalBoxes = used > 1 ? new Map([...plain].map(([id, rect]) => [id, scaleAbout(rect, used)] as const)) : plain;
+  const solved = solve(request, finalBoxes);
   const { ports, routes, blocked, chips } = solved;
   // an arc may bow over the top or left edge: shift everything so that every coordinate is at least 0
   let minX = 0;

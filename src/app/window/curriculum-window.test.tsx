@@ -7,6 +7,7 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi, type Mock } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
+import { toolbarAction } from '@/test-support/map-toolbar-kit';
 import { fakeLayout } from '@/test-support/inspector-kit';
 import { fakeApp, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { prefetchPalette } from './lazy-palette';
@@ -192,7 +193,7 @@ describe('making a class a map family', () => {
     expect(svg.querySelectorAll('[data-box="hub"]')).toHaveLength(16);
     expect(screen.getByRole('graphics-symbol', { name: /^Acyl halides, class hub, Oxygen compounds/ })).toBeTruthy();
     // and the Families list has the row
-    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name: 'List' }));
+    fireEvent.click(await toolbarAction('List'));
     const table = await screen.findByRole('table', { name: 'Families' });
     expect(within(table).getAllByText('Acyl halides').length).toBeGreaterThan(0);
     act(() => void app.store.undo());

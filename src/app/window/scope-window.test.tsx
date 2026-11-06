@@ -11,6 +11,7 @@ import { UNCLASSIFIED_HUB_ID } from '@/core/graph';
 import type { CanonicalState, ExamRelevance, Reaction } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
+import { openKey, toolbarAction } from '@/test-support/map-toolbar-kit';
 import { loadOtherViews } from '@/features/inspector/lazy-views';
 
 afterEach(cleanup);
@@ -67,7 +68,7 @@ describe('outside the scope: dimmed, marked in words, never hidden', () => {
     const app = fakeApp({ state: demoState() });
     renderWithApp(app);
     await screen.findByRole('group', { name: /^Navigator:/ });
-    fireEvent.click(screen.getByRole('button', { name: /^Unanchored reactions \(2\)/ }));
+    fireEvent.click(await toolbarAction(/^Unanchored reactions \(2\)/));
     const panel = await screen.findByRole('region', { name: 'Unanchored reactions' });
     expect(panel.querySelectorAll('[data-reaction-id]')).toHaveLength(2);
     expect(panel.querySelectorAll('[data-outside]')).toHaveLength(0);
@@ -131,7 +132,7 @@ describe('outside the scope: dimmed, marked in words, never hidden', () => {
     expect(node().getAttribute('class') ?? '').toMatch(/dimmed/);
     expect(document.querySelectorAll('svg [data-node-id]')).toHaveLength(15); // nothing is hidden
     expect(node().querySelector('title')?.textContent).toContain('outside JEE Main'); // the words are in the box's text, too
-    const legend = screen.getByRole('list', { name: 'What the marks mean' });
+    const legend = within(await openKey()).getByRole('list', { name: 'What the marks mean' });
     expect(within(legend).getByText(/outside JEE Main: faded and marked in words/)).toBeTruthy();
 
     act(() => app.navigator.ui.exam.getState().setActive(null));

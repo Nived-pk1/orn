@@ -10,6 +10,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { closeKey, openKey } from './map-toolbar-kit';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 import { eachFocus, focusFamily, joined, showUnclassified } from './map-focus-kit';
 import { linesThroughBoxes, problemsOf, type Measured } from './readability';
@@ -176,30 +177,40 @@ test.describe('the arrows of the arranged demo overview', () => {
       const loops = await page.locator('svg g[data-edge-id]').evaluateAll((groups) => groups.filter((g) => g.getAttribute('data-from') === g.getAttribute('data-to')).length);
       expect(loops, `a loop with ${id} in focus`).toBe(0);
     });
-    await expect(page.getByRole('list', { name: 'What the marks mean' })).toContainText('n within the family');
+    await expect((await openKey(page)).getByRole('list', { name: 'What the marks mean' })).toContainText('n within the family');
+    await closeKey(page);
     await expectClean(seen);
   });
 
   test('the legend explains the two line styles, the within-the-family line and Unclassified in words (and the chip once an arrow is drawn); axe; zero CSP violations; screenshot', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
-    // step 8.2b (B3): the legend holds the within-the-family line and Unclassified; the rows about arrows come, in the line row below it, once an arrow is drawn
-    const marks = page.getByRole('list', { name: 'What the marks mean' });
+    // step 8.3b (A3): the Key popover holds the within-the-family line and Unclassified (and the arrow rows once an arrow is drawn); a small key sits INSIDE the map
+    const marks = (await openKey(page)).getByRole('list', { name: 'What the marks mean' });
     await expect(marks.getByRole('listitem')).toHaveCount(2);
     await expect(marks).toContainText('n within the family');
     await expect(marks).toContainText('lead to compounds that are in no family yet');
+    await closeKey(page);
     await expect(page.getByRole('list', { name: 'What the arrows mean' })).toHaveCount(0);
-    const legendTop = (await marks.boundingBox())?.y ?? 0;
-    const mapTop = (await page.getByRole('group', { name: /^Navigator:/ }).boundingBox())?.y ?? 0;
+    const mapBefore = await page.getByRole('group', { name: /^Navigator:/ }).boundingBox();
     await focusFamily(page, 'cls_alcohols');
     const key = page.getByRole('list', { name: 'What the arrows mean' });
-    await expect(key).toContainText("solid line in the family's colour: what the family makes");
-    await expect(key).toContainText('dashed dark line: what the family is made from');
-    await expect(key).toContainText('number of reactions on this arrow');
-    // (the selection line above may wrap differently, so the legend itself can move; what matters is the height between the legend and the map)
-    const gap = ((await page.getByRole('group', { name: /^Navigator:/ }).boundingBox())?.y ?? 0) - ((await marks.boundingBox())?.y ?? 0);
-    expect(Math.abs(gap - (mapTop - legendTop)), 'the legend did not grow when the arrows were drawn (under 1 px)').toBeLessThan(1);
+    await expect(key).toContainText('makes');
+    await expect(key).toContainText('made from');
+    await expect(key).toContainText('number of reactions');
+    // the key is an overlay inside the map: the map did not move or change size when the arrows were drawn
+    const mapAfter = await page.getByRole('group', { name: /^Navigator:/ }).boundingBox();
+    expect(mapAfter).toEqual(mapBefore);
+    const keyBox = await key.boundingBox();
+    const area = await page.getByRole('group', { name: /^Navigator:/ }).boundingBox();
+    expect(keyBox !== null && area !== null && keyBox.x >= area.x && keyBox.y + keyBox.height <= area.y + area.height + 1, 'the key sits inside the map').toBe(true);
+    expect((keyBox?.height ?? 0), 'the key is two lines at most').toBeLessThanOrEqual(64);
+    const full = (await openKey(page)).getByRole('list', { name: 'What the marks mean' });
+    await expect(full).toContainText("solid line in the family's colour: what the family makes");
+    await expect(full).toContainText('dashed dark line: what the family is made from');
+    await expect(full).toContainText('number of reactions on this arrow');
     expect(await axeProblems(page)).toEqual([]);
+    await closeKey(page);
     mkdirSync(SHOTS, { recursive: true });
     const path = resolve(SHOTS, 'overview-arrows-1280x800.png');
     await page.screenshot({ path });

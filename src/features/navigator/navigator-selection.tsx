@@ -1,9 +1,9 @@
-/** The selection in one text line beside the canvas toolbar (step 5.5a review, item g; the inspector itself is step 5.6a). */
+/** The selection as a visually hidden live region (step 8.3b, A2): screen readers keep it; sighted people read it in the corner of the map and in the inspector. */
 import { useStore } from 'zustand';
 import { useStudyChrome } from '@/ui/study-chrome';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { selectionWordsOf } from './selection-words';
-import styles from './navigator.module.css';
+import styles from './map-room.module.css';
 
 export function NavigatorSelection(props: { /** The multi-selection in words (Studio; step 6.8b): shown instead of the single selection. */ readonly multiLine?: string }) {
   const { ports } = useNavigator();
@@ -13,7 +13,7 @@ export function NavigatorSelection(props: { /** The multi-selection in words (St
   const chrome = useStudyChrome();
   // a reaction picked in the Unanchored panel (or on a family page) is the selection when nothing on the map is
   const line = (text: string) => (
-    <p className={styles.selection} title={text}>
+    <p className={styles.liveOnly} role="status" data-selection-line="">
       {text}
     </p>
   );

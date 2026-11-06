@@ -38,7 +38,7 @@ export function createMapStore(initial: { readonly chapterId?: string | null; re
 }
 
 /** The fit rule this build writes (step 8.2b-fix, C4): a viewport saved under an older rule (or none) was made for smaller boxes and is ignored once. */
-export const FIT_RULE = 2;
+export const FIT_RULE = 3;
 
 export interface ParsedMap {
   readonly chapterId: string | null;

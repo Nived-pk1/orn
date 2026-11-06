@@ -12,6 +12,7 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { clickToolbar } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, loadDemo, openApp, openPhoneApp, watch, leaveChapters, examWord, expectSaved } from './kit';
 import { palette, pane, record, searchFor, shotsDir } from './editor-kit';
 
@@ -172,7 +173,7 @@ test.describe('desktop', () => {
     // an overview arrow of several reactions
     await modes(page).getByRole('button', { name: 'Map' }).click();
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
-    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).click();
+    await clickToolbar(page, 'List');
     const table = page.getByRole('table', { name: 'Arrows' });
     await expect(table).toBeVisible();
     const wanted = await table.locator('[data-row-key]').evaluateAll((all) => all.findIndex((row) => Number(row.querySelectorAll('[role="cell"]')[2]?.textContent) >= 2));

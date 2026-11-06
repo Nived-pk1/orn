@@ -3,6 +3,7 @@ import type { LayoutEdgeInput, LayoutNodeInput, LayoutRequest, LayoutResult, Poi
 import { layoutGrid } from './index';
 import { assignPorts, CORNER_CLEAR, PORT_GAP, shareSlots, sideFacing } from './ports';
 import type { Rect } from './geometry';
+import { boxScaleFor } from './scale';
 
 const SPACING = { node: 24, layer: 96, edge: 12 };
 const node = (id: string, column: number, row: number, width = 120, height = 56): LayoutNodeInput => ({ id, width, height, cell: { column, row } });
@@ -193,9 +194,12 @@ describe('the box scale in the layout (step 8.2b-fix, C1, C2)', () => {
   });
 });
 
-describe('growing boxes never makes a line cross a box that it cleared before (step 8.2b-fix, C2)', () => {
-  const crossings = (out: LayoutResult): number => Number(/(\d+) arrows? cross/.exec(out.notes.find((n) => n.includes('cross a box')) ?? '')?.[1] ?? 0);
-  it('on seeded layouts the grown drawing has no more blocked lines than the plain one', () => {
+describe('the box scale comes from the boxes only (step 8.3b, A5)', () => {
+  it('a wide count chip next to a box does not limit the scale', () => {
+    const r = request([node('a', 0, 0), node('b', 1, 0)], [{ ...edge('e1', 'a', 'b'), label: { width: 150, height: 20 } }]);
+    expect(layoutGrid({ ...r, growBoxes: true }, () => 0).boxScale).toBe(1.8);
+  });
+  it('on seeded layouts the scale is the largest factor that keeps every box 16 px from every other (boxes only)', () => {
     let seed = 7;
     const next = (n: number): number => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0), (seed >>> 8) % n);
     for (let round = 0; round < 12; round += 1) {
@@ -209,10 +213,14 @@ describe('growing boxes never makes a line cross a box that it cleared before (s
         const b = ids[next(ids.length)] as string;
         if (a === b || seen.has(`${a}>${b}`)) continue;
         seen.add(`${a}>${b}`);
-        edges.push(edge(`e${edges.length}`, a, b));
+        edges.push({ ...edge(`e${edges.length}`, a, b), label: { width: 24, height: 18 } });
       }
       const r = request(nodes, edges);
-      expect(crossings(layoutGrid({ ...r, growBoxes: true }, () => 0)), `round ${round}`).toBeLessThanOrEqual(crossings(run(r)));
+      const plain = run(r);
+      const wanted = boxScaleFor(r.nodes.map((n) => rectOf(r, plain, n.id)), []);
+      const got = layoutGrid({ ...r, growBoxes: true }, () => 0).boxScale ?? 1;
+      if (wanted < 1.02) expect(got, `round ${round}`).toBe(1);
+      else expect(got, `round ${round}`).toBeCloseTo(wanted, 6);
     }
   });
 });

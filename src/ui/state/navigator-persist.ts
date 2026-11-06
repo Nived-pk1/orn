@@ -32,6 +32,7 @@ import {
 import { createExplorerStore, parseExplorer, type ParsedExplorer } from './explorer-state';
 import { createChaptersStore, parseChapters, type ParsedChapters } from './chapters-state';
 import { NO_CHAPTER } from '@/core/chapters/types';
+import { parseExamChoice, type ParsedExamChoice } from './exam-state';
 import { createMapStore, FIT_RULE, parseMap, type ParsedMap } from './map-state';
 import { createSyllabusStore, parseSyllabus, type ParsedSyllabus } from './syllabus-state';
 import { createPageListStore, parsePageList, type ParsedPageList } from './page-list-state';
@@ -45,7 +46,7 @@ export const NAVIGATOR_UI_KEY = 'navigator';
 export const MAX_SAVED_EXPANDED = 1_000;
 const MAX_ID_LENGTH = 512;
 const MAX_COORDINATE = 1e7;
-const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'phoneTab', 'recentSearches', 'activeExam', 'explorer', 'precursors', 'chapters', 'map', 'reagents', 'named', 'mechanisms', 'syllabus']);
+const KNOWN = new Set(['selected', 'expanded', 'collapsedEdgeIds', 'viewports', 'openFamily', 'overviewMode', 'phoneTab', 'recentSearches', 'activeExam', 'explorer', 'precursors', 'chapters', 'map', 'reagents', 'named', 'mechanisms', 'syllabus', 'examChoice']);
 
 /** The same shape as the panels port: the stored entry, whether this tab writes, and the write. */
 export type NavigatorUiPort = PanelsPort;
@@ -79,6 +80,8 @@ export interface ParsedNavigatorUi {
   readonly recent: readonly string[];
   /** The chosen exam version (step 5.8), or null: no exam scope. Not judged against the data here: the selector does that. */
   readonly exam: ActiveExam | null;
+  /** "Only <exam>" or "Everything", and whether the first-run card was answered (step 8.3b). */
+  readonly examChoice: ParsedExamChoice;
   /** Parts that were present but unusable (reset to their defaults). A missing part is not damage. */
   readonly damaged: readonly string[];
   readonly extra: Readonly<Record<string, unknown>>;
@@ -101,7 +104,7 @@ function parseExpanded(value: unknown): ExpansionState['expanded'] | undefined {
 }
 
 export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
-  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', phoneTab: 'families', explorer: parseExplorer(undefined), precursors: parsePrecursors(undefined), chapters: parseChapters(undefined), map: parseMap(undefined), reagents: parseReagents(undefined), named: parsePageList(undefined, 'named'), mechanisms: parsePageList(undefined, 'mechanisms'), syllabus: parseSyllabus(undefined), phoneTabSaved: false, recent: [], exam: null, damaged: [], extra: {} };
+  const empty: ParsedNavigatorUi = { selected: null, expansion: NO_EXPANSION_STATE, views: {}, openFamily: null, overviewMode: 'map', phoneTab: 'families', explorer: parseExplorer(undefined), precursors: parsePrecursors(undefined), chapters: parseChapters(undefined), map: parseMap(undefined), reagents: parseReagents(undefined), named: parsePageList(undefined, 'named'), mechanisms: parsePageList(undefined, 'mechanisms'), syllabus: parseSyllabus(undefined), phoneTabSaved: false, recent: [], exam: null, examChoice: parseExamChoice(undefined), damaged: [], extra: {} };
   if (raw === undefined) return empty;
   if (!isRecord(raw)) return { ...empty, damaged: ['navigator'] };
   const damaged: string[] = [];
@@ -154,6 +157,8 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
   damaged.push(...mechanisms.damaged);
   const syllabus = parseSyllabus(raw.syllabus);
   damaged.push(...syllabus.damaged);
+  const examChoice = parseExamChoice(raw.examChoice);
+  damaged.push(...examChoice.damaged);
   let recent: string[] = [];
   const r = raw.recentSearches;
   if (r !== undefined) {
@@ -178,7 +183,7 @@ export function parseNavigatorUi(raw: unknown): ParsedNavigatorUi {
     } else damaged.push('viewports');
   }
   const extra = Object.fromEntries(Object.entries(raw).filter(([key]) => !KNOWN.has(key)));
-  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, phoneTab, phoneTabSaved: raw.phoneTab !== undefined && phoneTab === raw.phoneTab, explorer, precursors, chapters, map, reagents, named, mechanisms, syllabus, recent, exam, damaged, extra };
+  return { selected, expansion: { expanded, collapsedEdgeIds }, views, openFamily, overviewMode, phoneTab, phoneTabSaved: raw.phoneTab !== undefined && phoneTab === raw.phoneTab, explorer, precursors, chapters, map, reagents, named, mechanisms, syllabus, recent, exam, examChoice, damaged, extra };
 }
 
 export interface NavigatorUiStatus {
@@ -209,7 +214,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     // ADR-037: the overview does not expand; a saved expansion is ignored (and written back empty below).
     expansion: createExpansionStore(),
     filters: createFiltersStore(),
-    exam: createActiveExamStore(parsed.exam),
+    exam: createActiveExamStore(parsed.exam, parsed.examChoice),
     // a viewport saved under an older fit rule was made for smaller boxes: ignored once (step 8.2b-fix, C4); every save below marks the new rule
     viewports: createViewportsStore(parsed.map.fitRule === FIT_RULE ? parsed.views : withoutNavigator(parsed.views)),
     family: createFamilyStore(parsed.openFamily),
@@ -254,9 +259,9 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { filter, view, last } = stores.explorer.getState();
     const { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } = stores.precursors.getState();
     const { items: recentSearches } = stores.recent.getState();
-    const { active: activeExam } = stores.exam.getState();
+    const { active: activeExam, mode: examMode, asked: examAsked } = stores.exam.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === defaultTab ? {} : { phoneTab }), chapters: { chapterId, kinds, text: chapterText, onlyInScope: chaptersScoped }, map: { chapterId: mapChapter, showUnclassified, fitRule: FIT_RULE }, reagents: { reagentId, families: reagentFamilies, text: reagentText, onlyInScope: reagentsScoped }, named: { id: named.openId, text: named.text, onlyInScope: named.onlyInScope }, mechanisms: { id: mechanisms.openId, text: mechanisms.text, onlyInScope: mechanisms.onlyInScope }, syllabus: { versionId: syllabus.versionId, compareId: syllabus.compareId, gapsOnly: syllabus.gapsOnly }, recentSearches, activeExam, explorer: { filter, view, last }, precursors: { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === defaultTab ? {} : { phoneTab }), chapters: { chapterId, kinds, text: chapterText, onlyInScope: chaptersScoped }, map: { chapterId: mapChapter, showUnclassified, fitRule: FIT_RULE }, reagents: { reagentId, families: reagentFamilies, text: reagentText, onlyInScope: reagentsScoped }, named: { id: named.openId, text: named.text, onlyInScope: named.onlyInScope }, mechanisms: { id: mechanisms.openId, text: mechanisms.text, onlyInScope: mechanisms.onlyInScope }, syllabus: { versionId: syllabus.versionId, compareId: syllabus.compareId, gapsOnly: syllabus.gapsOnly }, recentSearches, activeExam, examChoice: { mode: examMode, asked: examAsked }, explorer: { filter, view, last }, precursors: { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

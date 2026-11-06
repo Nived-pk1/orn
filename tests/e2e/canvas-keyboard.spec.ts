@@ -8,6 +8,7 @@
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { selectionLine } from './map-toolbar-kit';
 import { axeProblems, expectClean, loadDemo, openApp, watch } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
@@ -201,7 +202,7 @@ test.describe('the overview map with the keyboard', () => {
     await openDemo(page);
     const target = page.locator('svg [data-node-id="cls_alcohols"]');
     await target.click();
-    await expect(page.getByText(/^Selected: Alcohols/)).toBeVisible();
+    await expect(selectionLine(page)).toHaveText(/^Selected: Alcohols/);
     await expect(pane(page).getByRole('article', { name: 'Record' })).toHaveAttribute('data-record-id', 'cls_alcohols');
     await page.getByRole('button', { name: 'Overview' }).count();
     // close the pane and start again: a double click never moves the target between its two clicks

@@ -6,6 +6,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { clickToolbar, closeKey, openKey, selectionLine, toolbarAction } from './map-toolbar-kit';
 import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection, UNCLASSIFIED_HUB_ID } from '@/core/graph';
 import { indexEngine } from '@/core/indexes';
 import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from '@/features/navigator/limits';
@@ -71,7 +72,8 @@ test.describe('the demo navigator', () => {
     await expect(page.locator('svg [data-edge-id]')).toHaveCount(own);
     await expect(page.getByText('Tap or click a family to see what it makes and what it is made from.')).toHaveCount(0);
     // Show brings Unclassified in
-    await page.getByRole('button', { name: 'Show', exact: true }).click();
+    await (await openKey(page)).getByRole('button', { name: 'Show', exact: true }).click();
+    await closeKey(page);
     await expect(page.locator('svg [data-node-id]')).toHaveCount(expected.nodes);
     await expect(page.getByRole('toolbar', { name: 'Canvas tools' })).toBeVisible();
     await expectClean(seen);
@@ -198,8 +200,6 @@ test.describe('pan and zoom', () => {
   });
 });
 
-// The line naming the selection sits next to the canvas toolbar (step 5.5a review, item g).
-const inspector = (page: Page) => page.getByRole('toolbar', { name: 'Canvas tools' });
 const hubGroup = (page: Page, id: string) => page.locator(`svg [data-node-id="${id}"]`);
 const nodeCount = (page: Page): Promise<number> => page.locator('svg [data-node-id]').count();
 
@@ -208,7 +208,7 @@ test.describe('selection and opening a family', () => {
     const seen = await watch(page);
     await openNavigator(page);
     await hubGroup(page, 'cls_aldehydes').click();
-    await expect(inspector(page).getByText(/^Selected: Aldehydes, class hub/)).toBeVisible();
+    await expect(selectionLine(page)).toHaveText(/^Selected: Aldehydes, class hub/);
     // a drag that starts on empty canvas is a pan, not a click: the selection stays
     const box = await drawing(page).boundingBox();
     if (box === null) throw new Error('the drawing has no box');
@@ -216,10 +216,10 @@ test.describe('selection and opening a family', () => {
     await page.mouse.down();
     await page.mouse.move(box.x + box.width - 80, box.y + box.height - 60, { steps: 6 });
     await page.mouse.up();
-    await expect(inspector(page).getByText(/^Selected: Aldehydes, class hub/)).toBeVisible();
+    await expect(selectionLine(page)).toHaveText(/^Selected: Aldehydes, class hub/);
     // a click on empty canvas (the corner of the drawing) clears it
     await page.mouse.click(box.x + 6, box.y + box.height - 6);
-    await expect(inspector(page).getByText('Nothing is selected.')).toBeVisible();
+    await expect(selectionLine(page)).toHaveText('Nothing is selected.');
     await expectClean(seen);
   });
 
@@ -240,9 +240,11 @@ test.describe('selection and opening a family', () => {
 
   test('the toolbar opens the selected family, and says why when it cannot', async ({ page }) => {
     await openNavigator(page);
-    const open = page.getByRole('button', { name: 'Open family' });
-    await expect(open).toHaveAccessibleDescription('select a family first');
+    // Open family is a button of the one-row toolbar, or an item of More when the row is narrow (step 8.3b, A1): either way it says why
+    await expect(await toolbarAction(page, /^Open family/)).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.getByText('select a family first')).toHaveCount(1);
     await hubGroup(page, 'cls_alkenes').click();
+    const open = await toolbarAction(page, /^Open family/);
     await expect(open).not.toHaveAttribute('aria-disabled', 'true');
     await open.click();
     await expect(page.getByRole('region', { name: 'Family page: Alkenes' })).toBeVisible();
@@ -257,14 +259,14 @@ test.describe('selection and opening a family', () => {
     const view = await transformOf(page);
     await page.reload();
     await expect(drawing(page)).toBeVisible();
-    await expect(inspector(page).getByText(/^Selected: Aldehydes, class hub/)).toBeVisible();
+    await expect(selectionLine(page)).toHaveText(/^Selected: Aldehydes, class hub/);
     await page.waitForTimeout(300);
     const again = await transformOf(page);
     expect(again.scale).toBeCloseTo(view.scale, 3);
     expect(again.x).toBeCloseTo(view.x, 0);
     expect(again.y).toBeCloseTo(view.y, 0);
     // an open family page comes back too
-    await page.getByRole('button', { name: 'Open family' }).click();
+    await clickToolbar(page, /^Open family/);
     await expect(page.getByRole('region', { name: 'Family page: Aldehydes' })).toBeVisible();
     await page.waitForTimeout(800);
     await page.reload();

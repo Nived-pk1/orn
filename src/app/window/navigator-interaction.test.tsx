@@ -7,24 +7,26 @@
  * keeps them without writing. A saved expansion is ignored and removed once. jsdom has no layout: what the browser does
  * with the drawing is proved by tests/e2e/navigator.spec.ts.
  */
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { doubleTap, tap } from '@/test-support/pointer-kit';
 import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
+import { selectionLine, toolbarAction } from '@/test-support/map-toolbar-kit';
 
 afterEach(cleanup);
 
 const drawing = (): Promise<HTMLElement> => screen.findByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ });
 const hub = (name: string): HTMLElement => screen.getByRole('graphics-symbol', { name: new RegExp(`^${name}, class hub`) });
 const symbols = (): number => screen.getAllByRole('graphics-symbol').length;
-// The line naming the selection sits next to the canvas toolbar (step 5.5a review, item g).
-const inspector = (): HTMLElement => screen.getByRole('toolbar', { name: 'Canvas tools' });
-// the toolbar's buttons (the inspector, once a record is picked, has an Open family button of its own)
-const button = (name: string): HTMLElement => within(screen.getByRole('toolbar', { name: 'Canvas tools' })).getByRole('button', { name });
-const reasonOf = (name: string): string | null => {
-  const id = button(name).getAttribute('aria-describedby');
-  return id === null ? null : (document.getElementById(id)?.textContent ?? null);
+// The line naming the selection is a visually hidden live region (step 8.3b, A2).
+const hasLine = (pattern: RegExp | string): boolean => (typeof pattern === 'string' ? selectionLine() === pattern : pattern.test(selectionLine()));
+// the toolbar's actions: a button in the row, or an item of More when the row is narrow (step 8.3b, A1)
+const button = (name: string): Promise<HTMLElement> => toolbarAction(name === 'Open' ? /^Open( the arrow)?$/ : new RegExp('^' + name));
+const reasonOf = async (name: string): Promise<string | null> => {
+  const el = await button(name);
+  const id = el.getAttribute('aria-describedby');
+  return id === null ? (el.querySelector('span:nth-child(2)')?.textContent ?? null) : (document.getElementById(id)?.textContent ?? null);
 };
 const saved = (app: FakeApp): Record<string, unknown> | undefined => app.navigator.uiSaves[app.navigator.uiSaves.length - 1];
 
@@ -39,22 +41,22 @@ async function opened(app: FakeApp = fakeApp({ state: demoState() })): Promise<F
 describe('selection', () => {
   it('a click on a hub selects it and the inspector names it in a text line', async () => {
     await opened();
-    expect(within(inspector()).getByText('Nothing is selected.')).toBeTruthy();
+    expect(hasLine('Nothing is selected.')).toBe(true);
     tap(hub('Aldehydes'));
-    expect(within(inspector()).getByText(/^Selected: Aldehydes, class hub/)).toBeTruthy();
+    expect(hasLine(/^Selected: Aldehydes, class hub/)).toBe(true);
   });
 
   it('a click on an arrow selects the arrow', async () => {
     await opened();
     tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ }));
-    expect(within(inspector()).getByText(/^Selected: Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/)).toBeTruthy();
+    expect(hasLine(/^Selected: Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/)).toBe(true);
   });
 
   it('a click on empty canvas clears the selection', async () => {
     await opened();
     tap(hub('Aldehydes'));
     tap(await drawing());
-    expect(within(inspector()).getByText('Nothing is selected.')).toBeTruthy();
+    expect(hasLine('Nothing is selected.')).toBe(true);
   });
 
   it('a click is handled by ONE listener on the svg: no node or arrow carries a handler of its own', async () => {
@@ -82,19 +84,19 @@ describe('the overview does not expand; a family opens as a page', () => {
 
   it('Open family says why it cannot act, and acts on a selected family', async () => {
     const app = await opened();
-    expect(button('Open family').getAttribute('aria-disabled')).toBe('true');
-    expect(reasonOf('Open family')).toBe('select a family first');
+    expect((await button('Open family')).getAttribute('aria-disabled')).toBe('true');
+    expect(await reasonOf('Open family')).toBe('select a family first');
     tap(hub('Aldehydes'));
-    expect(button('Open family').getAttribute('aria-disabled')).toBeNull();
-    fireEvent.click(button('Open family'));
+    expect((await button('Open family')).getAttribute('aria-disabled')).toBeNull();
+    fireEvent.click(await button('Open family'));
     expect(app.navigator.ui.family.getState().open).toBe('cls_aldehydes');
   });
 
   it('a selected arrow: Open family says to use Open, and Open opens the source family at the target group', async () => {
     const app = await opened();
     tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ }));
-    expect(reasonOf('Open family')).toBe('an arrow is selected: use Open, or select a family');
-    fireEvent.click(button('Open'));
+    expect(await reasonOf('Open family')).toBe('an arrow is selected: use Open, or select a family');
+    fireEvent.click(await button('Open'));
     expect(app.navigator.ui.family.getState().open).toBe('cls_alcohols');
     expect(app.navigator.ui.family.getState().target).toEqual({ section: 'reactions_of', hubId: 'cls_aldehydes' });
   });
@@ -112,7 +114,7 @@ describe('the overview does not expand; a family opens as a page', () => {
   it('a selection that is not a family says so', async () => {
     await opened();
     tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ }));
-    expect(button('Open family').getAttribute('aria-disabled')).toBe('true');
+    expect((await button('Open family')).getAttribute('aria-disabled')).toBe('true');
   });
 });
 
@@ -120,7 +122,7 @@ describe('the saved view', () => {
   it('saves the selection and the open family once, after the debounce', async () => {
     const app = await opened();
     tap(hub('Aldehydes'));
-    fireEvent.click(button('Open family'));
+    fireEvent.click(await button('Open family'));
     expect(app.navigator.uiSaves).toHaveLength(0);
     act(() => app.navigator.timers.advance(299));
     expect(app.navigator.uiSaves).toHaveLength(0);
@@ -132,7 +134,7 @@ describe('the saved view', () => {
   it('comes back in a new window: the hub is selected and its family page is open', async () => {
     const first = await opened();
     tap(hub('Aldehydes'));
-    fireEvent.click(button('Open family'));
+    fireEvent.click(await button('Open family'));
     act(() => first.navigator.timers.advance(300));
     await waitFor(() => expect(first.navigator.uiSaves).toHaveLength(1));
     cleanup();
@@ -148,7 +150,7 @@ describe('the saved view', () => {
     tap(hub('Aldehydes'));
     act(() => app.navigator.timers.advance(1000));
     expect(app.navigator.uiSaves).toHaveLength(0);
-    expect(within(inspector()).getByText(/^Selected: Aldehydes/)).toBeTruthy();
+    expect(hasLine(/^Selected: Aldehydes/)).toBe(true);
     expect(screen.getByRole('region', { name: 'Saved view' }).textContent).toContain('not saved: this tab is read-only');
   });
 
@@ -162,7 +164,7 @@ describe('the saved view', () => {
 
   it('a damaged entry is reset to the defaults and reported, never fatal', async () => {
     const app = await opened(fakeApp({ state: demoState(), navigator: { uiPort: { stored: { selected: 7, expanded: 'all', viewports: { navigator: { x: 'a' } } } } } }));
-    expect(within(inspector()).getByText('Nothing is selected.')).toBeTruthy();
+    expect(hasLine('Nothing is selected.')).toBe(true);
     expect(screen.getByRole('region', { name: 'Saved view' }).textContent).toContain('damaged and was reset (selected, expanded, viewports.navigator)');
     expect(app.navigator.logs.some((line) => line.type === 'ui_state_reset')).toBe(true);
   });

@@ -9,6 +9,7 @@ import { produce } from 'immer';
 import { afterEach, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp } from '@/test-support/window-kit';
+import { openKey } from '@/test-support/map-toolbar-kit';
 
 afterEach(cleanup);
 
@@ -18,6 +19,7 @@ describe('the legend', () => {
   it('lists each family group of the demo once, in the order the grid reads, with a swatch that carries the tone and no meaning of its own', async () => {
     renderWithApp(fakeApp({ state: demoState() }));
     await drawing();
+    await openKey();
     const legend = screen.getByRole('list', { name: 'Family groups' });
     const items = within(legend).getAllByRole('listitem');
     expect(items.map((li) => li.textContent)).toEqual(['Hydrocarbons', 'Halogen compounds', 'Oxygen compounds', 'Nitrogen compounds']);
@@ -36,6 +38,7 @@ describe('the legend', () => {
     });
     renderWithApp(fakeApp({ state }));
     await drawing();
+    await openKey();
     const items = within(screen.getByRole('list', { name: 'Family groups' })).getAllByRole('listitem');
     expect(items[0]?.textContent).toBe('Carbon and hydrogen only');
     expect(items[0]?.querySelector('[data-tone]')?.getAttribute('data-tone')).toBe('rose');
@@ -51,6 +54,7 @@ describe('the legend', () => {
     });
     renderWithApp(fakeApp({ state }));
     await drawing();
+    await openKey();
     expect(screen.queryByRole('list', { name: 'Family groups' })).toBeNull();
   });
 });

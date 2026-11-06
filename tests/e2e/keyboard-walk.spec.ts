@@ -8,6 +8,7 @@
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { clickToolbar, closeKey, openKey } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, openApp, watch, expectDemoLoaded } from './kit';
 
 const SHOTS = resolve(process.cwd(), 'screenshots');
@@ -146,8 +147,10 @@ test.describe('the keyboard-only walk', () => {
     expect(await axeProblems(page)).toEqual([]);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeFocused();
-    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).focus();
-    await expectFocusVisible(page, 'the List toggle');
+    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'More' }).focus();
+    await expectFocusVisible(page, 'the More button');
+    await page.keyboard.press('Enter'); // the menu opens on its first item, List (step 8.3b, A1)
+    await expect(page.getByRole('menuitem', { name: 'List' })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('table', { name: 'Families' })).toBeVisible();
     await expect(page.getByRole('status', { name: 'Navigator announcements' })).toContainText('list of families and arrows');
@@ -170,7 +173,7 @@ test.describe('the keyboard-only walk', () => {
     await openApp(page);
     await page.getByRole('button', { name: 'Load demo dataset' }).click();
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
-    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).click();
+    await clickToolbar(page, 'List');
     await expect(page.getByRole('table', { name: 'Families' })).toBeVisible();
     await page.getByRole('table', { name: 'Families' }).getByRole('button', { name: /^Reactions out/ }).click();
     await page.getByRole('table', { name: 'Families' }).getByRole('button', { name: /^Reactions out/ }).click();
@@ -190,10 +193,11 @@ test.describe('the keyboard-only walk', () => {
     const drawing = page.getByRole('group', { name: NAVIGATOR });
     await expect(drawing).toBeVisible({ timeout: 90_000 });
     // step 8.2a: Unclassified is hidden and no arrow is drawn until a family is focused: show Unclassified; the Arrows table lists every arrow
-    const show = page.getByRole('button', { name: 'Show', exact: true });
+    const show = (await openKey(page)).getByRole('button', { name: 'Show', exact: true }); // the legend is the Key popover (8.3b)
     if ((await show.count()) > 0) await show.click();
+    await closeKey(page);
     const mapNodes = await page.locator('svg [data-box="hub"], svg [data-box="unclassified"]').count();
-    await page.getByRole('toolbar', { name: 'Canvas tools' }).getByRole('button', { name: 'List' }).click();
+    await clickToolbar(page, 'List');
     const families = page.getByRole('table', { name: 'Families' });
     const arrows = page.getByRole('table', { name: 'Arrows' });
     await expect(families).toBeVisible();

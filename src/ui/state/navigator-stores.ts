@@ -4,6 +4,7 @@
  * IDs and numbers. Persistence is a separate wrapper (`persist.ts`) so the stores stay pure and testable without a port. The active exam version and the recent searches are saved (step 5.8); filters are in memory only.
  */
 import { createExplorerStore, type ExplorerStore } from './explorer-state';
+import type { ScopeMode } from './exam-state';
 import { createChaptersStore, type ChaptersStore } from './chapters-state';
 import { createMapStore, type MapStore } from './map-state';
 import { createPageListStore, type PageListStore } from './page-list-state';
@@ -138,12 +139,25 @@ export interface ActiveExam {
 }
 export interface ActiveExamState {
   readonly active: ActiveExam | null;
+  /** "Only <exam>" or "Everything" (step 8.3b, B2): one switch for every view. */
+  readonly mode: ScopeMode;
+  /** The first-run card ("Which exam are you preparing for?") has been answered (step 8.3b, B3). */
+  readonly asked: boolean;
   setActive(next: ActiveExam | null): void;
+  setMode(next: ScopeMode): void;
+  setAsked(next: boolean): void;
 }
 export type ActiveExamStore = StoreApi<ActiveExamState>;
 
-export function createActiveExamStore(initial: ActiveExam | null = null): ActiveExamStore {
-  return createStore<ActiveExamState>((set) => ({ active: initial, setActive: (next) => set({ active: next }) }));
+export function createActiveExamStore(initial: ActiveExam | null = null, choice: { readonly mode?: ScopeMode; readonly asked?: boolean } = {}): ActiveExamStore {
+  return createStore<ActiveExamState>((set) => ({
+    active: initial,
+    mode: choice.mode ?? 'only',
+    asked: choice.asked ?? false,
+    setActive: (next) => set({ active: next }),
+    setMode: (next) => set({ mode: next }),
+    setAsked: (next) => set({ asked: next }),
+  }));
 }
 
 export interface SavedViewport {

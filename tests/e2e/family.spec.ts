@@ -9,6 +9,7 @@ import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { selectionLine } from './map-toolbar-kit';
 import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection } from '@/core/graph';
 import { documentToState } from '@/core/dataset';
 import { indexEngine } from '@/core/indexes';
@@ -114,7 +115,7 @@ test.describe('the family page of the demo', () => {
     expect(after.scale).toBeCloseTo(before.scale, 3);
     expect(after.x).toBeCloseTo(before.x, 0);
     expect(after.y).toBeCloseTo(before.y, 0);
-    await expect(page.getByRole('toolbar', { name: 'Canvas tools' }).getByText(/^Selected: (Aldehydes|Alcohols), class hub/)).toBeVisible();
+    await expect(selectionLine(page)).toHaveText(/^Selected: (Aldehydes|Alcohols), class hub/);
     await expectClean(seen);
   });
 
@@ -140,7 +141,7 @@ test.describe('the family page of the demo', () => {
     const first = page.getByRole('article').first();
     await first.getByRole('button').first().focus();
     await page.keyboard.press('Enter');
-    await expect(page.getByText(/^Selected: reaction /)).toBeVisible();
+    await expect(selectionLine(page)).toHaveText(/^Selected: reaction /);
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toBeVisible();
   });

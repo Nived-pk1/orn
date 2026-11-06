@@ -12,7 +12,7 @@ export function layoutCacheKey(request: LayoutRequest): string {
   const { spacing } = request;
   const previous = request.previous === undefined ? [] : Object.keys(request.previous).sort().map((id) => `${id}=${request.previous?.[id]?.x},${request.previous?.[id]?.y}`);
   return hashParts([
-    'layout/4',
+    'layout/5',
     request.algorithm,
     request.direction,
     `${spacing.node},${spacing.layer},${spacing.edge}`,
