@@ -19,6 +19,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { answerExamCard } from './exam-kit';
 import { selectionLine } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, watch, type UploadFile } from './kit';
 import { palette, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
@@ -58,17 +59,6 @@ async function importOwnData(page: Page, file: UploadFile = DEMO_FILE): Promise<
   await answerExamCard(page);
 }
 
-/** Step 8.3b, B3: the first time a student has data with exams a card asks which exam; these specs are about other things, so they answer "Just exploring". */
-async function answerExamCard(page: Page): Promise<void> {
-  const card = page.getByRole('dialog', { name: 'Which exam are you preparing for?' });
-  try {
-    await card.waitFor({ state: 'visible', timeout: 8_000 });
-  } catch {
-    return; // no exam in the data: no card
-  }
-  await card.getByRole('button', { name: 'Just exploring' }).click();
-  await expect(card).toHaveCount(0);
-}
 
 /** A student has no Dataset page (step 8.3): the size of the data is the number of boxes on the Map. */
 const recordTotal = async (page: Page): Promise<number> => {

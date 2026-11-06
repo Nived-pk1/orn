@@ -8,6 +8,7 @@ import { expect, test } from './fixtures';
 import { expectClean, leaveChapters, loadDemo, watch } from './kit';
 import { shotsDir } from './editor-kit';
 import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone } from './map-layout-kit';
+import { clickToolbar } from './map-toolbar-kit';
 
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 const edges = (page: Page) => page.locator('svg [data-layer="edges"] [data-edge-id]');
@@ -121,12 +122,17 @@ test.describe('the map on a desktop (part 2)', () => {
     test.setTimeout(400_000);
     const seen = await watch(page);
     await openMapDesktop(page);
-    await page.getByRole('button', { name: 'From A to B' }).click();
+    await clickToolbar(page, 'From A to B');
     const panel = page.getByRole('complementary', { name: 'From A to B' });
     await expect(panel).toBeVisible();
     await expect(panel).toContainText('Across all chapters');
     expect(await findTwoStepChain(page)).toBe(true);
     await expect(edges(page)).toHaveCount(2);
+    // step 8.3b, B2.1: the chosen chain is ONE card with a summary line, an "On the map" chip and its step rows (each its own button)
+    const chosen = panel.getByRole('list', { name: 'Chains' }).locator('> li').first();
+    await expect(chosen).toContainText('On the map');
+    await expect(chosen).toContainText(/2 steps · \d+ reactions?/);
+    await expect(chosen.getByRole('button')).toHaveCount(3); // the card and its two step rows
     // the panel sits beside the map: it does not cover the drawing
     const map = await page.getByRole('group', { name: /^Navigator:/ }).boundingBox();
     const side = await panel.boundingBox();
@@ -143,6 +149,55 @@ test.describe('the map on a desktop (part 2)', () => {
     await expect(panel).toHaveCount(0);
     // the chain is gone; only the arrow whose step was opened stays drawn (a selected arrow does)
     await expect(edges(page)).toHaveCount(1);
+    await expectClean(seen);
+  });
+
+  test('chain cards: a click on the summary line chooses a card (the map draws it); a step row opens its reactions; the keyboard path chooses and enters', async ({ page }) => {
+    test.setTimeout(400_000);
+    const seen = await watch(page);
+    await openMapDesktop(page);
+    await clickToolbar(page, 'From A to B');
+    const panel = page.getByRole('complementary', { name: 'From A to B' });
+    await expect(panel).toBeVisible();
+    // find a pair of families with at least two chains
+    const from = page.getByRole('combobox', { name: 'From' });
+    const to = page.getByRole('combobox', { name: 'To' });
+    const values = await from.locator('option').evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value).filter((v) => v !== ''));
+    const cards = panel.getByRole('list', { name: 'Chains' }).locator('> li');
+    let found = false;
+    for (const a of values) {
+      await from.selectOption(a);
+      for (const b of values) {
+        if (a === b) continue;
+        await to.selectOption(b);
+        if ((await cards.count()) >= 2) {
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+    expect(found, 'the fixture has two families joined by at least two chains').toBe(true);
+    await expect(cards.first()).toHaveAttribute('data-picked', '');
+    await expect(cards.nth(1).getByRole('button')).toHaveCount(1); // not chosen: no step rows
+    await expect(cards.nth(1)).not.toContainText('On the map');
+    // a click on the SUMMARY line (not the title) chooses the card
+    await cards.nth(1).locator('span').last().click();
+    await expect(cards.nth(1)).toHaveAttribute('data-picked', '');
+    await expect(cards.nth(1)).toContainText('On the map');
+    await expect(cards.first()).not.toHaveAttribute('data-picked', '');
+    await expect.poll(() => edges(page).count()).toBeGreaterThan(0); // the map draws the chosen chain
+    await page.screenshot({ path: `${shotsDir()}/a-to-b-chain-cards-1280x800.png` });
+    // a step row opens that step's reactions and leaves the chosen chain alone
+    await cards.nth(1).getByRole('button').nth(1).click();
+    await expect(page.getByRole('article', { name: 'Arrow' }).first()).toBeVisible();
+    await expect(cards.nth(1)).toHaveAttribute('data-picked', '');
+    // keyboard: Tab reaches the first card's button, Enter chooses it, Tab moves into its step rows
+    await cards.first().getByRole('button').first().focus();
+    await page.keyboard.press('Enter');
+    await expect(cards.first()).toHaveAttribute('data-picked', '');
+    await page.keyboard.press('Tab');
+    await expect(cards.first().getByRole('button').nth(1)).toBeFocused();
     await expectClean(seen);
   });
 

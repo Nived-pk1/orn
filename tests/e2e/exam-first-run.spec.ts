@@ -34,7 +34,7 @@ async function importDemo(page: Page, phone: boolean): Promise<void> {
 test.describe('desktop', () => {
   test('the card asks once; JEE Main hides what is outside it in Reactions; Show them brings it back; a reload does not ask again', async ({ page }) => {
     test.setTimeout(240_000);
-    const seen = await watch(page);
+    const seen = await watch(page, STUDY);
     await page.setViewportSize({ width: 1280, height: 800 });
     await importDemo(page, false);
     await expect(card(page)).toBeVisible({ timeout: 30_000 });
@@ -45,7 +45,7 @@ test.describe('desktop', () => {
     await expect(page.getByRole('combobox', { name: /^Exam$/ })).toHaveValue('exm_jee-main');
     await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
 
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions' }).click();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions', exact: true }).click();
     const view = page.getByRole('region', { name: 'Reactions', exact: true });
     await expect(view.locator('[data-hidden-line]')).toContainText(/\d+ reactions? outside JEE Main (is|are) hidden · Show (them|it)/);
     const only = await view.locator('article[data-reaction-id]').count();
@@ -69,7 +69,7 @@ test.describe('desktop', () => {
 
   test('"Just exploring" means All exams, and the card does not come back', async ({ page }) => {
     test.setTimeout(240_000);
-    const seen = await watch(page);
+    const seen = await watch(page, STUDY);
     await page.setViewportSize({ width: 1280, height: 800 });
     await importDemo(page, false);
     await card(page).getByRole('button', { name: 'Just exploring' }).click();
@@ -89,7 +89,7 @@ for (const [label, options, engine, phoneShot] of [['Pixel 7 (Chromium)', PIXEL,
     test('the card asks once; the chip at the top shows the exam; Reactions hides what is outside it', async ({ page, browserName }) => {
       test.skip(browserName !== engine, `the ${label} profile is ${engine}`);
       test.setTimeout(240_000);
-      const seen = await watch(page);
+      const seen = await watch(page, STUDY);
       await importDemo(page, true);
       await expect(card(page)).toBeVisible({ timeout: 30_000 });
       await page.screenshot({ path: `${shotsDir()}/${phoneShot}` });

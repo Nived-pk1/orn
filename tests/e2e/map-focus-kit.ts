@@ -86,3 +86,13 @@ export async function eachFocusByKeyboard(page: Page, each: (id: string, drawn: 
     await each(id ?? `family ${i + 1}`, await measure(page));
   }
 }
+
+/**
+ * Step 8.3b, A5: the box scale no longer backs off for a line that cannot clear the bigger boxes: such a line stays straight and the layout note
+ * names it ("1 arrow crosses a box ..."). A line through a box is therefore allowed only up to the number the note gives; none is silent.
+ */
+export async function blockedLines(page: Page): Promise<number> {
+  const note = page.getByText(/\d+ arrows? cross(?:es)? a box/).first();
+  if ((await note.count()) === 0) return 0;
+  return Number(/(\d+) arrows? cross/.exec((await note.textContent()) ?? '')?.[1] ?? 0);
+}

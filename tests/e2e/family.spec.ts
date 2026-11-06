@@ -9,7 +9,7 @@ import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { selectionLine } from './map-toolbar-kit';
+import { clickToolbar, selectionLine } from './map-toolbar-kit';
 import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection } from '@/core/graph';
 import { documentToState } from '@/core/dataset';
 import { indexEngine } from '@/core/indexes';
@@ -129,7 +129,10 @@ test.describe('the family page of the demo', () => {
       path.dispatchEvent(new PointerEvent('pointerdown', init));
       document.dispatchEvent(new PointerEvent('pointerup', init));
     });
-    await page.getByRole('button', { name: 'Open', exact: true }).click();
+    // the inspector pane opens a moment after the press and narrows the map: the toolbar settles (Open may move into More) before it is used
+    await expect(page.locator('[data-map-selected]')).toContainText('→');
+    await page.waitForTimeout(800);
+    await clickToolbar(page, /^Open( the arrow)?$/); // the arrow's Open: a button of the row, or an item of More when the row is narrow
     await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
     await expect(page.getByRole('heading', { level: 3, name: 'To Aldehydes' })).toBeVisible();
     await expectClean(seen);
@@ -141,7 +144,7 @@ test.describe('the family page of the demo', () => {
     const first = page.getByRole('article').first();
     await first.getByRole('button').first().focus();
     await page.keyboard.press('Enter');
-    await expect(selectionLine(page)).toHaveText(/^Selected: reaction /);
+    await expect(page.getByText(/^Selected: reaction /)).toBeVisible(); // the family page has its own visible selection line
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toBeVisible();
   });

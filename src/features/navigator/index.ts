@@ -4,7 +4,6 @@ export { PhoneTabs } from './phone-tabs';
 export { ReactionCardHost } from './reaction-card-host';
 export { SubstanceHost } from './substance-host';
 export type { ReactionCardHostProps } from './reaction-card-host';
-export { FamilyPage } from './family-page';
 export { NavigatorSelection } from './navigator-selection';
 export { navigatorNoticesOf, NavigatorStatus, truncationLineOf } from './navigator-status';
 export { NavigatorProvider, useFamilyPageOpen, useNavigator, useNavigatorState } from './navigator-context';

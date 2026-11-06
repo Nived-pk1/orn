@@ -76,6 +76,13 @@ describe('ExamScopeSelector, the student edition', () => {
     fireEvent.click(within(group).getByRole('radio', { name: 'Only JEE Main' }));
     expect(exam.getState().mode).toBe('only');
   });
+  it('choosing an exam turns Only on again, even after Everything was chosen for the last one (Only is the default when an exam is chosen)', () => {
+    const exam = setup('study', { examId: 'exm_jee', examVersionId: 'exv_jee_2025' });
+    act(() => exam.getState().setMode('everything'));
+    fireEvent.change(examSelect(), { target: { value: '' } });
+    fireEvent.change(examSelect(), { target: { value: 'exm_cbse' } });
+    expect(exam.getState().mode).toBe('only');
+  });
   it('choosing All exams clears the exam and the switch goes away', () => {
     const exam = setup('study', { examId: 'exm_jee', examVersionId: 'exv_jee_2025' });
     fireEvent.change(examSelect(), { target: { value: '' } });

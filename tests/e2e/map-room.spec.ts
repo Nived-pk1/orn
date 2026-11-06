@@ -27,9 +27,20 @@ test.describe('the measuring helper', () => {
   test('boxTitlePx reads a known 12 px label as 12', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => {
-      const holder = document.createElement('div');
-      holder.innerHTML = '<svg width="200" height="40"><g id="calibration"><text font-size="12" x="4" y="20">Known</text></g></svg>';
-      document.body.append(holder);
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('width', '200');
+      svg.setAttribute('height', '40');
+      const group = document.createElementNS(ns, 'g');
+      group.setAttribute('id', 'calibration');
+      const text = document.createElementNS(ns, 'text');
+      text.setAttribute('font-size', '12');
+      text.setAttribute('x', '4');
+      text.setAttribute('y', '20');
+      text.textContent = 'Known';
+      group.append(text);
+      svg.append(group);
+      document.body.append(svg);
     });
     expect(await boxTitlePx(page, '#calibration text')).toBeCloseTo(12, 5);
   });
@@ -105,7 +116,8 @@ test.describe('more room for the map (Studio)', () => {
     const before = await drawing(page).boundingBox();
     await focusFamily(page, 'cls_alcohols');
     await expect(page.locator('[data-map-selected]')).toHaveText('Selected: Alcohols');
-    expect(await drawing(page).boundingBox(), 'nothing moved when the selection label appeared').toEqual(before);
+    const after = await drawing(page).boundingBox();
+    expect({ y: after?.y, height: after?.height }, 'the selection label did not move or resize the map vertically (the pane may narrow it)').toEqual({ y: before?.y, height: before?.height });
     const key = page.getByRole('list', { name: 'What the arrows mean' });
     await expect(key).toBeVisible();
     const keyBox = await key.boundingBox();

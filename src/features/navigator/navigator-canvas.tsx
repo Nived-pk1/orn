@@ -31,10 +31,6 @@ import { outsideNoteOf } from './scope-lens';
 import type { withChips as WithChipsFn } from './map-chips';
 import type { createPairFacts as CreatePairFactsFn } from './pair-facts';
 import { useNavigator, useNavigatorState } from './navigator-context';
-import { keyPlacement, type ScreenRect } from './key-placement';
-import { MapHint } from './map-hint';
-import { MapToolbar } from './map-toolbar';
-import { selectionWordsOf } from './selection-words';
 import { NavigatorSelection } from './navigator-selection';
 import { emptinessOf, truncationNoticeOf } from './notices';
 import { UnanchoredPanel } from './unanchored-panel';
@@ -42,13 +38,16 @@ import { boxesRect } from './map-geometry';
 import { useMapView } from './use-map-view';
 import styles from './navigator.module.css';
 import controls from './map-controls.module.css';
+import room from './map-room.module.css';
 
 // Studio only (the legend's link): a lazy chunk, never loaded in Study (nothing there mounts it)
 // "From A to B" (step 8.2b): a lazy chunk, loaded when the panel is first opened
 // the phone's controls row is its own chunk (the desktop never needs it); its placeholder is as high as the row
 const PhoneMapBar = /* @__PURE__ */ lazy(() => import('./phone-bar').then((m) => ({ default: m.PhoneMapBar })));
 const PhoneMapControls = /* @__PURE__ */ lazy(() => import('./phone-map-controls').then((m) => ({ default: m.PhoneMapControls })));
-const ArrowKey = /* @__PURE__ */ lazy(() => import('./arrow-key').then((m) => ({ default: m.ArrowKey })));
+// step 8.3b (Part 0.1): the desktop toolbar and the overlays inside the map are lazy chunks, loaded right after the first paint
+const MapToolbar = /* @__PURE__ */ lazy(() => import('./map-toolbar').then((m) => ({ default: m.MapToolbar })));
+const MapCorner = /* @__PURE__ */ lazy(() => import('./map-corner').then((m) => ({ default: m.MapCorner })));
 type WithChips = typeof WithChipsFn;
 type CreatePairFacts = typeof CreatePairFactsFn;
 const noFacts = (): undefined => undefined;
@@ -56,7 +55,6 @@ const KeyPopover = /* @__PURE__ */ lazy(() => import('./key-popover').then((m) =
 const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanelInScope })));
 const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
 const busyLine = (n: number): string => `This chapter has ${n} arrows. Tap or click a family to see its part.`;
-const KEY_SIZE = { width: 300, height: 48 };
 const NO_IDS: ReadonlySet<string> = new Set();
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
@@ -205,14 +203,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const outsideNote = useMemo(() => (scene === null || !scene.nodes.some((node) => node.state.dimmed) ? undefined : outsideNoteOf(ports.store.getState(), activeExam)), [scene, ports, activeExam]);
   const legend = useMemo(() => legendOf(scene), [scene]);
   const legendKeys = useMemo(() => keyOf(view), [view]);
-  // step 8.3b (A3, A4, B2.2): the key, the hint and the selection sit INSIDE the map; the key takes the bottom-left corner unless that covers a box
-  const keyCorner = useMemo(() => {
-    const area = svg?.getBoundingClientRect();
-    if (phone || drawn === null || settled === undefined || area === undefined) return 'bottom-left' as const;
-    const boxes: ScreenRect[] = drawn.nodes.map((node) => ({ x: node.x * settled.scale + settled.x, y: node.y * settled.scale + settled.y, width: node.width * settled.scale, height: node.height * settled.scale }));
-    return keyPlacement(boxes, KEY_SIZE, { width: area.width, height: area.height });
-  }, [phone, drawn, settled, svg]);
-  const selectedWords = selected === null || (multi !== null && multi.items.length > 0) ? undefined : selectionWordsOf(scene, selected, 'corner');
+  // step 8.3b (A3, A4, B2.2): the key, the hint and the selection sit INSIDE the map (MapCorner)
   const clearSelection = useCallback((): void => ports.ui.selection.getState().select(null), [ports]);
   const hint = view === null ? undefined : view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : undefined;
   const cut = truncationNoticeOf(scene?.truncation ?? null);
@@ -237,6 +228,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   return (
     <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
       {phone ? null : (
+        <Suspense fallback={<div className={room.row} aria-hidden="true" style={{ height: 45 }} />}>
         <MapToolbar
           listing={listing}
           noScene={scene === null}
@@ -267,6 +259,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           }
           extra={multi?.actions(false)}
         />
+        </Suspense>
       )}
       {phone ? null : <NavigatorSelection {...(multi !== null && multi.items.length > 0 ? { multiLine: multi.line } : {})} />}
       {cut === null ? null : (
@@ -302,12 +295,9 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         ) : null}
         {phone ? selectBar : null}
         {phone || listing || scene === null ? null : (
-          <>
-            <MapHint selected={selectedWords === undefined ? undefined : `Selected: ${selectedWords}`} onClear={clearSelection} hint={hint} hintKind={view?.quiet === true ? 'quiet' : 'busy'} />
-            <Suspense fallback={null}>
-              <ArrowKey keys={legendKeys} corner={keyCorner} />
-            </Suspense>
-          </>
+          <Suspense fallback={null}>
+            <MapCorner scene={scene} drawn={drawn ?? scene} selected={selected} multi={multi !== null && multi.items.length > 0} settled={settled} svg={svg} onClear={clearSelection} hint={hint} hintKind={view === null ? undefined : view.quiet ? 'quiet' : 'busy'} keys={legendKeys} />
+          </Suspense>
         )}
         {multi?.marquee == null ? null : <div className={styles.marquee} aria-hidden="true" style={{ left: multi.marquee.left, top: multi.marquee.top, width: multi.marquee.width, height: multi.marquee.height }} />}
         {state.error !== null ? (

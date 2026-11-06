@@ -27,7 +27,7 @@ import { useApp } from "./context";
 import { LazyPalette, prefetchPalette } from "./lazy-palette";
 import { LazyExamFirstRun } from "./lazy-exam-first-run";
 import { ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
-import { examOptions } from "./exam-scope";
+import { examOptionsByExam } from "./exam-choice";
 import { buildCommands, type CommandDeps } from "./palette-commands";
 import { createSearchPorts } from "./search-port";
 import { openChapter } from "./chapters-entry";
@@ -232,7 +232,7 @@ function WindowContent() {
     ...(EDITING ? editorCommandDeps(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()) : {}),
     structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
-    exams: examOptions(services.store.getState()),
+    exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }),
   };
   const searchPorts = useMemo(
     () =>
@@ -250,7 +250,7 @@ function WindowContent() {
         showReagent: (ref) => onReagent(ref.id),
         showNamed: (ref) => onNamed(ref.id),
         showMechanism: (ref) => onMechanism(ref.id),
-        commands: () => (commandDeps.current === null ? [] : buildCommands({ ...commandDeps.current, exams: examOptions(services.store.getState()) })),
+        commands: () => (commandDeps.current === null ? [] : buildCommands({ ...commandDeps.current, exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }) })),
         show(ref, title) {
           setMode(NAVIGATOR_MODE);
           if (navigator.ui.overview.getState().phoneTab === 'explore') navigator.ui.overview.getState().setPhoneTab('families');

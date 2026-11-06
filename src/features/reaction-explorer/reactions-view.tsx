@@ -74,7 +74,7 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
 
   const examName = active === null ? undefined : (state.records.exam[active.examId]?.name ?? active.examId);
   const filtered = isFilterSet(filter);
-  const line = countLine({ shown: cardRows.length, total: totalCards, examples: folding.folded, filtered, hidden: only ? result.hiddenByScope : 0, hiddenBy: examName });
+  const line = countLine({ shown: cardRows.length, total: totalCards, examples: folding.folded, filtered: filtered || (only && result.hiddenByScope > 0), hidden: only ? result.hiddenByScope : 0, hiddenBy: examName });
   const [said, setSaid] = useState({ message: line, serial: 0 });
   useEffect(() => setSaid((was) => (was.message === line ? was : { message: line, serial: was.serial + 1 })), [line]);
 

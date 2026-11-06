@@ -4,6 +4,7 @@
  * (Studio's Version select). Newest = year, then effective date, then id. Pure over the canonical state; derived, never stored.
  */
 import type { CanonicalState, Exam, ExamVersion } from '@/core/schema';
+import type { ExamOption, ExamOptions } from './exam-scope';
 
 export const PROVISIONAL_TIP = 'This syllabus is not checked against the official document yet';
 const GONE_EXAM = 'An exam that is not in this dataset';
@@ -37,4 +38,9 @@ export function examChoicesOf(state: CanonicalState, options: { readonly allowDr
     choices.push({ examId, name: exams[examId]?.name ?? GONE_EXAM, versionId: current.id, provisional: current.status !== 'official' });
   }
   return choices.sort((a, b) => a.name.localeCompare(b.name) || a.examId.localeCompare(b.examId));
+}
+
+/** The palette's "Choose the exam scope: <exam>" commands: one per exam, named by its display name, carrying its current version (step 8.3b, B1). */
+export function examOptionsByExam(state: CanonicalState, options: { readonly allowDraft?: boolean } = {}): ExamOptions {
+  return { options: examChoicesOf(state, options).map((choice) => ({ examId: choice.examId as ExamOption['examId'], examVersionId: choice.versionId as ExamOption['examVersionId'], label: choice.name })), omitted: 0 };
 }

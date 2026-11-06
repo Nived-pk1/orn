@@ -126,6 +126,9 @@ test.describe('the map on a desktop', () => {
     await expect(page.getByRole('combobox', { name: 'Chapter' })).toHaveValue('top_chapter-2');
     await page.getByRole('combobox', { name: 'Chapter' }).selectOption({ label: 'All chapters' });
     await expect(edges(page)).toHaveCount(0);
+    // the saved selection shows its label in the corner in place of the hint (step 8.3b, B2.2); clear it to see the hint
+    const clear = page.getByRole('button', { name: 'Clear the selection' });
+    if ((await clear.count()) > 0) await clear.click();
     await expect(page.getByText(QUIET)).toBeVisible();
     await expectClean(afterReload);
   });

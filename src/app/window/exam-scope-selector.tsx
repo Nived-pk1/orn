@@ -66,6 +66,7 @@ export function ExamScopeSelector(props: { readonly binding: ExamScopeBinding })
           onChange={(event) => {
             const choice = choices.find((one) => one.examId === event.target.value);
             exam.getState().setActive(choice === undefined ? null : { examId: choice.examId as never, examVersionId: choice.versionId as never });
+            if (choice !== undefined) exam.getState().setMode('only'); // Only is the default when an exam is chosen
           }}
         >
           <option value={ALL}>{ALL_LABEL}</option>

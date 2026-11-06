@@ -193,7 +193,8 @@ describe('commands', () => {
     const input = await open(app);
     await type(app, input, '> exam main');
     const option = within(screen.getByRole('dialog', { name: 'Search' })).getAllByRole('option')[0] as HTMLElement;
-    expect(option.textContent).toContain('JEE Main, provisional, not verified');
+    expect(option.textContent).toContain('Choose the exam scope: JEE Main'); // the exam by its display name (step 8.3b, B1)
+    expect(option.textContent).not.toContain('not verified');
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(app.navigator.ports.ui.exam.getState().active).toEqual({ examId: 'exm_jee-main', examVersionId: 'exv_jee-main-2026' });
   });

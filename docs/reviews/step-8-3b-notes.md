@@ -24,3 +24,8 @@ Part B2 search red: palette-model.test.ts AssertionError: expected { text: 'etha
 Part B3 red: exam-first-run.test.tsx Error: Failed to resolve import './exam-first-run'
 Part B2 chapters red: model.test.ts AssertionError: expected undefined to be 2 (hiddenByScope)
 Part B2 chips red: family-card-scope-chip.test.tsx Error: Failed to resolve import './scope-chip'
+Part B committed bc1b464 (check green 734 files / 8237 tests); next: palette command by exam, size trimming, e2e, deploy
+Palette-by-exam red: exam-choice.test.ts TypeError: examOptionsByExam is not a function
+Speed check before e2e: see time above
+Part B select red: exam-scope-selector.test.tsx AssertionError: expected 'everything' to be 'only' (a fresh exam choice must turn Only on)
+Part B2.1 reveal red: use-chain-reveal.test.tsx AssertionError: expected vi.fn() to be called 2 times, but got 1 times

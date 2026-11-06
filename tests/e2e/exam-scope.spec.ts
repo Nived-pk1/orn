@@ -60,7 +60,7 @@ test.describe('the exam scope', () => {
     // the Unclassified family page: the Beckmann card is marked, no card is hidden
     await showUnclassified(page); // step 8.2a: Unclassified is hidden unless shown (the legend is the Key popover, 8.3b)
     await page.locator('svg [data-box="unclassified"]').dblclick();
-    await page.getByRole('region', { name: /^Family page: Unclassified/ }).waitFor();
+    await page.getByRole('region', { name: /^Family page: Not in a family yet/ }).waitFor();
     const beckmann = page.locator('article[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]').first();
     await expect(beckmann).toHaveAttribute('data-outside', '');
     await expect(beckmann.getByText('outside JEE Main')).toBeVisible();

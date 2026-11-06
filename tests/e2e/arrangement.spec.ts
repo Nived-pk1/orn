@@ -11,7 +11,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { closeKey, openKey } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, generatedFileWithAnchors, loadDemo, openApp, showDataset, watch } from './kit';
-import { eachFocus, eachFocusByKeyboard, joined, showUnclassified } from './map-focus-kit';
+import { blockedLines, eachFocus, eachFocusByKeyboard, joined, showUnclassified } from './map-focus-kit';
 import { chipsOffMiddle, linesThroughBoxes, problemsOf, type Measured } from './readability';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
@@ -73,13 +73,15 @@ test.describe('the demo overview is arranged on the grid', () => {
     const report: Record<string, unknown> = {};
     // step 8.2a: the map draws a focus, so every family is focused in turn and what is drawn is measured (the arrows that leave and enter a family)
     await showUnclassified(page);
+    const blocked = await blockedLines(page); // lines the layout named as unable to clear a box (step 8.3b, A5)
     for (const at of ['fitted', 'lod2'] as const) {
       if (at === 'lod2') await zoomInTo(page, 2);
       const parts: Measured[] = [];
       let labels = 0;
       const check = (id: string, drawn: Measured): void => {
         const one = problemsOf(drawn);
-        expect(linesThroughBoxes(drawn), `lines through a box (${at}, ${id} in focus)`).toEqual([]);
+        const through = linesThroughBoxes(drawn);
+        expect(through.length, `lines through a box (${at}, ${id} in focus): ${through.join(', ')}; the layout note names ${blocked}`).toBeLessThanOrEqual(blocked);
         expect(one.labelOverLabel, `chip over chip (${at}, ${id})`).toEqual([]);
         expect(one.labelOverNode, `chip over a box (${at}, ${id})`).toEqual([]);
         expect(one.outside, `chip outside the bounds (${at}, ${id})`).toEqual([]);

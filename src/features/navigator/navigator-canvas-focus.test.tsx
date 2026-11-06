@@ -38,6 +38,9 @@ async function show() {
     </NavigatorProvider>,
   );
   const drawing = await screen.findByRole('group', { name: NAVIGATOR }, { timeout: 20_000 });
+  // the toolbar and the overlays inside the map are lazy chunks (step 8.3b, Part 0.1)
+  await screen.findByRole('combobox', { name: 'Chapter' }, { timeout: 20_000 });
+  await vi_waitFor(() => expect(document.querySelector('[data-map-corner]')).not.toBeNull());
   return { rig, drawing };
 }
 const edges = (root: Element): number => root.querySelectorAll('[data-layer="edges"] [data-edge-id]').length;

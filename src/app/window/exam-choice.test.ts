@@ -1,7 +1,7 @@
 /** The exam choice for students (step 8.3b, B1): the select picks an EXAM; the version used is the exam's current one (newest official, else newest provisional). */
 import { describe, expect, it } from 'vitest';
 import type { CanonicalState, ExamVersion } from '@/core/schema';
-import { currentVersionOf, examChoicesOf, PROVISIONAL_TIP } from './exam-choice';
+import { currentVersionOf, examChoicesOf, examOptionsByExam, PROVISIONAL_TIP } from './exam-choice';
 
 const version = (id: string, examId: string, status: ExamVersion['status'], year?: number, effectiveFrom?: string): ExamVersion =>
   ({ id, kind: 'exam_version', examId, label: id, status, ...(year === undefined ? {} : { year }), ...(effectiveFrom === undefined ? {} : { effectiveFrom }), units: [] }) as unknown as ExamVersion;
@@ -29,6 +29,17 @@ describe('currentVersionOf', () => {
   });
   it('an unknown year sorts oldest', () => {
     expect(currentVersionOf([version('a', 'e', 'official'), version('b', 'e', 'official', 2020)], 'e')?.id).toBe('b');
+  });
+});
+
+describe('examOptionsByExam', () => {
+  it('the palette commands name an exam by its display name and carry its current version', () => {
+    const state = stateOf({ jee: 'JEE Main', cbse: 'CBSE Class 11' }, [version('jee-1', 'jee', 'official', 2025), version('cbse-1', 'cbse', 'provisional', 2025)]);
+    expect(examOptionsByExam(state).options).toEqual([
+      { examId: 'cbse', examVersionId: 'cbse-1', label: 'CBSE Class 11' },
+      { examId: 'jee', examVersionId: 'jee-1', label: 'JEE Main' },
+    ]);
+    expect(examOptionsByExam(state).omitted).toBe(0);
   });
 });
 

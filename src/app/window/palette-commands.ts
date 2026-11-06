@@ -85,7 +85,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
           keywords: ['exam', 'scope', 'syllabus'],
           run: () => ui.exam.getState().setActive({ examId: option.examId, examVersionId: option.examVersionId }),
         },
-        scope?.examVersionId === option.examVersionId ? 'it is already chosen' : undefined,
+        scope?.examId === option.examId ? 'it is already chosen' : undefined,
       ),
     ),
   ];

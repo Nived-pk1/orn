@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { answerExamCard } from './exam-kit';
 import { selectionLine } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, openPhoneApp, watch, leaveChapters } from './kit';
 import { openDemo, shotsDir } from './editor-kit';
@@ -243,6 +244,7 @@ test.describe('Study', () => {
     await expectPreview(page);
     await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
+    await answerExamCard(page); // step 8.3b, B3: the exam card appears once the data has exams
     await chaptersFirstThenNavigator(page); // Study opens on Chapters when the data has a chapter topic (7.3b D5)
     await page.waitForTimeout(700);
     await expect(page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Review' })).toHaveCount(0);

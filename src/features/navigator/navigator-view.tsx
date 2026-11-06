@@ -4,16 +4,18 @@
  * viewport and the selection it left (both live in UI stores, not in the canvas). The screen's ONE polite live region is here
  * (step 5.7, item h), so what the canvas or the page says is heard whichever of them is mounted.
  */
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useStore } from 'zustand';
 import { useLayoutMode } from '@/ui/hooks';
 import { LiveRegion } from '@/ui/primitives';
 import { useStudyChrome } from '@/ui/study-chrome';
 import { FamiliesTab } from './families-tab';
-import { FamilyPage } from './family-page';
 import { NavigatorCanvas } from './navigator-canvas';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { useAnnouncements } from './use-announcements';
+
+// the family page is not part of the first screen: its own chunk (step 8.3b, Part 0.1)
+const FamilyPage = /* @__PURE__ */ lazy(() => import('./family-page').then((m) => ({ default: m.FamilyPage })));
 
 export function NavigatorView() {
   const { ports, announcer } = useNavigator();
@@ -31,7 +33,11 @@ export function NavigatorView() {
   }, [open]);
   return (
     <>
-      {open !== null ? <FamilyPage hubId={open} /> : phone && tab === 'families' ? <FamiliesTab /> : <NavigatorCanvas {...(returnTo === null ? {} : { returnTo })} />}
+      {open !== null ? (
+        <Suspense fallback={null}>
+          <FamilyPage hubId={open} />
+        </Suspense>
+      ) : phone && tab === 'families' ? <FamiliesTab /> : <NavigatorCanvas {...(returnTo === null ? {} : { returnTo })} />}
       <LiveRegion message={said.message} serial={said.serial} label="Navigator announcements" />
     </>
   );
