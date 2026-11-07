@@ -54,3 +54,6 @@ Affected e2e list: phone-inspector, inspector-study, study-edition, exam-first-r
 Speed before affected e2e run: 0.048s
 e2e affected run 1 (3 engines): 184 passed, 6 failed = inspector-study (my 'article' root, fixed) + reaction-explorer exam scope (stale count regex, fixed) in each engine. Study box title 17.34 px @1280x800, 25.57 @1920x1000; Studio 17.34, 25.84, fixture 23.96.
 Affected e2e after fixes (3 engines): inspector-study + reaction-explorer green; all others green in run 1 (184 passed). Speed 0.056s before. Starting full Chromium.
+Full Chromium at 2nd close commit: 343 passed, 41 skipped, 0 failed (23.8m). Deploying.
+Live Study specs, Chromium run 1: 29 failed, all one cause: tests/e2e/kit.ts leaveChapters did not answer the exam card (stale spec helper, not product). Fixed (answerExamCard when Chapters is the first screen). Speed 0.049s/0.052s. Re-run Chromium 45 passed 11 skipped; WebKit 44 passed 12 skipped. npm run check green again (735 files, 8247 tests).
+Deploy: Study d8b3b615-5638-443a-8b0f-5bb90fecbd3e, Studio 6f8bc77f-261a-464a-9e06-673cc54a11e3. Access: Studio 302 to Cloudflare Access, Study 200.

@@ -6742,7 +6742,7 @@ Commits: cd587e1 (Part A and fact sheet), 4d84e26 (Parts C and D), then the e2e 
 **REVIEW REQUIRED (my decisions):** (1) own data is a new uiState key `studyOwnData` (not a version change); (2) quiet first load only when the data was empty (an update's "Load it" keeps its notice and Undo); (3) the Study dot is also shown for `review_required`, labelled "Review required"; (4) Study exam options drop the status words, Studio keeps them; (5) the phone alert still tells real problems, only its storage line is gated; boot lines and the update notice are kept; (6) sizes miss the targets by 1.5 kB; (7) box text not re-measured and 12 px not reached; (8) the Study screenshots are taken after an own import of the demo because the fixture's published dataset has no map, so the update notice and storage warning appear in them.
 
 
-### Step 8.3b - More room for the map, and a clearer exam choice (2026-11-06), NOT DEPLOYED (one e2e failure open)
+### Step 8.3b - More room for the map, and a clearer exam choice (2026-11-06), deployed 2026-11-07 after the close round
 
 Commits: b5765c0 (Part 0), d15824e (Part A, B2.1, B2.2, pure B parts), bc1b464 (Part B), f96bd91 (lazy chunks, sizes), 8e66ccc (phone chain sheet, screenshots), then the final fix commit. ADR-046 (new), ADR-044 addendum, JEE_ONTOLOGY §3-§4 updated. Notes: docs/reviews/step-8-3b-notes.md. HEAD at start 5f153ec.
 

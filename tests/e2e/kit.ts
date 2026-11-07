@@ -11,6 +11,7 @@ import { expect, type BrowserContext, type Locator, type Page } from '@playwrigh
 import { documentToState, serializeDocument, stateToDocument } from '@/core/dataset';
 import { generateTier, type GeneratorShape, type GeneratorTier } from '@/test-support/generator';
 import { withNavigatorAnchors } from '@/test-support/perf-kit';
+import { answerExamCard } from './exam-kit';
 
 /** The origin `vite preview` serves (playwright.config.ts), or the site ORN_BASE_URL names. */
 export const ORIGIN = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4173';
@@ -114,6 +115,7 @@ export async function leaveChapters(page: Page): Promise<void> {
   const settled = page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ }).or(page.getByRole('region', { name: 'Families' })).or(page.getByRole('region', { name: /^Family page/ })).or(chapters);
   await expect(settled.first()).toBeVisible({ timeout: 90_000 });
   if (!(await chapters.isVisible())) return;
+  await answerExamCard(page); // Study asks which exam once the data is in (step 8.3b, B3); these specs are about something else
   const tabs = page.getByRole('navigation', { name: 'Home' });
   if (await tabs.isVisible()) await tabs.getByRole('button', { name: 'Families' }).click();
   else await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();

@@ -138,24 +138,24 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-05",
-    "commit": "8122d0b",
-    "version": "d5b994b7-d7c0-4b1e-9c5a-63d46f633f5d",
-    "liveSpecs": "2026-11-05 (step 8.3), Chromium 43 passed + the two fixed specs re-run 6 passed; WebKit 44 passed, 12 skipped, by exact names."
+    "deployedAt": "2026-11-07",
+    "commit": "94ca887",
+    "version": "d8b3b615-5638-443a-8b0f-5bb90fecbd3e",
+    "liveSpecs": "2026-11-07 (step 8.3b close): first Chromium run 29 failed (stale kit: leaveChapters did not answer the exam card); fixed in tests/e2e/kit.ts, re-run Chromium 45 passed, 11 skipped; WebKit 44 passed, 12 skipped, by exact names."
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-05",
-    "version": "9fe8f550-a72b-45d4-8573-2066058de1bf",
+    "deployedAt": "2026-11-07",
+    "version": "6f8bc77f-261a-464a-9e06-673cc54a11e3",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.2b fix-round deploy, 2026-11-05: an unauthenticated request got 302 and not the app; the Study site answered 200.",
-    "commit": "fe08283",
-    "protectedCheckedAt": "2026-11-05"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.3b close-round deploy, 2026-11-07: an unauthenticated request got 302 and not the app; the Study site answered 200.",
+    "commit": "94ca887",
+    "protectedCheckedAt": "2026-11-07"
   },
   "nextStep": "8.4",
-  "nextStepTitle": "Step 8.3b code done, NOT deployed (phone-inspector peek e2e open); then Phase 8 row 8.4. Awaiting review",
+  "nextStepTitle": "Step 8.3b closed and deployed 2026-11-07; then Phase 8 row 8.4. Awaiting review",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
