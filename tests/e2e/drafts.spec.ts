@@ -5,6 +5,7 @@
  * shows no start-up line at all.
  */
 import { resolve } from 'node:path';
+import { noticeScope } from './own-data-kit';
 import { expect, test } from './fixtures';
 import { expectClean, openApp, watch } from './kit';
 import { canonicalInput, draftStatus, editorDialog, openDemo, openNamesEditor, pane, record, shotsDir, showSpecies } from './editor-kit';
@@ -24,7 +25,7 @@ test.describe('drafts', () => {
     // a reload: the draft is offered, the store still has the old name
     await page.reload();
     await openApp(page);
-    const report = page.getByRole('region', { name: 'Start-up report' });
+    const report = await noticeScope(page, '1 unfinished draft'); // the band, or the list "+n more" opens
     await expect(report).toContainText('1 unfinished draft');
     await expect(report).not.toContainText('crash');
     await page.screenshot({ path: resolve(shotsDir(), 'drafts-startup-1280x800.png') });
@@ -46,7 +47,7 @@ test.describe('drafts', () => {
     await expect(reopened).toBeHidden();
 
     // Discard asks first, then removes it
-    await page.getByRole('region', { name: 'Start-up report' }).getByRole('button', { name: 'Show drafts' }).click();
+    await report.getByRole('button', { name: 'Show drafts' }).click();
     const again = page.getByRole('dialog', { name: 'Drafts' });
     await again.getByRole('button', { name: 'Discard' }).click();
     await expect(again).toContainText('Discard this draft? It cannot be undone.');
@@ -54,7 +55,7 @@ test.describe('drafts', () => {
     await again.getByRole('group', { name: 'Discard this draft?' }).getByRole('button', { name: 'Discard' }).click();
     await expect(again).toContainText('No unfinished drafts.');
     await again.getByRole('button', { name: 'Close' }).first().click();
-    await expect(page.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
+    await expect(page.getByText(/^\d+ unfinished drafts?$/)).toHaveCount(0);
     await showSpecies(page, 'spc_ethanol', 'ethanol'); // the stored record still has its old name
     await expect(record(page).getByRole('heading', { level: 3, name: 'Ethanol', exact: true })).toBeVisible();
     await expect(pane(page)).toBeVisible();
@@ -66,7 +67,7 @@ test.describe('drafts', () => {
     // a plain reload with no drafts shows no start-up line
     await page.reload();
     await openApp(page);
-    await expect(page.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
+    await expect(page.getByText(/^\d+ unfinished drafts?$/)).toHaveCount(0);
     expect(await seen.violations(), 'securitypolicyviolation events in the last document').toEqual([]);
   });
 });

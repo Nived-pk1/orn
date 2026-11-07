@@ -4,6 +4,7 @@
  */
 import { useId, useState, type ReactNode } from 'react';
 import { useLayoutMode } from '@/ui/hooks';
+import { Button, Menu } from '@/ui/primitives';
 import { useInspectorEnv } from './env';
 import type { CardGroup, Chip, WatchOut } from './model/study-model';
 import { RichText } from './rich-text';
@@ -111,29 +112,23 @@ export interface GoNextAction {
   readonly run: () => void;
 }
 
-/** Up to three buttons in one wrapping row, the rest under "More actions". On a phone the first two are in the peek. */
+/** Up to three buttons on ONE row, the rest in a "⋯" menu named "More actions" (step 8.4a). On a phone the first two are in the peek. */
 export function GoNext(props: { readonly actions: readonly GoNextAction[] }) {
-  const [more, setMore] = useState(false);
   if (props.actions.length === 0) return null;
   const first = props.actions.slice(0, MAX_GO_NEXT);
   const rest = props.actions.slice(MAX_GO_NEXT);
   return (
     <div className={styles.goNext} role="group" aria-label="Go next">
       {first.map((action, index) => (
-        <button key={action.label} type="button" onClick={action.run} {...(index >= 2 ? { 'data-sheet-full': '' } : {})}>
+        <Button key={action.label} onClick={action.run} {...(index >= 2 ? { 'data-sheet-full': '' } : {})}>
           {action.label}
-        </button>
+        </Button>
       ))}
       {rest.length === 0 ? null : (
-        <button type="button" aria-expanded={more} data-sheet-full="" onClick={() => setMore(!more)}>
-          More actions
-        </button>
+        <span data-sheet-full="">
+          <Menu label="More actions" trigger={<span aria-hidden="true">⋯</span>} items={rest.map((action) => ({ id: action.label, label: action.label, onSelect: action.run }))} />
+        </span>
       )}
-      {!more ? null : rest.map((action) => (
-        <button key={action.label} type="button" data-sheet-full="" onClick={action.run}>
-          {action.label}
-        </button>
-      ))}
     </div>
   );
 }

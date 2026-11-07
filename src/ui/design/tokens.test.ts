@@ -109,16 +109,17 @@ describe('focus ring, hit targets and motion tokens', () => {
     expect(CSS).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*:root\s*\{\s*--motion-fast:\s*0ms;\s*--motion-slow:\s*0ms;/);
   });
 
-  it('the type scale is 12/13/14/16/20/24 px', () => {
+  it('the type scale is 12/14/16/20/24/32 px (step 8.4a)', () => {
     const sizes = [...CSS.matchAll(/--text-(\d+):\s*([\d.]+)rem;/g)].map((m) => [Number(m[1]), Number(m[2]) * 16]);
-    expect(sizes).toEqual([[12, 12], [13, 13], [14, 14], [16, 16], [20, 20], [24, 24]]);
+    expect(sizes).toEqual([[12, 12], [14, 14], [16, 16], [20, 20], [24, 24], [32, 32]]);
   });
 });
 
 describe('rounded corners (ADR-037, 2026-10-09)', () => {
-  it('cards and panels are 8 px, controls 6 px', () => {
-    expect(CSS).toMatch(/--radius-card:\s*8px;/);
-    expect(CSS).toMatch(/--radius-control:\s*6px;/);
+  it('inputs are 4 px, cards, buttons and panels 8 px, chips a pill (step 8.4a)', () => {
+    expect(CSS).toMatch(/--radius-4:\s*4px;/);
+    expect(CSS).toMatch(/--radius-8:\s*8px;/);
+    expect(CSS).toMatch(/--radius-pill:\s*999px;/);
   });
 
   it('every radius a stylesheet uses is a defined token, and the old 4 px token is gone', () => {

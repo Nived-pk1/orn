@@ -286,14 +286,14 @@
 
 .badgeMark {
   fill: var(--color-ink);
-  font-size: 10px;
+  font-size: var(--text-12);
   font-weight: 600;
   text-anchor: middle;
 }
 
 .count {
   fill: var(--color-ink);
-  font-size: 12px;
+  font-size: var(--text-12);
   font-variant-numeric: tabular-nums;
   text-anchor: middle;
 }

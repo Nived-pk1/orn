@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import styles from './banner.module.css';
 
 export type NoticeKind = 'info' | 'warning' | 'error' | 'review';
@@ -11,13 +11,20 @@ export interface BannerProps {
   readonly children: ReactNode;
   /** Buttons the notice offers (Reload, Retry ...). */
   readonly actions?: ReactNode;
+  /** One line: the text is cut with an ellipsis (the band; step 8.4a). `expanded` shows it whole. */
+  readonly compact?: boolean;
+  readonly expanded?: boolean;
+  readonly textRef?: Ref<HTMLSpanElement>;
+  /** The whole text as a tooltip, for a cut one-line form. */
+  readonly title?: string;
 }
 
 export function Banner(props: BannerProps) {
+  const compact = props.compact === true && props.expanded !== true;
   return (
-    <div className={`${styles.banner} ${styles[props.kind]}`} data-kind={props.kind} role={props.kind === 'error' ? 'alert' : undefined}>
+    <div className={`${styles.banner} ${styles[props.kind]} ${compact ? styles.compact : ''}`} data-kind={props.kind} role={props.kind === 'error' ? 'alert' : undefined}>
       <span className={styles.word}>{NOTICE_WORD[props.kind]}</span>
-      <span className={styles.text}>{props.children}</span>
+      <span ref={props.textRef} className={styles.text} {...(props.title === undefined ? {} : { title: props.title })}>{props.children}</span>
       {props.actions === undefined ? null : <span className={styles.actions}>{props.actions}</span>}
     </div>
   );

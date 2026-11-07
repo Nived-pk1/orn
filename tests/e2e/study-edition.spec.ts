@@ -20,6 +20,7 @@ import { resolve } from 'node:path';
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { answerExamCard, expectStorageLineWhole } from './exam-kit';
+import { noticeScope } from './own-data-kit';
 import { selectionLine } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, watch, type UploadFile } from './kit';
 import { palette, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
@@ -58,7 +59,6 @@ async function importOwnData(page: Page, file: UploadFile = DEMO_FILE): Promise<
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
   await answerExamCard(page);
 }
-
 
 /** A student has no Dataset page (step 8.3): the size of the data is the number of boxes on the Map. */
 const recordTotal = async (page: Page): Promise<number> => {
@@ -118,7 +118,6 @@ test.describe('desktop', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
   });
-
   test('no editing anywhere, every study view works, and no editor chunk is ever requested', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page, STUDY);
@@ -228,18 +227,19 @@ test.describe('desktop', () => {
       await openStudy(page);
       await importOwnData(page); // this browser holds its own data and never loaded the study dataset
       const own = await recordTotal(page);
-      const notice = page.getByRole('region', { name: 'Study dataset update' });
+      const notice = await noticeScope(page, NOTICE);
       await expect(notice.getByText(NOTICE)).toBeVisible();
       // a WebKit screenshot injects a style the kit forgives only until the next load (as in mechanism-pictures.spec): Chromium takes it
       if (browserName === 'chromium') await page.screenshot({ path: resolve(shotsDir(), 'study-update-notice-1280x800.png') });
       await notice.getByRole('button', { name: 'Later' }).click();
-      await expect(notice).toBeHidden();
+      await expect(page.getByText(NOTICE)).toHaveCount(0);
       await page.reload();
       await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
-      await expect(page.getByRole('region', { name: 'Study dataset update' }).getByText(NOTICE)).toBeVisible({ timeout: 30_000 }); // asked again at the next visit
-      await page.getByRole('region', { name: 'Study dataset update' }).getByRole('button', { name: 'Load it' }).click();
+      await expect(page.getByRole('region', { name: 'Notices' })).toBeVisible({ timeout: 30_000 });
+      await expect(async () => expect(await (await noticeScope(page, NOTICE)).getByText(NOTICE).count()).toBe(1)).toPass({ timeout: 30_000 }); // asked again at the next visit
+      await (await noticeScope(page, NOTICE)).getByRole('button', { name: 'Load it' }).click();
       await expect(page.getByText(/^Imported \d+ records from dataset\.orn\.json\./)).toBeVisible({ timeout: 60_000 });
-      await expect(page.getByRole('region', { name: 'Study dataset update' })).toHaveCount(0);
+      await expect(page.getByText(NOTICE)).toHaveCount(0);
       const replaced = await recordTotal(page);
       expect(replaced).not.toBe(own);
       await page.getByRole('button', { name: 'Undo import' }).first().click(); // the notice of the replacing load (the Dataset page is not a student's)
@@ -254,12 +254,12 @@ test.describe('desktop', () => {
       const seen = await watch(page, STUDY);
       await openStudy(page);
       await importOwnData(page);
-      const notice = page.getByRole('region', { name: 'Study dataset update' });
+      const notice = await noticeScope(page, NOTICE);
       await expect(notice.getByText(NOTICE)).toBeVisible();
       await expect(notice.getByRole('button', { name: 'Later' })).toBeVisible();
       if (browserName === 'chromium') await page.screenshot({ path: resolve(shotsDir(), 'study-update-notice-keep-1280x800.png') });
       await notice.getByRole('button', { name: 'Keep my data' }).click();
-      await expect(notice).toBeHidden();
+      await expect(page.getByText(NOTICE)).toHaveCount(0);
       // the decision is written to IndexedDB in the background: wait for the row before the reload (a reload is not a flush)
       await expect
         .poll(() =>
@@ -285,7 +285,7 @@ test.describe('desktop', () => {
       await page.reload();
       await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
       await chaptersFirstThenNavigator(page);
-      await expect(page.getByRole('region', { name: 'Study dataset update' })).toHaveCount(0);
+      await expect(page.getByText(NOTICE)).toHaveCount(0);
       await expectClean(seen);
     });
   });

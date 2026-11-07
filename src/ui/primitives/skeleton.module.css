@@ -1,14 +1,14 @@
 .skeleton {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  gap: var(--space-12);
+  padding: var(--space-16);
 }
 
 .bar {
   display: block;
   height: 1em;
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-4);
   background: linear-gradient(90deg, var(--color-rule), var(--color-surface), var(--color-rule));
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;

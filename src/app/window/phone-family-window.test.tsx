@@ -146,7 +146,7 @@ describe('the family page toolbar on a phone (equation step, part 6)', () => {
 });
 
 describe('toasts on a phone', () => {
-  it('the result of an action joins the folded notices line and is announced; nothing floats over the cards', async () => {
+  it('with no sheet open the result of an action sits above the tab bar and is announced (step 8.4a); a sheet folds it into the notices row', async () => {
     const app = fakeApp({ state: demoState(), status: { mode: 'read_only', reason: 'another version is open' } });
     renderWithApp(app);
     const drop = new Event('drop', { bubbles: true, cancelable: true }) as Event & { dataTransfer?: unknown };
@@ -154,11 +154,8 @@ describe('toasts on a phone', () => {
     act(() => void document.dispatchEvent(drop));
     const live = await screen.findByRole('status', { name: 'Notifications' });
     expect(live.textContent).toContain('The dropped file dropped.orn.json was not opened');
-    expect(within(live).queryByRole('button')).toBeNull();
-    const fold = screen.getByRole('button', { name: /notices?$/ });
-    expect(fold.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(fold);
-    expect(screen.getAllByText(/The dropped file dropped\.orn\.json was not opened/).length).toBeGreaterThan(1);
-    expect(screen.getAllByRole('button', { name: 'Dismiss' }).length).toBeGreaterThan(0);
+    // not folded: the toast itself is on the page, with its Dismiss, and the notices row does not count it twice
+    expect(within(live).getByRole('button', { name: 'Dismiss' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^\d+ notices?$/ })?.textContent ?? '').not.toMatch(/dropped/);
   });
 });

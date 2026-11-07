@@ -1,11 +1,11 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
   box-sizing: border-box;
   width: 22rem;
   max-width: 40%;
-  padding: var(--space-3);
+  padding: var(--space-12);
   overflow-y: auto;
   background: var(--color-surface);
   border-left: 1px solid var(--color-rule);
@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .title {
@@ -32,13 +32,13 @@
 .selects {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-4);
   font-size: var(--text-14);
   color: var(--color-ink-2);
 }
@@ -49,34 +49,37 @@
   color: var(--color-ink);
   background: var(--color-paper);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
 }
 
 .chains,
 .steps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .chain {
-  padding: var(--space-1);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  composes: card from '../../ui/primitives/card.module.css';
 }
 
-.chain[data-picked] {
-  border-color: var(--color-ink);
+/* the card carries the padding: its rows add none, so a chain card is no taller than before */
+.chain > .chainRow {
+  padding: 0;
+}
+
+.chain:hover {
+  border-color: var(--color-ink-2);
 }
 
 .chainRow,
 .step {
   width: 100%;
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   font: inherit;
   text-align: left;
   color: var(--color-ink);
@@ -132,28 +135,28 @@
 }
 
 /* Chain cards (step 8.3b, B2.1): one card per chain; the chosen one has a 2 px border in the From family's colour, an "On the map" chip and its step rows. */
+/* The chosen card: a 2 px inset ring (no layout shift), in the From family's colour. */
 .chain {
   cursor: pointer;
 }
 
 .chain[data-picked] {
-  border-width: 2px;
-  padding: calc(var(--space-1) - 1px);
+  box-shadow: inset 0 0 0 2px var(--color-ink);
 }
 
-.chain[data-picked][data-tone='blue'] { border-color: var(--color-tone-blue-ink); }
-.chain[data-picked][data-tone='green'] { border-color: var(--color-tone-green-ink); }
-.chain[data-picked][data-tone='amber'] { border-color: var(--color-tone-amber-ink); }
-.chain[data-picked][data-tone='violet'] { border-color: var(--color-tone-violet-ink); }
-.chain[data-picked][data-tone='teal'] { border-color: var(--color-tone-teal-ink); }
-.chain[data-picked][data-tone='rose'] { border-color: var(--color-tone-rose-ink); }
-.chain[data-picked][data-tone='slate'] { border-color: var(--color-tone-slate-ink); }
+.chain[data-picked][data-tone='blue'] { box-shadow: inset 0 0 0 2px var(--color-tone-blue-ink); }
+.chain[data-picked][data-tone='green'] { box-shadow: inset 0 0 0 2px var(--color-tone-green-ink); }
+.chain[data-picked][data-tone='amber'] { box-shadow: inset 0 0 0 2px var(--color-tone-amber-ink); }
+.chain[data-picked][data-tone='violet'] { box-shadow: inset 0 0 0 2px var(--color-tone-violet-ink); }
+.chain[data-picked][data-tone='teal'] { box-shadow: inset 0 0 0 2px var(--color-tone-teal-ink); }
+.chain[data-picked][data-tone='rose'] { box-shadow: inset 0 0 0 2px var(--color-tone-rose-ink); }
+.chain[data-picked][data-tone='slate'] { box-shadow: inset 0 0 0 2px var(--color-tone-slate-ink); }
 
 .chainRow {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 var(--space-2);
+  gap: 0 var(--space-8);
 }
 
 .chainTitle {
@@ -168,22 +171,18 @@
 }
 
 .onMap {
-  padding: 0 var(--space-2);
+  composes: chip from '../../ui/primitives/chip.module.css';
   color: var(--color-ink);
-  font-size: var(--text-12);
   font-weight: 400;
-  background: var(--color-hover);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
 }
 
 .step {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2);
+  gap: var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
 }
 
@@ -203,17 +202,28 @@
 }
 
 /* Phone peek (step 8.3b, B2.1): the chosen card and its step rows fit the peek height, so the sheet stays low and the chain's boxes above it. */
+/* the phone peek is tight: its chain card keeps the old 4 px, the one place the card padding gives way (8.4a, disclosed) */
+.panel[data-phone] .chain {
+  padding: var(--space-4);
+}
+
+/* and its "On the map" chip is the desktop chip size in the peek */
+.panel[data-phone] .onMap {
+  min-height: 24px;
+  font-size: var(--text-12);
+}
+
 .panel[data-phone] {
-  gap: var(--space-1);
-  padding: var(--space-2);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-8);
 }
 
 .panel[data-phone] .chain {
-  padding: 2px;
+  padding: var(--space-4);
 }
 
 .panel[data-phone] .chainRow {
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-8);
 }
 
 .panel[data-phone] .note {

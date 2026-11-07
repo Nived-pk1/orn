@@ -17,7 +17,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: var(--text-14);
-  line-height: 1.45;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 
@@ -26,6 +26,7 @@ h2,
 h3 {
   margin: 0;
   font-weight: 600;
+  line-height: 1.25;
 }
 
 :focus-visible {
@@ -49,7 +50,11 @@ textarea {
   color: inherit;
 }
 
-input[type='text'],
+/* the UI font for inputs and selects (step 8.4a); only a free-text area is monospace */
+input[type='text'] {
+  font-family: var(--font-sans);
+}
+
 textarea {
   font-family: var(--font-mono);
 }

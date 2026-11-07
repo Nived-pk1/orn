@@ -4,7 +4,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from './fixtures';
 import { chooseFile, expectPreview, leaveChapters, openApp, type UploadFile } from './kit';
 
@@ -31,4 +31,12 @@ export async function importOwn(page: Page, file: UploadFile): Promise<void> {
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 90_000 });
   await leaveChapters(page);
   await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 90_000 });
+}
+
+/** Where a notice with this text can be read: the band when it is the one shown, else the list "+n more" opens (step 8.4a: one band row). */
+export async function noticeScope(page: Page, text: string): Promise<Locator> {
+  const band = page.getByRole('region', { name: 'Notices' });
+  if (await band.getByText(text).isVisible()) return band;
+  await band.getByRole('button', { name: /^\+\d+ more$/ }).click();
+  return page.getByRole('dialog', { name: 'Notices' });
 }

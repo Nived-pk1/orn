@@ -1,0 +1,53 @@
+/* The one card (step 8.4a). `.card` is the LOOK (padding 16, phone 12; radius 8; 1 px border; surface); other card-like classes
+   `composes: card from` this file and keep their own layout. `.stack` is the Card component's layout: parts 8 px apart. */
+.card {
+  min-width: 0;
+  padding: var(--space-16);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-8);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  text-align: start;
+}
+
+.card[data-selected='true'] {
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+}
+
+.whole {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+}
+
+.whole:hover {
+  border-color: var(--color-ink-2);
+}
+
+.whole[aria-disabled='true'] {
+  color: var(--color-ink-2);
+  cursor: not-allowed;
+}
+
+.title {
+  font-size: var(--text-16);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.meta {
+  font-size: var(--text-14);
+  color: var(--color-ink-2);
+}
+
+@media (max-width: 899px) {
+  .card {
+    padding: var(--space-12);
+  }
+}

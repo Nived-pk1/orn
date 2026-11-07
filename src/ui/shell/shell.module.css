@@ -11,7 +11,7 @@
   grid-template-rows: var(--top-bar-height) auto minmax(0, 1fr) var(--status-bar-height);
   grid-template-areas:
     'top top top top'
-    'rail banners banners banners'
+    'rail banners handle inspector'
     'rail canvas handle inspector'
     'status status status status';
   background: var(--color-paper);
@@ -21,12 +21,21 @@
   grid-template-columns: var(--mode-rail-width) minmax(0, 1fr) 0 0;
 }
 
+/* The view list hidden (step 8.4a, Part C2): the main column takes its room. */
+.shell[data-rail='hidden'] {
+  grid-template-columns: 0 minmax(0, 1fr) 0 var(--inspector-width);
+}
+
+.shell[data-rail='hidden'][data-inspector='closed'] {
+  grid-template-columns: 0 minmax(0, 1fr) 0 0;
+}
+
 .topBar {
   grid-area: top;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 0 var(--space-3);
+  gap: var(--space-12);
+  padding: 0 var(--space-12);
   border-bottom: 1px solid var(--color-rule);
   background: var(--color-surface);
 }
@@ -34,7 +43,7 @@
 .title {
   margin: 0;
   font-size: var(--text-16);
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -42,11 +51,15 @@
   display: flex;
   flex: 1;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   min-width: 0;
 }
 
+/* The rail is a column: the views, then Hide at its foot. */
 .rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   grid-area: rail;
   /* the containing block of the visually hidden text inside the buttons: without it that text is placed against the page, escapes the bar's overflow and widens the document (found in step 5.10a, 600 px) */
   position: relative;
@@ -58,9 +71,9 @@
 .modes {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
   margin: 0;
-  padding: var(--space-2);
+  padding: var(--space-8);
   list-style: none;
 }
 
@@ -74,8 +87,15 @@
   align-items: flex-start;
   justify-content: center;
   width: 100%;
-  padding: var(--space-1) var(--space-3);
+  min-height: 32px;
+  padding: var(--space-4) var(--space-12);
+  font-size: var(--text-14);
   text-align: left;
+}
+
+.railHide {
+  margin: 0 var(--space-8) var(--space-8);
+  justify-content: flex-start;
 }
 
 .modeButton[aria-current='page'] {
@@ -94,11 +114,48 @@
   min-width: 0;
 }
 
+.main {
+  grid-area: canvas;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
 .canvas {
   grid-area: canvas;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+/* On a phone the wrapper is out of the way: the canvas is the grid item, as before the toast dock existed. */
+.shell[data-layout='phone'] .main {
+  display: contents;
+}
+
+/* The toast: one row, at most 44 px, docked at the foot of the main column and never over the inspector. */
+.toastDock {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-toast);
+  display: flex;
+  justify-content: flex-end;
+  max-height: var(--toast-height);
+  pointer-events: none;
+}
+
+.toastDock:empty {
+  display: none;
+}
+
+/* A page keeps room below its last item while a toast shows (the map's own key band is already free). */
+.shell[data-layout='desktop'][data-toast] .canvas:not(:has([data-map-room])) {
+  padding-bottom: calc(var(--toast-height) + var(--space-16));
 }
 
 .handle {
@@ -145,8 +202,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-16);
   border-bottom: 1px solid var(--color-rule);
 }
 
@@ -157,7 +214,7 @@
 .inspectorBody {
   flex: 1;
   overflow: auto;
-  padding: var(--space-4);
+  padding: var(--space-16);
 }
 
 .statusBar {
@@ -166,10 +223,10 @@
   align-items: center;
   min-width: 0;
   overflow-x: auto;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-12);
   border-top: 1px solid var(--color-rule);
   background: var(--color-surface);
-  font-size: var(--text-13);
+  font-size: var(--text-12);
 }
 
 /* the bar scrolls sideways when the window is narrow, so the keyboard must be able to reach it */
@@ -187,6 +244,11 @@
       'rail banners'
       'rail canvas'
       'status status';
+  }
+
+  .shell[data-rail='hidden'],
+  .shell[data-rail='hidden'][data-inspector='closed'] {
+    grid-template-columns: 0 minmax(0, 1fr);
   }
 
   .inspector {
@@ -218,7 +280,7 @@
   .topBar {
     flex-wrap: wrap;
     min-height: var(--top-bar-height);
-    padding-block: var(--space-1);
+    padding-block: var(--space-4);
     row-gap: 0;
   }
 
@@ -234,6 +296,8 @@
   }
 
   .rail {
+    height: 56px;
+    flex-direction: row;
     overflow: auto hidden;
     border-top: 1px solid var(--color-rule);
     border-right: 0;
@@ -250,7 +314,8 @@
     text-align: center;
   }
 
-  .phase {
+  .phase,
+  .railHide {
     display: none;
   }
 
@@ -313,20 +378,6 @@
 
 .phoneAlert:empty {
   display: none;
-}
-
-/* the Studio edition's marker beside the title (a word, not a colour alone) */
-.marker {
-  flex: none;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius-control);
-  color: var(--color-accent);
-  font-size: var(--text-12);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  line-height: 1.6;
 }
 
 /* No status bar (the student edition, step 8.3): the desktop row goes; on a phone the row is as tall as the alert line, if there is one. */

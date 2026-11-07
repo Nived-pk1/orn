@@ -24,6 +24,8 @@ export const ZOOM_STEP = 1.25;
 export const FIT_PADDING = 24;
 /** The top margin of Fit: the hint inside the map sits 8 px from the top and is 28 px high (step 8.3b close, 3b), so Fit starts the content below it. */
 export const FIT_TOP_PADDING = 44;
+/** The bottom margin of Fit (step 8.4a): the key sits 8 px from the bottom and is 28 px high, and the toast docks in that band, so Fit leaves it free. */
+export const FIT_BOTTOM_PADDING = 44;
 /** Focus never zooms in past this (a single node must not fill the screen). */
 export const FOCUS_MAX_SCALE = 1.5;
 /** The culling rectangle is the screen grown by this fraction of its size on every side. */

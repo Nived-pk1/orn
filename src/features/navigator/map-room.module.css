@@ -3,8 +3,8 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-12);
   border-bottom: 1px solid var(--color-rule);
   background: var(--color-surface);
 }
@@ -14,7 +14,7 @@
 }
 
 .row button {
-  min-height: 36px;
+  min-height: 32px;
 }
 
 .row .chapterBox {
@@ -30,8 +30,8 @@
 }
 
 .zoomButton {
-  width: 36px;
-  min-width: 36px;
+  width: 32px;
+  min-width: 32px;
   padding: 0;
 }
 
@@ -42,7 +42,7 @@
 .popover {
   position: absolute;
   z-index: var(--z-menu);
-  top: calc(100% + var(--space-1));
+  top: calc(100% + var(--space-4));
   right: 0;
   width: min(560px, 90vw);
   max-height: 70vh;
@@ -50,7 +50,7 @@
   color: var(--color-ink);
   background: var(--color-paper);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
 }
 
 .spacer {
@@ -64,19 +64,19 @@
   z-index: 2;
   display: flex;
   max-width: min(60%, 28rem);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   color: var(--color-ink-2);
   font-size: var(--text-12);
   background: color-mix(in srgb, var(--color-paper) 85%, transparent);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   pointer-events: none;
 }
 
 .cornerTop {
-  top: var(--space-2);
-  left: var(--space-2);
+  top: var(--space-8);
+  left: var(--space-8);
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   min-height: 1.75rem; /* a fixed size: the label appearing on a click moves nothing */
 }
 
@@ -88,37 +88,37 @@
   pointer-events: auto;
   min-height: 24px;
   min-width: 24px;
-  padding: 0 var(--space-1);
+  padding: 0 var(--space-4);
   font: inherit;
   color: var(--color-ink);
   background: transparent;
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   cursor: pointer;
 }
 
 .cornerKey {
-  bottom: var(--space-2);
+  bottom: var(--space-8);
   margin: 0;
   list-style: none;
   flex-wrap: wrap;
-  gap: 0 var(--space-4);
+  gap: 0 var(--space-16);
   width: max-content;
   max-width: min(60%, 24rem);
 }
 
 .cornerKey[data-corner='bottom-left'] {
-  left: var(--space-2);
+  left: var(--space-8);
 }
 
 .cornerKey[data-corner='bottom-right'] {
-  right: var(--space-2);
+  right: var(--space-8);
 }
 
 .cornerKey li {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 /* the live region of the selection stays for screen readers only */

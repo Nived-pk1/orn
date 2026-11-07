@@ -1,11 +1,11 @@
 .trigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   min-height: var(--hit-min);
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-12);
   border: 1px solid transparent;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: transparent;
   color: var(--color-ink);
   font: inherit;
@@ -20,9 +20,9 @@
 .content {
   z-index: var(--z-menu);
   min-width: 200px;
-  padding: var(--space-1);
+  padding: var(--space-4);
   border: 1px solid var(--color-ink-2);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-ink);
 }
@@ -31,8 +31,8 @@
   display: flex;
   flex-direction: column;
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-control);
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-8);
   cursor: pointer;
   outline: none;
 }
@@ -72,7 +72,7 @@
 .item[role='menuitemradio'][aria-checked='true']::after {
   content: '¹3';
   position: absolute;
-  right: var(--space-3);
+  right: var(--space-12);
 }
 
 .item[role='menuitemradio'] {

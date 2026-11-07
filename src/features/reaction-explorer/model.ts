@@ -3,6 +3,7 @@
  * saved filter's ids that name nothing any more. Pure; the chemistry is the core filter's. Nothing here is stored.
  */
 import { STATUS_WORDS } from '@/core/editing/review-queue'; // deep, not the barrel (7.3c A1)
+import { REVIEW_FILTER_WORDS } from '@/ui/study-chrome';
 export { compactEquationOf } from '@/core/graph';
 import { UNCLASSIFIED_HUB_ID, UNCLASSIFIED_NAME, type ReactionFilter } from '@/core/graph';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
@@ -38,14 +39,15 @@ export interface Labels {
 type Named = { readonly name?: string; readonly names?: { readonly canonical: string } };
 const nameOfRecord = (record: Named | undefined, fallback: string): string => record?.names?.canonical ?? record?.name ?? fallback;
 
-export function labelsOf(state: CanonicalState, indexes: ReadonlyIndexes): Labels {
+/** `studyWords`: the three words a student reads (step 8.4a, Part D); Studio keeps the author's. */
+export function labelsOf(state: CanonicalState, indexes: ReadonlyIndexes, studyWords = false): Labels {
   const byId = (id: string): string => nameOfRecord(indexes.get(id) as Named | undefined, id);
   return {
     family: (id) => (id === UNCLASSIFIED_HUB_ID ? UNCLASSIFIED_NAME : byId(id)),
     type: (id) => nameOfRecord(state.records.concept[id as never] as Named | undefined, id),
     named: (id) => nameOfRecord(state.records.named_reaction[id as never] as Named | undefined, id),
     substance: byId,
-    status: (id) => STATUS_WORDS[id as keyof typeof STATUS_WORDS] ?? id,
+    status: (id) => (studyWords ? REVIEW_FILTER_WORDS[id as keyof typeof REVIEW_FILTER_WORDS] : STATUS_WORDS[id as keyof typeof STATUS_WORDS]) ?? id,
   };
 }
 

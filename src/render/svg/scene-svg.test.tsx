@@ -279,7 +279,7 @@ describe('arrow text in the box the layout reserved (step 5.5a, items a and f)',
     const chip = css.slice(css.indexOf('.chipPill {'), css.indexOf('}', css.indexOf('.chipPill {')));
     expect(chip).toContain('fill: var(--color-paper)');
     expect(chip).toContain('stroke: var(--color-ink-2)');
-    expect(css.slice(css.indexOf('.count {'), css.indexOf('}', css.indexOf('.count {')))).toContain('font-size: 12px');
+    expect(css.slice(css.indexOf('.count {'), css.indexOf('}', css.indexOf('.count {')))).toContain('font-size: var(--text-12)');
     const { container } = draw(demoNavigatorScene(false), { lod: 2 });
     expect(all(container, '[data-arrow-text-of] text[style], [data-count-of] text[style]')).toEqual([]);
   });

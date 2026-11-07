@@ -1,8 +1,8 @@
 .content {
   z-index: var(--z-menu);
   max-width: 280px;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-control);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-8);
   background: var(--color-ink);
   color: var(--color-paper);
   font-size: var(--text-12);

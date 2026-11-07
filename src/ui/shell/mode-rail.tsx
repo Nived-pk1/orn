@@ -12,6 +12,8 @@ export interface ModeRailProps {
   readonly modes: readonly ModeItem[];
   readonly active: string;
   readonly onChange: (id: string) => void;
+  /** A Hide button at the foot of the rail (step 8.4a, Part C2). Absent: none. */
+  readonly onHide?: () => void;
 }
 
 /** The mode rail: what exists is enabled; what does not exist yet is listed, disabled, with the phase that brings it. */
@@ -36,6 +38,11 @@ export function ModeRail(props: ModeRailProps) {
           );
         })}
       </ul>
+      {props.onHide === undefined ? null : (
+        <Button variant="quiet" className={styles.railHide} onClick={props.onHide}>
+          Hide
+        </Button>
+      )}
     </nav>
   );
 }

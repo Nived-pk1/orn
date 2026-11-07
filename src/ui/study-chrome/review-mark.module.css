@@ -1,12 +1,12 @@
 /* The Studio pill: the same look the reaction card chip had (step 5.5), in the review colour. */
 .pill {
   display: inline-block;
-  padding: 2px var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-review);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-surface);
   color: var(--color-review);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 
 /* The Study dot: small, grey, quiet; the label and the tooltip carry the meaning. */
@@ -15,8 +15,12 @@
   flex: none;
   width: 8px;
   height: 8px;
-  margin-inline-start: var(--space-2);
+  margin-inline-start: var(--space-8);
   border-radius: 50%;
   background: var(--color-ink-2);
   vertical-align: middle;
+}
+
+.warning {
+  background: var(--color-warning);
 }

@@ -55,3 +55,24 @@ describe('IconButton', () => {
     expect(screen.queryByRole('tooltip')).toBeNull();
   });
 });
+
+describe('Button kinds (step 8.4a)', () => {
+  it('has three kinds only: secondary (default), primary, quiet', () => {
+    render(
+      <>
+        <Button>One</Button>
+        <Button variant="primary">Two</Button>
+        <Button variant="quiet">Three</Button>
+      </>,
+    );
+    expect(screen.getByRole('button', { name: 'One' }).getAttribute('data-kind')).toBe('secondary');
+    expect(screen.getByRole('button', { name: 'Two' }).getAttribute('data-kind')).toBe('primary');
+    expect(screen.getByRole('button', { name: 'Three' }).getAttribute('data-kind')).toBe('quiet');
+  });
+
+  it('no stylesheet draws a disabled button with a dashed border', async () => {
+    const { readFileSync } = await import('node:fs');
+    const css = readFileSync('src/ui/primitives/button.module.css', 'utf8');
+    expect(css).not.toMatch(/dashed/);
+  });
+});

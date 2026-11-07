@@ -8,7 +8,7 @@ import type { EquationTerm } from '@/core/graph';
 
 const CHARS_PER_LINE = 26;
 const LINE_PX = 19;
-/** The gap between a drawing and its name (the same as `--space-1`, 4 px). */
+/** The gap between a drawing and its name (the same as `--space-4`, 4 px). */
 const GAP_PX = 4;
 
 const linesOf = (text: string): number => Math.max(1, Math.ceil(text.length / CHARS_PER_LINE));

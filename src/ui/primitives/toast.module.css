@@ -1,28 +1,45 @@
 .region {
   position: fixed;
-  right: var(--space-4);
-  bottom: calc(var(--status-bar-height) + var(--space-4));
+  right: var(--space-16);
+  bottom: calc(var(--status-bar-height) + var(--space-16));
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  width: min(420px, calc(100vw - 2 * var(--space-4)));
+  gap: var(--space-8);
+  width: min(420px, calc(100vw - 2 * var(--space-16)));
   pointer-events: none;
 }
 
 .toast {
   pointer-events: auto;
   border: 1px solid var(--color-ink-2);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
 }
 
 /* Release preview, phones: the bottom bar of modes is 56 px tall; a notice sits above it, not over it. */
 @media (max-width: 899px) {
   .region {
-    right: var(--space-2);
-    bottom: calc(var(--status-bar-height) + 56px + var(--space-2));
-    left: var(--space-2);
+    right: var(--space-8);
+    bottom: calc(var(--status-bar-height) + var(--tab-bar-height) + var(--space-8));
+    left: var(--space-8);
     width: auto;
   }
+}
+
+/* Docked in the shell (desktop, step 8.4a): one row, at most 44 px, at the foot of the main column. */
+.docked {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  width: min(560px, 100%);
+  max-height: var(--toast-height);
+  pointer-events: none;
+}
+
+.docked .toast {
+  max-height: var(--toast-height);
+  overflow: hidden;
+  border-radius: var(--radius-8);
 }

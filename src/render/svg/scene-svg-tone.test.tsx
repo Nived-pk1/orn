@@ -62,6 +62,6 @@ describe('a hub card with a tone (ADR-037, step 5.5c)', () => {
 
   it('the corner radius is the card radius token', () => {
     const tokens = readFileSync(resolve(__dirname, '../../ui/design/tokens.css'), 'utf8');
-    expect(HUB_RADIUS).toBe(Number(/--radius-card:\s*(\d+)px;/.exec(tokens)?.[1]));
+    expect(HUB_RADIUS).toBe(Number(/--radius-8:\s*(\d+)px;/.exec(tokens)?.[1]));
   });
 });

@@ -35,7 +35,7 @@ describe('parsePanels (tolerant)', () => {
 
   it('a good entry is taken as it is; a missing field is not damage', () => {
     expect(parsePanels({ inspectorWidth: 480, inspectorOpen: false })).toEqual({
-      values: { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal', equationNames: true },
+      values: { inspectorWidth: 480, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal', equationNames: true, railHidden: false },
       damaged: [],
       extra: {},
     });
@@ -58,7 +58,7 @@ describe('parsePanels (tolerant)', () => {
     ['infinite', Number.POSITIVE_INFINITY],
   ])('an inspectorWidth that is %s is reset and reported, the other fields are kept', (_name, width) => {
     const parsed = parsePanels({ inspectorWidth: width, inspectorOpen: false, startEmptyDismissed: true });
-    expect(parsed.values).toEqual({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: true, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal', equationNames: true });
+    expect(parsed.values).toEqual({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: true, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal', equationNames: true, railHidden: false });
     expect(parsed.damaged).toEqual(['inspectorWidth']);
   });
 
@@ -237,5 +237,31 @@ describe('the panels store', () => {
     store.getState().setInspectorOpen(false);
     timers.advance(SAVE_DEBOUNCE_MS);
     await vi.waitFor(() => expect(store.getState().persistence).toEqual({ kind: 'saved' }));
+  });
+});
+
+describe('railHidden (step 8.4a, Part C2): the view list can be hidden; remembered; tolerant', () => {
+  it('shown by default; read when stored true', () => {
+    expect(PANEL_DEFAULTS.railHidden).toBe(false);
+    expect(parsePanels({ railHidden: true }).values.railHidden).toBe(true);
+  });
+  it('a stored value that is not a boolean is damage, and the rail is shown', () => {
+    const parsed = parsePanels({ railHidden: 'yes' });
+    expect(parsed.values.railHidden).toBe(false);
+    expect(parsed.damaged).toEqual(['railHidden']);
+  });
+  it('is saved only when hidden (a stored file without the field stays the same), and survives a round trip', async () => {
+    const timers = manualTimers();
+    const p = port();
+    const store = createPanelsStore(p, timers);
+    store.getState().setInspectorWidth(430);
+    timers.advance(SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    expect(p.saved.at(-1)).not.toHaveProperty('railHidden');
+    store.getState().setRailHidden(true);
+    timers.advance(SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    expect(p.saved.at(-1)).toMatchObject({ railHidden: true });
+    expect(createPanelsStore(port({ stored: p.saved.at(-1) as Record<string, unknown> }), timers).getState().railHidden).toBe(true);
   });
 });

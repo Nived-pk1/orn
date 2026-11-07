@@ -54,7 +54,7 @@ test.describe('the page lifecycle in Chromium', () => {
     const seen = await watch(after);
     await openApp(after);
     await showDataset(after);
-    await expect(after.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
+    await expect(after.getByText(/unfinished draft|failed validation and|have no stored file|has no stored file|not verified\.|ran at start-up/)).toHaveCount(0);
     await expect(after.getByText(CRASH_LINE)).toHaveCount(0);
     await expectClean(seen);
   });
@@ -65,7 +65,7 @@ test.describe('the page lifecycle in Chromium', () => {
     await expect.poll(() => marker(page), { timeout: 15_000 }).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/));
     await page.reload();
     await showDataset(page);
-    await expect(page.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
+    await expect(page.getByText(/unfinished draft|failed validation and|have no stored file|has no stored file|not verified\.|ran at start-up/)).toHaveCount(0);
     await expect(page.getByText(CRASH_LINE)).toHaveCount(0);
   });
 
@@ -79,7 +79,7 @@ test.describe('the page lifecycle in Chromium', () => {
     await page.reload();
     await showDataset(page);
     await expect(page.getByText(CRASH_LINE)).toHaveCount(0);
-    await expect(page.getByRole('region', { name: 'Start-up report' })).toHaveCount(0);
+    await expect(page.getByText(/unfinished draft|failed validation and|have no stored file|has no stored file|not verified\.|ran at start-up/)).toHaveCount(0);
   });
 
   test('pageshow with persisted = true writes the running marker again after pagehide wrote a time', async ({ page }) => {

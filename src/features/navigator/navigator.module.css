@@ -9,8 +9,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
   border-bottom: 1px solid var(--color-rule);
   background: var(--color-surface);
 }
@@ -23,18 +23,18 @@
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-6);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-8) var(--space-24);
+  padding: var(--space-8) var(--space-12);
   border-bottom: 1px solid var(--color-rule);
   background: var(--color-paper);
   color: var(--color-ink);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 
 .legendList {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
+  gap: var(--space-8) var(--space-16);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -52,7 +52,7 @@
 
 .sampleText {
   fill: var(--color-ink);
-  font-size: 12px;
+  font-size: var(--text-12);
   font-family: var(--font-sans);
 }
 
@@ -74,7 +74,7 @@
 
 .sampleCaption {
   fill: var(--color-ink-2);
-  font-size: 10px;
+  font-size: var(--text-12);
   font-family: var(--font-sans);
 }
 
@@ -85,7 +85,7 @@
 .legendItem {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .swatch {
@@ -94,7 +94,7 @@
   height: 16px;
   border: 1px solid var(--color-rule);
   border-left: 4px solid var(--color-ink-2);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-surface);
 }
 
@@ -156,19 +156,19 @@
 
 .message {
   margin: 0;
-  padding: var(--space-4);
+  padding: var(--space-16);
 }
 
 .error {
-  margin: var(--space-4);
-  padding: var(--space-3);
+  margin: var(--space-16);
+  padding: var(--space-12);
   border: 1px solid var(--color-error);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-8);
 }
 
 .note {
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-8) var(--space-12);
   color: var(--color-ink-2);
 }
 
@@ -189,10 +189,10 @@
 .listView {
   display: grid;
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-3);
+  gap: var(--space-12);
   height: 100%;
   min-height: 0;
-  padding: var(--space-3);
+  padding: var(--space-12);
   box-sizing: border-box;
 }
 
@@ -200,7 +200,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .listHeading {
@@ -212,14 +212,14 @@
 .listNote {
   margin: 0;
   color: var(--color-ink-2);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 
 /* Release preview, phones (< 900 px): the toolbar and the legend take less height, so the drawing keeps room. */
 @media (max-width: 899px) {
   .toolbar {
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-2);
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-8);
   }
 
   .selection {
@@ -229,13 +229,13 @@
   }
 
   .legend {
-    gap: var(--space-1) var(--space-3);
-    padding: var(--space-1) var(--space-2);
+    gap: var(--space-4) var(--space-12);
+    padding: var(--space-4) var(--space-8);
     font-size: var(--text-12);
   }
 
   .legendList {
-    gap: var(--space-1) var(--space-3);
+    gap: var(--space-4) var(--space-12);
   }
 }
 
@@ -251,22 +251,22 @@
 .selectionActions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .selectionBar {
   position: absolute;
   z-index: 1;
-  right: var(--space-3);
-  bottom: var(--space-3);
-  left: var(--space-3);
+  right: var(--space-12);
+  bottom: var(--space-12);
+  left: var(--space-12);
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   align-items: center;
-  padding: var(--space-2);
+  padding: var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
 }
 
@@ -291,9 +291,9 @@
 .arrowKey {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-6);
+  gap: var(--space-4) var(--space-24);
   margin: 0;
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-4) var(--space-12);
   list-style: none;
   color: var(--color-ink-2);
   font-size: var(--text-14);
@@ -301,7 +301,7 @@
 
 .quiet {
   margin: 0;
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-4) var(--space-12);
   color: var(--color-ink-2);
   font-size: var(--text-14);
 }
@@ -310,7 +310,7 @@
 .chapterPhone {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   color: var(--color-ink-2);
 }
 
@@ -318,7 +318,7 @@
   flex: 1 1 0;
   min-width: 0;
   box-sizing: border-box;
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-4) var(--space-12);
 }
 
 .chapterSelect {
@@ -327,8 +327,8 @@
   color: var(--color-ink);
   background: var(--color-paper);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  padding: 0 var(--space-2);
+  border-radius: var(--radius-8);
+  padding: 0 var(--space-8);
 }
 
 .chapterSelect[data-phone] {
@@ -341,25 +341,25 @@
 
 .legendButton {
   min-height: 28px;
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-8);
   font: inherit;
   color: var(--color-ink);
   background: var(--color-paper);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   cursor: pointer;
 }
 
 /* "See those compounds" (step 8.2a, Studio): a plain list, one button per row. */
 .dialogLine {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-8);
   color: var(--color-ink-2);
 }
 
 .compoundList {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -367,18 +367,18 @@
 
 .compoundRow {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-12);
   align-items: baseline;
   justify-content: space-between;
   width: 100%;
   min-height: var(--hit-min);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-8) var(--space-12);
   font: inherit;
   text-align: left;
   color: var(--color-ink);
   background: var(--color-paper);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   cursor: pointer;
 }
 
@@ -391,8 +391,8 @@
 .phoneBar {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-8);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-rule);
 }

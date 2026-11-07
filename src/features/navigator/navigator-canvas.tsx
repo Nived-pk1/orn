@@ -226,9 +226,9 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
     [ports, controller, unanchoredReason, listing, noScene],
   );
   return (
-    <div className={styles.canvas} ref={root} data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
+    <div className={styles.canvas} ref={root} data-map-room="" data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
       {phone ? null : (
-        <Suspense fallback={<div className={room.row} aria-hidden="true" style={{ height: 45 }} />}>
+        <Suspense fallback={<div className={room.row} aria-hidden="true" style={{ height: 40 }} />}>
         <MapToolbar
           listing={listing}
           noScene={scene === null}

@@ -1,0 +1,14 @@
+/* One band row at the top of the main column: at most 56 px tall (step 8.4a). */
+.band {
+  min-width: 0;
+  padding: var(--space-4) var(--space-12);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

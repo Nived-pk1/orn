@@ -108,3 +108,13 @@ describe('compactEquationOf (step 7.2a, A3)', () => {
     expect(compactEquationOf([group('At 278 K', 'A → B'), group('At 293 K', undefined), group('', 'C → D')])).toBe('At 278 K: A → B; C → D');
   });
 });
+
+describe('labelsOf: the Study words of the review status (step 8.4a, Part D)', () => {
+  it('Study: Reviewed, Not yet reviewed, Needs checking; Studio keeps its own words', () => {
+    const study = labelsOf(ctx.state, ctx.indexes, true);
+    expect(study.status('verified')).toBe('Reviewed');
+    expect(study.status('unreviewed')).toBe('Not yet reviewed');
+    expect(study.status('review_required')).toBe('Needs checking');
+    expect(labelsOf(ctx.state, ctx.indexes).status('review_required')).not.toBe('Needs checking');
+  });
+});

@@ -11,6 +11,7 @@ import { studyInspectorModel } from './model/study-model';
 import { StudyHero } from './study-hero';
 import { Chips, Connected, Disclosure, GoNext, Lead, WatchOuts, type GoNextAction } from './study-parts';
 import { RichText } from './rich-text';
+import { ReviewMark, STUDY_REVIEW_SENTENCE, useStudyChrome, type ReviewStatus } from '@/ui/study-chrome';
 import styles from './study-inspector.module.css';
 
 const InChapters = lazy(() => import('./in-chapters').then((module) => ({ default: module.InChapters })));
@@ -33,6 +34,9 @@ export interface StudyInspectorProps {
 
 export function StudyInspector(props: StudyInspectorProps) {
   const { ports, state } = useInspectorEnv();
+  const student = useStudyChrome().reviewMark === 'dot';
+  const reviewed = (props.record as { review?: { status?: string } }).review?.status;
+  const status: ReviewStatus = reviewed === 'verified' || reviewed === 'review_required' ? reviewed : 'unreviewed';
   const model = useMemo(
     () => studyInspectorModel(props.refOf, { state, indexes: ports.indexes.current() }, props.authors ? 'studio' : 'study'),
     [props.refOf, state, ports, props.authors],
@@ -46,6 +50,12 @@ export function StudyInspector(props: StudyInspectorProps) {
             {model.kindChip.word}
           </span>
           <h3 id={props.titleId} className={styles.titleText}>{model.title}</h3>
+          {!student || status !== 'review_required' ? null : (
+            <span className={styles.reviewLine}>
+              <ReviewMark status={status} />
+              <span>{STUDY_REVIEW_SENTENCE}</span>
+            </span>
+          )}
         </div>
         {props.headerExtras}
       </header>

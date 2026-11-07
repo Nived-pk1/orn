@@ -32,6 +32,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         ref={ref}
         type={type}
         className={[styles.button, styles[variant], className].filter(Boolean).join(' ')}
+        data-kind={variant === 'default' ? 'secondary' : variant}
         aria-disabled={blocked ? true : undefined}
         aria-describedby={blocked ? reasonId : undefined}
         onClick={click}

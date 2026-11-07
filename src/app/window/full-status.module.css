@@ -1,0 +1,58 @@
+/* The status bar's short line (step 8.4a, Part C2): one 24 px row, 12 px text, items apart by a rule. */
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-width: 0;
+}
+
+.barButton {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.shortLine {
+  display: inline-flex;
+  align-items: center;
+}
+
+.shortItem + .shortItem {
+  margin-inline-start: var(--space-8);
+  padding-inline-start: var(--space-8);
+  border-inline-start: 1px solid var(--color-rule);
+}
+
+.detailList {
+  margin: 0;
+  padding-inline-start: var(--space-16);
+}
+
+.shortItem::before {
+  content: attr(data-short);
+}
+
+/* The full words: the page's real text for readers and tests, laid over the short line and not seen (opacity), never clipped away. */
+.statusRow {
+  position: relative;
+}
+
+.fullText {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}

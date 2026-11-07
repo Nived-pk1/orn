@@ -28,13 +28,15 @@ export interface PanelValues {
   readonly structureMode: StructureMode;
   /** The "Names" switch of the textbook equation: the name lines under the drawings are shown (equation step, part 5). */
   readonly equationNames: boolean;
+  /** The list of views at the left is hidden (step 8.4a, Part C2); the header then offers it as a menu. */
+  readonly railHidden: boolean;
 }
 
 export const INSPECTOR_LEVELS = [2, 3, 4, 5] as const;
 export type InspectorLevel = (typeof INSPECTOR_LEVELS)[number];
 
 /** The inspector starts closed until it has something to show (step 5.6a); a saved choice wins (step 5.5a review, item g). */
-export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal', equationNames: true });
+export const PANEL_DEFAULTS: PanelValues = Object.freeze({ inspectorWidth: INSPECTOR_DEFAULT, inspectorOpen: false, startEmptyDismissed: false, storageNoticeDismissed: false, inspectorLevel: 2, structureMode: 'skeletal', equationNames: true, railHidden: false });
 
 /** What the store says about keeping its values (shown in the status bar; nothing here is silent). */
 export type PanelPersistence =
@@ -68,6 +70,7 @@ export interface PanelsState extends PanelValues {
   openInspectorLevel(level: InspectorLevel): void;
   setStructureMode(mode: StructureMode): void;
   setEquationNames(names: boolean): void;
+  setRailHidden(hidden: boolean): void;
 }
 
 export type PanelsStore = StoreApi<PanelsState>;
@@ -82,7 +85,7 @@ export interface ParsedPanels {
   readonly extra: Readonly<Record<string, unknown>>;
 }
 
-const KNOWN = new Set(['inspectorWidth', 'inspectorOpen', 'startEmptyDismissed', 'storageNoticeDismissed', 'inspectorLevel', 'structureMode', 'equationNames']);
+const KNOWN = new Set(['inspectorWidth', 'inspectorOpen', 'startEmptyDismissed', 'storageNoticeDismissed', 'inspectorLevel', 'structureMode', 'equationNames', 'railHidden']);
 
 export function parsePanels(raw: unknown): ParsedPanels {
   if (raw === undefined) return { values: PANEL_DEFAULTS, damaged: [], extra: {} };
@@ -95,7 +98,7 @@ export function parsePanels(raw: unknown): ParsedPanels {
     if (typeof width === 'number' && Number.isFinite(width) && width >= INSPECTOR_MIN && width <= INSPECTOR_MAX) inspectorWidth = Math.round(width);
     else damaged.push('inspectorWidth');
   }
-  const bool = (name: 'inspectorOpen' | 'startEmptyDismissed' | 'storageNoticeDismissed' | 'equationNames'): boolean => {
+  const bool = (name: 'inspectorOpen' | 'startEmptyDismissed' | 'storageNoticeDismissed' | 'equationNames' | 'railHidden'): boolean => {
     const value = record[name];
     if (value === undefined) return PANEL_DEFAULTS[name];
     if (typeof value === 'boolean') return value;
@@ -106,6 +109,7 @@ export function parsePanels(raw: unknown): ParsedPanels {
   const startEmptyDismissed = bool('startEmptyDismissed');
   const storageNoticeDismissed = bool('storageNoticeDismissed');
   const equationNames = bool('equationNames');
+  const railHidden = bool('railHidden');
   let inspectorLevel: InspectorLevel = PANEL_DEFAULTS.inspectorLevel;
   if (record.inspectorLevel !== undefined) {
     if ((INSPECTOR_LEVELS as readonly unknown[]).includes(record.inspectorLevel)) inspectorLevel = record.inspectorLevel as InspectorLevel;
@@ -117,7 +121,7 @@ export function parsePanels(raw: unknown): ParsedPanels {
     else damaged.push('structureMode');
   }
   const extra = Object.fromEntries(Object.entries(record).filter(([key]) => !KNOWN.has(key)));
-  return { values: { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel, structureMode, equationNames }, damaged, extra };
+  return { values: { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel, structureMode, equationNames, railHidden }, damaged, extra };
 }
 
 export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): PanelsStore {
@@ -148,6 +152,7 @@ export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): Panel
       },
       setStructureMode: (mode) => change({ structureMode: mode }),
       setEquationNames: (names) => change({ equationNames: names }),
+      setRailHidden: (hidden) => change({ railHidden: hidden }),
     };
   });
 
@@ -170,10 +175,10 @@ export function createPanelsStore(port: PanelsPort, timers: PanelsTimers): Panel
   async function flushNow(): Promise<void> {
     if (!pending) return;
     pending = false;
-    const { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel, structureMode, equationNames } = store.getState();
+    const { inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel, structureMode, equationNames, railHidden } = store.getState();
     try {
       // the default is not written, so an entry that never chose a mode stays as it was
-      await port.save({ ...parsed.extra, inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel, ...(structureMode === PANEL_DEFAULTS.structureMode ? {} : { structureMode }), ...(equationNames === PANEL_DEFAULTS.equationNames ? {} : { equationNames }) });
+      await port.save({ ...parsed.extra, inspectorWidth, inspectorOpen, startEmptyDismissed, storageNoticeDismissed, inspectorLevel, ...(structureMode === PANEL_DEFAULTS.structureMode ? {} : { structureMode }), ...(equationNames === PANEL_DEFAULTS.equationNames ? {} : { equationNames }), ...(railHidden === PANEL_DEFAULTS.railHidden ? {} : { railHidden }) });
       if (store.getState().persistence.kind !== 'saved') store.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       store.setState({ persistence: { kind: 'save_failed', message: error instanceof Error ? error.message : String(error) } });

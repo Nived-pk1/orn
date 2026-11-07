@@ -2,13 +2,13 @@
 .conditions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: var(--space-2) var(--space-3);
+  gap: var(--space-8) var(--space-12);
   align-items: start;
 }
 
@@ -22,18 +22,18 @@
 
 .group {
   margin: 0;
-  padding: var(--space-2);
+  padding: var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
   min-width: 0;
 }
 
 .group legend {
   font-weight: 600;
-  padding: 0 var(--space-1);
+  padding: 0 var(--space-4);
 }
 
 .group[aria-invalid='true'] {
@@ -43,7 +43,7 @@
 .inline {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   align-items: center;
 }
 
@@ -61,12 +61,12 @@
 .checks {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
+  gap: var(--space-8) var(--space-12);
 }
 
 .checks label {
   display: inline-flex;
-  gap: var(--space-1);
+  gap: var(--space-4);
   align-items: center;
   min-height: var(--hit-min);
 }
@@ -74,10 +74,10 @@
 .parsed {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   align-items: center;
   margin: 0;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   color: var(--color-warning);
 }
 
@@ -89,9 +89,9 @@
 .conditions select,
 .conditions textarea {
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-ink);
   font: inherit;
@@ -117,6 +117,6 @@
 
 .hint {
   margin: 0;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   color: var(--color-ink-2);
 }

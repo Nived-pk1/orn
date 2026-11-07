@@ -20,7 +20,7 @@ import {
   type RecordKind,
 } from "@/core/schema";
 import { useLayoutMode, useStoreSelector, useSubscribable } from "@/ui/hooks";
-import { ErrorBoundary, ToastProvider } from "@/ui/primitives";
+import { ErrorBoundary, ToastProvider, ToastRegion, useToastShowing } from "@/ui/primitives";
 import { Shell, type InspectorPane, type ShellProps } from "@/ui/shell";
 import { INSPECTOR_MAX, INSPECTOR_MIN, usePanels, type ExplorerFilter } from "@/ui/state";
 import { useApp } from "./context";
@@ -44,14 +44,15 @@ import { filterFor, openReactions } from "./reactions-entry";
 import { Canvas, totalOf } from "./canvas";
 
 import { PanelsStatus } from "./panels-status";
-import { BootLines, Banners, StatusLine } from "./status-parts";
+import { StatusLine } from "./status-parts";
+import { LazyNoticeBand } from "./lazy-notice-band";
 import { EDITING, editionMarker } from "@/app/edition";
 import { useEditors } from "./editors-access";
 import { EditorsProvider } from "./editors";
 import { MapBulkProvider } from "./map-bulk-host";
 import { editorCommandDeps } from "./editor-commands";
 import { DatasetProvider, datasetWordsOf, useDatasetInfo } from "./dataset-info";
-import { StudyUpdateNotice, StudyUpdateProvider } from "./study-update";
+import { StudyUpdateProvider } from "./study-update";
 import { HistoryKeys } from "./history-keys";
 import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
 import { TopBar } from "./top-bar";
@@ -123,18 +124,22 @@ export function Window() {
   const layout = useLayoutMode();
   const ownData = useHasOwnData();
   const chrome = useMemo(() => studyChrome(EDITION, { ownData }), [ownData]);
+  // a phone toast sits above the tab bar; while a sheet is open it folds into the notices row instead (step 8.4a, Part C)
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // the A-to-B panel is a sheet too: a toast never floats over it
+  const chainOpen = useStore(useApp().navigator.ui.map, (s) => s.chainOpen);
   return (
     <StudyChromeProvider value={chrome}>
-    <ToastProvider folded={layout === 'phone'}>
+    <ToastProvider folded={layout === 'phone' && (sheetOpen || chainOpen)} docked={layout !== 'phone'}>
       <DatasetProvider>
       {EDITING ? (
         <EditorsProvider>
           <MapBulkProvider>
-            <WindowContent />
+            <WindowContent onSheetOpen={setSheetOpen} />
           </MapBulkProvider>
         </EditorsProvider>
       ) : (
-        <WindowContent />
+        <WindowContent onSheetOpen={setSheetOpen} />
       )}
       </DatasetProvider>
     </ToastProvider>
@@ -142,7 +147,9 @@ export function Window() {
   );
 }
 
-function WindowContent() {
+function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void }) {
+  const toastShowing = useToastShowing();
+  const { onSheetOpen } = props;
   const { panels, services, navigator, inspector: inspectorPorts } = useApp();
   const chrome = useStudyChrome();
   const editors = useEditors();
@@ -166,6 +173,8 @@ function WindowContent() {
   const counts = useStoreSelector(services.store, countsOf);
   const width = usePanels(panels, (s) => s.inspectorWidth);
   const open = usePanels(panels, (s) => s.inspectorOpen);
+  const railHidden = usePanels(panels, (s) => s.railHidden);
+  const setRailHidden = useCallback((hidden: boolean) => panels.getState().setRailHidden(hidden), [panels]);
   const [mode, setMode] = useState(NAVIGATOR_MODE);
   // the phone's Explore tab IS the Reactions mode (step 7.1b E1); the other tabs are the Navigator
   const layoutMode = useLayoutMode();
@@ -313,11 +322,14 @@ function WindowContent() {
           modes={modesFor(chrome)}
           activeMode={mode}
           onModeChange={setMode}
+          toasts={<ToastRegion />}
+          toastShowing={toastShowing}
+          onSheetHeight={(height) => onSheetOpen(height !== 'closed')}
+          railHidden={railHidden}
+          onRailHidden={setRailHidden}
           banners={
             <ErrorBoundary label="The notices panel">
-              <Banners />
-              <StudyUpdateNotice />
-              <BootLines />
+              <LazyNoticeBand />
             </ErrorBoundary>
           }
           canvas={

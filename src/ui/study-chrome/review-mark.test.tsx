@@ -29,7 +29,7 @@ describe('ReviewMark', () => {
   });
   it('Study, review required: the same quiet dot, labelled in its own words (never the pill)', () => {
     const { container } = inStudy('review_required');
-    expect(screen.getByRole('img', { name: 'Review required' }).getAttribute('data-review-mark')).toBe('dot');
+    expect(screen.getByRole('img', { name: 'Needs checking' }).getAttribute('data-review-mark')).toBe('dot');
     expect(container.querySelector('[data-review-mark="pill"]')).toBeNull();
   });
   it('Studio (and a bare render, which is Studio): the pill with the words', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LOD_THRESHOLDS } from '@/render/scene';
-import { FIT_PADDING, FIT_TOP_PADDING, LOD_HYSTERESIS, SCALE_MAX, SCALE_MIN } from './contracts';
+import { FIT_BOTTOM_PADDING, FIT_PADDING, FIT_TOP_PADDING, LOD_HYSTERESIS, SCALE_MAX, SCALE_MIN } from './contracts';
 import { lodWithHysteresis } from './lod';
 import { clampScale, FIT_FLOOR, fitBox, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout, keepScreenPoint, toScreen } from './transform';
 
@@ -105,7 +105,7 @@ describe('fitBox (step 8.2b, B1): the visible boxes fill the map area with the 2
     expect(view.scale).toBeCloseTo(Math.min(SCALE_MAX, 952 / 500));
     expect(toScreen(view, { x: 100, y: 50 }).x).toBeGreaterThanOrEqual(FIT_PADDING - 1e-9);
     expect(toScreen(view, { x: 600, y: 250 }).x).toBeLessThanOrEqual(1000 - FIT_PADDING + 1e-9);
-    expect(toScreen(view, { x: 350, y: 150 })).toEqual({ x: 500, y: (FIT_TOP_PADDING + 600 - FIT_PADDING) / 2 }); // centred in the area below the hint's band
+    expect(toScreen(view, { x: 350, y: 150 })).toEqual({ x: 500, y: (FIT_TOP_PADDING + 600 - FIT_BOTTOM_PADDING) / 2 }); // centred between the hint's band and the key's band
   });
   it('never goes above the maximum zoom', () => {
     expect(fitBox({ x0: 0, y0: 0, x1: 40, y1: 20 }, size).scale).toBe(SCALE_MAX);
@@ -114,5 +114,14 @@ describe('fitBox (step 8.2b, B1): the visible boxes fill the map area with the 2
     const view = fitBox({ x0: 200, y0: 100, x1: 20_200, y1: 10_100 }, size);
     expect(view.scale).toBe(FIT_FLOOR);
     expect(toScreen(view, { x: 200, y: 100 })).toEqual({ x: FIT_PADDING, y: FIT_TOP_PADDING });
+  });
+});
+
+describe('Fit leaves the key band free at the bottom (step 8.4a, Part C)', () => {
+  it('the bottom of the fitted content is at or above size.height - FIT_BOTTOM_PADDING', () => {
+    const tall = { x0: 0, y0: 0, x1: 100, y1: 400 };
+    expect(FIT_BOTTOM_PADDING).toBeGreaterThanOrEqual(8 + 28 + 4);
+    expect(toScreen(fitBox(tall, size), { x: 0, y: 400 }).y).toBeLessThanOrEqual(size.height - FIT_BOTTOM_PADDING + 1e-9);
+    expect(toScreen(fitScene({ width: 300, height: 500 }, size), { x: 0, y: 500 }).y).toBeLessThanOrEqual(size.height - FIT_BOTTOM_PADDING + 1e-9);
   });
 });

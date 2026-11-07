@@ -2,10 +2,10 @@
 .view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
   height: 100%;
   overflow: auto;
-  padding: var(--space-4);
+  padding: var(--space-16);
   box-sizing: border-box;
 }
 
@@ -17,7 +17,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .title {
@@ -27,7 +27,7 @@
 
 .compactExamples {
   flex: 1 1 100%;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 .compactExamples summary {
   cursor: pointer;
@@ -40,16 +40,16 @@
 
 .notice {
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-8) var(--space-12);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
 }
 
 .target {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
   font-weight: 600;
 }
@@ -57,8 +57,8 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding-top: var(--space-2);
+  gap: var(--space-8);
+  padding-top: var(--space-8);
   border-top: 1px solid var(--color-rule);
 }
 
@@ -70,7 +70,7 @@
 .group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .groupTitle {
@@ -85,7 +85,7 @@
 .hits {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -99,10 +99,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
 }
 
 .compactRow[data-selected] {
@@ -125,20 +125,20 @@
 .searchBox {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  font-size: var(--text-13);
+  gap: var(--space-4);
+  font-size: var(--text-14);
 }
 
 .option {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   min-height: 28px;
 }
 
@@ -146,33 +146,28 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
+  composes: chip from '../../ui/primitives/chip.module.css';
+  gap: var(--space-4);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .primary {
@@ -185,13 +180,10 @@
 }
 
 .route {
+  composes: card from '../../ui/primitives/card.module.css';
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
+  gap: var(--space-4);
 }
 
 .routeName {
@@ -211,14 +203,14 @@
 .step {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .stepReaction {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .showCard {
@@ -254,7 +246,7 @@
 .byproduct {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
+  gap: var(--space-8) var(--space-12);
   align-items: center;
   margin: 0;
   color: var(--color-ink-2);
@@ -266,7 +258,7 @@
 
 /* Phone (7.2b D2): one column, the pickers full width, 44 px targets, the route form stacked, the step's reaction line wraps. */
 .view[data-layout='phone'] {
-  padding: var(--space-3);
+  padding: var(--space-12);
 }
 
 .view[data-layout='phone'] button,

@@ -14,7 +14,7 @@ describe('HeroTextCard', () => {
     expect(card.style.border).toBe('');
     expect(card.style.borderRadius).toBe('');
     expect(card.style.textAlign).toBe('center');
-    expect(card.style.padding).toContain('--space-2');
+    expect(card.style.padding).toContain('--space-8');
     expect(card.tagName).toBe('P');
   });
 });

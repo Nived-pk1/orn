@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-06",
+  "lastUpdated": "2026-11-07",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -125,7 +125,8 @@
     "7.2",
     "8.1",
     "8.2a",
-    "8.2b"
+    "8.2b",
+    "8.4a"
   ],
   "nextPhase": 8,
   "outcomeGroupsStep": {
@@ -639,5 +640,15 @@
     "adr": "ADR-045",
     "summary": "studyChrome rule, no status bar, own-data line, Map/Exam words, review dot, quiet exclusive",
     "deployed": "2026-11-05"
+  },
+  "step84a": {
+    "closed": "2026-11-07",
+    "deployed": false,
+    "note": "8.4a closed, not deployed (deploys with 8.4b)",
+    "initialJsGzipKb": {
+      "study": 381,
+      "studio": 384.68
+    },
+    "adr": "docs/UI_ARCHITECTURE.md §3 addendum 2026-11-07"
   }
 }

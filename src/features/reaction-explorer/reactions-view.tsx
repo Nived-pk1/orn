@@ -12,6 +12,7 @@ import { useLayoutMode } from '@/ui/hooks';
 import { Button, Dialog, LiveRegion, SegmentedControl } from '@/ui/primitives';
 import { isFilterSet, useScopeOnly, type ExplorerFilter } from '@/ui/state';
 import { HiddenLine } from '@/ui/study-page';
+import { useStudyChrome } from '@/ui/study-chrome';
 import { PAGE_SIZE, type ExplorerPorts } from './contracts';
 import { FilterPopover, OptionList, type FilterOption } from './filter-popover';
 import { chipsOf, type Chip, countLine, labelsOf, pruneFilter, toReactionFilter, type Labels } from './model';
@@ -48,7 +49,8 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const source = useMemo(() => ({ state: ports.store.getState(), indexes: ports.indexes.current() }), [ports, version]);
   const { state, indexes } = source;
-  const labels = useMemo<Labels>(() => labelsOf(state, indexes), [state, indexes]);
+  const studyWords = useStudyChrome().reviewMark === 'dot';
+  const labels = useMemo<Labels>(() => labelsOf(state, indexes, studyWords), [state, indexes, studyWords]);
 
   // a saved filter that names a record that is gone: dropped, and said once
   useEffect(() => {

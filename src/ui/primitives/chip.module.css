@@ -1,0 +1,39 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-height: 24px;
+  padding: 0 var(--space-8);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: var(--text-12);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.exam {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.status {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.chip[data-tone='blue'] { background: var(--color-tone-blue-tint); border-color: var(--color-tone-blue-border); color: var(--color-tone-blue-ink); }
+.chip[data-tone='green'] { background: var(--color-tone-green-tint); border-color: var(--color-tone-green-border); color: var(--color-tone-green-ink); }
+.chip[data-tone='amber'] { background: var(--color-tone-amber-tint); border-color: var(--color-tone-amber-border); color: var(--color-tone-amber-ink); }
+.chip[data-tone='violet'] { background: var(--color-tone-violet-tint); border-color: var(--color-tone-violet-border); color: var(--color-tone-violet-ink); }
+.chip[data-tone='teal'] { background: var(--color-tone-teal-tint); border-color: var(--color-tone-teal-border); color: var(--color-tone-teal-ink); }
+.chip[data-tone='rose'] { background: var(--color-tone-rose-tint); border-color: var(--color-tone-rose-border); color: var(--color-tone-rose-ink); }
+.chip[data-tone='slate'] { background: var(--color-tone-slate-tint); border-color: var(--color-tone-slate-border); color: var(--color-tone-slate-ink); }
+
+@media (max-width: 899px) {
+  .chip {
+    min-height: 28px;
+    font-size: var(--text-14);
+  }
+}

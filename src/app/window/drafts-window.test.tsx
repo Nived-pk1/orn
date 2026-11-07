@@ -57,7 +57,7 @@ describe('Drafts in the window', () => {
     const app = fakeApp({ state: demoState() });
     draft(app);
     renderWithApp(app);
-    const region = screen.getByRole('region', { name: 'Start-up report' });
+    const region = screen.getByRole('region', { name: 'Notices' }); // the one notice band (step 8.4a)
     expect(region.textContent).toContain('1 unfinished draft');
     fireEvent.click(within(region).getByRole('button', { name: 'Show drafts' }));
     expect(await screen.findByRole('dialog', { name: 'Drafts' })).toBeTruthy();

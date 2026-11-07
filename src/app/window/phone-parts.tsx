@@ -142,7 +142,8 @@ export function PhoneNotices() {
   const storageNoticeDismissed = usePanels(panels, (s) => s.storageNoticeDismissed);
   const [open, setOpen] = useState(false);
   // the toasts (the import notice, the storage warning...) are counted and listed here on a phone; none floats over the cards
-  const toastCount = useToastView()?.items.length ?? 0;
+  const toastView = useToastView();
+  const toastCount = toastView?.folded === true ? toastView.items.length : 0;
   const draftsCount = draftsLineOf(useDraftsView().count) === null ? 0 : 1;
   const updateCount = useStudyUpdateDue() ? 1 : 0;
   const count = bannersOf(status, { storageNoticeDismissed, chrome }).length + bootLinesOf(status.notices).length + draftsCount + updateCount + toastCount;
@@ -157,7 +158,7 @@ export function PhoneNotices() {
           <Banners />
           <StudyUpdateNotice />
           <BootLines />
-          <ToastItems />
+          {toastCount === 0 ? null : <ToastItems />}
         </ErrorBoundary>
       ) : null}
     </div>

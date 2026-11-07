@@ -5,7 +5,7 @@ export function HeroTextCard(props: { readonly text: string }) {
       data-hero-text=""
       style={{
         margin: 0,
-        padding: 'var(--space-2) var(--space-3)',
+        padding: 'var(--space-8) var(--space-12)',
         textAlign: 'center',
         overflowWrap: 'anywhere',
       }}

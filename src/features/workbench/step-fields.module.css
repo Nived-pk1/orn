@@ -10,14 +10,14 @@
 
 .kinds legend {
   padding: 0;
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-4);
   font-weight: 600;
 }
 
 .kindGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-1) var(--space-3);
+  gap: var(--space-4) var(--space-12);
 }
 
 .kindGridPhone {
@@ -27,7 +27,7 @@
 .kind {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   min-height: var(--hit-min);
   cursor: pointer;
   overflow-wrap: anywhere;
@@ -47,14 +47,14 @@
 
 .tri legend {
   padding: 0;
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-4);
   font-weight: 600;
 }
 
 .segments {
   display: inline-flex;
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   overflow: hidden;
 }
 
@@ -64,7 +64,7 @@
   align-items: center;
   justify-content: center;
   min-height: 32px;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-12);
   cursor: pointer;
   background: var(--color-paper);
   color: var(--color-ink);
@@ -89,7 +89,7 @@
 .segment:has(input:checked) {
   background: var(--color-accent);
   color: var(--color-on-accent);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .segment:has(input:focus-visible) {
@@ -110,19 +110,19 @@
 .flags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 /* a phone: nested sections (mechanism > variant > step > row) add no side indent: a thin rule at the left of a variant and a top border for
    the rows inside it, no box border or padding at the sides (the element selector wins over the box rule of editor.module.css) */
 li.nestedVariant {
-  padding: var(--space-2) 0 var(--space-2) var(--space-2);
+  padding: var(--space-8) 0 var(--space-8) var(--space-8);
   border-width: 0 0 0 2px;
   border-radius: 0;
 }
 
 li.nestedRow {
-  padding: var(--space-2) 0;
+  padding: var(--space-8) 0;
   border-width: 1px 0 0;
   border-radius: 0;
   background: transparent;
@@ -145,6 +145,6 @@ li.nestedRow {
   .summaryText {
     display: block;
     flex: 1 1 100%;
-    margin-bottom: var(--space-1);
+    margin-bottom: var(--space-4);
   }
 }

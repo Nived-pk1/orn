@@ -13,8 +13,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
   border-bottom: 1px solid var(--color-rule);
   background: var(--color-surface);
 }
@@ -27,7 +27,7 @@
 .structures {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin-left: auto;
 }
 
@@ -52,14 +52,14 @@
 .item {
   max-width: 60rem;
   margin: 0 auto;
-  padding: 0 var(--space-4) var(--space-4);
+  padding: 0 var(--space-16) var(--space-16);
 }
 
 .missing {
-  margin: var(--space-4);
-  padding: var(--space-4);
+  margin: var(--space-16);
+  padding: var(--space-16);
   border: 1px solid var(--color-error);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-8);
 }
 
 .muted {
@@ -69,18 +69,13 @@
 }
 
 .chip {
-  display: inline-block;
-  padding: 2px var(--space-2);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  background: var(--color-surface);
+  composes: chip from '../../ui/primitives/chip.module.css';
   color: var(--color-ink);
-  font-size: var(--text-13);
 }
 
 .chipButton {
   font: inherit;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -92,9 +87,9 @@
 
 .link {
   min-height: var(--hit-min);
-  padding: 2px var(--space-3);
+  padding: var(--space-4) var(--space-12);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-accent);
   font: inherit;
@@ -112,8 +107,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-3);
-  padding-top: var(--space-6);
+  gap: var(--space-12);
+  padding-top: var(--space-24);
   border-bottom: 1px solid var(--color-rule);
 }
 
@@ -127,8 +122,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-3);
-  padding-top: var(--space-3);
+  gap: var(--space-12);
+  padding-top: var(--space-12);
 }
 
 .groupTitle {
@@ -139,20 +134,17 @@
 
 .empty {
   margin: 0;
-  padding-top: var(--space-3);
+  padding-top: var(--space-12);
   color: var(--color-ink-2);
 }
 
 /* Cards */
 
 .card {
+  composes: card from '../../ui/primitives/card.module.css';
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
-  background: var(--color-paper);
+  gap: var(--space-12);
 }
 
 .card[data-outside] {
@@ -163,7 +155,7 @@
 .dimmedScheme {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .outsideChip {
@@ -172,19 +164,18 @@
 }
 
 .card[data-selected] {
-  border: 2px solid var(--color-accent);
-  padding: calc(var(--space-4) - 1px);
+  box-shadow: inset 0 0 0 2px var(--color-accent);
 }
 
 .cardHeader {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .cardTitle {
-  margin: 0 var(--space-2) 0 0;
+  margin: 0 var(--space-8) 0 0;
   font-size: var(--text-16);
   font-weight: 600;
 }
@@ -202,34 +193,34 @@
 .elsewhere {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 
 /* Examples (7.3a): a closed disclosure under "Show full equation", the same look; each example is a card of its own inside it. */
 .examples {
-  margin-top: 0.4rem;
-  font-size: 0.85rem;
+  margin-top: var(--space-8);
+  font-size: var(--text-14);
 }
 .examples summary {
   cursor: pointer;
   color: var(--link, inherit);
 }
 .examples[open] > article {
-  margin-top: var(--space-2);
+  margin-top: var(--space-8);
 }
 .exampleOf {
   margin: 0;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   color: var(--color-ink-2);
 }
 
 .equation {
   position: relative;
   container-type: inline-size;
-  margin-top: 0.4rem;
-  font-size: 0.85rem;
+  margin-top: var(--space-8);
+  font-size: var(--text-14);
 }
 .equation summary {
   cursor: pointer;
@@ -241,32 +232,32 @@
 
 /* The open full equation is a panel of its own (outcome groups step): a light border and the surface tone, so it is never mistaken for the card's scheme. */
 .equation[open] {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-8) var(--space-12);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-surface);
 }
 
 /* A card with several outcome groups: each group in its own bordered block, headed by its conditions in words. */
 .groupBlock {
-  margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-8);
+  padding: var(--space-8) var(--space-12);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
 }
 
 .groupHeading {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-8);
   color: var(--color-ink-2);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   font-weight: 600;
 }
 
 /* the equation's "Names" switch (part 6): on the summary line, at its right; when the card is too narrow for both it sits directly under it */
 .equationNames {
   position: absolute;
-  top: var(--space-2); /* inside the panel's padding */
-  right: var(--space-3);
+  top: var(--space-8); /* inside the panel's padding */
+  right: var(--space-12);
 }
 
 @container (max-width: 17rem) {
@@ -290,37 +281,37 @@
 
 /* The page's scroll area runs behind the sheet (the shell lets it, [data-sheet-room]); the room of the sheet is empty space after the last card. */
 .page[data-layout='phone'] [data-virtual-list] {
-  padding-bottom: var(--sheet-space, 0px);
+  padding-bottom: var(--sheet-space, 0);
   scroll-padding-top: 0;
 }
 
 .page[data-layout='phone'] .toolbar {
   flex-wrap: nowrap;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
 }
 
 .page[data-layout='phone'] .item {
   max-width: none;
   margin: 0;
-  padding: 0 var(--space-2) var(--space-2);
+  padding: 0 var(--space-8) var(--space-8);
 }
 
 .page[data-layout='phone'] .item[data-bar] {
-  margin-left: var(--space-2);
-  padding-left: var(--space-2);
+  margin-left: var(--space-8);
+  padding-left: var(--space-8);
   border-left: 4px solid var(--bar, var(--color-rule));
 }
 
 .page[data-layout='phone'] .sectionHead {
-  padding-top: var(--space-3);
+  padding-top: var(--space-12);
 }
 
 .page[data-layout='phone'] .card {
-  padding: var(--space-3);
+  padding: var(--space-12);
 }
 
 .page[data-layout='phone'] .card[data-selected] {
-  padding: calc(var(--space-3) - 1px);
+  padding: var(--space-12);
 }
 
 .page[data-layout='phone'] .elsewhere .link {

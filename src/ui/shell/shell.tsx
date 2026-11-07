@@ -7,10 +7,11 @@
  */
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useLayoutMode } from '@/ui/hooks';
-import { IconButton, openLayers } from '@/ui/primitives';
+import { IconButton, Menu, openLayers } from '@/ui/primitives';
 import { ModeRail, type ModeItem } from './mode-rail';
-import { PhoneSheet } from './phone-sheet';
+import { PhoneSheet, type SheetHeight } from './phone-sheet';
 import { ResizeHandle } from './resize-handle';
+import marker from './edition-marker.module.css';
 import styles from './shell.module.css';
 import { useBreakpoint } from './use-breakpoint';
 
@@ -48,6 +49,15 @@ export interface ShellProps {
   readonly focusTitleRequest?: number;
   /** The status bar's content; undefined: no status bar at all (no footer, no reserved row; step 8.3, C1). */
   readonly statusBar?: ReactNode;
+  /** The toast dock: docked at the foot of the main column (step 8.4a, Part C), never over the inspector. */
+  readonly toasts?: ReactNode;
+  /** A toast is showing: pages keep room below their last item (the map's key band is already free). */
+  readonly toastShowing?: boolean;
+  /** The phone sheet's height changed (the window folds a floating toast into the notices row while a sheet is open). */
+  readonly onSheetHeight?: (height: SheetHeight) => void;
+  /** The list of views at the left is hidden; the header then shows a menu button for it (step 8.4a, Part C2). */
+  readonly railHidden?: boolean;
+  readonly onRailHidden?: (hidden: boolean) => void;
   /** The phone layout's own regions (ADR-039): used instead of the top bar controls, the banners, the mode rail and the status bar when the layout mode is phone. */
   readonly phone?: PhoneRegions;
 }
@@ -68,6 +78,8 @@ export function Shell(props: ShellProps) {
   const layout = useLayoutMode();
   const phone = layout === 'phone' && props.phone !== undefined ? props.phone : undefined;
   const { pane } = props;
+  const railHidden = props.railHidden === true && phone === undefined;
+  const currentMode = props.modes.find((mode) => mode.id === props.activeMode);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sheetSpace, setSheetSpace] = useState(0);
   const frame = useRef<HTMLDivElement>(null);
@@ -102,6 +114,8 @@ export function Shell(props: ShellProps) {
       data-layout={phone === undefined ? 'desktop' : 'phone'}
       {...(props.statusBar === undefined ? { 'data-status-bar': 'none' } : {})}
       data-inspector={inspectorOpen ? 'open' : 'closed'}
+      {...(railHidden ? { 'data-rail': 'hidden' } : {})}
+      {...(props.toastShowing === true ? { 'data-toast': '' } : {})}
       {...(phone !== undefined && sheetSpace > 0 ? { 'data-sheet-room': '' } : {})}
       style={{ ['--inspector-width' as string]: `${pane.width}px`, ['--sheet-space' as string]: `${sheetSpace}px` }}
     >
@@ -112,10 +126,17 @@ export function Shell(props: ShellProps) {
           <h1 ref={title} tabIndex={-1} className={styles.title} {...(phone === undefined ? {} : { 'aria-label': props.title })}>{phone === undefined ? props.title : 'ORN'}</h1>
         )}
         {props.marker === undefined ? null : (
-          <span className={styles.marker} data-edition-marker="">
+          <span className={marker.marker} data-edition-marker="">
             {props.marker}
           </span>
         )}
+        {railHidden ? (
+          <Menu
+            label={`☰ ${currentMode?.label ?? 'Views'}`}
+            items={props.modes.map((mode) => ({ id: mode.id, label: mode.label, ...(mode.unavailable === undefined ? { onSelect: () => props.onModeChange(mode.id) } : { unavailable: mode.unavailable }) }))}
+            {...(currentMode === undefined ? {} : { chosen: currentMode.id })}
+          />
+        ) : null}
         {phone === undefined ? (
           <>
             <div className={styles.topControls}>{props.topBar}</div>
@@ -130,9 +151,12 @@ export function Shell(props: ShellProps) {
           <div className={styles.topControls}>{phone.bar}</div>
         )}
       </header>
-      {phone === undefined ? <ModeRail modes={props.modes} active={props.activeMode} onChange={props.onModeChange} /> : null}
+      {phone === undefined && !railHidden ? <ModeRail modes={props.modes} active={props.activeMode} onChange={props.onModeChange} {...(props.onRailHidden === undefined ? {} : { onHide: () => props.onRailHidden?.(true) })} /> : null}
       <div className={styles.banners}>{phone === undefined ? props.banners : phone.notices}</div>
-      <main className={styles.canvas}>{props.canvas}</main>
+      <div className={styles.main}>
+        <main className={styles.canvas}>{props.canvas}</main>
+        {phone === undefined && props.toasts !== undefined ? <div className={styles.toastDock}>{props.toasts}</div> : null}
+      </div>
       {wide && pane.open ? <ResizeHandle width={pane.width} min={pane.min} max={pane.max} onWidth={pane.onWidth} edge={edge} /> : null}
       {phone === undefined ? (
         <aside className={styles.inspector} aria-label={props.inspectorTitle} hidden={!inspectorOpen} onKeyDown={escape}>
@@ -143,7 +167,7 @@ export function Shell(props: ShellProps) {
           <div className={styles.inspectorBody}>{props.inspector}</div>
         </aside>
       ) : (
-        <PhoneSheet title={props.inspectorTitle} openRequest={requested} closeRequest={props.closeRequest ?? 0} onSpace={setSheetSpace}>
+        <PhoneSheet title={props.inspectorTitle} openRequest={requested} closeRequest={props.closeRequest ?? 0} onSpace={setSheetSpace} {...(props.onSheetHeight === undefined ? {} : { onHeight: props.onSheetHeight })}>
           {props.inspector}
         </PhoneSheet>
       )}

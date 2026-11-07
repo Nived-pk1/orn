@@ -162,3 +162,48 @@ describe('Studio: the same layout, then "For authors"', () => {
     expect(document.querySelector('[role="status"]')).not.toBeNull();
   });
 });
+
+describe('the right pane (step 8.4a, Part C2.6)', () => {
+  it('go next: three buttons on one row and a "⋯" menu named "More actions" for the rest', async () => {
+    await show(ETHANOL, true, { showReactions: () => undefined, showPrecursors: () => undefined });
+    const row = screen.getByRole('group', { name: 'Go next' });
+    expect(within(row).getAllByRole('button').filter((b) => b.getAttribute('aria-haspopup') === null).length).toBeLessThanOrEqual(3);
+    const more = within(row).queryByRole('button', { name: 'More actions' });
+    if (more !== null) expect(more.textContent).toContain('⋯');
+  });
+
+  it('the connected cards fill the pane: a grid (one column narrow, two wide), never a fixed narrow card', async () => {
+    const { readFileSync } = await import('node:fs');
+    const css = readFileSync('src/features/inspector/study-inspector.module.css', 'utf8');
+    const cards = /\.cards \{[^}]*\}/.exec(css)?.[0] ?? '';
+    expect(cards).toMatch(/display: grid/);
+    expect(cards).toMatch(/minmax\(min\(100%, 240px\), 1fr\)/);
+    expect(/\.card \{[^}]*\}/.exec(css)?.[0] ?? '').not.toMatch(/max-width/);
+  });
+});
+
+describe('a record that needs checking (step 8.4a, Part D)', () => {
+  const BECKMANN = ref('reaction', 'rxn_cyclohexanone-oxime-beckmann');
+  async function inEdition(edition: 'study' | 'studio') {
+    const { StudyChromeProvider, studyChrome } = await import('@/ui/study-chrome');
+    const rig = inspectorRig(state, { studyView: true });
+    render(
+      <StudyChromeProvider value={studyChrome(edition, { ownData: false })}>
+        <Inspector ports={rig.ports} host={rig.host} />
+      </StudyChromeProvider>,
+    );
+    act(() => rig.inspector.getState().open(BECKMANN));
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+  }
+
+  it('Study: a warning-coloured dot "Needs checking" and the line "This has an open question..." under the title', async () => {
+    await inEdition('study');
+    expect(screen.getByRole('img', { name: 'Needs checking' }).getAttribute('data-tone')).toBe('warning');
+    expect(screen.getByText('This has an open question. Check it with your textbook or teacher.')).toBeTruthy();
+  });
+
+  it('Studio: its own pill and words, no Study sentence', async () => {
+    await inEdition('studio');
+    expect(screen.queryByText(/This has an open question/)).toBeNull();
+  });
+});

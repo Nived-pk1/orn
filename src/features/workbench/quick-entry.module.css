@@ -1,16 +1,16 @@
 .dialog {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
   min-width: 0;
 }
 
 .line {
   width: 100%;
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-ink);
   font: inherit;
@@ -31,7 +31,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .problems {
@@ -39,13 +39,13 @@
 }
 
 .terms {
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .term {
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   overflow-wrap: anywhere;
 }
 
@@ -55,49 +55,49 @@
 }
 
 .candidates {
-  margin-top: var(--space-1);
+  margin-top: var(--space-4);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
-  margin-top: var(--space-1);
+  gap: var(--space-4);
+  margin-top: var(--space-4);
 }
 
 .review {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
   min-width: 0;
 }
 
 .conditions {
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-8);
+  padding: var(--space-4) var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .conditions ul {
   margin: 0;
-  padding-left: var(--space-4);
+  padding-left: var(--space-16);
 }
 
 .scope {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .scope select {
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-ink);
   font: inherit;

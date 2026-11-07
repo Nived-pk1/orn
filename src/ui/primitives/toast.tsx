@@ -49,6 +49,8 @@ const ToastContext = createContext<Toasts | null>(null);
 export interface ToastView {
   readonly items: readonly (ToastInput & { readonly id: number })[];
   readonly dismiss: (id: number) => void;
+  /** The toasts are listed in the phone's notices row (a sheet is open), not floating. */
+  readonly folded: boolean;
 }
 const ViewContext = createContext<ToastView | null>(null);
 
@@ -76,8 +78,11 @@ function AutoDismiss(props: { readonly ms: number; readonly paused: boolean; rea
   return null;
 }
 
+const DockedContext = createContext(false);
+
 function ToastRow(props: { readonly item: ToastInput & { readonly id: number }; readonly dismiss: (id: number) => void }) {
   const { item, dismiss } = props;
+  const docked = useContext(DockedContext);
   const [hover, setHover] = useState(false);
   const [focus, setFocus] = useState(false);
   return (
@@ -92,6 +97,7 @@ function ToastRow(props: { readonly item: ToastInput & { readonly id: number }; 
     >
       <Banner
         kind={item.kind ?? 'info'}
+        {...(docked ? { compact: true, title: item.text } : {})}
         actions={
           <>
             {item.action === undefined ? null : (
@@ -130,7 +136,20 @@ export function ToastItems() {
   );
 }
 
-export function ToastProvider(props: { readonly children: ReactNode; readonly folded?: boolean; readonly timers?: ToastTimers }) {
+/** The toast region for a Shell dock (desktop): the same items, docked in the main column instead of floating. */
+export function ToastRegion() {
+  return (
+    <DockedContext.Provider value>
+      <div className={styles.docked} role="status" aria-live="polite" aria-relevant="additions text" aria-label="Notifications">
+        <ToastItems />
+      </div>
+    </DockedContext.Provider>
+  );
+}
+
+export const useToastShowing = (): boolean => (useContext(ViewContext)?.items.length ?? 0) > 0;
+
+export function ToastProvider(props: { readonly children: ReactNode; readonly folded?: boolean; /** The window docks the toasts in the shell (ToastRegion); the provider draws no region of its own. */ readonly docked?: boolean; readonly timers?: ToastTimers }) {
   const [items, setItems] = useState<readonly Item[]>([]);
   const next = useRef(1);
   const dismiss = useCallback((id: number) => setItems((current) => current.filter((item) => item.id !== id)), []);
@@ -141,7 +160,8 @@ export function ToastProvider(props: { readonly children: ReactNode; readonly fo
     return id;
   }, []);
   const api = useMemo<Toasts>(() => ({ push, dismiss }), [push, dismiss]);
-  const view = useMemo(() => ({ items, dismiss }), [items, dismiss]);
+  const folded = props.folded === true;
+  const view = useMemo(() => ({ items, dismiss, folded }), [items, dismiss, folded]);
   return (
     <ToastContext.Provider value={api}>
       <TimerContext.Provider value={props.timers ?? REAL_TIMERS}>
@@ -153,7 +173,7 @@ export function ToastProvider(props: { readonly children: ReactNode; readonly fo
               <p key={item.id}>{item.text}</p>
             ))}
           </div>
-        ) : (
+        ) : props.docked === true ? null : (
           <div className={styles.region} role="status" aria-live="polite" aria-relevant="additions text" aria-label="Notifications">
             <ToastItems />
           </div>

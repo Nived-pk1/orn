@@ -1,41 +1,41 @@
 .body {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: var(--space-4);
+  gap: var(--space-16);
   align-items: start;
 }
 
 .bodyPhone {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .toolbar {
   display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
 }
 
 .section h3,
 .panel h3 {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-8);
   font-size: var(--text-14);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
+  gap: var(--space-4);
+  margin-bottom: var(--space-12);
 }
 
 .field input,
 .row input {
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-ink);
   font: inherit;
@@ -48,37 +48,37 @@
 }
 
 .list {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-12);
 }
 
 .list h4 {
-  margin: 0 0 var(--space-1);
-  font-size: var(--text-13);
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-14);
 }
 
 .list ul {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-8);
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 /* a list that IS the <ul> (cards, summary rows): no bullets, no indent */
 ul.list {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-8);
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   align-items: center;
 }
 
@@ -126,15 +126,15 @@ ul.list {
 }
 
 .hint {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-13);
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-14);
   color: var(--color-ink-2);
 }
 
 .panel {
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  padding: var(--space-3);
+  border-radius: var(--radius-8);
+  padding: var(--space-12);
   background: var(--color-surface);
 }
 
@@ -144,14 +144,14 @@ ul.list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .findings button {
   width: 100%;
   text-align: left;
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
   background: var(--color-paper);
   color: var(--color-ink);
@@ -170,7 +170,7 @@ ul.list {
 .footer {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   align-items: center;
   width: 100%;
 }
@@ -178,19 +178,19 @@ ul.list {
 .status {
   flex: 1 1 14rem;
   margin: 0;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   color: var(--color-ink-2);
 }
 
 .confirm {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   align-items: center;
 }
 
 .notice {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-12);
   font-weight: 600;
   color: var(--color-warning);
 }
@@ -198,12 +198,12 @@ ul.list {
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 
 .table th,
 .table td {
-  padding: var(--space-2);
+  padding: var(--space-8);
   border-bottom: 1px solid var(--color-rule);
   text-align: left;
   vertical-align: top;
@@ -213,11 +213,11 @@ ul.list {
 .choices {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .chosen {
-  font-weight: 700;
+  font-weight: 600;
   outline: 2px solid var(--color-accent);
 }
 
@@ -226,27 +226,27 @@ ul.list {
 }
 
 .notes {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-8) 0 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .sectionHeading {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-8);
 }
 
 .sectionToggle {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   width: 100%;
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-surface);
   color: var(--color-ink);
   font: inherit;
@@ -259,21 +259,21 @@ ul.list {
 .sections {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .choice {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   align-items: center;
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-2);
+  gap: var(--space-8);
+  margin: 0 0 var(--space-8);
   padding: 0;
   list-style: none;
 }
@@ -282,50 +282,50 @@ ul.list {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
 }
 
 .field select,
 .field textarea {
   min-height: var(--hit-min);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-4) var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-ink);
   font: inherit;
 }
 
 .results {
-  margin: var(--space-1) 0 0;
+  margin: var(--space-4) 0 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .matches {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-12);
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .match {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-12);
   align-items: center;
-  padding: var(--space-2);
+  padding: var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
 }
 
 .matchDrawing {
@@ -344,32 +344,32 @@ ul.list {
 
 .mono {
   font-family: var(--font-mono);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 
 /* the main column of the editor: the kind's form and the sections every record has (Relationships, ...) */
 .formColumn {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
   min-width: 0;
 }
 
 /* the cell grid of the map family editor: the current arrangement plus one free row and column */
 .cellGrid {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-4);
   overflow-x: auto;
 }
 
 .gridCell {
   min-height: var(--hit-min);
-  padding: var(--space-1);
+  padding: var(--space-4);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-ink);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   overflow-wrap: anywhere;
 }
 

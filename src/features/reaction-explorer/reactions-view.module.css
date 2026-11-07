@@ -2,10 +2,10 @@
 .view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
   height: 100%;
   overflow: auto;
-  padding: var(--space-4);
+  padding: var(--space-16);
   box-sizing: border-box;
 }
 
@@ -13,7 +13,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .title {
@@ -30,7 +30,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .popoverRoot {
@@ -51,17 +51,17 @@
   max-width: 22rem;
   max-height: 20rem;
   overflow: auto;
-  margin-top: var(--space-1);
-  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-8) var(--space-12);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
 }
 
 .options {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   border: 0;
@@ -70,21 +70,21 @@
 .option {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   min-height: 28px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  font-size: var(--text-13);
+  gap: var(--space-4);
+  font-size: var(--text-14);
 }
 
 .picker {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .chosenList {
@@ -96,48 +96,43 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
+  composes: chip from '../../ui/primitives/chip.module.css';
+  gap: var(--space-4);
 }
 
 .notice {
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-8) var(--space-12);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
 }
 
 .empty {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-2);
+  gap: var(--space-8);
   color: var(--color-ink-2);
 }
 
 .results {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .list,
 .fallback {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -151,10 +146,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
 }
 
@@ -163,7 +158,7 @@
 }
 
 .compactName {
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
 }
 
@@ -174,7 +169,7 @@
 .compactTypes,
 .compactExamples {
   flex: 1 1 100%;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 .compactExamples summary {
   cursor: pointer;
@@ -182,18 +177,18 @@
 
 .muted {
   color: var(--color-ink-2);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 
 .outsideMark {
-  font-size: var(--text-13);
-  font-weight: 700;
+  font-size: var(--text-14);
+  font-weight: 600;
 }
 
 .more {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .srOnly {
@@ -207,7 +202,7 @@
 
 /* Phone (ADR-039, ADR-042 E8): one column, the filters in a full-screen sheet, 44 px targets. */
 .view[data-layout='phone'] {
-  padding: var(--space-3);
+  padding: var(--space-12);
 }
 
 .view[data-layout='phone'] button,
@@ -222,10 +217,10 @@
 .sheet {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-16);
 }
 
 .sheetSection h3 {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-8);
   font-size: var(--text-16);
 }

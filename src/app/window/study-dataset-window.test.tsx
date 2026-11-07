@@ -24,6 +24,9 @@ async function load(edition: Edition) {
   const { PHONE_QUERIES } = await import('@/ui/hooks');
   const { AppProvider } = await import('@/app/window/context');
   const { Window } = await import('@/app/window/window');
+  // the lazy chunks resolve in THIS module registry (the reset above), so the notice band finds its own context
+  await (await import('@/app/window/lazy-notice-band')).prefetchNoticeBand();
+  await (await import('@/app/window/lazy-full-status')).prefetchFullStatus();
   kit.stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {
@@ -80,7 +83,7 @@ describe('first run', () => {
     expect(remember).not.toHaveBeenCalled();
   });
 
-  it('study, nothing published (the demo): the demo words as today, and no notice', () => {
+  it('study, nothing published (the demo): the demo words as today, and no notice', async () => {
     const k = loaded.study;
     show(k, { kind: 'demo' });
     expect(k.screen.getByRole('button', { name: 'Load demo dataset' })).toBeTruthy();
@@ -88,7 +91,7 @@ describe('first run', () => {
     expect(k.screen.queryByText(NOTICE)).toBeNull();
   });
 
-  it('studio: always the demo words, even if it were handed a published dataset', () => {
+  it('studio: always the demo words, even if it were handed a published dataset', async () => {
     const k = loaded.studio;
     show(k, published(undefined));
     expect(k.screen.getByRole('button', { name: 'Load demo dataset' })).toBeTruthy();
@@ -97,23 +100,23 @@ describe('first run', () => {
 });
 
 describe('the update notice (Study only)', () => {
-  it('shown when the published sha256 differs from the last loaded one: its words, "Load it" and "Later"', () => {
+  it('shown when the published sha256 differs from the last loaded one: its words, "Load it" and "Later"', async () => {
     const k = loaded.study;
     show(k, published(SHA_A), { withData: true });
-    const notice = k.screen.getByText(NOTICE);
+    const notice = (await k.screen.findByText(NOTICE));
     expect(notice).toBeTruthy();
     const region = notice.closest('section') as HTMLElement;
     expect(k.within(region).getByRole('button', { name: 'Load it' })).toBeTruthy();
     expect(k.within(region).getByRole('button', { name: 'Later' })).toBeTruthy();
   });
 
-  it('shown too when this browser never loaded one (it holds data and a study dataset exists)', () => {
+  it('shown too when this browser never loaded one (it holds data and a study dataset exists)', async () => {
     const k = loaded.study;
     show(k, published(undefined), { withData: true });
-    expect(k.screen.getByText(NOTICE)).toBeTruthy();
+    expect((await k.screen.findByText(NOTICE))).toBeTruthy();
   });
 
-  it('NOT shown when the sha256 is the same', () => {
+  it('NOT shown when the sha256 is the same', async () => {
     const k = loaded.study;
     show(k, published(SHA_B), { withData: true });
     expect(k.screen.queryByText(NOTICE)).toBeNull();
@@ -132,7 +135,7 @@ describe('the update notice (Study only)', () => {
     expect(await k.screen.findByRole('button', { name: 'Undo import' })).toBeTruthy();
   });
 
-  it('"Later": hidden for this visit, asked again at the next one (a fresh window)', () => {
+  it('"Later": hidden for this visit, asked again at the next one (a fresh window)', async () => {
     const k = loaded.study;
     const info = published(SHA_A);
     show(k, info, { withData: true });
@@ -140,18 +143,18 @@ describe('the update notice (Study only)', () => {
     expect(k.screen.queryByText(NOTICE)).toBeNull();
     k.cleanup();
     show(k, info, { withData: true });
-    expect(k.screen.getByText(NOTICE)).toBeTruthy();
+    expect((await k.screen.findByText(NOTICE))).toBeTruthy();
   });
 
-  it('on a phone it is one of the folded notices', () => {
+  it('on a phone it is one of the folded notices', async () => {
     const k = loaded.study;
     asPhone(k);
     show(k, published(SHA_A), { withData: true });
     k.fireEvent.click(k.screen.getByRole('button', { name: /notice/ }));
-    expect(k.screen.getByText(NOTICE)).toBeTruthy();
+    expect((await k.screen.findByText(NOTICE))).toBeTruthy();
   });
 
-  it('studio: NEVER shown (the owner\'s working copy is never replaced by a prompt), whatever the sha256s', () => {
+  it('studio: NEVER shown (the owner\'s working copy is never replaced by a prompt), whatever the sha256s', async () => {
     const k = loaded.studio;
     show(k, published(SHA_A), { withData: true });
     expect(k.screen.queryByText(NOTICE)).toBeNull();
@@ -173,7 +176,7 @@ describe('the dataset view words follow the dataset', () => {
 });
 
 describe('H1: "Keep my data"', () => {
-  it('a third button records this published sha256 as declined and hides the notice, in a fresh window too', () => {
+  it('a third button records this published sha256 as declined and hides the notice, in a fresh window too', async () => {
     const k = loaded.study;
     const decline = vi.fn();
     const info = { ...published(SHA_A), decline } as Info;
@@ -182,21 +185,21 @@ describe('H1: "Keep my data"', () => {
     expect(decline).toHaveBeenCalledWith(SHA_B);
     expect(k.screen.queryByText(NOTICE)).toBeNull();
   });
-  it('not shown when that sha256 was declined earlier; shown again when a different one is published', () => {
+  it('not shown when that sha256 was declined earlier; shown again when a different one is published', async () => {
     const k = loaded.study;
     show(k, { ...published(SHA_A), declinedSha256: SHA_B } as Info, { withData: true });
     expect(k.screen.queryByText(NOTICE)).toBeNull();
     k.cleanup();
     show(k, { ...published(SHA_A), declinedSha256: SHA_A } as Info, { withData: true });
-    expect(k.screen.getByText(NOTICE)).toBeTruthy();
+    expect((await k.screen.findByText(NOTICE))).toBeTruthy();
   });
-  it('"Later" and "Keep my data" sit side by side in the notice', () => {
+  it('"Later" and "Keep my data" sit side by side in the notice', async () => {
     const k = loaded.study;
     show(k, published(SHA_A), { withData: true });
     expect(k.screen.getByRole('button', { name: 'Later' })).toBeTruthy();
     expect(k.screen.getByRole('button', { name: 'Keep my data' })).toBeTruthy();
   });
-  it('studio never shows the notice or the button', () => {
+  it('studio never shows the notice or the button', async () => {
     const k = loaded.studio;
     show(k, published(SHA_A), { withData: true });
     expect(k.screen.queryByRole('button', { name: 'Keep my data' })).toBeNull();

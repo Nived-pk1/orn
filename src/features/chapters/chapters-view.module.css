@@ -2,10 +2,10 @@
 .view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
   height: 100%;
   overflow: auto;
-  padding: var(--space-4);
+  padding: var(--space-16);
   box-sizing: border-box;
 }
 
@@ -13,7 +13,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .title {
@@ -28,9 +28,9 @@
 
 .notice {
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-8) var(--space-12);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-8);
 }
 
 .view button {
@@ -40,20 +40,17 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .chapterRow {
+  composes: card from '../../ui/primitives/card.module.css';
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
+  gap: var(--space-4);
 }
 
 .chapterName {
@@ -72,20 +69,14 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
-  background: var(--color-paper);
-  font-size: var(--text-13);
+  composes: chip from '../../ui/primitives/chip.module.css';
 }
 
 .partialChip {
@@ -96,7 +87,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .kindChip[aria-pressed='true'] {
@@ -107,21 +98,21 @@
 .field {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-13);
+  gap: var(--space-8);
+  font-size: var(--text-14);
 }
 
 .option {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   min-height: 28px;
 }
 
 .group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 
 .groupHeading {
@@ -131,19 +122,16 @@
 
 .partHeading {
   margin: 0;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   color: var(--color-ink-2);
   font-weight: 600;
 }
 
 .card {
+  composes: card from '../../ui/primitives/card.module.css';
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
-  background: var(--color-paper);
+  gap: var(--space-8);
 }
 
 .card[data-selected] {
@@ -186,7 +174,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 .readMore {
@@ -196,12 +184,12 @@
 .sheet {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
 }
 
 [data-layout='phone'] .view,
 .view[data-layout='phone'] {
-  padding: var(--space-3);
+  padding: var(--space-12);
 }
 
 .view[data-layout='phone'] .readMore,
@@ -229,5 +217,5 @@
   color: var(--color-accent);
   text-decoration: underline;
   cursor: pointer;
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }

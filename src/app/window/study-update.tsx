@@ -17,7 +17,7 @@ interface StudyUpdate {
   keep(): void;
 }
 const NONE: StudyUpdate = { due: false, loadIt: () => undefined, later: () => undefined, keep: () => undefined };
-const StudyUpdateContext = createContext<StudyUpdate>(NONE);
+export const StudyUpdateContext = createContext<StudyUpdate>(NONE);
 
 export const NOTICE_TEXT = 'A newer version of the study dataset is available. Load it (this replaces the data in this browser; export a backup first if you imported your own data).';
 

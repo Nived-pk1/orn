@@ -2,20 +2,17 @@
 .steps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-12);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .step {
+  composes: card from '../../ui/primitives/card.module.css';
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
+  gap: var(--space-4);
 }
 
 .stepHeading {
@@ -27,10 +24,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-8);
   margin: 0;
   color: var(--color-ink-2);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }
 
 .marks:empty {
@@ -38,9 +35,9 @@
 }
 
 .mark {
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-8);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-8);
   background: var(--color-paper);
   color: var(--color-ink);
 }
@@ -48,7 +45,7 @@
 .species {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-12);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -58,7 +55,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-4);
   min-width: 0;
   max-width: 10rem;
   text-align: center;
@@ -70,7 +67,7 @@
 }
 
 .speciesName {
-  font-size: var(--text-13);
+  font-size: var(--text-14);
   overflow-wrap: anywhere;
 }
 
@@ -82,17 +79,17 @@
   width: 100%;
   min-width: 7rem;
   min-height: 5rem;
-  padding: var(--space-2);
+  padding: var(--space-8);
   background: var(--color-paper);
   color: var(--color-ink);
 }
 
 .speciesFormula {
-  font-size: var(--text-16, 1rem);
+  font-size: var(--text-16);
   overflow-wrap: anywhere;
 }
 
 .role {
   color: var(--color-ink-2);
-  font-size: var(--text-13);
+  font-size: var(--text-14);
 }

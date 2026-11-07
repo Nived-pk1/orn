@@ -3,7 +3,8 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-libra
 import { afterEach, describe, expect, it } from 'vitest';
 import { truncationLineOf } from '@/features/navigator';
 import { demoState } from '@/test-support/app-boot-kit';
-import { fakeApp, renderWithApp } from '@/test-support/window-kit';
+import { prefetchFullStatus } from './lazy-full-status';
+import { fakeApp, renderWithApp, stubDialog } from '@/test-support/window-kit';
 
 // jsdom has no layout engine (every box is 0 x 0), no ResizeObserver and no SVG text metrics: the viewport is not fitted here and the
 // text measurer is the fake of the test kit. What the browser does with the drawing is proved by tests/e2e/navigator.spec.ts.
@@ -47,11 +48,15 @@ describe('the window with records', () => {
     expect(alert.textContent).toContain('no worker');
   });
 
-  it('shows a layout notice as a banner', async () => {
+  it('shows a layout note as a status-bar item "Layout notes (1)" that opens its text (step 8.4a: not a notice)', async () => {
+    stubDialog();
+    await prefetchFullStatus();
     const app = fakeApp({ state: demoState(), status: { layoutNotice: 'fallback layout (timeout) of "navigator"' } });
     renderWithApp(app);
-    const notices = await screen.findByRole('region', { name: 'Notices' });
-    expect(within(notices).getByText(/Layout note: fallback layout \(timeout\) of "navigator"/)).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Notices' })).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: 'Layout notes (1)' }));
+    expect(await screen.findByText('fallback layout (timeout) of "navigator"')).toBeTruthy(); // the body is a lazy chunk
+    expect(screen.getByRole('dialog', { name: 'Layout notes' })).toBeTruthy();
   });
 
   it('has no navigator for an empty dataset: the first-run screen stays', () => {
