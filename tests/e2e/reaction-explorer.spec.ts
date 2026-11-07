@@ -210,7 +210,8 @@ test.describe('desktop', () => {
     expect(await rows(page).count()).toBe(TOTAL); // nothing is hidden under Everything
     await page.getByRole('radio', { name: 'Only JEE Main' }).check();
     // the marked reactions (cards and folded examples alike) are the hidden ones; what is left is counted as cards
-    await expect(countLine(page, new RegExp(`^\\d+ of ${TOTAL} reactions( ${EXAMPLES})? \\(${marked} outside JEE Main hidden\\)$`))).toBeVisible();
+    await expect(countLine(page, new RegExp(`^\\d+ of ${TOTAL} reactions( ${EXAMPLES})?$`))).toBeVisible(); // "hidden" is said once, by the line under the count (ADR-046)
+    await expect(view(page).locator('[data-hidden-line]')).toContainText(new RegExp(`${marked} reactions? outside JEE Main (is|are) hidden`));
     expect(await rows(page).count()).toBeLessThan(TOTAL);
     expect(await axeProblems(page)).toEqual([]);
     await expectClean(seen);
