@@ -35,10 +35,13 @@ export async function measure(page: Page): Promise<Measured> {
         labels.push({ id: `${id}#${i}`, x: b.x, y: b.y, width: b.width, height: b.height });
       });
     }
+    // a chip is drawn at its SCREEN size (step 8.4b): its world rectangle is its centre (the group's translate) and its size over the zoom
+    const k = (document.querySelector('svg [data-world]') as unknown as SVGGElement | null)?.getScreenCTM()?.a ?? 1;
     for (const group of document.querySelectorAll('[data-count-of]')) {
       const at = translate(group);
-      const rect = group.querySelector('rect');
-      labels.push({ id: `${group.getAttribute('data-count-of') ?? ''}#count`, x: at.x, y: at.y, width: Number(rect?.getAttribute('width') ?? 0) + 1, height: Number(rect?.getAttribute('height') ?? 0) + 1 });
+      const w = Number(group.getAttribute('data-chip-width') ?? 0) / k;
+      const h = Number(group.getAttribute('data-chip-height') ?? 0) / k;
+      labels.push({ id: `${group.getAttribute('data-count-of') ?? ''}#count`, x: at.x - w / 2, y: at.y - h / 2, width: w + 1, height: h + 1 });
     }
     const nodes: Measured['nodes'] = [];
     for (const group of document.querySelectorAll('[data-node-id]')) {

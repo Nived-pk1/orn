@@ -21,14 +21,14 @@ const edgeEl = (root: Element, id: string): Element => root.querySelector(`[data
 describe('the whole drawing', () => {
   const scene = demoNavigatorScene(true);
 
-  it('is one root svg with a name, one world group and five layers in drawing order', () => {
+  it('is one root svg with a name, one world group and five layers in drawing order (chips and badges on top, step 8.4b)', () => {
     const { container, svg } = draw(scene, { ariaLabel: 'Navigator: demo' });
     expect(all(container, 'svg')).toHaveLength(1);
     expect(svg.getAttribute('role')).toBe('group');
     expect(svg.getAttribute('aria-label')).toBe('Navigator: demo');
     const worlds = all(container, '[data-world]');
     expect(worlds).toHaveLength(1);
-    expect(all(worlds[0] as Element, ':scope > [data-layer]').map((layer) => layer.getAttribute('data-layer'))).toEqual(['edges', 'nodes', 'labels', 'badges', 'overlay']);
+    expect(all(worlds[0] as Element, ':scope > [data-layer]').map((layer) => layer.getAttribute('data-layer'))).toEqual(['edges', 'nodes', 'labels', 'overlay', 'badges']);
   });
 
   it('draws every node and every edge of the Scene once, with its id and its accessible name', () => {

@@ -7,15 +7,38 @@ const timers = () => ({ after: (_ms: number, _run: () => void) => () => undefine
 
 describe('parseMap', () => {
   it('nothing saved: all chapters, Unclassified hidden, no damage', () => {
-    expect(parseMap(undefined)).toEqual({ chapterId: null, showUnclassified: false, fitRule: null, damaged: [] });
+    expect(parseMap(undefined)).toEqual({ chapterId: null, showUnclassified: false, fitRule: null, fitted: false, damaged: [] });
   });
 
   it('reads a good part and names a damaged field without touching the other', () => {
-    expect(parseMap({ chapterId: 'top_a', showUnclassified: true })).toEqual({ chapterId: 'top_a', showUnclassified: true, fitRule: null, damaged: [] });
+    expect(parseMap({ chapterId: 'top_a', showUnclassified: true })).toEqual({ chapterId: 'top_a', showUnclassified: true, fitRule: null, fitted: false, damaged: [] });
     const bad = parseMap({ chapterId: 7, showUnclassified: true });
     expect(bad).toMatchObject({ chapterId: null, showUnclassified: true });
     expect(bad.damaged).toEqual(['map.chapterId']);
     expect(parseMap('nope').damaged).toEqual(['map']);
+  });
+});
+
+describe('the saved "fitted" flag (step 8.4b, E2a)', () => {
+  it('is read tolerantly: true is true, anything else is false, a bad value is named', () => {
+    expect(parseMap({ fitted: true }).fitted).toBe(true);
+    expect(parseMap({ fitted: false }).fitted).toBe(false);
+    const bad = parseMap({ fitted: 'yes' });
+    expect(bad.fitted).toBe(false);
+    expect(bad.damaged).toEqual(['map.fitted']);
+  });
+  it('is set by the map, saved, and read back: a fitted map is still fitted after a reload', async () => {
+    const saves: Record<string, unknown>[] = [];
+    const port: NavigatorUiPort = { stored: undefined, mode: () => 'writable', save: (v) => (saves.push({ ...v }), Promise.resolve()) };
+    const ui = createNavigatorUi(port, { after: (_ms, run) => { run(); return () => undefined; } });
+    ui.stores.map.getState().setFitted(true);
+    await ui.flush();
+    const saved = saves.at(-1) as Record<string, unknown>;
+    expect((saved.map as { fitted: boolean }).fitted).toBe(true);
+    const again = createNavigatorUi({ stored: saved, mode: () => 'writable', save: () => Promise.resolve() }, timers());
+    expect(again.stores.map.getState().fitted).toBe(true);
+    ui.dispose();
+    again.dispose();
   });
 });
 
@@ -47,7 +70,7 @@ describe('the map part of uiState', () => {
     ui.stores.map.getState().setFocus('hub-a');
     await ui.flush();
     const saved = saves.at(-1) as Record<string, unknown>;
-    expect(saved.map).toEqual({ chapterId: 'top_a', showUnclassified: true, fitRule: 3 });
+    expect(saved.map).toEqual({ chapterId: 'top_a', showUnclassified: true, fitRule: 3, fitted: false });
     const again = createNavigatorUi({ stored: saved, mode: () => 'writable', save: () => Promise.resolve() }, timers());
     expect(again.stores.map.getState()).toMatchObject({ chapterId: 'top_a', showUnclassified: true, focusId: null });
     ui.dispose();
@@ -64,7 +87,7 @@ describe('the map part of uiState', () => {
   });
 
   it('a stored part is read tolerantly by the whole entry parser', () => {
-    expect(parseNavigatorUi({ map: { chapterId: 'top_c' } }).map).toEqual({ chapterId: 'top_c', showUnclassified: false, fitRule: null, damaged: [] });
+    expect(parseNavigatorUi({ map: { chapterId: 'top_c' } }).map).toEqual({ chapterId: 'top_c', showUnclassified: false, fitRule: null, fitted: false, damaged: [] });
     expect(parseNavigatorUi({ map: { showUnclassified: 'yes' } }).damaged).toContain('map.showUnclassified');
   });
 });

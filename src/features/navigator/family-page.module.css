@@ -231,11 +231,12 @@
 }
 
 /* The open full equation is a panel of its own (outcome groups step): a light border and the surface tone, so it is never mistaken for the card's scheme. */
+/* (the card itself is the surface tone since 8.4a, so the panel takes the paper tone: step 8.4b) */
 .equation[open] {
   padding: var(--space-8) var(--space-12);
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-8);
-  background: var(--color-surface);
+  background: var(--color-paper);
 }
 
 /* A card with several outcome groups: each group in its own bordered block, headed by its conditions in words. */

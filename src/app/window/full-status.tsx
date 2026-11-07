@@ -7,6 +7,7 @@ import { useApp } from './context';
 import { LazyStatusDialogs } from './lazy-status-dialogs';
 import { createLocalTimeFormatter } from './local-time';
 import { shortStatusOf } from './status-short';
+import { StatusWords } from './status-words';
 import styles from './full-status.module.css';
 
 const localTime = createLocalTimeFormatter();
@@ -25,12 +26,7 @@ export function FullStatusLine() {
     <section aria-label="Status" className={styles.statusRow}>
       <Tooltip content={everything}>
         <button type="button" className={styles.barButton} aria-label="Status details" onClick={() => setDetails('all')}>
-          {/* the short words are drawn from data-short (CSS content), so the full words are the only text in the page for readers and tests */}
-          <span aria-hidden="true" className={styles.shortLine}>
-            {bar.map((item) => (
-              <span key={item.id} className={styles.shortItem} data-short={item.short} />
-            ))}
-          </span>
+          <StatusWords items={bar} />
         </button>
       </Tooltip>
       {hasLayoutNotes ? (
@@ -38,11 +34,6 @@ export function FullStatusLine() {
           Layout notes (1)
         </button>
       ) : null}
-      <ul className={styles.fullText}>
-          {bar.map((item) => (
-            <li key={item.id}>{item.full}</li>
-          ))}
-      </ul>
       {details === null ? null : <LazyStatusDialogs kind={details} items={items.map((item) => item.full)} layoutNotice={status.layoutNotice} onClose={() => setDetails(null)} />}
     </section>
   );

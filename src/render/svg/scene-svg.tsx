@@ -57,8 +57,9 @@ export function SceneSvg(props: SceneSvgProps) {
         <EdgesLayer scene={scene} lod={lod} ids={ids} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
         <NodesLayer scene={scene} lod={lod} depictions={depictions} ids={ids} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
         <LabelsLayer scene={scene} lod={lod} depictions={depictions} ids={ids} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
-        <BadgesLayer scene={scene} lod={lod} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
-        <OverlayLayer scene={scene} lod={lod} ids={ids} selectedIds={selectedIds} focusedId={focusedId} hoveredId={props.hoveredId} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
+        <OverlayLayer scene={scene} lod={lod} ids={ids} selectedIds={selectedIds} focusedId={focusedId} hoveredId={props.hoveredId} marks={marks} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
+        {/* chips and badges are drawn above everything (step 8.4b, D) */}
+        <BadgesLayer scene={scene} lod={lod} marks={marks} onChip={props.onChip} {...(onLayerCommit === undefined ? {} : { onCommit: onLayerCommit })} />
       </g>
     </svg>
   );

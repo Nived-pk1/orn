@@ -33,26 +33,21 @@
   padding-inline-start: var(--space-16);
 }
 
-.shortItem::before {
-  content: attr(data-short);
-}
-
-/* The full words: the page's real text for readers and tests, laid over the short line and not seen (opacity), never clipped away. */
+/* The full words: the page's real text for readers and tests, visually hidden (the standard clip pattern), never display:none. */
 .statusRow {
   position: relative;
 }
 
 .fullText {
   position: absolute;
-  inset: 0 auto 0 0;
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
+  width: 1px;
+  height: 1px;
   margin: 0;
   padding: 0;
-  list-style: none;
-  opacity: 0;
   overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  list-style: none;
   white-space: nowrap;
-  pointer-events: none;
+  border: 0;
 }

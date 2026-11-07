@@ -125,7 +125,7 @@ test.describe('touch on the overview map', () => {
     await expectClean(seen);
   });
 
-  test('on a coarse pointer the hit path of an arrow is 44 screen pixels wide, at any zoom', async ({ page }) => {
+  test('on a coarse pointer the hit path of an arrow is 28 screen pixels wide (step 8.4b: a finger needs 28 px, A), at any zoom', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
     expect(await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches)).toBe(true);
@@ -137,11 +137,11 @@ test.describe('touch on the overview map', () => {
       const computed = getComputedStyle(hit);
       return { width: computed.strokeWidth, effect: computed.vectorEffect };
     });
-    expect(style).toEqual({ width: '44px', effect: 'non-scaling-stroke' });
+    expect(style).toEqual({ width: '28px', effect: 'non-scaling-stroke' });
     await page.getByRole('button', { name: 'Zoom out' }).click();
     await page.getByRole('button', { name: 'Zoom out' }).click();
     expect((await worldOf(page)).scale).toBeLessThan(0.9);
-    expect(await page.evaluate(() => getComputedStyle(document.querySelector('[data-edge-id] path[data-hit]') as SVGPathElement).strokeWidth)).toBe('44px');
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector('[data-edge-id] path[data-hit]') as SVGPathElement).strokeWidth)).toBe('28px');
     await expectClean(seen);
   });
 });

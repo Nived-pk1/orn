@@ -126,7 +126,8 @@
     "8.1",
     "8.2a",
     "8.2b",
-    "8.4a"
+    "8.4a",
+    "8.4b"
   ],
   "nextPhase": 8,
   "outcomeGroupsStep": {
@@ -155,8 +156,8 @@
     "commit": "94ca887",
     "protectedCheckedAt": "2026-11-07"
   },
-  "nextStep": "8.4",
-  "nextStepTitle": "Step 8.3b closed and deployed 2026-11-07; then Phase 8 row 8.4. Awaiting review",
+  "nextStep": "8.4b size fix and deploy of 8.4a + 8.4b",
+  "nextStepTitle": "Step 8.4b closed, not deployed (sizes over target by about 2 kB); then 8.4c. Awaiting review",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -650,5 +651,16 @@
       "studio": 384.68
     },
     "adr": "docs/UI_ARCHITECTURE.md §3 addendum 2026-11-07"
+  },
+  "step84b": {
+    "closed": "2026-11-07",
+    "deployed": false,
+    "note": "8.4b closed, NOT deployed: initial JS gzip Study 383.28 / Studio 387.16 kB over the 381.3 / 385.0 targets by 1.98 / 2.16 kB (rule: more than 0.5 over = stop before deploy). 8.4a and 8.4b deploy together after the size fix.",
+    "initialJsGzipKb": {
+      "study": 383.28,
+      "studio": 387.16
+    },
+    "adr": "ADR-044 addendum 2026-11-07",
+    "notes": "docs/reviews/step-8-4b-notes.md"
   }
 }

@@ -28,6 +28,8 @@ export interface MapViewArgs {
   readonly chips?: typeof withChips;
   /** The steps of the chain chosen in "From A to B", or none (step 8.2b, C). */
   readonly chain?: readonly { readonly from: string; readonly to: string }[] | undefined;
+  /** The zoom the map settled at: chips are placed in screen pixels at it (step 8.4b, A). */
+  readonly zoom?: number | undefined;
 }
 
 export interface MapViewState {
@@ -44,6 +46,7 @@ export interface MapViewState {
 
 export function useMapView(args: MapViewArgs): MapViewState {
   const { ui, timers, scene, selected, chapters, announce, facts, chain, chips } = args;
+  const zoom = args.zoom === undefined ? undefined : Math.round(args.zoom * 100) / 100;
   const chapterId = useStore(ui.map, (s) => s.chapterId);
   const showUnclassified = useStore(ui.map, (s) => s.showUnclassified);
   const chainOpen = useStore(ui.map, (s) => s.chainOpen);
@@ -83,8 +86,8 @@ export function useMapView(args: MapViewArgs): MapViewState {
   const focusId = hover ?? locked;
   const selectedEdgeId = selected !== null && selected.kind === 'edge' ? selected.id : undefined;
   const view = useMemo(
-    () => (scene === null ? null : mapView(scene, { focusId, chapter: chapterId !== null && !unknown && !chainOpen, showUnclassified, selectedEdgeId, facts, chips, chain: chainOpen ? chain : undefined })),
-    [scene, focusId, chapterId, unknown, showUnclassified, selectedEdgeId, facts, chips, chain, chainOpen],
+    () => (scene === null ? null : mapView(scene, { focusId, chapter: chapterId !== null && !unknown && !chainOpen, showUnclassified, selectedEdgeId, facts, chips, zoom, chain: chainOpen ? chain : undefined })),
+    [scene, focusId, chapterId, unknown, showUnclassified, selectedEdgeId, facts, chips, zoom, chain, chainOpen],
   );
   return { view, chainOpen, chapterId: unknown ? null : chapterId, showUnclassified, focusId, onNodeHover };
 }

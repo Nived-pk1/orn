@@ -63,16 +63,16 @@ describe('boxes and captions', () => {
     expect(group.getAttribute('aria-label')).toBe(hub.ariaLabel);
   });
 
-  it('a caption is written under its box from LOD 1 on, as text', () => {
+  it('the mark inside a box is written inside it from LOD 1 on, as text', () => {
     const shown = draw(scene, { lod: 1, marks: marks({ captions: new Map([[hub.id, '4 within the family']]) }) });
-    expect(shown.container.querySelector(`[data-caption-of="${hub.id}"]`)?.textContent).toBe('4 within the family');
+    expect(shown.container.querySelector(`[data-loops-of="${hub.id}"]`)?.textContent).toBe('4 within the family');
     cleanup();
-    expect(draw(scene, { lod: 0, marks: marks({ captions: new Map([[hub.id, '4 within the family']]) }) }).container.querySelector('[data-caption-of]')).toBeNull();
+    expect(draw(scene, { lod: 0, marks: marks({ captions: new Map([[hub.id, '4 within the family']]) }) }).container.querySelector('[data-loops-of]')).toBeNull();
   });
 
   it('without marks nothing is faded, captioned or marked', () => {
     const { container } = draw(scene, { lod: 2 });
-    expect(container.querySelector('[data-faded], [data-caption-of], [data-role], [data-count-extra-of]')).toBeNull();
+    expect(container.querySelector('[data-faded], [data-loops-of], [data-role], [data-count-extra-of]')).toBeNull();
   });
 });
 

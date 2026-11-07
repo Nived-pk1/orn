@@ -49,11 +49,18 @@ export interface BucketRow {
   readonly goesOn: readonly ChipCount[];
 }
 
+/** An arrow that leaves or enters the bucket (step 8.4b, C): the map draws none when there are many, so the panel lists them. */
+export interface BucketArrow {
+  readonly from: ArrowEnd;
+  readonly to: ArrowEnd;
+  readonly reactions: number;
+}
+
 export type MapInspectorView =
   | { readonly kind: 'empty' }
   | { readonly kind: 'record'; readonly ref: RecordRef }
   | { readonly kind: 'arrow'; readonly chip: 'Arrow'; readonly title: string; readonly from: ArrowEnd; readonly to: ArrowEnd; readonly reactions: readonly ArrowRow[] }
-  | { readonly kind: 'bucket'; readonly chip: string; readonly title: string; readonly lead: string; readonly rows: readonly BucketRow[]; readonly authorsLine?: string };
+  | { readonly kind: 'bucket'; readonly chip: string; readonly title: string; readonly lead: string; readonly rows: readonly BucketRow[]; readonly arrows: readonly BucketArrow[]; readonly authorsLine?: string };
 
 const refKey = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
 
@@ -119,6 +126,20 @@ function bucketView(snapshot: MapSnapshot, edition: 'study' | 'studio'): MapInsp
     acc.reactions.add(candidate.reactionId);
     add(acc.goesOn, candidate.toHub, candidate.reactionId);
   }
+  const arrowsOf = new Map<string, Set<string>>();
+  const noteArrow = (from: string, to: string, reactionId: string): void => {
+    if (from === to) return;
+    const key = `${from}>${to}`;
+    arrowsOf.set(key, (arrowsOf.get(key) ?? new Set<string>()).add(reactionId));
+  };
+  for (const candidate of rollup.candidatesTo(UNCLASSIFIED_HUB_ID)) noteArrow(candidate.fromHub, UNCLASSIFIED_HUB_ID, candidate.reactionId);
+  for (const candidate of rollup.candidatesFrom(UNCLASSIFIED_HUB_ID)) noteArrow(UNCLASSIFIED_HUB_ID, candidate.toHub, candidate.reactionId);
+  const arrows = [...arrowsOf].flatMap(([key, set]): BucketArrow[] => {
+    const [from, to] = key.split('>') as [string, string];
+    const a = endOf(from, state);
+    const b = endOf(to, state);
+    return a === undefined || b === undefined ? [] : [{ from: a, to: b, reactions: set.size }];
+  }).sort((x, y) => (`${x.from.name}>${x.to.name}` < `${y.from.name}>${y.to.name}` ? -1 : 1));
   const rows = [...byCompound.values()]
     .map((acc): BucketRow => ({ ref: acc.ref, name: nameOf(state, acc.ref), reactions: acc.reactions.size, madeFrom: chipsOf(acc.madeFrom, state), goesOn: chipsOf(acc.goesOn, state) }))
     .sort((x, y) => y.reactions - x.reactions || x.name.localeCompare(y.name) || (refKey(x.ref) < refKey(y.ref) ? -1 : 1));
@@ -128,6 +149,7 @@ function bucketView(snapshot: MapSnapshot, edition: 'study' | 'studio'): MapInsp
     title: NOT_IN_A_FAMILY,
     lead: 'These compounds appear in reactions, but no family covers them yet.',
     rows,
+    arrows,
     ...(edition === 'studio' ? { authorsLine: 'Give these compounds a family in the content data' } : {}),
   };
 }

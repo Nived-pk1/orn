@@ -177,7 +177,10 @@ describe('the right pane (step 8.4a, Part C2.6)', () => {
     const css = readFileSync('src/features/inspector/study-inspector.module.css', 'utf8');
     const cards = /\.cards \{[^}]*\}/.exec(css)?.[0] ?? '';
     expect(cards).toMatch(/display: grid/);
-    expect(cards).toMatch(/minmax\(min\(100%, 240px\), 1fr\)/);
+    // step 8.4b, G4: one column below 520 px of PANE (a container query on the group), two above; the card button fills its cell
+    expect(cards).toMatch(/grid-template-columns: minmax\(0, 1fr\)/);
+    expect(css).toMatch(/@container \(min-width: 520px\) \{ \.cards \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+    expect(css).toMatch(/\.cards:not\(\.cardsRow\) \.card \{ width: 100%/);
     expect(/\.card \{[^}]*\}/.exec(css)?.[0] ?? '').not.toMatch(/max-width/);
   });
 });

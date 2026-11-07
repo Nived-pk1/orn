@@ -179,3 +179,58 @@ test.describe('Study phone, A to B (Pixel 7)', () => {
     await expect(page.getByRole('button', { name: /^\d+ notices?$/ })).toBeVisible();
   });
 });
+
+// Step 8.4b, G1 and G2 (written AFTER their source, disclosed; broken on purpose and seen red, see the notes).
+const IPHONE = (() => { const { defaultBrowserType: _ios, ...rest } = devices['iPhone 14']; return rest; })();
+
+test.describe('the toast meets no right pane (Studio desktop)', () => {
+  test.use({ baseURL: STUDIO, actionTimeout: 60_000 });
+  test('the inspector and the A-to-B panel are right panes: the toast is not on top of either', async ({ page }) => {
+    test.setTimeout(300_000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openApp(page);
+    await loadDemo(page);
+    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 60_000 });
+    const toast = page.getByRole('status', { name: 'Notifications' }).locator('> *').first();
+    await expect(toast).toBeVisible();
+    await toast.hover(); // the countdown stops while the pointer is on it
+    await page.locator('svg [data-node-id]').first().click();
+    await expect(page.getByRole('complementary', { name: 'Inspector' })).toBeVisible();
+    await toast.hover();
+    expect(meets(await boxOf(toast), await boxOf(page.getByRole('complementary', { name: 'Inspector' }))), 'the toast is on top of the inspector').toBe(false);
+    await clickToolbar(page, 'From A to B');
+    const panel = page.getByRole('complementary', { name: 'From A to B' });
+    await expect(panel).toBeVisible();
+    await toast.hover();
+    expect(meets(await boxOf(toast), await boxOf(panel)), 'the toast is on top of the A-to-B panel').toBe(false);
+  });
+});
+
+for (const [name, device] of [['Pixel 7', PIXEL], ['iPhone 14', IPHONE]] as const) {
+  test.describe(`the phone toast is one line (${name})`, () => {
+    test.use({ baseURL: STUDY, ...device, actionTimeout: 60_000 });
+    test('at most 56 px tall; it meets neither the storage line, the tab bar, an open sheet nor the floating map buttons', async ({ page }) => {
+      test.setTimeout(300_000);
+      await page.goto('/');
+      await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
+      await importOwn(page, true);
+      await expect(page.getByRole('navigation', { name: 'Home' })).toBeVisible({ timeout: 90_000 });
+      await answerExamCard(page);
+      await leaveChapters(page);
+      const toast = page.getByRole('status', { name: 'Notifications' }).locator('> *').first();
+      await expect(toast).toBeVisible();
+      const box = await boxOf(toast);
+      expect(box.height, 'the phone toast is one line').toBeLessThanOrEqual(56);
+      const storage = page.getByText(/Your data may be cleared/).first();
+      if (await storage.isVisible()) expect(meets(box, await boxOf(storage)), 'the toast covers the storage line').toBe(false);
+      expect(meets(box, await boxOf(page.getByRole('navigation', { name: 'Home' }))), 'the toast meets the tab bar').toBe(false);
+      await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Map' }).tap();
+      await expect(page.getByRole('group', { name: /^Navigator:/ })).toBeVisible({ timeout: 60_000 });
+      if (await toast.isVisible()) {
+        for (const button of await page.locator('[data-phone-map-controls] button, button[aria-label="Fit"], button[aria-label="Key"]').all()) {
+          if (await button.isVisible()) expect(meets(await boxOf(toast), await boxOf(button)), 'the toast meets a floating map button').toBe(false);
+        }
+      }
+    });
+  });
+}

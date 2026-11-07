@@ -100,7 +100,7 @@ export function ChainPanel(props: ChainPanelProps) {
   );
   const shown = props.phone === true && !expanded ? cards.slice(0, 1) : cards;
   return (
-    <aside className={styles.panel} aria-label="From A to B" data-phone={props.phone === true ? '' : undefined} data-expanded={expanded ? '' : undefined}>
+    <aside className={styles.panel} data-right-pane="" aria-label="From A to B" data-phone={props.phone === true ? '' : undefined} data-expanded={expanded ? '' : undefined}>
       <div className={styles.head}>
         <h3 className={styles.title}>From A to B</h3>
         <Button onClick={onClose}>Close</Button>

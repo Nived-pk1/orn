@@ -174,9 +174,12 @@ export function ToastProvider(props: { readonly children: ReactNode; readonly fo
             ))}
           </div>
         ) : props.docked === true ? null : (
-          <div className={styles.region} role="status" aria-live="polite" aria-relevant="additions text" aria-label="Notifications">
-            <ToastItems />
-          </div>
+          <DockedContext.Provider value>
+            {/* step 8.4b, G2: the floating (phone) toast is ONE line too: the text is cut with an ellipsis, its full words are the tooltip */}
+            <div className={styles.region} role="status" aria-live="polite" aria-relevant="additions text" aria-label="Notifications">
+              <ToastItems />
+            </div>
+          </DockedContext.Provider>
         )}
       </ViewContext.Provider>
       </TimerContext.Provider>

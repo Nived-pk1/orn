@@ -5,7 +5,7 @@
  * overlay drawer; below 900 px one pane, the inspector a bottom sheet and the mode rail a bottom bar. The CSS decides the layout; the
  * breakpoint is read here only to know which open state a toggle changes (the persisted pane or the session's drawer).
  */
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useLayoutMode } from '@/ui/hooks';
 import { IconButton, Menu, openLayers } from '@/ui/primitives';
 import { ModeRail, type ModeItem } from './mode-rail';
@@ -86,6 +86,29 @@ export function Shell(props: ShellProps) {
   const wide = breakpoint === 'wide';
   const requested = props.openRequest ?? 0;
   const seen = useRef(requested);
+  // A phone toast floats above the storage line and the tab bar, wherever they are: the distance from the bottom of the page area to the bottom of the screen
+  // is published as `--phone-bottom-space` (step 8.4b, G2); the toast region reads it.
+  const onPhone = phone !== undefined;
+  useLayoutEffect(() => {
+    const root = frame.current;
+    if (!onPhone || root === null) return undefined;
+    const publish = (): void => {
+      const page = root.querySelector('main');
+      if (page === null) return;
+      document.documentElement.style.setProperty('--phone-bottom-space', `${Math.max(0, Math.round(window.innerHeight - page.getBoundingClientRect().bottom))}px`);
+    };
+    publish();
+    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(publish);
+    observer?.observe(root);
+    const page = root.querySelector('main');
+    if (page !== null) observer?.observe(page); // the storage line appearing or leaving changes the page area, not the shell
+    window.addEventListener('resize', publish);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', publish);
+      document.documentElement.style.removeProperty('--phone-bottom-space');
+    };
+  }, [onPhone]);
   useEffect(() => {
     if (seen.current === requested) return;
     seen.current = requested;

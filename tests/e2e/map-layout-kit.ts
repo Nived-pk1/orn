@@ -18,11 +18,11 @@ async function confirmImport(page: Page, phone: boolean): Promise<void> {
 }
 
 /** Desktop (1280 x 800): the fixture is the visitor's own data and the map is on screen. */
-export async function openMapDesktop(page: Page): Promise<void> {
+export async function openMapDesktop(page: Page, data: Buffer = MAP_LAYOUT): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
-  await chooseFile(page, { name: 'map-layout.orn.json', mimeType: 'application/json', buffer: MAP_LAYOUT });
+  await chooseFile(page, { name: 'map-layout.orn.json', mimeType: 'application/json', buffer: data });
   await confirmImport(page, false);
   await leaveChapters(page);
   await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible({ timeout: 90_000 });

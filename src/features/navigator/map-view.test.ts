@@ -75,8 +75,9 @@ describe('mapView', () => {
 
   it('a family with reactions inside says "4 within the family" (singular for 1, nothing for 0) and never draws a loop (D4)', () => {
     const view = mapView(sceneOf(), quiet);
-    expect(view.marks.captions.get('a')).toBe('4 within the family');
-    expect(view.marks.captions.get('c')).toBe('1 within the family');
+    expect(view.marks.captions.get('a')).toBe('↻ 4');
+    expect(view.marks.captionNames?.get('a')).toBe('4 reactions within the family');
+    expect(view.marks.captionNames?.get('c')).toBe('1 reaction within the family');
     expect(view.marks.captions.has('b')).toBe(false);
     expect(mapView(sceneOf(), { ...quiet, chapter: true }).scene.edges.some((e) => e.from === e.to)).toBe(false);
   });

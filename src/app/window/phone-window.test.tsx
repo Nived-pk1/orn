@@ -89,7 +89,7 @@ describe('the phone alert line and the folded notices', () => {
     renderWithApp(failing());
     const alert = screen.getByRole('button', { name: /Saving failed/ });
     fireEvent.click(alert);
-    expect(within(screen.getByRole('dialog', { name: 'Status' })).getByText(/NOT saved/)).toBeTruthy();
+    expect(within(screen.getByRole('dialog', { name: 'Status' })).getByText(/NOT saved/, { ignore: '[aria-hidden="true"]' })).toBeTruthy();
   });
 
   it('folds the notices into one line that expands on tap', () => {

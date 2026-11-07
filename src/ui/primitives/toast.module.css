@@ -10,6 +10,11 @@
   pointer-events: none;
 }
 
+.region .toast {
+  max-height: var(--toast-height);
+  overflow: hidden;
+}
+
 .toast {
   pointer-events: auto;
   border: 1px solid var(--color-ink-2);
@@ -21,7 +26,7 @@
 @media (max-width: 899px) {
   .region {
     right: var(--space-8);
-    bottom: calc(var(--status-bar-height) + var(--tab-bar-height) + var(--space-8));
+    bottom: calc(var(--phone-bottom-space, var(--status-bar-height) + var(--tab-bar-height)) + var(--space-8));
     left: var(--space-8);
     width: auto;
   }
@@ -34,8 +39,7 @@
   justify-content: flex-end;
   gap: var(--space-4);
   width: min(560px, 100%);
-  max-height: var(--toast-height);
-  pointer-events: none;
+  pointer-events: none; /* two toasts stack upward, each one row: none is clipped (found by axe, step 8.4b) */
 }
 
 .docked .toast {

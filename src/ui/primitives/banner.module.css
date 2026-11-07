@@ -77,4 +77,5 @@
 
 .compact .actions {
   flex: none;
+  white-space: nowrap; /* a button's words never wrap: a narrower column must not make the band taller (found in Firefox, step 8.4b) */
 }

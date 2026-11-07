@@ -6,10 +6,11 @@ import type { SceneHit } from './contracts';
 
 export function hitOf(target: EventTarget | null): SceneHit | null {
   if (target === null || typeof (target as Element).closest !== 'function') return null;
-  const element = (target as Element).closest('[data-node-id], [data-edge-id]');
+  const element = (target as Element).closest('[data-node-id], [data-edge-id], [data-hit-edge]');
   if (element === null) return null;
   const node = element.getAttribute('data-node-id');
   if (node !== null) return { kind: 'node', id: node };
-  const edge = element.getAttribute('data-edge-id');
+  // a half of a two-way pair's line and a pair's chip name the arrow of THEIR direction (`data-hit-edge`); an arrow's own group names itself
+  const edge = element.getAttribute('data-hit-edge') ?? element.getAttribute('data-edge-id');
   return edge === null ? null : { kind: 'edge', id: edge };
 }

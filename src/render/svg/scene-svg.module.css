@@ -10,6 +10,7 @@
 
 /* Edges: the dash pattern and the width are attributes (geometry.ts); the colour is here. */
 .edge {
+  vector-effect: non-scaling-stroke; /* 2 px (heavy 3 px) on the screen at every zoom (step 8.4b, A) */
   fill: none;
   stroke: var(--color-ink);
   stroke-linejoin: round;
@@ -20,14 +21,14 @@
   fill: none;
   stroke: var(--color-ink);
   stroke-opacity: 0;
+  vector-effect: non-scaling-stroke;
   pointer-events: stroke;
 }
 
 /* A finger needs 44 px (step 5.7, item i): on a coarse pointer the hit path is 44 SCREEN pixels wide at any zoom (the stroke does not scale with the drawing). */
 @media (pointer: coarse) {
   .edgeHit {
-    stroke-width: 44px;
-    vector-effect: non-scaling-stroke;
+    stroke-width: 28px;
   }
 }
 
@@ -46,9 +47,35 @@
   stroke-linecap: round;
 }
 
+.markerFilled,
+.markerAccent,
+.markerOpen {
+  /* an arrowhead is 10 screen px at every zoom: counter-scaled about its tip */
+  transform: translate(10px, 5px) scale(calc(1 / var(--map-k, 1))) translate(-10px, -5px);
+}
+
 .markerFilled {
   fill: var(--color-ink);
   stroke: none;
+}
+
+/* a chip is drawn at its screen size: counter-scaled about its centre */
+.chipScale {
+  transform: scale(calc(1 / var(--map-k, 1)));
+}
+
+[data-chip-button] {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+[data-chip-button]:focus-visible rect {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+
+.root marker {
+  overflow: visible;
 }
 
 .markerOpen {
@@ -209,14 +236,32 @@
   stroke: var(--color-tone-slate-ink);
 }
 
-.faded {
+/* A faded box is OPAQUE (step 8.4b, D): a paper underlay hides any line behind it, the box and its text are muted, never given an opacity, so a
+   line that crosses it is hidden, not seen through. */
+.fadeUnder {
+  fill: var(--color-paper);
+  stroke: none;
+}
+
+.faded > rect:not(.fadeUnder) {
+  fill-opacity: 0.35;
+  stroke-opacity: 0.35;
+}
+
+.faded .depiction {
   opacity: 0.35;
+}
+
+.faded text,
+text.faded {
+  fill: var(--color-ink-2);
+  fill-opacity: 0.6;
 }
 
 /* a map box fades in 150 ms, unless the visitor asked for less motion (then it changes at once) */
 @media (prefers-reduced-motion: no-preference) {
   .mapNode {
-    transition: opacity 150ms ease-out;
+    transition: fill-opacity 150ms ease-out, stroke-opacity 150ms ease-out;
   }
 }
 
@@ -314,6 +359,7 @@
 /* A hovered or selected arrow (step 5.5d, item b): heavier, in the accent, with its two families outlined. */
 .selectedEdge,
 .hoverEdge {
+  vector-effect: non-scaling-stroke;
   fill: none;
   stroke: var(--color-accent);
   stroke-width: 4;

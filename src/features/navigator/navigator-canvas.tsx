@@ -8,7 +8,7 @@
  * the choice is saved in `uiState`.
  * The legend of the family groups (step 5.5c) sits under the toolbar. The layer commit count is written to a data attribute by hand (no React state) so a test can prove pan and zoom render nothing.
  */
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
 import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
@@ -35,6 +35,8 @@ import { NavigatorSelection } from './navigator-selection';
 import { emptinessOf, truncationNoticeOf } from './notices';
 import { UnanchoredPanel } from './unanchored-panel';
 import { boxesRect } from './map-geometry';
+import { useZoomToSelection } from './use-zoom-selection';
+import { initialViewOf } from './initial-view';
 import { useMapView } from './use-map-view';
 import styles from './navigator.module.css';
 import controls from './map-controls.module.css';
@@ -54,7 +56,7 @@ const noFacts = (): undefined => undefined;
 const KeyPopover = /* @__PURE__ */ lazy(() => import('./key-popover').then((m) => ({ default: m.KeyPopover })));
 const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanelInScope })));
 const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
-const busyLine = (n: number): string => `This chapter has ${n} arrows. Tap or click a family to see its part.`;
+const busyLine = (n: number, selection = false): string => (selection ? `${n} arrows: listed in the panel` : `This chapter has ${n} arrows. Tap or click a family to see its part.`);
 const NO_IDS: ReadonlySet<string> = new Set();
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
@@ -80,6 +82,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const [unanchoredOpen, setUnanchoredOpen] = useState(false);
   const [keyOpen, setKeyOpen] = useState(false);
   const [settled, setSettled] = useState<Viewport | undefined>(undefined);
+  const [zoom, setZoom] = useState<number | undefined>(undefined);
   const chrome = useStudyChrome();
   // Studio's "See those compounds" selects the bucket: the inspector lists them (one view, step 8.2b-fix, S3)
   const seeCompounds = (): void => {
@@ -105,7 +108,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   controllerRef.current = controller;
   const picked = useStore(ports.ui.selection, (s) => s.multi);
   const selectedIds = useMemo(() => (picked.length > 0 ? new Set(picked.map((one) => one.id)) : selected === null ? NO_IDS : new Set([selected.id])), [selected, picked]);
-  const initialViewport = useMemo<Viewport | undefined>(() => ports.ui.viewports.getState().views[VIEW], [ports]);
+  // step 8.4b (E2a): a map saved while still fitted is fitted again on reload; one the person had moved keeps its view
+  const initialViewport = useMemo<Viewport | undefined>(() => initialViewOf(ports.ui.viewports.getState().views[VIEW], ports.ui.map.getState().fitted), [ports]);
   const depictions = useMemo(() => depictionBindingOf(ports)?.manager, [ports]);
   const isHub = useCallback((id: string): boolean => state.hubIds.includes(id), [state.hubIds]);
   // step 8.2a (ADR-044): the map draws a focus, not every arrow; the chapter choice and the focus are the map store's
@@ -128,7 +132,14 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const facts = useMemo(() => (factsMaker === null ? undefined : factsMaker(ports)), [factsMaker, ports]);
   const [svg, setSvg] = useState<SVGSVGElement | null>(null);
   const [chain, setChain] = useState<readonly { readonly from: string; readonly to: string }[] | undefined>(undefined);
-  const map = useMapView({ ui: ports.ui, timers: ports.timers, scene, isHub, selected, chapters: chapterIds, announce, facts, chips, chain });
+  // the zoom is state only while arrows with chips are drawn: a quiet map re-renders nothing on a zoom (step 8.4b, A)
+  const zoomLive = useRef<number | undefined>(undefined);
+  const chipsShown = useRef(false);
+  const onZoomSettled = useCallback((scale: number): void => {
+    zoomLive.current = scale;
+    if (chipsShown.current) setZoom(scale);
+  }, []);
+  const map = useMapView({ ui: ports.ui, timers: ports.timers, scene, isHub, selected, chapters: chapterIds, announce, facts, chips, chain, zoom });
   const familyList = useMemo(() => (scene === null ? [] : scene.nodes.filter((node) => node.box === 'hub').map((node) => ({ id: node.id, name: node.label.map((run) => run.text).join(''), tone: node.tone }))), [scene]);
   const toggleChain = useCallback((): void => ports.ui.map.getState().setChainOpen(!ports.ui.map.getState().chainOpen), [ports]);
   const closeChain = useCallback((): void => ports.ui.map.getState().setChainOpen(false), [ports]);
@@ -156,10 +167,16 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
     [ports, svg],
   );
   const { view } = map;
+  chipsShown.current = view !== null && view.marks.edges.size > 0;
+  useEffect(() => {
+    if (chipsShown.current && zoomLive.current !== undefined) setZoom(zoomLive.current);
+  }, [view]);
   useChainReveal({ phone, chain: map.chainOpen ? chain : undefined, svg, root, scene, controller });
   const drawn = view === null ? scene : view.scene;
   // step 8.2b (B1): on a wide screen Fit and the first view fill the area with the visible boxes; the phone keeps its zoom
   const fitBox = useMemo(() => (phone || drawn === null ? undefined : boxesRect(drawn.nodes)), [phone, drawn]);
+  const outlinedIds = useMemo(() => (view?.marks.outlined === undefined ? [] : [...view.marks.outlined.keys()]), [view]);
+  const zoomSelection = useZoomToSelection({ controller, svg, drawn, selected, chain: map.chainOpen ? chain : undefined, outlined: outlinedIds });
   const fitKey = phone ? undefined : `${state.chapterId ?? ''}|${map.showUnclassified}`;
   const hubs = drawn === null ? 0 : drawn.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
   const setChapter = useCallback((id: string | null): void => ports.ui.map.getState().setChapter(id), [ports]);
@@ -170,6 +187,24 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const multi = useMulti({ scene: drawn ?? scene, svg, controller, isHub, announce });
   const selectBar = phone ? multi?.actions(true) : null;
   const input = useCanvasInput({ ui: ports.ui, scene: map.view?.navigation ?? scene, isHub, controller, svg, announce, multi, ...(props.returnTo === undefined ? {} : { returnTo: props.returnTo }) });
+  // Z (the map has the focus) zooms to the selection, like the button in the "Selected" label (step 8.4b)
+  const zoomRef = useRef(zoomSelection);
+  zoomRef.current = zoomSelection;
+  const keyboard = {
+    ...input.keyboard,
+    onKeyDown: (event: KeyboardEvent<SVGSVGElement>): void => {
+      if ((event.key === 'z' || event.key === 'Z') && !event.ctrlKey && !event.metaKey && !event.altKey && zoomRef.current.available) {
+        event.preventDefault();
+        zoomRef.current.zoom();
+        return;
+      }
+      input.keyboard.onKeyDown(event);
+    },
+  };
+  // the settled signal of the chips: the zoom they were placed at (step 8.4b, A); a test waits for it to equal the map's own zoom
+  useEffect(() => {
+    root.current?.setAttribute('data-chips-zoom', String(Math.round((zoom ?? 1) * 100) / 100));
+  }, [view, zoom]);
   // Back from a family page the focus returns to the overview: the drawing (on the family just left), or the list's tab stop.
   const returning = useRef(props.returnTo !== undefined);
   useEffect(() => {
@@ -185,6 +220,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const onSettled = useCallback(
     (view: Viewport, automatic: boolean): void => {
       ports.ui.viewports.getState().setViewport(VIEW, view);
+      ports.ui.map.getState().setFitted(automatic);
       setSettled(view);
       const percent = Math.round(view.scale * 100);
       // an automatic fit (the first one, or the re-fit when the drawing's size settles) is not something the person did
@@ -205,7 +241,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const legendKeys = useMemo(() => keyOf(view), [view]);
   // step 8.3b (A3, A4, B2.2): the key, the hint and the selection sit INSIDE the map (MapCorner)
   const clearSelection = useCallback((): void => ports.ui.selection.getState().select(null), [ports]);
-  const hint = view === null ? undefined : view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : undefined;
+  const hint = view === null ? undefined : view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy, view.busySelection) : undefined;
   const cut = truncationNoticeOf(scene?.truncation ?? null);
   const families = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub').length;
   const empty = scene === null ? null : emptinessOf(state.reactions, families);
@@ -282,7 +318,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       {phone && view !== null && !listing ? (
         <div className={styles.lineRow}>
           <p className={styles.quiet} {...(view.quiet ? { 'data-map-quiet': '' } : view.busy > 0 ? { 'data-map-busy': '' } : { 'aria-hidden': 'true' })}>
-            {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy) : ' '}
+            {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy, view.busySelection) : ' '}
           </p>
         </div>
       ) : null}
@@ -296,7 +332,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         {phone ? selectBar : null}
         {phone || listing || scene === null ? null : (
           <Suspense fallback={null}>
-            <MapCorner scene={scene} drawn={drawn ?? scene} selected={selected} multi={multi !== null && multi.items.length > 0} settled={settled} svg={svg} onClear={clearSelection} hint={hint} hintKind={view === null ? undefined : view.quiet ? 'quiet' : 'busy'} keys={legendKeys} />
+            <MapCorner scene={scene} drawn={drawn ?? scene} selected={selected} multi={multi !== null && multi.items.length > 0} settled={settled} svg={svg} onClear={clearSelection} onZoom={zoomSelection.available ? zoomSelection.zoom : undefined} hint={hint} hintKind={view === null ? undefined : view.quiet ? 'quiet' : 'busy'} keys={legendKeys} />
           </Suspense>
         )}
         {multi?.marquee == null ? null : <div className={styles.marquee} aria-hidden="true" style={{ left: multi.marquee.left, top: multi.marquee.top, width: multi.marquee.width, height: multi.marquee.height }} />}
@@ -325,11 +361,13 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             onLayerCommit={onLayerCommit}
             pointer={input.pointer}
             pointerTimers={ports.timers}
-            keyboard={input.keyboard}
+            keyboard={keyboard}
             onSvg={setSvg}
             {...(input.ringId === undefined ? {} : { focusedId: input.ringId })}
             onSceneHover={onSceneHover}
+            onChip={input.onChip}
             onSettled={onSettled}
+            onZoomSettled={onZoomSettled}
             {...(initialViewport === undefined ? {} : { initialViewport })}
           />
         )}

@@ -127,7 +127,7 @@ describe('the map with a focus', () => {
   it('families with reactions inside say "n within the family" and no loop is drawn', async () => {
     const { rig, drawing } = await show();
     // (the caption text itself is drawn from LOD 1 on, which jsdom has no size for: the box's spoken name carries the same words)
-    const spoken = [...drawing.querySelectorAll('[data-node-id]')].filter((g) => /, \d+ within the family$/.test(g.getAttribute('aria-label') ?? ''));
+    const spoken = [...drawing.querySelectorAll('[data-node-id]')].filter((g) => /, \d+ reactions? within the family$/.test(g.getAttribute('aria-label') ?? ''));
     expect(spoken.length).toBeGreaterThanOrEqual(4);
     act(() => rig.ui.map.getState().setChapter('top_chapter-1'));
     act(() => rig.ui.map.getState().setFocus('cls_family-01'));

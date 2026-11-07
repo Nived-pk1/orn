@@ -169,7 +169,8 @@ test.describe('pan and zoom', () => {
     expect(await lodOf(page)).toBe(lodBefore);
     const mutations = await page.evaluate(() => (window as unknown as { __mutations: string[] }).__mutations);
     expect(mutations.length, 'the transform was written').toBeGreaterThan(0);
-    expect([...new Set(mutations)]).toEqual(['attributes:transform:g#world']);
+    // step 8.4b (A): one more write per frame, the zoom as a CSS variable on the svg, by which marks are sized in screen pixels
+    expect([...new Set(mutations)].sort()).toEqual(['attributes:style:svg', 'attributes:transform:g#world']);
     expect(await canvas.getAttribute('data-layer-commits')).toBe(commitsBefore);
     await expectClean(seen);
   });
@@ -312,7 +313,7 @@ test.describe('ADV-012 part 1: a hub with 1,000 reactions', () => {
     await checkBudget();
     // step 8.2a: the biggest pair is a family's reactions inside itself, which no loop draws any more: the box says it in words, with the full total
     expect(biggest.from, 'the biggest pair of the generated file is a family with itself').toBe(biggest.to);
-    await expect(page.locator(`svg [data-node-id="${biggest.from}"]`)).toHaveAttribute('aria-label', new RegExp(`, ${biggest.total} within the family$`));
+    await expect(page.locator(`svg [data-node-id="${biggest.from}"]`)).toHaveAttribute('aria-label', new RegExp(`, ${biggest.total} reactions? within the family$`));
     await expect(page.getByRole('alert')).toHaveCount(0);
     await expectClean(seen);
   });

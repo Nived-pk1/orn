@@ -34,7 +34,7 @@ describe('resolveChips: words unless they would overlap another chip', () => {
     expect(out.get('b')?.text).toBe('PCC');
   });
   it('a words chip that would overlap another chip falls back to the number (the later key; the first keeps its words)', () => {
-    const out = resolveChips([wish('a', 0), wish('b', 30)]);
+    const out = resolveChips([wish('a', 0), wish('b', 40)]); // 40 apart: a's words fit beside b's number, b's words would not
     expect(out.get('a')?.text).toBe('PCC');
     expect(out.get('b')?.text).toBe('1');
   });
@@ -67,8 +67,8 @@ describe('resolveChips in a chain: numbered chips', () => {
       { key: 'a', at: { x: 0, y: 0 }, count: 3, step: 1 },
       { key: 'b', at: { x: 300, y: 0 }, count: 1, step: 2, words: 'PCC' },
     ]);
-    expect(out.get('a')).toEqual({ text: '1', name: 'step 1: 3 reactions' });
-    expect(out.get('b')).toEqual({ text: '2: PCC', name: 'step 2: PCC' });
+    expect(out.get('a')).toMatchObject({ text: '1', name: 'step 1: 3 reactions' });
+    expect(out.get('b')).toMatchObject({ text: '2: PCC', name: 'step 2: PCC' });
   });
 });
 

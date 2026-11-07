@@ -159,7 +159,11 @@ test.describe('an overview without cells gets an automatic arrangement', () => {
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(drawing(page)).toBeVisible({ timeout: 60_000 });
     await expect(page.locator('[data-layout-engine]')).toHaveAttribute('data-layout-engine', 'grid');
+    // step 8.4a: the status line says "Layout notes (1)"; the note itself is in its dialog
+    await page.getByRole('button', { name: 'Layout notes (1)' }).click();
     await expect(page.getByText(/automatic arrangement: \d+ boxes? (has|have) no cell in the data/)).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await openKey(page);
     await expect(page.getByRole('list', { name: 'Family groups' })).toHaveCount(0);
     await closeKey(page);

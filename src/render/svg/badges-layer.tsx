@@ -5,9 +5,10 @@
  * words), so the layer is hidden from assistive technology.
  */
 import { memo } from 'react';
-import type { MapMarks } from './contracts';
+import type { MapMarks, SceneHit } from './contracts';
 import { CHIP_HEIGHT, chipTextWidth, chipWidth, countWidth, type FormattedText, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
 import type { LayerName } from './contracts';
+import type { Point } from '@/layout/contracts';
 import { BADGE_GAP, BADGE_MARK, BADGE_SIZE, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
 import { Runs } from './text';
@@ -62,54 +63,92 @@ function NodeBadges(props: { readonly node: SceneNode }) {
 const CHIP_FONT = 12;
 const widthOfText = (text: string): number => (/^[0-9]+$/.test(text) ? chipWidth(Number(text)) : chipTextWidth(text));
 
-function BundleCount(props: { readonly edge: SceneEdge; readonly size: number; readonly chip?: { readonly text: string; readonly name: string; readonly runs?: FormattedText } | undefined }) {
-  const { edge, size, chip } = props;
-  const text = chip?.text ?? String(size);
+interface ChipProps {
+  readonly at: Point;
+  readonly text: string;
+  readonly runs?: FormattedText | undefined;
+  /** The attribute that names the chip's edge for tests and measuring (`data-count-of` or `data-count-extra-of`). */
+  readonly attr: 'data-count-of' | 'data-count-extra-of';
+  readonly edgeId: string;
+  readonly name: string;
+  /** A pair's chip is a button for ITS direction (step 8.4b, B): `hitId` is the arrow it chooses. */
+  readonly button?: { readonly hitId: string; readonly onChip?: ((hit: SceneHit) => void) | undefined };
+}
+
+/** A chip is drawn at its screen size (CSS counter-scales the inner group about the chip's centre); `at` is its centre in map units. */
+function Chip(props: ChipProps) {
+  const { at, text, runs, name, button } = props;
   const width = widthOfText(text);
-  const name = chip?.name ?? `${size} ${size === 1 ? 'reaction' : 'reactions'}`;
+  const marks = { [props.attr]: props.edgeId } as Record<string, string>;
+  const pick = (event: { readonly key: string; preventDefault: () => void; stopPropagation: () => void }): void => {
+    if (button === undefined || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    button.onChip?.({ kind: 'edge', id: button.hitId });
+  };
+  const extra = button === undefined ? { role: 'img', 'aria-label': name, 'aria-hidden': true as const } : { role: 'button', tabIndex: 0, 'aria-label': name, 'data-chip-button': 'true', 'data-hit-edge': button.hitId, onKeyDown: pick };
   return (
-    <g transform={`translate(${edge.labelAt.x - width / 2} ${edge.labelAt.y - CHIP_HEIGHT / 2})`} data-count-of={edge.id} data-chip-width={width} data-chip-height={CHIP_HEIGHT} role="img" aria-label={name}>
-      <title>{name}</title>
-      <rect className={styles.chipPill} x={0.5} y={0.5} width={width - 1} height={CHIP_HEIGHT - 1} rx={CHIP_HEIGHT / 2 - 0.5} />
-      <text className={styles.count} x={width / 2} y={CHIP_HEIGHT / 2 + 4.2}>
-        {chip?.runs === undefined ? text : <Runs runs={chip.runs} size={CHIP_FONT} />}
-      </text>
+    <g transform={`translate(${at.x} ${at.y})`} {...marks} data-chip-width={width} data-chip-height={CHIP_HEIGHT} {...extra}>
+      <g className={styles.chipScale}>
+        <title>{name}</title>
+        <rect className={styles.chipPill} x={-width / 2} y={-CHIP_HEIGHT / 2} width={width} height={CHIP_HEIGHT} rx={CHIP_HEIGHT / 2} />
+        <text className={styles.count} x={0} y={4.2}>
+          {runs === undefined ? text : <Runs runs={runs} size={CHIP_FONT} />}
+        </text>
+      </g>
     </g>
   );
 }
 
-/** The count chip of the OTHER direction of a two-way pair (step 8.2a), near the start head. The pair's one spoken name is on its line. */
-function ExtraChip(props: { readonly edgeId: string; readonly at: { readonly x: number; readonly y: number }; readonly size: number; readonly text?: string | undefined; readonly name?: string | undefined; readonly runs?: FormattedText | undefined }) {
-  const text = props.text ?? String(props.size);
-  const width = widthOfText(text);
-  return (
-    <g transform={`translate(${props.at.x - width / 2} ${props.at.y - CHIP_HEIGHT / 2})`} data-count-extra-of={props.edgeId} data-chip-width={width} data-chip-height={CHIP_HEIGHT} aria-hidden="true">
-      <rect className={styles.chipPill} x={0.5} y={0.5} width={width - 1} height={CHIP_HEIGHT - 1} rx={CHIP_HEIGHT / 2 - 0.5} />
-      {props.name === undefined ? null : <title>{props.name}</title>}
-      <text className={styles.count} x={width / 2} y={CHIP_HEIGHT / 2 + 4.2}>
-        {props.runs === undefined ? text : <Runs runs={props.runs} size={CHIP_FONT} />}
-      </text>
-    </g>
-  );
-}
+const centreOf = (edge: SceneEdge, at: Point | undefined): Point => at ?? edge.labelAt;
 
-export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
+export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly marks?: MapMarks | undefined; readonly onChip?: ((hit: SceneHit) => void) | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('badges', props.onCommit);
-  const { scene, lod } = props;
+  const { scene, lod, onChip } = props;
   return (
-    <g data-layer="badges" aria-hidden="true">
-      {lod >= 2 ? scene.nodes.filter((node) => node.badges.length > 0 && visibleAt(node, lod)).map((node) => <NodeBadges key={node.id} node={node} />) : null}
+    <g data-layer="badges">
+      {lod >= 2 ? <g aria-hidden="true">{scene.nodes.filter((node) => node.badges.length > 0 && visibleAt(node, lod)).map((node) => <NodeBadges key={node.id} node={node} />)}</g> : null}
       {lod >= 1
         ? scene.edges.flatMap((edge) => {
-            const chip = props.marks?.edges.get(edge.id)?.chip;
-            if (!visibleAt(edge, lod) || (edge.bundleSize === undefined && chip === undefined)) return [];
-            return [<BundleCount key={edge.id} edge={edge} size={edge.bundleSize ?? 1} chip={chip} />];
+            const mark = props.marks?.edges.get(edge.id);
+            const chip = mark?.chip;
+            if (!visibleAt(edge, lod) || (edge.bundleSize === undefined && chip === undefined) || mark?.chipHidden === true) return [];
+            const size = edge.bundleSize ?? 1;
+            const text = chip?.text ?? String(size);
+            const plain = chip?.name ?? `${size} ${size === 1 ? 'reaction' : 'reactions'}`;
+            const pair = mark?.pair;
+            return [
+              <Chip
+                key={edge.id}
+                attr="data-count-of"
+                edgeId={edge.id}
+                at={centreOf(edge, chip?.at)}
+                text={text}
+                runs={chip?.runs}
+                name={pair === undefined ? plain : `${pair.forwardName}, ${size} ${size === 1 ? 'reaction' : 'reactions'}`}
+                {...(pair === undefined ? {} : { button: { hitId: edge.id, onChip } })}
+              />,
+            ];
           })
         : null}
       {lod >= 1 && props.marks !== undefined
         ? scene.edges.flatMap((edge) => {
-            const chip = props.marks?.edges.get(edge.id)?.extraChip;
-            return chip === undefined || !visibleAt(edge, lod) ? [] : [<ExtraChip key={`extra-${edge.id}`} edgeId={edge.id} at={chip.at} size={chip.size} text={chip.text} name={chip.name} runs={chip.runs} />];
+            const mark = props.marks?.edges.get(edge.id);
+            const chip = mark?.extraChip;
+            if (chip === undefined || chip.hidden === true || !visibleAt(edge, lod)) return [];
+            const pair = mark?.pair;
+            return [
+              <Chip
+                key={`extra-${edge.id}`}
+                attr="data-count-extra-of"
+                edgeId={edge.id}
+                at={chip.at}
+                text={chip.text ?? String(chip.size)}
+                runs={chip.runs}
+                name={pair === undefined ? (chip.name ?? String(chip.size)) : `${pair.backName}, ${chip.size} ${chip.size === 1 ? 'reaction' : 'reactions'}`}
+                {...(pair === undefined ? {} : { button: { hitId: pair.backId, onChip } })}
+              />,
+            ];
           })
         : null}
     </g>

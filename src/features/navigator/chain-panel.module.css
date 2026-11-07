@@ -112,7 +112,8 @@
 }
 
 .panel[data-phone][data-expanded] {
-  max-height: 80dvh;
+  /* "Show all n" keeps at least 30% of the screen's height for the map above it; the list scrolls inside (step 8.4b, E3) */
+  max-height: calc(100% - 30dvh);
 }
 
 .panel[data-phone] .selects {

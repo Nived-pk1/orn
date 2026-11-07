@@ -7,6 +7,7 @@ import { memo } from 'react';
 import type { LodLevel, Scene, SceneEdge } from '@/render/scene';
 import type { DefIds } from './defs';
 import type { EdgeMark, LayerName, MapMarks } from './contracts';
+import { halfOf } from './pair-direction';
 import { EDGE_HIT_WIDTH, pathData, STROKE_DASH, visibleAt, WEIGHT_WIDTH } from './geometry';
 import styles from './scene-svg.module.css';
 import { useCommitProbe } from './use-commit-probe';
@@ -28,7 +29,15 @@ function EdgeGroup(props: { readonly edge: SceneEdge; readonly ids: DefIds; read
         {...(mark?.startHead === true ? { markerStart: `url(#${ids.start})` } : {})}
         {...(mark?.tone === undefined ? {} : { 'data-tone': mark.tone })}
       />
-      <path className={styles.edgeHit} d={pathData(edge.points)} strokeWidth={EDGE_HIT_WIDTH} data-hit="true" aria-hidden="true" />
+      {mark?.pair === undefined ? (
+        <path className={styles.edgeHit} d={pathData(edge.points)} strokeWidth={EDGE_HIT_WIDTH} data-hit="true" aria-hidden="true" />
+      ) : (
+        <>
+          {/* a two-way pair: each half of the line is the hit area of the direction whose head it ends at (step 8.4b, B) */}
+          <path className={styles.edgeHit} d={pathData(halfOf(edge.points))} strokeWidth={EDGE_HIT_WIDTH} data-hit="true" aria-hidden="true" />
+          <path className={styles.edgeHit} d={pathData(halfOf([...edge.points].reverse()))} strokeWidth={EDGE_HIT_WIDTH} data-hit="true" data-hit-edge={mark.pair.backId} aria-hidden="true" />
+        </>
+      )}
     </g>
   );
 }

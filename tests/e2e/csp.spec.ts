@@ -170,7 +170,7 @@ for (const kind of ['same', 'chem-allowance'] as const) {
       expect(chemEntry.every((s) => s.csp.includes("'unsafe-eval'")), 'unsafe-eval on the chem entry only in case B').toBe(kind === 'chem-allowance');
       expect(server.served.filter((s) => !CHEM_ENTRY.test(s.path)).some((s) => s.csp.includes("'unsafe-eval'")), 'the page policy is never widened').toBe(false);
 
-      const workers = (await page.getByText(/^Workers: /).first().textContent()) ?? '';
+      const workers = (await page.locator('li', { hasText: /^Workers: / }).first().textContent()) ?? '';
       const chemWorks = (await page.getByText(/Check unavailable/).count()) === 0;
       const retry = (await page.getByRole('button', { name: 'Retry' }).count()) > 0;
       let structure = 'not tried';

@@ -26,38 +26,44 @@ const wordsOf = (facts: Facts, from: string, to: string): { readonly words: stri
   return { words: found?.words, parts: found?.parts };
 };
 
-/** The same arrows with the chip marks added. `chain`: every arrow is a numbered step (in the order given) and has a chip. */
-export function withChips(drawn: readonly Drawn[], facts: Facts, chain: boolean, nodes: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[] = []): Drawn[] {
+/** Where along a merged pair the chips sit: each near its own head (map-view.ts says the same). */
+const NEAR_HEAD = 0.78;
+
+/**
+ * The same arrows with the chip marks added: words or numbers, placed in SCREEN pixels at `zoom` (step 8.4b, A); a chip with no free place is marked
+ * hidden (its words stay in the arrow's name). `chain`: every arrow is a numbered step (in the order given) and has a chip.
+ */
+export function withChips(drawn: readonly Drawn[], facts: Facts, chain: boolean, nodes: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[] = [], zoom = 1): Drawn[] {
   if (facts === undefined && !chain) return [...drawn];
   const wishes: ChipWish[] = [];
   drawn.forEach((d, at) => {
     const { edge, mark } = d;
     const reactions = facts?.(edge.from, edge.to)?.reactions;
+    const pair = mark.extraChip !== undefined;
     wishes.push({
       key: edge.id,
       at: edge.labelAt,
+      route: edge.points,
+      start: pair ? NEAR_HEAD : 0.5,
       count: chain ? (reactions ?? edge.bundleSize ?? 1) : (edge.bundleSize ?? 1),
       ...wordsOf(facts, edge.from, edge.to),
       base: chain || edge.bundleSize !== undefined ? 'number' : 'none',
       ...(chain ? { step: at + 1 } : {}),
     });
-    if (mark.extraChip !== undefined) wishes.push({ key: `${edge.id}:back`, at: mark.extraChip.at, count: mark.extraChip.size, ...wordsOf(facts, edge.to, edge.from) });
+    if (mark.extraChip !== undefined) wishes.push({ key: `${edge.id}:back`, at: mark.extraChip.at, route: edge.points, start: 1 - NEAR_HEAD, count: mark.extraChip.size, ...wordsOf(facts, edge.to, edge.from) });
   });
-  const chips = resolveChips(wishes, nodes);
+  const chips = resolveChips(wishes, nodes, zoom);
   return drawn.map((d) => {
     const own = chips.get(d.edge.id);
     const back = chips.get(`${d.edge.id}:back`);
-    const lone = d.edge.bundleSize === undefined;
-    const changed = own !== undefined && (chain || lone || own.text !== String(d.edge.bundleSize));
     const extra = d.mark.extraChip;
-    const extraChanged = extra !== undefined && back !== undefined && back.text !== String(extra.size);
-    if (!changed && !extraChanged) return d;
+    const wanted = d.edge.bundleSize !== undefined || chain || own !== undefined || d.mark.chip !== undefined;
     return {
       edge: d.edge,
       mark: {
         ...d.mark,
-        ...(changed ? { chip: own } : {}),
-        ...(extra !== undefined && extraChanged ? { extraChip: { ...extra, text: back.text, name: back.name, ...(back.runs === undefined ? {} : { runs: back.runs }) } } : {}),
+        ...(own !== undefined ? { chip: own } : wanted && (d.edge.bundleSize !== undefined || chain) ? { chipHidden: true } : {}),
+        ...(extra === undefined ? {} : back === undefined ? { extraChip: { ...extra, hidden: true } } : { extraChip: { ...extra, text: back.text, name: back.name, at: back.at, ...(back.runs === undefined ? {} : { runs: back.runs }) } }),
       },
     };
   });

@@ -65,7 +65,7 @@ test.describe('the app in Chromium', () => {
     const other = await context.newPage();
     await other.goto('/');
     await expect(other.getByText(/This tab is read-only because another tab of this app is the writer/)).toBeVisible();
-    await expect(other.getByText('Read-only', { exact: true })).toBeVisible();
+    await expect(other.getByRole('listitem').filter({ hasText: /^Read-only$/ })).toBeVisible(); // the full words of the status line (the short ones are aria-hidden, step 8.4b G3)
     expect(await recordCount(other, 'reaction')).toBe(27);
     await expect(other.getByRole('button', { name: 'Load demo dataset' })).toHaveCount(0);
     await expect(page.getByText(/This tab is read-only/)).toHaveCount(0);

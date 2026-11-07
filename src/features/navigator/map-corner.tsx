@@ -24,6 +24,8 @@ export interface MapCornerProps {
   readonly settled: Viewport | undefined;
   readonly svg: SVGSVGElement | null;
   readonly onClear: () => void;
+  /** "Zoom to selection": the button in the "Selected" label; absent when there is nothing to zoom to. */
+  readonly onZoom?: (() => void) | undefined;
   readonly hint: string | undefined;
   readonly hintKind: 'quiet' | 'busy' | undefined;
   readonly keys: LegendKey;
@@ -40,7 +42,7 @@ export function MapCorner(props: MapCornerProps) {
   const words = props.selected === null || props.multi ? undefined : selectionWordsOf(props.scene, props.selected, 'corner');
   return (
     <>
-      <MapHint selected={words === undefined ? undefined : `Selected: ${words}`} onClear={props.onClear} hint={props.hint} hintKind={props.hintKind} />
+      <MapHint selected={words === undefined ? undefined : `Selected: ${words}`} onClear={props.onClear} onZoom={props.onZoom} zoomName={words} hint={props.hint} hintKind={props.hintKind} />
       <ArrowKey keys={props.keys} corner={corner} />
     </>
   );

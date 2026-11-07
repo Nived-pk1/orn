@@ -48,7 +48,7 @@ describe('the status line', () => {
       },
     });
     renderWithApp(app, <StatusLine />);
-    expect(screen.getByText('Read-only')).toBeTruthy();
+    expect(screen.getByText('Read-only', { ignore: '[aria-hidden="true"]' })).toBeTruthy();
     expect(screen.getByText('Single tab only')).toBeTruthy();
     expect(screen.getByText('Applying an import: committing, 2 of 4')).toBeTruthy();
     act(() => void app.status.update({ mode: 'session_only', save: null, operation: null }));

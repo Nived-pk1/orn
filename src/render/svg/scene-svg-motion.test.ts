@@ -9,10 +9,12 @@ describe('the fade of a map box', () => {
   it('has a transition only inside prefers-reduced-motion: no-preference', () => {
     const outside = css.replace(/@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*?\n\}\n/g, '');
     expect(outside).not.toMatch(/\.mapNode[^}]*transition/);
-    expect(css).toMatch(/@media \(prefers-reduced-motion: no-preference\) \{\s*\.mapNode \{\s*transition: opacity/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: no-preference\) \{\s*\.mapNode \{\s*transition: fill-opacity/);
   });
 
   it('the faded opacity itself is set outside any motion query (it applies at once)', () => {
-    expect(css).toMatch(/\n\.faded \{\s*opacity: 0\.35;/);
+    // step 8.4b: a faded box is opaque (a paper underlay) with muted ink, never an element opacity, so a line behind it is hidden
+    expect(css).toMatch(/\n\.faded > rect:not\(\.fadeUnder\) \{\s*fill-opacity: 0\.35;/);
+    expect(css).not.toMatch(/\n\.faded \{\s*opacity/);
   });
 });

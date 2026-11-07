@@ -113,7 +113,7 @@ export function NavigatorLegend(props: {
           {!keys.within ? null : (
             <li className={styles.legendItem} data-key="within">
               <WithinSample />
-              n within the family: reactions that start and end in the same family (no loop is drawn)
+              ↻ n: reactions that start and end in the same family (no loop is drawn)
             </li>
           )}
           {props.outsideNote === undefined ? null : (

@@ -10,6 +10,7 @@ import { memo } from 'react';
 import type { LodLevel, Scene, SceneEdge, SceneNode } from '@/render/scene';
 import type { DefIds } from './defs';
 import type { DepictionSource, LayerName, MapMarks } from './contracts';
+import { BOXES } from '@/render/scene';
 import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, textSlots, visibleAt } from './geometry';
 
 const CAPTION_SIZE = 11;
@@ -47,12 +48,16 @@ function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; re
   );
 }
 
-/** The small second line of a family box (step 8.2a): "4 within the family", written just under the box, as text. */
-function Caption(props: { readonly node: SceneNode; readonly text: string; readonly faded: boolean }) {
+/** "↻ n" inside a family box, at the right end of the formula line (step 8.4b, D): reactions that start and end in the same family. */
+function Loops(props: { readonly node: SceneNode; readonly text: string; readonly faded: boolean }) {
   const { node } = props;
-  const size = CAPTION_SIZE * (node.scale ?? 1);
+  const slots = textSlots(node);
+  const spec = BOXES[node.box];
+  const k = node.scale ?? 1;
+  const size = CAPTION_SIZE * k;
+  const y = node.depictionKey === undefined ? slots.sublabelY : slots.labelY;
   return (
-    <text className={`${styles.caption}${props.faded ? ` ${styles.faded}` : ''}`} data-caption-of={node.id} x={node.x + node.width / 2} y={node.y + node.height + size + 2} fontSize={size} textAnchor="middle">
+    <text className={`${styles.caption}${props.faded ? ` ${styles.faded}` : ''}`} data-loops-of={node.id} x={node.x + node.width - spec.padX * k} y={node.y + y} fontSize={size} textAnchor="end">
       {props.text}
     </text>
   );
@@ -84,7 +89,7 @@ export const LabelsLayer = memo(function LabelsLayer(props: { readonly scene: Sc
   return (
     <g data-layer="labels" aria-hidden="true">
       {lod >= 1 ? scene.nodes.filter((node) => visibleAt(node, lod)).map((node) => <NodeLabel key={node.id} node={node} lod={lod} source={props.depictions} ids={props.ids} faded={props.marks?.faded.has(node.id) === true} />) : null}
-      {lod >= 1 && props.marks !== undefined ? scene.nodes.filter((node) => props.marks?.captions.has(node.id) === true && visibleAt(node, lod)).map((node) => <Caption key={node.id} node={node} text={props.marks?.captions.get(node.id) ?? ''} faded={props.marks?.faded.has(node.id) === true} />) : null}
+      {lod >= 1 && props.marks !== undefined ? scene.nodes.filter((node) => props.marks?.captions.has(node.id) === true && visibleAt(node, lod)).map((node) => <Loops key={node.id} node={node} text={props.marks?.captions.get(node.id) ?? ''} faded={props.marks?.faded.has(node.id) === true} />) : null}
       {lod >= 2 ? scene.edges.filter((edge) => visibleAt(edge, lod)).map((edge) => <ArrowText key={edge.id} edge={edge} />) : null}
     </g>
   );

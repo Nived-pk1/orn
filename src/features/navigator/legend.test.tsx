@@ -79,7 +79,7 @@ describe('NavigatorLegend explains the marks in words next to small samples', ()
       'dashed dark line: what the family is made from',
       'number of reactions on this arrow',
       'one line with a head at each end: reactions both ways, a number near each head',
-      'n within the family: reactions that start and end in the same family (no loop is drawn)',
+      '↻ n: reactions that start and end in the same family (no loop is drawn)',
     ]);
     for (const li of within(list).getAllByRole('listitem')) expect(li.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
     expect(screen.queryByRole('list', { name: 'Family groups' })).toBeNull();

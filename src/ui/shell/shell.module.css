@@ -145,9 +145,11 @@
   z-index: var(--z-toast);
   display: flex;
   justify-content: flex-end;
-  max-height: var(--toast-height);
   pointer-events: none;
 }
+
+/* the dock stops at the left edge of a right pane inside the main column (From A to B; step 8.4b, G1) */
+.main:has([data-right-pane]) .toastDock { right: min(22rem, 40%); }
 
 .toastDock:empty {
   display: none;

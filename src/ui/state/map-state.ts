@@ -16,6 +16,9 @@ export interface MapState {
   readonly focusId: string | null;
   /** The "From A to B" panel is open (step 8.2b): the map is built across ALL chapters while it is. Not saved. */
   readonly chainOpen: boolean;
+  /** The map's view was still the automatic fit when it last settled (step 8.4b, E2a): saved, so a reload fits again. */
+  readonly fitted: boolean;
+  setFitted(fitted: boolean): void;
   setChapter(chapterId: string | null): void;
   setShowUnclassified(shown: boolean): void;
   setFocus(id: string | null): void;
@@ -23,12 +26,14 @@ export interface MapState {
 }
 export type MapStore = StoreApi<MapState>;
 
-export function createMapStore(initial: { readonly chapterId?: string | null; readonly showUnclassified?: boolean } = {}): MapStore {
+export function createMapStore(initial: { readonly chapterId?: string | null; readonly showUnclassified?: boolean; readonly fitted?: boolean } = {}): MapStore {
   return createStore<MapState>((set) => ({
     chapterId: initial.chapterId ?? null,
     showUnclassified: initial.showUnclassified ?? false,
     focusId: null,
     chainOpen: false,
+    fitted: initial.fitted ?? false,
+    setFitted: (fitted) => set({ fitted }),
     // another chapter is another set of arrows: a focus from the old set would mislead
     setChapter: (chapterId) => set({ chapterId, focusId: null }),
     setShowUnclassified: (showUnclassified) => set({ showUnclassified }),
@@ -45,13 +50,15 @@ export interface ParsedMap {
   readonly showUnclassified: boolean;
   /** The fit rule the saved viewport was made under; null: before the rule existed (or unreadable). */
   readonly fitRule: number | null;
+  /** Step 8.4b: the saved view was the automatic fit (optional field; absent means no). */
+  readonly fitted: boolean;
   readonly damaged: readonly string[];
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 export function parseMap(raw: unknown): ParsedMap {
-  const defaults: ParsedMap = { chapterId: null, showUnclassified: false, fitRule: null, damaged: [] };
+  const defaults: ParsedMap = { chapterId: null, showUnclassified: false, fitRule: null, fitted: false, damaged: [] };
   if (raw === undefined) return defaults;
   if (!isRecord(raw)) return { ...defaults, damaged: ['map'] };
   const damaged: string[] = [];
@@ -67,5 +74,10 @@ export function parseMap(raw: unknown): ParsedMap {
   }
   // tolerant: only the rule this build knows counts; anything else is read as missing
   const fitRule = raw.fitRule === FIT_RULE ? FIT_RULE : null;
-  return { chapterId, showUnclassified, fitRule, damaged };
+  let fitted = false;
+  if (raw.fitted !== undefined) {
+    if (typeof raw.fitted === 'boolean') fitted = raw.fitted;
+    else damaged.push('map.fitted');
+  }
+  return { chapterId, showUnclassified, fitRule, fitted, damaged };
 }

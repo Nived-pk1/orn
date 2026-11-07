@@ -112,3 +112,18 @@ test('a long lead is clamped to four lines with "Read more", which opens it in p
   await page.screenshot({ path: `${shotsDir()}/inspector-study-lead-expanded-1280x800.png` });
   await expectClean(seen);
 });
+
+// step 8.4b, G4: every go-next card fills the pane's width (one column narrow, two wide): at least 45% of its group's width. Written AFTER its source (disclosed).
+test('the "Makes" and "Made from" cards fill the pane: each card is at least 45% of its group width', async ({ page }) => {
+  test.setTimeout(300_000);
+  await start(page);
+  await open(page, 'r: Ethanol → ethanal (PCC)', 'rxn_ethanol-to-ethanal-pcc');
+  const widths = await record(page).evaluate((article) =>
+    [...article.querySelectorAll('[data-group]')].flatMap((group) => {
+      const list = group.querySelector('ul') as HTMLElement;
+      return [...list.querySelectorAll('button[data-record-id]')].map((card) => ({ group: group.getAttribute('data-group') ?? '', share: card.getBoundingClientRect().width / list.getBoundingClientRect().width }));
+    }),
+  );
+  expect(widths.length).toBeGreaterThan(0);
+  for (const w of widths) expect(w.share, `a card of ${w.group}`).toBeGreaterThanOrEqual(0.45);
+});

@@ -17,6 +17,8 @@ export interface MapViewActions {
   /** Focuses a family or the bucket on the map (and shows it in the inspector). */
   readonly focusEnd: (id: string) => void;
   readonly open: (ref: RecordRef) => void;
+  /** Shows the arrow between two map nodes in the panel (step 8.4b, C). */
+  readonly openArrow?: (from: string, to: string) => void;
   readonly titleId: string;
   /** Back and Forward, drawn on the header line. */
   readonly history?: ReactNode;
@@ -71,6 +73,18 @@ export function BucketPane(props: { readonly view: BucketView; readonly actions:
       <Head chip={view.chip} title={view.title} titleId={actions.titleId} history={actions.history} />
       <p className={styles.line}>{view.lead}</p>
       {view.authorsLine === undefined ? null : <p className={styles.authors}>{view.authorsLine}</p>}
+      {view.arrows.length === 0 ? null : (
+        <ul className={styles.list} aria-label="Arrows of this selection">
+          {view.arrows.map((arrow) => (
+            <li key={`${arrow.from.id}>${arrow.to.id}`}>
+              <button type="button" className={styles.row} onClick={() => actions.openArrow?.(arrow.from.id, arrow.to.id)}>
+                <span>{`${arrow.from.name} → ${arrow.to.name}`}</span>
+                <span className={styles.count}>{`${arrow.reactions} ${arrow.reactions === 1 ? 'reaction' : 'reactions'}`}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       {view.rows.length === 0 ? null : (
         <ul className={styles.list} aria-label="Compounds in no family">
           {view.rows.map((row) => (

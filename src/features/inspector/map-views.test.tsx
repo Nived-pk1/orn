@@ -9,6 +9,7 @@ afterEach(cleanup);
 
 const bucket: Extract<MapInspectorView, { kind: 'bucket' }> = {
   kind: 'bucket',
+  arrows: [],
   chip: 'Compounds',
   title: 'Not in a family yet',
   lead: 'These compounds appear in reactions, but no family covers them yet.',

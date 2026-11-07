@@ -24,6 +24,8 @@ export interface OpenMenu {
 export interface CanvasInput {
   readonly keyboard: NonNullable<SceneSvgProps['keyboard']>;
   readonly pointer: PointerHandlers;
+  /** A pair's chip chosen with the keyboard: selects its direction's arrow and shows it (step 8.4b, B). */
+  readonly onChip: (hit: SceneHit) => void;
   /** The family the focus ring is drawn on: only while the drawing has the keyboard focus. */
   readonly ringId: string | undefined;
   readonly menu: OpenMenu | null;
@@ -284,5 +286,9 @@ export function useCanvasInput(args: Args): CanvasInput {
   const closeMenu = useCallback((): void => setMenu(null), []);
   const closeMenuFocus = useCallback((): void => live.current.svg?.focus({ preventScroll: true }), []);
   const active = focus.inside ? familyId(focus.id, scene) : undefined;
-  return { keyboard: { activeId: active, onKeyDown, onFocus, onBlur }, pointer, ringId: focus.ring ? active : undefined, menu, closeMenu, closeMenuFocus, run };
+  const onChip = useCallback((hit: SceneHit): void => {
+    ui.selection.getState().select(hit);
+    ui.selection.getState().reveal();
+  }, [ui]);
+  return { keyboard: { activeId: active, onKeyDown, onFocus, onBlur }, pointer, onChip, ringId: focus.ring ? active : undefined, menu, closeMenu, closeMenuFocus, run };
 }

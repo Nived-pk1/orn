@@ -3,7 +3,7 @@
  * visit every family in turn (a click focuses it: its arrows in and out are drawn), measure what is drawn, and join the measurements.
  * Test code only.
  */
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from './fixtures';
 import { closeKey, openKey } from './map-toolbar-kit';
 import { measure, type Measured } from './readability';
@@ -23,8 +23,22 @@ export async function showUnclassified(page: Page): Promise<void> {
 
 /** Focuses a family by clicking its box, and waits until the drawing has settled on it. */
 export async function focusFamily(page: Page, id: string): Promise<void> {
+  // step 8.4b (E2): with a pane open, Fit fills the area with what matters, so a far family can lie off the edge: the toolbar's Fit shows the whole map
+  const inside = await page.evaluate((node) => {
+    const box = document.querySelector(`svg [data-node-id="${node}"]`)?.getBoundingClientRect();
+    const area = document.querySelector('svg[role="group"]')?.getBoundingClientRect();
+    return box !== undefined && area !== undefined && box.left >= area.left && box.right <= area.right && box.top >= area.top && box.bottom <= area.bottom;
+  }, id);
+  if (!inside) {
+    const hide = page.getByRole('button', { name: 'Hide inspector' });
+    if ((await hide.count()) > 0) await hide.click();
+    await page.waitForTimeout(700);
+    await page.getByRole('button', { name: 'Fit', exact: true }).click();
+    await page.waitForTimeout(700);
+  }
   await page.locator(`svg [data-node-id="${id}"]`).click();
   await page.waitForTimeout(350); // the hover preview (150 ms) and the fade (150 ms) have settled
+  await chipsSettled(page); // and the chips are placed for the zoom the map has now (step 8.4b, A)
 }
 
 /** Visits every family in turn and calls `each` with what is drawn for it. */
@@ -109,4 +123,37 @@ export async function blockedCeiling(page: Page, ceiling: number): Promise<numbe
   console.log(`layout note names ${named} arrows crossing a box (fixed ceiling ${ceiling})`);
   expect(named, 'the layout note names no more crossing arrows than the fixed ceiling').toBeLessThanOrEqual(ceiling);
   return ceiling;
+}
+
+/** Clicks a box; with a pane open the map may show only what matters (step 8.4b, E2), so a box off the edge is brought in first (pane hidden, Fit). */
+export async function clickNode(page: Page, node: Locator): Promise<void> {
+  const inside = await node.evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const area = document.querySelector('svg[role="group"]')?.getBoundingClientRect();
+    return area !== undefined && box.left >= area.left && box.right <= area.right && box.top >= area.top && box.bottom <= area.bottom;
+  });
+  if (!inside) {
+    const hide = page.getByRole('button', { name: 'Hide inspector' });
+    if ((await hide.count()) > 0) await hide.click();
+    await page.waitForTimeout(700);
+    await page.getByRole('button', { name: 'Fit', exact: true }).click();
+    await page.waitForTimeout(700);
+  }
+  await node.click();
+}
+
+/**
+ * Waits until the chips are placed for the map's CURRENT zoom (step 8.4b, A): the map says so itself, `data-chips-zoom` (the zoom the chips were
+ * placed at) equals the zoom of the world group. No arrows with chips drawn: nothing to wait for. No sleeps.
+ */
+export async function chipsSettled(page: Page): Promise<void> {
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        if (document.querySelector('svg [data-count-of], svg [data-count-extra-of]') === null) return 'none';
+        const k = ((document.querySelector('svg [data-world]') as unknown as SVGGElement).getScreenCTM() as DOMMatrix).a;
+        return document.querySelector('[data-chips-zoom]')?.getAttribute('data-chips-zoom') === String(Math.round(k * 100) / 100) ? 'settled' : 'waiting';
+      }),
+    )
+    .not.toBe('waiting');
 }

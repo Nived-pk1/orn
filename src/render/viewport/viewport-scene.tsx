@@ -30,6 +30,8 @@ export interface ViewportSceneProps {
   /** Shown at the first layout instead of fitting the drawing (a saved view). Read once, when the drawing first has a size. */
   readonly initialViewport?: Viewport;
   /** Called with the viewport once it has been still for `VIEWPORT_SETTLE_MS` (never per frame), and when the drawing goes away with a move pending; `automatic` is true while the view is still the one the automatic fit made. Keep it stable. */
+  /** Step 8.4b (A): the zoom, reported once it has been still for 150 ms (chips are placed in screen pixels at it). Keep it stable. */
+  readonly onZoomSettled?: (scale: number) => void;
   readonly onSettled?: (view: Viewport, automatic: boolean) => void;
   /** The smallest zoom a gesture or a command reaches (the phone's name floor). Default: the global minimum. */
   readonly minScale?: number;
@@ -41,6 +43,8 @@ export interface ViewportSceneProps {
   /** The map's focus marks and the box under the pointer (step 8.2a; see `SceneSvgProps`). Keep them stable. */
   readonly marks?: MapMarks;
   readonly onNodeHover?: (id: string | null) => void;
+  /** A chip button chosen with the keyboard (step 8.4b, B). Keep it stable. */
+  readonly onChip?: SceneSvgProps['onChip'];
   /**
    * The pointer state machine's outcomes (step 5.7): click, double click, confirmed click, context menu. When given, they replace
    * the delegated `onSceneClick` / `onSceneDoubleClick` (the machine decides what a press was). Read at the time of each event, so
@@ -64,6 +68,7 @@ const passive = (source: DepictionSource): DepictionSource => ({ request: () => 
 
 /** How many automatic fits are remembered (a drawing's size settles in a few steps; bounded). */
 const MAX_AUTO_VIEWS = 8;
+const ZOOM_SETTLE_MS = 150;
 
 const sameView = (a: Viewport, b: Viewport): boolean => a.x === b.x && a.y === b.y && a.scale === b.scale;
 
@@ -83,7 +88,7 @@ export function ViewportScene(props: ViewportSceneProps) {
   fitBoxRef.current = props.fitBox;
   const refit = useRef<(() => void) | undefined>(undefined);
   const keyRef = useRef(props.fitKey);
-  const { pointerTimers, onSvg, minScale } = props;
+  const { pointerTimers, onSvg, minScale, onZoomSettled } = props;
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -96,7 +101,12 @@ export function ViewportScene(props: ViewportSceneProps) {
         : createDepictionQueue({ source: depictions, setTimer: (callback, ms) => window.setTimeout(callback, ms), clearTimer: (handle) => window.clearTimeout(handle as number) });
     const controller = createViewportController({
       store,
-      write: (transform) => world.setAttribute('transform', transform),
+      write: (transform) => {
+        world.setAttribute('transform', transform);
+        // the zoom as a CSS variable: the marks people read or click are sized in screen pixels by it (step 8.4b, A)
+        const scale = /scale\(([^)]+)\)/.exec(transform)?.[1];
+        if (scale !== undefined) svg.style.setProperty('--map-k', scale);
+      },
       schedule: (callback) => window.requestAnimationFrame(callback),
       cancel: (handle) => window.cancelAnimationFrame(handle as number),
       onCommand: (view) => bound.binding?.adopt(view),
@@ -153,7 +163,8 @@ export function ViewportScene(props: ViewportSceneProps) {
       measureFrame = window.requestAnimationFrame(measure);
     });
     observer?.observe(svg);
-    onController?.(controller);
+    // the Fit command of the toolbar fits the WHOLE map (not the focus set) and counts as an automatic view again (step 8.4b, E2)
+    onController?.({ ...controller, fit: () => { controller.setFitBox(fitBoxRef.current); controller.fit(); markAutomatic(); } });
     // The viewport is reported once it has been still; the store's first frames (fit, restore) count as moves like any other.
     let lastView = store.get().viewport;
     let still: number | undefined;
@@ -165,6 +176,15 @@ export function ViewportScene(props: ViewportSceneProps) {
       const view = store.get().viewport;
       onSettled?.(view, autoViews.some((auto) => sameView(view, auto)));
     };
+    let zoomStill: number | undefined;
+    let lastScale = store.get().viewport.scale;
+    const offZoom = onZoomSettled === undefined ? undefined : store.subscribe(() => {
+      const scale = store.get().viewport.scale;
+      if (scale === lastScale) return;
+      lastScale = scale;
+      if (zoomStill !== undefined) window.clearTimeout(zoomStill);
+      zoomStill = window.setTimeout(() => onZoomSettled(scale), ZOOM_SETTLE_MS);
+    });
     const off = onSettled === undefined ? undefined : store.subscribe(() => {
       const view = store.get().viewport;
       if (view.x === lastView.x && view.y === lastView.y && view.scale === lastView.scale) return;
@@ -175,6 +195,8 @@ export function ViewportScene(props: ViewportSceneProps) {
     });
     return () => {
       off?.();
+      offZoom?.();
+      if (zoomStill !== undefined) window.clearTimeout(zoomStill);
       if (still !== undefined) window.clearTimeout(still);
       settle();
       onController?.(null);
@@ -186,7 +208,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       controller.dispose();
       controllerRef.current = null;
     };
-  }, [store, depictions, onController, onSettled, minScale]);
+  }, [store, depictions, onController, onSettled, onZoomSettled, minScale]);
 
   useEffect(() => {
     controllerRef.current?.setScene(scene);
@@ -244,6 +266,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       {...(props.onSceneHover === undefined ? {} : { onSceneHover: props.onSceneHover })}
       {...(props.marks === undefined ? {} : { marks: props.marks })}
       {...(props.onNodeHover === undefined ? {} : { onNodeHover: props.onNodeHover })}
+      {...(props.onChip === undefined ? {} : { onChip: props.onChip })}
       {...(props.onSceneDoubleClick === undefined ? {} : { onSceneDoubleClick: props.onSceneDoubleClick })}
       {...(props.onLayerCommit === undefined ? {} : { onLayerCommit: props.onLayerCommit })}
     />

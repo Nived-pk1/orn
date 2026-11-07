@@ -67,11 +67,13 @@ export function MapToolbar(props: MapToolbarProps) {
   const openMoved = moved.includes('open');
   const zoomReason = props.listing ? NO_ZOOM : props.noScene ? NOTHING : undefined;
   const unavailable = (reason: string | undefined): { unavailable?: string } => (reason === undefined ? {} : { unavailable: reason });
+  // ONE Open button (step 8.4b, E1): a family selected, "Open family"; an arrow selected, "Open reactions"; nothing selected, disabled
+  const arrow = props.arrowOpen;
+  const open = arrow === undefined ? { label: 'Open family', onSelect: props.onOpenFamily, reason: props.noScene ? NOTHING : props.openReason } : { label: 'Open reactions', onSelect: arrow.onOpen, reason: arrow.unavailable };
   const more: MenuItem[] = [
     { id: 'list', label: props.listing ? 'Show the map' : 'List', onSelect: props.onToggleList },
     ...(chainMoved ? [{ id: 'chain', label: 'From A to B', onSelect: props.onToggleChain, ...unavailable(props.noScene ? NOTHING : undefined) }] : []),
-    ...(openMoved ? [{ id: 'open', label: 'Open family', onSelect: props.onOpenFamily, ...unavailable(props.noScene ? NOTHING : props.openReason) }] : []),
-    ...(openMoved && props.arrowOpen !== undefined ? [{ id: 'open-arrow', label: 'Open the arrow', onSelect: props.arrowOpen.onOpen, ...unavailable(props.arrowOpen.unavailable) }] : []),
+    ...(openMoved ? [{ id: 'open', label: open.label, onSelect: open.onSelect, ...unavailable(open.reason) }] : []),
     ...(props.unanchored === undefined ? [] : [{ id: 'unanchored', label: `Unanchored reactions (${props.unanchored.count})`, onSelect: props.unanchored.onToggle, ...unavailable(props.unanchored.reason) }]),
   ];
   return (
@@ -91,16 +93,9 @@ export function MapToolbar(props: MapToolbarProps) {
         </Button>
       )}
       {openMoved ? null : (
-        <>
-          <Button onClick={props.onOpenFamily} {...unavailable(props.noScene ? NOTHING : props.openReason)}>
-            Open family
-          </Button>
-          {props.arrowOpen === undefined ? null : (
-            <Button onClick={props.arrowOpen.onOpen} {...unavailable(props.arrowOpen.unavailable)}>
-              Open
-            </Button>
-          )}
-        </>
+        <Button onClick={open.onSelect} {...unavailable(open.reason)}>
+          {open.label}
+        </Button>
       )}
       <span className={styles.spacer} />
       <span className={styles.keyWrap} data-key-wrap="">

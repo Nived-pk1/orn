@@ -461,3 +461,10 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 - **Hint and selection inside the map.** The quiet hint and "Selected: ..." are a fixed-size overlay in the map's top-left corner, not a row. "Nothing is selected." / "Selected: ..." stays as a visually hidden live region.
 - **Box scale from the boxes only.** The grid layout grows the boxes by the largest factor up to 1.8 that keeps 16 px between any two boxes; chips and the "no new blocked line" back-off no longer limit it. Arrows are routed against the scaled boxes; a line that cannot clear stays straight and the layout note says so. The layout cache key is `layout/5`; the saved fit rule is 3.
 - **From A to B** shows each chain as one card (title and "2 steps · 4 reactions"); the chosen card (2 px border in the From family's colour, "On the map") shows its step rows, each its own button.
+
+**Addendum to ADR-044 (step 8.4b, 2026-11-07): map readability.**
+- **Screen-pixel marks.** What people read or click on an arrow is sized in screen pixels at every zoom: strokes 2 px (heavy 3), dashes 6 on 4, heads 10 px, hit area 16 px (28 px touch), chips about 20 px with 12 px text. The zoom is a CSS variable (`--map-k`) written by the viewport; chips are counter-scaled and PLACED in screen pixels (re-placed 150 ms after the zoom settles; a chip with no free place is not drawn, its words stay in the arrow's name).
+- **Pairs.** A two-way pair stays one line with two heads; each half is the hit area of the direction it ends at, each chip is a button for its direction.
+- **One busy rule** for every map state: over 15 arrows nothing is drawn, the connected families are outlined, the panel lists the arrows.
+- **Arrows under boxes.** Faded boxes are opaque; chips and badges above everything; "n within the family" is "↻ n" inside the box.
+- **Fit.** Sticky whole-map Fit (a saved optional `fitted` flag); NO automatic focus fit (reason: an automatic zoom on every click moved the map under the pointer and hid other families). "Zoom to selection" (button in the "Selected" label, key Z) is the command that fits the focus set; the toolbar Fit fits the whole map.

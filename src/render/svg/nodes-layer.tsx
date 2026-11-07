@@ -71,7 +71,8 @@ function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; re
       role="graphics-symbol"
       aria-label={node.ariaLabel}
     >
-      <title>{node.group === undefined ? full : `${full} · ${node.group}`}</title>
+      <title>{[full, node.group, marks?.captionNames?.get(node.id)].filter((part) => part !== undefined && part !== '').join(' · ')}</title>
+      {faded ? <rect className={styles.fadeUnder} width={node.width} height={node.height} rx={node.box === 'hub' ? HUB_RADIUS : 2} /> : null}
       <Shape node={node} ids={props.ids} />
       {status.state === 'ready' && node.depictionKey !== undefined ? <StructureImage node={node} url={status.url} /> : null}
     </g>

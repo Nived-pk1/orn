@@ -22,7 +22,7 @@ const symbols = (): number => screen.getAllByRole('graphics-symbol').length;
 // The line naming the selection is a visually hidden live region (step 8.3b, A2).
 const hasLine = (pattern: RegExp | string): boolean => (typeof pattern === 'string' ? selectionLine() === pattern : pattern.test(selectionLine()));
 // the toolbar's actions: a button in the row, or an item of More when the row is narrow (step 8.3b, A1)
-const button = (name: string): Promise<HTMLElement> => toolbarAction(name === 'Open' ? /^Open( the arrow)?$/ : new RegExp('^' + name));
+const button = (name: string): Promise<HTMLElement> => toolbarAction(name === 'Open' ? /^Open reactions$/ : new RegExp('^' + name));
 const reasonOf = async (name: string): Promise<string | null> => {
   const el = await button(name);
   const id = el.getAttribute('aria-describedby');
@@ -92,10 +92,10 @@ describe('the overview does not expand; a family opens as a page', () => {
     expect(app.navigator.ui.family.getState().open).toBe('cls_aldehydes');
   });
 
-  it('a selected arrow: Open family says to use Open, and Open opens the source family at the target group', async () => {
+  it('a selected arrow: the one Open button reads Open reactions (step 8.4b, E1), and opens the source family at the target group', async () => {
     const app = await opened();
     tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ }));
-    expect(await reasonOf('Open family')).toBe('an arrow is selected: use Open, or select a family');
+    await expect(toolbarAction(/^Open family/)).rejects.toThrow(); // one Open button: there is no second one
     fireEvent.click(await button('Open'));
     expect(app.navigator.ui.family.getState().open).toBe('cls_alcohols');
     expect(app.navigator.ui.family.getState().target).toEqual({ section: 'reactions_of', hubId: 'cls_aldehydes' });
@@ -111,10 +111,10 @@ describe('the overview does not expand; a family opens as a page', () => {
     expect(before).toBeGreaterThan(0);
   });
 
-  it('a selection that is not a family says so', async () => {
+  it('a selected arrow: the Open button is enabled and reads Open reactions', async () => {
     await opened();
     tap(screen.getByRole('graphics-symbol', { name: /^Alcohols to Aldehydes, 2 reactions \(\+ 1 example\)/ }));
-    expect((await button('Open family')).getAttribute('aria-disabled')).toBe('true');
+    expect((await button('Open')).getAttribute('aria-disabled')).toBeNull();
   });
 });
 

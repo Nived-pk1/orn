@@ -8,6 +8,7 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { clickNode } from './map-focus-kit';
 import { closeKey, openKey } from './map-toolbar-kit';
 import { axeProblems, expectClean, watch } from './kit';
 import { shotsDir } from './editor-kit';
@@ -47,7 +48,7 @@ test.describe('the map on a desktop', () => {
     // a faded family is still clickable: the focus moves to it
     const faded = page.locator('svg [data-node-id][data-faded="true"]').first();
     const fadedId = (await faded.getAttribute('data-node-id')) as string;
-    await faded.click();
+    await clickNode(page, faded);
     await expect(family(page, fadedId)).not.toHaveAttribute('data-faded', 'true');
     await expect.poll(() => edges(page).evaluateAll((gs, id) => gs.length > 0 && gs.every((g) => g.getAttribute('data-from') === id || g.getAttribute('data-to') === id), fadedId)).toBe(true);
 

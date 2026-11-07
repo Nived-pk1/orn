@@ -31,6 +31,7 @@ export function MapPane(props: {
         ports.ui.map?.getState().setFocus(id);
       },
       open,
+      openArrow: (from: string, to: string): void => ports.ui.inspector.getState().select({ kind: 'arrow', from, to }),
       titleId: SHEET_TITLE_ID,
       history: <HistoryButtons inspector={ports.ui.inspector} />,
     }),

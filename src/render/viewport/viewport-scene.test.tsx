@@ -113,7 +113,7 @@ describe('ViewportScene', () => {
     const { world, svg } = mount();
     expect(world.getAttribute('transform')).toMatch(/^translate\(.+\) scale\(.+\)$/);
     expect(svg.getAttribute('data-lod')).toMatch(/^[0-3]$/);
-    expect(svg.hasAttribute('style')).toBe(false);
+    expect(svg.getAttribute('style')).toMatch(/^--map-k: [0-9.]+;$/); // step 8.4b: the zoom as a CSS variable is the only style
   });
 
   it('renders nothing during pan and zoom: no React commit, no layer commit, one transform write per frame', () => {

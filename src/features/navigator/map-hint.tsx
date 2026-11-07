@@ -9,6 +9,9 @@ export interface MapHintProps {
   /** "Selected: A → B", or undefined when nothing is selected. */
   readonly selected: string | undefined;
   readonly onClear: () => void;
+  /** Step 8.4b: "Zoom to X" next to the clear button; absent: no button. */
+  readonly onZoom?: (() => void) | undefined;
+  readonly zoomName?: string | undefined;
   /** The quiet hint or the busy-chapter text, or undefined. */
   readonly hint: string | undefined;
   readonly hintKind: 'quiet' | 'busy' | undefined;
@@ -23,9 +26,15 @@ export function MapHint(props: MapHintProps) {
           <span className={styles.cornerSelected} data-map-selected="">
             {props.selected}
           </span>
+          {props.onZoom === undefined ? null : (
+            <button type="button" className={styles.cornerClear} aria-label={`Zoom to ${props.zoomName ?? 'the selection'}`} title="Zoom to selection (Z)" onClick={props.onZoom}>
+              <span aria-hidden="true">⌖</span>
+            </button>
+          )}
           <button type="button" className={styles.cornerClear} aria-label="Clear the selection" title="Clear the selection (Esc)" onClick={props.onClear} onKeyDown={(event) => event.key === 'Escape' && props.onClear()}>
             <span aria-hidden="true">✕</span>
           </button>
+          {props.hintKind === 'busy' && props.hint !== undefined ? <span data-map-busy="">{props.hint}</span> : null}
         </>
       ) : (
         <span {...(props.hintKind === 'quiet' ? { 'data-map-quiet': '' } : { 'data-map-busy': '' })}>{props.hint}</span>

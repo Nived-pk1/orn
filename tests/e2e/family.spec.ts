@@ -132,7 +132,7 @@ test.describe('the family page of the demo', () => {
     // the inspector pane opens a moment after the press and narrows the map: the toolbar settles (Open may move into More) before it is used
     await expect(page.locator('[data-map-selected]')).toContainText('→');
     await page.waitForTimeout(800);
-    await clickToolbar(page, /^Open( the arrow)?$/); // the arrow's Open: a button of the row, or an item of More when the row is narrow
+    await clickToolbar(page, /^Open reactions$/); // the one Open button (step 8.4b, E1) reads "Open reactions" with an arrow selected: a button of the row, or an item of More when the row is narrow
     await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
     await expect(page.getByRole('heading', { level: 3, name: 'To Aldehydes' })).toBeVisible();
     await expectClean(seen);

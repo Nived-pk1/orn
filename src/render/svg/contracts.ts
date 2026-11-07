@@ -46,9 +46,13 @@ export interface EdgeMark {
   readonly tone?: AnchorTone;
   readonly startHead?: boolean;
   /** The count chip of the reverse direction of a pair, near the start head. */
-  readonly extraChip?: { readonly at: Point; readonly size: number; readonly text?: string; readonly name?: string; readonly runs?: FormattedText };
+  readonly extraChip?: { readonly at: Point; readonly size: number; readonly text?: string; readonly name?: string; readonly runs?: FormattedText; readonly hidden?: boolean };
   /** Step 8.2b: the chip of the arrow when it shows words or a step number instead of the count (a lone arrow gets a chip too). `name` is its accessible name and tooltip. */
-  readonly chip?: { readonly text: string; readonly name: string; readonly runs?: FormattedText };
+  readonly chip?: { readonly text: string; readonly name: string; readonly runs?: FormattedText; /** Where it sits (step 8.4b: placed in screen pixels); absent: the Scene's own place. */ readonly at?: Point };
+  /** Step 8.4b: no free place for the chip at this zoom, so it is not drawn (its words stay in the arrow's name). */
+  readonly chipHidden?: boolean;
+  /** Step 8.4b, B: a two-way pair. `backId` is the Scene edge of the other direction (the line is the forward one); the names say "A → B" for each. */
+  readonly pair?: { readonly backId: string; readonly forwardName: string; readonly backName: string };
 }
 
 /** The derived marks of one map view (step 8.2a): arrows in focus, boxes shown faded, and a small caption under a box. */
@@ -56,6 +60,10 @@ export interface MapMarks {
   readonly edges: ReadonlyMap<string, EdgeMark>;
   readonly faded: ReadonlySet<string>;
   readonly captions: ReadonlyMap<string, string>;
+  /** The words of a caption ("4 reactions within the family"), for the box's tooltip (step 8.4b, D). */
+  readonly captionNames?: ReadonlyMap<string, string>;
+  /** Step 8.4b, C: families outlined in their colour (the far ends of a busy selection's arrows, which are not drawn), by node id. */
+  readonly outlined?: ReadonlyMap<string, AnchorTone | undefined>;
 }
 
 export interface SceneSvgProps {
@@ -103,6 +111,8 @@ export interface SceneSvgProps {
     readonly onFocus: (event: FocusEvent<SVGSVGElement>) => void;
     readonly onBlur: (event: FocusEvent<SVGSVGElement>) => void;
   };
+  /** Step 8.4b: a chip button chosen with the keyboard (Enter or Space): the arrow of its direction. Keep it stable. */
+  readonly onChip?: (hit: SceneHit) => void;
   /** Called after a layer commits (not when a memoised layer is skipped): the render counters of the tests. Keep it stable. */
   readonly onLayerCommit?: (layer: LayerName) => void;
 }

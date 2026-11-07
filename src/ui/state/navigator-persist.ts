@@ -222,7 +222,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     explorer: createExplorerStore({ filter: parsed.explorer.filter, view: parsed.explorer.view, last: parsed.explorer.last }),
     precursors: createPrecursorsStore({ target: parsed.precursors.target, startFrom: parsed.precursors.startFrom, maxSteps: parsed.precursors.maxSteps, onlyListed: parsed.precursors.onlyListed, onlyInScope: parsed.precursors.onlyInScope, searched: parsed.precursors.searched }),
     chapters: createChaptersStore({ chapterId: parsed.chapters.chapterId, kinds: parsed.chapters.kinds, text: parsed.chapters.text, onlyInScope: parsed.chapters.onlyInScope }),
-    map: createMapStore({ chapterId: parsed.map.chapterId, showUnclassified: parsed.map.showUnclassified }),
+    map: createMapStore({ chapterId: parsed.map.chapterId, showUnclassified: parsed.map.showUnclassified, fitted: parsed.map.fitted }),
     reagents: createReagentsStore({ reagentId: parsed.reagents.reagentId, families: parsed.reagents.families, text: parsed.reagents.text, onlyInScope: parsed.reagents.onlyInScope }),
     named: createPageListStore({ openId: parsed.named.openId, text: parsed.named.text, onlyInScope: parsed.named.onlyInScope }),
     syllabus: createSyllabusStore({ versionId: parsed.syllabus.versionId, compareId: parsed.syllabus.compareId, gapsOnly: parsed.syllabus.gapsOnly }),
@@ -251,7 +251,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { open } = stores.family.getState();
     const { mode: overviewMode, phoneTab, defaultTab } = stores.overview.getState();
     const { chapterId, kinds, text: chapterText, onlyInScope: chaptersScoped } = stores.chapters.getState();
-    const { chapterId: mapChapter, showUnclassified } = stores.map.getState();
+    const { chapterId: mapChapter, showUnclassified, fitted } = stores.map.getState();
     const { reagentId, families: reagentFamilies, text: reagentText, onlyInScope: reagentsScoped } = stores.reagents.getState();
     const named = stores.named.getState();
     const mechanisms = stores.mechanisms.getState();
@@ -261,7 +261,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     const { items: recentSearches } = stores.recent.getState();
     const { active: activeExam, mode: examMode, asked: examAsked } = stores.exam.getState();
     try {
-      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === defaultTab ? {} : { phoneTab }), chapters: { chapterId, kinds, text: chapterText, onlyInScope: chaptersScoped }, map: { chapterId: mapChapter, showUnclassified, fitRule: FIT_RULE }, reagents: { reagentId, families: reagentFamilies, text: reagentText, onlyInScope: reagentsScoped }, named: { id: named.openId, text: named.text, onlyInScope: named.onlyInScope }, mechanisms: { id: mechanisms.openId, text: mechanisms.text, onlyInScope: mechanisms.onlyInScope }, syllabus: { versionId: syllabus.versionId, compareId: syllabus.compareId, gapsOnly: syllabus.gapsOnly }, recentSearches, activeExam, examChoice: { mode: examMode, asked: examAsked }, explorer: { filter, view, last }, precursors: { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } });
+      await port.save({ ...parsed.extra, selected, expanded: expansion.expanded, collapsedEdgeIds: expansion.collapsedEdgeIds, viewports: views, openFamily: open, overviewMode, ...(phoneTab === defaultTab ? {} : { phoneTab }), chapters: { chapterId, kinds, text: chapterText, onlyInScope: chaptersScoped }, map: { chapterId: mapChapter, showUnclassified, fitRule: FIT_RULE, fitted }, reagents: { reagentId, families: reagentFamilies, text: reagentText, onlyInScope: reagentsScoped }, named: { id: named.openId, text: named.text, onlyInScope: named.onlyInScope }, mechanisms: { id: mechanisms.openId, text: mechanisms.text, onlyInScope: mechanisms.onlyInScope }, syllabus: { versionId: syllabus.versionId, compareId: syllabus.compareId, gapsOnly: syllabus.gapsOnly }, recentSearches, activeExam, examChoice: { mode: examMode, asked: examAsked }, explorer: { filter, view, last }, precursors: { target, startFrom, maxSteps, onlyListed, onlyInScope, searched } });
       if (status.getState().persistence.kind !== 'saved') status.setState({ persistence: { kind: 'saved' } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -289,7 +289,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     if (now.selected !== before.selected) schedule();
   }), stores.expansion.subscribe(schedule), stores.viewports.subscribe(schedule), stores.family.subscribe(schedule), stores.overview.subscribe(schedule), stores.explorer.subscribe(schedule), stores.chapters.subscribe(schedule), stores.reagents.subscribe(schedule), stores.named.subscribe(schedule), stores.mechanisms.subscribe(schedule), stores.syllabus.subscribe(schedule), stores.precursors.subscribe(schedule), stores.recent.subscribe(schedule), stores.exam.subscribe(schedule)];
   // The map saves only what is saved (the chapter and the Unclassified choice); the focus changes with every click and is never written.
-  offs.push(stores.map.subscribe((now, before) => (now.chapterId !== before.chapterId || now.showUnclassified !== before.showUnclassified ? schedule() : undefined)));
+  offs.push(stores.map.subscribe((now, before) => (now.chapterId !== before.chapterId || now.showUnclassified !== before.showUnclassified || now.fitted !== before.fitted ? schedule() : undefined)));
   // D7 (step 8.2a): opening a chapter's page in the Chapters view makes it the map's chapter. "No chapter yet" is not a chapter.
   offs.push(stores.chapters.subscribe((now, before) => (now.chapterId !== before.chapterId && now.chapterId !== null && now.chapterId !== NO_CHAPTER ? stores.map.getState().setChapter(now.chapterId) : undefined)));
   // The removed expansion is written back empty, once.

@@ -171,15 +171,15 @@ test.describe('the arrows of the arranged demo overview', () => {
   test('a family with reactions inside says "n within the family" and draws NO loop (ADR-044, D4); the legend says so', async ({ page }) => {
     const seen = await watch(page);
     await openDemo(page);
-    const captions = await page.locator('[data-caption-of]').evaluateAll((texts) => texts.map((t) => ({ of: t.getAttribute('data-caption-of') ?? '', text: t.textContent ?? '' })));
+    const captions = await page.locator('[data-loops-of]').evaluateAll((texts) => texts.map((t) => ({ of: t.getAttribute('data-loops-of') ?? '', text: t.textContent ?? '' })));
     expect(captions.length, 'the demo overview has at least one family with reactions inside it').toBeGreaterThan(0);
-    for (const caption of captions) expect(caption.text, caption.of).toMatch(/^\d+ within the family$/);
+    for (const caption of captions) expect(caption.text, caption.of).toMatch(/^↻ \d+$/);
     // no loop is drawn, whichever family is in focus
     await eachFocus(page, async (id) => {
       const loops = await page.locator('svg g[data-edge-id]').evaluateAll((groups) => groups.filter((g) => g.getAttribute('data-from') === g.getAttribute('data-to')).length);
       expect(loops, `a loop with ${id} in focus`).toBe(0);
     });
-    await expect((await openKey(page)).getByRole('list', { name: 'What the marks mean' })).toContainText('n within the family');
+    await expect((await openKey(page)).getByRole('list', { name: 'What the marks mean' })).toContainText('↻ n');
     await closeKey(page);
     await expectClean(seen);
   });
@@ -190,7 +190,7 @@ test.describe('the arrows of the arranged demo overview', () => {
     // step 8.3b (A3): the Key popover holds the within-the-family line and Unclassified (and the arrow rows once an arrow is drawn); a small key sits INSIDE the map
     const marks = (await openKey(page)).getByRole('list', { name: 'What the marks mean' });
     await expect(marks.getByRole('listitem')).toHaveCount(2);
-    await expect(marks).toContainText('n within the family');
+    await expect(marks).toContainText('↻ n');
     await expect(marks).toContainText('lead to compounds that are in no family yet');
     await closeKey(page);
     await expect(page.getByRole('list', { name: 'What the arrows mean' })).toHaveCount(0);

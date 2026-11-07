@@ -1,0 +1,34 @@
+/* The outline of the families at the far ends of a busy selection's arrows (step 8.4b, C): their group colour, 2 px. */
+.outlined {
+  fill: none;
+  stroke: var(--color-ink-2);
+  stroke-width: 2;
+}
+
+.outlined[data-tone='blue'] {
+  stroke: var(--color-tone-blue-ink);
+}
+
+.outlined[data-tone='green'] {
+  stroke: var(--color-tone-green-ink);
+}
+
+.outlined[data-tone='amber'] {
+  stroke: var(--color-tone-amber-ink);
+}
+
+.outlined[data-tone='violet'] {
+  stroke: var(--color-tone-violet-ink);
+}
+
+.outlined[data-tone='teal'] {
+  stroke: var(--color-tone-teal-ink);
+}
+
+.outlined[data-tone='rose'] {
+  stroke: var(--color-tone-rose-ink);
+}
+
+.outlined[data-tone='slate'] {
+  stroke: var(--color-tone-slate-ink);
+}

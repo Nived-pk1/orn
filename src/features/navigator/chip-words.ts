@@ -5,7 +5,9 @@
  * arrow, which has no number chip, then has no chip): the map never has more overlap than before. Pure; no DOM, no chemistry.
  */
 import type { ArrowTextPart } from '@/core/graph';
-import { CHIP_HEIGHT, chipTextWidth, chipWidth, partsToRuns, type FormattedText, type TextRun } from '@/render/scene';
+import type { Point } from '@/layout/contracts';
+import { placeChipsAtZoom, type ChipRequest } from './chip-place';
+import { chipTextWidth, chipWidth, partsToRuns, type FormattedText, type TextRun } from '@/render/scene';
 
 export const CHIP_WORDS_MAX = 14;
 
@@ -53,6 +55,9 @@ export interface ChipWish {
   /** A stable key (the edge id, plus ":back" for the other end of a pair). */
   readonly key: string;
   readonly at: { readonly x: number; readonly y: number };
+  /** The line the chip sits on and where on it it would like to be (step 8.4b); absent: the single point `at`. */
+  readonly route?: readonly Point[] | undefined;
+  readonly start?: number | undefined;
   /** The reactions this chip counts. */
   readonly count: number;
   /** Reagent words, when the arrow carries one reaction that has some. */
@@ -76,38 +81,34 @@ const stepped = (wish: ChipWish, chip: ChipText, words: boolean): ChipText => {
 };
 const widthOf = (chip: ChipText): number => (/^[0-9]+$/.test(chip.text) ? chipWidth(Number(chip.text)) : chipTextWidth(chip.text));
 
-interface Box {
-  readonly x0: number;
-  readonly x1: number;
-  readonly y0: number;
-  readonly y1: number;
-}
-const boxAt = (at: { readonly x: number; readonly y: number }, width: number): Box => ({ x0: at.x - width / 2, x1: at.x + width / 2, y0: at.y - CHIP_HEIGHT / 2, y1: at.y + CHIP_HEIGHT / 2 });
-const overlap = (a: Box, b: Box): boolean => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
-
-/** The chip each wish gets: its words where they fit among the other chips (as they are now) and clear of every box, else its number, else none. Decided in key order. */
-export function resolveChips(wishes: readonly ChipWish[], obstacles: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[] = []): Map<string, ChipText> {
-  const boxesOfNodes: Box[] = obstacles.map((n) => ({ x0: n.x, x1: n.x + n.width, y0: n.y, y1: n.y + n.height }));
+/** A chip's place is chosen in screen pixels (chip-place.ts), at the zoom given; a chip with no free place is not in the answer (step 8.4b, A). */
+export function resolveChips(
+  wishes: readonly ChipWish[],
+  obstacles: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[] = [],
+  zoom = 1,
+): Map<string, ChipText & { readonly at: Point }> {
   const ordered = [...wishes].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-  const out = new Map<string, ChipText>();
-  const boxes = new Map<string, Box>();
-  for (const wish of ordered) {
-    if (wish.base !== 'none') {
-      const chip = stepped(wish, chipTextOf(wish.count, undefined), false);
-      out.set(wish.key, chip);
-      boxes.set(wish.key, boxAt(wish.at, widthOf(chip)));
-    }
-  }
+  const texts = new Map<string, ChipText>();
+  for (const wish of ordered) if (wish.base !== 'none') texts.set(wish.key, stepped(wish, chipTextOf(wish.count, undefined), false));
+  const requests = (): ChipRequest[] => ordered.flatMap((wish) => {
+    const chip = texts.get(wish.key);
+    return chip === undefined ? [] : [{ key: wish.key, route: wish.route ?? [wish.at, wish.at], width: widthOf(chip), start: wish.start ?? 0.5 }];
+  });
+  let places = placeChipsAtZoom(requests(), obstacles, zoom);
   for (const wish of ordered) {
     if (wish.words === undefined || wish.words === '') continue;
-    const chip = stepped(wish, chipTextOf(1, wish.words, wish.parts), true);
-    const box = boxAt(wish.at, widthOf(chip));
-    let clear = true;
-    for (const [key, other] of boxes) if (key !== wish.key && overlap(box, other)) clear = false;
-    for (const node of boxesOfNodes) if (overlap(box, node)) clear = false;
-    if (!clear) continue;
-    out.set(wish.key, chip);
-    boxes.set(wish.key, box);
+    const number = texts.get(wish.key);
+    texts.set(wish.key, stepped(wish, chipTextOf(1, wish.words, wish.parts), true));
+    const trial = placeChipsAtZoom(requests(), obstacles, zoom);
+    // the words are kept only where they get a place and no other chip loses its own
+    if (trial.has(wish.key) && [...places.keys()].every((key) => trial.has(key))) places = trial;
+    else if (number === undefined) texts.delete(wish.key);
+    else texts.set(wish.key, number);
+  }
+  const out = new Map<string, ChipText & { readonly at: Point }>();
+  for (const [key, at] of places) {
+    const chip = texts.get(key);
+    if (chip !== undefined) out.set(key, { ...chip, at });
   }
   return out;
 }

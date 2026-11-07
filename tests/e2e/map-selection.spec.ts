@@ -8,7 +8,7 @@ import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { expectClean, leaveChapters, loadDemo, watch } from './kit';
 import { shotsDir } from './editor-kit';
-import { showUnclassified } from './map-focus-kit';
+import { clickNode, showUnclassified } from './map-focus-kit';
 import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone } from './map-layout-kit';
 
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
@@ -65,7 +65,7 @@ async function pickArrow(page: Page, id: string, phone: boolean): Promise<void> 
 
 async function pickNode(page: Page, id: string, phone: boolean): Promise<void> {
   if (phone) await node(page, id).tap();
-  else await node(page, id).click();
+  else await clickNode(page, node(page, id));
   await page.waitForTimeout(450);
 }
 
