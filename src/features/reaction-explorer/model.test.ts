@@ -15,16 +15,16 @@ const some = (records: object): string => Object.keys(records)[0] as string;
 
 describe('countLine', () => {
   it('unfiltered: "24 reactions" (singular for one)', () => {
-    expect(countLine({ shown: 24, total: 24, filtered: false, hidden: 0, hiddenBy: undefined })).toBe('24 reactions');
-    expect(countLine({ shown: 1, total: 1, filtered: false, hidden: 0, hiddenBy: undefined })).toBe('1 reaction');
+    expect(countLine({ shown: 24, total: 24, filtered: false })).toBe('24 reactions');
+    expect(countLine({ shown: 1, total: 1, filtered: false })).toBe('1 reaction');
   });
   it('filtered: "24 of 212 reactions"', () => {
-    expect(countLine({ shown: 24, total: 212, filtered: true, hidden: 0, hiddenBy: undefined })).toBe('24 of 212 reactions');
-    expect(countLine({ shown: 0, total: 212, filtered: true, hidden: 0, hiddenBy: undefined })).toBe('0 of 212 reactions');
+    expect(countLine({ shown: 24, total: 212, filtered: true })).toBe('24 of 212 reactions');
+    expect(countLine({ shown: 0, total: 212, filtered: true })).toBe('0 of 212 reactions');
   });
-  it('with Only on: the hidden ones are counted in words', () => {
-    expect(countLine({ shown: 24, total: 212, filtered: true, hidden: 5, hiddenBy: 'JEE Main' })).toBe('24 of 212 reactions (5 outside JEE Main hidden)');
-    expect(countLine({ shown: 24, total: 212, filtered: true, hidden: 0, hiddenBy: 'JEE Main' })).toBe('24 of 212 reactions');
+  it('with Only on: the count line does not say "hidden" (the one line under it does, ADR-046)', () => {
+    expect(countLine({ shown: 24, total: 212, filtered: true })).toBe('24 of 212 reactions');
+    expect(countLine({ shown: 24, total: 212, filtered: true })).toBe('24 of 212 reactions');
   });
 });
 

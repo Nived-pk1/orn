@@ -1,7 +1,7 @@
 /** What a student reads of an outcome (step 8.3, C8): "exclusive" only says "the one product", which textbooks do not write; every other word stays. */
 import { describe, expect, it } from 'vitest';
 import type { EquationTerm, FullEquation } from './full-equation';
-import { shownWordOf, withoutExclusive } from './quiet-words';
+import { quietGroups, shownWordOf, withoutExclusive } from './quiet-words';
 
 describe('shownWordOf: one function decides the word', () => {
   it.each([
@@ -40,5 +40,24 @@ describe('withoutExclusive: the same equation without the word "exclusive"', () 
     const out = withoutExclusive(equation([term('B', 'exclusive', { regiochemistry: 'Saytzeff' })]));
     expect(out.products[0]?.regiochemistry).toBe('Saytzeff');
     expect(out.reactants).toHaveLength(1);
+  });
+});
+
+describe('withoutExclusive: the equation text a student reads', () => {
+  const withText = (products: readonly EquationTerm[], text: string): FullEquation => ({ ...equation(products), text });
+  it('the one-outcome text has no "exclusive" and keeps "major" and "minor"', () => {
+    const out = withoutExclusive(withText([term('Ethanal', 'exclusive'), term('B', 'major'), term('C', 'minor')], 'Ethanol → Ethanal (exclusive) + B (major) + C (minor)'));
+    expect(out.text).toBe('Ethanol → Ethanal + B (major) + C (minor)');
+  });
+  it('the sentence of a group has no "exclusive" either', () => {
+    const out = withoutExclusive(withText([term('Ethanal', 'exclusive'), term('B', 'major')], 'Ethanol with PCC gives Ethanal (exclusive) and B (major)'));
+    expect(out.text).toBe('Ethanol with PCC gives Ethanal and B (major)');
+    expect(out.text).not.toMatch(/exclusive/);
+  });
+  it('quietGroups cleans the equation of every group, for the compact rows', () => {
+    const groups = [{ heading: '', equation: withText([term('Ethanal', 'exclusive')], 'A → Ethanal (exclusive)') }, { heading: 'x' }];
+    const out = quietGroups(groups);
+    expect(out[0]?.equation?.text).toBe('A → Ethanal');
+    expect(out[1]).toBe(groups[1]);
   });
 });

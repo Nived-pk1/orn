@@ -88,11 +88,25 @@ export async function eachFocusByKeyboard(page: Page, each: (id: string, drawn: 
 }
 
 /**
- * Step 8.3b, A5: the box scale no longer backs off for a line that cannot clear the bigger boxes: such a line stays straight and the layout note
- * names it ("1 arrow crosses a box ..."). A line through a box is therefore allowed only up to the number the note gives; none is silent.
+ * Step 8.3b, A5 (decision at the close round): the box scale no longer backs off for a line that cannot clear the bigger boxes: such a line stays
+ * straight and the layout note names it ("n arrows cross a box ..."). The ceiling is FIXED here, never read from the note (a test that reads its
+ * limit from the thing it tests can never fail): at most this many lines through a box over the demo, and the note itself may not name more.
  */
+export const DEMO_BLOCKED_MAX = 3;
+/** The same ceiling for the user-like fixture (the generated "chain" fixture). */
+export const FIXTURE_BLOCKED_MAX = 51;
+
+/** The number the layout note names (0 when there is no note); logged by the specs, checked against the fixed ceiling. */
 export async function blockedLines(page: Page): Promise<number> {
   const note = page.getByText(/\d+ arrows? cross(?:es)? a box/).first();
   if ((await note.count()) === 0) return 0;
   return Number(/(\d+) arrows? cross/.exec((await note.textContent()) ?? '')?.[1] ?? 0);
+}
+
+/** Checks the note against the fixed ceiling and returns the ceiling to use for the lines through a box. */
+export async function blockedCeiling(page: Page, ceiling: number): Promise<number> {
+  const named = await blockedLines(page);
+  console.log(`layout note names ${named} arrows crossing a box (fixed ceiling ${ceiling})`);
+  expect(named, 'the layout note names no more crossing arrows than the fixed ceiling').toBeLessThanOrEqual(ceiling);
+  return ceiling;
 }

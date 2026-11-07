@@ -28,7 +28,7 @@ describe('alertOf (the phone status alert line, ADR-039)', () => {
   it('a student with their own data gets the student words, not the author status words (8.3b 0.3)', () => {
     const refused = status({ save: save({}), storage: { persistence: 'refused', message: null } });
     expect(alertOf(refused, studyChrome('study', { ownData: true }))).toBe(STUDY_STORAGE_ALERT);
-    expect(STUDY_STORAGE_ALERT).toBe('This browser may clear your imported data. Export a backup to keep it.');
+    expect(STUDY_STORAGE_ALERT).toBe('Your data may be cleared. Back it up.');
     expect(alertOf(refused, STUDIO_CHROME)).toBe('Storage: not persistent');
     expect(alertOf(refused, studyChrome('study', { ownData: false }))).toBeNull();
   });

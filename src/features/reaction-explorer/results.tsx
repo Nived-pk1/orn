@@ -4,7 +4,8 @@
  * with the reason. A click or Enter on a row selects the reaction.
  */
 import type { ReactNode } from 'react';
-import { reactionCard } from '@/core/graph';
+import { quietGroups, reactionCard } from '@/core/graph';
+import { useStudyChrome } from '@/ui/study-chrome';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { ExampleFold, ReactionFilterRow } from '@/core/graph';
 import type { CanonicalState } from '@/core/schema';
@@ -56,6 +57,7 @@ export function Results(props: {
   readonly onMore: () => void;
 }) {
   const { ports, rows } = props;
+  const { exclusiveWord } = useStudyChrome();
   const shown = rows.slice(0, props.limit);
   const outsideOf = (row: ReactionFilterRow): string | undefined => (row.outside ? props.outsideNote : undefined);
   const byId = new Map(props.allRows.map((row) => [row.id, row]));
@@ -66,7 +68,7 @@ export function Results(props: {
   };
   const compactOf = (row: ReactionFilterRow, reason?: string, nested = false) => {
     const card = reactionCard({ state: props.state, indexes: props.indexes, scopeOf: unscoped }, row.id);
-    const equation = 'missing' in card ? '' : compactEquationOf(card.groups);
+    const equation = 'missing' in card ? '' : compactEquationOf(exclusiveWord ? card.groups : quietGroups(card.groups));
     const mine = nested ? [] : (props.folding.examplesOf.get(row.id) ?? []);
     const general = nested ? undefined : generalOf(row.id);
     return <CompactRow key={row.id} row={row} equation={equation} labels={props.labels} selected={props.selected === row.id} outside={outsideOf(row)} onSelect={ports.select} {...(mine.length === 0 ? {} : { exampleCount: mine.length, examples: mine.map((id) => compactOf(byId.get(id) as ReactionFilterRow, undefined, true)) })} {...(general === undefined ? {} : { exampleOf: general })} {...(reason === undefined ? {} : { reason })} />;

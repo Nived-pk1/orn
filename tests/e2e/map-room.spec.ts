@@ -8,8 +8,8 @@ import { expect, test } from './fixtures';
 import { expectClean, leaveChapters, loadDemo, watch } from './kit';
 import { shotsDir } from './editor-kit';
 import { boxTitlePx } from './box-text';
-import { closeKey, cornerLabel, openKey, selectionLine } from './map-toolbar-kit';
-import { focusFamily } from './map-focus-kit';
+import { closeKey, cornerLabel, hintOverlaps, openKey, selectionLine } from './map-toolbar-kit';
+import { blockedCeiling, FIXTURE_BLOCKED_MAX, focusFamily } from './map-focus-kit';
 import { NAVIGATOR, openMapDesktop } from './map-layout-kit';
 
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
@@ -62,6 +62,7 @@ test.describe('more room for the map (Studio)', () => {
     const px = await boxTitlePx(page);
     console.log(`demo 1280x800 Studio: box title ${px.toFixed(2)} px`);
     expect(px).toBeGreaterThanOrEqual(12);
+    expect(await hintOverlaps(page), 'the hint is clear of every box (1280 x 800)').toEqual([]);
     await page.screenshot({ path: `${shotsDir()}/map-room-studio-demo-1280x800.png` });
     await expectClean(seen);
   });
@@ -73,6 +74,7 @@ test.describe('more room for the map (Studio)', () => {
     const px = await boxTitlePx(page);
     console.log(`demo 1920x1000 Studio: box title ${px.toFixed(2)} px`);
     expect(px).toBeGreaterThanOrEqual(13);
+    expect(await hintOverlaps(page), 'the hint is clear of every box (demo, 1920 x 1000)').toEqual([]);
     await expectClean(seen);
   });
 
@@ -86,6 +88,8 @@ test.describe('more room for the map (Studio)', () => {
     const px = await boxTitlePx(page);
     console.log(`fixture 1920x1000 Studio: box title ${px.toFixed(2)} px`);
     expect(px).toBeGreaterThanOrEqual(13);
+    expect(await hintOverlaps(page), 'the hint is clear of every box (fixture, 1920 x 1000)').toEqual([]);
+    await blockedCeiling(page, FIXTURE_BLOCKED_MAX); // a fixed ceiling, never read from the note (step 8.3b close, 4.1)
     await page.screenshot({ path: `${shotsDir()}/map-room-studio-1920x1000.png` });
     await expectClean(seen);
   });

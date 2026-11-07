@@ -3,8 +3,9 @@
  * compact row (Compact, the Reactions view's own toggle), outside reactions marked as on the family page, a click opens the inspector.
  */
 import type { ReactNode } from 'react';
-import { compactEquationOf, exampleLookupOf, foldExamples, reactionCard, type DirectPrecursors, type ProjectionContext } from '@/core/graph';
+import { compactEquationOf, exampleLookupOf, foldExamples, quietGroups, reactionCard, type DirectPrecursors, type ProjectionContext } from '@/core/graph';
 import type { ExplorerView } from '@/ui/state';
+import { useStudyChrome } from '@/ui/study-chrome';
 import type { PrecursorPorts } from './contracts';
 import styles from './precursors-view.module.css';
 
@@ -39,13 +40,14 @@ export function DirectBlock(props: {
   readonly outsideNote: string | undefined;
 }) {
   const { ports, direct } = props;
+  const { exclusiveWord } = useStudyChrome();
   const outsideOf = (outside: boolean): string | undefined => (outside ? props.outsideNote : undefined);
   const lookup = exampleLookupOf(props.ctx.state);
   const nameOf = (id: string): string => props.ctx.state.records.reaction[id as never]?.name ?? id;
   // the list is ONE starting material's block: an example folds under its general reaction when that card is in the block (7.3a C1, C2)
   const compact = (reactionId: string, name: string, outside: boolean, reason?: string, fold?: { readonly examples: readonly string[]; readonly of: string | undefined; readonly rowOf: (id: string) => ReactNode }) => {
     const card = reactionCard(props.ctx, reactionId);
-    const equation = 'missing' in card ? '' : compactEquationOf(card.groups);
+    const equation = 'missing' in card ? '' : compactEquationOf(exclusiveWord ? card.groups : quietGroups(card.groups));
     const mine = fold?.examples ?? [];
     return (
       <CompactRow

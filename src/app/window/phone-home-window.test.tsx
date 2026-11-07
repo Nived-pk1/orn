@@ -18,6 +18,7 @@ import { prefetchPalette } from './lazy-palette';
 
 beforeAll(async () => {
   await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
+  await import('@/features/navigator/family-page'); // the family page is a lazy chunk (8.3b): warmed here, so no test needs a longer limit
   stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {
@@ -118,14 +119,14 @@ describe('the Families tab', () => {
     renderWithApp(app);
     await screen.findByRole('region', { name: 'Families' });
     fireEvent.click(cards().find((card) => card.getAttribute('data-family-id') === 'cls_alcohols') as HTMLElement);
-    await screen.findByRole('region', { name: /^Family page/ }, { timeout: 20_000 }); // the page is a lazy chunk (8.3b, Part 0.1): it mounts after its import
+    await screen.findByRole('region', { name: /^Family page/ });
     act(() => app.navigator.timers.advance(0));
     expect(await screen.findByRole('region', { name: 'Family page: Alcohols' })).toBeTruthy();
     expect(screen.getByRole('navigation', { name: 'Home' })).toBeTruthy();
     fireEvent.click(tab('Families'));
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Family page: Alcohols' })).toBeNull());
     expect(screen.getByRole('region', { name: 'Families' })).toBeTruthy();
-  }, 30_000); // the family page is a lazy chunk: its first import in the test environment takes a few seconds
+  });
 });
 
 describe('the Map tab', () => {

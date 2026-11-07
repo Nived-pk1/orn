@@ -20,8 +20,23 @@ const quiet = (term: EquationTerm): EquationTerm => {
   return { ...term, word: null, quantifier: null, text: term.text.replace(` (${term.quantifier === null ? '' : `${term.quantifier} `}${EXCLUSIVE})`, '') };
 };
 
-/** The same equation without the word "exclusive" on its products; the very same object when it has none. */
+/**
+ * The same equation without the word "exclusive" on its products; the very same object when it has none. The equation's own `text` (the line
+ * and the screen reader's sentence) is rebuilt too: each changed term's text is swapped for its quiet text where it stands, so no consumer has to
+ * clean a string.
+ */
 export function withoutExclusive(equation: FullEquation): FullEquation {
   if (!equation.products.some((term) => term.word === EXCLUSIVE)) return equation;
-  return { ...equation, products: equation.products.map(quiet) };
+  const products = equation.products.map(quiet);
+  let text = equation.text;
+  equation.products.forEach((term, index) => {
+    const now = products[index] as EquationTerm;
+    if (now !== term) text = text.split(term.text).join(now.text);
+  });
+  return { ...equation, products, text };
+}
+
+/** Groups (of a reaction card) with their equation cleaned by `withoutExclusive`; a group with no equation is returned as it is. */
+export function quietGroups<G extends { readonly equation?: FullEquation | undefined }>(groups: readonly G[]): G[] {
+  return groups.map((group) => (group.equation === undefined ? group : { ...group, equation: withoutExclusive(group.equation) }));
 }

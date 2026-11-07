@@ -62,7 +62,7 @@ test('one record of each kind: chip, hero, no author words, axe, no CSP violatio
     const article = record(page);
     await expect(article.locator('header')).toContainText(one.chip);
     if (one.hero) await expect(article.locator('[data-hero], [data-hero-equation], [data-hero-picture]').first()).toBeVisible({ timeout: 30_000 });
-    if (one.id.startsWith('rxn_')) await expectHeroNeverWraps(page, 'the desktop panel width'); // review decision 0
+    if (one.id.startsWith('rxn_')) await expectHeroNeverWraps(page, 'the desktop panel width', 'article'); // review decision 0
     await expect(article.getByRole('button', { name: 'Back' })).toBeVisible();
     await expect(article.getByRole('button', { name: /For authors/ })).toHaveCount(0);
     const text = await article.innerText();

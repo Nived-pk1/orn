@@ -10,7 +10,8 @@ import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { chooseFile, expectClean, expectPreview, watch } from './kit';
 import { shotsDir } from './editor-kit';
-import { answerExamCard } from './exam-kit';
+import { answerExamCard, expectStorageLineWhole } from './exam-kit';
+import { hintOverlaps } from './map-toolbar-kit';
 import { boxTitlePx } from './box-text';
 
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
@@ -46,6 +47,7 @@ test.describe('desktop', () => {
     const small = await boxTitlePx(page);
     console.log(`demo 1280x800 Study: box title ${small.toFixed(2)} px`);
     expect(small).toBeGreaterThanOrEqual(12);
+    expect(await hintOverlaps(page), 'the hint is clear of every box (Study 1280 x 800)').toEqual([]);
     await page.screenshot({ path: `${shotsDir()}/map-room-study-1280x800.png` });
     await page.setViewportSize({ width: 1920, height: 1000 });
     await page.getByRole('button', { name: 'Fit' }).click();
@@ -53,6 +55,7 @@ test.describe('desktop', () => {
     const large = await boxTitlePx(page);
     console.log(`demo 1920x1000 Study: box title ${large.toFixed(2)} px`);
     expect(large).toBeGreaterThanOrEqual(13);
+    expect(await hintOverlaps(page), 'the hint is clear of every box (Study 1920 x 1000)').toEqual([]);
     await page.screenshot({ path: `${shotsDir()}/map-room-study-1920x1000.png` });
     await expectClean(seen);
   });
@@ -73,6 +76,7 @@ test.describe('desktop', () => {
     await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions', exact: true }).click();
     const view = page.getByRole('region', { name: 'Reactions', exact: true });
     await expect(view.locator('[data-hidden-line]')).toContainText(/\d+ reactions? outside JEE Main (is|are) hidden · Show (them|it)/);
+    expect(((await view.textContent()) ?? '').match(/hidden/g)?.length, '"hidden" is said once (ADR-046)').toBe(1);
     const only = await view.locator('article[data-reaction-id]').count();
     await page.screenshot({ path: `${shotsDir()}/exam-only-reactions-1280x800.png` });
     await view.getByRole('button', { name: /^Show (them|it)$/ }).click();
@@ -121,6 +125,7 @@ for (const [label, options, engine, phoneShot] of [['Pixel 7 (Chromium)', PIXEL,
       const seen = await watch(page, STUDY);
       await importDemo(page, true);
       await expect(card(page)).toBeVisible({ timeout: 30_000 });
+      await expectStorageLineWhole(page);
       await page.screenshot({ path: `${shotsDir()}/${phoneShot}` });
       await card(page).getByRole('button', { name: 'JEE Main' }).tap();
       await expect(card(page)).toHaveCount(0);

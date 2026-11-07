@@ -15,7 +15,9 @@ import { navigatorRig } from '@/test-support/navigator-kit';
 import { NavigatorCanvas } from './navigator-canvas';
 import { NavigatorProvider } from './navigator-context';
 
-beforeAll(() => {
+beforeAll(async () => {
+  // the toolbar and the overlays inside the map are lazy chunks (step 8.3b): warmed once, so no test needs a longer limit
+  await Promise.all([import('./map-toolbar'), import('./map-corner'), import('./key-popover'), import('./find-family'), import('./chain-panel')]);
   (globalThis as { ResizeObserver?: unknown }).ResizeObserver ??= class {
     observe(): void {}
     unobserve(): void {}
@@ -39,7 +41,7 @@ async function show() {
   );
   const drawing = await screen.findByRole('group', { name: NAVIGATOR }, { timeout: 20_000 });
   // the toolbar and the overlays inside the map are lazy chunks (step 8.3b, Part 0.1)
-  await screen.findByRole('combobox', { name: 'Chapter' }, { timeout: 20_000 });
+  await screen.findByRole('combobox', { name: 'Chapter' });
   await vi_waitFor(() => expect(document.querySelector('[data-map-corner]')).not.toBeNull());
   return { rig, drawing };
 }

@@ -12,6 +12,7 @@ import { emptyRecordTables, type AnyRecord, type CanonicalState, type Reaction }
 import { demoState } from '@/test-support/app-boot-kit';
 import { contextOf, reaction, sp, species } from '@/test-support/graph-state';
 import { navigatorRig } from '@/test-support/navigator-kit';
+import { studyChrome, StudyChromeProvider } from '@/ui/study-chrome';
 import { createExplorerStore, createPrecursorsStore, type PrecursorsState } from '@/ui/state';
 import type { PrecursorPorts, RoutesAnswer } from './contracts';
 import { PrecursorsView } from './precursors-view';
@@ -20,7 +21,7 @@ afterEach(cleanup);
 
 type Saved = Partial<Pick<PrecursorsState, 'target' | 'startFrom' | 'maxSteps' | 'onlyListed' | 'onlyInScope' | 'searched'>>;
 
-function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['findRoutes']; readonly state?: CanonicalState; readonly withSave?: boolean } = {}) {
+function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['findRoutes']; readonly state?: CanonicalState; readonly withSave?: boolean; readonly edition?: 'study' | 'studio' } = {}) {
   const state = over.state ?? demoState();
   const store = createCanonicalStore({ initial: state, validateInitial: false });
   const rig = navigatorRig(store);
@@ -64,7 +65,7 @@ function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['
     timers: { after: (_ms, run) => (run(), () => undefined) },
     log: vi.fn(),
   };
-  render(<PrecursorsView ports={ports} />);
+  render(over.edition === 'study' ? <StudyChromeProvider value={studyChrome('study', { ownData: false })}><PrecursorsView ports={ports} /></StudyChromeProvider> : <PrecursorsView ports={ports} />);
   return { ports, precursors, explorer, select, openMaking, saveAsRoute, openRoute, asked, rig, state, ctx };
 }
 
@@ -110,6 +111,18 @@ describe('Made directly from', () => {
     const direct = directPrecursors(ctx, sp('propan-2-ol'), () => 'unmapped');
     expect(document.querySelectorAll('li[data-reaction-id]')).toHaveLength(direct.reactionCount);
     expect(document.querySelectorAll('article[data-reaction-id]')).toHaveLength(0);
+  });
+
+  it('Compact in Study never says "exclusive" in an equation; Studio keeps the word', () => {
+    const ETHANAL = { kind: 'species', id: 'spc_ethanal' } as const;
+    const study = setup({ target: ETHANAL }, { edition: 'study' });
+    act(() => study.explorer.getState().setView('compact'));
+    expect(document.body.textContent).toContain('→');
+    expect(document.body.textContent).not.toMatch(/exclusive/i);
+    cleanup();
+    const studio = setup({ target: ETHANAL });
+    act(() => studio.explorer.getState().setView('compact'));
+    expect(document.body.textContent).toMatch(/\(exclusive\)/);
   });
 
   it('a click opens the reaction in the inspector', () => {

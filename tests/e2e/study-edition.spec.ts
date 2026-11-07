@@ -19,7 +19,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerExamCard } from './exam-kit';
+import { answerExamCard, expectStorageLineWhole } from './exam-kit';
 import { selectionLine } from './map-toolbar-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, watch, type UploadFile } from './kit';
 import { palette, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
@@ -381,6 +381,7 @@ for (const [label, profile, engine, shot] of [
       await expect(page.locator('header').getByText('Studio')).toHaveCount(0);
       await expect(page.getByText(/\d+ notices?/)).toHaveCount(0);
       await importOwnData(page, generatedFileWithAnchors('tiny', 'chain'));
+      await expectStorageLineWhole(page, true); // as is, and at 360 px
       await page.getByRole('button', { name: 'More', exact: true }).click();
       const more = page.getByRole('dialog', { name: 'More' });
       await expect(more.getByRole('button', { name: 'Undo import' })).toBeVisible();

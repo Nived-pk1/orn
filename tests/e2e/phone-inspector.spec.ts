@@ -58,14 +58,16 @@ async function walk(page: Page, device: string, withPeek: boolean, query: string
     await expect(sheet(page).locator('section[data-group]').first()).toBeHidden();
     const compact = await sheet(page).locator('[data-sheet-peek-only] [data-hero-equation]').boundingBox(); // review decision 1: one row, at most 120 px
     expect(compact?.height ?? 999, 'the compact hero is at most 120 px high').toBeLessThanOrEqual(121);
-    await expectHeroNeverWraps(page, 'the peek');
+    const peekHero = await expectHeroNeverWraps(page, 'the peek', '[data-sheet]'); // row OR the one-line text, by design (fitHero's peek rule)
+    console.log(`${device}: the settled peek hero is ${peekHero.mode}`);
+    expect((await sheet(page).textContent()) ?? '', 'a student never reads "exclusive"').not.toMatch(/exclusive/i);
     for (const box of await sheet(page).getByRole('button').evaluateAll((els) => els.filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.getBoundingClientRect().toJSON() as { height: number }))) expect(box.height).toBeGreaterThanOrEqual(44 - 1);
     expect(await axeProblems(page, 10), 'axe at peek').toEqual([]);
     await page.screenshot({ path: `${shotsDir()}/phone-inspector-peek-${device}.png` });
   }
   await page.getByRole('button', { name: 'Show the whole record' }).tap();
   await expect(sheet(page)).toHaveAttribute('data-sheet', 'full');
-  if (chip === 'Reaction') await expectHeroNeverWraps(page, 'the full sheet');
+  if (chip === 'Reaction') await expectHeroNeverWraps(page, 'the full sheet', '[data-sheet]');
   const group = sheet(page).locator('section[data-group]').first();
   await expect(group).toBeVisible();
   const row = group.locator('ul');

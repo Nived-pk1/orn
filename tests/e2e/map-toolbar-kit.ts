@@ -41,3 +41,19 @@ export const selectionLine = (page: Page): Locator => page.locator('[data-select
 
 /** The label inside the map's top-left corner: "Selected: A → B" with a ✕ (the hint when nothing is selected). */
 export const cornerLabel = (page: Page): Locator => page.locator('[data-map-corner]');
+
+/** Step 8.3b close, 3b: the hint in the map's top-left corner is not drawn over any box (Fit leaves its band free). Returns the overlaps found. */
+export async function hintOverlaps(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const hint = document.querySelector('[data-map-corner]');
+    if (hint === null) return ['the hint is not on screen'];
+    const h = hint.getBoundingClientRect();
+    const found: string[] = [];
+    for (const node of document.querySelectorAll('[data-layer="nodes"] [data-node-id]')) {
+      const b = node.getBoundingClientRect();
+      if (b.width === 0 || b.height === 0) continue;
+      if (b.left < h.right && b.right > h.left && b.top < h.bottom && b.bottom > h.top) found.push(`${node.getAttribute('data-node-id')} (${Math.round(b.left)},${Math.round(b.top)} to ${Math.round(b.right)},${Math.round(b.bottom)}) under the hint (${Math.round(h.left)},${Math.round(h.top)} to ${Math.round(h.right)},${Math.round(h.bottom)})`);
+    }
+    return found;
+  });
+}

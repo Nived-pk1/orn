@@ -2,7 +2,7 @@
 import type { Rect, Size, Viewport } from './contracts';
 import { LOD_HYSTERESIS } from './contracts';
 import { LOD_THRESHOLDS } from '@/render/scene';
-import { FIT_PADDING, FOCUS_MAX_SCALE, SCALE_MAX, SCALE_MIN } from './contracts';
+import { FIT_PADDING, FIT_TOP_PADDING, FOCUS_MAX_SCALE, SCALE_MAX, SCALE_MIN } from './contracts';
 
 export const IDENTITY: Viewport = { x: 0, y: 0, scale: 1 };
 
@@ -28,14 +28,14 @@ export function zoomAbout(view: Viewport, factor: number, px: number, py: number
 }
 
 /** The viewport that shows `box` whole and centred, never above `maxScale`. An empty or degenerate screen answers identity. */
-export function fitRect(box: Rect, size: Size, maxScale: number = SCALE_MAX, padding: number = FIT_PADDING): Viewport {
+export function fitRect(box: Rect, size: Size, maxScale: number = SCALE_MAX, padding: number = FIT_PADDING, topPadding: number = padding): Viewport {
   const availableW = size.width - 2 * padding;
-  const availableH = size.height - 2 * padding;
+  const availableH = size.height - topPadding - padding;
   if (availableW <= 0 || availableH <= 0) return IDENTITY;
   const boxW = Math.max(1, box.x1 - box.x0);
   const boxH = Math.max(1, box.y1 - box.y0);
   const scale = Math.min(maxScale, clampScale(Math.min(availableW / boxW, availableH / boxH)));
-  return { scale, x: size.width / 2 - ((box.x0 + box.x1) / 2) * scale, y: size.height / 2 - ((box.y0 + box.y1) / 2) * scale };
+  return { scale, x: size.width / 2 - ((box.x0 + box.x1) / 2) * scale, y: topPadding + availableH / 2 - ((box.y0 + box.y1) / 2) * scale };
 }
 
 /** Room above the LOD 1 entry point, so a fitted view is never on the edge of the level (release preview: names on the phone first view). */
@@ -53,9 +53,9 @@ export const FIT_FLOOR = LOD_THRESHOLDS[1] * (1 + LOD_HYSTERESIS) + FIT_FLOOR_MA
  * the padding) and stays pannable.
  */
 export function fitScene(bounds: Size, size: Size): Viewport {
-  const fitted = fitRect({ x0: 0, y0: 0, x1: bounds.width, y1: bounds.height }, size);
+  const fitted = fitRect({ x0: 0, y0: 0, x1: bounds.width, y1: bounds.height }, size, SCALE_MAX, FIT_PADDING, FIT_TOP_PADDING);
   if (fitted.scale >= FIT_FLOOR) return fitted;
-  return { scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_PADDING };
+  return { scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_TOP_PADDING };
 }
 
 export const focusRect = (box: Rect, size: Size): Viewport => fitRect(box, size, FOCUS_MAX_SCALE);
@@ -78,7 +78,7 @@ export const toTransformAttribute = (view: Viewport): string => `translate(${vie
  * zoom, centred. Below the name floor (a drawing too big to read) it starts at the box's top-left corner inside the padding, like `fitScene`.
  */
 export function fitBox(box: Rect, size: Size): Viewport {
-  const fitted = fitRect(box, size);
+  const fitted = fitRect(box, size, SCALE_MAX, FIT_PADDING, FIT_TOP_PADDING);
   if (fitted.scale >= FIT_FLOOR) return fitted;
-  return { scale: FIT_FLOOR, x: FIT_PADDING - box.x0 * FIT_FLOOR, y: FIT_PADDING - box.y0 * FIT_FLOOR };
+  return { scale: FIT_FLOOR, x: FIT_PADDING - box.x0 * FIT_FLOOR, y: FIT_TOP_PADDING - box.y0 * FIT_FLOOR };
 }

@@ -12,6 +12,7 @@ import { contextOf } from '@/test-support/graph-state';
 import type { CanonicalState, Reaction } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { navigatorRig } from '@/test-support/navigator-kit';
+import { studyChrome, StudyChromeProvider } from '@/ui/study-chrome';
 import { createExplorerStore, EMPTY_EXPLORER_FILTER, type ExplorerFilter } from '@/ui/state';
 import type { ExplorerPorts } from './contracts';
 import { ReactionsView } from './reactions-view';
@@ -30,7 +31,7 @@ function manyReactions(count: number): CanonicalState {
   return { ...base, records: { ...base.records, reaction: { ...base.records.reaction, ...extra } } } as CanonicalState;
 }
 
-function setup(state: CanonicalState = demoState(), saved: Partial<ExplorerFilter> = {}) {
+function setup(state: CanonicalState = demoState(), saved: Partial<ExplorerFilter> = {}, edition: 'study' | 'studio' = 'studio') {
   const store = createCanonicalStore({ initial: state, validateInitial: false });
   const rig = navigatorRig(store);
   const explorer = createExplorerStore({ filter: { ...EMPTY_EXPLORER_FILTER, ...saved } });
@@ -54,7 +55,7 @@ function setup(state: CanonicalState = demoState(), saved: Partial<ExplorerFilte
     timers: { after: (_ms, run) => (run(), () => undefined) },
     log: () => undefined,
   };
-  render(<ReactionsView ports={ports} />);
+  render(edition === 'study' ? <StudyChromeProvider value={studyChrome('study', { ownData: false })}><ReactionsView ports={ports} /></StudyChromeProvider> : <ReactionsView ports={ports} />);
   return { ports, explorer, select, rig, state };
 }
 
@@ -150,6 +151,18 @@ describe('Cards and Compact', () => {
     const rows = screen.getAllByRole('listitem').filter((li) => li.hasAttribute('data-reaction-id'));
     expect(rows.length).toBeGreaterThan(10);
     expect(rows.some((row) => row.textContent?.includes('→'))).toBe(true);
+  });
+
+  it('Compact in Study never says "exclusive" in its equation; Studio keeps the word', () => {
+    const study = setup(demoState(), {}, 'study');
+    fireEvent.click(screen.getByRole('radio', { name: 'Compact' }));
+    expect(study.explorer.getState().view).toBe('compact');
+    expect(document.body.textContent).toContain('→');
+    expect(document.body.textContent).not.toMatch(/exclusive/i);
+    cleanup();
+    setup(demoState(), {}, 'studio');
+    fireEvent.click(screen.getByRole('radio', { name: 'Compact' }));
+    expect(document.body.textContent).toMatch(/\(exclusive\)/);
   });
 
   it('a reaction with no card shows its compact row with the reason, in Cards too', () => {

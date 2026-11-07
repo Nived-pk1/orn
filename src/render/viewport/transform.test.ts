@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LOD_THRESHOLDS } from '@/render/scene';
-import { FIT_PADDING, LOD_HYSTERESIS, SCALE_MAX, SCALE_MIN } from './contracts';
+import { FIT_PADDING, FIT_TOP_PADDING, LOD_HYSTERESIS, SCALE_MAX, SCALE_MIN } from './contracts';
 import { lodWithHysteresis } from './lod';
 import { clampScale, FIT_FLOOR, fitBox, fitRect, fitScene, focusRect, IDENTITY, toTransformAttribute, worldRect, zoomAbout, keepScreenPoint, toScreen } from './transform';
 
@@ -30,7 +30,7 @@ describe('viewport arithmetic', () => {
   it('fits a drawing too large for the LOD 1 threshold at that threshold, from its top-left corner (ADR-037)', () => {
     const huge = fitScene({ width: 10_000, height: 8_000 }, size);
     expect(huge.scale).toBe(FIT_FLOOR);
-    expect(huge).toEqual({ scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_PADDING });
+    expect(huge).toEqual({ scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_TOP_PADDING });
     // The top-left of the drawing is on screen and the rest is reachable by panning.
     expect(worldRect(huge, size).x0).toBeLessThan(0);
     expect(worldRect(huge, size).x1).toBeLessThan(10_000);
@@ -47,7 +47,7 @@ describe('viewport arithmetic', () => {
     const demo = { width: 1428, height: 840 };
     // case 2: whole-drawing fit on a phone is below the LOD 1 threshold, so the first view stays at the floor, top-left
     expect(fitRect({ x0: 0, y0: 0, x1: demo.width, y1: demo.height }, phone).scale).toBeLessThan(FIT_FLOOR);
-    expect(fitScene(demo, phone)).toEqual({ scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_PADDING });
+    expect(fitScene(demo, phone)).toEqual({ scale: FIT_FLOOR, x: FIT_PADDING, y: FIT_TOP_PADDING });
     // case 1: a drawing that fits at or above the threshold is the whole drawing in view
     const small = fitScene({ width: 600, height: 300 }, phone);
     expect(small.scale).toBeGreaterThanOrEqual(FIT_FLOOR);
@@ -89,13 +89,23 @@ describe('keeping a world point on the screen (step 5.5a: a toggled hub stays wh
   });
 });
 
+describe('Fit leaves the hint band free (step 8.3b close, 3b)', () => {
+  it('the top of the fitted content is at or below FIT_TOP_PADDING (hint: 8 px from the top, 28 px high, then a gap)', () => {
+    expect(FIT_TOP_PADDING).toBeGreaterThanOrEqual(8 + 28 + 4);
+    const box = { x0: 100, y0: 50, x1: 600, y1: 250 };
+    expect(toScreen(fitBox(box, size), { x: 100, y: 50 }).y).toBeGreaterThanOrEqual(FIT_TOP_PADDING - 1e-9);
+    expect(toScreen(fitBox({ x0: 0, y0: 0, x1: 100, y1: 5000 }, size), { x: 0, y: 0 }).y).toBeGreaterThanOrEqual(FIT_TOP_PADDING - 1e-9);
+    expect(toScreen(fitScene({ width: 800, height: 3000 }, size), { x: 0, y: 0 }).y).toBeGreaterThanOrEqual(FIT_TOP_PADDING - 1e-9);
+  });
+});
+
 describe('fitBox (step 8.2b, B1): the visible boxes fill the map area with the 24 px margin', () => {
   it('fills the area on the tighter side, centred, with FIT_PADDING on every side', () => {
     const view = fitBox({ x0: 100, y0: 50, x1: 600, y1: 250 }, size); // 500 x 200: the width gives 952 / 500, the height 552 / 200
     expect(view.scale).toBeCloseTo(Math.min(SCALE_MAX, 952 / 500));
     expect(toScreen(view, { x: 100, y: 50 }).x).toBeGreaterThanOrEqual(FIT_PADDING - 1e-9);
     expect(toScreen(view, { x: 600, y: 250 }).x).toBeLessThanOrEqual(1000 - FIT_PADDING + 1e-9);
-    expect(toScreen(view, { x: 350, y: 150 })).toEqual({ x: 500, y: 300 });
+    expect(toScreen(view, { x: 350, y: 150 })).toEqual({ x: 500, y: (FIT_TOP_PADDING + 600 - FIT_PADDING) / 2 }); // centred in the area below the hint's band
   });
   it('never goes above the maximum zoom', () => {
     expect(fitBox({ x0: 0, y0: 0, x1: 40, y1: 20 }, size).scale).toBe(SCALE_MAX);
@@ -103,6 +113,6 @@ describe('fitBox (step 8.2b, B1): the visible boxes fill the map area with the 2
   it('a box too big for the name floor starts at its top-left corner inside the padding, at the floor', () => {
     const view = fitBox({ x0: 200, y0: 100, x1: 20_200, y1: 10_100 }, size);
     expect(view.scale).toBe(FIT_FLOOR);
-    expect(toScreen(view, { x: 200, y: 100 })).toEqual({ x: FIT_PADDING, y: FIT_PADDING });
+    expect(toScreen(view, { x: 200, y: 100 })).toEqual({ x: FIT_PADDING, y: FIT_TOP_PADDING });
   });
 });
