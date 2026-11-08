@@ -1,22 +1,43 @@
 /*
- * Design tokens (UI_ARCHITECTURE §3). The ONLY file with colour literals: scripts/check-colours.mjs (part of `npm run check`)
- * fails on a colour written anywhere else under src. Light theme is required; a dark theme would redefine the colour tokens here.
- * src/ui/design/tokens.test.ts computes the WCAG 2.2 AA contrast of every text/background pair listed there.
+ * Design tokens v2 (step 8.4d; UI_ARCHITECTURE §3 and the addendum). The ONLY file with colour literals: scripts/check-colours.mjs (part of
+ * `npm run check`) fails on a colour written anywhere else under src. The two theme blocks are copied from the design reference
+ * (docs/design/ORN_DESIGN_REFERENCE.html, token NAMES are the contract) plus the app's own extras (text-safe role inks, review, family
+ * tones). `data-theme` on the root element picks the block; step 8.4d always writes "light", dark is switched on in step 8.4f after every
+ * screen is checked in it. The 8.4a names (--color-*, --space-*, --text-*, --radius-*) stay and alias the reference tokens.
+ * src/ui/design/tokens.test.ts computes the WCAG 2.2 AA contrast of every text/background pair; tokens-v2.test.ts pins the reference.
  */
-:root {
-  --color-paper: #fcfcfb;
-  --color-surface: #f6f7f5;
-  --color-ink: #16191d;
-  --color-ink-2: #5a626b;
-  --color-rule: #d9dde1;
-  --color-accent: #2b4fd8;
-  --color-warning: #b45309;
-  --color-error: #b42318;
-  --color-review: #7a3fb0;
-  --color-on-accent: var(--color-paper);
-
-  /* Family tones (ADR-037, step 5.5c): a soft tint, a border and an ink for each. Text on a tint is ink (or --color-ink) and meets
-     WCAG 2.2 AA (tokens.test.ts computes it). Colour only helps recognition: a family's group is always written too. */
+:root, [data-theme="light"] {
+  /* Surfaces: canvas is the page, surface is cards/panels, raised is popovers */
+  --canvas:#F7F7F5; --surface:#FFFFFF; --sunken:#F0F0EC; --raised:#FFFFFF;
+  --hover:rgba(20,20,30,.045); --press:rgba(20,20,30,.08); --selected:rgba(59,91,219,.10);
+  /* Text */
+  --text:#18181D; --text-2:#55555F; --text-3:#8A8A94; --text-on-accent:#FFFFFF;
+  /* Lines */
+  --line:rgba(20,20,30,.09); --line-strong:rgba(20,20,30,.16); --grid-dot:rgba(20,20,30,.10);
+  /* Accent and roles */
+  --accent:#3B5BDB; --accent-hover:#3350C6; --accent-soft:#EDF1FD; --accent-text:#2E48B8;
+  --success:#1F8A5B; --success-soft:#E7F5EE; --warning:#B86E00; --warning-soft:#FDF3E1;
+  --danger:#C93A3A; --danger-soft:#FCEBEB; --review-grey:#9A9AA3; --review-orange:#D9822B;
+  /* Family groups (the user likes the current colours: these are them, refined) */
+  --fam-hc:#3567D6; --fam-hc-soft:#EEF3FD;   /* hydrocarbons */
+  --fam-hal:#B9730F; --fam-hal-soft:#FDF4E6; /* halogen compounds */
+  --fam-oxy:#1C8F62; --fam-oxy-soft:#EAF6F0; /* oxygen compounds */
+  --fam-nit:#6E55CF; --fam-nit-soft:#F2EFFC; /* nitrogen compounds */
+  --made-from:#4A4A55;                       /* dashed "made from" lines */
+  /* Structure drawings always sit on paper (light even in dark theme) */
+  --paper:#FFFFFF; --paper-line:rgba(20,20,30,.08);
+  /* Elevation */
+  --shadow-1:0 1px 2px rgba(16,24,40,.06),0 1px 1px rgba(16,24,40,.04);
+  --shadow-2:0 6px 16px -4px rgba(16,24,40,.12),0 2px 4px rgba(16,24,40,.06);
+  --shadow-3:0 16px 40px -8px rgba(16,24,40,.20),0 4px 10px rgba(16,24,40,.08);
+  --focus:0 0 0 2px var(--canvas),0 0 0 4px rgba(59,91,219,.55);
+  --scrim:rgba(16,18,24,.38);
+  /* App extras: text-safe role inks (the reference role colours are for fills and icons; as small text they need these), review mark, tones */
+  --success-ink: #17704a;
+  --warning-ink: #8f5400;
+  --danger-ink: #b42318;
+  --review-violet: #7a3fb0;
+  /* Family tones (ADR-037, step 5.5c): a soft tint, a border and an ink for each. Colour only helps recognition: the group is always written too. */
   --color-tone-blue-tint: #e8eefc;
   --color-tone-blue-border: #9db3ee;
   --color-tone-blue-ink: #1d3a9c;
@@ -38,11 +59,100 @@
   --color-tone-slate-tint: #eceff2;
   --color-tone-slate-border: #b0b9c2;
   --color-tone-slate-ink: #3d4650;
-  --color-hover: color-mix(in srgb, var(--color-ink) 6%, var(--color-paper));
-  --color-scrim: color-mix(in srgb, var(--color-ink) 40%, transparent);
+}
 
-  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+[data-theme="dark"] {
+  --canvas:#0E1014; --surface:#16191F; --sunken:#111318; --raised:#1D2129;
+  --hover:rgba(255,255,255,.05); --press:rgba(255,255,255,.09); --selected:rgba(124,147,245,.16);
+  --text:#E9EAEE; --text-2:#A6A9B3; --text-3:#757985; --text-on-accent:#0E1014;
+  --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.15); --grid-dot:rgba(255,255,255,.07);
+  --accent:#7C93F5; --accent-hover:#93A6F7; --accent-soft:rgba(124,147,245,.14); --accent-text:#A9B8FA;
+  --success:#4CC38A; --success-soft:rgba(76,195,138,.14); --warning:#F0A646; --warning-soft:rgba(240,166,70,.14);
+  --danger:#F07171; --danger-soft:rgba(240,113,113,.14); --review-grey:#7E818C; --review-orange:#F0A646;
+  --fam-hc:#7EA2F2; --fam-hc-soft:rgba(126,162,242,.12);
+  --fam-hal:#E6A653; --fam-hal-soft:rgba(230,166,83,.12);
+  --fam-oxy:#5CCB9B; --fam-oxy-soft:rgba(92,203,155,.12);
+  --fam-nit:#A895F0; --fam-nit-soft:rgba(168,149,240,.13);
+  --made-from:#B9BCC6;
+  --paper:#F7F7F4; --paper-line:rgba(0,0,0,.10);
+  --shadow-1:0 0 0 1px rgba(255,255,255,.04),0 1px 2px rgba(0,0,0,.5);
+  --shadow-2:0 0 0 1px rgba(255,255,255,.05),0 8px 20px -4px rgba(0,0,0,.6);
+  --shadow-3:0 0 0 1px rgba(255,255,255,.06),0 18px 44px -8px rgba(0,0,0,.7);
+  --focus:0 0 0 2px var(--canvas),0 0 0 4px rgba(124,147,245,.7);
+  --scrim:rgba(0,0,0,.55);
+  --success-ink: #4cc38a;
+  --warning-ink: #f0a646;
+  --danger-ink: #f07171;
+  --review-violet: #b79ae8;
+  --color-tone-blue-tint: #1b2438;
+  --color-tone-blue-border: #3a4f85;
+  --color-tone-blue-ink: #9db4f5;
+  --color-tone-green-tint: #15291d;
+  --color-tone-green-border: #2f6b45;
+  --color-tone-green-ink: #8fd4a6;
+  --color-tone-amber-tint: #2e2415;
+  --color-tone-amber-border: #7a5a22;
+  --color-tone-amber-ink: #e8be7a;
+  --color-tone-violet-tint: #251d36;
+  --color-tone-violet-border: #5a4690;
+  --color-tone-violet-ink: #c3a9f0;
+  --color-tone-teal-tint: #12292a;
+  --color-tone-teal-border: #2b6b6b;
+  --color-tone-teal-ink: #86d6d6;
+  --color-tone-rose-tint: #2e1a22;
+  --color-tone-rose-border: #85384f;
+  --color-tone-rose-ink: #f0a3ba;
+  --color-tone-slate-tint: #1e2227;
+  --color-tone-slate-border: #4b5560;
+  --color-tone-slate-ink: #b9c1cb;
+}
+
+:root {
+  /* Type roles, space, radius, motion and control heights of the reference */
+  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --t-12: 12px;
+  --t-14: 14px;
+  --t-16: 16px;
+  --t-20: 20px;
+  --t-24: 24px;
+  --t-32: 32px;
+  --s-4: 4px;
+  --s-8: 8px;
+  --s-12: 12px;
+  --s-16: 16px;
+  --s-24: 24px;
+  --s-32: 32px;
+  --s-48: 48px;
+  --r-control: 6px;
+  --r-card: 10px;
+  --r-panel: 14px;
+  --r-pill: 999px;
+  --d-fast: 120ms;
+  --d-base: 180ms;
+  --d-slow: 260ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --h-sm: 28px;
+  --h-md: 32px;
+  --h-touch: 44px;
+
+  /* 8.4a names, now aliases of the reference tokens (every stylesheet keeps working in both themes) */
+  --color-paper: var(--surface);
+  --color-surface: var(--canvas);
+  --color-ink: var(--text);
+  --color-ink-2: var(--text-2);
+  --color-rule: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-warning: var(--warning-ink);
+  --color-error: var(--danger-ink);
+  --color-review: var(--review-violet);
+  --color-on-accent: var(--text-on-accent);
+  --color-hover: var(--hover);
+  --color-scrim: var(--scrim);
+
+  --font-sans: var(--font);
+  --font-mono: var(--mono);
   --text-12: 0.75rem;
   --text-14: 0.875rem;
   --text-16: 1rem;
@@ -50,14 +160,13 @@
   --text-24: 1.5rem;
   --text-32: 2rem;
 
-  /* Spacing and radius scale (step 8.4a): the number is the px. Radius 4 inputs, 8 cards, buttons and panels, pill for chips. */
-  --space-4: 4px;
-  --space-8: 8px;
-  --space-12: 12px;
-  --space-16: 16px;
-  --space-24: 24px;
-  --space-32: 32px;
-  --space-48: 48px;
+  --space-4: var(--s-4);
+  --space-8: var(--s-8);
+  --space-12: var(--s-12);
+  --space-16: var(--s-16);
+  --space-24: var(--s-24);
+  --space-32: var(--s-32);
+  --space-48: var(--s-48);
   --radius-4: 4px;
   --radius-8: 8px;
   --radius-pill: 999px;
@@ -67,7 +176,7 @@
   --focus-ring-color: var(--color-accent);
   --hit-min: 24px;
 
-  --motion-fast: 120ms;
+  --motion-fast: var(--d-fast);
   --motion-slow: 200ms;
 
   --z-drawer: 20;
@@ -77,6 +186,8 @@
   --top-bar-height: 44px;
   --tab-bar-height: 48px;
   --status-bar-height: 24px;
+  --rail-width: 188px;
+  --rail-width-collapsed: 56px;
   --mode-rail-width: max-content;
   --toast-height: 44px;
   --inspector-min: 360px;
@@ -91,6 +202,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root {
+    --d-fast: 0ms;
+    --d-base: 0ms;
+    --d-slow: 0ms;
     --motion-fast: 0ms;
     --motion-slow: 0ms;
   }

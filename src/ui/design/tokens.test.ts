@@ -9,11 +9,38 @@ import { ANCHOR_TONES } from '@/core/schema';
 
 const CSS = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8');
 
-/** `--name: #rrggbb;` declarations of the token file. */
-function colours(): Map<string, string> {
+/** Every `--name: value;` of the blocks that apply to a theme (the theme block, then the plain :root block), as written. */
+function declarations(theme: 'light' | 'dark'): Map<string, string> {
+  const text = CSS.replace(/\/\*[\s\S]*?\*\//g, '');
+  const pick = (selector: string): string => {
+    const at = text.indexOf(selector);
+    return text.slice(text.indexOf('{', at) + 1, text.indexOf('}', at));
+  };
+  const out = new Map<string, string>();
+  for (const body of [pick(theme === 'light' ? ':root, [data-theme="light"] {' : '[data-theme="dark"] {'), pick('\n:root {')]) {
+    for (const m of body.matchAll(/--([a-z0-9-]+):\s*([^;]+);/gi)) out.set(m[1] as string, (m[2] as string).trim());
+  }
+  return out;
+}
+
+/** The solid #rrggbb colours of a theme, aliases (`var(--x)`) followed. A colour that is not solid (rgba, color-mix) is left out. */
+function coloursOf(theme: 'light' | 'dark'): Map<string, string> {
+  const raw = declarations(theme);
   const found = new Map<string, string>();
-  for (const match of CSS.matchAll(/--(color-[a-z0-9-]+):\s*(#[0-9a-f]{6})\s*;/gi)) found.set(match[1] as string, match[2] as string);
+  for (const name of raw.keys()) {
+    let value = raw.get(name) as string;
+    for (let hop = 0; hop < 6; hop += 1) {
+      const alias = /^var\(--([a-z0-9-]+)\)$/.exec(value);
+      if (alias === null) break;
+      value = raw.get(alias[1] as string) ?? '';
+    }
+    if (/^#[0-9a-f]{6}$/i.test(value)) found.set(name, value.toLowerCase());
+  }
   return found;
+}
+
+function colours(): Map<string, string> {
+  return coloursOf('light');
 }
 
 function luminance(hex: string): number {
@@ -62,13 +89,16 @@ const NON_TEXT_PAIRS: readonly (readonly [string, string])[] = [
 ];
 
 describe('colour tokens', () => {
-  it('has the eight tokens of UI_ARCHITECTURE §3 with their stated values', () => {
-    expect(token('color-paper')).toBe('#fcfcfb');
-    expect(token('color-ink')).toBe('#16191d');
-    expect(token('color-ink-2')).toBe('#5a626b');
-    expect(token('color-rule')).toBe('#d9dde1');
-    expect(token('color-accent')).toBe('#2b4fd8');
-    expect(token('color-warning')).toBe('#b45309');
+  it('the eight tokens of UI_ARCHITECTURE §3 are the reference tokens they alias (tokens v2, step 8.4d)', () => {
+    const light = declarations('light');
+    expect(light.get('color-paper')).toBe('var(--surface)');
+    expect(light.get('color-ink')).toBe('var(--text)');
+    expect(token('color-paper')).toBe('#ffffff');
+    expect(token('color-surface')).toBe('#f7f7f5');
+    expect(token('color-ink')).toBe('#18181d');
+    expect(token('color-ink-2')).toBe('#55555f');
+    expect(token('color-accent')).toBe('#3b5bdb');
+    expect(token('color-warning')).toBe('#8f5400');
     expect(token('color-error')).toBe('#b42318');
     expect(token('color-review')).toBe('#7a3fb0');
   });
@@ -94,6 +124,23 @@ describe('colour tokens', () => {
   });
 });
 
+describe('dark theme tokens (defined in 8.4d, switched on in 8.4f)', () => {
+  const dark = coloursOf('dark');
+  const pair = (a: string, b: string): number => contrast(dark.get(a) as string, dark.get(b) as string);
+  it.each([
+    ['text', 'canvas'], ['text', 'surface'], ['text', 'raised'], ['text-2', 'canvas'], ['text-2', 'surface'],
+    ['accent', 'surface'], ['accent', 'canvas'], ['text-on-accent', 'accent'], ['success-ink', 'surface'], ['warning-ink', 'surface'], ['danger-ink', 'surface'], ['review-violet', 'surface'],
+  ])('%s on %s meets 4.5:1', (a, b) => {
+    expect(pair(a, b)).toBeGreaterThanOrEqual(4.5);
+  });
+  it('the paper under structure drawings stays near-white in the dark theme', () => {
+    expect(luminance(dark.get('paper') as string)).toBeGreaterThan(0.85);
+  });
+  it.each(['blue', 'green', 'amber', 'violet', 'teal', 'rose', 'slate'])('tone %s: ink on tint meets 4.5:1 in dark', (tone) => {
+    expect(contrast(dark.get(`color-tone-${tone}-ink`) as string, dark.get(`color-tone-${tone}-tint`) as string)).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
 describe('focus ring, hit targets and motion tokens', () => {
   it('the focus ring is 2 px in the accent colour', () => {
     expect(CSS).toMatch(/--focus-ring-width:\s*2px;/);
@@ -106,7 +153,9 @@ describe('focus ring, hit targets and motion tokens', () => {
   });
 
   it('prefers-reduced-motion zeroes the motion durations', () => {
-    expect(CSS).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*:root\s*\{\s*--motion-fast:\s*0ms;\s*--motion-slow:\s*0ms;/);
+    const media = CSS.slice(CSS.indexOf('prefers-reduced-motion'));
+    expect(media).toMatch(/--motion-fast:\s*0ms;/);
+    expect(media).toMatch(/--motion-slow:\s*0ms;/);
   });
 
   it('the type scale is 12/14/16/20/24/32 px (step 8.4a)', () => {

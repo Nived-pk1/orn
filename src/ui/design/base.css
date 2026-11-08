@@ -13,12 +13,14 @@ body,
 
 body {
   margin: 0;
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font);
   font-size: var(--text-14);
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--d-base), color var(--d-base);
 }
 
 h1,
@@ -29,9 +31,10 @@ h3 {
   line-height: 1.25;
 }
 
+/* The one focus ring (step 8.4d): a 2 px gap in the canvas colour and a 2 px accent ring, drawn as a shadow so it follows the radius. */
 :focus-visible {
-  outline: var(--focus-ring-width) solid var(--focus-ring-color);
-  outline-offset: var(--focus-ring-offset);
+  outline: none;
+  box-shadow: var(--focus);
 }
 
 button,
