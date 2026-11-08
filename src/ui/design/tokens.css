@@ -34,6 +34,7 @@
   --scrim:rgba(16,18,24,.38);
   /* App extras: text-safe role inks (the reference role colours are for fills and icons; as small text they need these), review mark, tones */
   --success-ink: #17704a;
+  --focus-ring: 0 0 0 2px var(--canvas), 0 0 0 4px var(--accent); /* the reference --focus with the solid accent (its alpha ring is below 3:1) */
   --warning-ink: #8f5400;
   --danger-ink: #b42318;
   --review-violet: #7a3fb0;
@@ -81,6 +82,7 @@
   --focus:0 0 0 2px var(--canvas),0 0 0 4px rgba(124,147,245,.7);
   --scrim:rgba(0,0,0,.55);
   --success-ink: #4cc38a;
+  --focus-ring: 0 0 0 2px var(--canvas), 0 0 0 4px var(--accent);
   --warning-ink: #f0a646;
   --danger-ink: #f07171;
   --review-violet: #b79ae8;

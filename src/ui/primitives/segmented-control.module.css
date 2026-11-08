@@ -47,7 +47,7 @@
 }
 
 .segment:has(.input:focus-visible) {
-  box-shadow: var(--focus);
+  box-shadow: var(--focus-ring);
 }
 
 .chosen {

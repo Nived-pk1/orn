@@ -109,7 +109,7 @@ test.describe('desktop', () => {
       if (new URL(request.url()).pathname.endsWith('.js')) scripts.push(request.url().split('/').pop() as string);
     });
     await openStudy(page);
-    await expect(page).toHaveTitle(TITLE);
+    await expect(page).toHaveTitle(/ · ORN$/); // step 8.4d: the tab title names the view ("Chapters · ORN", "Map · ORN")
     await expect(page.locator('[data-edition-marker]')).toHaveCount(0);
     await importOwnData(page);
     await chaptersFirstThenNavigator(page); // the Study first screen is Chapters when the dataset has chapter topics (7.3b D5)

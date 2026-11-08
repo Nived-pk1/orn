@@ -1,8 +1,8 @@
-/* One band row at the top of the main column: the 40 px banner and 8 px above and below, so at most 56 px tall (steps 8.4a, 8.4d). */
+/* One band row at the top of the main column: the 40 px banner and 4 px above and below, 48 px, as before 8.4d (the map keeps its height; at most 56 px). */
 .band {
   min-width: 0;
   box-sizing: border-box;
-  padding: var(--s-8) var(--s-12);
+  padding: var(--s-4) var(--s-12);
 }
 
 .list {

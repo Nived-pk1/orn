@@ -61,7 +61,7 @@ test('compare the frame with the reference (light theme)', async ({ page, contex
   await shot(page, ref, 'palette', palette, ref.locator('.menu'));
   await page.keyboard.press('Escape');
   // Reactions: cards, then compact rows
-  await rail.getByRole('button', { name: 'Reactions' }).click();
+  await rail.getByRole('button', { name: 'Reactions', exact: true }).click();
   const main = page.getByRole('main');
   await expect(page.getByRole('list', { name: 'Reactions' })).toBeVisible({ timeout: 60_000 });
   await shot(page, ref, 'reactions-cards', main, ref.locator('.card').first());
@@ -77,7 +77,7 @@ test('compare the frame with the reference (light theme)', async ({ page, contex
   // the phone: top bar and notices row
   await page.setViewportSize({ width: 412, height: 915 });
   await page.reload();
-  await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeAttached({ timeout: 60_000 });
+  await expect(page.locator('header')).toBeVisible({ timeout: 60_000 });
   await shot(page, ref, 'phone-top-bar', page.locator('header'), ref.locator('.ptop'));
   const fold = page.getByRole('button', { name: /^\d+ notices?$/ });
   if (await fold.isVisible()) {

@@ -108,14 +108,17 @@ test.describe('the shell and the design system', () => {
     await expectClean(seen);
   });
 
-  test('the focus ring is 2 px and keyboard focus reaches the controls', async ({ page }) => {
+  test('the focus ring is 2 px (a shadow: a 2 px gap and a 2 px accent ring) and keyboard focus reaches the controls', async ({ page }) => {
     await openApp(page);
     await page.keyboard.press('Tab');
     const ring = await page.evaluate(() => {
       const style = getComputedStyle(document.activeElement as Element);
-      return { width: style.outlineWidth, style: style.outlineStyle };
+      return { outline: style.outlineStyle, shadow: style.boxShadow };
     });
-    expect(ring).toEqual({ width: '2px', style: 'solid' });
+    // step 8.4d: the ring is drawn as box-shadow (it follows the radius); the accent ring is the outer 4 px edge, 2 px thick
+    expect(ring.outline).toBe('none');
+    expect(ring.shadow).toMatch(/0px 0px 0px 2px/);
+    expect(ring.shadow).toMatch(/0px 0px 0px 4px/);
   });
 
   test('hit targets are at least 24 px', async ({ page }) => {

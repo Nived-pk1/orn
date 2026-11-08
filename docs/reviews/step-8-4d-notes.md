@@ -92,3 +92,25 @@ once the palette is opened) became a lazy chunk (`lazy-commands.ts`; the window 
 Every piece of text that carries meaning uses `--text-2` or `--text` (status bar, rail group labels, the search box text and its Ctrl K hint);
 `--text-3` stays on icons (chevrons), the family dot's neutral, field hover borders and placeholders (the reference's choice; REVIEW REQUIRED).
 After the lazy palette-commands chunk: Study 383.02 kB, Studio 386.90 kB (exact bytes in PROGRESS): within this step's limit (383,262 / 387,082).
+
+## E2E (Chromium) findings
+Run 1 (24 specs): 106 passed, 7 failed. Fixed: notice band 56 -> 48 px (map height back to >= 640 / 840); the focus ring is a shadow now (shell.spec asserts
+the 2 px gap + 2 px ring, no outline); study-edition title spec ("<view> · ORN"); compare spec selectors; skip-link spec (fresh page).
+The reference's ring `rgba(59,91,219,.55)` is about 2.5:1 on the canvas (needs 3:1): the app uses the SAME ring with the solid accent (`--focus-ring`).
+Run 2 (the failed specs again): ONE layout failure left and NOT fixed: map-room.spec.ts:52 (1280 x 800 Studio demo, Fit, pane shut): box title 9.86 px,
+the 8.4c reviewer decision asks >= 10. Cause measured: the map is 1280 - 188 = 1092 px wide (rail 188 px per the reference; the old rail was about 148 px),
+Fit is width-limited (9.855820314798734 px with the band at 56 px and again at 48 px: the same number, so height is not the limit). The bound is not lowered.
+frame.spec.ts "map width with the rail" 1100 -> 1090 (a direct consequence of the 188 px rail, stated in the spec).
+
+## Comparison screenshots (screenshots/compare-8.4d/<name>.png: app left, reference right; opened and looked at)
+- top-bar: mark, breadcrumb, search box with Ctrl K, bell with count match. Differs: the exam control is still the native "Exam [All exams]" select, not the JEE Main chip; Studio chip is outlined; no record in the crumb because nothing was selected.
+- rail-open: groups, icons, 188 px, selected tint match. Differs: the active label is not medium weight, group labels are darker/bolder than the reference; no Starred, Settings (8.4f/g) and no counts (the app shows no Review count today).
+- rail-collapsed: 56 px icons, a hairline between groups and the Expand chevron; the reference has no collapsed picture.
+- status-bar: hairline-separated parts, 24 px, tabular figures; matches (reference shows different items).
+- palette: still the Search dialog (title row, hint line, "Go to" list); NOT the reference's menu pattern (no icons, no key hints, taller rows). Open difference.
+- toast: dark pill with text, Undo import, X; matches. Differs: no icon on the action, text is longer ("from demo.orn.json.").
+- notice-band: soft warm tint, warning icon, text, buttons; matches. Differs: two buttons side by side and no "+n more" because there is one notice; text is not cut.
+- reactions-cards / reactions-compact: the cards and rows are still the old look (boxed name buttons, outlined review pill, filter buttons); the review dot shows on compact rows. Open difference (screen pass is 8.4f).
+- buttons-chips: filter buttons keep their shadow/border; the segmented control matches the reference; the reference row is a spec table, not a screen.
+- family-header: one summary line "12 reactions · makes 6 families · made from 5" matches; the header is still the old green block with outlined partner chips, not the reference panel (8.4e).
+- phone-top-bar: mark, page name, Studio chip, search icon; More is a bordered button (reference has the exam chip and no More). Phone notices row: height 40 px.

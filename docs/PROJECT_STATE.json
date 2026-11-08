@@ -159,8 +159,8 @@
     "protectedCheckedAt": "2026-11-08",
     "workerVersion": "21199061-2f5e-4a1d-a908-997e0c51ade6"
   },
-  "nextStep": "8.4c",
-  "nextStepTitle": "Step 8.4b deployed (8.4a + 8.4b); then 8.4c. Awaiting review",
+  "nextStep": "8.4d",
+  "nextStepTitle": "Step 8.4d implemented but NOT closed: map-room.spec.ts:52 box titles 9.86 px (needs 10) with the 188 px rail; awaiting a reviewer decision. Not deployed (deploys with 8.4f)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -684,5 +684,34 @@
   "step84cWorkers": {
     "study": "9f7727e7-65fb-436a-bf7c-9e0152f2951b",
     "studio": "21199061-2f5e-4a1d-a908-997e0c51ade6"
+  },
+  "step84d": {
+    "closed": null,
+    "deployed": null,
+    "note": "8.4d implemented 2026-11-08; STOPPED on one Chromium e2e layout failure (map-room.spec.ts:52). Not deployed. 8.4d closed 2026-11-08, not deployed (deploys with 8.4f with 8.4e and 8.4f). Design language and app frame to docs/design/ORN_DESIGN_REFERENCE.html. Rule: 8.4d to 8.4g add at most 1.0 kB gzip to the initial chunk in total (Study 383.8, Studio 387.6 kB); 8.4d used 255 / 319 bytes.",
+    "initialJsGzipBytes": {
+      "study": 383017,
+      "studio": 386901
+    },
+    "initialJsGzipKb": {
+      "study": 383.02,
+      "studio": 386.9
+    },
+    "baselineBytes": {
+      "study": 382762,
+      "studio": 386582
+    },
+    "limitsRowBytes": {
+      "study": 383762,
+      "studio": 387582
+    },
+    "iconsVendored": 29,
+    "adr": "docs/UI_ARCHITECTURE.md §3 addendum 2026-11-08",
+    "notes": "docs/reviews/step-8-4d-notes.md",
+    "commits": [
+      "2296ced",
+      "34a9489",
+      "ba4eed4"
+    ]
   }
 }

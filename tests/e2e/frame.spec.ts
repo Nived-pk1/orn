@@ -30,7 +30,8 @@ test('1280x800: the map area, the rail and its Collapse button, the bars', async
   expect(status?.height ?? 999, 'status bar height').toBeLessThanOrEqual(24.5);
   const shown = await drawing(page).boundingBox();
   expect(shown?.height ?? 0, 'map height').toBeGreaterThanOrEqual(640);
-  expect(shown?.width ?? 0, 'map width with the rail').toBeGreaterThanOrEqual(1100);
+  // step 8.4d: the rail is 188 px (reference), so the map is 1280 - 188 = 1092 px wide at most; it was at least 1100 with the old 148 px rail
+  expect(shown?.width ?? 0, 'map width with the rail').toBeGreaterThanOrEqual(1090);
   const rail = page.getByRole('navigation', { name: 'Modes' });
   const railBox = await rail.boundingBox();
   for (const row of await rail.getByRole('button').all()) {
@@ -95,8 +96,9 @@ test('the breadcrumb, the search box, Ctrl K, the skip link and the tab title', 
   await loadDemo(page);
   await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 60_000 });
   // the skip link is the first stop of Tab and moves the focus into the main area
-  await page.locator('body').click({ position: { x: 1, y: 1 } });
-  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.reload(); // a fresh page: the first Tab starts from the top of the document (a click would move the starting point)
+  await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeAttached();
+  await expect(page.getByRole('navigation', { name: 'Modes' })).toBeVisible({ timeout: 60_000 });
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
   await page.keyboard.press('Enter');

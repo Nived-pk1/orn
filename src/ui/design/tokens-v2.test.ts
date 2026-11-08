@@ -74,10 +74,11 @@ describe('tokens v2: type, space, radius, motion, focus', () => {
     for (const name of ['--d-fast', '--d-base', '--d-slow', '--motion-fast', '--motion-slow']) expect(media).toMatch(new RegExp(`${name}:\\s*0ms`));
   });
 
-  it('there is one global focus ring, drawn from the --focus token', () => {
+  it('there is one global focus ring, drawn from the --focus-ring token: the reference ring with the SOLID accent (its alpha ring is under 3:1)', () => {
+    for (const theme of [APP_LIGHT, APP_DARK]) expect(theme.get('--focus-ring')).toBe('0002pxvar(--canvas),0004pxvar(--accent)');
     const rules = [...noComments(BASE).matchAll(/(^|\n)\s*:focus-visible\s*\{([^}]*)\}/g)];
     expect(rules).toHaveLength(1);
-    expect(rules[0]?.[2]).toMatch(/box-shadow:\s*var\(--focus\)/);
+    expect(rules[0]?.[2]).toMatch(/box-shadow:\s*var\(--focus-ring\)/);
   });
 
   it('counts, tables and the status bar use tabular figures (set once, on the body)', () => {
