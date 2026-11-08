@@ -6,6 +6,7 @@
  */
 import type { LayoutNodeInput, LayoutRequest } from '../contracts';
 import type { Rect } from './geometry';
+import { COLUMN_GAP_RATIO } from './scale';
 
 /**
  * The gaps, as multiples of `spacing.layer`: between columns twice, between rows one and a half (96 px gives 192 and 144). Room
@@ -13,6 +14,11 @@ import type { Rect } from './geometry';
  */
 export const COLUMN_GAP_FACTOR = 2;
 export const ROW_GAP_FACTOR = 1.5;
+/**
+ * Asked to grow the boxes (the overview, step 8.4c, A2) the column gap is also at least `COLUMN_GAP_RATIO` widths of the widest box plus this air (px),
+ * so a box that has grown wide (the title row holds "↻ n" and the badges) never takes the old map's airy proportions away. Narrow boxes keep the stated gap.
+ */
+export const COLUMN_GAP_AIR = 6;
 
 export interface Arrangement {
   readonly boxes: ReadonlyMap<string, Rect>;
@@ -23,7 +29,8 @@ export interface Arrangement {
 const cellKey = (column: number, row: number): string => `${column}:${row}`;
 
 export function arrange(request: LayoutRequest): Arrangement {
-  const columnGap = request.spacing.layer * COLUMN_GAP_FACTOR;
+  const widest = Math.max(0, ...request.nodes.map((node) => node.width));
+  const columnGap = Math.max(request.spacing.layer * COLUMN_GAP_FACTOR, request.growBoxes === true ? Math.ceil(COLUMN_GAP_RATIO * widest) + COLUMN_GAP_AIR : 0);
   const rowGap = request.spacing.layer * ROW_GAP_FACTOR;
   const stack = request.spacing.node;
   let lastRow = -1;

@@ -37,22 +37,20 @@ export interface SceneHit {
 
 /**
  * How the map shows an arrow in focus (step 8.2a, an additive amendment: the Scene itself is unchanged). The line style (solid or dashed) is the
- * SceneEdge's own `stroke`; the mark adds the colour of the family group (`tone`; a 'made from' line carries none), a head at the start too
- * (a two-way pair is ONE line), and the count chip of the other direction.
+ * SceneEdge's own `stroke`; the mark adds the colour of the family group (`tone`; a 'made from' line carries none). A two-way pair is TWO lines, one
+ * per direction (step 8.4c, C; user decision 2026-11-08, ADR-044 addendum): each is an arrow of its own, `paired` only narrows its hit area so the
+ * pointer's nearer line wins.
  */
 export interface EdgeMark {
-  /** What the arrow is for the focused family; a pair is one line with a head and a chip at each end. */
-  readonly role: 'makes' | 'madeFrom' | 'pair';
+  /** What the arrow is for the focused family (with no family focused, every arrow is 'makes'). */
+  readonly role: 'makes' | 'madeFrom';
   readonly tone?: AnchorTone;
-  readonly startHead?: boolean;
-  /** The count chip of the reverse direction of a pair, near the start head. */
-  readonly extraChip?: { readonly at: Point; readonly size: number; readonly text?: string; readonly name?: string; readonly runs?: FormattedText; readonly hidden?: boolean };
+  /** Step 8.4c, C: the arrow has a partner running the other way between the same two boxes (the two lines are drawn apart, each its own hit area). */
+  readonly paired?: true;
   /** Step 8.2b: the chip of the arrow when it shows words or a step number instead of the count (a lone arrow gets a chip too). `name` is its accessible name and tooltip. */
   readonly chip?: { readonly text: string; readonly name: string; readonly runs?: FormattedText; /** Where it sits (step 8.4b: placed in screen pixels); absent: the Scene's own place. */ readonly at?: Point };
   /** Step 8.4b: no free place for the chip at this zoom, so it is not drawn (its words stay in the arrow's name). */
   readonly chipHidden?: boolean;
-  /** Step 8.4b, B: a two-way pair. `backId` is the Scene edge of the other direction (the line is the forward one); the names say "A → B" for each. */
-  readonly pair?: { readonly backId: string; readonly forwardName: string; readonly backName: string };
 }
 
 /** The derived marks of one map view (step 8.2a): arrows in focus, boxes shown faded, and a small caption under a box. */

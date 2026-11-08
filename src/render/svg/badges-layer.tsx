@@ -6,15 +6,16 @@
  */
 import { memo } from 'react';
 import type { MapMarks, SceneHit } from './contracts';
-import { CHIP_HEIGHT, chipTextWidth, chipWidth, countWidth, type FormattedText, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
+import { badgeRunWidth, CHIP_HEIGHT, chipTextWidth, chipWidth, countWidth, type FormattedText, type LodLevel, type Scene, type SceneBadge, type SceneEdge, type SceneNode } from '@/render/scene';
 import type { LayerName } from './contracts';
 import type { Point } from '@/layout/contracts';
-import { BADGE_GAP, BADGE_MARK, BADGE_SIZE, visibleAt } from './geometry';
+import { BADGE_GAP, BADGE_MARK, BADGE_SIZE, badgeOrigin, visibleAt } from './geometry';
+import badgeStyles from './badges.module.css';
 import styles from './scene-svg.module.css';
 import { Runs } from './text';
 import { useCommitProbe } from './use-commit-probe';
 
-const SHAPE_CLASS: Readonly<Partial<Record<SceneBadge['kind'], string>>> = { review: styles.badgeShapeReview, warning: styles.badgeShapeWarning, error: styles.badgeShapeError };
+const SHAPE_CLASS: Readonly<Partial<Record<SceneBadge['kind'], string>>> = { review: badgeStyles.badgeShapeReview, warning: badgeStyles.badgeShapeWarning, error: badgeStyles.badgeShapeError };
 
 function Shape(props: { readonly shape: (typeof BADGE_MARK)[SceneBadge['kind']]['shape']; readonly width: number; readonly className: string }) {
   const { shape, width, className } = props;
@@ -35,20 +36,24 @@ function Shape(props: { readonly shape: (typeof BADGE_MARK)[SceneBadge['kind']][
 
 function NodeBadges(props: { readonly node: SceneNode }) {
   const { node } = props;
-  let right = node.width;
+  // inside the box, on the title row, the first badge at its right end (step 8.4c, A3)
+  const origin = badgeOrigin(node);
+  let right = badgeRunWidth(node.badges) - BADGE_GAP;
   return (
-    <g transform={`translate(${node.x} ${node.y - BADGE_SIZE / 2})`} data-badges-of={node.id}>
+    <g transform={`translate(${origin.x} ${origin.y})`} data-badges-of={node.id}>
       {node.badges.map((badge) => {
         const mark = BADGE_MARK[badge.kind];
         const width = badge.kind === 'hidden_neighbours' && badge.count !== undefined ? countWidth(badge.count) : BADGE_SIZE;
-        right -= width + BADGE_GAP;
+        right -= width;
+        const at = right;
+        right -= BADGE_GAP;
         const title = badge.count === undefined ? mark.title : `${mark.title}: ${badge.count}`;
         const text = badge.count === undefined ? mark.mark : `${mark.mark}${badge.count}`;
         return (
-          <g key={badge.kind} transform={`translate(${right + BADGE_GAP} 0)`} data-badge-kind={badge.kind} data-shape={mark.shape}>
+          <g key={badge.kind} transform={`translate(${at} 0)`} data-badge-kind={badge.kind} data-shape={mark.shape}>
             <title>{title}</title>
-            <Shape shape={mark.shape} width={width} className={`${styles.badgeShape}${SHAPE_CLASS[badge.kind] === undefined ? '' : ` ${SHAPE_CLASS[badge.kind]}`}`} />
-            <text className={styles.badgeMark} x={width / 2} y={BADGE_SIZE - 3.5}>
+            <Shape shape={mark.shape} width={width} className={`${badgeStyles.badgeShape}${SHAPE_CLASS[badge.kind] === undefined ? '' : ` ${SHAPE_CLASS[badge.kind]}`}`} />
+            <text className={badgeStyles.badgeMark} x={width / 2} y={BADGE_SIZE - 3.5}>
               {text}
             </text>
           </g>
@@ -68,10 +73,10 @@ interface ChipProps {
   readonly text: string;
   readonly runs?: FormattedText | undefined;
   /** The attribute that names the chip's edge for tests and measuring (`data-count-of` or `data-count-extra-of`). */
-  readonly attr: 'data-count-of' | 'data-count-extra-of';
+  readonly attr: 'data-count-of';
   readonly edgeId: string;
   readonly name: string;
-  /** A pair's chip is a button for ITS direction (step 8.4b, B): `hitId` is the arrow it chooses. */
+  /** The chip of a line of a two-way pair is a button for ITS direction (step 8.4c, C): `hitId` is the arrow it chooses. */
   readonly button?: { readonly hitId: string; readonly onChip?: ((hit: SceneHit) => void) | undefined };
 }
 
@@ -116,7 +121,7 @@ export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Sc
             const size = edge.bundleSize ?? 1;
             const text = chip?.text ?? String(size);
             const plain = chip?.name ?? `${size} ${size === 1 ? 'reaction' : 'reactions'}`;
-            const pair = mark?.pair;
+            const paired = mark?.paired === true;
             return [
               <Chip
                 key={edge.id}
@@ -125,28 +130,8 @@ export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Sc
                 at={centreOf(edge, chip?.at)}
                 text={text}
                 runs={chip?.runs}
-                name={pair === undefined ? plain : `${pair.forwardName}, ${size} ${size === 1 ? 'reaction' : 'reactions'}`}
-                {...(pair === undefined ? {} : { button: { hitId: edge.id, onChip } })}
-              />,
-            ];
-          })
-        : null}
-      {lod >= 1 && props.marks !== undefined
-        ? scene.edges.flatMap((edge) => {
-            const mark = props.marks?.edges.get(edge.id);
-            const chip = mark?.extraChip;
-            if (chip === undefined || chip.hidden === true || !visibleAt(edge, lod)) return [];
-            const pair = mark?.pair;
-            return [
-              <Chip
-                key={`extra-${edge.id}`}
-                attr="data-count-extra-of"
-                edgeId={edge.id}
-                at={chip.at}
-                text={chip.text ?? String(chip.size)}
-                runs={chip.runs}
-                name={pair === undefined ? (chip.name ?? String(chip.size)) : `${pair.backName}, ${chip.size} ${chip.size === 1 ? 'reaction' : 'reactions'}`}
-                {...(pair === undefined ? {} : { button: { hitId: pair.backId, onChip } })}
+                name={paired ? edge.ariaLabel : plain}
+                {...(paired ? { button: { hitId: edge.id, onChip } } : {})}
               />,
             ];
           })

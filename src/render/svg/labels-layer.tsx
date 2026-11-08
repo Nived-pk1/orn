@@ -10,10 +10,8 @@ import { memo } from 'react';
 import type { LodLevel, Scene, SceneEdge, SceneNode } from '@/render/scene';
 import type { DefIds } from './defs';
 import type { DepictionSource, LayerName, MapMarks } from './contracts';
-import { BOXES } from '@/render/scene';
-import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, textSlots, visibleAt } from './geometry';
-
-const CAPTION_SIZE = 11;
+import { CAPTION_SIZE } from '@/render/scene';
+import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, loopsAnchor, textSlots, visibleAt } from './geometry';
 import styles from './scene-svg.module.css';
 import { Runs } from './text';
 import { useCommitProbe } from './use-commit-probe';
@@ -48,16 +46,13 @@ function NodeLabel(props: { readonly node: SceneNode; readonly lod: LodLevel; re
   );
 }
 
-/** "↻ n" inside a family box, at the right end of the formula line (step 8.4b, D): reactions that start and end in the same family. */
+/** "↻ n" inside a family box, at the right end of the TITLE row, left of the badges (step 8.4c, A3): reactions that start and end in the same family. */
 function Loops(props: { readonly node: SceneNode; readonly text: string; readonly faded: boolean }) {
   const { node } = props;
-  const slots = textSlots(node);
-  const spec = BOXES[node.box];
-  const k = node.scale ?? 1;
-  const size = CAPTION_SIZE * k;
-  const y = node.depictionKey === undefined ? slots.sublabelY : slots.labelY;
+  const size = CAPTION_SIZE * (node.scale ?? 1);
+  const at = loopsAnchor(node);
   return (
-    <text className={`${styles.caption}${props.faded ? ` ${styles.faded}` : ''}`} data-loops-of={node.id} x={node.x + node.width - spec.padX * k} y={node.y + y} fontSize={size} textAnchor="end">
+    <text className={`${styles.caption}${props.faded ? ` ${styles.faded}` : ''}`} data-loops-of={node.id} x={at.x} y={at.y} fontSize={size} textAnchor="end">
       {props.text}
     </text>
   );

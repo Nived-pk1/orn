@@ -76,7 +76,7 @@ test.describe('the map on a desktop', () => {
     await expectClean(seen);
   });
 
-  test('a chapter draws all of its arrows, a two-way pair as one line with a chip at each end; it is saved; All chapters puts the quiet map back', async ({ page }) => {
+  test('a chapter draws all of its arrows, a two-way pair as two lines; it is saved; All chapters puts the quiet map back', async ({ page }) => {
     test.setTimeout(400_000);
     const seen = await watch(page);
     await openMapDesktop(page);
@@ -101,11 +101,10 @@ test.describe('the map on a desktop', () => {
     } else await select.selectOption({ label: calm });
     if (calm !== '') {
     expect(await edges(page).evaluateAll((gs) => gs.some((g) => g.getAttribute('data-from') === g.getAttribute('data-to')))).toBe(false); // no loop
-    await expect.poll(() => page.locator('svg [data-edge-id][data-role="pair"]').count(), { message: 'a two-way pair is one line' }).toBeGreaterThan(0);
-    const pair = page.locator('svg [data-edge-id][data-role="pair"]').first();
-    expect(((await pair.getAttribute('aria-label')) ?? '')).toMatch(/^.+ to .+: \d+ reactions?; .+ to .+: \d+ reactions?$/);
-    expect(await pair.locator('path:not([data-hit])').getAttribute('marker-start')).toMatch(/^url\(/);
-    await expect(page.locator('svg [data-count-extra-of]').first()).toBeAttached();
+    // step 8.4c, C: a two-way pair is two lines, each with its own mark, solid and dark in a chapter
+    await expect.poll(() => edges(page).count(), { message: 'a chapter draws its arrows' }).toBeGreaterThan(0);
+    expect(await edges(page).evaluateAll((gs) => gs.some((g) => g.getAttribute('data-role') === 'pair'))).toBe(false);
+    expect(await edges(page).evaluateAll((gs) => gs.some((g) => gs.some((h) => h.getAttribute('data-from') === g.getAttribute('data-to') && h.getAttribute('data-to') === g.getAttribute('data-from'))))).toBe(true); // the pair: two arrows
     }
     await select.selectOption({ label: 'Chapter 1' });
     await expect(page.locator('[data-map-busy]')).toBeVisible();

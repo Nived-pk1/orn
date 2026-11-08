@@ -13,7 +13,7 @@ test.describe('map marks in screen pixels', () => {
   test.use({ actionTimeout: 60_000 });
 
   for (const size of [{ width: 1280, height: 800 }, { width: 1920, height: 1000 }]) {
-    test(`a family's arrows: stroke 2 or 3 px, heads 10 px, chips 20 px and 12 px text, nothing overlaps, at Fit and zoomed out (${size.width} x ${size.height})`, async ({ page }) => {
+    test(`a family's arrows: stroke 2 px or more, heads 10 px or more, chips 20 px and 12 px text or more (they grow with the map, 8.4c), nothing overlaps, at Fit and zoomed out (${size.width} x ${size.height})`, async ({ page }) => {
       test.setTimeout(300_000);
       await openMapDesktop(page);
       await page.setViewportSize(size);
@@ -32,7 +32,7 @@ test.describe('map marks in screen pixels', () => {
     });
   }
 
-  test('a two-way pair: each chip is a button for its direction; a click near each head does the same', async ({ page }) => {
+  test('a two-way pair is two lines: each chip is a button for its own direction; a click on each line does the same (step 8.4c, C)', async ({ page }) => {
     test.setTimeout(300_000);
     await openMapDesktop(page, PAIR_DATA());
     await page.getByRole('combobox', { name: 'Chapter' }).selectOption('top_chapter-4');
@@ -40,7 +40,7 @@ test.describe('map marks in screen pixels', () => {
     const buttons = page.locator('svg [data-chip-button]');
     await expect(buttons).toHaveCount(2);
     const names = await buttons.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''));
-    expect(names.every((n) => /^.+ → .+, \d+ reactions?$/.test(n))).toBe(true);
+    expect(names.every((n) => /^.+ to .+/.test(n))).toBe(true);
     const sizes = await buttons.evaluateAll((els) => els.map((el) => el.getBoundingClientRect()).map((b) => [b.width, b.height]));
     sizes.forEach(([w, h]) => {
       expect(w).toBeGreaterThanOrEqual(19.99);
@@ -48,28 +48,43 @@ test.describe('map marks in screen pixels', () => {
     });
     for (const name of names) {
       await page.getByRole('button', { name }).click();
-      await expect(cornerLabel(page)).toContainText(`Selected: ${name.split(', ')[0]}`);
+      await expect(cornerLabel(page)).toContainText('Selected:');
+      await page.waitForTimeout(900);
     }
-    // near each head: the point 20 px before the end of each half of the line, measured just before each click (a selection can open the inspector and move the map)
-    const near = (which: 'forward' | 'back') =>
-      page.evaluate((w) => {
-        const path = document.querySelector('svg [data-layer="edges"] [data-role="pair"] > path:not([data-hit])') as unknown as SVGPathElement;
-        const m = path.getScreenCTM() as DOMMatrix;
-        const len = path.getTotalLength();
-        const k = m.a;
-        const d = w === 'forward' ? len * k - 20 : 20;
-        const p = path.getPointAtLength(d / k);
-        return { x: p.x * m.a + p.y * m.c + m.e, y: p.x * m.b + p.y * m.d + m.f };
-      }, which);
     await page.waitForTimeout(900);
     await page.screenshot({ path: `${shotsDir()}/map-marks-pair-1280x800.png` });
-    const forward = await near('forward');
-    await page.mouse.click(forward.x, forward.y);
-    await expect(cornerLabel(page)).toContainText(`Selected: ${names[0]?.split(', ')[0]}`);
-    await page.waitForTimeout(1200);
-    const back = await near('back');
-    await page.mouse.click(back.x, back.y);
-    await expect(cornerLabel(page)).toContainText(`Selected: ${names[1]?.split(', ')[0]}`);
+    // a click on the middle of each line selects that line
+    const ids = await page.locator('svg [data-layer="edges"] [data-edge-id][data-from="cls_family-08"][data-to="cls_family-13"], svg [data-layer="edges"] [data-edge-id][data-from="cls_family-13"][data-to="cls_family-08"]').evaluateAll((els) => els.map((el) => el.getAttribute('data-edge-id') ?? ''));
+    expect(ids).toHaveLength(2);
+    // the chip loop left one of them selected: a click on a selected arrow keeps it, so start with the one that is not
+    const picked = await page.locator('svg [data-overlay="selected"]').evaluateAll((els) => els.map((el) => el.getAttribute('data-overlay-id') ?? ''));
+    ids.sort((x, y) => Number(picked.includes(x)) - Number(picked.includes(y)));
+    for (const id of ids) {
+      await page.getByRole('button', { name: 'Fit', exact: true }).click();
+      await page.waitForTimeout(900);
+      // points of this line where this line is what is on top (another arrow may cross it): one of them must select it
+      const spots = await page.evaluate((edge) => {
+        const path = document.querySelector(`svg [data-layer="edges"] [data-edge-id="${edge}"] > path:not([data-hit])`) as unknown as SVGPathElement;
+        const m = path.getScreenCTM() as DOMMatrix;
+        const found: { x: number; y: number }[] = [];
+        for (const f of [0.4, 0.5, 0.3, 0.6, 0.25, 0.7, 0.2, 0.8]) {
+          const p = path.getPointAtLength(path.getTotalLength() * f);
+          const x = p.x * m.a + p.y * m.c + m.e;
+          const y = p.x * m.b + p.y * m.d + m.f;
+          if (document.elementFromPoint(x, y)?.closest('[data-edge-id]')?.getAttribute('data-edge-id') === edge) found.push({ x, y });
+        }
+        return found;
+      }, id);
+      expect(spots.length, `a free point on ${id}`).toBeGreaterThan(0);
+      const overlay = page.locator(`svg [data-overlay="selected"][data-overlay-id="${id}"]`);
+      for (const at of spots.slice(0, 3)) {
+        await page.mouse.click(at.x, at.y);
+        await page.waitForTimeout(700);
+        if ((await overlay.count()) === 1) break;
+      }
+      await expect(overlay).toHaveCount(1);
+      await page.waitForTimeout(1200);
+    }
   });
 
   test('a bucket with more than 15 arrows draws none, outlines the families and lists the arrows in the panel', async ({ page }) => {

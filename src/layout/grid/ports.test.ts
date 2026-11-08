@@ -62,15 +62,15 @@ describe('spreading the end points along a side', () => {
     expect(xs[0]).toBeCloseTo(hub.x + CORNER_CLEAR + usable / 4, 6);
   });
 
-  it('end points on one side are at least 12 px apart and 10 px from the corners, even on a short side', () => {
-    const others = ['p', 'q', 'r', 's'].map((id, i) => node(id, 8, i));
+  it('end points on one side are at least PORT_GAP (20 px, step 8.4c) apart and 10 px from the corners, even on a short side', () => {
+    const others = ['p', 'q'].map((id, i) => node(id, 8, i)); // a 56 px side holds two slots 20 px apart, clear of the corners
     const r = request([node('a', 0, 1), spacer, ...others], others.map((o, i) => edge(`e${i}`, 'a', o.id)));
     const out = run(r);
     const a = rectOf(r, out, 'a');
     const ys = r.edges.map((e) => first(out, e.id).y).sort((x, y) => x - y);
     for (let i = 1; i < ys.length; i += 1) expect((ys[i] as number) - (ys[i - 1] as number)).toBeGreaterThanOrEqual(PORT_GAP - 1e-9);
     expect(ys[0]).toBeGreaterThanOrEqual(a.y + CORNER_CLEAR - 1e-9);
-    expect(ys[3]).toBeLessThanOrEqual(a.y + a.height - CORNER_CLEAR + 1e-9);
+    expect(ys[1]).toBeLessThanOrEqual(a.y + a.height - CORNER_CLEAR + 1e-9);
     expect(out.notes).toEqual([]);
   });
 
@@ -86,10 +86,10 @@ describe('spreading the end points along a side', () => {
     }
     expect(new Set(ys).size).toBeLessThan(5); // some share a slot
     for (let i = 1; i < ys.length; i += 1) if (ys[i] !== ys[i - 1]) expect((ys[i] as number) - (ys[i - 1] as number)).toBeGreaterThanOrEqual(PORT_GAP - 1e-9);
-    expect(out.notes.some((n) => n.includes('more arrows than fit 12 px apart'))).toBe(true);
+    expect(out.notes.some((n) => n.includes('more arrows than fit 20 px apart'))).toBe(true);
   });
 
-  it('an arrow and its reverse run 12 px apart at both ends, in the same order (they do not cross)', () => {
+  it('an arrow and its reverse run PORT_GAP apart at both ends, in the same order (they do not cross)', () => {
     const r = request([node('a', 0, 0), node('b', 2, 0)], [edge('e1', 'a', 'b'), edge('e2', 'b', 'a')]);
     const out = run(r);
     expect(Math.abs(first(out, 'e1').y - first(out, 'e2').y)).toBeCloseTo(PORT_GAP, 6);
@@ -188,7 +188,8 @@ describe('the box scale in the layout (step 8.2b-fix, C1, C2)', () => {
     expect(dx).toBeCloseTo(120 + 192, 6);
   });
   it('a crowded layout is not scaled (boxScale absent)', () => {
-    const r = { ...request([node('a', 0, 0), node('b', 1, 0)], [edge('e1', 'a', 'b')]), spacing: { node: 24, layer: 4, edge: 12 } };
+    // step 8.4c, A2: a grown overview widens its column gap to 1.4 widths on its own, so the crowded case is a stack of rows 6 px apart (below 2 heights)
+    const r = { ...request([node('a', 0, 0), node('b', 0, 1)], [edge('e1', 'a', 'b')]), spacing: { node: 24, layer: 4, edge: 12 } };
     expect(layoutGrid({ ...r, growBoxes: true }, () => 0).boxScale).toBeUndefined();
     expect(run(request([node('a', 0, 0), node('b', 3, 0)], [])).boxScale).toBeUndefined(); // not asked for: never scaled
   });
@@ -197,7 +198,8 @@ describe('the box scale in the layout (step 8.2b-fix, C1, C2)', () => {
 describe('the box scale comes from the boxes only (step 8.3b, A5)', () => {
   it('a wide count chip next to a box does not limit the scale', () => {
     const r = request([node('a', 0, 0), node('b', 1, 0)], [{ ...edge('e1', 'a', 'b'), label: { width: 150, height: 20 } }]);
-    expect(layoutGrid({ ...r, growBoxes: true }, () => 0).boxScale).toBe(1.8);
+    // step 8.4c, A1: the column ratio decides now (pitch 312, width 120: 312 / (2.4 * 120)); the chip changes nothing
+    expect(layoutGrid({ ...r, growBoxes: true }, () => 0).boxScale).toBeCloseTo(312 / 288, 5);
   });
   it('on seeded layouts the scale is the largest factor that keeps every box 16 px from every other (boxes only)', () => {
     let seed = 7;

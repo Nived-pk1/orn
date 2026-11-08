@@ -150,7 +150,7 @@ export async function chipsSettled(page: Page): Promise<void> {
   await expect
     .poll(() =>
       page.evaluate(() => {
-        if (document.querySelector('svg [data-count-of], svg [data-count-extra-of]') === null) return 'none';
+        if (document.querySelector('svg [data-count-of]') === null) return 'none';
         const k = ((document.querySelector('svg [data-world]') as unknown as SVGGElement).getScreenCTM() as DOMMatrix).a;
         return document.querySelector('[data-chips-zoom]')?.getAttribute('data-chips-zoom') === String(Math.round(k * 100) / 100) ? 'settled' : 'waiting';
       }),

@@ -59,3 +59,18 @@ describe('chips placed in screen pixels', () => {
     expect([...first]).toEqual([...second]);
   });
 });
+
+describe('chips grow with the map (step 8.4c, B)', () => {
+  const route = [{ x: 0, y: -60 }, { x: 0, y: 60 }];
+  const between = (screenGap: number, zoom: number) => {
+    const half = screenGap / zoom / 2; // the gap between the two boxes in map units
+    return [box(-50, -half - 80, 100, 80), box(-50, half, 100, 80)];
+  };
+  it('a chip is 20 px tall at zoom 1: a gap of 30 screen px between two boxes holds it', () => {
+    expect(placeChipsAtZoom([req('a', route)], between(30, 1), 1).has('a')).toBe(true);
+  });
+  it('at zoom 1.5 the chip is 26.7 px tall (a third bigger, the most it grows): the same 30 screen px no longer hold it', () => {
+    expect(placeChipsAtZoom([req('a', route)], between(30, 1.5), 1.5).has('a')).toBe(false);
+    expect(placeChipsAtZoom([req('a', route)], between(34, 1.5), 1.5).has('a')).toBe(true);
+  });
+});

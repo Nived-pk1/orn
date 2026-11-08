@@ -10,7 +10,8 @@
 
 /* Edges: the dash pattern and the width are attributes (geometry.ts); the colour is here. */
 .edge {
-  vector-effect: non-scaling-stroke; /* 2 px (heavy 3 px) on the screen at every zoom (step 8.4b, A) */
+  vector-effect: non-scaling-stroke; /* screen pixels: 2 px at least, growing with the zoom up to 4 px (heavy 3 to 5; step 8.4c, B) */
+  stroke-width: clamp(2px, calc(var(--map-k, 1) * 2px), 4px);
   fill: none;
   stroke: var(--color-ink);
   stroke-linejoin: round;
@@ -23,12 +24,14 @@
   stroke-opacity: 0;
   vector-effect: non-scaling-stroke;
   pointer-events: stroke;
+  /* 16 px at least, wider as the line grows (step 8.4c, B): the stroke plus 14 px */
+  stroke-width: calc(clamp(2px, calc(var(--map-k, 1) * 2px), 4px) + 14px);
 }
 
 /* A finger needs 44 px (step 5.7, item i): on a coarse pointer the hit path is 44 SCREEN pixels wide at any zoom (the stroke does not scale with the drawing). */
 @media (pointer: coarse) {
   .edgeHit {
-    stroke-width: 28px;
+    stroke-width: calc(clamp(2px, calc(var(--map-k, 1) * 2px), 4px) + 26px);
   }
 }
 
@@ -41,6 +44,11 @@
 
 .edgeHeavy {
   stroke: var(--color-ink);
+  stroke-width: clamp(3px, calc(var(--map-k, 1) * 3px), 5px);
+}
+
+.edgeLight {
+  stroke-width: calc(clamp(2px, calc(var(--map-k, 1) * 2px), 4px) * 0.625);
 }
 
 .edgeDotted {
@@ -50,8 +58,8 @@
 .markerFilled,
 .markerAccent,
 .markerOpen {
-  /* an arrowhead is 10 screen px at every zoom: counter-scaled about its tip */
-  transform: translate(10px, 5px) scale(calc(1 / var(--map-k, 1))) translate(-10px, -5px);
+  /* an arrowhead is 10 screen px at least, growing with the zoom up to 16 px (step 8.4c, B): scaled about its tip */
+  transform: translate(10px, 5px) scale(calc(clamp(1, var(--map-k, 1), 1.6) / var(--map-k, 1))) translate(-10px, -5px);
 }
 
 .markerFilled {
@@ -59,9 +67,9 @@
   stroke: none;
 }
 
-/* a chip is drawn at its screen size: counter-scaled about its centre */
+/* a chip is 20 px at least (text 12), growing with the zoom up to a third bigger (30 px, text 16 at most; step 8.4c, B): scaled about its centre */
 .chipScale {
-  transform: scale(calc(1 / var(--map-k, 1)));
+  transform: scale(calc(clamp(1, var(--map-k, 1), 1.3333) / var(--map-k, 1)));
 }
 
 [data-chip-button] {
@@ -308,32 +316,6 @@ text.faded {
   stroke-width: 3px;
   stroke-linejoin: round;
   paint-order: stroke;
-}
-
-/* Badges */
-.badgeShape {
-  fill: var(--color-paper);
-  stroke: var(--color-ink);
-  stroke-width: 1;
-}
-
-.badgeShapeReview {
-  stroke: var(--color-review);
-}
-
-.badgeShapeWarning {
-  stroke: var(--color-warning);
-}
-
-.badgeShapeError {
-  stroke: var(--color-error);
-}
-
-.badgeMark {
-  fill: var(--color-ink);
-  font-size: var(--text-12);
-  font-weight: 600;
-  text-anchor: middle;
 }
 
 .count {

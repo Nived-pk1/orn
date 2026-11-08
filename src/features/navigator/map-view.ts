@@ -3,11 +3,11 @@
  * once by the pipeline; this is a derived, pure view over it (never stored, never fed back to the layout). Rules:
  *  - nothing focused and no chapter chosen: boxes only, no arrow (the quiet map);
  *  - a focused family (selected, or hovered for 150 ms): only the arrows that leave it ("makes": solid, in its group colour) and enter it
- *    ("made from": dashed, ink), the two lines of a two-way pair kept at least PAIR_GAP px apart;
- *  - a chapter and no focus: every arrow of the chapter, a two-way pair as ONE line with a head and a count chip at each end;
+ *    ("made from": dashed, ink); a two-way pair is two parallel lines, one per direction (step 8.4c, C);
+ *  - a chapter and no focus: every arrow of the chapter, a two-way pair as two lines, both solid and dark;
  *  - a self-loop is never drawn: the box carries "n within the family" instead;
  *  - Unclassified is hidden unless shown; the reactions that lead there are counted for the legend;
- *  - a busy chapter (more than BUSY_CHAPTER_ARROWS arrows after pair merging) draws none until a family is chosen (`busy` says how many);
+ *  - a busy chapter (more than BUSY_CHAPTER_ARROWS arrows) draws none until a family is chosen (`busy` says how many);
  *  - a chain ("From A to B") draws only the chain's arrows, heavy and solid in the first family's colour, numbered at their chips;
  *  - an arrow of ONE reaction shows that reaction's reagent words on its chip (`facts`), unless the chip would overlap another;
  *  - the selected arrow stays drawn. Boxes that are not the focus, not at an end of a drawn arrow (in a chapter also: with no reaction inside)
@@ -17,14 +17,11 @@ import type { MapMarks } from '@/render/svg';
 import type { Scene, SceneEdge, SceneNode } from '@/render/scene';
 import type { withChips, Drawn, PairFacts } from './map-chips';
 import { BUSY_ARROWS, isBusy } from './busy-rule';
-import { distance, pointAlong, reactionsWord, shifted, sideOffset } from './map-geometry';
+import { pairSeparationMap, strokePx } from '@/render/svg';
+import { pointAlong, shifted, sideOffset, snapEnds } from './map-geometry';
 
-/** The least distance between the two lines of a pair in a family focus (px). */
-export const PAIR_GAP = 6;
 /** A chapter with more arrows than this (after pair merging) draws none until a family is chosen (step 8.2b, B2). */
 export const BUSY_CHAPTER_ARROWS = BUSY_ARROWS;
-/** Where along a merged pair the count chips sit: near their own heads. */
-const NEAR_HEAD = 0.78;
 
 export interface MapViewOptions {
   /** The focused family (a node id), or null. */
@@ -63,7 +60,6 @@ export interface MapView {
 }
 
 const countOf = (edge: SceneEdge): number => edge.bundleSize ?? 1;
-const nameOf = (node: SceneNode | undefined, fallback: string): string => (node === undefined ? fallback : node.label.map((run) => run.text).join('') || fallback);
 const within = (n: number): string => `${n} ${n === 1 ? 'reaction' : 'reactions'} within the family`;
 
 function roleOf(edge: SceneEdge, focus: string | null, nodes: ReadonlyMap<string, SceneNode>): Drawn {
@@ -74,45 +70,31 @@ function roleOf(edge: SceneEdge, focus: string | null, nodes: ReadonlyMap<string
   return { edge, mark: { role: 'makes', ...(tone === undefined ? {} : { tone }) } };
 }
 
-/** Two arrows between the same two boxes, one each way: one line, a head at each end, the other direction's chip near the start. */
-function mergePairs(drawn: readonly Drawn[], nodes: ReadonlyMap<string, SceneNode>): Drawn[] {
-  const byKey = new Map(drawn.map((d) => [`${d.edge.from}>${d.edge.to}`, d]));
-  const done = new Set<string>();
-  const out: Drawn[] = [];
-  for (const d of [...drawn].sort((a, b) => (a.edge.id < b.edge.id ? -1 : a.edge.id > b.edge.id ? 1 : 0))) {
-    const key = `${d.edge.from}>${d.edge.to}`;
-    if (done.has(key)) continue;
-    const back = byKey.get(`${d.edge.to}>${d.edge.from}`);
-    done.add(key);
-    if (back === undefined) {
-      out.push(d);
-      continue;
-    }
-    done.add(`${back.edge.from}>${back.edge.to}`);
-    const e = d.edge;
-    const fromName = nameOf(nodes.get(e.from), e.from);
-    const toName = nameOf(nodes.get(e.to), e.to);
-    const tone = nodes.get(e.from)?.tone;
-    const merged: SceneEdge = {
-      ...e,
-      labelAt: pointAlong(e.points, NEAR_HEAD),
-      bundleSize: countOf(e),
-      ariaLabel: `${fromName} to ${toName}: ${reactionsWord(countOf(e))}; ${toName} to ${fromName}: ${reactionsWord(countOf(back.edge))}`,
-    };
-    out.push({ edge: merged, mark: { role: 'pair', startHead: true, pair: { backId: back.edge.id, forwardName: `${fromName} → ${toName}`, backName: `${toName} → ${fromName}` }, extraChip: { at: pointAlong(e.points, 1 - NEAR_HEAD), size: countOf(back.edge) }, ...(tone === undefined ? {} : { tone }) } });
-  }
-  return out;
-}
-
-/** In a family focus, the two lines of a pair that run on top of each other are moved PAIR_GAP / 2 apart each (arcs that already bow apart stay). */
-function separatePairs(drawn: readonly Drawn[]): Drawn[] {
+/**
+ * A two-way pair is TWO lines, one per direction (step 8.4c, C; ADR-044 addendum). They are drawn parallel, the stroke EDGES `pairGapPx(zoom)` apart
+ * on the screen (8 to 16 px, growing with the zoom), each on the side the layout put it. Each is marked `paired`; with no family focused both are ink
+ * (no colour: neither is "made" by a chosen family). Everything else about the lines (style, chip, head, hit) is the arrow's own.
+ */
+function pairUp(drawn: readonly Drawn[], zoom: number, focused: boolean, nodes: ReadonlyMap<string, SceneNode>): Drawn[] {
   const byKey = new Map(drawn.map((d) => [`${d.edge.from}>${d.edge.to}`, d]));
   return drawn.map((d) => {
     const back = byKey.get(`${d.edge.to}>${d.edge.from}`);
-    if (back === undefined) return d;
-    if (distance(pointAlong(d.edge.points, 0.5), pointAlong(back.edge.points, 0.5)) >= PAIR_GAP) return d;
-    const by = sideOffset(d.edge.points, PAIR_GAP / 2);
-    return { mark: d.mark, edge: { ...d.edge, points: shifted(d.edge.points, by), labelAt: { x: d.edge.labelAt.x + by.x, y: d.edge.labelAt.y + by.y } } };
+    if (back === undefined || d.edge.from === d.edge.to) return d;
+    const { tone: _tone, ...plain } = d.mark;
+    const separation = pairSeparationMap(zoom, (strokePx(d.edge.weight, zoom) + strokePx(back.edge.weight, zoom)) / 2); // the edges, not the centres, are the gap apart
+    const mark = { ...(focused ? d.mark : plain), paired: true as const };
+    // the signed distance of the other line's middle from this one, along this line's own normal: its side stays, its size becomes `separation`
+    const normal = sideOffset(d.edge.points, 1);
+    const from = pointAlong(d.edge.points, 0.5);
+    const to = pointAlong(back.edge.points, 0.5);
+    const signed = (to.x - from.x) * normal.x + (to.y - from.y) * normal.y;
+    const wanted = signed < 0 ? -separation : separation;
+    const by = sideOffset(d.edge.points, -(wanted - signed) / 2);
+    const moved = shifted(d.edge.points, by);
+    const fromBox = nodes.get(d.edge.from);
+    const toBox = nodes.get(d.edge.to);
+    const points = fromBox === undefined || toBox === undefined ? moved : snapEnds(moved, fromBox, toBox); // the ends stay on the borders of their boxes
+    return { mark, edge: { ...d.edge, points, labelAt: { x: d.edge.labelAt.x + by.x, y: d.edge.labelAt.y + by.y } } };
   });
 }
 
@@ -133,7 +115,7 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
   const selected = options.selectedEdgeId === undefined || chosen.some((edge) => edge.id === options.selectedEdgeId) ? undefined : usable.find((edge) => edge.id === options.selectedEdgeId);
   const base = [...chosen, ...(selected === undefined ? [] : [selected])].map((edge) => roleOf(edge, chain === undefined ? focus : null, nodes));
   const asChain = (d: Drawn): Drawn => ({ edge: { ...d.edge, weight: 'heavy', stroke: 'solid' }, mark: { role: 'makes', ...(chainTone === undefined ? {} : { tone: chainTone }) } });
-  const drawn = chain !== undefined ? base.map(asChain) : focus !== null ? separatePairs(base) : options.chapter ? mergePairs(base, nodes) : base;
+  const drawn = chain !== undefined ? base.map(asChain) : focus !== null || options.chapter ? pairUp(base, options.zoom ?? 1, focus !== null, nodes) : base;
   // a busy chapter draws nothing until a family is chosen (its families stay at full strength); the selected arrow stays
   const busy = chain === undefined && (focus !== null || options.chapter) && isBusy(drawn.length) ? drawn.length : 0;
   const drawable = busy > 0 ? drawn.filter((d) => d.edge.id === options.selectedEdgeId) : drawn;

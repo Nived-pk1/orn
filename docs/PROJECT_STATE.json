@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-07",
+  "lastUpdated": "2026-11-08",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -127,7 +127,8 @@
     "8.2a",
     "8.2b",
     "8.4a",
-    "8.4b"
+    "8.4b",
+    "8.4c"
   ],
   "nextPhase": 8,
   "outcomeGroupsStep": {
@@ -662,5 +663,16 @@
     },
     "adr": "ADR-044 addendum 2026-11-07",
     "notes": "docs/reviews/step-8-4b-notes.md"
+  },
+  "step84c": {
+    "closed": "2026-11-08",
+    "deployed": null,
+    "note": "closed, NOT deployed, NOT pushed: REVIEW REQUIRED (pair spread below zoom 0.58, arrows.spec end gap relaxed to 4.5 px, hit overlap band). 8.4d is the screenshot-led pass.",
+    "initialJsGzipKb": {
+      "study": 382.77,
+      "studio": 386.6
+    },
+    "adr": "ADR-044 addendum 2026-11-08",
+    "notes": "docs/reviews/step-8-4c-notes.md"
   }
 }

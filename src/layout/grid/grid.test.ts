@@ -46,6 +46,23 @@ describe('cells, sizes and gaps', () => {
     expect(out.bounds).toEqual({ width: 140 + across + 60, height: 80 + down + 40 });
   });
 
+  it('asked to grow the boxes (the overview), the column gap is at least 1.4 widths of the widest box: wide boxes push the columns apart, narrow ones keep the stated gap (step 8.4c, A2)', () => {
+    const cells = (width: number) => request([node('a', { column: 0, row: 0 }, width, 40), node('b', { column: 1, row: 0 }, width, 40)], [], { growBoxes: true });
+    const apart = (width: number): number => {
+      const r = cells(width);
+      const out = run(r);
+      return rectOf(r, out, 'b').x - (rectOf(r, out, 'a').x + width);
+    };
+    expect(apart(120)).toBe(SPACING.layer * COLUMN_GAP_FACTOR); // 1.4 x 120 = 168 is less than 192: the stated gap
+    expect(apart(160)).toBeGreaterThanOrEqual(1.4 * 160);
+    expect(apart(200)).toBeGreaterThanOrEqual(1.4 * 200);
+    expect(apart(200)).toBeLessThan(1.4 * 200 + 12); // and not more than a little over
+    // not asked to grow: the gap is the stated one whatever the width
+    const plain = request([node('a', { column: 0, row: 0 }, 200, 40), node('b', { column: 1, row: 0 }, 200, 40)]);
+    const out = run(plain);
+    expect(rectOf(plain, out, 'b').x - (rectOf(plain, out, 'a').x + 200)).toBe(SPACING.layer * COLUMN_GAP_FACTOR);
+  });
+
   it('empty rows and columns take no room: cells are counted in use, in order', () => {
     const r = request([node('a', { column: 0, row: 0 }), node('b', { column: 5, row: 7 })]);
     const out = run(r);

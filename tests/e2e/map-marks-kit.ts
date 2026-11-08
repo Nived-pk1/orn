@@ -72,10 +72,10 @@ export async function measureMarks(page: Page): Promise<MarkMeasure> {
     const markerPath = document.querySelector('svg marker path');
     const transform = markerPath === null ? 'none' : getComputedStyle(markerPath).transform;
     const head = markerPath === null ? [] : [10 * new DOMMatrix(transform === 'none' ? undefined : transform).a * k];
-    const chips = [...document.querySelectorAll('svg [data-count-of], svg [data-count-extra-of]')].map((g) => {
+    const chips = [...document.querySelectorAll('svg [data-count-of]')].map((g) => {
       const b = rect(g);
       const t = g.querySelector('text');
-      return { id: g.getAttribute('data-count-of') ?? g.getAttribute('data-count-extra-of') ?? '', left: b.left, top: b.top, right: b.right, bottom: b.bottom, textHeight: t === null ? 0 : rect(t).height };
+      return { id: g.getAttribute('data-count-of') ?? '', left: b.left, top: b.top, right: b.right, bottom: b.bottom, textHeight: t === null ? 0 : rect(t).height };
     });
     const nodes = [...document.querySelectorAll('svg [data-node-id]')].map((g) => {
       const b = rect(g);
@@ -91,17 +91,19 @@ const cross = (a: Box, b: Box): boolean => a.left < b.right && b.left < a.right 
 /** Problems found in one measurement (an empty list is a pass). */
 export function marksProblems(m: MarkMeasure): string[] {
   const out: string[] = [];
+  // step 8.4c, B: the sizes of 8.4b are the FLOORS now; marks grow with the map up to a ceiling (stroke 4 px, heavy 5; head 16; chip 30 px; hit area grows with the stroke)
   m.strokes.forEach((s) => {
-    if (Math.abs(s - 2) > 0.1 && Math.abs(s - 3) > 0.1) out.push(`stroke ${s.toFixed(2)} px`);
+    if (s < 2 - 0.1 || s > 5 + 0.1) out.push(`stroke ${s.toFixed(2)} px`);
   });
   m.hit.forEach((h) => {
-    if (h.effect !== 'non-scaling-stroke' || !['16px', '28px'].includes(h.width)) out.push(`hit ${h.width} ${h.effect}`);
+    const width = parseFloat(h.width);
+    if (h.effect !== 'non-scaling-stroke' || !(width >= 16 - 0.1) || width > 40) out.push(`hit ${h.width} ${h.effect}`);
   });
   m.head.forEach((h) => {
-    if (Math.abs(h - 10) > 0.6) out.push(`arrowhead ${h.toFixed(2)} px`);
+    if (h < 10 - 0.6 || h > 16 + 0.6) out.push(`arrowhead ${h.toFixed(2)} px`);
   });
   m.chips.forEach((c, i) => {
-    if (c.bottom - c.top < 19.5) out.push(`chip ${c.id} ${(c.bottom - c.top).toFixed(1)} px tall`);
+    if (c.bottom - c.top < 19.5 || c.bottom - c.top > 30.5) out.push(`chip ${c.id} ${(c.bottom - c.top).toFixed(1)} px tall`);
     if (c.textHeight < 12) out.push(`chip ${c.id} text ${c.textHeight.toFixed(1)} px`);
     m.chips.slice(i + 1).forEach((d) => cross(c, d) && out.push(`chips ${c.id} and ${d.id} overlap`));
     m.nodes.forEach((n) => cross(c, n) && out.push(`chip ${c.id} overlaps box ${n.id}`));

@@ -19,7 +19,6 @@ export type LabelSizes = ReadonlyMap<string, LabelSize>;
 
 export const ARROW_TEXT_SIZE = 11;
 export const ARROW_LINE_HEIGHT = ARROW_TEXT_SIZE * 1.3;
-export const BADGE_SIZE = 14;
 /** Margin added around the measured text: the paper-coloured outline (item f) and a little air. */
 export const LABEL_MARGIN = { x: 10, y: 6 } as const;
 
@@ -28,7 +27,7 @@ export const CHIP_TEXT_SIZE = 12;
 export const CHIP_HEIGHT = 20;
 export const chipWidth = (count: number): number => 12 + 8 * String(count).length;
 
-export const countWidth = (count: number): number => BADGE_SIZE + Math.max(0, String(count).length - 1) * 6;
+export { BADGE_SIZE, countWidth } from './title-row';
 
 const STYLE: TextStyle = { size: ARROW_TEXT_SIZE, weight: 'regular', mono: false };
 const safe = (value: number): number => (Number.isFinite(value) && value > 0 ? value : 0);

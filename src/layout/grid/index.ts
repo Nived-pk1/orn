@@ -62,7 +62,7 @@ function solve(request: LayoutRequest, boxes: ReadonlyMap<string, Rect>): Solved
 
 export function layoutGrid(request: LayoutRequest, durationMs: () => number, options: GridOptions = {}): LayoutResult {
   const { boxes: plain, sharedCells } = arrange(request);
-  // the box scale comes from the BOXES ONLY (step 8.3b, A5): the largest factor up to 1.8 with at least 16 px between any two boxes. Arrows are then
+  // the box scale comes from the BOXES ONLY (step 8.3b, A5): the largest factor (at least 1) that keeps the column gap at 1.4 box widths and the row gap at 2 box heights (step 8.4c, A1). Arrows are then
   // routed against the scaled boxes; a line that cannot clear stays straight and the notes below say so.
   const grown = request.growBoxes === true ? boxScaleFor([...plain.values()], []) : 1;
   const used = grown < MIN_VISIBLE_SCALE ? 1 : grown;

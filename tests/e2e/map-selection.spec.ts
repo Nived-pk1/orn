@@ -2,7 +2,7 @@
  * The map has ONE selection (step 8.2b-fix, S1 to S4; ADR-044 addendum), the STUDIO build over the own-data layout fixture with Unclassified
  * shown. The user's three sequences, by click on a desktop (1280 x 800) and by tap on a Pixel 7: the inspector's header names the family, the
  * ARROW ("<from> → <to>") or the bucket ("Compounds not in a family yet") that was picked last, never an earlier one. Also the arrow's end cards,
- * the bucket's chips and rows, and a small chapter whose two-way pair is ONE line with a head and a chip at each end. Screenshots go to screenshots/.
+ * the bucket's chips and rows, and a small chapter whose two-way pair is two lines, one head each. Screenshots go to screenshots/.
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
@@ -226,21 +226,17 @@ test.describe('the map selection on a desktop', () => {
     await expectClean(seen);
   });
 
-  test('a small chapter: a two-way pair is ONE line with a head and a chip at each end', async ({ page }) => {
+  test('a small chapter: a two-way pair is TWO lines, one head each, apart (step 8.4c, C)', async ({ page }) => {
     test.setTimeout(400_000);
     const seen = await watch(page);
     await openMapDesktop(page);
     await page.getByRole('combobox', { name: 'Chapter' }).selectOption({ label: 'Chapter 4' });
-    await expect.poll(() => edges(page).count()).toBe(3);
-    const pair = page.locator('svg [data-edge-id][data-role="pair"]');
-    await expect(pair).toHaveCount(1);
-    await expect(pair.locator('path[marker-start]')).toHaveCount(1);
-    await expect(pair.locator('path[marker-end]')).toHaveCount(1);
-    const id = (await pair.getAttribute('data-edge-id')) as string;
-    await expect(page.locator(`svg [data-count-of="${id}"]`)).toHaveCount(1);
-    await expect(page.locator(`svg [data-count-extra-of="${id}"]`)).toHaveCount(1);
+    await expect.poll(() => edges(page).count()).toBe(4); // the pair is two arrows now, plus the two one-way arrows
+    await expect(page.locator('svg [data-edge-id][data-role="pair"]')).toHaveCount(0);
+    await expect(page.locator('svg [data-edge-id] path[marker-start]')).toHaveCount(0);
+    await expect(page.locator('svg [data-edge-id] path[marker-end]:not([data-hit])')).toHaveCount(4);
     await page.waitForTimeout(400);
-    await page.screenshot({ path: `${shotsDir()}/map-merged-pair-1280x800.png` });
+    await page.screenshot({ path: `${shotsDir()}/map-pair-two-lines-1280x800.png` });
     await expectClean(seen);
   });
 });

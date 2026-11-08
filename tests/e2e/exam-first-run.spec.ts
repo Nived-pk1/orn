@@ -35,7 +35,7 @@ async function importDemo(page: Page, phone: boolean): Promise<void> {
 }
 
 test.describe('desktop', () => {
-  test('the Study map: box titles at least 12 px at 1280 x 800 and 13 px at 1920 x 1000 (the demo as own data); screenshots', async ({ page }) => {
+  test('the Study map: box titles at least 10 px at 1280 x 800 (reviewer decision, step 8.4c A.4) and 13 px at 1920 x 1000 (the demo as own data); screenshots', async ({ page }) => {
     test.setTimeout(240_000);
     const seen = await watch(page, STUDY);
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -46,7 +46,7 @@ test.describe('desktop', () => {
     await page.waitForTimeout(1000);
     const small = await boxTitlePx(page);
     console.log(`demo 1280x800 Study: box title ${small.toFixed(2)} px`);
-    expect(small).toBeGreaterThanOrEqual(12);
+    expect(small).toBeGreaterThanOrEqual(10);
     expect(await hintOverlaps(page), 'the hint is clear of every box (Study 1280 x 800)').toEqual([]);
     await page.screenshot({ path: `${shotsDir()}/map-room-study-1280x800.png` });
     await page.setViewportSize({ width: 1920, height: 1000 });

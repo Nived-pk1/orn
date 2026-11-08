@@ -52,3 +52,47 @@ export function boxesRect(boxes: readonly { readonly x: number; readonly y: numb
   }
   return { x0, y0, x1, y1 };
 }
+
+interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Where the line through `from` along `dir` meets the border of `box` nearest to `from` (undefined when it meets none). */
+function borderNear(from: Point, dir: Point, box: Box): Point | undefined {
+  const hits: Point[] = [];
+  const within = (v: number, low: number, high: number): boolean => v >= low - 1e-6 && v <= high + 1e-6;
+  if (dir.x !== 0) {
+    for (const x of [box.x, box.x + box.width]) {
+      const y = from.y + ((x - from.x) / dir.x) * dir.y;
+      if (within(y, box.y, box.y + box.height)) hits.push({ x, y });
+    }
+  }
+  if (dir.y !== 0) {
+    for (const y of [box.y, box.y + box.height]) {
+      const x = from.x + ((y - from.y) / dir.y) * dir.x;
+      if (within(x, box.x, box.x + box.width)) hits.push({ x, y });
+    }
+  }
+  return hits.sort((a, b) => length(a, from) - length(b, from))[0];
+}
+
+/**
+ * A line that was moved sideways ends beside its box's border, not on it (step 8.4c, C): each end slides along its own first or last segment to the
+ * border of its box. An end that meets no border keeps where it is. The inner points stay.
+ */
+export function snapEnds(points: readonly Point[], from: Box, to: Box): Point[] {
+  if (points.length < 2) return [...points];
+  const out = [...points];
+  const first = points[0] as Point;
+  const second = points[1] as Point;
+  const last = points[points.length - 1] as Point;
+  const before = points[points.length - 2] as Point;
+  const start = borderNear(first, { x: second.x - first.x, y: second.y - first.y }, from);
+  const end = borderNear(last, { x: last.x - before.x, y: last.y - before.y }, to);
+  if (start !== undefined) out[0] = start;
+  if (end !== undefined) out[out.length - 1] = end;
+  return out;
+}

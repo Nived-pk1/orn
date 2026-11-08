@@ -5,6 +5,7 @@ export { buildLayoutRequest, directionOfView, isArranged, DEFAULT_SPACING, LAYOU
 export type { LayoutRequestOptions, LayoutRequestResult } from './layout-request';
 export { formulaRuns, partsToRuns, plainRuns, richToRuns } from './formatted-text';
 export { nodeSizes, BOXES, GRID, roundUpToGrid } from './sizes';
+export { TITLE_ROW_GAP, BADGE_GAP, CAPTION_SIZE, loopsCaption, badgeWidth, badgeRunWidth, titleRowExtra } from './title-row';
 export { labelSizes, arrowLines, linesOfPath, ARROW_TEXT_SIZE, ARROW_LINE_HEIGHT, BADGE_SIZE, CHIP_HEIGHT, CHIP_TEXT_SIZE, LABEL_MARGIN, chipWidth, chipTextWidth, countWidth } from './label-sizes';
 export type { LabelSize, LabelSizes } from './label-sizes';
 export { drawnPaths } from './paths';

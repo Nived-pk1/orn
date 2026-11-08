@@ -137,7 +137,10 @@ test.describe('touch on the overview map', () => {
       const computed = getComputedStyle(hit);
       return { width: computed.strokeWidth, effect: computed.vectorEffect };
     });
-    expect(style).toEqual({ width: '28px', effect: 'non-scaling-stroke' });
+    // step 8.4c, B: 28 px is the floor; the hit area grows with the stroke (stroke + 26 px)
+    expect(style.effect).toBe('non-scaling-stroke');
+    expect(parseFloat(style.width)).toBeGreaterThanOrEqual(28);
+    expect(parseFloat(style.width)).toBeLessThanOrEqual(32);
     await page.getByRole('button', { name: 'Zoom out' }).click();
     await page.getByRole('button', { name: 'Zoom out' }).click();
     expect((await worldOf(page)).scale).toBeLessThan(0.9);

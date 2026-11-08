@@ -53,7 +53,7 @@ describe('keyOf: what the map needs explained, only when it draws it (step 5.5d 
     expect(key.lines).toBe(true);
     expect(key.chip).toBe(true);
   });
-  it('a chapter with a two-way pair draws it as one line, and the pair is explained', () => {
+  it('a chapter with a two-way pair draws it as two lines, and the pair is explained', () => {
     const scene = demoNavigatorScene(false);
     const one = scene.edges.find((e) => e.from !== e.to && scene.edges.some((r) => r.from === e.to && r.to === e.from));
     expect(one).toBeTruthy();
@@ -78,7 +78,7 @@ describe('NavigatorLegend explains the marks in words next to small samples', ()
       "solid line in the family's colour: what the family makes",
       'dashed dark line: what the family is made from',
       'number of reactions on this arrow',
-      'one line with a head at each end: reactions both ways, a number near each head',
+      'two parallel lines, one for each direction: reactions both ways, a number near each head',
       '↻ n: reactions that start and end in the same family (no loop is drawn)',
     ]);
     for (const li of within(list).getAllByRole('listitem')) expect(li.querySelector('svg[aria-hidden="true"]')).not.toBeNull();

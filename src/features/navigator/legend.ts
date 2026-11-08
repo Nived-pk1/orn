@@ -38,7 +38,7 @@ export interface LegendKey {
   readonly lines: boolean;
   /** A count chip sits on an arrow. */
   readonly chip: boolean;
-  /** A two-way pair is drawn as one line with a head at each end. */
+  /** A two-way pair is drawn as two parallel lines, one per direction (step 8.4c, C). */
   readonly pair: boolean;
   /** A box says "n within the family" (no loop is drawn any more). */
   readonly within: boolean;
@@ -55,7 +55,7 @@ export function keyOf(view: MapView | null): LegendKey {
     // step 8.2b (B3): the rows about arrows show only while an arrow is drawn
     lines: view.scene.edges.length > 0,
     chip: view.scene.edges.length > 0,
-    pair: marks.some((mark) => mark.role === 'pair'),
+    pair: marks.some((mark) => mark.paired === true),
     within: view.marks.captions.size > 0,
     unclassified: view.unclassified.present ? { shown: view.unclassified.shown, reactions: view.unclassified.reactions } : undefined,
   };

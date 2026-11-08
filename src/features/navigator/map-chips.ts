@@ -26,7 +26,7 @@ const wordsOf = (facts: Facts, from: string, to: string): { readonly words: stri
   return { words: found?.words, parts: found?.parts };
 };
 
-/** Where along a merged pair the chips sit: each near its own head (map-view.ts says the same). */
+/** Where along a line of a two-way pair its chip sits: near its own head, so the two chips of a pair are at opposite ends (step 8.4c, C). */
 const NEAR_HEAD = 0.78;
 
 /**
@@ -39,7 +39,7 @@ export function withChips(drawn: readonly Drawn[], facts: Facts, chain: boolean,
   drawn.forEach((d, at) => {
     const { edge, mark } = d;
     const reactions = facts?.(edge.from, edge.to)?.reactions;
-    const pair = mark.extraChip !== undefined;
+    const pair = mark.paired === true;
     wishes.push({
       key: edge.id,
       at: edge.labelAt,
@@ -47,23 +47,19 @@ export function withChips(drawn: readonly Drawn[], facts: Facts, chain: boolean,
       start: pair ? NEAR_HEAD : 0.5,
       count: chain ? (reactions ?? edge.bundleSize ?? 1) : (edge.bundleSize ?? 1),
       ...wordsOf(facts, edge.from, edge.to),
-      base: chain || edge.bundleSize !== undefined ? 'number' : 'none',
+      base: chain || pair || edge.bundleSize !== undefined ? 'number' : 'none', // each line of a pair has its own chip (step 8.4c, C)
       ...(chain ? { step: at + 1 } : {}),
     });
-    if (mark.extraChip !== undefined) wishes.push({ key: `${edge.id}:back`, at: mark.extraChip.at, route: edge.points, start: 1 - NEAR_HEAD, count: mark.extraChip.size, ...wordsOf(facts, edge.to, edge.from) });
   });
   const chips = resolveChips(wishes, nodes, zoom);
   return drawn.map((d) => {
     const own = chips.get(d.edge.id);
-    const back = chips.get(`${d.edge.id}:back`);
-    const extra = d.mark.extraChip;
     const wanted = d.edge.bundleSize !== undefined || chain || own !== undefined || d.mark.chip !== undefined;
     return {
       edge: d.edge,
       mark: {
         ...d.mark,
         ...(own !== undefined ? { chip: own } : wanted && (d.edge.bundleSize !== undefined || chain) ? { chipHidden: true } : {}),
-        ...(extra === undefined ? {} : back === undefined ? { extraChip: { ...extra, hidden: true } } : { extraChip: { ...extra, text: back.text, name: back.name, at: back.at, ...(back.runs === undefined ? {} : { runs: back.runs }) } }),
       },
     };
   });

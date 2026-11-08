@@ -10,8 +10,8 @@
 import type { LayoutEdgeInput, Point } from '../contracts';
 import { centreOf, type Rect } from './geometry';
 
-/** The least distance between two end points on one side, and between an arrow and its reverse. */
-export const PORT_GAP = 12;
+/** The least distance between two end points on one side, and between an arrow and its reverse (step 8.4c, C: 20 map units, so the stroke edges are 8 px or more apart at the sizes Fit gives). */
+export const PORT_GAP = 20;
 /** An end point is at least this far from a corner of the box: the corner radius (8 px) and a little air. */
 export const CORNER_CLEAR = 10;
 

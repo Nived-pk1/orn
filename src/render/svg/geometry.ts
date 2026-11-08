@@ -4,7 +4,7 @@
  * weight, never colour alone; UI_ARCHITECTURE §3) and a test can read them from the DOM.
  */
 import type { LodLevel, SceneBadge, SceneEdge, SceneNode } from '@/render/scene';
-import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE, BOXES, STRUCTURE_AREA } from '@/render/scene';
+import { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_GAP, BADGE_SIZE, BOXES, badgeRunWidth, STRUCTURE_AREA, TITLE_ROW_GAP } from '@/render/scene';
 
 // The arrow-text and badge sizes belong to the Scene (the layout reserves room for them); the renderer draws in that room.
 export { ARROW_LINE_HEIGHT, ARROW_TEXT_SIZE, BADGE_SIZE };
@@ -22,7 +22,7 @@ export const ARROW_SIZE = 10;
 export const HUB_RULE_WIDTH = 4;
 /** The corner radius of a hub card (an `rx` attribute): the `--radius-8` token, 8 px (tokens.css; a test keeps them equal). */
 export const HUB_RADIUS = 8;
-export const BADGE_GAP = 3;
+export { BADGE_GAP };
 export const SELECTION_PAD = 3;
 export const FOCUS_PAD = 6;
 
@@ -78,6 +78,22 @@ export function textSlots(node: SceneNode): TextSlots {
     labelSize,
     sublabelSize,
   };
+}
+
+/** The right end of the title row: one padding inside the box (step 8.4c, A3). */
+export const titleRowRight = (node: SceneNode): number => node.x + node.width - BOXES[node.box].padX * (node.scale ?? 1);
+
+/** The top-left corner of the badge run: wholly inside the box, centred on the title row, ending at its right end. The first badge is the rightmost. */
+export function badgeOrigin(node: SceneNode): { readonly x: number; readonly y: number } {
+  const slots = textSlots(node);
+  const rowTop = slots.labelY - slots.labelSize * 0.9;
+  return { x: titleRowRight(node) - (badgeRunWidth(node.badges) - BADGE_GAP), y: node.y + rowTop + (slots.labelSize * 1.3 - BADGE_SIZE) / 2 };
+}
+
+/** Where "↻ n" ends (text-anchor end) and its baseline: on the title row, left of the badges. */
+export function loopsAnchor(node: SceneNode): { readonly x: number; readonly y: number } {
+  const run = badgeRunWidth(node.badges);
+  return { x: titleRowRight(node) - (run > 0 ? run - BADGE_GAP + TITLE_ROW_GAP : 0), y: node.y + textSlots(node).labelY };
 }
 
 /** Badge marks: a SHAPE and a short mark per kind, so no badge is told apart by colour only. */

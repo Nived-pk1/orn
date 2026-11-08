@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 /**
- * The map's focus marks on the renderer (step 8.2a, ADR-044): the colour of an arrow's group, a head at each end of a pair with a chip near
- * each, boxes shown faded but still clickable, a small caption under a box, and the box under the pointer. Absent marks: the drawing is unchanged.
+ * The map's focus marks on the renderer (step 8.2a, ADR-044): the colour of an arrow's group, boxes shown faded but still clickable, a small caption under a box, and the box under the pointer. Absent marks: the drawing is unchanged.
  */
 import { cleanup, fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -32,13 +31,24 @@ describe('an arrow with a mark', () => {
     expect(edgePath(container).getAttribute('stroke-dasharray')).toBeTruthy();
   });
 
-  it('a pair has a head at the start too, and the other direction\'s chip near it', () => {
-    const { container } = draw(scene, { lod: 2, marks: marks({ edges: new Map([[arrow.id, { role: 'pair', startHead: true, extraChip: { at: { x: 11, y: 22 }, size: 7 } }]]) }) });
-    expect(edgePath(container).getAttribute('marker-start')).toMatch(/\)$/);
+  it('a line of a two-way pair has one head (at its end only), a hit area of its own, and a chip that is a button for ITS direction (step 8.4c, C)', () => {
+    const bundled = { ...scene, edges: scene.edges.map((e) => (e.id === arrow.id ? { ...e, bundleSize: 3 } : e)) };
+    const { container } = draw(bundled, { lod: 2, marks: marks({ edges: new Map([[arrow.id, { role: 'makes', paired: true }]]) }), });
+    expect(edgePath(container).getAttribute('marker-start')).toBeNull();
     expect(edgePath(container).getAttribute('marker-end')).toMatch(/\)$/);
-    const extra = container.querySelector(`[data-count-extra-of="${arrow.id}"]`) as Element;
-    expect(extra.querySelector('text')?.textContent).toBe('7');
-    expect(extra.closest('[aria-hidden="true"]')).not.toBeNull(); // the pair's one spoken name is on the line itself
+    const hits = container.querySelectorAll(`[data-edge-id="${arrow.id}"] path[data-hit]`);
+    expect(hits).toHaveLength(1); // not two halves
+    expect(hits[0]?.getAttribute('stroke-width')).toBe('16');
+    const chip = container.querySelector(`[data-count-of="${arrow.id}"]`) as Element;
+    expect(chip.getAttribute('role')).toBe('button');
+    expect(chip.getAttribute('data-hit-edge')).toBe(arrow.id);
+    expect(container.querySelector('[data-count-extra-of]')).toBeNull();
+  });
+
+  it('a one-way arrow keeps one plain hit path and a chip that is not a button', () => {
+    const bundled = { ...scene, edges: scene.edges.map((e) => (e.id === arrow.id ? { ...e, bundleSize: 3 } : e)) };
+    const { container } = draw(bundled, { lod: 2, marks: marks({ edges: new Map([[arrow.id, { role: 'makes' }]]) }) });
+    expect(container.querySelector(`[data-count-of="${arrow.id}"]`)?.getAttribute('role')).toBe('img');
   });
 });
 
@@ -72,7 +82,7 @@ describe('boxes and captions', () => {
 
   it('without marks nothing is faded, captioned or marked', () => {
     const { container } = draw(scene, { lod: 2 });
-    expect(container.querySelector('[data-faded], [data-loops-of], [data-role], [data-count-extra-of]')).toBeNull();
+    expect(container.querySelector('[data-faded], [data-loops-of], [data-role]')).toBeNull();
   });
 });
 

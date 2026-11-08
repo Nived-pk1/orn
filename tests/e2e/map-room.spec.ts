@@ -49,7 +49,7 @@ test.describe('the measuring helper', () => {
 test.describe('more room for the map (Studio)', () => {
   test.use({ actionTimeout: 60_000 });
 
-  test('1280 x 800, the demo: ONE toolbar row, no row of hints above the map, box titles at least 12 px', async ({ page }) => {
+  test('1280 x 800, the demo: ONE toolbar row, no row of hints above the map, box titles at least 10 px (reviewer decision, step 8.4c A.4)', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemoAt(page, 1280, 800);
@@ -61,7 +61,7 @@ test.describe('more room for the map (Studio)', () => {
     expect(map.y - (bar.y + bar.height), 'the map starts right under the toolbar: no legend row, no hint row, no selection line').toBeLessThanOrEqual(2);
     const px = await boxTitlePx(page);
     console.log(`demo 1280x800 Studio: box title ${px.toFixed(2)} px`);
-    expect(px).toBeGreaterThanOrEqual(12);
+    expect(px).toBeGreaterThanOrEqual(10);
     expect(await hintOverlaps(page), 'the hint is clear of every box (1280 x 800)').toEqual([]);
     await page.screenshot({ path: `${shotsDir()}/map-room-studio-demo-1280x800.png` });
     await expectClean(seen);

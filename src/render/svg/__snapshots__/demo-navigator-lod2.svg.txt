@@ -12,6 +12,9 @@
     <clipPath id="orn-ID-clip-120x40">
       <rect x="0" y="0" width="120" height="40"></rect>
     </clipPath>
+    <clipPath id="orn-ID-clip-128x40">
+      <rect x="0" y="0" width="128" height="40"></rect>
+    </clipPath>
     <clipPath id="orn-ID-clip-156x40">
       <rect x="0" y="0" width="156" height="40"></rect>
     </clipPath>
@@ -24,6 +27,9 @@
     <clipPath id="orn-ID-hub-120x40">
       <rect x="0" y="0" width="120" height="40" rx="8"></rect>
     </clipPath>
+    <clipPath id="orn-ID-hub-128x40">
+      <rect x="0" y="0" width="128" height="40" rx="8"></rect>
+    </clipPath>
     <clipPath id="orn-ID-hub-156x40">
       <rect x="0" y="0" width="156" height="40" rx="8"></rect>
     </clipPath>
@@ -35,43 +41,43 @@
     <g data-layer="edges">
       <g data-edge-id="bnd_324d46034ec02b80" data-from="cls_alkenes" data-to="cls_haloalkanes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alkenes to Haloalkanes, 2 reactions, through class membership">
         <title>Alkenes to Haloalkanes, 2 reactions, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M425.33 40 L84 184" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M425.33 40 L84 184" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M420 40 L80 184" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M420 40 L80 184" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="bnd_5b25a181afc93270" data-from="cls_alcohols" data-to="cls_aldehydes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Aldehydes, 2 reactions (+ 1 example), through class membership">
         <title>Alcohols to Aldehydes, 2 reactions (+ 1 example), through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M429.33 224 L444 368" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M429.33 224 L444 368" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M420 224 L440 368" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M420 224 L440 368" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="bnd_a08c9dcf0ab7e7a8" data-from="cls_haloalkanes" data-to="cls_alkenes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Haloalkanes to Alkenes, 1 reaction, through class membership">
         <title>Haloalkanes to Alkenes, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M96 184 L437.33 40" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M96 184 L437.33 40" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M100 184 L440 40" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M100 184 L440 40" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="bnd_c4d43e6b9551c256" data-from="cls_alkenes" data-to="cls_alcohols" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alkenes to Alcohols, 2 reactions, through class membership">
         <title>Alkenes to Alcohols, 2 reactions, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M462.67 40 L444 184" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M462.67 40 L444 184" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M460 40 L440 184" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M460 40 L440 184" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="bnd_cb00d015a2f16f5e" data-from="cls_aldehydes" data-to="cls_aldehydes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="1 reaction that stays within Aldehydes, through class membership">
         <title>1 reaction that stays within Aldehydes, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M498 368 L498.57 358.88 L500.17 351.81 L502.63 346.62 L505.78 343.14 L509.44 341.19 L513.44 340.6 L517.62 341.21 L521.81 342.85 L525.82 345.33 L529.5 348.5 L532.67 352.18 L535.15 356.19 L536.79 360.38 L537.4 364.56 L536.81 368.56 L534.86 372.22 L531.38 375.37 L526.19 377.83 L519.12 379.43 L510 380" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M498 368 L498.57 358.88 L500.17 351.81 L502.63 346.62 L505.78 343.14 L509.44 341.19 L513.44 340.6 L517.62 341.21 L521.81 342.85 L525.82 345.33 L529.5 348.5 L532.67 352.18 L535.15 356.19 L536.79 360.38 L537.4 364.56 L536.81 368.56 L534.86 372.22 L531.38 375.37 L526.19 377.83 L519.12 379.43 L510 380" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M502 368 L502.57 358.88 L504.17 351.81 L506.63 346.62 L509.78 343.14 L513.44 341.19 L517.44 340.6 L521.62 341.21 L525.81 342.85 L529.82 345.33 L533.5 348.5 L536.67 352.18 L539.15 356.19 L540.79 360.38 L541.4 364.56 L540.81 368.56 L538.86 372.22 L535.38 375.37 L530.19 377.83 L523.12 379.43 L514 380" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M502 368 L502.57 358.88 L504.17 351.81 L506.63 346.62 L509.78 343.14 L513.44 341.19 L517.44 340.6 L521.62 341.21 L525.81 342.85 L529.82 345.33 L533.5 348.5 L536.67 352.18 L539.15 356.19 L540.79 360.38 L541.4 364.56 L540.81 368.56 L538.86 372.22 L535.38 375.37 L530.19 377.83 L523.12 379.43 L514 380" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="bnd_fed74b5163e7e8c0" data-from="cls_aldehydes" data-to="cls_alcohols" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Alcohols, 2 reactions, through class membership">
         <title>Aldehydes to Alcohols, 2 reactions, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M456 368 L441.33 224" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M456 368 L441.33 224" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M460 368 L440 224" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M460 368 L440 224" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_1a1946269d939e45" data-from="cls_esters" data-to="cls_alcohols" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Esters to Alcohols, 1 reaction, through class membership">
         <title>Esters to Alcohols, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M780 552 L470.67 224" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M780 552 L470.67 224" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M780 552 L480 224" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M780 552 L480 224" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_1c182e6b0d66f2d2" data-from="cls_ketones" data-to="cls_alcohols" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Alcohols, 1 reaction, through class membership">
         <title>Ketones to Alcohols, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M763.33 368 L485.33 224" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M763.33 368 L485.33 224" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M763.33 368 L500 224" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M763.33 368 L500 224" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_259afb9089da1c8f" data-from="cls_ketones" data-to="cls_haloalkanes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Haloalkanes, 1 reaction, through class membership">
         <title>Ketones to Haloalkanes, 1 reaction, through class membership</title>
@@ -80,8 +86,8 @@
       </g>
       <g data-edge-id="edg_34c28eb87d128965" data-from="cls_alcohols" data-to="cls_haloalkanes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Haloalkanes, 1 reaction, through class membership">
         <title>Alcohols to Haloalkanes, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M390 198 L150 194" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M390 198 L150 194" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M390 194 L150 194" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M390 194 L150 194" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_35346729a67ed440" data-from="cls_amines" data-to="cls_diazonium-salts" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Amines to Diazonium salts, 1 reaction, through class membership">
         <title>Amines to Diazonium salts, 1 reaction, through class membership</title>
@@ -90,8 +96,8 @@
       </g>
       <g data-edge-id="edg_385c3a964b49c487" data-from="cls_alcohols" data-to="cls_alkenes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Alkenes, 1 reaction, through class membership">
         <title>Alcohols to Alkenes, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M456 184 L474.67 40" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M456 184 L474.67 40" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M460 184 L480 40" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M460 184 L480 40" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_39cef07c4a0169b5" data-from="cls_diazonium-salts" data-to="cls_haloarenes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Diazonium salts to Haloarenes, 1 reaction, through class membership">
         <title>Diazonium salts to Haloarenes, 1 reaction, through class membership</title>
@@ -100,8 +106,8 @@
       </g>
       <g data-edge-id="edg_4bfe46bbb77accf6" data-from="cls_aldehydes" data-to="virtual:unclassified:hub" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Not in a family yet, 1 reaction, through class membership">
         <title>Aldehydes to Not in a family yet, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M433.33 408 L90 736" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M433.33 408 L90 736" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M432 408 L90 736" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M432 408 L90 736" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_6f2e3faedc755975" data-from="cls_alkynes" data-to="cls_alkenes" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alkynes to Alkenes, 1 reaction, through class membership">
         <title>Alkynes to Alkenes, 1 reaction, through class membership</title>
@@ -115,13 +121,13 @@
       </g>
       <g data-edge-id="edg_82c2e4140c8148ff" data-from="cls_alcohols" data-to="cls_carboxylic-acids" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Carboxylic acids, 1 reaction, through class membership">
         <title>Alcohols to Carboxylic acids, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M456 224 L442.08 236.55 L429.26 249.21 L417.55 261.95 L406.95 274.8 L397.45 287.74 L389.06 300.78 L381.78 313.91 L375.6 327.14 L370.53 340.47 L366.57 353.89 L363.72 367.42 L361.97 381.03 L361.33 394.75 L361.8 408.56 L363.37 422.47 L366.05 436.48 L369.83 450.58 L374.73 464.78 L380.73 479.07 L387.84 493.46 L396.05 507.95 L405.37 522.54 L415.8 537.22 L427.33 552" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M456 224 L442.08 236.55 L429.26 249.21 L417.55 261.95 L406.95 274.8 L397.45 287.74 L389.06 300.78 L381.78 313.91 L375.6 327.14 L370.53 340.47 L366.57 353.89 L363.72 367.42 L361.97 381.03 L361.33 394.75 L361.8 408.56 L363.37 422.47 L366.05 436.48 L369.83 450.58 L374.73 464.78 L380.73 479.07 L387.84 493.46 L396.05 507.95 L405.37 522.54 L415.8 537.22 L427.33 552" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M460 224 L445.92 236.4 L432.95 248.91 L421.09 261.53 L410.33 274.26 L400.68 287.1 L392.13 300.05 L384.69 313.11 L378.35 326.29 L373.12 339.57 L368.99 352.96 L365.97 366.46 L364.06 380.07 L363.25 393.79 L363.55 407.63 L364.95 421.57 L367.46 435.62 L371.08 449.78 L375.8 464.05 L381.62 478.44 L388.55 492.93 L396.59 507.53 L405.73 522.24 L415.98 537.07 L427.33 552" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M460 224 L445.92 236.4 L432.95 248.91 L421.09 261.53 L410.33 274.26 L400.68 287.1 L392.13 300.05 L384.69 313.11 L378.35 326.29 L373.12 339.57 L368.99 352.96 L365.97 366.46 L364.06 380.07 L363.25 393.79 L363.55 407.63 L364.95 421.57 L367.46 435.62 L371.08 449.78 L375.8 464.05 L381.62 478.44 L388.55 492.93 L396.59 507.53 L405.73 522.24 L415.98 537.07 L427.33 552" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_8ad76a96dd03ff47" data-from="cls_aldehydes" data-to="cls_carboxylic-acids" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Aldehydes to Carboxylic acids, 1 reaction, through class membership">
         <title>Aldehydes to Carboxylic acids, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M466.67 408 L472.67 552" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M466.67 408 L472.67 552" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M468 408 L472.67 552" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M468 408 L472.67 552" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_90472bc0bf31a157" data-from="cls_alcohols" data-to="cls_ethers" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Ethers, 1 reaction, through class membership">
         <title>Alcohols to Ethers, 1 reaction, through class membership</title>
@@ -135,8 +141,8 @@
       </g>
       <g data-edge-id="edg_a00793d88d8e9add" data-from="cls_haloalkanes" data-to="cls_alcohols" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Haloalkanes to Alcohols, 1 reaction, through class membership">
         <title>Haloalkanes to Alcohols, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M150 214 L390 210" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M150 214 L390 210" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M150 214 L390 214" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M150 214 L390 214" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_a42c3acbd915486a" data-from="cls_ketones" data-to="virtual:unclassified:hub" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Ketones to Not in a family yet, 1 reaction, through class membership">
         <title>Ketones to Not in a family yet, 1 reaction, through class membership</title>
@@ -150,18 +156,18 @@
       </g>
       <g data-edge-id="edg_cb2550c19b809402" data-from="cls_carboxylic-acids" data-to="cls_esters" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Carboxylic acids to Esters, 1 reaction, through class membership">
         <title>Carboxylic acids to Esters, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M528 566 L720 566" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M528 566 L720 566" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M528 562 L720 562" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M528 562 L720 562" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_d84c3dfd1ce69b46" data-from="cls_esters" data-to="cls_carboxylic-acids" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Esters to Carboxylic acids, 1 reaction, through class membership">
         <title>Esters to Carboxylic acids, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M720 578 L528 578" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M720 578 L528 578" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M720 582 L528 582" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M720 582 L528 582" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
       <g data-edge-id="edg_fd425dfbd902c1cc" data-from="cls_alcohols" data-to="virtual:unclassified:hub" data-semantic="transforms_to" data-stroke="solid" data-weight="heavy" role="graphics-symbol" aria-label="Alcohols to Not in a family yet, 1 reaction, through class membership">
         <title>Alcohols to Not in a family yet, 1 reaction, through class membership</title>
-        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M414.67 224 L50 736" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
-        <path class="_edgeHit_e97cec" d="M414.67 224 L50 736" stroke-width="16" data-hit="true" aria-hidden="true"></path>
+        <path class="_edge_e97cec _edgeHeavy_e97cec" d="M400 224 L50 736" stroke-width="3" marker-end="url(#orn-ID-arrow-filled)"></path>
+        <path class="_edgeHit_e97cec" d="M400 224 L50 736" stroke-width="16" data-hit="true" aria-hidden="true"></path>
       </g>
     </g>
     <g data-layer="nodes">
@@ -170,10 +176,10 @@
         <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
         <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
       </g>
-      <g transform="translate(390 368)" id="orn-ID-node-cls_aldehydes" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 3 reactions out, 2 reactions (+ 1 example) in, 1 reaction from and back to itself">
+      <g transform="translate(386 368)" id="orn-ID-node-cls_aldehydes" data-node-id="cls_aldehydes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Aldehydes, class hub, Oxygen compounds, 3 reactions out, 2 reactions (+ 1 example) in, 1 reaction from and back to itself">
         <title>Aldehydes · Oxygen compounds</title>
-        <rect class="_hubBlock_e97cec" data-tone="green" width="120" height="40" rx="8"></rect>
-        <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-120x40)"></rect>
+        <rect class="_hubBlock_e97cec" data-tone="green" width="128" height="40" rx="8"></rect>
+        <rect class="_hubRule_e97cec" data-tone="green" width="4" height="40" clip-path="url(#orn-ID-hub-128x40)"></rect>
       </g>
       <g transform="translate(30 0)" id="orn-ID-node-cls_alkanes" data-node-id="cls_alkanes" data-glyph="class_hub" data-box="hub" role="graphics-symbol" aria-label="Alkanes, class hub, Hydrocarbons">
         <title>Alkanes · Hydrocarbons</title>
@@ -253,8 +259,8 @@
           </text>
         </g>
       </g>
-      <g transform="translate(390 368)" data-label-of="cls_aldehydes">
-        <g clip-path="url(#orn-ID-clip-120x40)">
+      <g transform="translate(386 368)" data-label-of="cls_aldehydes">
+        <g clip-path="url(#orn-ID-clip-128x40)">
           <text class="_label_e97cec _strong_e97cec" x="20" y="22.6" font-size="14">
             <tspan>Aldehydes</tspan>
           </text>
@@ -359,7 +365,7 @@
         </g>
       </g>
       <g data-arrow-text-of="edg_1a1946269d939e45">
-        <text class="_arrowText_e97cec" x="625.3333333333334" y="383.59999999999997" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="630" y="383.59999999999997" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">O, H</tspan>
@@ -367,17 +373,17 @@
           <tspan dy="-2.75">O</tspan>
           <tspan class="_script_e97cec" dy="-4.4">+</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="625.3333333333334" y="397.9" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="630" y="397.9" font-size="11" data-side="below">
           <tspan>heat, acidic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_1c182e6b0d66f2d2">
-        <text class="_arrowText_e97cec" x="624.3333333333334" y="291.59999999999997" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="631.6666666666667" y="291.59999999999997" font-size="11" data-side="above">
           <tspan>(i) CH</tspan>
           <tspan class="_script_e97cec" dy="2.75">3</tspan>
           <tspan dy="-2.75">MgBr, Diethyl ether</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="624.3333333333334" y="305.9" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="631.6666666666667" y="305.9" font-size="11" data-side="below">
           <tspan>(i) anhydrous (ii) H</tspan>
           <tspan class="_script_e97cec" dy="2.75">3</tspan>
           <tspan dy="-2.75">O</tspan>
@@ -396,12 +402,12 @@
         </text>
       </g>
       <g data-arrow-text-of="edg_34c28eb87d128965">
-        <text class="_arrowText_e97cec" x="270" y="191.6" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="270" y="189.6" font-size="11" data-side="above">
           <tspan>I</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">, NaOH</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="270" y="205.9" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="270" y="203.9" font-size="11" data-side="below">
           <tspan>warm, basic medium</tspan>
         </text>
       </g>
@@ -416,13 +422,13 @@
         </text>
       </g>
       <g data-arrow-text-of="edg_385c3a964b49c487">
-        <text class="_arrowText_e97cec" x="459.73333333333335" y="150.79999999999998" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="464" y="150.79999999999998" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">SO</tspan>
           <tspan class="_script_e97cec" dy="2.75">4</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="459.73333333333335" y="165.1" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="464" y="165.1" font-size="11" data-side="below">
           <tspan>443 K</tspan>
         </text>
       </g>
@@ -432,10 +438,10 @@
         </text>
       </g>
       <g data-arrow-text-of="edg_4bfe46bbb77accf6">
-        <text class="_arrowText_e97cec" x="261.66666666666663" y="567.6" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="261" y="567.6" font-size="11" data-side="above">
           <tspan>NaOH</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="261.66666666666663" y="581.9" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="261" y="581.9" font-size="11" data-side="below">
           <tspan>basic medium</tspan>
         </text>
       </g>
@@ -461,18 +467,18 @@
         </text>
       </g>
       <g data-arrow-text-of="edg_82c2e4140c8148ff">
-        <text class="_arrowText_e97cec" x="371.35714033926524" y="450.5956456048072" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="372.5398024016798" y="449.8094719619485" font-size="11" data-side="above">
           <tspan>Acidified potassium dichromate</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="371.35714033926524" y="464.8956456048072" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="372.5398024016798" y="464.1094719619485" font-size="11" data-side="below">
           <tspan>reflux, acidic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_8ad76a96dd03ff47">
-        <text class="_arrowText_e97cec" x="470.8666666666667" y="504.4" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="470.8" y="489.99999999999994" font-size="11" data-side="above">
           <tspan>acidified K₂Cr₂O₇</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="470.8666666666667" y="518.7" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="470.8" y="504.29999999999995" font-size="11" data-side="below">
           <tspan>acidic medium</tspan>
         </text>
       </g>
@@ -488,10 +494,10 @@
         </text>
       </g>
       <g data-arrow-text-of="edg_a00793d88d8e9add">
-        <text class="_arrowText_e97cec" x="270" y="207.6" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="270" y="209.6" font-size="11" data-side="above">
           <tspan>aq. KOH</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="270" y="221.9" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="270" y="223.9" font-size="11" data-side="below">
           <tspan>basic medium</tspan>
         </text>
       </g>
@@ -517,7 +523,7 @@
         </text>
       </g>
       <g data-arrow-text-of="edg_cb2550c19b809402">
-        <text class="_arrowText_e97cec" x="624" y="561.6" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="624" y="557.6" font-size="11" data-side="above">
           <tspan>C</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">H</tspan>
@@ -527,12 +533,12 @@
           <tspan dy="-2.75">SO</tspan>
           <tspan class="_script_e97cec" dy="2.75">4</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="624" y="575.9" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="624" y="571.9" font-size="11" data-side="below">
           <tspan>heat, acidic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_d84c3dfd1ce69b46">
-        <text class="_arrowText_e97cec" x="624" y="573.6" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="624" y="577.6" font-size="11" data-side="above">
           <tspan>H</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">O, H</tspan>
@@ -540,17 +546,17 @@
           <tspan dy="-2.75">O</tspan>
           <tspan class="_script_e97cec" dy="-4.4">+</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="624" y="587.9" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="624" y="591.9" font-size="11" data-side="below">
           <tspan>heat, acidic medium</tspan>
         </text>
       </g>
       <g data-arrow-text-of="edg_fd425dfbd902c1cc">
-        <text class="_arrowText_e97cec" x="195.86666666666667" y="526.8000000000001" font-size="11" data-side="above">
+        <text class="_arrowText_e97cec" x="190" y="526.8000000000001" font-size="11" data-side="above">
           <tspan>I</tspan>
           <tspan class="_script_e97cec" dy="2.75">2</tspan>
           <tspan dy="-2.75">, NaOH</tspan>
         </text>
-        <text class="_arrowText_e97cec" x="195.86666666666667" y="541.1" font-size="11" data-side="below">
+        <text class="_arrowText_e97cec" x="190" y="541.1" font-size="11" data-side="below">
           <tspan>warm, basic medium</tspan>
         </text>
       </g>
@@ -558,42 +564,42 @@
     <g data-layer="overlay" aria-hidden="true" pointer-events="none"></g>
     <g data-layer="badges">
       <g aria-hidden="true"></g>
-      <g transform="translate(254.66666666666666 112)" data-count-of="bnd_324d46034ec02b80" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions" aria-hidden="true">
+      <g transform="translate(250 112)" data-count-of="bnd_324d46034ec02b80" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions" aria-hidden="true">
         <g class="_chipScale_e97cec">
           <title>2 reactions</title>
           <rect class="_chipPill_e97cec" x="-10" y="-10" width="20" height="20" rx="10"></rect>
           <text class="_count_e97cec" x="0" y="4.2">2</text>
         </g>
       </g>
-      <g transform="translate(436.66666666666663 296)" data-count-of="bnd_5b25a181afc93270" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions" aria-hidden="true">
+      <g transform="translate(430 296)" data-count-of="bnd_5b25a181afc93270" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions" aria-hidden="true">
         <g class="_chipScale_e97cec">
           <title>2 reactions</title>
           <rect class="_chipPill_e97cec" x="-10" y="-10" width="20" height="20" rx="10"></rect>
           <text class="_count_e97cec" x="0" y="4.2">2</text>
         </g>
       </g>
-      <g transform="translate(300.79999999999995 97.60000000000001)" data-count-of="bnd_a08c9dcf0ab7e7a8" data-chip-width="20" data-chip-height="20" role="img" aria-label="1 reaction" aria-hidden="true">
+      <g transform="translate(304 97.60000000000001)" data-count-of="bnd_a08c9dcf0ab7e7a8" data-chip-width="20" data-chip-height="20" role="img" aria-label="1 reaction" aria-hidden="true">
         <g class="_chipScale_e97cec">
           <title>1 reaction</title>
           <rect class="_chipPill_e97cec" x="-10" y="-10" width="20" height="20" rx="10"></rect>
           <text class="_count_e97cec" x="0" y="4.2">1</text>
         </g>
       </g>
-      <g transform="translate(453.3333333333333 112)" data-count-of="bnd_c4d43e6b9551c256" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions" aria-hidden="true">
+      <g transform="translate(450 112)" data-count-of="bnd_c4d43e6b9551c256" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions" aria-hidden="true">
         <g class="_chipScale_e97cec">
           <title>2 reactions</title>
           <rect class="_chipPill_e97cec" x="-10" y="-10" width="20" height="20" rx="10"></rect>
           <text class="_count_e97cec" x="0" y="4.2">2</text>
         </g>
       </g>
-      <g transform="translate(557.396 353)" data-count-of="bnd_cb00d015a2f16f5e" data-chip-width="20" data-chip-height="20" role="img" aria-label="1 reaction" aria-hidden="true">
+      <g transform="translate(561.396 353)" data-count-of="bnd_cb00d015a2f16f5e" data-chip-width="20" data-chip-height="20" role="img" aria-label="1 reaction" aria-hidden="true">
         <g class="_chipScale_e97cec">
           <title>1 reaction</title>
           <rect class="_chipPill_e97cec" x="-10" y="-10" width="20" height="20" rx="10"></rect>
           <text class="_count_e97cec" x="0" y="4.2">1</text>
         </g>
       </g>
-      <g transform="translate(451.6 324.8)" data-count-of="bnd_fed74b5163e7e8c0" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions" aria-hidden="true">
+      <g transform="translate(454 324.8)" data-count-of="bnd_fed74b5163e7e8c0" data-chip-width="20" data-chip-height="20" role="img" aria-label="2 reactions" aria-hidden="true">
         <g class="_chipScale_e97cec">
           <title>2 reactions</title>
           <rect class="_chipPill_e97cec" x="-10" y="-10" width="20" height="20" rx="10"></rect>

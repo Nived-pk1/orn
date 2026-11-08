@@ -1,9 +1,11 @@
 /**
- * Chips placed in SCREEN pixels (step 8.4b, A). A chip is `width` x 20 on the screen at any zoom, so in map units it is that over the zoom.
+ * Chips placed in SCREEN pixels (step 8.4b, A). A chip is `width` x 20 on the screen at zoom 1 or less and a third bigger at most when the map grows
+ * (step 8.4c, B: `chipFactor`), so in map units it is that over the zoom.
  * It starts at a fraction of its line and slides along it to the first place that touches no box and no chip placed before it (and keeps
  * CHIP_GAP_PX from them). No free place: no chip (its words stay in the arrow's name). Pure and deterministic.
  */
 import type { Point } from '@/layout/contracts';
+import { chipFactor } from '@/render/svg';
 
 /** Chip height on the screen (px): a circle of at least this across. */
 export const CHIP_SCREEN_HEIGHT = 20;
@@ -64,8 +66,9 @@ export function placeChipsAtZoom(requests: readonly ChipRequest[], boxes: readon
   const placed: Rect[] = [];
   const out = new Map<string, Point>();
   for (const request of requests) {
-    const halfW = request.width / 2 / k;
-    const halfH = CHIP_SCREEN_HEIGHT / 2 / k;
+    const f = chipFactor(k); // the chip grows with the map within limits
+    const halfW = (request.width * f) / 2 / k;
+    const halfH = (CHIP_SCREEN_HEIGHT * f) / 2 / k;
     const gap = CHIP_GAP_PX / 2 / k; // each of two chips keeps half the gap
     for (const slide of SLIDES) {
       const fraction = Math.min(1 - EDGE_FRACTION, Math.max(EDGE_FRACTION, request.start + slide));

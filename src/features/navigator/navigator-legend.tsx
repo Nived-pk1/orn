@@ -21,9 +21,20 @@ export function ChipSample() {
 export function LineSample(props: { readonly dashed: boolean; readonly both?: boolean }) {
   return (
     <svg className={styles.sample} width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" data-sample={props.dashed ? 'madeFrom' : props.both === true ? 'pair' : 'makes'}>
-      <line x1={props.both === true ? 7 : 2} y1="8" x2="29" y2="8" className={props.dashed ? styles.sampleLine : styles.sampleMakes} {...(props.dashed ? { strokeDasharray: '6 4' } : {})} />
-      <path d="M34 8 L27 4.5 L27 11.5 Z" className={styles.sampleHead} />
-      {props.both === true ? <path d="M2 8 L9 4.5 L9 11.5 Z" className={styles.sampleHead} /> : null}
+      {props.both === true ? (
+        <>
+          {/* two lines, one each way (step 8.4c, C): the upper runs right and is solid, the lower runs left and is dashed */}
+          <line x1="2" y1="4.5" x2="29" y2="4.5" className={styles.sampleMakes} />
+          <path d="M34 4.5 L27 1.5 L27 7.5 Z" className={styles.sampleHead} />
+          <line x1="7" y1="11.5" x2="34" y2="11.5" className={styles.sampleLine} strokeDasharray="6 4" />
+          <path d="M2 11.5 L9 8.5 L9 14.5 Z" className={styles.sampleHead} />
+        </>
+      ) : (
+        <>
+          <line x1="2" y1="8" x2="29" y2="8" className={props.dashed ? styles.sampleLine : styles.sampleMakes} {...(props.dashed ? { strokeDasharray: '6 4' } : {})} />
+          <path d="M34 8 L27 4.5 L27 11.5 Z" className={styles.sampleHead} />
+        </>
+      )}
     </svg>
   );
 }
@@ -107,7 +118,7 @@ export function NavigatorLegend(props: {
           {!keys.pair ? null : (
             <li className={styles.legendItem} data-key="pair">
               <LineSample dashed={false} both />
-              one line with a head at each end: reactions both ways, a number near each head
+              two parallel lines, one for each direction: reactions both ways, a number near each head
             </li>
           )}
           {!keys.within ? null : (

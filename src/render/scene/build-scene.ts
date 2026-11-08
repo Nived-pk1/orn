@@ -4,10 +4,11 @@
  * truncation and counts a bundle's TOTAL. No record is copied into it beyond what is drawn (names and formulas come through the
  * ports as text). A layout result that does not answer the projection (a stale result) is refused as a value, never patched.
  */
-import type { GraphNode, NodeFlag, Projection } from '@/core/graph/contracts';
+import type { GraphNode, Projection } from '@/core/graph/contracts';
 import type { LayoutResult, Point } from '@/layout/contracts';
 import { countsByNode, edgeAria, nodeAria } from './aria';
-import type { FormattedText, LodLevel, NodeSizes, Scene, SceneBadge, SceneEdge, SceneNode, ScenePorts } from './contracts';
+import { badgesOf } from './badges';
+import type { FormattedText, LodLevel, NodeSizes, Scene, SceneEdge, SceneNode, ScenePorts } from './contracts';
 import { styleOf } from './edge-style';
 import { partsToRuns } from './formatted-text';
 import type { LabelSize, LabelSizes } from './label-sizes';
@@ -25,26 +26,6 @@ export interface SceneOptions {
 export type SceneResult =
   | { readonly ok: true; readonly scene: Scene }
   | { readonly ok: false; readonly code: 'LAYOUT_MISMATCH' | 'MISSING_SIZE'; readonly missing: readonly string[]; readonly message: string };
-
-const BADGE_OF: Readonly<Partial<Record<NodeFlag, SceneBadge['kind']>>> = {
-  has_caveat: 'caveat',
-  has_mechanism: 'mechanism',
-  review_required: 'review',
-  has_warning: 'warning',
-  has_error: 'error',
-  outside_scope: 'outside_scope',
-};
-
-function badgesOf(node: GraphNode): SceneBadge[] {
-  const badges: SceneBadge[] = [];
-  for (const flag of node.flags) {
-    const kind = BADGE_OF[flag];
-    if (kind !== undefined) badges.push({ kind });
-  }
-  const hidden = node.hidden.outgoing + node.hidden.incoming;
-  if (hidden > 0) badges.push({ kind: 'hidden_neighbours', count: hidden });
-  return badges;
-}
 
 const EMPHASIS: Readonly<Record<GraphNode['role'], SceneNode['emphasis']>> = { anchor: 'anchor', focus: 'target', member: 'normal', overflow: 'normal', unclassified: 'normal' };
 

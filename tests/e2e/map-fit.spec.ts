@@ -63,7 +63,7 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
       const whole = await boxTitlePx(page);
       await page.screenshot({ path: `${shotsDir()}/map-fit-pane-open-${size.width}x${size.height}.png` });
       await page.getByRole('button', { name: /^Zoom to / }).click();
-      await expect.poll(() => boxTitlePx(page, FOCUS_TITLES), { message: 'focus-set titles' }).toBeGreaterThanOrEqual(12);
+      await expect.poll(() => boxTitlePx(page, FOCUS_TITLES), { message: 'focus-set titles' }).toBeGreaterThanOrEqual(11.99); // 12 px up to floating-point rounding (Firefox 11.9999997)
       const zoomed = await boxTitlePx(page, FOCUS_TITLES);
       await page.waitForTimeout(600); // the move takes 200 ms
       expect(await placementProblems(page, FAMILY_ONE), 'where Zoom to selection puts the view').toEqual([]);

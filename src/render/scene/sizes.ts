@@ -7,6 +7,7 @@
 import type { Projection } from '@/core/graph/contracts';
 import { STRUCTURE_AREA, STRUCTURE_GAP, type NodeSize, type NodeSizes, type ScenePorts, type TextMeasurer, type TextStyle } from './contracts';
 import { contentOf, type BoxKind } from './node-content';
+import { titleRowExtra } from './title-row';
 
 export const GRID = 4;
 
@@ -43,7 +44,8 @@ export function nodeSizes(projection: Projection, ports: ScenePorts, measure: Te
     const spec = BOXES[content.box];
     const label = measure(content.label, spec.label);
     const sublabel = content.sublabel === undefined ? undefined : measure(content.sublabel, spec.sublabel);
-    const text = Math.max(safe(label.width), sublabel === undefined ? 0 : safe(sublabel.width));
+    // the title row also holds "↻ n" and the badges (step 8.4c, A3): they get their own room
+    const text = Math.max(safe(label.width) + titleRowExtra(node, measure), sublabel === undefined ? 0 : safe(sublabel.width));
     // A node with a depiction key has a structure area above its name line, at every LOD; the formula line gives way to it.
     const structure = content.depictionKey !== undefined;
     const minWidth = structure ? Math.max(spec.minWidth, STRUCTURE_AREA.width + 2 * spec.padX) : spec.minWidth;

@@ -8,7 +8,7 @@ const text = (s: string) => [{ text: s }];
 const node = (id: string, x: number, over: Partial<SceneNode> = {}): SceneNode => ({ id, glyph: 'class_hub', box: 'hub', x, y: 0, width: 100, height: 40, label: text(id), badges: [], emphasis: 'anchor', state: { dimmed: false, onPath: false }, minLod: 0, ariaLabel: `${id}, family`, group: 'G', tone: 'blue', ...over }) as SceneNode;
 const edge = (from: string, to: string, size?: number): SceneEdge =>
   ({ id: `${from}>${to}`, from, to, points: [{ x: 0, y: 20 }, { x: 100, y: 20 }], semantic: 'produces', stroke: 'solid', weight: 'normal', arrowHead: 'filled', labelAt: { x: 50, y: 20 }, ...(size === undefined ? {} : { bundleSize: size }), minLod: 0, ariaLabel: `${from} to ${to}` }) as SceneEdge;
-/** `n` one-way arrows between n + 1 boxes (no pair merges) */
+/** `n` one-way arrows between n + 1 boxes (no pairs) */
 function chainScene(n: number): Scene {
   const ids = Array.from({ length: n + 1 }, (_, i) => `f${i}`);
   const nodes = ids.map((id, i) => node(id, i * 150));
@@ -31,10 +31,10 @@ describe('the busy chapter rule (B2)', () => {
     expect(view.quiet).toBe(false);
     expect(view.marks.faded.size).toBe(0);
   });
-  it('counts after pair merging: 16 arrows of which two are a pair is 15 lines', () => {
+  it('counts lines, a pair as two (step 8.4c, C: pairs are no longer merged): 16 arrows of which two are a pair are 16 lines, so busy', () => {
     const scene = chainScene(15);
     const withBack: Scene = { ...scene, edges: [...scene.edges, edge('f1', 'f0')] };
-    expect(mapView(withBack, chapter).busy).toBe(0);
+    expect(mapView(withBack, chapter).busy).toBe(16);
   });
   it('a chosen family draws its own part of a busy chapter as in a family focus', () => {
     const view = mapView(chainScene(16), { ...chapter, focusId: 'f3' });

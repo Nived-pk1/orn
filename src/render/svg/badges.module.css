@@ -1,0 +1,25 @@
+/* Badges */
+.badgeShape {
+  fill: var(--color-paper);
+  stroke: var(--color-ink);
+  stroke-width: 1;
+}
+
+.badgeShapeReview {
+  stroke: var(--color-review);
+}
+
+.badgeShapeWarning {
+  stroke: var(--color-warning);
+}
+
+.badgeShapeError {
+  stroke: var(--color-error);
+}
+
+.badgeMark {
+  fill: var(--color-ink);
+  font-size: var(--text-12);
+  font-weight: 600;
+  text-anchor: middle;
+}
