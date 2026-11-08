@@ -6837,7 +6837,7 @@ Notes (size table, red lines of each fix, screenshots opened): docs/reviews/step
 - **study-edition.spec.ts split**: shared helpers in `study-kit.ts`, the student tests and the Alcohols-selected screenshot in `study-student.spec.ts` (study-edition 348 lines, new file 51).
 - **Checks.** `npm run check` at default workers: 751 files, 8327 tests green on the second run; the first run had one failure, `review-grouping.test.tsx` "Filters (n)" (timeout at 5 s under load, passes alone, named in PROGRESS before); no timeout was changed. Specs run: csp (Chromium and WebKit), study-edition, study-student, study-review-mark (Chromium). Commit 75abbfa.
 
-### Step 8.4c: map proportions back to the "peak" map (2026-11-08), HEAD at start 2dcee03: CLOSED, NOT DEPLOYED, NOT PUSHED (REVIEW REQUIRED)
+### Step 8.4c: map proportions back to the "peak" map (2026-11-08), HEAD at start 2dcee03: CLOSED, DEPLOYED 2026-11-08 after the reviewer reply
 
 Notes (fact sheet with the old-build measurements, red lines, changed tests): docs/reviews/step-8-4c-notes.md. ADR-044 addendum 2026-11-08.
 
@@ -6860,4 +6860,9 @@ Notes (fact sheet with the old-build measurements, red lines, changed tests): do
 - Compact rows in the Reactions list carry no review mark. Reviewer decision: they show the same dot as cards (grey "Not yet reviewed", orange "Needs checking").
 - A click between the two lines of a pair selects the NEARER line (distance to each path), not the one drawn last (the overlap band of the two hit areas is about 5 px wide at Fit).
 - On the phone at Fit the lines and chips look heavy next to the small boxes (screenshots/map-after-focus-pixel7.png): scale the mark limits with the box size on phones.
+
+#### 8.4c deploy (2026-11-08, after the reviewer reply)
+- Re-runs after the final pair-line change (Chromium and WebKit): arrows, phone-family, study-edition, study-student, arrangement, map-chains, map-room, map-shift, map-selection, canvas-keyboard, touch-walk, navigator: 123 passed, 7 skipped, 0 failed.
+- Study Worker version 9f7727e7-65fb-436a-bf7c-9e0152f2951b; live specs by exact name: Chromium 44 passed / 11 skipped, WebKit 43 passed / 12 skipped, none failed. Studio Worker version 21199061-2f5e-4a1d-a908-997e0c51ade6. Initial JS gzip: Study 382,762, Studio 386,582 bytes.
+- Access check: Studio unauthenticated 302 (sign-in redirect), Study 200.
 

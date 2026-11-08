@@ -144,7 +144,8 @@
     "deployedAt": "2026-11-08",
     "commit": "b4478f5+",
     "version": "25e67c4c-9d3a-4241-91f6-c92b3fb00bef",
-    "liveSpecs": "2026-11-08 (8.4b close): Chromium 45 passed, 11 skipped; WebKit 44 passed, 12 skipped, by exact names, after the csp.spec stale-spec fix (first WebKit run: 1 failed, csp case A)."
+    "liveSpecs": "2026-11-08 (8.4b close): Chromium 45 passed, 11 skipped; WebKit 44 passed, 12 skipped, by exact names, after the csp.spec stale-spec fix (first WebKit run: 1 failed, csp case A).",
+    "workerVersion": "9f7727e7-65fb-436a-bf7c-9e0152f2951b"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
@@ -155,7 +156,8 @@
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4b deploy, 2026-11-08: an unauthenticated request got 302 and not the app; the Study site answered 200.",
     "commit": "b4478f5+",
-    "protectedCheckedAt": "2026-11-08"
+    "protectedCheckedAt": "2026-11-08",
+    "workerVersion": "21199061-2f5e-4a1d-a908-997e0c51ade6"
   },
   "nextStep": "8.4c",
   "nextStepTitle": "Step 8.4b deployed (8.4a + 8.4b); then 8.4c. Awaiting review",
@@ -666,13 +668,21 @@
   },
   "step84c": {
     "closed": "2026-11-08",
-    "deployed": null,
-    "note": "closed, NOT deployed, NOT pushed: REVIEW REQUIRED (pair spread below zoom 0.58, arrows.spec end gap relaxed to 4.5 px, hit overlap band). 8.4d is the screenshot-led pass.",
+    "deployed": "2026-11-08",
+    "note": "closed and deployed 2026-11-08 after the reviewer reply (pair spread limit accepted, zoom-dependent end-spacing check).",
     "initialJsGzipKb": {
       "study": 382.77,
       "studio": 386.6
     },
     "adr": "ADR-044 addendum 2026-11-08",
-    "notes": "docs/reviews/step-8-4c-notes.md"
+    "notes": "docs/reviews/step-8-4c-notes.md",
+    "initialJsGzipBytes": {
+      "study": 382762,
+      "studio": 386582
+    }
+  },
+  "step84cWorkers": {
+    "study": "9f7727e7-65fb-436a-bf7c-9e0152f2951b",
+    "studio": "21199061-2f5e-4a1d-a908-997e0c51ade6"
   }
 }
