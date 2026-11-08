@@ -12,7 +12,7 @@ import { loadDemo, openApp, watch, exampleCard, LIVE } from './kit';
 import { startHeaderServer, type HeaderServer } from './support/header-server';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
-const FINDINGS = 'Findings: E 0 / W 1 / I 17 / Review 38';
+const FINDINGS = 'Findings: E 0 / W 2 / I 17 / Review 38';
 const CHEM_ENTRY = /^\/assets\/worker-chem-[\w-]+\.js$/;
 /** What the deliberate violations of this spec put in the console or the page errors. */
 const DELIBERATE = /Content Security Policy|Content-Security-Policy|CSP|unsafe-eval|EvalError|invalid\.invalid|Refused|blocked|violat/i;
@@ -156,9 +156,9 @@ for (const kind of ['same', 'chem-allowance'] as const) {
       await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
       if (!LIVE) {
         await expect(page.getByText(/^Workers: compute ok, /)).toBeVisible({ timeout: 60_000 });
-        // wait until the chem worker has had its say: the findings settle, or the unavailable banner shows
+        // wait until the chem worker has had its say: the findings settle, or it is unavailable (the banner can sit behind "+n more" since step 8.4a: the status line says it too)
         await expect
-          .poll(async () => (await page.getByText(FINDINGS).count()) + (await page.getByText(/Check unavailable/).count()), { timeout: 90_000 })
+          .poll(async () => (await page.getByText(FINDINGS).count()) + (await page.getByText(/Check unavailable/).count()) + (await page.locator('li', { hasText: /^Workers: .*chem unavailable/ }).count()), { timeout: 90_000 })
           .toBeGreaterThan(0);
       } else await page.waitForTimeout(5_000); // the student edition has no status bar: give the chem worker time to answer
 

@@ -19,20 +19,17 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerExamCard, expectStorageLineWhole } from './exam-kit';
+import { expectStorageLineWhole } from './exam-kit';
+import { importOwnData, openStudy, STUDY, TITLE } from './study-kit';
 import { noticeScope } from './own-data-kit';
-import { selectionLine } from './map-toolbar-kit';
-import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, watch, type UploadFile } from './kit';
+import { axeProblems, expectClean, generatedFileWithAnchors, watch, type UploadFile } from './kit';
 import { palette, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
 import { makePng } from './png-kit';
 
 const REMOTE = process.env.ORN_BASE_URL !== undefined;
-const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
 test.use({ baseURL: STUDY });
 
-const TITLE = 'Organic Reaction Navigator';
 const NOTICE = 'A newer version of the study dataset is available. Load it (this replaces the data in this browser; export a backup first if you imported your own data).';
-const DEMO_FILE = { name: 'my-own-data.orn.json', mimeType: 'application/json', buffer: readFileSync(resolve(process.cwd(), 'data/seed/demo.orn.json')) };
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 
@@ -44,20 +41,6 @@ function editorChunkNames(): string[] {
   const isEditor = (id: string): boolean => modules.some((entry) => (entry.endsWith('/') ? id.startsWith(entry) : id === entry));
   const report = JSON.parse(readFileSync(studio, 'utf8')) as { chunks: { file: string; modules: string[] }[] };
   return report.chunks.filter((chunk) => chunk.modules.some(isEditor)).map((chunk) => chunk.file.split('/').pop() as string);
-}
-
-async function openStudy(page: Page): Promise<void> {
-  await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
-  await expect(page.getByText('Starting up', { exact: true })).toHaveCount(0);
-}
-
-async function importOwnData(page: Page, file: UploadFile = DEMO_FILE): Promise<void> {
-  await chooseFile(page, file);
-  await expectPreview(page);
-  await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
-  await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 60_000 });
-  await answerExamCard(page);
 }
 
 /** A student has no Dataset page (step 8.3): the size of the data is the number of boxes on the Map. */
@@ -327,40 +310,6 @@ test.describe('desktop', () => {
     await openStudy(page);
     await importOwnData(page, generatedFileWithAnchors('tiny', 'chain'));
     await chaptersFirstThenNavigator(page); // Study opens on Chapters when the data has a chapter topic (7.3b D5)
-    await expectClean(seen);
-  });
-});
-
-test.describe('what a student sees (step 8.3)', () => {
-  test('own data: the notice with Undo, the quiet saved line, the review dot, no "exclusive", no status bar, no Dataset, Map in the rail', async ({ page }) => {
-    test.setTimeout(300_000);
-    const seen = await watch(page, STUDY);
-    await openStudy(page);
-    await expect(page.getByRole('contentinfo')).toHaveCount(0);
-    await expect(page.getByText(/Findings: E|Saved \(revision|Workers:|Storage: not persistent|Layout note/)).toHaveCount(0);
-    await importOwnData(page);
-    await expect(page.getByRole('button', { name: 'Undo import' })).toBeVisible(); // the notice of the visitor's own import
-    await expect(page.getByText('Your data is saved in this browser', { exact: true })).toBeVisible();
-    await expect(page.getByText(/Findings: E|Saved \(revision|Workers:/)).toHaveCount(0);
-    const modes = page.getByRole('navigation', { name: 'Modes' });
-    await expect(modes.getByRole('button', { name: 'Map' })).toBeVisible();
-    await expect(modes.getByRole('button', { name: 'Dataset' })).toHaveCount(0);
-    await expect(modes.getByRole('button', { name: 'Navigator' })).toHaveCount(0);
-    // the storage warning appears after an own import where the browser did not grant persistent storage, in the student wording
-    const warning = page.getByText('This browser may clear your imported data when space is short. Export a backup to keep it.');
-    if ((await warning.count()) > 0) await expect(page.getByRole('button', { name: 'Export a backup' })).toBeVisible();
-    await chaptersFirstThenNavigator(page);
-    await expect(page.getByRole('button', { name: /Unanchored reactions/ })).toHaveCount(0);
-    await expect(page.getByRole('combobox', { name: /^Exam$/ })).toBeVisible();
-    await page.locator('svg [data-node-id="cls_alcohols"]').click();
-    await expect(selectionLine(page)).toHaveText('Selected: Alcohols.');
-    await expect(page.locator('[data-map-selected]')).toHaveText('Selected: Alcohols'); // the label inside the map (step 8.3b, B2.2)
-    await page.locator('svg [data-node-id="cls_alcohols"]').dblclick();
-    const family = page.getByRole('region', { name: 'Family page: Alcohols' });
-    await expect(family).toBeVisible();
-    await expect(family.locator('[data-review-mark="dot"]').first()).toBeVisible();
-    await expect(family.locator('[data-review-mark="pill"]')).toHaveCount(0);
-    await expect(family.getByText('exclusive', { exact: true })).toHaveCount(0);
     await expectClean(seen);
   });
 });
