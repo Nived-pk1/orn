@@ -80,9 +80,17 @@ test.describe('the arrows of the arranged demo overview', () => {
     await openDemo(page);
     await showUnclassified(page);
     const parts: Measured[] = [];
-    await eachFocus(page, (_id, drawn) => void parts.push(drawn));
+    // reviewer decision (8.4c): the spread of ends depends on the zoom; the smallest zoom of any focus decides which floor applies
+    let zoom = Infinity;
+    await eachFocus(page, async (_id, drawn) => {
+      parts.push(drawn);
+      zoom = Math.min(zoom, await page.evaluate(() => ((document.querySelector('svg [data-world]') as unknown as SVGGElement).getScreenCTM() as DOMMatrix).a));
+    });
     const m = joined(parts);
     const { ends, offBorder } = endsOf(m);
+    // at a zoom of 0.6 or more the stroke EDGES of two ends are at least 8 px apart (2 px strokes: centres 10 px); below 0.6 the room on a box side is the limit: 4.5 px
+    const floor = zoom >= 0.6 ? 10 - 0.1 : 4.5;
+    console.log(`ends: smallest zoom ${zoom.toFixed(2)}, floor ${floor} px`);
     expect(offBorder, 'every end point lies on the border of its box').toEqual([]);
     expect(ends.length).toBeGreaterThan(10);
     const groups = new Map<string, End[]>();
@@ -94,7 +102,7 @@ test.describe('the arrows of the arranged demo overview', () => {
       for (let i = 1; i < sorted.length; i += 1) {
         const gap = (sorted[i] as End).along - (sorted[i - 1] as End).along;
         closest = Math.min(closest, gap);
-        expect(gap, `${key}: ${(sorted[i - 1] as End).edge} and ${(sorted[i] as End).edge}`).toBeGreaterThanOrEqual(4.5); // step 8.4c, C: was 12 px. Measured limit (4.7 px seen), REVIEW REQUIRED: this view has the inspector open (zoom about 0.45); a pair is spread to 8 px between its edges and its ends then lie 4.7 px from the next pair's on the same side
+        expect(gap, `${key}: ${(sorted[i - 1] as End).edge} and ${(sorted[i] as End).edge}`).toBeGreaterThanOrEqual(floor); // step 8.4c, C (reviewer decision): was 12 px; 10 px between centres (8 px between 2 px stroke edges) from a zoom of 0.6, 4.5 px below it (the room on a box side)
       }
       for (const e of sorted) nearestCorner = Math.min(nearestCorner, e.along, e.length - e.along);
     }

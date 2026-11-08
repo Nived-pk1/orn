@@ -6849,8 +6849,15 @@ Notes (fact sheet with the old-build measurements, red lines, changed tests): do
 - **Checks.** `npm run check` at default workers: 753 files, 8359 tests green (the first run of the round had three load timeouts that pass alone). Initial JS gzip: Study 382,768, Studio 386,597 bytes (ceilings 382,800 / 386,600). e2e (Studio build): the spec list of the step in 3 engines, then re-runs of the failures; last runs: arrows, map-marks, map-proportions, canvas-touch, map-fit, map-focus, map-selection in 3 engines 107 passed, 8 skipped, 2 failed (map-marks pair click in Firefox and WebKit), fixed in the spec and re-run: 3 passed. No full Chromium run (8.4d has it).
 - **Deploy and push: NOT done.** RELEASE.md: a failure in the e2e run means no deploy until the reviewer approves; findings (1) to (3) need a decision first.
 
+#### Reviewer reply on 8.4c (2026-11-08): deploy approved after these
+- **Finding 1 accepted** as a geometric limit: below a zoom of about 0.58 the stroke edges of a pair are less than 8 px apart (the room on a box side caps the spread; ADR-044 addendum).
+- **Finding 2, reviewer decision:** the end-spacing check in `arrows.spec.ts:78` depends on the zoom: at least 8 px between stroke edges (10 px between centres of 2 px lines) when the zoom is 0.6 or more, at least 4.5 px below 0.6. Reason: the room on a box side is a fixed number of map units, so what is possible on the screen follows the zoom; one global floor was either too strict for the pane-open view or too loose for the normal one. Run in Chromium and WebKit.
+- **Finding 3 and the phone mark weight** go to 8.4d (below).
+
 #### 8.4d inputs (reviewer)
 - The review dot on the family page shows grey ("Not yet reviewed") for up to a second before it turns orange ("Needs checking"). A student must never see the wrong mark: render no mark until the status is known; test the first painted state.
 - The "Selected: reaction Beckmann..." label stays on the family page after a click in Reactions while the Alcohols page is open. Decide and test what the selection is when a family page opens (one selection model, ADR-044).
 - Compact rows in the Reactions list carry no review mark. Reviewer decision: they show the same dot as cards (grey "Not yet reviewed", orange "Needs checking").
+- A click between the two lines of a pair selects the NEARER line (distance to each path), not the one drawn last (the overlap band of the two hit areas is about 5 px wide at Fit).
+- On the phone at Fit the lines and chips look heavy next to the small boxes (screenshots/map-after-focus-pixel7.png): scale the mark limits with the box size on phones.
 
