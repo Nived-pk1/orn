@@ -13,12 +13,14 @@ type Native = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'aria-disabled' | 'a
 
 export interface ButtonProps extends Native {
   readonly variant?: 'default' | 'primary' | 'quiet';
+  /** `sm`: 28 px high with 12 px text (toolbars, bands, toasts). A size, not a kind. */
+  readonly size?: 'sm';
   /** Why this control cannot be used now. Present: the button is `aria-disabled`, does nothing on activation, and shows the reason. */
   readonly unavailable?: string;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(props, ref) {
-  const { variant = 'default', unavailable, onClick, className, children, type = 'button', ...rest } = props;
+  const { variant = 'default', size, unavailable, onClick, className, children, type = 'button', ...rest } = props;
   const reasonId = useId();
   const blocked = unavailable !== undefined;
   const click = (event: MouseEvent<HTMLButtonElement>): void => {
@@ -33,6 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         type={type}
         className={[styles.button, styles[variant], className].filter(Boolean).join(' ')}
         data-kind={variant === 'default' ? 'secondary' : variant}
+        {...(size === undefined ? {} : { 'data-size': size })}
         aria-disabled={blocked ? true : undefined}
         aria-describedby={blocked ? reasonId : undefined}
         onClick={click}

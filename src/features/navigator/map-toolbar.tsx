@@ -78,9 +78,9 @@ export function MapToolbar(props: MapToolbarProps) {
   ];
   return (
     <div className={styles.row} ref={row} role="toolbar" aria-label="Canvas tools" data-map-toolbar="">
-      <IconButton label="Zoom out" icon="zoom-out" variant="default" className={styles.zoomButton} onClick={props.onZoomOut} {...unavailable(zoomReason)} />
-      <IconButton label="Zoom in" icon="zoom-in" variant="default" className={styles.zoomButton} onClick={props.onZoomIn} {...unavailable(zoomReason)} />
-      <IconButton label="Fit" icon="fit" variant="default" className={styles.zoomButton} onClick={props.onFit} {...unavailable(zoomReason)} />
+      <IconButton label="Zoom out" icon="minus" variant="default" className={styles.zoomButton} onClick={props.onZoomOut} {...unavailable(zoomReason)} />
+      <IconButton label="Zoom in" icon="plus" variant="default" className={styles.zoomButton} onClick={props.onZoomIn} {...unavailable(zoomReason)} />
+      <IconButton label="Fit" icon="scan" variant="default" className={styles.zoomButton} onClick={props.onFit} {...unavailable(zoomReason)} />
       <span className={styles.chapterBox}>
         <ChapterSelect chapters={props.chapters} value={props.chapterId} onChange={props.onChapter} />
       </span>

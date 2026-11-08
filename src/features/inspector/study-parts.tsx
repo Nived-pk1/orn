@@ -3,8 +3,7 @@
  * go-next buttons and the connected cards. Each draws a value the model made; the only state is "is it expanded".
  */
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { useLayoutMode } from '@/ui/hooks';
-import { Button, Menu } from '@/ui/primitives';
+import { Button, Icon, ListRow, ListRows, Menu } from '@/ui/primitives';
 import { useInspectorEnv } from './env';
 import type { CardGroup, Chip, WatchOut } from './model/study-model';
 import { RichText } from './rich-text';
@@ -150,7 +149,7 @@ export function GoNext(props: { readonly actions: readonly GoNextAction[] }) {
       ))}
       {rest.length === 0 ? null : (
         <span data-sheet-full="">
-          <Menu label="More actions" trigger={<span aria-hidden="true">⋯</span>} items={rest.map((action) => ({ id: action.label, label: action.label, onSelect: action.run }))} />
+          <Menu label="More actions" trigger={<Icon name="more-horizontal" />} items={rest.map((action) => ({ id: action.label, label: action.label, onSelect: action.run }))} />
         </span>
       )}
     </div>
@@ -159,23 +158,17 @@ export function GoNext(props: { readonly actions: readonly GoNextAction[] }) {
 
 function CardGroupView(props: { readonly group: CardGroup }) {
   const { open: openRecord } = useInspectorEnv();
-  const phone = useLayoutMode() === 'phone';
   const [all, setAll] = useState(false);
   const { group } = props;
   const shown = all ? group.cards : group.cards.slice(0, CARDS_SHOWN);
   return (
     <section aria-label={group.heading} className={styles.group} data-group={group.key}>
       <h4 className={styles.groupHeading}>{group.heading}</h4>
-      <ul className={`${styles.cards} ${phone ? styles.cardsRow : ''}`} {...(phone ? { 'data-scroll-row': '' } : {})}>
+      <ListRows label={group.heading}>
         {shown.map((card) => (
-          <li key={`${card.ref.kind}:${card.ref.id}`}>
-            <button type="button" className={styles.card} data-record-id={card.ref.id} onClick={() => openRecord(card.ref)}>
-              <span className={styles.cardTitle}>{card.title}</span>
-              <span className={styles.cardLine}>{card.line}</span>
-            </button>
-          </li>
+          <ListRow key={`${card.ref.kind}:${card.ref.id}`} label={card.title} sub={card.line} dataAttr={{ 'data-record-id': card.ref.id }} onOpen={() => openRecord(card.ref)} />
         ))}
-      </ul>
+      </ListRows>
       {group.cards.length <= CARDS_SHOWN ? null : (
         <button type="button" className={styles.more} aria-expanded={all} onClick={() => setAll(!all)}>
           {all ? 'Show fewer' : `Show all ${group.total}`}

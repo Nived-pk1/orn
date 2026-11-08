@@ -72,7 +72,7 @@ describe('Ctrl K and the Search button', () => {
     const input = await open(app);
     expect(document.activeElement).toBe(input);
     fireEvent.keyDown(input, { key: 'Escape' });
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search or jump to…' }));
     expect(await paletteInput()).toBeTruthy();
   });
 });
@@ -130,7 +130,7 @@ describe('a record is found by every alias and placed (ADV-058, UI part)', () =>
     expect(app.inspectorStore.getState().history.at(-1)).toMatchObject({ kind: 'class', id: 'cls_alcohols' });
 
     const reaction = Object.values(state.records.reaction)[0] as { id: string; name: string };
-    const again = await screen.findByRole('button', { name: 'Search' });
+    const again = await screen.findByRole('button', { name: 'Search or jump to…' });
     fireEvent.click(again);
     const input2 = await paletteInput();
     await type(app, input2, `r: ${reaction.name}`);

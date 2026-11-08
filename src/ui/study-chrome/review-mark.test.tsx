@@ -40,3 +40,20 @@ describe('ReviewMark', () => {
     expect(render(<ReviewMark status="verified" />).container.firstChild).toBeNull();
   });
 });
+
+describe('the status is known before a mark is drawn (step 8.4d, E1)', () => {
+  it('an unknown status draws NO mark in either edition (never a "Not yet reviewed" flash)', () => {
+    const { container } = render(
+      <StudyChromeProvider value={studyChrome('study', { ownData: false })}>
+        <ReviewMark status={undefined} />
+      </StudyChromeProvider>,
+    );
+    expect(container.firstChild).toBeNull();
+    const studio = render(
+      <StudyChromeProvider value={studyChrome('studio', { ownData: false })}>
+        <ReviewMark status={undefined} />
+      </StudyChromeProvider>,
+    );
+    expect(studio.container.firstChild).toBeNull();
+  });
+});

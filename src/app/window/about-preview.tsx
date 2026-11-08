@@ -14,6 +14,9 @@ export const ABOUT_TEXT =
   'Everything you do stays on this device: nothing is sent anywhere, there are no accounts and no tracking. ' +
   `Your data lives in this browser only; use File > Export to keep a copy. © 2026 ${OWNER}. All rights reserved.`;
 
+/** Credits for vendored assets (step 8.4d): the icons follow Lucide (ISC licence, text in public/icons/LICENSE.txt). Kept apart from the agreed notice above. */
+export const ABOUT_CREDITS = 'Icons: Lucide (ISC licence).';
+
 export const aboutVersionLine = (): string => `Version ${__ORN_VERSION__} (${__ORN_COMMIT__})`;
 
 /** Opens the dialog from places that do not own it (the first-run screen). Without a provider the link is not offered. */
@@ -29,6 +32,7 @@ export function AboutDialog(props: { readonly open: boolean; readonly onClose: (
       footer={<Button onClick={props.onClose}>Close</Button>}
     >
       <p>{ABOUT_TEXT}</p>
+      <p>{ABOUT_CREDITS}</p>
       <p>{aboutVersionLine()}</p>
     </Dialog>
   );

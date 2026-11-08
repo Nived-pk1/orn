@@ -44,6 +44,8 @@ export interface CommandDeps {
   readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
   readonly ui: NavigatorUiStores;
   readonly exams: ExamOptions;
+  /** The views of the rail for this reader; the ones with no entry of their own (Dataset, Workbench, Review) get a "Go to" command that just opens them. */
+  readonly views?: readonly { readonly id: string; readonly label: string }[] | undefined;
 }
 
 /** Why the map's commands (fit, zoom, the Unanchored panel) cannot run now. */
@@ -54,6 +56,9 @@ function mapReason(deps: CommandDeps): string | undefined {
   if (deps.ui.viewCommands.getState().commands === null) return 'the map is not shown';
   return undefined;
 }
+
+/** The views that have their own command above (they remember an explorer, or close a family page first). */
+const HANDLED_VIEWS: ReadonlySet<string> = new Set(['chapters', 'navigator', 'reactions', 'precursors', 'reagents', 'named', 'mechanisms', 'syllabus']);
 
 const MODE_WORDS: Readonly<Record<StructureMode, string>> = { skeletal: 'Skeletal', condensed: 'Condensed', full: 'Full' };
 
@@ -103,7 +108,6 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
 
   return [
     withReason({ id: 'import-file', title: 'Import a file...', keywords: ['import', 'open', 'file', 'v6', 'load', 'package'], run: deps.pickFile }, importReason),
-    { id: 'export', title: 'Export...', keywords: ['export', 'backup', 'save', 'download', 'share', 'package'], run: deps.openExport },
     withReason({ id: 'replace-demo', title: deps.replaceTitle ?? 'Replace with the demo dataset', keywords: ['load', 'import', 'demo', 'study'], run: deps.askReplace }, importReason),
     withReason({ id: 'undo-import', title: 'Undo import', keywords: ['restore', 'snapshot'], run: deps.undoImport }, undoReason),
     ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit the selected record', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
@@ -136,13 +140,19 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
       },
       !deps.hasData ? 'there is no data' : navigatorShown && !familyOpen ? 'the overview is already shown' : undefined,
     ),
-    withReason({ id: 'open-chapters', title: 'Open Chapters', keywords: ['chapters', 'chapter', 'units', 'syllabus', 'topics'], run: () => openChaptersList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
-    withReason({ id: 'open-reactions', title: 'Open Reactions', keywords: ['reactions', 'reaction', 'list', 'explore', 'filters'], run: () => openReactionsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
-    withReason({ id: 'open-precursors', title: 'Open Precursors', keywords: ['precursors', 'precursor', 'how to make', 'routes', 'synthesis'], run: () => openPrecursorsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
-    withReason({ id: 'open-reagents', title: 'Open Reagents', keywords: ['reagents', 'reagent', 'list', 'oxidant', 'base', 'profile'], run: () => openReagentsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
-    withReason({ id: 'open-named', title: 'Open Named reactions', keywords: ['named', 'named reactions', 'reaction', 'name reaction', 'aldol', 'grignard'], run: () => openNamedList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
-    withReason({ id: 'open-mechanisms', title: 'Open Mechanisms', keywords: ['mechanisms', 'mechanism', 'steps', 'sn1', 'sn2', 'e2'], run: () => openMechanismsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
-    withReason({ id: 'open-syllabus', title: 'Open Syllabus', keywords: ['syllabus', 'exam', 'coverage', 'gaps', 'units', 'topics', 'compare'], run: () => openSyllabus(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-chapters', suggest: true, title: 'Go to Chapters', keywords: ['chapters', 'chapter', 'units', 'syllabus', 'topics'], run: () => openChaptersList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason(
+      { id: 'go-map', title: 'Go to Map', suggest: true, keywords: ['map', 'families', 'navigator', 'overview'], run: () => { deps.setMode(NAVIGATOR_MODE); ui.family.getState().closeFamily(); } },
+      deps.hasData ? undefined : 'there is no data',
+    ),
+    withReason({ id: 'open-reactions', suggest: true, title: 'Go to Reactions', keywords: ['reactions', 'reaction', 'list', 'explore', 'filters'], run: () => openReactionsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-precursors', suggest: true, title: 'Go to Precursors', keywords: ['precursors', 'precursor', 'how to make', 'routes', 'synthesis'], run: () => openPrecursorsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-reagents', suggest: true, title: 'Go to Reagents', keywords: ['reagents', 'reagent', 'list', 'oxidant', 'base', 'profile'], run: () => openReagentsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-named', suggest: true, title: 'Go to Named reactions', keywords: ['named', 'named reactions', 'reaction', 'name reaction', 'aldol', 'grignard'], run: () => openNamedList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-mechanisms', suggest: true, title: 'Go to Mechanisms', keywords: ['mechanisms', 'mechanism', 'steps', 'sn1', 'sn2', 'e2'], run: () => openMechanismsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    withReason({ id: 'open-syllabus', suggest: true, title: 'Go to Syllabus', keywords: ['syllabus', 'exam', 'coverage', 'gaps', 'units', 'topics', 'compare'], run: () => openSyllabus(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
+    ...(deps.views ?? []).filter((view) => !HANDLED_VIEWS.has(view.id)).map((view) => ({ id: `go-${view.id}`, title: `Go to ${view.label}`, suggest: true as const, keywords: [view.label.toLowerCase()], run: () => deps.setMode(view.id) })),
+    { id: 'export', title: 'Back up your data', keywords: ['export', 'backup', 'back up', 'save', 'download', 'share', 'package'], suggest: true, run: deps.openExport },
     withReason({ id: 'unanchored', title: 'Open the Unanchored reactions', keywords: ['unclassified', 'reactions', 'panel'], run: () => view?.openUnanchored() }, onMap ?? view?.unanchoredReason),
     ...scopeCommands,
   ];

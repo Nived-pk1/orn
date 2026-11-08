@@ -54,7 +54,7 @@ test.describe('the palette', () => {
     test.setTimeout(120_000);
     const seen = await watch(page);
     await openDemo(page);
-    await page.getByRole('button', { name: 'Search' }).click();
+    await page.getByRole('button', { name: 'Search or jump to…' }).click();
     await search(page, 'c: Alcohols');
     await palette(page).locator('[role="option"][data-record-id="cls_alcohols"]').click();
     await expect(record(page)).toHaveAttribute('data-record-id', 'cls_alcohols');

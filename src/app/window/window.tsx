@@ -28,7 +28,8 @@ import { LazyPalette, prefetchPalette } from "./lazy-palette";
 import { LazyExamFirstRun } from "./lazy-exam-first-run";
 import { ReplaceDialog, undoUnavailableReason } from "./dataset-actions";
 import { examOptionsByExam } from "./exam-choice";
-import { buildCommands, type CommandDeps } from "./palette-commands";
+import type { CommandDeps } from "./palette-commands";
+import { loadedCommands, prefetchCommands } from "./lazy-commands";
 import { createSearchPorts } from "./search-port";
 import { openChapter } from "./chapters-entry";
 import { useFirstScreen, hasChapterTopic } from "./first-screen";
@@ -56,6 +57,7 @@ import { StudyUpdateProvider } from "./study-update";
 import { HistoryKeys } from "./history-keys";
 import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
 import { TopBar } from "./top-bar";
+import { useFrame } from "./use-frame";
 import { AboutDialog, AboutOpenContext } from "./about-preview";
 import { ExportOpenContext } from "./export-context";
 import { useExportActions } from "./use-export-actions";
@@ -159,10 +161,12 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const datasetInfo = useDatasetInfo();
   const [asking, setAsking] = useState(false);
   const [searching, setSearching] = useState(false);
+  // the palette opens once its commands are loaded (the idle prefetch makes that immediate)
+  const openSearch = useCallback(() => void (loadedCommands() !== undefined ? setSearching(true) : prefetchCommands().then(() => setSearching(true))), []);
   // the palette is a lazy chunk: fetch it once the first view is drawn and the browser is idle, so the first Ctrl/Cmd+K opens at once
   useEffect(() => {
     const idle = (window as { requestIdleCallback?: (run: () => void) => number }).requestIdleCallback;
-    const handle = idle === undefined ? window.setTimeout(() => void prefetchPalette(), 200) : idle(() => void prefetchPalette());
+    const handle = idle === undefined ? window.setTimeout(() => void prefetchPalette().then(prefetchCommands), 200) : idle(() => void prefetchPalette().then(prefetchCommands));
     return () => {
       if (idle === undefined) window.clearTimeout(handle);
       else (window as { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback?.(handle);
@@ -176,6 +180,8 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const railHidden = usePanels(panels, (s) => s.railHidden);
   const setRailHidden = useCallback((hidden: boolean) => panels.getState().setRailHidden(hidden), [panels]);
   const [mode, setMode] = useState(NAVIGATOR_MODE);
+  const railModes = modesFor(chrome);
+  const crumb = useFrame(mode, railModes);
   // the phone's Explore tab IS the Reactions mode (step 7.1b E1); the other tabs are the Navigator
   const layoutMode = useLayoutMode();
   const phoneTab = useStore(navigator.ui.overview, (s) => s.phoneTab);
@@ -242,6 +248,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
     structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
     exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }),
+    views: railModes,
   };
   const searchPorts = useMemo(
     () =>
@@ -259,7 +266,10 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
         showReagent: (ref) => onReagent(ref.id),
         showNamed: (ref) => onNamed(ref.id),
         showMechanism: (ref) => onMechanism(ref.id),
-        commands: () => (commandDeps.current === null ? [] : buildCommands({ ...commandDeps.current, exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }) })),
+        commands: () => {
+          const build = loadedCommands();
+          return build === undefined || commandDeps.current === null ? [] : build({ ...commandDeps.current, exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }) });
+        },
         show(ref, title) {
           setMode(NAVIGATOR_MODE);
           if (navigator.ui.overview.getState().phoneTab === 'explore') navigator.ui.overview.getState().setPhoneTab('families');
@@ -275,12 +285,12 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
     const onKey = (event: KeyboardEvent): void => {
       if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setSearching(true);
+        openSearch();
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, []);
+  }, [openSearch]);
   const file = { reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true) };
   const exam = { exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log };
   const openStatus = () => setStatusOpen(true);
@@ -307,26 +317,27 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
           marker={editionMarker()}
           topBar={
             <TopBar
-              onSearch={() => setSearching(true)}
               {...(EDITING ? { history: services.store } : {})}
               file={file}
               exam={exam}
             />
           }
           phone={{
-            bar: <PhoneBar onSearch={() => setSearching(true)} structures={navigator.structures} file={file} exam={exam} counts={counts} onStatus={openStatus} {...(EDITING ? { history: services.store } : {})} />,
+            bar: <PhoneBar onSearch={openSearch} structures={navigator.structures} file={file} exam={exam} counts={counts} onStatus={openStatus} {...(EDITING ? { history: services.store } : {})} />,
             notices: <PhoneNotices />,
             alert: <PhoneAlert onStatus={openStatus} />,
-            tabs: <PhoneTabs onSearch={() => setSearching(true)} searching={searching} />,
+            tabs: <PhoneTabs onSearch={openSearch} searching={searching} />,
           }}
-          modes={modesFor(chrome)}
+          modes={railModes}
+          crumb={crumb}
+          commandBox={{ onOpen: openSearch }}
           activeMode={mode}
           onModeChange={setMode}
           toasts={<ToastRegion />}
           toastShowing={toastShowing}
           onSheetHeight={(height) => onSheetOpen(height !== 'closed')}
-          railHidden={railHidden}
-          onRailHidden={setRailHidden}
+          railCollapsed={railHidden}
+          onRailCollapsed={setRailHidden}
           banners={
             <ErrorBoundary label="The notices panel">
               <LazyNoticeBand />

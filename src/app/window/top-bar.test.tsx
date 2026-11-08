@@ -12,6 +12,9 @@ import { createCanonicalStore } from '@/core/commands';
 import { emptyStoreState } from '@/test-support/window-kit';
 import { historyReason, TopBar, type HistoryBinding } from './top-bar';
 
+// the notices bell reads the whole app's status (its own tests: notice-bell-button.test.tsx, notices-band e2e); this test is about history
+vi.mock('./lazy-notice-bell', () => ({ LazyNoticeBell: () => null }));
+
 afterEach(cleanup);
 
 function stub(initial: { undo: number; redo: number; readOnly?: boolean }) {
@@ -55,7 +58,7 @@ function show(history: HistoryBinding) {
   const exam = { exam: createActiveExamStore(), store: createCanonicalStore({ initial: emptyStoreState(), revision: 0, validateInitial: false }), hasData: false, log: () => undefined };
   render(
     <ToastProvider>
-      <TopBar onSearch={() => undefined} history={history} exam={exam} file={{ reason: undefined, undoReason: undefined, onImport: () => undefined, onUndo: () => undefined, onExport: () => undefined, onAbout: () => undefined }} />
+      <TopBar history={history} exam={exam} file={{ reason: undefined, undoReason: undefined, onImport: () => undefined, onUndo: () => undefined, onExport: () => undefined, onAbout: () => undefined }} />
     </ToastProvider>,
   );
 }

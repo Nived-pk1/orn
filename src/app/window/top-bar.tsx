@@ -4,6 +4,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import { IconButton, Menu, useToasts, type MenuItem, type Toasts } from '@/ui/primitives';
+import { LazyNoticeBell } from './lazy-notice-bell';
 import { useDraftsView, useEditors } from './editors-access';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 
@@ -86,14 +87,14 @@ export function useFileWithDrafts(file: FileBinding): FileBinding {
   return editors === null ? file : { ...file, drafts: { count, onOpen: editors.openDrafts } };
 }
 
-export function TopBar(props: { readonly onSearch: () => void; readonly history?: HistoryBinding; readonly exam: ExamScopeBinding; readonly file: FileBinding }) {
+export function TopBar(props: { readonly history?: HistoryBinding; readonly exam: ExamScopeBinding; readonly file: FileBinding }) {
   const file = useFileWithDrafts(props.file);
   return (
     <>
-      <Menu label="File" items={fileItems(file)} />
-      <IconButton label="Search" icon="search" onClick={props.onSearch} aria-keyshortcuts="Control+K Meta+K" />
-      <ExamScopeSelector binding={props.exam} />
       {props.history === undefined ? null : <History store={props.history} />}
+      <Menu label="File" items={fileItems(file)} />
+      <ExamScopeSelector binding={props.exam} />
+      <LazyNoticeBell />
     </>
   );
 }

@@ -1,6 +1,2 @@
-/** The small chip words of a reaction's exam scope (step 8.3b, B2; ADR-046): an enrichment reaction is "Extra", a prerequisite one "Background". Pure. */
-export type ScopeChip = 'Extra' | 'Background';
-
-export function scopeChipOf(scope: string): ScopeChip | undefined {
-  return scope === 'enrichment' ? 'Extra' : scope === 'prerequisite' ? 'Background' : undefined;
-}
+/** The scope chip words moved to the shared UI helper (step 8.4d, E4) so every list draws the same chip. */
+export { scopeChipOf, type ScopeChip } from '@/ui/study-page';

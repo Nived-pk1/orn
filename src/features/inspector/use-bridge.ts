@@ -6,9 +6,12 @@
  * else (`mapInspectorView`), so closing the pane never changes it and reopening it shows exactly it. Alt+Left and Alt+Right walk the
  * history. A pick on the MAP opens the pane only on `reveal()` of the selection store (step 5.7: the pointer state machine calls it when
  * the click's 300 ms double-click window has passed; Enter and the context menu call it at once). The bridge keeps no timer of its own.
+ * Step 8.4d (E3): opening a family PAGE selects that family (it is a place the selection can be), and closing the page (Back) puts back the
+ * selection that was there before, as long as the family is still the selection; a reaction opened on the page stays selected.
  */
 import { useEffect, useRef } from 'react';
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph';
+import { currentOf } from '@/ui/state';
 import type { InspectorHost, InspectorPorts } from './contracts';
 import { refOfId } from './model/describe';
 
@@ -49,6 +52,26 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): void {
       if (ref === undefined) inspector.getState().select({ kind: 'none' });
       else inspector.getState().open(ref);
     });
+    // the open family page: its family becomes the selection; closing the page takes that entry away again (Back)
+    let opened = family.getState().open;
+    let pushed = false;
+    const offOpen = family.subscribe((state) => {
+      if (state.open === opened) return;
+      const was = opened;
+      opened = state.open;
+      if (state.open !== null) {
+        const ref = refOfId(state.open);
+        if (ref === undefined) return;
+        const before = inspector.getState().index;
+        inspector.getState().open(ref);
+        pushed = pushed || inspector.getState().index !== before;
+        return;
+      }
+      const wasRef = was === null ? undefined : refOfId(was);
+      const current = currentOf(inspector.getState());
+      if (pushed && wasRef !== undefined && current !== null && current.kind === wasRef.kind && current.id === wasRef.id) inspector.getState().back();
+      pushed = false;
+    });
     const offFamily = family.subscribe((state) => {
       if (state.picks === familyPicks) return;
       familyPicks = state.picks;
@@ -58,6 +81,7 @@ export function useBridge(ports: InspectorPorts, host: InspectorHost): void {
     });
     return () => {
       offSelection();
+      offOpen();
       offFamily();
     };
   }, [ports]);

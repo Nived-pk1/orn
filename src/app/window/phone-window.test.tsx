@@ -27,10 +27,11 @@ afterEach(() => {
 const loaded = () => fakeApp({ state: tierState('tiny', 'dense') });
 
 describe('the phone shell', () => {
-  it('is one slim top bar: the title ORN (the page heading keeps its full name), Search and More', () => {
+  it('is one slim top bar: the mark, the name of the page (the heading keeps the full app name), Search and More', () => {
     renderWithApp(fakeApp());
     const heading = screen.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' });
-    expect(heading.textContent).toBe('ORN');
+    expect(heading.textContent).toBe('Map');
+    expect(document.querySelector('header [data-app-mark]')).not.toBeNull();
     const bar = screen.getByRole('banner');
     expect(within(bar).getByRole('button', { name: 'Search' })).toBeTruthy();
     expect(within(bar).getByRole('button', { name: 'More' })).toBeTruthy();
@@ -102,6 +103,16 @@ describe('the phone alert line and the folded notices', () => {
     expect(within(screen.getByRole('region', { name: 'Notices' })).getByText(/Saving failed/)).toBeTruthy();
     fireEvent.click(fold);
     expect(screen.queryByRole('region', { name: 'Notices' })).toBeNull();
+  });
+
+  it('the folded line reads "n notices" with a chevron that turns when it is open (step 8.4d, E7)', () => {
+    renderWithApp(failing());
+    const fold = screen.getByRole('button', { name: /^\d+ notices?$/ });
+    const chevron = fold.querySelector('[data-notices-chevron]');
+    expect(chevron?.getAttribute('aria-hidden')).toBe('true');
+    expect(chevron?.getAttribute('data-open')).toBe('false');
+    fireEvent.click(fold);
+    expect(fold.querySelector('[data-notices-chevron]')?.getAttribute('data-open')).toBe('true');
   });
 
   it('has no notices line when there is nothing to say', () => {

@@ -8,14 +8,18 @@
  * `ToastItems` (the phone's folded notices line); a visually hidden live region, mounted from the start, still announces each addition.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Banner, type NoticeKind } from './banner';
-import { Button } from './button';
+import { NOTICE_WORD, type NoticeKind } from './banner';
+import { Button, IconButton } from './button';
+import { Icon } from './icons';
+import { VisuallyHidden } from './visually-hidden';
 import styles from './toast.module.css';
 import hidden from './visually-hidden.module.css';
 
 export const MAX_TOASTS = 5;
-/** How long a result toast without an action stays (step 6.5a): the save state stays in the status line. */
-export const RESULT_TOAST_MS = 6_000;
+/** How long a plain result toast stays (steps 6.5a, 8.4d): the save state stays in the status line. */
+export const RESULT_TOAST_MS = 5_000;
+/** A toast with an action stays longer (step 8.4d); the action is also reachable elsewhere (Undo import is in the File menu), so leaving is never a loss. */
+export const ACTION_TOAST_MS = 10_000;
 
 /** The timer functions a toast uses, injectable so tests need no real time (INV: injected clock). */
 export interface ToastTimers {
@@ -95,28 +99,27 @@ function ToastRow(props: { readonly item: ToastInput & { readonly id: number }; 
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocus(false);
       }}
     >
-      <Banner
-        kind={item.kind ?? 'info'}
-        {...(docked ? { compact: true, title: item.text } : {})}
-        actions={
-          <>
-            {item.action === undefined ? null : (
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  dismiss(item.id);
-                  item.action?.onAction();
-                }}
-              >
-                {item.action.label}
-              </Button>
-            )}
-            <Button variant="quiet" onClick={() => dismiss(item.id)}>Dismiss</Button>
-          </>
-        }
-      >
-        {item.text}
-      </Banner>
+      <div className={styles.pill} data-kind={item.kind ?? 'info'} {...(item.kind === 'error' ? { role: 'alert' } : {})}>
+        {item.kind === 'warning' || item.kind === 'error' ? <Icon name="triangle-alert" /> : null}
+        <VisuallyHidden>{NOTICE_WORD[item.kind ?? 'info']}</VisuallyHidden>
+        <span className={styles.text} {...(docked ? { title: item.text } : {})}>
+          {item.text}
+        </span>
+        {item.action === undefined ? null : (
+          <Button
+            variant="quiet"
+            size="sm"
+            className={styles.action}
+            onClick={() => {
+              dismiss(item.id);
+              item.action?.onAction();
+            }}
+          >
+            {item.action.label}
+          </Button>
+        )}
+        <IconButton label="Dismiss" icon="x" size="sm" className={styles.action} onClick={() => dismiss(item.id)} />
+      </div>
       {item.autoDismissMs === undefined ? null : <AutoDismiss ms={item.autoDismissMs} paused={hover || focus} onDone={() => dismiss(item.id)} />}
     </div>
   );

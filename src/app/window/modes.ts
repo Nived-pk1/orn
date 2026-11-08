@@ -45,16 +45,17 @@ export function modeOfExplorer(kind: ExplorerKind): string {
 }
 
 export const MODES: readonly ModeItem[] = [
-  { id: CHAPTERS_MODE, label: 'Chapters' },
-  { id: NAVIGATOR_MODE, label: 'Map' },
-  { id: DATASET_MODE, label: 'Dataset' },
-  { id: REACTIONS_MODE, label: 'Reactions' },
-  { id: PRECURSORS_MODE, label: 'Precursors' },
-  { id: REAGENTS_MODE, label: 'Reagents' },
-  { id: NAMED_MODE, label: 'Named reactions' },
-  { id: MECHANISMS_MODE, label: 'Mechanisms' },
-  { id: SYLLABUS_MODE, label: 'Syllabus' },
-  ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench' }, { id: REVIEW_MODE, label: 'Review' }] : []),
+  { id: CHAPTERS_MODE, label: 'Chapters', icon: 'book-open', group: 'study' },
+  { id: NAVIGATOR_MODE, label: 'Map', icon: 'map', group: 'study' },
+  // the Dataset page is an author view in Studio; the Study build lists it with the other views (no Author heading there)
+  { id: DATASET_MODE, label: 'Dataset', icon: 'database', group: EDITING ? 'author' : 'study' },
+  { id: REACTIONS_MODE, label: 'Reactions', icon: 'flask', group: 'study' },
+  { id: PRECURSORS_MODE, label: 'Precursors', icon: 'route', group: 'study' },
+  { id: REAGENTS_MODE, label: 'Reagents', icon: 'test-tube', group: 'study' },
+  { id: NAMED_MODE, label: 'Named reactions', icon: 'tag', group: 'study' },
+  { id: MECHANISMS_MODE, label: 'Mechanisms', icon: 'atom', group: 'study' },
+  { id: SYLLABUS_MODE, label: 'Syllabus', icon: 'list-checks', group: 'study' },
+  ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench', icon: 'pencil', group: 'author' }, { id: REVIEW_MODE, label: 'Review', icon: 'clipboard-check', group: 'author' }] satisfies readonly ModeItem[] : []),
 ];
 
 /** The rail for this reader: a student does not get the Dataset page (step 8.3, C4). */

@@ -7,12 +7,13 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useLayoutMode } from '@/ui/hooks';
-import { IconButton, Menu, openLayers } from '@/ui/primitives';
+import { IconButton, openLayers } from '@/ui/primitives';
 import { ModeRail, type ModeItem } from './mode-rail';
 import { PhoneSheet, type SheetHeight } from './phone-sheet';
 import { ResizeHandle } from './resize-handle';
 import marker from './edition-marker.module.css';
 import styles from './shell.module.css';
+import { AppMark, Breadcrumb, CommandBox, type ShellCrumb } from './top-bar-parts';
 import { useBreakpoint } from './use-breakpoint';
 
 export interface InspectorPane {
@@ -55,9 +56,13 @@ export interface ShellProps {
   readonly toastShowing?: boolean;
   /** The phone sheet's height changed (the window folds a floating toast into the notices row while a sheet is open). */
   readonly onSheetHeight?: (height: SheetHeight) => void;
-  /** The list of views at the left is hidden; the header then shows a menu button for it (step 8.4a, Part C2). */
-  readonly railHidden?: boolean;
-  readonly onRailHidden?: (hidden: boolean) => void;
+  /** The list of views at the left is collapsed to icons (56 px; step 8.4d: replaces the 8.4a "Hide"); the caller remembers it. */
+  readonly railCollapsed?: boolean;
+  readonly onRailCollapsed?: (collapsed: boolean) => void;
+  /** Where the reader is: the view, then the record (the desktop breadcrumb; the phone shows the view's name). */
+  readonly crumb?: ShellCrumb;
+  /** The search / command box in the middle of the desktop bar (a click opens the palette). Absent: none. */
+  readonly commandBox?: { readonly onOpen: () => void };
   /** The phone layout's own regions (ADR-039): used instead of the top bar controls, the banners, the mode rail and the status bar when the layout mode is phone. */
   readonly phone?: PhoneRegions;
 }
@@ -78,8 +83,8 @@ export function Shell(props: ShellProps) {
   const layout = useLayoutMode();
   const phone = layout === 'phone' && props.phone !== undefined ? props.phone : undefined;
   const { pane } = props;
-  const railHidden = props.railHidden === true && phone === undefined;
-  const currentMode = props.modes.find((mode) => mode.id === props.activeMode);
+  const railCollapsed = props.railCollapsed === true && phone === undefined;
+  const main = useRef<HTMLElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sheetSpace, setSheetSpace] = useState(0);
   const frame = useRef<HTMLDivElement>(null);
@@ -137,35 +142,43 @@ export function Shell(props: ShellProps) {
       data-layout={phone === undefined ? 'desktop' : 'phone'}
       {...(props.statusBar === undefined ? { 'data-status-bar': 'none' } : {})}
       data-inspector={inspectorOpen ? 'open' : 'closed'}
-      {...(railHidden ? { 'data-rail': 'hidden' } : {})}
+      {...(railCollapsed ? { 'data-rail': 'collapsed' } : {})}
       {...(props.toastShowing === true ? { 'data-toast': '' } : {})}
       {...(phone !== undefined && sheetSpace > 0 ? { 'data-sheet-room': '' } : {})}
       style={{ ['--inspector-width' as string]: `${pane.width}px`, ['--sheet-space' as string]: `${sheetSpace}px` }}
     >
+      <a
+        href="#main-content"
+        className={styles.skip}
+        onClick={(event) => {
+          event.preventDefault();
+          main.current?.focus();
+        }}
+      >
+        Skip to content
+      </a>
       <header className={styles.topBar}>
+        <AppMark />
         {props.titleHeading === false ? (
-          <p className={styles.title}>{phone === undefined ? props.title : 'ORN'}</p>
+          <p className={phone === undefined ? styles.srOnly : styles.title}>{phone === undefined ? props.title : (props.crumb?.section ?? 'ORN')}</p>
         ) : (
-          <h1 ref={title} tabIndex={-1} className={styles.title} {...(phone === undefined ? {} : { 'aria-label': props.title })}>{phone === undefined ? props.title : 'ORN'}</h1>
+          <h1 ref={title} tabIndex={-1} className={phone === undefined ? styles.srOnly : styles.title} {...(phone === undefined ? {} : { 'aria-label': props.title })}>
+            {phone === undefined ? props.title : (props.crumb?.section ?? 'ORN')}
+          </h1>
         )}
         {props.marker === undefined ? null : (
           <span className={marker.marker} data-edition-marker="">
             {props.marker}
           </span>
         )}
-        {railHidden ? (
-          <Menu
-            label={`☰ ${currentMode?.label ?? 'Views'}`}
-            items={props.modes.map((mode) => ({ id: mode.id, label: mode.label, ...(mode.unavailable === undefined ? { onSelect: () => props.onModeChange(mode.id) } : { unavailable: mode.unavailable }) }))}
-            {...(currentMode === undefined ? {} : { chosen: currentMode.id })}
-          />
-        ) : null}
+        {phone === undefined && props.crumb !== undefined ? <Breadcrumb crumb={props.crumb} /> : null}
         {phone === undefined ? (
           <>
+            <div className={styles.barSpace}>{props.commandBox === undefined ? null : <CommandBox onOpen={props.commandBox.onOpen} />}</div>
             <div className={styles.topControls}>{props.topBar}</div>
             <IconButton
               label={inspectorOpen ? 'Hide inspector' : 'Show inspector'}
-              icon="inspector"
+              icon="panel-right"
               aria-pressed={inspectorOpen}
               onClick={toggle}
             />
@@ -174,10 +187,12 @@ export function Shell(props: ShellProps) {
           <div className={styles.topControls}>{phone.bar}</div>
         )}
       </header>
-      {phone === undefined && !railHidden ? <ModeRail modes={props.modes} active={props.activeMode} onChange={props.onModeChange} {...(props.onRailHidden === undefined ? {} : { onHide: () => props.onRailHidden?.(true) })} /> : null}
+      {phone === undefined ? <ModeRail modes={props.modes} active={props.activeMode} onChange={props.onModeChange} collapsed={railCollapsed} {...(props.onRailCollapsed === undefined ? {} : { onCollapse: props.onRailCollapsed })} /> : null}
       <div className={styles.banners}>{phone === undefined ? props.banners : phone.notices}</div>
       <div className={styles.main}>
-        <main className={styles.canvas}>{props.canvas}</main>
+        <main ref={main} id="main-content" tabIndex={-1} className={styles.canvas}>
+          {props.canvas}
+        </main>
         {phone === undefined && props.toasts !== undefined ? <div className={styles.toastDock}>{props.toasts}</div> : null}
       </div>
       {wide && pane.open ? <ResizeHandle width={pane.width} min={pane.min} max={pane.max} onWidth={pane.onWidth} edge={edge} /> : null}
@@ -185,7 +200,7 @@ export function Shell(props: ShellProps) {
         <aside className={styles.inspector} aria-label={props.inspectorTitle} hidden={!inspectorOpen} onKeyDown={escape}>
           <div className={styles.inspectorHeader}>
             <h2 className={styles.inspectorTitle}>{props.inspectorTitle}</h2>
-            {wide ? null : <IconButton label="Close inspector" icon="close" onClick={() => setDrawerOpen(false)} />}
+            {wide ? null : <IconButton label="Close inspector" icon="x" onClick={() => setDrawerOpen(false)} />}
           </div>
           <div className={styles.inspectorBody}>{props.inspector}</div>
         </aside>

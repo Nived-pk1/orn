@@ -9,8 +9,10 @@ import styles from './review-mark.module.css';
 
 export type { ReviewStatus } from './review-mark-of';
 
-export function ReviewMark(props: { readonly status: ReviewStatus }) {
+/** `status` undefined: not known yet, so no mark (never a wrong one that is corrected a moment later). */
+export function ReviewMark(props: { readonly status: ReviewStatus | undefined }) {
   const chrome = useStudyChrome();
+  if (props.status === undefined) return null;
   const mark = reviewMarkOf(chrome.reviewMark === 'dot' ? 'study' : 'studio', props.status);
   if (mark.kind === 'none') return null;
   if (mark.kind === 'dot') {

@@ -2,7 +2,11 @@
  * The reactions of an arrow, as the rows of the arrow view (ADR-039; step 8.2b-fix, S2): each a button that shows that reaction, with the
  * reagent words under it; an example folds under its general reaction (7.3a). The same roll-up the family page and the arrow's count come from.
  */
-import { exampleLookupOf, foldExamples, type ArrowTextPart } from '@/core/graph';
+import { useStore } from 'zustand';
+import { createScopeOf, exampleLookupOf, foldExamples, type ArrowTextPart } from '@/core/graph';
+import { Chip } from '@/ui/primitives';
+import { createActiveExamStore } from '@/ui/state';
+import { scopeChipOf } from '@/ui/study-page';
 import { Runs } from '@/render/equation';
 import { partsToRuns } from '@/render/scene';
 import { arrowReactionIds } from './model/focus';
@@ -10,9 +14,14 @@ import { nameOfRecord, recordOf } from './model/describe';
 import { useInspectorEnv } from './env';
 import styles from './inspector.module.css';
 
+const NO_EXAM = createActiveExamStore();
+
 export function ArrowReactions(props: { readonly ends: { readonly from: string; readonly to: string }; readonly words: ReadonlyMap<string, readonly ArrowTextPart[]> }) {
   const { ports, host, state, open } = useInspectorEnv();
   const { ends } = props;
+  // "Extra" / "Background" on every reaction row, as on the cards (step 8.4d, E4)
+  const active = useStore(ports.ui.exam ?? NO_EXAM, (s) => s.active);
+  const scopeOf = active === null ? undefined : createScopeOf(ports.indexes.current(), active.examId, active.examVersionId);
   const ids = arrowReactionIds(ends, ports.indexes.current());
   if (ids.length < 1) return null;
   // 7.3a C3: the rows are CARDS; an example folds under its general reaction (a closed "Examples (n)"), and the count says so in words
@@ -20,10 +29,14 @@ export function ArrowReactions(props: { readonly ends: { readonly from: string; 
   const row = (id: string) => {
     const ref = { kind: 'reaction', id } as const;
     const record = recordOf(state, ref);
+    const chip = scopeChipOf(scopeOf?.(ref));
     return (
-      <button type="button" onClick={() => open(ref)}>
-        {record === undefined ? id : nameOfRecord(record)}
-      </button>
+      <>
+        <button type="button" onClick={() => open(ref)}>
+          {record === undefined ? id : nameOfRecord(record)}
+        </button>
+        {chip === undefined ? null : <Chip data-scope-chip="">{chip}</Chip>}
+      </>
     );
   };
   const wordsOf = (id: string) => {

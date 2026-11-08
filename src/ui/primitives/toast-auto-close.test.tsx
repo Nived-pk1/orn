@@ -2,7 +2,7 @@
 /** Result toasts close by themselves (step 6.5a): the countdown pauses under the pointer and while focus is inside; an action or a warning given no time stays. */
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { RESULT_TOAST_MS, ToastProvider, useToasts, type ToastTimers, type Toasts } from './toast';
+import { ACTION_TOAST_MS, RESULT_TOAST_MS, ToastProvider, useToasts, type ToastTimers, type Toasts } from './toast';
 
 afterEach(cleanup);
 
@@ -47,14 +47,24 @@ function setup() {
 }
 
 describe('result toasts', () => {
-  it('RESULT_TOAST_MS is 6 seconds', () => {
-    expect(RESULT_TOAST_MS).toBe(6_000);
+  it('a plain result leaves after 5 seconds, one with an action after 10 (step 8.4d, Part D)', () => {
+    expect(RESULT_TOAST_MS).toBe(5_000);
+    expect(ACTION_TOAST_MS).toBe(10_000);
+  });
+
+  it('a toast with an action given ACTION_TOAST_MS closes after 10 seconds and not before', () => {
+    const clock = setup();
+    act(() => void api.push({ text: 'Imported', autoDismissMs: ACTION_TOAST_MS, action: { label: 'Undo import', onAction: () => undefined } }));
+    act(() => clock.advance(9_999));
+    expect(screen.getByText('Imported')).toBeTruthy();
+    act(() => clock.advance(1));
+    expect(screen.queryByText('Imported')).toBeNull();
   });
 
   it('closes after its time and not before', () => {
     const clock = setup();
     act(() => void api.push({ text: 'Saved', autoDismissMs: RESULT_TOAST_MS }));
-    act(() => clock.advance(5_999));
+    act(() => clock.advance(4_999));
     expect(screen.getByText('Saved')).toBeTruthy();
     act(() => clock.advance(1));
     expect(screen.queryByText('Saved')).toBeNull();

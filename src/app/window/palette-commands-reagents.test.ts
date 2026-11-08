@@ -22,11 +22,11 @@ function deps(over: Partial<CommandDeps> = {}): { deps: CommandDeps; modes: stri
   return { deps: base, modes };
 }
 
-describe('the "Open Reagents" command (7.3c D4)', () => {
+describe('the "Go to Reagents" command (7.3c D4)', () => {
   it('opens the Reagents mode as it was left and remembers the explorer', () => {
     const { deps: d, modes } = deps();
     const command = buildCommands(d).find((c) => c.id === 'open-reagents');
-    expect(command?.title).toBe('Open Reagents');
+    expect(command?.title).toBe('Go to Reagents');
     expect(command?.unavailable).toBeUndefined();
     command?.run();
     expect(modes).toEqual(['reagents']);

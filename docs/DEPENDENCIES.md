@@ -24,6 +24,12 @@ Phase 10's documentation sweep keeps this list current. Each new dependency is r
 | zustand | 5.0.15 | MIT | step 5.2 | UI stores (`src/ui/state`); no middleware, no `localStorage` |
 | @tanstack/react-virtual | 3.14.13 | MIT | step 5.5b | VirtualList primitive (`src/ui/primitives`): the family page's cards. Pulls `@tanstack/virtual-core` 3.17.11 (MIT; locked by the lockfile, not a direct pin). Scanned: no `eval(`, `new Function`, `Function(`; it positions items through style props (CSSOM, allowed by the CSP) |
 
+### Vendored assets (files, not packages)
+
+| Asset | Licence | Added | Notes |
+|---|---|---|---|
+| Lucide icons (`public/icons/*.svg`, 29 files incl. the ORN mark) | ISC | step 8.4d | Outline, stroke 1.75, drawn through CSS `mask-image` by `src/ui/primitives/icons.tsx` (no markup injected, not in the JS). Taken from the design reference's sprite in Lucide style; `redo`, `panel-right`, `pencil` added in the same style; `mark.svg` is an original ORN glyph. Licence text: `public/icons/LICENSE.txt`; credited in About. Guard: `tests/integration/icons-guard.test.ts` |
+
 ## Dev dependencies (not shipped)
 
 Exact pins, added in the step that first uses them (note E12); `npm audit` 0 vulnerabilities after each.

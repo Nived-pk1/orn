@@ -11,10 +11,10 @@ import { useNavigator } from './navigator-context';
 import styles from './phone-home.module.css';
 
 const TABS: readonly { readonly id: PhoneTab; readonly label: string; readonly icon: IconName }[] = [
-  { id: 'chapters', label: 'Chapters', icon: 'chapters' },
-  { id: 'families', label: 'Families', icon: 'families' },
+  { id: 'chapters', label: 'Chapters', icon: 'book-open' },
+  { id: 'families', label: 'Families', icon: 'layers' },
   { id: 'map', label: 'Map', icon: 'map' },
-  { id: 'explore', label: 'Explore', icon: 'explore' },
+  { id: 'explore', label: 'Explore', icon: 'compass' },
 ];
 
 export function PhoneTabs(props: { readonly onSearch: () => void; readonly searching: boolean }) {

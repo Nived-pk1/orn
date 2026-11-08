@@ -1,7 +1,8 @@
 /**
  * The app frame takes less room (step 8.4a, Part C2), Studio with one notice showing: the map area is at least 640 px tall and 1100 px wide
  * at 1280x800 with the rail shown (1220 px with it hidden) and at least 840 px tall at 1920x1000; the header is 44 px, the status bar at most
- * 24 px; the rail's Hide button collapses it into a "☰ <view>" menu and the choice is remembered after a reload; the Find box uses the UI font.
+ * 24 px; the rail's Collapse button shrinks it to a 56 px icon rail and the choice is remembered after a reload (step 8.4d replaced the 8.4a
+ * Hide and its ☰ menu); the Find box uses the UI font. Step 8.4d adds: the breadcrumb, Ctrl K and the search box, the skip link, the tab title.
  * NOTE (honest): this spec was written AFTER the source it tests (not seen red).
  */
 import type { Page } from '@playwright/test';
@@ -14,7 +15,7 @@ test.use({ baseURL: STUDIO, actionTimeout: 60_000 });
 
 const drawing = (page: Page) => page.locator('[data-map-room] div[aria-busy]').first();
 
-test('1280x800: the map area, the rail and its Hide button, the bars', async ({ page }) => {
+test('1280x800: the map area, the rail and its Collapse button, the bars', async ({ page }) => {
   test.setTimeout(300_000);
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
@@ -23,6 +24,7 @@ test('1280x800: the map area, the rail and its Hide button, the bars', async ({ 
   await expect(page.getByRole('region', { name: 'Notices' })).toBeVisible();
   const header = await page.locator('header').boundingBox();
   expect(header?.height ?? 999, 'header height').toBeLessThanOrEqual(44.5);
+  expect(header?.height ?? 0, 'header height').toBeGreaterThanOrEqual(43.5);
   const status = await page.locator('footer').boundingBox();
   await page.locator('footer').screenshot({ path: `${shotsDir()}/status-bar-close-up-1280.png` });
   expect(status?.height ?? 999, 'status bar height').toBeLessThanOrEqual(24.5);
@@ -33,22 +35,24 @@ test('1280x800: the map area, the rail and its Hide button, the bars', async ({ 
   const railBox = await rail.boundingBox();
   for (const row of await rail.getByRole('button').all()) {
     const box = await row.boundingBox();
-    if (box !== null && (await row.textContent()) !== 'Hide') expect(box.height, 'a rail row').toBeLessThanOrEqual(33);
+    if (box !== null && (await row.textContent()) !== 'Collapse') expect(box.height, 'a rail row').toBeLessThanOrEqual(33);
   }
-  expect(railBox?.width ?? 999, 'the rail is as wide as its longest label plus padding').toBeLessThanOrEqual(200);
-  await rail.getByRole('button', { name: 'Hide' }).click();
-  await expect(rail).toHaveCount(0);
-  const menu = page.locator('header').getByRole('button', { name: /^☰ / });
-  await expect(menu).toBeVisible();
-  await page.screenshot({ path: `${shotsDir()}/frame-rail-hidden-1280x800.png` });
-  const hidden = await drawing(page).boundingBox();
-  expect(hidden?.width ?? 0, 'map width with the rail hidden').toBeGreaterThanOrEqual(1220);
+  expect(railBox?.width ?? 999, 'the rail is 188 px wide').toBeLessThanOrEqual(190);
+  expect(railBox?.width ?? 0).toBeGreaterThanOrEqual(186);
+  await rail.getByRole('button', { name: 'Collapse' }).click();
+  await expect(rail.getByRole('button', { name: 'Expand' })).toBeVisible();
+  const narrow = await rail.boundingBox();
+  expect(narrow?.width ?? 999, 'the collapsed rail is 56 px wide').toBeLessThanOrEqual(58);
+  expect(narrow?.width ?? 0).toBeGreaterThanOrEqual(54);
+  await page.screenshot({ path: `${shotsDir()}/frame-rail-collapsed-1280x800.png` });
+  const wider = await drawing(page).boundingBox();
+  expect(wider?.width ?? 0, 'map width with the rail collapsed').toBeGreaterThanOrEqual(1220);
   await page.waitForTimeout(1000); // the choice is saved after a short delay (a reload is not a flush)
   await page.reload();
-  await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
-  await expect(page.locator('header').getByRole('button', { name: /^☰ / })).toBeVisible({ timeout: 60_000 }); // remembered
-  await page.locator('header').getByRole('button', { name: /^☰ / }).click();
-  await expect(page.getByRole('menuitemradio').first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeAttached();
+  await expect(rail.getByRole('button', { name: 'Expand' })).toBeVisible({ timeout: 60_000 }); // remembered
+  await rail.getByRole('button', { name: 'Expand' }).click();
+  await expect(rail.getByRole('button', { name: 'Collapse' })).toBeVisible();
 });
 
 test('1920x1000: the map area is at least 840 px tall; the Find box uses the UI font', async ({ page }) => {
@@ -81,4 +85,42 @@ test('the status bar: a rule before every item but the first', async ({ page }) 
   });
   expect(items.length, 'the bar has several items').toBeGreaterThan(4);
   expect(items.slice(1).filter((item) => item.rule < 1).map((item) => item.text), 'items with no rule before them').toEqual([]);
+});
+
+// Step 8.4d, Part C: the top bar and the shortcuts.
+test('the breadcrumb, the search box, Ctrl K, the skip link and the tab title', async ({ page }) => {
+  test.setTimeout(300_000);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page);
+  await loadDemo(page);
+  await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 60_000 });
+  // the skip link is the first stop of Tab and moves the focus into the main area
+  await page.locator('body').click({ position: { x: 1, y: 1 } });
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('main')).toBeFocused();
+  // the breadcrumb names the view; a selected family adds its name; the tab title follows
+  const crumb = page.getByRole('navigation', { name: 'Breadcrumb' });
+  await expect(crumb).toHaveText('Map');
+  await expect(page).toHaveTitle('Map · ORN');
+  await page.locator('svg [data-node-id="cls_alcohols"]').click();
+  await expect(crumb).toContainText('Alcohols');
+  await expect(page).toHaveTitle('Alcohols · Map · ORN');
+  // the search box says what it does and opens the palette; Esc closes it; Ctrl K opens it again with the places to go
+  const box = page.getByRole('button', { name: 'Search or jump to…' });
+  await expect(box).toContainText('Ctrl K');
+  await box.click();
+  const palette = page.getByRole('dialog', { name: 'Search' });
+  await expect(palette).toBeVisible();
+  await expect(palette.getByRole('option', { name: 'Go to Reactions' })).toBeVisible({ timeout: 60_000 });
+  await expect(palette.getByRole('option', { name: 'Back up your data' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(palette).toBeHidden();
+  await page.keyboard.press('Control+k');
+  await expect(palette).toBeVisible();
+  await palette.getByRole('option', { name: 'Go to Reactions' }).click();
+  await expect(page).toHaveTitle(/^Reactions · ORN$|· Reactions · ORN$/);
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Reactions');
 });

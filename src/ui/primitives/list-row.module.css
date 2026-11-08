@@ -1,0 +1,110 @@
+/* The list row (reference ".list" and ".li"): a hairline-bordered surface, rows at least 40 px, hover tint, chevron at the end. */
+.rows {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+}
+
+.row {
+  border-top: 1px solid var(--line);
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-12);
+  width: 100%;
+  min-height: 40px;
+  padding: var(--s-8) var(--s-12);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-14);
+  text-align: start;
+}
+
+.action {
+  cursor: pointer;
+  transition: background var(--d-fast);
+}
+
+.action:hover {
+  background: var(--hover);
+}
+
+.action[aria-disabled='true'] {
+  color: var(--text-2);
+  cursor: not-allowed;
+}
+
+.grow {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: var(--t-12);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.why {
+  display: block;
+  padding: 0 var(--s-12) var(--s-8);
+  color: var(--text-2);
+  font-size: var(--t-12);
+}
+
+.chevron {
+  display: inline-flex;
+  color: var(--text-3);
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+
+.dot[data-dot='hc'] {
+  background: var(--fam-hc);
+}
+
+.dot[data-dot='hal'] {
+  background: var(--fam-hal);
+}
+
+.dot[data-dot='oxy'] {
+  background: var(--fam-oxy);
+}
+
+.dot[data-dot='nit'] {
+  background: var(--fam-nit);
+}
+
+@media (pointer: coarse) {
+  .inner {
+    min-height: var(--h-touch);
+  }
+}

@@ -1,6 +1,6 @@
 /** One function decides the review mark from (edition, status) (step 8.4a, Part D): all six combinations. */
 import { describe, expect, it } from 'vitest';
-import { reviewMarkOf, REVIEW_FILTER_WORDS, STUDY_REVIEW_SENTENCE } from './review-mark-of';
+import { knownReviewStatus, reviewMarkOf, REVIEW_FILTER_WORDS, STUDY_REVIEW_SENTENCE } from './review-mark-of';
 
 describe('reviewMarkOf', () => {
   it('Study, verified: no mark', () => expect(reviewMarkOf('study', 'verified')).toEqual({ kind: 'none' }));
@@ -16,5 +16,14 @@ describe('reviewMarkOf', () => {
   it('the inspector line and the Reactions filter use the Study words', () => {
     expect(STUDY_REVIEW_SENTENCE).toBe('This has an open question. Check it with your textbook or teacher.');
     expect(REVIEW_FILTER_WORDS).toEqual({ verified: 'Reviewed', unreviewed: 'Not yet reviewed', review_required: 'Needs checking' });
+  });
+});
+
+describe('knownReviewStatus (step 8.4d, E1): only a status the record really holds counts', () => {
+  it('passes the three statuses and nothing else', () => {
+    expect(knownReviewStatus('verified')).toBe('verified');
+    expect(knownReviewStatus('review_required')).toBe('review_required');
+    expect(knownReviewStatus('unreviewed')).toBe('unreviewed');
+    for (const unknown of [undefined, null, '', 'draft', 3, {}]) expect(knownReviewStatus(unknown)).toBeUndefined();
   });
 });

@@ -2,10 +2,11 @@
   width: min(560px, calc(100vw - 2 * var(--space-16)));
   max-height: calc(100vh - 2 * var(--space-16));
   padding: 0;
-  border: 1px solid var(--color-ink-2);
-  border-radius: var(--radius-8);
-  background: var(--color-paper);
-  color: var(--color-ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--raised);
+  box-shadow: var(--shadow-3);
+  color: var(--text);
 }
 
 .wide {
@@ -39,7 +40,7 @@
   justify-content: space-between;
   gap: var(--space-12);
   padding: var(--space-12) var(--space-16);
-  border-bottom: 1px solid var(--color-rule);
+  border-bottom: 1px solid var(--line);
 }
 
 .title {
@@ -70,5 +71,5 @@
   justify-content: flex-end;
   gap: var(--space-8);
   padding: var(--space-12) var(--space-16);
-  border-top: 1px solid var(--color-rule);
+  border-top: 1px solid var(--line);
 }

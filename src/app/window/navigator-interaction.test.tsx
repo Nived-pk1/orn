@@ -7,7 +7,7 @@
  * keeps them without writing. A saved expansion is ignored and removed once. jsdom has no layout: what the browser does
  * with the drawing is proved by tests/e2e/navigator.spec.ts.
  */
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { demoState } from '@/test-support/app-boot-kit';
 import { doubleTap, tap } from '@/test-support/pointer-kit';
@@ -78,8 +78,10 @@ describe('selection', () => {
 describe('the overview does not expand; a family opens as a page', () => {
   it('has no Expand and no Collapse button', async () => {
     await opened();
-    expect(screen.queryByRole('button', { name: 'Expand' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Collapse' })).toBeNull();
+    // (the view list at the left has its own Collapse / Expand since step 8.4d; the question here is about the map's families)
+    const page = within(screen.getByRole('main'));
+    expect(page.queryByRole('button', { name: 'Expand' })).toBeNull();
+    expect(page.queryByRole('button', { name: 'Collapse' })).toBeNull();
   });
 
   it('Open family says why it cannot act, and acts on a selected family', async () => {

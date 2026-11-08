@@ -17,7 +17,7 @@ import { NoticeBandView, type BandNotice } from './notice-band-view';
 import { BannerButtons, useBannerRunner } from './status-parts';
 import { NOTICE_TEXT, StudyUpdateContext } from './study-update';
 
-function useBandNotices(): readonly BandNotice[] {
+export function useBandNotices(): readonly BandNotice[] {
   const { services, panels } = useApp();
   const status = useSubscribable(services.status);
   const storageNoticeDismissed = usePanels(panels, (s) => s.storageNoticeDismissed);

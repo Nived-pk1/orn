@@ -1,3 +1,4 @@
+/* The skeleton (reference ".sk"): bars matching the final shape, a slow shimmer; none with reduced motion. */
 .skeleton {
   display: flex;
   flex-direction: column;
@@ -8,10 +9,10 @@
 .bar {
   display: block;
   height: 1em;
-  border-radius: var(--radius-4);
-  background: linear-gradient(90deg, var(--color-rule), var(--color-surface), var(--color-rule));
+  border-radius: var(--r-control);
+  background: linear-gradient(90deg, var(--sunken) 0%, var(--hover) 50%, var(--sunken) 100%);
   background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
+  animation: shimmer 1.4s ease-in-out infinite;
 }
 
 .bar[data-last] {
@@ -24,5 +25,11 @@
   }
   to {
     background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
   }
 }

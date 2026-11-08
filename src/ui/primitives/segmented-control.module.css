@@ -1,12 +1,14 @@
+/* The segmented control (reference ".seg"): a sunken track with the chosen segment raised on the surface. The chosen segment is also bold, so colour is never the only carrier. */
 .group {
   display: inline-flex;
 }
 
 .segments {
   display: inline-flex;
-  border: 1px solid var(--color-ink-2);
+  padding: 2px;
+  border: 1px solid var(--line);
   border-radius: var(--radius-8);
-  overflow: hidden;
+  background: var(--sunken);
 }
 
 .segment {
@@ -14,21 +16,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: var(--hit-min);
+  gap: var(--s-4);
+  min-height: max(26px, var(--hit-min));
   min-width: var(--hit-min);
-  padding: 0 var(--space-12);
-  border-left: 1px solid var(--color-rule);
-  background: var(--color-paper);
-  color: var(--color-ink);
+  padding: 0 var(--s-8);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--text-12);
+  font-weight: 500;
   cursor: pointer;
-}
-
-.segment:first-child {
-  border-left: 0;
+  transition:
+    background var(--d-fast),
+    color var(--d-fast);
 }
 
 .segment:hover {
-  background: var(--color-hover);
+  color: var(--text);
 }
 
 /* the real radio fills the segment, invisible, so the whole segment is its target and the browser's own focus and keys work */
@@ -43,20 +47,12 @@
 }
 
 .segment:has(.input:focus-visible) {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
+  box-shadow: var(--focus);
 }
 
-/* the chosen segment is told by weight and an underline as well as by fill, so colour is never the only carrier */
 .chosen {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.chosen:hover {
-  background: var(--color-accent);
-  filter: brightness(0.92);
 }

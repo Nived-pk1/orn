@@ -1,10 +1,8 @@
-/* One band row at the top of the main column: at most 56 px tall (step 8.4a). */
+/* One band row at the top of the main column: the 40 px banner and 8 px above and below, so at most 56 px tall (steps 8.4a, 8.4d). */
 .band {
   min-width: 0;
-  /* the row has the height of its tallest content (a 32 px button) from the start: the "Details" button appearing when a pane narrows the column must not make it taller (Firefox: +12.4 px, step 8.4b) */
-  min-height: var(--space-48);
   box-sizing: border-box;
-  padding: var(--space-4) var(--space-12);
+  padding: var(--s-8) var(--s-12);
 }
 
 .list {

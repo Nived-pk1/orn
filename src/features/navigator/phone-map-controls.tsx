@@ -28,10 +28,10 @@ export function PhoneMapControls(props: {
       <div className={styles.floating} {...(props.barShown === true ? { 'data-bar': 'shown' } : {})}>
         {props.extra}
         <button type="button" className={styles.round} aria-label="Fit" onClick={() => props.controller?.fit()} aria-disabled={props.controller === null ? true : undefined}>
-          <Icon name="fit" size={22} />
+          <Icon name="scan" size={20} />
         </button>
         <button type="button" className={styles.round} aria-label="Legend" aria-haspopup="dialog" onClick={() => setLegend(true)}>
-          <Icon name="info" size={22} />
+          <Icon name="info" size={20} />
         </button>
       </div>
       <Dialog open={legend} onClose={() => setLegend(false)} title="Legend">

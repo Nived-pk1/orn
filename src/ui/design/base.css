@@ -62,6 +62,39 @@ textarea {
   font-family: var(--font-mono);
 }
 
+/* The field (step 8.4d, reference ".field"): text boxes, selects and text areas share one look. Component classes win over these element rules. */
+input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='hidden'], [type='color']),
+select,
+textarea {
+  padding: 0 var(--space-8);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color var(--d-fast);
+}
+
+textarea {
+  padding: var(--space-8);
+}
+
+input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='hidden'], [type='color']):hover,
+select:hover,
+textarea:hover {
+  border-color: var(--text-3);
+}
+
+input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='hidden'], [type='color']):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: var(--accent);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-3);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

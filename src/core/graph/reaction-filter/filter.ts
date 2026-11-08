@@ -61,7 +61,8 @@ export function filterReactions(input: ReactionFilterInput, filter: ReactionFilt
   let hiddenByScope = 0;
 
   for (const entry of input.entries) {
-    const outside = scope !== undefined && scope({ kind: 'reaction', id: entry.id } as never) === 'outside';
+    const scopeOfEntry = scope === undefined ? undefined : scope({ kind: 'reaction', id: entry.id } as never);
+    const outside = scopeOfEntry === 'outside';
     const failed: Dimension[] = [];
     for (const dimension of DIMENSIONS) {
       const wanted = chosen[dimension];
@@ -83,7 +84,7 @@ export function filterReactions(input: ReactionFilterInput, filter: ReactionFilt
       for (const option of new Set(geo.fromOptions)) counts.fromFamily.set(option, (counts.fromFamily.get(option) ?? 0) + 1);
       for (const option of new Set(geo.toOptions)) counts.toFamily.set(option, (counts.toFamily.get(option) ?? 0) + 1);
     }
-    if (failed.length === 0 && !geoFails) rows.push({ id: entry.id, name: entry.name, fromFamilyIds: entry.fromFamilyIds, toFamilyIds: entry.toFamilyIds, outside, typeIds: entry.typeIds });
+    if (failed.length === 0 && !geoFails) rows.push({ id: entry.id, name: entry.name, fromFamilyIds: entry.fromFamilyIds, toFamilyIds: entry.toFamilyIds, outside, ...(scopeOfEntry === 'enrichment' || scopeOfEntry === 'prerequisite' ? { scopeKind: scopeOfEntry } : {}), typeIds: entry.typeIds });
   }
 
   const facet = (dimension: Dimension | 'fromFamily' | 'toFamily', picked: readonly string[]): FacetOption[] => {

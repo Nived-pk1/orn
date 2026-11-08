@@ -264,3 +264,14 @@ describe('From family and To family together match ONE candidate (7.1b C2)', () 
     expect(all({ toFamilyIds: ['D'] })).not.toContain('loose');
   });
 });
+
+describe('rows carry the scope kind that makes a chip (step 8.4d, E4)', () => {
+  const scope = (ref: { id: string }) => (ref.id === 'rxn_hydr' ? ('enrichment' as const) : ref.id === 'rxn_oxid' ? ('prerequisite' as const) : ref.id === 'rxn_dehyd' ? ('outside' as const) : ('official' as const));
+  it('enrichment and prerequisite are written on the row; official and outside are not', () => {
+    const rows = filterReactions(input, {}, scope).rows;
+    expect(Object.fromEntries(rows.map((row) => [row.id, row.scopeKind]))).toEqual({ rxn_hydr: 'enrichment', rxn_oxid: 'prerequisite', rxn_dehyd: undefined, rxn_odd: undefined });
+  });
+  it('with no exam chosen no row has one', () => {
+    expect(filterReactions(input, {}, undefined).rows.every((row) => row.scopeKind === undefined)).toBe(true);
+  });
+});

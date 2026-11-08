@@ -44,7 +44,7 @@ describe('the family page', () => {
     expect(screen.getByRole('heading', { level: 1, name: /Alcohols/ }).textContent).toContain('R–OH');
     // one h1 per screen: the family name; the shell's title is a plain line here
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByText(/12 reactions \(\+ 1 example\) in all: 5 reactions \(\+ 1 example\) of Alcohols and 7 reactions that make it/)).toBeTruthy();
+    expect(screen.getByText(/^12 reactions · makes \d+ famil(y|ies) · made from \d+$/)).toBeTruthy(); // one line (step 8.4d, E5)
     expect(within(screen.getByRole('list', { name: 'Reaction types in this family' })).getByText(/Oxidation/)).toBeTruthy();
     expect(screen.getByText('Made from')).toBeTruthy();
     expect(screen.getByText('Turns into')).toBeTruthy();

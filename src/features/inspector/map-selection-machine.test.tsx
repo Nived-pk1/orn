@@ -65,6 +65,8 @@ type Pick = <T>(items: readonly T[]) => T;
 interface Model {
   history: Subject[];
   index: number;
+  /** The open family page (step 8.4d, E3): its subject, and whether opening it pushed an entry (Back then pops it). */
+  family?: { hub: Subject; pushed: boolean } | null;
 }
 const push = (model: Model, subject: Subject): void => {
   if (model.history[model.index] === subject) return;
@@ -107,6 +109,25 @@ const STEPS: readonly (readonly [string, Step])[] = [
     w.rig.inspector.getState().open({ kind: 'species', id });
     push(m, `record:species:${id}`);
   }],
+  ['open a family page', (w, pick, m) => {
+    // opening a family page SELECTS that family (one selection model, ADR-044 addendum 8.4d)
+    const id = pick(w.hubs);
+    const ref = refOfId(id);
+    const subject = `record:${ref?.kind}:${ref?.id}`;
+    if (m.family?.hub === subject) return; // that page is already open: nothing changes
+    const before = m.index;
+    w.rig.ports.ui.family.getState().openFamily(id);
+    push(m, subject);
+    m.family = { hub: subject, pushed: m.index !== before || (m.family?.pushed ?? false) };
+  }],
+  ['Back from the family page', (w, _p, m) => {
+    // closing it brings back the selection that was there before it opened, as long as the family is still the selection
+    w.rig.ports.ui.family.getState().closeFamily();
+    if (m.family !== undefined && m.family !== null) {
+      if (m.family.pushed && m.history[m.index] === m.family.hub) m.index = Math.max(0, m.index - 1);
+      m.family = null;
+    }
+  }],
   ['close pane', (w) => w.rig.ports.ui.panels.getState().setInspectorOpen(false)],
   ['reopen pane', (w) => w.rig.ports.ui.panels.getState().setInspectorOpen(true)],
   ['Esc / empty-map click', (w, _p, m) => {
@@ -136,6 +157,7 @@ describe('the map selection state machine (pure answer)', () => {
     try {
       for (let seed = 1; seed <= 500; seed += 1) {
         failing = `seed ${seed}`;
+        world.rig.ports.ui.family.getState().closeFamily(); // a sequence starts with no family page open
         world.rig.inspector.getState().clear();
         world.rig.ports.ui.selection.getState().drop();
         const random = generator(seed);
@@ -171,7 +193,10 @@ describe.each([
     const world = build(phone, studio, true);
     let failing = '';
     for (let seed = 1; seed <= 12; seed += 1) {
-      act(() => world.rig.inspector.getState().clear());
+      act(() => {
+        world.rig.ports.ui.family.getState().closeFamily();
+        world.rig.inspector.getState().clear();
+      });
       const random = generator(seed * 7919);
       const pick: Pick = (items) => items[Math.floor(random() * items.length)] as never;
       const model: Model = { history: [], index: -1 };

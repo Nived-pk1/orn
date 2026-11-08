@@ -32,7 +32,7 @@ export function Menu(props: MenuProps) {
     <Dropdown.Root modal={false}>
       <Dropdown.Trigger className={styles.trigger} aria-label={props.label}>
         {props.trigger ?? props.label}
-        <Icon name="chevron-down" size={12} />
+        <Icon name="chevron-down" />
       </Dropdown.Trigger>
       <Dropdown.Portal {...(container === undefined ? {} : { container })}>
         <Dropdown.Content className={styles.content} sideOffset={4} align="start" collisionPadding={8}>

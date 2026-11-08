@@ -76,3 +76,16 @@ describe('Button kinds (step 8.4a)', () => {
     expect(css).not.toMatch(/dashed/);
   });
 });
+
+describe('Button size (step 8.4d)', () => {
+  it('small is a size, not a fourth kind: the kind attribute is unchanged and the size is written', () => {
+    render(<Button size="sm">Back up</Button>);
+    const button = screen.getByRole('button', { name: 'Back up' });
+    expect(button.getAttribute('data-kind')).toBe('secondary');
+    expect(button.getAttribute('data-size')).toBe('sm');
+  });
+  it('the default size writes nothing', () => {
+    render(<Button>Save</Button>);
+    expect(screen.getByRole('button', { name: 'Save' }).hasAttribute('data-size')).toBe(false);
+  });
+});

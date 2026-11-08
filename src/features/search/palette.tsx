@@ -27,7 +27,7 @@ function useEntries(rows: readonly PaletteRow[], commands: readonly PaletteComma
   return useMemo(() => {
     if (mode === 'command') return commands.map((c) => ({ key: `command:${c.id}` }));
     if (hasText || rows.length > 0) return rows.flatMap((row, index) => (row.type === 'hit' ? [{ key: row.key, row: index }] : []));
-    return recent.map((text) => ({ key: `recent:${text}` }));
+    return [...commands.map((c) => ({ key: `command:${c.id}` })), ...recent.map((text) => ({ key: `recent:${text}` }))];
   }, [rows, commands, recent, mode, hasText]);
 }
 
@@ -184,9 +184,16 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
             )}
             <div role="presentation" style={{ height: win.after }} />
           </>
-        ) : !hasText && recent.length > 0 ? (
+        ) : !hasText && (state.commands.length > 0 || recent.length > 0) ? (
           <>
-            <p className={styles.recent}>Recent searches</p>
+            {state.commands.length === 0 ? null : <p className={styles.recent}>Go to</p>}
+            {state.commands.map((command, index) => (
+              <Command.Item key={command.id} value={`command:${command.id}`} className={styles.item} disabled={command.unavailable !== undefined} aria-posinset={index + 1} aria-setsize={state.commands.length} onSelect={() => activate(`command:${command.id}`)}>
+                <span className={styles.title}>{command.title}</span>
+                {command.unavailable === undefined ? null : <span className={styles.why}>Not available: {command.unavailable}</span>}
+              </Command.Item>
+            ))}
+            {recent.length === 0 ? null : <p className={styles.recent}>Recent searches</p>}
             {recent.map((text, index) => (
               <Command.Item key={text} value={`recent:${text}`} className={styles.item} aria-posinset={index + 1} aria-setsize={recent.length} onSelect={() => activate(`recent:${text}`)}>
                 <span className={styles.title}>{text}</span>

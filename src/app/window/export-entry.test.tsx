@@ -78,7 +78,7 @@ describe('the File menu', () => {
 });
 
 describe('the palette and the Dataset mode', () => {
-  it('"Export..." is a command and opens the same screen', async () => {
+  it('"Back up your data" is a command (found by "export" too) and opens the same screen', async () => {
     renderWithApp(app());
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
     const palette = await screen.findByRole('dialog', { name: 'Search' });
@@ -86,7 +86,7 @@ describe('the palette and the Dataset mode', () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, PALETTE_DEBOUNCE_MS + 50));
     });
-    fireEvent.click(await within(palette).findByRole('option', { name: /Export\.\.\./ }));
+    fireEvent.click(await within(palette).findByRole('option', { name: /Back up your data/ }));
     await exportDialog();
   });
 

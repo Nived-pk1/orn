@@ -6,6 +6,7 @@ import styles from './notice-band.module.css';
 export function NoticeList(props: { readonly notices: readonly BandNotice[]; readonly onClose: () => void }) {
   return (
     <Dialog open onClose={props.onClose} title="Notices" dismissOnBackdrop>
+      {props.notices.length === 0 ? <p>Nothing needs your attention.</p> : null}
       <ul className={styles.list}>
         {props.notices.map((notice) => (
           <li key={notice.id}>

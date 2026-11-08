@@ -1,0 +1,80 @@
+/* The desktop top bar's own parts (step 8.4d): mark, breadcrumb, search box. Tokens only (design reference section 8). */
+.mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-control);
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.crumb {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--t-14);
+  white-space: nowrap;
+}
+
+.section {
+  flex: none;
+}
+
+.record {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.commandBox {
+  display: flex;
+  flex: 0 1 300px;
+  align-items: center;
+  gap: var(--s-8);
+  width: 300px;
+  min-width: 0;
+  min-height: 30px;
+  height: 30px;
+  padding: 0 var(--s-4) 0 var(--s-8);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  background: var(--sunken);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-14);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--d-fast),
+    background var(--d-fast);
+}
+
+.commandBox:hover {
+  border-color: var(--line-strong);
+  background: var(--hover);
+}
+
+.commandText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kbd {
+  margin-left: auto;
+  padding: 0 var(--s-4);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-4);
+  background: var(--surface);
+  color: var(--text-2);
+  font: 500 var(--t-12) / 20px var(--mono);
+}

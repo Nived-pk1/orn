@@ -23,9 +23,9 @@ function deps(over: Partial<CommandDeps> = {}): { deps: CommandDeps; modes: stri
 }
 
 describe.each([
-  ['open-named', 'Open Named reactions', 'named'],
-  ['open-mechanisms', 'Open Mechanisms', 'mechanisms'],
-  ['open-syllabus', 'Open Syllabus', 'syllabus'],
+  ['open-named', 'Go to Named reactions', 'named'],
+  ['open-mechanisms', 'Go to Mechanisms', 'mechanisms'],
+  ['open-syllabus', 'Go to Syllabus', 'syllabus'],
 ] as const)('the "%s" command (7.4)', (id, title, mode) => {
   it('opens the mode as it was left and remembers the explorer', () => {
     const { deps: d, modes } = deps();

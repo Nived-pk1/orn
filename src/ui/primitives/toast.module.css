@@ -1,3 +1,5 @@
+/* The toast (step 8.4d; reference "Toast"): a dark pill, one line, 44 px, with the text, an optional action and Dismiss. It floats on the raised layer
+   (shadow 3). On desktop it is docked at the bottom centre of the main column (the shell places the dock); on a phone it floats above the tab bar. */
 .region {
   position: fixed;
   right: var(--space-16);
@@ -10,16 +12,61 @@
   pointer-events: none;
 }
 
-.region .toast {
-  max-height: var(--toast-height);
-  overflow: hidden;
-}
-
 .toast {
   pointer-events: auto;
-  border: 1px solid var(--color-ink-2);
-  border-radius: var(--radius-8);
-  background: var(--color-paper);
+  max-height: var(--toast-height);
+  overflow: hidden;
+  border-radius: var(--r-card);
+  animation: toast-in var(--d-base) var(--ease-out);
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: var(--s-12);
+  height: var(--toast-height);
+  padding: 0 var(--s-8) 0 var(--s-12);
+  border-radius: var(--r-card);
+  background: var(--text);
+  box-shadow: var(--shadow-3);
+  color: var(--canvas);
+  font-size: var(--t-14);
+}
+
+.text {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the buttons sit on the dark pill: light text, a light tint on hover */
+.action {
+  flex: none;
+  color: var(--canvas);
+}
+
+.action:hover {
+  background: color-mix(in srgb, var(--canvas) 14%, transparent);
+  color: var(--canvas);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
 }
 
 /* Release preview, phones: the bottom bar of modes is 56 px tall; a notice sits above it, not over it. */
@@ -32,18 +79,12 @@
   }
 }
 
-/* Docked in the shell (desktop, step 8.4a): one row, at most 44 px, at the foot of the main column. */
+/* Docked in the shell (desktop): one row at the foot of the main column, centred; two toasts stack upward, each one row (found by axe, step 8.4b). */
 .docked {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   gap: var(--space-4);
   width: min(560px, 100%);
-  pointer-events: none; /* two toasts stack upward, each one row: none is clipped (found by axe, step 8.4b) */
-}
-
-.docked .toast {
-  max-height: var(--toast-height);
-  overflow: hidden;
-  border-radius: var(--radius-8);
+  pointer-events: none;
 }

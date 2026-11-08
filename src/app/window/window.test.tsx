@@ -288,7 +288,7 @@ describe('the shell frame around the window', () => {
   it('the top bar lists what does not exist yet as unavailable, with the reason (Search, the exam scope, Undo and Redo exist since 5.8)', () => {
     renderWithApp(app());
     // Search exists since step 5.8 (it opens the palette); Undo and Redo reflect the store and say why they cannot act
-    expect(screen.getByRole('button', { name: 'Search' }).getAttribute('aria-disabled')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Search or jump to…' }).getAttribute('aria-disabled')).toBeNull();
     for (const [name, reason] of [['Undo', 'Nothing to undo'], ['Redo', 'Nothing to redo']] as const) {
       expect(screen.getByRole('button', { name, description: reason }).getAttribute('aria-disabled')).toBe('true');
     }

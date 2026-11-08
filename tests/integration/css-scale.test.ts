@@ -10,7 +10,9 @@ import { SCALE_EXCEPTIONS } from './css-scale-exceptions';
 const TEXT = ['12', '14', '16', '20', '24', '32'];
 const SPACE = ['4', '8', '12', '16', '24', '32', '48'];
 const RADIUS = ['4', '8', 'pill'];
-const TOKEN = new RegExp(`^var[(]--(?:text-(?:${TEXT.join('|')})|space-(?:${SPACE.join('|')})|radius-(?:${RADIUS.join('|')}))[)]$`);
+// tokens v2 (step 8.4d): the design reference's names for the same scale (--t-N, --s-N) and its four radii
+const REF_RADIUS = ['control', 'card', 'panel', 'pill'];
+const TOKEN = new RegExp(`^var[(]--(?:text-(?:${TEXT.join('|')})|t-(?:${TEXT.join('|')})|space-(?:${SPACE.join('|')})|s-(?:${SPACE.join('|')})|radius-(?:${RADIUS.join('|')})|r-(?:${REF_RADIUS.join('|')}))[)]$`);
 const KEYWORD = /^(?:0|auto|inherit|initial|unset|normal)$/;
 const PROP = /(?:^|[\s;{])((?:font-size|padding(?:-[a-z]+)*|margin(?:-[a-z]+)*|gap|row-gap|column-gap|border-radius|border-[a-z]+-[a-z]+-radius))\s*:\s*([^;}]+)/g;
 
@@ -38,7 +40,7 @@ function parts(value: string): string[] {
   return out;
 }
 
-const calcOfTokens = (v: string): boolean => /^calc\(/.test(v) && !/\d+(?:\.\d+)?(?:px|rem|em|%)/.test(v) && /var\(--(?:text|space|radius)-/.test(v);
+const calcOfTokens = (v: string): boolean => /^calc\(/.test(v) && !/\d+(?:\.\d+)?(?:px|rem|em|%)/.test(v) && /var\(--(?:text|space|radius|t|s|r)-/.test(v);
 const allowed = (v: string): boolean => KEYWORD.test(v) || TOKEN.test(v) || calcOfTokens(v);
 
 export function violations(): string[] {

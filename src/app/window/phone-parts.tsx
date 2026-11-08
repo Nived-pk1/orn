@@ -6,7 +6,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import type { RecordKind } from '@/core/schema';
 import { useSubscribable } from '@/ui/hooks';
-import { Button, Dialog, ErrorBoundary, IconButton, ToastItems, useToastView, useToasts } from '@/ui/primitives';
+import { Button, Dialog, ErrorBoundary, Icon, IconButton, ToastItems, useToastView, useToasts } from '@/ui/primitives';
 import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
 import { useExportOpen } from './export-context';
@@ -151,7 +151,10 @@ export function PhoneNotices() {
   return (
     <div className={styles.notices}>
       <Button variant="quiet" className={styles.noticesButton} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        {count === 1 ? '1 notice' : `${count} notices`}
+        <span>{count === 1 ? '1 notice' : `${count} notices`}</span>
+        <span className={styles.noticesChevron} data-notices-chevron="" data-open={open ? 'true' : 'false'} aria-hidden="true">
+          <Icon name="chevron-right" />
+        </span>
       </Button>
       {open ? (
         <ErrorBoundary label="The notices panel">

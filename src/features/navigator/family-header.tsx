@@ -5,11 +5,10 @@
  */
 import type { FamilyPartner, FamilyStudy } from '@/core/graph';
 import { VisuallyHidden } from '@/ui/primitives';
-import { examplesWords } from './family-items';
+import { familySummaryOf } from './family-summary';
 import { FormulaText } from './family-text';
 import styles from './family-header.module.css';
 
-const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
 
 function Partners(props: { readonly title: string; readonly empty: string; readonly partners: readonly FamilyPartner[]; readonly onGo: (hubId: string) => void }) {
   return (
@@ -52,13 +51,7 @@ export function FamilyHeader({ study, onGoToMadeFrom, onGoToTurnsInto }: FamilyH
           </span>
         )}
       </h1>
-      <p className={styles.counts}>
-        {plural(counts.total, 'reaction', 'reactions')}
-        {examplesWords(counts.examples)} in all: {plural(counts.reactionsOf, 'reaction', 'reactions')}
-        {examplesWords(study.reactionsOf.exampleCount)} of {study.name} and {plural(counts.preparationOf, 'reaction', 'reactions')}
-        {examplesWords(study.preparationOf.exampleCount)} that make it
-        {counts.total < counts.reactionsOf + counts.preparationOf ? ' (a reaction of the family into itself is in both and counted once in the total)' : ''}.
-      </p>
+      <p className={styles.counts}>{familySummaryOf({ reactions: counts.total, makes: study.turnsInto.length, madeFrom: study.madeFrom.length })}</p>
       {study.reactionTypes.length === 0 ? null : (
         <ul className={styles.types} aria-label="Reaction types in this family">
           {study.reactionTypes.map((type) => (

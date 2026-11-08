@@ -169,19 +169,20 @@ describe('the right pane (step 8.4a, Part C2.6)', () => {
     const row = screen.getByRole('group', { name: 'Go next' });
     expect(within(row).getAllByRole('button').filter((b) => b.getAttribute('aria-haspopup') === null).length).toBeLessThanOrEqual(3);
     const more = within(row).queryByRole('button', { name: 'More actions' });
-    if (more !== null) expect(more.textContent).toContain('⋯');
+    if (more !== null) expect(more.querySelector('span[aria-hidden="true"][style*="more-horizontal.svg"]')).not.toBeNull(); // the ⋯ icon (step 8.4d)
   });
 
-  it('the connected cards fill the pane: a grid (one column narrow, two wide), never a fixed narrow card', async () => {
-    const { readFileSync } = await import('node:fs');
-    const css = readFileSync('src/features/inspector/study-inspector.module.css', 'utf8');
-    const cards = /\.cards \{[^}]*\}/.exec(css)?.[0] ?? '';
-    expect(cards).toMatch(/display: grid/);
-    // step 8.4b, G4: one column below 520 px of PANE (a container query on the group), two above; the card button fills its cell
-    expect(cards).toMatch(/grid-template-columns: minmax\(0, 1fr\)/);
-    expect(css).toMatch(/@container \(min-width: 520px\) \{ \.cards \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-    expect(css).toMatch(/\.cards:not\(\.cardsRow\) \.card \{ width: 100%/);
-    expect(/\.card \{[^}]*\}/.exec(css)?.[0] ?? '').not.toMatch(/max-width/);
+  it('the connected groups are list rows (dot or icon, name, sub-line, chevron), one column that fills the pane (step 8.4d, E6)', async () => {
+    await show(ETHANOL, true, { showReactions: () => undefined, showPrecursors: () => undefined });
+    const groups = [...document.querySelectorAll('section[data-group]')];
+    expect(groups.length).toBeGreaterThan(0);
+    for (const group of groups) {
+      const list = group.querySelector('ul[aria-label]');
+      expect(list, group.getAttribute('data-group') ?? '').not.toBeNull();
+      const rows = [...(list as Element).querySelectorAll('li > button[data-record-id]')];
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) expect(row.querySelector('[data-chevron]')).not.toBeNull();
+    }
   });
 });
 

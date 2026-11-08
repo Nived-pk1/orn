@@ -22,6 +22,8 @@ export interface PaletteCommand {
   readonly keywords?: readonly string[];
   /** Why the command cannot run now, in words; absent: it can. */
   readonly unavailable?: string;
+  /** Listed in the palette while the box is empty (the places to go and the backup); step 8.4d. Every command is listed after ">". */
+  readonly suggest?: boolean;
   run(): void;
 }
 

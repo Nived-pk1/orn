@@ -19,6 +19,8 @@ async function load(edition: Edition) {
   const { PHONE_QUERIES } = await import('@/ui/hooks');
   const { AppProvider } = await import('@/app/window/context');
   const { useDraftsView } = await import('@/app/window/drafts-ui');
+  // the lazy notices bell resolves in THIS module registry (the reset above), so it finds its own context
+  await (await import('@/app/window/lazy-notice-bell')).prefetchNoticeBell();
   kit.stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

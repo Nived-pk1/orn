@@ -86,7 +86,7 @@ test('Entry points: the palette opens Reagents, Named reactions, Mechanisms and 
   const seen = await watch(page);
   await importOwn(page, changedDemo(() => undefined));
   await leaveChapters(page).catch(() => undefined);
-  for (const [title, heading] of [['Open Reagents', 'Reagents'], ['Open Named reactions', 'Named reactions'], ['Open Mechanisms', 'Mechanisms'], ['Open Syllabus', 'Syllabus']] as const) {
+  for (const [title, heading] of [['Go to Reagents', 'Reagents'], ['Go to Named reactions', 'Named reactions'], ['Go to Mechanisms', 'Mechanisms'], ['Go to Syllabus', 'Syllabus']] as const) {
     await page.keyboard.press('Control+k');
     await palette(page).getByRole('combobox').fill(`>${title}`);
     await palette(page).getByRole('option', { name: title }).first().click();

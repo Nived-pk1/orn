@@ -1,79 +1,115 @@
-/* Three kinds only (step 8.4a): secondary (outlined, the default), primary (filled; one per view) and quiet (text only). 32 px, phone 44. */
+/* Three kinds only (steps 8.4a, 8.4d): secondary (outlined, the default), primary (filled; one per view) and quiet (text only), at one of two sizes:
+   32 px, or small 28 px; 44 px on touch. The look is the design reference's ".btn". */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-8);
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 var(--space-12);
-  border: 1px solid var(--color-ink-2);
-  border-radius: var(--radius-8);
-  background: var(--color-paper);
-  color: var(--color-ink);
+  gap: var(--s-8);
+  min-width: var(--h-md);
+  min-height: var(--h-md);
+  padding: 0 var(--s-12);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
   font: inherit;
-  font-size: var(--text-14);
+  font-size: var(--t-14);
+  font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color var(--motion-fast);
+  transition:
+    background var(--d-fast),
+    border-color var(--d-fast),
+    transform var(--d-fast);
 }
 
 .button:hover {
-  background: var(--color-hover);
+  background: var(--sunken);
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.button[data-size='sm'] {
+  min-width: var(--h-sm);
+  min-height: var(--h-sm);
+  padding: 0 var(--s-8);
+  font-size: var(--t-12);
 }
 
 .primary {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .primary:hover {
-  background: var(--color-accent);
-  filter: brightness(0.92);
+  background: var(--accent-hover);
 }
 
 .quiet {
   border-color: transparent;
   background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+}
+
+.quiet:hover {
+  background: var(--hover);
+  color: var(--text);
 }
 
 .icon {
   padding: 0;
-  width: 32px;
+  width: var(--h-md);
 }
 
-/* Disabled: muted text and border only. */
+.icon[data-size='sm'] {
+  width: var(--h-sm);
+}
+
+/* Unavailable: muted text, no shadow, not-allowed cursor; the reason is in the tooltip and the description. */
 .button[aria-disabled='true'],
 .button:disabled {
-  border-color: var(--color-rule);
-  color: var(--color-ink-2);
+  box-shadow: none;
+  color: var(--text-2);
   cursor: not-allowed;
 }
 
 .button[aria-disabled='true']:hover,
 .button:disabled:hover {
-  background: transparent;
-  filter: none;
+  background: var(--surface);
+  transform: none;
 }
 
 .primary[aria-disabled='true'],
 .primary:disabled {
-  background: var(--color-surface);
+  background: var(--sunken);
+  border-color: var(--line);
 }
 
-.quiet[aria-disabled='true'],
-.quiet:disabled {
-  border-color: transparent;
+.primary[aria-disabled='true']:hover,
+.primary:disabled:hover {
+  background: var(--sunken);
+}
+
+.quiet[aria-disabled='true']:hover,
+.quiet:disabled:hover {
+  background: transparent;
 }
 
 @media (max-width: 899px), (pointer: coarse) {
-  .button {
-    min-width: 44px;
-    min-height: 44px;
-    font-size: var(--text-16);
+  .button,
+  .button[data-size='sm'] {
+    min-width: var(--h-touch);
+    min-height: var(--h-touch);
+    font-size: var(--t-16);
   }
 
-  .icon {
-    width: 44px;
+  .icon,
+  .icon[data-size='sm'] {
+    width: var(--h-touch);
   }
 }

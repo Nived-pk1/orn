@@ -7,8 +7,8 @@ Reference screenshots: screenshots/reference-light.png, reference-dark.png (1280
 1. Tokens: `src/ui/design/tokens.css` (8.4a names: `--color-paper/surface/ink/ink-2/rule/accent/warning/error/review/on-accent/hover/scrim`,
    21 `--color-tone-*`, `--font-sans/mono`, `--text-12..32`, `--space-4..48`, `--radius-4/8/pill`, `--motion-fast/slow`, `--hit-min`,
    `--focus-ring-*`). Raw colours only there (scripts/check-colours.mjs, part of `npm run check`). No dark theme.
-2. Fonts: "IBM Plex Sans/Mono" named in `--font-*` with system fallbacks; NO @font-face anywhere (no self-hosted files): system
-   fallback is what renders. Kept as is (reference says keep).
+2. Fonts: IBM Plex Sans 400/600 and Mono 400, self-hosted through @fontsource CSS imports in `src/ui/design/index.ts` (served from the
+   origin, font-src 'self'); system fallbacks in `--font`. Kept as is.
 3. Icons: `src/ui/primitives/icons.tsx`, 16 inline-SVG paths (16 px box, stroke 1.5). Text glyphs elsewhere (☰, ›, ↻).
 4. Palette: `src/features/search/palette.tsx` (cmdk inside native Dialog), lazy via `src/app/window/lazy-palette.tsx`; opened by Ctrl/Cmd K
    (window.tsx keydown) and the top bar Search icon; lists search hits, recent searches, and `>` commands (palette-commands.ts).
@@ -32,3 +32,63 @@ GREEN: tokens-v2.test.ts 10/10; tokens.test.ts 74 pass (changed: stated-value te
 also covers `--d-*`; contrast pairs read the resolved aliases; added dark-theme pairs).
 Reference gap: `--text-3` is 3.3:1 on white (light) and 4.05:1 on surface (dark): used for icons, hints and separators only, never for
 text that carries meaning (dark `text-3 on surface` pair left out of the test on purpose; REVIEW REQUIRED).
+
+## Part B red line (before icons.tsx / public/icons touched)
+`npx vitest run tests/integration/icons-guard.test.ts src/ui/primitives/icons.test.tsx` -> `Tests 8 failed` (Icon is an inline <svg>,
+expected SPAN; no ICON_NAMES list; no public/icons, LICENSE.txt, favicon.svg/png; no Lucide credit in DEPENDENCIES/About).
+
+## Part B (icons) built; guard 'every vendored icon is used' goes green with Parts C and D (bell, chevron-right, rail icons, ...)
+Vendored 29 SVG files (27 from the reference sprite renamed to Lucide names, redo mirrored from undo, panel-right, pencil drawn in the
+same style; mark.svg is the hexagon). favicon.svg + favicon-32.png from the mark. Call sites renamed (close->x, zoom-in->plus,
+zoom-out->minus, fit->scan, families->layers, explore->compass, chapters->book-open, inspector->panel-right); icon sizes 16|20 only.
+
+## Part C red lines (before shell.tsx / mode-rail.tsx / frame-title.ts touched)
+`npx vitest run src/app/window/frame-title.test.ts src/ui/shell` -> `Tests 9 failed | 40 passed`, `Cannot find module './frame-title'`
+(shell-frame.test.tsx: no groups, no icons, no Collapse/Expand, no breadcrumb, no command box, no skip link).
+Decision: the stored panels field stays `railHidden` (no schema/uiState change); in 8.4d it means "rail collapsed to icons". The
+8.4a "hide fully + ☰ menu" behaviour is replaced by Collapse/Expand (changed tests: shell-frame.test.tsx "view list" block).
+
+## Part C progress (shell, bell, palette)
+RED lines: shell-frame.test.tsx 9 failed (above); notice-bell-button.test.tsx `Failed to resolve import "./notice-bell-button"`;
+palette-commands-go.test.ts, palette-model.test.ts (suggested), palette-suggest.test.tsx written before palette-commands/model/palette changed.
+Contract amendment (PaletteCommand, src/features/search/contracts.ts): optional `suggest?: boolean` (additive; no schema impact).
+Changed tests and why: top-bar.test.tsx (bell stubbed: it reads the whole app status); palette-window.test.tsx + window.test.tsx (the
+top-bar Search icon is now the box "Search or jump to…"); study-dataset / edition-window / map-multiselect tests (prefetch the lazy
+bell chunk in their module registry, like the band); navigator-interaction.test.tsx (the rail has Collapse/Expand now: the check is
+scoped to <main>); phone-window.test.tsx (phone bar shows the page name, spec C1); palette-commands-{lists,named,reagents}.test.ts
+(titles "Open X" -> "Go to X"); shell-frame.test.tsx (8.4a Hide/☰ block replaced by Collapse/Expand).
+
+## Part D red lines (before count.tsx / list-row.tsx / Button size)
+`npx vitest run src/ui/primitives/count.test.tsx list-row.test.tsx button.test.tsx` -> `Failed to resolve import "./count"`,
+`"./list-row"`, and button.test.tsx "small is a size" `expected null to be 'sm'` (1 failed | 8 passed). GREEN after the three files.
+Toast: plain result 5 s (was 6), with an action 10 s (data-exchange was 20 s): editor-host.test.tsx + toast-auto-close.test.tsx updated.
+Toast is now the dark pill (kind icon for warning/error, hidden kind word); Banner has its kind icon + hidden word.
+css-scale guard (8.4a) now also accepts the reference names (--t-N, --s-N, --r-control/card/panel/pill) + 4 reasoned exceptions.
+
+## Part E red lines
+E1: review-mark-of.test.ts `knownReviewStatus is not a function`; review-mark.test.tsx `expected <span role="img"> to be null`.
+E2: reactions-view.test.tsx compact row `expected [] to have a length of 1 but got +0` (3 failed | 36 passed).
+E1 green: `knownReviewStatus`, `ReviewMark status={undefined}` -> null, study inspector passes the real status only.
+E2 green: compact rows draw `ReviewMark` from the record's own review status.
+E3: red `state machine failed at seed 1, step 20 (open a family page)`; green after use-bridge.ts: opening a family page selects the family, closing
+it (Back) pops that entry while the family is still the selection. Test: two new gestures in map-selection-machine.test.tsx (500 seeds pure + rendered).
+E4 red: reaction-card-host-chip.test.tsx (`Unable to find an element with the text: Extra`), filter.test.ts (`1 failed | 28 passed`, run red
+after writing, then green), arrow-reactions-chip.test.tsx (same). Green: ReactionCardHost uses useScope; rows carry `scopeKind` (core, additive
+optional); compact rows and the arrow view rows draw the Chip; `scopeChipOf` moved to ui/study-page (navigator/scope-chip.ts re-exports it).
+Chain cards (From A to B) are family steps, not reactions: no chip there (REVIEW REQUIRED).
+E5 red: family-summary.test.ts `Cannot find module './family-summary'`; green with family-summary.ts + family-header.tsx (one line). Changed test:
+navigator-family.test.tsx line 47 (the old long sentence "… in all: … of Alcohols and … that make it" is the one line now).
+E6 (partial, said so): the inspector's connected groups are `ListRows`/`ListRow` (study-inspector.test.tsx "connected cards fill the pane" replaced by a
+list-row test; dead card CSS removed); `ListEntry` composes the one Card. Other card-like classes in Studio screens keep their own recipe: the
+screen-by-screen pass in 8.4f takes them (REVIEW REQUIRED: E6 is not "all").
+E7 red: phone-window.test.tsx `expected undefined to be 'true'` (chevron); green: the folded line is 40 px high, "n notices" + a turning chevron.
+
+## Sizes (initial JS gzip)
+Baseline (8.4c close): Study 382,792 / Studio 386,595 bytes. Limit for this step (+0.5 kB): 383,292 / 387,095.
+First build after Parts A-E: Study 384.29 kB, Studio 388.33 kB (about +1.5 / +1.7 kB): OVER. Action: `palette-commands.ts` (7.2 kB rendered, used only
+once the palette is opened) became a lazy chunk (`lazy-commands.ts`; the window loads it with the palette at idle and `openSearch` waits for it). Result below.
+
+## Text colours
+Every piece of text that carries meaning uses `--text-2` or `--text` (status bar, rail group labels, the search box text and its Ctrl K hint);
+`--text-3` stays on icons (chevrons), the family dot's neutral, field hover borders and placeholders (the reference's choice; REVIEW REQUIRED).
+After the lazy palette-commands chunk: Study 383.02 kB, Studio 386.90 kB (exact bytes in PROGRESS): within this step's limit (383,262 / 387,082).

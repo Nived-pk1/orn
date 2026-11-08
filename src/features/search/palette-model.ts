@@ -59,12 +59,15 @@ export interface PaletteModel {
 
 const EMPTY: PaletteQuery = { mode: 'search', text: '', truncated: false };
 
-const initial = (): PaletteState => ({ input: '', parsed: EMPTY, status: 'idle', rows: [], commands: [], message: '', hidden: undefined, serial: 0 });
+const initial = (commands: readonly PaletteCommand[] = []): PaletteState => ({ input: '', parsed: EMPTY, status: 'idle', rows: [], commands, message: '', hidden: undefined, serial: 0 });
+
+/** What the empty palette lists: the commands that ask to be suggested (the places to go, the backup). */
+const suggested = (all: readonly PaletteCommand[]): readonly PaletteCommand[] => all.filter((command) => command.suggest === true);
 
 const cutNote = (parsed: PaletteQuery): string => (parsed.truncated ? 'Only the first 16 words (1,000 characters) of the text were used. ' : '');
 
 export function createPaletteModel(ports: SearchPorts): PaletteModel {
-  const store = createStore<PaletteState>(initial);
+  const store = createStore<PaletteState>(() => initial(suggested(ports.commands())));
   let token = 0;
   let cancel: (() => void) | undefined;
   const patch = (next: Partial<PaletteState>): void => store.setState((s) => ({ ...s, ...next, serial: s.serial + 1 }));
@@ -144,7 +147,7 @@ export function createPaletteModel(ports: SearchPorts): PaletteModel {
       return;
     }
     if (parsed.text === '' && parsed.kinds === undefined) {
-      patch({ input: text, parsed, status: 'idle', rows: [], commands: [], message: '' });
+      patch({ input: text, parsed, status: 'idle', rows: [], commands: suggested(ports.commands()), message: '' });
       return;
     }
     patch({ input: text, parsed, status: 'waiting', commands: [], message: '' });
@@ -180,7 +183,7 @@ export function createPaletteModel(ports: SearchPorts): PaletteModel {
     reset() {
       token += 1;
       stopTimer();
-      store.setState({ ...initial(), serial: store.getState().serial + 1 });
+      store.setState({ ...initial(suggested(ports.commands())), serial: store.getState().serial + 1 });
     },
     dispose() {
       token += 1;

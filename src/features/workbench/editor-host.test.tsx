@@ -151,7 +151,7 @@ describe('live findings (L1, debounced 300 ms) and Save', () => {
     expect(rig.drafts.view().count).toBe(0);
   });
 
-  it('the "Saved" toast closes by itself after 6 seconds (the save state stays in the status line)', async () => {
+  it('the "Saved" toast closes by itself after 5 seconds (the save state stays in the status line)', async () => {
     const due: Array<() => void> = [];
     const ms: number[] = [];
     const timers = { set: (run: () => void, after: number) => (due.push(run), ms.push(after), due.length), clear: () => undefined };
@@ -162,7 +162,7 @@ describe('live findings (L1, debounced 300 ms) and Save', () => {
     type('Canonical name (required)', 'Renamed here');
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('Saved')).toBeTruthy();
-    await waitFor(() => expect(ms).toContain(6_000));
+    await waitFor(() => expect(ms).toContain(5_000));
     act(() => due.forEach((run) => run()));
     expect(screen.queryByText('Saved')).toBeNull();
   });

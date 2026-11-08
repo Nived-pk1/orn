@@ -20,6 +20,8 @@ async function load(edition: 'study' | 'studio') {
   // the multi-selection engine is a lazy chunk (step 6.8b, Y1); a test that is not about the loading has it there from the first Shift-click
   const { loadMultiEngine } = await import('@/features/navigator');
   await loadMultiEngine();
+  // the lazy notices bell resolves in THIS module registry (the reset above), so it finds its own context
+  await (await import('@/app/window/lazy-notice-bell')).prefetchNoticeBell();
   kit.stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

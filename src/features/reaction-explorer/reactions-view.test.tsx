@@ -165,6 +165,21 @@ describe('Cards and Compact', () => {
     expect(document.body.textContent).toMatch(/\(exclusive\)/);
   });
 
+  it('a Compact row shows the review dot as a card does (step 8.4d, E2)', () => {
+    const state = demoState();
+    setup(state, {}, 'study');
+    fireEvent.click(screen.getByRole('radio', { name: 'Compact' }));
+    const rows = screen.getAllByRole('listitem').filter((li) => li.hasAttribute('data-reaction-id'));
+    let withDot = 0;
+    for (const row of rows) {
+      const status = (state.records.reaction as Record<string, Reaction>)[row.getAttribute('data-reaction-id') as string]?.review?.status;
+      const dots = [...row.children].filter((el) => el.hasAttribute('data-review-mark')); // the row's own dot (an example folded under it has its own row)
+      expect(dots).toHaveLength(status === 'verified' ? 0 : 1);
+      withDot += dots.length;
+    }
+    expect(withDot).toBeGreaterThan(0);
+  });
+
   it('a reaction with no card shows its compact row with the reason, in Cards too', () => {
     setup();
     expect(screen.getAllByText('No main product is marked, so this reaction has no card.').length).toBeGreaterThan(0);

@@ -23,9 +23,9 @@ function deps(over: Partial<CommandDeps> = {}): { deps: CommandDeps; modes: stri
 }
 
 describe.each([
-  ['open-chapters', 'Open Chapters', 'chapters'],
-  ['open-reactions', 'Open Reactions', 'reactions'],
-  ['open-precursors', 'Open Precursors', 'precursors'],
+  ['open-chapters', 'Go to Chapters', 'chapters'],
+  ['open-reactions', 'Go to Reactions', 'reactions'],
+  ['open-precursors', 'Go to Precursors', 'precursors'],
 ] as const)('the "%s" command (8.1 RR3)', (id, title, mode) => {
   it('opens the mode and closes an open family page', () => {
     const { deps: d, modes } = deps();

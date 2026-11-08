@@ -27,9 +27,22 @@
   background: var(--color-surface);
 }
 
-.noticesButton {
+/* The folded line is one row at most 40 px high (step 8.4d, E7): "n notices" and a chevron that turns when the list is open. */
+.notices .noticesButton {
   width: 100%;
-  justify-content: flex-start;
+  height: 40px;
+  min-height: 40px;
+  justify-content: space-between;
+  border-radius: 0;
+}
+
+.noticesChevron {
+  display: inline-flex;
+  transition: transform var(--d-fast);
+}
+
+.noticesChevron[data-open='true'] {
+  transform: rotate(90deg);
 }
 
 .alert {

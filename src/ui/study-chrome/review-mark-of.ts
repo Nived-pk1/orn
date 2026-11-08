@@ -5,6 +5,11 @@
 export type ReviewStatus = 'verified' | 'review_required' | 'unreviewed';
 export type ReviewEdition = 'study' | 'studio';
 
+/** The status a record really holds, or undefined (step 8.4d, E1): a missing or unknown value is NOT "unreviewed", it draws no mark until it is known. */
+export function knownReviewStatus(value: unknown): ReviewStatus | undefined {
+  return value === 'verified' || value === 'review_required' || value === 'unreviewed' ? value : undefined;
+}
+
 export type ReviewMarkSpec =
   | { readonly kind: 'none' }
   | { readonly kind: 'dot'; readonly tone: 'quiet' | 'warning'; readonly label: string }

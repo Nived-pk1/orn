@@ -131,7 +131,7 @@ export function PhoneSheet(props: {
         <button type="button" className={styles.handle} aria-label={height === 'peek' ? 'Show the whole record' : 'Show less'} onClick={toggle}>
           <span className={styles.grip} aria-hidden="true" />
         </button>
-        <IconButton label="Close inspector" icon="close" onClick={() => change('closed')} />
+        <IconButton label="Close inspector" icon="x" onClick={() => change('closed')} />
       </div>
       {/* a tap on the record's name is the same as a tap on the handle (the handle button is the keyboard way) */}
       <div className={styles.body} tabIndex={0} role="region" aria-label="Details" onClick={(event) => (event.target instanceof Element && event.target.closest(`#${SHEET_TITLE_ID}`) !== null ? change(height === 'peek' ? 'full' : 'peek') : undefined)}>

@@ -15,6 +15,7 @@ import { useNavigator } from './navigator-context';
 import { touchOf } from './reads';
 import { createScenePorts } from './scene-ports';
 import { unscoped } from './scope-lens';
+import { useScope } from './use-scope';
 
 export interface ReactionCardHostProps {
   readonly reactionId: string;
@@ -58,6 +59,8 @@ export function ReactionCardHost(props: ReactionCardHostProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `exampleKey` is the examples' ids; `version` re-makes them when the data moved
     [ports, exampleKey, version],
   );
+  // "Extra" / "Background" on every card, as on the family page (step 8.4d, E4)
+  const chip = useScope(ports, version).chipOf(props.reactionId);
   const binding = depictionBindingOf(ports);
   const env = useMemo<FamilyEnv>(() => {
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
@@ -73,6 +76,7 @@ export function ReactionCardHost(props: ReactionCardHostProps) {
         onSelect={props.onSelect}
         onGoToGroup={NO_JUMP}
         {...(props.outside === undefined ? {} : { outside: props.outside })}
+        {...(chip === undefined ? {} : { scopeChip: chip })}
         {...(props.outsideOf === undefined ? {} : { outsideOf: props.outsideOf })}
         {...(props.selectedId === undefined ? {} : { selectedId: props.selectedId })}
         {...(props.hideNamedId === undefined ? {} : { hideNamedId: props.hideNamedId })}

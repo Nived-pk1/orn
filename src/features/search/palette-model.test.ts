@@ -340,3 +340,25 @@ describe('opening, recent searches and commands', () => {
     expect(r.calls).toHaveLength(0);
   });
 });
+
+describe('suggested commands in the empty palette (step 8.4d, C7)', () => {
+  const run = (): void => undefined;
+  const commands: PaletteCommand[] = [
+    { id: 'go-a', title: 'Go to A', suggest: true, run },
+    { id: 'zoom', title: 'Zoom in', run },
+    { id: 'backup', title: 'Back up your data', suggest: true, run },
+  ];
+  it('empty text lists the suggested commands only; asks nothing', () => {
+    const r = rig({ commands });
+    r.model.setInput('');
+    expect(r.state().commands.map((c) => c.id)).toEqual(['go-a', 'backup']);
+    expect(r.calls).toHaveLength(0);
+  });
+  it('typing text lists search results instead (no commands), and ">" still lists every command', () => {
+    const r = rig({ commands });
+    r.model.setInput('eth');
+    expect(r.state().commands).toEqual([]);
+    r.model.setInput('>');
+    expect(r.state().commands.map((c) => c.id)).toEqual(['go-a', 'zoom', 'backup']);
+  });
+});

@@ -5,7 +5,9 @@
  */
 import type { ReactNode } from 'react';
 import { quietGroups, reactionCard } from '@/core/graph';
-import { useStudyChrome } from '@/ui/study-chrome';
+import { Chip } from '@/ui/primitives';
+import { scopeChipOf } from '@/ui/study-page';
+import { knownReviewStatus, ReviewMark, useStudyChrome, type ReviewStatus } from '@/ui/study-chrome';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { ExampleFold, ReactionFilterRow } from '@/core/graph';
 import type { CanonicalState } from '@/core/schema';
@@ -16,7 +18,7 @@ import styles from './reactions-view.module.css';
 
 const unscoped = (): 'unmapped' => 'unmapped';
 
-function CompactRow(props: { readonly examples?: ReactNode; readonly exampleCount?: number; readonly exampleOf?: { readonly id: string; readonly name: string }; readonly row: ReactionFilterRow; readonly equation: string; readonly reason?: string; readonly labels: Labels; readonly selected: boolean; readonly outside: string | undefined; readonly onSelect: (id: string) => void }) {
+function CompactRow(props: { readonly examples?: ReactNode; readonly exampleCount?: number; readonly exampleOf?: { readonly id: string; readonly name: string }; readonly row: ReactionFilterRow; readonly equation: string; readonly reason?: string; readonly labels: Labels; readonly selected: boolean; readonly outside: string | undefined; readonly review: ReviewStatus | undefined; readonly onSelect: (id: string) => void }) {
   const { row } = props;
   const types = row.typeIds.map(props.labels.type).join(', ');
   return (
@@ -24,6 +26,8 @@ function CompactRow(props: { readonly examples?: ReactNode; readonly exampleCoun
       <button type="button" className={styles.compactName} aria-pressed={props.selected} onClick={() => props.onSelect(row.id)}>
         {row.name}
       </button>
+      <ReviewMark status={props.review} />
+      {scopeChipOf(row.scopeKind) === undefined ? null : <Chip data-scope-chip="">{scopeChipOf(row.scopeKind)}</Chip>}
       {props.equation === '' ? null : <span className={styles.compactEquation}>{props.equation}</span>}
       {types === '' ? null : <span className={styles.compactTypes}>{types}</span>}
       {props.outside === undefined ? null : <span className={styles.outsideMark}>{props.outside}</span>}
@@ -71,7 +75,7 @@ export function Results(props: {
     const equation = 'missing' in card ? '' : compactEquationOf(exclusiveWord ? card.groups : quietGroups(card.groups));
     const mine = nested ? [] : (props.folding.examplesOf.get(row.id) ?? []);
     const general = nested ? undefined : generalOf(row.id);
-    return <CompactRow key={row.id} row={row} equation={equation} labels={props.labels} selected={props.selected === row.id} outside={outsideOf(row)} onSelect={ports.select} {...(mine.length === 0 ? {} : { exampleCount: mine.length, examples: mine.map((id) => compactOf(byId.get(id) as ReactionFilterRow, undefined, true)) })} {...(general === undefined ? {} : { exampleOf: general })} {...(reason === undefined ? {} : { reason })} />;
+    return <CompactRow key={row.id} row={row} equation={equation} labels={props.labels} selected={props.selected === row.id} outside={outsideOf(row)} review={knownReviewStatus(props.state.records.reaction[row.id as never]?.review?.status)} onSelect={ports.select} {...(mine.length === 0 ? {} : { exampleCount: mine.length, examples: mine.map((id) => compactOf(byId.get(id) as ReactionFilterRow, undefined, true)) })} {...(general === undefined ? {} : { exampleOf: general })} {...(reason === undefined ? {} : { reason })} />;
   };
   return (
     <div className={styles.results}>

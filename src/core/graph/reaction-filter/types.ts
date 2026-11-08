@@ -34,6 +34,8 @@ export interface ReactionFilterRow {
   readonly toFamilyIds: readonly string[];
   /** Marked outside the chosen exam scope (always false without one). */
   readonly outside: boolean;
+  /** Enrichment or prerequisite for the chosen exam (step 8.4d: the "Extra" / "Background" chip); absent otherwise and without a chosen exam. */
+  readonly scopeKind?: 'enrichment' | 'prerequisite';
   /** The ids of the reaction's types (concepts). */
   readonly typeIds: readonly string[];
 }

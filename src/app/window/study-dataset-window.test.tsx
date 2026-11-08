@@ -26,6 +26,7 @@ async function load(edition: Edition) {
   const { Window } = await import('@/app/window/window');
   // the lazy chunks resolve in THIS module registry (the reset above), so the notice band finds its own context
   await (await import('@/app/window/lazy-notice-band')).prefetchNoticeBand();
+  await (await import('@/app/window/lazy-notice-bell')).prefetchNoticeBell();
   await (await import('@/app/window/lazy-full-status')).prefetchFullStatus();
   kit.stubDialog();
   fakeLayout();
