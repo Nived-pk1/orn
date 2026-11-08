@@ -12,7 +12,7 @@ import { loadDemo, openApp, watch, exampleCard, LIVE } from './kit';
 import { startHeaderServer, type HeaderServer } from './support/header-server';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
-const FINDINGS = 'Findings: E 0 / W 2 / I 17 / Review 38';
+const FINDINGS = 'Findings: E 0 / W 1 / I 17 / Review 38';
 const CHEM_ENTRY = /^\/assets\/worker-chem-[\w-]+\.js$/;
 /** What the deliberate violations of this spec put in the console or the page errors. */
 const DELIBERATE = /Content Security Policy|Content-Security-Policy|CSP|unsafe-eval|EvalError|invalid\.invalid|Refused|blocked|violat/i;
@@ -171,7 +171,13 @@ for (const kind of ['same', 'chem-allowance'] as const) {
       expect(server.served.filter((s) => !CHEM_ENTRY.test(s.path)).some((s) => s.csp.includes("'unsafe-eval'")), 'the page policy is never widened').toBe(false);
 
       const workers = (await page.locator('li', { hasText: /^Workers: / }).first().textContent()) ?? '';
-      const chemWorks = (await page.getByText(/Check unavailable/).count()) === 0;
+      // since step 8.4a the "Check unavailable" banner can sit behind "+n more" in the notice band: the status line's words are the other source of the same state
+      const chemWorks = (await page.getByText(/Check unavailable/).count()) === 0 && !/chem unavailable/.test(workers);
+      const more = page.getByRole('button', { name: /^\+\d+ more$/ }); // the notice band keeps one notice in view (step 8.4a): Retry may be in the list
+      if (!chemWorks && (await more.count()) > 0) {
+        await more.click(); // the list is a lazy chunk: wait for it
+        await page.getByRole('button', { name: 'Retry' }).first().waitFor({ timeout: 10_000 }).catch(() => undefined);
+      }
       const retry = (await page.getByRole('button', { name: 'Retry' }).count()) > 0;
       let structure = 'not tried';
       if (chemWorks) {

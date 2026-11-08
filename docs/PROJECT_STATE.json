@@ -140,24 +140,24 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-07",
-    "commit": "94ca887",
-    "version": "d8b3b615-5638-443a-8b0f-5bb90fecbd3e",
-    "liveSpecs": "2026-11-07 (step 8.3b close): first Chromium run 29 failed (stale kit: leaveChapters did not answer the exam card); fixed in tests/e2e/kit.ts, re-run Chromium 45 passed, 11 skipped; WebKit 44 passed, 12 skipped, by exact names."
+    "deployedAt": "2026-11-08",
+    "commit": "b4478f5+",
+    "version": "25e67c4c-9d3a-4241-91f6-c92b3fb00bef",
+    "liveSpecs": "2026-11-08 (8.4b close): Chromium 45 passed, 11 skipped; WebKit 44 passed, 12 skipped, by exact names, after the csp.spec stale-spec fix (first WebKit run: 1 failed, csp case A)."
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-07",
-    "version": "6f8bc77f-261a-464a-9e06-673cc54a11e3",
+    "deployedAt": "2026-11-08",
+    "version": "b2f9f7ef-f249-44fc-b6d7-a329d3a69eec",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.3b close-round deploy, 2026-11-07: an unauthenticated request got 302 and not the app; the Study site answered 200.",
-    "commit": "94ca887",
-    "protectedCheckedAt": "2026-11-07"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4b deploy, 2026-11-08: an unauthenticated request got 302 and not the app; the Study site answered 200.",
+    "commit": "b4478f5+",
+    "protectedCheckedAt": "2026-11-08"
   },
-  "nextStep": "8.4b size fix and deploy of 8.4a + 8.4b",
-  "nextStepTitle": "Step 8.4b closed, not deployed (sizes over target by about 2 kB); then 8.4c. Awaiting review",
+  "nextStep": "8.4c",
+  "nextStepTitle": "Step 8.4b deployed (8.4a + 8.4b); then 8.4c. Awaiting review",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -644,8 +644,8 @@
   },
   "step84a": {
     "closed": "2026-11-07",
-    "deployed": false,
-    "note": "8.4a closed, not deployed (deploys with 8.4b)",
+    "deployed": "2026-11-08",
+    "note": "8.4a closed 2026-11-07; deployed with 8.4b on 2026-11-08",
     "initialJsGzipKb": {
       "study": 381,
       "studio": 384.68
@@ -654,11 +654,11 @@
   },
   "step84b": {
     "closed": "2026-11-07",
-    "deployed": false,
-    "note": "8.4b closed, NOT deployed: initial JS gzip Study 383.28 / Studio 387.16 kB over the 381.3 / 385.0 targets by 1.98 / 2.16 kB (rule: more than 0.5 over = stop before deploy). 8.4a and 8.4b deploy together after the size fix.",
+    "deployed": "2026-11-08",
+    "note": "8.4b closed and deployed 2026-11-08 with 8.4a: initial JS gzip Study 382,792 / Studio 386,595 bytes (reviewer ceiling 382.8 / 386.6 kB). Rule: 8.4c, 8.5 and 8.6 add nothing to the initial chunk (all new UI lazy).",
     "initialJsGzipKb": {
-      "study": 383.28,
-      "studio": 387.16
+      "study": 382.79,
+      "studio": 386.6
     },
     "adr": "ADR-044 addendum 2026-11-07",
     "notes": "docs/reviews/step-8-4b-notes.md"
