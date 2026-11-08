@@ -127,3 +127,28 @@ test('the "Makes" and "Made from" cards fill the pane: each card is at least 45%
   expect(widths.length).toBeGreaterThan(0);
   for (const w of widths) expect(w.share, `a card of ${w.group}`).toBeGreaterThanOrEqual(0.45);
 });
+
+// Step 8.4b, reviewer round, 2e (written red first): the inspector's action buttons never wrap a word onto a second line; the ones that do not fit go into "⋯".
+test('the Go next buttons are one line each at 1280x800', async ({ page }) => {
+  test.setTimeout(600_000);
+  await start(page);
+  for (const one of CASES.filter((c) => ['class', 'reagent', 'reaction', 'compound'].includes(c.chip.toLowerCase()))) {
+    await open(page, one.query, one.id);
+    const group = page.getByRole('group', { name: 'Go next' });
+    await expect(group).toBeVisible();
+    const lines = await group.evaluate((el) => {
+      const buttons = [...el.querySelectorAll('button')];
+      return {
+        overflow: el.scrollWidth - el.clientWidth,
+        rows: buttons.map((b) => {
+          const range = document.createRange();
+          range.selectNodeContents(b);
+          const tops = new Set([...range.getClientRects()].map((r) => Math.round(r.top)));
+          return { text: b.textContent ?? '', lines: (b.textContent ?? '') === '⋯' ? 1 : tops.size, clipped: b.scrollWidth - b.clientWidth };
+        }),
+      };
+    });
+    expect(lines.rows.filter((r) => r.lines > 1 || r.clipped > 1).map((r) => r.text), `${one.chip}: buttons with wrapped or cut words`).toEqual([]);
+    expect(lines.overflow, `${one.chip}: the row fits`).toBeLessThanOrEqual(1);
+  }
+});

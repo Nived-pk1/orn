@@ -10,21 +10,29 @@ export interface ZoomChoice {
   /** The box title's size in map units. */
   readonly titleSize: number;
   readonly minTitlePx: number;
-  /** The selected box alone: when even the focus set cannot keep titles at `minTitlePx`, the view centres on it at exactly that size (the far ends may lie off the edge). */
+  /** The selected box: when even the focus set cannot keep titles at `minTitlePx`, the view uses that size, centres on the focus set and moves just enough to show this box fully (far ends may lie off the edge). */
   readonly selected?: Rect | undefined;
 }
 
-/** The rectangle "Zoom to selection" fills the map with: the focus set, or (when its titles would be under the minimum) the selected box at the minimum title size. */
+/** The rectangle "Zoom to selection" fills the map with: the focus set, or (when its titles would be under the minimum) the minimum-title-size window, centred on the focus set and moved to show the selected box. */
 export function zoomTargetRect(choice: ZoomChoice): Rect | undefined {
   const { focus } = choice;
   if (focus === undefined) return undefined;
   if (choice.titleSize * fitBox(focus, choice.size).scale >= choice.minTitlePx || choice.selected === undefined) return focus;
   const s = choice.minTitlePx / choice.titleSize;
-  const cx = (choice.selected.x0 + choice.selected.x1) / 2;
-  const cy = (choice.selected.y0 + choice.selected.y1) / 2;
   const halfW = (choice.size.width - 2 * FIT_PADDING) / (2 * s);
   const halfH = (choice.size.height - FIT_TOP_PADDING - FIT_BOTTOM_PADDING) / (2 * s);
-  return { x0: cx - halfW, y0: cy - halfH, x1: cx + halfW, y1: cy + halfH };
+  // the window (it already keeps the fit padding, so the selected box inside it has its 24 px margin) is centred on the focus set, then moved just
+  // enough that the SELECTED box is fully inside; a box larger than the window is centred instead
+  const place = (lo: number, hi: number, half: number, from: number, to: number): [number, number] => {
+    const centre = (lo + hi) / 2;
+    if (to - from > 2 * half) return [(from + to) / 2 - half, (from + to) / 2 + half];
+    const start = Math.min(Math.max(centre - half, to - 2 * half), from);
+    return [start, start + 2 * half];
+  };
+  const [x0, x1] = place(focus.x0, focus.x1, halfW, choice.selected.x0, choice.selected.x1);
+  const [y0, y1] = place(focus.y0, focus.y1, halfH, choice.selected.y0, choice.selected.y1);
+  return { x0, y0, x1, y1 };
 }
 
 interface Box {

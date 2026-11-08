@@ -7,6 +7,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { loadDemo, openApp } from './kit';
+import { shotsDir } from './editor-kit';
 
 const STUDIO = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4173';
 test.use({ baseURL: STUDIO, actionTimeout: 60_000 });
@@ -23,6 +24,7 @@ test('1280x800: the map area, the rail and its Hide button, the bars', async ({ 
   const header = await page.locator('header').boundingBox();
   expect(header?.height ?? 999, 'header height').toBeLessThanOrEqual(44.5);
   const status = await page.locator('footer').boundingBox();
+  await page.locator('footer').screenshot({ path: `${shotsDir()}/status-bar-close-up-1280.png` });
   expect(status?.height ?? 999, 'status bar height').toBeLessThanOrEqual(24.5);
   const shown = await drawing(page).boundingBox();
   expect(shown?.height ?? 0, 'map height').toBeGreaterThanOrEqual(640);
@@ -38,6 +40,7 @@ test('1280x800: the map area, the rail and its Hide button, the bars', async ({ 
   await expect(rail).toHaveCount(0);
   const menu = page.locator('header').getByRole('button', { name: /^☰ / });
   await expect(menu).toBeVisible();
+  await page.screenshot({ path: `${shotsDir()}/frame-rail-hidden-1280x800.png` });
   const hidden = await drawing(page).boundingBox();
   expect(hidden?.width ?? 0, 'map width with the rail hidden').toBeGreaterThanOrEqual(1220);
   await page.waitForTimeout(1000); // the choice is saved after a short delay (a reload is not a flush)
@@ -60,4 +63,22 @@ test('1920x1000: the map area is at least 840 px tall; the Find box uses the UI 
   expect(status?.height ?? 999).toBeLessThanOrEqual(24.5);
   const family = await page.getByRole('combobox', { name: 'Find a family' }).evaluate((el) => getComputedStyle(el).fontFamily);
   expect(family).not.toMatch(/mono/i);
+});
+
+// Step 8.4b, reviewer round, 2d (written red first): the status bar has a separator between ALL items, the Layout notes button included.
+test('the status bar: a rule before every item but the first', async ({ page }) => {
+  test.setTimeout(300_000);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page);
+  await loadDemo(page);
+  await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible({ timeout: 60_000 });
+  const items = await page.evaluate(() => {
+    const bar = document.querySelector('footer');
+    if (bar === null) return [];
+    const leaves = [...bar.querySelectorAll('[data-short-item], section > button:not([aria-label="Status details"]), footer > :not(section) > *')];
+    const own = [...bar.querySelectorAll('[data-short-item]')].length === 0 ? [] : leaves;
+    return own.map((el) => ({ text: (el.textContent ?? '').slice(0, 30), rule: parseFloat(getComputedStyle(el).borderLeftWidth), x: el.getBoundingClientRect().x })).sort((a, b) => a.x - b.x);
+  });
+  expect(items.length, 'the bar has several items').toBeGreaterThan(4);
+  expect(items.slice(1).filter((item) => item.rule < 1).map((item) => item.text), 'items with no rule before them').toEqual([]);
 });

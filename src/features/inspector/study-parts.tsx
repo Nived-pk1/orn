@@ -2,7 +2,7 @@
  * The small parts of the Study inspector (step 8.1 Part C): the lead with "Read more", the fact chips, the watch-out callouts, the
  * go-next buttons and the connected cards. Each draws a value the model made; the only state is "is it expanded".
  */
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, Menu } from '@/ui/primitives';
 import { useInspectorEnv } from './env';
@@ -112,13 +112,37 @@ export interface GoNextAction {
   readonly run: () => void;
 }
 
-/** Up to three buttons on ONE row, the rest in a "⋯" menu named "More actions" (step 8.4a). On a phone the first two are in the peek. */
+/**
+ * Up to three buttons on ONE row, the rest in a "⋯" menu named "More actions" (step 8.4a). A button's words never wrap (step 8.4b): when the row does
+ * not fit, the last button moves into the menu, one at a time, and a wider pane tries all three again. On a phone the first two are in the peek.
+ */
 export function GoNext(props: { readonly actions: readonly GoNextAction[] }) {
+  const row = useRef<HTMLDivElement>(null);
+  const most = Math.min(MAX_GO_NEXT, props.actions.length);
+  const [shown, setShown] = useState(most);
+  const key = props.actions.map((action) => action.label).join('|');
+  useLayoutEffect(() => setShown(most), [key, most]);
+  useLayoutEffect(() => {
+    const el = row.current;
+    if (el !== null && shown > 1 && el.scrollWidth > el.clientWidth + 1) setShown(shown - 1);
+  });
+  useEffect(() => {
+    const el = row.current;
+    if (el === null || typeof ResizeObserver === 'undefined') return undefined;
+    let width = el.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (Math.abs(el.clientWidth - width) < 1) return;
+      width = el.clientWidth;
+      setShown(most);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [most]);
   if (props.actions.length === 0) return null;
-  const first = props.actions.slice(0, MAX_GO_NEXT);
-  const rest = props.actions.slice(MAX_GO_NEXT);
+  const first = props.actions.slice(0, shown);
+  const rest = props.actions.slice(shown);
   return (
-    <div className={styles.goNext} role="group" aria-label="Go next">
+    <div ref={row} className={styles.goNext} role="group" aria-label="Go next">
       {first.map((action, index) => (
         <Button key={action.label} onClick={action.run} {...(index >= 2 ? { 'data-sheet-full': '' } : {})}>
           {action.label}

@@ -26,6 +26,18 @@ describe('MapHint', () => {
     fireEvent.keyDown(clear, { key: 'Escape' });
     expect(onClear).toHaveBeenCalledTimes(2);
   });
+  it('"Zoom to selection" is a magnifier with a plus (inline SVG, 16 px), not a text glyph', () => {
+    const onZoom = vi.fn();
+    render(<MapHint selected="Selected: Alcohols" onClear={() => undefined} onZoom={onZoom} zoomName="Alcohols" hint={undefined} hintKind={undefined} />);
+    const zoom = screen.getByRole('button', { name: 'Zoom to Alcohols' });
+    const svg = zoom.querySelector('svg');
+    expect(svg?.getAttribute('width')).toBe('16');
+    expect(svg?.getAttribute('aria-hidden')).toBe('true');
+    expect(svg?.querySelectorAll('path').length).toBeGreaterThan(0);
+    expect(zoom.textContent).toBe('');
+    fireEvent.click(zoom);
+    expect(onZoom).toHaveBeenCalledTimes(1);
+  });
   it('nothing to say: nothing is drawn', () => {
     const { container } = render(<MapHint selected={undefined} onClear={() => undefined} hint={undefined} hintKind={undefined} />);
     expect(container.textContent).toBe('');

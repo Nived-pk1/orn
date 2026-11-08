@@ -52,8 +52,8 @@ export const OverlayLayer = memo(function OverlayLayer(props: {
     const pair = props.marks?.edges.get(edge.id)?.pair;
     return pair === undefined ? [edge] : [edge, { ...edge, id: pair.backId, from: edge.to, to: edge.from, points: [...edge.points].reverse() }];
   });
-  const pairIds = new Set(withPairs.filter((edge) => props.marks?.edges.get(edge.id)?.pair !== undefined).map((edge) => edge.id));
-  for (const mark of props.marks?.edges.values() ?? []) if (mark.pair !== undefined) pairIds.add(mark.pair.backId);
+  const pairIds = new Set<string>();
+  for (const [id, mark] of props.marks?.edges ?? []) if (mark.pair !== undefined) pairIds.add(id).add(mark.pair.backId);
   const isHalf = (id: string): boolean => pairIds.has(id);
   const edges = withPairs.filter((edge) => visibleAt(edge, lod) && (selectedIds.has(edge.id) || edge.id === focusedId));
   const hovered = hoveredId === undefined ? undefined : withPairs.find((edge) => edge.id === hoveredId && visibleAt(edge, lod) && !selectedIds.has(edge.id));

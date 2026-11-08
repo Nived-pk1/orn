@@ -83,6 +83,7 @@ test.describe('map marks in screen pixels', () => {
     const rows = page.getByRole('list', { name: 'Arrows of this selection' }).getByRole('button');
     await expect(rows.first()).toBeVisible();
     expect(await rows.count()).toBeGreaterThan(15);
+    await page.screenshot({ path: `${shotsDir()}/map-bucket-selected-1280x800.png` });
   });
 
   test('lines never run through text: a box is drawn over every line, opaque; the "↻ n" mark is inside its box', async ({ page }) => {

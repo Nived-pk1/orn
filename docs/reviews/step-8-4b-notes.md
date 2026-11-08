@@ -88,3 +88,50 @@ bring them back with Hide inspector + Fit).
 ## Sizes (npm run build:smoke, after all code of this round)
 Initial JS gzip: Study 383.28 kB (target 381.3: over by 1.98), Studio 387.16 kB (target 385.0: over by 2.16). 8.4a closed at 381.00 / 384.68.
 Rule: missed by more than 0.5 kB -> STOP before deploy. Everything before the deploy continues (e2e, screenshots, docs); nothing is deployed or pushed.
+
+## Reviewer reply 2 (2026-11-08): size round
+**Measured once**, initial chunk, module by module, `1b0162c` (a worktree build) vs HEAD `0f95fa8`, Study. Rendered bytes come from `build-report/study.json`;
+gzip per module is NOT measured (the report has none): the column is the module's rendered delta times the chunk's gzip/rendered ratio (an estimate).
+Whole chunk, real gzip: Study 381.02 -> 383.43 kB, Studio 384.69 -> 387.35 kB (rendered +12,372 bytes, no module shrank).
+
+| # | module | rendered delta | ~gzip |
+|---|---|---|---|
+| 1 | features/navigator/use-zoom-selection.ts | +1796 B | 0.27 kB |
+| 2 | features/navigator/navigator-canvas.tsx | +1679 B | 0.25 kB |
+| 3 | features/navigator/focus-fit.ts | +1330 B | 0.20 kB |
+| 4 | render/svg/overlay-layer.tsx | +1204 B | 0.18 kB |
+| 5 | ui/shell/shell.tsx | +926 B | 0.14 kB |
+| 6 | render/viewport/viewport-scene.tsx | +893 B | 0.14 kB |
+| 7 | render/svg/pair-direction.ts | +748 B | 0.11 kB |
+| 8 | features/navigator/zoom-to.ts | +712 B | 0.11 kB |
+| 9 | render/svg/badges-layer.tsx | +631 B | 0.10 kB |
+| 10 | render/svg/edges-layer.tsx | +549 B | 0.08 kB |
+
+**Made lazy (runs only after a click):** "Zoom to selection": `focus-fit.ts`, `zoom-to.ts` and the fitting code of `use-zoom-selection.ts` moved to
+`zoom-selection-run.ts`, imported on the click or the Z key (the hook keeps only a cheap "is there a selection" test). The busy-selection arrow
+list and the arrow pane were already in lazy chunks (`map-pane`, `arrow-reactions`). Also: one duplicated pair-id pass in `overlay-layer.tsx` folded
+into one loop (no behaviour change). The whole map view is NOT lazy (Phase 9).
+**Result (exact gzip bytes of the initial chunk, final build):** Study 382,792 (ceiling 382.8 kB), Studio 386,595 (ceiling 386.6 kB): within, by 8 and 5 bytes. (A first try put the new magnifier icon in `icons.tsx`: 382,816 / 386,619, over; the SVG is now inline in the lazy `map-hint.tsx`.)
+**Rule recorded:** 8.4c, 8.5 and 8.6 add nothing to the initial chunk; all their new UI is lazy.
+
+**Fixes (reviewer item 2), each seen red first:**
+- 2a toast over the map key: red `notices-band.spec.ts` "the toast meets no map key" at 1280 (`the toast covers the map key Expected false Received true`; 1920 was already clear). Fix: `[data-layout='desktop'][data-toast] .cornerKey { bottom: toast height + 16 px }` (the key always sits above a showing toast; simpler than "16 px right of the key, else above"; it moves when the toast comes and goes).
+- 2b glyph: red `map-hint.test.tsx` (button had text, no svg); now an inline SVG in `map-hint.tsx` (magnifier with a plus, 16 px).
+- 2c placement: red unit (`focus-fit.test.ts`) and red e2e (`map-fit.spec.ts` `placementProblems`; with the old code: `left: 314 px empty while focus boxes are cut on the right` at 1280, `left: 357` and `top: 282 ... bottom` at 1366). Rule built as written: 12 px window centred on the focus set, shifted just enough for the SELECTED box (the window already keeps the 24 px fit padding).
+- 2d status separators: red `frame.spec.ts` ("items with no rule before them" listed Layout notes); `.barButton + .barButton` and `.statusBar > * + *` rules.
+- 2e inspector buttons: red `inspector-study.spec.ts` ("Show on map", "Open family", "Show its reactions" wrapped); `white-space: nowrap`, and `GoNext` moves the last button into "⋯" while the row overflows (measured in a layout effect, re-tried when the pane width changes). The jsdom unit tests cannot measure widths; the e2e is the proof.
+
+**Tests (item 3):** unit (features, ui, app, render): 388 files, 3375 passed. e2e in Chromium, Firefox and WebKit: map-marks, map-fit, notices-band, frame, inspector-study, inspector, map-room, arrows, map-chains: 154 passed, 2 skipped, 0 failed (no re-runs were needed). No new full Chromium run.
+
+**Screenshots opened (item 4), one line each:**
+- Phone A-to-B "Show all" (Pixel 7, `map-phone-a-to-b-show-all.png`): the map keeps its top third (boxes and the 1 chip visible), the list scrolls in the sheet; storage line and tab bar below, no toast on screen.
+- Bucket selected (`map-bucket-selected-1280x800.png`): no arrows drawn, every family outlined, "20 arrows: listed in the panel", the panel lists them; no hairball.
+- Busy chapter (`map-busy-chapter-1280x800.png`): boxes only, the hint "This chapter has 38 arrows. Tap or click a family to see its part."; the toast sits at the foot, clear of the boxes.
+- Study demo map, Alcohols selected (`study-map-alcohols-selected-1280x800.png`; made by a temporary line in `study-edition.spec.ts` that was removed afterwards for the 400-line limit, so it is not regenerated by the suite): arrows and chips drawn, the key ("makes / made from / number of reactions") sits above the toast, inspector buttons "Show on map", "Open family", "⋯" on one line.
+- Phone toast with the storage line (`toast-phone-pixel7.png`): one-row toast ("Imported 3...") above the storage line "Your data may be cleared. Back it up." and the tab bar; it covers part of the Alcohols card (as a floating toast does).
+- A-to-B at 1280 with a toast (`a-to-b-toast-1280x800.png`): the toast ends at the A-to-B panel's left edge (its text is cut to "Imported 305 record..."); the key is above it on two lines.
+- review_required in Study: NOT shown (a try, `study-family-review-mark-1280x800.png`, showed the Study family page of Alcohols; the test line was then removed because `study-edition.spec.ts` is at the 400-line limit). This is the Study family page of Alcohols (the test asserts its review dot exists); I could not see a dot in the screenshot at this size and the demo has no review_required family opened here. Not proven by a picture; needs a reviewer decision on which record to show.
+- Rail hidden (`frame-rail-hidden-1280x800.png`): the "☰ Map" menu in the header, the map fills the width, the status bar has all its rules.
+- Status bar close-up (`status-bar-close-up-1280.png`): a rule between every item, "Snapshot none yet | Storage: not persistent | Layout notes (1)" included.
+- (a) pair, toast and key (`map-marks-pair-1280x800.png`): the two-line key is above the toast, no overlap.
+- (c) Zoom to selection (`map-fit-zoomed-1280x800.png`): Family 01 and its focus set fill the map; the selected box is fully visible; the right end of the far arrow (Family 15) is still cut by the pane edge.

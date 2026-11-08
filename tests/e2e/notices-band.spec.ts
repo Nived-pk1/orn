@@ -12,6 +12,9 @@ import { expect, test } from './fixtures';
 import { answerExamCard } from './exam-kit';
 import { chooseFile, expectPreview, leaveChapters, loadDemo, openApp, type UploadFile } from './kit';
 import { clickToolbar } from './map-toolbar-kit';
+import { openMapDesktop } from './map-layout-kit';
+import { shotsDir } from './editor-kit';
+import { PAIR_DATA } from './map-marks-kit';
 
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
 const STUDIO = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4173';
@@ -203,6 +206,7 @@ test.describe('the toast meets no right pane (Studio desktop)', () => {
     await expect(panel).toBeVisible();
     await toast.hover();
     expect(meets(await boxOf(toast), await boxOf(panel)), 'the toast is on top of the A-to-B panel').toBe(false);
+    await page.screenshot({ path: `${shotsDir()}/a-to-b-toast-1280x800.png` });
   });
 });
 
@@ -221,6 +225,7 @@ for (const [name, device] of [['Pixel 7', PIXEL], ['iPhone 14', IPHONE]] as cons
       await expect(toast).toBeVisible();
       const box = await boxOf(toast);
       expect(box.height, 'the phone toast is one line').toBeLessThanOrEqual(56);
+      await page.screenshot({ path: `${shotsDir()}/toast-phone-${name.replace(' ', '').toLowerCase()}.png` });
       const storage = page.getByText(/Your data may be cleared/).first();
       if (await storage.isVisible()) expect(meets(box, await boxOf(storage)), 'the toast covers the storage line').toBe(false);
       expect(meets(box, await boxOf(page.getByRole('navigation', { name: 'Home' }))), 'the toast meets the tab bar').toBe(false);
@@ -234,3 +239,25 @@ for (const [name, device] of [['Pixel 7', PIXEL], ['iPhone 14', IPHONE]] as cons
     });
   });
 }
+
+// Step 8.4b, reviewer round, 2a: the toast never covers the map's arrow key (written red first; own-data layout fixture, a family selected).
+test.describe('the toast meets no map key (Studio desktop)', () => {
+  test.use({ actionTimeout: 60_000 });
+  for (const size of SIZES) {
+    test(`${size.width}x${size.height}: the key and the toast do not intersect`, async ({ page }) => {
+      test.setTimeout(300_000);
+      await openMapDesktop(page, PAIR_DATA()); // the two-way pair chapter of map-marks (the reviewer's screenshot)
+      await page.setViewportSize(size);
+      await page.getByRole('combobox', { name: 'Chapter' }).selectOption('top_chapter-4');
+      await page.waitForTimeout(900);
+      await page.locator('svg [data-chip-button]').first().click(); // the arrow's panel opens beside the map: the key wraps to two lines
+      await page.waitForTimeout(900);
+      const toast = page.getByRole('status', { name: 'Notifications' }).locator('> *').first();
+      await expect(toast).toBeVisible();
+      await toast.hover(); // the countdown stops while the pointer is on it
+      const key = page.getByRole('list', { name: 'What the arrows mean' });
+      await expect(key).toBeVisible();
+      expect(meets(await boxOf(toast), await boxOf(key)), 'the toast covers the map key').toBe(false);
+    });
+  }
+});

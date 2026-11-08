@@ -85,6 +85,9 @@
 }
 
 .cornerClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: auto;
   min-height: 24px;
   min-width: 24px;
@@ -105,6 +108,11 @@
   gap: 0 var(--space-16);
   width: max-content;
   max-width: min(60%, 24rem);
+}
+
+/* While a toast shows on a desktop screen the key sits above it (step 8.4b, reviewer 2a): the toast is one row of at most --toast-height at the foot of the column, so the key never goes under it */
+[data-layout='desktop'][data-toast] .cornerKey {
+  bottom: calc(var(--toast-height) + var(--space-16));
 }
 
 .cornerKey[data-corner='bottom-left'] {

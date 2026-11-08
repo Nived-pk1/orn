@@ -25,6 +25,23 @@ async function offScreen(page: Page): Promise<number> {
   });
 }
 
+/** After "Zoom to selection": the selected box is wholly inside the map area, and no side has more than 48 px of empty map while focus-set boxes are cut on the opposite side. */
+async function placementProblems(page: Page, selectedId: string): Promise<string[]> {
+  return page.evaluate((id) => {
+    const area = (document.querySelector('svg[role="group"]') as unknown as SVGElement).getBoundingClientRect();
+    const rectOf = (key: string): DOMRect | undefined => document.querySelector(`svg [data-node-id="${key}"]`)?.getBoundingClientRect();
+    const problems: string[] = [];
+    const own = rectOf(id);
+    if (own === undefined) return ['the selected box is not drawn'];
+    if (own.left < area.left || own.right > area.right || own.top < area.top || own.bottom > area.bottom) problems.push('the selected box is not fully visible');
+    const focus = [...document.querySelectorAll('svg [data-label-of]:not([class*="faded"])')].map((el) => rectOf(el.getAttribute('data-label-of') ?? '')).filter((r): r is DOMRect => r !== undefined);
+    const edge = { left: Math.min(...focus.map((r) => r.left)) - area.left, top: Math.min(...focus.map((r) => r.top)) - area.top, right: area.right - Math.max(...focus.map((r) => r.right)), bottom: area.bottom - Math.max(...focus.map((r) => r.bottom)) };
+    const pairs = [['left', 'right'], ['right', 'left'], ['top', 'bottom'], ['bottom', 'top']] as const;
+    for (const [empty, cut] of pairs) if (edge[empty] > 48 && edge[cut] < 0) problems.push(`${empty}: ${edge[empty].toFixed(0)} px empty while focus boxes are cut on the ${cut}`);
+    return problems;
+  }, selectedId);
+}
+
 const world = (page: Page): Promise<string | null> => page.locator('svg [data-world]').getAttribute('transform');
 
 test.describe('Fit: sticky; Zoom to selection is a command', () => {
@@ -48,6 +65,8 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
       await page.getByRole('button', { name: /^Zoom to / }).click();
       await expect.poll(() => boxTitlePx(page, FOCUS_TITLES), { message: 'focus-set titles' }).toBeGreaterThanOrEqual(12);
       const zoomed = await boxTitlePx(page, FOCUS_TITLES);
+      await page.waitForTimeout(600); // the move takes 200 ms
+      expect(await placementProblems(page, FAMILY_ONE), 'where Zoom to selection puts the view').toEqual([]);
       await page.screenshot({ path: `${shotsDir()}/map-fit-zoomed-${size.width}x${size.height}.png` });
       info.annotations.push({ type: 'title px', description: `${size.width}x${size.height}: pane shut ${shut.toFixed(1)}; pane open, whole map ${whole.toFixed(1)}; zoomed to selection ${zoomed.toFixed(1)}` });
       await clickToolbar(page, 'Fit');
@@ -122,6 +141,7 @@ test.describe('the phone: From A to B, Show all', () => {
       return { visible: Math.min(map.bottom, sheet.top) - map.top, screen: window.innerHeight };
     });
     expect(room.visible).toBeGreaterThanOrEqual(0.3 * room.screen);
+    await page.screenshot({ path: `${shotsDir()}/map-phone-a-to-b-show-all.png` });
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
   });
 });

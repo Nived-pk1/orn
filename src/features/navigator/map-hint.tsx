@@ -28,7 +28,9 @@ export function MapHint(props: MapHintProps) {
           </span>
           {props.onZoom === undefined ? null : (
             <button type="button" className={styles.cornerClear} aria-label={`Zoom to ${props.zoomName ?? 'the selection'}`} title="Zoom to selection (Z)" onClick={props.onZoom}>
-              <span aria-hidden="true">⌖</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                <path d="M7 2.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM10.5 10.5l3 3M5 7h4M7 5v4" />
+              </svg>
             </button>
           )}
           <button type="button" className={styles.cornerClear} aria-label="Clear the selection" title="Clear the selection (Esc)" onClick={props.onClear} onKeyDown={(event) => event.key === 'Escape' && props.onClear()}>

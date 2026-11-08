@@ -15,6 +15,18 @@ describe('what "Zoom to selection" fills the map with (step 8.4b, E2b)', () => {
     const scale = (size.width - 48) / ((rect?.x1 ?? 0) - (rect?.x0 ?? 0));
     expect(14 * scale).toBeCloseTo(12, 5);
   });
+  it('too wide: the 12 px window is centred on the focus set, then shifted just enough to show the selected box (reviewer, 8.4b)', () => {
+    const wide = { x0: 0, y0: 0, x1: 5000, y1: 300 };
+    const selected = { x0: 100, y0: 100, x1: 300, y1: 200 };
+    const rect = zoomTargetRect({ focus: wide, size, titleSize: 14, minTitlePx: 12, selected });
+    expect(rect?.x0).toBeCloseTo(100, 5); // the selected box's left edge sits at the window's edge (the window already keeps 24 px)
+    expect(rect?.x1 ?? 0).toBeGreaterThanOrEqual(300);
+    // the selected box is already in the centred window: no shift at all
+    const middle = { x0: 2400, y0: 100, x1: 2600, y1: 200 };
+    const centred = zoomTargetRect({ focus: wide, size, titleSize: 14, minTitlePx: 12, selected: middle });
+    expect(((centred?.x0 ?? 0) + (centred?.x1 ?? 0)) / 2).toBeCloseTo(2500, 5);
+    expect(((centred?.y0 ?? 0) + (centred?.y1 ?? 0)) / 2).toBeCloseTo(150, 5);
+  });
   it('too wide and no selected box known: the focus set (the name floor applies)', () => {
     const wide = { x0: 0, y0: 0, x1: 5000, y1: 300 };
     expect(zoomTargetRect({ focus: wide, size, titleSize: 14, minTitlePx: 12 })).toBe(wide);
