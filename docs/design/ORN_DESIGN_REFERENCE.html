@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORN design reference (row 8.4)</title>
+<style>
+/* =========================================================================
+   ORN DESIGN REFERENCE, written by the Opus reviewer, 2026-11-08.
+   The app must MATCH this file. Token NAMES below are the contract; the app's
+   own token file maps onto them (8.4a tokens stay where they agree).
+   Light and dark themes: toggle at the top right of this page.
+   ========================================================================= */
+:root, [data-theme="light"] {
+  /* Surfaces: canvas is the page, surface is cards/panels, raised is popovers */
+  --canvas:#F7F7F5; --surface:#FFFFFF; --sunken:#F0F0EC; --raised:#FFFFFF;
+  --hover:rgba(20,20,30,.045); --press:rgba(20,20,30,.08); --selected:rgba(59,91,219,.10);
+  /* Text */
+  --text:#18181D; --text-2:#55555F; --text-3:#8A8A94; --text-on-accent:#FFFFFF;
+  /* Lines */
+  --line:rgba(20,20,30,.09); --line-strong:rgba(20,20,30,.16); --grid-dot:rgba(20,20,30,.10);
+  /* Accent and roles */
+  --accent:#3B5BDB; --accent-hover:#3350C6; --accent-soft:#EDF1FD; --accent-text:#2E48B8;
+  --success:#1F8A5B; --success-soft:#E7F5EE; --warning:#B86E00; --warning-soft:#FDF3E1;
+  --danger:#C93A3A; --danger-soft:#FCEBEB; --review-grey:#9A9AA3; --review-orange:#D9822B;
+  /* Family groups (the user likes the current colours: these are them, refined) */
+  --fam-hc:#3567D6; --fam-hc-soft:#EEF3FD;   /* hydrocarbons */
+  --fam-hal:#B9730F; --fam-hal-soft:#FDF4E6; /* halogen compounds */
+  --fam-oxy:#1C8F62; --fam-oxy-soft:#EAF6F0; /* oxygen compounds */
+  --fam-nit:#6E55CF; --fam-nit-soft:#F2EFFC; /* nitrogen compounds */
+  --made-from:#4A4A55;                       /* dashed "made from" lines */
+  /* Structure drawings always sit on paper (light even in dark theme) */
+  --paper:#FFFFFF; --paper-line:rgba(20,20,30,.08);
+  /* Elevation */
+  --shadow-1:0 1px 2px rgba(16,24,40,.06),0 1px 1px rgba(16,24,40,.04);
+  --shadow-2:0 6px 16px -4px rgba(16,24,40,.12),0 2px 4px rgba(16,24,40,.06);
+  --shadow-3:0 16px 40px -8px rgba(16,24,40,.20),0 4px 10px rgba(16,24,40,.08);
+  --focus:0 0 0 2px var(--canvas),0 0 0 4px rgba(59,91,219,.55);
+  --scrim:rgba(16,18,24,.38);
+}
+[data-theme="dark"] {
+  --canvas:#0E1014; --surface:#16191F; --sunken:#111318; --raised:#1D2129;
+  --hover:rgba(255,255,255,.05); --press:rgba(255,255,255,.09); --selected:rgba(124,147,245,.16);
+  --text:#E9EAEE; --text-2:#A6A9B3; --text-3:#757985; --text-on-accent:#0E1014;
+  --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.15); --grid-dot:rgba(255,255,255,.07);
+  --accent:#7C93F5; --accent-hover:#93A6F7; --accent-soft:rgba(124,147,245,.14); --accent-text:#A9B8FA;
+  --success:#4CC38A; --success-soft:rgba(76,195,138,.14); --warning:#F0A646; --warning-soft:rgba(240,166,70,.14);
+  --danger:#F07171; --danger-soft:rgba(240,113,113,.14); --review-grey:#7E818C; --review-orange:#F0A646;
+  --fam-hc:#7EA2F2; --fam-hc-soft:rgba(126,162,242,.12);
+  --fam-hal:#E6A653; --fam-hal-soft:rgba(230,166,83,.12);
+  --fam-oxy:#5CCB9B; --fam-oxy-soft:rgba(92,203,155,.12);
+  --fam-nit:#A895F0; --fam-nit-soft:rgba(168,149,240,.13);
+  --made-from:#B9BCC6;
+  --paper:#F7F7F4; --paper-line:rgba(0,0,0,.10);
+  --shadow-1:0 0 0 1px rgba(255,255,255,.04),0 1px 2px rgba(0,0,0,.5);
+  --shadow-2:0 0 0 1px rgba(255,255,255,.05),0 8px 20px -4px rgba(0,0,0,.6);
+  --shadow-3:0 0 0 1px rgba(255,255,255,.06),0 18px 44px -8px rgba(0,0,0,.7);
+  --focus:0 0 0 2px var(--canvas),0 0 0 4px rgba(124,147,245,.7);
+  --scrim:rgba(0,0,0,.55);
+}
+:root {
+  /* Type: the app keeps its fonts (IBM Plex Sans / Plex Mono). Scale from 8.4a. */
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",monospace;
+  --t-12:12px; --t-14:14px; --t-16:16px; --t-20:20px; --t-24:24px; --t-32:32px;
+  /* Space and radius */
+  --s-4:4px; --s-8:8px; --s-12:12px; --s-16:16px; --s-24:24px; --s-32:32px; --s-48:48px;
+  --r-control:6px; --r-card:10px; --r-panel:14px; --r-pill:999px;
+  /* Motion */
+  --d-fast:120ms; --d-base:180ms; --d-slow:260ms;
+  --ease-out:cubic-bezier(.2,.8,.2,1); --ease-in-out:cubic-bezier(.4,0,.2,1);
+  /* Control heights */
+  --h-sm:28px; --h-md:32px; --h-touch:44px;
+}
+@media (prefers-reduced-motion: reduce){ :root{ --d-fast:0ms; --d-base:0ms; --d-slow:0ms; } }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--text);font:400 var(--t-14)/1.45 var(--font);-webkit-font-smoothing:antialiased;transition:background var(--d-base),color var(--d-base)}
+.page{max-width:1120px;margin:0 auto;padding:var(--s-32) var(--s-24) 96px}
+h1{font-size:var(--t-32);font-weight:600;letter-spacing:-.02em;margin:0 0 var(--s-8)}
+h2{font-size:var(--t-20);font-weight:600;letter-spacing:-.01em;margin:var(--s-48) 0 var(--s-4)}
+h3{font-size:var(--t-14);font-weight:600;margin:var(--s-24) 0 var(--s-8)}
+p{margin:0 0 var(--s-12);color:var(--text-2);max-width:760px}
+.lead{font-size:var(--t-16)}
+.label{font-size:var(--t-12);font-weight:600;color:var(--text-3);letter-spacing:.02em}
+.rule{font-size:var(--t-12);color:var(--text-2);background:var(--sunken);border-radius:var(--r-control);padding:var(--s-8) var(--s-12);margin:var(--s-8) 0 var(--s-16);max-width:860px}
+.row{display:flex;flex-wrap:wrap;gap:var(--s-12);align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:var(--s-12)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:var(--s-16);box-shadow:var(--shadow-1)}
+code{font:var(--t-12)/1.4 var(--mono);background:var(--sunken);padding:1px 5px;border-radius:4px;color:var(--text-2)}
+.top-toggle{position:fixed;top:16px;right:16px;z-index:9}
+
+/* ---------- Icons: Lucide outline, 1.75 stroke, drawn as CSS masks in the app ---------- */
+.i{display:inline-block;width:16px;height:16px;flex:none;vertical-align:-3px}
+.i svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;height:var(--h-md);padding:0 12px;border-radius:var(--r-control);font:500 var(--t-14)/1 var(--font);border:1px solid var(--line-strong);background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;box-shadow:var(--shadow-1);transition:background var(--d-fast),border-color var(--d-fast),transform var(--d-fast)}
+.btn:hover{background:var(--sunken)} .btn:active{transform:scale(.98)} .btn:focus-visible{outline:none;box-shadow:var(--focus)}
+.btn.primary{background:var(--accent);border-color:transparent;color:var(--text-on-accent)} .btn.primary:hover{background:var(--accent-hover)}
+.btn.quiet{background:transparent;border-color:transparent;box-shadow:none;color:var(--text-2)} .btn.quiet:hover{background:var(--hover);color:var(--text)}
+.btn.icon{width:var(--h-md);padding:0;justify-content:center}
+.btn.sm{height:var(--h-sm);font-size:var(--t-12);padding:0 10px}
+.btn[aria-disabled="true"]{color:var(--text-3);background:var(--surface);box-shadow:none;cursor:default}
+.btn.danger{color:var(--danger)}
+.kbd{font:500 11px/1 var(--mono);color:var(--text-3);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:2px 5px;background:var(--surface)}
+
+/* ---------- Inputs ---------- */
+.field{display:flex;align-items:center;gap:8px;height:var(--h-md);padding:0 10px;border-radius:var(--r-control);border:1px solid var(--line-strong);background:var(--surface);color:var(--text-3);min-width:220px;font-size:var(--t-14)}
+.field:focus-within{box-shadow:var(--focus);border-color:var(--accent)}
+.select::after{content:"";margin-left:auto;width:8px;height:8px;border-right:1.5px solid var(--text-3);border-bottom:1.5px solid var(--text-3);transform:rotate(45deg) translateY(-2px)}
+.seg{display:inline-flex;padding:2px;border-radius:8px;background:var(--sunken);border:1px solid var(--line)}
+.seg span{height:26px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;border-radius:6px;font-size:var(--t-12);font-weight:500;color:var(--text-2)}
+.seg span.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow-1)}
+.switch{width:32px;height:18px;border-radius:999px;background:var(--line-strong);position:relative;display:inline-block;vertical-align:middle}
+.switch.on{background:var(--accent)} .switch::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:var(--shadow-1);transition:transform var(--d-fast) var(--ease-out)} .switch.on::after{transform:translateX(14px)}
+
+/* ---------- Chips, dots, badges ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:var(--r-pill);font-size:var(--t-12);font-weight:500;background:var(--sunken);color:var(--text-2);border:1px solid var(--line);white-space:nowrap}
+.chip.accent{background:var(--accent-soft);color:var(--accent-text);border-color:transparent}
+.chip.success{background:var(--success-soft);color:var(--success);border-color:transparent}
+.chip.warn{background:var(--warning-soft);color:var(--warning);border-color:transparent}
+.chip.outline{background:transparent}
+.chip .x{opacity:.6;margin-right:-3px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:var(--r-pill);font:600 11px/1 var(--font);font-variant-numeric:tabular-nums;background:var(--sunken);color:var(--text-2)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Cards and rows ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:var(--s-16);box-shadow:var(--shadow-1);transition:border-color var(--d-fast),box-shadow var(--d-fast),transform var(--d-fast)}
+.card.link:hover{border-color:var(--line-strong);box-shadow:var(--shadow-2)}
+.card.sel{box-shadow:0 0 0 2px var(--accent),var(--shadow-2);border-color:transparent}
+.card .t{font-weight:600;font-size:var(--t-14);margin-bottom:2px}
+.card .m{font-size:var(--t-12);color:var(--text-2)}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+.li{display:flex;align-items:center;gap:10px;min-height:40px;padding:8px 12px;border-top:1px solid var(--line);font-size:var(--t-14);transition:background var(--d-fast)}
+.li:first-child{border-top:0} .li:hover{background:var(--hover)} .li .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li .sub{font-size:var(--t-12);color:var(--text-3)} .chev{color:var(--text-3)}
+
+/* ---------- Skeleton ---------- */
+.sk{background:linear-gradient(90deg,var(--sunken) 0%,var(--hover) 50%,var(--sunken) 100%);background-size:200% 100%;border-radius:6px;animation:sk 1.4s ease-in-out infinite}
+@keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+/* ---------- Floating chrome ---------- */
+.float{background:var(--raised);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-2)}
+.toast{display:inline-flex;align-items:center;gap:12px;height:44px;padding:0 8px 0 14px;border-radius:12px;background:var(--text);color:var(--canvas);box-shadow:var(--shadow-3);font-size:var(--t-14)}
+.toast .btn.quiet{color:var(--canvas)} .toast .btn.quiet:hover{background:rgba(255,255,255,.12)}
+[data-theme="dark"] .toast .btn.quiet:hover{background:rgba(0,0,0,.08)}
+.band{display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 12px;border-radius:var(--r-control);font-size:var(--t-14)}
+.band.warn{background:var(--warning-soft);color:var(--text)} .band.warn .i{color:var(--warning)}
+.band .msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu{width:240px;padding:4px;background:var(--raised);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-3)}
+.mi{display:flex;align-items:center;gap:10px;height:32px;padding:0 8px;border-radius:6px;font-size:var(--t-14);color:var(--text)}
+.mi:hover,.mi.on{background:var(--hover)} .mi .i{color:var(--text-2)} .mi .kbd{margin-left:auto}
+.sep{height:1px;background:var(--line);margin:4px 0}
+.tip{display:inline-block;padding:5px 8px;border-radius:6px;background:var(--text);color:var(--canvas);font-size:var(--t-12)}
+
+/* ---------- App frame demo ---------- */
+.app{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--canvas);box-shadow:var(--shadow-2)}
+.topbar{display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+.mark{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--text-on-accent)}
+.crumb{display:flex;align-items:center;gap:6px;font-size:var(--t-14);color:var(--text-2)} .crumb b{color:var(--text);font-weight:600}
+.cmdk{display:flex;align-items:center;gap:8px;width:300px;height:30px;padding:0 6px 0 10px;border-radius:8px;background:var(--sunken);border:1px solid var(--line);color:var(--text-3);font-size:var(--t-14)}
+.cmdk .kbd{margin-left:auto}
+.rail{width:188px;padding:8px;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:1px}
+.ri{display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border-radius:6px;font-size:var(--t-14);color:var(--text-2)}
+.ri:hover{background:var(--hover);color:var(--text)} .ri.on{background:var(--selected);color:var(--accent-text);font-weight:500}
+.ri .count{margin-left:auto}
+.rail .label{padding:12px 10px 4px}
+.status{display:flex;align-items:center;gap:0;height:24px;padding:0 8px;background:var(--surface);border-top:1px solid var(--line);font-size:var(--t-12);color:var(--text-3)}
+.status span{padding:0 10px;border-left:1px solid var(--line)} .status span:first-child{border-left:0}
+
+/* ---------- Map ---------- */
+.mapc{position:relative;background-color:var(--canvas);background-image:radial-gradient(var(--grid-dot) 1px,transparent 1.2px);background-size:20px 20px;overflow:hidden}
+.fam{position:absolute;width:118px;padding:8px 10px 8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1);transition:opacity var(--d-base),box-shadow var(--d-fast),transform var(--d-fast)}
+.fam::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--g)}
+.fam .n{display:flex;align-items:center;gap:6px;font-weight:600;font-size:var(--t-12);color:var(--text)}
+.fam .n .loop{margin-left:auto;font-weight:500;color:var(--text-3);font-size:11px}
+.fam .f{font:var(--t-12)/1.3 var(--mono);color:var(--text-2);margin-top:2px}
+.fam.tint{background:var(--gs)}
+.fam.faded{opacity:.42;box-shadow:none}
+.fam.hover{box-shadow:var(--shadow-2);transform:translateY(-1px)}
+.fam.sel{box-shadow:0 0 0 2px var(--accent),var(--shadow-2)}
+.g-hc{--g:var(--fam-hc);--gs:var(--fam-hc-soft)} .g-hal{--g:var(--fam-hal);--gs:var(--fam-hal-soft)}
+.g-oxy{--g:var(--fam-oxy);--gs:var(--fam-oxy-soft)} .g-nit{--g:var(--fam-nit);--gs:var(--fam-nit-soft)}
+.chipc{fill:var(--surface);stroke:var(--line-strong)} .chipt{fill:var(--text);font:600 11px var(--font)}
+.rchip{fill:var(--surface);stroke:var(--line-strong)} .rchipt{fill:var(--text-2);font:500 11px var(--font)}
+.mtool{position:absolute;display:flex;align-items:center;gap:2px;padding:3px}
+.mtool .btn{box-shadow:none;border-color:transparent;background:transparent;height:28px} .mtool .btn:hover{background:var(--hover)}
+.mtool .div{width:1px;height:18px;background:var(--line);margin:0 3px}
+.selbar{position:absolute;display:flex;align-items:center;gap:6px;height:32px;padding:0 4px 0 10px;font-size:var(--t-12)}
+
+/* ---------- Side panel ---------- */
+.panel{width:340px;background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column}
+.ph{padding:16px 16px 12px;border-bottom:1px solid var(--line)}
+.ph .title{font-size:var(--t-20);font-weight:600;letter-spacing:-.01em;margin:8px 0 2px}
+.ph .sum{font-size:var(--t-12);color:var(--text-2)}
+.pb{padding:12px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.paper{background:var(--paper);border:1px solid var(--paper-line);border-radius:var(--r-card);padding:14px;color:#1b1b20}
+
+/* ---------- Phone ---------- */
+.phone{width:300px;height:620px;border-radius:36px;border:8px solid #1b1c20;background:var(--canvas);overflow:hidden;position:relative;box-shadow:var(--shadow-3)}
+.ptop{height:44px;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+.ptabs{position:absolute;left:0;right:0;bottom:0;height:64px;padding-bottom:12px;display:flex;background:var(--surface);border-top:1px solid var(--line)}
+.ptab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;color:var(--text-3)}
+.ptab.on{color:var(--accent-text)} .ptab .i{width:20px;height:20px}
+.sheet{position:absolute;left:0;right:0;bottom:64px;background:var(--surface);border-radius:16px 16px 0 0;box-shadow:var(--shadow-3);padding:8px 14px 14px}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line-strong);margin:0 auto 10px}
+.swatch{display:flex;flex-direction:column;gap:6px}
+.swatch i{display:block;height:44px;border-radius:8px;border:1px solid var(--line)}
+.swatch small{font:var(--t-12)/1.2 var(--mono);color:var(--text-2)}
+table.spec{border-collapse:collapse;font-size:var(--t-12);width:100%;max-width:900px}
+table.spec td,table.spec th{border-top:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.spec th{color:var(--text-3);font-weight:600}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.5 6h9M6.5 8l4 8M17.5 8l-4 8"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v7.5L4.5 19a2 2 0 0 0 1.7 3h11.6a2 2 0 0 0 1.7-3L14 9.5V2M8.5 2h7M7 16h10"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+  <symbol id="i-tube" viewBox="0 0 24 24"><path d="M14.5 2v17.5a2.5 2.5 0 0 1-5 0V2M8.5 2h7M14.5 16h-5"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1.2"/></symbol>
+  <symbol id="i-atom" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2-2-.4-7.7-5.4-12.7S4.1 1.8 2.1 3.8s.4 7.7 5.4 12.7 10.7 5.7 12.7 3.7"/><path d="M15.7 15.7c5-5 7.4-10.7 5.4-12.7s-7.7.4-12.7 5.4-7.4 10.7-5.4 12.7 7.7-.4 12.7-5.4"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M11.5 2.3a.5.5 0 0 1 1 0l2.3 4.7 5.2.8a.5.5 0 0 1 .3.9l-3.8 3.7.9 5.2a.5.5 0 0 1-.8.5L12 15.6l-4.6 2.5a.5.5 0 0 1-.8-.5l.9-5.2L3.7 8.7a.5.5 0 0 1 .3-.9l5.2-.8z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 14l2 2 4-4"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></symbol>
+  <symbol id="i-max" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol>
+  <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8v6M8 11h6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h0"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h0"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><path d="M3 6h3M3 12h3M3 18h3M10 6h11M10 12h11M10 18h11"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-hex" viewBox="0 0 24 24"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><circle cx="12" cy="12" r="3.2"/></symbol>
+</svg>
+
+<button class="btn top-toggle" id="tt" onclick="t()"><span class="i"><svg><use href="#i-moon"/></svg></span><span id="tl">Dark</span></button>
+
+<div class="page">
+<div class="label">ORN · Row 8.4 · Design reference</div>
+<h1>Calm, precise, quick</h1>
+<p class="lead">The app should feel like a well-made study instrument: quiet surfaces so the chemistry stands out, one clear way to do each thing, and motion that explains what happened. Every screen is built from the parts on this page. If a screen needs something not shown here, it goes under REVIEW REQUIRED, not into code.</p>
+<div class="rule"><b>Five rules.</b> 1. Content first: chrome is quiet (hairlines, no heavy bars, at most one primary button per view). 2. One way per thing: one button set, one chip, one card, one list row, one icon style. 3. Depth means something: canvas &lt; surface &lt; raised (popovers, toasts, floating map controls). Never more than two floating layers. 4. Motion explains: 120–260 ms, opacity and transform only, none with reduced motion. 5. Both themes are first class: every part is checked in light AND dark.</div>
+
+<h2>1. Colour</h2>
+<p>Token names are the contract. Map them onto the app's token file (8.4a); keep 8.4a names where they already mean the same thing and alias the rest. No raw colour values outside the token file (the 8.4a guard extends to colours).</p>
+<h3>Surfaces and text</h3>
+<div class="grid">
+  <div class="swatch"><i style="background:var(--canvas)"></i><small>--canvas · page, map</small></div>
+  <div class="swatch"><i style="background:var(--surface)"></i><small>--surface · cards, panels, bars</small></div>
+  <div class="swatch"><i style="background:var(--sunken)"></i><small>--sunken · fields, segmented, skeleton</small></div>
+  <div class="swatch"><i style="background:var(--raised);box-shadow:var(--shadow-2)"></i><small>--raised · popovers, toasts, floating</small></div>
+  <div class="swatch"><i style="background:var(--text)"></i><small>--text · titles, body</small></div>
+  <div class="swatch"><i style="background:var(--text-2)"></i><small>--text-2 · supporting</small></div>
+  <div class="swatch"><i style="background:var(--text-3)"></i><small>--text-3 · labels, placeholders</small></div>
+  <div class="swatch"><i style="background:var(--accent)"></i><small>--accent · focus, selection, primary</small></div>
+</div>
+<h3>Roles</h3>
+<div class="grid">
+  <div class="swatch"><i style="background:var(--success-soft);border-color:var(--success)"></i><small>--success / -soft</small></div>
+  <div class="swatch"><i style="background:var(--warning-soft);border-color:var(--warning)"></i><small>--warning / -soft · notices, "Needs checking"</small></div>
+  <div class="swatch"><i style="background:var(--danger-soft);border-color:var(--danger)"></i><small>--danger / -soft · destructive, errors</small></div>
+  <div class="swatch"><i style="background:var(--review-grey)"></i><small>--review-grey · "Not yet reviewed" dot</small></div>
+</div>
+<h3>Family groups (keep the hues the user likes)</h3>
+<div class="grid">
+  <div class="swatch"><i style="background:var(--fam-hc-soft);border-left:4px solid var(--fam-hc)"></i><small>--fam-hc · Hydrocarbons</small></div>
+  <div class="swatch"><i style="background:var(--fam-hal-soft);border-left:4px solid var(--fam-hal)"></i><small>--fam-hal · Halogen compounds</small></div>
+  <div class="swatch"><i style="background:var(--fam-oxy-soft);border-left:4px solid var(--fam-oxy)"></i><small>--fam-oxy · Oxygen compounds</small></div>
+  <div class="swatch"><i style="background:var(--fam-nit-soft);border-left:4px solid var(--fam-nit)"></i><small>--fam-nit · Nitrogen compounds</small></div>
+</div>
+<div class="rule"><b>Structure drawings stay on paper.</b> RDKit structures keep their textbook colours (black bonds, red O, blue N). In the dark theme they sit on a <code>--paper</code> card (near-white, rounded, hairline) instead of being inverted. Inverting chemistry colours would be wrong; a paper card reads like a page of a book and is honest.</div>
+
+<h2>2. Type</h2>
+<p>Keep IBM Plex Sans and Plex Mono (already in the app). Sizes from the 8.4a scale only. Numbers in counts, tables and the status bar use tabular figures. Formulas (R–OH, R₂C=CR₂) stay in Plex Mono at the body size of their context.</p>
+<table class="spec">
+<tr><th>Role</th><th>Size / weight / tracking</th><th>Use</th></tr>
+<tr><td style="font-size:32px;font-weight:600;letter-spacing:-.02em">Page title</td><td>32 / 600 / -0.02em</td><td>Top of a page (family page, chapter page, Settings). Phone: 24.</td></tr>
+<tr><td style="font-size:24px;font-weight:600;letter-spacing:-.015em">Section title</td><td>24 / 600 / -0.015em</td><td>Big sections inside a page.</td></tr>
+<tr><td style="font-size:20px;font-weight:600;letter-spacing:-.01em">Panel title</td><td>20 / 600 / -0.01em</td><td>Inspector title, dialog title, sheet title.</td></tr>
+<tr><td style="font-size:16px">Body large</td><td>16 / 400</td><td>Reading text (descriptions, notes), phone body.</td></tr>
+<tr><td style="font-size:14px">Body</td><td>14 / 400 (500 for controls, 600 for card titles)</td><td>Everything else on desktop.</td></tr>
+<tr><td><span class="label">Section label</span></td><td>12 / 600 / +0.02em, --text-3, sentence case</td><td>"Makes", "Made from", "In the syllabus". Never all caps.</td></tr>
+<tr><td style="font-size:12px;color:var(--text-2)">Meta</td><td>12 / 400, --text-2</td><td>Counts, summaries, status bar, chip text.</td></tr>
+</table>
+
+<h2>3. Space, shape, depth, motion</h2>
+<table class="spec">
+<tr><th>Token</th><th>Value</th><th>Use</th></tr>
+<tr><td>Spacing</td><td>4 · 8 · 12 · 16 · 24 · 32 · 48</td><td>8.4a scale. Inside controls 8–12; between related parts 8–12; between sections 24; page padding 24 (phone 16).</td></tr>
+<tr><td>--r-control</td><td>6</td><td>Buttons, inputs, menu items, rail items.</td></tr>
+<tr><td>--r-card</td><td>10</td><td>Cards, list groups, map family boxes, paper.</td></tr>
+<tr><td>--r-panel</td><td>14</td><td>Dialogs, floating panels; phone sheets 16 on the top corners only.</td></tr>
+<tr><td>--r-pill</td><td>999</td><td>Chips, count badges, toggles.</td></tr>
+<tr><td>--shadow-1</td><td><span class="box" style="padding:4px 10px;display:inline-block">rest</span></td><td>Cards, buttons, family boxes at rest.</td></tr>
+<tr><td>--shadow-2</td><td><span class="box" style="padding:4px 10px;display:inline-block;box-shadow:var(--shadow-2)">lifted</span></td><td>Hovered card, selected box, floating map controls, side panel overlay in full map.</td></tr>
+<tr><td>--shadow-3</td><td><span class="box" style="padding:4px 10px;display:inline-block;box-shadow:var(--shadow-3)">floating</span></td><td>Menus, popovers, toasts, dialogs, sheets.</td></tr>
+<tr><td>Motion</td><td>fast 120 · base 180 · slow 260; ease-out (.2,.8,.2,1)</td><td>Hover and press: fast. Popover, toast, fade of map families: base. Panels, sheets, full map, theme change: slow. Opacity and transform only. All 0 with reduced motion.</td></tr>
+<tr><td>Focus</td><td><button class="btn" style="box-shadow:var(--focus)">Focused</button></td><td>2 px accent ring with a 2 px gap, on :focus-visible only, everywhere (map boxes too).</td></tr>
+</table>
+
+<h2>4. Icons</h2>
+<p>Lucide (ISC licence; record it in DEPENDENCIES.md and the About credits), outline, stroke 1.75, 16 px in controls, 20 px in the phone tab bar. Only the icons below are vendored, as single-colour SVG files drawn through CSS <code>mask-image</code> with <code>background: currentColor</code>. That keeps them out of the JavaScript bundle and inside the "SVG only through the sanitiser or img" rule (a CSS image, no markup injected). Every icon-only button has an accessible name and a tooltip.</p>
+<div class="row" style="gap:18px;color:var(--text-2)">
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-book"/></svg></span>Chapters</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-layers"/></svg></span>Families</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-map"/></svg></span>Map</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-flask"/></svg></span>Reactions</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-route"/></svg></span>Precursors, From A to B</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-tube"/></svg></span>Reagents</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-tag"/></svg></span>Named reactions</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-atom"/></svg></span>Mechanisms</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-list"/></svg></span>Syllabus</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-star"/></svg></span>Starred</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-clock"/></svg></span>Recent</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-compass"/></svg></span>Explore</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-search"/></svg></span>Search</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-db"/></svg></span>Dataset</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-check"/></svg></span>Review</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-gear"/></svg></span>Settings</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-scan"/></svg></span>Fit</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-max"/></svg></span>Full map</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-zoom"/></svg></span>Zoom to selection</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-key"/></svg></span>Key</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-link"/></svg></span>Copy link</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-dl"/></svg></span>Back up</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-undo"/></svg></span>Undo</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-bell"/></svg></span>Notices</span>
+  <span class="row" style="gap:6px"><span class="i"><svg><use href="#i-sun"/></svg><svg><use href="#i-moon"/></svg></span>Theme</span>
+</div>
+<p style="margin-top:12px">Also: x (close), more-horizontal (⋯), chevron-right, chevron-down, arrow-up-right (open), plus, minus, info, triangle-alert, monitor. App mark: an original hexagon-with-ring glyph (shown in the top bar); favicon and app icons are drawn from it. No third-party logos.</p>
+
+<h2>5. Controls</h2>
+<h3>Buttons (three kinds, as 8.4a; icon buttons are secondary or quiet)</h3>
+<div class="row">
+  <button class="btn primary">Open family</button>
+  <button class="btn">Show on map</button>
+  <button class="btn quiet">Show everything</button>
+  <button class="btn icon" aria-label="More actions"><span class="i"><svg><use href="#i-dots"/></svg></span></button>
+  <button class="btn"><span class="i"><svg><use href="#i-route"/></svg></span>From A to B</button>
+  <button class="btn sm">Small</button>
+  <button class="btn" aria-disabled="true">Open family</button>
+  <button class="btn danger">Delete…</button>
+</div>
+<div class="rule">Height 32 desktop, 44 touch. Hover darkens the fill; press scales to 0.98 for 120 ms. Disabled only when truly impossible, and then with a tooltip saying why. A view has at most one primary button (often none: on the map, nothing is primary).</div>
+<h3>Fields</h3>
+<div class="row">
+  <div class="field"><span class="i"><svg><use href="#i-search"/></svg></span>Find a family</div>
+  <div class="field select" style="min-width:180px;color:var(--text)">All chapters</div>
+  <div class="seg"><span class="on">Cards</span><span>Compact</span></div>
+  <div class="seg"><span><span class="i"><svg><use href="#i-sun"/></svg></span>Light</span><span class="on"><span class="i"><svg><use href="#i-monitor"/></svg></span>System</span><span><span class="i"><svg><use href="#i-moon"/></svg></span>Dark</span></div>
+  <span class="row" style="gap:8px;font-size:14px"><span class="switch on"></span>Reduce motion</span>
+</div>
+<h3>Chips, dots, counts</h3>
+<div class="row">
+  <span class="chip">1 caveat</span>
+  <span class="chip accent">JEE Main</span>
+  <span class="chip outline">Extra</span>
+  <span class="chip outline">Background</span>
+  <span class="chip success">Family</span>
+  <span class="chip"><span class="dot" style="background:var(--fam-oxy)"></span>Alcohols</span>
+  <span class="chip accent">Only JEE Main<span class="x"><span class="i" style="width:12px;height:12px"><svg><use href="#i-x"/></svg></span></span></span>
+  <span class="row" style="gap:6px;font-size:12px;color:var(--text-2)"><span class="dot" style="background:var(--review-grey)"></span>Not yet reviewed</span>
+  <span class="row" style="gap:6px;font-size:12px;color:var(--text-2)"><span class="dot" style="background:var(--review-orange)"></span>Needs checking</span>
+  <span class="count">12</span>
+  <span class="kbd">Ctrl</span><span class="kbd">K</span>
+</div>
+
+<h2>6. Containers</h2>
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
+  <div>
+    <h3>Card (link card: hover lifts; selected: accent ring)</h3>
+    <div class="card link" style="margin-bottom:10px">
+      <div class="row" style="justify-content:space-between"><div class="t">Oxidation of ethanol</div><span class="row" style="gap:6px;font-size:12px;color:var(--text-2)"><span class="dot" style="background:var(--review-grey)"></span></span></div>
+      <div class="m" style="font-family:var(--mono)">Ethanol → Ethanal</div>
+      <div class="row" style="margin-top:10px;gap:6px"><span class="chip">PCC</span><span class="chip accent">JEE Main</span><span class="chip outline">Extra</span></div>
+    </div>
+    <div class="card sel"><div class="t">Selected card</div><div class="m">2 px accent ring, no layout shift.</div></div>
+  </div>
+  <div>
+    <h3>List group (dense lists: rows, not cards)</h3>
+    <div class="list">
+      <div class="li"><span class="dot" style="background:var(--fam-oxy)"></span><span class="grow">Aldehydes</span><span class="count">3</span><span class="i chev"><svg><use href="#i-chev"/></svg></span></div>
+      <div class="li"><span class="dot" style="background:var(--fam-oxy)"></span><span class="grow">Ethers<div class="sub">Williamson synthesis</div></span><span class="count">2</span><span class="i chev"><svg><use href="#i-chev"/></svg></span></div>
+      <div class="li"><span class="dot" style="background:var(--fam-hal)"></span><span class="grow">Haloalkanes</span><span class="count">1</span><span class="i chev"><svg><use href="#i-chev"/></svg></span></div>
+    </div>
+  </div>
+  <div>
+    <h3>Loading (skeleton matches the final shape)</h3>
+    <div class="card"><div class="sk" style="height:14px;width:60%;margin-bottom:8px"></div><div class="sk" style="height:12px;width:40%;margin-bottom:14px"></div><div class="sk" style="height:84px;width:100%"></div></div>
+    <div class="rule">Replaces "Drawing the structure…" text. Same size as what replaces it: no layout shift (CLS ≤ 0.02 on every page).</div>
+  </div>
+  <div>
+    <h3>Empty state (an invitation, not an apology)</h3>
+    <div class="card" style="text-align:center;padding:28px 16px">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" stroke="var(--text-3)" stroke-width="1.5" aria-hidden="true"><path d="M28 6 46 16.5v21L28 48 10 37.5v-21z"/><circle cx="28" cy="27" r="7"/><path d="M28 6v14M46 37.5 34 31M10 37.5 22 31"/></svg>
+      <div style="font-weight:600;margin:10px 0 4px">No reactions for JEE Main in this chapter</div>
+      <div class="m" style="margin-bottom:12px">Everything in this chapter is outside the JEE Main syllabus.</div>
+      <button class="btn">Show everything</button>
+    </div>
+  </div>
+</div>
+
+<h2>7. Floating things</h2>
+<div class="row" style="align-items:flex-start;gap:24px">
+  <div>
+    <h3>Menu (⋯, canvas menu, More)</h3>
+    <div class="menu">
+      <div class="mi on"><span class="i"><svg><use href="#i-arrow"/></svg></span>Open family<span class="kbd">↵</span></div>
+      <div class="mi"><span class="i"><svg><use href="#i-zoom"/></svg></span>Zoom to selection<span class="kbd">Z</span></div>
+      <div class="mi"><span class="i"><svg><use href="#i-star"/></svg></span>Star for revision<span class="kbd">S</span></div>
+      <div class="mi"><span class="i"><svg><use href="#i-link"/></svg></span>Copy link</div>
+      <div class="sep"></div>
+      <div class="mi"><span class="i"><svg><use href="#i-info"/></svg></span>Report a mistake</div>
+    </div>
+  </div>
+  <div>
+    <h3>Toast (dark pill, bottom centre of the main column)</h3>
+    <div class="toast">Imported 305 records<button class="btn quiet sm"><span class="i"><svg><use href="#i-undo"/></svg></span>Undo</button><button class="btn quiet icon sm" aria-label="Dismiss"><span class="i"><svg><use href="#i-x"/></svg></span></button></div>
+    <div class="rule" style="max-width:380px">One line. Plain confirmations leave after 5 s; toasts with an action stay 10 s; hover or focus pauses. The action stays reachable elsewhere (Undo in the File menu) so leaving is never a loss.</div>
+    <h3>Notice band (one row, +n more)</h3>
+    <div class="band warn" style="width:560px"><span class="i"><svg><use href="#i-alert"/></svg></span><span class="msg">This browser may clear your data when space is short. Back it up.</span><button class="btn sm">Back up</button><button class="btn quiet sm">+1 more</button><button class="btn quiet icon sm" aria-label="Dismiss"><span class="i"><svg><use href="#i-x"/></svg></span></button></div>
+  </div>
+  <div>
+    <h3>Tooltip</h3>
+    <span class="tip">Zoom to selection <span class="kbd" style="margin-left:4px">Z</span></span>
+  </div>
+</div>
+
+<h2>8. Desktop frame and map</h2>
+<p>Top bar 44: app mark, breadcrumb, the search / command box (Ctrl K) in the middle, exam chip, notices bell (with count), theme-aware. Rail 188 (collapses to 56, icons only), grouped "Study" / "Author" (Author only in Studio), Settings at the bottom. Map controls float on the canvas: the toolbar top-left, zoom stack bottom-right, key bottom-left, the "Selected" bar top-right (it never covers the toolbar). Status bar 24 (Studio full; Study only its storage line).</p>
+<div class="app">
+  <div class="topbar">
+    <span class="mark"><span class="i"><svg><use href="#i-hex"/></svg></span></span>
+    <div class="crumb"><span>Map</span><span class="i chev"><svg><use href="#i-chev"/></svg></span><b>Alcohols</b></div>
+    <div style="flex:1"></div>
+    <div class="cmdk"><span class="i"><svg><use href="#i-search"/></svg></span>Search or jump to…<span class="kbd">Ctrl K</span></div>
+    <div style="flex:1"></div>
+    <span class="chip accent">JEE Main<span class="i" style="width:12px;height:12px"><svg><use href="#i-down"/></svg></span></span>
+    <button class="btn quiet icon" aria-label="Notices"><span class="i"><svg><use href="#i-bell"/></svg></span></button>
+  </div>
+  <div style="display:flex;height:480px">
+    <div class="rail">
+      <div class="label">Study</div>
+      <div class="ri"><span class="i"><svg><use href="#i-book"/></svg></span>Chapters</div>
+      <div class="ri on"><span class="i"><svg><use href="#i-map"/></svg></span>Map</div>
+      <div class="ri"><span class="i"><svg><use href="#i-flask"/></svg></span>Reactions</div>
+      <div class="ri"><span class="i"><svg><use href="#i-route"/></svg></span>Precursors</div>
+      <div class="ri"><span class="i"><svg><use href="#i-tube"/></svg></span>Reagents</div>
+      <div class="ri"><span class="i"><svg><use href="#i-tag"/></svg></span>Named reactions</div>
+      <div class="ri"><span class="i"><svg><use href="#i-atom"/></svg></span>Mechanisms</div>
+      <div class="ri"><span class="i"><svg><use href="#i-list"/></svg></span>Syllabus</div>
+      <div class="ri"><span class="i"><svg><use href="#i-star"/></svg></span>Starred<span class="count">4</span></div>
+      <div class="label">Author</div>
+      <div class="ri"><span class="i"><svg><use href="#i-db"/></svg></span>Dataset</div>
+      <div class="ri"><span class="i"><svg><use href="#i-check"/></svg></span>Review<span class="count">38</span></div>
+      <div style="flex:1"></div>
+      <div class="ri"><span class="i"><svg><use href="#i-gear"/></svg></span>Settings</div>
+    </div>
+    <div class="mapc" style="flex:1">
+      <div class="float mtool" style="left:12px;top:12px">
+        <div class="field select" style="min-width:140px;height:28px;border:0;background:transparent;color:var(--text)">All chapters</div>
+        <span class="div"></span>
+        <button class="btn icon" aria-label="Find a family"><span class="i"><svg><use href="#i-search"/></svg></span></button>
+        <button class="btn"><span class="i"><svg><use href="#i-route"/></svg></span>From A to B</button>
+        <span class="div"></span>
+        <button class="btn icon" aria-label="Full map"><span class="i"><svg><use href="#i-max"/></svg></span></button>
+        <button class="btn icon" aria-label="More"><span class="i"><svg><use href="#i-dots"/></svg></span></button>
+      </div>
+      <div class="float selbar" style="right:12px;top:12px">
+        <span style="color:var(--text-2)">Selected</span><b>Alcohols</b>
+        <button class="btn quiet icon sm" aria-label="Zoom to Alcohols"><span class="i"><svg><use href="#i-zoom"/></svg></span></button>
+        <button class="btn quiet icon sm" aria-label="Clear selection"><span class="i"><svg><use href="#i-x"/></svg></span></button>
+      </div>
+      <svg width="100%" height="480" style="position:absolute;inset:0" aria-hidden="true">
+        <defs>
+          <marker id="mo" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1.2 9 5 1 8.8 2.6 5z" fill="var(--fam-oxy)"/></marker>
+          <marker id="mg" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1.2 9 5 1 8.8 2.6 5z" fill="var(--made-from)"/></marker>
+        </defs>
+        <path d="M232 214 C 232 250, 232 270, 232 300" stroke="var(--fam-oxy)" stroke-width="2" fill="none" stroke-linecap="round" marker-end="url(#mo)"/>
+        <path d="M294 186 L 410 186" stroke="var(--fam-oxy)" stroke-width="2" fill="none" stroke-linecap="round" marker-end="url(#mo)"/>
+        <path d="M170 180 L 118 180" stroke="var(--fam-oxy)" stroke-width="2" fill="none" stroke-linecap="round" marker-end="url(#mo)"/>
+        <path d="M118 196 L 170 196" stroke="var(--made-from)" stroke-width="2" stroke-dasharray="6 4" fill="none" stroke-linecap="round" marker-end="url(#mg)"/>
+        <path d="M226 110 L 226 160" stroke="var(--made-from)" stroke-width="2" stroke-dasharray="6 4" fill="none" stroke-linecap="round" marker-end="url(#mg)"/>
+        <g><circle cx="232" cy="256" r="10" class="chipc"/><text x="232" y="260" text-anchor="middle" class="chipt">3</text></g>
+        <g><rect x="326" y="175" width="52" height="22" rx="11" class="rchip"/><text x="352" y="190" text-anchor="middle" class="rchipt">NaH</text></g>
+        <g><circle cx="144" cy="166" r="10" class="chipc"/><text x="144" y="170" text-anchor="middle" class="chipt">2</text></g>
+        <g><circle cx="144" cy="210" r="10" class="chipc"/><text x="144" y="214" text-anchor="middle" class="chipt">1</text></g>
+      </svg>
+      <div class="fam g-hc tint faded" style="left:166px;top:62px"><div class="n">Alkenes</div><div class="f">R₂C=CR₂</div></div>
+      <div class="fam g-hal tint faded" style="left:0px;top:160px;width:116px"><div class="n">Haloalkanes</div><div class="f">R–X</div></div>
+      <div class="fam g-oxy tint sel" style="left:172px;top:160px"><div class="n">Alcohols</div><div class="f">R–OH</div></div>
+      <div class="fam g-oxy tint" style="left:412px;top:160px"><div class="n">Ethers</div><div class="f">R–O–R′</div></div>
+      <div class="fam g-oxy tint hover" style="left:172px;top:302px"><div class="n">Aldehydes<span class="loop">↻ 1</span></div><div class="f">R–CHO</div></div>
+      <div class="fam g-nit tint faded" style="left:412px;top:302px"><div class="n">Amines</div><div class="f">R–NH₂</div></div>
+      <div class="float" style="position:absolute;left:12px;bottom:12px;display:flex;gap:14px;align-items:center;padding:7px 12px;font-size:12px;color:var(--text-2)">
+        <span class="row" style="gap:6px"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H17" stroke="var(--fam-oxy)" stroke-width="2"/><path d="M15 1 21 4 15 7z" fill="var(--fam-oxy)"/></svg>makes</span>
+        <span class="row" style="gap:6px"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H16" stroke="var(--made-from)" stroke-width="2" stroke-dasharray="4 3"/><path d="M15 1 21 4 15 7z" fill="var(--made-from)"/></svg>made from</span>
+        <span class="row" style="gap:6px"><span class="count" style="background:var(--surface);border:1px solid var(--line-strong)">3</span>reactions</span>
+      </div>
+      <div class="float" style="position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;padding:3px">
+        <button class="btn quiet icon" aria-label="Zoom in"><span class="i"><svg><use href="#i-plus"/></svg></span></button>
+        <button class="btn quiet icon" aria-label="Zoom out"><span class="i"><svg><use href="#i-minus"/></svg></span></button>
+        <div class="sep"></div>
+        <button class="btn quiet icon" aria-label="Fit"><span class="i"><svg><use href="#i-scan"/></svg></span></button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph">
+        <div class="row" style="justify-content:space-between"><span class="chip success">Family</span><span class="row" style="gap:2px"><button class="btn quiet icon sm" aria-label="Star"><span class="i"><svg><use href="#i-star"/></svg></span></button><button class="btn quiet icon sm" aria-label="Close panel"><span class="i"><svg><use href="#i-x"/></svg></span></button></span></div>
+        <div class="title">Alcohols</div>
+        <div class="sum"><span style="font-family:var(--mono)">R–OH</span> · <span class="num">12</span> reactions · makes <span class="num">3</span> families · made from <span class="num">2</span></div>
+        <div class="row" style="margin-top:12px;gap:6px"><button class="btn"><span class="i"><svg><use href="#i-arrow"/></svg></span>Open family</button><button class="btn">Its reactions</button><button class="btn icon" aria-label="More actions"><span class="i"><svg><use href="#i-dots"/></svg></span></button></div>
+      </div>
+      <div class="pb">
+        <div><div class="label" style="margin-bottom:6px">Makes</div>
+          <div class="list">
+            <div class="li"><span class="dot" style="background:var(--fam-oxy)"></span><span class="grow">Aldehydes</span><span class="count">3</span><span class="i chev"><svg><use href="#i-chev"/></svg></span></div>
+            <div class="li"><span class="dot" style="background:var(--fam-oxy)"></span><span class="grow">Ethers</span><span class="count">2</span><span class="i chev"><svg><use href="#i-chev"/></svg></span></div>
+            <div class="li"><span class="dot" style="background:var(--fam-hal)"></span><span class="grow">Haloalkanes</span><span class="count">2</span><span class="i chev"><svg><use href="#i-chev"/></svg></span></div>
+          </div></div>
+        <div><div class="label" style="margin-bottom:6px">Made from</div>
+          <div class="list">
+            <div class="li"><span class="dot" style="background:var(--fam-hc)"></span><span class="grow">Alkenes</span><span class="count">2</span><span class="i chev"><svg><use href="#i-chev"/></svg></span></div>
+            <div class="li"><span class="dot" style="background:var(--fam-hal)"></span><span class="grow">Haloalkanes</span><span class="count">1</span><span class="i chev"><svg><use href="#i-chev"/></svg></span></div>
+          </div></div>
+      </div>
+    </div>
+  </div>
+  <div class="status"><span>Saved · rev 21</span><span>Findings 0 · 0 · 143</span><span>Review 38</span><span>Workers ok</span><span>Snapshot 2 Nov, 14:44</span></div>
+</div>
+<div class="rule">Map family box: surface card (soft group tint), 3 px group-colour edge on the left, title 12/600, formula Plex Mono, "↻ n" at the right of the title row. Faded: opacity 0.42 on an OPAQUE card (lines hide behind it). Hover: shadow-2 and a 1 px lift. Selected: 2 px accent ring + shadow-2. Arrows: round caps, the sleek head shown (notched triangle), solid group colour = makes, dashed --made-from = made from; count chips are circles 20+, reagent chips are pills. Families fade in and out over 180 ms when the selection changes. Sizes and spacing from 8.4c stay exactly.</div>
+
+<h2>9. Inspector reaction view</h2>
+<div class="row" style="align-items:flex-start;gap:24px">
+<div class="panel" style="border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2)">
+  <div class="ph">
+    <div class="row" style="justify-content:space-between"><span class="chip accent">Reaction</span><span class="row" style="gap:6px;font-size:12px;color:var(--text-2)"><span class="dot" style="background:var(--review-grey)"></span>Not yet reviewed</span></div>
+    <div class="title">Oxidation of ethanol with PCC</div>
+    <div class="sum">Ethanol → Ethanal · Alcohols to Aldehydes</div>
+  </div>
+  <div class="pb">
+    <div class="paper">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font:600 15px var(--font)">
+        <span>CH₃CH₂<span style="color:#d22">O</span>H</span>
+        <span style="flex:1;text-align:center;font:500 11px var(--font);color:#55555f">PCC<br><span style="display:block;height:1.5px;background:#1b1b20;margin:3px 0"></span>CH₂Cl₂</span>
+        <span>CH₃CH<span style="color:#d22">O</span></span>
+      </div>
+    </div>
+    <div class="row" style="gap:6px"><span class="chip">PCC</span><span class="chip accent">JEE Main</span><span class="chip">1 caveat</span></div>
+    <div><div class="label" style="margin-bottom:6px">Why it works</div><p style="font-size:14px;color:var(--text);margin:0">PCC stops at the aldehyde because no water is present to form the hydrate that would oxidise further.</p></div>
+    <div class="row" style="gap:6px"><button class="btn">Show in family</button><button class="btn icon" aria-label="More actions"><span class="i"><svg><use href="#i-dots"/></svg></span></button></div>
+  </div>
+</div>
+<div style="max-width:420px">
+  <div class="rule">Panel header: kind chip (and the review mark on the right), title 20/600, one summary line. The header sticks while the body scrolls. The equation hero sits on --paper in both themes. Sections: label 12/600, then content; 14 px between sections. Go-next lists are list rows (dot, name, count, chevron), not big cards. Actions: at most three visible, the rest in ⋯. The panel opens with a 260 ms slide + fade from the right (none with reduced motion); its content cross-fades when the selection changes.</div>
+</div>
+</div>
+
+<h2>10. Phone</h2>
+<div class="row" style="align-items:flex-start;gap:28px">
+  <div class="phone">
+    <div class="ptop"><span class="mark"><span class="i"><svg><use href="#i-hex"/></svg></span></span><b style="font-size:15px">Map</b><div style="flex:1"></div><span class="chip accent">JEE Main</span><button class="btn quiet icon" aria-label="Search"><span class="i"><svg><use href="#i-search"/></svg></span></button></div>
+    <div class="mapc" style="height:520px">
+      <div class="fam g-oxy tint sel" style="left:90px;top:120px;width:110px"><div class="n">Alcohols</div><div class="f">R–OH</div></div>
+      <div class="fam g-oxy tint" style="left:90px;top:236px;width:110px"><div class="n">Aldehydes</div><div class="f">R–CHO</div></div>
+      <div class="float" style="position:absolute;right:10px;top:10px;display:flex;flex-direction:column;padding:3px"><button class="btn quiet icon" aria-label="Full map"><span class="i"><svg><use href="#i-max"/></svg></span></button><button class="btn quiet icon" aria-label="Fit"><span class="i"><svg><use href="#i-scan"/></svg></span></button><button class="btn quiet icon" aria-label="Key"><span class="i"><svg><use href="#i-key"/></svg></span></button></div>
+    </div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="row" style="justify-content:space-between"><span class="chip success">Family</span><button class="btn quiet icon sm" aria-label="Close"><span class="i"><svg><use href="#i-x"/></svg></span></button></div>
+      <div style="font-size:20px;font-weight:600;margin:6px 0 2px">Alcohols</div>
+      <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">12 reactions · makes 3 · made from 2</div>
+      <div class="row" style="gap:8px"><button class="btn" style="height:44px;flex:1;justify-content:center">Open family</button><button class="btn icon" style="height:44px;width:44px" aria-label="More"><span class="i"><svg><use href="#i-dots"/></svg></span></button></div>
+    </div>
+    <div class="ptabs">
+      <div class="ptab"><span class="i"><svg><use href="#i-book"/></svg></span>Chapters</div>
+      <div class="ptab"><span class="i"><svg><use href="#i-layers"/></svg></span>Families</div>
+      <div class="ptab on"><span class="i"><svg><use href="#i-map"/></svg></span>Map</div>
+      <div class="ptab"><span class="i"><svg><use href="#i-compass"/></svg></span>Explore</div>
+      <div class="ptab"><span class="i"><svg><use href="#i-star"/></svg></span>Starred</div>
+    </div>
+  </div>
+  <div style="max-width:440px">
+    <div class="rule">Top bar 44 (mark, page name, exam chip, search). Tab bar: icons 20 + labels 11, active in accent, respects the home-indicator safe area (env(safe-area-inset-bottom)). Sheets: 16 px top radius, grab handle, snap to peek / full, the map behind dims only at full (--scrim). Floating map controls in one stack top-right, clear of boxes (Fit leaves their column free). Touch targets 44. Tapping a box gives a 120 ms press state. Search moves to the top bar on phones; the fifth tab becomes Starred.</div>
+    <div class="rule">Landscape (height ≤ 500): one 44 px top row, the tab bar becomes a 56 px icon column on the left, sheets become a right-side panel (≤ 60% width).</div>
+  </div>
+</div>
+
+<h2>11. Settings page (pattern for every page)</h2>
+<div class="app" style="max-width:760px">
+  <div style="padding:24px 28px;background:var(--canvas)">
+    <div class="label">Settings</div>
+    <h1 style="font-size:24px;margin:4px 0 20px">Appearance</h1>
+    <div class="list">
+      <div class="li" style="min-height:56px"><span class="grow">Theme<div class="sub">System follows your device.</div></span><div class="seg"><span><span class="i"><svg><use href="#i-sun"/></svg></span>Light</span><span class="on"><span class="i"><svg><use href="#i-monitor"/></svg></span>System</span><span><span class="i"><svg><use href="#i-moon"/></svg></span>Dark</span></div></div>
+      <div class="li" style="min-height:56px"><span class="grow">Text size</div></span><div class="seg"><span class="on">100%</span><span>112%</span><span>125%</span></div></div>
+      <div class="li" style="min-height:56px"><span class="grow">Density<div class="sub">Compact fits more rows on a screen.</div></span><div class="seg"><span class="on">Comfortable</span><span>Compact</span></div></div>
+      <div class="li" style="min-height:56px"><span class="grow">Reduce motion<div class="sub">Follows your device unless turned on here.</div></span><span class="switch"></span></div>
+    </div>
+    <div class="label" style="margin:24px 0 8px">Your exam</div>
+    <div class="list"><div class="li" style="min-height:56px"><span class="grow">JEE Main 2027<div class="sub">The app shows what this exam needs. Switch any time.</div></span><button class="btn">Change</button></div></div>
+    <div class="label" style="margin:24px 0 8px">Your data</div>
+    <div class="list">
+      <div class="li" style="min-height:56px"><span class="grow">Back up<div class="sub">Starred items, recent items and your own data, as one file.</div></span><button class="btn"><span class="i"><svg><use href="#i-dl"/></svg></span>Back up</button></div>
+      <div class="li" style="min-height:56px"><span class="grow">Keyboard shortcuts</span><span class="kbd">?</span></div>
+    </div>
+  </div>
+</div>
+<div class="rule">Page pattern: section label, page title, then grouped list rows (label + one-line explanation on the left, the control on the right). Max content width 760. The same pattern serves About, the family page header (label "Family", title, summary line, actions) and the chapter page header.</div>
+
+<h2>12. Accessibility and quality bars (both themes)</h2>
+<table class="spec">
+<tr><td>Contrast</td><td>Text ≥ 4.5:1, large text and icons ≥ 3:1, in light AND dark (axe in both themes).</td></tr>
+<tr><td>Focus</td><td>Every control and every map box reachable by keyboard, visible ring, logical order. A "Skip to content" link first.</td></tr>
+<tr><td>Motion</td><td>All animation off with reduced motion (device or Settings).</td></tr>
+<tr><td>Zoom</td><td>Usable at 200% browser zoom and at "Text size 125%": no clipped controls, no horizontal page scroll (the map may pan).</td></tr>
+<tr><td>Stability</td><td>No layout shift after load (CLS ≤ 0.02); skeletons hold the space.</td></tr>
+<tr><td>Speed feel</td><td>Press feedback ≤ 100 ms; panels open in one frame and finish animating in 260 ms; lazy chunks prefetched when the browser is idle after first load.</td></tr>
+<tr><td>Titles</td><td>Each view sets the tab title ("Alcohols · Map · ORN").</td></tr>
+</table>
+</div>
+<script>
+function t(){var r=document.documentElement,d=r.getAttribute('data-theme')==='dark';r.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Dark':'Light';}
+</script>
+</body>
+</html>
