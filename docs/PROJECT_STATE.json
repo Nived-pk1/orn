@@ -159,8 +159,8 @@
     "protectedCheckedAt": "2026-11-08",
     "workerVersion": "21199061-2f5e-4a1d-a908-997e0c51ade6"
   },
-  "nextStep": "8.4d",
-  "nextStepTitle": "Step 8.4d implemented but NOT closed: map-room.spec.ts:52 box titles 9.86 px (needs 10) with the 188 px rail; awaiting a reviewer decision. Not deployed (deploys with 8.4f)",
+  "nextStep": "8.4e",
+  "nextStepTitle": "Step 8.4d closed 2026-11-09 (rail 168 px below 1440, 188 px from 1440); not deployed (deploys with 8.4f). Next: 8.4e",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

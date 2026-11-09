@@ -3,7 +3,7 @@
  * at 1280x800 with the rail shown (1220 px with it hidden) and at least 840 px tall at 1920x1000; the header is 44 px, the status bar at most
  * 24 px; the rail's Collapse button shrinks it to a 56 px icon rail and the choice is remembered after a reload (step 8.4d replaced the 8.4a
  * Hide and its ☰ menu); the Find box uses the UI font. Step 8.4d adds: the breadcrumb, Ctrl K and the search box, the skip link, the tab title.
- * NOTE (honest): this spec was written AFTER the source it tests (not seen red).
+ * NOTE (honest): the rail-width test was written red first; the rest was written AFTER the source, so each rule was broken once and seen red (step 8.4d close).
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';

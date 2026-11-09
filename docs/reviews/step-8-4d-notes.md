@@ -114,3 +114,6 @@ frame.spec.ts "map width with the rail" 1100 -> 1090 (a direct consequence of th
 - buttons-chips: filter buttons keep their shadow/border; the segmented control matches the reference; the reference row is a spec table, not a screen.
 - family-header: one summary line "12 reactions · makes 6 families · made from 5" matches; the header is still the old green block with outlined partner chips, not the reference panel (8.4e).
 - phone-top-bar: mark, page name, Studio chip, search icon; More is a bordered button (reference has the exam chip and no More). Phone notices row: height 40 px.
+
+## Resume 2026-11-09 (close)
+Rail: 168 px below 1440 px, 188 px from 1440 (tokens.css media rule). frame.spec rail test red (received 188 at 1280), then green; map-room.spec.ts:52 title 10.04 px. Frame mutation pass: 13 breaks, each red in frame.spec alone. Sizes Study 383,020 / Studio 386,902. Moved to 8.4f: see PROGRESS "8.4f inputs".
