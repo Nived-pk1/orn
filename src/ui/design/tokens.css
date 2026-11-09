@@ -188,7 +188,7 @@
   --top-bar-height: 44px;
   --tab-bar-height: 48px;
   --status-bar-height: 24px;
-  --rail-width: 188px;
+  --rail-width: 168px; /* 188 px from a 1440 px viewport (media rule below) */
   --rail-width-collapsed: 56px;
   --mode-rail-width: max-content;
   --toast-height: 44px;
@@ -209,5 +209,11 @@
     --d-slow: 0ms;
     --motion-fast: 0ms;
     --motion-slow: 0ms;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --rail-width: 188px;
   }
 }

@@ -1,4 +1,4 @@
-/* The mode rail (step 8.4d): groups of views with icons, Collapse at the foot. 188 px wide, 56 px collapsed (the shell sets the column). Tokens only. */
+/* The mode rail (step 8.4d): groups of views with icons, Collapse at the foot. 168 px wide (188 px from 1440 px), 56 px collapsed (the shell sets the column). Tokens only. */
 /* The rail: groups of views with icons, Collapse at the foot. 188 px; 56 px collapsed. */
 .rail {
   grid-area: rail;

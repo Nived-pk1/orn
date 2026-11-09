@@ -30,16 +30,16 @@ test('1280x800: the map area, the rail and its Collapse button, the bars', async
   expect(status?.height ?? 999, 'status bar height').toBeLessThanOrEqual(24.5);
   const shown = await drawing(page).boundingBox();
   expect(shown?.height ?? 0, 'map height').toBeGreaterThanOrEqual(640);
-  // step 8.4d: the rail is 188 px (reference), so the map is 1280 - 188 = 1092 px wide at most; it was at least 1100 with the old 148 px rail
-  expect(shown?.width ?? 0, 'map width with the rail').toBeGreaterThanOrEqual(1090);
+  // step 8.4d: the rail is 168 px below a 1440 px viewport (188 px from 1440), so the map is 1280 - 168 = 1112 px wide
+  expect(shown?.width ?? 0, 'map width with the rail').toBeGreaterThanOrEqual(1100);
   const rail = page.getByRole('navigation', { name: 'Modes' });
   const railBox = await rail.boundingBox();
   for (const row of await rail.getByRole('button').all()) {
     const box = await row.boundingBox();
     if (box !== null && (await row.textContent()) !== 'Collapse') expect(box.height, 'a rail row').toBeLessThanOrEqual(33);
   }
-  expect(railBox?.width ?? 999, 'the rail is 188 px wide').toBeLessThanOrEqual(190);
-  expect(railBox?.width ?? 0).toBeGreaterThanOrEqual(186);
+  expect(railBox?.width ?? 999, 'the rail is 168 px wide below 1440 px').toBeLessThanOrEqual(170);
+  expect(railBox?.width ?? 0).toBeGreaterThanOrEqual(166);
   await rail.getByRole('button', { name: 'Collapse' }).click();
   await expect(rail.getByRole('button', { name: 'Expand' })).toBeVisible();
   const narrow = await rail.boundingBox();
@@ -54,6 +54,16 @@ test('1280x800: the map area, the rail and its Collapse button, the bars', async
   await expect(rail.getByRole('button', { name: 'Expand' })).toBeVisible({ timeout: 60_000 }); // remembered
   await rail.getByRole('button', { name: 'Expand' }).click();
   await expect(rail.getByRole('button', { name: 'Collapse' })).toBeVisible();
+});
+
+test('the rail is 168 px wide at 1280 and 188 px at 1440', async ({ page }) => {
+  test.setTimeout(300_000);
+  await openApp(page);
+  for (const [width, expected] of [[1280, 168], [1439, 168], [1440, 188]] as const) {
+    await page.setViewportSize({ width, height: 800 });
+    const box = await page.getByRole('navigation', { name: 'Modes' }).boundingBox();
+    expect(Math.round(box?.width ?? 0), `rail width at ${width}`).toBe(expected);
+  }
 });
 
 test('1920x1000: the map area is at least 840 px tall; the Find box uses the UI font', async ({ page }) => {
