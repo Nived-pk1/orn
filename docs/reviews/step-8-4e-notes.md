@@ -118,3 +118,91 @@ nothing hidden/moving that a test waits on.
 See the last line of this file.
 
 Last line: Session 2 stopped after the canvas split + Part 0 items 1,3,5(width),7,8. check green (766 files, 8449 tests, 11m52s). NEXT: session 2 continues with Part A (A4 red test first), pane inventory is session 3.
+
+## Session 3 (2026-11-10): Part A (phone half) first, because Part A was NOT done in session 2
+Session 2 stopped after the split and Part 0; Part A (A1..A6), the A4 red test and the pane inventory were still open. C4 and the
+phone parts of B need A3's free-area rule, so this session did the PHONE half of Part A first. Speed check: 238 ms (start), 243, 231,
+etc. (before each Playwright run, all about 230-245 ms).
+
+### Done
+- A3 plumbing: `Insets` (render/viewport/contracts.ts); `fitBox` / `fitScene` / `fitRect` take insets (left/right too); controller
+  `setInsets`; ViewportScene prop `fitInsets` (a change re-fits only while the view is still the automatic one: sticky Fit).
+  Defaults unchanged when no insets are given (desktop passes none yet, FIT_TOP_PADDING stays for it and for focus-fit.ts).
+- `free-areas.tsx` (lazy) measures `[data-map-control]` rectangles; `free-areas-rule.ts` (pure) turns them into insets.
+- Phone: the bar floats on the canvas (`data-phone-map-bar`, `data-map-control="bar"`), the lineRow is GONE (it was the blank band), the
+  hint is a pill at the foot (`.hintPill`, keeps its place when empty), the round-button stack moved to the top-right
+  (`data-map-control="stack"`). Map area on the Pixel 7 now starts at y=86 and is 653 px high (was y=199, 540 px).
+- A6: `.drawing svg:focus` draws the token ring inside the map, no UA outline.
+- Specs: tests/e2e/map-free-areas.spec.ts (A4, A3, A6, Pixel 7). Red line: written first but only RUN after the source (slip);
+  closed by breaking the insets pass-through and the focus rule: 3 failed (A4 151.88 < 156, A3 overlap, A6 UA outline), then restored, 3 pass.
+  Unit tests fit-insets.test.ts: seen red (3 of 4 failed) before the source. free-areas-rule.test.ts: written with the rule (slip, disclosed).
+- phone.spec layout guard failed once on `select[Chapter] 18 x 44` (the floating bar gave the select no width): fixed in CSS, no spec change.
+
+### Findings
+- PRE-EXISTING at HEAD 572fb25 (proved in a clean worktree): map-fit.spec 1280 x 800 "inspector open: the whole map stays fitted"
+  fails (one family not wholly on screen). Not caused by this step. REVIEW REQUIRED.
+- A3 conflict (CLAUDE.md §10): on a phone the map is wider than the screen (it pans), so the right-hand stack at Fit can reach into a
+  box that runs past the edge (Alkynes, Ethers on the Pixel 7). No inset can avoid that without leaving the stack's column empty.
+  Implemented: bars and the pill meet no box; the stack meets no TEXT of a box (title, formula, count). Proposed amendment: A3 holds for
+  the stack as "no box text under it". C4 (height-fit zoom) will change which boxes spill.
+
+## (superseded by 'Session 3 later' below)
+- Part A desktop: A1 floating bars (toolbar row, MapCorner, key strip, zoom stack), A5 look of boxes/arrows/canvas, A2 pieces left:
+  Full map button (Part D), hint pill must also hide while a sheet is open, toast must not cover a stack button, desktop focus ring check.
+- Part B (pane header/sticky, review mark, list rows, motion), Part C (C1..C4). The pane inventory (Part 0 item 5) is still open.
+- Sizes and the full list of specs for Part G: see the running list below.
+
+## Running spec list (Chromium) for Part G
+map-free-areas, phone, phone-sheet, map-fit (1280x800 fails at HEAD too), canvas-touch, touch-walk, map-chains.
+
+
+## Session 3 later (2026-11-10): Part A desktop finished (session 2's leftover); STOPPED here by the user
+The user said: finish session 2 (Part A) and stop; do NOT start session 3 (Parts B, C). Nothing of Part B or C was built.
+
+### Done after the phone half
+- A1 desktop: the toolbar row is GONE. `map-toolbar.tsx` is now ONE transparent layer (role=toolbar "Canvas tools", `map-float.module.css`) over
+  the drawing with four floating things, all `data-map-control`: top-left bar (chapter select, Find a family ICON that opens its box in the bar,
+  From A to B, More, Studio `extra`), top-right Selected bar (Selected: X, Open family / Open reactions, Zoom to selection, Clear) or, with nothing
+  selected, the hint as plain words, bottom-right zoom stack (Zoom in, Zoom out, separator, Fit), bottom-left key strip (arrow key + Key button).
+  The Key popover opens upward. `map-corner.tsx`, `key-placement.ts` (+ test) deleted (no longer used). `MapHint`/`ArrowKey` restyled.
+  NOT in the bar yet: Full map button (Part D, session 4).
+- A3 desktop: `free-areas.tsx` (lazy) + `free-areas-rule.ts`. With the size of what Fit shows, each corner control reserves the edge that
+  costs the fit least (a width-limited map gives the zoom stack the bottom). Zoom to selection uses the same insets (focus-fit.ts, zoom-selection-run).
+  FIT_TOP_PADDING / FIT_BOTTOM_PADDING stay as defaults for callers that pass no insets (nothing else needed removing).
+- The desktop toast no longer raises the bottom controls (a moving control also moved the free area: titles fell under 10 px).
+- A5 (CSS only, scene-svg.module.css): dot grid, faded 0.42, 180 ms fades, soft shadow on hovered box and selection ring. NOT done: the 1 px
+  hover lift (box and text are two layers), arrow caps/notched head and count-chip shapes were NOT re-checked against the reference.
+- A2 leftover: hint pill also hidden while the A-to-B sheet is open.
+- Size: Study 383,144 (limit 383,270), Studio 386,987 (limit 387,150); baseline 383,020 / 386,902.
+
+### Specs written / changed
+New: tests/e2e/map-free-areas.spec.ts (phone A3/A4/A6; desktop A1, A3 at 1280x800, 1366x768, 1920x1000, demo title px >= 10 at 1280x800,
+1389x868, 1920x1000). Desktop specs were seen RED before the source (5 failed). Unit: fit-insets.test.ts (red first), free-areas-rule.test.ts
+(first cases written with the rule; the content-aware cases red first), map-toolbar.test.tsx rewritten, scene-svg-motion.test.ts (red first).
+Changed for the new LOOK (old look tested): map-toolbar.test.tsx (row order -> floating groups); navigator-interaction.test.tsx (Open family
+has no disabled state with nothing selected; reasonOf helper removed); toolbar-rule.ts constant 1040 -> 620 (only `chain` still moves);
+map-room.spec (toolbar row -> floating bar, column top); frame.spec and map-chains.spec (click the Find icon first; the box closes after a
+choice); map-shift.spec (the label's position is read from the floating layer); navigator.spec (no Open family button until selected);
+scene-svg-motion.test (0.35 -> 0.42). Real defects fixed on the way: phone chapter select squeezed to 18 px, then to 66 px (label hidden in the
+phone bar); Key button failed axe target-size under the open canvas menu (the layer is `inert` while the menu is open).
+Rule breaks (disclosed): phone specs were first RUN after the source (closed by break-and-restore: 3 red); free-areas-rule first cases.
+
+### Failures that are PRE-EXISTING at HEAD 572fb25 (proved in a clean worktree, not caused by this step; REVIEW REQUIRED)
+- map-fit.spec 1280x800 "inspector open: the whole map stays fitted" (one family not wholly on screen).
+- map-marks.spec "a two-way pair is two lines..." (getByRole button 'Family 13 to Family 08, 1 reaction' never found; 60 s timeout).
+- navigator.spec "the overview does not expand: no Expand or Collapse" (the 8.4d rail has a 'Collapse' button).
+
+### A3 conflict (CLAUDE.md section 10)
+On a phone the map is wider than the screen, so the top-right stack can reach into a box that runs past the edge. Implemented: bars and the pill meet
+no box; the stack meets no box TEXT. Proposed amendment: A3 for the phone stack = "no box text under it". C4 will change which boxes spill.
+
+## WHERE TO RESUME (tomorrow)
+1. Read this file. HEAD = the commit after 572fb25 named at the end of this file.
+2. Session 2 is DONE except these small Part A leftovers: look-check A5 (arrow caps/notched head, chip shapes) against the reference; hover lift.
+3. Then session 3 as in the resume prompt: Part B (pane header sticky, review mark right, list rows, motion; pane inventory item 5 first), Part C (C1..C4;
+   C4 uses `fitInsets`/`insets` already built: on the phone Fit should become height-fit between FIT_FLOOR and 13 px titles).
+4. The 3 pre-existing failures above need a decision from the reviewer (fix in 8.4f or here).
+5. Final Chromium spec list NOT run for this commit after the last edits (user stopped early): run map-free-areas, phone, phone-sheet, map-fit,
+   map-chains, map-room, map-selection, map-shift, navigator, keyboard-walk, frame, canvas-touch, touch-walk, study-edition, axe-screens.
+   Last full run of the first 13 desktop specs: 10 failed -> 3 left (the pre-existing ones) after the updates above.
+- Radius: the reference says 10 px for floating bars; no 10 px token exists, so bars use --radius-8 (REVIEW REQUIRED: add a token or accept 8).

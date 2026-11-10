@@ -1,0 +1,47 @@
+/* The phone map's floating controls (steps 8.2a, 8.4e): the bar, the hint pill and the canvas focus ring. */
+.phoneBar {
+  position: absolute;
+  z-index: 2;
+  top: var(--space-8);
+  left: var(--space-8);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: calc(100% - 72px); /* the stack on the right keeps its column */
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-8);
+  box-shadow: var(--shadow-2);
+}
+
+.phoneBarFinding {
+  right: var(--space-8);
+  max-width: none;
+}
+
+/* the hint as a quiet pill at the foot of the map (step 8.4e, A2): transparent when it has nothing to say, so it never hides anything */
+.hintPill {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: var(--space-8);
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  max-width: calc(100% - 32px);
+  min-height: 32px;
+  margin: 0;
+  padding: var(--space-4) var(--space-12);
+  color: var(--color-ink-2);
+  font-size: var(--text-12);
+  text-align: center;
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+}
+
+.hintPill:not([data-shown]) {
+  visibility: hidden;
+}

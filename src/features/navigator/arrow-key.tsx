@@ -4,14 +4,13 @@
  */
 import type { LegendKey } from './legend';
 import { ChipSample, LineSample } from './navigator-legend';
-import styles from './map-room.module.css';
-import { type KeyCorner } from './key-placement';
+import styles from './map-float.module.css';
 
-export function ArrowKey(props: { readonly keys: LegendKey; readonly corner: KeyCorner }) {
+export function ArrowKey(props: { readonly keys: LegendKey }) {
   const { keys } = props;
   if (!keys.lines && !keys.chip && !keys.pair) return null;
   return (
-    <ul className={`${styles.corner} ${styles.cornerKey}`} data-corner={props.corner} aria-label="What the arrows mean" data-arrow-key="">
+    <ul className={styles.arrowKey} aria-label="What the arrows mean" data-arrow-key="">
       {!keys.lines ? null : (
         <>
           <li data-key="makes">

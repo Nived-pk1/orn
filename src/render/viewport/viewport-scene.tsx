@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { LodLevel, Scene } from '@/render/scene';
 import { SceneSvg } from '@/render/svg';
 import type { DepictionSource, LayerName, MapMarks, SceneHit, SceneSvgProps } from '@/render/svg';
-import { VIEWPORT_SETTLE_MS, type Rect, type Viewport } from './contracts';
+import { VIEWPORT_SETTLE_MS, type Insets, type Rect, type Viewport } from './contracts';
 import { createViewportController } from './controller';
 import type { ViewportController } from './controller';
 import { createDepictionQueue } from './depiction-queue';
@@ -61,6 +61,8 @@ export interface ViewportSceneProps {
   readonly fitBox?: Rect;
   /** Changes when the drawing is a different one to look at (another chapter, Unclassified shown): the view is fitted again. Absent: never. */
   readonly fitKey?: string;
+  /** Step 8.4e (A3): the free areas the floating controls leave, measured. A change fits again while the view is still the automatic one. */
+  readonly fitInsets?: Insets;
 }
 
 /** What the layers get: the same statuses, but `request` does nothing (the queue decides what is asked for). */
@@ -87,6 +89,9 @@ export function ViewportScene(props: ViewportSceneProps) {
   const fitBoxRef = useRef(props.fitBox);
   fitBoxRef.current = props.fitBox;
   const refit = useRef<(() => void) | undefined>(undefined);
+  const refitIfAuto = useRef<(() => void) | undefined>(undefined);
+  const insetsRef = useRef(props.fitInsets);
+  insetsRef.current = props.fitInsets;
   const keyRef = useRef(props.fitKey);
   const { pointerTimers, onSvg, minScale, onZoomSettled } = props;
 
@@ -132,7 +137,15 @@ export function ViewportScene(props: ViewportSceneProps) {
       if (autoViews.length > MAX_AUTO_VIEWS) autoViews.shift();
     };
     controller.setFitBox(fitBoxRef.current);
+    controller.setInsets(insetsRef.current);
+    refitIfAuto.current = () => {
+      controller.setInsets(insetsRef.current);
+      if (autoView === undefined || !sameView(controller.current(), autoView)) return;
+      controller.fit();
+      markAutomatic();
+    };
     refit.current = () => {
+      controller.setInsets(insetsRef.current);
       controller.setFitBox(fitBoxRef.current);
       controller.fit();
       markAutomatic();
@@ -201,6 +214,7 @@ export function ViewportScene(props: ViewportSceneProps) {
       settle();
       onController?.(null);
       refit.current = undefined;
+      refitIfAuto.current = undefined;
       observer?.disconnect();
       window.cancelAnimationFrame(measureFrame);
       bound.binding?.destroy();
@@ -216,6 +230,8 @@ export function ViewportScene(props: ViewportSceneProps) {
   }, [scene]);
 
   const { fitKey } = props;
+  const insetKey = props.fitInsets === undefined ? '' : `${props.fitInsets.top}|${props.fitInsets.right}|${props.fitInsets.bottom}|${props.fitInsets.left}`;
+  useEffect(() => refitIfAuto.current?.(), [insetKey]);
   useEffect(() => {
     if (keyRef.current === fitKey) return;
     keyRef.current = fitKey;

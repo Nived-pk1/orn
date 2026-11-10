@@ -25,7 +25,7 @@ export function PhoneMapControls(props: {
   const [legend, setLegend] = useState(false);
   return (
     <>
-      <div className={styles.floating} {...(props.barShown === true ? { 'data-bar': 'shown' } : {})}>
+      <div className={styles.floating} data-map-control="stack" {...(props.barShown === true ? { 'data-bar': 'shown' } : {})}>
         {props.extra}
         <button type="button" className={styles.round} aria-label="Fit" onClick={() => props.controller?.fit()} aria-disabled={props.controller === null ? true : undefined}>
           <Icon name="scan" size={20} />

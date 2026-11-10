@@ -17,6 +17,7 @@ async function boxes(page: Page): Promise<Record<string, string>> {
     };
     const main = document.querySelector('[class*="_main_"]');
     const corner = document.querySelector('[data-map-corner]');
+    const layer = document.querySelector('[data-map-toolbar]'); // step 8.4e: the label sits in the floating layer, which is what is absolute
     return Object.fromEntries([
       of('header', document.querySelector('header')),
       of('notices band', document.querySelector('section[aria-label="Notices"]')),
@@ -24,7 +25,7 @@ async function boxes(page: Page): Promise<Record<string, string>> {
       of('main column', main),
       of('map toolbar', document.querySelector('[data-map-toolbar]')),
       of('selected label', corner),
-      ['selected label position', corner === null ? 'absent' : getComputedStyle(corner).position],
+      ['selected label position', corner === null || layer === null ? 'absent' : getComputedStyle(layer).position],
       of('map area', document.querySelector('svg[role="group"]')),
     ]);
   });

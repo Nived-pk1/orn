@@ -1,0 +1,162 @@
+/*
+ * The map's floating controls on a wide screen (step 8.4e, A1; design reference section 8). One transparent layer over the drawing lets the pointer
+ * through; the bars, the zoom stack and the key strip are the only things in it that take it. Every bar uses the reference ".float" look: a raised
+ * surface, a line, radius 10 and shadow-2, all from tokens (light and dark both exist).
+ */
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.top {
+  position: absolute;
+  top: var(--space-8);
+  left: var(--space-8);
+  right: var(--space-8);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between; /* both fit: the bar left, Selected right; they do not: Selected drops to a second row, left-aligned */
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.bar,
+.selectedBar,
+.zoom,
+.keyStrip {
+  pointer-events: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-8);
+  box-shadow: var(--shadow-2);
+}
+
+.bar,
+.selectedBar,
+.keyStrip {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+}
+
+.bar button,
+.selectedBar button,
+.keyStrip button {
+  min-height: 32px;
+}
+
+.bar > *,
+.selectedBar > * {
+  flex: 0 0 auto;
+}
+
+.barButton {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+}
+
+.chapterBox {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 260px;
+}
+
+/* The chapter select never grows into Find: its label and select shrink and cut the text. */
+.chapterBox label {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chapterBox select {
+  min-width: 0;
+  max-width: 180px;
+  text-overflow: ellipsis;
+}
+
+.selectedBar {
+  min-height: 32px;
+  max-width: 100%;
+  color: var(--color-ink);
+  font-size: var(--text-12);
+}
+
+/* With nothing selected the hint is plain words, not a bar: the pointer goes through it */
+.hint {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  max-width: min(60%, 32rem);
+  padding: 0 var(--space-8);
+  color: var(--color-ink-2);
+  font-size: var(--text-12);
+  pointer-events: none;
+}
+
+.barIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 0 var(--space-4);
+  font: inherit;
+  color: var(--color-ink);
+  background: transparent;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-8);
+  cursor: pointer;
+}
+
+.zoom {
+  position: absolute;
+  right: var(--space-8);
+  bottom: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.zoomButton {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+}
+
+.separator {
+  width: 20px;
+  height: 1px;
+  background: var(--color-rule);
+}
+
+.keyStrip {
+  position: absolute;
+  left: var(--space-8);
+  bottom: var(--space-8);
+  max-width: calc(100% - 80px); /* the zoom stack keeps its column */
+}
+
+.arrowKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-16);
+  margin: 0;
+  padding: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-12);
+  list-style: none;
+}
+
+.arrowKey li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* The desktop toast is one row centred at the foot of the column; the key strip and the zoom stack sit at the sides, so they never move for it (a moving control would also move the free area Fit keeps). */

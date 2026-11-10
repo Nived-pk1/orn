@@ -14,7 +14,20 @@ describe('the fade of a map box', () => {
 
   it('the faded opacity itself is set outside any motion query (it applies at once)', () => {
     // step 8.4b: a faded box is opaque (a paper underlay) with muted ink, never an element opacity, so a line behind it is hidden
-    expect(css).toMatch(/\n\.faded > rect:not\(\.fadeUnder\) \{\s*fill-opacity: 0\.35;/);
+    expect(css).toMatch(/\n\.faded > rect:not\(\.fadeUnder\) \{\s*fill-opacity: 0\.42;/); // the reference rule: faded = 0.42 on an opaque card (step 8.4e, A5; it was 0.35)
     expect(css).not.toMatch(/\n\.faded \{\s*opacity/);
+  });
+});
+
+describe('the map look of the design reference (step 8.4e, A5)', () => {
+  it('a box fades over 180 ms', () => {
+    expect(css).toMatch(/\.mapNode \{\s*transition: [^;]*180ms/);
+  });
+  it('the canvas has the dot grid, from a token', () => {
+    expect(css).toMatch(/\.root \{[^}]*radial-gradient\(var\(--color-rule\)/);
+  });
+  it('a hovered map box and the selection ring carry a soft shadow', () => {
+    expect(css).toMatch(/\.mapNode:hover \{\s*filter: drop-shadow/);
+    expect(css).toMatch(/\.selected \{[^}]*filter: drop-shadow/);
   });
 });

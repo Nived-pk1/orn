@@ -5,7 +5,7 @@
  * with reduced motion). A command, never automatic: an automatic zoom on every click moved the map under the pointer and hid other families.
  */
 import { BOXES, type Scene } from '@/render/scene';
-import { fitBox, type ViewportController } from '@/render/viewport';
+import { fitBox, type Insets, type ViewportController } from '@/render/viewport';
 import { focusSetOf, zoomTargetRect } from './focus-fit';
 import { animateView } from './zoom-to';
 
@@ -25,12 +25,14 @@ export interface ZoomSelectionArgs {
   readonly selected: { readonly kind: 'node' | 'edge'; readonly id: string } | null;
   readonly chain: readonly { readonly from: string; readonly to: string }[] | undefined;
   readonly outlined: readonly string[];
+  /** The free areas the floating controls leave (step 8.4e, A3). */
+  readonly insets?: Insets | undefined;
 }
 
 const MIN_TITLE_PX = 12;
 
 export function runZoomToSelection(args: ZoomSelectionArgs): void {
-  const { controller, svg, drawn, selected, chain, outlined } = args;
+  const { controller, svg, drawn, selected, chain, outlined, insets } = args;
   const area = svg?.getBoundingClientRect();
   if (controller === null || area === undefined || drawn === null) return;
   const ids = selectionIds(drawn, selected, chain);
@@ -39,8 +41,8 @@ export function runZoomToSelection(args: ZoomSelectionArgs): void {
   const hub = drawn.nodes.find((node) => node.box === 'hub');
   const titleSize = hub === undefined ? 14 : BOXES.hub.label.size * (hub.scale ?? 1);
   const size = { width: area.width, height: area.height };
-  const rect = zoomTargetRect({ focus, size, titleSize, minTitlePx: MIN_TITLE_PX, selected: own });
+  const rect = zoomTargetRect({ focus, size, titleSize, minTitlePx: MIN_TITLE_PX, selected: own, insets });
   if (rect === undefined) return;
   const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  animateView(controller, fitBox(rect, size), { reduced, raf: (run) => window.requestAnimationFrame(run), now: () => performance.now() });
+  animateView(controller, fitBox(rect, size, insets), { reduced, raf: (run) => window.requestAnimationFrame(run), now: () => performance.now() });
 }

@@ -18,6 +18,14 @@ export interface Rect {
   readonly y1: number;
 }
 
+/** The free areas Fit leaves on each side, in screen px: measured from the floating controls (step 8.4e, A3). */
+export interface Insets {
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+}
+
 export const SCALE_MIN = 0.05;
 export const SCALE_MAX = 4;
 export const ZOOM_STEP = 1.25;

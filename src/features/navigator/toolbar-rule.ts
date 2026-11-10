@@ -4,8 +4,8 @@
  * own measured size, so the rule needs no window size.
  */
 
-/** The width at which every button fits one row: 3 icon buttons (36), chapter select (260), Find (200), 2 text buttons (120), Key, More (72), gaps, padding. */
-export const TOOLBAR_FULL_WIDTH = 1040;
+/** The map width at which the floating bar keeps From A to B: chapter select (260), Find (36), From A to B (110), More (72), gaps, padding (step 8.4e: the bar floats, so this is the map's width, and only `chain` is used). */
+export const TOOLBAR_FULL_WIDTH = 620;
 /** What the row gains when the button moves into More (its width and one gap). */
 export const TOOLBAR_MOVE_SAVES = { chain: 128, open: 128 } as const;
 

@@ -241,9 +241,8 @@ test.describe('selection and opening a family', () => {
 
   test('the toolbar opens the selected family, and says why when it cannot', async ({ page }) => {
     await openNavigator(page);
-    // Open family is a button of the one-row toolbar, or an item of More when the row is narrow (step 8.3b, A1): either way it says why
-    await expect(await toolbarAction(page, /^Open family/)).toHaveAttribute('aria-disabled', 'true');
-    await expect(page.getByText('select a family first')).toHaveCount(1);
+    // step 8.4e (A1): Open family lives in the Selected bar; with nothing selected the bar is the hint, so there is no button to disable
+    await expect(page.getByRole('button', { name: /^Open family/ })).toHaveCount(0);
     await hubGroup(page, 'cls_alkenes').click();
     const open = await toolbarAction(page, /^Open family/);
     await expect(open).not.toHaveAttribute('aria-disabled', 'true');

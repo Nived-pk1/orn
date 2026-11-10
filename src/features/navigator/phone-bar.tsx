@@ -6,7 +6,7 @@ import { lazy, Suspense, useState } from 'react';
 import { ChapterSelect, type ChapterOption } from './chapter-select';
 import type { NamedFamily } from './find-family-match';
 import controls from './map-controls.module.css';
-import styles from './navigator.module.css';
+import styles from './phone-map.module.css';
 
 const FindFamily = /* @__PURE__ */ lazy(() => import('./find-family').then((m) => ({ default: m.FindFamily })));
 
@@ -24,7 +24,7 @@ export function PhoneMapBar(props: PhoneMapBarProps) {
   const [finding, setFinding] = useState(false);
   if (finding) {
     return (
-      <div className={styles.phoneBar}>
+      <div className={`${styles.phoneBar} ${styles.phoneBarFinding}`} data-phone-map-bar="" data-map-control="bar">
         <Suspense fallback={<input className={controls.findBox} data-phone="" disabled aria-label="Loading" />}>
           <FindFamily
             families={props.families}
@@ -41,7 +41,7 @@ export function PhoneMapBar(props: PhoneMapBarProps) {
     );
   }
   return (
-    <div className={styles.phoneBar}>
+    <div className={styles.phoneBar} data-phone-map-bar="" data-map-control="bar">
       <ChapterSelect chapters={props.chapters} value={props.chapterId} onChange={props.onChapter} phone />
       <button type="button" className={controls.iconButton} data-icon-button="" aria-label="Find a family" onClick={() => setFinding(true)}>
         <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">

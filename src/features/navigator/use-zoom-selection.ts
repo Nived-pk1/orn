@@ -6,10 +6,10 @@ import { useCallback } from 'react';
 import type { ZoomSelectionArgs } from './zoom-selection-run';
 
 export function useZoomToSelection(args: ZoomSelectionArgs): { readonly zoom: () => void; readonly available: boolean } {
-  const { controller, svg, drawn, selected, chain, outlined } = args;
+  const { controller, svg, drawn, selected, chain, outlined, insets } = args;
   const available = drawn !== null && (chain !== undefined ? chain.length > 0 : selected !== null);
   const zoom = useCallback((): void => {
-    void import('./zoom-selection-run').then((run) => run.runZoomToSelection({ controller, svg, drawn, selected, chain, outlined }));
-  }, [controller, svg, drawn, selected, chain, outlined]);
+    void import('./zoom-selection-run').then((run) => run.runZoomToSelection({ controller, svg, drawn, selected, chain, outlined, insets }));
+  }, [controller, svg, drawn, selected, chain, outlined, insets]);
   return { zoom, available };
 }

@@ -6,7 +6,7 @@
 import type { Scene } from '@/render/scene';
 import type { Size, Viewport, ViewportStore } from './contracts';
 import { ZOOM_STEP } from './contracts';
-import type { Rect } from './contracts';
+import type { Insets, Rect } from './contracts';
 import { depictionCandidates, visibleIn } from './cull';
 import { buildGridIndex, nodeBoxes } from './grid-index';
 import type { GridIndex } from './grid-index';
@@ -37,6 +37,8 @@ export interface ViewportController {
   readonly fit: () => void;
   /** The world rectangle Fit fills the area with (the visible boxes; step 8.2b). Undefined: the whole drawing, as before. Takes effect at the next `fit`. */
   readonly setFitBox: (box: Rect | undefined) => void;
+  /** The free areas Fit leaves (measured from the floating controls; step 8.4e, A3). Undefined: the constant bands. Takes effect at the next `fit`. */
+  readonly setInsets: (insets: Insets | undefined) => void;
   /** Sets the viewport (a command, like zoom in): restoring a saved view, or keeping a toggled hub where it was. */
   readonly setViewport: (view: Viewport) => void;
   /** Centres and zooms on the nodes with these ids; false when none of them is in the scene (nothing moves). */
@@ -61,6 +63,7 @@ export function createViewportController(deps: ControllerDeps): ViewportControll
   let frames = 0;
   let lastWritten: Viewport | undefined;
   let fitArea: Rect | undefined;
+  let fitInsets: Insets | undefined;
 
   const frame = (): void => {
     queued = false;
@@ -105,9 +108,12 @@ export function createViewportController(deps: ControllerDeps): ViewportControll
     },
     zoomIn: () => command(zoomAbout(view, ZOOM_STEP, size.width / 2, size.height / 2)),
     zoomOut: () => command(zoomAbout(view, 1 / ZOOM_STEP, size.width / 2, size.height / 2)),
-    fit: () => command(fitArea === undefined ? fitScene(scene.bounds, size) : fitBox(fitArea, size)),
+    fit: () => command(fitArea === undefined ? fitScene(scene.bounds, size, fitInsets) : fitBox(fitArea, size, fitInsets)),
     setFitBox(box) {
       fitArea = box;
+    },
+    setInsets(insets) {
+      fitInsets = insets;
     },
     setViewport: (next) => command(next),
     focus(ids) {

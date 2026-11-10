@@ -1,132 +1,17 @@
-/* More room for the map (step 8.3b, ADR-044 addendum): one toolbar row, the Key popover, and the hint, the selection and the key INSIDE the map. */
-.row {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: var(--space-8);
-  padding: var(--space-4) var(--space-12);
-  border-bottom: 1px solid var(--color-rule);
-  background: var(--color-surface);
-}
-
-.row > * {
-  flex: 0 0 auto;
-}
-
-.row button {
-  min-height: 32px;
-}
-
-.row .chapterBox {
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 260px;
-}
-
-.row .findBox {
-  flex: 0 1 200px;
-  min-width: 0;
-  max-width: 200px;
-}
-
-.zoomButton {
-  width: 32px;
-  min-width: 32px;
-  padding: 0;
-}
-
-.keyWrap {
-  position: relative;
-}
-
+/* More room for the map (steps 8.3b, 8.4e): the Key popover over the key strip, and the selection as a live region for screen readers. The floating controls are map-float.module.css. */
 .popover {
   position: absolute;
   z-index: var(--z-menu);
-  top: calc(100% + var(--space-4));
-  right: 0;
+  bottom: calc(100% + var(--space-4));
+  left: 0;
   width: min(560px, 90vw);
-  max-height: 70vh;
+  max-height: 60vh;
   overflow: auto;
   color: var(--color-ink);
   background: var(--color-paper);
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-8);
-}
-
-.spacer {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-/* Inside the map: a soft background so the boxes under it stay readable; the pointer goes through everything but the buttons. */
-.corner {
-  position: absolute;
-  z-index: 2;
-  display: flex;
-  max-width: min(60%, 28rem);
-  padding: var(--space-4) var(--space-8);
-  color: var(--color-ink-2);
-  font-size: var(--text-12);
-  background: color-mix(in srgb, var(--color-paper) 85%, transparent);
-  border-radius: var(--radius-8);
-  pointer-events: none;
-}
-
-.cornerTop {
-  top: var(--space-8);
-  left: var(--space-8);
-  align-items: center;
-  gap: var(--space-8);
-  min-height: 1.75rem; /* a fixed size: the label appearing on a click moves nothing */
-}
-
-.cornerSelected {
-  color: var(--color-ink);
-}
-
-.cornerClear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  min-height: 24px;
-  min-width: 24px;
-  padding: 0 var(--space-4);
-  font: inherit;
-  color: var(--color-ink);
-  background: transparent;
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-8);
-  cursor: pointer;
-}
-
-.cornerKey {
-  bottom: var(--space-8);
-  margin: 0;
-  list-style: none;
-  flex-wrap: wrap;
-  gap: 0 var(--space-16);
-  width: max-content;
-  max-width: min(60%, 24rem);
-}
-
-/* While a toast shows on a desktop screen the key sits above it (step 8.4b, reviewer 2a): the toast is one row of at most --toast-height at the foot of the column, so the key never goes under it */
-[data-layout='desktop'][data-toast] .cornerKey {
-  bottom: calc(var(--toast-height) + var(--space-16));
-}
-
-.cornerKey[data-corner='bottom-left'] {
-  left: var(--space-8);
-}
-
-.cornerKey[data-corner='bottom-right'] {
-  right: var(--space-8);
-}
-
-.cornerKey li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-4);
+  box-shadow: var(--shadow-2);
 }
 
 /* the live region of the selection stays for screen readers only */
@@ -140,17 +25,4 @@
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
-}
-
-/* The chapter select never grows into Find (seen in the 8.3b screenshots): its label and select shrink and cut the text. */
-.chapterBox label {
-  display: flex;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.chapterBox select {
-  min-width: 0;
-  max-width: 180px;
-  text-overflow: ellipsis;
 }

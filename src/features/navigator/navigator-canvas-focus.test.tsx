@@ -17,7 +17,7 @@ import { NavigatorProvider } from './navigator-context';
 
 beforeAll(async () => {
   // the toolbar and the overlays inside the map are lazy chunks (step 8.3b): warmed once, so no test needs a longer limit
-  await Promise.all([import('./map-toolbar'), import('./map-corner'), import('./key-popover'), import('./find-family'), import('./chain-panel')]);
+  await Promise.all([import('./map-toolbar'), import('./key-popover'), import('./find-family'), import('./chain-panel')]);
   (globalThis as { ResizeObserver?: unknown }).ResizeObserver ??= class {
     observe(): void {}
     unobserve(): void {}

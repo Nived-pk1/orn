@@ -205,6 +205,7 @@ test.describe('the map on a desktop (part 2)', () => {
     test.setTimeout(400_000);
     const seen = await watch(page);
     await openMapDesktop(page);
+    await page.getByRole('button', { name: 'Find a family' }).click(); // step 8.4e: Find is an icon that opens its box
     const box = page.getByRole('combobox', { name: 'Find a family' });
     const name = ((await page.locator(`svg [data-label-of="${FAMILY_ONE}"] text`).first().textContent()) ?? '').trim();
     await box.fill(name);
@@ -215,8 +216,11 @@ test.describe('the map on a desktop (part 2)', () => {
     expect(at.x).toBeGreaterThanOrEqual(drawing.x - 1);
     expect(at.x + at.width).toBeLessThanOrEqual(drawing.x + drawing.width + 1);
     await page.screenshot({ path: `${shotsDir()}/map-find-family-1280x800.png` });
+    // step 8.4e: choosing closes the box and the icon comes back; Esc closes it too
+    await expect(box).toHaveCount(0);
+    await page.getByRole('button', { name: 'Find a family' }).click();
     await box.press('Escape');
-    await expect(box).toHaveValue('');
+    await expect(box).toHaveCount(0);
     await expectClean(seen);
   });
 });

@@ -23,11 +23,6 @@ const symbols = (): number => screen.getAllByRole('graphics-symbol').length;
 const hasLine = (pattern: RegExp | string): boolean => (typeof pattern === 'string' ? selectionLine() === pattern : pattern.test(selectionLine()));
 // the toolbar's actions: a button in the row, or an item of More when the row is narrow (step 8.3b, A1)
 const button = (name: string): Promise<HTMLElement> => toolbarAction(name === 'Open' ? /^Open reactions$/ : new RegExp('^' + name));
-const reasonOf = async (name: string): Promise<string | null> => {
-  const el = await button(name);
-  const id = el.getAttribute('aria-describedby');
-  return id === null ? (el.querySelector('span:nth-child(2)')?.textContent ?? null) : (document.getElementById(id)?.textContent ?? null);
-};
 const saved = (app: FakeApp): Record<string, unknown> | undefined => app.navigator.uiSaves[app.navigator.uiSaves.length - 1];
 
 async function opened(app: FakeApp = fakeApp({ state: demoState() })): Promise<FakeApp> {
@@ -84,10 +79,9 @@ describe('the overview does not expand; a family opens as a page', () => {
     expect(page.queryByRole('button', { name: 'Collapse' })).toBeNull();
   });
 
-  it('Open family says why it cannot act, and acts on a selected family', async () => {
+  it('Open family is in the Selected bar: nothing selected shows the hint instead; a selected family enables it', async () => {
     const app = await opened();
-    expect((await button('Open family')).getAttribute('aria-disabled')).toBe('true');
-    expect(await reasonOf('Open family')).toBe('select a family first');
+    await expect(toolbarAction(/^Open family/)).rejects.toThrow(); // step 8.4e: no Open button until something is selected
     tap(hub('Aldehydes'));
     expect((await button('Open family')).getAttribute('aria-disabled')).toBeNull();
     fireEvent.click(await button('Open family'));

@@ -116,6 +116,7 @@ test("1920x1000: the map area is at least 840 px tall; the Find box uses the UI 
   );
   const status = await page.locator("footer").boundingBox();
   expect(status?.height ?? 999).toBeLessThanOrEqual(24.5);
+  await page.getByRole("button", { name: "Find a family" }).click(); // step 8.4e: Find is an icon that opens its box
   const family = await page
     .getByRole("combobox", { name: "Find a family" })
     .evaluate((el) => getComputedStyle(el).fontFamily);

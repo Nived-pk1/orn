@@ -2,7 +2,7 @@
  * What "Zoom to selection" fills the map with (step 8.4b, E2b): the FOCUS SET (what is selected plus the far ends of its drawn arrows, the families of a
  * chain, the outlined families of a busy selection). Pure: sizes and rectangles in, a rectangle out.
  */
-import { FIT_BOTTOM_PADDING, FIT_PADDING, FIT_TOP_PADDING, fitBox, type Rect, type Size } from '@/render/viewport';
+import { FIT_BOTTOM_PADDING, FIT_PADDING, FIT_TOP_PADDING, fitBox, type Insets, type Rect, type Size } from '@/render/viewport';
 
 export interface ZoomChoice {
   readonly focus: Rect | undefined;
@@ -12,16 +12,19 @@ export interface ZoomChoice {
   readonly minTitlePx: number;
   /** The selected box: when even the focus set cannot keep titles at `minTitlePx`, the view uses that size, centres on the focus set and moves just enough to show this box fully (far ends may lie off the edge). */
   readonly selected?: Rect | undefined;
+  /** The free areas the floating controls leave (measured; step 8.4e, A3). Absent: the constant bands. */
+  readonly insets?: Insets | undefined;
 }
 
 /** The rectangle "Zoom to selection" fills the map with: the focus set, or (when its titles would be under the minimum) the minimum-title-size window, centred on the focus set and moved to show the selected box. */
 export function zoomTargetRect(choice: ZoomChoice): Rect | undefined {
   const { focus } = choice;
   if (focus === undefined) return undefined;
-  if (choice.titleSize * fitBox(focus, choice.size).scale >= choice.minTitlePx || choice.selected === undefined) return focus;
+  if (choice.titleSize * fitBox(focus, choice.size, choice.insets).scale >= choice.minTitlePx || choice.selected === undefined) return focus;
   const s = choice.minTitlePx / choice.titleSize;
-  const halfW = (choice.size.width - 2 * FIT_PADDING) / (2 * s);
-  const halfH = (choice.size.height - FIT_TOP_PADDING - FIT_BOTTOM_PADDING) / (2 * s);
+  const { insets } = choice;
+  const halfW = (choice.size.width - (insets === undefined ? 2 * FIT_PADDING : insets.left + insets.right)) / (2 * s);
+  const halfH = (choice.size.height - (insets === undefined ? FIT_TOP_PADDING + FIT_BOTTOM_PADDING : insets.top + insets.bottom)) / (2 * s);
   // the window (it already keeps the fit padding, so the selected box inside it has its 24 px margin) is centred on the focus set, then moved just
   // enough that the SELECTED box is fully inside; a box larger than the window is centred instead
   const place = (lo: number, hi: number, half: number, from: number, to: number): [number, number] => {

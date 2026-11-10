@@ -11,7 +11,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
-import { ViewportScene, type ViewportController, type Viewport } from '@/render/viewport';
+import { ViewportScene, type Insets, type ViewportController, type Viewport } from '@/render/viewport';
 import type { Scene } from '@/render/scene';
 import { useLayoutMode } from '@/ui/hooks';
 import { useStudyChrome } from '@/ui/study-chrome';
@@ -24,7 +24,7 @@ import { useChainReveal } from './use-chain-reveal';
 import { useMapCompounds } from './compounds-context';
 import { depictionBindingOf } from './depictions';
 import { ListView } from './list-view';
-import { keyOf, legendOf } from './legend';
+import { keyOf, legendOf, type LegendKey } from './legend';
 import { useMapBulk, useNoMulti } from './bulk-context';
 import { useCanvasInput } from './use-canvas-input';
 import { outsideNoteOf } from './scope-lens';
@@ -40,21 +40,21 @@ import { useZoomToSelection } from './use-zoom-selection';
 import { initialViewOf } from './initial-view';
 import { useMapView } from './use-map-view';
 import styles from './navigator.module.css';
-import controls from './map-controls.module.css';
-import room from './map-room.module.css';
+import phoneMap from './phone-map.module.css';
 
 // Studio only (the legend's link): a lazy chunk, never loaded in Study (nothing there mounts it)
 // "From A to B" (step 8.2b): a lazy chunk, loaded when the panel is first opened
 // the phone's controls row is its own chunk (the desktop never needs it); its placeholder is as high as the row
 const PhoneMapBar = /* @__PURE__ */ lazy(() => import('./phone-bar').then((m) => ({ default: m.PhoneMapBar })));
+const FreeAreas = /* @__PURE__ */ lazy(() => import('./free-areas').then((m) => ({ default: m.FreeAreas })));
 const PhoneMapControls = /* @__PURE__ */ lazy(() => import('./phone-map-controls').then((m) => ({ default: m.PhoneMapControls })));
 // step 8.3b (Part 0.1): the desktop toolbar and the overlays inside the map are lazy chunks, loaded right after the first paint
 const MapToolbar = /* @__PURE__ */ lazy(() => import('./map-toolbar').then((m) => ({ default: m.MapToolbar })));
-const MapCorner = /* @__PURE__ */ lazy(() => import('./map-corner').then((m) => ({ default: m.MapCorner })));
 const noFacts = (): undefined => undefined;
 const KeyPopover = /* @__PURE__ */ lazy(() => import('./key-popover').then((m) => ({ default: m.KeyPopover })));
 const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanelInScope })));
 const NO_IDS: ReadonlySet<string> = new Set();
+const NO_KEYS: LegendKey = { lines: false, chip: false, pair: false, within: false, unclassified: undefined };
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
 
@@ -70,8 +70,10 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
   const [unanchoredOpen, setUnanchoredOpen] = useState(false);
   const [keyOpen, setKeyOpen] = useState(false);
-  const [settled, setSettled] = useState<Viewport | undefined>(undefined);
   const [zoom, setZoom] = useState<number | undefined>(undefined);
+  // step 8.4e (A3): the room the floating controls leave, measured; Fit keeps the boxes out of it (phone first; the desktop bars follow)
+  const [area, setArea] = useState<HTMLDivElement | null>(null);
+  const [insets, setInsets] = useState<Insets | undefined>(undefined);
   const chrome = useStudyChrome();
   // Studio's "See those compounds" selects the bucket: the inspector lists them (one view, step 8.2b-fix, S3)
   const seeCompounds = (): void => {
@@ -152,7 +154,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   // step 8.2b (B1): on a wide screen Fit and the first view fill the area with the visible boxes; the phone keeps its zoom
   const fitBox = useMemo(() => (phone || drawn === null ? undefined : boxesRect(drawn.nodes)), [phone, drawn]);
   const outlinedIds = useMemo(() => (view?.marks.outlined === undefined ? [] : [...view.marks.outlined.keys()]), [view]);
-  const zoomSelection = useZoomToSelection({ controller, svg, drawn, selected, chain: map.chainOpen ? chain : undefined, outlined: outlinedIds });
+  const zoomSelection = useZoomToSelection({ controller, svg, drawn, selected, chain: map.chainOpen ? chain : undefined, outlined: outlinedIds, insets });
   const fitKey = phone ? undefined : `${state.chapterId ?? ''}|${map.showUnclassified}`;
   const hubs = drawn === null ? 0 : drawn.nodes.filter((node) => node.box === 'hub' || node.box === 'unclassified').length;
   const setChapter = useCallback((id: string | null): void => ports.ui.map.getState().setChapter(id), [ports]);
@@ -197,7 +199,6 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
     (view: Viewport, automatic: boolean): void => {
       ports.ui.viewports.getState().setViewport(VIEW, view);
       ports.ui.map.getState().setFitted(automatic);
-      setSettled(view);
       const percent = Math.round(view.scale * 100);
       // an automatic fit (the first one, or the re-fit when the drawing's size settles) is not something the person did
       if (!automatic && said.current !== undefined && said.current !== percent) announce(`Zoom ${percent} percent`);
@@ -228,11 +229,35 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   useMapCommands({ ports, controller, unanchoredReason, listing, noScene, nothingDrawn: NOTHING_DRAWN, openUnanchored });
   return (
     <div className={styles.canvas} ref={root} data-map-room="" data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
-      {phone ? null : (
-        <Suspense fallback={<div className={room.row} aria-hidden="true" style={{ height: 40 }} />}>
+      {phone ? null : <NavigatorSelection {...(multi !== null && multi.items.length > 0 ? { multiLine: multi.line } : {})} />}
+      {cut === null ? null : (
+        <Banner kind="warning">
+          {cut.cut} {cut.more}
+        </Banner>
+      )}
+      {empty === null ? null : (
+        <Banner kind="info">
+          <strong>{empty.title}</strong> {empty.body}
+        </Banner>
+      )}
+      {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
+      <div className={styles.mapRow}>
+      <div className={styles.drawing} aria-busy={state.working} ref={setArea}>
+        {scene !== null && !listing ? (
+          <Suspense fallback={null}>
+            <FreeAreas area={area} onInsets={setInsets} {...(fitBox === undefined ? {} : { contentWidth: fitBox.x1 - fitBox.x0, contentHeight: fitBox.y1 - fitBox.y0 })} />
+          </Suspense>
+        ) : null}
+        {phone && scene !== null && !listing ? (
+          <Suspense fallback={null}>
+            <PhoneMapBar chapters={chapters} chapterId={map.chapterId} onChapter={setChapter} families={familyList} onFind={findFamily} chainOpen={map.chainOpen} onToggleChain={toggleChain} />
+          </Suspense>
+        ) : null}
+        {phone || scene === null ? null : (
+        <Suspense fallback={null}>
         <MapToolbar
           listing={listing}
-          noScene={scene === null}
+          noScene={false}
           onToggleList={() => {
             ports.ui.overview.getState().setMode(listing ? 'map' : 'list');
             announce(listing ? 'Showing the map' : 'Showing the list of families and arrows');
@@ -259,47 +284,30 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             </Suspense>
           }
           extra={multi?.actions(false)}
+          scene={scene}
+          selected={listing ? null : selected}
+          multi={multi !== null && multi.items.length > 0}
+          onClear={clearSelection}
+          onZoomSelection={zoomSelection.available ? zoomSelection.zoom : undefined}
+          hint={listing ? undefined : hint}
+          hintKind={view === null ? undefined : view.quiet ? 'quiet' : 'busy'}
+          keys={listing ? NO_KEYS : legendKeys}
+          inert={input.menu !== null}
         />
         </Suspense>
       )}
-      {phone ? null : <NavigatorSelection {...(multi !== null && multi.items.length > 0 ? { multiLine: multi.line } : {})} />}
-      {cut === null ? null : (
-        <Banner kind="warning">
-          {cut.cut} {cut.more}
-        </Banner>
-      )}
-      {empty === null ? null : (
-        <Banner kind="info">
-          <strong>{empty.title}</strong> {empty.body}
-        </Banner>
-      )}
-      {unanchoredOpen && unanchored.length > 0 ? <UnanchoredPanel ids={unanchored} onClose={() => setUnanchoredOpen(false)} /> : null}
-      {phone && scene !== null && !listing ? (
-        <Suspense fallback={<div className={styles.phoneBar}><span className={controls.iconButton} aria-hidden="true" /></div>}>
-          <PhoneMapBar chapters={chapters} chapterId={map.chapterId} onChapter={setChapter} families={familyList} onFind={findFamily} chainOpen={map.chainOpen} onToggleChain={toggleChain} />
-        </Suspense>
-      ) : null}
-      {/* the line keeps its height when it has nothing to say, so a click that focuses a family does not move the map under the pointer (a double click's second press would miss) */}
-      {phone && view !== null && !listing ? (
-        <div className={styles.lineRow}>
-          <p className={styles.quiet} {...(view.quiet ? { 'data-map-quiet': '' } : view.busy > 0 ? { 'data-map-busy': '' } : { 'aria-hidden': 'true' })}>
-            {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy, view.busySelection) : ' '}
+        {/* the hint is a quiet pill at the foot of the map; it keeps its place when empty, so a selection moves nothing (step 8.4e, A2) */}
+        {phone && view !== null && !listing ? (
+          <p className={phoneMap.hintPill} data-map-control="pill" data-shown={(view.quiet || view.busy > 0) && !map.chainOpen ? '' : undefined} {...(view.quiet ? { 'data-map-quiet': '' } : view.busy > 0 ? { 'data-map-busy': '' } : { 'aria-hidden': 'true' })}>
+            {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy, view.busySelection) : ' '}
           </p>
-        </div>
-      ) : null}
-      <div className={styles.mapRow}>
-      <div className={styles.drawing} aria-busy={state.working}>
+        ) : null}
         {phone && scene !== null && !listing ? (
           <Suspense fallback={null}>
             <PhoneMapControls controller={controller} items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => seeCompounds() })} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} />
           </Suspense>
         ) : null}
         {phone ? selectBar : null}
-        {phone || listing || scene === null ? null : (
-          <Suspense fallback={null}>
-            <MapCorner scene={scene} drawn={drawn ?? scene} selected={selected} multi={multi !== null && multi.items.length > 0} settled={settled} svg={svg} onClear={clearSelection} onZoom={zoomSelection.available ? zoomSelection.zoom : undefined} hint={hint} hintKind={view === null ? undefined : view.quiet ? 'quiet' : 'busy'} keys={legendKeys} />
-          </Suspense>
-        )}
         {multi?.marquee == null ? null : <div className={styles.marquee} aria-hidden="true" style={{ left: multi.marquee.left, top: multi.marquee.top, width: multi.marquee.width, height: multi.marquee.height }} />}
         {state.error !== null ? (
           <div className={styles.error} role="alert">
@@ -322,6 +330,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             {...(phone ? { minScale: FIT_FLOOR } : {})}
             {...(fitBox === undefined ? {} : { fitBox })}
             {...(fitKey === undefined ? {} : { fitKey })}
+            {...(insets === undefined ? {} : { fitInsets: insets })}
             {...(depictions === undefined ? {} : { depictions })}
             onLayerCommit={onLayerCommit}
             pointer={input.pointer}

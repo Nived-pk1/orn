@@ -277,17 +277,6 @@
 }
 
 /* The map's quiet line, the chapter select and the legend's Show / Hide buttons (step 8.2a). */
-/* The line row has one height whatever it shows (the quiet line, the busy line or the key of the drawn arrows): both children share one cell. */
-.lineRow {
-  display: grid;
-  min-height: 3.25rem;
-  align-content: start;
-}
-
-.lineRow > * {
-  grid-area: 1 / 1;
-}
-
 .arrowKey {
   display: flex;
   flex-wrap: wrap;
@@ -295,13 +284,6 @@
   margin: 0;
   padding: var(--space-4) var(--space-12);
   list-style: none;
-  color: var(--color-ink-2);
-  font-size: var(--text-14);
-}
-
-.quiet {
-  margin: 0;
-  padding: var(--space-4) var(--space-12);
   color: var(--color-ink-2);
   font-size: var(--text-14);
 }
@@ -387,12 +369,26 @@
   font-size: var(--text-12);
 }
 
-/* The phone map's chapter select and quiet line sit above the drawing (step 8.2a). */
-.phoneBar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-8);
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-rule);
+[data-phone-map-bar] .chapterPhone > span {
+  display: none; /* the chip reads "All chapters"; the select keeps its name Chapter */
+}
+
+[data-phone-map-bar] .chapterPhone {
+  flex: 1 1 auto;
+  min-width: 8rem;
+  max-width: 14rem;
+  padding: 0;
+}
+
+[data-phone-map-bar] .chapterSelect {
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
+}
+
+/* the canvas's one focus ring, drawn INSIDE the map area so it is never clipped (step 8.4e, A6); no browser outline */
+.drawing svg:focus,
+.drawing svg:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--canvas), inset 0 0 0 4px var(--accent);
 }

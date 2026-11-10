@@ -1,20 +1,26 @@
 /**
- * The map's toolbar on a wide screen (step 8.3b, A1; ADR-044 addendum): ONE row. Zoom out, Zoom in, Fit (icon buttons with names and tooltips),
- * the chapter select, Find a family, From A to B, Open family, a Key button (the legend in a popover) and a More menu (List, and in Studio
- * "Unanchored reactions (n)"). When the row is too narrow `movedToMore` moves From A to B, then Open family, into More. It only reports what
- * the person did; the drawing and the saving are the map's.
+ * The map's controls on a wide screen (step 8.4e, A1; ADR-044 addendum): they FLOAT on the canvas, nothing sits in a row above or below it.
+ * Top-left a bar: the chapter select, Find a family (an icon that opens its box in the bar), From A to B and More. Top-right the "Selected" bar
+ * (Open family, Zoom to selection, Clear) or, with nothing selected, the hint. Bottom-right the zoom stack: Zoom in, Zoom out, Fit. Bottom-left the key
+ * strip: what the drawn arrows mean and a Key button that opens the full key. It only reports what the person did; the drawing and the saving
+ * are the map's. Fit leaves each control its own free area (`free-areas.tsx` measures the `data-map-control` boxes).
  */
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { Button, IconButton, Menu, type MenuItem } from '@/ui/primitives';
+import { Button, Icon, IconButton, Menu, type MenuItem } from '@/ui/primitives';
+import type { Scene } from '@/render/scene';
+import { ArrowKey } from './arrow-key';
 import { ChapterSelect, type ChapterOption } from './chapter-select';
+import type { LegendKey } from './legend';
+import { MapHint } from './map-hint';
+import { selectionWordsOf } from './selection-words';
 import { movedToMore } from './toolbar-rule';
-import styles from './map-room.module.css';
+import styles from './map-float.module.css';
 import controls from './map-controls.module.css';
 
 const FindFamily = /* @__PURE__ */ lazy(() => import('./find-family').then((m) => ({ default: m.FindFamily })));
 
-/** The toolbar's own width (a ResizeObserver; none in jsdom: then the row is as wide as it needs). */
-function useRowWidth(ref: RefObject<HTMLElement | null>): number {
+/** The layer's own width (a ResizeObserver; none in jsdom: then the bar is as wide as it needs). */
+function useLayerWidth(ref: RefObject<HTMLElement | null>): number {
   const [width, setWidth] = useState(Number.POSITIVE_INFINITY);
   useLayoutEffect(() => {
     const element = ref.current;
@@ -51,61 +57,95 @@ export interface MapToolbarProps {
   readonly unanchored?: { readonly count: number; readonly expanded: boolean; readonly reason: string | undefined; readonly onToggle: () => void };
   readonly keyOpen: boolean;
   readonly onToggleKey: () => void;
-  /** The popover itself (a lazy chunk), drawn under the Key button when it is open. */
+  /** The popover itself (a lazy chunk), drawn over the Key button when it is open. */
   readonly keyPopover: ReactNode;
-  /** The multi-selection actions of Studio, at the end of the row. */
+  /** The multi-selection actions of Studio, at the end of the bar. */
   readonly extra?: ReactNode;
+  /** What the "Selected" bar and the key strip say (they used to be the map's corner). */
+  readonly scene: Scene | null;
+  readonly selected: { readonly kind: string; readonly id: string } | null;
+  readonly multi: boolean;
+  readonly onClear: () => void;
+  readonly onZoomSelection: (() => void) | undefined;
+  readonly hint: string | undefined;
+  readonly hintKind: 'quiet' | 'busy' | undefined;
+  readonly keys: LegendKey;
+  /** The canvas menu is open: nothing else is operable (it may lie over the key strip). */
+  readonly inert?: boolean;
 }
 
 const NOTHING = 'there is nothing drawn yet';
 const NO_ZOOM = 'the List view has no zoom';
 
 export function MapToolbar(props: MapToolbarProps) {
-  const row = useRef<HTMLDivElement>(null);
-  const moved = movedToMore(useRowWidth(row));
+  const layer = useRef<HTMLDivElement>(null);
+  const [finding, setFinding] = useState(false);
+  const moved = movedToMore(useLayerWidth(layer));
   const chainMoved = moved.includes('chain');
-  const openMoved = moved.includes('open');
   const zoomReason = props.listing ? NO_ZOOM : props.noScene ? NOTHING : undefined;
   const unavailable = (reason: string | undefined): { unavailable?: string } => (reason === undefined ? {} : { unavailable: reason });
-  // ONE Open button (step 8.4b, E1): a family selected, "Open family"; an arrow selected, "Open reactions"; nothing selected, disabled
+  // ONE Open button (step 8.4b, E1): a family selected, "Open family"; an arrow selected, "Open reactions". It lives in the Selected bar.
   const arrow = props.arrowOpen;
   const open = arrow === undefined ? { label: 'Open family', onSelect: props.onOpenFamily, reason: props.noScene ? NOTHING : props.openReason } : { label: 'Open reactions', onSelect: arrow.onOpen, reason: arrow.unavailable };
   const more: MenuItem[] = [
     { id: 'list', label: props.listing ? 'Show the map' : 'List', onSelect: props.onToggleList },
     ...(chainMoved ? [{ id: 'chain', label: 'From A to B', onSelect: props.onToggleChain, ...unavailable(props.noScene ? NOTHING : undefined) }] : []),
-    ...(openMoved ? [{ id: 'open', label: open.label, onSelect: open.onSelect, ...unavailable(open.reason) }] : []),
     ...(props.unanchored === undefined ? [] : [{ id: 'unanchored', label: `Unanchored reactions (${props.unanchored.count})`, onSelect: props.unanchored.onToggle, ...unavailable(props.unanchored.reason) }]),
   ];
+  const words = props.scene === null || props.selected === null || props.multi ? undefined : selectionWordsOf(props.scene, props.selected, 'corner');
   return (
-    <div className={styles.row} ref={row} role="toolbar" aria-label="Canvas tools" data-map-toolbar="">
-      <IconButton label="Zoom out" icon="minus" variant="default" className={styles.zoomButton} onClick={props.onZoomOut} {...unavailable(zoomReason)} />
-      <IconButton label="Zoom in" icon="plus" variant="default" className={styles.zoomButton} onClick={props.onZoomIn} {...unavailable(zoomReason)} />
-      <IconButton label="Fit" icon="scan" variant="default" className={styles.zoomButton} onClick={props.onFit} {...unavailable(zoomReason)} />
-      <span className={styles.chapterBox}>
-        <ChapterSelect chapters={props.chapters} value={props.chapterId} onChange={props.onChapter} />
-      </span>
-      <Suspense fallback={<input className={controls.findBox} disabled aria-label="Loading" />}>
-        <FindFamily families={props.families} onChoose={props.onFind} />
-      </Suspense>
-      {chainMoved ? null : (
-        <Button aria-pressed={props.chainOpen} onClick={props.onToggleChain} {...unavailable(props.noScene ? NOTHING : undefined)}>
-          From A to B
-        </Button>
-      )}
-      {openMoved ? null : (
-        <Button onClick={open.onSelect} {...unavailable(open.reason)}>
-          {open.label}
-        </Button>
-      )}
-      <span className={styles.spacer} />
-      <span className={styles.keyWrap} data-key-wrap="">
+    <div className={styles.layer} ref={layer} role="toolbar" aria-label="Canvas tools" data-map-toolbar="" inert={props.inert}>
+      <div className={styles.top}>
+        <div className={styles.bar} data-map-control="bar">
+          <span className={styles.chapterBox}>
+            <ChapterSelect chapters={props.chapters} value={props.chapterId} onChange={props.onChapter} />
+          </span>
+          {finding ? (
+            <Suspense fallback={<input className={controls.findBox} disabled aria-label="Loading" />}>
+              <FindFamily
+                families={props.families}
+                autoFocus
+                onChoose={(id) => {
+                  props.onFind(id);
+                  setFinding(false);
+                }}
+                onClose={() => setFinding(false)}
+              />
+            </Suspense>
+          ) : (
+            <IconButton label="Find a family" icon="search" variant="default" className={styles.barButton} onClick={() => setFinding(true)} />
+          )}
+          {chainMoved ? null : (
+            <Button aria-pressed={props.chainOpen} onClick={props.onToggleChain} {...unavailable(props.noScene ? NOTHING : undefined)}>
+              From A to B
+            </Button>
+          )}
+          <Menu label="More" items={more} />
+          {props.extra}
+        </div>
+        <MapHint
+          selected={words === undefined ? undefined : `Selected: ${words}`}
+          onClear={props.onClear}
+          onZoom={props.onZoomSelection}
+          zoomName={words}
+          hint={props.hint}
+          hintKind={props.hintKind}
+          open={words === undefined ? undefined : <Button onClick={open.onSelect} {...unavailable(open.reason)}>{open.label}</Button>}
+        />
+      </div>
+      <div className={styles.zoom} role="group" aria-label="Zoom" data-map-control="stack">
+        <IconButton label="Zoom in" icon="plus" variant="default" className={styles.zoomButton} onClick={props.onZoomIn} {...unavailable(zoomReason)} />
+        <IconButton label="Zoom out" icon="minus" variant="default" className={styles.zoomButton} onClick={props.onZoomOut} {...unavailable(zoomReason)} />
+        <span className={styles.separator} aria-hidden="true" />
+        <IconButton label="Fit" icon="scan" variant="default" className={styles.zoomButton} onClick={props.onFit} {...unavailable(zoomReason)} />
+      </div>
+      <div className={styles.keyStrip} data-map-control="bar" data-key-wrap="">
+        <ArrowKey keys={props.keys} />
         <Button aria-expanded={props.keyOpen} aria-haspopup="dialog" onClick={props.onToggleKey} data-key-button="">
-          Key
+          <Icon name="info" size={16} /> Key
         </Button>
         {props.keyOpen ? props.keyPopover : null}
-      </span>
-      <Menu label="More" items={more} />
-      {props.extra}
+      </div>
     </div>
   );
 }
