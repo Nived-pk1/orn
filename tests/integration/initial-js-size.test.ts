@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-// @ts-expect-error plain .mjs script without types
 const load = (): Promise<{ initialScripts: (html: string) => string[] }> =>
+  // @ts-expect-error plain .mjs script without types
   import("../../scripts/initial-js-size.mjs");
 
 describe("initialScripts", () => {

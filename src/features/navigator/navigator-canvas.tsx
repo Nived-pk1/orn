@@ -28,8 +28,9 @@ import { keyOf, legendOf } from './legend';
 import { useMapBulk, useNoMulti } from './bulk-context';
 import { useCanvasInput } from './use-canvas-input';
 import { outsideNoteOf } from './scope-lens';
-import type { withChips as WithChipsFn } from './map-chips';
-import type { createPairFacts as CreatePairFactsFn } from './pair-facts';
+import { QUIET_LINE, busyLine, openFamilyReason } from './map-lines';
+import { useMapChips } from './use-map-chips';
+import { useMapCommands } from './use-map-commands';
 import { useNavigator, useNavigatorState } from './navigator-context';
 import { NavigatorSelection } from './navigator-selection';
 import { emptinessOf, truncationNoticeOf } from './notices';
@@ -50,24 +51,12 @@ const PhoneMapControls = /* @__PURE__ */ lazy(() => import('./phone-map-controls
 // step 8.3b (Part 0.1): the desktop toolbar and the overlays inside the map are lazy chunks, loaded right after the first paint
 const MapToolbar = /* @__PURE__ */ lazy(() => import('./map-toolbar').then((m) => ({ default: m.MapToolbar })));
 const MapCorner = /* @__PURE__ */ lazy(() => import('./map-corner').then((m) => ({ default: m.MapCorner })));
-type WithChips = typeof WithChipsFn;
-type CreatePairFacts = typeof CreatePairFactsFn;
 const noFacts = (): undefined => undefined;
 const KeyPopover = /* @__PURE__ */ lazy(() => import('./key-popover').then((m) => ({ default: m.KeyPopover })));
 const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanelInScope })));
-const QUIET_LINE = 'Tap or click a family to see what it makes and what it is made from.';
-const busyLine = (n: number, selection = false): string => (selection ? `${n} arrows: listed in the panel` : `This chapter has ${n} arrows. Tap or click a family to see its part.`);
 const NO_IDS: ReadonlySet<string> = new Set();
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
-
-/** Why Open family cannot act now, or undefined when it can. */
-export function openFamilyReason(selected: { readonly kind: 'node' | 'edge' } | null, isFamily: boolean): string | undefined {
-  if (selected === null) return 'select a family first';
-  if (selected.kind === 'edge') return 'an arrow is selected: use Open, or select a family';
-  if (!isFamily) return 'the selection is not a family';
-  return undefined;
-}
 
 export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const { ports, announcer } = useNavigator();
@@ -115,21 +104,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   // step 8.2a (ADR-044): the map draws a focus, not every arrow; the chapter choice and the focus are the map store's
   const chapters = useMemo(() => (scene === null ? [] : buildChapterIndex(ports.store.getState()).chapters.map((chapter) => ({ id: chapter.id, title: chapter.title }))), [scene, ports]);
   const chapterIds = useMemo(() => chapters.map((chapter) => chapter.id), [chapters]);
-  // the reagent words on arrow chips come from their own chunk, loaded right after the first paint (the first view draws no arrow)
-  const [factsMaker, setFactsMaker] = useState<CreatePairFacts | null>(null);
-  const [chips, setChips] = useState<WithChips | undefined>(undefined);
-  useEffect(() => {
-    let live = true;
-    void Promise.all([import('./pair-facts'), import('./map-chips')]).then(([facts, chipModule]) => {
-      if (!live) return;
-      setFactsMaker(() => facts.createPairFacts);
-      setChips(() => chipModule.withChips);
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
-  const facts = useMemo(() => (factsMaker === null ? undefined : factsMaker(ports)), [factsMaker, ports]);
+  // the reagent words on arrow chips come from their own chunk (use-map-chips.ts)
+  const { facts, chips } = useMapChips(ports);
   const [svg, setSvg] = useState<SVGSVGElement | null>(null);
   const [chain, setChain] = useState<readonly { readonly from: string; readonly to: string }[] | undefined>(undefined);
   // the zoom is state only while arrows with chips are drawn: a quiet map re-renders nothing on a zoom (step 8.4b, A)
@@ -247,20 +223,9 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const empty = scene === null ? null : emptinessOf(state.reactions, families);
   const unanchored = state.unanchored;
   const unanchoredReason = scene === null ? NOTHING_DRAWN : unanchored.length === 0 ? 'every reaction is in a family' : undefined;
-  // The palette's commands (step 5.8) run on the map while it is mounted; each says why it cannot run.
   const noScene = scene === null;
-  useEffect(
-    () =>
-      ports.ui.viewCommands.getState().register({
-        zoomIn: () => controller?.zoomIn(),
-        zoomOut: () => controller?.zoomOut(),
-        fit: () => controller?.fit(),
-        openUnanchored: () => setUnanchoredOpen(true),
-        ...(unanchoredReason === undefined ? {} : { unanchoredReason }),
-        ...(listing ? { zoomReason: 'the List view has no zoom' } : noScene ? { zoomReason: NOTHING_DRAWN } : {}),
-      }),
-    [ports, controller, unanchoredReason, listing, noScene],
-  );
+  const openUnanchored = useCallback((): void => setUnanchoredOpen(true), []);
+  useMapCommands({ ports, controller, unanchoredReason, listing, noScene, nothingDrawn: NOTHING_DRAWN, openUnanchored });
   return (
     <div className={styles.canvas} ref={root} data-map-room="" data-layer-commits="0" data-layout-engine={state.layout ?? undefined}>
       {phone ? null : (
