@@ -1,0 +1,85 @@
+import { appendFileSync, writeFileSync } from 'node:fs';
+import { devices, type Page } from '@playwright/test';
+import { expect, test } from './fixtures';
+import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone } from './map-layout-kit';
+import { clickNode } from './map-focus-kit';
+
+const OUT = process.env.PROBE_OUT ?? 'probe-8.4e.jsonl';
+const log = (o: unknown): void => appendFileSync(OUT, JSON.stringify(o) + '\n');
+
+async function measure(page: Page, tag: string): Promise<void> {
+  const r = await page.evaluate(() => {
+    const rect = (e: Element | null) => (e === null ? null : (({ x, y, width, height }) => ({ x: Math.round(x), y: Math.round(y), w: Math.round(width), h: Math.round(height) }))(e.getBoundingClientRect()));
+    const bg = (e: Element | null) => (e === null ? null : getComputedStyle(e).backgroundColor);
+    const svg = document.querySelector('svg[role="group"]') as SVGElement;
+    const area = svg.getBoundingClientRect();
+    const nodes = [...document.querySelectorAll('svg [data-node-id]')].map((n) => n.getBoundingClientRect());
+    const vis = nodes.filter((b) => b.right > area.left && b.left < area.right && b.bottom > area.top && b.top < area.bottom);
+    const cols = new Set(vis.map((b) => Math.round(b.left / 10))).size;
+    const rows = new Set(vis.map((b) => Math.round(b.top / 10))).size;
+    const used = vis.length ? Math.max(...vis.map((b) => b.bottom)) - Math.min(...vis.map((b) => b.top)) : 0;
+    const title = document.querySelector('svg [data-label-of] text:first-of-type');
+    const world = document.querySelector('svg [data-world]')?.getAttribute('transform');
+    const q = (s: string) => document.querySelector(s);
+    // elements in the strip under the top of the svg that cover it without text
+    const above: unknown[] = [];
+    for (const e of document.querySelectorAll('body *')) {
+      const b = e.getBoundingClientRect();
+      if (b.width < 20 || b.height < 8 || e.tagName === 'svg' || e.closest('svg')) continue;
+      if (b.bottom > area.top && b.top < area.top + 140 && b.right > area.left && b.left < area.right && b.width * b.height > 0) {
+        const s = getComputedStyle(e);
+        above.push({ tag: e.tagName.toLowerCase(), cls: String(e.className).slice(0, 60), role: e.getAttribute('role'), r: [Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height)], bg: s.backgroundColor, pe: s.pointerEvents, text: (e.textContent ?? '').trim().slice(0, 30) });
+      }
+    }
+    return {
+      vp: [innerWidth, innerHeight], area: rect(svg), world, titlePx: title ? Math.round(title.getBoundingClientRect().height * 10) / 10 : null,
+      cols, rows, used: Math.round(used), nodes: nodes.length, visible: vis.length,
+      header: rect(q('header')), footer: rect(q('footer')), toolbar: rect(q('[data-map-toolbar]')), corner: rect(q('[data-map-corner]')), cornerBg: bg(q('[data-map-corner]')),
+      quiet: rect(q('[data-map-quiet]')), nav: rect(q('nav[aria-label="Home"]')), notices: rect(q('[aria-label="Notices"]')),
+      svgStyle: (() => { const s = getComputedStyle(svg); return { outline: s.outline, border: s.border, boxShadow: s.boxShadow }; })(),
+      above,
+    };
+  });
+  log({ tag, ...r });
+}
+
+test.describe('desktop', () => {
+  test.use({ actionTimeout: 60_000 });
+  test('probe desktop', async ({ page }) => {
+    test.setTimeout(300_000);
+    writeFileSync(OUT, '');
+    await openMapDesktop(page);
+    await measure(page, 'desk-1280x800-none');
+    await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
+    await page.waitForTimeout(900);
+    await measure(page, 'desk-1280x800-sel');
+    await page.locator('svg[role="group"]').focus();
+    await measure(page, 'desk-focus');
+    await page.screenshot({ path: 'probe-desk-focus.png' });
+    await page.reload();
+    await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible({ timeout: 90_000 });
+  });
+});
+
+const PH = { pixel: devices['Pixel 7'], iphone: devices['iPhone 14'] };
+for (const [name, dev] of Object.entries(PH)) {
+  const { defaultBrowserType: _d, ...device } = dev;
+  test.describe(name, () => {
+    test.use({ ...device, actionTimeout: 60_000 });
+    test(`probe ${name}`, async ({ page }) => {
+      test.setTimeout(300_000);
+      await openMapPhone(page);
+      const v = page.viewportSize()!;
+      await measure(page, `${name}-portrait-none`);
+      await page.screenshot({ path: `probe-${name}-portrait-none.png` });
+      await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
+      await page.waitForTimeout(1000);
+      await measure(page, `${name}-portrait-sel`);
+      await page.screenshot({ path: `probe-${name}-portrait-sel.png` });
+      await page.setViewportSize({ width: v.height, height: v.width });
+      await page.waitForTimeout(1200);
+      await measure(page, `${name}-landscape-sel`);
+      await page.screenshot({ path: `probe-${name}-landscape-sel.png` });
+    });
+  });
+}
