@@ -206,3 +206,4 @@ no box; the stack meets no box TEXT. Proposed amendment: A3 for the phone stack 
    map-chains, map-room, map-selection, map-shift, navigator, keyboard-walk, frame, canvas-touch, touch-walk, study-edition, axe-screens.
    Last full run of the first 13 desktop specs: 10 failed -> 3 left (the pre-existing ones) after the updates above.
 - Radius: the reference says 10 px for floating bars; no 10 px token exists, so bars use --radius-8 (REVIEW REQUIRED: add a token or accept 8).
+Commit: f44aa52
