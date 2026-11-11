@@ -343,3 +343,4 @@ Quick runs with ORN_BASE_URL against a local Studio server are NOT equivalent fo
   are STAYS. (5) the phone full-map first view is 15.0 px titles on the Pixel 7 (above the 13 px cap of C4? C4's cap applies to Fit with the frame; full map re-fits to the taller area:
   to check in Part E/G). (6) Landscape: full map gives titles 6.1 px (FIT_FLOOR) on both phones, the normal landscape map is 174 / 154 px high: Part E.
 ## WHERE TO RESUME: session 5 = Part E (phone landscape) and Part F (fluid feel). Make Part E code lazy (Studio has 13 bytes of room).
+Commit (session 4): 6579ac2
