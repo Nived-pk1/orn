@@ -31,13 +31,3 @@ describe('the map look of the design reference (step 8.4e, A5)', () => {
     expect(css).not.toMatch(/\.mapNode:hover[^{]*\{[^}]*filter/);
   });
 });
-
-describe('the hit band of a two-way pair (step 8.4e, C1)', () => {
-  it('a paired line is hit only within half the gap between the two lines: the stroke plus the smaller of the usual band and the pair gap, finger or not', () => {
-    const rule = /\[data-paired\] \.edgeHit \{([^}]*)\}/g;
-    const rules = [...css.matchAll(rule)].map((m) => m[1] ?? '');
-    expect(rules.length, 'one rule for the mouse, one for a finger').toBe(2);
-    for (const body of rules) expect(body).toMatch(/stroke-width: calc\(clamp\(2px[^;]*\+ min\((14|26)px, clamp\(8\.5px, calc\(var\(--map-k, 1\) \* 12px\), 16px\)\)\)/);
-  });
-});
-

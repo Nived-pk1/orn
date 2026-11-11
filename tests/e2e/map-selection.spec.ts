@@ -118,6 +118,8 @@ async function sequences(page: Page, phone: boolean, shots: { arrow: string; arr
   // S-bug 3: a family, then the bucket, a compound opened from its list, then a solid arrow out of the bucket: its reactions show
   await pickNode(page, outTo as string, phone);
   await expect(heading(page, familyName(outTo as string))).toBeVisible();
+  // step 8.4e (C4): the phone's first view fills the height, so the bucket box can lie under the open sheet's peek: close it first (a peek covers what is under it)
+  if (phone) await closeInspector(page, phone);
   await pickNode(page, BUCKET_ID, phone);
   await expect(heading(page, 'Not in a family yet')).toBeVisible();
   const row = page.getByRole('list', { name: 'Compounds in no family' }).getByRole('button').first();

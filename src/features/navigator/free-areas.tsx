@@ -36,10 +36,13 @@ export function FreeAreas(props: {
     const measure = (): void => {
       frame = 0;
       const box = area.getBoundingClientRect();
+      // a toast on a desktop screen lifts the bottom controls above it (map-float.module.css); Fit measures them where they rest, or it would shrink for every toast
+      const lift = area.closest('[data-layout="desktop"][data-toast]') === null ? 0 : (Number.parseFloat(getComputedStyle(area).getPropertyValue("--toast-height")) || 0) + 8;
       const controls: Box[] = [...area.querySelectorAll<HTMLElement>(READ)].map(
         (el) => {
           const r = el.getBoundingClientRect();
-          return { x: r.x - box.x, y: r.y - box.y, w: r.width, h: r.height };
+          const low = r.y - box.y + r.height / 2 > box.height / 2;
+          return { x: r.x - box.x, y: r.y - box.y + (low ? lift : 0), w: r.width, h: r.height };
         },
       );
       const size = { width: box.width, height: box.height };

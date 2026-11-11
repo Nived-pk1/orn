@@ -231,7 +231,7 @@ Resumed on the user's word. HEAD at start a051fe9. Speed checks 229-243 ms befor
 - B5 phone sheets use the same parts; peek rules not loosened (phone-sheet spec green).
 
 ### Part C, done
-- C1 NOT as specified, REVIEW REQUIRED. The exact nearest-line version (distance from the pointer to each path) worked and its e2e failed when broken, but cost
+- C1 NOT DONE, REVIEW REQUIRED (see the C1 note below).
   380 bytes of initial JS (the row had 34 / 19 left); it is saved in docs/reviews/step-8-4e-c1-pair-hit.ts.txt with how to reinstate it. What is in: paired
   lines carry `data-paired` and the stylesheet narrows each paired line's hit band to the stroke + the smaller of the usual band and the pair gap, so the two bands
   meet in the middle (CSS rule test + data-paired test). Near the box ports the two lines nearly coincide and the bands still overlap there; an e2e could not be
@@ -260,3 +260,13 @@ Reviewer decisions waiting: C1 (spend ~400 bytes for exact nearest-line?), Studi
 the pre-existing failures above.
 - The css-scale guard (tests/integration/css-scale.test.ts) now allows --space-14 (the reference's 14 px between panel sections): one token added to the scale. REVIEW REQUIRED if the scale should stay 4/8/12/16.
 Commit (Part B, C): ae66720
+
+### Corrections after the broad Chromium run (2026-11-11, later)
+- C1 is NOT DONE. The CSS band narrowing I first committed made a paired line's hit area 10.5 px, under the standing 16 px (mouse) and 28 px (finger) floors
+  (map-marks, map-proportions, canvas-touch failed), so it is REVERTED (no `data-paired`, no CSS rule). The exact nearest-line code is in
+  docs/reviews/step-8-4e-c1-pair-hit.ts.txt (380 bytes gzip over a budget with about 20 bytes left). Reviewer: spend the bytes, or move C1 to 8.4f / drop it.
+- The Key button failed axe target-size where it lay under the import toast (the wide key strip with a selection). The desktop toast raises the zoom stack and key
+  strip again (8.4b rule) and FreeAreas adds the lift back when it measures, so Fit does not shrink for a toast.
+- map-selection.spec (phone, S-bug 3): closes the sheet before picking the bucket (the fuller first view can put the bucket under the peek). Reason recorded in the spec.
+- Sizes after the corrections: Study 383,250 / Studio 387,128.
+- Failing at HEAD 572fb25 as well (clean worktree, not caused by this step): phone-inspector x4, map-fit 1280x800, map-marks pair click, navigator "Collapse".

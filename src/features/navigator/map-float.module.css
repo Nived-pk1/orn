@@ -159,4 +159,8 @@
   gap: var(--space-4);
 }
 
-/* The desktop toast is one row centred at the foot of the column; the key strip and the zoom stack sit at the sides, so they never move for it (a moving control would also move the free area Fit keeps). */
+/* While a toast shows on a desktop screen the bottom controls sit above it (step 8.4b): the toast is one row of at most --toast-height at the foot of the column. The free-area measurement (free-areas.tsx) adds this lift back, so Fit does not move for a toast. */
+[data-layout="desktop"][data-toast] .zoom,
+[data-layout="desktop"][data-toast] .keyStrip {
+  bottom: calc(var(--toast-height) + var(--space-16));
+}
