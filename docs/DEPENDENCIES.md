@@ -28,7 +28,7 @@ Phase 10's documentation sweep keeps this list current. Each new dependency is r
 
 | Asset | Licence | Added | Notes |
 |---|---|---|---|
-| Lucide icons (`public/icons/*.svg`, 29 files incl. the ORN mark) | ISC | step 8.4d | Outline, stroke 1.75, drawn through CSS `mask-image` by `src/ui/primitives/icons.tsx` (no markup injected, not in the JS). Taken from the design reference's sprite in Lucide style; `redo`, `panel-right`, `pencil` added in the same style; `mark.svg` is an original ORN glyph. Licence text: `public/icons/LICENSE.txt`; credited in About. Guard: `tests/integration/icons-guard.test.ts` |
+| Lucide icons (`public/icons/*.svg`, 31 files incl. the ORN mark) | ISC | step 8.4d | Outline, stroke 1.75, drawn through CSS `mask-image` by `src/ui/primitives/icons.tsx` (no markup injected, not in the JS). Taken from the design reference's sprite in Lucide style; `redo`, `panel-right`, `pencil` added in the same style; `mark.svg` is an original ORN glyph. Licence text: `public/icons/LICENSE.txt`; credited in About. Guard: `tests/integration/icons-guard.test.ts` |
 
 ## Dev dependencies (not shipped)
 

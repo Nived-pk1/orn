@@ -8,7 +8,7 @@ import { defIds, SceneDefs } from './defs';
 import { BadgesLayer } from './badges-layer';
 import type { SceneSvgProps } from './contracts';
 import { EdgesLayer } from './edges-layer';
-import { hitOf } from './hit';
+import { hitAt } from './hit';
 import { LabelsLayer } from './labels-layer';
 import { NodesLayer } from './nodes-layer';
 import { OverlayLayer } from './overlay-layer';
@@ -20,8 +20,8 @@ export function SceneSvg(props: SceneSvgProps) {
   const prefix = `orn${useId().replace(/[^A-Za-z0-9_-]/g, '')}`;
   const ids = useMemo(() => defIds(prefix), [prefix]);
   const { onSceneClick, onSceneDoubleClick } = props;
-  const click = onSceneClick === undefined ? undefined : (event: MouseEvent): void => onSceneClick(hitOf(event.target));
-  const doubleClick = onSceneDoubleClick === undefined ? undefined : (event: MouseEvent): void => onSceneDoubleClick(hitOf(event.target));
+  const click = onSceneClick === undefined ? undefined : (event: MouseEvent): void => onSceneClick(hitAt(event));
+  const doubleClick = onSceneDoubleClick === undefined ? undefined : (event: MouseEvent): void => onSceneDoubleClick(hitAt(event));
   // hover: the arrow under the pointer, reported when it changes; ignored while a button is held (a drag pans)
   const hovered = useRef<string | null>(null);
   const { onSceneHover, onNodeHover, marks } = props;
@@ -41,7 +41,7 @@ export function SceneSvg(props: SceneSvgProps) {
       report(null);
       return reportNode(null);
     }
-    const hit = hitOf(event.target);
+    const hit = hitAt(event);
     report(hit !== null && hit.kind === 'edge' ? hit.id : null);
     reportNode(hit !== null && hit.kind === 'node' ? hit.id : null);
   };

@@ -72,9 +72,16 @@ async function walk(page: Page, device: string, withPeek: boolean, query: string
   await expect(group).toBeVisible();
   const row = group.locator('ul');
   const geometry = await row.evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth, overflowX: getComputedStyle(el).overflowX, snap: getComputedStyle(el).scrollSnapType }));
-  expect(geometry.overflowX).toBe('auto');
-  expect(geometry.snap).toContain('x');
-  for (const box of await group.locator('li button').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON() as { height: number }))) expect(box.height).toBeGreaterThanOrEqual(44 - 1);
+  // step 8.4e: since 8.4d (E6) the go-next lists are list ROWS, not a sideways-scrolling card strip; the behaviour this guards is the same: every entry is
+  // reachable (nothing hidden past the edge), named, and a 44 px target
+  expect(geometry.scroll, 'the rows fit the sheet: nothing to scroll sideways').toBeLessThanOrEqual(geometry.client + 1);
+  const rows = group.locator('li button');
+  expect(await rows.count()).toBeGreaterThan(0);
+  for (const box of await rows.evaluateAll((els) => els.map((el) => ({ ...(el.getBoundingClientRect().toJSON() as { height: number; right: number }), name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim() })))) {
+    expect(box.height).toBeGreaterThanOrEqual(44 - 1);
+    expect(box.right, 'inside the screen').toBeLessThanOrEqual((page.viewportSize()?.width ?? 0) + 1);
+    expect(box.name.length, 'named').toBeGreaterThan(0);
+  }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'no sideways scroll').toBe(true);
   expect(await axeProblems(page, 10), 'axe at full').toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/${shot}-${device}.png` });
@@ -87,7 +94,7 @@ async function walk(page: Page, device: string, withPeek: boolean, query: string
 
 test.describe('phone: Pixel 7 (Chromium)', () => {
   test.use({ ...PIXEL });
-  test('peek, full, horizontal cards, 44 px, reduced motion', async ({ page, browserName }) => {
+  test('peek, full, go-next rows, 44 px, reduced motion', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'the Pixel 7 profile is Chromium');
     test.setTimeout(400_000);
     await walk(page, 'pixel7', true, 'r: Ethanol → ethanal (PCC)', 'rxn_ethanol-to-ethanal-pcc', 'phone-inspector-full', 'Reaction');
@@ -96,7 +103,7 @@ test.describe('phone: Pixel 7 (Chromium)', () => {
 
 test.describe('phone: iPhone 14 (WebKit)', () => {
   test.use({ ...IPHONE });
-  test('full sheet, horizontal cards, 44 px', async ({ page, browserName }) => {
+  test('full sheet, go-next rows, 44 px', async ({ page, browserName }) => {
     test.skip(browserName !== 'webkit', 'the iPhone 14 profile is WebKit');
     test.setTimeout(400_000);
     await walk(page, 'iphone14', false, 'r: Ethanol → ethanal (PCC)', 'rxn_ethanol-to-ethanal-pcc', 'phone-inspector-full', 'Reaction');

@@ -5,6 +5,8 @@
 import { useState, type ReactNode } from 'react';
 import type { ViewportController } from '@/render/viewport';
 import { Dialog, Icon } from '@/ui/primitives';
+import type { MapStore } from '@/ui/state/map-state';
+import FullMapButton from './full-map-button';
 import type { LegendItem, LegendKey } from './legend';
 import { NavigatorLegend } from './navigator-legend';
 import styles from './phone-home.module.css';
@@ -21,11 +23,14 @@ export function PhoneMapControls(props: {
   readonly extra?: ReactNode;
   /** The Select bar is shown at the bottom: the buttons move to the top so none is half covered (step 6.9, Z2). */
   readonly barShown?: boolean;
+  /** The map's UI state (step 8.4e, Part D): the Full map button. */
+  readonly map?: MapStore;
 }) {
   const [legend, setLegend] = useState(false);
   return (
     <>
       <div className={styles.floating} data-map-control="stack" {...(props.barShown === true ? { 'data-bar': 'shown' } : {})}>
+        {props.map === undefined ? null : <FullMapButton map={props.map} variant="round" />}
         {props.extra}
         <button type="button" className={styles.round} aria-label="Fit" onClick={() => props.controller?.fit()} aria-disabled={props.controller === null ? true : undefined}>
           <Icon name="scan" size={20} />

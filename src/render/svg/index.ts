@@ -9,6 +9,7 @@ export { useStructureMode } from './use-structure-mode';
 export { LAYER_NAMES } from './contracts';
 export type { DepictionSource, DepictionStatus, EdgeMark, LayerName, MapMarks, SceneHit, SceneSvgProps } from './contracts';
 export { STROKE_DASH, WEIGHT_WIDTH } from './geometry';
-export { hitOf } from './hit';
+export { hitAt, hitOf, hitRefiner } from './hit';
+export { nearerEdgeAt } from './pair-hit';
 export { chipFactor, headFactor, hitPx, MARK_LIMITS, pairGapPx, pairSeparationMap, strokePx } from './mark-scale';
 export { plainText } from './text';

@@ -118,7 +118,8 @@ function InspectorPanel(props: {
 function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
   const { familyVisible, ...shell } = props;
   const familyOpen = useFamilyPageOpen();
-  return <Shell {...shell} titleHeading={!(familyVisible && familyOpen)} />;
+  const fullMap = useStore(useApp().navigator.ui.map, (s) => s.fullMap);
+  return <Shell {...shell} titleHeading={!(familyVisible && familyOpen)} fullMap={fullMap} />;
 }
 
 /** The window: the toast provider and the editors' entry points (ADR-040) around the content. */

@@ -91,3 +91,13 @@ describe('the map part of uiState', () => {
     expect(parseNavigatorUi({ map: { showUnclassified: 'yes' } }).damaged).toContain('map.showUnclassified');
   });
 });
+
+describe('full map (step 8.4e, Part D)', () => {
+  it('starts off, is a plain flag, and is not part of what the map saves', () => {
+    const store = createMapStore();
+    expect(store.getState().fullMap).toBe(false);
+    store.getState().setFullMap(true);
+    expect(store.getState().fullMap).toBe(true);
+    expect(parseMap({ fullMap: true })).toEqual({ chapterId: null, showUnclassified: false, fitRule: null, fitted: false, damaged: [] });
+  });
+});

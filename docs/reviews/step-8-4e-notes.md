@@ -271,3 +271,75 @@ Commit (Part B, C): ae66720
 - Sizes after the corrections: Study 383,250 / Studio 387,128.
 - Failing at HEAD 572fb25 as well (clean worktree, not caused by this step): phone-inspector x4, map-fit 1280x800, map-marks pair click, navigator "Collapse".
 Commit (corrections): 221087d
+
+## Session 4 (2026-11-11): the failures, C1 lazy, Part D
+START: HEAD 5df549b clean, stash empty. Speed check 235 ms (start), 233 ms (before the worktree run).
+Reviewer decisions (resume 2) recorded: C1 lazy (exact code from the .txt, FreeAreas chunk, < 60 bytes initial, CSS narrowing stays reverted);
+Studio author buttons row accepted; bar radius 8 accepted; --space-14 accepted; A3 phone stack = "no box TEXT under it" accepted (write into
+UI_ARCHITECTURE); sizes now Study 383,400 / Studio 387,280 (not a budget increase); no "pre-existing" failures; RED line BEFORE source edit.
+### 7a: clean worktree at 3395286 (8.4d close), Chromium, phone-inspector map-fit map-marks navigator.spec (4m10s)
+RESULT: 7 failed, 20 passed. ALL FOUR spec files fail at the 8.4d close: map-fit 1280x800, map-marks pair click, navigator "Collapse",
+phone-inspector x4 (overflowX 'auto' expected, 'hidden' received). So 8.4d's close report (navigator and map-fit green) was WRONG. No bisect needed.
+### 7b: the fixes (HEAD 5df549b + uncommitted; speed 230-235 ms before every run)
+- map-marks pair (PRODUCT): the second chip of a pair vanished when the pane opened (zoom 0.39: each line about 133 px, chip slides of 0.1 skipped the only
+  free stretch 0.69-0.77). RED 17:22: `npx vitest run src/features/navigator/chip-place.test.ts` -> 2 failed (['a'] not ['a','b']), then chip-place.ts slides in 0.02
+  steps -> 11/11 and all 386 navigator unit tests green. The spec then needed C1 (below): its "topmost element is this line" probe is false for a pair whose
+  bands overlap; it now needs "only arrow bands under the point, no chip or box" (reason: C1 gives the click to the nearer line).
+- navigator "Collapse" (OLD LOOK): the 8.4d rail has its own Collapse; the spec is scoped to `getByRole('main')` (the map's families). Behaviour kept.
+- phone-inspector x3 "horizontal cards" (OLD LOOK): go-next lists are list rows since 8.4d E6; the spec now asserts the same behaviour on the rows (nothing past the
+  edge, every row 44 px high, named). The 4th (Pixel 7 peek) also failed on "a student never reads exclusive" at 3395286: it asserted the STUDENT rule on the Studio
+  build (STUDIO_CHROME.exclusiveWord is true). Now as equation.spec does: Studio (no ORN_BASE_URL) must show the word, the live student edition must not.
+  NOTE: with ORN_BASE_URL set (my quick runs against a local preview) that branch is the student one and fails; phone-inspector must run with the real config.
+- map-fit 1280x800 (PRODUCT, NOT FIXED, REVIEW REQUIRED, CLAUDE.md section 10): pane open, the map area is 712 px; the fixture is 1884 units wide, so the whole map needs
+  scale >= 0.3779 with NO padding, while ADR-037 FIT_FLOOR is 0.3775 and Fit keeps a 17 px edge: Fit sits at the floor and the last family is 8 px cut. At the 8.4c close the
+  area was 730 px (rail 150): floor + 16 px edge = 727, 3 px to spare. 8.4d's rail (168) took those 18 px. Not fixable without changing a decided number: options
+  (a) pane default 400 -> 380 (contradicts B4), (b) rail 168 -> 150 (contradicts 8.4d), (c) the spec accepts "scale at FIT_FLOOR" at that width (loosening, ADR-037 says pannable).
+  Recommend (c) or (a). Left red; the Part G list carries it.
+- C1 DONE LAZY: `src/render/svg/pair-hit.ts` (the .txt code), `hitRefiner` ref in hit.ts, `hitAt(event)` at the five call sites, set by the lazy FreeAreas chunk.
+  RED 17:29: pair-hit.test.ts (module missing), hit-refine.test.ts (3 failed), map-pair-click.spec.ts ("nearer to line A" 0 of 1: the last-drawn band won); then green.
+  Size: Study 383,292, Studio 387,171 (+42 / +43; limit for C1 60).
+- 8.4d CLOSE REPORT WAS WRONG (7a): correction line to go under the 8.4d entry in PROGRESS.
+
+### Session 4: Part D (full map) built; commit hash at the end of this file
+Speed checks 230-235 ms before every run. RED lines (before the source edit): 
+- 17:38:29 `npx vitest run full-map.test.ts map-state.test.ts shell-status-bar.test.tsx` -> full-map: module missing; shell: data-full-map false; map-state: fullMap undefined.
+- 18:10:36 `npx vitest run full-map.test.ts` -> "leaves when the canvas is gone" failed (the `watch` dep).
+- The e2e specs (full-map.spec, full-map-table.spec) were written AFTER the source (slip, disclosed); closed by break-and-restore at 18:27: the lazy full-map.css emptied ->
+  full-map.spec 1280 entry test and Pixel 7 portrait failed (2 failed, 1 passed), restored -> 3 passed.
+What is in: `fullMap` flag in the map store (not saved); lazy `full-map.ts` controller (one history entry; fullscreen where `document.fullscreenEnabled`, refusal silent; Back,
+Esc (not when handled, a layer or the A-to-B panel was open at the key press), the browser leaving fullscreen all clear the flag; the flag clearing exits fullscreen and pops the
+entry; a MutationObserver on `[data-chips-zoom]` leaves when the map's canvas is gone = every LEAVES row); lazy `full-map.css` (frame hidden by `[data-full-map]` / `data-frame`, pane
+as an overlay with shadow-3 on desktop, the map's right controls and the A-to-B panel kept left of an open pane); lazy `FullMapButton` (desktop bar, phone stack; icons maximize-2 /
+minimize-2, 31 icon files); Shell prop `fullMap`; FreeAreas also reserves the part of the pane that lies over the map.
+KEY: plain F already means "centre" (intentOfKey), so full map is SHIFT+F (caught in the lazy button chunk, capture phase). Conflict with the prompt's "key F"; REVIEW REQUIRED.
+Studio More items: Unanchored reactions and List / From A to B all work inside the canvas, none needs the frame, so there is no "Leave full map to use this" tooltip (nothing to put it on).
+Studio's editor buttons (Edit, Delete) open dialogs that work over full map: treated as STAYS.
+Interaction table result in full map (full-map-table.spec): STAYS exercised: zoom in/out/Fit, wheel, pan, chapter, Find, Selected bar (Zoom to selection, Clear), click box/empty, pane go-next,
+From A to B (panel left of the pane), Key (Esc closes the Key only), keyboard Z + - arrows Tab Enter, List / Show the map, canvas menus (node: arrow row, Show in inspector; empty: Zoom in,
+Zoom out, Fit), Unanchored (Studio), multi-select (shift-click), phone: chapter, Find, From A to B, Fit, pinch (CDP), Legend, Select, tap a box. LEAVES exercised: double-click, Open family,
+canvas-menu Open family page, Open reactions (arrow: the family page), the pane's "Open these n reactions" (Reactions mode); Overview brings the normal map back with the selection and view.
+Part D numbers (Chromium, full-map.spec): map area share 100% of the viewport on all four phone profiles and both desktop sizes. Box title px in full map: Pixel 7 portrait 15.0, iPhone 14
+portrait 12.6; landscape (Pixel 7 / iPhone 14) 6.1 (FIT_FLOOR, map 360 / 340 px high): Part E. Normal map height in landscape with the frame: 174 / 154 px.
+Sizes: Study 383,380 (limit 383,400), Studio 387,273-387,280 (limit 387,280). C1 lazy cost 42/43 bytes; Part D ~ 85 bytes. Zero margin left in Studio: Part E must be lazy.
+Changed specs (reason): see 7b above. Hit-test change: the old pair spec now needs only "arrow bands under the point".
+
+### CORRECTION (end of session 4): the "exclusive" change in phone-inspector.spec was WRONG and is reverted
+Under the real config (no ORN_BASE_URL) the Pixel 7 peek test runs the student rule green ("a student never reads exclusive" holds). The failure I saw came from my quick runs against a LOCAL Studio
+preview with ORN_BASE_URL set (a Studio page writes the word). So at 3395286 that line was not red; the real failures there were the "horizontal cards" assertions only. Spec line restored as at 3395286.
+Quick runs with ORN_BASE_URL against a local Studio server are NOT equivalent for specs that depend on the edition: use the full config for the final run.
+
+### Session 4 close (2026-11-11)
+- `npm run check` at default workers: 772 files, 8500 tests green, 11m24s (first full pass); re-run after the last edits: 772 files, 8500 tests green, 11m29s.
+- Chromium e2e, REAL config (no ORN_BASE_URL), this session's list: full-map, full-map-table, map-pair-click, map-marks, map-fit, map-free-areas, navigator.spec, phone-inspector, map-phone-fit,
+  map-phone-marks, pane-list, phone-sheet, map-chains, map-room, map-selection, frame, canvas-touch (86 tests: 82 passed, 2 skipped, 2 failed: map-fit 1280x800 (open, REVIEW REQUIRED) and
+  phone-inspector (my wrong "exclusive" edit, reverted, 4 passed + 1 skipped after)); then full-map, full-map-table, frame, map-room, shell.spec, phone.spec: 39 passed, 3 skipped,
+  1 failed (shell.spec 900-1279 drawer measured the pane mid-slide: 1124 vs 1100) -> the spec waits for the animations to finish (reason: the 260 ms slide of B3); shell.spec 12 passed.
+- RUNNING SPEC LIST for Part G (Chromium): map-free-areas, phone, phone-sheet, map-fit, map-marks, map-pair-click, map-chains, map-room, map-selection, map-shift, navigator, keyboard-walk, frame,
+  canvas-touch, touch-walk, study-edition, axe-screens, pane-list, map-phone-fit, map-phone-marks, phone-inspector, full-map, full-map-table, shell.
+- Sizes (node scripts/initial-js-size.mjs, fresh builds): Study 383,365, Studio 387,267 (limits 383,400 / 387,280). Frame marks dropped for element selectors in the lazy CSS to make room.
+- CSS scale guard: one exception added (full-map.css margin-right: var(--inspector-width)).
+- Disclosed: the e2e specs of Part D were written after the source (closed by break-and-restore); the "exclusive" spec edit was wrong and is reverted (above).
+- REVIEW REQUIRED: (1) map-fit 1280x800 pane open (three options in 7b). (2) Shift+F instead of F. (3) No "Leave full map" tooltip: no More item needs the frame. (4) Studio editor dialogs
+  are STAYS. (5) the phone full-map first view is 15.0 px titles on the Pixel 7 (above the 13 px cap of C4? C4's cap applies to Fit with the frame; full map re-fits to the taller area:
+  to check in Part E/G). (6) Landscape: full map gives titles 6.1 px (FIT_FLOOR) on both phones, the normal landscape map is 174 / 154 px high: Part E.
+## WHERE TO RESUME: session 5 = Part E (phone landscape) and Part F (fluid feel). Make Part E code lazy (Studio has 13 bytes of room).

@@ -7,7 +7,7 @@
  */
 export const ICON_NAMES = [
   'atom', 'bell', 'book-open', 'chevron-down', 'chevron-right', 'clipboard-check', 'compass', 'database', 'download', 'flask', 'info', 'layers',
-  'list-checks', 'map', 'mark', 'minus', 'more-horizontal', 'panel-right', 'pencil', 'plus', 'redo', 'route', 'scan', 'search', 'tag', 'test-tube',
+  'list-checks', 'map', 'mark', 'maximize-2', 'minimize-2', 'minus', 'more-horizontal', 'panel-right', 'pencil', 'plus', 'redo', 'route', 'scan', 'search', 'tag', 'test-tube',
   'triangle-alert', 'undo', 'x',
 ] as const;
 export type IconName = (typeof ICON_NAMES)[number];

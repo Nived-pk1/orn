@@ -74,3 +74,21 @@ describe('chips grow with the map (step 8.4c, B)', () => {
     expect(placeChipsAtZoom([req('a', route)], between(34, 1.5), 1.5).has('a')).toBe(true);
   });
 });
+
+describe('both chips of a two-way pair (step 8.4e: the map-marks pair spec was red since 8.4d)', () => {
+  // The fixture's pair 08 <-> 13 with the pane open: the whole map is fitted at zoom 0.39, so each line is about 133 screen px long.
+  const boxes = [{ x: 624, y: 200, width: 130, height: 61 }, { x: 936, y: 400, width: 130, height: 61 }];
+  const makes: ChipRequest = { key: 'a', width: 20, start: 0.78, route: [{ x: 664.5, y: 260.7 }, { x: 976.5, y: 400 }] };
+  const madeFrom: ChipRequest = { key: 'b', width: 20, start: 0.78, route: [{ x: 1025.5, y: 400 }, { x: 713.5, y: 260.7 }] };
+  it('both get a place at zoom 0.39 (a slide of 0.1 skipped the only free stretch of the second line)', () => {
+    const out = placeChipsAtZoom([makes, madeFrom], boxes, 0.39);
+    expect([...out.keys()].sort()).toEqual(['a', 'b']);
+  });
+  it('and still never touch each other or a box', () => {
+    const out = placeChipsAtZoom([makes, madeFrom], boxes, 0.39);
+    const a = out.get('a') as { x: number; y: number };
+    const b = out.get('b') as { x: number; y: number };
+    expect(hit(rectOf(a, 20, 0.39), rectOf(b, 20, 0.39))).toBe(false);
+    for (const at of [a, b]) for (const box of boxes) expect(hit(rectOf(at, 20, 0.39), { x0: box.x, y0: box.y, x1: box.x + box.width, y1: box.y + box.height })).toBe(false);
+  });
+});

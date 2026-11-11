@@ -257,6 +257,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         {phone || scene === null ? null : (
         <Suspense fallback={null}>
         <MapToolbar
+          map={ports.ui.map}
           listing={listing}
           noScene={false}
           onToggleList={() => {
@@ -305,7 +306,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         ) : null}
         {phone && scene !== null && !listing ? (
           <Suspense fallback={null}>
-            <PhoneMapControls controller={controller} items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => seeCompounds() })} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} />
+            <PhoneMapControls map={ports.ui.map} controller={controller} items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => seeCompounds() })} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} />
           </Suspense>
         ) : null}
         {phone ? selectBar : null}

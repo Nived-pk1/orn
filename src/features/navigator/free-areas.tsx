@@ -6,12 +6,15 @@
  */
 import { useEffect, useMemo } from "react";
 import { BOXES, type Scene } from "@/render/scene";
+import { hitRefiner, nearerEdgeAt } from "@/render/svg";
 import type { Insets, Rect } from "@/render/viewport";
 import { boxesRect } from "./map-geometry";
 import { phoneFitBox } from "./phone-fit";
 import { insetsOf, type Box } from "./free-areas-rule";
 
 const READ = "[data-map-control]";
+const PANE_HOST = "[data-full-map]";
+const PANE = ":scope > aside:not([hidden])";
 
 /** `content`: the rectangle (map units) of what Fit shows when the map fits it whole (the desktop): each corner control then takes the edge that costs the fit least. */
 export function FreeAreas(props: {
@@ -30,6 +33,13 @@ export function FreeAreas(props: {
   const contentHeight = shown === undefined ? undefined : shown.y1 - shown.y0;
   const titleUnits = useMemo(() => Math.min(BOXES.hub.label.size, ...(scene?.nodes ?? []).filter((node) => node.box === "hub").map((node) => BOXES.hub.label.size * (node.scale ?? 1))), [scene]);
   useEffect(() => area?.style.setProperty("--map-title-u", String(titleUnits)) as undefined, [area, titleUnits]);
+  // the nearer line of a two-way pair gets the click (step 8.4e, C1); until this chunk is loaded a click goes to the line drawn last
+  useEffect(() => {
+    hitRefiner.current = nearerEdgeAt;
+    return () => {
+      hitRefiner.current = undefined;
+    };
+  }, []);
   useEffect(() => {
     if (area === null) return undefined;
     let frame = 0;
@@ -45,6 +55,14 @@ export function FreeAreas(props: {
           return { x: r.x - box.x, y: r.y - box.y + (low ? lift : 0), w: r.width, h: r.height };
         },
       );
+      // full map: the pane lies OVER the map's right edge (step 8.4e, D2); Fit keeps the boxes out from under it like it does for a control
+      const pane = area.closest(PANE_HOST)?.querySelector<HTMLElement>(PANE);
+      if (pane !== null && pane !== undefined) {
+        const r = pane.getBoundingClientRect();
+        const x0 = Math.max(r.x, box.x);
+        const x1 = Math.min(r.right, box.right);
+        if (x1 > x0) controls.push({ x: x0 - box.x, y: 0, w: x1 - x0, h: box.height }); // only the part that lies over the map
+      }
       const size = { width: box.width, height: box.height };
       const insets = insetsOf(controls, size, contentWidth === undefined || contentHeight === undefined ? undefined : { width: contentWidth, height: contentHeight });
       onInsets(insets);
@@ -70,6 +88,9 @@ export function FreeAreas(props: {
       attributes: true,
       attributeFilter: ["data-map-control", "hidden", "data-shown"],
     });
+    // the pane opening or closing, and full map itself, change the free areas too (they live outside the map area)
+    const shell = area.closest("[data-layout]");
+    if (shell !== null) mutation.observe(shell, { subtree: true, attributes: true, attributeFilter: ["data-full-map", "hidden"] });
     watch();
     return () => {
       window.cancelAnimationFrame(frame);

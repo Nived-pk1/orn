@@ -227,8 +227,10 @@ test.describe('selection and opening a family', () => {
   test('the overview does not expand: no Expand or Collapse, and a double click opens the family page without adding a node', async ({ page }) => {
     const seen = await watch(page);
     await openNavigator(page);
-    await expect(page.getByRole('button', { name: 'Expand' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Collapse' })).toHaveCount(0);
+    // step 8.4e: scoped to the map area: the 8.4d frame's rail has its own "Collapse" (the sidebar), which is not a map node control
+    const mapArea = page.getByRole('main');
+    await expect(mapArea.getByRole('button', { name: 'Expand' })).toHaveCount(0);
+    await expect(mapArea.getByRole('button', { name: 'Collapse' })).toHaveCount(0);
     const before = await nodeCount(page);
     expect(before).toBe(15); // Unclassified is hidden unless shown (step 8.2a)
     await hubGroup(page, 'cls_aldehydes').dblclick();

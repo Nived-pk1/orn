@@ -57,6 +57,8 @@ export interface ShellProps {
   /** The phone sheet's height changed (the window folds a floating toast into the notices row while a sheet is open). */
   readonly onSheetHeight?: (height: SheetHeight) => void;
   /** The list of views at the left is collapsed to icons (56 px; step 8.4d: replaces the 8.4a "Hide"); the caller remembers it. */
+  /** Full map is on (step 8.4e, Part D): the frame parts (top bar, rail, notices, status bar, tab bar) are hidden by the lazy full-map stylesheet. */
+  readonly fullMap?: boolean;
   readonly railCollapsed?: boolean;
   readonly onRailCollapsed?: (collapsed: boolean) => void;
   /** Where the reader is: the view, then the record (the desktop breadcrumb; the phone shows the view's name). */
@@ -143,6 +145,7 @@ export function Shell(props: ShellProps) {
       {...(props.statusBar === undefined ? { 'data-status-bar': 'none' } : {})}
       data-inspector={inspectorOpen ? 'open' : 'closed'}
       {...(railCollapsed ? { 'data-rail': 'collapsed' } : {})}
+      {...(props.fullMap === true ? { 'data-full-map': '' } : {})}
       {...(props.toastShowing === true ? { 'data-toast': '' } : {})}
       {...(phone !== undefined && sheetSpace > 0 ? { 'data-sheet-room': '' } : {})}
       style={{ ['--inspector-width' as string]: `${pane.width}px`, ['--sheet-space' as string]: `${sheetSpace}px` }}

@@ -23,4 +23,5 @@ export const SCALE_EXCEPTIONS: readonly ScaleException[] = [
   E('src/ui/primitives/segmented-control.module.css', 'padding', '2px', 'the track inset around the raised chosen segment (reference .seg)'),
   E('src/ui/shell/mode-rail.module.css', 'gap', '1px', 'rows of the rail sit 1 px apart (reference .rail)'),
   E('src/render/svg/scene-svg.module.css', 'font-size', '75%', 'sub/superscript inside map text (relative to the box text)'),
+  E('src/features/navigator/full-map.css', 'margin-right', 'var(--inspector-width)', 'the A-to-B panel stays left of the open pane (the width of the open pane, step 8.4e Part D)'),
 ];

@@ -4,13 +4,21 @@
  */
 import type { SceneHit } from './contracts';
 
-export function hitOf(target: EventTarget | null): SceneHit | null {
+/** Chooses between the two lines of a pair (step 8.4e, C1): set by a lazy chunk once loaded; until then a click goes to the line drawn last, as before. */
+export const hitRefiner: { current: ((group: Element, at: { readonly x: number; readonly y: number }) => string | null) | undefined } = { current: undefined };
+
+export function hitOf(target: EventTarget | null, at?: { readonly x: number; readonly y: number }): SceneHit | null {
   if (target === null || typeof (target as Element).closest !== 'function') return null;
   const element = (target as Element).closest('[data-node-id], [data-edge-id], [data-hit-edge]');
   if (element === null) return null;
   const node = element.getAttribute('data-node-id');
   if (node !== null) return { kind: 'node', id: node };
   // a half of a two-way pair's line and a pair's chip name the arrow of THEIR direction (`data-hit-edge`); an arrow's own group names itself
-  const edge = element.getAttribute('data-hit-edge') ?? element.getAttribute('data-edge-id');
+  const own = element.getAttribute('data-hit-edge');
+  const picked = own === null && at !== undefined ? hitRefiner.current?.(element, at) : undefined;
+  const edge = own ?? picked ?? element.getAttribute('data-edge-id');
   return edge === null ? null : { kind: 'edge', id: edge };
 }
+
+/** `hitOf` for a pointer or mouse event: the pointer's place lets a pair's nearer line be chosen. */
+export const hitAt = (event: { readonly target: EventTarget | null; readonly clientX: number; readonly clientY: number }): SceneHit | null => hitOf(event.target, { x: event.clientX, y: event.clientY });

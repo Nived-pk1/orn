@@ -4,7 +4,7 @@
  * resolved with `hitOf`, the machine's timers asked of an injected `after` (the fake clock of the tests; `window` in the app).
  * It never moves the drawing: d3-zoom still pans and pinches, the machine only classifies the press.
  */
-import { hitOf } from '@/render/svg';
+import { hitAt } from '@/render/svg';
 import type { SceneHit } from '@/render/svg';
 import { INITIAL_POINTER_STATE, stepPointer } from './pointer-machine';
 import type { PointerEffect, PointerInput, PointerKind, PointerState } from './pointer-machine';
@@ -105,7 +105,7 @@ export function bindPointer(element: Element, handlers: PointerHandlers, timers:
   const down = (event: Event): void => {
     const e = event as PointerEvent;
     holdOpened = false;
-    feed({ type: 'down', id: e.pointerId, kind: kindOf(e.pointerType), x: e.clientX, y: e.clientY, button: e.button, hit: hitOf(e.target), ...(e.shiftKey && handlers.multi?.() === true ? { shift: true } : {}) });
+    feed({ type: 'down', id: e.pointerId, kind: kindOf(e.pointerType), x: e.clientX, y: e.clientY, button: e.button, hit: hitAt(e), ...(e.shiftKey && handlers.multi?.() === true ? { shift: true } : {}) });
   };
   const move = (event: Event): void => {
     const e = event as PointerEvent;
@@ -119,7 +119,7 @@ export function bindPointer(element: Element, handlers: PointerHandlers, timers:
   const context = (event: Event): void => {
     const e = event as MouseEvent;
     e.preventDefault();
-    feed({ type: 'context', x: e.clientX, y: e.clientY, hit: hitOf(e.target) });
+    feed({ type: 'context', x: e.clientX, y: e.clientY, hit: hitAt(e) });
   };
 
   // After a hold the browser still sends touchend and then the compatibility mousedown / mouseup / click at the finger. The mousedown

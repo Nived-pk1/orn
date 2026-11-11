@@ -8,8 +8,10 @@
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Button, Icon, IconButton, Menu, type MenuItem } from '@/ui/primitives';
 import type { Scene } from '@/render/scene';
+import type { MapStore } from '@/ui/state/map-state';
 import { ArrowKey } from './arrow-key';
 import { ChapterSelect, type ChapterOption } from './chapter-select';
+import { FullMapButton } from './full-map-lazy';
 import type { LegendKey } from './legend';
 import { MapHint } from './map-hint';
 import { selectionWordsOf } from './selection-words';
@@ -70,6 +72,8 @@ export interface MapToolbarProps {
   readonly hint: string | undefined;
   readonly hintKind: 'quiet' | 'busy' | undefined;
   readonly keys: LegendKey;
+  /** The map's UI state: the Full map button reads and sets its `fullMap` flag (step 8.4e, Part D). Absent: no button. */
+  readonly map?: MapStore;
   /** The canvas menu is open: nothing else is operable (it may lie over the key strip). */
   readonly inert?: boolean;
 }
@@ -122,6 +126,7 @@ export function MapToolbar(props: MapToolbarProps) {
               From A to B
             </Button>
           )}
+          {props.map === undefined ? null : <FullMapButton map={props.map} variant="bar" />}
           <Menu label="More" items={more} />
           {props.extra}
         </div>

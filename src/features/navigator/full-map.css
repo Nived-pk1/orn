@@ -1,0 +1,42 @@
+/*
+ * Full map (step 8.4e, Part D). A plain stylesheet, loaded with the lazy full-map chunk so none of it is in the first load: the shell carries
+ * [data-full-map] and its frame parts are hidden by element. The map fills the viewport; the pane opens OVER it (it never shrinks the map); the map's own
+ * floating controls are not touched.
+ */
+[data-full-map][data-layout][data-breakpoint] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "canvas";
+}
+
+/* the notices band and the phone's alert line are the divs that do not hold the page */
+[data-full-map] > div:not(:has(> main)),
+[data-full-map] > header,
+[data-full-map] > footer,
+[data-full-map] > nav,
+[data-full-map] > [role="separator"] {
+  display: none;
+}
+
+[data-full-map][data-layout='desktop'] > aside:not([hidden]) {
+  position: fixed;
+  z-index: var(--z-drawer);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(var(--inspector-width), 100vw);
+  max-height: none;
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-3);
+}
+
+/* the map's own controls on the right (the Selected bar, the zoom stack) sit left of an open pane, not under it */
+[data-full-map][data-layout='desktop']:has(> aside:not([hidden])) [data-map-toolbar] {
+  right: min(var(--inspector-width), 100vw);
+}
+
+/* the From A to B panel sits in the map row at its right edge: it too stays left of an open pane */
+[data-full-map][data-layout='desktop']:has(> aside:not([hidden])) [data-right-pane] {
+  margin-right: var(--inspector-width);
+}

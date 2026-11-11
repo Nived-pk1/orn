@@ -14,7 +14,8 @@ export const CHIP_GAP_PX = 8;
 /** Air kept between a chip and a box (px on the screen). */
 export const BOX_GAP_PX = 2;
 /** Offsets from the starting fraction, tried in this order. */
-const SLIDES: readonly number[] = [0, -0.1, 0.1, -0.2, 0.2, -0.3, 0.3, -0.4, 0.4];
+/** In steps of 0.02 (step 8.4e: steps of 0.1 skipped the one free stretch of a short line, so the second chip of a pair vanished at low zoom). */
+const SLIDES: readonly number[] = [0, ...Array.from({ length: 20 }, (_, i) => [-(i + 1) * 0.02, (i + 1) * 0.02]).flat()];
 const EDGE_FRACTION = 0.06;
 
 export interface ChipRequest {

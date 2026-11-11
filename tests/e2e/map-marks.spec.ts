@@ -62,7 +62,7 @@ test.describe('map marks in screen pixels', () => {
     for (const id of ids) {
       await page.getByRole('button', { name: 'Fit', exact: true }).click();
       await page.waitForTimeout(900);
-      // points of this line where this line is what is on top (another arrow may cross it): one of them must select it
+      // points on this line with only arrow bands under them: a click on one of them must select this line, whichever band is drawn last
       const spots = await page.evaluate((edge) => {
         const path = document.querySelector(`svg [data-layer="edges"] [data-edge-id="${edge}"] > path:not([data-hit])`) as unknown as SVGPathElement;
         const m = path.getScreenCTM() as DOMMatrix;
@@ -71,7 +71,10 @@ test.describe('map marks in screen pixels', () => {
           const p = path.getPointAtLength(path.getTotalLength() * f);
           const x = p.x * m.a + p.y * m.c + m.e;
           const y = p.x * m.b + p.y * m.d + m.f;
-          if (document.elementFromPoint(x, y)?.closest('[data-edge-id]')?.getAttribute('data-edge-id') === edge) found.push({ x, y });
+          // step 8.4e (C1): the NEARER line of a pair gets the click, so the point need not be where this line's own band is on top; it must only be
+          // clear of chips and boxes (an arrow's band is under it)
+          const top = document.elementFromPoint(x, y);
+          if (top?.closest('[data-edge-id]') !== null && top?.closest('[data-chip-button],[data-count-of],[data-node-id]') === null) found.push({ x, y });
         }
         return found;
       }, id);

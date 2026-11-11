@@ -18,6 +18,9 @@ export interface MapState {
   readonly chainOpen: boolean;
   /** The map's view was still the automatic fit when it last settled (step 8.4b, E2a): saved, so a reload fits again. */
   readonly fitted: boolean;
+  /** Full map is on (step 8.4e, Part D): the frame is hidden and the map fills the screen. Never saved: a reload opens the normal map. */
+  readonly fullMap: boolean;
+  setFullMap(on: boolean): void;
   setFitted(fitted: boolean): void;
   setChapter(chapterId: string | null): void;
   setShowUnclassified(shown: boolean): void;
@@ -33,6 +36,8 @@ export function createMapStore(initial: { readonly chapterId?: string | null; re
     focusId: null,
     chainOpen: false,
     fitted: initial.fitted ?? false,
+    fullMap: false,
+    setFullMap: (fullMap) => set({ fullMap }),
     setFitted: (fitted) => set({ fitted }),
     // another chapter is another set of arrows: a focus from the old set would mislead
     setChapter: (chapterId) => set({ chapterId, focusId: null }),

@@ -213,6 +213,8 @@ test.describe('the three breakpoints', () => {
     await expect(page.getByRole('separator')).toHaveCount(0);
     const canvasBefore = await box(page, 'main');
     await page.getByRole('button', { name: 'Show inspector' }).click();
+    // step 8.4e (B3): the pane slides in over 260 ms; the position is read once it has arrived
+    await page.evaluate(() => Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined))));
     const drawer = await box(page, 'aside');
     const canvasAfter = await box(page, 'main');
     expect(canvasAfter.width).toBe(canvasBefore.width); // an overlay: the canvas does not shrink
