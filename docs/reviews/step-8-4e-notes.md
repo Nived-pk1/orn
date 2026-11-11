@@ -270,3 +270,4 @@ Commit (Part B, C): ae66720
 - map-selection.spec (phone, S-bug 3): closes the sheet before picking the bucket (the fuller first view can put the bucket under the peek). Reason recorded in the spec.
 - Sizes after the corrections: Study 383,250 / Studio 387,128.
 - Failing at HEAD 572fb25 as well (clean worktree, not caused by this step): phone-inspector x4, map-fit 1280x800, map-marks pair click, navigator "Collapse".
+Commit (corrections): 221087d
