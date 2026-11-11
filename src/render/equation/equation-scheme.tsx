@@ -39,6 +39,8 @@ export interface EquationSchemeProps {
   readonly nowrap?: boolean;
   /** Said in place of "nothing listed" on the products side (a reaction with no outcome yet); absent: "nothing listed". */
   readonly noProducts?: string;
+  /** False (the sheet's peek): the arrow carries the reagent names only, no conditions line under it (step 8.4e, C3). Default: both. */
+  readonly conditions?: boolean;
 }
 
 function Side(props: { readonly terms: FullEquation['reactants']; readonly names: boolean; readonly ports: TermPorts; readonly empty: string }) {
@@ -95,7 +97,7 @@ export function EquationScheme(props: EquationSchemeProps) {
         <div className={props.nowrap === true ? `${styles.row} ${styles.rowNoWrap}` : styles.row} {...(props.nowrap === true ? { 'data-nowrap': '' } : {})}>
           <Side terms={equation.reactants} names={names} ports={ports} empty="nothing listed" />
           <span className={styles.arrowCell}>
-            <SchemeArrow arrow={equation.arrow} equilibrium={equation.equilibrium} />
+            <SchemeArrow arrow={props.conditions === false ? { above: equation.arrow.above, below: [] } : equation.arrow} equilibrium={equation.equilibrium} />
           </span>
           <Side terms={equation.products} names={names} ports={ports} empty={props.noProducts ?? 'nothing listed'} />
         </div>

@@ -4,9 +4,8 @@ import { LOD_HYSTERESIS } from './contracts';
 import { LOD_THRESHOLDS } from '@/render/scene';
 import { FIT_BOTTOM_PADDING, FIT_PADDING, FIT_TOP_PADDING, FOCUS_MAX_SCALE, SCALE_MAX, SCALE_MIN } from './contracts';
 
-/** top, right, bottom, left of the margin Fit keeps: the measured insets, or the constant bands when none were measured. */
-const sides = (insets: Insets | undefined): readonly [number, number, number, number] =>
-  insets === undefined ? [FIT_TOP_PADDING, FIT_PADDING, FIT_BOTTOM_PADDING, FIT_PADDING] : [insets.top, insets.right, insets.bottom, insets.left];
+/** The margin Fit keeps: the measured insets, or the constant bands when none were measured. */
+const BANDS: Insets = { top: FIT_TOP_PADDING, right: FIT_PADDING, bottom: FIT_BOTTOM_PADDING, left: FIT_PADDING };
 
 export const IDENTITY: Viewport = { x: 0, y: 0, scale: 1 };
 
@@ -57,7 +56,7 @@ export const FIT_FLOOR = LOD_THRESHOLDS[1] * (1 + LOD_HYSTERESIS) + FIT_FLOOR_MA
  * the padding) and stays pannable.
  */
 export function fitScene(bounds: Size, size: Size, insets?: Insets): Viewport {
-  const [top, right, bottom, left] = sides(insets);
+  const { top, right, bottom, left } = insets ?? BANDS;
   const fitted = fitRect({ x0: 0, y0: 0, x1: bounds.width, y1: bounds.height }, size, SCALE_MAX, FIT_PADDING, top, bottom, left, right);
   if (fitted.scale >= FIT_FLOOR) return fitted;
   return { scale: FIT_FLOOR, x: left, y: top };
@@ -83,7 +82,7 @@ export const toTransformAttribute = (view: Viewport): string => `translate(${vie
  * zoom, centred. Below the name floor (a drawing too big to read) it starts at the box's top-left corner inside the padding, like `fitScene`.
  */
 export function fitBox(box: Rect, size: Size, insets?: Insets): Viewport {
-  const [top, right, bottom, left] = sides(insets);
+  const { top, right, bottom, left } = insets ?? BANDS;
   const fitted = fitRect(box, size, SCALE_MAX, FIT_PADDING, top, bottom, left, right);
   if (fitted.scale >= FIT_FLOOR) return fitted;
   return { scale: FIT_FLOOR, x: left - box.x0 * FIT_FLOOR, y: top - box.y0 * FIT_FLOOR };

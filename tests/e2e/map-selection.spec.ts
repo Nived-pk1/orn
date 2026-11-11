@@ -218,7 +218,8 @@ test.describe('the map selection on a desktop', () => {
     await expect(list.getByRole('button', { name: /^Made from:/ }).first()).toBeVisible();
     await expect(page.getByText('Give these compounds a family in the content data')).toBeVisible();
     const chip = list.getByRole('button', { name: /^Made from:/ }).first();
-    const chipFamily = ((await chip.textContent()) ?? '').replace(/^Made from: /, '').replace(/ \(\d+\)$/, '');
+    // the chip is a list row now (step 8.4e): its visible text carries the count apart, its accessible name is still "Made from: X (n)"
+    const chipFamily = ((await chip.getAttribute('aria-label')) ?? '').replace(/^Made from: /, '').replace(/ \(\d+\)$/, '');
     await chip.click();
     await expect(heading(page, chipFamily)).toBeVisible();
     await page.getByRole('group', { name: 'History' }).getByRole('button', { name: 'Back' }).click();

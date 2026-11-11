@@ -140,6 +140,13 @@ describe('the mode rail', () => {
 });
 
 describe('the inspector pane at the wide breakpoint', () => {
+  it('has a Close button in its header (step 8.4e, B1) that hides the pane', () => {
+    viewport(1400);
+    const onOpen = vi.fn();
+    renderShell({ pane: pane({ onOpen }) });
+    fireEvent.click(within(screen.getByRole('complementary', { name: 'Inspector' })).getByRole('button', { name: 'Close inspector' }));
+    expect(onOpen).toHaveBeenCalledWith(false);
+  });
   it('is a separator with min, max and now; the arrow keys change the width by a step, Shift by a big step, Home and End go to the ends', () => {
     viewport(1400);
     const onWidth = vi.fn();

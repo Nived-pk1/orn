@@ -63,6 +63,8 @@ export interface ViewportSceneProps {
   readonly fitKey?: string;
   /** Step 8.4e (A3): the free areas the floating controls leave, measured. A change fits again while the view is still the automatic one. */
   readonly fitInsets?: Insets;
+  /** The fit window drives Fit by its SIZE (the phone, step 8.4e C4): a change of that size fits again while the view is the automatic one. */
+  readonly fitBoxRefits?: boolean;
 }
 
 /** What the layers get: the same statuses, but `request` does nothing (the queue decides what is asked for). */
@@ -136,20 +138,18 @@ export function ViewportScene(props: ViewportSceneProps) {
       autoViews.push(autoView);
       if (autoViews.length > MAX_AUTO_VIEWS) autoViews.shift();
     };
-    controller.setFitBox(fitBoxRef.current);
-    controller.setInsets(insetsRef.current);
-    refitIfAuto.current = () => {
-      controller.setInsets(insetsRef.current);
-      if (autoView === undefined || !sameView(controller.current(), autoView)) return;
-      controller.fit();
-      markAutomatic();
-    };
-    refit.current = () => {
+    const sync = (): void => {
       controller.setInsets(insetsRef.current);
       controller.setFitBox(fitBoxRef.current);
+    };
+    const fitNow = (): void => {
+      sync();
       controller.fit();
       markAutomatic();
     };
+    sync();
+    refit.current = fitNow;
+    refitIfAuto.current = () => (autoView !== undefined && sameView(controller.current(), autoView) ? fitNow() : sync());
     const measure = (): void => {
       const box = svg.getBoundingClientRect();
       controller.setSize({ width: box.width, height: box.height });
@@ -177,7 +177,7 @@ export function ViewportScene(props: ViewportSceneProps) {
     });
     observer?.observe(svg);
     // the Fit command of the toolbar fits the WHOLE map (not the focus set) and counts as an automatic view again (step 8.4b, E2)
-    onController?.({ ...controller, fit: () => { controller.setFitBox(fitBoxRef.current); controller.fit(); markAutomatic(); } });
+    onController?.({ ...controller, fit: fitNow });
     // The viewport is reported once it has been still; the store's first frames (fit, restore) count as moves like any other.
     let lastView = store.get().viewport;
     let still: number | undefined;
@@ -230,8 +230,9 @@ export function ViewportScene(props: ViewportSceneProps) {
   }, [scene]);
 
   const { fitKey } = props;
-  const insetKey = props.fitInsets === undefined ? '' : `${props.fitInsets.top}|${props.fitInsets.right}|${props.fitInsets.bottom}|${props.fitInsets.left}`;
-  useEffect(() => refitIfAuto.current?.(), [insetKey]);
+  const insetKey = `${Object.values(props.fitInsets ?? {})}`;
+  const boxKey = props.fitBoxRefits === true && props.fitBox !== undefined ? `${(props.fitBox.x1 - props.fitBox.x0) | 0},${(props.fitBox.y1 - props.fitBox.y0) | 0}` : '';
+  useEffect(() => refitIfAuto.current?.(), [insetKey, boxKey]);
   useEffect(() => {
     if (keyRef.current === fitKey) return;
     keyRef.current = fitKey;

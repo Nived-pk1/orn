@@ -74,6 +74,8 @@ export interface MapToolbarProps {
   readonly inert?: boolean;
 }
 
+/** The List view has no selection label, no hint and no arrow key. */
+const NO_KEYS: LegendKey = { lines: false, chip: false, pair: false, within: false, unclassified: undefined };
 const NOTHING = 'there is nothing drawn yet';
 const NO_ZOOM = 'the List view has no zoom';
 
@@ -92,7 +94,7 @@ export function MapToolbar(props: MapToolbarProps) {
     ...(chainMoved ? [{ id: 'chain', label: 'From A to B', onSelect: props.onToggleChain, ...unavailable(props.noScene ? NOTHING : undefined) }] : []),
     ...(props.unanchored === undefined ? [] : [{ id: 'unanchored', label: `Unanchored reactions (${props.unanchored.count})`, onSelect: props.unanchored.onToggle, ...unavailable(props.unanchored.reason) }]),
   ];
-  const words = props.scene === null || props.selected === null || props.multi ? undefined : selectionWordsOf(props.scene, props.selected, 'corner');
+  const words = props.listing || props.scene === null || props.selected === null || props.multi ? undefined : selectionWordsOf(props.scene, props.selected, 'corner');
   return (
     <div className={styles.layer} ref={layer} role="toolbar" aria-label="Canvas tools" data-map-toolbar="" inert={props.inert}>
       <div className={styles.top}>
@@ -128,7 +130,7 @@ export function MapToolbar(props: MapToolbarProps) {
           onClear={props.onClear}
           onZoom={props.onZoomSelection}
           zoomName={words}
-          hint={props.hint}
+          hint={props.listing ? undefined : props.hint}
           hintKind={props.hintKind}
           open={words === undefined ? undefined : <Button onClick={open.onSelect} {...unavailable(open.reason)}>{open.label}</Button>}
         />
@@ -140,7 +142,7 @@ export function MapToolbar(props: MapToolbarProps) {
         <IconButton label="Fit" icon="scan" variant="default" className={styles.zoomButton} onClick={props.onFit} {...unavailable(zoomReason)} />
       </div>
       <div className={styles.keyStrip} data-map-control="bar" data-key-wrap="">
-        <ArrowKey keys={props.keys} />
+        <ArrowKey keys={props.listing ? NO_KEYS : props.keys} />
         <Button aria-expanded={props.keyOpen} aria-haspopup="dialog" onClick={props.onToggleKey} data-key-button="">
           <Icon name="info" size={16} /> Key
         </Button>

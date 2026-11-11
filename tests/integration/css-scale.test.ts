@@ -8,7 +8,8 @@ import { describe, expect, it } from 'vitest';
 import { SCALE_EXCEPTIONS } from './css-scale-exceptions';
 
 const TEXT = ['12', '14', '16', '20', '24', '32'];
-const SPACE = ['4', '8', '12', '16', '24', '32', '48'];
+// '14' is the design reference's gap between the sections of a panel (step 8.4e, B1): one token added to the scale, in tokens.css as --space-14
+const SPACE = ['4', '8', '12', '14', '16', '24', '32', '48'];
 const RADIUS = ['4', '8', 'pill'];
 // tokens v2 (step 8.4d): the design reference's names for the same scale (--t-N, --s-N) and its four radii
 const REF_RADIUS = ['control', 'card', 'panel', 'pill'];

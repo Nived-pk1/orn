@@ -34,7 +34,7 @@ const REACTION = ref('reaction', 'rxn_alcohol1-to-aldehyde-pcc');
 describe('the Study layout', () => {
   it('a kind chip in plain words, then the title; no "species" or "concept" word under it', async () => {
     await show(ETHANOL);
-    expect(document.querySelector('header')?.textContent).toMatch(/^CompoundEthanol/);
+    expect(document.querySelector('header')?.textContent).toMatch(/^Compound(Not yet reviewed)?Ethanol/); // the review mark sits on the chip row, right of the chip (step 8.4e, B1)
     expect(screen.queryByText('species')).toBeNull();
   });
 

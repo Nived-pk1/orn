@@ -45,16 +45,17 @@ export function StudyInspector(props: StudyInspectorProps) {
     <>
       <header className={styles.head}>
         <div className={styles.headText}>
-          <span className={styles.kindChip} {...(model.kindChip.tone === undefined ? {} : { 'data-tone': model.kindChip.tone })}>
-            {model.kindChip.word}
-          </span>
-          <h3 id={props.titleId} className={styles.titleText}>{model.title}</h3>
-          {!student || status !== 'review_required' ? null : (
-            <span className={styles.reviewLine}>
-              <ReviewMark status={status} />
-              <span>{STUDY_REVIEW_SENTENCE}</span>
+          <div className={styles.chipRow}>
+            <span className={styles.kindChip} {...(model.kindChip.tone === undefined ? {} : { 'data-tone': model.kindChip.tone })}>
+              {model.kindChip.word}
             </span>
-          )}
+            <span className={styles.headAside} data-head-aside="">
+              <ReviewMark status={status} />
+            </span>
+          </div>
+          <h3 id={props.titleId} className={styles.titleText}>{model.title}</h3>
+          {model.summary === undefined ? null : <p className={styles.summary} data-pane-summary="" data-sheet-full="">{model.summary}</p>}
+          {!student || status !== 'review_required' ? null : <span className={styles.reviewLine}>{STUDY_REVIEW_SENTENCE}</span>}
         </div>
         {props.headerExtras}
       </header>

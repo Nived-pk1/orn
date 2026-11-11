@@ -1,4 +1,4 @@
-.root { display: flex; flex-direction: column; gap: var(--space-12); color: var(--color-ink); font-size: var(--text-14); }
+.root { display: flex; flex-direction: column; gap: var(--space-14); color: var(--color-ink); font-size: var(--text-14); }
 .header { display: flex; flex-direction: column; gap: var(--space-8); }
 .nav { display: flex; gap: var(--space-8); align-items: center; }
 .nav button, .actions button { min-height: var(--hit-min); padding: 0 var(--space-12); border: 1px solid var(--color-rule); border-radius: var(--radius-8); background: var(--color-surface); color: var(--color-ink); }
@@ -53,9 +53,13 @@
 /* on the phone sheet at peek the main actions are large (ADR-039) */
 [data-sheet='peek'] .actions button { min-height: var(--tab-bar-height); flex: 1 1 40%; font-size: var(--text-16); }
 .arrowReactions { display: flex; flex-direction: column; gap: var(--space-8); }
-.arrowTitle { margin: 0; font-size: var(--text-14); }
-.arrowList { display: flex; flex-direction: column; gap: var(--space-8); margin: 0; padding: 0; list-style: none; }
-.arrowList button { width: 100%; min-height: var(--hit-min); padding: 0 var(--space-12); border: 1px solid var(--color-rule); border-radius: var(--radius-8); background: var(--color-surface); color: var(--color-ink); text-align: left; }
+.arrowTitle { margin: 0; font-size: var(--text-12); font-weight: 600; color: var(--color-ink-2); }
+/* the arrow's reactions are list rows (step 8.4e): the surface and the row look come from the list-row primitive */
+.arrowActions { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.arrowLine { display: block; }
+.examples { padding: var(--space-4) var(--space-12); }
+.examples summary { cursor: pointer; color: var(--color-ink-2); }
+.nestedRows { margin: var(--space-4) 0 0; padding: 0; list-style: none; }
 
 /* The open full equation is a panel of its own (outcome groups step): a light border and the surface tone. */
 .equationPanel[open] {
@@ -66,3 +70,12 @@
 }
 
 .equationPanel > summary { display: list-item; min-height: 24px; padding: var(--space-4) 0; cursor: pointer; }
+
+/* When the selection changes the content cross-fades (step 8.4e, B3): opacity only, and none under reduced motion */
+@keyframes contentIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .root { animation: contentIn 180ms ease-out; }
+}

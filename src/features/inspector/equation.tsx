@@ -100,7 +100,7 @@ export function HeroEquation(props: { readonly record: Reaction; readonly compac
     };
   }, [compact, reactants, products, first, mode]);
   if (first === undefined) return null;
-  const scheme = (layout: 'row' | 'stacked') => <EquationScheme equation={first} binding={binding} timers={ports.timers} facts={ports.facts} names={compact ? false : names} label="Equation of this reaction" layout={layout} nowrap={layout === 'row'} />; // the peek has no room for the name lines
+  const scheme = (layout: 'row' | 'stacked') => <EquationScheme equation={first} binding={binding} timers={ports.timers} facts={ports.facts} names={compact ? false : names} conditions={!compact} label="Equation of this reaction" layout={layout} nowrap={layout === 'row'} />; // the peek has no room for the name lines
   const scale = fit.mode === 'row' ? fit.scale : 1;
   return (
     <div ref={box} data-hero-equation="" data-fit={fit.mode} {...(compact ? { 'data-compact': '' } : {})} style={{ width: '100%', minWidth: 0, position: 'relative', contain: 'paint' }}>

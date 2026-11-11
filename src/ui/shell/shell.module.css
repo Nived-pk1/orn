@@ -356,3 +356,21 @@
     grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   }
 }
+
+/* The pane opens with a 260 ms slide and fade from the right (step 8.4e, B3). Transform and opacity only, never the width: the map area changes size once and sticky Fit fits once. None under reduced motion. */
+@keyframes paneIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .inspector:not([hidden]) {
+    animation: paneIn 260ms ease-out;
+  }
+}

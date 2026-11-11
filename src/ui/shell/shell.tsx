@@ -200,7 +200,7 @@ export function Shell(props: ShellProps) {
         <aside className={styles.inspector} aria-label={props.inspectorTitle} hidden={!inspectorOpen} onKeyDown={escape}>
           <div className={styles.inspectorHeader}>
             <h2 className={styles.inspectorTitle}>{props.inspectorTitle}</h2>
-            {wide ? null : <IconButton label="Close inspector" icon="x" onClick={() => setDrawerOpen(false)} />}
+            <IconButton label="Close inspector" icon="x" onClick={() => (wide ? pane.onOpen(false) : setDrawerOpen(false))} />
           </div>
           <div className={styles.inspectorBody}>{props.inspector}</div>
         </aside>

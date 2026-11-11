@@ -165,6 +165,7 @@
   --space-4: var(--s-4);
   --space-8: var(--s-8);
   --space-12: var(--s-12);
+  --space-14: 14px; /* the reference's gap between sections of a panel (step 8.4e, B1) */
   --space-16: var(--s-16);
   --space-24: var(--s-24);
   --space-32: var(--s-32);

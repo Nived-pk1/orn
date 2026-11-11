@@ -75,7 +75,7 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   // the arrow and bucket views (and the pure answer behind them) are their own chunk; an arrow that is gone shows the empty state from there
   if (entry !== null && (entry.kind === 'arrow' || entry.kind === 'bucket')) {
     return (
-      <section className={styles.root} data-subject={entry.kind}>
+      <section className={styles.root} data-subject={entry.kind} key={JSON.stringify(entry)}>
         <InspectorEnvContext.Provider value={env}>
           <Suspense fallback={<Skeleton label="Loading" lines={3} />}>
             <MapPane entry={entry} state={state} ports={ports} open={open} edition={edition} empty={empty} />
@@ -89,7 +89,7 @@ export function Inspector(props: { readonly ports: InspectorPorts; readonly host
   const record = recordOf(state, current);
   return (
     <InspectorEnvContext.Provider value={env}>
-      <article className={styles.root} aria-label="Record" data-record-id={current.id}>
+      <article className={styles.root} aria-label="Record" data-record-id={current.id} key={`${current.kind}:${current.id}`}>
         {record === undefined ? (
           <p role="status" className={styles.missing}>
             Missing record {current.id}: it is not in this dataset (it may have been removed or replaced).

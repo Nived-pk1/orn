@@ -45,6 +45,13 @@ describe('an arrow with a mark', () => {
     expect(container.querySelector('[data-count-extra-of]')).toBeNull();
   });
 
+  it('a line of a two-way pair is marked data-paired, so the stylesheet narrows its hit band to half the gap between the two lines (step 8.4e, C1: the nearer line wins)', () => {
+    const { container } = draw(scene, { lod: 2, marks: marks({ edges: new Map([[arrow.id, { role: 'makes', paired: true }]]) }) });
+    expect(container.querySelector(`[data-edge-id="${arrow.id}"]`)?.hasAttribute('data-paired')).toBe(true);
+    const lone = draw(scene, { lod: 2, marks: marks({ edges: new Map([[arrow.id, { role: 'makes' }]]) }) });
+    expect(lone.container.querySelector(`[data-edge-id="${arrow.id}"]`)?.hasAttribute('data-paired')).toBe(false);
+  });
+
   it('a one-way arrow keeps one plain hit path and a chip that is not a button', () => {
     const bundled = { ...scene, edges: scene.edges.map((e) => (e.id === arrow.id ? { ...e, bundleSize: 3 } : e)) };
     const { container } = draw(bundled, { lod: 2, marks: marks({ edges: new Map([[arrow.id, { role: 'makes' }]]) }) });

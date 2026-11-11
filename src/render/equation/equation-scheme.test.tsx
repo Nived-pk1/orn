@@ -322,3 +322,16 @@ describe('the look (equation step, part 6): names directly under their drawings,
     expect(fixed.map(([selector]) => (selector ?? '').trim())).toEqual([]);
   });
 });
+
+describe('the arrow of the sheet peek (step 8.4e, C3)', () => {
+  it('carries the reagent names only: no conditions line under it, so the drawings of a one-to-one reaction fit the peek', () => {
+    const eq = equation([term('Alkyne', { structure: smiles('CC#CC'), formula: 'C4H6' }), HYDROGEN], [BUTENE], { arrow: { above: [formulaPart('Pd')], below: [plainPart('quinoline')] } });
+    const r = rig({ facts: FACTS });
+    render(<EquationScheme equation={eq} binding={r.binding} timers={r.timers} facts={r.facts} names={false} conditions={false} />);
+    expect(document.querySelector('[data-equation-above]')?.textContent).toContain('Pd');
+    expect(document.querySelector('[data-equation-below]')?.textContent ?? '').toBe('');
+    cleanup();
+    render(<EquationScheme equation={eq} binding={r.binding} timers={r.timers} facts={r.facts} names={false} />);
+    expect(document.querySelector('[data-equation-below]')?.textContent, 'the full sheet and the desktop keep the conditions').toContain('quinoline');
+  });
+});

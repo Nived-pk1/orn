@@ -170,7 +170,7 @@ The user said: finish session 2 (Part A) and stop; do NOT start session 3 (Parts
   costs the fit least (a width-limited map gives the zoom stack the bottom). Zoom to selection uses the same insets (focus-fit.ts, zoom-selection-run).
   FIT_TOP_PADDING / FIT_BOTTOM_PADDING stay as defaults for callers that pass no insets (nothing else needed removing).
 - The desktop toast no longer raises the bottom controls (a moving control also moved the free area: titles fell under 10 px).
-- A5 (CSS only, scene-svg.module.css): dot grid, faded 0.42, 180 ms fades, soft shadow on hovered box and selection ring. NOT done: the 1 px
+- A5 (CSS only): dot grid, faded 0.42, 180 ms fades, shadow on the selection ring (NOT on hover: it broke the phone arrow tap). NOT done: the 1 px
   hover lift (box and text are two layers), arrow caps/notched head and count-chip shapes were NOT re-checked against the reference.
 - A2 leftover: hint pill also hidden while the A-to-B sheet is open.
 - Size: Study 383,144 (limit 383,270), Studio 386,987 (limit 387,150); baseline 383,020 / 386,902.
@@ -207,3 +207,55 @@ no box; the stack meets no box TEXT. Proposed amendment: A3 for the phone stack 
    Last full run of the first 13 desktop specs: 10 failed -> 3 left (the pre-existing ones) after the updates above.
 - Radius: the reference says 10 px for floating bars; no 10 px token exists, so bars use --radius-8 (REVIEW REQUIRED: add a token or accept 8).
 Commit: f44aa52
+
+
+## Session 3 proper (2026-11-11): Part B and Part C done; Part A leftovers closed
+Resumed on the user's word. HEAD at start a051fe9. Speed checks 229-243 ms before every run. Re-ran the Part A spec list first: 70 passed, 4 failed
+(2 pre-existing, keyboard-walk axe and map-selection phone: both resolved below, they were caused by new work, see Findings).
+
+### Part B (side panel), done
+- B1 header (study-inspector.tsx, map-views.tsx, CSS): `.head` sticky inside the pane (bleeds to the pane's padding; static in the phone peek), chip row
+  with the review mark on the RIGHT (`data-head-aside`; Study the dot, Studio its pill), title 20/600, ONE summary line (`data-pane-summary`, hidden in the
+  peek). Summary: reaction = "reactants -> main products" (model/study-summary.ts), compound = formula, anything else = first sentence of the lead; arrow =
+  its kind ("Between two families" / "Leads to compounds in no family yet"; NOT a count: 8.3 A5 says the count is only in the list heading); bucket = "n compounds".
+  The old review SENTENCE stays under the title for review_required in Study.
+  Close: the shell's inspector header now always has "Close inspector" (wide: pane.onOpen(false)); no contract change.
+  Where each action went: unchanged. GoNext already shows at most 3 and the rest in "..." (8.4a). Studio's own author buttons (Edit, Delete..., Duplicate, New
+  specific reaction) are STILL a separate row on the header line (data-sheet-full): REVIEW REQUIRED, moving them into "..." would hide Studio's main controls.
+  Body: section labels 12/600 (groupHeading, arrowTitle), gap 14 px (new token --space-14), the reaction hero on --paper.
+  Go-next lists / arrow ends / bucket rows / the arrow's reactions are LIST ROWS (ListRow got `ariaLabel`, `sub: ReactNode`); no pill buttons left in the panes.
+- B2 the arrow pane: "Reactions on this arrow (n)" = list rows (name, reagent words, scope chip); "Open these n reactions in Reactions" = a normal Button.
+- B3 motion: pane 260 ms slide + fade (shell.module.css `paneIn`, transform + opacity, reduced-motion guarded); content cross-fade 180 ms on a changed
+  selection (`.root` keyed by the entry). e2e axe read a half-faded frame once: tests/e2e/kit.ts axeProblems now waits for running animations to finish.
+- B4 tests/e2e/pane-list.spec.ts: the A-to-B pane's last card is inside the pane and clear of the toast at 1280x800 (green at once; behaviour was right).
+- B5 phone sheets use the same parts; peek rules not loosened (phone-sheet spec green).
+
+### Part C, done
+- C1 NOT as specified, REVIEW REQUIRED. The exact nearest-line version (distance from the pointer to each path) worked and its e2e failed when broken, but cost
+  380 bytes of initial JS (the row had 34 / 19 left); it is saved in docs/reviews/step-8-4e-c1-pair-hit.ts.txt with how to reinstate it. What is in: paired
+  lines carry `data-paired` and the stylesheet narrows each paired line's hit band to the stroke + the smaller of the usual band and the pair gap, so the two bands
+  meet in the middle (CSS rule test + data-paired test). Near the box ports the two lines nearly coincide and the bands still overlap there; an e2e could not be
+  made to discriminate in the fixture, so there is none for C1.
+- C2 phone marks (touch only, scene-svg.module.css, `--map-title-u` published by the lazy FreeAreas): a line <= 0.25 x the box title height (>= 1.5 px), a chip <= 2 x
+  the title (>= 18 px). tests/e2e/map-phone-marks.spec.ts red (stroke 3 px at a 6.1 px title) then green; desktop map-marks unchanged.
+- C3 the sheet's peek equation carries reagent names only (`conditions={false}` on EquationScheme from HeroEquation compact). The primitives already had chip 28 px
+  (chip.module.css:41) and phone card padding 12 (card.module.css:59), so nothing to restore; phone-sheet / phone-equation specs pass.
+- C4 phone first view and Fit: `phone-fit.ts` (pure, 8 unit tests incl. each clamp) answers the world window; the lazy FreeAreas gives it to the canvas as `fitBox`,
+  and ViewportScene re-fits when its SIZE changes while the view is automatic (`fitBoxRefits`). Before (title px, columns x rows on screen, boxes' share of the map
+  height): Pixel 7 6.1 px, 3 x 4, 38%; iPhone 14 6.1 px, 3 x 4, 52%. After: Pixel 7 12.8 px, 2 x 4, 80%; iPhone 14 8.1 px, 3 x 4, 70% (its map area is only about 365 px
+  high, so the largest zoom that fits the height is smaller). tests/e2e/map-phone-fit.spec.ts (portrait only; landscape is Part E). Part 0 had measured 8 px titles
+  and 46% / 69% before: the title was 6.1 px once Part A's insets applied, the usage figures are as measured in the new spec.
+
+### Findings and fixes on the way
+- Hover shadow dropped: a drop-shadow filter on `.mapNode:hover` made a tap beside an arrow select the box on the phone (map-selection phone spec). The selection ring keeps its shadow.
+- map-selection.spec bucket-view test: the chip is a list row now, its visible text carries the count apart: the spec reads the family from the accessible name.
+- Also failing at HEAD 572fb25 (clean worktree): phone-inspector.spec x4 ("horizontal cards", stale since 8.4d), map-fit 1280x800, map-marks pair click, navigator "Collapse".
+
+### Sizes (node scripts/initial-js-size.mjs, fresh builds): Study 383,260 (limit 383,270), Studio 387,138 (limit 387,150). Made room by moving work into the lazy FreeAreas
+(titles, phone window, content size) and trimming duplicate code in viewport-scene.
+
+### WHERE TO RESUME (supersedes the earlier one)
+Sessions 2 and 3 are DONE. Next: session 4 (Part D full map, Part E phone landscape). Keep the size headroom in mind (10 / 12 bytes): make new code lazy from the start.
+Reviewer decisions waiting: C1 (spend ~400 bytes for exact nearest-line?), Studio author buttons in the header, bar radius 8 vs 10, the A3 phone-stack reading,
+the pre-existing failures above.
+- The css-scale guard (tests/integration/css-scale.test.ts) now allows --space-14 (the reference's 14 px between panel sections): one token added to the scale. REVIEW REQUIRED if the scale should stay 4/8/12/16.

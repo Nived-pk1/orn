@@ -1,5 +1,9 @@
 /* The Study inspector (step 8.1): calm cards on the existing tokens; no colour literals, no new fonts. Motion is opt-in: nothing moves under prefers-reduced-motion. */
-.head { display: flex; align-items: center; gap: var(--space-8); flex-wrap: wrap; }
+/* the header stays while the body scrolls (step 8.4e, B1): it bleeds to the pane's padding and covers what passes under it */
+.head { position: sticky; top: calc(var(--space-16) * -1); z-index: 1; display: flex; align-items: center; gap: var(--space-8); flex-wrap: wrap; margin: calc(var(--space-16) * -1) calc(var(--space-16) * -1) 0; padding: var(--space-16) var(--space-16) var(--space-8); background: var(--color-surface); border-bottom: 1px solid var(--color-rule); }
+.chipRow { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); }
+.headAside { display: inline-flex; align-items: center; gap: var(--space-4); font-size: var(--text-12); color: var(--color-ink-2); }
+.summary { margin: 0; color: var(--color-ink-2); font-size: var(--text-14); overflow-wrap: anywhere; }
 .headText { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; flex: 1 1 12rem; }
 .kindChip { composes: chip from '../../ui/primitives/chip.module.css'; align-self: flex-start; color: var(--color-ink-2); }
 .kindChip[data-tone='blue'] { background: var(--color-tone-blue-tint); border-color: var(--color-tone-blue-border); color: var(--color-tone-blue-ink); }
@@ -11,7 +15,7 @@
 .history { display: flex; gap: var(--space-4); }
 .iconButton { min-width: var(--hit-min); min-height: var(--hit-min); border: 1px solid var(--color-rule); border-radius: var(--radius-8); background: var(--color-surface); color: var(--color-ink); font-size: var(--text-20); line-height: 1; }
 .iconButton:disabled { color: var(--color-ink-2); opacity: 0.6; }
-.hero { composes: card from '../../ui/primitives/card.module.css'; display: flex; flex-direction: column; align-items: center; gap: var(--space-8); overflow: auto; max-width: 100%; }
+.hero { composes: card from '../../ui/primitives/card.module.css'; background: var(--color-paper); display: flex; flex-direction: column; align-items: center; gap: var(--space-8); overflow: auto; max-width: 100%; }
 .formula { margin: 0; font-size: var(--text-20); text-align: center; overflow-wrap: anywhere; }
 .stepRow { flex-direction: row; flex-wrap: wrap; justify-content: center; margin: 0; list-style: none; }
 .stepRow li { display: flex; flex-direction: column; align-items: center; }
@@ -32,9 +36,9 @@
 .goNext > button { flex: 1 0 auto; padding-block: var(--space-4); white-space: nowrap; line-height: 1.25; }
 .goNext > span { flex: none; }
 [data-sheet='peek'] .goNext button { flex: 1 1 40%; font-size: var(--text-16); }
-.connected { display: flex; flex-direction: column; gap: var(--space-12); }
+.connected { display: flex; flex-direction: column; gap: var(--space-14); }
 .group { display: flex; flex-direction: column; gap: var(--space-4); container-type: inline-size; }
-.groupHeading { margin: 0; font-size: var(--text-14); color: var(--color-ink-2); }
+.groupHeading { margin: 0; font-size: var(--text-12); font-weight: 600; color: var(--color-ink-2); }
 .note { margin: 0; color: var(--color-ink-2); font-size: var(--text-12); }
 .chapters { display: flex; flex-direction: column; gap: var(--space-4); }
 .disclosure { border-top: 1px solid var(--color-rule); padding-top: var(--space-8); }
@@ -44,12 +48,13 @@
   .lead { transition: max-height 180ms ease-out; }
   .card, .chip, .iconButton { transition: opacity 150ms ease-out; }
 }
-.titleText { margin: 0; font-size: var(--text-20); overflow-wrap: anywhere; }
+.titleText { margin: 0; font-size: var(--text-20); font-weight: 600; overflow-wrap: anywhere; }
 /* Phone peek (step 8.1 Part D): the hero is compact, at most 40% of the peek (35dvh); the rest of the layout is marked data-sheet-full and hidden by the sheet. */
 [data-sheet='peek'] .hero { max-height: 120px; overflow: hidden; padding: var(--space-4) var(--space-8); gap: var(--space-4); }
 [data-sheet='peek'] .hero img { max-height: 96px; width: auto; max-width: 100%; object-fit: contain; }
 [data-sheet='peek'] .formula { font-size: var(--text-16); }
-[data-sheet='peek'] .head { flex-wrap: nowrap; }
+[data-sheet='peek'] .head { flex-wrap: nowrap; position: static; margin: 0; padding: 0; border: 0; background: none; }
+[data-sheet='peek'] .chipRow { justify-content: flex-start; }
 /* the peek is about as high as it ever was (the PCC card still fits above it on a Pixel 7): chip and title on one line, tight gaps, one-line title */
 [data-sheet='peek'] .headText { flex-direction: row; align-items: center; gap: var(--space-8); flex-basis: 0; }
 [data-sheet='peek'] .titleText { font-size: var(--text-16); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }

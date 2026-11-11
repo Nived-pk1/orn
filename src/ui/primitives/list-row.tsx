@@ -12,7 +12,8 @@ export type RowDot = 'hc' | 'hal' | 'oxy' | 'nit';
 
 export interface ListRowProps {
   readonly label: string;
-  readonly sub?: string;
+  /** The line under the label: words, or a short run of marked-up text (reagent words). */
+  readonly sub?: ReactNode;
   readonly count?: number;
   readonly icon?: IconName;
   readonly dot?: RowDot;
@@ -22,6 +23,8 @@ export interface ListRowProps {
   readonly unavailable?: string;
   /** Attributes a caller's tests and specs find the row by (for example `data-record-id`); written on the row's button, or its item when it has none. */
   readonly dataAttr?: Readonly<Record<string, string>>;
+  /** The accessible name when it must say more than the visible label (a chip row that reads "Made from: Amines (2)"). */
+  readonly ariaLabel?: string;
   /** Extra text after the label, on the same line (a chip, a mark). */
   readonly trailing?: ReactNode;
 }
@@ -56,7 +59,7 @@ export function ListRow(props: ListRowProps) {
   const blocked = unavailable !== undefined;
   return (
     <li className={styles.row}>
-      <button type="button" className={`${styles.inner} ${styles.action}`} {...props.dataAttr} aria-disabled={blocked ? true : undefined} aria-describedby={blocked ? reasonId : undefined} onClick={blocked ? undefined : onOpen}>
+      <button type="button" className={`${styles.inner} ${styles.action}`} {...props.dataAttr} {...(props.ariaLabel === undefined ? {} : { 'aria-label': props.ariaLabel })} aria-disabled={blocked ? true : undefined} aria-describedby={blocked ? reasonId : undefined} onClick={blocked ? undefined : onOpen}>
         <Body {...props} />
         <span className={styles.chevron} data-chevron="" aria-hidden="true">
           <Icon name="chevron-right" />

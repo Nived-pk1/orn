@@ -11,7 +11,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useStore } from 'zustand';
 import type { LayerName, SceneHit } from '@/render/svg';
-import { ViewportScene, type Insets, type ViewportController, type Viewport } from '@/render/viewport';
+import { ViewportScene, type Insets, type Rect, type ViewportController, type Viewport } from '@/render/viewport';
 import type { Scene } from '@/render/scene';
 import { useLayoutMode } from '@/ui/hooks';
 import { useStudyChrome } from '@/ui/study-chrome';
@@ -24,7 +24,7 @@ import { useChainReveal } from './use-chain-reveal';
 import { useMapCompounds } from './compounds-context';
 import { depictionBindingOf } from './depictions';
 import { ListView } from './list-view';
-import { keyOf, legendOf, type LegendKey } from './legend';
+import { keyOf, legendOf } from './legend';
 import { useMapBulk, useNoMulti } from './bulk-context';
 import { useCanvasInput } from './use-canvas-input';
 import { outsideNoteOf } from './scope-lens';
@@ -54,7 +54,6 @@ const noFacts = (): undefined => undefined;
 const KeyPopover = /* @__PURE__ */ lazy(() => import('./key-popover').then((m) => ({ default: m.KeyPopover })));
 const ChainPanel = /* @__PURE__ */ lazy(() => import('./chain-panel').then((m) => ({ default: m.ChainPanelInScope })));
 const NO_IDS: ReadonlySet<string> = new Set();
-const NO_KEYS: LegendKey = { lines: false, chip: false, pair: false, within: false, unclassified: undefined };
 const VIEW = 'navigator';
 const NOTHING_DRAWN = 'there is nothing drawn yet';
 
@@ -74,6 +73,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   // step 8.4e (A3): the room the floating controls leave, measured; Fit keeps the boxes out of it (phone first; the desktop bars follow)
   const [area, setArea] = useState<HTMLDivElement | null>(null);
   const [insets, setInsets] = useState<Insets | undefined>(undefined);
+  const [phoneBox, setPhoneBox] = useState<Rect | undefined>(undefined);
   const chrome = useStudyChrome();
   // Studio's "See those compounds" selects the bucket: the inspector lists them (one view, step 8.2b-fix, S3)
   const seeCompounds = (): void => {
@@ -153,6 +153,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const drawn = view === null ? scene : view.scene;
   // step 8.2b (B1): on a wide screen Fit and the first view fill the area with the visible boxes; the phone keeps its zoom
   const fitBox = useMemo(() => (phone || drawn === null ? undefined : boxesRect(drawn.nodes)), [phone, drawn]);
+  const viewBox = phone ? phoneBox : fitBox;
   const outlinedIds = useMemo(() => (view?.marks.outlined === undefined ? [] : [...view.marks.outlined.keys()]), [view]);
   const zoomSelection = useZoomToSelection({ controller, svg, drawn, selected, chain: map.chainOpen ? chain : undefined, outlined: outlinedIds, insets });
   const fitKey = phone ? undefined : `${state.chapterId ?? ''}|${map.showUnclassified}`;
@@ -245,7 +246,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       <div className={styles.drawing} aria-busy={state.working} ref={setArea}>
         {scene !== null && !listing ? (
           <Suspense fallback={null}>
-            <FreeAreas area={area} onInsets={setInsets} {...(fitBox === undefined ? {} : { contentWidth: fitBox.x1 - fitBox.x0, contentHeight: fitBox.y1 - fitBox.y0 })} />
+            <FreeAreas area={area} onInsets={setInsets} scene={drawn} {...(phone ? { onPhoneBox: setPhoneBox, selectedId: selected?.id } : {})} {...(fitBox === undefined ? {} : { content: fitBox })} />
           </Suspense>
         ) : null}
         {phone && scene !== null && !listing ? (
@@ -285,13 +286,13 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           }
           extra={multi?.actions(false)}
           scene={scene}
-          selected={listing ? null : selected}
+          selected={selected}
           multi={multi !== null && multi.items.length > 0}
           onClear={clearSelection}
           onZoomSelection={zoomSelection.available ? zoomSelection.zoom : undefined}
-          hint={listing ? undefined : hint}
+          hint={hint}
           hintKind={view === null ? undefined : view.quiet ? 'quiet' : 'busy'}
-          keys={listing ? NO_KEYS : legendKeys}
+          keys={legendKeys}
           inert={input.menu !== null}
         />
         </Suspense>
@@ -328,7 +329,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             ariaLabel={`Navigator: ${hubs} ${hubs === 1 ? 'hub' : 'hubs'}, ${(drawn ?? scene).edges.length} ${(drawn ?? scene).edges.length === 1 ? 'arrow' : 'arrows'}`}
             onController={setController}
             {...(phone ? { minScale: FIT_FLOOR } : {})}
-            {...(fitBox === undefined ? {} : { fitBox })}
+            {...(viewBox === undefined ? {} : { fitBox: viewBox })}
+            fitBoxRefits={phone}
             {...(fitKey === undefined ? {} : { fitKey })}
             {...(insets === undefined ? {} : { fitInsets: insets })}
             {...(depictions === undefined ? {} : { depictions })}

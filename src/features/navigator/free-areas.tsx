@@ -4,20 +4,32 @@
  * control (a bar, the hint pill) takes the top or the bottom by where its middle is; a tall one (the zoom or phone stack) the left or right.
  * Measured, not constants: the real rectangles, again whenever a control appears, goes, or changes size. Draws nothing.
  */
-import { useEffect } from "react";
-import type { Insets } from "@/render/viewport";
+import { useEffect, useMemo } from "react";
+import { BOXES, type Scene } from "@/render/scene";
+import type { Insets, Rect } from "@/render/viewport";
+import { boxesRect } from "./map-geometry";
+import { phoneFitBox } from "./phone-fit";
 import { insetsOf, type Box } from "./free-areas-rule";
 
 const READ = "[data-map-control]";
 
-/** `contentWidth` / `contentHeight`: the size (map units) of what Fit shows when the map fits it whole (the desktop): each corner control then takes the edge that costs the fit least. */
+/** `content`: the rectangle (map units) of what Fit shows when the map fits it whole (the desktop): each corner control then takes the edge that costs the fit least. */
 export function FreeAreas(props: {
   readonly area: HTMLElement | null;
   readonly onInsets: (insets: Insets) => void;
-  readonly contentWidth?: number;
-  readonly contentHeight?: number;
+  readonly content?: Rect;
+  /** The drawing: its smallest family title (map units) is published as `--map-title-u` for the touch marks (step 8.4e, C2). */
+  readonly scene?: Scene | null;
+  /** The phone (step 8.4e, C4): receives the world window Fit and the first view show; absent on the desktop. */
+  readonly onPhoneBox?: (box: Rect) => void;
+  /** The selected box's id: the phone's view is centred on it. */
+  readonly selectedId?: string | undefined;
 }) {
-  const { area, onInsets, contentWidth, contentHeight } = props;
+  const { area, onInsets, content: shown, scene, onPhoneBox, selectedId } = props;
+  const contentWidth = shown === undefined ? undefined : shown.x1 - shown.x0;
+  const contentHeight = shown === undefined ? undefined : shown.y1 - shown.y0;
+  const titleUnits = useMemo(() => Math.min(BOXES.hub.label.size, ...(scene?.nodes ?? []).filter((node) => node.box === "hub").map((node) => BOXES.hub.label.size * (node.scale ?? 1))), [scene]);
+  useEffect(() => area?.style.setProperty("--map-title-u", String(titleUnits)) as undefined, [area, titleUnits]);
   useEffect(() => {
     if (area === null) return undefined;
     let frame = 0;
@@ -30,7 +42,13 @@ export function FreeAreas(props: {
           return { x: r.x - box.x, y: r.y - box.y, w: r.width, h: r.height };
         },
       );
-      onInsets(insetsOf(controls, { width: box.width, height: box.height }, contentWidth === undefined || contentHeight === undefined ? undefined : { width: contentWidth, height: contentHeight }));
+      const size = { width: box.width, height: box.height };
+      const insets = insetsOf(controls, size, contentWidth === undefined || contentHeight === undefined ? undefined : { width: contentWidth, height: contentHeight });
+      onInsets(insets);
+      const nodes = scene?.nodes ?? [];
+      const own = nodes.find((node) => node.id === selectedId);
+      const content = boxesRect(nodes);
+      if (onPhoneBox !== undefined && content !== undefined) onPhoneBox(phoneFitBox({ content, size, insets, titleUnits, selected: own === undefined ? undefined : boxesRect([own]) }));
     };
     const soon = (): void => {
       if (frame === 0) frame = window.requestAnimationFrame(measure);
@@ -55,6 +73,6 @@ export function FreeAreas(props: {
       resize?.disconnect();
       mutation.disconnect();
     };
-  }, [area, onInsets, contentWidth, contentHeight]);
+  }, [area, onInsets, contentWidth, contentHeight, scene, onPhoneBox, selectedId, titleUnits]);
   return null;
 }

@@ -72,3 +72,30 @@ describe('ArrowPane', () => {
     expect(focusEnd.mock.calls).toEqual([['cls_amines'], ['virtual:unclassified:hub']]);
   });
 });
+
+describe('list rows, not pill buttons (step 8.4e, B1)', () => {
+  it('the ends of an arrow are list rows with a chevron', () => {
+    render(<ArrowPane view={arrow} actions={{ focusEnd: () => undefined, open: () => undefined, titleId: 't' }} />);
+    const rows = within(screen.getByRole('list', { name: 'Ends of this arrow' })).getAllByRole('button');
+    expect(rows.map((b) => b.textContent)).toEqual(['Amines', 'Not in a family yet']);
+    for (const row of rows) expect(row.querySelector('[data-chevron]'), row.textContent ?? '').not.toBeNull();
+  });
+  it('the compounds of the bucket are list rows with their count, and what they are made from and go on to are rows too', () => {
+    render(<BucketPane view={bucket} actions={{ focusEnd: () => undefined, open: () => undefined, titleId: 't' }} />);
+    for (const name of [/Ethanal/, 'Made from: Amines (2)', 'Goes on to: Alkynes (1)']) {
+      expect(screen.getByRole('button', { name }).querySelector('[data-chevron]'), String(name)).not.toBeNull();
+    }
+    expect(screen.getByRole('button', { name: /Ethanal/ }).textContent).toMatch(/3/);
+  });
+  it('the header of every pane has the kind chip and a summary line', () => {
+    render(<ArrowPane view={arrow} actions={{ focusEnd: () => undefined, open: () => undefined, titleId: 't' }} />);
+    expect(document.querySelector('header [data-pane-summary]')?.textContent).toBe('Leads to compounds in no family yet'); // not a count: the count is in the list heading only
+    cleanup();
+    render(<ArrowPane view={{ ...arrow, to: { id: 'cls_b', name: 'B', bucket: false } }} actions={{ focusEnd: () => undefined, open: () => undefined, titleId: 't' }} />);
+    expect(document.querySelector('header [data-pane-summary]')?.textContent).toBe('Between two families');
+  });
+  it('the bucket summary counts its compounds', () => {
+    render(<BucketPane view={bucket} actions={{ focusEnd: () => undefined, open: () => undefined, titleId: 't' }} />);
+    expect(document.querySelector('header [data-pane-summary]')?.textContent).toBe('2 compounds');
+  });
+});

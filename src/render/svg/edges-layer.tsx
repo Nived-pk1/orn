@@ -17,7 +17,7 @@ function EdgeGroup(props: { readonly edge: SceneEdge; readonly ids: DefIds; read
   const classes = [styles.edge, edge.weight === 'heavy' ? styles.edgeHeavy : undefined, edge.stroke === 'dotted' ? styles.edgeDotted : undefined, edge.weight === 'light' ? styles.edgeLight : undefined].filter((name): name is string => name !== undefined).join(' ');
   const marker = edge.arrowHead === 'filled' ? `url(#${ids.filled})` : edge.arrowHead === 'open' ? `url(#${ids.open})` : undefined;
   return (
-    <g data-edge-id={edge.id} data-from={edge.from} data-to={edge.to} data-semantic={edge.semantic} data-stroke={edge.stroke} data-weight={edge.weight} {...(mark === undefined ? {} : { 'data-role': mark.role })} role="graphics-symbol" aria-label={edge.ariaLabel}>
+    <g data-edge-id={edge.id} data-from={edge.from} data-to={edge.to} data-semantic={edge.semantic} data-stroke={edge.stroke} data-weight={edge.weight} {...(mark === undefined ? {} : { 'data-role': mark.role })} {...(mark?.paired === true ? { 'data-paired': '' } : {})} role="graphics-symbol" aria-label={edge.ariaLabel}>
       <title>{edge.ariaLabel}</title>
       <path
         className={classes}

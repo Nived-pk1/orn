@@ -9,6 +9,7 @@ import type { AnchorTone, Caveat, ChemicalClass, Concept, Mechanism, NamedReacti
 import { nameOf, nameOfRecord, recordOf } from './describe';
 import { parameterPhrases } from './conditions';
 import { connectedOf, type CardGroup, type Snapshot } from './study-connected';
+import { summaryOf } from './study-summary';
 import { plain, STUDY_LAYOUT_KINDS, studyKindWord } from './study-words';
 
 export type { Card, CardGroup, Snapshot } from './study-connected';
@@ -34,6 +35,8 @@ export interface WatchOut {
 export interface StudyModel {
   readonly kindChip: { readonly word: string; readonly tone: AnchorTone | undefined };
   readonly title: string;
+  /** The ONE line under the title (step 8.4e, B1), or undefined when there is nothing worth saying. */
+  readonly summary: string | undefined;
   readonly hero: Hero | undefined;
   /** The idea in one paragraph: the first of summary, study notes, description (a caveat: its statement). */
   readonly lead: { readonly source: string; readonly from: 'summary' | 'notes' | 'description' } | undefined;
@@ -200,7 +203,7 @@ export function studyInspectorModel(ref: RecordRef, snapshot: Snapshot, edition:
   if (record === undefined) return undefined;
   const forAuthors = edition === 'studio';
   const header = { kindChip: { word: studyKindWord(ref.kind), tone: toneOf(snapshot, ref) }, title: nameOfRecord(record), forAuthors };
-  if (!STUDY_LAYOUT_KINDS.has(ref.kind)) return { ...header, hero: undefined, lead: undefined, facts: [], watchOut: [], connected: [], notes: undefined };
+  if (!STUDY_LAYOUT_KINDS.has(ref.kind)) return { ...header, summary: undefined, hero: undefined, lead: undefined, facts: [], watchOut: [], connected: [], notes: undefined };
   const { lead, notes } = leadOf(record, ref.kind);
-  return { ...header, hero: heroOf(snapshot, ref, record), lead, facts: factsOf(snapshot, ref, record), watchOut: watchOutOf(snapshot, ref), connected: connectedOf(snapshot, ref), notes };
+  return { ...header, summary: summaryOf(snapshot, ref, record, lead?.source), hero: heroOf(snapshot, ref, record), lead, facts: factsOf(snapshot, ref, record), watchOut: watchOutOf(snapshot, ref), connected: connectedOf(snapshot, ref), notes };
 }
