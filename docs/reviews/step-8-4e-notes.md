@@ -259,3 +259,4 @@ Sessions 2 and 3 are DONE. Next: session 4 (Part D full map, Part E phone landsc
 Reviewer decisions waiting: C1 (spend ~400 bytes for exact nearest-line?), Studio author buttons in the header, bar radius 8 vs 10, the A3 phone-stack reading,
 the pre-existing failures above.
 - The css-scale guard (tests/integration/css-scale.test.ts) now allows --space-14 (the reference's 14 px between panel sections): one token added to the scale. REVIEW REQUIRED if the scale should stay 4/8/12/16.
+Commit (Part B, C): ae66720
