@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-08",
+  "lastUpdated": "2026-11-12",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -159,8 +159,8 @@
     "protectedCheckedAt": "2026-11-08",
     "workerVersion": "21199061-2f5e-4a1d-a908-997e0c51ade6"
   },
-  "nextStep": "8.4e",
-  "nextStepTitle": "Step 8.4d closed 2026-11-09 (rail 168 px below 1440, 188 px from 1440); not deployed (deploys with 8.4f). Next: 8.4e",
+  "nextStep": "8.4f",
+  "nextStepTitle": "Step 8.4e closed 2026-11-12 (map, side panel, full map, phone landscape); not deployed (deploys with 8.4f). Next: 8.4f",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

@@ -231,7 +231,7 @@ export function ViewportScene(props: ViewportSceneProps) {
 
   const { fitKey } = props;
   const insetKey = `${Object.values(props.fitInsets ?? {})}`;
-  const boxKey = props.fitBoxRefits === true && props.fitBox !== undefined ? `${(props.fitBox.x1 - props.fitBox.x0) | 0},${(props.fitBox.y1 - props.fitBox.y0) | 0}` : '';
+  const boxKey = props.fitBoxRefits === true && props.fitBox !== undefined ? String(Object.values(props.fitBox).map(Math.trunc)) : '';
   useEffect(() => refitIfAuto.current?.(), [insetKey, boxKey]);
   useEffect(() => {
     if (keyRef.current === fitKey) return;

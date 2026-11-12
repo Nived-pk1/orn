@@ -9,6 +9,7 @@
  * px, nothing behind the tab bar, and axe at WCAG 2.2 AA. Screenshots go to screenshots/phone2-<device>-<n>-<stop>.png.
  */
 import { devices, type CDPSession, type Page } from '@playwright/test';
+import { bringIntoView } from './pan-kit';
 import { expect, test } from './fixtures';
 import { layoutProblems } from './layout-guard';
 import { axeProblems, expectClean, openPhoneApp, watch, exampleCard, leaveChapters, expectDemoLoaded, LIVE } from './kit';
@@ -79,6 +80,8 @@ async function centreOf(page: Page, id: string): Promise<{ x: number; y: number 
 /** A tap on a family; the map may still be settling (a second layout), so a tap that opens nothing is made again. */
 async function tapFamily(page: Page, id: string, name: string): Promise<void> {
   for (let attempt = 0; attempt < 5; attempt += 1) {
+    await centreOf(page, id); // settled
+    await bringIntoView(page, id); // the first view shows the readable part of a wide map (step 8.4e, resume 4); the map may settle again, so each attempt
     const at = await centreOf(page, id);
     await page.touchscreen.tap(at.x, at.y);
     if (await page.getByRole('complementary', { name }).isVisible({ timeout: 6_000 }).catch(() => false)) return;

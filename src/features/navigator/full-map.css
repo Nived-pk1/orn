@@ -40,3 +40,35 @@
 [data-full-map][data-layout='desktop']:has(> aside:not([hidden])) [data-right-pane] {
   margin-right: var(--inspector-width);
 }
+
+/*
+ * Enter and exit are 200 ms (step 8.4e, resume 4): the drawing fades in (opacity only: a transform on the drawing would distort the size the viewport measures while it runs). Entering and leaving name DIFFERENT animations, so the
+ * change of name starts the one for that direction (a stylesheet can see the flag appear and go, not an element leave). None under reduced motion.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes orn-full-map-in {
+    from {
+      opacity: 0.6;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes orn-full-map-out {
+    from {
+      opacity: 0.6;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  svg[role="group"] {
+    animation: orn-full-map-out 200ms ease-out;
+  }
+
+  [data-full-map] svg[role="group"] {
+    animation-name: orn-full-map-in;
+  }
+}

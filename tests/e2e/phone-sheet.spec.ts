@@ -7,6 +7,7 @@
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { axeProblems, expectClean, openPhoneApp, watch } from './kit';
+import { bringIntoView } from './pan-kit';
 
 const NAVIGATOR = /^Navigator: \d+ hubs?, \d+ arrows?$/;
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
@@ -29,6 +30,8 @@ async function centreOf(page: Page, id: string): Promise<{ x: number; y: number 
 /** Taps a family and waits for its sheet; the map may still be settling (a second layout), so a tap that selects nothing is made again. */
 async function tapFamily(page: Page, id: string, name: string): Promise<void> {
   for (let attempt = 0; attempt < 5; attempt += 1) {
+    await centreOf(page, id); // settled
+    await bringIntoView(page, id); // the first view shows the readable part of a wide map (step 8.4e, resume 4); the map may settle again, so each attempt
     const at = await centreOf(page, id);
     await page.touchscreen.tap(at.x, at.y);
     if (await page.getByRole('complementary', { name }).isVisible({ timeout: 6_000 }).catch(() => false)) return;

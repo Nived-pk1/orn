@@ -1,6 +1,6 @@
 /**
  * Step 8.4e, C4 (STUDIO build, own-data fixture, Pixel 7 and iPhone 14 in Chromium, portrait): the first view and Fit use the largest zoom at which
- * the boxes fit the map area's HEIGHT: family titles up to 13 px (before: 6.1 px; Pixel 7 now 12.8 px, iPhone 14 8.1 px because its map area is shorter) and the boxes use most of
+ * the boxes fit the map area's HEIGHT: family titles up to 13 px (before: 6.1 px; Pixel 7 now 12.8 px, iPhone 14 8.1 px because its map area is shorter, 10 px since resume 4) and the boxes use most of
  * the free height. Landscape belongs to Part E.
  */
 import { devices, type Page } from "@playwright/test";
@@ -24,7 +24,7 @@ async function measure(page: Page): Promise<{ title: number; use: number; column
 }
 
 // the iPhone 14 map area is only about 365 px high, so the largest zoom that fits the height gives smaller titles there (before: 6.1 px, 52% of the height)
-for (const [label, device, minTitle, minUse] of [["Pixel 7", PIXEL, 10, 0.8], ["iPhone 14", IPHONE, 8, 0.65]] as const) {
+for (const [label, device, minTitle, minUse] of [["Pixel 7", PIXEL, 10, 0.8], ["iPhone 14", IPHONE, 9.99, 0.65]] as const) {
   test.describe(`the phone's first view and Fit (${label})`, () => {
     test.use({ ...device, actionTimeout: 60_000 });
 

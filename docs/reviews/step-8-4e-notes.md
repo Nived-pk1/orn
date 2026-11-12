@@ -376,3 +376,34 @@ Numbers to beat: landscape box titles 6.1 px on both phones (map 360 / 340 px hi
 - REVIEW REQUIRED: (1) landscape titles stay 6.1 px (FIT_FLOOR); (2) notices are the folded control, not the bell icon; (3) landscape panel keeps the peek/full content rules; (4) stack becomes a row under 836 px wide with the panel open; (5) the 24 px storage line has no spec; (6) Full-map 200 ms animation and 120 ms touch press not built (Part F adds no app code); (7) profile sizes 750x340 / 915x412, not 844x390.
 ## WHERE TO RESUME: session 6 = Part G (close).
 Commit (session 5): a276cf9
+
+## Session 6 (2026-11-12): resume 4 items, then Part G
+START: HEAD 74560fa clean, stash empty. Speed check logged below before each run.
+Reviewer decisions (resume 4), recorded:
+1. Landscape titles 6.1 px unreadable: on TOUCH layouts the lower bound of Fit / first view = max(FIT_FLOOR, zoom at which titles are 10 px); pans both ways; pinch minimum unchanged (FIT_FLOOR);
+   desktop unchanged; rule in phone-fit.ts (lazy). ADR-037 addendum. Tests red first (unit each bound; e2e both phones portrait / landscape / full map >= 10 px, pinch reaches FIT_FLOOR).
+2-4, 7 accepted (notices control; panel keeps peek/full; stack row under 836 px - the A3 test must cover it; 750x340).
+5. Storage line landscape spec (present, 24 px, text not clipped, tap opens backup), red by breaking the height once.
+6. Build the two motions CSS only: full map enter/exit 200 ms (opacity + transform of the map layer, lazy full-map.css), 120 ms touch press on a box (:active, touch). None under reduced motion.
+   Tests: computed durations. If JS is needed, leave out and list for 8.4f.
+Part G: rebuild, sizes (383,400 / 387,280; Studio 2 bytes), check, WHOLE spec list Chromium green, screenshots compare-8.4e (+ landscape map, panel beside map, landscape full map), dark render, UI_ARCHITECTURE addendum, PROGRESS with the spec list for 8.4f, plan row 8.4e DONE, PROJECT_STATE next 8.4f, commit.
+- RED 11:48 `npx vitest run src/features/navigator/phone-fit.test.ts` -> 1 failed (PHONE_TITLE_MIN_PX missing / floor still FIT_FLOOR), before the source edit.
+- RED 11:51 phone-fit.test.ts new case 'a selection lower than the first window' (before the y-centring edit)
+- RED run of map-phone-titles.spec: see next line (source phone-fit.ts already edited by then: the unit red came first; e2e written after the unit source, disclosed; closed by break-and-restore below).
+- Break-and-restore 13:xx (PHONE_TITLE_MIN_PX = 0): map-phone-titles 3 failed. BEFORE numbers (title px, families whole on screen cols x rows): iPhone 14 portrait 8.1 px (2 x 4); Pixel 7 landscape 6.1 (6 x 3), full map 6.1 (6 x 4); iPhone 14 landscape 6.1 (5 x 3), full map 6.1 (6 x 4); Pixel 7 portrait 12.8 / full 13.0 unchanged.
+  AFTER (restored, 4 passed): Pixel 7 portrait 12.8 (1 x 4) / full 13.0 (1 x 4); iPhone 14 portrait 10.0 (2 x 3) / full 12.6 (1 x 4); Pixel 7 landscape 10.0 (4 x 2) / full 10.0 (4 x 3); iPhone 14 landscape 10.0 (3 x 2) / full 10.0 (3 x 2). Pinch out still reaches FIT_FLOOR in all.
+  Also phone-fit.ts: a selection lower than the first window now centres the window vertically (map pans both ways), unit test red first.
+- RED 11:54 landscape-storage-line.spec (landscape.css storage line height broken to 44 px) -> 'one 24 px line' Received 44; restored below.
+- RED 11:59 map-motion.spec -> 2 failed (full map animation names, touch press duration '') before the CSS.
+- FOUND 12:40: map-free-areas A3 measured the box words as 'svg [data-node-id] text' (empty: the words are in the labels layer 'svg [data-label-of] text'), so the phone stack-over-text rule was never really tested; the Pixel 7 screenshot shows 'Family 02' under the stack/Select pill. Test fixed to the labels layer (red expected below).
+- RED 12:41 map-free-areas A3 (labels layer): Pixel 7 stack {338.7,94,65x216} over a title (322.6,163.6,57.8x17). Fix: phoneFitBox gets avoid (stack, screen px) + boxes (map units) and slides the first view RIGHT (content right, left margin) until no box in the stack's rows lies under it.
+- RED 12:14 phone-fit.test.ts 'with it the first view is slid...' -> 1 failed (no avoid/boxes support) before the source edit.
+- 12:55 after the slide: A3 still red (Pixel) because viewport-scene's boxKey only compares the window SIZE (a slid window has the same size: no refit); and map-phone-titles landscape full map 9.85 px because my full-map keyframes scale(0.99) distort getBoundingClientRect-based size measured during the 200 ms. Fix: boxKey includes the window position; the keyframes are opacity only (transform dropped from resume 4 item 6: it distorts the measured map size; reported).
+- 13:10 selection alone must not move the phone view (boxKey now has the window position): FreeAreas reads the selection from a ref (not a dep): re-measures for resize/rotation/controls only, as before the key change.
+- 13:40 A3 phone green with the REAL words (labels layer): phoneFitBox slides the first view RIGHT (<= 60% of the map width) until no box in the rows of the stack or the visible hint pill lies under them (avoid + boxes from the lazy FreeAreas); viewport-scene boxKey carries the window position (so a slid window refits); FreeAreas reads the selection from a ref (a selection alone does not move the view). map-free-areas ignores a visibility:hidden hint pill (covers nothing). map-selection.spec (phone): `bringIntoView` pans the map before a tap (reason: the first view now shows the readable part of a wide map, a family can be off screen).
+
+### Session 6 close (2026-11-12)
+- check green at default workers: 772 files, 8510 tests, 9m44s (an earlier run stopped at the 400-line file limit and the motion guard test, both fixed).
+- Whole running list, Chromium, final build: 126 passed, 5 skipped, 0 failed (8m30s). Sizes: Study 383,390, Studio 387,257.
+- Screenshots in screenshots/compare-8.4e/ (lines in PROGRESS). Docs: PROGRESS, ADR-037 addenda (floor case, 10 px touch bound), UI_ARCHITECTURE §14 addendum, plan row 8.4e DONE, PROJECT_STATE next 8.4f.
+## WHERE TO RESUME: 8.4f (deploys 8.4d to 8.4f; run the spec list in PROGRESS in 3 engines).

@@ -4,13 +4,13 @@
  * control (a bar, the hint pill) takes the top or the bottom by where its middle is; a tall one (the zoom or phone stack) the left or right.
  * Measured, not constants: the real rectangles, again whenever a control appears, goes, or changes size. Draws nothing.
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { BOXES, type Scene } from "@/render/scene";
 import { hitRefiner, nearerEdgeAt } from "@/render/svg";
 import type { Insets, Rect } from "@/render/viewport";
 import { boxesRect } from "./map-geometry";
 import { phoneFitBox } from "./phone-fit";
-import { insetsOf, titleUnitsOf, type Box } from "./free-areas-rule";
+import { CONTROL_GAP, insetsOf, titleUnitsOf, type Box } from "./free-areas-rule";
 
 const READ = "[data-map-control]";
 const PANE_HOST = '[data-full-map],[data-layout="phone"]';
@@ -36,6 +36,9 @@ export function FreeAreas(props: {
     onPhoneBox,
     selectedId,
   } = props;
+  // a selection ALONE does not move the view (the window is measured again for a resize, a rotation or a control, and then centres on the selection as it is then)
+  const selectedNow = useRef(selectedId);
+  selectedNow.current = selectedId;
   const contentWidth = shown === undefined ? undefined : shown.x1 - shown.x0;
   const contentHeight = shown === undefined ? undefined : shown.y1 - shown.y0;
   // the smallest family title as DRAWN (a box drawn bigger carries its text with it); the nominal size only when no family is drawn
@@ -103,8 +106,14 @@ export function FreeAreas(props: {
           : { width: contentWidth, height: contentHeight },
       );
       onInsets(insets);
+      // the controls every box must stay clear of on the phone (A3): the stack of buttons at the side and the hint pill, where they are in the map area, with their gap
+      const avoid = [...area.querySelectorAll<HTMLElement>('[data-map-control="stack"], [data-map-control="pill"]')]
+        .filter((el) => getComputedStyle(el).visibility !== "hidden") // a hint pill with nothing to say covers nothing
+        .map((el) => el.getBoundingClientRect())
+        .filter((r) => r.width > 0)
+        .map((r) => ({ x0: r.x - box.x - CONTROL_GAP, y0: r.y - box.y - CONTROL_GAP, x1: r.right - box.x + CONTROL_GAP, y1: r.bottom - box.y + CONTROL_GAP }));
       const nodes = scene?.nodes ?? [];
-      const own = nodes.find((node) => node.id === selectedId);
+      const own = nodes.find((node) => node.id === selectedNow.current);
       const content = boxesRect(nodes);
       if (onPhoneBox !== undefined && content !== undefined)
         onPhoneBox(
@@ -114,6 +123,7 @@ export function FreeAreas(props: {
             insets,
             titleUnits,
             selected: own === undefined ? undefined : boxesRect([own]),
+            ...(avoid.length === 0 ? {} : { avoid, boxes: nodes.map((node) => ({ x0: node.x, y0: node.y, x1: node.x + node.width, y1: node.y + node.height })) }),
           }),
         );
     };
@@ -158,7 +168,6 @@ export function FreeAreas(props: {
     contentHeight,
     scene,
     onPhoneBox,
-    selectedId,
     titleUnits,
   ]);
   return null;

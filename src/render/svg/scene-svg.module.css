@@ -387,3 +387,11 @@ text.faded {
   .edgeLight { stroke-width: calc(min(clamp(2px, calc(var(--map-k, 1) * 2px), 4px), max(1.5px, calc(var(--map-title-u, 14) * var(--map-k, 1) * 0.25px))) * 0.625); }
   .chipScale { transform: scale(calc(min(clamp(1, var(--map-k, 1), 1.3333), max(0.9, calc(var(--map-title-u, 14) * var(--map-k, 1) * 2 / 20))) / var(--map-k, 1))); }
 }
+
+/* Touch press state of a box (step 8.4e): 120 ms ease to a lighter box; opacity only (a filter once caught taps meant for an arrow beside it); none under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @media (pointer: coarse) {
+    .mapNode { transition: fill-opacity 180ms ease-out, stroke-opacity 180ms ease-out, opacity 120ms ease-out; }
+    .mapNode:active { opacity: 0.8; }
+  }
+}

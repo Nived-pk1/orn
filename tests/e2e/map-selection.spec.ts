@@ -7,6 +7,7 @@
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { expectClean, leaveChapters, loadDemo, watch } from './kit';
+import { bringIntoView } from './pan-kit';
 import { shotsDir } from './editor-kit';
 import { clickNode, showUnclassified } from './map-focus-kit';
 import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone } from './map-layout-kit';
@@ -64,6 +65,7 @@ async function pickArrow(page: Page, id: string, phone: boolean): Promise<void> 
 }
 
 async function pickNode(page: Page, id: string, phone: boolean): Promise<void> {
+  if (phone) await bringIntoView(page, id);
   if (phone) await node(page, id).tap();
   else await clickNode(page, node(page, id));
   await page.waitForTimeout(450);

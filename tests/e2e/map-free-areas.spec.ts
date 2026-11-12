@@ -65,16 +65,17 @@ async function expectFree(page: Page): Promise<void> {
           w: r.width,
           h: r.height,
           kind: el.getAttribute("data-map-control"),
+          shown: getComputedStyle(el).visibility !== "hidden", // a hint pill with nothing to say covers nothing
         };
       })
-      .filter((r) => r.w > 0 && r.h > 0),
+      .filter((r) => r.w > 0 && r.h > 0 && r.shown),
   );
   expect(
     controls.length,
     "the floating controls are marked data-map-control",
   ).toBeGreaterThan(0);
   const boxes = await rects(page, "svg [data-node-id]");
-  const words = await rects(page, "svg [data-node-id] text");
+  const words = await rects(page, "svg [data-label-of] text");
   for (const control of controls) {
     const against = control.kind === "stack" ? words : boxes;
     for (const one of against)
