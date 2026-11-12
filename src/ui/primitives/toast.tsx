@@ -7,13 +7,22 @@
  * Phone (ADR-039, `folded`): nothing floats over the page. The toasts are counted and listed by whoever calls `useToastView` and renders
  * `ToastItems` (the phone's folded notices line); a visually hidden live region, mounted from the start, still announces each addition.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { NOTICE_WORD, type NoticeKind } from './banner';
-import { Button, IconButton } from './button';
-import { Icon } from './icons';
-import { VisuallyHidden } from './visually-hidden';
-import styles from './toast.module.css';
-import hidden from './visually-hidden.module.css';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { NOTICE_WORD, type NoticeKind } from "./banner";
+import { Button, IconButton } from "./button";
+import { Icon, type IconName } from "./icons";
+import { VisuallyHidden } from "./visually-hidden";
+import styles from "./toast.module.css";
+import hidden from "./visually-hidden.module.css";
 
 export const MAX_TOASTS = 5;
 /** How long a plain result toast stays (steps 6.5a, 8.4d): the save state stays in the status line. */
@@ -34,7 +43,11 @@ export interface ToastInput {
   readonly text: string;
   readonly autoDismissMs?: number;
   /** One action of the toast (step 5.9a: "Undo import"); choosing it also dismisses the toast. */
-  readonly action?: { readonly label: string; readonly onAction: () => void };
+  readonly action?: {
+    readonly label: string;
+    readonly onAction: () => void;
+    /** An icon before the label ("Undo import" with the undo icon; step 8.4f, L6). */ readonly icon?: IconName;
+  };
 }
 
 export interface Toasts {
@@ -115,6 +128,9 @@ function ToastRow(props: { readonly item: ToastInput & { readonly id: number }; 
               item.action?.onAction();
             }}
           >
+            {item.action.icon === undefined ? null : (
+              <Icon name={item.action.icon} />
+            )}
             {item.action.label}
           </Button>
         )}

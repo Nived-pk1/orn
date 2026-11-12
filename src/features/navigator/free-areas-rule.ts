@@ -37,10 +37,35 @@ function cost(c: Box, side: Side, area: Area): number {
   }
 }
 
-const verticalOf = (c: Box, area: Area): Side => (c.y + c.h / 2 < area.height / 2 ? 'top' : 'bottom');
-const horizontalOf = (c: Box, area: Area): Side => (c.x + c.w / 2 < area.width / 2 ? 'left' : 'right');
+const verticalOf = (c: Box, area: Area): Side =>
+  c.y + c.h / 2 < area.height / 2 ? "top" : "bottom";
+const horizontalOf = (c: Box, area: Area): Side =>
+  c.x + c.w / 2 < area.width / 2 ? "left" : "right";
+/** A control that fills the area's whole height (and not its whole width) is a column at a side, however wide it is: the landscape panel (step 8.4f, M2). */
+const isColumn = (c: Box, area: Area): boolean =>
+  c.h >= area.height - 1 && c.w < area.width - 1;
+/** A control right beside a column that holds the right edge (within two gaps, sharing rows) belongs to that edge: the stack that hugs the panel (step 8.4f, M2). */
+const besideColumn = (c: Box, all: readonly Box[], area: Area): boolean =>
+  c.h > c.w && // a stack, not a bar
+  all.some(
+    (k) =>
+      k !== c &&
+      isColumn(k, area) &&
+      horizontalOf(k, area) === "right" &&
+      k.x - (c.x + c.w) <= 2 * CONTROL_GAP &&
+      k.x >= c.x + c.w - 1 &&
+      c.y < k.y + k.h &&
+      c.y + c.h > k.y,
+  );
+/** The side a control must take whatever the content, if its place says so. */
+const forced = (c: Box, all: readonly Box[], area: Area): Side | undefined => {
+  if (isColumn(c, area)) return horizontalOf(c, area);
+  return besideColumn(c, all, area) ? "right" : undefined;
+};
 /** By shape: a wide control is a bar (top or bottom), a tall one a stack (left or right). */
-const shapeSide = (c: Box, area: Area): Side => (c.w >= c.h ? verticalOf(c, area) : horizontalOf(c, area));
+const shapeSide = (c: Box, all: readonly Box[], area: Area): Side =>
+  forced(c, all, area) ??
+  (c.w >= c.h ? verticalOf(c, area) : horizontalOf(c, area));
 
 function insetsFor(taken: readonly (readonly [Box, Side])[], area: Area): Insets {
   const room = { top: MIN_VERTICAL, right: FIT_PADDING, bottom: MIN_VERTICAL, left: FIT_PADDING };
@@ -63,13 +88,21 @@ function fitScale(insets: Insets, area: Area, content: Area): number {
  */
 export function insetsOf(controls: readonly Box[], area: Area, content?: Area): Insets {
   const shown = controls.filter((c) => c.w > 0 && c.h > 0);
-  const shaped = shown.map((c): readonly [Box, Side] => [c, shapeSide(c, area)]);
-  if (content === undefined || shown.length > MAX_CHOICES) return insetsFor(shaped, area);
+  const shaped = shown.map((c): readonly [Box, Side] => [
+    c,
+    shapeSide(c, shown, area),
+  ]);
+  if (content === undefined || shown.length > MAX_CHOICES)
+    return insetsFor(shaped, area);
   let best = insetsFor(shaped, area);
   let bestScale = fitScale(best, area, content);
   const total = (i: Insets): number => i.top + i.right + i.bottom + i.left;
   for (let mask = 0; mask < 1 << shown.length; mask += 1) {
-    const taken = shown.map((c, at): readonly [Box, Side] => [c, (mask >> at) & 1 ? horizontalOf(c, area) : verticalOf(c, area)]);
+    const taken = shown.map((c, at): readonly [Box, Side] => [
+      c,
+      forced(c, shown, area) ??
+        ((mask >> at) & 1 ? horizontalOf(c, area) : verticalOf(c, area)),
+    ]);
     const insets = insetsFor(taken, area);
     const scale = fitScale(insets, area, content);
     if (scale > bestScale + 1e-9 || (Math.abs(scale - bestScale) <= 1e-9 && total(insets) < total(best))) {

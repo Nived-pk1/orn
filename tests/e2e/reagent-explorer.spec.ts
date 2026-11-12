@@ -7,11 +7,19 @@
  * reload (uiState); axe on each state; zero CSP violations. Screenshots: reagents-list, reagent-page-kmno4, reagent-page-koh, reagents-filter
  * (all -1280x800.png).
  */
-import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { axeProblems, expectClean, watch, leaveChapters, examWord, LIVE } from './kit';
-import { shotsDir } from './editor-kit';
-import { changedDemo, importOwn } from './own-data-kit';
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import {
+  axeProblems,
+  expectClean,
+  watch,
+  leaveChapters,
+  examWord,
+  LIVE,
+  chooseExam,
+} from "./kit";
+import { shotsDir } from "./editor-kit";
+import { changedDemo, importOwn } from "./own-data-kit";
 
 test.use({ actionTimeout: 60_000 });
 const rail = (page: Page) => page.getByRole('navigation', { name: 'Modes' });
@@ -119,15 +127,14 @@ test('the exam scope marks and hides outside reactions; the open reagent comes b
   await expect(section(page, 'Aqueous KOH').locator('article[data-reaction-id]')).toHaveCount(1, { timeout: 60_000 });
 
   // the exam scope: the checkbox appears, and ticking it leaves only the reactions inside the version (it may leave none; it says so)
-  const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
+  await chooseExam(page, examWord("JEE Main, provisional, not verified"));
   // "Only <exam>" is the top bar's one switch (step 8.3b, B2): on by default with an exam, no box in the view
   await expect(view(page).getByLabel(/^Only /)).toHaveCount(0);
   await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
   expect(await axeProblems(page)).toEqual([]);
-  await page.getByRole('radio', { name: 'Everything' }).check();
-  await scope.selectOption({ value: '' });
-  await expect(page.getByRole('radiogroup', { name: 'Show' })).toHaveCount(0);
+  await page.getByRole("radio", { name: "Everything" }).check();
+  await chooseExam(page, "All exams");
+  await expect(page.getByRole("radiogroup", { name: "Show" })).toHaveCount(0);
 
   // the choice is saved: a reload opens the same page (not while the chem worker is still fetching its wasm: WebKit logs the aborted fetch)
   if (!LIVE) await expect(page.getByText(/Workers: .*chem ok/)).toBeVisible({ timeout: 60_000 }); // Studio's status bar; a student has none (step 8.3)

@@ -6,11 +6,18 @@
  * page; the open page survives a reload; axe on each state; zero CSP violations. Screenshots: mechanism-list, mechanism-page, mechanism-variants
  * (all -1280x800.png).
  */
-import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { axeProblems, expectClean, leaveChapters, watch, examWord } from './kit';
-import { shotsDir } from './editor-kit';
-import { changedDemo, importOwn } from './own-data-kit';
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import {
+  axeProblems,
+  expectClean,
+  leaveChapters,
+  watch,
+  examWord,
+  chooseExam,
+} from "./kit";
+import { shotsDir } from "./editor-kit";
+import { changedDemo, importOwn } from "./own-data-kit";
 
 test.use({ actionTimeout: 60_000 });
 const rail = (page: Page) => page.getByRole('navigation', { name: 'Modes' });
@@ -78,14 +85,15 @@ test('Alt+Enter on a palette hit opens the page; the exam scope offers "Only"; t
   await importOwn(page, changedDemo(() => undefined));
   await openMechanisms(page);
 
-  const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
+  await chooseExam(page, examWord("JEE Main, provisional, not verified"));
   // "Only <exam>" is one switch in the top bar now (step 8.3b, B2): the per-view box is gone
   await expect(view(page).getByLabel(/^Only /)).toHaveCount(0);
-  await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
-  await page.getByRole('radio', { name: 'Everything' }).check();
-  await page.getByRole('radio', { name: 'Only JEE Main' }).check();
-  await scope.selectOption({ value: '' });
+  await expect(
+    page.getByRole("radio", { name: "Only JEE Main" }),
+  ).toBeChecked();
+  await page.getByRole("radio", { name: "Everything" }).check();
+  await page.getByRole("radio", { name: "Only JEE Main" }).check();
+  await chooseExam(page, "All exams");
 
   await page.keyboard.press('Control+k');
   const palette = page.getByRole('dialog', { name: /Search/ });

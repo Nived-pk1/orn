@@ -1,7 +1,7 @@
 /**
  * The top of the family page (step 5.5b; ADR-037): the family's name and generic formula, the counts, the reaction types as text chips,
  * and the "Made from" / "Turns into" strip: the partner families as buttons with their counts; a button brings the reader to its group.
- * The family's tone (step 5.5c) tints the header; each partner button takes the PARTNER's own tone (step 5.5d); the group is written above the name, so colour is never the only carrier.
+ * Step 8.4f, L4 (the page pattern of the design reference): the label "Family" (with the group in words) above the title, the one summary line, then "Made from" and "Turns into" as two labelled groups of chips with the partner's family dot. No tinted block: the tone is only a dot, so colour is never the only carrier.
  */
 import type { FamilyPartner, FamilyStudy } from '@/core/graph';
 import { VisuallyHidden } from '@/ui/primitives';
@@ -20,9 +20,17 @@ function Partners(props: { readonly title: string; readonly empty: string; reado
         <ul className={styles.partnerList}>
           {props.partners.map((partner) => (
             <li key={partner.hubId}>
-              <button type="button" className={styles.partner} data-tone={partner.tone} onClick={() => props.onGo(partner.hubId)}>
-                {partner.name} <span className={styles.count}>{partner.reactionCount}</span>
-                <VisuallyHidden>{partner.reactionCount === 1 ? ' reaction' : ' reactions'}</VisuallyHidden>
+              <button
+                type="button"
+                className={styles.partner}
+                data-tone={partner.tone}
+                onClick={() => props.onGo(partner.hubId)}
+              >
+                <span>{partner.name}</span>{" "}
+                <span className={styles.count}>{partner.reactionCount}</span>
+                <VisuallyHidden>
+                  {partner.reactionCount === 1 ? " reaction" : " reactions"}
+                </VisuallyHidden>
               </button>
             </li>
           ))}
@@ -42,7 +50,9 @@ export function FamilyHeader({ study, onGoToMadeFrom, onGoToTurnsInto }: FamilyH
   const { counts } = study;
   return (
     <div className={styles.header} data-tone={study.tone}>
-      {study.group === undefined ? null : <p className={styles.group}>{study.group}</p>}
+      <p className={styles.group}>
+        {study.group === undefined ? "Family" : `Family · ${study.group}`}
+      </p>
       <h1 className={styles.familyName}>
         {study.name}
         {study.formula === undefined ? null : (

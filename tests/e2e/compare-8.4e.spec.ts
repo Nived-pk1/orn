@@ -7,7 +7,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { devices, type Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { FAMILY_ONE, openMapDesktop, openMapPhone } from "./map-layout-kit";
+import { FAMILY_ONE, phoneFamily, openMapDesktop, openMapPhone } from "./map-layout-kit";
 import { clickNode } from "./map-focus-kit";
 import { clickToolbar } from "./map-toolbar-kit";
 
@@ -145,7 +145,7 @@ test.describe("phone portrait (Pixel 7)", () => {
     await openMapPhone(page);
     await page.waitForTimeout(1200);
     await shot(page, "phone-portrait-map-nothing-selected", ".phone", 0);
-    await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).first().tap();
+    await page.locator(`svg [data-node-id="${await phoneFamily(page)}"]`).first().tap();
     await page.waitForTimeout(1500);
     await shot(page, "phone-portrait-map-family-and-peek", ".phone", 0);
   });
@@ -161,7 +161,7 @@ test.describe("phone landscape (Pixel 7)", () => {
     await openMapPhone(page);
     await page.waitForTimeout(1200);
     await shot(page, "phone-landscape-map", ".phone", 0);
-    await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).first().tap();
+    await page.locator(`svg [data-node-id="${await phoneFamily(page)}"]`).first().tap();
     await page.waitForTimeout(1500);
     await shot(page, "phone-landscape-panel-beside-map", ".phone", 0);
     await page.getByRole("button", { name: "Close inspector" }).first().tap();
@@ -172,7 +172,7 @@ test.describe("phone landscape (Pixel 7)", () => {
     await page
       .getByRole("button", { name: "Exit full map", exact: true })
       .tap();
-    await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).first().dblclick();
+    await page.locator(`svg [data-node-id="${await phoneFamily(page)}"]`).first().dblclick();
     await page.waitForTimeout(2000);
     await shot(page, "phone-landscape-family-page");
   });

@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 /** The Study first run and the phone's exam chip (step 8.3b, B3): ask once which exam, never guess, never ask again. */
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CanonicalState } from '@/core/schema';
-import { stubDialog } from '@/test-support/window-kit';
-import { createActiveExamStore } from '@/ui/state';
-import { ExamChip, ExamFirstRun } from './exam-first-run';
-import type { ExamScopeBinding } from './exam-scope-selector';
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CanonicalState } from "@/core/schema";
+import { stubDialog } from "@/test-support/window-kit";
+import { createActiveExamStore } from "@/ui/state";
+import { ExamFirstRun } from "./exam-first-run";
+import type { ExamScopeBinding } from "./exam-scope-selector";
 
 beforeEach(stubDialog);
 afterEach(cleanup);
@@ -64,31 +64,5 @@ describe('ExamFirstRun', () => {
       render(<ExamFirstRun binding={binding} />);
       expect(screen.queryByText('Which exam are you preparing for?')).toBeNull();
     }
-  });
-});
-
-describe('ExamChip', () => {
-  it('shows the exam in use (or All exams); a tap opens the same card as "Change exam" with the exam marked', () => {
-    const { exam, binding } = setup({ asked: true });
-    act(() => exam.getState().setActive({ examId: 'exm_jee', examVersionId: 'exv_jee' } as never));
-    render(<ExamChip binding={binding} />);
-    const chip = screen.getByRole('button', { name: /JEE Main/ });
-    expect(chip.textContent).toContain('JEE Main');
-    fireEvent.click(chip);
-    expect(screen.getByText('Change exam')).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: 'JEE Main' }).some((b) => b.getAttribute('aria-pressed') === 'true')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'CBSE Class 11' }));
-    expect(exam.getState().active).toEqual({ examId: 'exm_cbse', examVersionId: 'exv_cbse' });
-    expect(screen.queryByText('Change exam')).toBeNull();
-  });
-  it('with All exams the chip says so', () => {
-    const { binding } = setup({ asked: true });
-    render(<ExamChip binding={binding} />);
-    expect(screen.getByRole('button', { name: /All exams/ })).toBeTruthy();
-  });
-  it('no chip when the data has no exam', () => {
-    const { binding } = setup({ empty: true, asked: true });
-    const { container } = render(<ExamChip binding={binding} />);
-    expect(container.textContent).toBe('');
   });
 });

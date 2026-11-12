@@ -12,7 +12,7 @@ import { clickNode } from './map-focus-kit';
 import { closeKey, openKey } from './map-toolbar-kit';
 import { axeProblems, expectClean, watch } from './kit';
 import { shotsDir } from './editor-kit';
-import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone } from './map-layout-kit';
+import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone, phoneFamily } from './map-layout-kit';
 
 const QUIET = 'Tap or click a family to see what it makes and what it is made from.';
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
@@ -178,8 +178,8 @@ async function phoneWalk(page: Page, device: string, withChapter: boolean): Prom
   await expect(edges(page)).toHaveCount(0);
   await page.screenshot({ path: `${shotsDir()}/map-after-${device}.png` });
   // a tap focuses a family
-  const box = await family(page, FAMILY_ONE).boundingBox();
-  if (box === null) throw new Error('family 01 is not on the screen');
+  const box = await family(page, await phoneFamily(page)).boundingBox();
+  if (box === null) throw new Error('no family is on the screen');
   await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
   await expect.poll(() => edges(page).count()).toBeGreaterThan(0);
   await expect(page.getByText(QUIET)).toHaveCount(0);

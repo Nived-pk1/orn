@@ -57,11 +57,13 @@ describe('the family page', () => {
     expect(screen.getByRole('list', { name: 'Reactions of and preparation of Alcohols' })).toBeTruthy();
   });
 
-  it('the header takes the tone of the family and writes its group; each partner button carries the tone of the PARTNER (step 5.5d, item e)', async () => {
-    await openFamily('cls_alcohols');
-    const header = screen.getByRole('heading', { level: 1 }).closest('[data-tone]') as HTMLElement;
-    expect(header.getAttribute('data-tone')).toBe('green');
-    expect(within(header).getByText('Oxygen compounds')).toBeTruthy();
+  it("the header takes the tone of the family and writes its group; each partner button carries the tone of the PARTNER (step 5.5d, item e)", async () => {
+    await openFamily("cls_alcohols");
+    const header = screen
+      .getByRole("heading", { level: 1 })
+      .closest("[data-tone]") as HTMLElement;
+    expect(header.getAttribute("data-tone")).toBe("green");
+    expect(within(header).getByText("Family · Oxygen compounds")).toBeTruthy();
     // Aldehydes and Ethers are Oxygen compounds too (green); Made-from Alkenes is a Hydrocarbon (blue): the button wears Alkenes' tone, not Alcohols'
     expect(within(header).getAllByRole('button', { name: /^Aldehydes\s*2\s*reactions$/ })[0]?.getAttribute('data-tone')).toBe('green');
     expect(within(header).getByRole('button', { name: /^Ethers/ }).getAttribute('data-tone')).toBe('green');

@@ -5,16 +5,21 @@
  * two-choice switch "Only <exam> | Everything" says whether records outside it are hidden (every view reads it). The choice is the navigator's
  * `exam` UI store (saved in `uiState`). A saved choice whose exam is no longer in the data is reset to All and SAID (nothing silent).
  */
-import { useEffect, useMemo } from 'react';
-import { useStore } from 'zustand';
-import type { CanonicalState, ExamVersion } from '@/core/schema';
-import { useStoreSelector, type StateSource } from '@/ui/hooks';
-import { SegmentedControl, useToasts } from '@/ui/primitives';
-import type { ActiveExamStore } from '@/ui/state';
-import { useStudyChrome } from '@/ui/study-chrome';
-import { currentVersionOf, examChoicesOf, PROVISIONAL_TIP } from './exam-choice';
-import { ALL_LABEL, EXAM_LABEL, examOptions } from './exam-scope';
-import styles from './window.module.css';
+import { useEffect, useMemo } from "react";
+import { useStore } from "zustand";
+import type { CanonicalState, ExamVersion } from "@/core/schema";
+import { useStoreSelector, type StateSource } from "@/ui/hooks";
+import { Menu, SegmentedControl, useToasts } from "@/ui/primitives";
+import type { ActiveExamStore } from "@/ui/state";
+import { useStudyChrome } from "@/ui/study-chrome";
+import {
+  currentVersionOf,
+  examChoicesOf,
+  PROVISIONAL_TIP,
+  type ExamChoice,
+} from "./exam-choice";
+import { ALL_LABEL, examOptions } from "./exam-scope";
+import styles from "./window.module.css";
 
 export interface ExamScopeBinding {
   readonly exam: ActiveExamStore;
@@ -24,12 +29,17 @@ export interface ExamScopeBinding {
   readonly log: (type: string, message: string) => void;
 }
 
-const ALL = '';
+const ALL_ID = "all-exams";
 const examsOf = (state: CanonicalState) => state.records.exam;
 const versionsOf = (state: CanonicalState) => state.records.exam_version;
 
-export function ExamScopeSelector(props: { readonly binding: ExamScopeBinding }) {
+/** `chip`: only the exam chip (the phone's top bar); `rest`: everything but the chip (the phone's More); default: both (the desktop top bar). */
+export function ExamScopeSelector(props: {
+  readonly binding: ExamScopeBinding;
+  readonly part?: "chip" | "rest";
+}) {
   const { exam, store, hasData, log } = props.binding;
+  const { part } = props;
   const chrome = useStudyChrome();
   const author = chrome.examStatusWords; // Studio's rule: the author sees versions and their status words
   const active = useStore(exam, (s) => s.active);
@@ -57,32 +67,48 @@ export function ExamScopeSelector(props: { readonly binding: ExamScopeBinding })
     exam.getState().setActive({ examId: active.examId, examVersionId: currentId as typeof active.examVersionId });
   }, [author, active, missing, currentId, exam]);
   const examName = chosen?.name;
+  const pick = (choice?: ExamChoice): void => {
+    const state = exam.getState();
+    state.setActive(
+      choice === undefined
+        ? null
+        : {
+            examId: choice.examId as never,
+            examVersionId: choice.versionId as never,
+          },
+    );
+    if (choice !== undefined) state.setMode("only"); // Only is the default when an exam is chosen
+  };
+  const shown = examName ?? ALL_LABEL;
   return (
     <span className={styles.examScope}>
-      <label>
-        <span className={styles.examLabel}>{EXAM_LABEL} </span>
-        <select
-          value={active === null || chosen === undefined ? ALL : active.examId}
-          onChange={(event) => {
-            const choice = choices.find((one) => one.examId === event.target.value);
-            exam.getState().setActive(choice === undefined ? null : { examId: choice.examId as never, examVersionId: choice.versionId as never });
-            if (choice !== undefined) exam.getState().setMode('only'); // Only is the default when an exam is chosen
-          }}
-        >
-          <option value={ALL}>{ALL_LABEL}</option>
-          {choices.map((choice) => (
-            <option key={choice.examId} value={choice.examId}>
-              {choice.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      {!author && chosen?.provisional === true && version?.status !== 'official' ? (
+      {part === "rest" ? null : (
+        <Menu
+          label={`Exam: ${shown}`}
+          items={[
+            { id: ALL_ID, label: ALL_LABEL, onSelect: pick },
+            ...choices.map((choice) => ({
+              id: choice.examId,
+              label: choice.name,
+              onSelect: () => pick(choice),
+            })),
+          ]}
+          trigger={shown}
+          chosen={chosen?.examId ?? ALL_ID}
+        />
+      )}
+      {part !== "chip" &&
+      !author &&
+      chosen?.provisional === true &&
+      version?.status !== "official" ? (
         <span className={styles.provisional} title={PROVISIONAL_TIP}>
           provisional
         </span>
       ) : null}
-      {author && active !== null && versionList.length > 0 ? (
+      {part !== "chip" &&
+      author &&
+      active !== null &&
+      versionList.length > 0 ? (
         <label>
           <span className={styles.examLabel}>Version </span>
           <select
@@ -100,7 +126,7 @@ export function ExamScopeSelector(props: { readonly binding: ExamScopeBinding })
           </select>
         </label>
       ) : null}
-      {examName === undefined ? null : (
+      {part === "chip" || examName === undefined ? null : (
         <SegmentedControl
           label="Show"
           options={[

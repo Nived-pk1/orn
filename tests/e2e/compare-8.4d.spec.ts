@@ -77,8 +77,8 @@ test('compare the frame with the reference (light theme)', async ({ page, contex
   // the phone: top bar and notices row
   await page.setViewportSize({ width: 412, height: 915 });
   await page.reload();
-  await expect(page.locator('header')).toBeVisible({ timeout: 60_000 });
-  await shot(page, ref, 'phone-top-bar', page.locator('header'), ref.locator('.ptop'));
+  await expect(page.locator('header').first()).toBeVisible({ timeout: 60_000 });
+  await shot(page, ref, 'phone-top-bar', page.locator('header').first(), ref.locator('.ptop'));
   const fold = page.getByRole('button', { name: /^\d+ notices?$/ });
   if (await fold.isVisible()) {
     await shot(page, ref, 'phone-notices-row', fold, ref.locator('.ptop'));

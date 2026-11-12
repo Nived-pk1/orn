@@ -39,8 +39,8 @@ function show(k: Loaded) {
 }
 const asPhone = (k: Loaded) => vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === k.PHONE_QUERIES[0], media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
 
-describe('desktop', () => {
-  it('study: no status bar, no Dataset in the rail, the rail says Map, no Unanchored button, the exam select says Exam / All exams', async () => {
+describe("desktop", () => {
+  it("study: no status bar, no Dataset in the rail, the rail says Map, no Unanchored button, the exam chip says Exam: All exams", async () => {
     const k = loaded.study;
     show(k);
     const rail = k.within(k.screen.getByRole('navigation', { name: 'Modes' }));
@@ -49,22 +49,33 @@ describe('desktop', () => {
     expect(rail.queryByText('Navigator')).toBeNull();
     expect(k.screen.queryByRole('contentinfo')).toBeNull();
     expect(k.screen.queryByText(/Findings: E/)).toBeNull();
-    expect(k.screen.queryByRole('button', { name: /Unanchored reactions/ })).toBeNull();
-    expect(k.screen.getByLabelText('Exam')).toBeTruthy();
-    expect(k.screen.getByRole('option', { name: 'All exams' })).toBeTruthy();
+    expect(
+      k.screen.queryByRole("button", { name: /Unanchored reactions/ }),
+    ).toBeNull();
+    expect(
+      k.screen.getByRole("button", { name: "Exam: All exams" }),
+    ).toBeTruthy(); // the exam chip (step 8.4f, L1)
   });
   it('studio: the status bar, Dataset, Unanchored reactions, and the same Map / Exam words', async () => {
     const k = loaded.studio;
     show(k);
-    const rail = k.within(k.screen.getByRole('navigation', { name: 'Modes' }));
-    expect(rail.getByText('Dataset')).toBeTruthy();
-    expect(rail.getByText('Map')).toBeTruthy();
-    expect(k.within(k.screen.getByRole('contentinfo')).getByText(/Findings: E/)).toBeTruthy();
-    await k.screen.findByRole('group', { name: /^Navigator:/ });
-    k.fireEvent.pointerDown(k.screen.getByRole('button', { name: 'More' }), { button: 0, ctrlKey: false });
-    expect(await k.screen.findByRole('menuitem', { name: /Unanchored reactions/ })).toBeTruthy();
-    expect(k.screen.getByLabelText('Exam')).toBeTruthy();
-    expect(k.screen.getByRole('option', { name: 'All exams' })).toBeTruthy();
+    const rail = k.within(k.screen.getByRole("navigation", { name: "Modes" }));
+    expect(rail.getByText("Dataset")).toBeTruthy();
+    expect(rail.getByText("Map")).toBeTruthy();
+    expect(
+      k.within(k.screen.getByRole("contentinfo")).getByText(/Findings: E/),
+    ).toBeTruthy();
+    await k.screen.findByRole("group", { name: /^Navigator:/ });
+    k.fireEvent.pointerDown(k.screen.getByRole("button", { name: "More" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    expect(
+      await k.screen.findByRole("menuitem", { name: /Unanchored reactions/ }),
+    ).toBeTruthy();
+    expect(
+      k.screen.getByRole("button", { name: "Exam: All exams" }),
+    ).toBeTruthy(); // the exam chip (step 8.4f, L1)
   });
 });
 

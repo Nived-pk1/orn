@@ -5,14 +5,26 @@
  * the Unclassified family page; a family whose every reaction is outside on the overview, with the legend); a chosen version that is not
  * in the data is reset and said; the inspector marks the chosen version.
  */
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { UNCLASSIFIED_HUB_ID } from '@/core/graph';
-import type { CanonicalState, ExamRelevance, Reaction } from '@/core/schema';
-import { demoState } from '@/test-support/app-boot-kit';
-import { fakeApp, renderWithApp, type FakeApp } from '@/test-support/window-kit';
-import { openKey, toolbarAction } from '@/test-support/map-toolbar-kit';
-import { loadOtherViews } from '@/features/inspector/lazy-views';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { UNCLASSIFIED_HUB_ID } from "@/core/graph";
+import type { CanonicalState, ExamRelevance, Reaction } from "@/core/schema";
+import { demoState } from "@/test-support/app-boot-kit";
+import { chooseExam, examChipText, examChoices } from "@/test-support/exam-chip-kit";
+import {
+  fakeApp,
+  renderWithApp,
+  type FakeApp,
+} from "@/test-support/window-kit";
+import { openKey, toolbarAction } from "@/test-support/map-toolbar-kit";
+import { loadOtherViews } from "@/features/inspector/lazy-views";
 
 afterEach(cleanup);
 
@@ -28,20 +40,23 @@ beforeAll(async () => {
   };
 });
 
-const MAIN = { examId: 'exm_jee-main', examVersionId: 'exv_jee-main-2026' } as never;
-const BECKMANN = 'rxn_cyclohexanone-oxime-beckmann';
-const selector = () => screen.getByRole('combobox', { name: /^Exam$/ }) as HTMLSelectElement;
+const MAIN = {
+  examId: "exm_jee-main",
+  examVersionId: "exv_jee-main-2026",
+} as never;
+const BECKMANN = "rxn_cyclohexanone-oxime-beckmann";
 
 describe('the selector', () => {
   it('lists All and every exam version, each with its exam and status in words', async () => {
     const app = fakeApp({ state: demoState() });
     renderWithApp(app);
-    await screen.findByRole('group', { name: /^Navigator:/ });
-    expect([...selector().options].map((o) => o.textContent)).toEqual(['All exams', 'JEE Advanced', 'JEE Main']); // exams by name (step 8.3b, B1)
-    expect(selector().value).toBe('');
-    fireEvent.change(selector(), { target: { value: 'exm_jee-main' } });
+    await screen.findByRole("group", { name: /^Navigator:/ });
+    expect(examChipText()).toContain("All exams");
+    expect(examChoices()).toEqual(["All exams", "JEE Advanced", "JEE Main"]); // exams by name (step 8.3b, B1)
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    chooseExam("JEE Main");
     expect(app.navigator.ui.exam.getState().active).toEqual(MAIN);
-    fireEvent.change(selector(), { target: { value: '' } });
+    chooseExam("All exams");
     expect(app.navigator.ui.exam.getState().active).toBeNull();
   });
 
@@ -49,8 +64,8 @@ describe('the selector', () => {
     const app = fakeApp({ state: demoState() });
     app.navigator.ui.exam.getState().setActive(MAIN);
     renderWithApp(app);
-    await screen.findByRole('group', { name: /^Navigator:/ });
-    expect(selector().value).toBe('exm_jee-main');
+    await screen.findByRole("group", { name: /^Navigator:/ });
+    expect(examChipText()).toContain("JEE Main");
 
     cleanup();
     const gone = fakeApp({ state: demoState() });

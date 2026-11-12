@@ -62,3 +62,50 @@ describe('ToastProvider folded', () => {
     expect(within(region).getByRole('button', { name: 'Dismiss' })).toBeTruthy();
   });
 });
+
+describe("a toast action with an icon (step 8.4f, L6)", () => {
+  it('the action button shows its icon beside the label ("Undo import" with the undo icon); the name is the label alone', () => {
+    render(
+      <ToastProvider folded>
+        <Probe />
+      </ToastProvider>,
+    );
+    act(
+      () =>
+        void api.push({
+          text: "Imported 3 records.",
+          action: {
+            label: "Undo import",
+            icon: "undo",
+            onAction: () => undefined,
+          },
+        }),
+    );
+    const button = screen.getByRole("button", { name: "Undo import" });
+    expect(button.querySelector('span[aria-hidden="true"]')).not.toBeNull();
+    expect(
+      (button.querySelector('span[aria-hidden="true"]') as HTMLElement).style
+        .maskImage,
+    ).toContain("/icons/undo.svg");
+    expect(button.textContent).toBe("Undo import");
+  });
+  it("an action without an icon is as before", () => {
+    render(
+      <ToastProvider folded>
+        <Probe />
+      </ToastProvider>,
+    );
+    act(
+      () =>
+        void api.push({
+          text: "Done.",
+          action: { label: "Open", onAction: () => undefined },
+        }),
+    );
+    expect(
+      screen
+        .getByRole("button", { name: "Open" })
+        .querySelector('span[aria-hidden="true"]'),
+    ).toBeNull();
+  });
+});

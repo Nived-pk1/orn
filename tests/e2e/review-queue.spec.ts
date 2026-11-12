@@ -15,6 +15,7 @@ import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { answerExamCard } from './exam-kit';
 import { selectionLine } from './map-toolbar-kit';
+import { phoneFamilies } from './map-layout-kit';
 import { axeProblems, chooseFile, expectClean, expectPreview, openPhoneApp, watch, leaveChapters } from './kit';
 import { openDemo, shotsDir } from './editor-kit';
 import { chaptersFirstThenNavigator } from './chapters-kit';
@@ -190,8 +191,12 @@ async function walkPhone(page: Page, device: string): Promise<void> {
   const select = page.getByRole('button', { name: 'Select', exact: true });
   await select.tap();
   await expect(select).toHaveAttribute('aria-pressed', 'true');
-  await page.locator('svg [data-node-id="cls_alcohols"]').tap();
-  await page.locator('svg [data-node-id="cls_aldehydes"]').tap();
+  // two families on screen (the first view may start further along the map, step 8.4f M1)
+  const [one] = await phoneFamilies(page);
+  await page.locator(`svg [data-node-id="${one}"]`).tap();
+  await page.waitForTimeout(700); // the view may slide after the first press
+  const two = (await phoneFamilies(page)).find((id) => id !== one) as string;
+  await page.locator(`svg [data-node-id="${two}"]`).tap();
   const bar = page.getByRole('region', { name: 'Selection actions' });
   await expect(bar).toContainText(/^2 families selected \(\d+ reactions?\)/);
   // step 6.9 Z2: no floating button is covered by the bar, even in part

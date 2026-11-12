@@ -5,7 +5,7 @@
  */
 import { devices, type Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { FAMILY_ONE, openMapDesktop, openMapPhone } from "./map-layout-kit";
+import { FAMILY_ONE, phoneFamily, openMapDesktop, openMapPhone } from "./map-layout-kit";
 import { clickNode } from "./map-focus-kit";
 import { boxTitlePx } from "./box-text";
 
@@ -185,7 +185,7 @@ for (const [label, device, phone] of [
         path: `test-results/full-map-${label.replace(/ /g, "-")}.png`,
       });
       // a family tapped: its sheet opens over the map, the map area does not change
-      await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).tap();
+      await page.locator(`svg [data-node-id="${await phoneFamily(page)}"]`).tap();
       await page.waitForTimeout(1200);
       const withSheet = await areaOf(page);
       expect(

@@ -4,13 +4,21 @@
  * whose coverage includes one demo topic are made from the Workbench; after Save the exam scope selector lists the version and choosing it
  * scopes the demo records exactly as it does for a demo version (the same derived scope; no code names an exam).
  */
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { createScopeOf } from '@/core/graph/scope';
-import { indexEngine } from '@/core/indexes';
-import { demoState } from '@/test-support/app-boot-kit';
-import { fakeLayout } from '@/test-support/inspector-kit';
-import { fakeApp, renderWithApp, stubDialog } from '@/test-support/window-kit';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { createScopeOf } from "@/core/graph/scope";
+import { indexEngine } from "@/core/indexes";
+import { demoState } from "@/test-support/app-boot-kit";
+import { chooseExam, examChoices } from "@/test-support/exam-chip-kit";
+import { fakeLayout } from "@/test-support/inspector-kit";
+import { fakeApp, renderWithApp, stubDialog } from "@/test-support/window-kit";
 
 beforeAll(async () => {
   await import('@/features/workbench/layer');
@@ -67,12 +75,27 @@ describe('a new exam and version made in the Workbench', () => {
     await waitFor(() => expect(Object.values(app.store.getState().records.exam_version).some((v) => v.label === 'Test board exam 2027')).toBe(true));
     const versionId = Object.values(app.store.getState().records.exam_version).find((v) => v.label === 'Test board exam 2027')?.id as string;
 
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Modes' })).getByRole('button', { name: /^Map$/ }));
-    const selector = (await screen.findByRole('combobox', { name: /^Exam$/ })) as HTMLSelectElement;
-    expect([...selector.options].map((o) => o.textContent)).toContain('Test board exam'); // the select lists exams by name (step 8.3b, B1); Studio lists a draft-only exam too
-    fireEvent.change(selector, { target: { value: examId } }); // the exam's only version is its current one (Studio's Version select can pick any)
-    expect(((await screen.findByRole('combobox', { name: 'Version' })) as HTMLSelectElement).value).toBe(versionId);
-    expect(app.navigator.ui.exam.getState().active).toEqual({ examId, examVersionId: versionId });
+    fireEvent.click(
+      within(screen.getByRole("navigation", { name: "Modes" })).getByRole(
+        "button",
+        { name: /^Map$/ },
+      ),
+    );
+    await screen.findByRole("button", { name: /^Exam: / });
+    expect(examChoices()).toContain("Test board exam"); // the menu lists exams by name (step 8.3b, B1); Studio lists a draft-only exam too
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    chooseExam("Test board exam"); // the exam's only version is its current one (Studio's Version select can pick any)
+    expect(
+      (
+        (await screen.findByRole("combobox", {
+          name: "Version",
+        })) as HTMLSelectElement
+      ).value,
+    ).toBe(versionId);
+    expect(app.navigator.ui.exam.getState().active).toEqual({
+      examId,
+      examVersionId: versionId,
+    });
 
     const scopeIn = (e: string, v: string) => createScopeOf(indexEngine.build(app.store.getState()), e as never, v as never)(mapping.target as never);
     expect(scopeIn(examId, versionId)).toBe(scopeIn('exm_jee-main', 'exv_jee-main-2026'));

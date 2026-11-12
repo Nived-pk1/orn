@@ -29,6 +29,40 @@
   font: inherit;
 }
 
+/* The exam chip (step 8.4f, L1; reference ".chip.exam" with a menu): the exam in use, accent soft, a chevron; it opens the menu of exams */
+.examScope button[aria-haspopup="menu"] {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 32px;
+  max-width: 14rem;
+  padding: 0 var(--space-8) 0 var(--space-12);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.examScope button[aria-haspopup="menu"]:hover,
+.examScope button[aria-haspopup="menu"][data-state="open"] {
+  border-color: var(--accent);
+}
+
+/* a touch target of 44 px around the 32 px chip */
+.examScope button[aria-haspopup="menu"]::after {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+}
+
 .examLabel {
   color: var(--color-ink-2);
   font-size: var(--text-14);

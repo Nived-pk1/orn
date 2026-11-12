@@ -81,4 +81,9 @@ describe('filtering commands', () => {
     expect(filterCommands(commands, 'list view').map((c) => c.id)).toEqual(['b']);
     expect(filterCommands(commands, 'nothing')).toEqual([]);
   });
+  it("rows are 32 to 36 px high (the reference menu rows, step 8.4f L2) and the group label is a short row", () => {
+    expect(HIT_ROW_HEIGHT).toBeGreaterThanOrEqual(32);
+    expect(HIT_ROW_HEIGHT).toBeLessThanOrEqual(36);
+    expect(HEADER_ROW_HEIGHT).toBeLessThanOrEqual(28);
+  });
 });

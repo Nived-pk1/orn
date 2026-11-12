@@ -22,8 +22,18 @@ export function ImportNotices(props: { readonly model: ImportModel }) {
     toasts.push({
       kind: notice.kind,
       text: notice.text,
-      ...(notice.kind === 'info' ? { autoDismissMs: notice.offerUndo ? ACTION_TOAST_MS : PLAIN_TOAST_MS } : {}),
-      ...(notice.offerUndo ? { action: { label: 'Undo import', onAction: model.undoImport } } : {}),
+      ...(notice.kind === "info"
+        ? { autoDismissMs: notice.offerUndo ? ACTION_TOAST_MS : PLAIN_TOAST_MS }
+        : {}),
+      ...(notice.offerUndo
+        ? {
+            action: {
+              label: "Undo import",
+              icon: "undo",
+              onAction: model.undoImport,
+            },
+          }
+        : {}),
     });
   }, [notice, toasts, model]);
   return null;

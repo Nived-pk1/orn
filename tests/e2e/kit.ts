@@ -274,3 +274,33 @@ export async function expectSaved(page: Page): Promise<void> {
   if (LIVE) await expect(page.getByRole('navigation', { name: 'Modes' })).toBeVisible();
   else await expect(page.getByText(/^Saved \(revision \d+\)$/)).toBeVisible();
 }
+
+/**
+ * The exam chip (step 8.4f, L1): a menu button named "Exam: <exam>" in the top bar (desktop and phone); its menu holds "All exams" and each exam as radio
+ * items. These helpers are the one place the specs know that.
+ */
+export const examChip = (page: Page): Locator =>
+  page.getByRole("button", { name: /^Exam: / });
+
+export async function chooseExam(page: Page, label: string): Promise<void> {
+  await examChip(page).click();
+  await page.getByRole("menuitemradio", { name: label, exact: true }).click();
+}
+
+export async function examChoices(page: Page): Promise<string[]> {
+  await examChip(page).click();
+  const texts = await page.getByRole("menuitemradio").allTextContents();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0); // closed, or the next click on the chip would close it again
+  return texts;
+}
+
+/** The chip says the exam in use ('' for All exams); ids of the demo's exams are mapped to their display names. */
+export async function expectExamId(page: Page, id: string): Promise<void> {
+  const words: Record<string, string> = {
+    "": "All exams",
+    "exm_jee-main": "JEE Main",
+    "exm_jee-advanced": "JEE Advanced",
+  };
+  await expect(examChip(page)).toHaveText(words[id] ?? id);
+}

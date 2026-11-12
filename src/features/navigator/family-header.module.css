@@ -53,22 +53,24 @@
   --tone-ink: var(--color-tone-slate-ink);
 }
 
-.header[data-tone] {
-  margin-top: var(--space-24);
-  padding: var(--space-16);
-  border: 1px solid var(--tone-border);
-  border-left: 4px solid var(--tone-ink);
-  border-radius: var(--radius-8);
-  background: var(--tone-tint);
+.group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0 0 var(--space-4);
+  color: var(--text-2);
+  font-size: var(--text-12);
+  font-weight: 600;
 }
 
-.group {
-  margin: 0 0 var(--space-4);
-  color: var(--tone-ink);
-  font-size: var(--text-14);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+/* the family's tone is a dot beside the label (the words carry the meaning) */
+.header[data-tone] .group::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--tone-ink);
 }
 
 /* A partner button takes the PARTNER family's tone (step 5.5d, item e; it was this family's): its tint, its ink for the border and the count. */
@@ -107,17 +109,8 @@
   --partner-ink: var(--color-tone-slate-ink);
 }
 
-.partner[data-tone] {
-  border-color: var(--partner-ink);
-  background: var(--partner-tint);
-}
-
-.partner[data-tone] .count {
-  color: var(--partner-ink);
-}
-
-.header[data-tone] .partnersTitle {
-  color: var(--tone-ink);
+.partner[data-tone]::before {
+  background: var(--partner-ink);
 }
 
 .familyName {
@@ -164,19 +157,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   gap: var(--space-16);
-  padding: var(--space-12) var(--space-16);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-8);
-  background: var(--color-surface);
 }
 
 .partnersTitle {
   margin: 0 0 var(--space-8);
-  font-size: var(--text-14);
+  font-size: var(--text-12);
   font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--color-ink-2);
+  color: var(--text-2);
 }
 
 .partnerList {
@@ -189,18 +176,38 @@
 }
 
 .partner {
-  min-height: var(--hit-min);
-  padding: var(--space-4) var(--space-12);
-  border: 1px solid var(--color-ink-2);
-  border-radius: var(--radius-8);
-  background: var(--color-paper);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 28px;
+  padding: 0 var(--space-12);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
   color: var(--color-ink);
   font: inherit;
+  font-size: var(--text-14);
   cursor: pointer;
+}
+
+/* the partner's family dot */
+.partner::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--text-3);
 }
 
 .partner:hover {
   background: var(--color-hover);
+}
+
+@media (pointer: coarse) {
+  .partner {
+    min-height: var(--hit-min);
+  }
 }
 
 /* Phone (ADR-039; keyed on data-layout): a compact header, name, formula and counts, the chips wrap. */
@@ -208,12 +215,7 @@
   padding-top: var(--space-8);
 }
 
-:global([data-layout='phone']) .header[data-tone] {
-  margin-top: var(--space-8);
-  padding: var(--space-8) var(--space-12);
-}
-
-:global([data-layout='phone']) .familyName {
+:global([data-layout="phone"]) .familyName {
   gap: var(--space-8);
   font-size: var(--text-20);
 }
@@ -230,5 +232,4 @@
 :global([data-layout='phone']) .strip {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-8);
-  padding: var(--space-8) var(--space-12);
 }

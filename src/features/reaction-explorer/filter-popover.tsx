@@ -40,7 +40,17 @@ export function FilterPopover(props: { readonly title: string; readonly chosen: 
   }, [open]);
   return (
     <div ref={root} className={styles.popoverRoot}>
-      <button ref={button} type="button" className={styles.filterButton} data-filter-title={props.title} aria-expanded={open} aria-controls={open ? panelId : undefined} aria-haspopup="true" onClick={() => setOpen((value) => !value)}>
+      <button
+        ref={button}
+        type="button"
+        className={styles.filterButton}
+        data-filter-title={props.title}
+        data-chosen={props.chosen > 0 ? "" : undefined}
+        aria-expanded={open}
+        aria-controls={open ? panelId : undefined}
+        aria-haspopup="true"
+        onClick={() => setOpen((value) => !value)}
+      >
         {props.chosen > 0 ? `${props.title} (${props.chosen})` : props.title}
       </button>
       {open ? (

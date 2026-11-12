@@ -7,7 +7,7 @@
  */
 import { devices, type Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { FAMILY_ONE, openMapDesktop, openMapPhone } from "./map-layout-kit";
+import { FAMILY_ONE, phoneFamily, openMapDesktop, openMapPhone } from "./map-layout-kit";
 
 const { defaultBrowserType: _a, ...PIXEL } = devices["Pixel 7"];
 
@@ -169,13 +169,14 @@ test.describe("fluid feel: press to selection painted", () => {
       test.setTimeout(300_000);
       await openMapPhone(page);
       await page.waitForTimeout(900);
-      await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).first().tap();
+      const one = await phoneFamily(page);
+      await page.locator(`svg [data-node-id="${one}"]`).first().tap();
       const sheet = page
         .getByRole("complementary")
         .filter({ has: page.getByRole("button", { name: "Close inspector" }) });
       await expect(sheet.first()).toBeVisible();
       const selected = page.locator(
-        `[data-overlay="selected"][data-overlay-id="${FAMILY_ONE}"]`,
+        `[data-overlay="selected"][data-overlay-id="${one}"]`,
       );
       await expect(selected).toHaveCount(1);
       await rotate(page, 839, 412); // portrait to landscape

@@ -3,13 +3,13 @@
  * notice and Undo, the quiet saved line, the review dot, no "exclusive", no status bar, no Dataset, Map in the rail. Screenshot
  * study-map-alcohols-selected-1280x800.png (git-ignored) is made here again by the suite.
  */
-import { resolve } from 'node:path';
-import { expect, test } from './fixtures';
-import { chaptersFirstThenNavigator } from './chapters-kit';
-import { selectionLine } from './map-toolbar-kit';
-import { expectClean, watch } from './kit';
-import { shotsDir } from './editor-kit';
-import { importOwnData, openStudy, STUDY } from './study-kit';
+import { resolve } from "node:path";
+import { expect, test } from "./fixtures";
+import { chaptersFirstThenNavigator } from "./chapters-kit";
+import { selectionLine } from "./map-toolbar-kit";
+import { expectClean, watch, examChip } from "./kit";
+import { shotsDir } from "./editor-kit";
+import { importOwnData, openStudy, STUDY } from "./study-kit";
 
 test.use({ baseURL: STUDY });
 
@@ -32,8 +32,10 @@ test.describe('what a student sees (step 8.3)', () => {
     const warning = page.getByText('This browser may clear your imported data when space is short. Export a backup to keep it.');
     if ((await warning.count()) > 0) await expect(page.getByRole('button', { name: 'Export a backup' })).toBeVisible();
     await chaptersFirstThenNavigator(page);
-    await expect(page.getByRole('button', { name: /Unanchored reactions/ })).toHaveCount(0);
-    await expect(page.getByRole('combobox', { name: /^Exam$/ })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Unanchored reactions/ }),
+    ).toHaveCount(0);
+    await expect(examChip(page)).toBeVisible();
     await page.locator('svg [data-node-id="cls_alcohols"]').click();
     await expect(selectionLine(page)).toHaveText('Selected: Alcohols.');
     await expect(page.locator('[data-map-selected]')).toHaveText('Selected: Alcohols'); // the label inside the map (step 8.3b, B2.2)

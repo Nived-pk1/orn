@@ -39,3 +39,29 @@ export async function openMapPhone(page: Page): Promise<void> {
   await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible({ timeout: 90_000 });
   await page.waitForTimeout(800);
 }
+
+/**
+ * The id of a family that is on screen and under no floating control. The phone's first view takes the smallest shift that keeps every box clear of
+ * the stack (step 8.4f, M1), so on a sparse map it may not show family 01; a spec that only needs "a family" takes this one.
+ */
+export async function phoneFamilies(page: Page): Promise<string[]> {
+  const ids = await page.evaluate(() => {
+    const out: string[] = [];
+    const area = (document.querySelector('svg[role="group"]') as unknown as SVGElement).getBoundingClientRect();
+    const controls = [...document.querySelectorAll('[data-map-control], [aria-label="Selection actions"]')].map((c) => c.getBoundingClientRect());
+    for (const n of document.querySelectorAll('svg [data-node-id]')) {
+      const r = n.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      const free = !controls.some((c) => x > c.left - 8 && x < c.right + 8 && y > c.top - 8 && y < c.bottom + 8);
+      if (free && r.left > area.left + 4 && r.right < area.right - 4 && y > area.top + 8 && y < area.bottom - 8) out.push(n.getAttribute('data-node-id') ?? '');
+    }
+    return out;
+  });
+  if (ids.length === 0) throw new Error('no family is on screen and free of the controls');
+  return ids;
+}
+
+export async function phoneFamily(page: Page): Promise<string> {
+  return (await phoneFamilies(page))[0] as string;
+}

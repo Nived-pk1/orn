@@ -11,6 +11,7 @@ import { leaveChapters, loadDemo } from "./kit";
 import { chipsSettled, clickNode } from "./map-focus-kit";
 import {
   FAMILY_ONE,
+  phoneFamily,
   NAVIGATOR,
   openMapDesktop,
   openMapPhone,
@@ -95,7 +96,7 @@ test.describe("the map to the reference: free areas (Pixel 7)", () => {
     test.setTimeout(300_000);
     await openMapPhone(page);
     await settle(page);
-    await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).tap();
+    await page.locator(`svg [data-node-id="${await phoneFamily(page)}"]`).tap();
     await settle(page);
     const area = await page
       .getByRole("group", { name: NAVIGATOR })
@@ -130,7 +131,7 @@ test.describe("the map to the reference: free areas (Pixel 7)", () => {
     await openMapPhone(page);
     await settle(page);
     await expectFree(page);
-    await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).tap();
+    await page.locator(`svg [data-node-id="${await phoneFamily(page)}"]`).tap();
     await settle(page);
     await page.getByRole("button", { name: "Fit" }).tap();
     await settle(page);

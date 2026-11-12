@@ -6,7 +6,7 @@ import { devices } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { boxTitlePx } from "./box-text";
 import { measureMarks } from "./map-marks-kit";
-import { FAMILY_ONE, openMapPhone } from "./map-layout-kit";
+import { phoneFamily, openMapPhone } from "./map-layout-kit";
 
 const { defaultBrowserType: _pixel, ...PIXEL } = devices["Pixel 7"];
 
@@ -16,7 +16,7 @@ test.describe("marks on a phone", () => {
   test("lines and chips are sized from the box title (Pixel 7)", async ({ page }) => {
     test.setTimeout(300_000);
     await openMapPhone(page);
-    await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).tap();
+    await page.locator(`svg [data-node-id="${await phoneFamily(page)}"]`).tap();
     await page.waitForTimeout(1500);
     const title = await boxTitlePx(page);
     const marks = await measureMarks(page);

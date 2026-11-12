@@ -3,13 +3,22 @@
  * The phone shell through the real window (ADR-039): a stubbed `matchMedia` makes the layout mode phone. The desktop tests elsewhere
  * run without matchMedia and are not touched.
  */
-import { cleanup, fireEvent, screen, within } from '@testing-library/react';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { PHONE_QUERIES } from '@/ui/hooks';
-import { tierState } from '@/test-support/perf-kit';
-import { fakeLayout } from '@/test-support/inspector-kit';
-import { fakeApp, renderWithApp, stubDialog } from '@/test-support/window-kit';
-import { prefetchPalette } from './lazy-palette';
+import { demoState } from "@/test-support/app-boot-kit";
+import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { PHONE_QUERIES } from "@/ui/hooks";
+import { tierState } from "@/test-support/perf-kit";
+import { fakeLayout } from "@/test-support/inspector-kit";
+import { fakeApp, renderWithApp, stubDialog } from "@/test-support/window-kit";
+import { prefetchPalette } from "./lazy-palette";
 
 beforeAll(async () => {
   await prefetchPalette(); // the palette is a lazy chunk since step 6.1a: load it once so these tests open it at once
@@ -37,7 +46,16 @@ describe('the phone shell', () => {
     expect(within(bar).getByRole('button', { name: 'More' })).toBeTruthy();
   });
 
-  it('shows no Undo, Redo, inspector toggle, mode list or Phase 7 placeholders', () => {
+  it("the exam chip is in the top bar between the page name and Search (when the data has an exam); More keeps the rest of the exam controls (step 8.4f, L1, L5)", () => {
+    renderWithApp(fakeApp({ state: demoState() }));
+    const bar = screen.getByRole("banner");
+    expect(
+      within(bar).getByRole("button", { name: "Exam: All exams" }),
+    ).toBeTruthy();
+    expect(within(bar).getByRole("button", { name: "Search" })).toBeTruthy();
+  });
+
+  it("shows no Undo, Redo, inspector toggle, mode list or Phase 7 placeholders", () => {
     renderWithApp(loaded());
     for (const name of ['Undo', 'Redo', 'Show inspector', 'Hide inspector', 'File']) expect(screen.queryByRole('button', { name })).toBeNull();
     expect(screen.queryByRole('navigation', { name: /mode/i })).toBeNull();
@@ -53,13 +71,21 @@ describe('the phone shell', () => {
 
   it('More holds the File items, Exam scope, Dataset counts, About this preview and Status', () => {
     renderWithApp(loaded());
-    fireEvent.click(screen.getByRole('button', { name: 'More' }));
-    const more = screen.getByRole('dialog', { name: 'More' });
-    const file = within(more).getByRole('region', { name: 'File' });
-    for (const name of ['Import a file...', 'Export...', 'Undo import', 'About this preview']) expect(within(file).getByRole('button', { name })).toBeTruthy();
-    expect(within(more).getByRole('combobox', { name: /exam/i })).toBeTruthy();
-    expect(within(more).getByRole('list', { name: 'Record counts' })).toBeTruthy();
-    expect(within(more).getByRole('button', { name: 'Status' })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    const more = screen.getByRole("dialog", { name: "More" });
+    const file = within(more).getByRole("region", { name: "File" });
+    for (const name of [
+      "Import a file...",
+      "Export...",
+      "Undo import",
+      "About this preview",
+    ])
+      expect(within(file).getByRole("button", { name })).toBeTruthy();
+    expect(within(more).getByRole("region", { name: "Exam" })).toBeTruthy(); // the exam chip itself is in the top bar (step 8.4f, L1)
+    expect(
+      within(more).getByRole("list", { name: "Record counts" }),
+    ).toBeTruthy();
+    expect(within(more).getByRole("button", { name: "Status" })).toBeTruthy();
   });
 
   it('Status in More opens the whole status line in its own dialog', () => {

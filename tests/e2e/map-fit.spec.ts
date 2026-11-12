@@ -71,6 +71,8 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
       const shut = await boxTitlePx(page);
       await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
       const hide = page.getByRole('button', { name: 'Hide inspector' });
+      const show = page.getByRole('button', { name: 'Show inspector' });
+      await expect(hide.or(show)).toBeVisible(); // the pane may still be opening: do not read the count too early
       if ((await hide.count()) === 0) await page.getByRole('button', { name: 'Show inspector' }).click();
       await expect(hide).toBeVisible();
       await chipsSettled(page);
@@ -123,6 +125,8 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
     const first = page.locator('svg [data-node-id]').first();
     await clickNode(page, first);
     const hide = page.getByRole('button', { name: 'Hide inspector' });
+    const show = page.getByRole('button', { name: 'Show inspector' });
+    await expect(hide.or(show)).toBeVisible(); // the pane may still be opening: do not read the count too early
     if ((await hide.count()) === 0) await page.getByRole('button', { name: 'Show inspector' }).click();
     await expect(hide).toBeVisible();
     await chipsSettled(page);

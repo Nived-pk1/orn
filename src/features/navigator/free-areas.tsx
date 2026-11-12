@@ -9,8 +9,13 @@ import { BOXES, type Scene } from "@/render/scene";
 import { hitRefiner, nearerEdgeAt } from "@/render/svg";
 import type { Insets, Rect } from "@/render/viewport";
 import { boxesRect } from "./map-geometry";
-import { phoneFitBox } from "./phone-fit";
-import { CONTROL_GAP, insetsOf, titleUnitsOf, type Box } from "./free-areas-rule";
+import { phoneFit } from "./phone-fit";
+import {
+  CONTROL_GAP,
+  insetsOf,
+  titleUnitsOf,
+  type Box,
+} from "./free-areas-rule";
 
 const READ = "[data-map-control]";
 const PANE_HOST = '[data-full-map],[data-layout="phone"]';
@@ -115,17 +120,29 @@ export function FreeAreas(props: {
       const nodes = scene?.nodes ?? [];
       const own = nodes.find((node) => node.id === selectedNow.current);
       const content = boxesRect(nodes);
-      if (onPhoneBox !== undefined && content !== undefined)
-        onPhoneBox(
-          phoneFitBox({
-            content,
-            size,
-            insets,
-            titleUnits,
-            selected: own === undefined ? undefined : boxesRect([own]),
-            ...(avoid.length === 0 ? {} : { avoid, boxes: nodes.map((node) => ({ x0: node.x, y0: node.y, x1: node.x + node.width, y1: node.y + node.height })) }),
-          }),
-        );
+      if (onPhoneBox !== undefined && content !== undefined) {
+        const fit = phoneFit({
+          content,
+          size,
+          insets,
+          titleUnits,
+          selected: own === undefined ? undefined : boxesRect([own]),
+          ...(avoid.length === 0
+            ? {}
+            : {
+                avoid,
+                boxes: nodes.map((node) => ({
+                  x0: node.x,
+                  y0: node.y,
+                  x1: node.x + node.width,
+                  y1: node.y + node.height,
+                })),
+              }),
+        });
+        // the fallback case of the first view (no shift clears the controls): said on the area for the tests and the report
+        area.dataset.stackClear = String(fit.clear);
+        onPhoneBox(fit.box);
+      }
     };
     const soon = (): void => {
       if (frame === 0) frame = window.requestAnimationFrame(measure);
@@ -153,10 +170,15 @@ export function FreeAreas(props: {
       mutation.observe(shell, {
         subtree: true,
         attributes: true,
-        attributeFilter: ["data-full-map", "hidden"],
+        attributeFilter: ["data-full-map", "data-inspector", "hidden"],
       });
+    // a panel sliding in moves the controls beside it without changing any size: measure again when the motion has ended (step 8.4f, M2)
+    shell?.addEventListener("transitionend", soon, true);
+    shell?.addEventListener("animationend", soon, true);
     watch();
     return () => {
+      shell?.removeEventListener("transitionend", soon, true);
+      shell?.removeEventListener("animationend", soon, true);
       window.cancelAnimationFrame(frame);
       resize?.disconnect();
       mutation.disconnect();

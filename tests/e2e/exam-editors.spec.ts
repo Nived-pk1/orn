@@ -7,18 +7,31 @@
  * Axe on both editors; zero CSP violations. Screenshots: exam-editor, exam-version-editor (a unit open), scope-selector (open),
  * about (-1280x800) and phone-exam-version-<pixel7|iphone14>.
  */
-import { resolve } from 'node:path';
-import { devices, type Locator, type Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { clickToolbar } from './map-toolbar-kit';
-import { axeProblems, expectClean, openPhoneApp, watch } from './kit';
-import { editorDialog, openDemo, palette, searchFor, shotsDir } from './editor-kit';
+import { resolve } from "node:path";
+import { devices, type Locator, type Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import { clickToolbar } from "./map-toolbar-kit";
+import {
+  axeProblems,
+  expectClean,
+  openPhoneApp,
+  watch,
+  chooseExam,
+  examChoices,
+  examChip,
+} from "./kit";
+import {
+  editorDialog,
+  openDemo,
+  palette,
+  searchFor,
+  shotsDir,
+} from "./editor-kit";
 
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 
-const selector = (page: Page) => page.getByRole('combobox', { name: /^Exam$/ });
-const NEW_EXAM = 'Zz e2e board exam';
+const NEW_EXAM = "Zz e2e board exam";
 
 /** Dismisses every toast first, so a screenshot shows the editor and not the "Saved" of the step before. */
 const quiet = async (page: Page): Promise<void> => {
@@ -86,23 +99,35 @@ test.describe('the exam editors (Studio)', () => {
 
     // chosen in the selector: Beckmann (a rearrangement) is outside JEE Main and not outside the new version
     const NEW_LABEL = NEW_EXAM; // the select lists exams by name (step 8.3b, B1)
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Map' }).click();
-    await expect(selector(page).locator('option', { hasText: NEW_LABEL })).toHaveCount(1, { timeout: 60_000 });
+    await page
+      .getByRole("navigation", { name: "Modes" })
+      .getByRole("button", { name: "Map" })
+      .click();
+    await expect
+      .poll(
+        async () =>
+          (await examChoices(page)).filter((text) => text === NEW_LABEL).length,
+        { timeout: 60_000 },
+      )
+      .toBe(1);
     await clickToolbar(page, /^Unanchored reactions/);
-    const panel = page.getByRole('region', { name: 'Unanchored reactions' });
-    const beckmann = panel.locator('[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]');
-    await selector(page).selectOption({ label: 'JEE Main' });
-    await page.getByRole('radio', { name: 'Everything' }).check(); // Only would leave the outside reaction out of the panel (step 8.3b, B2)
-    await expect(beckmann).toHaveAttribute('data-outside', '');
-    await selector(page).selectOption({ label: NEW_LABEL });
+    const panel = page.getByRole("region", { name: "Unanchored reactions" });
+    const beckmann = panel.locator(
+      '[data-reaction-id="rxn_cyclohexanone-oxime-beckmann"]',
+    );
+    await chooseExam(page, "JEE Main");
+    await page.getByRole("radio", { name: "Everything" }).check(); // Only would leave the outside reaction out of the panel (step 8.3b, B2)
+    await expect(beckmann).toHaveAttribute("data-outside", "");
+    await chooseExam(page, NEW_LABEL);
     await expect(beckmann).toBeVisible();
-    await expect(beckmann).not.toHaveAttribute('data-outside', '');
-    await panel.getByRole('button', { name: 'Close' }).click();
-    await selector(page).focus();
+    await expect(beckmann).not.toHaveAttribute("data-outside", "");
+    await panel.getByRole("button", { name: "Close" }).click();
     await quiet(page);
-    await selector(page).evaluate((el) => (el as HTMLSelectElement).showPicker?.());
-    await page.screenshot({ path: resolve(shotsDir(), 'scope-selector-1280x800.png') });
-    await page.keyboard.press('Escape');
+    await examChip(page).click(); // the menu is open for the picture
+    await page.screenshot({
+      path: resolve(shotsDir(), "scope-selector-1280x800.png"),
+    });
+    await page.keyboard.press("Escape");
 
     // (2) a new version of a demo exam, started from the demo version
     const copy = await newRecord(page, 'New exam version');
@@ -117,8 +142,14 @@ test.describe('the exam editors (Studio)', () => {
     await expect(copy.getByRole('list', { name: 'Syllabus units' }).getByRole('listitem')).toHaveCount(11);
     await expect(copy.getByRole('button', { name: /^Copy its units and coverage/ })).toHaveAttribute('aria-disabled', 'true'); // nothing is replaced silently
     await save(copy);
-    await selector(page).selectOption({ label: 'JEE Main' });
-    await expect(page.getByRole('combobox', { name: 'Version' }).locator('option', { hasText: 'JEE Main 2027 (e2e), draft, not verified' })).toHaveCount(1, { timeout: 60_000 }); // Studio's Version select
+    await chooseExam(page, "JEE Main");
+    await expect(
+      page
+        .getByRole("combobox", { name: "Version" })
+        .locator("option", {
+          hasText: "JEE Main 2027 (e2e), draft, not verified",
+        }),
+    ).toHaveCount(1, { timeout: 60_000 }); // Studio's Version select
     await expectClean(seen);
   });
 

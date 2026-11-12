@@ -240,3 +240,32 @@ describe.each([
     expect(r.opened).toHaveLength(1);
   });
 });
+
+describe("the palette rows to the reference menu pattern (step 8.4f, L2)", () => {
+  it("a command row has an icon at the left and, when a key does the same, the key at the right (decoration: the name is unchanged)", async () => {
+    const commands: PaletteCommand[] = [
+      { id: "zoom-in", title: "Zoom in", run: () => undefined },
+      { id: "export", title: "Back up your data", run: () => undefined },
+    ];
+    const { type } = rig({ ok: true, value: [] }, commands);
+    await type(">");
+    const zoom = screen.getByRole("option", { name: "Zoom in" });
+    expect(zoom.querySelector('span[aria-hidden="true"]')).not.toBeNull();
+    const key = zoom.querySelector("kbd");
+    expect(key?.textContent).toBe("+");
+    expect(key?.getAttribute("aria-hidden")).toBe("true");
+    expect(
+      screen
+        .getByRole("option", { name: "Back up your data" })
+        .querySelector("kbd"),
+    ).toBeNull();
+  });
+  it("a result row has the icon of its kind, its name and what it matched", async () => {
+    const { type } = rig({ ok: true, value: hits(2) });
+    await type("name");
+    const row = (await screen.findAllByRole("option"))[0] as HTMLElement;
+    expect(row.querySelector('span[aria-hidden="true"]')).not.toBeNull();
+    expect(row.textContent).toContain("Name 0");
+    expect(row.textContent).toContain("Matched the alias");
+  });
+});

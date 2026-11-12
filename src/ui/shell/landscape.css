@@ -102,7 +102,7 @@
   [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
     > nav
     > button
-    > span {
+    > span:not([aria-hidden="true"]) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -145,6 +145,41 @@
     border-left: 1px solid var(--color-ink-2);
     border-radius: 0;
     box-shadow: var(--shadow-3);
+  }
+
+  /* the hint pill is centred in the part of the map the panel leaves free (step 8.4f, M2) */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    [data-map-control="pill"] {
+    left: calc(50% - var(--landscape-panel) / 2);
+    max-width: calc(100% - var(--landscape-panel) - 32px);
+  }
+
+  /* M4 (step 8.4f): the side panel's header is the wide panes' pattern (chip row, review mark at its right end, the title on its own line), not the sheet's squeezed peek row */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > aside:not([hidden])
+    header
+    > div:first-child {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+    flex-basis: 12rem;
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > aside:not([hidden])
+    header
+    > div:first-child
+    > div:first-child {
+    justify-content: space-between;
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > aside:not([hidden])
+    header
+    > div:first-child
+    > h3 {
+    white-space: normal;
+    font-size: var(--text-20);
   }
 
   /* in full map there is no top row: the panel starts at the top */

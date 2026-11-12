@@ -3,14 +3,31 @@
  * map, box text size at 1280 x 800 and 1920 x 1000 (the demo and the user-like own-data fixture), the selection label with its clear button, and
  * a second click that keeps an arrow selected. Screenshots go to screenshots/.
  */
-import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { expectClean, leaveChapters, loadDemo, watch } from './kit';
-import { shotsDir } from './editor-kit';
-import { boxTitlePx } from './box-text';
-import { closeKey, cornerLabel, hintOverlaps, openKey, selectionLine } from './map-toolbar-kit';
-import { blockedCeiling, FIXTURE_BLOCKED_MAX, focusFamily } from './map-focus-kit';
-import { NAVIGATOR, openMapDesktop } from './map-layout-kit';
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import {
+  expectClean,
+  leaveChapters,
+  loadDemo,
+  watch,
+  chooseExam,
+  examChoices,
+} from "./kit";
+import { shotsDir } from "./editor-kit";
+import { boxTitlePx } from "./box-text";
+import {
+  closeKey,
+  cornerLabel,
+  hintOverlaps,
+  openKey,
+  selectionLine,
+} from "./map-toolbar-kit";
+import {
+  blockedCeiling,
+  FIXTURE_BLOCKED_MAX,
+  focusFamily,
+} from "./map-focus-kit";
+import { NAVIGATOR, openMapDesktop } from "./map-layout-kit";
 
 const drawing = (page: Page) => page.getByRole('group', { name: NAVIGATOR });
 
@@ -97,13 +114,23 @@ test.describe('more room for the map (Studio)', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemoAt(page, 1280, 800);
-    const exam = page.getByRole('combobox', { name: /^Exam$/ });
-    await expect(exam.locator('option')).toHaveText(['All exams', 'JEE Advanced', 'JEE Main']);
-    await expect(page.getByRole('combobox', { name: 'Version' })).toHaveCount(0);
-    await exam.selectOption({ label: 'JEE Main' });
-    await expect(page.getByRole('combobox', { name: 'Version' })).toBeVisible();
-    await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
-    await page.screenshot({ path: `${shotsDir()}/exam-select-studio-1280x800.png`, clip: { x: 0, y: 0, width: 1280, height: 140 } });
+    expect(await examChoices(page)).toEqual([
+      "All exams",
+      "JEE Advanced",
+      "JEE Main",
+    ]);
+    await expect(page.getByRole("combobox", { name: "Version" })).toHaveCount(
+      0,
+    );
+    await chooseExam(page, "JEE Main");
+    await expect(page.getByRole("combobox", { name: "Version" })).toBeVisible();
+    await expect(
+      page.getByRole("radio", { name: "Only JEE Main" }),
+    ).toBeChecked();
+    await page.screenshot({
+      path: `${shotsDir()}/exam-select-studio-1280x800.png`,
+      clip: { x: 0, y: 0, width: 1280, height: 140 },
+    });
     await expectClean(seen);
   });
 

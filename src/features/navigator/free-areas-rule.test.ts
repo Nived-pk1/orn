@@ -67,3 +67,40 @@ describe("titleUnitsOf: the smallest family title as drawn (the phone's 13 px ca
     expect(titleUnitsOf([{ box: "unclassified" }], nominal)).toBe(nominal);
   });
 });
+
+describe("insetsOf: a control as tall as the area is a side control (step 8.4f, M2)", () => {
+  // phone landscape with the panel open: the panel is wider than it is tall and fills the map's whole height, but it is a column at the right, not a bar
+  const landscape = { width: 694, height: 272 };
+  const panel = { x: 300, y: 0, w: 394, h: 272 };
+  it("takes the right side, nothing from the bottom", () => {
+    const got = insetsOf([panel], landscape);
+    expect(got.right).toBe(402);
+    expect(got.bottom).toBe(16);
+  });
+  it("also when the content size is known (every choice of side is tried)", () => {
+    const got = insetsOf([panel], landscape, { width: 1800, height: 600 });
+    expect(got.right).toBe(402);
+    expect(got.bottom).toBe(16);
+  });
+  it("a bar as wide as the area is still a top or bottom control", () => {
+    const bar = { x: 0, y: 0, w: 694, h: 40 };
+    expect(insetsOf([bar], landscape).top).toBe(48);
+  });
+  it("a control that sits right beside such a column belongs to its side: the stack at the panel's edge takes room from the right, not the left", () => {
+    const wideMap = { width: 807, height: 292 };
+    const column = { x: 407, y: 0, w: 400, h: 292 };
+    const stack = { x: 351, y: 8, w: 48, h: 196 }; // its middle is left of the area's middle, but it hugs the panel
+    for (const content of [undefined, { width: 1800, height: 600 }]) {
+      const got = insetsOf([stack, column], wideMap, content);
+      expect(got.left).toBe(24);
+      expect(got.right).toBe(464);
+    }
+  });
+  it("a bar beside the column is not pulled to its side (the top bar of the phone)", () => {
+    const wideMap = { width: 694, height: 272 };
+    const bar = { x: 8, y: 8, w: 289, h: 54 };
+    const column = { x: 300, y: 0, w: 394, h: 272 };
+    expect(insetsOf([bar, column], wideMap).top).toBe(70);
+    expect(insetsOf([bar, column], wideMap).left).toBe(24);
+  });
+});

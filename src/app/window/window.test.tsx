@@ -292,8 +292,8 @@ describe('the shell frame around the window', () => {
     for (const [name, reason] of [['Undo', 'Nothing to undo'], ['Redo', 'Nothing to redo']] as const) {
       expect(screen.getByRole('button', { name, description: reason }).getAttribute('aria-disabled')).toBe('true');
     }
-    expect(screen.getByRole('combobox', { name: /^Exam$/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'File' })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Exam: / })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "File" })).toBeTruthy();
   });
 
   it('the inspector starts closed (step 5.5a review, item g); a saved choice to open it wins', () => {

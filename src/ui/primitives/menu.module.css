@@ -97,7 +97,7 @@
 }
 
 .item[role='menuitemradio'][aria-checked='true']::after {
-  content: '¹3';
+  content: '\2713'; /* a tick (it was a broken character before step 8.4f) */
   position: absolute;
   right: var(--space-12);
 }

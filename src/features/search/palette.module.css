@@ -40,20 +40,20 @@
   padding: 0 var(--space-12);
   display: flex;
   align-items: center;
-  background: var(--color-hover);
-  color: var(--color-ink-2);
-  font-size: var(--text-14);
+  background: var(--color-surface);
+  color: var(--text-2);
+  font-size: var(--text-12);
   font-weight: 600;
 }
 
 .item {
   box-sizing: border-box;
-  height: 48px;
+  height: 36px;
   padding: 0 var(--space-12);
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--space-4);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-12);
   cursor: pointer;
   overflow: hidden;
 }
@@ -69,13 +69,37 @@
   cursor: default;
 }
 
+.icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--text-2);
+}
+
+/* the key at the right end (reference ".kbd") */
+.kbd {
+  flex: none;
+  margin-left: auto;
+  padding: 0 var(--space-4);
+  line-height: 18px;
+  border: 1px solid var(--color-rule);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-4);
+  background: var(--color-surface);
+  color: var(--text-3);
+  font: 500 11px/1 var(--mono, ui-monospace, monospace);
+}
+
 .title {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .why {
+  flex: 0 1 45%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -85,7 +109,8 @@
 
 .recent {
   margin: 0;
-  padding: var(--space-8) var(--space-12);
-  color: var(--color-ink-2);
-  font-size: var(--text-14);
+  padding: var(--space-8) var(--space-12) var(--space-4);
+  color: var(--text-2);
+  font-size: var(--text-12);
+  font-weight: 600;
 }

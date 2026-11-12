@@ -3,27 +3,51 @@
  * Exam scope, Dataset counts, About this preview, Status), the folded notices line and the one-line alert. Composition only; every word
  * of a notice still comes from `banners.ts`.
  */
-import { useState, useSyncExternalStore } from 'react';
-import type { RecordKind } from '@/core/schema';
-import { useSubscribable } from '@/ui/hooks';
-import { Button, Dialog, ErrorBoundary, Icon, IconButton, ToastItems, useToastView, useToasts } from '@/ui/primitives';
-import { bannersOf, bootLinesOf, draftsLineOf } from './banners';
-import { useApp } from './context';
-import { useExportOpen } from './export-context';
-import { EDITING } from '@/app/edition';
-import { StudyUpdateNotice, useStudyUpdateDue } from './study-update';
-import { useDraftsView, useEditors } from './editors-access';
-import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
-import { LazyExamChip } from './lazy-exam-first-run';
-import { alertOf, STUDY_STORAGE_ALERT } from './phone-alert';
-import { RecordCounts } from './record-counts';
-import { fileItems, historyLabelOf, historyReason, historySnapshot, stepHistory, useFileWithDrafts, type FileBinding, type HistoryBinding } from './top-bar';
-import { NavigatorStatus, StructuresControl, type NavigatorStructures } from '@/features/navigator';
-import { PanelsStatus } from './panels-status';
-import { BootLines, Banners, StatusLine } from './status-parts';
-import { usePanels } from '@/ui/state';
-import { useStudyChrome } from '@/ui/study-chrome';
-import styles from './phone-parts.module.css';
+import { useState, useSyncExternalStore } from "react";
+import type { RecordKind } from "@/core/schema";
+import { useSubscribable } from "@/ui/hooks";
+import {
+  Button,
+  Dialog,
+  ErrorBoundary,
+  Icon,
+  IconButton,
+  ToastItems,
+  useToastView,
+  useToasts,
+} from "@/ui/primitives";
+import { bannersOf, bootLinesOf, draftsLineOf } from "./banners";
+import { useApp } from "./context";
+import { useExportOpen } from "./export-context";
+import { EDITING } from "@/app/edition";
+import { StudyUpdateNotice, useStudyUpdateDue } from "./study-update";
+import { useDraftsView, useEditors } from "./editors-access";
+import {
+  ExamScopeSelector,
+  type ExamScopeBinding,
+} from "./exam-scope-selector";
+import { alertOf, STUDY_STORAGE_ALERT } from "./phone-alert";
+import { RecordCounts } from "./record-counts";
+import {
+  fileItems,
+  historyLabelOf,
+  historyReason,
+  historySnapshot,
+  stepHistory,
+  useFileWithDrafts,
+  type FileBinding,
+  type HistoryBinding,
+} from "./top-bar";
+import {
+  NavigatorStatus,
+  StructuresControl,
+  type NavigatorStructures,
+} from "@/features/navigator";
+import { PanelsStatus } from "./panels-status";
+import { BootLines, Banners, StatusLine } from "./status-parts";
+import { usePanels } from "@/ui/state";
+import { useStudyChrome } from "@/ui/study-chrome";
+import styles from "./phone-parts.module.css";
 
 export function PhoneBar(props: {
   readonly onSearch: () => void;
@@ -47,11 +71,14 @@ export function PhoneBar(props: {
   };
   return (
     <>
-      {EDITING ? null : <LazyExamChip binding={props.exam} />}
+      <ExamScopeSelector binding={props.exam} part="chip" />
       <IconButton label="Search" icon="search" onClick={props.onSearch} />
-      <Button onClick={() => setMore(true)} aria-haspopup="dialog">
-        More
-      </Button>
+      <IconButton
+        label="More"
+        icon="more-horizontal"
+        onClick={() => setMore(true)}
+        aria-haspopup="dialog"
+      />
       <Dialog open={more} onClose={() => setMore(false)} title="More">
         <section aria-label="File" className={styles.section}>
           <h3>File</h3>
@@ -92,7 +119,7 @@ export function PhoneBar(props: {
         )}
         <section aria-label="Exam" className={styles.section}>
           <h3>Exam</h3>
-          <ExamScopeSelector binding={props.exam} />
+          <ExamScopeSelector binding={props.exam} part="rest" />
         </section>
         {chrome.datasetCounts ? (
           <section aria-label="Dataset" className={styles.section}>

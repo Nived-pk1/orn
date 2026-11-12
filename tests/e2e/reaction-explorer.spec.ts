@@ -10,11 +10,25 @@
  * reactions-filter-open-1280x800.png, reactions-empty-1280x800.png, inspector-arrow-open-reactions-1280x800.png,
  * phone-reactions-<pixel7|iphone14>.png, phone-reactions-filters-<pixel7|iphone14>.png.
  */
-import { devices, type Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { clickToolbar } from './map-toolbar-kit';
-import { axeProblems, chooseFile, expectClean, expectPreview, generatedFileWithAnchors, loadDemo, openApp, openPhoneApp, watch, leaveChapters, examWord, expectSaved } from './kit';
-import { palette, pane, record, searchFor, shotsDir } from './editor-kit';
+import { devices, type Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import { clickToolbar } from "./map-toolbar-kit";
+import {
+  axeProblems,
+  chooseFile,
+  expectClean,
+  expectPreview,
+  generatedFileWithAnchors,
+  loadDemo,
+  openApp,
+  openPhoneApp,
+  watch,
+  leaveChapters,
+  examWord,
+  expectSaved,
+  chooseExam,
+} from "./kit";
+import { palette, pane, record, searchFor, shotsDir } from "./editor-kit";
 
 test.use({ actionTimeout: 60_000 });
 const { defaultBrowserType: _ios, ...IPHONE } = devices['iPhone 14'];
@@ -198,7 +212,7 @@ test.describe('desktop', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: examWord('JEE Main, provisional, not verified') });
+    await chooseExam(page, examWord("JEE Main, provisional, not verified"));
     await openReactions(page);
     // step 8.3b, B2: with an exam chosen "Only JEE Main" is on: the outside reactions are HIDDEN and one quiet line says how many
     await expect(view(page).locator('[data-hidden-line]')).toContainText(/reactions? outside JEE Main (is|are) hidden/);

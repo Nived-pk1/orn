@@ -13,18 +13,32 @@
  *  (3) phone (Pixel 7 in Chromium, iPhone 14 in WebKit): More has File and Undo import and no Workbench, New, Undo, Redo or Drafts.
  * Screenshots: study-desktop-1280x800.png, study-phone-pixel7.png, study-update-notice-1280x800.png (git-ignored).
  */
-import { chaptersFirstThenNavigator } from './chapters-kit';
-import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { devices, type Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { expectStorageLineWhole } from './exam-kit';
-import { importOwnData, openStudy, STUDY, TITLE } from './study-kit';
-import { noticeScope } from './own-data-kit';
-import { axeProblems, expectClean, generatedFileWithAnchors, watch, type UploadFile } from './kit';
-import { palette, pane, record, searchFor, shotsDir, showRecord } from './editor-kit';
-import { makePng } from './png-kit';
+import { chaptersFirstThenNavigator } from "./chapters-kit";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { devices, type Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import { expectStorageLineWhole } from "./exam-kit";
+import { importOwnData, openStudy, STUDY, TITLE } from "./study-kit";
+import { noticeScope } from "./own-data-kit";
+import {
+  axeProblems,
+  examChip,
+  expectClean,
+  generatedFileWithAnchors,
+  watch,
+  type UploadFile,
+} from "./kit";
+import {
+  palette,
+  pane,
+  record,
+  searchFor,
+  shotsDir,
+  showRecord,
+} from "./editor-kit";
+import { makePng } from "./png-kit";
 
 const REMOTE = process.env.ORN_BASE_URL !== undefined;
 test.use({ baseURL: STUDY });
@@ -152,14 +166,20 @@ test.describe('desktop', () => {
     await page.keyboard.press('Escape');
 
     // the exam scope, the Structures setting, the export screen, the import screen
-    const scope = page.getByRole('combobox', { name: /^Exam$/ });
-    await expect(scope).toBeVisible();
-    await page.getByRole('radiogroup', { name: 'Structures' }).getByRole('radio', { name: 'Condensed' }).check({ force: true });
-    await banner.getByRole('button', { name: 'File' }).click();
-    await page.getByRole('menuitem', { name: /Export\.\.\./ }).click();
-    await expect(page.getByRole('dialog', { name: 'Export your data' })).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog', { name: 'Export your data' })).toBeHidden();
+    await expect(examChip(page)).toBeVisible();
+    await page
+      .getByRole("radiogroup", { name: "Structures" })
+      .getByRole("radio", { name: "Condensed" })
+      .check({ force: true });
+    await banner.getByRole("button", { name: "File" }).click();
+    await page.getByRole("menuitem", { name: /Export\.\.\./ }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Export your data" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("dialog", { name: "Export your data" }),
+    ).toBeHidden();
     // a student has no Dataset page (step 8.3, C4); replacing the data stays reachable as a palette command
     await expect(page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Dataset' })).toHaveCount(0);
 

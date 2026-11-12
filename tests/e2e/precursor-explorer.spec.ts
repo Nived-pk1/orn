@@ -5,10 +5,18 @@
  * make it"; the choices survive a reload; axe on each state. Screenshots: precursors-direct-1280x800.png, precursors-routes-1280x800.png,
  * precursors-no-route-1280x800.png.
  */
-import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { axeProblems, expectClean, watch, leaveChapters, examWord, expectSaved } from './kit';
-import { openDemo, pane, record, shotsDir, showSpecies } from './editor-kit';
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import {
+  axeProblems,
+  expectClean,
+  watch,
+  leaveChapters,
+  examWord,
+  expectSaved,
+  chooseExam,
+} from "./kit";
+import { openDemo, pane, record, shotsDir, showSpecies } from "./editor-kit";
 
 test.use({ actionTimeout: 60_000 });
 
@@ -128,8 +136,8 @@ test.describe('Studio, desktop', () => {
     test.setTimeout(300_000);
     const seen = await watch(page);
     await openDemo(page);
-    await page.getByRole('combobox', { name: /^Exam$/ }).selectOption({ label: examWord('JEE Main, provisional, not verified') });
-    await page.getByRole('radio', { name: 'Everything' }).check(); // the outside reaction is marked, not left out (step 8.3b, B2)
+    await chooseExam(page, examWord("JEE Main, provisional, not verified"));
+    await page.getByRole("radio", { name: "Everything" }).check(); // the outside reaction is marked, not left out (step 8.3b, B2)
     await openPrecursors(page);
     await pick(page, 'Compound to make', 'caprolactam', 'Choose ε-Caprolactam');
     await expect(view(page).locator('[data-outside]').first()).toContainText('outside JEE Main');

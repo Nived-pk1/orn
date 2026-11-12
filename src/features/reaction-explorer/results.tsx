@@ -3,36 +3,79 @@
  * the type names, the outside mark in words), 30 at a time with the truncation said in words. A reaction with no card shows its compact row
  * with the reason. A click or Enter on a row selects the reaction.
  */
-import type { ReactNode } from 'react';
-import { quietGroups, reactionCard } from '@/core/graph';
-import { Chip } from '@/ui/primitives';
-import { scopeChipOf } from '@/ui/study-page';
-import { knownReviewStatus, ReviewMark, useStudyChrome, type ReviewStatus } from '@/ui/study-chrome';
-import type { ReadonlyIndexes } from '@/core/indexes/contracts';
-import type { ExampleFold, ReactionFilterRow } from '@/core/graph';
-import type { CanonicalState } from '@/core/schema';
-import type { ExplorerView } from '@/ui/state';
-import { PAGE_SIZE, type ExplorerPorts } from './contracts';
-import { compactEquationOf, type Labels } from './model';
-import styles from './reactions-view.module.css';
+import type { ReactNode } from "react";
+import { quietGroups, reactionCard } from "@/core/graph";
+import { Chip, Icon } from "@/ui/primitives";
+import { scopeChipOf } from "@/ui/study-page";
+import {
+  knownReviewStatus,
+  ReviewMark,
+  useStudyChrome,
+  type ReviewStatus,
+} from "@/ui/study-chrome";
+import type { ReadonlyIndexes } from "@/core/indexes/contracts";
+import type { ExampleFold, ReactionFilterRow } from "@/core/graph";
+import type { CanonicalState } from "@/core/schema";
+import type { ExplorerView } from "@/ui/state";
+import { PAGE_SIZE, type ExplorerPorts } from "./contracts";
+import { compactEquationOf, type Labels } from "./model";
+import styles from "./reactions-view.module.css";
 
 const unscoped = (): 'unmapped' => 'unmapped';
 
 function CompactRow(props: { readonly examples?: ReactNode; readonly exampleCount?: number; readonly exampleOf?: { readonly id: string; readonly name: string }; readonly row: ReactionFilterRow; readonly equation: string; readonly reason?: string; readonly labels: Labels; readonly selected: boolean; readonly outside: string | undefined; readonly review: ReviewStatus | undefined; readonly onSelect: (id: string) => void }) {
   const { row } = props;
-  const types = row.typeIds.map(props.labels.type).join(', ');
+  const types = row.typeIds.map(props.labels.type).join(", ");
+  const hasCard = props.equation !== "";
   return (
-    <li className={styles.compactRow} data-reaction-id={row.id} data-selected={props.selected ? '' : undefined} data-outside={props.outside === undefined ? undefined : ''}>
-      <button type="button" className={styles.compactName} aria-pressed={props.selected} onClick={() => props.onSelect(row.id)}>
-        {row.name}
-      </button>
-      <ReviewMark status={props.review} />
-      {scopeChipOf(row.scopeKind) === undefined ? null : <Chip data-scope-chip="">{scopeChipOf(row.scopeKind)}</Chip>}
-      {props.equation === '' ? null : <span className={styles.compactEquation}>{props.equation}</span>}
-      {types === '' ? null : <span className={styles.compactTypes}>{types}</span>}
-      {props.outside === undefined ? null : <span className={styles.outsideMark}>{props.outside}</span>}
-      {props.reason === undefined ? null : <span className={styles.muted}>{props.reason}</span>}
-      {props.exampleOf === undefined ? null : <span className={styles.muted}>{`Example of ${props.exampleOf.name}`}</span>}
+    <li
+      className={styles.compactRow}
+      data-reaction-id={row.id}
+      data-selected={props.selected ? "" : undefined}
+      data-outside={props.outside === undefined ? undefined : ""}
+    >
+      <div className={styles.rowInner}>
+        <ReviewMark status={props.review} />
+        <span className={styles.rowGrow}>
+          <button
+            type="button"
+            className={styles.compactName}
+            aria-pressed={props.selected}
+            onClick={() => props.onSelect(row.id)}
+          >
+            {row.name}
+          </button>
+          {hasCard ? (
+            <span className={styles.compactEquation}>{props.equation}</span>
+          ) : null}
+        </span>
+        {scopeChipOf(row.scopeKind) === undefined ? null : (
+          <Chip data-scope-chip="">{scopeChipOf(row.scopeKind)}</Chip>
+        )}
+        {props.outside === undefined ? null : (
+          <span className={styles.outsideMark}>{props.outside}</span>
+        )}
+        <span className={styles.rowChevron} data-chevron="" aria-hidden="true">
+          <Icon name="chevron-right" />
+        </span>
+      </div>
+      {types === "" &&
+      props.reason === undefined &&
+      props.exampleOf === undefined ? null : (
+        <p className={styles.rowMeta}>
+          {types === "" ? null : (
+            <span className={styles.compactTypes}>{types}</span>
+          )}
+          {props.reason === undefined ? null : (
+            <span className={styles.muted}>{props.reason}</span>
+          )}
+          {props.exampleOf === undefined ? null : (
+            <span
+              className={styles.muted}
+            >{`Example of ${props.exampleOf.name}`}</span>
+          )}
+        </p>
+      )}
       {props.examples === undefined ? null : (
         <details className={styles.compactExamples} onClick={(event) => event.stopPropagation()}>
           <summary>{`${props.exampleCount} ${props.exampleCount === 1 ? 'example' : 'examples'}`}</summary>
@@ -79,7 +122,10 @@ export function Results(props: {
   };
   return (
     <div className={styles.results}>
-      <ul className={styles.list} aria-label="Reactions">
+      <ul
+        className={`${styles.list} ${props.view === "compact" ? styles.rowList : ""}`}
+        aria-label="Reactions"
+      >
         {shown.map((row) =>
           props.view === 'compact' ? (
             compactOf(row)

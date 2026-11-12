@@ -172,9 +172,13 @@ describe('Cards and Compact', () => {
     const rows = screen.getAllByRole('listitem').filter((li) => li.hasAttribute('data-reaction-id'));
     let withDot = 0;
     for (const row of rows) {
-      const status = (state.records.reaction as Record<string, Reaction>)[row.getAttribute('data-reaction-id') as string]?.review?.status;
-      const dots = [...row.children].filter((el) => el.hasAttribute('data-review-mark')); // the row's own dot (an example folded under it has its own row)
-      expect(dots).toHaveLength(status === 'verified' ? 0 : 1);
+      const status = (state.records.reaction as Record<string, Reaction>)[
+        row.getAttribute("data-reaction-id") as string
+      ]?.review?.status;
+      const dots = [...(row.firstElementChild?.children ?? [])].filter((el) =>
+        el.hasAttribute("data-review-mark"),
+      ); // the row's own dot, first in its inner line (an example folded under it has its own row) (step 8.4f, L3)
+      expect(dots).toHaveLength(status === "verified" ? 0 : 1);
       withDot += dots.length;
     }
     expect(withDot).toBeGreaterThan(0);

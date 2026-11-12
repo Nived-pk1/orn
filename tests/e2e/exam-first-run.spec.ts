@@ -4,15 +4,24 @@
  * "Show them" brings them back, dimmed); the card never comes back after a reload. Desktop 1280 x 800, Pixel 7 (Chromium) and iPhone 14 (WebKit).
  * Screenshots: exam-first-run-1280x800.png, exam-first-run-pixel7.png, exam-only-reactions-1280x800.png, exam-everything-reactions-1280x800.png.
  */
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { devices, type Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { chooseFile, expectClean, expectPreview, watch } from './kit';
-import { shotsDir } from './editor-kit';
-import { answerExamCard, expectStorageLineWhole } from './exam-kit';
-import { hintOverlaps } from './map-toolbar-kit';
-import { boxTitlePx } from './box-text';
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { devices, type Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import {
+  chooseFile,
+  expectClean,
+  expectPreview,
+  watch,
+  chooseExam,
+  examChip,
+  examChoices,
+  expectExamId,
+} from "./kit";
+import { shotsDir } from "./editor-kit";
+import { answerExamCard, expectStorageLineWhole } from "./exam-kit";
+import { hintOverlaps } from "./map-toolbar-kit";
+import { boxTitlePx } from "./box-text";
 
 const STUDY = process.env.ORN_BASE_URL?.replace(/\/+$/, '') ?? 'http://127.0.0.1:4174';
 test.use({ baseURL: STUDY });
@@ -70,22 +79,46 @@ test.describe('desktop', () => {
     await page.screenshot({ path: `${shotsDir()}/exam-first-run-1280x800.png` });
     await card(page).getByRole('button', { name: 'JEE Main' }).click();
     await expect(card(page)).toHaveCount(0);
-    await expect(page.getByRole('combobox', { name: /^Exam$/ })).toHaveValue('exm_jee-main');
-    await expect(page.getByRole('radio', { name: 'Only JEE Main' })).toBeChecked();
+    await expectExamId(page, "exm_jee-main");
+    await expect(
+      page.getByRole("radio", { name: "Only JEE Main" }),
+    ).toBeChecked();
 
-    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Reactions', exact: true }).click();
-    const view = page.getByRole('region', { name: 'Reactions', exact: true });
-    await expect(view.locator('[data-hidden-line]')).toContainText(/\d+ reactions? outside JEE Main (is|are) hidden · Show (them|it)/);
-    expect(((await view.textContent()) ?? '').match(/hidden/g)?.length, '"hidden" is said once (ADR-046)').toBe(1);
-    const only = await view.locator('article[data-reaction-id]').count();
-    await page.screenshot({ path: `${shotsDir()}/exam-only-reactions-1280x800.png` });
-    await view.getByRole('button', { name: /^Show (them|it)$/ }).click();
-    await expect(view.locator('[data-hidden-line]')).toHaveCount(0);
-    await expect(view.locator('article[data-outside]').first()).toContainText('outside JEE Main'); // back, dimmed and marked in words
-    expect(await view.locator('article[data-reaction-id]').count()).toBeGreaterThan(only);
-    await page.screenshot({ path: `${shotsDir()}/exam-everything-reactions-1280x800.png` });
-    expect(await page.getByRole('combobox', { name: /^Exam$/ }).locator('option').allTextContents()).toEqual(['All exams', 'JEE Advanced', 'JEE Main']); // no version words for a student
-    await expect(page.getByRole('combobox', { name: 'Version' })).toHaveCount(0);
+    await page
+      .getByRole("navigation", { name: "Modes" })
+      .getByRole("button", { name: "Reactions", exact: true })
+      .click();
+    const view = page.getByRole("region", { name: "Reactions", exact: true });
+    await expect(view.locator("[data-hidden-line]")).toContainText(
+      /\d+ reactions? outside JEE Main (is|are) hidden · Show (them|it)/,
+    );
+    expect(
+      ((await view.textContent()) ?? "").match(/hidden/g)?.length,
+      '"hidden" is said once (ADR-046)',
+    ).toBe(1);
+    const only = await view.locator("article[data-reaction-id]").count();
+    await page.screenshot({
+      path: `${shotsDir()}/exam-only-reactions-1280x800.png`,
+    });
+    await view.getByRole("button", { name: /^Show (them|it)$/ }).click();
+    await expect(view.locator("[data-hidden-line]")).toHaveCount(0);
+    await expect(view.locator("article[data-outside]").first()).toContainText(
+      "outside JEE Main",
+    ); // back, dimmed and marked in words
+    expect(
+      await view.locator("article[data-reaction-id]").count(),
+    ).toBeGreaterThan(only);
+    await page.screenshot({
+      path: `${shotsDir()}/exam-everything-reactions-1280x800.png`,
+    });
+    expect(await examChoices(page)).toEqual([
+      "All exams",
+      "JEE Advanced",
+      "JEE Main",
+    ]); // no version words for a student
+    await expect(page.getByRole("combobox", { name: "Version" })).toHaveCount(
+      0,
+    );
 
     await page.waitForTimeout(1200); // the saved state is written after a short pause
     await expectClean(seen); // a reload loses the watcher's count of the styles WebKit's screenshot injects: a new watcher after it
@@ -94,7 +127,7 @@ test.describe('desktop', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
     await page.waitForTimeout(1500);
     await expect(card(page)).toHaveCount(0); // never again
-    await expect(page.getByRole('combobox', { name: /^Exam$/ })).toHaveValue('exm_jee-main');
+    await expectExamId(page, "exm_jee-main");
     await expectClean(afterReload);
   });
 
@@ -103,9 +136,9 @@ test.describe('desktop', () => {
     const seen = await watch(page, STUDY);
     await page.setViewportSize({ width: 1280, height: 800 });
     await importDemo(page, false);
-    await card(page).getByRole('button', { name: 'Just exploring' }).click();
-    await expect(page.getByRole('combobox', { name: /^Exam$/ })).toHaveValue('');
-    await expect(page.getByRole('radiogroup', { name: 'Show' })).toHaveCount(0);
+    await card(page).getByRole("button", { name: "Just exploring" }).click();
+    await expectExamId(page, "");
+    await expect(page.getByRole("radiogroup", { name: "Show" })).toHaveCount(0);
     await page.waitForTimeout(1200);
     await expectClean(seen);
     await page.reload();
@@ -129,17 +162,15 @@ for (const [label, options, engine, phoneShot] of [['Pixel 7 (Chromium)', PIXEL,
       await page.screenshot({ path: `${shotsDir()}/${phoneShot}` });
       await card(page).getByRole('button', { name: 'JEE Main' }).tap();
       await expect(card(page)).toHaveCount(0);
-      await expect(page.getByRole('button', { name: 'JEE Main', exact: true })).toBeVisible(); // the exam chip at the top
+      await expect(examChip(page)).toHaveText('JEE Main'); // the exam chip at the top
       await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Explore' }).tap();
       const view = page.getByRole('region', { name: 'Reactions', exact: true });
       await expect(view.locator('[data-hidden-line]')).toContainText(/outside JEE Main (is|are) hidden/, { timeout: 60_000 });
       await view.getByRole('button', { name: /^Show (them|it)$/ }).tap();
       await expect(view.locator('[data-hidden-line]')).toHaveCount(0);
-      // "Change exam" from the chip opens the same card with the exam marked
-      await page.getByRole('button', { name: 'JEE Main', exact: true }).tap();
-      await expect(page.getByRole('dialog', { name: 'Change exam' })).toBeVisible();
-      await page.getByRole('dialog', { name: 'Change exam' }).getByRole('button', { name: 'Just exploring' }).tap();
-      await expect(page.getByRole('button', { name: 'All exams', exact: true })).toBeVisible();
+      // the chip's menu changes the exam (step 8.4f, L1: the phone's old "Change exam" card is replaced by the menu)
+      await chooseExam(page, 'All exams');
+      await expect(examChip(page)).toHaveText('All exams');
       await page.waitForTimeout(1200);
       await expectClean(seen);
       await page.reload();

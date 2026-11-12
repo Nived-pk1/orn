@@ -5,7 +5,7 @@
 import type { RecordKind } from '@/core/schema';
 import type { SearchHit } from '@/search/contracts';
 
-export const HIT_ROW_HEIGHT = 48;
+export const HIT_ROW_HEIGHT = 36;
 export const HEADER_ROW_HEIGHT = 28;
 export const LIST_HEIGHT = 360;
 export const WINDOW_OVERSCAN = 4;

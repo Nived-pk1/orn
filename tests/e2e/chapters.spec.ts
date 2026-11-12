@@ -7,12 +7,25 @@
  * violations. Screenshots: chapters-list, chapter-page, chapter-page-supporting, chapter-no-chapter, chapters-exam-scope,
  * inspector-in-chapters (all -1280x800.png).
  */
-import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { axeProblems, expectClean, watch, examWord, expectSaved } from './kit';
-import { record, shotsDir } from './editor-kit';
-import { importOwn } from './own-data-kit';
-import { CHAPTER_A, CHAPTER_B, chaptersDemo, EMPTY_IDEA, UNMAPPED } from './chapters-kit';
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import {
+  axeProblems,
+  expectClean,
+  watch,
+  examWord,
+  expectSaved,
+  chooseExam,
+} from "./kit";
+import { record, shotsDir } from "./editor-kit";
+import { importOwn } from "./own-data-kit";
+import {
+  CHAPTER_A,
+  CHAPTER_B,
+  chaptersDemo,
+  EMPTY_IDEA,
+  UNMAPPED,
+} from "./chapters-kit";
 
 test.use({ actionTimeout: 60_000 });
 const view = (page: Page) => page.getByRole('region', { name: 'Chapters', exact: true });
@@ -86,14 +99,21 @@ test('the list, a chapter page, selecting, the inspector line, the exam scope an
   await view(page).getByRole('button', { name: 'All chapters' }).click();
 
   // the exam scope: the chapters a version does not cover are hidden, and said
-  const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
-  await expect(view(page).locator('[data-hidden-line]')).toContainText(/chapters? outside JEE Main (is|are) hidden/); // step 8.3b, B2
-  await expect(rows(page).filter({ hasText: 'Molecular rearrangements' })).toHaveCount(0);
-  await expect(rows(page).filter({ hasText: 'No chapter yet' })).toHaveCount(studio ? 1 : 0); // 7.3c A2: only Studio lists it under a scope
+  await chooseExam(page, examWord("JEE Main, provisional, not verified"));
+  await expect(view(page).locator("[data-hidden-line]")).toContainText(
+    /chapters? outside JEE Main (is|are) hidden/,
+  ); // step 8.3b, B2
+  await expect(
+    rows(page).filter({ hasText: "Molecular rearrangements" }),
+  ).toHaveCount(0);
+  await expect(rows(page).filter({ hasText: "No chapter yet" })).toHaveCount(
+    studio ? 1 : 0,
+  ); // 7.3c A2: only Studio lists it under a scope
   expect(await axeProblems(page)).toEqual([]);
-  await page.screenshot({ path: `${shotsDir()}/chapters-exam-scope-1280x800.png` });
-  await scope.selectOption({ value: '' });
+  await page.screenshot({
+    path: `${shotsDir()}/chapters-exam-scope-1280x800.png`,
+  });
+  await chooseExam(page, "All exams");
 
   // No chapter yet
   await rows(page).filter({ hasText: 'No chapter yet' }).getByRole('button').click();

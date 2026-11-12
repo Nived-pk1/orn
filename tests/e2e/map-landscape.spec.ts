@@ -8,7 +8,7 @@
 import { devices, type Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { boxTitlePx } from "./box-text";
-import { FAMILY_ONE, openMapPhone } from "./map-layout-kit";
+import { phoneFamily, openMapPhone } from "./map-layout-kit";
 
 const { defaultBrowserType: _a, ...IPHONE } = devices["iPhone 14 landscape"];
 const { defaultBrowserType: _b, ...PIXEL } = devices["Pixel 7 landscape"];
@@ -134,7 +134,7 @@ for (const [label, device] of [
       ).toBeGreaterThanOrEqual(0.6);
 
       // E4: the inspector is a panel at the right, at most 60% of the width; the map stays visible beside it
-      await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).tap();
+      await page.locator(`svg [data-node-id="${await phoneFamily(page)}"]`).tap();
       const sheet = page
         .getByRole("complementary", { name: /./ })
         .filter({ has: page.getByRole("button", { name: "Close inspector" }) });
@@ -172,7 +172,7 @@ for (const [label, device] of [
       // the selected family is not under the panel
       const box = need(
         await page
-          .locator(`svg [data-node-id="${FAMILY_ONE}"]`)
+          .locator(`svg [data-node-id="${await phoneFamily(page)}"]`)
           .first()
           .boundingBox(),
       );

@@ -3,12 +3,20 @@
  * Mechanisms, Reagents and Syllabus (the Precursors notice cannot be reached from the screen with test-size data: see the audit); "Only <exam>" narrowing in Named reactions and Mechanisms; the Syllabus default version from the exam
  * scope; the palette and inspector entry points. Own data (dod-kit.ts); the demo chemistry is never edited. Studio build.
  */
-import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { axeProblems, expectClean, leaveChapters, watch, examWord } from './kit';
-import { palette, shotsDir } from './editor-kit';
-import { changedDemo, importOwn } from './own-data-kit';
-import { longChapterDemo, longListsDemo } from './dod-kit';
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import {
+  axeProblems,
+  expectClean,
+  leaveChapters,
+  watch,
+  examWord,
+  chooseExam,
+  examChip,
+} from "./kit";
+import { palette, shotsDir } from "./editor-kit";
+import { changedDemo, importOwn } from "./own-data-kit";
+import { longChapterDemo, longListsDemo } from "./dod-kit";
 
 test.use({ actionTimeout: 60_000 });
 const rail = (page: Page) => page.getByRole('navigation', { name: 'Modes' });
@@ -24,8 +32,10 @@ test('Named reactions, Mechanisms and Reagents: a list of more than 30 is cut at
   test.setTimeout(480_000);
   const seen = await watch(page);
   await importOwn(page, longListsDemo());
-  const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  for (const [mode, noun, entry] of [['Named reactions', 'named reactions', '[data-named-id]'], ['Mechanisms', 'mechanisms', '[data-mechanism-id]']] as const) {
+  for (const [mode, noun, entry] of [
+    ["Named reactions", "named reactions", "[data-named-id]"],
+    ["Mechanisms", "mechanisms", "[data-mechanism-id]"],
+  ] as const) {
     await openMode(page, mode);
     const view = region(page, mode);
     const list = view.getByRole('list', { name: mode });
@@ -34,12 +44,14 @@ test('Named reactions, Mechanisms and Reagents: a list of more than 30 is cut at
     await view.getByRole('button', { name: 'Show 30 more' }).click();
     expect(await list.locator(entry).count()).toBeGreaterThan(30);
     // "Only <exam version>": the clones have no reaction, so they are hidden and the count line says how many are left
-    await scope.selectOption({ label: examWord('JEE Main, provisional, not verified') });
-    await expect(view.getByText(new RegExp(`^\\d+ of \\d+ ${noun}$`))).toBeVisible();
+    await chooseExam(page, examWord("JEE Main, provisional, not verified"));
+    await expect(
+      view.getByText(new RegExp(`^\\d+ of \\d+ ${noun}$`)),
+    ).toBeVisible();
     expect(await list.locator(entry).count()).toBeLessThan(30);
     expect(await axeProblems(page)).toEqual([]);
-    await page.getByRole('radio', { name: 'Everything' }).check(); // the top bar's switch (step 8.3b, B2)
-    await scope.selectOption({ value: '' });
+    await page.getByRole("radio", { name: "Everything" }).check(); // the top bar's switch (step 8.3b, B2)
+    await chooseExam(page, "All exams");
   }
   await openMode(page, 'Reagents');
   const reagents = region(page, 'Reagents');
@@ -65,13 +77,16 @@ test('Chapters: a group of 35 concepts is cut at 30; Syllabus: a unit of 65 topi
   expect(await axeProblems(page)).toEqual([]);
 
   // the exam scope picks the version the Syllabus opens with; choosing a version there leaves the scope alone
-  const scope = page.getByRole('combobox', { name: /^Exam$/ });
-  await scope.selectOption({ label: examWord('JEE Advanced, provisional, not verified') });
-  await rail(page).getByRole('button', { name: 'Syllabus' }).click();
-  const syllabus = region(page, 'Syllabus');
-  await expect(syllabus.getByLabel('Exam version')).toHaveValue('exv_jee-advanced-2026');
-  await syllabus.getByLabel('Exam version').selectOption({ value: 'exv_jee-main-2026' });
-  await expect(scope.locator('option:checked')).toHaveText('JEE Advanced');
+  await chooseExam(page, examWord("JEE Advanced, provisional, not verified"));
+  await rail(page).getByRole("button", { name: "Syllabus" }).click();
+  const syllabus = region(page, "Syllabus");
+  await expect(syllabus.getByLabel("Exam version")).toHaveValue(
+    "exv_jee-advanced-2026",
+  );
+  await syllabus
+    .getByLabel("Exam version")
+    .selectOption({ value: "exv_jee-main-2026" });
+  await expect(examChip(page)).toHaveText("JEE Advanced");
   const unit = syllabus.locator('[data-unit-id="unt_zz-long"]');
   await expect(unit.getByText(/^Showing 60 of 65 topics$/)).toBeVisible();
   await unit.getByRole('button', { name: 'Show 60 more' }).click();

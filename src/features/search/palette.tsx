@@ -6,24 +6,92 @@
  * whole list. A press on Enter is the same as a click: a result opens in the inspector and is placed; a command runs; a recent search
  * is typed again.
  */
-import { Command } from 'cmdk';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { useStore } from 'zustand';
-import { useLayoutMode } from '@/ui/hooks';
-import { Dialog } from '@/ui/primitives';
-import { kindName, kindTitle, pageOpenerOf, SHOW_REACTIONS_KINDS, type PaletteCommand, type SearchPorts } from './contracts';
-import { createPaletteModel } from './palette-model';
-import { HEADER_ROW_HEIGHT, LIST_HEIGHT, nextHit, scrollToShow, windowOf, type PaletteRow } from './rows';
-import { matchWords } from './words';
-import { HiddenLine } from '@/ui/study-page';
-import styles from './palette.module.css';
+import { Command } from "cmdk";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
+import { useStore } from "zustand";
+import { useLayoutMode } from "@/ui/hooks";
+import { Dialog, Icon, type IconName } from "@/ui/primitives";
+import {
+  kindName,
+  kindTitle,
+  pageOpenerOf,
+  SHOW_REACTIONS_KINDS,
+  type PaletteCommand,
+  type SearchPorts,
+} from "./contracts";
+import { createPaletteModel } from "./palette-model";
+import { commandLook, kindIcon } from "./palette-look";
+import {
+  HEADER_ROW_HEIGHT,
+  LIST_HEIGHT,
+  nextHit,
+  scrollToShow,
+  windowOf,
+  type PaletteRow,
+} from "./rows";
+import { matchWords } from "./words";
+import { HiddenLine } from "@/ui/study-page";
+import styles from "./palette.module.css";
 
 type Entry = { readonly key: string; readonly row?: number };
 
 const PAGE = 6;
 const HINT = 'Type to search. r: s: c: g: n: m: t: narrow to one kind. > lists commands.';
 
-function useEntries(rows: readonly PaletteRow[], commands: readonly PaletteCommand[], recent: readonly string[], mode: 'search' | 'command', hasText: boolean): readonly Entry[] {
+/** One row of the palette in the reference menu pattern (step 8.4f, L2): the icon at the left, the name, then the key or the reason at the right. The key is decoration (the name says what the row does). */
+function RowLook(props: {
+  readonly icon: IconName;
+  readonly name: ReactNode;
+  readonly aside?: ReactNode;
+  readonly keys?: string | undefined;
+}) {
+  return (
+    <>
+      <span className={styles.icon}>
+        <Icon name={props.icon} />
+      </span>
+      <span className={styles.title}>{props.name}</span>
+      {props.aside === undefined ? null : (
+        <span className={styles.why}>{props.aside}</span>
+      )}
+      {props.keys === undefined ? null : (
+        <kbd className={styles.kbd} aria-hidden="true">
+          {props.keys}
+        </kbd>
+      )}
+    </>
+  );
+}
+
+function CommandRow(props: { readonly command: PaletteCommand }) {
+  const { command } = props;
+  const look = commandLook(command.id);
+  return (
+    <RowLook
+      icon={look.icon}
+      name={command.title}
+      keys={look.keys}
+      {...(command.unavailable === undefined
+        ? {}
+        : { aside: `Not available: ${command.unavailable}` })}
+    />
+  );
+}
+
+function useEntries(
+  rows: readonly PaletteRow[],
+  commands: readonly PaletteCommand[],
+  recent: readonly string[],
+  mode: "search" | "command",
+  hasText: boolean,
+): readonly Entry[] {
   return useMemo(() => {
     if (mode === 'command') return commands.map((c) => ({ key: `command:${c.id}` }));
     if (hasText || rows.length > 0) return rows.flatMap((row, index) => (row.type === 'hit' ? [{ key: row.key, row: index }] : []));
@@ -152,8 +220,7 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
               aria-setsize={state.commands.length}
               onSelect={() => activate(`command:${command.id}`)}
             >
-              <span className={styles.title}>{command.title}</span>
-              {command.unavailable === undefined ? null : <span className={styles.why}>Not available: {command.unavailable}</span>}
+              <CommandRow command={command} />
             </Command.Item>
           ))
         ) : state.rows.length > 0 ? (
@@ -174,11 +241,19 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
                   onSelect={() => activate(row.key)}
                   data-record-id={row.hit.ref.id}
                 >
-                  <span className={styles.title}>
-                    {row.hit.title}
-                    <span className={styles.why}> · {kindName(row.kind)}</span>
-                  </span>
-                  <span className={styles.why}>{matchWords(row.hit, ports.factsOf(row.hit.ref))}</span>
+                  <RowLook
+                    icon={kindIcon(row.kind)}
+                    name={
+                      <>
+                        {row.hit.title}
+                        <span className={styles.why}>
+                          {" "}
+                          · {kindName(row.kind)}
+                        </span>
+                      </>
+                    }
+                    aside={matchWords(row.hit, ports.factsOf(row.hit.ref))}
+                  />
                 </Command.Item>
               ),
             )}
@@ -188,9 +263,16 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
           <>
             {state.commands.length === 0 ? null : <p className={styles.recent}>Go to</p>}
             {state.commands.map((command, index) => (
-              <Command.Item key={command.id} value={`command:${command.id}`} className={styles.item} disabled={command.unavailable !== undefined} aria-posinset={index + 1} aria-setsize={state.commands.length} onSelect={() => activate(`command:${command.id}`)}>
-                <span className={styles.title}>{command.title}</span>
-                {command.unavailable === undefined ? null : <span className={styles.why}>Not available: {command.unavailable}</span>}
+              <Command.Item
+                key={command.id}
+                value={`command:${command.id}`}
+                className={styles.item}
+                disabled={command.unavailable !== undefined}
+                aria-posinset={index + 1}
+                aria-setsize={state.commands.length}
+                onSelect={() => activate(`command:${command.id}`)}
+              >
+                <CommandRow command={command} />
               </Command.Item>
             ))}
             {recent.length === 0 ? null : <p className={styles.recent}>Recent searches</p>}

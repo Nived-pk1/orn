@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { FIT_FLOOR, fitBox, toScreen } from '@/render/viewport';
-import { phoneFitBox, PHONE_TITLE_MAX_PX, PHONE_TITLE_MIN_PX } from './phone-fit';
+import { describe, expect, it } from "vitest";
+import { FIT_FLOOR, fitBox, toScreen } from "@/render/viewport";
+import {
+  phoneFit,
+  phoneFitBox,
+  PHONE_TITLE_MAX_PX,
+  PHONE_TITLE_MIN_PX,
+} from "./phone-fit";
 
 /**
  * Step 8.4e, C4: on a touch screen Fit and the first view use the LARGEST zoom at which the visible boxes fit the map area's HEIGHT, never below
@@ -98,11 +103,14 @@ describe('phoneFitBox: the stack at the side keeps clear of the boxes (A3 for th
     const view = viewOf(phoneFitBox({ content, size, insets, titleUnits: TITLE, avoid, boxes }));
     expect(clashes(view)).toBe(0);
   });
-  it('the slide is only to the right (nothing is cut at the left) and as small as it can be', () => {
-    const plain = viewOf(phoneFitBox({ content, size, insets, titleUnits: TITLE }));
-    const view = viewOf(phoneFitBox({ content, size, insets, titleUnits: TITLE, avoid, boxes }));
+  it("the zoom is the plain zoom (the shift is sideways only)", () => {
+    const plain = viewOf(
+      phoneFitBox({ content, size, insets, titleUnits: TITLE }),
+    );
+    const view = viewOf(
+      phoneFitBox({ content, size, insets, titleUnits: TITLE, avoid, boxes }),
+    );
     expect(view.scale).toBeCloseTo(plain.scale, 9);
-    expect(view.x).toBeGreaterThanOrEqual(plain.x);
   });
   it('every control counts: the stack and a hint pill at the foot are both cleared', () => {
     const both = [{ x0: 330, y0: 90, x1: 395, y1: 300 }, { x0: 150, y0: 600, x1: 250, y1: 740 }];
@@ -121,3 +129,79 @@ describe('phoneFitBox: the stack at the side keeps clear of the boxes (A3 for th
   });
 });
 
+describe("phoneFit: the smallest shift, left or right (step 8.4f, M1)", () => {
+  const content = { x0: 0, y0: 0, x1: 2000, y1: 1000 };
+  const scale = 670 / 1000; // the free height over the content height: the plain zoom here
+  const at = (screenLefts: readonly number[]) =>
+    screenLefts.map((s) => ({
+      x0: (s - insets.left) / scale,
+      y0: 0,
+      x1: (s - insets.left) / scale + 100,
+      y1: 100,
+    })); // boxes 67 px wide
+  const avoid = [{ x0: 330, y0: 60, x1: 395, y1: 300 }];
+  const lefts = (
+    boxes: ReturnType<typeof at>,
+    view: ReturnType<typeof viewOf>,
+  ): number[] => boxes.map((b) => toScreen(view, { x: b.x0, y: b.y0 }).x);
+  const under = (
+    boxes: ReturnType<typeof at>,
+    view: ReturnType<typeof viewOf>,
+  ): number =>
+    boxes.filter((b) => {
+      const x = toScreen(view, { x: b.x0, y: b.y0 }).x;
+      return x < 395 && x + 100 * scale > 330;
+    }).length;
+  const answer = (boxes: ReturnType<typeof at>) =>
+    phoneFit({ content, size, insets, titleUnits: TITLE, avoid, boxes });
+  it("LEFT when that is the only way: the first column leaves, the next is whole with a margin of 16 to 24 px", () => {
+    const boxes = at([8, 108, 208, 308]); // the fourth lies under the stack; a right shift would push the first column far in
+    const result = answer(boxes);
+    const view = viewOf(result.box);
+    expect(result.clear).toBe(true);
+    expect(under(boxes, view)).toBe(0);
+    expect(
+      Math.min(...lefts(boxes, view).filter((x) => x >= 0)),
+    ).toBeGreaterThanOrEqual(15.9);
+    expect(
+      Math.min(...lefts(boxes, view).filter((x) => x >= 0)),
+    ).toBeLessThanOrEqual(24.1);
+    expect(result.box.x0).toBeGreaterThan(0); // moved left (the window moved right on the map)
+    expect(
+      lefts(boxes, view).filter((x) => x < 0 && x + 100 * scale > 0),
+    ).toEqual([]); // nothing cut at the edge
+  });
+  it("RIGHT when a few px is enough: the first column keeps a margin of at most 24 px", () => {
+    const boxes = at([8, 108, 208, 380]);
+    const result = answer(boxes);
+    const view = viewOf(result.box);
+    expect(result.clear).toBe(true);
+    expect(under(boxes, view)).toBe(0);
+    const first = lefts(boxes, view)[0] as number;
+    expect(first).toBeGreaterThan(8);
+    expect(first).toBeLessThanOrEqual(24.1);
+  });
+  it("no shift that clears the stack: the margin is 16 px, the stack sits over the position with the fewest boxes, and the case is reported", () => {
+    const boxes = at(Array.from({ length: 12 }, (_, i) => 8 + 100 * i)); // a box under the stack wherever the view is put
+    const result = phoneFit({
+      content: {
+        x0: boxes[0]?.x0 ?? 0,
+        y0: 0,
+        x1: Math.max(...boxes.map((b) => b.x1)),
+        y1: 1000,
+      },
+      size,
+      insets,
+      titleUnits: TITLE,
+      avoid,
+      boxes,
+    }); // the content ends with the last box
+    const view = viewOf(result.box);
+    expect(result.clear).toBe(false);
+    expect(Math.min(...lefts(boxes, view).filter((x) => x >= 0))).toBeCloseTo(
+      16,
+      4,
+    );
+    expect(under(boxes, view)).toBe(1);
+  });
+});
