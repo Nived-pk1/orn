@@ -375,3 +375,4 @@ Numbers to beat: landscape box titles 6.1 px on both phones (map 360 / 340 px hi
 - RUNNING SPEC LIST for Part G adds: map-landscape, fluid-feel.
 - REVIEW REQUIRED: (1) landscape titles stay 6.1 px (FIT_FLOOR); (2) notices are the folded control, not the bell icon; (3) landscape panel keeps the peek/full content rules; (4) stack becomes a row under 836 px wide with the panel open; (5) the 24 px storage line has no spec; (6) Full-map 200 ms animation and 120 ms touch press not built (Part F adds no app code); (7) profile sizes 750x340 / 915x412, not 844x390.
 ## WHERE TO RESUME: session 6 = Part G (close).
+Commit (session 5): a276cf9
