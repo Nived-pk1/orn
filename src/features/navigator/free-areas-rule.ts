@@ -79,3 +79,9 @@ export function insetsOf(controls: readonly Box[], area: Area, content?: Area): 
   }
   return best;
 }
+
+/** The smallest family title as DRAWN, in map units (a box drawn bigger carries its text with it); `nominal` when no family is drawn. */
+export function titleUnitsOf(nodes: readonly { readonly box: string; readonly scale?: number | undefined }[], nominal: number): number {
+  const sizes = nodes.filter((node) => node.box === 'hub').map((node) => nominal * (node.scale ?? 1));
+  return sizes.length === 0 ? nominal : Math.min(...sizes);
+}

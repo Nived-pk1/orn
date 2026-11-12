@@ -1,0 +1,178 @@
+/*
+ * Phone landscape (step 8.4e, Part E): a touch screen under 500 px high (the layout hook already calls it a phone). CSS only; portrait is untouched.
+ * One top row (44 px: mark, page name, exam, search, More, and the notices control at its right end), the five tabs as a 56 px icon column at the
+ * left, the page beside it, the storage line as one 24 px line under the page, and the inspector as a panel at the right (at most 60% of the width)
+ * that lies over the map's right part. The frame children are told apart by element and place (the notices div is the first div, the alert line the last),
+ * as full-map.css does, so no extra attribute is needed in the first load.
+ */
+@media (pointer: coarse) and (max-height: 499px) {
+  /* the panel width and the sheet space also hold in full map (the panel lies over the map there) */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden]) {
+    --landscape-panel: min(
+      60vw - var(--tab-column, 56px),
+      25rem
+    ); /* the map keeps 40% of the width beside it, the icon column aside */
+    --sheet-space: 0px !important; /* the panel is beside the page, not under it */
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden]):not(
+      [data-full-map]
+    ) {
+    grid-template-columns: var(--tab-column, 56px) minmax(0, 1fr) auto;
+    grid-template-rows: 44px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "top top banners"
+      "tabs canvas canvas"
+      "tabs status status";
+  }
+
+  /* E1: one top row, 44 px with its rule drawn inside */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > header {
+    box-sizing: border-box;
+    height: 44px;
+    min-height: 0;
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--line);
+  }
+
+  /* the notices fold into one control at the right end of the top row; its list opens below it, over the page */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > div:first-of-type:not(:empty) {
+    min-width: 8.5rem;
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > div:first-of-type
+    > div {
+    position: fixed;
+    z-index: var(--z-drawer);
+    top: 0;
+    right: 0;
+    width: 8.5rem;
+    max-height: calc(100dvh - 24px);
+    overflow: auto;
+    border: 0;
+    box-shadow: inset 0 -1px 0 var(--line);
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > div:first-of-type
+    > div:has(> button[aria-expanded="true"]) {
+    width: min(24rem, 60vw);
+    border-left: 1px solid var(--line);
+    box-shadow: var(--shadow-3);
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > div:first-of-type
+    > div
+    > button {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  /* E2: the tab bar is a 56 px icon column; the names stay as the buttons' accessible names */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden]) > nav {
+    grid-area: tabs;
+    flex-direction: column;
+    width: var(--tab-column, 56px);
+    overflow: hidden auto;
+    border-top: 0;
+    border-right: 1px solid var(--line);
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > nav
+    > button {
+    position: relative;
+    min-height: 44px;
+    padding: 0;
+    border-top: 0;
+    border-left: 3px solid transparent;
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > nav
+    > button[aria-current="page"] {
+    border-top-color: transparent;
+    border-left-color: var(--accent);
+  }
+
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > nav
+    > button
+    > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* the page beside the column never runs behind a sheet any more */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not(
+      [hidden]
+    )[data-sheet-room]
+    main:has([data-sheet-room]) {
+    grid-row: auto !important;
+  }
+
+  /* the storage line: one 24 px line at the foot of the content column */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > div:last-of-type
+    > * {
+    height: 24px;
+    min-height: 24px;
+    padding-block: 0;
+    font-size: var(--text-12);
+    line-height: 24px;
+  }
+
+  /* E4: the inspector is a panel at the right, under the top row */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden])
+    > aside:not([hidden]) {
+    top: 44px;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: var(--landscape-panel);
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    border-top: 0;
+    border-left: 1px solid var(--color-ink-2);
+    border-radius: 0;
+    box-shadow: var(--shadow-3);
+  }
+
+  /* in full map there is no top row: the panel starts at the top */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not(
+      [hidden]
+    )[data-full-map]
+    > aside:not([hidden]) {
+    top: 0;
+  }
+
+  /* the map's own controls on the right stay left of the open panel */
+  [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden]):has(
+      > aside:not([hidden])
+    )
+    [data-map-control="stack"] {
+    right: calc(var(--landscape-panel) + 8px);
+  }
+
+  /* a narrow screen (under 836 px: the map beside the panel is under 380 px) has no room for the bar and the stack side by side: the stack becomes a row under the bar */
+  @media (max-width: 835px) {
+    [data-layout="phone"][data-breakpoint][data-inspector]:not([hidden]):has(
+        > aside:not([hidden])
+      )
+      [data-map-control="stack"] {
+      top: 70px;
+      right: auto;
+      left: 8px;
+      flex-direction: row;
+    }
+  }
+}

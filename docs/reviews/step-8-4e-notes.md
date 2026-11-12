@@ -344,3 +344,34 @@ Quick runs with ORN_BASE_URL against a local Studio server are NOT equivalent fo
   to check in Part E/G). (6) Landscape: full map gives titles 6.1 px (FIT_FLOOR) on both phones, the normal landscape map is 174 / 154 px high: Part E.
 ## WHERE TO RESUME: session 5 = Part E (phone landscape) and Part F (fluid feel). Make Part E code lazy (Studio has 13 bytes of room).
 Commit (session 4): 6579ac2
+
+## Session 5 (2026-11-12): reviewer decisions of resume 3, then Part E and Part F
+START: HEAD 92f8252 clean, stash empty. Speed check 232 ms (start).
+Reviewer decisions (resume 3), recorded:
+1. map-fit 1280x800 pane open: spec states the FLOOR CASE (ADR-037): above FIT_FLOOR the whole map on screen; clamped at FIT_FLOOR: zoom == FIT_FLOOR, names drawn
+   (LOD >= 1), the top-left family fully on screen, the far family reachable by panning. Plus a DEMO-build 1280x800 pane-open check: whole map stays fitted (else STOP).
+   Reason goes in the spec and ADR-037's addendum.
+2. Full map key Shift+F accepted (F stays centre). Tooltip "Full map (Shift+F)".
+3. ONE phone Fit rule in every mode: the 13 px title cap holds in full map too. Test the cap in full map.
+4. RULE: never judge an edition-dependent spec against a local server with ORN_BASE_URL; use the real Playwright config.
+5. Sizes: Studio has 13 bytes, Study 35. Part E is CSS; any JS lazy. Part F adds NO app code. If Part E cannot fit: STOP and report.
+Numbers to beat: landscape box titles 6.1 px on both phones (map 360 / 340 px high).
+### Part E
+- RED 09:41 `npx playwright test tests/e2e/map-landscape.spec.ts --project=chromium` (speed 231 ms) -> 2 failed (the top row is 45 px; tabs span the whole width) BEFORE any source edit.
+  BEFORE numbers (normal map, frame on): Pixel 7 landscape map 863 x 174 (48% of the height), iPhone 14 landscape 750 x 154 (45%), titles 6.1 px both.
+- RED 09:50 map-landscape.spec (tooltip assertion) -> 2 failed (Chapters has no title) before the title source edit.
+- E5 assertions of map-landscape.spec were added after the source (slip, disclosed); closed 09:56 by break-and-restore (landscape.css import off -> 2 failed at the first assertion, bar 45 px / tabs full width), restored.
+- RED 09:59 `npx playwright test tests/e2e/full-map.spec.ts --project=chromium -g portrait` -> Pixel 7 portrait: title 14.997 > 13.2 (iPhone 12.6 passes); before the source edit.
+- RED 10:02 `npx vitest run src/features/navigator/free-areas-rule.test.ts` -> 3 failed (titleUnitsOf missing). Cause found by probe: the cap used Math.min(nominal 14, ...drawn): the fixture draws hubs at scale 1.15 (title 16.15 units), so the cap was 13/14 -> 15.0 px (normal map 12.8 only because the height bound won).
+- RED 10:12 (see run below) map-fit.spec floor-case + demo check were edited after the first 1280x800 failure known from session 4 (7b); the new floor-case assertion needs no source change (spec decision).
+- RED 10:21 map-landscape.spec (panel open: controls overlap) -> iPhone 14 landscape: bar and stack overlap beside the panel (and the hidden hint pill counted: test filter fixed to visible controls); before the max-width CSS.
+- Landscape: CSS landscape.css (+ free-areas pane for a side panel, tab titles); titleUnitsOf fix (13 px cap used the nominal 14 not the drawn 16.15). Specs green so far: map-landscape, full-map (all 8), map-fit (1280 floor case + demo), map-phone-fit, map-phone-marks. Part F next, then check + the session's spec list.
+- Part F spec tests/e2e/fluid-feel.spec.ts (measurement; no app code; written without a red phase, nothing to fail: disclosed). Chromium: press->selection painted median of 10: desktop 1280x800 26 ms (worst 38, 0 long tasks), Pixel 7 43 ms (worst 46, 0 long tasks). Rotation (CDP metrics override, a window resize is refused in fullscreen) keeps selection, open sheet, full map: green.
+
+### Session 5 close (2026-11-12)
+- check at default workers: first run 3 timeouts under load (16m34s; files pass alone), second run green: 772 files, 8503 tests, 13m12s. Lint caught non-null assertions in my two new specs: fixed.
+- Sizes (fresh builds, scripts/initial-js-size.mjs): Study 383,381 (limit 383,400), Studio 387,278 (limit 387,280).
+- Chromium, real config, this session's list: map-landscape, fluid-feel, full-map, full-map-table, map-fit, map-phone-fit, map-phone-marks, map-free-areas, phone.spec, phone-sheet, phone-inspector, canvas-touch, touch-walk, map-selection, pane-list, shell.spec, frame: 71 passed, 5 skipped, 2 failed (map-landscape: my `need` helper used inside page.evaluate; fixed, map-landscape re-run 2 passed).
+- RUNNING SPEC LIST for Part G adds: map-landscape, fluid-feel.
+- REVIEW REQUIRED: (1) landscape titles stay 6.1 px (FIT_FLOOR); (2) notices are the folded control, not the bell icon; (3) landscape panel keeps the peek/full content rules; (4) stack becomes a row under 836 px wide with the panel open; (5) the 24 px storage line has no spec; (6) Full-map 200 ms animation and 120 ms touch press not built (Part F adds no app code); (7) profile sizes 750x340 / 915x412, not 844x390.
+## WHERE TO RESUME: session 6 = Part G (close).

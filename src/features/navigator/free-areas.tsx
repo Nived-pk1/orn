@@ -10,10 +10,10 @@ import { hitRefiner, nearerEdgeAt } from "@/render/svg";
 import type { Insets, Rect } from "@/render/viewport";
 import { boxesRect } from "./map-geometry";
 import { phoneFitBox } from "./phone-fit";
-import { insetsOf, type Box } from "./free-areas-rule";
+import { insetsOf, titleUnitsOf, type Box } from "./free-areas-rule";
 
 const READ = "[data-map-control]";
-const PANE_HOST = "[data-full-map]";
+const PANE_HOST = '[data-full-map],[data-layout="phone"]';
 const PANE = ":scope > aside:not([hidden])";
 
 /** `content`: the rectangle (map units) of what Fit shows when the map fits it whole (the desktop): each corner control then takes the edge that costs the fit least. */
@@ -28,11 +28,26 @@ export function FreeAreas(props: {
   /** The selected box's id: the phone's view is centred on it. */
   readonly selectedId?: string | undefined;
 }) {
-  const { area, onInsets, content: shown, scene, onPhoneBox, selectedId } = props;
+  const {
+    area,
+    onInsets,
+    content: shown,
+    scene,
+    onPhoneBox,
+    selectedId,
+  } = props;
   const contentWidth = shown === undefined ? undefined : shown.x1 - shown.x0;
   const contentHeight = shown === undefined ? undefined : shown.y1 - shown.y0;
-  const titleUnits = useMemo(() => Math.min(BOXES.hub.label.size, ...(scene?.nodes ?? []).filter((node) => node.box === "hub").map((node) => BOXES.hub.label.size * (node.scale ?? 1))), [scene]);
-  useEffect(() => area?.style.setProperty("--map-title-u", String(titleUnits)) as undefined, [area, titleUnits]);
+  // the smallest family title as DRAWN (a box drawn bigger carries its text with it); the nominal size only when no family is drawn
+  const titleUnits = useMemo(
+    () => titleUnitsOf(scene?.nodes ?? [], BOXES.hub.label.size),
+    [scene],
+  );
+  useEffect(
+    () =>
+      area?.style.setProperty("--map-title-u", String(titleUnits)) as undefined,
+    [area, titleUnits],
+  );
   // the nearer line of a two-way pair gets the click (step 8.4e, C1); until this chunk is loaded a click goes to the line drawn last
   useEffect(() => {
     hitRefiner.current = nearerEdgeAt;
@@ -47,12 +62,22 @@ export function FreeAreas(props: {
       frame = 0;
       const box = area.getBoundingClientRect();
       // a toast on a desktop screen lifts the bottom controls above it (map-float.module.css); Fit measures them where they rest, or it would shrink for every toast
-      const lift = area.closest('[data-layout="desktop"][data-toast]') === null ? 0 : (Number.parseFloat(getComputedStyle(area).getPropertyValue("--toast-height")) || 0) + 8;
+      const lift =
+        area.closest('[data-layout="desktop"][data-toast]') === null
+          ? 0
+          : (Number.parseFloat(
+              getComputedStyle(area).getPropertyValue("--toast-height"),
+            ) || 0) + 8;
       const controls: Box[] = [...area.querySelectorAll<HTMLElement>(READ)].map(
         (el) => {
           const r = el.getBoundingClientRect();
           const low = r.y - box.y + r.height / 2 > box.height / 2;
-          return { x: r.x - box.x, y: r.y - box.y + (low ? lift : 0), w: r.width, h: r.height };
+          return {
+            x: r.x - box.x,
+            y: r.y - box.y + (low ? lift : 0),
+            w: r.width,
+            h: r.height,
+          };
         },
       );
       // full map: the pane lies OVER the map's right edge (step 8.4e, D2); Fit keeps the boxes out from under it like it does for a control
@@ -61,20 +86,44 @@ export function FreeAreas(props: {
         const r = pane.getBoundingClientRect();
         const x0 = Math.max(r.x, box.x);
         const x1 = Math.min(r.right, box.right);
-        if (x1 > x0) controls.push({ x: x0 - box.x, y: 0, w: x1 - x0, h: box.height }); // only the part that lies over the map
+        // outside full map only a side panel counts (phone landscape, step 8.4e E4): a bottom sheet is as wide as the map
+        if (
+          x1 > x0 &&
+          (area.closest("[data-full-map]") !== null ||
+            r.width < box.width * 0.9)
+        )
+          controls.push({ x: x0 - box.x, y: 0, w: x1 - x0, h: box.height }); // only the part that lies over the map
       }
       const size = { width: box.width, height: box.height };
-      const insets = insetsOf(controls, size, contentWidth === undefined || contentHeight === undefined ? undefined : { width: contentWidth, height: contentHeight });
+      const insets = insetsOf(
+        controls,
+        size,
+        contentWidth === undefined || contentHeight === undefined
+          ? undefined
+          : { width: contentWidth, height: contentHeight },
+      );
       onInsets(insets);
       const nodes = scene?.nodes ?? [];
       const own = nodes.find((node) => node.id === selectedId);
       const content = boxesRect(nodes);
-      if (onPhoneBox !== undefined && content !== undefined) onPhoneBox(phoneFitBox({ content, size, insets, titleUnits, selected: own === undefined ? undefined : boxesRect([own]) }));
+      if (onPhoneBox !== undefined && content !== undefined)
+        onPhoneBox(
+          phoneFitBox({
+            content,
+            size,
+            insets,
+            titleUnits,
+            selected: own === undefined ? undefined : boxesRect([own]),
+          }),
+        );
     };
     const soon = (): void => {
       if (frame === 0) frame = window.requestAnimationFrame(measure);
     };
-    const resize = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(soon);
+    const resize =
+      typeof ResizeObserver === "undefined"
+        ? undefined
+        : new ResizeObserver(soon);
     const watch = (): void => {
       resize?.disconnect();
       resize?.observe(area);
@@ -90,13 +139,27 @@ export function FreeAreas(props: {
     });
     // the pane opening or closing, and full map itself, change the free areas too (they live outside the map area)
     const shell = area.closest("[data-layout]");
-    if (shell !== null) mutation.observe(shell, { subtree: true, attributes: true, attributeFilter: ["data-full-map", "hidden"] });
+    if (shell !== null)
+      mutation.observe(shell, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["data-full-map", "hidden"],
+      });
     watch();
     return () => {
       window.cancelAnimationFrame(frame);
       resize?.disconnect();
       mutation.disconnect();
     };
-  }, [area, onInsets, contentWidth, contentHeight, scene, onPhoneBox, selectedId, titleUnits]);
+  }, [
+    area,
+    onInsets,
+    contentWidth,
+    contentHeight,
+    scene,
+    onPhoneBox,
+    selectedId,
+    titleUnits,
+  ]);
   return null;
 }

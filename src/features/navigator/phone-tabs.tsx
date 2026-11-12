@@ -27,12 +27,12 @@ export function PhoneTabs(props: { readonly onSearch: () => void; readonly searc
   return (
     <nav className={styles.tabs} aria-label="Home">
       {TABS.map((item) => (
-        <button key={item.id} type="button" className={styles.tab} {...(tab === item.id && !props.searching ? { 'aria-current': 'page' as const } : {})} onClick={() => go(item.id)}>
+        <button key={item.id} type="button" title={item.label} className={styles.tab} {...(tab === item.id && !props.searching ? { 'aria-current': 'page' as const } : {})} onClick={() => go(item.id)}>
           <Icon name={item.icon} size={20} />
           <span>{item.label}</span>
         </button>
       ))}
-      <button type="button" className={styles.tab} {...(props.searching ? { 'aria-current': 'page' as const } : {})} aria-haspopup="dialog" onClick={props.onSearch}>
+      <button type="button" title="Search" className={styles.tab} {...(props.searching ? { 'aria-current': 'page' as const } : {})} aria-haspopup="dialog" onClick={props.onSearch}>
         <Icon name="search" size={20} />
         <span>Search</span>
       </button>

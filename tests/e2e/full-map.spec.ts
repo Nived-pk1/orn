@@ -171,6 +171,11 @@ for (const [label, device, phone] of [
       ).toBeGreaterThanOrEqual(0.95);
       expect(whole.h, "taller than the normal map").toBeGreaterThan(normal.h);
       const title = await boxTitlePx(page);
+      // C4 in every mode (resume 3, decision 3): the phone Fit rule caps a family title at 13 px in full map too
+      expect(
+        title,
+        `${label}: titles stay at most 13 px in full map`,
+      ).toBeLessThanOrEqual(13.2);
       info.annotations.push({
         type: "full map",
         description: `${label}: map ${whole.w.toFixed(0)} x ${whole.h.toFixed(0)} (${(whole.share * 100).toFixed(0)}% of the viewport), normal map ${normal.w.toFixed(0)} x ${normal.h.toFixed(0)}, box title ${title.toFixed(1)} px`,

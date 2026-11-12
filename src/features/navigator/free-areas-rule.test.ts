@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { insetsOf } from "./free-areas-rule";
+import { insetsOf, titleUnitsOf } from "./free-areas-rule";
 
 const area = { width: 400, height: 600 };
 
@@ -49,5 +49,21 @@ describe('insetsOf with the size of what Fit shows: each corner control reserves
   });
   it('without the content size the nearest edge by shape is used, as before', () => {
     expect(insetsOf([bar, stack], wide).right).toBe(58);
+  });
+});
+
+describe("titleUnitsOf: the smallest family title as drawn (the phone's 13 px cap uses it)", () => {
+  const nominal = 14;
+  it("a box drawn bigger carries its title with it: the cap counts the DRAWN size, not the nominal one", () => {
+    expect(titleUnitsOf([{ box: "hub", scale: 1.15 }], nominal)).toBeCloseTo(16.1, 1);
+  });
+  it("the smallest drawn hub wins; boxes that are not families do not count", () => {
+    expect(
+      titleUnitsOf([{ box: "hub", scale: 1.5 }, { box: "hub", scale: 0.9 }, { box: "unclassified", scale: 0.1 }, { box: "hub" }], nominal),
+    ).toBeCloseTo(12.6, 1);
+  });
+  it("no family drawn: the nominal size", () => {
+    expect(titleUnitsOf([], nominal)).toBe(nominal);
+    expect(titleUnitsOf([{ box: "unclassified" }], nominal)).toBe(nominal);
   });
 });

@@ -11,6 +11,7 @@ import { IconButton, openLayers } from '@/ui/primitives';
 import { ModeRail, type ModeItem } from './mode-rail';
 import { PhoneSheet, type SheetHeight } from './phone-sheet';
 import { ResizeHandle } from './resize-handle';
+import './landscape.css';
 import marker from './edition-marker.module.css';
 import styles from './shell.module.css';
 import { AppMark, Breadcrumb, CommandBox, type ShellCrumb } from './top-bar-parts';
