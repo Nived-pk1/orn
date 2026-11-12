@@ -407,3 +407,4 @@ Part G: rebuild, sizes (383,400 / 387,280; Studio 2 bytes), check, WHOLE spec li
 - Whole running list, Chromium, final build: 126 passed, 5 skipped, 0 failed (8m30s). Sizes: Study 383,390, Studio 387,257.
 - Screenshots in screenshots/compare-8.4e/ (lines in PROGRESS). Docs: PROGRESS, ADR-037 addenda (floor case, 10 px touch bound), UI_ARCHITECTURE §14 addendum, plan row 8.4e DONE, PROJECT_STATE next 8.4f.
 ## WHERE TO RESUME: 8.4f (deploys 8.4d to 8.4f; run the spec list in PROGRESS in 3 engines).
+Commit (session 6): 45149ad
