@@ -141,26 +141,26 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-08",
-    "commit": "b4478f5+",
-    "version": "25e67c4c-9d3a-4241-91f6-c92b3fb00bef",
-    "liveSpecs": "2026-11-08 (8.4b close): Chromium 45 passed, 11 skipped; WebKit 44 passed, 12 skipped, by exact names, after the csp.spec stale-spec fix (first WebKit run: 1 failed, csp case A).",
-    "workerVersion": "9f7727e7-65fb-436a-bf7c-9e0152f2951b"
+    "deployedAt": "2026-11-12",
+    "commit": "779be49",
+    "version": "59d9ef19-dec1-4af3-8b6f-631ff0bde339",
+    "liveSpecs": "2026-11-12 (8.4f Part 1): WebKit 43 passed, 12 skipped, 0 failed; Chromium 40 passed, 4 failed (equation x2, structures x2: drawings not finished) that passed on re-run with no code change (transient live condition, disclosed in PROGRESS).",
+    "workerVersion": "59d9ef19-dec1-4af3-8b6f-631ff0bde339"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-08",
-    "version": "b2f9f7ef-f249-44fc-b6d7-a329d3a69eec",
+    "version": "c37e39e2-53d1-4a1d-b127-efbf2e0d5a04",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4b deploy, 2026-11-08: an unauthenticated request got 302 and not the app; the Study site answered 200.",
-    "commit": "b4478f5+",
-    "protectedCheckedAt": "2026-11-08",
-    "workerVersion": "21199061-2f5e-4a1d-a908-997e0c51ade6"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4f Part 1 deploy, 2026-11-13: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
+    "commit": "779be49",
+    "protectedCheckedAt": "2026-11-13",
+    "workerVersion": "c37e39e2-53d1-4a1d-b127-efbf2e0d5a04"
   },
   "nextStep": "8.4f",
-  "nextStepTitle": "Step 8.4f Part 1 done 2026-11-12 (map fixes, exam chip, palette, Reactions, family header); deploy of 8.4d to 8.4f Part 1 recorded in PROGRESS. Next: 8.4f Part 2 (Settings, dark mode, empty and loading states, phone sheets, transitions, both-theme pass)",
+  "nextStepTitle": "Step 8.4f Part 1 done 2026-11-12 (map fixes, exam chip, palette, Reactions, family header); 8.4d to 8.4f Part 1 deployed (Study 59d9ef19, Studio c37e39e2). Next: 8.4f Part 2 (Settings, dark mode, empty and loading states, phone sheets, transitions, both-theme pass)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

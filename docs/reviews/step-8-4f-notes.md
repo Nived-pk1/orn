@@ -69,3 +69,16 @@ START: HEAD 71ff193 clean, stash empty. Speed check (5e7 loop): 228 ms (start).
 - reactions-compact.png: rows with the review mark first, name and one equation line, kind and examples below, a chevron at the right; denser than cards.
 - family-header.png: label "Family · Oxygen compounds" with its group dot, title and formula, one summary line, type chips, then "Made from" and "Turns into" as labelled chip groups with dots; no tinted block.
 - phone-top-bar.png: mark, title, Studio badge, exam chip, search and ⋯ in one row (the reference has no Studio badge; ours is the author build).
+- Study deployed: reaction-navigator version 59d9ef19-dec1-4af3-8b6f-631ff0bde339; live curl 200 (index and chem worker); speed 231 ms before the live specs.
+- LIVE Chromium (Study 59d9ef19): 40 passed, 4 failed (equation x2, structures x2: drawings 'Drawing the structure...' not finished); re-runs: the same specs failed repeatedly for a few minutes, then passed 5/5 with NO code change; a probe showed first drawing at 3-325 ms and the same Study build passes locally. Treated as a transient live condition after the deploy; disclosed.
+
+## STATE AT STOP (2026-11-12, user closed the session)
+
+- Part 1 committed: 779be49 (on master, NOT pushed). Docs (PROGRESS, plan row, PROJECT_STATE) are in that commit and say "deploy pending".
+- Study DEPLOYED: reaction-navigator 59d9ef19-dec1-4af3-8b6f-631ff0bde339.
+- Live specs on Study: Chromium 40 passed + 4 transient failures that cleared on re-run (see above); WebKit 43 passed, 12 skipped, 0 failed.
+- STILL TO DO for Part 1 (in this order): (1) `npm run build:studio` then `npm run deploy:studio`; (2) Access check: curl -sI the studio URL must redirect to cloudflareaccess.com (not 200 with the app), and the Study URL must answer 200; (3) record both Worker versions in docs/PROJECT_STATE.json (`releasePreview` Study = 59d9ef19..., `studioPreview` = the new one) and in PROGRESS; set the plan row to "Part 1 done, deployed"; (4) commit those docs; (5) `git push origin master`; (6) add the line "Part 2 next" here and write the Part 1 report. Then STOP (break). Part 2 (D1-D7) is a later session.
+- Housekeeping: a git worktree of HEAD 71ff193 lives at ../orn-base (node_modules there is a junction to ../orn/node_modules). Remove with `git worktree remove --force ../orn-base` (the junction is removed with it; do not recursively delete through it).
+- Baseline failures (identical at 71ff193, not 8.4f): see PROGRESS "Step 8.4f, Part 1", Checks.
+
+- Part 2 next. Part 1 finished 2026-11-13: Studio c37e39e2-53d1-4a1d-b127-efbf2e0d5a04 deployed, Access check 302, Study 200.
