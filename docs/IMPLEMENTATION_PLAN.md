@@ -214,7 +214,6 @@ Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)
 | 8.4s | **DONE 2026-11-15 (commit 38dde4f); reviewer APPROVED; deployed 2026-11-15 (Study ab83544d, Studio e6e8e1ea).** Safety of the owner's data (undo import, backups, boot guard, publish gate, summary outcome) and room (lazy map canvas). Comes before 8.4f Part 2. |
 | 8.4f | **Part 1 done 2026-11-12 (map fixes M1-M4, the 8.4d leftovers L1-L6); deployed 2026-11-12/13 (Study 59d9ef19, Studio c37e39e2): Part 1 done, deployed.** Part 2 next: Settings page, DARK MODE on, empty and loading states, phone sheets, transitions, a both-theme pass. |
 | 8.4m | The map with every chapter (edge limit, busy selected family, the bucket box at Fit, the map model starts when the map is shown). |
-| 8.4g | (reserved: what the 8.4f both-theme pass leaves.) |
 | 8.4g | App essentials: links to every view and record (Back / Forward, Copy link), Starred ("revise later"), Recent, a short first-run tour, keyboard shortcuts sheet, Report a mistake, friendly error and not-found screens. Closes row 8.4. |
 | 8.5 | Arrow-pushing mechanism drawings (ADR-038) and the before → after step layout. |
 | 8.6 | Export pictures (SVG/PNG from a card, family page and map) and a print stylesheet. |

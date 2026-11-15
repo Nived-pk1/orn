@@ -33,6 +33,7 @@ test.describe("the interaction table, in full map (desktop)", () => {
 
   test("STAYS rows: zoom, Fit, wheel, pan, chapter, Find, From A to B, Key, Selected bar, keyboard, List, canvas menu, pane lists", async ({
     page,
+    browserName,
   }) => {
     test.setTimeout(600_000);
     await openMapDesktop(page);
@@ -128,7 +129,9 @@ test.describe("the interaction table, in full map (desktop)", () => {
     await clickToolbar(page, "From A to B");
     await stays(page);
     await openKey(page);
-    await page.keyboard.press("Escape");
+    // Firefox and WebKit take Esc themselves in fullscreen (no keydown reaches the page), so they close the Key by its button
+    if (browserName === "chromium") await page.keyboard.press("Escape");
+    else await clickToolbar(page, "Key");
     await expect(page.getByRole("dialog", { name: "Key" })).toHaveCount(0);
     await stays(page);
 
@@ -282,6 +285,7 @@ test.describe("the interaction table, in full map (desktop)", () => {
 
   test("Studio: Unanchored reactions and the multi-selection work inside full map (they do not need the frame)", async ({
     page,
+    browserName,
   }) => {
     test.setTimeout(300_000);
     await openMapDesktop(page);
@@ -293,7 +297,8 @@ test.describe("the interaction table, in full map (desktop)", () => {
     // (whether it is enabled depends on the data: the fixture has no unanchored reactions; full map adds no reason of its own)
     if ((await item.getAttribute("aria-disabled")) !== "true")
       await item.click();
-    else await page.keyboard.press("Escape");
+    else if (browserName === "chromium") await page.keyboard.press("Escape");
+    else await bar.getByRole("button", { name: "More" }).click(); // the browser takes Esc in fullscreen (Firefox, WebKit)
     await stays(page);
     // shift-click a second family: the multi-selection (its actions are in the bar, at its end)
     await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
@@ -312,7 +317,9 @@ test.describe("the interaction table, in full map (phone, Pixel 7 portrait)", ()
 
   test("STAYS rows by touch: the bar (chapter, Find, From A to B), Fit, pinch, Key, Select; a tap on a box; a sheet over the map", async ({
     page,
+    browserName,
   }) => {
+    test.skip(browserName !== "chromium", "the pinch is sent through a CDP session, which exists only in Chromium (and Firefox has no touch emulation)");
     test.setTimeout(400_000);
     await openMapPhone(page);
     await page.getByRole("button", { name: "Full map", exact: true }).tap();

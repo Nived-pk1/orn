@@ -58,7 +58,9 @@ for (const [label, device] of [
 
     test("10 to 13 px in the normal map and in full map; a pinch out reaches FIT_FLOOR", async ({
       page,
+      browserName,
     }, info) => {
+      test.skip(browserName !== "chromium", "CDP device-metrics and touch emulation exist only in Chromium (the pinch is sent through a CDP session)");
       test.setTimeout(300_000);
       await openMapPhone(page);
       await page.waitForTimeout(1500);

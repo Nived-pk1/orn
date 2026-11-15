@@ -67,6 +67,7 @@ export function useBandNotices(): readonly BandNotice[] {
     out.push({
       id: 'backup_notice',
       kind: 'info',
+      first: true,
       text: backupNoticeText(revision - (marks.last?.revision ?? 0)),
       order: orderOf('backup_notice'),
       actions: (

@@ -32,7 +32,7 @@ function useEquations(record: Reaction) {
 /**
  * The picture first (step 8.1 hero): the reaction's first full equation. It NEVER wraps (review decision 0): one row when it fits, the row
  * scaled down while its drawings stay 80 px tall, else the vertical layout of the phone card; `compact` (the sheet's peek) is one row at most
- * 120 px high, or the one-line text when it cannot be read that way. `fitHero` decides; this measures and draws.
+ * 64 px high, or the one-line text when it cannot be read that way. `fitHero` decides; this measures and draws.
  */
 export function HeroEquation(props: { readonly record: Reaction; readonly compact?: boolean }) {
   const { ports, equations, binding, names } = useEquations(props.record);

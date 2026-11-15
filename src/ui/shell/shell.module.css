@@ -9,6 +9,7 @@
   display: grid;
   height: 100%;
   min-height: 0;
+  overflow-x: clip; /* the pane slide (paneIn) must never widen the page while it runs */
   grid-template-columns: var(--rail-w) minmax(0, 1fr) 0 var(--inspector-width);
   grid-template-rows: var(--top-bar-height) auto minmax(0, 1fr) var(--status-bar-height);
   grid-template-areas:

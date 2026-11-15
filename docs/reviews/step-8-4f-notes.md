@@ -82,3 +82,42 @@ START: HEAD 71ff193 clean, stash empty. Speed check (5e7 loop): 228 ms (start).
 - Baseline failures (identical at 71ff193, not 8.4f): see PROGRESS "Step 8.4f, Part 1", Checks.
 
 - Part 2 next. Part 1 finished 2026-11-13: Studio c37e39e2-53d1-4a1d-b127-efbf2e0d5a04 deployed, Access check 302, Study 200.
+
+# PART 2 (session 2026-11-15). Decisions from the reviewer's "changes before you start" file
+
+- HEAD at start 2e93ecd (8.4s close), clean, pushed, stash empty. Speed (5e7 loop) 230 ms (slower machine than 8.4s: compare only with itself).
+- Prettier rule DROPPED (ESLint is the style check; no prettier on existing files).
+- Part 2 SIZE LIMITS rebased: 8.4s close Study 348,880 / Studio 352,7xx (PROGRESS "Step 8.4s") + 1,500 bytes each: Study <= 350,380, Studio <= 354,2xx (exact Studio number measured with a fresh build below). Settings is its own lazy chunk.
+- Do not touch ..\fable-work\. No schema or import-format change.
+- Order: Z (red specs), C (carry-overs), then fact sheet, D1-D7, close. E2E close: every Part 2 spec + every Z spec, 3 engines, then full Chromium; green only with NO failure in any engine (skips with reasons allowed).
+- Live specs: if "Drawing the structure..." failures return, wait 10 minutes, rerun once; fail again -> STOP, do not deploy Studio.
+- Plan row 8.4g restored (done in this session).
+
+## Z. Red specs (session 2026-11-15)
+
+Z1 Chromium list (RED at 2e93ecd, `npx playwright test <5 specs> --project=chromium`, speed 230 ms -> 7 failed, 5 passed, 3.3 min, before any edit):
+- mechanism-pictures:88 desktop, :229 Pixel 7; record-pictures:86 desktop, :187 Pixel 7: `toHaveCSS background-color` expected rgb(43,79,216), got rgb(59,91,219).
+- narrow-width:31 (1280): scrollWidth 1301 vs 1280; aside inspector right=1301.
+- outcome-groups:23 (E2): "a paper tone of its own": panel bg rgb(255,255,255) = article bg.
+- phone-family:175 (Pixel 7): card bottom 634.6 > peek top 607.8 ("the whole PCC card is above the peek").
+Causes and fixes (Z3):
+- COLOUR (4 specs): OLD LOOK. Tokens v2 (34a9489, 8.4d) moved the accent #2B4FD8 -> #3B5BDB. Specs now expect rgb(59,91,219) (same behaviour: the primary button is accent-filled).
+- outcome-groups: PRODUCT/look. v2 made card surface = paper = white, so the open equation panel (`.equation[open]` in family-page.module.css) was no longer a tone of its own. Panel now `var(--sunken)`; spec unchanged (message only extended to print the values).
+- narrow-width: PRODUCT. The 8.4e B3 pane slide (`paneIn`, translateX(24px), 260 ms) widens scrollWidth by 21 px while it runs (probe: inspector 901-1301 mid-animation). `.shell` now `overflow-x: clip`. Spec unchanged. After: narrow-width, outcome-groups, record-pictures, mechanism-pictures green in Chromium (11 passed, 2 skipped).
+- phone-family PCC card: see below.
+- phone-family PCC card (Z2/Z4): GREEN at e0ddf47, 34a9489, ba4eed4, 3395286, f44aa52; RED first at ae66720 (8.4e Part B). Cause: PRODUCT, two parts. (a) The Studio review pill (`.pill`) wrapped to two lines in the peek header (+5 px); fixed `white-space: nowrap; flex: none`. (b) At the earlier commits the hero equation was still the text row when the spec measured (1 s wait; the drawing came later), so the rule passed without the picture; now the picture is drawn in time and the peek was 22 px too high. `PEEK_MAX_HEIGHT` 120 -> 64 (hero-fit.ts); assertion unchanged. Pixel 7 peek: card bottom 634.6 vs peek top 613 before; spec green after.
+- Z2 colour group: first red at 34a9489 (tokens v2). outcome-groups: 34a9489. narrow-width: ae66720 (paneIn).
+- State 2026-11-15 (mid-session): Z Chromium group fixed and green (colour x4 specs, outcome-groups, narrow-width, phone-family). Unit tests green for inspector/equation/study-chrome (40 files). Firefox run of the 12 Z specs (canvas-keyboard, fluid-feel, frame, full-map-table, full-map, landscape-storage-line, map-fit, map-focus, map-free-areas, map-landscape, map-phone-fit, map-phone-titles) started (zff.txt in ../scratch), then WebKit. C2/C3 tests written first for C3 (notice-order.test.ts, red until the source edit); C2 plan: boot detail words ("N of M saved records do not fit this version of the app. Nothing was changed or deleted. Reload the page to get the newest version."), banner shows detail without the code, FirstRun shows one refusal section instead of "Get started". Source edits held while the Playwright run uses the dev server.
+- Worktree ../orn-base is at f44aa52 (bisect); remove with `git worktree remove --force ../orn-base` when done.
+
+## Z results so far (Firefox and WebKit, 12 Z specs, 2026-11-15)
+RED at 2e93ecd: Firefox 15 failed / 2 skipped / 38 passed (8.2 min); WebKit 18 failed / 1 skipped / 36 passed (15.9 min).
+Groups and fixes (spec only, same behaviour; reasons in the spec comments):
+- CDP only in Chromium (fluid-feel rotate, map-phone-titles x4 per engine, full-map-table phone pinch): skipped outside Chromium with the reason.
+- Firefox has no mobile/touch emulation (map-phone-fit, map-free-areas A4 Pixel 7, landscape-storage-line, full-map-table phone): skipped in Firefox with the reason (as phone.spec does).
+- Esc in true fullscreen (full-map "Esc clears", full-map-table Key and More menu): PROBED in Firefox and WebKit: no keydown reaches the page, the browser leaves fullscreen and full map ends with it. Spec: Chromium keeps the Esc order; the other two assert that Esc ends full map (the browser's own exit) and close the Key / More by their buttons. The Esc order stays covered by full-map.test.ts.
+- Result after the edits: full-map (2 sizes) Firefox + WebKit pass; full-map-table Firefox passes.
+STILL RED (not solved this session): WebKit full-map-table:34 ("From A to B" toolbar button 'detached from the DOM, retrying' on the second click while the pane is open; idle probe shows no render loop, so it is tied to the hover/click path) and :193 (view scale differs after Back, < 0.02); WebKit map-fit x2, map-landscape x2, frame:166 ("Search is on screen"); Firefox map-free-areas:221 (desktop 1366 bar over a family box, 'bar 176,150 w313 over 191,174'), full-map:60 at 1920 (pane at x=1366). Z6 leads: canvas-keyboard passed in WebKit and map-focus passed in Firefox in this run (NOT reproduced), so observeSize and hover tracking are NOT done.
+C1 zod 4.6.7 exact (npm audit --omit=dev: 0 vulnerabilities; typecheck, core+persistence tests green). C2 done (words, banner, FirstRun refusal section; tests red first for banners and the first-run section; boot-guard test red first). C3 done (notice-order `first`; the unit test was written before the source but its first run was after the edit: disclosed).
+- C4: `npm run check` at DEFAULT workers: 785 files, 8,598 tests, 11m56s: 1 failure, my typo in the new boot sentence ("records saved records", boot-guard test caught it); fixed, that file and banners.test re-run green (2 files, 50 tests). No load timeouts at default workers this time.
+- STATE AT COMMIT: Part 2 NOT done. Done: Z (partly, see above), C1-C4. NOT started: fact sheet, D1-D7 (Settings, dark mode, EmptyState, Skeleton, sheet frame, fade, both-theme pass), Part 2 e2e close, deploy. Nothing deployed or pushed. Worktree ../orn-base (f44aa52) still exists.

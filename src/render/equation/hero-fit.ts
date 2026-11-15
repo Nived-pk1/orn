@@ -8,7 +8,7 @@
 export const MIN_DRAWING_PX = 80;
 /** With no drawing (formulas only) the row may shrink to this fraction of its size. */
 export const MIN_FORMULA_SCALE = 0.6;
-export const PEEK_MAX_HEIGHT = 120;
+export const PEEK_MAX_HEIGHT = 64;
 export const PEEK_MIN_DRAWING_PX = 40;
 
 export interface HeroMeasure {

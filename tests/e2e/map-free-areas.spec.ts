@@ -92,7 +92,9 @@ test.describe("the map to the reference: free areas (Pixel 7)", () => {
 
   test("A4: no empty strip above the drawing, the top row of boxes fully visible at Fit", async ({
     page,
+    browserName,
   }) => {
+    test.skip(browserName === "firefox", "Playwright has no mobile or touch emulation for Firefox");
     test.setTimeout(300_000);
     await openMapPhone(page);
     await settle(page);

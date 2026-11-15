@@ -165,7 +165,9 @@ test.describe("fluid feel: press to selection painted", () => {
 
     test("rotating keeps the selection, the open sheet and full map", async ({
       page,
+      browserName,
     }) => {
+      test.skip(browserName !== "chromium", "CDP device-metrics and touch emulation exist only in Chromium (the rotation is a CDP device-metrics override)");
       test.setTimeout(300_000);
       await openMapPhone(page);
       await page.waitForTimeout(900);

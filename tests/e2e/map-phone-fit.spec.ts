@@ -28,7 +28,8 @@ for (const [label, device, minTitle, minUse] of [["Pixel 7", PIXEL, 10, 0.8], ["
   test.describe(`the phone's first view and Fit (${label})`, () => {
     test.use({ ...device, actionTimeout: 60_000 });
 
-    test("titles 10 to 13 px and the boxes use most of the height, at the first view and after Fit", async ({ page }, info) => {
+    test("titles 10 to 13 px and the boxes use most of the height, at the first view and after Fit", async ({ page, browserName }, info) => {
+      test.skip(browserName === "firefox", "Playwright has no mobile or touch emulation for Firefox");
       test.setTimeout(300_000);
       await openMapPhone(page);
       await page.waitForTimeout(1500);

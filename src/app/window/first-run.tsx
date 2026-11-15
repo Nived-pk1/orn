@@ -3,6 +3,7 @@ import { useSubscribable } from '@/ui/hooks';
 import { Button, Skeleton } from '@/ui/primitives';
 import { useAboutOpen } from './about-preview';
 import { useApp } from './context';
+import { refusedWordsOf } from './banners';
 import { datasetWordsOf, useDatasetInfo } from './dataset-info';
 import type { ImportActions } from './use-import-actions';
 
@@ -14,6 +15,16 @@ export function FirstRun(props: { readonly imports: ImportActions; readonly onSt
   const about = useAboutOpen() ?? (() => undefined);
   const writable = status.mode === 'writer' || status.mode === 'session_only';
   const waiting = status.stage === 'booting' || status.mode === null;
+  // 8.4f C2: the stored data does not fit this build; the tab is read-only and empty, and "Get started" would be wrong here
+  const refused = status.mode === 'read_only' ? refusedWordsOf(status.reason, status.detail) : null;
+  if (refused !== null) {
+    return (
+      <section aria-label="Saved data not opened">
+        <h2>Your saved data was not opened</h2>
+        <p>{refused}</p>
+      </section>
+    );
+  }
   return (
     <section aria-label="First run">
       <h2>Get started</h2>

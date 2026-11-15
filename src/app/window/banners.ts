@@ -63,6 +63,11 @@ export interface BannerChoices {
   readonly storageNoticeDismissed?: boolean;
 }
 
+/** The words of a read-only boot that refused a build-mismatched dataset (8.4f C2; the boot report's sentence, no code). Null for any other reason. */
+export function refusedWordsOf(reason: string | null, detail: string | null): string | null {
+  return reason === 'integrity_failure' && detail !== null && /^\d+ of \d+ saved records do not fit this version of the app\./.test(detail) ? detail : null;
+}
+
 export function bannersOf(status: AppStatus, choices: BannerChoices = {}): readonly Banner[] {
   const banners: Banner[] = [];
   const chrome = choices.chrome ?? STUDIO_CHROME;
@@ -72,7 +77,7 @@ export function bannersOf(status: AppStatus, choices: BannerChoices = {}): reado
     banners.push({ id: 'follower', text: `This tab is read-only because another tab of this app is the writer. It shows that tab's changes and takes over when that tab closes.${suffix(status.detail)}` });
   }
   if (status.mode === 'read_only') {
-    banners.push({ id: 'read_only', text: `This tab is read-only (${status.reason ?? 'no reason given'}).${suffix(status.detail)}` });
+    banners.push({ id: 'read_only', text: refusedWordsOf(status.reason, status.detail) ?? `This tab is read-only (${status.reason ?? 'no reason given'}).${suffix(status.detail)}` });
   }
   if (status.promotion === 'refused') {
     banners.push({ id: 'promotion_refused', text: `This tab could not take over as the writer (${status.reason ?? 'no reason given'}), so it stays read-only.${suffix(status.detail)}`, action: reload });

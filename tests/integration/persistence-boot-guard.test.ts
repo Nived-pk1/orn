@@ -33,7 +33,7 @@ describe('step 8.4s, S6 (DA-08): a build that rejects most of the data never emp
     const total = await t.db.records.count();
     const { result, writes } = await boot(t);
     expect(result).toMatchObject({ mode: 'read_only', readOnlyReason: 'integrity_failure', state: null });
-    expect(result.detail).toBe(`25 of ${total} records do not fit this version of the app. Nothing was changed. Export them, then reload with the newest version.`);
+    expect(result.detail).toBe(`25 of ${total} saved records do not fit this version of the app. Nothing was changed or deleted. Reload the page to get the newest version.`);
     expect(writes).toEqual([]);
     expect(await t.db.records.count()).toBe(total);
     expect(await t.adapter.listQuarantine()).toEqual([]);

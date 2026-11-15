@@ -56,7 +56,7 @@ async function addPicture(page: Page, editor: ReturnType<typeof editorDialog>, o
   if (options.shots === true) {
     await dismissToasts(page);
     await expect(page.getByRole('img', { name: 'Preview of the chosen picture' })).toBeVisible();
-    await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(43, 79, 216)');
+    await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(59, 91, 219)');
     await page.screenshot({ path: resolve(shotsDir(), 'add-picture-dialog-1280x800.png') });
     expect(await axeProblems(page, 10)).toEqual([]); // a modal dialog leaves fewer rules to run
   }
@@ -204,7 +204,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   await dismissToasts(page);
   if (device === 'pixel7') await page.screenshot({ path: resolve(shotsDir(), 'phone-add-picture-pixel7.png') });
   // the enabled button fades from its dimmed look: axe reads the colour as it is at that moment, so wait for the accent
-  await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(43, 79, 216)');
+  await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(59, 91, 219)');
   expect(await axeProblems(page, 10)).toEqual([]);
   await addDialog(page).getByRole('button', { name: 'Add picture', exact: true }).tap();
   await expect(addDialog(page)).toBeHidden({ timeout: 60_000 });

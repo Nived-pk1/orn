@@ -68,7 +68,7 @@ async function addPicture(page: Page, editor: ReturnType<typeof editorDialog>): 
   await expect(addDialog(page).getByRole('img', { name: 'Preview of the chosen picture' })).toBeVisible();
   await addDialog(page).getByLabel('Alt text (required)').fill(ALT);
   await addDialog(page).getByLabel('Caption (optional)').fill(CAPTION);
-  await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(43, 79, 216)');
+  await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(59, 91, 219)');
   expect(await axeProblems(page, 10)).toEqual([]); // a modal dialog leaves fewer rules to run
   await addDialog(page).getByRole('button', { name: 'Add picture', exact: true }).click();
   await expect(addDialog(page)).toBeHidden({ timeout: 60_000 });
@@ -163,7 +163,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   await expect(addDialog(page).getByRole('img', { name: 'Preview of the chosen picture' })).toBeVisible();
   await addDialog(page).getByLabel('Alt text (required)').fill(ALT);
   await addDialog(page).getByLabel('Caption (optional)').fill(CAPTION); // 7.1b F2: the first phone run wrote none, so none showed
-  await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(43, 79, 216)');
+  await expect(addDialog(page).getByRole('button', { name: 'Add picture', exact: true })).toHaveCSS('background-color', 'rgb(59, 91, 219)');
   await addDialog(page).getByRole('button', { name: 'Add picture', exact: true }).tap();
   await expect(addDialog(page)).toBeHidden({ timeout: 60_000 });
   await editor.getByRole('button', { name: 'Close (keeps the draft)', exact: true }).tap();

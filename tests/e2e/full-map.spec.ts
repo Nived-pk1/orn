@@ -118,6 +118,7 @@ for (const size of [
 
     test("Esc clears the selection first and the next Esc leaves; Back leaves without leaving the page; Shift+F enters, plain F does not", async ({
       page,
+      browserName,
     }) => {
       test.setTimeout(300_000);
       await openMapDesktop(page);
@@ -132,11 +133,18 @@ for (const size of [
       await expect(full(page)).toHaveCount(1);
       await page.waitForTimeout(600);
       await drawing(page).focus();
-      await page.keyboard.press("Escape"); // the selection goes first
-      await expect(full(page)).toHaveCount(1);
-      await expect(page.getByText(/^Selected: /)).toHaveCount(0);
-      await page.keyboard.press("Escape"); // nothing left for Esc to close: full map ends
-      await expect(full(page)).toHaveCount(0);
+      if (browserName === "chromium") {
+        await page.keyboard.press("Escape"); // the selection goes first
+        await expect(full(page)).toHaveCount(1);
+        await expect(page.getByText(/^Selected: /)).toHaveCount(0);
+        await page.keyboard.press("Escape"); // nothing left for Esc to close: full map ends
+        await expect(full(page)).toHaveCount(0);
+      } else {
+        // Firefox and WebKit take Esc themselves while the page is fullscreen (probed: no keydown reaches the page): the browser leaves
+        // fullscreen and full map ends with it. The "selection goes first" order is covered in Chromium and in full-map.test.ts.
+        await page.keyboard.press("Escape");
+        await expect(full(page)).toHaveCount(0);
+      }
       // Back
       await enterByButton(page, false);
       await page.goBack();

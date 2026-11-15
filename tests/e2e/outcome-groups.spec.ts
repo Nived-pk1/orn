@@ -54,7 +54,7 @@ test('E2: one scheme for the major and the minor outcome, the words under the ti
   });
   expect(look.width).toBe('1px');
   expect(look.style).toBe('solid');
-  expect(look.background, 'a paper tone of its own').not.toBe(look.article);
+  expect(look.background, `a paper tone of its own: ${JSON.stringify(look)}`).not.toBe(look.article);
   const sentence = await scheme.evaluate((element) => document.getElementById(element.getAttribute('aria-describedby') as string)?.textContent);
   expect(sentence).toBe('(R)-2-bromobutane with alc. KOH, heat, basic medium gives But-2-ene (major) and But-1-ene (minor)');
   await expect(scheme.getByText('Drawing the structure…')).toHaveCount(0, { timeout: 60_000 });

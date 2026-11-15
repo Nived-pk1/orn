@@ -131,7 +131,7 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     state = assembled.state;
     // A build that rejects MOST of the data is the wrong build, not damaged data: nothing is moved, the tab opens read-only (step 8.4s, S6; audit DA-08).
     if (assembled.rejected.length > MASS_REJECT_ROWS && assembled.rejected.length > rows.length * MASS_REJECT_SHARE) {
-      return refuse('integrity_failure', `${assembled.rejected.length} of ${rows.length} records do not fit this version of the app. Nothing was changed. Export them, then reload with the newest version.`, revision);
+      return refuse('integrity_failure', `${assembled.rejected.length} of ${rows.length} saved records do not fit this version of the app. Nothing was changed or deleted. Reload the page to get the newest version.`, revision);
     }
     if (writer && assembled.rejected.length > 0) newlyQuarantined = await ports.moveToQuarantine(assembled.rejected);
     quarantineCount = quarantined();

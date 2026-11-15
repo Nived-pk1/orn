@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_STATUS, type AppStatus } from '@/app/services';
 import { createLocalTimeFormatter } from './local-time';
-import { bannerKindOf, bannersOf, bootLinesOf, draftsLineOf, operationTextOf, periodicTextOf, saveTextOf, workersTextOf } from './banners';
+import { refusedWordsOf, bannerKindOf, bannersOf, bootLinesOf, draftsLineOf, operationTextOf, periodicTextOf, saveTextOf, workersTextOf } from './banners';
 
 const status = (patch: Partial<AppStatus>): AppStatus => ({ ...INITIAL_STATUS, stage: 'ready', mode: 'writer', ...patch });
 const save = (patch: Partial<NonNullable<AppStatus['save']>>): NonNullable<AppStatus['save']> => ({
@@ -203,5 +203,24 @@ describe('periodicTextOf (step 6.1b part 4)', () => {
     expect(periodicTextOf(status({ lastAt: null, kept: 0, failure: null }), utc)).toBe('Automatic snapshots: none yet');
     expect(periodicTextOf(status({ lastAt: '2026-10-18T10:35:12.000Z', kept: 5, failure: null }), createLocalTimeFormatter('Asia/Kolkata'))).toBe('Automatic snapshots: last at 2026-10-18 16:05 GMT+5:30 (5 kept)');
     expect(periodicTextOf(status({ lastAt: '2026-10-18T10:35:12.000Z', kept: 2, failure: 'the compute worker is down (x)' }), utc)).toBe('Automatic snapshots: last attempt failed: the compute worker is down (x)');
+  });
+});
+
+describe('8.4f C2: the read-only boot after a mass rejection says it in words, with no code', () => {
+  const detail = '30 of 335 saved records do not fit this version of the app. Nothing was changed or deleted. Reload the page to get the newest version.';
+  it('the banner is the sentence alone; nothing about a code or an export', () => {
+    const [banner] = bannersOf(status({ mode: 'read_only', reason: 'integrity_failure', detail }));
+    expect(banner?.id).toBe('read_only');
+    expect(banner?.text).toBe(detail);
+    expect(banner?.text).not.toMatch(/integrity_failure|Export/);
+  });
+  it('another integrity failure keeps the old words (damaged meta is not a "newer version" case)', () => {
+    const [banner] = bannersOf(status({ mode: 'read_only', reason: 'integrity_failure', detail: 'the stored dataset meta is missing or invalid' }));
+    expect(banner?.text).toMatch(/read-only \(integrity_failure\)/);
+  });
+  it('refusedWordsOf answers only for the mass-rejection sentence', () => {
+    expect(refusedWordsOf('integrity_failure', detail)).toBe(detail);
+    expect(refusedWordsOf('integrity_failure', 'other')).toBeNull();
+    expect(refusedWordsOf('newer_schema', detail)).toBeNull();
   });
 });

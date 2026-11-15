@@ -75,7 +75,7 @@ dispatch(envelope) ─► commit (memory, revision n) ─► ChangeSet n
 
 Cold boot budget: < 2.5 s at 2k species / 5k reactions (PERFORMANCE_ARCHITECTURE.md §2).
 
-**Mass-rejection guard (step 8.4s, S6; audit DA-08).** Before rows go to quarantine, if the rejected rows are MORE than 20 AND more than 2% of all rows, the boot opens read-only with reason `integrity_failure` and the words "N of M records do not fit this version of the app. Nothing was changed. Export them, then reload with the newest version." Nothing is moved or written. One damaged row, or up to 20, or 2% or fewer, still goes to quarantine as before. A fingerprint of `src/core/schema/**` (`src/core/schema/fingerprint.ts`, checked by `npm run check`) fails with "Schema files changed: bump the schema version or update the fingerprint with a note in PROGRESS", so a build whose schema changed without a version step is caught before it can reject real data.
+**Mass-rejection guard (step 8.4s, S6; audit DA-08).** Before rows go to quarantine, if the rejected rows are MORE than 20 AND more than 2% of all rows, the boot opens read-only with reason `integrity_failure` and the words "N of M records do not fit this version of the app. Nothing was changed. Reload the page to get the newest version." Nothing is moved or written. One damaged row, or up to 20, or 2% or fewer, still goes to quarantine as before. A fingerprint of `src/core/schema/**` (`src/core/schema/fingerprint.ts`, checked by `npm run check`) fails with "Schema files changed: bump the schema version or update the fingerprint with a note in PROGRESS", so a build whose schema changed without a version step is caught before it can reject real data.
 
 ## 5. Assets
 

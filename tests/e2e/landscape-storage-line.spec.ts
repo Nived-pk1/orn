@@ -38,7 +38,9 @@ async function importDemo(page: Page): Promise<void> {
 
 test("landscape: the storage line is one 24 px line, whole, and a tap opens the backup", async ({
   page,
+  browserName,
 }) => {
+  test.skip(browserName === "firefox", "Playwright has no mobile or touch emulation for Firefox");
   test.setTimeout(240_000);
   await importDemo(page);
   await answerExamCard(page);
