@@ -142,26 +142,26 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-12",
-    "commit": "779be49",
-    "version": "59d9ef19-dec1-4af3-8b6f-631ff0bde339",
-    "liveSpecs": "2026-11-12 (8.4f Part 1): WebKit 43 passed, 12 skipped, 0 failed; Chromium 40 passed, 4 failed (equation x2, structures x2: drawings not finished) that passed on re-run with no code change (transient live condition, disclosed in PROGRESS).",
+    "deployedAt": "2026-11-15",
+    "commit": "75c38af",
+    "version": "ab83544d-76f6-47b9-b426-822cea16d6f2",
+    "liveSpecs": "2026-11-15 (8.4s): Chromium 44 passed, 11 skipped, 0 failed; WebKit 43 passed, 12 skipped, 0 failed (the RELEASE.md live list, exact file names, one command per browser)",
     "workerVersion": "59d9ef19-dec1-4af3-8b6f-631ff0bde339"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-08",
-    "version": "c37e39e2-53d1-4a1d-b127-efbf2e0d5a04",
+    "deployedAt": "2026-11-15",
+    "version": "e6e8e1ea-09e4-47df-8919-6f5c3444fe24",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4f Part 1 deploy, 2026-11-13: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4f Part 1 deploy, 2026-11-13: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200. | 8.4s deploy 2026-11-15: unauthenticated request to the main URL answered 302 to cloudflareaccess.com; a preview-style URL (<version prefix>-reaction-navigator-studio...) answered 404, not the app; wrangler.studio.jsonc has \"preview_urls\": false; Study 200.",
     "commit": "779be49",
     "protectedCheckedAt": "2026-11-13",
     "workerVersion": "c37e39e2-53d1-4a1d-b127-efbf2e0d5a04"
   },
   "nextStep": "8.4f",
-  "nextStepTitle": "Step 8.4s done and committed (38dde4f) 2026-11-15 but HELD: reviewer approval, then deploy + push. Then 8.4f Part 2 (Settings, dark mode, empty and loading states, phone sheets, transitions, both-theme pass)",
+  "nextStepTitle": "Step 8.4s done, approved and deployed 2026-11-15 (Study ab83544d, Studio e6e8e1ea). Next: 8.4f Part 2 (files ORN_SONNET_8.4f_PROMPT.md + ORN_SONNET_8.4f_PART2.md, updated 2026-11-15 with section C)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -717,8 +717,8 @@
   },
   "step84s": {
     "closed": "2026-11-15",
-    "deployed": null,
-    "note": "closed 2026-11-15, NOT deployed and NOT pushed: held for the reviewer (RELEASE.md: no deploy after a full-run failure until approved; two S3 spec fixes). See docs/PROGRESS.md \"Step 8.4s\".",
+    "deployed": "2026-11-15",
+    "note": "closed 2026-11-15 (38dde4f, 75c38af), reviewer APPROVED 2026-11-15, deployed both editions and pushed. See docs/PROGRESS.md \"Step 8.4s\".",
     "initialJsGzipBytes": {
       "study": 348868,
       "studio": 352716
@@ -728,6 +728,10 @@
       "studio": 365
     },
     "notes": "docs/reviews/step-8-4s-notes.md",
-    "commit": "38dde4f"
+    "commit": "38dde4f",
+    "workers": {
+      "study": "ab83544d-76f6-47b9-b426-822cea16d6f2",
+      "studio": "e6e8e1ea-09e4-47df-8919-6f5c3444fe24"
+    }
   }
 }

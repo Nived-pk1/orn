@@ -138,3 +138,7 @@ both Worker versions in PROGRESS and PROJECT_STATE (releasePreview / studioPrevi
 ## STATE (closing, 2026-11-15): committed 38dde4f, HELD for the reviewer
 
 `ORN_TEST_WORKERS=2 npm run check` green (784 files, 8,592 tests, 905.8 s; the user approved 2 workers after three default-workers runs failed on load timeouts only). Not deployed, not pushed. Resume: reviewer approves the two S3 spec fixes (hostile.spec.ts, mechanism-pictures.spec.ts) and the 2-worker check; then deploy per docs/RELEASE.md and record the versions.
+
+## STATE (deployed, 2026-11-15): CLOSED
+
+Reviewer approved. Study ab83544d-76f6-47b9-b426-822cea16d6f2, Studio e6e8e1ea-09e4-47df-8919-6f5c3444fe24; live specs Chromium 44/0, WebKit 43/0; Access check 302 + preview 404 + Study 200. Pushed. Next: 8.4f Part 2.
