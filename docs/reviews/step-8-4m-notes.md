@@ -67,4 +67,33 @@ profile, File > Import; one measuring script run from the git-ignored `test-resu
   was cut. Rules that should have prevented it: A3 (reserve the largest state, so the bar's second row is always
   counted) and the floor case (take the insets that cut least).
 
-NEXT: M1 (tests red first).
+
+## M. Map work (IN PROGRESS, stopped mid-edit 2026-11-15: usage limit)
+
+- RED M2 `npx vitest run src/features/navigator/pipeline-full-map.test.ts` -> 2 failed (truncation max_edges; family-08>family-02
+  missing), 3 passed (2 s), before the source edit. GREEN: pipeline.ts builds again with boxes squared when the grid overview
+  was cut (5 passed; pipeline tests 38 passed). Test data: tests/fixtures/full-map/full-map.ts (17 families, 650 reactions, 170 pairs).
+- RED e2e `npx playwright test tests/e2e/map-full-content.spec.ts --project=chromium` (speed 51 ms; pipeline change stashed for the
+  run, popped after) -> 8 failed (3.3 min): M2 notice, M1 x2, M4 x2 ("a bar (176,642 556x42) lies over the bucket"), M3 x2
+  (11 lines for 18; "21 arrows: listed in the panel"), F2 (2 for 4).
+- RED M4 unit `npx vitest run src/features/navigator/free-areas-rule.test.ts` -> 1 failed (expected 107 to be 24). GREEN after
+  `insetsOf(..., floor)` (19 passed).
+- F5 correction: screenshot 4 was not reproduced exactly (the pane could not be dragged to 650 px in the probe). Seen instead:
+  the open legend over the bucket box, and Fit with the Key on the LEFT edge (a 147 px strip).
+- WRITTEN, NOT YET COMPILED OR RUN (uncommitted): free-areas.tsx (structural flag, floor), viewport-scene.tsx (`fitEpoch`),
+  map-float.module.css (.hintSlot, .keyReserve), map-toolbar.tsx, map-hint.tsx (`links` kind), arrow-key.tsx (ArrowKeySizer),
+  busy-rule.ts (BUSY_SELECTED_LINES 30), map-view.ts (`locked`, `links`), use-map-view.ts, map-lines.ts (`linksLine`;
+  `busyLine` now takes one argument).
+- Probe scripts: `.vite/8.4m-probe/` (git-ignored; Playwright wipes test-results/). Local Studio preview was on port 4183.
+
+NEXT (in order):
+1. navigator-canvas.tsx (372 lines, limit 400): `onInsets(insets, structural)` -> `fitEpoch` state passed to ViewportScene;
+   hint = quiet / busy chapter `busyLine(n)` / busySelection or `view.links` -> `linksLine(reactions, families, listed)`
+   with hintKind 'links' (reactions = distinct reaction ids of the rollup pairs in `view.links.lines`; for a busy selection
+   count from the outlined ends); the phone pill the same. Then `npx tsc --noEmit`.
+2. F2: the map store's first focus = the saved selection when it is a node (navigator-persist.ts createMapStore; map-state.ts
+   comment). 3. M3 panel: core `familyLinksOf` (src/core/graph/navigator/links.ts), a "Links" section (region "Links", lists
+   "Turns into" / "Made from", rows "Name · n" that select {kind:'arrow'}) in study-inspector.tsx before <Connected>.
+4. Unit tests for map-view (locked rule), lint, the e2e spec green in Chromium; M5 carried list red then fix; M6 report
+   (numbers so far: 17 boxes are the 17 anchored classes; 194 reactions have an arrow from or to the bucket; 5 unanchored;
+   the per-class list is still to print: class names are in `names.canonical`). 5. CLOSE as in the prompt.

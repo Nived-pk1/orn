@@ -86,8 +86,8 @@ export function useMapView(args: MapViewArgs): MapViewState {
   const focusId = hover ?? locked;
   const selectedEdgeId = selected !== null && selected.kind === 'edge' ? selected.id : undefined;
   const view = useMemo(
-    () => (scene === null ? null : mapView(scene, { focusId, chapter: chapterId !== null && !unknown && !chainOpen, showUnclassified, selectedEdgeId, facts, chips, zoom, chain: chainOpen ? chain : undefined })),
-    [scene, focusId, chapterId, unknown, showUnclassified, selectedEdgeId, facts, chips, zoom, chain, chainOpen],
+    () => (scene === null ? null : mapView(scene, { focusId, locked: focusId !== null && focusId === locked, chapter: chapterId !== null && !unknown && !chainOpen, showUnclassified, selectedEdgeId, facts, chips, zoom, chain: chainOpen ? chain : undefined })),
+    [scene, focusId, locked, chapterId, unknown, showUnclassified, selectedEdgeId, facts, chips, zoom, chain, chainOpen],
   );
   return { view, chainOpen, chapterId: unknown ? null : chapterId, showUnclassified, focusId, onNodeHover };
 }

@@ -10,13 +10,14 @@
  *    shows only when there is no Scene yet and `SKELETON_DELAY_MS` have passed.
  *  - The overview does not expand (ADR-037, step 5.5b): the request always carries no expansion, whatever the expansion store holds
  *    (the store stays for later views). A selection that is not in a new Scene is cleared (and logged).
+ *  - The arranged (grid) overview admits every ordered pair of its boxes (step 8.4m, M2); the layered path keeps `NAVIGATOR_MAX_EDGES`.
  * An indexes handle is asked for at every build and never kept.
  */
 import { DEFAULT_TRAVERSAL_LIMITS, navigatorProjection, sameProjection } from '@/core/graph';
 import type { Projection, ProjectionRequest } from '@/core/graph';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { LayoutAlgorithm, LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
-import { buildLayoutRequest, buildScene, labelSizes, nodeSizes } from '@/render/scene';
+import { buildLayoutRequest, buildScene, isArranged, labelSizes, nodeSizes } from '@/render/scene';
 import type { LabelSizes, NodeSizes } from '@/render/scene';
 import type { NavigatorPorts } from './contracts';
 import { chapterFilters } from './chapter-filters';
@@ -74,21 +75,28 @@ export function createNavigatorModel(ports: NavigatorPorts, modelOptions: Naviga
   const chapterOf = (): string | null => (ports.ui.map.getState().chainOpen ? null : ports.ui.map.getState().chapterId);
   // "Only <exam>" (step 8.3b, B2): an exam is chosen and the switch says Only
   const onlyNow = (): boolean => effectiveOnly(ports.ui.exam.getState());
-  const requestOf = (): ProjectionRequest => ({
+  const requestOf = (maxEdges: number = NAVIGATOR_MAX_EDGES): ProjectionRequest => ({
     view: 'navigator',
     focus: [],
     expansion: NO_EXPANSION,
     filters: onlyFilters(chapterFilters(ports.ui.filters.getState().filters, chapterOf()), onlyNow()),
-    limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges: NAVIGATOR_MAX_EDGES },
+    limits: { ...DEFAULT_TRAVERSAL_LIMITS, maxNodes: NAVIGATOR_MAX_NODES, maxEdges },
   });
 
   function buildOnce(): Projection {
     const exam = ports.ui.exam.getState().active;
     const indexes = ports.indexes.current();
     const scopeOf = keepUnmapped(scopeLens(indexes, exam), onlyNow());
-    const built = navigatorProjection.build({ state: ports.store.getState(), indexes, scopeOf }, requestOf());
+    const context = { state: ports.store.getState(), indexes, scopeOf };
+    const built = navigatorProjection.build(context, requestOf());
     counts.projections += 1;
-    return built;
+    // The whole map is drawn (step 8.4m, M2): the anchored overview is laid out by the grid (fixed cells, a few milliseconds whatever the number
+    // of lines), so its limit is every ordered pair of the shown boxes (bounded: boxes squared, boxes at most NAVIGATOR_MAX_NODES). The layered
+    // (ELK) path keeps NAVIGATOR_MAX_EDGES. Built again only when the first build cut a pair.
+    const grid = modelOptions.layoutAlgorithm === undefined ? isArranged(built) : modelOptions.layoutAlgorithm === 'grid';
+    if (!grid || built.truncation?.reason !== 'max_edges') return built;
+    counts.projections += 1;
+    return navigatorProjection.build(context, requestOf(Math.max(NAVIGATOR_MAX_EDGES, built.nodes.length * built.nodes.length)));
   }
 
   function buildProjection(): Projection {

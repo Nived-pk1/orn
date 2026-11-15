@@ -77,6 +77,18 @@ describe('the map part of uiState', () => {
     again.dispose();
   });
 
+  it('a saved SELECTED family is the focus on the next start (step 8.4m, F2): its lines are drawn again; a saved arrow or nothing focuses nothing', () => {
+    const start = (selected: unknown) => createNavigatorUi({ stored: { selected }, mode: () => 'writable', save: () => Promise.resolve() }, timers());
+    const family = start({ kind: 'node', id: 'cls_family' });
+    expect(family.stores.selection.getState().selected).toEqual({ kind: 'node', id: 'cls_family' });
+    expect(family.stores.map.getState().focusId).toBe('cls_family');
+    const arrow = start({ kind: 'edge', id: 'edge-1' });
+    expect(arrow.stores.map.getState().focusId).toBeNull();
+    const none = start(null);
+    expect(none.stores.map.getState().focusId).toBeNull();
+    for (const ui of [family, arrow, none]) ui.dispose();
+  });
+
   it('opening a chapter in the Chapters view makes it the map\'s chapter (D7); "No chapter yet" does not', () => {
     const ui = createNavigatorUi({ stored: undefined, mode: () => 'writable', save: () => Promise.resolve() }, timers());
     ui.stores.chapters.getState().open('top_b');

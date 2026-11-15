@@ -61,8 +61,10 @@ export interface ViewportSceneProps {
   readonly fitBox?: Rect;
   /** Changes when the drawing is a different one to look at (another chapter, Unclassified shown): the view is fitted again. Absent: never. */
   readonly fitKey?: string;
-  /** Step 8.4e (A3): the free areas the floating controls leave, measured. A change fits again while the view is still the automatic one. */
+  /** Step 8.4e (A3): the free areas the floating controls leave, measured. Kept for the next fit; a change alone never moves the view (step 8.4m, M1). */
   readonly fitInsets?: Insets;
+  /** Step 8.4m (M1): counts the changes of the map AREA (size, pane, full map, the set of controls). A change fits again while the view is still the automatic one. */
+  readonly fitEpoch?: number;
   /** The fit window drives Fit by its SIZE (the phone, step 8.4e C4): a change of that size fits again while the view is the automatic one. */
   readonly fitBoxRefits?: boolean;
 }
@@ -232,7 +234,10 @@ export function ViewportScene(props: ViewportSceneProps) {
   const { fitKey } = props;
   const insetKey = `${Object.values(props.fitInsets ?? {})}`;
   const boxKey = props.fitBoxRefits === true && props.fitBox !== undefined ? String(Object.values(props.fitBox).map(Math.trunc)) : '';
-  useEffect(() => refitIfAuto.current?.(), [insetKey, boxKey]);
+  const { fitEpoch } = props;
+  // new insets are for the NEXT fit: a floating control that grew or shrank (the legend opening, a longer bar) moves nothing
+  useEffect(() => controllerRef.current?.setInsets(insetsRef.current), [insetKey]);
+  useEffect(() => refitIfAuto.current?.(), [fitEpoch, boxKey]);
   useEffect(() => {
     if (keyRef.current === fitKey) return;
     keyRef.current = fitKey;

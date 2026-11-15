@@ -9,7 +9,7 @@ import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode, type
 import { Button, Icon, IconButton, Menu, type MenuItem } from '@/ui/primitives';
 import type { Scene } from '@/render/scene';
 import type { MapStore } from '@/ui/state/map-state';
-import { ArrowKey } from './arrow-key';
+import { ArrowKey, ArrowKeySizer } from './arrow-key';
 import { ChapterSelect, type ChapterOption } from './chapter-select';
 import { FullMapButton } from './full-map-lazy';
 import type { LegendKey } from './legend';
@@ -70,7 +70,7 @@ export interface MapToolbarProps {
   readonly onClear: () => void;
   readonly onZoomSelection: (() => void) | undefined;
   readonly hint: string | undefined;
-  readonly hintKind: 'quiet' | 'busy' | undefined;
+  readonly hintKind: 'quiet' | 'busy' | 'links' | undefined;
   readonly keys: LegendKey;
   /** The map's UI state: the Full map button reads and sets its `fullMap` flag (step 8.4e, Part D). Absent: no button. */
   readonly map?: MapStore;
@@ -130,6 +130,7 @@ export function MapToolbar(props: MapToolbarProps) {
           <Menu label="More" items={more} />
           {props.extra}
         </div>
+        <div className={styles.hintSlot} data-map-control="bar" data-map-reserve="" {...(finding ? { 'data-finding': '' } : {})}>
         <MapHint
           selected={words === undefined ? undefined : `Selected: ${words}`}
           onClear={props.onClear}
@@ -139,6 +140,7 @@ export function MapToolbar(props: MapToolbarProps) {
           hintKind={props.hintKind}
           open={words === undefined ? undefined : <Button onClick={open.onSelect} {...unavailable(open.reason)}>{open.label}</Button>}
         />
+        </div>
       </div>
       <div className={styles.zoom} role="group" aria-label="Zoom" data-map-control="stack">
         <IconButton label="Zoom in" icon="plus" variant="default" className={styles.zoomButton} onClick={props.onZoomIn} {...unavailable(zoomReason)} />
@@ -146,6 +148,14 @@ export function MapToolbar(props: MapToolbarProps) {
         <span className={styles.separator} aria-hidden="true" />
         <IconButton label="Fit" icon="scan" variant="default" className={styles.zoomButton} onClick={props.onFit} {...unavailable(zoomReason)} />
       </div>
+      {props.listing ? null : (
+        <div className={styles.keyReserve} data-map-control="bar" data-map-reserve="" aria-hidden="true" inert>
+          <ArrowKeySizer />
+          <Button tabIndex={-1}>
+            <Icon name="info" size={16} /> Key
+          </Button>
+        </div>
+      )}
       <div className={styles.keyStrip} data-map-control="bar" data-key-wrap="">
         <ArrowKey keys={props.listing ? NO_KEYS : props.keys} />
         <Button aria-expanded={props.keyOpen} aria-haspopup="dialog" onClick={props.onToggleKey} data-key-button="">

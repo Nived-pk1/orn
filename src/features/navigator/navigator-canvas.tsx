@@ -28,7 +28,8 @@ import { keyOf, legendOf } from './legend';
 import { useMapBulk, useNoMulti } from './bulk-context';
 import { useCanvasInput } from './use-canvas-input';
 import { outsideNoteOf } from './scope-lens';
-import { QUIET_LINE, busyLine, openFamilyReason } from './map-lines';
+import { openFamilyReason } from './map-lines';
+import { mapHintOf } from './map-hint-line';
 import { useMapChips } from './use-map-chips';
 import { useMapCommands } from './use-map-commands';
 import { useNavigator, useNavigatorState } from './navigator-context';
@@ -73,6 +74,12 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   // step 8.4e (A3): the room the floating controls leave, measured; Fit keeps the boxes out of it (phone first; the desktop bars follow)
   const [area, setArea] = useState<HTMLDivElement | null>(null);
   const [insets, setInsets] = useState<Insets | undefined>(undefined);
+  // step 8.4m (M1): only a change of the map AREA fits again; a control that changed size leaves the view alone
+  const [fitEpoch, setFitEpoch] = useState(0);
+  const onInsets = useCallback((next: Insets, structural: boolean): void => {
+    setInsets(next);
+    if (structural) setFitEpoch((n) => n + 1);
+  }, []);
   const [phoneBox, setPhoneBox] = useState<Rect | undefined>(undefined);
   const chrome = useStudyChrome();
   // Studio's "See those compounds" selects the bucket: the inspector lists them (one view, step 8.2b-fix, S3)
@@ -219,7 +226,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const legendKeys = useMemo(() => keyOf(view), [view]);
   // step 8.3b (A3, A4, B2.2): the key, the hint and the selection sit INSIDE the map (MapCorner)
   const clearSelection = useCallback((): void => ports.ui.selection.getState().select(null), [ports]);
-  const hint = view === null ? undefined : view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy, view.busySelection) : undefined;
+  const hintLine = useMemo(() => mapHintOf(view, pairs), [view, pairs]);
   const cut = truncationNoticeOf(scene?.truncation ?? null);
   const families = scene === null ? 0 : scene.nodes.filter((node) => node.box === 'hub').length;
   const empty = scene === null ? null : emptinessOf(state.reactions, families);
@@ -246,7 +253,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       <div className={styles.drawing} aria-busy={state.working} ref={setArea}>
         {scene !== null && !listing ? (
           <Suspense fallback={null}>
-            <FreeAreas area={area} onInsets={setInsets} scene={drawn} {...(phone ? { onPhoneBox: setPhoneBox, selectedId: selected?.id } : {})} {...(fitBox === undefined ? {} : { content: fitBox })} />
+            <FreeAreas area={area} onInsets={onInsets} scene={drawn} {...(phone ? { onPhoneBox: setPhoneBox, selectedId: selected?.id } : {})} {...(fitBox === undefined ? {} : { content: fitBox })} />
           </Suspense>
         ) : null}
         {phone && scene !== null && !listing ? (
@@ -291,8 +298,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           multi={multi !== null && multi.items.length > 0}
           onClear={clearSelection}
           onZoomSelection={zoomSelection.available ? zoomSelection.zoom : undefined}
-          hint={hint}
-          hintKind={view === null ? undefined : view.quiet ? 'quiet' : 'busy'}
+          hint={hintLine.text}
+          hintKind={hintLine.kind}
           keys={legendKeys}
           inert={input.menu !== null}
         />
@@ -300,8 +307,8 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
       )}
         {/* the hint is a quiet pill at the foot of the map; it keeps its place when empty, so a selection moves nothing (step 8.4e, A2) */}
         {phone && view !== null && !listing ? (
-          <p className={phoneMap.hintPill} data-map-control="pill" data-shown={(view.quiet || view.busy > 0) && !map.chainOpen ? '' : undefined} {...(view.quiet ? { 'data-map-quiet': '' } : view.busy > 0 ? { 'data-map-busy': '' } : { 'aria-hidden': 'true' })}>
-            {view.quiet ? QUIET_LINE : view.busy > 0 ? busyLine(view.busy, view.busySelection) : ' '}
+          <p className={phoneMap.hintPill} data-map-control="pill" data-shown={hintLine.text !== undefined && !map.chainOpen ? '' : undefined} {...(hintLine.kind === 'quiet' ? { 'data-map-quiet': '' } : hintLine.kind === 'busy' ? { 'data-map-busy': '' } : hintLine.kind === 'links' ? { 'data-map-links': '' } : { 'aria-hidden': 'true' })}>
+            {hintLine.text ?? ' '}
           </p>
         ) : null}
         {phone && scene !== null && !listing ? (
@@ -334,6 +341,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
             fitBoxRefits={phone}
             {...(fitKey === undefined ? {} : { fitKey })}
             {...(insets === undefined ? {} : { fitInsets: insets })}
+            fitEpoch={fitEpoch}
             {...(depictions === undefined ? {} : { depictions })}
             onLayerCommit={onLayerCommit}
             pointer={input.pointer}

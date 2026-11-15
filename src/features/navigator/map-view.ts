@@ -8,6 +8,8 @@
  *  - a self-loop is never drawn: the box carries "n within the family" instead;
  *  - Unclassified is hidden unless shown; the reactions that lead there are counted for the legend;
  *  - a busy chapter (more than BUSY_CHAPTER_ARROWS arrows) draws none until a family is chosen (`busy` says how many);
+ *  - a SELECTED family (`locked`) draws up to BUSY_SELECTED_LINES lines, one per neighbour family and direction (step 8.4m, M3); a hover
+ *    preview keeps the BUSY_ARROWS rule; `links` counts the lines and the families of a selected family for the bar;
  *  - a chain ("From A to B") draws only the chain's arrows, heavy and solid in the first family's colour, numbered at their chips;
  *  - an arrow of ONE reaction shows that reaction's reagent words on its chip (`facts`), unless the chip would overlap another;
  *  - the selected arrow stays drawn. Boxes that are not the focus, not at an end of a drawn arrow (in a chapter also: with no reaction inside)
@@ -26,6 +28,8 @@ export const BUSY_CHAPTER_ARROWS = BUSY_ARROWS;
 export interface MapViewOptions {
   /** The focused family (a node id), or null. */
   readonly focusId: string | null;
+  /** The focus is the SELECTED family (clicked, tapped, Enter), not a hover preview (step 8.4m, M3). */
+  readonly locked?: boolean | undefined;
   /** A chapter is chosen: all of its arrows are drawn. */
   readonly chapter: boolean;
   readonly showUnclassified: boolean;
@@ -55,6 +59,8 @@ export interface MapView {
   readonly busy: number;
   /** Step 8.4b, C: the busy view is a selected family (or the bucket), not a chapter: its arrows are listed in the panel. */
   readonly busySelection: boolean;
+  /** Step 8.4m, M3: the focus is a SELECTED family with more lines than a hover would draw: its lines to and from FAMILY boxes (the bucket is not a family) and how many families are at their far ends. Undefined otherwise. */
+  readonly links?: { readonly lines: readonly { readonly from: string; readonly to: string }[]; readonly families: number } | undefined;
   /** `present`: the Scene has an Unclassified box; `reactions`: how many reactions lead there (counted from the arrows, shown or not). */
   readonly unclassified: { readonly present: boolean; readonly shown: boolean; readonly reactions: number };
 }
@@ -117,7 +123,12 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
   const asChain = (d: Drawn): Drawn => ({ edge: { ...d.edge, weight: 'heavy', stroke: 'solid' }, mark: { role: 'makes', ...(chainTone === undefined ? {} : { tone: chainTone }) } });
   const drawn = chain !== undefined ? base.map(asChain) : focus !== null || options.chapter ? pairUp(base, options.zoom ?? 1, focus !== null, nodes) : base;
   // a busy chapter draws nothing until a family is chosen (its families stay at full strength); the selected arrow stays
-  const busy = chain === undefined && (focus !== null || options.chapter) && isBusy(drawn.length) ? drawn.length : 0;
+  const locked = focus !== null && options.locked === true;
+  const busy = chain === undefined && (focus !== null || options.chapter) && isBusy(drawn.length, locked) ? drawn.length : 0;
+  // the lines of the selected family itself (a selected arrow kept in view is not one of them)
+  const farEnd = (d: Drawn): string => (d.edge.from === focus ? d.edge.to : d.edge.from);
+  const own = locked && chain === undefined && isBusy(drawn.length) ? drawn.filter((d) => (d.edge.from === focus || d.edge.to === focus) && nodes.get(farEnd(d))?.box === 'hub') : [];
+  const families = new Set(own.map(farEnd));
   const drawable = busy > 0 ? drawn.filter((d) => d.edge.id === options.selectedEdgeId) : drawn;
   const shown = options.chips === undefined ? drawable : options.chips(drawable, options.facts, chain !== undefined, visibleNodes, options.zoom);
 
@@ -149,6 +160,7 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
     quiet: focus === null && !options.chapter && chain === undefined && shown.length === 0,
     busy,
     busySelection: busy > 0 && focus !== null,
+    ...(own.length === 0 ? {} : { links: { lines: own.map((d) => ({ from: d.edge.from, to: d.edge.to })), families: families.size } }),
     unclassified: { present, shown: present && options.showUnclassified, reactions: leading },
   };
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { FIT_PADDING } from "@/render/viewport";
 import { insetsOf, titleUnitsOf } from "./free-areas-rule";
 
 const area = { width: 400, height: 600 };
@@ -102,5 +103,30 @@ describe("insetsOf: a control as tall as the area is a side control (step 8.4f, 
     const column = { x: 300, y: 0, w: 394, h: 272 };
     expect(insetsOf([bar, column], wideMap).top).toBe(70);
     expect(insetsOf([bar, column], wideMap).left).toBe(24);
+  });
+});
+
+describe('the floor case (step 8.4m, M4): content that cannot fit at the smallest readable zoom', () => {
+  // a 1900 x 1100 map in a 1100 x 640 area; at the floor (0.55) the content is 1045 x 605 px and cannot fit whichever edges the controls take
+  const area = { width: 1100, height: 640 };
+  const content = { width: 1900, height: 1100 };
+  const toolbar = { x: 8, y: 8, w: 537, h: 42 };
+  const key = { x: 8, y: 590, w: 91, h: 42 };
+  const stack = { x: 1050, y: 513, w: 42, h: 119 };
+
+  it('without a floor the largest zoom wins: the Key takes the left edge (107 px), which is the empty strip of screenshot 4', () => {
+    expect(insetsOf([toolbar, key, stack], area, content).left).toBe(107);
+  });
+
+  it('with the floor the edges that CUT least win: the left stays at the padding and the Key takes the bottom', () => {
+    const insets = insetsOf([toolbar, key, stack], area, content, 0.55);
+    expect(insets.left).toBe(FIT_PADDING);
+    expect(insets.bottom).toBe(58);
+  });
+
+  it('content that fits above the floor is not affected by it', () => {
+    const roomy = { width: 1732, height: 888 };
+    const controls = [toolbar, { x: 8, y: 838, w: 556, h: 42 }, { x: 1682, y: 761, w: 42, h: 119 }];
+    expect(insetsOf(controls, roomy, { width: 1500, height: 900 }, 0.55)).toEqual(insetsOf(controls, roomy, { width: 1500, height: 900 }));
   });
 });

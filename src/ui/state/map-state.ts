@@ -1,8 +1,8 @@
 /**
  * The overview map's UI state (step 8.2a, ADR-044): the chapter the map shows ("All chapters" is null) and whether the Unclassified box is
  * shown are saved inside the navigator's `uiState` entry (navigator-persist.ts), read tolerantly like the other parts (each field checked by
- * itself, a bad one falls back and is named in `damaged`). The FOCUS (the family whose arrows are drawn) lives here too but is never saved: the
- * map always opens with nothing focused. UI state only, never records.
+ * itself, a bad one falls back and is named in `damaged`). The FOCUS (the family whose arrows are drawn) lives here too but is never saved by itself: the
+ * map opens focused on the saved SELECTION when that is a box (step 8.4m, F2: a reload showed "Selected: X" with none of its lines), else on nothing. UI state only, never records.
  */
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
@@ -29,11 +29,11 @@ export interface MapState {
 }
 export type MapStore = StoreApi<MapState>;
 
-export function createMapStore(initial: { readonly chapterId?: string | null; readonly showUnclassified?: boolean; readonly fitted?: boolean } = {}): MapStore {
+export function createMapStore(initial: { readonly chapterId?: string | null; readonly showUnclassified?: boolean; readonly fitted?: boolean; readonly focusId?: string | null } = {}): MapStore {
   return createStore<MapState>((set) => ({
     chapterId: initial.chapterId ?? null,
     showUnclassified: initial.showUnclassified ?? false,
-    focusId: null,
+    focusId: initial.focusId ?? null,
     chainOpen: false,
     fitted: initial.fitted ?? false,
     fullMap: false,

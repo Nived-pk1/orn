@@ -9,6 +9,7 @@ import type { AnchorTone, Caveat, ChemicalClass, Concept, Mechanism, NamedReacti
 import { nameOf, nameOfRecord, recordOf } from './describe';
 import { parameterPhrases } from './conditions';
 import { connectedOf, type CardGroup, type Snapshot } from './study-connected';
+import { linksOf, type StudyLinks } from './study-links';
 import { summaryOf } from './study-summary';
 import { plain, STUDY_LAYOUT_KINDS, studyKindWord } from './study-words';
 
@@ -43,6 +44,8 @@ export interface StudyModel {
   readonly facts: readonly Chip[];
   readonly watchOut: readonly WatchOut[];
   readonly connected: readonly CardGroup[];
+  /** A family on the map: what it turns into and is made from (step 8.4m, M3). Undefined for anything else. */
+  readonly links: StudyLinks | undefined;
   /** Study notes kept for the closed "Notes" section (set only when the lead was something else). */
   readonly notes: string | undefined;
   /** True in Studio: the layout is followed by the closed "For authors" section. */
@@ -203,7 +206,7 @@ export function studyInspectorModel(ref: RecordRef, snapshot: Snapshot, edition:
   if (record === undefined) return undefined;
   const forAuthors = edition === 'studio';
   const header = { kindChip: { word: studyKindWord(ref.kind), tone: toneOf(snapshot, ref) }, title: nameOfRecord(record), forAuthors };
-  if (!STUDY_LAYOUT_KINDS.has(ref.kind)) return { ...header, summary: undefined, hero: undefined, lead: undefined, facts: [], watchOut: [], connected: [], notes: undefined };
+  if (!STUDY_LAYOUT_KINDS.has(ref.kind)) return { ...header, summary: undefined, hero: undefined, lead: undefined, facts: [], watchOut: [], connected: [], links: undefined, notes: undefined };
   const { lead, notes } = leadOf(record, ref.kind);
-  return { ...header, summary: summaryOf(snapshot, ref, record, lead?.source), hero: heroOf(snapshot, ref, record), lead, facts: factsOf(snapshot, ref, record), watchOut: watchOutOf(snapshot, ref), connected: connectedOf(snapshot, ref), notes };
+  return { ...header, summary: summaryOf(snapshot, ref, record, lead?.source), hero: heroOf(snapshot, ref, record), lead, facts: factsOf(snapshot, ref, record), watchOut: watchOutOf(snapshot, ref), connected: connectedOf(snapshot, ref), links: linksOf(snapshot, ref), notes };
 }

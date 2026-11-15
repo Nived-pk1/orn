@@ -7,6 +7,7 @@ import { lazy, Suspense, useMemo, type ReactNode } from 'react';
 import type { AnyRecord, Reaction, RecordRef } from '@/core/schema';
 import { FullEquations } from './equation';
 import { useInspectorEnv } from './env';
+import { LinksSection } from './links-section';
 import { studyInspectorModel } from './model/study-model';
 import { StudyHero } from './study-hero';
 import { Chips, Connected, Disclosure, GoNext, Lead, WatchOuts, type GoNextAction } from './study-parts';
@@ -70,6 +71,7 @@ export function StudyInspector(props: StudyInspectorProps) {
       <Chips chips={model.facts} />
       <WatchOuts items={model.watchOut} />
       <GoNext actions={props.goNext} />
+      <LinksSection familyId={props.refOf.id} links={model.links} />
       <Connected groups={model.connected} />
       <Suspense fallback={null}>
         <InChapters refOf={props.refOf} />

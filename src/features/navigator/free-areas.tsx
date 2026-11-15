@@ -3,11 +3,14 @@
  * the canvas how much room each side needs, so Fit keeps the boxes out from under them. Nothing here knows what a control is for: a wide
  * control (a bar, the hint pill) takes the top or the bottom by where its middle is; a tall one (the zoom or phone stack) the left or right.
  * Measured, not constants: the real rectangles, again whenever a control appears, goes, or changes size. Draws nothing.
+ * Step 8.4m (M1): each answer says whether the map AREA changed (its size, the pane over it, full map, the number of controls, the size of
+ * the content): only then may the sticky Fit fit again. A control that merely changes size never moves the view; the controls that grow
+ * (the key strip, the Selected bar) are measured through a reserve of their largest state (`data-map-reserve`), so nothing they grow into is covered.
  */
 import { useEffect, useMemo, useRef } from "react";
 import { BOXES, type Scene } from "@/render/scene";
 import { hitRefiner, nearerEdgeAt } from "@/render/svg";
-import type { Insets, Rect } from "@/render/viewport";
+import { FIT_FLOOR, type Insets, type Rect } from "@/render/viewport";
 import { boxesRect } from "./map-geometry";
 import { phoneFit } from "./phone-fit";
 import {
@@ -24,7 +27,8 @@ const PANE = ":scope > aside:not([hidden])";
 /** `content`: the rectangle (map units) of what Fit shows when the map fits it whole (the desktop): each corner control then takes the edge that costs the fit least. */
 export function FreeAreas(props: {
   readonly area: HTMLElement | null;
-  readonly onInsets: (insets: Insets) => void;
+  /** `structural`: the map area itself changed since the last answer (not just a control's size). */
+  readonly onInsets: (insets: Insets, structural: boolean) => void;
   readonly content?: Rect;
   /** The drawing: its smallest family title (map units) is published as `--map-title-u` for the touch marks (step 8.4e, C2). */
   readonly scene?: Scene | null;
@@ -44,6 +48,7 @@ export function FreeAreas(props: {
   // a selection ALONE does not move the view (the window is measured again for a resize, a rotation or a control, and then centres on the selection as it is then)
   const selectedNow = useRef(selectedId);
   selectedNow.current = selectedId;
+  const structure = useRef("");
   const contentWidth = shown === undefined ? undefined : shown.x1 - shown.x0;
   const contentHeight = shown === undefined ? undefined : shown.y1 - shown.y0;
   // the smallest family title as DRAWN (a box drawn bigger carries its text with it); the nominal size only when no family is drawn
@@ -90,6 +95,7 @@ export function FreeAreas(props: {
       );
       // full map: the pane lies OVER the map's right edge (step 8.4e, D2); Fit keeps the boxes out from under it like it does for a control
       const pane = area.closest(PANE_HOST)?.querySelector<HTMLElement>(PANE);
+      let over = "";
       if (pane !== null && pane !== undefined) {
         const r = pane.getBoundingClientRect();
         const x0 = Math.max(r.x, box.x);
@@ -100,7 +106,10 @@ export function FreeAreas(props: {
           (area.closest("[data-full-map]") !== null ||
             r.width < box.width * 0.9)
         )
+        {
           controls.push({ x: x0 - box.x, y: 0, w: x1 - x0, h: box.height }); // only the part that lies over the map
+          over = `${Math.round(x0 - box.x)}-${Math.round(x1 - box.x)}`;
+        }
       }
       const size = { width: box.width, height: box.height };
       const insets = insetsOf(
@@ -109,8 +118,11 @@ export function FreeAreas(props: {
         contentWidth === undefined || contentHeight === undefined
           ? undefined
           : { width: contentWidth, height: contentHeight },
+        onPhoneBox === undefined ? FIT_FLOOR : 0,
       );
-      onInsets(insets);
+      const now = [Math.round(box.width), Math.round(box.height), over, controls.length, Math.round(contentWidth ?? 0), Math.round(contentHeight ?? 0)].join();
+      onInsets(insets, now !== structure.current);
+      structure.current = now;
       // the controls every box must stay clear of on the phone (A3): the stack of buttons at the side and the hint pill, where they are in the map area, with their gap
       const avoid = [...area.querySelectorAll<HTMLElement>('[data-map-control="stack"], [data-map-control="pill"]')]
         .filter((el) => getComputedStyle(el).visibility !== "hidden") // a hint pill with nothing to say covers nothing

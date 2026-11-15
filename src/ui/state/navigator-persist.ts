@@ -222,7 +222,7 @@ export function createNavigatorUi(port: NavigatorUiPort, timers: PanelsTimers, l
     explorer: createExplorerStore({ filter: parsed.explorer.filter, view: parsed.explorer.view, last: parsed.explorer.last }),
     precursors: createPrecursorsStore({ target: parsed.precursors.target, startFrom: parsed.precursors.startFrom, maxSteps: parsed.precursors.maxSteps, onlyListed: parsed.precursors.onlyListed, onlyInScope: parsed.precursors.onlyInScope, searched: parsed.precursors.searched }),
     chapters: createChaptersStore({ chapterId: parsed.chapters.chapterId, kinds: parsed.chapters.kinds, text: parsed.chapters.text, onlyInScope: parsed.chapters.onlyInScope }),
-    map: createMapStore({ chapterId: parsed.map.chapterId, showUnclassified: parsed.map.showUnclassified, fitted: parsed.map.fitted }),
+    map: createMapStore({ chapterId: parsed.map.chapterId, showUnclassified: parsed.map.showUnclassified, fitted: parsed.map.fitted, focusId: parsed.selected?.kind === 'node' ? parsed.selected.id : null }),
     reagents: createReagentsStore({ reagentId: parsed.reagents.reagentId, families: parsed.reagents.families, text: parsed.reagents.text, onlyInScope: parsed.reagents.onlyInScope }),
     named: createPageListStore({ openId: parsed.named.openId, text: parsed.named.text, onlyInScope: parsed.named.onlyInScope }),
     syllabus: createSyllabusStore({ versionId: parsed.syllabus.versionId, compareId: parsed.syllabus.compareId, gapsOnly: parsed.syllabus.gapsOnly }),

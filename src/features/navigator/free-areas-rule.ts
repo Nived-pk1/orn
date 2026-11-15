@@ -80,13 +80,23 @@ function fitScale(insets: Insets, area: Area, content: Area): number {
   return w <= 0 || h <= 0 ? 0 : Math.min(w / Math.max(1, content.width), h / Math.max(1, content.height));
 }
 
+/** How many px of `content` at the zoom `floor` do not fit what the insets leave (0 when it fits, or when there is no floor). */
+function cutAt(insets: Insets, area: Area, content: Area, floor: number): number {
+  if (floor <= 0 || fitScale(insets, area, content) >= floor) return 0;
+  const w = area.width - insets.left - insets.right;
+  const h = area.height - insets.top - insets.bottom;
+  return Math.max(0, content.width * floor - w) + Math.max(0, content.height * floor - h);
+}
+
 /**
  * The room Fit leaves on each side. Without `content` (the size of what Fit shows, in map units) each control takes the edge its shape
  * suggests. With it, a control that sits in a corner may take either of its two edges: the choice that lets the content fit LARGEST wins
  * (a map limited by its width gives the zoom stack the bottom, one limited by its height gives it the right side), ties going to the
  * smaller total. Any choice keeps every control clear of the content, so the rule of A3 holds either way.
+ * `floor` (step 8.4m, M4) is the zoom Fit never goes below (ADR-037): when the content cannot fit at it, something is cut, and then the
+ * choice that CUTS LEAST wins before the largest zoom does (a control that took the left edge left an empty strip there while the right was cut).
  */
-export function insetsOf(controls: readonly Box[], area: Area, content?: Area): Insets {
+export function insetsOf(controls: readonly Box[], area: Area, content?: Area, floor = 0): Insets {
   const shown = controls.filter((c) => c.w > 0 && c.h > 0);
   const shaped = shown.map((c): readonly [Box, Side] => [
     c,
@@ -96,6 +106,7 @@ export function insetsOf(controls: readonly Box[], area: Area, content?: Area): 
     return insetsFor(shaped, area);
   let best = insetsFor(shaped, area);
   let bestScale = fitScale(best, area, content);
+  let bestCut = cutAt(best, area, content, floor);
   const total = (i: Insets): number => i.top + i.right + i.bottom + i.left;
   for (let mask = 0; mask < 1 << shown.length; mask += 1) {
     const taken = shown.map((c, at): readonly [Box, Side] => [
@@ -105,9 +116,12 @@ export function insetsOf(controls: readonly Box[], area: Area, content?: Area): 
     ]);
     const insets = insetsFor(taken, area);
     const scale = fitScale(insets, area, content);
-    if (scale > bestScale + 1e-9 || (Math.abs(scale - bestScale) <= 1e-9 && total(insets) < total(best))) {
+    const cut = cutAt(insets, area, content, floor);
+    if (cut > bestCut + 1e-9) continue;
+    if (cut < bestCut - 1e-9 || scale > bestScale + 1e-9 || (Math.abs(scale - bestScale) <= 1e-9 && total(insets) < total(best))) {
       best = insets;
       bestScale = scale;
+      bestCut = cut;
     }
   }
   return best;

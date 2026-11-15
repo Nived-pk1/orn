@@ -54,6 +54,36 @@
   flex: 0 0 auto;
 }
 
+/*
+ * Step 8.4m (M1): the place of the hint / Selected bar. It is always there and always one row high, whatever is selected, and it is what the
+ * free areas measure: the row it is on depends on the width of the map area alone (the toolbar at rest + 464 px fit, or it takes a second row),
+ * never on what the bar says. While "Find a family" is open the toolbar is 184 px wider and the slot asks for that much less, so the row stays.
+ */
+.hintSlot {
+  flex: 1 1 464px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  min-width: 0;
+  min-height: 42px;
+  pointer-events: none;
+}
+
+.hintSlot[data-finding] {
+  flex-basis: 280px;
+}
+
+/* the bar never grows past its slot: the name and the count line give way with an ellipsis (the full words are in the title and in the panel) */
+.selectedBar > .cornerSelected,
+.selectedBar > [data-map-busy],
+.selectedBar > [data-map-links] {
+  flex: 0 1 auto;
+  min-width: 3ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .barButton {
   width: 32px;
   min-width: 32px;
@@ -81,6 +111,7 @@
 
 .selectedBar {
   min-height: 32px;
+  min-width: 0;
   max-width: 100%;
   color: var(--color-ink);
   font-size: var(--text-12);
@@ -91,8 +122,16 @@
   display: flex;
   align-items: center;
   min-height: 32px;
-  max-width: min(60%, 32rem);
+  min-width: 0;
+  max-width: 100%;
   padding: 0 var(--space-8);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.hint > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--color-ink-2);
   font-size: var(--text-12);
   pointer-events: none;
@@ -140,6 +179,30 @@
   left: var(--space-8);
   bottom: var(--space-8);
   max-width: calc(100% - 80px); /* the zoom stack keeps its column */
+}
+
+/* Step 8.4m (M1): the key strip at its LARGEST (every arrow key shown), invisible, at the strip's own place: the free areas measure this, so the legend opening covers nothing and moves nothing */
+.keyReserve {
+  position: absolute;
+  left: var(--space-8);
+  bottom: var(--space-8);
+  max-width: calc(100% - 80px);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+  border: 1px solid transparent;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.keyReserve button {
+  min-height: 32px;
+}
+
+[data-layout="desktop"][data-toast] .keyReserve {
+  bottom: calc(var(--toast-height) + var(--space-16));
 }
 
 .arrowKey {
