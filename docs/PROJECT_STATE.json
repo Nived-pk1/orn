@@ -143,25 +143,25 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-15",
-    "commit": "75c38af",
-    "version": "ab83544d-76f6-47b9-b426-822cea16d6f2",
-    "liveSpecs": "2026-11-15 (8.4s): Chromium 44 passed, 11 skipped, 0 failed; WebKit 43 passed, 12 skipped, 0 failed (the RELEASE.md live list, exact file names, one command per browser)",
-    "workerVersion": "59d9ef19-dec1-4af3-8b6f-631ff0bde339"
+    "commit": "d6105c7",
+    "version": "75241662-07d1-4e04-882a-f57f1fcb13c1",
+    "liveSpecs": "2026-11-15 (8.4f Part 2): Chromium 44 passed, 11 skipped, 0 failed; WebKit 43 passed, 12 skipped, 0 failed (the RELEASE.md live list, exact file names, one command per browser)",
+    "workerVersion": "75241662-07d1-4e04-882a-f57f1fcb13c1"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-15",
-    "version": "e6e8e1ea-09e4-47df-8919-6f5c3444fe24",
+    "version": "337520f3-b0f5-4802-bbe8-58a90c2b3438",
     "protected": true,
-    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4f Part 1 deploy, 2026-11-13: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200. | 8.4s deploy 2026-11-15: unauthenticated request to the main URL answered 302 to cloudflareaccess.com; a preview-style URL (<version prefix>-reaction-navigator-studio...) answered 404, not the app; wrangler.studio.jsonc has \"preview_urls\": false; Study 200.",
-    "commit": "779be49",
-    "protectedCheckedAt": "2026-11-13",
-    "workerVersion": "c37e39e2-53d1-4a1d-b127-efbf2e0d5a04"
+    "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4f Part 2 deploy, 2026-11-15: an unauthenticated request got 302 to cloudflareaccess.com and not the app; a preview-style address answered 404; the Wrangler output listed no preview URL; the Study site answered 200.",
+    "commit": "d6105c7",
+    "protectedCheckedAt": "2026-11-15",
+    "workerVersion": "337520f3-b0f5-4802-bbe8-58a90c2b3438"
   },
-  "nextStep": "8.4f",
-  "nextStepTitle": "Step 8.4f Part 2 BUILT 2026-11-15 (f20b2ff, a02879a + close docs), close HELD for the reviewer: npm run check green; 3-engine round = only the carried failures (to 8.4m); full Chromium 2 unlisted failures (exam-editors, map-fit:66) pass alone. NOT deployed, NOT pushed. After the reviewer: deploy per RELEASE.md (Study and Studio), push; then 8.4g or 8.4m.",
+  "nextStep": "8.4g",
+  "nextStepTitle": "Step 8.4f DONE and deployed 2026-11-15 (Study 75241662, Studio 337520f3; reviewer approved). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix), then 8.4m (with the carried Z failures) and the test-speed step.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
