@@ -59,6 +59,8 @@ export interface MapView {
   readonly busy: number;
   /** Step 8.4b, C: the busy view is a selected family (or the bucket), not a chapter: its arrows are listed in the panel. */
   readonly busySelection: boolean;
+  /** The busy view is of what is SELECTED (not a hover preview): the panel lists what the map does not draw (step 8.4m). */
+  readonly busyListed: boolean;
   /** Step 8.4m, M3: the focus is a SELECTED family with more lines than a hover would draw: its lines to and from FAMILY boxes (the bucket is not a family) and how many families are at their far ends. Undefined otherwise. */
   readonly links?: { readonly lines: readonly { readonly from: string; readonly to: string }[]; readonly families: number } | undefined;
   /** `present`: the Scene has an Unclassified box; `reactions`: how many reactions lead there (counted from the arrows, shown or not). */
@@ -123,7 +125,9 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
   const asChain = (d: Drawn): Drawn => ({ edge: { ...d.edge, weight: 'heavy', stroke: 'solid' }, mark: { role: 'makes', ...(chainTone === undefined ? {} : { tone: chainTone }) } });
   const drawn = chain !== undefined ? base.map(asChain) : focus !== null || options.chapter ? pairUp(base, options.zoom ?? 1, focus !== null, nodes) : base;
   // a busy chapter draws nothing until a family is chosen (its families stay at full strength); the selected arrow stays
-  const locked = focus !== null && options.locked === true;
+  // the new rule is for a selected FAMILY; the selected bucket keeps the 15-line rule (its arrows are listed in the panel, step 8.4b)
+  const picked = focus !== null && options.locked === true;
+  const locked = picked && nodes.get(focus ?? '')?.box === 'hub';
   const busy = chain === undefined && (focus !== null || options.chapter) && isBusy(drawn.length, locked) ? drawn.length : 0;
   // the lines of the selected family itself (a selected arrow kept in view is not one of them)
   const farEnd = (d: Drawn): string => (d.edge.from === focus ? d.edge.to : d.edge.from);
@@ -160,6 +164,7 @@ export function mapView(scene: Scene, options: MapViewOptions): MapView {
     quiet: focus === null && !options.chapter && chain === undefined && shown.length === 0,
     busy,
     busySelection: busy > 0 && focus !== null,
+    busyListed: busy > 0 && picked,
     ...(own.length === 0 ? {} : { links: { lines: own.map((d) => ({ from: d.edge.from, to: d.edge.to })), families: families.size } }),
     unclassified: { present, shown: present && options.showUnclassified, reactions: leading },
   };

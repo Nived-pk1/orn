@@ -80,20 +80,101 @@ profile, File > Import; one measuring script run from the git-ignored `test-resu
   `insetsOf(..., floor)` (19 passed).
 - F5 correction: screenshot 4 was not reproduced exactly (the pane could not be dragged to 650 px in the probe). Seen instead:
   the open legend over the bucket box, and Fit with the Key on the LEFT edge (a 147 px strip).
-- WRITTEN, NOT YET COMPILED OR RUN (uncommitted): free-areas.tsx (structural flag, floor), viewport-scene.tsx (`fitEpoch`),
-  map-float.module.css (.hintSlot, .keyReserve), map-toolbar.tsx, map-hint.tsx (`links` kind), arrow-key.tsx (ArrowKeySizer),
-  busy-rule.ts (BUSY_SELECTED_LINES 30), map-view.ts (`locked`, `links`), use-map-view.ts, map-lines.ts (`linksLine`;
-  `busyLine` now takes one argument).
-- Probe scripts: `.vite/8.4m-probe/` (git-ignored; Playwright wipes test-results/). Local Studio preview was on port 4183.
+- Session 2 (same day, after the break): speed 51 to 62 ms before each Playwright run.
+- **M1 built.** (a) `free-areas.tsx` tells each answer whether the map AREA changed (its size, the pane over it, the number of
+  controls, the size of the content); `navigator-canvas.tsx` counts those in `fitEpoch`; `viewport-scene.tsx` fits again (while
+  the view is the automatic one) on `fitEpoch` only. New insets alone are kept for the next fit and move nothing.
+  (b) Largest state: the key strip has an invisible reserve with every arrow key (`.keyReserve`, `ArrowKeySizer`); the hint /
+  Selected bar sits in a slot that is always one row (`.hintSlot`), whose row depends on the area's width only; the bar gives way
+  with an ellipsis (full words in `title`) instead of taking a second row over the boxes.
+- **M2 built** (above). The old window test that lowered the ARROW limit to 3 to see the notice now lowers the BOX limit to 5
+  (`navigator-truncation.test.tsx`; the notice and the status line are still asserted, reason "max nodes"): disclosed change.
+- **M3 built.** `busy-rule.ts` BUSY_SELECTED_LINES = 30; `map-view.ts` `locked` (the focus is the selected family) and `links`;
+  `map-hint-line.ts` the bar's line: "68 reactions to 14 families" (drawn), "... : listed in the panel" (more than 30 lines; the
+  panel has the list), a hover over a busy family says "This family has N arrows. Click it to see them." (no panel promised).
+  Panel: `core/graph/navigator/links.ts` `familyLinksOf`, `inspector/model/study-links.ts`, `inspector/links-section.tsx`
+  (region "Links", lists "Turns into" / "Made from", rows "Name · n", a row selects the arrow = the pair's reaction list).
+  RED `npx vitest run src/core/graph/navigator/links.test.ts src/features/inspector/model/study-links.test.ts` -> 2 files failed
+  (module missing; links undefined) before the source. `map-view-links.test.ts` (6 tests) was written AFTER the map-view source
+  (the e2e M3 tests were red first): disclosed.
+- **F2 fix.** The map store starts focused on the saved selection when it is a box (`navigator-persist.ts`, `map-state.ts`).
+  RED `npx vitest run src/ui/state/map-state.test.ts` -> 1 failed (expected null to be 'cls_family'); the test was added after
+  the two-line source edit and proven red with that edit stashed: disclosed.
+- **M4 built.** `insetsOf(..., floor)`: below FIT_FLOOR (0.3775) the edges that CUT least win. With the reserve the Key needs
+  572 px on the left, so it takes the bottom except on a very wide, short map.
+- GREEN `npx playwright test tests/e2e/map-full-content.spec.ts --project=chromium` -> 8 passed (1.4 min). Two spec corrections
+  on the way: the busy family has 14 neighbour families (not 13), 2 faded; the spec dismisses the "Imported ..." toast (it stays
+  until dismissed and lifts the bottom controls, step 8.4b) and asserts "the click did not move the view" only when the click
+  did not also open the pane (that is an area change).
+- Owner's data, local Studio (probe): 1920 x 1040 no notice, no "Not drawn"; hover Esters: view unchanged, 14 lines; Ketones
+  clicked: 21 lines, "63 reactions to 11 families"; no control over a box. 1366 x 768 the same.
+- Commit a checkpoint after M1-M4 (see git log).
 
-NEXT (in order):
-1. navigator-canvas.tsx (372 lines, limit 400): `onInsets(insets, structural)` -> `fitEpoch` state passed to ViewportScene;
-   hint = quiet / busy chapter `busyLine(n)` / busySelection or `view.links` -> `linksLine(reactions, families, listed)`
-   with hintKind 'links' (reactions = distinct reaction ids of the rollup pairs in `view.links.lines`; for a busy selection
-   count from the outlined ends); the phone pill the same. Then `npx tsc --noEmit`.
-2. F2: the map store's first focus = the saved selection when it is a node (navigator-persist.ts createMapStore; map-state.ts
-   comment). 3. M3 panel: core `familyLinksOf` (src/core/graph/navigator/links.ts), a "Links" section (region "Links", lists
-   "Turns into" / "Made from", rows "Name · n" that select {kind:'arrow'}) in study-inspector.tsx before <Connected>.
-4. Unit tests for map-view (locked rule), lint, the e2e spec green in Chromium; M5 carried list red then fix; M6 report
-   (numbers so far: 17 boxes are the 17 anchored classes; 194 reactions have an arrow from or to the bucket; 5 unanchored;
-   the per-class list is still to print: class names are in `names.canonical`). 5. CLOSE as in the prompt.
+## M6 (report only; owner's data)
+
+132 classes: 17 are boxes, 76 sit inside a box (through their parent classes), 39 have no anchored ancestor.
+194 of 657 reactions have an arrow from or to "Not in a family yet" (115 compounds there: 84 single compounds, 31 classes);
+5 reactions are in no box at all (unanchored).
+- Polyhalogen compounds: inside "Haloalkanes". Vicinal dihalides: inside "Haloalkanes". Geminal dihalides: inside "Haloalkanes".
+  α,ω-Dihalides: inside "Haloalkanes". Vicinal diols: inside "Alcohols". Carboxylate (alkanoate) salts: inside "Carboxylic acids".
+  Diazonium salts: a box of its own.
+- No anchored ancestor (reactions through the bucket): Acyl halides 13, Grignard reagents 12, Nitriles 7, Epoxides 6, Ammonium
+  salts 4, Isocyanides 4, Nitro compounds 3, Nitroarenes 3, Oximes 3, Quaternary ammonium salts 3, Sulfonic acids 3, Addition
+  polymers 2, Cycloalkanes 2, Haloalkenes 2, Isocyanates 2, Metal alkynides 2, Sulfonamides 2; one each: 2,4-Dinitrophenyl-
+  hydrazones, Alkyl nitrites, Aryl nitriles, Azo compounds, Bisulfite addition compounds, Hydrazines, Hydrazones, Hydroxamic
+  acids, Imines, N-Nitrosoamines, Phenylhydrazones, Semicarbazones, Sulfonyl chlorides, Tertiary amine oxides; none: Elements
+  and metals, Imides, Inorganic acids, Inorganic bases, Inorganic salts, Isothiocyanates, Osazones, Other inorganic compounds.
+
+
+## Session 2, after M1-M4 (stopped by the owner 2026-11-15; everything committed)
+
+- Existing map specs, Chromium (18 files): 99 passed, 1 skipped, 2 failed, both fixed:
+  (1) `map-marks.spec.ts:93` (the selected BUCKET with more than 15 arrows draws none): my M3 rule had applied to the bucket too.
+  Now the 30-line rule is for a selected FAMILY only; the bucket keeps 15 and its old line "N arrows: listed in the panel"
+  (`map-view.ts` `busyListed`, `map-lines.ts` `listedLine`). Spec unchanged, passes.
+  (2) `full-map-table.spec.ts:34` "From A to B ... element was detached": a race in the test helper (the button moves into More
+  one frame after the A-to-B panel narrows the map). `map-toolbar-kit.ts` `clickToolbar` now looks the action up again
+  (bounded, 4 tries). The whole file passes in Chromium (4 passed), and :34 now passes in WebKit too (carried item closed).
+- **M5, carried list, run red on the current build** (speed 51 ms):
+  WebKit (full-map-table, map-fit, map-landscape, frame): 10 passed, 1 skipped, 7 failed:
+  - `frame.spec.ts:166` skip link not focused. PROBE (`tab-links.mjs`, a static page): Tab stops are link > button > input in
+    Chromium and Firefox, button > input in WebKit: Safari's default skips links (an engine setting). PLAN: press Alt+Tab
+    (Option+Tab) for that step in WebKit, assertions kept. NOT DONE YET.
+  - `full-map-table.spec.ts:193` "the view is as it was" (0.559 off). NOT LOOKED AT YET.
+  - `map-fit.spec.ts:66` (1280, 1920) and `:117`: "Hide inspector" not found after "Show inspector". NOT LOOKED AT YET.
+  - `map-landscape.spec.ts:45` both phones: 360.015625 against 360 (and 340.015625 against 340): 1/64 px, WebKit's layout
+    unit. PLAN: name it an engine limit (compare with 1/32 px of slack, said in the spec). NOT DONE YET.
+  Firefox (map-free-areas, full-map, map-full-content): 21 passed, 1 skipped, 2 failed:
+  - `full-map.spec.ts:60` (1920 x 1000) pane right edge 1366 against 1919: in true fullscreen Firefox's window is its screen
+    (1366 wide). PLAN: compare with `window.innerWidth` (the real viewport), not the asked size. NOT DONE YET.
+  - `map-free-areas.spec.ts:223` (1366 x 768): **the real cause is found, it is NOT text width.** It fails only when the whole
+    file runs (3 of 3), passes alone. Temporary logging in viewport-scene.tsx (removed again) showed: when the pane opens,
+    `measure` runs at width 798 and the controller IS given the new fit (scale 0.402), and `refitIfAuto` runs after it, but the
+    `data-world` transform on the page stays the old one (scale 0.616): the controller's frame is never drawn. Same box
+    position (191.7, 174.3) as the carried failure, so this bug is older than 8.4m. Before the click the view is sticky (a
+    window resize fits again), and a later window resize draws the right view. NEXT: read `controller.ts` `request` / `frame`
+    (`queued`, the scheduler handle) for a frame that is queued and never run or cancelled in Firefox (e.g. a
+    `cancelAnimationFrame` of the wrong handle, or `queued` left true), fix with a unit test red first.
+  `map-full-content.spec.ts` passed in Firefox (8 of 8) in that run.
+- A change made after that run: `free-areas.tsx` also counts the reserves' rows in the "area changed" signature (harmless; it did
+  not cure the Firefox case, which is the frame bug above). Keep or drop after the controller fix.
+
+## RESUME HERE (new session)
+
+State: `git status` clean, all work committed locally (NOT pushed, NOT deployed). Run the START checks of the prompt again
+(ports, speed). Probe scripts and owner-data helpers: `playwright-report/8.4m-probe/` (git-ignored, ESLint-ignored; do NOT use
+test-results/, Playwright wipes it): lib.mjs, probe3-6.mjs, m6.ts, tab-links.mjs. Local Studio for probes:
+`node scripts/edition.mjs studio preview --host 127.0.0.1 --port 4183 --strictPort` (stop it by PID before any Playwright run
+is not needed: Playwright uses 4173 / 4174).
+1. M5: the Firefox frame bug (above), then the four planned spec fixes, then look at WebKit full-map-table:193 and map-fit.
+2. Sizes: fresh `npm run build:smoke` + `node scripts/initial-js-size.mjs`; limit Study 336,869 / Studio 340,676 (M + 1,500).
+   NOT MEASURED since M (335,369 / 339,176); the new code is in lazy chunks except `study-links.ts` / `links-section.tsx`
+   (check they did not land in the entry).
+3. CLOSE of the prompt: `npm run check`; ONE 3-engine round (map specs + touched specs + carried list); ONE full Chromium;
+   screenshots `screenshots/8.4m/` with the owner's data (dark and light); timings (overview layout median of 5, select-to-drawn
+   for Aldehydes, in the browser); docs (PROGRESS, plan row, PROJECT_STATE next 8.4g, ADR-037 addendum M1 + M4, ADR-044 busy
+   rule addendum M3, GRAPH_SEMANTICS pair limit, PERFORMANCE_ARCHITECTURE timings); commit; deploy per RELEASE.md.
+4. To disclose in the report: tests written after their source (map-view-links.test.ts; the F2 unit test, proven red with the
+   fix stashed); budget tests renumbered; navigator-truncation.test.tsx now lowers the box limit; the count line with a chapter
+   chosen counts reactions of ALL chapters on the drawn lines; an "Imported" toast still lifts the (now wider) key reserve
+   over the bucket box until it is dismissed; F5 not reproduced exactly.

@@ -120,7 +120,13 @@ export function FreeAreas(props: {
           : { width: contentWidth, height: contentHeight },
         onPhoneBox === undefined ? FIT_FLOOR : 0,
       );
-      const now = [Math.round(box.width), Math.round(box.height), over, controls.length, Math.round(contentWidth ?? 0), Math.round(contentHeight ?? 0)].join();
+      // where the reserves sit is part of the area's own layout (the slot's row follows the area's width, and can settle a frame after the width does):
+      // a reserve never moves or grows for a hover or a selection, so this cannot make a control's change move the view
+      const reserves = [...area.querySelectorAll<HTMLElement>("[data-map-reserve]")].map((el) => {
+        const r = el.getBoundingClientRect();
+        return `${Math.round(r.y - box.y)}:${Math.round(r.height)}`;
+      });
+      const now = [Math.round(box.width), Math.round(box.height), over, controls.length, Math.round(contentWidth ?? 0), Math.round(contentHeight ?? 0), ...reserves].join();
       onInsets(insets, now !== structure.current);
       structure.current = now;
       // the controls every box must stay clear of on the phone (A3): the stack of buttons at the side and the hint pill, where they are in the map area, with their gap

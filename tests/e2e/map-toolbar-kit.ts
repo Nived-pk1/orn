@@ -17,8 +17,21 @@ export async function toolbarAction(page: Page, name: string | RegExp): Promise<
   return item.first();
 }
 
-/** Clicks a toolbar action wherever it is. */
+/**
+ * Clicks a toolbar action wherever it is. The row follows the map's width (a panel that opens beside the map narrows it one frame later and
+ * the button moves into More), so an action found in the row can be gone before the click lands: then it is looked up again, where it is now
+ * (step 8.4m; this was the "element was detached from the DOM, retrying" failure of full-map-table in WebKit, and once in Chromium). Bounded.
+ */
 export async function clickToolbar(page: Page, name: string | RegExp): Promise<void> {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const action = await toolbarAction(page, name);
+    try {
+      await action.click({ timeout: 3_000 });
+      return;
+    } catch (error) {
+      if (!(error instanceof Error) || !/Timeout/.test(error.message)) throw error;
+    }
+  }
   await (await toolbarAction(page, name)).click();
 }
 

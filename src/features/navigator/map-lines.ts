@@ -3,6 +3,9 @@ export const QUIET_LINE =
   "Tap or click a family to see what it makes and what it is made from.";
 export const busyLine = (n: number): string =>
   `This chapter has ${n} arrows. Tap or click a family to see its part.`;
+/** The selected bucket ("Not in a family yet") with more arrows than the map draws at once: the panel lists them (step 8.4b, C). */
+export const listedLine = (n: number): string =>
+  `${n} arrows: listed in the panel`;
 /** A hover preview of a family with more lines than a preview draws: nothing is selected, so no panel is promised. */
 export const hoverBusyLine = (n: number): string =>
   `This family has ${n} arrows. Click it to see them.`;

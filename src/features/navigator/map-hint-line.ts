@@ -3,7 +3,7 @@
  * count of a selected family's links ("16 reactions to 9 families"). Pure. The reactions are counted as DISTINCT reactions over the
  * family's lines to other families, read from the roll-up's pair table (a reaction with products in two families is one reaction).
  */
-import { QUIET_LINE, busyLine, hoverBusyLine, linksLine } from './map-lines';
+import { QUIET_LINE, busyLine, hoverBusyLine, linksLine, listedLine } from './map-lines';
 import type { MapView } from './map-view';
 
 export interface MapHintLine {
@@ -29,6 +29,7 @@ export function mapHintOf(view: MapView | null, pairs: () => readonly PairLike[]
     // lines drawn: the plain count; not drawn (more than the map shows at once): the panel has the list, and the line says so
     return { text: linksLine(reactions.size, view.links.families, view.busy > 0), kind: view.busy > 0 ? 'busy' : 'links' };
   }
-  if (view.busy > 0) return { text: view.busySelection ? hoverBusyLine(view.busy) : busyLine(view.busy), kind: 'busy' };
+  // the selected bucket: the panel lists its arrows ("Arrows of this selection"); a hover promises no panel; a chapter says its own line
+  if (view.busy > 0) return { text: view.busyListed ? listedLine(view.busy) : view.busySelection ? hoverBusyLine(view.busy) : busyLine(view.busy), kind: 'busy' };
   return NONE;
 }
