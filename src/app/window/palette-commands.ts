@@ -50,7 +50,7 @@ export interface CommandDeps {
 }
 
 /** More words that find a view (data, not a branch per view). */
-const VIEW_KEYWORDS: Readonly<Record<string, readonly string[]>> = { settings: ['theme', 'dark', 'light', 'appearance', 'motion', 'preferences', 'exam', 'back up'] };
+const VIEW_KEYWORDS: Readonly<Record<string, readonly string[]>> = { settings: ['theme', 'dark', 'appearance', 'motion'] };
 
 /** Why the map's commands (fit, zoom, the Unanchored panel) cannot run now. */
 function mapReason(deps: CommandDeps): string | undefined {

@@ -161,7 +161,7 @@
     "workerVersion": "c37e39e2-53d1-4a1d-b127-efbf2e0d5a04"
   },
   "nextStep": "8.4f",
-  "nextStepTitle": "Step 8.4s done, approved and deployed 2026-11-15 (Study ab83544d, Studio e6e8e1ea). Next: 8.4f Part 2 (files ORN_SONNET_8.4f_PROMPT.md + ORN_SONNET_8.4f_PART2.md, updated 2026-11-15 with section C)",
+  "nextStepTitle": "Step 8.4f Part 2 BUILT 2026-11-15 (f20b2ff, a02879a + close docs), close HELD for the reviewer: npm run check green; 3-engine round = only the carried failures (to 8.4m); full Chromium 2 unlisted failures (exam-editors, map-fit:66) pass alone. NOT deployed, NOT pushed. After the reviewer: deploy per RELEASE.md (Study and Studio), push; then 8.4g or 8.4m."",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

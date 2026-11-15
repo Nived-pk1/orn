@@ -22,11 +22,6 @@
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
-.block[data-sk='label'] {
-  width: 64px;
-  height: 14px;
-}
-
 .block[data-sk='title'] {
   width: 40%;
   height: 32px;

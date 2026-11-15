@@ -34,7 +34,8 @@ async function both(page: Page, name: string, ready?: () => Promise<void>): Prom
 
 test.describe('both themes, desktop 1280 x 800', () => {
   test.use({ actionTimeout: 60_000 });
-  test('every view', async ({ page }) => {
+  test('every view', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'screenshots for the reviewer, Chromium only');
     test.setTimeout(900_000);
     mkdirSync(OUT, { recursive: true });
     await page.setViewportSize({ width: 1280, height: 800 });

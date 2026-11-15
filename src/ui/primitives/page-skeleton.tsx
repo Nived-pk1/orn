@@ -11,7 +11,6 @@ export function PageSkeleton(props: { readonly label: string; readonly shape?: '
   return (
     <div role="status" aria-busy="true" className={rows ? `${styles.page} ${styles.narrow}` : styles.page}>
       <VisuallyHidden>{props.label}</VisuallyHidden>
-      <span className={styles.block} data-sk="label" aria-hidden="true" />
       <span className={styles.block} data-sk="title" aria-hidden="true" />
       {rows ? (
         <div className={styles.rows} aria-hidden="true">

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createAppearanceStore } from '@/ui/state';
-import { applyAppearance, watchAppearance } from './appearance-dom';
+import { applyAppearance } from './appearance-dom';
+import { watchAppearance } from './appearance-watch';
 
 const fakeRoot = () => {
   const attrs = new Map<string, string>();

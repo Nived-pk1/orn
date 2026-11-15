@@ -130,11 +130,9 @@ export function PhoneBar(props: {
           </section>
         ) : null}
         {props.onSettings === undefined ? null : (
-          <section aria-label="Settings" className={styles.section}>
-            <Button className={styles.wide} onClick={then(props.onSettings)}>
-              Settings
-            </Button>
-          </section>
+          <Button className={styles.wide} onClick={then(props.onSettings)}>
+            Settings
+          </Button>
         )}
         {chrome.datasetCounts ? (
           <section aria-label="Status" className={styles.section}>

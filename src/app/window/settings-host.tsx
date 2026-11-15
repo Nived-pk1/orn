@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { SettingsPage } from '@/features/settings';
 import { useNavigator } from '@/features/navigator';
 import { createAppearanceStore, type AppearanceStore, type PanelsPort, type PanelsTimers } from '@/ui/state';
-import { watchAppearance } from '@/app/appearance-dom';
+import { watchAppearance } from '@/app/appearance-watch';
 import { useApp } from './context';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 import { useExportOpen } from './export-context';
