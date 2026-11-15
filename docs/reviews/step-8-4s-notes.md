@@ -134,3 +134,7 @@ runs; Z-list failures compared with a worktree of f985187, same way), screenshot
 PERSISTENCE, SECURITY, GRAPH_SEMANTICS, RELEASE). Sizes (fresh `build:smoke`): Study 348,868 / Studio 352,716 bytes gzip.
 Left: final `npm run check`, commit `phase-8.4s: ...`, deploy per RELEASE.md (Study, live specs, Studio, Access check, push), record
 both Worker versions in PROGRESS and PROJECT_STATE (releasePreview / studioPreview, step84s.deployed).
+
+## STATE (closing, 2026-11-15): committed 38dde4f, HELD for the reviewer
+
+`ORN_TEST_WORKERS=2 npm run check` green (784 files, 8,592 tests, 905.8 s; the user approved 2 workers after three default-workers runs failed on load timeouts only). Not deployed, not pushed. Resume: reviewer approves the two S3 spec fixes (hostile.spec.ts, mechanism-pictures.spec.ts) and the 2-worker check; then deploy per docs/RELEASE.md and record the versions.

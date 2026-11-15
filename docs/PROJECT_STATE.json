@@ -161,7 +161,7 @@
     "workerVersion": "c37e39e2-53d1-4a1d-b127-efbf2e0d5a04"
   },
   "nextStep": "8.4f",
-  "nextStepTitle": "Step 8.4s done 2026-11-15 (safety of the owner's data, lazy map canvas). Next: 8.4f Part 2 (Settings, dark mode, empty and loading states, phone sheets, transitions, both-theme pass)",
+  "nextStepTitle": "Step 8.4s done and committed (38dde4f) 2026-11-15 but HELD: reviewer approval, then deploy + push. Then 8.4f Part 2 (Settings, dark mode, empty and loading states, phone sheets, transitions, both-theme pass)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -718,7 +718,7 @@
   "step84s": {
     "closed": "2026-11-15",
     "deployed": null,
-    "note": "commit and Worker versions: see docs/PROGRESS.md \"Step 8.4s\"",
+    "note": "closed 2026-11-15, NOT deployed and NOT pushed: held for the reviewer (RELEASE.md: no deploy after a full-run failure until approved; two S3 spec fixes). See docs/PROGRESS.md \"Step 8.4s\".",
     "initialJsGzipBytes": {
       "study": 348868,
       "studio": 352716
@@ -727,6 +727,7 @@
       "study": 360,
       "studio": 365
     },
-    "notes": "docs/reviews/step-8-4s-notes.md"
+    "notes": "docs/reviews/step-8-4s-notes.md",
+    "commit": "38dde4f"
   }
 }
