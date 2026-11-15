@@ -34,7 +34,8 @@ import { createSearchPorts } from "./search-port";
 import { openChapter } from "./chapters-entry";
 import { useFirstScreen, hasChapterTopic } from "./first-screen";
 import { useWarmCanvas } from "./use-warm-canvas";
-import { CHAPTERS_MODE, EXPLORER_MODES, modesFor, modeOfExplorer, NAVIGATOR_MODE } from "./modes";
+import { CHAPTERS_MODE, EXPLORER_MODES, modesFor, modeOfExplorer, NAVIGATOR_MODE, SETTINGS_MODE } from "./modes";
+import { usePhoneTabMode } from "./phone-tab-mode";
 import { studyChrome, StudyChromeProvider, useStudyChrome } from '@/ui/study-chrome';
 import { useHasOwnData } from './own-data-hooks';
 import { EDITION } from '@/app/edition';
@@ -189,12 +190,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const phoneTab = useStore(navigator.ui.overview, (s) => s.phoneTab);
   const lastExplorer = useStore(navigator.ui.explorer, (s) => s.last);
   useWarmCanvas(layoutMode === 'phone', phoneTab);
-  useEffect(() => {
-    if (layoutMode !== 'phone') return;
-    if (phoneTab === 'explore') setMode(modeOfExplorer(lastExplorer));
-    else if (phoneTab === 'chapters') setMode(CHAPTERS_MODE);
-    else setMode((current) => (EXPLORER_MODES.includes(current) || current === CHAPTERS_MODE ? NAVIGATOR_MODE : current));
-  }, [layoutMode, phoneTab, lastExplorer]);
+  const onPhoneTab = usePhoneTabMode({ phone: layoutMode === 'phone', phoneTab, explorerMode: () => modeOfExplorer(lastExplorer), setMode });
   const chapterTopics = useStoreSelector(services.store, hasChapterTopic);
   const [openRequest, setOpenRequest] = useState(0);
   const [closeRequest, setCloseRequest] = useState(0);
@@ -325,10 +321,10 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
             />
           }
           phone={{
-            bar: <PhoneBar onSearch={openSearch} structures={navigator.structures} file={file} exam={exam} counts={counts} onStatus={openStatus} {...(EDITING ? { history: services.store } : {})} />,
+            bar: <PhoneBar onSettings={() => setMode(SETTINGS_MODE)} onSearch={openSearch} structures={navigator.structures} file={file} exam={exam} counts={counts} onStatus={openStatus} {...(EDITING ? { history: services.store } : {})} />,
             notices: <PhoneNotices />,
             alert: <PhoneAlert onStatus={openStatus} />,
-            tabs: <PhoneTabs onSearch={openSearch} searching={searching} />,
+            tabs: <PhoneTabs onSearch={openSearch} searching={searching} onTab={onPhoneTab} />,
           }}
           modes={railModes}
           crumb={crumb}
@@ -347,7 +343,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
           }
           canvas={
             <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onSyllabus={onSyllabus} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} openPane={openPane} />
+              <Canvas mode={mode} exam={exam} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onSyllabus={onSyllabus} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} openPane={openPane} />
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"

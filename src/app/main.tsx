@@ -10,7 +10,8 @@ import { createDatasetInfo } from './window/dataset-info';
 import { createBrowserEnv } from './env';
 import { installLifecycle } from './lifecycle';
 import { createAppServices } from './services';
-import { createInspectorStore, createNavigatorUi, createPanelsStore, NAVIGATOR_UI_KEY } from '@/ui/state';
+import { APPEARANCE_KEY, createInspectorStore, createNavigatorUi, createPanelsStore, NAVIGATOR_UI_KEY, parseAppearance } from '@/ui/state';
+import { applyAppearance } from './appearance-dom';
 import { createTextMeasurer } from './text-measurer';
 import type { DemoLoad } from './window/context';
 import { createInspectorPorts } from './window/inspector-port';
@@ -40,6 +41,9 @@ async function start(): Promise<void> {
   const env = createBrowserEnv();
   const services = await createAppServices(env);
   const panels = createPanelsStore(createPanelsPort(services), env.timers);
+  // The stored Light or Dark (and Reduce motion) is on the root element before the first render; System writes nothing (the device decides by CSS).
+  const appearancePort = createUiEntryPort(services, APPEARANCE_KEY);
+  applyAppearance(document.documentElement, parseAppearance(appearancePort.stored).values);
   const measurer = createTextMeasurer({
     fonts: document.fonts,
     context: () => document.createElement('canvas').getContext('2d') ?? undefined,
@@ -60,7 +64,7 @@ async function start(): Promise<void> {
   window.addEventListener('pagehide', () => void navigatorUi.flush());
   createRoot(rootElement).render(
     <StrictMode>
-      <App value={{ services, panels, navigator, inspector, loadDemo, dataset: createDatasetInfo(services, dataset.kind === 'published' ? dataset : null), nowMs: () => env.clock.nowMs(), formatTime: createLocalTimeFormatter(), reviewUi: createReviewUiPort(services), ownData: createOwnData(services), backup: createBackupRecord(services, () => env.clock.nowMs()), reload: () => window.location.reload() }} />
+      <App value={{ services, panels, appearancePort, navigator, inspector, loadDemo, dataset: createDatasetInfo(services, dataset.kind === 'published' ? dataset : null), nowMs: () => env.clock.nowMs(), formatTime: createLocalTimeFormatter(), reviewUi: createReviewUiPort(services), ownData: createOwnData(services), backup: createBackupRecord(services, () => env.clock.nowMs()), reload: () => window.location.reload() }} />
     </StrictMode>,
   );
 }

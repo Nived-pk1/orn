@@ -82,11 +82,11 @@ test('S4: after a backup and 4 days with one change, the notice offers a backup'
   await canonicalInput(page).fill('Ethanol one');
   await editorDialog(page, 'Ethanol').getByRole('button', { name: 'Save', exact: true }).click();
   await expect(record(page).getByRole('heading', { level: 3, name: 'Ethanol one' })).toBeVisible();
-  // the band shows the most severe notice and "+n more" for the rest: the storage warning comes first, so it is dismissed (as the owner would)
-  await expect(page.getByRole('button', { name: '+1 more' })).toBeVisible({ timeout: 30_000 });
-  await page.getByRole('button', { name: 'Dismiss', exact: true }).first().click();
+  // 8.4f C3 (the old look of this step changes, the behaviour tested stays): the backup notice comes BEFORE the storage warning, so it is shown at
+  // once and the storage warning is the "+1 more" behind it (before, the owner had to dismiss the storage warning to reach the backup notice)
   const notice = page.getByText('1 change is not in a backup.');
   await expect(notice).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('button', { name: '+1 more' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Back up now' })).toBeVisible();
   await page.screenshot({ path: shot('backup-notice-1280x800.png') });
   await expectClean(seen);
@@ -122,8 +122,14 @@ test('S6: most rows do not fit this version: read-only, the words, nothing moved
   );
   expect(added).toBe(30);
   await page.reload();
-  await expect(page.getByText(/30 of \d+ records do not fit this version of the app\. Nothing was changed\./)).toBeVisible({ timeout: 60_000 });
+  // 8.4f C2: the words, no code, no "Get started" block
+  await expect(page.getByText(/30 of \d+ saved records do not fit this version of the app\. Nothing was changed or deleted\. Reload the page to get the newest version\./).first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/integrity_failure/)).toHaveCount(0);
+  await expect(page.getByText('Get started')).toHaveCount(0);
+  await expect(page.getByText(/Use the writer tab/)).toHaveCount(0);
   await page.screenshot({ path: shot('boot-read-only-1280x800.png') });
+  mkdirSync(resolve(process.cwd(), 'screenshots', 'compare-8.4f', 'part2'), { recursive: true });
+  await page.screenshot({ path: resolve(process.cwd(), 'screenshots', 'compare-8.4f', 'part2', 'read-only-boot.png') });
 });
 
 test('L1: while the map canvas chunk is slow, the map shows its loading line, then the map', async ({ page }) => {

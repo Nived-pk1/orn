@@ -53,9 +53,36 @@ describe('tokens v2: the reference themes', () => {
     expect([...APP_DARK.keys()].sort()).toEqual([...APP_LIGHT.keys()].sort());
   });
 
-  it('the page starts in the light theme; dark is not switched on yet', () => {
-    expect(INDEX).toMatch(/<html[^>]*data-theme="light"/);
-    expect(INDEX).toMatch(/name="color-scheme" content="light"/);
+  it('8.4f D2: the page names no theme (the device decides by CSS alone) and tells the browser both schemes exist', () => {
+    // the old look test ("starts in the light theme") changes: dark is switched on in 8.4f, so index.html writes no data-theme
+    expect(INDEX).not.toMatch(/<html[^>]*data-theme=/);
+    expect(INDEX).toMatch(/name="color-scheme" content="light dark"/);
+  });
+
+  it('8.4f D2: with no stored choice the dark tokens apply under prefers-color-scheme, and they are the same tokens as [data-theme="dark"]', () => {
+    const text = noComments(TOKENS);
+    const at = text.indexOf('@media (prefers-color-scheme: dark)');
+    expect(at, 'a prefers-color-scheme: dark block').toBeGreaterThan(0);
+    const inner = text.slice(at, text.indexOf('\n}', at));
+    expect(inner).toContain(':root:not([data-theme="light"]):not([data-theme="dark"])');
+    const media = new Map<string, string>();
+    for (const m of inner.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/g)) media.set(m[1] as string, (m[2] as string).trim().replace(/\s+/g, ''));
+    expect([...media.entries()].sort()).toEqual([...APP_DARK.entries()].sort());
+  });
+
+  it('8.4f D7: native controls (a select, a scroll bar) follow the theme: color-scheme is light dark by default and the stored choice fixes it', () => {
+    const text = noComments(TOKENS).replace(/\s+/g, ' ');
+    expect(text).toContain('html { color-scheme: light dark; }');
+    expect(text).toContain('html[data-theme="light"] { color-scheme: light; }');
+    expect(text).toContain('html[data-theme="dark"] { color-scheme: dark; }');
+  });
+
+  it('8.4f D2: Reduce motion on (data-reduce-motion="on") zeroes the same durations as the media query', () => {
+    const text = noComments(TOKENS);
+    const media = block(text.slice(text.indexOf('@media (prefers-reduced-motion: reduce)')), ':root');
+    const attribute = block(text, ':root[data-reduce-motion="on"]');
+    expect(attribute.size).toBeGreaterThanOrEqual(5);
+    expect([...attribute.entries()].sort()).toEqual([...media.entries()].sort());
   });
 });
 

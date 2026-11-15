@@ -17,12 +17,13 @@ const TABS: readonly { readonly id: PhoneTab; readonly label: string; readonly i
   { id: 'explore', label: 'Explore', icon: 'compass' },
 ];
 
-export function PhoneTabs(props: { readonly onSearch: () => void; readonly searching: boolean }) {
+export function PhoneTabs(props: { readonly onSearch: () => void; readonly searching: boolean; /** Called on every press of a tab, also of the tab already chosen (the app leaves Settings by it). */ readonly onTab?: (tab: PhoneTab) => void }) {
   const { ports } = useNavigator();
   const tab = useStore(ports.ui.overview, (s) => s.phoneTab);
   const go = (next: PhoneTab): void => {
     ports.ui.overview.getState().setPhoneTab(next);
     ports.ui.family.getState().closeFamily();
+    props.onTab?.(next);
   };
   return (
     <nav className={styles.tabs} aria-label="Home">

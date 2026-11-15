@@ -13,6 +13,7 @@ import { currentOf, useScopeOnly, type ActiveExam } from '@/ui/state';
 import { CaveatSection, ChaptersLine, LinkLine, PageHeader, ReactionCards, studyPageStyles as styles, useScopeLens } from '@/ui/study-page';
 import type { MechanismPorts } from './contracts';
 import { VariantSteps } from './mechanism-steps';
+import { EmptyState } from '@/ui/primitives';
 
 export function MechanismPage(props: { readonly ports: MechanismPorts; readonly state: CanonicalState; readonly indexes: ReadonlyIndexes; readonly id: string; readonly active: ActiveExam | null }) {
   const { ports, state, indexes, id, active } = props;
@@ -42,7 +43,7 @@ export function MechanismPage(props: { readonly ports: MechanismPorts; readonly 
           </button>
         )}
       </div>
-      {page.variants.length === 0 ? <p className={styles.muted}>No step is written for this mechanism yet.</p> : null}
+      {page.variants.length === 0 ? <EmptyState inline>No step is written for this mechanism yet.</EmptyState> : null}
       {page.variants.map((variant) => (
         <VariantSteps key={variant.id} ports={ports} variant={variant} heading={!single} />
       ))}

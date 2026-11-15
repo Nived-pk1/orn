@@ -109,6 +109,56 @@
   --color-tone-slate-ink: #b9c1cb;
 }
 
+/* 8.4f D2: with no stored choice the device decides, by CSS alone (no script). These are the SAME tokens as [data-theme="dark"] above; a test keeps the two equal. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+      --canvas:#0E1014; --surface:#16191F; --sunken:#111318; --raised:#1D2129;
+      --hover:rgba(255,255,255,.05); --press:rgba(255,255,255,.09); --selected:rgba(124,147,245,.16);
+      --text:#E9EAEE; --text-2:#A6A9B3; --text-3:#757985; --text-on-accent:#0E1014;
+      --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.15); --grid-dot:rgba(255,255,255,.07);
+      --accent:#7C93F5; --accent-hover:#93A6F7; --accent-soft:rgba(124,147,245,.14); --accent-text:#A9B8FA;
+      --success:#4CC38A; --success-soft:rgba(76,195,138,.14); --warning:#F0A646; --warning-soft:rgba(240,166,70,.14);
+      --danger:#F07171; --danger-soft:rgba(240,113,113,.14); --review-grey:#7E818C; --review-orange:#F0A646;
+      --fam-hc:#7EA2F2; --fam-hc-soft:rgba(126,162,242,.12);
+      --fam-hal:#E6A653; --fam-hal-soft:rgba(230,166,83,.12);
+      --fam-oxy:#5CCB9B; --fam-oxy-soft:rgba(92,203,155,.12);
+      --fam-nit:#A895F0; --fam-nit-soft:rgba(168,149,240,.13);
+      --made-from:#B9BCC6;
+      --paper:#F7F7F4; --paper-line:rgba(0,0,0,.10);
+      --shadow-1:0 0 0 1px rgba(255,255,255,.04),0 1px 2px rgba(0,0,0,.5);
+      --shadow-2:0 0 0 1px rgba(255,255,255,.05),0 8px 20px -4px rgba(0,0,0,.6);
+      --shadow-3:0 0 0 1px rgba(255,255,255,.06),0 18px 44px -8px rgba(0,0,0,.7);
+      --focus:0 0 0 2px var(--canvas),0 0 0 4px rgba(124,147,245,.7);
+      --scrim:rgba(0,0,0,.55);
+      --success-ink: #4cc38a;
+      --focus-ring: 0 0 0 2px var(--canvas), 0 0 0 4px var(--accent);
+      --warning-ink: #f0a646;
+      --danger-ink: #f07171;
+      --review-violet: #b79ae8;
+      --color-tone-blue-tint: #1b2438;
+      --color-tone-blue-border: #3a4f85;
+      --color-tone-blue-ink: #9db4f5;
+      --color-tone-green-tint: #15291d;
+      --color-tone-green-border: #2f6b45;
+      --color-tone-green-ink: #8fd4a6;
+      --color-tone-amber-tint: #2e2415;
+      --color-tone-amber-border: #7a5a22;
+      --color-tone-amber-ink: #e8be7a;
+      --color-tone-violet-tint: #251d36;
+      --color-tone-violet-border: #5a4690;
+      --color-tone-violet-ink: #c3a9f0;
+      --color-tone-teal-tint: #12292a;
+      --color-tone-teal-border: #2b6b6b;
+      --color-tone-teal-ink: #86d6d6;
+      --color-tone-rose-tint: #2e1a22;
+      --color-tone-rose-border: #85384f;
+      --color-tone-rose-ink: #f0a3ba;
+      --color-tone-slate-tint: #1e2227;
+      --color-tone-slate-border: #4b5560;
+      --color-tone-slate-ink: #b9c1cb;
+  }
+}
+
 :root {
   /* Type roles, space, radius, motion and control heights of the reference */
   --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -129,6 +179,7 @@
   --r-control: 6px;
   --r-card: 10px;
   --r-panel: 14px;
+  --r-sheet: 16px; /* phone sheets: the top corners only (reference) */
   --r-pill: 999px;
   --d-fast: 120ms;
   --d-base: 180ms;
@@ -213,8 +264,22 @@
   }
 }
 
+/* 8.4f D1: "Reduce motion" turned on in Settings zeroes the same durations as the device setting does. */
+:root[data-reduce-motion="on"] {
+  --d-fast: 0ms;
+  --d-base: 0ms;
+  --d-slow: 0ms;
+  --motion-fast: 0ms;
+  --motion-slow: 0ms;
+}
+
 @media (min-width: 1440px) {
   :root {
     --rail-width: 188px;
   }
 }
+
+/* 8.4f D7: native controls (a select, scroll bars) follow the theme; with no stored choice both are offered and the device picks. */
+html { color-scheme: light dark; }
+html[data-theme="light"] { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }

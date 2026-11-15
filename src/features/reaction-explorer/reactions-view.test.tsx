@@ -207,6 +207,13 @@ describe('empty states', () => {
     const base = demoState();
     setup({ ...base, records: { ...base.records, reaction: {} } } as CanonicalState);
     expect(screen.getByText('No reactions yet.')).toBeTruthy();
+    expect(document.querySelector('[data-empty-state]')?.textContent).toBe('No reactions yet.'); // 8.4f D3: the EmptyState primitive
+  });
+
+  it('8.4f D3: a student gets student words, and the same primitive', () => {
+    const base = demoState();
+    setup({ ...base, records: { ...base.records, reaction: {} } } as CanonicalState, {}, 'study');
+    expect(document.querySelector('[data-empty-state]')?.textContent).toBe('There are no reactions here yet.');
   });
 
   it('nothing matches: says so and Clear all filters brings them back', () => {

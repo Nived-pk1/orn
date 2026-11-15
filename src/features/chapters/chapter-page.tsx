@@ -9,7 +9,7 @@ import { chapterContents, chaptersOf, NO_CHAPTER, NO_CHAPTER_TITLE, type Chapter
 import { createScopeOf } from '@/core/graph';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
-import { Button, Dialog } from '@/ui/primitives';
+import { Button, Dialog, EmptyState } from '@/ui/primitives';
 import { currentOf, useScopeOnly, type ActiveExam } from '@/ui/state';
 import { HiddenLine } from '@/ui/study-page';
 import type { ChaptersPorts } from './contracts';
@@ -152,7 +152,7 @@ export function ChapterPage(props: {
         </ul>
       )}
       {contents.groups.length === 0 ? (
-        <p className={styles.muted}>Nothing is mapped to this chapter yet.</p>
+        <EmptyState>{ports.editing ? 'Nothing is mapped to this chapter yet.' : 'Nothing is linked to this chapter yet.'}</EmptyState>
       ) : (
         <>
           {phone ? (

@@ -32,6 +32,9 @@ export const MECHANISMS_MODE = 'mechanisms';
 /** The Syllabus view (step 7.6): one exam version's units, topics, content and gaps. */
 export const SYLLABUS_MODE = 'syllabus';
 
+/** The Settings page (step 8.4f, D1): reached from the bottom of the rail, the phone's More and the palette. */
+export const SETTINGS_MODE = 'settings';
+
 export const WORKBENCH_MODE = 'workbench';
 /** Studio's review queue (step 6.8b). */
 export const REVIEW_MODE = 'review';
@@ -55,6 +58,7 @@ export const MODES: readonly ModeItem[] = [
   { id: NAMED_MODE, label: 'Named reactions', icon: 'tag', group: 'study' },
   { id: MECHANISMS_MODE, label: 'Mechanisms', icon: 'atom', group: 'study' },
   { id: SYLLABUS_MODE, label: 'Syllabus', icon: 'list-checks', group: 'study' },
+  { id: SETTINGS_MODE, label: 'Settings', icon: 'settings', group: 'app' },
   ...(EDITING ? [{ id: WORKBENCH_MODE, label: 'Workbench', icon: 'pencil', group: 'author' }, { id: REVIEW_MODE, label: 'Review', icon: 'clipboard-check', group: 'author' }] satisfies readonly ModeItem[] : []),
 ];
 

@@ -55,6 +55,8 @@ export function PhoneBar(props: {
   readonly exam: ExamScopeBinding;
   readonly counts: Readonly<Record<RecordKind, number>>;
   readonly onStatus: () => void;
+  /** Opens the Settings page (step 8.4f, D1). Absent: no Settings button. */
+  readonly onSettings?: () => void;
   /** The store's history: Undo and Redo are in More on a phone, never on the bar (authoring is desktop-first, ADR-039 addendum). */
   readonly history?: HistoryBinding;
   /** The Structures setting (equation step, part 4): a control in More. Absent: none. */
@@ -127,6 +129,13 @@ export function PhoneBar(props: {
             <RecordCounts counts={props.counts} />
           </section>
         ) : null}
+        {props.onSettings === undefined ? null : (
+          <section aria-label="Settings" className={styles.section}>
+            <Button className={styles.wide} onClick={then(props.onSettings)}>
+              Settings
+            </Button>
+          </section>
+        )}
         {chrome.datasetCounts ? (
           <section aria-label="Status" className={styles.section}>
             <Button className={styles.wide} onClick={then(props.onStatus)}>

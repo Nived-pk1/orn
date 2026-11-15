@@ -1,10 +1,6 @@
-/** The fallback of every lazy view of the canvas (7.6 A4): a muted "Loading…" line (role status) while its chunk loads, so a page is never silently empty. */
-import styles from './window.module.css';
+/** The fallback of every lazy view of the canvas (7.6 A4; 8.4f D4): the skeleton of a page (title, filter row, cards) while its chunk loads, so a page is never silently empty and nothing moves when it arrives. Its words are "Loading…" for a screen reader. */
+import { PageSkeleton } from '@/ui/primitives';
 
 export function LoadingLine() {
-  return (
-    <p role="status" className={styles.loadingLine}>
-      Loading…
-    </p>
-  );
+  return <PageSkeleton label="Loading…" />;
 }

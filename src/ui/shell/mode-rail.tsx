@@ -9,7 +9,7 @@ export interface ModeItem {
   /** The icon drawn before the label (and alone when the rail is collapsed). Absent: no icon. */
   readonly icon?: IconName;
   /** The group the view sits in: "Study" (the default) or "Author" (Studio only). */
-  readonly group?: 'study' | 'author';
+  readonly group?: 'study' | 'author' | 'app';
   /** A count the app already shows for this view (Review); absent: none. */
   readonly count?: number;
 }
@@ -52,6 +52,8 @@ function ModeButton(props: { readonly mode: ModeItem; readonly current: boolean;
 /** The mode rail: views in groups, each with its icon; what exists is enabled, what does not exist yet is listed, disabled, with the phase that brings it. */
 export function ModeRail(props: ModeRailProps) {
   const collapsed = props.collapsed === true;
+  // views of the app itself (Settings) sit at the bottom of the rail, above Collapse (step 8.4f, D1)
+  const appItems = props.modes.filter((mode) => mode.group === 'app');
   return (
     <nav className={styles.rail} aria-label="Modes">
       <div className={styles.groups}>
@@ -72,16 +74,27 @@ export function ModeRail(props: ModeRailProps) {
           );
         })}
       </div>
-      {props.onCollapse === undefined ? null : collapsed ? (
-        <IconButton label="Expand" icon="chevron-right" className={styles.railToggle} onClick={() => props.onCollapse?.(false)} />
-      ) : (
-        <Button variant="quiet" className={styles.railCollapse} onClick={() => props.onCollapse?.(true)}>
-          <span className={styles.flip}>
-            <Icon name="chevron-right" />
-          </span>
-          <span>Collapse</span>
-        </Button>
-      )}
+      <div className={styles.foot}>
+        {appItems.length === 0 ? null : (
+          <ul className={styles.modes} aria-label="App">
+            {appItems.map((mode) => (
+              <li key={mode.id} className={styles.mode}>
+                <ModeButton mode={mode} current={mode.id === props.active && mode.unavailable === undefined} collapsed={collapsed} onChange={props.onChange} />
+              </li>
+            ))}
+          </ul>
+        )}
+        {props.onCollapse === undefined ? null : collapsed ? (
+          <IconButton label="Expand" icon="chevron-right" className={styles.railToggle} onClick={() => props.onCollapse?.(false)} />
+        ) : (
+          <Button variant="quiet" className={styles.railCollapse} onClick={() => props.onCollapse?.(true)}>
+            <span className={styles.flip}>
+              <Icon name="chevron-right" />
+            </span>
+            <span>Collapse</span>
+          </Button>
+        )}
+      </div>
     </nav>
   );
 }

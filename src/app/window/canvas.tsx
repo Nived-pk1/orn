@@ -2,18 +2,20 @@
  * What the window shows on its canvas for the chosen mode (split out of window.tsx, step 7.2a): the navigator, the dataset page, the
  * Workbench, and the lazy views (Reactions and Precursors in BOTH editions; the review queue in Studio only).
  */
-import { lazy, Suspense, useCallback } from "react";
+import { lazy, Suspense, useCallback, useRef } from "react";
 import { NavigatorView } from "@/features/navigator";
 import { RECORD_KINDS, type RecordKind } from "@/core/schema";
 import { EDITING } from "@/app/edition";
 import { useLayoutMode } from "@/ui/hooks";
+import { PageSkeleton } from "@/ui/primitives";
+import type { ExamScopeBinding } from "./exam-scope-selector";
 import { usePanels, type ExplorerFilter } from "@/ui/state";
 import { ExploreSwitch } from "./explore-switch";
 import { LoadingLine } from "./loading-line";
 import { useApp } from "./context";
 import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
-import { CHAPTERS_MODE, EXPLORER_MODES, MECHANISMS_MODE, NAMED_MODE, SYLLABUS_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, WORKBENCH_MODE } from "./modes";
+import { CHAPTERS_MODE, EXPLORER_MODES, MECHANISMS_MODE, NAMED_MODE, SYLLABUS_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, SETTINGS_MODE, WORKBENCH_MODE } from "./modes";
 import { RecordCounts } from "./record-counts";
 import type { ExportActions } from "./use-export-actions";
 import type { ImportActions } from "./use-import-actions";
@@ -21,6 +23,7 @@ import { WorkbenchPage } from "./workbench-page";
 import styles from "./window.module.css";
 
 // the Reactions list: a lazy chunk in BOTH editions (step 7.1b)
+const SettingsHost = lazy(() => import("./settings-host").then((m) => ({ default: m.SettingsHost })));
 const ReactionsHost = lazy(() => import("./reactions-host").then((m) => ({ default: m.ReactionsHost })));
 // the Chapters view: a lazy chunk in BOTH editions (step 7.3b)
 const ChaptersHost = lazy(() => import("./chapters-host").then((m) => ({ default: m.ChaptersHost })));
@@ -60,6 +63,8 @@ function DatasetView(props: {
 }
 
 export function Canvas(props: {
+  /** The exam binding the Settings page's exam row uses (step 8.4f). */
+  readonly exam?: ExamScopeBinding;
   readonly mode: string;
   readonly counts: Readonly<Record<RecordKind, number>>;
   readonly imports: ImportActions;
@@ -88,12 +93,19 @@ export function Canvas(props: {
     [panels],
   );
   const empty = totalOf(props.counts) === 0;
+  // 8.4f D6: each change of view restarts a short opacity fade of the main column. The attribute alternates, so the CSS animation restarts without the column being remounted (focus stays).
+  const fade = useRef({ mode: props.mode, n: 0 });
+  if (fade.current.mode !== props.mode) fade.current = { mode: props.mode, n: fade.current.n + 1 };
   const phoneExplorer = useLayoutMode() === 'phone' && !empty && EXPLORER_MODES.includes(props.mode);
   const showsNavigator = !empty && props.mode === NAVIGATOR_MODE;
   return (
-    <div className={showsNavigator ? styles.canvasFull : EDITING && props.mode === REVIEW_MODE ? styles.canvasFill : styles.canvas}>
+    <div className={`${showsNavigator ? styles.canvasFull : EDITING && props.mode === REVIEW_MODE ? styles.canvasFill : styles.canvas} ${styles.viewFade}`} data-fade={fade.current.n % 2 === 0 ? 'a' : 'b'}>
       {phoneExplorer ? <ExploreSwitch /> : null}
-      {empty && !startedEmpty ? (
+      {props.mode === SETTINGS_MODE && props.exam !== undefined ? (
+        <Suspense fallback={<PageSkeleton label="Loading settings" shape="rows" />}>
+          <SettingsHost exam={props.exam} />
+        </Suspense>
+      ) : empty && !startedEmpty ? (
         <FirstRun imports={imports} onStartEmpty={onStartEmpty} />
       ) : showsNavigator ? (
         <NavigatorView />

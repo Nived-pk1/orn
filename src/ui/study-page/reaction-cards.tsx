@@ -7,6 +7,7 @@ import { useState, type ReactNode } from 'react';
 import { plural, verbFor } from '@/core/text';
 import { HiddenLine } from './hidden-line-view';
 import styles from './study-page.module.css';
+import { EmptyState } from '@/ui/primitives';
 
 export const CARDS_PAGE_SIZE = 30;
 
@@ -49,7 +50,7 @@ export function ReactionCards(props: ReactionCardsProps) {
   const shown = kept.slice(0, limit);
   return (
     <div className={styles.cards}>
-      {props.reactions.length === 0 ? <p className={styles.muted}>{props.emptyWords}</p> : null}
+      {props.reactions.length === 0 ? <EmptyState inline>{props.emptyWords}</EmptyState> : null}
       {left > 0 && props.examName !== undefined && props.onShowAll !== undefined ? <HiddenLine count={left} noun={['reaction', 'reactions']} examName={props.examName} onShow={props.onShowAll} /> : null}
       {left > 0 && (props.examName === undefined || props.onShowAll === undefined) ? <p className={styles.muted}>{`${plural(left, 'reaction', 'reactions')} ${verbFor(left, 'is', 'are')} left out by the exam scope.`}</p> : null}
       <ul className={styles.cardList}>

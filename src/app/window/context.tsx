@@ -6,7 +6,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { AppServices } from '@/app/services';
 import type { InspectorPorts } from '@/features/inspector';
 import type { NavigatorPorts } from '@/features/navigator';
-import type { PanelsStore } from '@/ui/state';
+import type { PanelsPort, PanelsStore } from '@/ui/state';
 import type { EditorEntries } from './editor-entries';
 import type { EditorsControllerType } from './editors-api';
 import type { TimeFormatter } from './local-time';
@@ -28,6 +28,8 @@ export interface AppContextValue {
   readonly dataset?: DatasetInfo;
   /** The panels store (inspector width and open state, "Start empty" dismissed), persisted in `uiState`. */
   readonly panels: PanelsStore;
+  /** Where the appearance choice (Theme, Reduce motion; step 8.4f) is kept: the `uiState` entry "appearance". The store is made when Settings first opens (lazy); the boot applies the stored values to the page without it. Absent: session only. */
+  readonly appearancePort?: PanelsPort;
   /** What the navigator needs (step 5.5a): the store, indexes, layout service, text measurer, UI stores and timers. */
   readonly navigator: NavigatorPorts;
   /** What the inspector needs (step 5.6a): the store, findings, L4 checks, depictions and the UI stores. */

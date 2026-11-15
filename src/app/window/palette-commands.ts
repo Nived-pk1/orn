@@ -49,6 +49,9 @@ export interface CommandDeps {
   readonly views?: readonly { readonly id: string; readonly label: string }[] | undefined;
 }
 
+/** More words that find a view (data, not a branch per view). */
+const VIEW_KEYWORDS: Readonly<Record<string, readonly string[]>> = { settings: ['theme', 'dark', 'light', 'appearance', 'motion', 'preferences', 'exam', 'back up'] };
+
 /** Why the map's commands (fit, zoom, the Unanchored panel) cannot run now. */
 function mapReason(deps: CommandDeps): string | undefined {
   if (!deps.hasData) return 'there is no data';
@@ -152,7 +155,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     withReason({ id: 'open-named', suggest: true, title: 'Go to Named reactions', keywords: ['named', 'named reactions', 'reaction', 'name reaction', 'aldol', 'grignard'], run: () => openNamedList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'open-mechanisms', suggest: true, title: 'Go to Mechanisms', keywords: ['mechanisms', 'mechanism', 'steps', 'sn1', 'sn2', 'e2'], run: () => openMechanismsList(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
     withReason({ id: 'open-syllabus', suggest: true, title: 'Go to Syllabus', keywords: ['syllabus', 'exam', 'coverage', 'gaps', 'units', 'topics', 'compare'], run: () => openSyllabus(ui, deps.setMode) }, deps.hasData ? undefined : 'there is no data'),
-    ...(deps.views ?? []).filter((view) => !HANDLED_VIEWS.has(view.id)).map((view) => ({ id: `go-${view.id}`, title: `Go to ${view.label}`, suggest: true as const, keywords: [view.label.toLowerCase()], run: () => deps.setMode(view.id) })),
+    ...(deps.views ?? []).filter((view) => !HANDLED_VIEWS.has(view.id)).map((view) => ({ id: `go-${view.id}`, title: `Go to ${view.label}`, suggest: true as const, keywords: [view.label.toLowerCase(), ...(VIEW_KEYWORDS[view.id] ?? [])], run: () => deps.setMode(view.id) })),
     { id: 'export', title: 'Back up your data', keywords: ['export', 'backup', 'back up', 'save', 'download', 'share', 'package'], suggest: true, run: deps.openExport },
     withReason({ id: 'unanchored', title: 'Open the Unanchored reactions', keywords: ['unclassified', 'reactions', 'panel'], run: () => view?.openUnanchored() }, onMap ?? view?.unanchoredReason),
     ...scopeCommands,

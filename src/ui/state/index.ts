@@ -72,3 +72,6 @@ export type { ParsedPrecursors, PrecursorsState, PrecursorsStore, SubstanceChoic
 export { effectiveOnly, parseExamChoice } from './exam-state';
 export type { ParsedExamChoice, ScopeMode } from './exam-state';
 export { useScopeOnly } from './use-scope-only';
+export { APPEARANCE_DEFAULTS, APPEARANCE_KEY, appearanceAttributes, parseAppearance, THEMES } from './appearance';
+export { createAppearanceStore } from './appearance-store';
+export type { AppearanceState, AppearanceStore, AppearanceValues, Theme } from './appearance';

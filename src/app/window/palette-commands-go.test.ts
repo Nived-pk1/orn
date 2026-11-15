@@ -62,4 +62,15 @@ describe('"Go to <view>" and "Back up your data" in the palette (step 8.4d, C7)'
     const go = buildCommands(d).find((c) => c.title === 'Go to Reactions');
     expect(go?.unavailable).toBe('there is no data');
   });
+
+  it('8.4f D1: "Go to Settings" opens the Settings page with or without data, and is found by theme, dark and appearance', () => {
+    for (const hasData of [true, false]) {
+      const { deps: d, modes } = deps({ hasData, views: [{ id: 'settings', label: 'Settings' }] });
+      const command = buildCommands(d).find((c) => c.title === 'Go to Settings');
+      expect(command?.unavailable).toBeUndefined();
+      for (const word of ['theme', 'dark', 'appearance', 'motion']) expect(command?.keywords).toContain(word);
+      command?.run();
+      expect(modes).toEqual(['settings']);
+    }
+  });
 });

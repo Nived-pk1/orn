@@ -41,6 +41,7 @@ const VIEW_ICONS: Readonly<Record<string, IconName>> = {
   dataset: "database",
   review: "clipboard-check",
   workbench: "pencil",
+  settings: "settings",
 };
 
 const FIXED: Readonly<Record<string, CommandLook>> = {

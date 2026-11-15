@@ -227,3 +227,22 @@ describe('named-reaction and mechanism cards open their pages (7.4)', () => {
     expect(screen.queryByRole('button', { name: /^Open page of/ })).toBeNull();
   });
 });
+
+describe('empty states (8.4f D3: the EmptyState primitive, Study words for students, Studio words for authors)', () => {
+  const words = () => document.querySelector('[data-empty-state]')?.textContent;
+  it('no chapters at all', () => {
+    show(stateOf(), {}, true);
+    expect(words()).toBe('No chapters yet.');
+    cleanup();
+    show(stateOf(), {}, false);
+    expect(words()).toBe('No chapters here yet.');
+  });
+  it('a chapter with nothing mapped to it', () => {
+    const bare = stateOf(topic('subj', 'Organic', { kind: 'subject', order: 1 }), topic('chap-a', 'Alpha chapter', { kind: 'chapter', parent: 'subj', order: 1 }));
+    show(bare, { chapterId: 'top_chap-a' }, true);
+    expect(words()).toBe('Nothing is mapped to this chapter yet.');
+    cleanup();
+    show(bare, { chapterId: 'top_chap-a' }, false);
+    expect(words()).toBe('Nothing is linked to this chapter yet.');
+  });
+});

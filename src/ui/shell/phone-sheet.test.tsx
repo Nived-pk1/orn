@@ -90,6 +90,18 @@ describe('PhoneSheet', () => {
     expect(sheet().getAttribute('data-sheet')).toBe('closed');
   });
 
+  it('8.4f D5: the map behind is dimmed (a scrim) only at full, never at peek or closed; the grab handle is always there', () => {
+    render(<Harness />);
+    expect(document.querySelector('[data-sheet-scrim]')).toBeNull();
+    open();
+    expect(document.querySelector('[data-sheet-scrim]')).toBeNull();
+    expect(document.querySelector('aside [aria-hidden="true"]')).not.toBeNull(); // the grip
+    fireEvent.click(screen.getByRole('button', { name: 'Show the whole record' }));
+    expect(document.querySelector('[data-sheet-scrim]')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
+    expect(document.querySelector('[data-sheet-scrim]')).toBeNull();
+  });
+
   it('the drag handle (a button) switches between peek and full', () => {
     render(<Harness />);
     open();

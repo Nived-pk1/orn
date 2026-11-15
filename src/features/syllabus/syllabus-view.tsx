@@ -13,6 +13,7 @@ import { Changes } from './changes';
 import { defaultVersionId, effectiveWords, gapsOnly, rowsOf, statusWords, totalsWords, UNITS_PAGE, versionGroups } from './model';
 import { UnitSection } from './unit-section';
 import styles from './syllabus-view.module.css';
+import { EmptyState } from '@/ui/primitives';
 
 export function SyllabusView(props: { readonly ports: SyllabusPorts }) {
   const { ports } = props;
@@ -114,7 +115,7 @@ export function SyllabusView(props: { readonly ports: SyllabusPorts }) {
           {diff === undefined || !diff.ok ? null : (
             <Changes labelA={page.label} added={diff.added} removed={diff.removed} changed={diff.changed} empty={diff.empty} chapterName={topicName} isChapter={isChapter} openChapter={ports.openChapter} />
           )}
-          {page.units.length === 0 ? <p className={styles.muted}>This version has no unit yet.</p> : null}
+          {page.units.length === 0 ? <EmptyState inline>This version has no unit yet.</EmptyState> : null}
           {gaps !== undefined && gaps.length === 0 && page.units.length > 0 ? <p className={styles.muted}>No gaps: every covered topic has content.</p> : null}
           {shownUnits.map(({ unit, rows }) => (
             <UnitSection key={unit.id} ports={ports} unit={unit} rows={rows} phone={phone} chapterName={topicName} showExcluded={gaps === undefined} />

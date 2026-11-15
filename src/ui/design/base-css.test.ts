@@ -24,3 +24,20 @@ describe('base.css fieldsets (T4)', () => {
     expect(bodyOf('legend')).toMatch(/padding:\s*0/);
   });
 });
+
+describe('base.css reduced motion (8.4f D1)', () => {
+  const rule = (header: string): string => {
+    const at = css.indexOf(header);
+    return at < 0 ? '' : css.slice(at, css.indexOf('}', css.indexOf('{', at)));
+  };
+  it('the Settings switch "Reduce motion" (data-reduce-motion="on") stops animations and transitions exactly as the device setting does', () => {
+    const media = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
+    const device = media.slice(media.indexOf('{ ') < 0 ? 0 : 0, media.indexOf('}', media.indexOf('animation-duration')) + 1);
+    const setting = rule(':root[data-reduce-motion="on"] *');
+    expect(setting).toMatch(/animation-duration:\s*0\.001ms !important/);
+    expect(setting).toMatch(/animation-iteration-count:\s*1 !important/);
+    expect(setting).toMatch(/transition-duration:\s*0\.001ms !important/);
+    expect(setting).toMatch(/scroll-behavior:\s*auto !important/);
+    expect(device).toContain('0.001ms');
+  });
+});

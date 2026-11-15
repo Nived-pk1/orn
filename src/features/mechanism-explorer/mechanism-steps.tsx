@@ -12,6 +12,7 @@ import { studyPageStyles as page } from '@/ui/study-page';
 import type { MechanismPorts } from './contracts';
 import { stepHeading } from './model';
 import styles from './mechanism-view.module.css';
+import { EmptyState } from '@/ui/primitives';
 
 type StepSpecies = StepView['species'][number];
 
@@ -86,7 +87,7 @@ export function VariantSteps(props: { readonly ports: MechanismPorts; readonly v
     <section className={page.section} aria-label={props.heading ? variant.label : 'Steps'} data-variant-id={variant.id}>
       {props.heading ? <h3 className={page.sectionHeading}>{variant.label}</h3> : null}
       {variant.applicability === undefined ? null : <div>{ports.renderRichText(variant.applicability)}</div>}
-      {variant.steps.length === 0 ? <p className={page.muted}>No step is written for this pathway yet.</p> : (
+      {variant.steps.length === 0 ? <EmptyState inline>No step is written for this pathway yet.</EmptyState> : (
         <ol className={styles.steps} aria-label={`Steps${props.heading ? ` of ${variant.label}` : ''}`}>
           {variant.steps.map((step) => (
             <Step key={step.id} ports={ports} step={step} />

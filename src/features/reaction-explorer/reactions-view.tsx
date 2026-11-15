@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import { createReactionFilterMemo, createScopeOf, exampleLookupOf, filterReactions, foldExamples, type ReactionFacets } from '@/core/graph';
 import { useLayoutMode } from '@/ui/hooks';
-import { Button, Dialog, LiveRegion, SegmentedControl } from '@/ui/primitives';
+import { Button, Dialog, EmptyState, LiveRegion, SegmentedControl } from '@/ui/primitives';
 import { isFilterSet, useScopeOnly, type ExplorerFilter } from '@/ui/state';
 import { HiddenLine } from '@/ui/study-page';
 import { useStudyChrome } from '@/ui/study-chrome';
@@ -166,7 +166,7 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
         </ul>
       )}
       {none ? (
-        <p className={styles.empty}>No reactions yet.</p>
+        <EmptyState>{studyWords ? 'There are no reactions here yet.' : 'No reactions yet.'}</EmptyState>
       ) : result.rows.length === 0 ? (
         <div className={styles.empty}>
           <p>No reaction matches these filters.</p>

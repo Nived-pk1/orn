@@ -7,6 +7,7 @@ import { NO_CHAPTER, NO_CHAPTER_TITLE, type ChaptersList } from '@/core/chapters
 import type { ChaptersPorts } from './contracts';
 import { chipWords } from './chapter-page';
 import { countsWords } from './model';
+import { EmptyState } from '@/ui/primitives';
 import { HiddenLine } from '@/ui/study-page';
 import styles from './chapters-view.module.css';
 
@@ -24,7 +25,7 @@ export function ChapterList(props: { readonly ports: ChaptersPorts; readonly lis
       {props.examName !== undefined && list.hiddenByExam > 0 ? (
         <HiddenLine count={list.hiddenByExam} noun={['chapter', 'chapters']} examName={props.examName} onShow={props.onShowAll} />
       ) : null}
-      {list.chapters.length === 0 && !listNone ? <p className={styles.muted}>No chapters yet.</p> : null}
+      {list.chapters.length === 0 && !listNone ? <EmptyState>{ports.editing ? 'No chapters yet.' : 'No chapters here yet.'}</EmptyState> : null}
       <ul className={styles.list} aria-label="Chapters">
         {shown.map((chapter) => (
           <li key={chapter.id} className={styles.chapterRow} data-chapter-id={chapter.id}>

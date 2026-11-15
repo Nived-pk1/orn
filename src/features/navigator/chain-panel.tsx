@@ -12,7 +12,7 @@ import type { RecordRef } from '@/core/schema';
 // deep import: the chain search is only for this lazy chunk (a barrel would pull it into the first load)
 import { CHAIN_MAX_STEPS, familyChains, familyEdgesOf, type FamilyChain } from '@/core/graph/navigator/chains';
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph/navigator/hubs';
-import { Button } from '@/ui/primitives';
+import { Button, EmptyState } from '@/ui/primitives';
 import type { NavigatorPorts } from './contracts';
 import { chainCardsOf } from './chain-card';
 import type { NamedFamily } from './find-family-match';
@@ -122,7 +122,7 @@ export function ChainPanel(props: ChainPanelProps) {
       {result === undefined ? null : !result.ok ? (
         <p role="status">{result.reason}</p>
       ) : chains.length === 0 ? (
-        <p role="status">{outside && props.scopeName !== undefined ? `No chain within ${props.scopeName} in ${CHAIN_MAX_STEPS} steps or fewer.` : `No chain of ${CHAIN_MAX_STEPS} steps or fewer.`}</p>
+        <EmptyState inline role="status">{outside && props.scopeName !== undefined ? `No chain within ${props.scopeName} in ${CHAIN_MAX_STEPS} steps or fewer.` : `No chain of ${CHAIN_MAX_STEPS} steps or fewer.`}</EmptyState>
       ) : (
         <>
           <ol className={styles.chains} aria-label="Chains">

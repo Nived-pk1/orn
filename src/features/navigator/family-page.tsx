@@ -14,7 +14,7 @@ import { useStructureMode } from '@/render/svg';
 import { useLayoutMode } from '@/ui/hooks';
 import { useScopeOnly } from '@/ui/state';
 import { HiddenLine } from '@/ui/study-page';
-import { Button, Skeleton, VirtualList, type VirtualListHandle } from '@/ui/primitives';
+import { Button, EmptyState, Skeleton, VirtualList, type VirtualListHandle } from '@/ui/primitives';
 import { depictionBindingOf, equationBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
@@ -145,7 +145,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
             </div>
           );
         case 'empty':
-          return <p className={styles.empty}>{item.text}.</p>;
+          return <EmptyState>{item.text}.</EmptyState>;
         case 'hidden':
           return <HiddenLine count={item.count} noun={['reaction', 'reactions']} examName={scope.examName} onShow={showEverything} />;
         case 'group':

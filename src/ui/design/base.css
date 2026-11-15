@@ -106,6 +106,16 @@ textarea::placeholder {
   }
 }
 
+/* 8.4f D1: "Reduce motion" turned on in Settings does the same as the device setting. */
+:root[data-reduce-motion="on"] *,
+:root[data-reduce-motion="on"] *::before,
+:root[data-reduce-motion="on"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* Fieldsets (step 6.7b T4): no native border, margin or padding, so the legend never breaks a border; a class that wants a frame says so. */
 fieldset {
   border: 0;

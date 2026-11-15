@@ -143,9 +143,31 @@
   font: inherit;
 }
 
-.loadingLine {
-  margin: var(--space-16);
-  color: var(--color-ink-2);
+/* 8.4f D6: a view change fades the main column in (opacity only, never layout). The two names alternate so the animation restarts; reduced motion zeroes it (base.css). */
+.viewFade[data-fade='a'] {
+  animation: viewFadeA var(--d-base) ease-out;
+}
+
+.viewFade[data-fade='b'] {
+  animation: viewFadeB var(--d-base) ease-out;
+}
+
+@keyframes viewFadeA {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes viewFadeB {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* The small word beside the select when the exam's current syllabus is provisional (step 8.3b, B1). */

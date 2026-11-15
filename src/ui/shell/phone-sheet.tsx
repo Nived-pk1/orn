@@ -117,6 +117,9 @@ export function PhoneSheet(props: {
     change(height === 'peek' ? 'full' : 'peek');
   };
   return (
+    <>
+    {/* 8.4f D5: the map behind dims only when the sheet is full; non-modal, so the scrim takes no taps */}
+    {height === 'full' ? <div className={styles.scrim} data-sheet-scrim="" aria-hidden="true" /> : null}
     <aside
       ref={sheet}
       className={styles.sheet}
@@ -138,5 +141,6 @@ export function PhoneSheet(props: {
         {props.children}
       </div>
     </aside>
+    </>
   );
 }

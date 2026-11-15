@@ -19,6 +19,13 @@
   flex-direction: column;
 }
 
+/* the bottom of the rail: the app's own views (Settings), then Collapse */
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
 .group {
   display: flex;
   flex-direction: column;
@@ -137,6 +144,10 @@
     overflow: auto hidden;
     border-top: 1px solid var(--color-rule);
     border-right: 0;
+  }
+
+  .foot {
+    flex-direction: row;
   }
 
   .modes {

@@ -21,7 +21,11 @@ async function openFamily(page: Page): Promise<void> {
   await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
 }
 
-test.describe('axe on every screen', () => {
+// 8.4f D7: every screen in BOTH themes. With no stored choice the theme follows the device by CSS alone, so the browser's colour scheme
+// IS the theme parameter here (System, which is also what a first visit gets).
+for (const scheme of ['light', 'dark'] as const) {
+test.describe(`axe on every screen, ${scheme} theme`, () => {
+  test.use({ colorScheme: scheme });
   test('first run, overview, List view, Unanchored, family page, inspector levels, palette, import, export (1280 x 800)', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page);
@@ -117,7 +121,30 @@ test.describe('axe on every screen', () => {
     console.log(`OBSERVED width at 700 px with the inspector open: page ${widths.page}, window ${widths.window}`);
     await expectClean(seen);
   });
+
+  test('Settings: the page itself, then a stored theme wins over the device and survives a reload', async ({ page }) => {
+    test.setTimeout(240_000);
+    const seen = await watch(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openApp(page);
+    await loadDemo(page);
+    await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
+    await page.getByRole('navigation', { name: 'Modes' }).getByRole('button', { name: 'Settings' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Settings' })).toBeVisible();
+    await clean(page, 'the Settings page');
+    const root = page.locator('html');
+    await expect(root).not.toHaveAttribute('data-theme', /.+/); // System: the device decides
+    const other = scheme === 'dark' ? 'Light' : 'Dark';
+    await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: other }).check({ force: true });
+    await expect(root).toHaveAttribute('data-theme', other.toLowerCase());
+    await clean(page, `the Settings page, ${other} chosen over a ${scheme} device`);
+    await page.waitForTimeout(800); // the choice is saved after a short pause
+    await page.reload();
+    await expect(root).toHaveAttribute('data-theme', other.toLowerCase());
+    await expectClean(seen);
+  });
 });
+}
 
 /** The bundled demo, as the import screen's own preview wants it (any valid dataset file does). */
 async function demoJson(): Promise<unknown> {
