@@ -32,7 +32,7 @@ function EdgeGroup(props: { readonly edge: SceneEdge; readonly ids: DefIds; read
   );
 }
 
-export const EdgesLayer = memo(function EdgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
+export const EdgesLayer = /* @__PURE__ */ memo(function EdgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('edges', props.onCommit);
   return (
     <g data-layer="edges">

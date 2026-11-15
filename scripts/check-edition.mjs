@@ -7,7 +7,7 @@
 //   2. Studio: at least one editor module is in the build (a report of the wrong build is not mistaken for a right one).
 //   3. The report is for this edition.
 //   4. Both: the initial JS (the scripts and preloads index.html names) in gzip kB is reported; Study must be at most
-//      360 kB and Studio at most 365 kB (step 8.4s; scripts/check-build.mjs keeps the same two lines).
+//      346 kB and Studio at most 350 kB (step 8.4m, R2: the measured size + 10 kB, rounded up; scripts/check-build.mjs keeps the same two lines).
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -15,8 +15,8 @@ import { gzipSync } from 'node:zlib';
 /** What counts as an editor module: scripts/editor-modules.json (also read by vite.config.ts). */
 const EDITOR_MODULES = JSON.parse(readFileSync(new URL('./editor-modules.json', import.meta.url), 'utf8')).modules;
 // step 8.4s (L1): lowered after the lazy map canvas gave the room back, so it is not spent silently
-const STUDY_LINE_KB = 360;
-const STUDIO_LINE_KB = 365;
+const STUDY_LINE_KB = 346;
+const STUDIO_LINE_KB = 350;
 const MAX_LISTED = 6;
 
 /**

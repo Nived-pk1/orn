@@ -8,3 +8,5 @@
  */
 export const NAVIGATOR_MAX_EDGES = 120;
 export const NAVIGATOR_MAX_NODES = 400;
+/** With no Scene yet, the skeleton shows after this long (counted from the model's start, whether or not its code has arrived). */
+export const SKELETON_DELAY_MS = 300;

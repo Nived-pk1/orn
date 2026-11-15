@@ -16,14 +16,8 @@ export {
   useNavigator,
   useNavigatorState,
 } from "./navigator-context";
-export {
-  createNavigatorModel,
-  LAYOUT_VIEW,
-  NAVIGATOR_MAX_EDGES,
-  NAVIGATOR_MAX_NODES,
-  SKELETON_DELAY_MS,
-} from "./pipeline";
-export type { NavigatorModel, NavigatorState, PipelineStats } from "./pipeline";
+export { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from "./limits";
+export type { NavigatorModel, NavigatorState, PipelineStats } from "./navigator-state";
 export { PROJECTION_KINDS, SCENE_KINDS, touchOf } from "./reads";
 export type {
   NavigatorDepictionAnswer,

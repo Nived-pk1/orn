@@ -99,7 +99,7 @@ describe('scripts/check-build.mjs', () => {
     expect(out).toContain('initial JS: assets/index-x1.js');
   });
 
-  it('fails when a lazy chunk is missing, is loaded by the page, or the initial JS is over its budget (365 kB gzip)', () => {
+  it('fails when a lazy chunk is missing, is loaded by the page, or the initial JS is over its budget (350 kB gzip)', () => {
     const missing = run({ 'assets/views-other-v1.js': null });
     expect(missing.status).toBe(1);
     expect(missing.out).toContain('FAIL assets/views-other-<hash>.js: the lazy chunk is missing');
@@ -108,7 +108,7 @@ describe('scripts/check-build.mjs', () => {
     expect(eager.out).toContain('FAIL import-screen: is loaded by index.html, so it is not lazy');
     const heavy = run({ 'assets/index-x1.js': randomBytes(410_000).toString('latin1') });
     expect(heavy.status).toBe(1);
-    expect(heavy.out).toContain('over the 365 kB budget');
+    expect(heavy.out).toContain('over the 350 kB budget');
   });
 
   it('fails on eval( in a lazy chunk (the scan covers every chunk)', () => {

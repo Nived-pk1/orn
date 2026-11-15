@@ -1,6 +1,6 @@
 /**
  * The record kinds a change can touch before the navigator's screen is stale (step 5.5a, review decision 6 (5)).
- *  - PROJECTION_KINDS: what the projection reads (`navigatorProjection.readsKinds`; proved by tests/property/navigator-reads-kinds.test.ts). A ChangeSet touching one rebuilds the
+ *  - PROJECTION_KINDS: what the projection reads (`NAVIGATOR_READS_KINDS`, the list `navigatorProjection.readsKinds` carries, imported alone so the projection builder stays out of the entry chunk; proved by tests/property/navigator-reads-kinds.test.ts). A ChangeSet touching one rebuilds the
  *    projection, and the previous Projection object is kept when `sameProjection` holds.
  *  - SCENE_KINDS: what the Scene ports read. `describe` reads names, formulas and charges (species, class, reagent, concept,
  *    named_reaction: all in the projection list); `arrowTextOf` reads the reaction, its `reaction_scheme` records and
@@ -9,10 +9,10 @@
  * A ChangeSet touching neither rebuilds nothing. A kind listed too much costs a rebuild; a kind missing is a stale screen.
  */
 import type { RecordKind } from '@/core/schema';
-import { navigatorProjection } from '@/core/graph';
+import { NAVIGATOR_READS_KINDS } from '@/core/graph';
 
-export const PROJECTION_KINDS: ReadonlySet<RecordKind> = new Set(navigatorProjection.readsKinds ?? []);
-export const SCENE_KINDS: ReadonlySet<RecordKind> = new Set<RecordKind>([...(navigatorProjection.readsKinds ?? []), 'reaction_scheme']);
+export const PROJECTION_KINDS: ReadonlySet<RecordKind> = new Set(NAVIGATOR_READS_KINDS);
+export const SCENE_KINDS: ReadonlySet<RecordKind> = new Set<RecordKind>([...NAVIGATOR_READS_KINDS, 'reaction_scheme']);
 
 export type Touch = 'none' | 'scene' | 'projection';
 

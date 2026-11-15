@@ -17,11 +17,12 @@ import type { Projection, ProjectionRequest } from '@/core/graph';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { LayoutAlgorithm, LayoutRequest, LayoutResult, Point } from '@/layout/contracts';
 import { buildLayoutRequest, buildScene, labelSizes, nodeSizes } from '@/render/scene';
-import type { LabelSizes, NodeSizes, Scene } from '@/render/scene';
-import type { NavigatorError, NavigatorPorts } from './contracts';
+import type { LabelSizes, NodeSizes } from '@/render/scene';
+import type { NavigatorPorts } from './contracts';
 import { chapterFilters } from './chapter-filters';
 import { depictionBindingOf } from './depictions';
-import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from './limits';
+import { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES, SKELETON_DELAY_MS } from './limits';
+import { IDLE_NAVIGATOR_STATE, type NavigatorModel, type NavigatorState } from './navigator-state';
 import { touchOf } from './reads';
 import { sameRequest } from './same-request';
 import { createScenePorts } from './scene-ports';
@@ -29,52 +30,15 @@ import { outsideNoteOf, scopeLens } from './scope-lens';
 import { keepUnmapped, onlyFilters } from './scope-filters';
 import { effectiveOnly } from '@/ui/state';
 
-export const SKELETON_DELAY_MS = 300;
 /** The service's view key: one navigator drawing, so a newer request replaces the older one. */
 export const LAYOUT_VIEW = 'navigator';
-export { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES } from './limits';
+export { NAVIGATOR_MAX_EDGES, NAVIGATOR_MAX_NODES, SKELETON_DELAY_MS } from './limits';
 
-export interface NavigatorState {
-  readonly scene: Scene | null;
-  readonly error: NavigatorError | null;
-  /** True when there is no Scene yet and `SKELETON_DELAY_MS` have passed. */
-  readonly skeleton: boolean;
-  /** A new Scene is being computed (the previous one, if any, stays on screen). */
-  readonly working: boolean;
-  /** The admitted hubs (real hubs and Unclassified) of the current projection, sorted. */
-  readonly hubIds: readonly string[];
-  /** Which layout drew the current Scene (step 5.5c): `grid` for an arranged overview, `elk` or `fallback` otherwise; null before the first Scene. */
-  readonly layout: LayoutResult['engine'] | null;
-  /** The reactions no family holds (the projection's `unanchoredReactionIds`, sorted: step 5.5d, item f). All of them are here, none cut. */
-  readonly unanchored: readonly string[];
-  /** How many reactions the dataset holds (the empty states, step 5.5d item j). */
-  readonly reactions: number;
-  /** The chapter the current Scene was built for (null: all chapters, or the "From A to B" panel is open). The map fits its view again when it changes (step 8.2b). */
-  readonly chapterId: string | null;
-}
-
-export interface PipelineStats {
-  readonly projections: number;
-  readonly sizes: number;
-  readonly requests: number;
-  readonly layoutCalls: number;
-  readonly scenes: number;
-}
-
-export interface NavigatorModel {
-  getState(): NavigatorState;
-  subscribe(listener: () => void): () => void;
-  /** Subscribes to the inputs and runs the first build once the measurer is ready. Safe to call again after `stop`. */
-  start(): void;
-  stop(): void;
-  stats(): PipelineStats;
-}
+export type { NavigatorModel, NavigatorState, PipelineStats } from './navigator-state';
 
 const hubIdsOf = (projection: Projection): string[] => projection.nodes.filter((node) => node.role === 'anchor' || node.role === 'unclassified').map((node) => node.id);
 
 const NO_EXPANSION: ProjectionRequest['expansion'] = { expanded: [], collapsedEdgeIds: [] };
-
-const INITIAL: NavigatorState = { scene: null, error: null, skeleton: false, working: false, hubIds: [], layout: null, unanchored: [], reactions: 0, chapterId: null };
 
 /** `layoutAlgorithm` forces the layout of the overview (the tests that are about the layered path use it); the app leaves it unset. */
 export interface NavigatorModelOptions {
@@ -83,7 +47,7 @@ export interface NavigatorModelOptions {
 
 export function createNavigatorModel(ports: NavigatorPorts, modelOptions: NavigatorModelOptions = {}): NavigatorModel {
   const binding = depictionBindingOf(ports);
-  let state = INITIAL;
+  let state = IDLE_NAVIGATOR_STATE;
   const listeners = new Set<() => void>();
   let running = false;
   let measured = false;

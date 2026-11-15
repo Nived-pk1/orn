@@ -32,7 +32,7 @@ function EndBox(props: { readonly node: SceneNode }) {
   return <rect className={styles.endBox} data-overlay="end" data-overlay-id={node.id} x={node.x - pad} y={node.y - pad} width={node.width + 2 * pad} height={node.height + 2 * pad} rx={HUB_RADIUS + pad} />;
 }
 
-export const OverlayLayer = memo(function OverlayLayer(props: {
+export const OverlayLayer = /* @__PURE__ */ memo(function OverlayLayer(props: {
   readonly scene: Scene;
   readonly lod: LodLevel;
   readonly ids: DefIds;

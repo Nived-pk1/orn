@@ -34,6 +34,7 @@ import { createSearchPorts } from "./search-port";
 import { openChapter } from "./chapters-entry";
 import { useFirstScreen, hasChapterTopic } from "./first-screen";
 import { useWarmCanvas } from "./use-warm-canvas";
+import { mapWanted } from "./map-wanted";
 import { CHAPTERS_MODE, EXPLORER_MODES, modesFor, modeOfExplorer, NAVIGATOR_MODE, SETTINGS_MODE } from "./modes";
 import { usePhoneTabMode } from "./phone-tab-mode";
 import { studyChrome, StudyChromeProvider, useStudyChrome } from '@/ui/study-chrome';
@@ -210,7 +211,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const navigatorPorts = useMemo(() => ({ ...navigator, openNamedReaction: onNamed }), [navigator, onNamed]);
   const onPrecursors = useCallback((ref: RecordRef) => openPrecursors(navigator.ui, setMode, ref), [navigator]);
   const hasData = totalOf(counts) > 0;
-  useFirstScreen({ hasData, chapterTopics, phone: layoutMode === 'phone', overview: navigator.ui.overview, setMode });
+  const settled = useFirstScreen({ hasData, chapterTopics, phone: layoutMode === 'phone', overview: navigator.ui.overview, setMode });
   // When the first-run screen closes (data arrived, or Start empty) the control that had the focus is gone: the focus goes to the page title,
   // so the next Tab starts from the top in every engine (UI_ARCHITECTURE §11).
   const startedEmpty = usePanels(panels, (s) => s.startEmptyDismissed);
@@ -308,7 +309,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
       {EDITING ? <HistoryKeys history={services.store} /> : null}
       <ExportOpenContext.Provider value={exports.open}>
       <AboutOpenContext.Provider value={() => setAbout(true)}>
-      <NavigatorProvider ports={navigatorPorts} active={totalOf(counts) > 0}>
+      <NavigatorProvider ports={navigatorPorts} active={hasData} shown={mapWanted({ hasData, editing: EDITING, phone: layoutMode === 'phone', phoneTab, mode, settled })}>
         <TitledShell
           familyVisible={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
           title="Organic Reaction Navigator"

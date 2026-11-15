@@ -35,7 +35,7 @@ export const defIds = (prefix: string): DefIds => ({
 
 const half = ARROW_SIZE / 2;
 
-export const SceneDefs = memo(function SceneDefs(props: { readonly scene: Scene; readonly ids: DefIds; readonly marks?: MapMarks | undefined }) {
+export const SceneDefs = /* @__PURE__ */ memo(function SceneDefs(props: { readonly scene: Scene; readonly ids: DefIds; readonly marks?: MapMarks | undefined }) {
   const { scene, ids } = props;
   const sizes = new Map<string, { width: number; height: number }>();
   const hubs = new Map<string, { width: number; height: number }>();

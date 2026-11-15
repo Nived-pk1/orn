@@ -3,7 +3,7 @@
  * Navigator; Studio is unchanged. The rule runs ONCE per start, when data first exists, and only while the visitor has not moved: a mode
  * they already chose stays, and on a phone a tab they chose before (saved) wins (`adoptDefaultTab` does nothing then).
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CanonicalState } from '@/core/schema';
 import { EDITING } from '@/app/edition';
 import type { OverviewStore } from '@/ui/state';
@@ -20,14 +20,18 @@ export function useFirstScreen(args: {
   readonly phone: boolean;
   readonly overview: OverviewStore;
   readonly setMode: (update: (current: string) => string) => void;
-}): void {
+}): boolean {
   const { hasData, chapterTopics, phone, overview, setMode } = args;
   const decided = useRef(false);
+  // true from the render in which the rule's own mode or tab change is visible (step 8.4m R1: the map model waits for it)
+  const [settled, setSettled] = useState(false);
   useEffect(() => {
     if (decided.current || !hasData) return;
     decided.current = true;
+    setSettled(true);
     if (!startsOnChapters(EDITING, chapterTopics)) return;
     if (phone) overview.getState().adoptDefaultTab('chapters');
     else setMode((current) => (current === NAVIGATOR_MODE ? CHAPTERS_MODE : current));
   }, [hasData, chapterTopics, phone, overview, setMode]);
+  return settled;
 }

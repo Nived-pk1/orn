@@ -79,7 +79,7 @@ function NodeGroup(props: { readonly node: SceneNode; readonly lod: LodLevel; re
   );
 }
 
-export const NodesLayer = memo(function NodesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
+export const NodesLayer = /* @__PURE__ */ memo(function NodesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('nodes', props.onCommit);
   return (
     <g data-layer="nodes">

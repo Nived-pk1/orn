@@ -2,7 +2,7 @@
  * scripts/check-edition.mjs against small fixture builds (studio step E2): the Study output must contain NO editor module in ANY chunk
  * (the module list comes from the build's own report, `build-report/<edition>.json`, written by the Vite plugin: the Vite manifest has no
  * module list); the Studio output must contain them (a wrong build is not mistaken for a right one); both report the initial JS gzip;
- * Study is held to 360 kB and Studio to 365 kB (8.4s). It must FAIL on a deliberately wrong fixture.
+ * Study is held to 346 kB and Studio to 350 kB (8.4m; 360 / 365 in 8.4s). It must FAIL on a deliberately wrong fixture.
  */
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -112,15 +112,15 @@ describe('scripts/check-edition.mjs', () => {
     expect(run('neither', studyChunks).status).toBe(1);
   });
 
-  it('holds Study to 360 kB and Studio to 365 kB gzip of initial JS (step 8.4s), and passes both well under', () => {
+  it('holds Study to 346 kB and Studio to 350 kB gzip of initial JS (step 8.4m), and passes both well under', () => {
     const heavy = randomBytes(410_000).toString('latin1');
     const studio = run('studio', studioChunks, { indexJs: heavy });
     expect(studio.status).toBe(1);
-    expect(studio.out).toContain('over the 365 kB line');
+    expect(studio.out).toContain('over the 350 kB line');
     const study = run('study', studyChunks, { indexJs: heavy });
     expect(study.status).toBe(1);
-    expect(study.out).toContain('over the 360 kB line');
-    const light = randomBytes(300_000).toString('latin1');
+    expect(study.out).toContain('over the 346 kB line');
+    const light = randomBytes(280_000).toString('latin1');
     expect(run('studio', studioChunks, { indexJs: light }).status).toBe(0);
     expect(run('study', studyChunks, { indexJs: light }).status).toBe(0);
   });

@@ -1,11 +1,13 @@
 /**
- * The navigator's model, shared by the canvas and the status line (step 5.5a): one model per window, started while the dataset has
- * records and stopped when it has none. React reads the model's state through `useSyncExternalStore`; nothing else is React state.
+ * The navigator's model, shared by the canvas and the status line (step 5.5a): one model per window, started once the dataset has
+ * records AND the map has been shown (`shown`, step 8.4m R1; it then stays started), stopped when the dataset has none. The model's
+ * code is a lazy chunk (`lazy-model.ts`, R2); before its first state readers get the idle state. React reads the model's state through `useSyncExternalStore`; nothing else is React state.
  */
-import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createAnnouncer, type Announcer } from './announcer';
 import type { NavigatorPorts } from './contracts';
-import { createNavigatorModel, type NavigatorModel, type NavigatorState } from './pipeline';
+import { createLazyNavigatorModel } from './lazy-model';
+import type { NavigatorModel, NavigatorState } from './navigator-state';
 
 interface NavigatorContextValue {
   readonly model: NavigatorModel;
@@ -16,14 +18,16 @@ interface NavigatorContextValue {
 
 const NavigatorContext = createContext<NavigatorContextValue | null>(null);
 
-export function NavigatorProvider(props: { readonly ports: NavigatorPorts; readonly active: boolean; readonly children: ReactNode }) {
-  const { ports, active } = props;
-  const value = useMemo<NavigatorContextValue>(() => ({ model: createNavigatorModel(ports), ports, announcer: createAnnouncer() }), [ports]);
+export function NavigatorProvider(props: { readonly ports: NavigatorPorts; readonly active: boolean; /** The map is (or has been) the screen; left out: yes. */ readonly shown?: boolean; readonly children: ReactNode }) {
+  const { ports, active, shown = true } = props;
+  const [seen, setSeen] = useState(shown);
+  if (shown && !seen) setSeen(true);
+  const value = useMemo<NavigatorContextValue>(() => ({ model: createLazyNavigatorModel(ports), ports, announcer: createAnnouncer() }), [ports]);
   useEffect(() => {
-    if (!active) return undefined;
+    if (!active || !seen) return undefined;
     value.model.start();
     return () => value.model.stop();
-  }, [value, active]);
+  }, [value, active, seen]);
   return <NavigatorContext.Provider value={value}>{props.children}</NavigatorContext.Provider>;
 }
 

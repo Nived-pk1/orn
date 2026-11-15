@@ -167,8 +167,8 @@ if (shipsPublished) {
 // 2026-10-13 (5.10a review): legacy converter is static in the compute worker; WebKit re-evaluated the worker entry when a
 // dynamic chunk imported shared code from it. There is no import-legacy chunk any more.
 const LAZY = ['views-other', 'import-inprocess', 'export-inprocess', 'import-screen', 'export-screen'];
-// step 8.4s (L1): Study 360 kB, Studio 365 kB (it was 400 kB for both), so the room the lazy map canvas gave back is not spent silently
-const INITIAL_JS_GZIP_BUDGET = (process.argv[4] === 'study' ? 360 : 365) * 1000;
+// step 8.4m (R2): Study 346 kB, Studio 350 kB (8.4s: 360 / 365; before: 400 for both), so the room the lazy map canvas and model gave back is not spent silently
+const INITIAL_JS_GZIP_BUDGET = (process.argv[4] === 'study' ? 346 : 350) * 1000;
 const gz = (bytes) => `${(bytes / 1000).toFixed(2)} kB gzip`; // vite's unit (1 kB = 1000 bytes)
 const htmlText = existsSync(indexPath) ? readFileSync(indexPath, 'utf8') : '';
 const initial = [...htmlText.matchAll(/<(?:script|link)\s[^>]*(?:src|href)="\/?([^"]+\.js)"/gi)].map((m) => m[1]);

@@ -78,7 +78,7 @@ function ArrowText(props: { readonly edge: SceneEdge }) {
   );
 }
 
-export const LabelsLayer = memo(function LabelsLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
+export const LabelsLayer = /* @__PURE__ */ memo(function LabelsLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly depictions: DepictionSource | undefined; readonly ids: DefIds; readonly marks?: MapMarks | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('labels', props.onCommit);
   const { scene, lod } = props;
   return (

@@ -107,7 +107,7 @@ function Chip(props: ChipProps) {
 
 const centreOf = (edge: SceneEdge, at: Point | undefined): Point => at ?? edge.labelAt;
 
-export const BadgesLayer = memo(function BadgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly marks?: MapMarks | undefined; readonly onChip?: ((hit: SceneHit) => void) | undefined; readonly onCommit?: (layer: LayerName) => void }) {
+export const BadgesLayer = /* @__PURE__ */ memo(function BadgesLayer(props: { readonly scene: Scene; readonly lod: LodLevel; readonly marks?: MapMarks | undefined; readonly onChip?: ((hit: SceneHit) => void) | undefined; readonly onCommit?: (layer: LayerName) => void }) {
   useCommitProbe('badges', props.onCommit);
   const { scene, lod, onChip } = props;
   return (
