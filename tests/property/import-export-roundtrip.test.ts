@@ -6,6 +6,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { documentToState } from '@/core/dataset';
 import { emptyRecordTables, type CanonicalState } from '@/core/schema';
+import { IMPORT_LIMITS } from '@/io/contracts';
+import { sha256Hex } from '@/io/hash';
 import { makeStore } from '@/test-support/command-kit';
 import { buildDemoDocument } from '@/test-support/demo';
 import { exportBytes, parseBytes, testSession } from '@/test-support/import-kit';
@@ -63,6 +65,30 @@ describe('P-02 full (INV-19): export → import (real importer) → export is by
       const { first, second } = await importAndExport(state, format, mode);
       expect(second).toEqual(first);
     });
+  });
+
+  it('step 8.4s (S2): one picture just under the asset cap, embedded in the file, goes round and comes out byte-identical', async () => {
+    const base = loadFixtureState('maximal-valid');
+    const [assetId, asset] = Object.entries(base.records.asset)[0] ?? [];
+    if (assetId === undefined || asset === undefined) throw new Error('fixture has no asset');
+    const bytes = new Uint8Array(IMPORT_LIMITS.maxAssetBytes - 3);
+    bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    for (let i = 8; i < bytes.length; i += 1) bytes[i] = (i * 31) & 0xff;
+    const state = { ...base, records: { ...base.records, asset: { ...base.records.asset, [assetId]: { ...asset, sha256: await sha256Hex(bytes), mediaType: 'image/png', byteSize: bytes.length } } } } as unknown as CanonicalState;
+    const provide = async (id: string) => (id === assetId ? bytes : undefined);
+    const first = await exportBytes(state, 'json', 'embed', provide);
+    const parsed = await parseBytes(first);
+    expect(parsed.quarantined).toEqual([]);
+    expect(parsed.rejectedAssets).toEqual([]);
+    const store = makeStore({ meta: state.meta, records: emptyRecordTables() });
+    const { session } = testSession(store);
+    const outcome = await session.preview({ parsed, fileName: 'x', request: { mode: 'merge' } });
+    if (!outcome.ok) throw new Error(`${outcome.code}: ${outcome.message}`);
+    const applied = await session.apply(outcome.plan.preview.batchId, outcome.plan);
+    if (!applied.ok) throw new Error(`${applied.code}: ${applied.message}`);
+    const second = await exportBytes(store.getState(), 'json', 'embed', provide);
+    // a plain comparison: toEqual on two 27 MB arrays would build a huge diff if they ever differed
+    expect(second.length === first.length && Buffer.from(second).equals(Buffer.from(first))).toBe(true);
   });
 
   it('generator hub_explosion (initial tier, 1,000 reactions): .json, replace_all', async () => {

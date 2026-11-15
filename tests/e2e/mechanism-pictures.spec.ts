@@ -265,6 +265,8 @@ test.describe('export and import', () => {
     await a.getByRole('menuitem', { name: /Export\.\.\./ }).click();
     const exportDialog = a.getByRole('dialog', { name: 'Export your data' });
     await expect(exportDialog.getByRole('group', { name: 'What to include' })).toBeVisible();
+    // step 8.4s (S3): a dataset with pictures opens on the package; this test is about the pictures inside ONE file
+    await exportDialog.getByRole('radio', { name: /One file/ }).check();
     await exportDialog.getByRole('radio', { name: /Inside the file/ }).check();
     const [download] = await Promise.all([a.waitForEvent('download'), exportDialog.getByRole('button', { name: 'Export', exact: true }).click()]);
     const path = await download.path();

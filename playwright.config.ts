@@ -41,7 +41,7 @@ export default defineConfig({
             timeout: 300_000,
           },
           {
-            command: `node scripts/publish-dataset.mjs data/fixtures/schema/v2/minimal-valid.orn.json && node scripts/edition.mjs study build && node scripts/edition.mjs study preview --host 127.0.0.1 --port ${STUDY_PORT} --strictPort`,
+            command: `node scripts/publish-dataset.mjs data/fixtures/schema/v2/minimal-valid.orn.json --allow-unreviewed 22 && node scripts/edition.mjs study build && node scripts/edition.mjs study preview --host 127.0.0.1 --port ${STUDY_PORT} --strictPort`,
             url: `http://127.0.0.1:${STUDY_PORT}`,
             reuseExistingServer: false,
             timeout: 300_000,

@@ -57,7 +57,7 @@ export function DatasetActions(props: { readonly imports: ImportActions; readonl
   const words = datasetWordsOf(useDatasetInfo());
   const busy = imports.busy ? 'another operation is running' : undefined;
   const blocked = unavailableReason(status.mode, status.reason) ?? busy;
-  const undoBlocked = undoUnavailableReason(status.mode, status.reason) ?? busy;
+  const undoBlocked = undoUnavailableReason(status.mode, status.reason) ?? imports.undoneReason ?? busy;
   return (
     <>
     <section aria-label="Back up the data">

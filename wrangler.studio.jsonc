@@ -4,6 +4,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "reaction-navigator-studio",
   "compatibility_date": "2026-10-14",
+  // no per-version preview URLs: the Access policy is on the main URL only (docs/RELEASE.md, step 8.4s)
+  "preview_urls": false,
   "assets": {
     "directory": "./dist-studio"
   }

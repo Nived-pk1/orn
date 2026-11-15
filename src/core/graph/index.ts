@@ -13,6 +13,8 @@ export { previewOfDraft } from './draft-preview';
 export type { DraftPreview, PreviewGroup } from './draft-preview';
 export { groupOutcomes, outcomeWordOf, variantSetKeyOf } from './outcome-groups';
 export type { OutcomeGroup, OutcomeLike } from './outcome-groups';
+export { headlineOutcomeOf, MAX_HEADLINE_ALTERNATIVES } from './headline-outcome';
+export type { HeadlineOutcome } from './headline-outcome';
 export type { EquationShape, EquationTerm, FullEquation, ProductRoleWord, SelectivityQuantifier } from './full-equation';
 export { MAX_FORMULA_HEAVY_ATOMS, needsFacts, termRepresentationOf } from './equation-term';
 export type { FactsInput, FormulaRepresentation, TermRepresentation, TermSubstance } from './equation-term';

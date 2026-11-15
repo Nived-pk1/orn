@@ -20,6 +20,10 @@ import type { BootPorts } from './boot-ports';
 import type { BootReport, OpenResult } from './contracts';
 import { describeError } from './events';
 
+/** More than this many rejected rows AND more than this share of all rows: the app opens read-only instead of quarantining (step 8.4s, S6). */
+const MASS_REJECT_ROWS = 20;
+const MASS_REJECT_SHARE = 0.02;
+
 const isRevision = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0;
 
 type ReadOnlyReason = NonNullable<Extract<OpenResult, { mode: 'read_write' | 'read_only' }>['readOnlyReason']>;
@@ -125,6 +129,10 @@ export async function runBoot(ports: BootPorts, options: BootOptions = {}): Prom
     }
     const assembled = assembleState(rows, datasetMeta.data, now);
     state = assembled.state;
+    // A build that rejects MOST of the data is the wrong build, not damaged data: nothing is moved, the tab opens read-only (step 8.4s, S6; audit DA-08).
+    if (assembled.rejected.length > MASS_REJECT_ROWS && assembled.rejected.length > rows.length * MASS_REJECT_SHARE) {
+      return refuse('integrity_failure', `${assembled.rejected.length} of ${rows.length} records do not fit this version of the app. Nothing was changed. Export them, then reload with the newest version.`, revision);
+    }
     if (writer && assembled.rejected.length > 0) newlyQuarantined = await ports.moveToQuarantine(assembled.rejected);
     quarantineCount = quarantined();
     quarantineCount.catch(() => undefined); // awaited below; a failure must not be reported twice if validation throws first

@@ -7,7 +7,7 @@ import { useId } from 'react';
 import { useStore } from 'zustand';
 import { Button, Dialog } from '@/ui/primitives';
 import type { ExportModel, ExportState } from './export-model';
-import { EXTENSION, FORMATS, IMAGES, SCOPES, fileNameOf, imagesNote, imagesUnavailable, type Choice } from './export-words';
+import { EXTENSION, FORMATS, IMAGES, SCOPES, fileNameOf, imagesNote, imagesUnavailable, notInFileLine, scopeWords, type Choice } from './export-words';
 import { shownName } from './words';
 import styles from './import.module.css';
 
@@ -59,7 +59,7 @@ function Options(props: { readonly model: ExportModel; readonly state: ExportSta
         An export is your backup, and how you share data. Your browser may clear its stored data, so keep a copy of the file somewhere else too.
       </p>
       <Group legend="File format" name="export-format" choices={FORMATS} value={state.format} onChange={model.setFormat} />
-      <Group legend="What to include" name="export-scope" choices={SCOPES} value={state.scope} onChange={model.setScope} />
+      <Group legend="What to include" name="export-scope" choices={SCOPES.map((scope) => ({ ...scope, text: scopeWords(scope, state.images) }))} value={state.scope} onChange={model.setScope} />
       <Group
         legend="Images"
         name="export-images"
@@ -67,7 +67,7 @@ function Options(props: { readonly model: ExportModel; readonly state: ExportSta
         value={state.images}
         onChange={model.setImages}
         unavailable={(id) => imagesUnavailable(id, state.format)}
-        note={imagesNote(state.imageInfo)}
+        note={[imagesNote(state.imageInfo), notInFileLine(state.imageInfo, state.images)].filter((line) => line !== undefined).join(' ')}
       />
     </div>
   );

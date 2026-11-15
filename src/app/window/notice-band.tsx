@@ -3,11 +3,14 @@
  * unfinished-drafts line become entries of ONE band; `NoticeBandView` shows the most severe and "+n more". Toasts are not here (they dock at
  * the foot of the main column); layout notes are not here (a status-bar item). "Newest" is the order a notice was first seen.
  */
-import { useRef, useContext, type ReactNode } from 'react';
+import { useRef, useContext, useSyncExternalStore, type ReactNode } from 'react';
 import { Button } from '@/ui/primitives';
 import { useSubscribable } from '@/ui/hooks';
 import { usePanels } from '@/ui/state';
 import { useStudyChrome } from '@/ui/study-chrome';
+import { EDITING } from '@/app/edition';
+import { backupNoticeDue, backupNoticeText } from './backup-rule';
+import { useBackupMarks, useBackupRecord } from './backup-hooks';
 import { bannersOf, bannerKindOf, bootLinesOf, draftsLineOf } from './banners';
 import { useApp } from './context';
 import { useDraftsOpen, useDraftsView } from './editors-access';
@@ -18,7 +21,7 @@ import { BannerButtons, useBannerRunner } from './status-parts';
 import { NOTICE_TEXT, StudyUpdateContext } from './study-update';
 
 export function useBandNotices(): readonly BandNotice[] {
-  const { services, panels } = useApp();
+  const { services, panels, nowMs: clock } = useApp();
   const status = useSubscribable(services.status);
   const storageNoticeDismissed = usePanels(panels, (s) => s.storageNoticeDismissed);
   const chrome = useStudyChrome();
@@ -27,6 +30,11 @@ export function useBandNotices(): readonly BandNotice[] {
   const update = useContext(StudyUpdateContext);
   const draftsLine = draftsLineOf(useDraftsView().count);
   const showDrafts = useDraftsOpen();
+  // Studio only (step 8.4s, S4): the changes that are not in a backup
+  const revision = useSyncExternalStore((onChange) => services.store.subscribe(() => onChange()), () => services.store.getRevision());
+  const marks = useBackupMarks();
+  const backup = useBackupRecord();
+  const nowMs = (clock ?? (() => 0))();
   const seen = useRef(new Map<string, number>());
   const orderOf = (id: string): number => {
     const known = seen.current.get(id);
@@ -51,6 +59,20 @@ export function useBandNotices(): readonly BandNotice[] {
           <Button onClick={update.loadIt}>Load it</Button>
           <Button onClick={update.later}>Later</Button>
           <Button onClick={update.keep}>Keep my data</Button>
+        </>
+      ),
+    });
+  }
+  if (EDITING && backupNoticeDue({ last: marks.last, revision, nowMs, dismissed: marks.dismissed })) {
+    out.push({
+      id: 'backup_notice',
+      kind: 'info',
+      text: backupNoticeText(revision - (marks.last?.revision ?? 0)),
+      order: orderOf('backup_notice'),
+      actions: (
+        <>
+          {openExport === undefined ? null : <Button onClick={openExport}>Back up now</Button>}
+          <Button onClick={() => backup.dismiss(revision)}>Dismiss</Button>
         </>
       ),
     });

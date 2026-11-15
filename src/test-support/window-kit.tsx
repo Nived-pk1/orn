@@ -25,6 +25,10 @@ import type { NavigatorPorts } from '@/features/navigator';
 import { navigatorRig, type NavigatorRig } from './navigator-kit';
 import type { ReactNode } from 'react';
 
+// The map canvas is a lazy chunk (step 8.4s, L1). In jsdom its first import (d3, the viewport, the pointer machine) takes longer than a findBy wait, so a
+// window test that is not about the loading has it in before the first render, as the multi-selection engine and the editors are (no timeout is raised).
+await import('@/features/navigator/navigator-canvas');
+
 export const WRITER_STATUS: Partial<AppStatus> = {
   stage: 'ready',
   mode: 'writer',

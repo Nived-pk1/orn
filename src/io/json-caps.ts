@@ -10,6 +10,11 @@ export interface CapScanLimits {
   readonly maxDepth: number;
   /** Characters of raw JSON text inside one string literal's quotes (an escape sequence counts as one). */
   readonly maxStringLength: number;
+  /**
+   * Step 8.4s (S2): a longer limit for the strings inside the TOP-LEVEL `embeddedAssets` array only (a picture is one base64 string).
+   * Every other string keeps `maxStringLength`. A look-alike key anywhere else, or one written with escapes, gets no extra room.
+   */
+  readonly embeddedStringLength?: number;
 }
 
 export type CapScanResult =
@@ -29,6 +34,12 @@ export function scanJsonCaps(text: string, limits: CapScanLimits): CapScanResult
   let inString = false;
   let stringLength = 0;
   let i = 0;
+  // the top-level `embeddedAssets` array (a key string at depth 1, then `:`, then `[`): its strings may use the larger limit
+  const EMBEDDED_KEY = 'embeddedAssets';
+  let stringStart = 0;
+  let keyIsEmbedded = false;
+  let colonAfterEmbedded = false;
+  let inEmbedded = false;
   while (i < len) {
     const ch = text.charCodeAt(i);
     if (inString) {
@@ -40,12 +51,14 @@ export function scanJsonCaps(text: string, limits: CapScanLimits): CapScanResult
       }
       if (ch === QUOTE) {
         inString = false;
+        if (depth === 1) keyIsEmbedded = text.slice(stringStart, i) === EMBEDDED_KEY;
         i += 1;
         continue;
       }
       stringLength += 1;
-      if (stringLength > limits.maxStringLength) {
-        return { ok: false, code: 'STRING_TOO_LONG', message: `a string literal exceeds ${limits.maxStringLength} characters`, at: i };
+      const cap = inEmbedded && limits.embeddedStringLength !== undefined ? limits.embeddedStringLength : limits.maxStringLength;
+      if (stringLength > cap) {
+        return { ok: false, code: 'STRING_TOO_LONG', message: `a string literal exceeds ${cap} characters`, at: i };
       }
       i += 1;
       continue;
@@ -53,11 +66,21 @@ export function scanJsonCaps(text: string, limits: CapScanLimits): CapScanResult
     if (ch === QUOTE) {
       inString = true;
       stringLength = 0;
+      stringStart = i + 1;
+      colonAfterEmbedded = false;
+      i += 1;
+      continue;
+    }
+    if (depth === 1 && ch === 58 /* : */) {
+      colonAfterEmbedded = keyIsEmbedded;
+      keyIsEmbedded = false;
       i += 1;
       continue;
     }
     if (ch === OPEN_BRACE || ch === OPEN_BRACKET) {
       depth += 1;
+      if (depth === 2 && ch === OPEN_BRACKET && colonAfterEmbedded) inEmbedded = true;
+      colonAfterEmbedded = false;
       if (depth > limits.maxDepth) {
         return { ok: false, code: 'TOO_DEEP', message: `nesting exceeds depth ${limits.maxDepth}`, at: i };
       }
@@ -66,7 +89,9 @@ export function scanJsonCaps(text: string, limits: CapScanLimits): CapScanResult
     }
     if (ch === CLOSE_BRACE || ch === CLOSE_BRACKET) {
       depth -= 1;
+      if (depth < 2) inEmbedded = false;
     }
+    if (ch > 32 && ch !== 44 /* , */) colonAfterEmbedded = false;
     i += 1;
   }
   return { ok: true };

@@ -29,6 +29,23 @@ export const SCOPES: readonly Choice<ExportScopeId>[] = [
   { id: 'presentation', label: 'Display settings', text: 'How things are shown: the family layout, the reaction schemes and the saved views, together with the chemistry they point at.' },
 ];
 
+/** The scope's words for the images choice: with No images the text never claims images that are not in the file (step 8.4s, S3). */
+const WITHOUT_IMAGES: Readonly<Partial<Record<ExportScopeId, string>>> = {
+  full: 'All of it: the chemistry, the syllabus (exams and topics) and the display settings.',
+  chemistry: 'Substances, reagents, reactions, mechanisms, concepts and their notes. No syllabus and no display settings.',
+};
+export const scopeWords = (scope: Choice<ExportScopeId>, images: ImagesChoice): string => (images === 'none' ? (WITHOUT_IMAGES[scope.id] ?? scope.text) : scope.text);
+
+/** "N pictures are NOT in this file." when the choice leaves out the pictures the dataset holds; undefined otherwise. */
+export function notInFileLine(info: { readonly count: number; readonly bytes?: number }, images: ImagesChoice): string | undefined {
+  if (images !== 'none' || info.count === 0) return undefined;
+  return `${info.count} ${info.count === 1 ? 'picture is' : 'pictures are'} NOT in this file.`;
+}
+
+/** What the export opens with: a dataset with pictures (with bytes) opens on the package, which keeps them; otherwise the one file. */
+export const exportDefaults = (info: { readonly count: number; readonly bytes: number }): { readonly format: ExportFormatId; readonly images: ImagesChoice } =>
+  info.count > 0 && info.bytes > 0 ? { format: 'ornpkg', images: 'package' } : { format: 'orn.json', images: 'none' };
+
 export const IMAGES: readonly Choice<ImagesChoice>[] = [
   { id: 'none', label: 'No images', text: 'Only the records. Image records are kept, but their pictures are not in the file.' },
   { id: 'embed', label: 'Inside the file', text: 'The pictures are written into the one file. Needs the one-file format.' },

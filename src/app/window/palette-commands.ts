@@ -34,6 +34,7 @@ export interface CommandDeps {
   readonly replaceTitle?: string | undefined;
   askReplace(): void;
   undoImport(): void;
+  readonly undoneReason?: string | undefined;
   pickFile(): void;
   openExport(): void;
   /** "Edit the selected record" (ADR-040): why it cannot run now, and what it does. Absent: no such command. */
@@ -70,7 +71,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
   const onMap = mapReason(deps);
   const zoomReason = onMap ?? view?.zoomReason;
   const importReason = deps.importReason;
-  const undoReason = undoUnavailableReason(deps.writerMode, deps.writerReason) ?? importReason;
+  const undoReason = undoUnavailableReason(deps.writerMode, deps.writerReason) ?? deps.undoneReason ?? importReason;
   const listing = ui.overview.getState().mode === 'list';
   const familyOpen = ui.family.getState().open !== null;
   const withReason = (command: Omit<PaletteCommand, 'unavailable'>, reason: string | undefined): PaletteCommand =>

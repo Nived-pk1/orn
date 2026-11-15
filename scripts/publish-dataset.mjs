@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-// npm run publish:dataset -- <file>   (studio step E4, ADR-041, docs/RELEASE.md "Publishing a dataset")
+// npm run publish:dataset -- <file> [--allow-unreviewed N]   (studio step E4, ADR-041, docs/RELEASE.md "Publishing a dataset")
 // Checks a Studio export (.orn.json with its pictures embedded, or an .ornpkg) with the SAME import pipeline the app uses (src/io/publish.ts:
 // parse, envelope, migrations, L1-L3, assets with magic bytes and SHA-256), refuses on any L1 ERROR or rejected asset, prints the counts and
 // the findings, then copies the file into data/published/ (dataset.orn.json or dataset.ornpkg) with manifest.json: sha256, publishedAt from an
 // INJECTED clock (ORN_NOW, an ISO time; the wall clock only when it is not set), the record counts. Nothing is written on a refusal.
+// Step 8.4s: it counts the records whose review status is not `verified`, per kind, prints that every time and refuses while it is above 0
+// unless run with --allow-unreviewed N where N is the EXACT count (a wrong N refuses too).
 // ORN_PUBLISH_DIR changes the folder (the tests use a temporary one). Exit: 0 accepted, 1 refused, 2 usage.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
@@ -11,9 +13,23 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { register } from 'tsx/esm/api';
 
-const file = process.argv[2];
-if (file === undefined || process.argv.length > 3) {
-  console.error('usage: npm run publish:dataset -- <file>');
+const USAGE = 'usage: npm run publish:dataset -- <file> [--allow-unreviewed N]';
+const args = process.argv.slice(2);
+const flagAt = args.indexOf('--allow-unreviewed');
+let allowUnreviewed;
+if (flagAt !== -1) {
+  const text = args[flagAt + 1];
+  if (text === undefined || !/^\d+$/.test(text)) {
+    console.error(`publish: --allow-unreviewed needs a whole number (the exact count of unverified records)
+${USAGE}`);
+    process.exit(2);
+  }
+  allowUnreviewed = Number(text);
+  args.splice(flagAt, 2);
+}
+const file = args[0];
+if (file === undefined || args.length > 1) {
+  console.error(USAGE);
   process.exit(2);
 }
 let bytes;
@@ -48,15 +64,21 @@ const next = () => {
 };
 const iso = new Date(nowMs).toISOString();
 const empty = { meta: { datasetId: 'orn-publish-check', title: 'Untitled dataset', createdAt: iso, updatedAt: iso }, records: emptyRecordTables() };
-const verdict = await checkForPublish({ fileName: file, bytes }, { store: { getState: () => empty, getRevision: () => 0 }, ids: createIdFactory({ nowMs: () => nowMs }, { next }), runner: migrationRunner });
+const verdict = await checkForPublish({ fileName: file, bytes }, { store: { getState: () => empty, getRevision: () => 0 }, ids: createIdFactory({ nowMs: () => nowMs }, { next }), runner: migrationRunner }, allowUnreviewed === undefined ? {} : { allowUnreviewed });
 
 const SHOWN = 20;
 const printFindings = (findings) => {
   if (findings.length > SHOWN) console.log('  (the first ' + SHOWN + ' of ' + findings.length + ' listed findings; errors come first)');
   for (const finding of findings.slice(0, SHOWN)) console.log(`  ${finding.severity.toUpperCase().padEnd(7)} ${finding.ruleId.padEnd(8)} ${finding.subject.kind} ${finding.subject.id}: ${finding.message}`);
 };
+// printed every time, whatever the verdict
+const printUnreviewed = (count, log) => {
+  const kinds = Object.keys(count.byKind).sort();
+  log(`not verified: ${count.total}${kinds.length === 0 ? '' : ` (${kinds.map((kind) => `${kind} ${count.byKind[kind]}`).join(', ')})`}`);
+};
 if (!verdict.ok) {
   console.error(`publish: refused ${file}`);
+  if (verdict.unreviewed !== undefined) printUnreviewed(verdict.unreviewed, console.error);
   for (const reason of verdict.reasons) console.error(`  - ${reason}`);
   if (verdict.findings.length > 0) {
     console.error('findings:');
@@ -72,6 +94,7 @@ const summary = verdict.findingSummary;
 console.log(`findings: ${summary.error} error, ${summary.warning} warning, ${summary.info} info, ${summary.reviewRequired} review required${summary.truncated ? ' (list cut short)' : ''}`);
 printFindings(verdict.findings);
 console.log(`pictures stored with the file: ${verdict.assets.toStore}`);
+printUnreviewed(verdict.unreviewed, console.log);
 
 const dir = resolve(process.env.ORN_PUBLISH_DIR ?? join(root, 'data', 'published'));
 const sha256 = createHash('sha256').update(bytes).digest('hex');

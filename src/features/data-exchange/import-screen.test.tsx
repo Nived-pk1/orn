@@ -220,3 +220,23 @@ describe('choices revise the whole request; Confirm waits while blocked (INV-21)
     expect(second.ports.cancel).toHaveBeenCalledWith('batch-1');
   });
 });
+
+describe('the Undo import question (step 8.4s, S1)', () => {
+  it('says how many changes the undo throws away; Cancel has the focus; "Undo import anyway" goes on', async () => {
+    const ports = fakePorts();
+    ports.undo.mockResolvedValueOnce({ ok: false, code: 'CHANGED_SINCE', discardedRevisions: 1, message: 'x' }).mockResolvedValueOnce({ ok: true, saved: true, sessionOnly: false, notes: [] });
+    const model = createImportModel(ports);
+    render(
+      <ToastProvider>
+        <ImportScreen model={model} ports={ports} />
+      </ToastProvider>,
+    );
+    act(() => model.undoImport());
+    await settle();
+    expect(screen.getByText('You made 1 change after this import. Undo import throws it away too.')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo import anyway' }));
+    await settle();
+    expect(ports.undo).toHaveBeenLastCalledWith({ discardLaterChanges: true });
+  });
+});

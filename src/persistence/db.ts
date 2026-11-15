@@ -87,7 +87,8 @@ export class OrnDb extends Dexie {
   declare quarantine: Table<QuarantineRow, string>;
 
   constructor(name: string, options: Pick<OrnDbOptions, 'indexedDB' | 'IDBKeyRange'>) {
-    super(name, { indexedDB: options.indexedDB, IDBKeyRange: options.IDBKeyRange });
+    // `strict`: Chrome reports a write done only when it is on disk (its own default is `relaxed`, which can lose the last writes in a crash; step 8.4s, S5)
+    super(name, { indexedDB: options.indexedDB, IDBKeyRange: options.IDBKeyRange, chromeTransactionDurability: 'strict' });
     this.preflightOptions = { name, indexedDB: options.indexedDB, IDBKeyRange: options.IDBKeyRange };
   }
 

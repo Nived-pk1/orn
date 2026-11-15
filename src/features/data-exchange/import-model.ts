@@ -18,7 +18,7 @@ const workerWhy = (message: string): string => (plainEngineText(message) === '' 
 
 const undoNothing = (message: string): string => (plainEngineText(message) === '' ? 'Undo import: the newest import did not keep a safety copy, so it cannot be undone.' : `Undo import: ${plainEngineText(message)}.`);
 
-export type ImportPhase = 'closed' | 'reading' | 'refused' | 'preview' | 'applying' | 'undoing';
+export type ImportPhase = 'closed' | 'reading' | 'refused' | 'preview' | 'applying' | 'undoing' | 'undo_question';
 
 export type Offer = 'merge' | 'in_process' | 'preview_again';
 
@@ -50,6 +50,8 @@ export interface ImportState {
   /** `applying`: the apply has run longer than 2 s (step 5.11b); only then is `progress` shown, and it is paced (apply-pace.ts). */
   readonly long?: boolean;
   readonly cancellable: boolean;
+  /** `undo_question`: how many saved changes Undo import would throw away (step 8.4s). */
+  readonly later?: number;
   /** The last result, for the toast. */
   readonly notice?: ImportNotice;
 }
@@ -68,6 +70,8 @@ export interface ImportModel {
   close(): void;
   acceptOffer(): void;
   undoImport(): void;
+  /** The answer "Undo import anyway" to the question the undo asked (step 8.4s). */
+  undoAnyway(): void;
   /** Shows a notice (a toast) from outside the model: the window uses it for what it refused before an import could start. */
   say(kind: 'info' | 'warning', text: string): void;
   /** Why the user may not start an import now; undefined: they may. */
@@ -257,7 +261,7 @@ export function createImportModel(ports: DataExchangePorts, options?: ImportMode
     refuse(state.fileName, refusalWords(answer), lost ? 'preview_again' : undefined);
   }
 
-  async function runUndo(): Promise<void> {
+  async function runUndo(discardLaterChanges = false): Promise<void> {
     const reason = ports.unavailable();
     if (reason !== undefined) {
       announce('warning', `Undo import is not available now: ${reason}.`);
@@ -275,13 +279,17 @@ export function createImportModel(ports: DataExchangePorts, options?: ImportMode
     const mine = ++token;
     set({ phase: 'undoing', fileName: last.fileName, stage: 'preparing', progress: null, cancellable: false });
     watch();
-    const answer = await ports.undo();
+    const answer = await ports.undo(discardLaterChanges ? { discardLaterChanges } : undefined);
     if (mine !== token) return;
     stopWatching();
     set({ phase: 'closed' });
     const name = shownName(last.fileName);
+    if (!answer.ok && answer.code === 'CHANGED_SINCE' && typeof answer.discardedRevisions === 'number') {
+      set({ phase: 'undo_question', fileName: last.fileName, later: answer.discardedRevisions, cancellable: true });
+      return;
+    }
     if (!answer.ok) {
-      announce('warning', answer.code === 'UNKNOWN_BATCH' ? undoNothing(answer.message) : `The import of ${name} was not undone. ${refusalWords(answer).text}`);
+      announce('warning', answer.code === 'ALREADY_UNDONE' ? `The import of ${name} was undone already. Undo import is available again after the next import.` : answer.code === 'UNKNOWN_BATCH' ? undoNothing(answer.message) : `The import of ${name} was not undone. ${refusalWords(answer).text}`);
       return;
     }
     const count = ports.recordCount();
@@ -320,6 +328,10 @@ export function createImportModel(ports: DataExchangePorts, options?: ImportMode
         controller?.abort();
         return;
       }
+      if (state.phase === 'undo_question') {
+        set({ phase: 'closed' });
+        return;
+      }
       if (state.phase === 'preview') {
         token += 1;
         controller?.abort();
@@ -339,6 +351,11 @@ export function createImportModel(ports: DataExchangePorts, options?: ImportMode
       void runPreview(from, pending.request, pending.inProcess);
     },
     undoImport: () => void runUndo(),
+    undoAnyway() {
+      if (store.getState().phase !== 'undo_question') return;
+      set({ phase: 'closed' });
+      void runUndo(true);
+    },
     say: (kind, text) => announce(kind, text),
     unavailable: () => ports.unavailable(),
     dispose() {

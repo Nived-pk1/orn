@@ -167,7 +167,8 @@ if (shipsPublished) {
 // 2026-10-13 (5.10a review): legacy converter is static in the compute worker; WebKit re-evaluated the worker entry when a
 // dynamic chunk imported shared code from it. There is no import-legacy chunk any more.
 const LAZY = ['views-other', 'import-inprocess', 'export-inprocess', 'import-screen', 'export-screen'];
-const INITIAL_JS_GZIP_BUDGET = 400 * 1000;
+// step 8.4s (L1): Study 360 kB, Studio 365 kB (it was 400 kB for both), so the room the lazy map canvas gave back is not spent silently
+const INITIAL_JS_GZIP_BUDGET = (process.argv[4] === 'study' ? 360 : 365) * 1000;
 const gz = (bytes) => `${(bytes / 1000).toFixed(2)} kB gzip`; // vite's unit (1 kB = 1000 bytes)
 const htmlText = existsSync(indexPath) ? readFileSync(indexPath, 'utf8') : '';
 const initial = [...htmlText.matchAll(/<(?:script|link)\s[^>]*(?:src|href)="\/?([^"]+\.js)"/gi)].map((m) => m[1]);
@@ -179,8 +180,8 @@ for (const name of LAZY) {
 }
 const initialGzip = initial.reduce((sum, name) => sum + gzipSync(readFileSync(join(dist, name))).length, 0);
 if (initial.length === 0) fail('index.html', 'no initial JS found');
-else if (initialGzip > INITIAL_JS_GZIP_BUDGET) fail('index.html', `initial JS is ${gz(initialGzip)}, over the 400 kB budget`);
-else report.push(`initial JS: ${initial.join(', ')} (${gz(initialGzip)}, budget 400 kB)`);
+else if (initialGzip > INITIAL_JS_GZIP_BUDGET) fail('index.html', `initial JS is ${gz(initialGzip)}, over the ${INITIAL_JS_GZIP_BUDGET / 1000} kB budget`);
+else report.push(`initial JS: ${initial.join(', ')} (${gz(initialGzip)}, budget ${INITIAL_JS_GZIP_BUDGET / 1000} kB)`);
 
 // 7. no chunk imports a worker entry chunk (a `new URL(..., import.meta.url)` that starts the worker is not an import)
 const entryNames = new Set([...entries.values()].map((path) => path.split(sep).pop()));

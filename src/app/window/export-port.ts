@@ -6,12 +6,13 @@ import { downloadBlob, type ExportPorts } from '@/features/data-exchange';
 import type { RecordRef } from '@/core/schema';
 import { createDescriber } from '@/core/graph/family/describe';
 import type { AppStatus } from '@/app/services';
+import { NO_BACKUP_RECORD, type BackupRecord } from './backup-record';
 import type { WindowServices } from './context';
 
 /** Why an export cannot start now, in words; undefined: it can (in every mode). */
 export const exportReason = (status: Pick<AppStatus, 'operation'>): string | undefined => (status.operation === null ? undefined : 'another operation is running');
 
-export function createExportPorts(services: WindowServices, nowMs: () => number, log: (type: string, message: string) => void): ExportPorts {
+export function createExportPorts(services: WindowServices, nowMs: () => number, log: (type: string, message: string) => void, backup: BackupRecord = NO_BACKUP_RECORD): ExportPorts {
   const { flows, status, store } = services;
   return {
     run: (options, format, flow) => flows.export(options, format, flow),
@@ -24,6 +25,10 @@ export function createExportPorts(services: WindowServices, nowMs: () => number,
     nameOf: (ref: RecordRef) => (ref.kind === 'asset' ? (store.getState().records.asset[ref.id]?.filename ?? undefined) : createDescriber(store.getState()).describe(ref)?.name),
     unavailable: () => exportReason(status.get()),
     save: downloadBlob,
+    // an Everything export that was saved is a backup (step 8.4s, S4); the revision it exported, or the live one when the flow did not say
+    exported: ({ scope, revision }) => {
+      if (scope === 'full') backup.markBackedUp(revision ?? store.getRevision());
+    },
     log,
   };
 }

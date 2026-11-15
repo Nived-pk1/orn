@@ -44,3 +44,26 @@ describe('scanJsonCaps', () => {
     expect(result).toMatchObject({ ok: false, code: 'STRING_TOO_LONG' });
   });
 });
+
+describe('scanJsonCaps: the top-level embeddedAssets array (step 8.4s, S2)', () => {
+  const BASE = { maxDepth: 4, maxStringLength: 20 };
+  const WITH = { ...BASE, embeddedStringLength: 40 };
+  const long = 'x'.repeat(30);
+  it('allows longer strings inside the top-level embeddedAssets array only', () => {
+    expect(scanJsonCaps(`{"embeddedAssets":[{"assetId":"a","base64":"${long}"}]}`, WITH)).toEqual({ ok: true });
+    expect(scanJsonCaps(`{"x":"${long}"}`, WITH)).toMatchObject({ ok: false, code: 'STRING_TOO_LONG' });
+    expect(scanJsonCaps(`{"embeddedAssets":[{"assetId":"a","base64":"${long}"}],"y":"${long}"}`, WITH)).toMatchObject({ ok: false, code: 'STRING_TOO_LONG' });
+  });
+  it('still refuses a string over the larger limit', () => {
+    expect(scanJsonCaps(`{"embeddedAssets":[{"base64":"${'x'.repeat(41)}"}]}`, WITH)).toMatchObject({ ok: false, code: 'STRING_TOO_LONG' });
+  });
+  it('a nested or escaped look-alike key does not get the larger limit', () => {
+    expect(scanJsonCaps(`{"a":{"embeddedAssets":["${long}"]}}`, WITH)).toMatchObject({ ok: false, code: 'STRING_TOO_LONG' });
+    const escapedKey = `embedded${String.fromCharCode(92)}u0041ssets`; // JSON for "embeddedAssets", written with an escape
+    expect(scanJsonCaps(`{"${escapedKey}":["${long}"]}`, WITH)).toMatchObject({ ok: false, code: 'STRING_TOO_LONG' });
+    expect(scanJsonCaps(`{"v":"embeddedAssets","w":["${long}"]}`, WITH)).toMatchObject({ ok: false, code: 'STRING_TOO_LONG' });
+  });
+  it('without the extra limit nothing changes', () => {
+    expect(scanJsonCaps(`{"embeddedAssets":["${long}"]}`, BASE)).toMatchObject({ ok: false, code: 'STRING_TOO_LONG' });
+  });
+});

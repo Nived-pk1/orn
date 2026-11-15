@@ -18,7 +18,7 @@ export interface ExportFailure {
   readonly busyWith?: string;
 }
 
-export type ExportReply = { readonly ok: true; readonly result: ExportResult; readonly inProcess: boolean } | ExportFailure;
+export type ExportReply = { readonly ok: true; readonly result: ExportResult; readonly inProcess: boolean; /** The revision that was exported (step 8.4s). */ readonly revision?: number } | ExportFailure;
 
 export interface ExportRunOptions {
   readonly signal?: AbortSignal;
@@ -46,5 +46,7 @@ export interface ExportPorts {
   unavailable(): string | undefined;
   /** Saves a finished file (an anchor with `download`; the object URL is revoked after). */
   save(blob: Blob, fileName: string): void;
+  /** A finished export was saved (step 8.4s, S4): the window records an Everything export as a backup. Optional. */
+  exported?(info: { readonly scope: string; readonly revision: number | undefined }): void;
   readonly log: (type: string, message: string) => void;
 }

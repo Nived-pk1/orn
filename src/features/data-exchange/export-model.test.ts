@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createExportModel } from './export-model';
 import { fakePorts, OK_RESULT } from '@/test-support/export-ports';
 
@@ -153,5 +153,37 @@ describe('the export model', () => {
     await flush();
     expect(second.store.getState().phase).toBe('refused');
     expect(second.store.getState().refusal?.text).toContain('blocked by the browser');
+  });
+});
+
+describe('the export defaults keep the pictures (step 8.4s, S3)', () => {
+  it('a dataset with pictures opens on the package with "In the package"; one without keeps the one file', () => {
+    const withPictures = createExportModel(fakePorts({ images: { count: 2, bytes: 4096 } }));
+    withPictures.open();
+    expect(withPictures.store.getState()).toMatchObject({ format: 'ornpkg', images: 'package', scope: 'full' });
+    const plain = createExportModel(fakePorts());
+    plain.open();
+    expect(plain.store.getState()).toMatchObject({ format: 'orn.json', images: 'none' });
+  });
+});
+
+describe('a saved export is told to the window (step 8.4s, S4)', () => {
+  it('after the file is saved, with the scope and the exported revision; not for a refused or cancelled export', async () => {
+    const exported = vi.fn();
+    const ports = { ...fakePorts(), exported };
+    const model = createExportModel(ports);
+    model.open();
+    model.start();
+    ports.finish({ ok: true, result: OK_RESULT, inProcess: false, revision: 17 });
+    await flush();
+    expect(ports.save).toHaveBeenCalledTimes(1);
+    expect(exported).toHaveBeenCalledWith({ scope: 'full', revision: 17 });
+    const refused = { ...fakePorts(), exported: vi.fn() };
+    const second = createExportModel(refused);
+    second.open();
+    second.start();
+    refused.finish({ ok: false, code: 'SERIALIZE_FAILED', message: 'x' } as never);
+    await flush();
+    expect(refused.exported).not.toHaveBeenCalled();
   });
 });

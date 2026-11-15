@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-12",
+  "lastUpdated": "2026-11-15",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -128,7 +128,8 @@
     "8.2b",
     "8.4a",
     "8.4b",
-    "8.4c"
+    "8.4c",
+    "8.4s"
   ],
   "nextPhase": 8,
   "outcomeGroupsStep": {
@@ -160,7 +161,7 @@
     "workerVersion": "c37e39e2-53d1-4a1d-b127-efbf2e0d5a04"
   },
   "nextStep": "8.4f",
-  "nextStepTitle": "Step 8.4f Part 1 done 2026-11-12 (map fixes, exam chip, palette, Reactions, family header); 8.4d to 8.4f Part 1 deployed (Study 59d9ef19, Studio c37e39e2). Next: 8.4f Part 2 (Settings, dark mode, empty and loading states, phone sheets, transitions, both-theme pass)",
+  "nextStepTitle": "Step 8.4s done 2026-11-15 (safety of the owner's data, lazy map canvas). Next: 8.4f Part 2 (Settings, dark mode, empty and loading states, phone sheets, transitions, both-theme pass)",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -713,5 +714,19 @@
       "34a9489",
       "ba4eed4"
     ]
+  },
+  "step84s": {
+    "closed": "2026-11-15",
+    "deployed": null,
+    "note": "commit and Worker versions: see docs/PROGRESS.md \"Step 8.4s\"",
+    "initialJsGzipBytes": {
+      "study": 348868,
+      "studio": 352716
+    },
+    "budgetsKb": {
+      "study": 360,
+      "studio": 365
+    },
+    "notes": "docs/reviews/step-8-4s-notes.md"
   }
 }

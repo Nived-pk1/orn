@@ -5,7 +5,7 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createExportModel, type ExportModel } from './index';
 import { ExportScreen } from './export-screen';
 import { fakePorts, OK_RESULT, type FakePorts } from '@/test-support/export-ports';
-import { FORMATS, IMAGES, SCOPES } from './export-words';
+import { FORMATS, IMAGES, scopeWords, SCOPES } from './export-words';
 
 afterEach(cleanup);
 beforeAll(() => {
@@ -37,7 +37,8 @@ describe('the options', () => {
       for (const choice of choices) {
         const radio = within(group).getByRole('radio', { name: new RegExp(choice.label.replace(/[()]/g, '\\$&')) });
         expect(radio).toBeTruthy();
-        expect(group.textContent).toContain(choice.text);
+        // the scope words follow the images choice (No images is the default here: step 8.4s, S3)
+        expect(group.textContent).toContain(legend === 'What to include' ? scopeWords(choice as (typeof SCOPES)[number], 'none') : choice.text);
       }
     }
   });
@@ -77,11 +78,24 @@ describe('the options', () => {
 
   it('an image choice that does not fit the format is disabled and says why; the image sizes are stated when known', () => {
     show(fakePorts({ images: { count: 3, bytes: 5 * 1024 * 1024 } }));
+    // a dataset with pictures opens on the package with "In the package" (step 8.4s, S3); the one file is a choice
+    expect((within(dialog()).getByRole('radio', { name: /Package/ }) as HTMLInputElement).checked).toBe(true);
+    expect((within(dialog()).getByRole('radio', { name: /In the package/ }) as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /One file/ }));
     expect((within(dialog()).getByRole('radio', { name: /In the package/ }) as HTMLInputElement).disabled).toBe(true);
     expect(dialog().textContent).toContain('This dataset holds 3 images, 5 MB in all.');
     fireEvent.click(within(dialog()).getByRole('radio', { name: /Package/ }));
     expect((within(dialog()).getByRole('radio', { name: /Inside the file/ }) as HTMLInputElement).disabled).toBe(true);
     expect((within(dialog()).getByRole('radio', { name: /In the package/ }) as HTMLInputElement).disabled).toBe(false);
+  });
+
+  it('with No images the words say the pictures are not in the file (step 8.4s, S3)', () => {
+    show(fakePorts({ images: { count: 3, bytes: 5 * 1024 * 1024 } }));
+    expect(dialog().textContent).toContain('every attached image');
+    expect(dialog().textContent).not.toContain('NOT in this file');
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /No images/ }));
+    expect(dialog().textContent).toContain('3 pictures are NOT in this file.');
+    expect(within(dialog()).getByRole('group', { name: 'What to include' }).textContent).not.toContain('every attached image');
   });
 
   it('a hostile dataset title gives a safe name that is shown before the export runs', () => {

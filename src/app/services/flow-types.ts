@@ -64,6 +64,14 @@ export interface LastImport {
   readonly mode: string;
   /** False when the batch records no `pre_import` snapshot (an older report): Undo import answers `UNKNOWN_BATCH`. */
   readonly undoable: boolean;
+  /** Step 8.4s (S1): this import was undone already (its report says so); Undo import stays unavailable until the next import. */
+  readonly undone: boolean;
+}
+
+/** Step 8.4s (S1): what Undo import accepts besides the flow options. */
+export interface UndoOptions extends FlowOptions {
+  /** The person was told how many saved changes the undo throws away and chose to go on. */
+  readonly discardLaterChanges?: boolean;
 }
 
 export type ImportApplyAnswer = (Extract<ImportApplyResult, { ok: true }> & Durability) | Extract<ImportApplyResult, { ok: false }> | FlowRefusal;
@@ -85,7 +93,7 @@ export interface ImportFlows {
   /** Applies the confirmed plan; answers only after `flush()`. */
   apply(batchId: string, plan: ImportPlan, options?: FlowOptions): Promise<ImportApplyAnswer>;
   /** Restores the `pre_import` snapshot of the newest import batch through the restore flow. `UNKNOWN_BATCH` when there is none. */
-  undo(options?: FlowOptions): Promise<RestoreAnswer | UndoRefusal>;
+  undo(options?: UndoOptions): Promise<RestoreAnswer | UndoRefusal>;
   /** The newest import batch (undefined: none), for the words of Undo import. */
   lastImport(): Promise<LastImport | undefined>;
   /** Every import in the journal, newest first (7.3b A1): the id is the `importBatchId` its records carry. */
@@ -101,8 +109,13 @@ export interface ImportLogLine {
 
 export interface UndoRefusal {
   readonly ok: false;
-  readonly code: 'UNKNOWN_BATCH';
+  /**
+   * `UNKNOWN_BATCH`: no import, or no safety copy that belongs to the newest one. `ALREADY_UNDONE` (8.4s): the newest import was undone.
+   * `CHANGED_SINCE` (8.4s): saved changes were made after the import; `discardedRevisions` says how many the undo would throw away.
+   */
+  readonly code: 'UNKNOWN_BATCH' | 'ALREADY_UNDONE' | 'CHANGED_SINCE';
   readonly message: string;
+  readonly discardedRevisions?: number;
 }
 
 export interface Flows extends ImportFlows {

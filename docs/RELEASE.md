@@ -23,7 +23,11 @@ server code, no database and no account system in the app. Everything a visitor 
 2. `npm run build:smoke` builds BOTH editions and checks each one: `scripts/check-build.mjs` (CSP, workers, WASM, no eval, the demo or
    published dataset, lazy chunks, the `_headers` rules, `robots.txt`) and `scripts/check-edition.mjs` (the Study build contains NO editor
    module in any chunk, from the build's own module list `build-report/<edition>.json`; the Studio build contains them; both print the initial
-   JS gzip, and Studio must stay at or under 395 kB). It must pass before anything is deployed.
+   JS gzip; since step 8.4s Study must stay at or under 360 kB and Studio at or under 365 kB, and a Study module whose path holds
+   `delete-host`, `merge-port`, `quick-entry`, `create-new` or `bulk-` fails the edition check even when `editor-modules.json` forgot it).
+   It must pass before anything is deployed.
+3. `npm audit --omit=dev` and report its result in the row's notes (step 8.4s). Dependencies are not changed by the audit step itself:
+   a finding is reported to the reviewer, who decides.
 
 ## Deploy again
 
@@ -59,10 +63,11 @@ step (nothing here needs credentials beyond the `wrangler` login), once:
 1. Cloudflare dashboard, Zero Trust, Access: add an Access policy to the Worker `reaction-navigator-studio` ONLY, allowing the owner's
    sign-in (an email one-time PIN or the Google account; the address is typed in the dashboard and is never written into this repo). Access
    covers the Worker's workers.dev address, its routes, custom domains and preview URLs, and is enforced before a request reaches the Worker
-   (a static-assets-only Worker too).
+   (a static-assets-only Worker too). Since step 8.4s `wrangler.studio.jsonc` also says `"preview_urls": false`, so no per-version preview
+   address exists for Studio at all; the Access check below covers both (the main address is protected, and a preview address must not answer).
 2. NEVER attach a policy to "all Workers" and never to `reaction-navigator`: the public site must stay public.
 
-After EVERY Studio deploy, check it:
+After EVERY Studio deploy, check it (the Wrangler output must not list a preview URL either):
 `curl -sI https://reaction-navigator-studio.<account>.workers.dev/` must answer a redirect to a `cloudflareaccess.com` sign-in (or 401 / 403),
 never the app (no `200` with the app's HTML); and `curl -sI https://reaction-navigator.<account>.workers.dev/` must still answer `200`.
 
@@ -75,6 +80,9 @@ The Study site ships ONE dataset: the published one if there is one, else the bu
    and SHA-256), refuses on any L1 ERROR or any rejected asset or a missing file, prints the counts and the findings, then copies the file to
    `data/published/` (`dataset.orn.json` or `dataset.ornpkg`) with `manifest.json` (`sha256`, `publishedAt`, record counts). A refusal writes nothing
    and leaves the previous dataset as it was. `ORN_NOW` (an ISO time) sets the published time for a repeatable manifest.
+   **Review gate (step 8.4s):** every run counts the records whose review status is not `verified`, per kind, and prints the count. It
+   refuses while the count is above 0, unless it is run with `--allow-unreviewed N` where N is the EXACT count printed (a wrong N refuses
+   too, so an old command line cannot let new unreviewed records through). Verify the chemistry in Studio first; use the flag only on purpose.
 3. Commit `data/published/`, `npm run build:smoke`, then `npm run deploy:study`.
 4. A visitor's first run offers "Load the study dataset" (the demo words when nothing is published). A visitor who loaded an earlier version
    is told at their next visit: "A newer version of the study dataset is available. Load it ..." with "Load it" (the existing replace import,

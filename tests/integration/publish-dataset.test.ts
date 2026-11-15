@@ -46,21 +46,51 @@ beforeAll(async () => {
   Object.assign(bad.embeddedAssets[0] ?? {}, { base64: Buffer.from(new Uint8Array(64).fill(3)).toString('base64') });
   badAsset = new TextEncoder().encode(JSON.stringify(bad));
   valid2 = await exportBytes(demoState(), 'pkg');
+  for (const [bytes, name] of [[valid, 'study.orn.json'], [withPictures, 'study.orn.json'], [valid2, 'study.ornpkg']] as const) allowed.set(bytes, await allowFor(bytes, name));
 });
 
-function run(bytes: Uint8Array | null, over: { name?: string; args?: string[]; out?: string; now?: string } = {}) {
+/** The demo fixtures are not all verified: a run that should be accepted passes the exact count (S7). `allow: null` passes none. */
+const allowFor = async (bytes: Uint8Array, fileName: string): Promise<number> => {
+  const nowMs = Date.parse(NOW);
+  const iso = new Date(nowMs).toISOString();
+  const empty = { meta: { datasetId: 'orn-publish-check', title: 'Untitled dataset', createdAt: iso, updatedAt: iso }, records: emptyRecordTables() };
+  const verdict = await checkForPublish({ fileName, bytes }, { store: { getState: () => empty, getRevision: () => 0 }, ids: createIdFactory({ nowMs: () => nowMs }, { next: () => 0.5 }), runner: migrationRunner });
+  return verdict.ok ? verdict.unreviewed.total : (verdict.unreviewed?.total ?? 0);
+};
+const allowed = new Map<Uint8Array, number>();
+
+function run(bytes: Uint8Array | null, over: { name?: string; args?: string[]; out?: string; now?: string; allow?: number | null } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'orn-publish-'));
   dirs.push(root);
   const file = join(root, over.name ?? 'study.orn.json');
   if (bytes !== null) writeFileSync(file, bytes);
   const out = over.out ?? join(root, 'published');
-  const result = spawnSync(process.execPath, [SCRIPT, ...(over.args ?? [file])], { encoding: 'utf8', env: { ...process.env, ORN_NOW: over.now ?? NOW, ORN_PUBLISH_DIR: out } });
+  const result = spawnSync(process.execPath, [SCRIPT, ...(over.args ?? [file, ...allowArgs(bytes, over.allow)])], { encoding: 'utf8', env: { ...process.env, ORN_NOW: over.now ?? NOW, ORN_PUBLISH_DIR: out } });
   return { status: result.status, out: result.stdout + result.stderr, dir: out, file };
 }
+const allowArgs = (bytes: Uint8Array | null, allow: number | null | undefined): string[] => {
+  const n = allow === undefined ? (bytes === null ? undefined : allowed.get(bytes)) : (allow ?? undefined);
+  return n === undefined || n === 0 ? [] : ['--allow-unreviewed', String(n)];
+};
 const files = (dir: string): string[] => (existsSync(dir) ? readdirSync(dir).sort() : []);
 const sha = (bytes: Uint8Array): string => createHash('sha256').update(bytes).digest('hex');
 
 describe('scripts/publish-dataset.mjs', () => {
+  it('the review gate: unverified records with no flag are refused with the count; a wrong N refuses; the exact N accepts (S7)', () => {
+    const total = allowed.get(valid) as number;
+    expect(total).toBeGreaterThan(0);
+    const none = run(valid, { allow: null });
+    expect(none.status).toBe(1);
+    expect(none.out).toContain(`--allow-unreviewed ${total}`);
+    expect(files(none.dir)).toEqual([]);
+    const wrong = run(valid, { allow: total + 1 });
+    expect(wrong.status).toBe(1);
+    expect(wrong.out).toContain('does not match');
+    expect(files(wrong.dir)).toEqual([]);
+    const exact = run(valid, { allow: total });
+    expect(exact.status, exact.out).toBe(0);
+  });
+
   it('accepts a valid file: prints counts and findings, copies it to the folder with a manifest', () => {
     const { status, out, dir } = run(valid);
     expect(status, out).toBe(0);
@@ -81,7 +111,7 @@ describe('scripts/publish-dataset.mjs', () => {
     const iso = new Date(nowMs).toISOString();
     const empty = { meta: { datasetId: 'orn-publish-check', title: 'Untitled dataset', createdAt: iso, updatedAt: iso }, records: emptyRecordTables() };
     const verdictOf = async () => {
-      const verdict = await checkForPublish({ fileName: 'study.orn.json', bytes: valid }, { store: { getState: () => empty, getRevision: () => 0 }, ids: createIdFactory({ nowMs: () => nowMs }, { next: () => 0.5 }), runner: migrationRunner });
+      const verdict = await checkForPublish({ fileName: 'study.orn.json', bytes: valid }, { store: { getState: () => empty, getRevision: () => 0 }, ids: createIdFactory({ nowMs: () => nowMs }, { next: () => 0.5 }), runner: migrationRunner }, { allowUnreviewed: allowed.get(valid) });
       if (!verdict.ok) throw new Error(verdict.reasons.join('; '));
       return verdict;
     };

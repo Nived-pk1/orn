@@ -24,6 +24,8 @@ export interface ImportActions {
   pick(): void;
   loadDemo(): void;
   undoImport(): void;
+  /** Why Undo import is unavailable although an import exists (the newest was undone already, step 8.4s); undefined: no such reason. */
+  readonly undoneReason: string | undefined;
 }
 
 const ACCEPT = '.json,.orn,.ornpkg,.zip,application/json';
@@ -44,6 +46,15 @@ export function useImportActions(): { readonly actions: ImportActions; readonly 
   const [dragging, setDragging] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
 
+  // the newest import was undone: Undo import waits for the next import (re-read when a notice is said: an import or an undo just ended)
+  const noticeSerial = useStore(model.store, (state) => state.notice?.serial ?? 0);
+  const [undone, setUndone] = useState(false);
+  useEffect(() => {
+    let current = true;
+    void ports.lastImport().then((last) => current && setUndone(last?.undone === true));
+    return () => void (current = false);
+  }, [ports, noticeSerial]);
+  const undoneReason = undone ? 'the newest import was undone already; it is available again after the next import' : undefined;
   const busy = open || fetching || status.operation !== null;
   const reason = importReason(status) ?? (open || fetching ? 'another import is open' : undefined);
 
@@ -104,8 +115,8 @@ export function useImportActions(): { readonly actions: ImportActions; readonly 
   }, []);
 
   const actions = useMemo<ImportActions>(
-    () => ({ model, reason, busy, pick, loadDemo, undoImport: model.undoImport }),
-    [model, reason, busy, pick, loadDemo],
+    () => ({ model, reason, busy, pick, loadDemo, undoImport: model.undoImport, undoneReason }),
+    [model, reason, busy, pick, loadDemo, undoneReason],
   );
   const element = (
     <>

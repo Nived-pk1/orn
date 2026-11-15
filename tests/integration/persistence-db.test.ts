@@ -69,3 +69,11 @@ describe('DB upgrade scaffold', () => {
     expect(upgrades).toBe(1);
   });
 });
+
+describe('saved means on disk (step 8.4s, S5; audit DA-07)', () => {
+  it('the database asks Chrome for strict transaction durability, with no version step', () => {
+    const t = freshDb();
+    expect((t.db as unknown as { _options: { chromeTransactionDurability?: string } })._options.chromeTransactionDurability).toBe('strict');
+    expect(DB_VERSION_STEPS.at(-1)?.version).toBe(DB_VERSION);
+  });
+});

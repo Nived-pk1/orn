@@ -3,7 +3,9 @@
  * formula, anything else the first sentence of its lead. Pure over a snapshot; nothing here is chemistry beyond names the records hold.
  */
 import type { Reaction, RecordRef, Species } from '@/core/schema';
+import { headlineOutcomeOf } from '@/core/graph';
 import { nameOf } from './describe';
+import { byConditionsOf } from './headline-words';
 import type { Snapshot } from './study-connected';
 import { plain } from './study-words';
 
@@ -18,10 +20,14 @@ function ends(snapshot: Snapshot, reaction: Reaction): string | undefined {
     return names.slice(0, MAX_NAMES).join(' + ') + (names.length > MAX_NAMES ? ' + …' : '');
   };
   const from = nameList(reaction.participants.filter((p) => p.role === 'reactant'));
-  // the products of the first outcome, the main ones first
-  const products = (reaction.outcomes[0]?.products ?? []).filter((p) => p.role === 'main');
-  const to = nameList(products.length > 0 ? products : (reaction.outcomes[0]?.products ?? []));
-  return from === '' || to === '' ? undefined : `${from} → ${to}`;
+  // the products of the headline outcome (the exclusive, then the major one of the first group, step 8.4s S8), the main ones first
+  const { headline, alternatives } = headlineOutcomeOf(reaction.outcomes);
+  const mainOf = (outcome: typeof headline) => {
+    const main = (outcome?.products ?? []).filter((p) => p.role === 'main');
+    return main.length > 0 ? main : (outcome?.products ?? []);
+  };
+  const to = nameList(mainOf(headline));
+  return from === '' || to === '' ? undefined : `${from} → ${to}${byConditionsOf(to, alternatives.map((outcome) => nameList(mainOf(outcome))))}`;
 }
 
 export function summaryOf(snapshot: Snapshot, ref: RecordRef, record: unknown, lead: string | undefined): string | undefined {

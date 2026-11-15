@@ -15,6 +15,8 @@ export interface FlowFailure {
   readonly detail?: Readonly<Record<string, unknown>>;
   readonly inProcessAvailable?: true;
   readonly busyWith?: string;
+  /** `CHANGED_SINCE` (Undo import, step 8.4s): how many saved changes the undo would throw away. */
+  readonly discardedRevisions?: number;
 }
 
 /** The earlier import of the same file (its SHA-256 matched a stored batch). */
@@ -44,11 +46,15 @@ export interface LastImportInfo {
   readonly appliedAt: string;
   readonly mode: string;
   readonly undoable: boolean;
+  /** Step 8.4s: the import was undone already. */
+  readonly undone?: boolean;
 }
 
 export interface FlowCallOptions {
   readonly signal?: AbortSignal;
   readonly inProcess?: boolean;
+  /** Undo import only (step 8.4s): the person was asked and chose to throw the later changes away too. */
+  readonly discardLaterChanges?: boolean;
 }
 
 /** Where the running operation is (`AppStatus.operation`), as far as the screen words it. */

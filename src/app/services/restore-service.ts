@@ -10,11 +10,12 @@ import type { FlowDeps } from './flow-deps';
 import { isRefusal, type Operation } from './flow-gate';
 import { durabilityOf, guardStore } from './flow-ports';
 import { cancelledRefusal, isRoute, readOnlyRefusal, routeOf } from './flow-route';
-import type { FlowOptions, ImportLogLine, LastImport, RestoreAnswer, UndoRefusal } from './flow-types';
+import type { FlowOptions, ImportLogLine, LastImport, RestoreAnswer, UndoOptions, UndoRefusal } from './flow-types';
+import type { JsonValue } from '@/core/schema';
 
 export interface RestoreService {
   restore(snapshotId: string, options?: FlowOptions): Promise<RestoreAnswer>;
-  undo(options?: FlowOptions): Promise<RestoreAnswer | UndoRefusal>;
+  undo(options?: UndoOptions): Promise<RestoreAnswer | UndoRefusal>;
   lastImport(): Promise<LastImport | undefined>;
   importLog(): Promise<readonly ImportLogLine[]>;
 }
@@ -85,6 +86,7 @@ export function createRestoreService(deps: FlowDeps): RestoreService {
         format: text(report.format, 'unknown'),
         mode: text(report.mode, 'unknown'),
         undoable: typeof report.snapshotId === 'string',
+        undone: typeof report.undoneAt === 'string',
       };
     },
     async importLog() {
@@ -104,9 +106,25 @@ export function createRestoreService(deps: FlowDeps): RestoreService {
       const newest = (await deps.durable.listImportBatches())[0];
       if (newest === undefined) return { ok: false, code: 'UNKNOWN_BATCH', message: 'there is no import to undo' };
       const report: unknown = newest.report;
-      const snapshotId = typeof report === 'object' && report !== null && 'snapshotId' in report ? (report as { snapshotId?: unknown }).snapshotId : undefined;
+      const fields = (typeof report === 'object' && report !== null && !Array.isArray(report) ? report : {}) as Record<string, unknown>;
+      const snapshotId = fields.snapshotId;
       if (typeof snapshotId !== 'string') return { ok: false, code: 'UNKNOWN_BATCH', message: `the newest import (${newest.id}) records no pre_import snapshot, so it cannot be undone` };
-      return restore(snapshotId, options);
+      if (typeof fields.undoneAt === 'string') return { ok: false, code: 'ALREADY_UNDONE', message: 'the newest import was undone already; Undo import is available again after the next import' };
+      // the safety copy must be THIS import's: the newest pre_import snapshot (a missing or older one never redirects the undo to an earlier import)
+      const newestCopy = (await deps.durable.listSnapshots()).filter((s) => s.reason === 'pre_import').sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0))[0];
+      if (newestCopy?.id !== snapshotId) return { ok: false, code: 'UNKNOWN_BATCH', message: `the safety copy (snapshot) of the newest import (${newest.id}) is no longer stored, so it cannot be undone` };
+      // saved changes made after the import are thrown away by the undo: the person is asked first (the revision the import produced is in its report)
+      const after = fields.revisionAfter;
+      const since = typeof after === 'number' ? store.getRevision() - after : 0;
+      if (since > 0 && options?.discardLaterChanges !== true) {
+        return { ok: false, code: 'CHANGED_SINCE', discardedRevisions: since, message: `${since} saved ${since === 1 ? 'change was' : 'changes were'} made after this import; undoing the import throws ${since === 1 ? 'it' : 'them'} away too` };
+      }
+      const answer = await restore(snapshotId, options);
+      if (answer.ok) {
+        const marked = { ...fields, undoneAt: ids.now() } as unknown as JsonValue;
+        await deps.durable.saveImportBatch({ id: newest.id, createdAt: newest.createdAt, report: marked }).catch(() => undefined);
+      }
+      return answer;
     },
   };
 }

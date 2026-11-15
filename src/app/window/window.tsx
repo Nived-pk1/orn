@@ -33,6 +33,7 @@ import { loadedCommands, prefetchCommands } from "./lazy-commands";
 import { createSearchPorts } from "./search-port";
 import { openChapter } from "./chapters-entry";
 import { useFirstScreen, hasChapterTopic } from "./first-screen";
+import { useWarmCanvas } from "./use-warm-canvas";
 import { CHAPTERS_MODE, EXPLORER_MODES, modesFor, modeOfExplorer, NAVIGATOR_MODE } from "./modes";
 import { studyChrome, StudyChromeProvider, useStudyChrome } from '@/ui/study-chrome';
 import { useHasOwnData } from './own-data-hooks';
@@ -187,6 +188,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const layoutMode = useLayoutMode();
   const phoneTab = useStore(navigator.ui.overview, (s) => s.phoneTab);
   const lastExplorer = useStore(navigator.ui.explorer, (s) => s.last);
+  useWarmCanvas(layoutMode === 'phone', phoneTab);
   useEffect(() => {
     if (layoutMode !== 'phone') return;
     if (phoneTab === 'explore') setMode(modeOfExplorer(lastExplorer));
@@ -237,12 +239,11 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
     mode,
     setMode,
     hasData,
-    writerMode: status.mode,
-    writerReason: status.reason,
+    writerMode: status.mode, writerReason: status.reason,
     importReason: imports.reason,
     askReplace: () => setAsking(true),
     replaceTitle: datasetWordsOf(datasetInfo).replaceTitle,
-    undoImport: imports.undoImport,
+    undoImport: imports.undoImport, undoneReason: imports.undoneReason,
     pickFile: imports.pick,
     openExport: exports.open,
     ...(EDITING ? editorCommandDeps(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()) : {}),
@@ -292,7 +293,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [openSearch]);
-  const file = { reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true) };
+  const file = { reason: imports.reason, undoReason: undoUnavailableReason(status.mode, status.reason) ?? imports.undoneReason ?? imports.reason, onImport: imports.pick, onUndo: imports.undoImport, onExport: exports.open, onAbout: () => setAbout(true) };
   const exam = { exam: navigator.ui.exam, store: services.store, hasData, log: navigator.log };
   const openStatus = () => setStatusOpen(true);
   const pane = useMemo<InspectorPane>(

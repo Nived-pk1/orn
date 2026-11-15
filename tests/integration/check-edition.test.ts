@@ -2,7 +2,7 @@
  * scripts/check-edition.mjs against small fixture builds (studio step E2): the Study output must contain NO editor module in ANY chunk
  * (the module list comes from the build's own report, `build-report/<edition>.json`, written by the Vite plugin: the Vite manifest has no
  * module list); the Studio output must contain them (a wrong build is not mistaken for a right one); both report the initial JS gzip;
- * Studio is held to the 395 kB line. It must FAIL on a deliberately wrong fixture.
+ * Study is held to 360 kB and Studio to 365 kB (8.4s). It must FAIL on a deliberately wrong fixture.
  */
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -68,6 +68,22 @@ describe('scripts/check-edition.mjs', () => {
     expect(out).toMatch(/initial JS \(studio\): [\d.]+ kB gzip/);
   });
 
+  it('FAILS a Study module whose name is an editor name even when nobody listed its path (step 8.4s, S7)', () => {
+    for (const name of ['delete-host', 'merge-port', 'quick-entry', 'create-new', 'bulk-actions']) {
+      const module = `src/features/somewhere/${name}.tsx`;
+      const { status, out } = run('study', [...studyChunks, { file: 'assets/forgotten-d1.js', modules: [module] }]);
+      expect(status, name).toBe(1);
+      expect(out).toContain(`FAIL assets/forgotten-d1.js: module ${module} is in the Study build and its name has`);
+    }
+  });
+
+  it('lets a named exception through (bulk-context.ts is in the Study build on purpose) and does not hold Studio to the names', () => {
+    const exception = { file: 'assets/ctx-e1.js', modules: ['src/features/navigator/bulk-context.ts'] };
+    expect(run('study', [...studyChunks, exception]).status).toBe(0);
+    const forgotten = { file: 'assets/forgotten-d1.js', modules: ['src/features/somewhere/delete-host.tsx'] };
+    expect(run('studio', [...studioChunks, forgotten]).status).toBe(0);
+  });
+
   it('FAILS a Study build with an editor module in a lazy chunk (names the module and the chunk)', () => {
     const { status, out } = run('study', [...studyChunks, { file: 'assets/editor-session-c1.js', modules: EDITORS }]);
     expect(status).toBe(1);
@@ -96,13 +112,17 @@ describe('scripts/check-edition.mjs', () => {
     expect(run('neither', studyChunks).status).toBe(1);
   });
 
-  it('holds the Studio build to 395 kB gzip of initial JS, and says the Study figure without a limit', () => {
+  it('holds Study to 360 kB and Studio to 365 kB gzip of initial JS (step 8.4s), and passes both well under', () => {
     const heavy = randomBytes(410_000).toString('latin1');
     const studio = run('studio', studioChunks, { indexJs: heavy });
     expect(studio.status).toBe(1);
-    expect(studio.out).toContain('over the 395 kB line');
+    expect(studio.out).toContain('over the 365 kB line');
     const study = run('study', studyChunks, { indexJs: heavy });
-    expect(study.status).toBe(0);
+    expect(study.status).toBe(1);
+    expect(study.out).toContain('over the 360 kB line');
+    const light = randomBytes(300_000).toString('latin1');
+    expect(run('studio', studioChunks, { indexJs: light }).status).toBe(0);
+    expect(run('study', studyChunks, { indexJs: light }).status).toBe(0);
   });
 });
 

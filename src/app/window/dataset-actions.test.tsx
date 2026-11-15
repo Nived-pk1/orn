@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { tierState } from '@/test-support/perf-kit';
 import { fakeApp, planOf, renderWithApp, stubDialog, type FakeApp } from '@/test-support/window-kit';
 import { undoUnavailableReason, unavailableReason } from './dataset-actions';
@@ -52,6 +52,16 @@ describe('Replace with the demo dataset (Dataset mode)', () => {
     await screen.findByText(/^Import undone: the data from before it is back\. That was the import of earlier\.orn\.json; the dataset holds \d+ records again\./);
     fireEvent.click(within(screen.getByRole('region', { name: 'Replace the data' })).getByRole('button', { name: 'Undo import' }));
     await screen.findByText('Undo import: there is no import to undo.');
+  });
+
+  it('an import that was undone leaves Undo import unavailable, with the reason, until the next import (step 8.4s)', async () => {
+    const a = withData();
+    a.flows.lastImport.mockResolvedValue({ batchId: 'b', fileName: 'earlier.orn.json', appliedAt: '2026-10-12T10:00:00.000Z', format: 'orn.dataset', mode: 'merge', undoable: true, undone: true });
+    renderWithApp(a);
+    const region = openDataset();
+    await vi.waitFor(() => expect(within(region).getByRole('button', { name: 'Undo import' }).getAttribute('aria-disabled')).toBe('true'));
+    fireEvent.click(within(region).getByRole('button', { name: 'Undo import' }));
+    expect(a.flows.undo).not.toHaveBeenCalled();
   });
 
   it('read-only and follower tabs get both buttons unavailable, with the reason; a session-only tab can undo but not replace', () => {

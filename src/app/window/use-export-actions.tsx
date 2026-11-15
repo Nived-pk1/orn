@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, type ReactNode } from 'react';
 import { createExportModel, LazyExportScreen } from '@/features/data-exchange';
 import { useSubscribable } from '@/ui/hooks';
 import { useApp } from './context';
+import { useBackupRecord } from './backup-hooks';
 import { createExportPorts, exportReason } from './export-port';
 
 export interface ExportActions {
@@ -17,8 +18,9 @@ export interface ExportActions {
 
 export function useExportActions(): { readonly actions: ExportActions; readonly element: ReactNode } {
   const { services, navigator, nowMs } = useApp();
+  const backup = useBackupRecord();
   const status = useSubscribable(services.status);
-  const ports = useMemo(() => createExportPorts(services, nowMs ?? (() => 0), navigator.log), [services, navigator.log, nowMs]);
+  const ports = useMemo(() => createExportPorts(services, nowMs ?? (() => 0), navigator.log, backup), [services, navigator.log, nowMs, backup]);
   const model = useMemo(() => createExportModel(ports), [ports]);
   useEffect(() => () => model.dispose(), [model]);
   const open = useCallback(() => model.open(), [model]);

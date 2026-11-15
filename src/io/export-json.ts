@@ -7,7 +7,7 @@
  */
 import { serializeDocument } from '@/core/dataset';
 import type { AssetId, CanonicalState, DatasetDocument } from '@/core/schema';
-import type { AssetBytesProvider, ExportBuildResult, ExportOptions, MissingAsset, TaskOptions } from './contracts';
+import { IMPORT_LIMITS, type AssetBytesProvider, type ExportBuildResult, type ExportOptions, type MissingAsset, type TaskOptions } from './contracts';
 import { readAssetBytes } from './export-assets';
 import { buildScopedDocument } from './export-document';
 
@@ -58,8 +58,13 @@ export async function buildOrnJsonExport(state: CanonicalState, options: ExportO
   if (!serialized.ok) {
     return { ok: false, code: 'SERIALIZE_FAILED', message: serialized.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; ') };
   }
+  const bytes = new TextEncoder().encode(serialized.text);
+  // a one-file backup the importer would refuse for its size is never written (step 8.4s, S2); the package has no such cap on its pictures
+  if (bytes.length > IMPORT_LIMITS.maxJsonBytes) {
+    return { ok: false, code: 'SERIALIZE_FAILED', message: 'This backup is too large for one file. Choose Package (.ornpkg).' };
+  }
   return {
     ok: true,
-    result: { bytes: new TextEncoder().encode(serialized.text), counts: scoped.counts, missingAssets, missingReferences: scoped.missingReferences },
+    result: { bytes, counts: scoped.counts, missingAssets, missingReferences: scoped.missingReferences },
   };
 }

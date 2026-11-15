@@ -1,6 +1,5 @@
-export { NavigatorCanvas } from "./navigator-canvas";
 export { openFamilyReason } from "./map-lines";
-export { NavigatorView } from "./navigator-view";
+export { NavigatorView, warmNavigatorCanvas } from "./navigator-view";
 export { PhoneTabs } from "./phone-tabs";
 export { ReactionCardHost } from "./reaction-card-host";
 export { SubstanceHost } from "./substance-host";

@@ -12,6 +12,7 @@ import type { EditorsControllerType } from './editors-api';
 import type { TimeFormatter } from './local-time';
 import type { DatasetInfo } from './dataset-types';
 import type { ReviewUiPort } from './review-ui';
+import type { BackupRecord } from './backup-record';
 import type { OwnData } from './own-data';
 
 /** What the window needs from the services (so a test can fake only these). */
@@ -33,6 +34,8 @@ export interface AppContextValue {
   readonly inspector: InspectorPorts;
   /** Whether the browser holds the visitor's own imported data (step 8.3). Absent: none. */
   readonly ownData?: OwnData;
+  /** The last finished backup and the dismissed backup notice (Studio, step 8.4s S4). Absent: none. */
+  readonly backup?: BackupRecord;
   /** The Review page's saved choices (7.3a E1). Absent: nothing is kept. */
   readonly reviewUi?: ReviewUiPort;
   /** The injected clock in milliseconds (the export file name's date). Absent: 0, which a test never relies on. */

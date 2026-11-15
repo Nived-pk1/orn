@@ -102,6 +102,8 @@ test.describe('hostile data', () => {
     const exporter = page.getByRole('dialog', { name: 'Export your data' });
     await expect(exporter).toBeVisible();
     await inert('the export options');
+    // step 8.4s (S3): a dataset with pictures opens on the package; this test reads the file as text, so it asks for the one-file format
+    await exporter.getByRole('radio', { name: /One file/ }).check();
     const [download] = await Promise.all([page.waitForEvent('download'), exporter.getByRole('button', { name: /^Export$/ }).click()]);
     const exported = readFileSync((await download.path()) as string, 'utf8');
     expect(exported).toContain(HOSTILE_REACTION);

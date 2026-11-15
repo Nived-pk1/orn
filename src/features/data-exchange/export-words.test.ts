@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ExportResult } from '@/io';
-import { countsWords, defaultBase, exportRefusal, fileNameOf, imagesFor, progressWords, safeFileBase, SCOPES, writtenOf } from './export-words';
+import { countsWords, defaultBase, exportRefusal, fileNameOf, imagesFor, progressWords, exportDefaults, notInFileLine, safeFileBase, scopeWords, SCOPES, writtenOf } from './export-words';
 
 describe('the file name is made safe for a file system', () => {
   it('a plain title gives a readable name with the date of the injected clock', () => {
@@ -99,5 +99,34 @@ describe('refusals', () => {
     expect(r.text).toContain('built on this page instead');
     expect(r.text).toContain('Nothing was exported.');
     expect(exportRefusal({ ok: false, code: 'SERIALIZE_FAILED', message: 'schema_invalid at datasetId' }).text).not.toMatch(/schema_invalid|datasetId/);
+  });
+});
+
+describe('the words never claim pictures that are not in the file (step 8.4s, S3)', () => {
+  const everything = SCOPES.find((scope) => scope.id === 'full');
+  it('Everything names the attached images only when the images are in the file', () => {
+    if (everything === undefined) throw new Error('no full scope');
+    expect(scopeWords(everything, 'package')).toContain('every attached image');
+    expect(scopeWords(everything, 'embed')).toContain('every attached image');
+    expect(scopeWords(everything, 'none')).not.toMatch(/image/);
+    expect(scopeWords(everything, 'none')).toBe('All of it: the chemistry, the syllabus (exams and topics) and the display settings.');
+  });
+  it('the other scopes say what they say with images, and a scope without images in its words stays as it is', () => {
+    const curriculum = SCOPES.find((scope) => scope.id === 'curriculum');
+    if (curriculum === undefined) throw new Error('no curriculum scope');
+    expect(scopeWords(curriculum, 'none')).toBe(curriculum.text);
+    const chemistry = SCOPES.find((scope) => scope.id === 'chemistry');
+    expect(scopeWords(chemistry ?? curriculum, 'none')).not.toMatch(/with the images attached/);
+  });
+  it('with No images and pictures in the dataset, a line says how many are NOT in the file', () => {
+    expect(notInFileLine({ count: 3, bytes: 10 }, 'none')).toBe('3 pictures are NOT in this file.');
+    expect(notInFileLine({ count: 1, bytes: 10 }, 'none')).toBe('1 picture is NOT in this file.');
+    expect(notInFileLine({ count: 3, bytes: 10 }, 'package')).toBeUndefined();
+    expect(notInFileLine({ count: 0, bytes: 0 }, 'none')).toBeUndefined();
+  });
+  it('the export opens with the package and "In the package" when the dataset has pictures with bytes', () => {
+    expect(exportDefaults({ count: 2, bytes: 4096 })).toEqual({ format: 'ornpkg', images: 'package' });
+    expect(exportDefaults({ count: 2, bytes: 0 })).toEqual({ format: 'orn.json', images: 'none' });
+    expect(exportDefaults({ count: 0, bytes: 0 })).toEqual({ format: 'orn.json', images: 'none' });
   });
 });

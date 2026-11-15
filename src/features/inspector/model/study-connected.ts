@@ -3,8 +3,9 @@
  * headings. A card is a title and one line: the reaction's arrow in words ("Ethanol → Ethanal") or the record's kind chip. Pure; empty
  * groups are not returned; a group holds at most MAX_CARDS cards and says its real total.
  */
-import { relatedReactionsOf } from '@/core/graph';
+import { headlineOutcomeOf, relatedReactionsOf } from '@/core/graph';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
+import { byConditionsOf } from './headline-words';
 import type { CanonicalState, Reaction, RecordRef, Relationship } from '@/core/schema';
 import { nameOf, recordOf } from './describe';
 import { studyKindWord } from './study-words';
@@ -34,12 +35,18 @@ export interface Snapshot {
 const refOf = (kind: string, id: string): RecordRef => ({ kind, id }) as RecordRef;
 const reactionRef = (id: string): RecordRef => refOf('reaction', id);
 
-/** "Ethanol → Ethanal": the first outcome's products against the reactants, by name; only the names, no formulas or conditions. */
+/**
+ * "Ethanol → Ethanal": the HEADLINE outcome's products against the reactants, by name; only the names, no formulas or conditions. The headline
+ * is the exclusive, then the major outcome of the first outcome group, not whichever is stored first (step 8.4s, S8); outcomes that tie across
+ * condition variants follow as "(or C, by conditions)".
+ */
 export function arrowLine(state: CanonicalState, reaction: Reaction): string {
   const left = reaction.participants.filter((p) => p.role === 'reactant').map((p) => nameOf(state, p.ref));
-  const right = (reaction.outcomes[0]?.products ?? []).map((p) => nameOf(state, p.ref));
-  if (left.length === 0 && right.length === 0) return 'Reaction';
-  return `${left.join(' + ')} → ${right.join(' + ')}`;
+  const { headline, alternatives } = headlineOutcomeOf(reaction.outcomes);
+  const namesOf = (outcome: typeof headline): string => (outcome?.products ?? []).map((p) => nameOf(state, p.ref)).join(' + ');
+  const right = namesOf(headline);
+  if (left.length === 0 && right === '') return 'Reaction';
+  return `${left.join(' + ')} → ${right}${byConditionsOf(right, alternatives.map(namesOf))}`;
 }
 
 export function cardOf(state: CanonicalState, ref: RecordRef): Card | undefined {

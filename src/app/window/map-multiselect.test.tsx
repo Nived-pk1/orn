@@ -20,6 +20,8 @@ async function load(edition: 'study' | 'studio') {
   // the multi-selection engine is a lazy chunk (step 6.8b, Y1); a test that is not about the loading has it there from the first Shift-click
   const { loadMultiEngine } = await import('@/features/navigator');
   await loadMultiEngine();
+  // the map canvas is a lazy chunk too (step 8.4s, L1): its first import in this registry is slower than findBy's 1 s, so it is in before the first render
+  await import('@/features/navigator/navigator-canvas');
   // the lazy notices bell resolves in THIS module registry (the reset above), so it finds its own context
   await (await import('@/app/window/lazy-notice-bell')).prefetchNoticeBell();
   kit.stubDialog();
@@ -202,7 +204,7 @@ const withoutChapters = (state: ReturnType<Loaded['demoState']>): ReturnType<Loa
 
 describe('Study has none of it', () => {
   it('Shift-click is a plain click: one selection, no multi-selection line, no bulk buttons', async () => {
-    const k = loaded.study;
+    const k = (loaded.study = await load('study')); // its own registry: the lazy canvas resolves at render time, so a later load must not have replaced it (8.4s, L1)
     const app = k.fakeApp({ state: withoutChapters(k.demoState()), navigator: { depictions: true } });
     k.renderWithApp(app);
     await drawing(k);
@@ -212,7 +214,7 @@ describe('Study has none of it', () => {
     expect(k.screen.queryByRole('button', { name: /^Mark verified|^Delete \(/ })).toBeNull();
   });
   it('a Study phone has no Select toggle', async () => {
-    const k = loaded.study;
+    const k = (loaded.study = await load('study')); // its own registry: the lazy canvas resolves at render time, so a later load must not have replaced it (8.4s, L1)
     asPhone(k);
     k.renderWithApp(k.fakeApp({ state: withoutChapters(k.demoState()), navigator: { depictions: true } }));
     k.fireEvent.click(k.within(k.screen.getByRole('navigation', { name: 'Home' })).getByRole('button', { name: 'Map' }));

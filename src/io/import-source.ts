@@ -19,7 +19,8 @@ export interface ImportParseDeps {
 }
 
 const EMPTY_RESULT_FIELDS = { migrationsApplied: [], records: {}, counts: {}, quarantined: [], kindMismatches: [], assets: [], rejectedAssets: [], packageIssues: [] } as const;
-const CAP_LIMITS = { maxDepth: IMPORT_LIMITS.maxJsonDepth, maxStringLength: IMPORT_LIMITS.maxStringLength };
+// step 8.4s (S2): a picture inside the top-level `embeddedAssets` array is one base64 string, up to the asset cap (4/3 of its bytes, padded)
+const CAP_LIMITS = { maxDepth: IMPORT_LIMITS.maxJsonDepth, maxStringLength: IMPORT_LIMITS.maxStringLength, embeddedStringLength: Math.ceil((IMPORT_LIMITS.maxAssetBytes * 4) / 3) + 4 };
 
 function base64ToBytes(base64: string): Uint8Array {
   const binary = atob(base64);

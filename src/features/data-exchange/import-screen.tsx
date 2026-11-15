@@ -3,6 +3,7 @@
  * offer when there is one), preview (everything the file would do, Cancel / Confirm; Confirm says why when it cannot), applying
  * (the stage in words; Cancel until the commit). It is its own chunk, loaded when the first import opens (`lazy-screen.tsx`).
  */
+import { useEffect } from 'react';
 import { useStore } from 'zustand';
 import { Button, Dialog } from '@/ui/primitives';
 import type { DataExchangePorts } from './contracts';
@@ -25,6 +26,7 @@ const TITLES: Readonly<Record<ImportState['phase'], string>> = {
   preview: 'Import summary',
   applying: 'Importing',
   undoing: 'Undo import',
+  undo_question: 'Undo import',
 };
 
 /** The long wait (step 5.11b): shown once an apply has run over 2 s and the writer has reported. Not a live region: it changes up to 4 times a second. */
@@ -85,6 +87,10 @@ export function ImportScreen(props: { readonly model: ImportModel; readonly port
   const cancelReason = phase === 'applying' && !state.cancellable ? 'it is past the point where it can be stopped' : undefined;
   // while the records are being applied past the commit the dialog cannot be dismissed: no Close button, Esc and the backdrop do nothing
   const closable = !(phase === 'applying' && state.long === true && !state.cancellable);
+  // the question's default answer is Cancel: it takes the focus when the question replaces the progress (the dialog is open already)
+  useEffect(() => {
+    if (phase === 'undo_question') document.querySelector<HTMLElement>('[data-default]')?.focus();
+  }, [phase]);
   let footer = null;
   if (phase === 'applying' && state.long === true && !state.cancellable) {
     footer = null; // no Cancel during a long apply (decision of step 5.11b): the writes are one transaction past the commit
@@ -99,6 +105,13 @@ export function ImportScreen(props: { readonly model: ImportModel; readonly port
           </Button>
         )}
         <Button onClick={model.close}>Dismiss</Button>
+      </>
+    );
+  } else if (phase === 'undo_question') {
+    footer = (
+      <>
+        <Button onClick={model.cancel} data-default>Cancel</Button>
+        <Button onClick={model.undoAnyway}>Undo import anyway</Button>
       </>
     );
   } else if (phase === 'preview') {
@@ -117,6 +130,11 @@ export function ImportScreen(props: { readonly model: ImportModel; readonly port
   return (
     <Dialog open={phase !== 'closed'} onClose={model.cancel} title={TITLES[phase]} size="wide" footer={footer} closable={closable}>
       {phase === 'reading' || phase === 'applying' || phase === 'undoing' ? <Progress state={state} /> : null}
+      {phase === 'undo_question' && state.later !== undefined ? (
+        <div className={styles.body}>
+          <p>{`You made ${state.later} ${state.later === 1 ? 'change' : 'changes'} after this import. Undo import throws ${state.later === 1 ? 'it' : 'them'} away too.`}</p>
+        </div>
+      ) : null}
       {phase === 'refused' && state.refusal !== undefined ? (
         <div className={styles.body}>
           <p className={styles.file} title={state.fileName}>

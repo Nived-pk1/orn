@@ -10,6 +10,7 @@ import type { ExportOptions } from '@/io';
 import type { ExportFormatId, ExportPorts, ImageInfo } from './export-contracts';
 import {
   defaultBase,
+  exportDefaults,
   exportRefusal,
   fileNameOf,
   imagesFor,
@@ -81,11 +82,13 @@ export function createExportModel(ports: ExportPorts): ExportModel {
     if (store.getState().phase !== 'closed') return;
     clear();
     const blocked = ports.unavailable();
+    const imageInfo = ports.images();
     store.setState({
       ...CLOSED,
+      ...exportDefaults(imageInfo),
       phase: 'options',
       base: defaultBase(ports.datasetTitle(), ports.today()),
-      imageInfo: ports.images(),
+      imageInfo,
       ...(blocked === undefined ? {} : { blocked }),
     });
   }
@@ -131,6 +134,7 @@ export function createExportModel(ports: ExportPorts): ExportModel {
             return;
           }
           ports.log('export', `exported ${fileName}`);
+          ports.exported?.({ scope, revision: answer.revision });
           patch({ phase: 'done', written: writtenOf(answer.result, fileName, answer.inProcess, ports.nameOf) });
           return;
         }

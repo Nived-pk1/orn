@@ -23,6 +23,13 @@ const text = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
 const bytesOf = (value: string): Uint8Array => new TextEncoder().encode(value);
 const reasons = (verdict: PublishVerdict): string => (verdict.ok ? '' : verdict.reasons.join(' | '));
 
+/** The demo is not all verified: a publish that should be accepted says the exact count (S7), read here from a first pass. */
+async function accepted(input: { fileName: string; bytes: Uint8Array }): Promise<PublishVerdict> {
+  const first = await checkForPublish(input, deps());
+  const total = first.ok ? first.unreviewed.total : (first.unreviewed?.total ?? 0);
+  return checkForPublish(input, deps(), { allowUnreviewed: total });
+}
+
 async function withPictures() {
   const base = demoState();
   const attachTo = (i: number) => ({ kind: 'mechanism' as const, id: Object.keys(base.records.mechanism).sort()[i % 2] as string });
@@ -32,7 +39,7 @@ async function withPictures() {
 
 describe('checkForPublish: accepted', () => {
   it('a Studio export (.orn.json) of the demo: ok, with the counts, the record total and no ERROR', async () => {
-    const verdict = await checkForPublish({ fileName: 'study.orn.json', bytes: await exportBytes(demoState()) }, deps());
+    const verdict = await accepted({ fileName: 'study.orn.json', bytes: await exportBytes(demoState()) });
     expect(verdict.ok).toBe(true);
     if (!verdict.ok) return;
     expect(verdict.format).toBe('orn.dataset');
@@ -44,13 +51,38 @@ describe('checkForPublish: accepted', () => {
   it('an .orn.json with the pictures embedded, and an .ornpkg with the pictures inside: ok, the pictures counted', async () => {
     const { state, provider } = await withPictures();
     for (const [format, assets, fileName] of [['json', 'embed', 'study.orn.json'], ['pkg', 'package', 'study.ornpkg']] as const) {
-      const verdict = await checkForPublish({ fileName, bytes: await exportBytes(state, format, assets, provider as never) }, deps());
+      const verdict = await accepted({ fileName, bytes: await exportBytes(state, format, assets, provider as never) });
       expect(verdict.ok, `${fileName}: ${reasons(verdict)}`).toBe(true);
       if (verdict.ok) {
         expect(verdict.counts.asset).toBe(2);
         expect(verdict.assets.withoutBytes).toBe(0);
       }
     }
+  });
+});
+
+describe('checkForPublish: the review gate (step 8.4s, S7)', () => {
+  it('unverified records with no --allow-unreviewed: refused, with the exact count and the kinds in the words', async () => {
+    const verdict = await checkForPublish({ fileName: 'study.orn.json', bytes: await exportBytes(demoState()) }, deps());
+    expect(verdict.ok).toBe(false);
+    const total = verdict.ok ? 0 : (verdict.unreviewed?.total ?? 0);
+    expect(total).toBeGreaterThan(0);
+    expect(reasons(verdict)).toContain(`${total} record(s) are not verified`);
+    expect(reasons(verdict)).toContain(`--allow-unreviewed ${total}`);
+  });
+
+  it('a wrong count refuses too, and says the right one; the exact count accepts', async () => {
+    const input = { fileName: 'study.orn.json', bytes: await exportBytes(demoState()) };
+    const first = await checkForPublish(input, deps());
+    const total = first.ok ? 0 : (first.unreviewed?.total ?? 0);
+    for (const wrong of [total - 1, total + 1, 0]) {
+      const verdict = await checkForPublish(input, deps(), { allowUnreviewed: wrong });
+      expect(verdict.ok, String(wrong)).toBe(false);
+      expect(reasons(verdict)).toContain(`does not match the ${total} unverified`);
+    }
+    const exact = await checkForPublish(input, deps(), { allowUnreviewed: total });
+    expect(exact.ok).toBe(true);
+    if (exact.ok) expect(exact.unreviewed.total).toBe(total);
   });
 });
 
