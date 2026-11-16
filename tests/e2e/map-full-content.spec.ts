@@ -108,8 +108,12 @@ test.describe('the map with every chapter (8.4m)', () => {
       await open(page, size);
       await showBucket(page);
       await box(page, BUSY_FAMILY).click();
+      const hide = page.getByRole('button', { name: 'Hide inspector' });
       const show = page.getByRole('button', { name: 'Show inspector' });
-      if ((await show.count()) > 0) await show.click();
+      await expect(hide.or(show)).toBeVisible();
+      // a pick opens the pane by itself a moment later: a click on "Show" while it opens would shut it
+      const opened = await hide.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false);
+      if (!opened) await show.click();
       await expect(page.getByRole('complementary', { name: 'Inspector' })).toBeVisible();
       await page.waitForTimeout(900);
       await page.getByRole('button', { name: 'Fit', exact: true }).click();
