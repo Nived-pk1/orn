@@ -178,3 +178,14 @@ is not needed: Playwright uses 4173 / 4174).
    fix stashed); budget tests renumbered; navigator-truncation.test.tsx now lowers the box limit; the count line with a chapter
    chosen counts reactions of ALL chapters on the drawn lines; an "Imported" toast still lifts the (now wider) key reserve
    over the bucket box until it is dismissed; F5 not reproduced exactly.
+
+## Session 2026-11-16 (continuation): Firefox map-free-areas:223 (1366 x 768) re-diagnosed, NOT fixed
+
+The earlier reading ("the frame is never drawn") is WRONG. Controller event log (temporary, removed) at a failure: the last frame IS
+written and `data-world` equals the controller's last view (translate 16.58 155.6, scale 0.402). Two commands came in order: a fit
+with top inset 58, then a fit with top inset 108 (the bar stack becomes two rows when the pane narrows the area to 798 px:
+`ctl 8,8,468x42 | 8,58,782x42`, `ins top 108`, `struct true`). So the refit does run with the right insets; the drawing still has a
+box about 32 px below the area's top (under the second bar). Not yet explained: next look at `fitBox` in transform.ts (a scale
+floor / `FIT_FLOOR` or the title floor in focus-fit.ts clamping the scale so the content overflows the band) with Firefox's wider
+text (`--map-title-u`). Fails about 1 of 3 whole-file runs, passes alone and with heavy logging (timing-dependent).
+Tried and dropped: adding the controls' sizes to the "area changed" signature (no cure, 2 of 3 still failed); reverted.
