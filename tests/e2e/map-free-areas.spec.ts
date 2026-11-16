@@ -41,11 +41,19 @@ async function rects(page: Page, selector: string): Promise<Rect[]> {
   );
 }
 
+/**
+ * The drawing has stopped moving: the boxes AND the world transform (a refit after the area changed) are the same in three polls in a row.
+ * Two were not enough in Firefox: the inspector slid in and narrowed the area about 300 ms after the boxes had looked still (step 8.4m).
+ */
 async function settle(page: Page): Promise<void> {
   let previous = "";
-  for (let i = 0; i < 40; i += 1) {
-    const now = JSON.stringify(await rects(page, "svg [data-node-id]"));
-    if (now === previous) return;
+  let same = 0;
+  for (let i = 0; i < 60 && same < 2; i += 1) {
+    const now = JSON.stringify([
+      await rects(page, "svg [data-node-id]"),
+      await page.evaluate(() => document.querySelector("[data-world]")?.getAttribute("transform")),
+    ]);
+    same = now === previous ? same + 1 : 0;
     previous = now;
     await page.waitForTimeout(250);
   }
@@ -231,6 +239,7 @@ test.describe("the map to the reference: desktop floating controls (Studio)", ()
       await expectFree(page);
       await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
       await chipsSettled(page);
+      await expect(page.locator("[data-full-map] > aside:not([hidden]), [data-layout] aside:not([hidden])").first()).toBeVisible(); // the inspector is open before the drawing is judged
       await settle(page);
       await expectFree(page);
     });
