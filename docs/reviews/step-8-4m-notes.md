@@ -220,7 +220,7 @@ LEFT (the rest of the CLOSE, in this order):
 1. ONE 3-engine round: map specs + touched specs (map-free-areas, frame, map-landscape, full-map, full-map-table, map-fit, map-full-content) + the carried list, with
    `npx playwright test <files> --project=chromium --project=firefox --project=webkit`. Expected failures only the two carried above.
 2. ONE full Chromium run (`npx playwright test --project=chromium`).
-3. Screenshots `screenshots/8.4m/` with the owner's data (dark and light): `..able-work\inputs\ORN-real-data-2026-11-15.ornpkg`, read-only, never copied into the repo.
+3. Screenshots `screenshots/8.4m/` with the owner's data (dark and light): `../fable-work/inputs/ORN-real-data-2026-11-15.ornpkg`, read-only, never copied into the repo.
 4. Timings in the browser: overview layout median of 5; select-to-drawn for Aldehydes.
 5. Docs: PROGRESS (Amendments + the carried list above), plan row 8.4m DONE, PROJECT_STATE (completedSteps add 8.4m, next 8.4g), ADR-037 addendum M1 + M4,
    ADR-044 busy-rule addendum M3, GRAPH_SEMANTICS pair limit, PERFORMANCE_ARCHITECTURE timings. Commit `phase-8.4m: ...`.
