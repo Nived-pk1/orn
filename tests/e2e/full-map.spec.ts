@@ -94,10 +94,13 @@ for (const size of [
         x: number;
         width: number;
       };
+      // true fullscreen can give the page less than the size asked for (Firefox clamps it to the screen: 1366 wide for a 1920 request), so the
+      // edge is the page's own width
+      const edge = await page.evaluate(() => window.innerWidth);
       expect(
         paneBox.x + paneBox.width,
         "the pane sits at the right edge of the viewport",
-      ).toBeGreaterThanOrEqual(size.width - 1);
+      ).toBeGreaterThanOrEqual(edge - 1);
       expect(paneBox.x, "and lies over the map").toBeLessThan(
         withPane.x + withPane.w,
       );

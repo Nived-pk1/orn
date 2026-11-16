@@ -221,10 +221,12 @@ test.describe("the interaction table, in full map (desktop)", () => {
     ).toBeVisible();
     await left(page);
     await back();
-    expect(
-      Math.abs((await scaleOf(page)) - scale),
-      "the view is as it was",
-    ).toBeLessThan(0.02);
+    // polled: the drawing is there before its first frame has written the transform (WebKit read 0 in that gap)
+    await expect
+      .poll(async () => Math.abs((await scaleOf(page)) - scale), {
+        message: "the view is as it was",
+      })
+      .toBeLessThan(0.02);
 
     // Open family (the Selected bar)
     await enter(page);
