@@ -129,7 +129,8 @@
     "8.4a",
     "8.4b",
     "8.4c",
-    "8.4s"
+    "8.4s",
+    "8.4m"
   ],
   "nextPhase": 8,
   "outcomeGroupsStep": {
@@ -161,7 +162,7 @@
     "workerVersion": "337520f3-b0f5-4802-bbe8-58a90c2b3438"
   },
   "nextStep": "8.4g",
-  "nextStepTitle": "Step 8.4f DONE and deployed 2026-11-15 (Study 75241662, Studio 337520f3; reviewer approved). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix), then 8.4m (with the carried Z failures) and the test-speed step.",
+  "nextStepTitle": "Step 8.4m DONE 2026-11-16 (docs/PROGRESS.md 'Step 8.4m'; deploy details recorded there). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix; also the Imported toast over the key reserve), then the test-speed step (flaky: WebKit map-fit:66, Firefox map-free-areas:137, Chromium exam-editors:64).",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

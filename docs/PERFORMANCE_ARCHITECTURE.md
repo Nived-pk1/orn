@@ -77,6 +77,8 @@ ELK (`elkjs`) in the layout worker: `layered` for navigator, reaction and precur
 
 **Step 4.5 (2026-10-01).** Built as ADR-034's "Search worker (step 4.5)" paragraph says; measured numbers are in docs/PROGRESS.md step 4.5 (design tier, 5,000 reactions, worker code in Node).
 
+**Timings, anchored overview with every pair admitted (step 8.4m, 2026-11-16; the owner's real data: 657 reactions, 18 boxes, 159 ordered pairs, 826 candidate arrows).** Node, median of 5: projection 3.2 ms, grid layout 2.5 ms, scene build 0.6 ms (with 120 pairs: 3.3 / 2.7 / 0.7 ms), so admitting every pair costs about 0.1 ms. Browser (Chromium, Studio preview, 1920 x 1040, median of 5): select-to-drawn for Aldehydes (click to its first line in the drawing) 40 ms (57, 60, 35, 39, 40); reload to the drawn map 884 ms (932, 897, 882, 884, 883). The map model starts only when the map is shown (R1): initial JS Study 335,552 / Studio 339,367 bytes gzip (was 350,215 / 354,213).
+
 ## 6. Rendering
 
 Render budget 400 visible nodes / 800 visible edges; above it LOD is capped at 1. Viewport culling via a uniform grid index; pan/zoom by a single imperative transform; hover and focus rings on an overlay layer so the node layer does not re-render; text measurement cached per (string, font size); depictions lazily loaded and cached; long lists (inspector, overflow, search, diagnostics) virtualised with TanStack Virtual.
