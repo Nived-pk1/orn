@@ -72,8 +72,10 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
       await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
       const hide = page.getByRole('button', { name: 'Hide inspector' });
       const show = page.getByRole('button', { name: 'Show inspector' });
-      await expect(hide.or(show)).toBeVisible(); // the pane may still be opening: do not read the count too early
-      if ((await hide.count()) === 0) await page.getByRole('button', { name: 'Show inspector' }).click();
+      await expect(hide.or(show)).toBeVisible();
+      // a pick opens the pane by itself a moment later (about 300 ms in WebKit): "Show" at first is not "closed", and a click on it while the pane opens would shut it
+      const opened = await hide.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false);
+      if (!opened) await show.click();
       await expect(hide).toBeVisible();
       await chipsSettled(page);
       // ADR-037's floor case (step 8.4e, reviewer decision): above FIT_FLOOR the whole map stays on screen; clamped AT the floor the zoom IS the floor, names are
@@ -126,8 +128,10 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
     await clickNode(page, first);
     const hide = page.getByRole('button', { name: 'Hide inspector' });
     const show = page.getByRole('button', { name: 'Show inspector' });
-    await expect(hide.or(show)).toBeVisible(); // the pane may still be opening: do not read the count too early
-    if ((await hide.count()) === 0) await page.getByRole('button', { name: 'Show inspector' }).click();
+    await expect(hide.or(show)).toBeVisible();
+    // a pick opens the pane by itself a moment later (about 300 ms in WebKit): "Show" at first is not "closed", and a click on it while the pane opens would shut it
+    const opened = await hide.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false);
+    if (!opened) await show.click();
     await expect(hide).toBeVisible();
     await chipsSettled(page);
     expect(await scaleOf(page), 'the demo is fitted above the floor').toBeGreaterThan(FIT_FLOOR + 0.001);
