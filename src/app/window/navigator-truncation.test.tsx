@@ -7,10 +7,11 @@
  */
 import { cleanup, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type * as Limits from '@/features/navigator/limits';
 import { demoState } from '@/test-support/app-boot-kit';
 import { fakeApp, renderWithApp } from '@/test-support/window-kit';
 
-vi.mock('@/features/navigator/limits', async (original) => ({ ...(await original<typeof import('@/features/navigator/limits')>()), NAVIGATOR_MAX_NODES: 5 }));
+vi.mock('@/features/navigator/limits', async (original) => ({ ...(await original<typeof Limits>()), NAVIGATOR_MAX_NODES: 5 }));
 
 afterEach(cleanup);
 

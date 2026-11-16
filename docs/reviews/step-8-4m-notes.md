@@ -189,3 +189,40 @@ box about 32 px below the area's top (under the second bar). Not yet explained: 
 floor / `FIT_FLOOR` or the title floor in focus-fit.ts clamping the scale so the content overflows the band) with Firefox's wider
 text (`--map-title-u`). Fails about 1 of 3 whole-file runs, passes alone and with heavy logging (timing-dependent).
 Tried and dropped: adding the controls' sizes to the "area changed" signature (no cure, 2 of 3 still failed); reverted.
+
+## RESUME HERE v2 (session of 2026-11-16, paused by the owner after `npm run check` passed)
+
+State: all work committed locally (NOT pushed, NOT deployed). `npm run check` PASSED (ORN_TEST_WORKERS=2: lint, types, 800 files / 8,663 tests).
+Sizes measured: Study 335,544 / Studio 339,360 (limit 336,869 / 340,676). `data-link-to` (links section) is in the lazy `views-other` chunk, not the entry.
+
+DONE this session (reviewer's order):
+- Firefox `map-free-areas:223`: NOT a product bug. The fit was correct (scale 0.402, centred inside top inset 108). The spec judged the drawing
+  before the inspector had narrowed the area (its `settle` took two equal polls 250 ms apart). Fixed in the spec: waits for the open pane, three
+  equal polls, the world transform in the signature. Assertions kept. The hypothesis "scale raised to a floor" was checked: 0.402 > FIT_FLOOR 0.3775, and
+  `fitBox` already starts top-left inside the insets below the floor.
+- `frame:166` (WebKit): Alt+Tab does NOT reach links in this WebKit build (probe: Alt+Tab, Alt+Shift+Tab, manual Alt down all give the button). So in WebKit the
+  spec focuses the skip link directly; in every engine it asserts the link is the first focusable element. Said in the spec. (Differs from the reviewer's plan.)
+- `map-landscape:45`: 1/32 px slack. `full-map:60`: compares with window.innerWidth (Firefox clamps true fullscreen to 1366).
+- `full-map-table:193`: race in the test (scale read as 0 before the first frame): polled. `map-fit:117` and the 1920 case: race in the test (the pick opens the
+  pane ~300 ms later, the spec clicked "Show inspector" meanwhile and shut it): waits for Hide first. Lint error in navigator-truncation.test.tsx fixed.
+
+CARRIED to the test-speed step (flaky list; at the close they may fail ONLY in these engines and ONLY this way):
+- WebKit `map-fit.spec.ts:66` at 1280 x 800: after the pane narrows the area to 712 px the view stays at the pane-closed fit (scale 0.570); one family is off screen.
+  FreeAreas measured w712, top inset 108, struct true, and `refitIfAuto` saw autoView == current (so it called fitNow); yet the drawn view stayed old. Passed once with logging
+  in (timing). Suspect: the controller's size is still the old one when fitNow runs (viewport-scene's own ResizeObserver measure runs later), so fit gives the same view; the later
+  measure then should refit, check `sameView` / `autoView` after the first fitNow. Not proven.
+- Firefox `map-free-areas.spec.ts:137` (phone A3): failed once in a full-file run, passes alone 3 of 3.
+- To write down for 8.4g (no fix now): an "Imported" toast lifts the (wider) key reserve over the bucket box until it is dismissed.
+- To disclose in the report: tests written after their source (map-view-links.test.ts; the F2 unit test, proven red with the fix stashed); budget tests renumbered;
+  navigator-truncation.test.tsx lowers the box limit; the count line with a chapter chosen counts reactions of ALL chapters on the drawn lines; F5 not reproduced exactly.
+
+LEFT (the rest of the CLOSE, in this order):
+1. ONE 3-engine round: map specs + touched specs (map-free-areas, frame, map-landscape, full-map, full-map-table, map-fit, map-full-content) + the carried list, with
+   `npx playwright test <files> --project=chromium --project=firefox --project=webkit`. Expected failures only the two carried above.
+2. ONE full Chromium run (`npx playwright test --project=chromium`).
+3. Screenshots `screenshots/8.4m/` with the owner's data (dark and light): `..able-work\inputs\ORN-real-data-2026-11-15.ornpkg`, read-only, never copied into the repo.
+4. Timings in the browser: overview layout median of 5; select-to-drawn for Aldehydes.
+5. Docs: PROGRESS (Amendments + the carried list above), plan row 8.4m DONE, PROJECT_STATE (completedSteps add 8.4m, next 8.4g), ADR-037 addendum M1 + M4,
+   ADR-044 busy-rule addendum M3, GRAPH_SEMANTICS pair limit, PERFORMANCE_ARCHITECTURE timings. Commit `phase-8.4m: ...`.
+6. Deploy per docs/RELEASE.md (Study + Studio), then push. At a gate: write the packet and stop; never mark it passed.
+Probe scripts (git-ignored): `playwright-report/8.4m-probe/` (tab2.mjs, floor.ts, backups *.bak, check.log). Never keep scratch in test-results/.
