@@ -88,8 +88,9 @@ for (const [label, device] of [
           56.5,
         );
         expect(r.height, `${name} can be hit`).toBeGreaterThanOrEqual(44);
+        // 1/32 px of slack: WebKit lays out in 1/64 px units, so a control that ends on the edge can read 360.015625 (step 8.4m)
         expect(r.y + r.height, `${name} is on screen`).toBeLessThanOrEqual(
-          view.height,
+          view.height + 1 / 32,
         );
       }
       await expect(

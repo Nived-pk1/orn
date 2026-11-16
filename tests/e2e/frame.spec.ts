@@ -165,6 +165,7 @@ test("the status bar: a rule before every item but the first", async ({
 // Step 8.4d, Part C: the top bar and the shortcuts.
 test("the breadcrumb, the search box, Ctrl K, the skip link and the tab title", async ({
   page,
+  browserName,
 }) => {
   test.setTimeout(300_000);
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -181,7 +182,21 @@ test("the breadcrumb, the search box, Ctrl K, the skip link and the tab title", 
   await expect(page.getByRole("navigation", { name: "Modes" })).toBeVisible({
     timeout: 60_000,
   });
-  await page.keyboard.press("Tab");
+  // The skip link is the first focusable element of the document in every engine (the order Tab follows)...
+  expect(
+    await page.evaluate(
+      () =>
+        document.querySelector<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
+        )?.textContent,
+    ),
+    "the first focusable element is the skip link",
+  ).toBe("Skip to content");
+  // ...and Tab stops on it. WebKit follows Safari's default, which skips LINKS with Tab (an engine setting; Option+Tab is not delivered by the
+  // test driver), so there the link is focused directly; what follows (Enter moves the focus into the main area) is asserted the same way.
+  if (browserName === "webkit")
+    await page.getByRole("link", { name: "Skip to content" }).focus();
+  else await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Skip to content" }),
   ).toBeFocused();
