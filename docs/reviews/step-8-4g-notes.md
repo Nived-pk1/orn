@@ -60,3 +60,5 @@ START ok (2026-11-17): HEAD 0599d63 == origin/master, clean, stash empty. Part A
 - G7 chunk failure: boundary Reload reloads the page when the code could not be loaded (RED: error-boundary.test 'a screen whose code could not be loaded' failed first). e2e: app-essentials 'a view whose code cannot be loaded' (page.route abort of settings-host chunk), screenshots error-screen-{light,dark}.png.
 - WebKit quirk (unproved cause): after a chunk fails and Reload reloads the page, WebKit's persistent profile fails the same Settings file again even with the route removed/continued; the e2e proves the reload (load event) there and the recovery in Chromium/Firefox. Message there is 'TypeError: Importing a module script failed.'
 - Part A close: sizes Study 336,625 (+948), Studio 340,716 (+1,080); check green 813/8730; build:smoke passed; audit 0. Next: commit, deploy.
+
+Part A deployed; Part B next. Study 05f85da9, Studio 8f47f39f, pushed (2df7287), live specs Chromium 44/WebKit 43 green, Access check passed.
