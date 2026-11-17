@@ -144,17 +144,17 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-17",
-    "commit": "4eb8fbe",
-    "version": "d5f40124-79aa-4969-9293-99cb60282dae",
-    "liveSpecs": "2026-11-17 (8.4m2): Chromium 44 passed, 11 skipped, 0 failed; WebKit 43 passed, 12 skipped, 0 failed (the RELEASE.md live list, exact file names, one command per browser)",
-    "workerVersion": "d5f40124-79aa-4969-9293-99cb60282dae"
+    "commit": "b10778a",
+    "version": "05f85da9-0fae-4d23-8d59-d3ea07c26e41",
+    "liveSpecs": "2026-11-17 (8.4g Part A): Chromium 44 passed, 11 skipped, 0 failed; WebKit 43 passed, 12 skipped, 0 failed (the RELEASE.md live list, exact file names, one command per browser)",
+    "workerVersion": "05f85da9-0fae-4d23-8d59-d3ea07c26e41"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-17",
-    "version": "e4f17ad9-bef6-4dd9-997a-b4fc7f5f49f7",
+    "version": "8f47f39f-5fd4-4b55-a0e2-12fc347c754e",
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4m deploy, 2026-11-16: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
     "commit": "4eb8fbe",
