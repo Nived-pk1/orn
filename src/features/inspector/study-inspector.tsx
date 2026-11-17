@@ -11,6 +11,7 @@ import { LinksSection } from './links-section';
 import { studyInspectorModel } from './model/study-model';
 import { StudyHero } from './study-hero';
 import { Chips, Connected, Disclosure, GoNext, Lead, WatchOuts, type GoNextAction } from './study-parts';
+import { RecordMenu } from './record-menu';
 import { RichText } from './rich-text';
 import { knownReviewStatus, ReviewMark, STUDY_REVIEW_SENTENCE, useStudyChrome, type ReviewStatus } from '@/ui/study-chrome';
 import styles from './study-inspector.module.css';
@@ -34,7 +35,7 @@ export interface StudyInspectorProps {
 }
 
 export function StudyInspector(props: StudyInspectorProps) {
-  const { ports, state } = useInspectorEnv();
+  const { ports, state, host } = useInspectorEnv();
   const student = useStudyChrome().reviewMark === 'dot';
   const status: ReviewStatus | undefined = knownReviewStatus((props.record as { review?: { status?: unknown } }).review?.status);
   const model = useMemo(
@@ -52,6 +53,7 @@ export function StudyInspector(props: StudyInspectorProps) {
             </span>
             <span className={styles.headAside} data-head-aside="">
               <ReviewMark status={status} />
+              <RecordMenu refOf={props.refOf} name={model.title} kindWord={model.kindChip.word} {...(host.report === undefined ? {} : { report: host.report })} />
             </span>
           </div>
           <h3 id={props.titleId} className={styles.titleText}>{model.title}</h3>

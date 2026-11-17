@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
-import { Inspector, placeOf, type InspectorHost } from "@/features/inspector";
+import { Inspector, type InspectorHost } from "@/features/inspector";
 import {
   NavigatorProvider,
   PhoneTabs,
@@ -40,12 +40,18 @@ import { usePhoneTabMode } from "./phone-tab-mode";
 import { studyChrome, StudyChromeProvider, useStudyChrome } from '@/ui/study-chrome';
 import { useHasOwnData } from './own-data-hooks';
 import { EDITION } from '@/app/edition';
+import { REPORT_ADDRESS } from "@/app/report-config";
 import { openPrecursors } from "./precursors-entry";
 import { openReagent } from "./reagents-entry";
 import { usePageEntries } from "./use-page-entries";
 import type { RecordRef } from "@/core/schema";
 import { filterFor, openReactions } from "./reactions-entry";
 import { Canvas, totalOf } from "./canvas";
+import { LazyNotFound } from "./lazy-not-found";
+import { showRecord } from "./show-record";
+import { AddressGate } from "./address-gate";
+import type { LostAddress } from "./use-address";
+import { useTitleFocus } from "./use-title-focus";
 
 import { PanelsStatus } from "./panels-status";
 import { StatusLine } from "./status-parts";
@@ -94,6 +100,7 @@ function InspectorPanel(props: {
     () => ({
       openPane,
       closePane,
+      report: { address: REPORT_ADDRESS, version: __ORN_VERSION__ },
       navigatorShown,
       explorerShown,
       showReactions: (ref) => {
@@ -156,7 +163,8 @@ export function Window() {
 function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void }) {
   const toastShowing = useToastShowing();
   const { onSheetOpen } = props;
-  const { panels, services, navigator, inspector: inspectorPorts } = useApp();
+  const app = useApp();
+  const { panels, services, navigator, inspector: inspectorPorts } = app;
   const chrome = useStudyChrome();
   const editors = useEditors();
   const { actions: imports, element: importElement } = useImportActions();
@@ -212,24 +220,14 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const onPrecursors = useCallback((ref: RecordRef) => openPrecursors(navigator.ui, setMode, ref), [navigator]);
   const hasData = totalOf(counts) > 0;
   const settled = useFirstScreen({ hasData, chapterTopics, phone: layoutMode === 'phone', overview: navigator.ui.overview, setMode });
-  // When the first-run screen closes (data arrived, or Start empty) the control that had the focus is gone: the focus goes to the page title,
-  // so the next Tab starts from the top in every engine (UI_ARCHITECTURE §11).
-  const startedEmpty = usePanels(panels, (s) => s.startEmptyDismissed);
-  // (only once start-up has settled: a returning user's data arriving after boot is not a first run closing)
-  const firstRunShown = status.stage !== 'booting' && status.mode !== null && !hasData && !startedEmpty;
-  const wasFirstRun = useRef(firstRunShown);
-  const [titleRequest, setTitleRequest] = useState(0);
-  const [titleWanted, setTitleWanted] = useState(false);
-  useEffect(() => {
-    if (wasFirstRun.current && !firstRunShown) setTitleWanted(true);
-    wasFirstRun.current = firstRunShown;
-  }, [firstRunShown]);
-  // ...but only once the import has finished: while its dialog is modal the page is inert and a focus call does nothing
-  useEffect(() => {
-    if (!titleWanted || imports.busy) return;
-    setTitleWanted(false);
-    setTitleRequest((n) => n + 1);
-  }, [titleWanted, imports.busy]);
+  const pageOpeners = useMemo(() => ({ chapters: onChapter, reagents: onReagent, named: onNamed, mechanisms: onMechanism }), [onChapter, onReagent, onNamed, onMechanism]);
+  const [lostAt, setLost] = useState<LostAddress>(null);
+  const lost = lostAt !== null && lostAt.mode === mode ? lostAt.what : null;
+  const changeMode = useCallback((next: string) => {
+    setLost(null);
+    setMode(next);
+  }, []);
+  const titleRequest = useTitleFocus({ panels, status, hasData, busy: imports.busy });
   // The palette's commands read the window as it is when the list is asked for (a ref, so the palette's port never changes).
   const commandDeps = useRef<CommandDeps | null>(null);
   commandDeps.current = {
@@ -244,6 +242,11 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
     pickFile: imports.pick,
     openExport: exports.open,
     ...(EDITING ? editorCommandDeps(editors, services.store.getState(), inspectorPorts.ui.inspector.getState()) : {}),
+    state: services.store.getState,
+    openPlacement: (id) => {
+      inspectorPorts.ui.inspector.getState().open({ kind: 'topic_mapping', id });
+      openPane();
+    },
     structures: { mode: () => panels.getState().structureMode, set: (mode) => panels.getState().setStructureMode(mode) },
     ui: navigator.ui,
     exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }),
@@ -269,16 +272,9 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
           const build = loadedCommands();
           return build === undefined || commandDeps.current === null ? [] : build({ ...commandDeps.current, exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }) });
         },
-        show(ref, title) {
-          setMode(NAVIGATOR_MODE);
-          if (navigator.ui.overview.getState().phoneTab === 'explore') navigator.ui.overview.getState().setPhoneTab('families');
-          inspectorPorts.ui.inspector.getState().open(ref);
-          openPane();
-          // a family is focused on the map, a reaction opens its family page at its card; anything else has its places in the inspector
-          placeOf(ref, title, navigator.indexes.current(), { selection: navigator.ui.selection, family: navigator.ui.family }, true).actions[0]?.run();
-        },
+        show: (ref, title) => showRecord(app, setMode, openPane, ref, title),
       }),
-    [services, navigator, inspectorPorts, openPane, onReactions, onReagent, onNamed, onMechanism],
+    [app, services, navigator, inspectorPorts, openPane, onReactions, onReagent, onNamed, onMechanism],
   );
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
@@ -296,13 +292,14 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const pane = useMemo<InspectorPane>(
     () => ({
       width,
-      open,
+      // Settings has no record to show: the pane closes there and comes back (as the reader left it) with the next view (step 8.4g, G10)
+      open: open && mode !== SETTINGS_MODE,
       min: INSPECTOR_MIN,
       max: INSPECTOR_MAX,
       onWidth: (next) => panels.getState().setInspectorWidth(next),
       onOpen: (next) => panels.getState().setInspectorOpen(next),
     }),
-    [width, open, panels],
+    [width, open, mode, panels],
   );
   return (
     <StudyUpdateProvider load={imports.loadDemo} hasData={hasData}>
@@ -331,7 +328,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
           crumb={crumb}
           commandBox={{ onOpen: openSearch }}
           activeMode={mode}
-          onModeChange={setMode}
+          onModeChange={changeMode}
           toasts={<ToastRegion />}
           toastShowing={toastShowing}
           onSheetHeight={(height) => onSheetOpen(height !== 'closed')}
@@ -343,8 +340,8 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
             </ErrorBoundary>
           }
           canvas={
-            <ErrorBoundary label="The dataset panel">
-              <Canvas mode={mode} exam={exam} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onSyllabus={onSyllabus} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} openPane={openPane} />
+            <ErrorBoundary label="The dataset panel" {...(EDITING ? { backUp: exports.open } : {})}>
+              {lost === null ? <Canvas mode={mode} exam={exam} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onSyllabus={onSyllabus} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} openPane={openPane} /> : <LazyNotFound what={lost} onChapters={() => changeMode(CHAPTERS_MODE)} />}
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"
@@ -385,6 +382,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
         {exportElement}
         <PhoneStatusDialog open={statusOpen} onClose={() => setStatusOpen(false)} />
         <AboutDialog open={about} onClose={() => setAbout(false)} />
+        <AddressGate mode={mode} setMode={setMode} ready={hasData && settled} views={railModes} open={pageOpeners} openPane={openPane} lost={lostAt} setLost={setLost} />
 
         <LazyPalette ports={searchPorts} open={searching} onClose={() => setSearching(false)} />
         {EDITING ? null : <LazyExamFirstRun binding={exam} />}

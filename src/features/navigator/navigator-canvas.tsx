@@ -105,6 +105,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
   const controllerRef = useRef<ViewportController | null>(null);
   controllerRef.current = controller;
   const picked = useStore(ports.ui.selection, (s) => s.multi);
+  const fitted = useStore(ports.ui.map, (s) => s.fitted);
   const selectedIds = useMemo(() => (picked.length > 0 ? new Set(picked.map((one) => one.id)) : selected === null ? NO_IDS : new Set([selected.id])), [selected, picked]);
   // step 8.4b (E2a): a map saved while still fitted is fitted again on reload; one the person had moved keeps its view
   const initialViewport = useMemo<Viewport | undefined>(() => initialViewOf(ports.ui.viewports.getState().views[VIEW], ports.ui.map.getState().fitted), [ports]);
@@ -274,6 +275,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
           onZoomIn={() => controller?.zoomIn()}
           onZoomOut={() => controller?.zoomOut()}
           onFit={() => controller?.fit()}
+          fitted={fitted}
           chapters={chapters}
           chapterId={map.chapterId}
           onChapter={setChapter}
@@ -313,7 +315,7 @@ export function NavigatorCanvas(props: { readonly returnTo?: string }) {
         ) : null}
         {phone && scene !== null && !listing ? (
           <Suspense fallback={null}>
-            <PhoneMapControls map={ports.ui.map} controller={controller} items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => seeCompounds() })} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} />
+            <PhoneMapControls map={ports.ui.map} fitted={fitted} controller={controller} items={legend} keys={legendKeys} onToggleUnclassified={toggleUnclassified} {...(compounds === undefined ? {} : { onSeeCompounds: () => seeCompounds() })} {...(outsideNote === undefined ? {} : { outsideNote })} {...(multi === null ? {} : { extra: multi.selectToggle })} {...(selectBar == null ? {} : { barShown: true })} />
           </Suspense>
         ) : null}
         {phone ? selectBar : null}

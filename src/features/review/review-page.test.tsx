@@ -117,6 +117,35 @@ describe('the rows', () => {
   });
 });
 
+const countLine = (): string | undefined => screen.getAllByRole('status').map((one) => one.textContent ?? '').find((words) => /records? (to review|shown)/.test(words));
+
+describe('Find by name (step 8.4g, G8)', () => {
+  it('narrows the list by name, says how many of all, and clearing the box brings the full list back', () => {
+    const r = rig({ [`species:${SPC[0]}`]: {}, [`species:${SPC[1]}`]: {}, [`reaction:${RXN[0]}`]: {} });
+    show(r.port);
+    expect(countLine()).toBe('3 records to review');
+    const box = screen.getByRole('searchbox', { name: 'Find by name' });
+    const first = nameOf(r.store.getState(), 'species', SPC[0] as string);
+    fireEvent.change(box, { target: { value: first } });
+    expect(rowOf(first)).toBeTruthy();
+    expect(rows().length).toBeLessThan(3);
+    expect(countLine()).toMatch(/^\d+ of 3 records shown$/);
+    fireEvent.change(box, { target: { value: 'qqqq-nothing' } });
+    expect(screen.queryByRole('list', { name: 'Records to review' })).toBeNull();
+    expect(screen.getByText('No record matches these filters.')).toBeTruthy();
+    fireEvent.change(box, { target: { value: '' } });
+    expect(rows()).toHaveLength(3);
+    expect(countLine()).toBe('3 records to review');
+  });
+
+  it('the kind filter says its kinds in plain plurals', () => {
+    const r = rig({ [`species:${SPC[0]}`]: {}, [`reaction:${RXN[0]}`]: {}, [`class:${CLS[0]}`]: {} });
+    show(r.port);
+    const kind = screen.getByRole('combobox', { name: 'Kind' });
+    expect([...kind.querySelectorAll('option')].map((o) => o.textContent)).toEqual(['All', 'Classes (1)', 'Compounds (1)', 'Reactions (1)']);
+  });
+});
+
 describe('filters', () => {
   it('Kind, Status, Has errors, Has warnings, Origin and Tag narrow the list; the count says how many are shown', () => {
     const r = rig(

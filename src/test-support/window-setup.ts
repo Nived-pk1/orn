@@ -5,7 +5,12 @@
  * up for the warm-up and puts the originals back afterwards: a test file's own setup is unchanged. It also loads the lazy Reactions and Precursors
  * hosts once (7.2b: `reactions-window` failed twice under a busy machine; alone it opens in 0.47 s before and after the step). No wait is raised anywhere.
  */
-import { beforeAll, expect } from 'vitest';
+import { beforeAll, beforeEach, expect } from 'vitest';
+
+// The window writes the address after `#` (step 8.4g, G1); a test is a fresh visit, so each one starts without it (a reload keeps it: render twice).
+beforeEach(() => {
+  if (typeof history !== 'undefined' && location.hash !== '') history.replaceState(null, '', location.pathname + location.search);
+});
 
 const IN_WINDOW_TESTS = /[\\/]src[\\/]app[\\/]window[\\/]/;
 

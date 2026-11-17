@@ -79,6 +79,8 @@ export interface InspectorHost {
   showMechanism?(ref: RecordRef): void;
   /** Opens the Reactions view for an overview arrow: From = its from family, To = its to family (a self-loop: the same family twice). Absent: no such button. */
   showArrowReactions?(ends: { readonly from: string; readonly to: string }): void;
+  /** The mail address a "Report a mistake" goes to and the app version it names (step 8.4g, G6). Absent: the item is not shown. */
+  readonly report?: { readonly address: string; readonly version: string };
   /** Studio (8.1): the inspector adds the closed "For authors" section and the author lines. Absent: true exactly when `editNames` is wired. */
   readonly authorSections?: boolean;
   /** True while the navigator is the view on the canvas (a record can then have a place in it). */

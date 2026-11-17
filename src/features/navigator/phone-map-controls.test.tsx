@@ -17,4 +17,13 @@ describe('PhoneMapControls', () => {
     show();
     expect(screen.getByRole('button', { name: 'Fit' }).parentElement?.getAttribute('data-bar')).toBeNull();
   });
+  it('8.4g G12: the round Fit button says whether the automatic fit is on (aria-pressed, pressed look, the same tooltip words)', () => {
+    const { rerender } = render(<PhoneMapControls controller={null} items={[]} keys={{ lines: false, chip: false, pair: false, within: false, unclassified: undefined }} fitted />);
+    const fit = screen.getByRole('button', { name: 'Fit' });
+    expect(fit.getAttribute('aria-pressed')).toBe('true');
+    expect(fit.getAttribute('title')).toBe('Fit is on: the map follows the window');
+    rerender(<PhoneMapControls controller={null} items={[]} keys={{ lines: false, chip: false, pair: false, within: false, unclassified: undefined }} fitted={false} />);
+    expect(screen.getByRole('button', { name: 'Fit' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByRole('button', { name: 'Fit' }).getAttribute('title')).toBe('Fit: show the whole map');
+  });
 });

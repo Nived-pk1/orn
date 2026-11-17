@@ -485,3 +485,18 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 - **Marks grow with the map**, clamped: stroke 2 to 4 px (heavy 3 to 5), head 10 to 16, chip 20 to 26.7 px (text 12 to 16), hit area = stroke + 14 px (touch + 26). They were fixed screen sizes in 8.4b; those sizes are now the floors.
 - **Limit, stated:** the room on a box side caps how far a pair is spread (`PORT_GAP` = 20 map units). Below a zoom of about 0.58 the stroke edges of a pair are therefore less than 8 px apart. The reviewer accepted this as a geometric limit (2026-11-08); the end-spacing e2e check follows it: 8 px between stroke edges from a zoom of 0.6, 4.5 px below.
 - **Reviewer decision:** box titles are at least 10 px at Fit at 1280 x 800 with the pane shut, and at least 12 px after "Zoom to selection" (they were 12 and 13 at Fit); the user prefers the airy map and zoom gives big text.
+
+### ADR-047 — The address of the app: links to every view and record (step 8.4g, Part A, 2026-11-17)
+
+**Problem.** A view or a record could not be linked, bookmarked or reached with Back and Forward; a reload always came back to the map.
+
+**Decision.**
+- **Format** (after `#`; IDs only, never names; `src/ui/state/address.ts`): `#/<view>` (the map is `map`); `#/<view>/<id>` for the page of a chapter, reagent, named reaction or mechanism and for a reaction in Reactions; `#/<view>/<kind>/<id>` for a record shown in the inspector on the map, in Reactions or in Precursors (`family` is the class kind); `#/family/<id>` for the family page. Zoom, pan, hover and typed filters are not in the address (they stay in the saved UI state). At most 600 characters, ids at most 200, `%2F` and control characters refused: anything else is `bad`.
+- **One history entry per change** of view, page or record shown; the first address of a visit, and every address carried out from the URL (Back, Forward, reload, a link), REPLACE the entry. A bad address, or a record this version lacks, leaves the address as it is and shows the not-found screen ("This page does not exist." / "This record is not in this version of the app.") until the reader goes to another view.
+- **A plain view address shows no record** (Back to `#/map` clears the selection); **a page already open is not opened again** (its saved filters stay).
+- **The full map** keeps its own history entry; nothing is written while it owns the current entry.
+- **Lazy.** Only a small gate is in the entry. The code (parse/format, the hook, carrying out an address) is a lazy chunk, fetched at once when the URL has an address, on the first change of view, or when the browser is idle.
+- **Record menu** ("⋯", `Record menu`): "Copy link" (the record's address with origin and path; "Link copied") and "Report a mistake" (a `mailto:` to the one address in `src/app/report-config.ts`; subject "ORN: mistake in <name>", body with the link, the kind, the app version and "What is wrong:"; absent when the address is empty).
+- **Errors.** The error boundary answers at once with one plain sentence and a native Reload; the full screen (EmptyState look, Back up now in Studio, Details) is a lazy chunk. A screen whose code could not be loaded reloads the page (a retry would fail the same way).
+
+**Consequences.** No schema, import-format, CSP or persistence change. Specs that reloaded and expected the map now find the same view again (reaction-explorer, precursor-explorer); the full-map Back spec reads the address after the selection. Topic placements are palette commands ("> record in topic"), not search documents (SEARCH §1 unchanged).

@@ -76,6 +76,9 @@ export function useToastView(): ToastView | null {
   return useContext(ViewContext);
 }
 
+/** The toasts, or null outside a provider (a record shown on its own, as in a test or a standalone view). */
+export const useOptionalToasts = (): Toasts | null => useContext(ToastContext);
+
 export function useToasts(): Toasts {
   const value = useContext(ToastContext);
   if (value === null) throw new Error('useToasts was called outside a ToastProvider');

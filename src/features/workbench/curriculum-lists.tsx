@@ -58,9 +58,14 @@ export function SyllabusTopicsSection(props: CurriculumListProps) {
             <li key={line.id} className={styles.chip}>
               <span>{line.words}</span>
               {props.openRecord === undefined ? null : (
-                <Button aria-label={`Open ${line.words.split(' · ')[0] ?? line.words} in the inspector`} onClick={() => props.openRecord?.({ kind: 'topic', id: line.topicId } as RecordRef)}>
-                  Open
-                </Button>
+                <>
+                  <Button aria-label={`Open ${line.words.split(' · ')[0] ?? line.words} in the inspector`} onClick={() => props.openRecord?.({ kind: 'topic', id: line.topicId } as RecordRef)}>
+                    Open
+                  </Button>
+                  <Button aria-label={`Open placement in ${line.words.split(' · ')[0] ?? line.words} in the inspector`} onClick={() => props.openRecord?.({ kind: 'topic_mapping', id: line.id } as RecordRef)}>
+                    Open placement
+                  </Button>
+                </>
               )}
             </li>
           ))}

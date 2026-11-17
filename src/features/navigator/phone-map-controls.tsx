@@ -25,6 +25,8 @@ export function PhoneMapControls(props: {
   readonly barShown?: boolean;
   /** The map's UI state (step 8.4e, Part D): the Full map button. */
   readonly map?: MapStore;
+  /** The automatic fit is on (step 8.4g, G12). Absent: a plain button. */
+  readonly fitted?: boolean;
 }) {
   const [legend, setLegend] = useState(false);
   return (
@@ -32,7 +34,7 @@ export function PhoneMapControls(props: {
       <div className={styles.floating} data-map-control="stack" {...(props.barShown === true ? { 'data-bar': 'shown' } : {})}>
         {props.map === undefined ? null : <FullMapButton map={props.map} variant="round" />}
         {props.extra}
-        <button type="button" className={styles.round} aria-label="Fit" onClick={() => props.controller?.fit()} aria-disabled={props.controller === null ? true : undefined}>
+        <button type="button" className={styles.round} aria-label="Fit" {...(props.fitted === undefined ? {} : { 'aria-pressed': props.fitted, title: props.fitted ? 'Fit is on: the map follows the window' : 'Fit: show the whole map' })} onClick={() => props.controller?.fit()} aria-disabled={props.controller === null ? true : undefined}>
           <Icon name="scan" size={20} />
         </button>
         <button type="button" className={styles.round} aria-label="Legend" aria-haspopup="dialog" onClick={() => setLegend(true)}>

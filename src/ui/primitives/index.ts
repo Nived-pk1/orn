@@ -23,7 +23,7 @@ export type { MenuItem, MenuProps } from './menu';
 export { SegmentedControl } from './segmented-control';
 export type { SegmentedControlProps, SegmentedOption } from './segmented-control';
 export { Skeleton } from './skeleton';
-export { ACTION_TOAST_MS, MAX_TOASTS, RESULT_TOAST_MS, ToastItems, ToastProvider, ToastRegion, useToastShowing, useToastView, useToasts } from './toast';
+export { ACTION_TOAST_MS, MAX_TOASTS, RESULT_TOAST_MS, ToastItems, ToastProvider, ToastRegion, useToastShowing, useOptionalToasts, useToastView, useToasts } from './toast';
 export type { ToastTimers } from './toast';
 export type { ToastInput, ToastView, Toasts } from './toast';
 export { Tooltip } from './tooltip';

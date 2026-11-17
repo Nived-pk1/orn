@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-16",
     "workerVersion": "9698b43a-8a8f-4879-b043-e73a275a9d79"
   },
-  "nextStep": "8.4g",
-  "nextStepTitle": "Step 8.4m2 DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4m2'; B2 and B3 fixed, B1 NOT reproduced, awaiting review). Step 8.4m DONE 2026-11-16 (docs/PROGRESS.md 'Step 8.4m'; deployed 2026-11-16: Study 2af04982, Studio 9698b43a). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix; also the Imported toast over the key reserve), then the test-speed step (flaky: WebKit map-fit:66, Firefox map-free-areas:137, Chromium exam-editors:64).",
+  "nextStep": "8.4g Part B",
+  "nextStepTitle": "Step 8.4g Part A DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4g Part A'; links, Copy link, Report a mistake, error and not-found screens, Review find, placements, Settings pane, Fit state; ADR-047). Next: 8.4g Part B (Starred, Recent, first-run tour, shortcuts sheet; closes row 8.4), then the test-speed step. Step 8.4m2 DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4m2'; B2 and B3 fixed, B1 NOT reproduced, awaiting review). Step 8.4m DONE 2026-11-16 (docs/PROGRESS.md 'Step 8.4m'; deployed 2026-11-16: Study 2af04982, Studio 9698b43a). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix; also the Imported toast over the key reserve), then the test-speed step (flaky: WebKit map-fit:66, Firefox map-free-areas:137, Chromium exam-editors:64).",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

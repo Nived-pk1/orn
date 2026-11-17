@@ -12,6 +12,8 @@ import { NAVIGATOR_MODE } from './modes';
 import { openMechanismsList, openNamedList, openSyllabus } from './page-entries';
 import { openChaptersList, openPrecursorsList, openReactionsList } from './list-entries';
 import { openReagentsList } from './reagents-entry';
+import { placementsOf } from './placement-commands';
+import type { CanonicalState } from '@/core/schema';
 
 /** One "New <kind>" palette command. */
 export interface NewKindCommand {
@@ -43,6 +45,9 @@ export interface CommandDeps {
   readonly newKinds?: readonly NewKindCommand[] | undefined;
   /** How structures are drawn (equation step, part 4). Absent: no Structures commands. */
   readonly structures?: { mode(): StructureMode; set(mode: StructureMode): void } | undefined;
+  /** The canonical state the topic placements ("<record> in <topic>") are made from, and how to open one in the inspector (step 8.4g, G9). Absent: none are listed. */
+  readonly state?: (() => CanonicalState) | undefined;
+  readonly openPlacement?: ((id: string) => void) | undefined;
   readonly ui: NavigatorUiStores;
   readonly exams: ExamOptions;
   /** The views of the rail for this reader; the ones with no entry of their own (Dataset, Workbench, Review) get a "Go to" command that just opens them. */
@@ -117,6 +122,7 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit the selected record', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
     ...(deps.newKinds ?? []).map((command) => withReason({ id: command.id, title: command.title, keywords: command.keywords, run: command.run }, command.reason)),
     ...structureCommands,
+    ...(deps.state === undefined || deps.openPlacement === undefined ? [] : placementsOf(deps.state()).map((placement) => ({ id: `placement:${placement.id}`, title: placement.title, keywords: ['topic', 'placement', 'syllabus', 'mapping'], run: () => deps.openPlacement?.(placement.id) }))),
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),
     withReason({ id: 'zoom-out', title: 'Zoom out', keywords: ['map', 'view'], run: () => view?.zoomOut() }, zoomReason),

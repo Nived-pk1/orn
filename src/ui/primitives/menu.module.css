@@ -105,3 +105,9 @@
 .item[role='menuitemradio'] {
   position: relative;
 }
+
+/* An item that is a link (Report a mistake, step 8.4g, G6) looks like the other items */
+a.item {
+  color: inherit;
+  text-decoration: none;
+}

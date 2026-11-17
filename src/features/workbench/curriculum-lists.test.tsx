@@ -27,6 +27,14 @@ describe('Syllabus topics', () => {
     fireEvent.click(within(list).getByRole('button', { name: 'Open Oxidation and dehydration of alcohols in the inspector' }));
     expect(shown.openRecord).toHaveBeenCalledWith({ kind: 'topic', id: 'top_alcohol-oxidation-dehydration' });
   });
+  it('8.4g G9: each row also has "Open placement", which opens the topic placement record (not the topic)', () => {
+    const shown = showKnowledge('reaction', { target: REACTION });
+    open(/Syllabus topics/);
+    const list = screen.getByRole('list', { name: 'Syllabus topics' });
+    fireEvent.click(within(list).getByRole('button', { name: 'Open placement in Oxidation and dehydration of alcohols in the inspector' }));
+    expect(shown.openRecord).toHaveBeenCalledTimes(1);
+    expect(shown.openRecord).toHaveBeenCalledWith({ kind: 'topic_mapping', id: expect.stringMatching(/^tmp_/) });
+  });
   it('"Map to a topic" keeps the draft and asks for a NEW mapping with the target filled in', () => {
     const shown = showKnowledge('reaction', { target: REACTION });
     open(/Syllabus topics/);

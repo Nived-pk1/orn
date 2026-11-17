@@ -127,7 +127,6 @@ for (const size of [
       await openMapDesktop(page);
       await page.setViewportSize(size);
       await page.waitForTimeout(900);
-      const url = page.url();
       await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
       await drawing(page).focus();
       await page.keyboard.press("f"); // centre: not full map
@@ -148,7 +147,9 @@ for (const size of [
         await page.keyboard.press("Escape");
         await expect(full(page)).toHaveCount(0);
       }
-      // Back
+      // Back: the address follows the selection (step 8.4g, G1), so Back must land on the address in force when the full map was entered
+      await page.waitForTimeout(600);
+      const url = page.url();
       await enterByButton(page, false);
       await page.goBack();
       await expect(full(page)).toHaveCount(0);
@@ -172,7 +173,6 @@ for (const [label, device, phone] of [
     }, info) => {
       test.setTimeout(300_000);
       await openMapPhone(page);
-      const url = page.url();
       const normal = await areaOf(page);
       await enterByButton(page, phone);
       const whole = await areaOf(page);
@@ -211,6 +211,9 @@ for (const [label, device, phone] of [
         .getByRole("button", { name: "Exit full map", exact: true })
         .tap();
       await expect(full(page)).toHaveCount(0);
+      // the address follows the selection (step 8.4g, G1): Back must land on the address in force when the full map was entered
+      await page.waitForTimeout(600);
+      const url = page.url();
       await enterByButton(page, phone);
       await page.goBack();
       await expect(full(page)).toHaveCount(0);

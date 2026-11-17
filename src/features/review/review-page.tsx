@@ -5,15 +5,17 @@
  * core (`core/editing/review-queue.ts`); this file shows them. The app never verifies anything by itself.
  */
 import { useEffect, useId, useMemo, useReducer, useRef, useState, type ChangeEvent } from 'react';
-import { chapterIndexOf, facetCountsOf, groupQueueRows, importIndexOf, queueRows, rowsMatching, type GroupBy, type GroupPlaces, type QueueFilters, type QueueRow, type ReviewGroup } from '@/core/editing';
+import { chapterIndexOf, createRowFinder, facetCountsOf, groupQueueRows, importIndexOf, queueRows, rowsMatching, type GroupBy, type GroupPlaces, type QueueFilters, type QueueRow, type ReviewGroup } from '@/core/editing';
 import type { RecordRef } from '@/core/schema';
 import { useLayoutMode } from '@/ui/hooks';
 import { Button, SegmentedControl, VirtualList } from '@/ui/primitives';
 import type { ReviewPort } from './contracts';
 import { ReviewRow } from './review-row';
+import { kindPlural } from './words';
 import { useBulkReview } from './use-bulk-review';
 import styles from './review.module.css';
 
+const count = (n: number): string => n.toLocaleString('en-US');
 const keyOf = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
 const ROW_ESTIMATE = 84;
 const HEAD_ESTIMATE = 44;
@@ -43,6 +45,7 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
   const { port } = props;
   const [, bump] = useReducer((n: number) => n + 1, 0);
   useEffect(() => port.subscribe(bump), [port]);
+  const [text, setText] = useState('');
   const [kind, setKind] = useState('');
   const [status, setStatus] = useState('');
   const [errorsOnly, setErrorsOnly] = useState(false);
@@ -73,10 +76,13 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
   const formatTime = port.imports?.formatTime;
   const places = useMemo<GroupPlaces>(() => ({ chapters: chapterIndexOf(state), imports: importIndexOf(importLog ?? [], formatTime ?? ((iso) => iso)) }), [state, importLog, formatTime]);
   const chosenFacets = useMemo(() => ({ ...(kind === '' ? {} : { kind }), ...(status === '' ? {} : { status }), ...(chapter === '' ? {} : { chapter }), ...(imported === '' ? {} : { import: imported }) }), [kind, status, chapter, imported]);
-  const shown = useMemo(() => rowsMatching(base, places, chosenFacets), [base, places, chosenFacets]);
+  const matched = useMemo(() => rowsMatching(base, places, chosenFacets), [base, places, chosenFacets]);
+  // "Find by name" narrows what the filters left (names, other names, formulas); the options' counts do not depend on it
+  const find = useMemo(() => createRowFinder(state, matched), [state, matched]);
+  const shown = useMemo(() => find(text), [find, text]);
   const facets = useMemo(() => facetCountsOf(base, places, chosenFacets), [base, places, chosenFacets]);
-  const withCount = (map: ReadonlyMap<string, { readonly title: string; readonly count: number }>, chosen: string): (readonly [string, string])[] => {
-    const options = [...map.entries()].map(([value, one]) => [value, `${one.title} (${one.count})`] as const);
+  const withCount = (map: ReadonlyMap<string, { readonly title: string; readonly count: number }>, chosen: string, words: (title: string) => string = (title) => title): (readonly [string, string])[] => {
+    const options = [...map.entries()].map(([value, one]) => [value, `${words(one.title)} (${one.count})`] as const);
     return chosen === '' || map.has(chosen) ? options : [...options, [chosen, `${chosen} (0)`] as const];
   };
   // a chosen chapter shows its own group only (a record in two chapters would otherwise repeat under the other one)
@@ -84,8 +90,9 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
   // the rows in the order they are listed, each once: a range (Shift-click) follows what the person sees
   const listed = useMemo(() => [...new Map(groups.flatMap((group) => group.rows).map((row) => [keyOf(row.ref), row])).values()], [groups]);
   const items = useMemo(() => itemsOf(groups), [groups]);
-  const setCount = [kind, status, chapter, imported, origin, tag].filter((one) => one !== '').length + (errorsOnly ? 1 : 0) + (warningsOnly ? 1 : 0);
+  const setCount = [text.trim(), kind, status, chapter, imported, origin, tag].filter((one) => one !== '').length + (errorsOnly ? 1 : 0) + (warningsOnly ? 1 : 0);
   const clearAll = (): void => {
+    setText('');
     setKind('');
     setStatus('');
     setChapter('');
@@ -124,13 +131,17 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
       <h2>Review</h2>
       <p>Records that are not verified yet. Nothing is verified by itself: you mark each one, and one Undo takes a whole step back.</p>
       <SegmentedControl<GroupBy> label="Group by" options={[{ value: 'import', label: 'Import' }, { value: 'chapter', label: 'Chapter' }, { value: 'kind', label: 'Kind' }]} value={groupBy} onChange={chooseGroupBy} />
+      <label className={styles.find}>
+        <span>Find by name</span>
+        <input type="search" value={text} autoComplete="off" spellCheck={false} onChange={(event) => setText(event.target.value.slice(0, 200))} />
+      </label>
       {phone ? (
         <Button aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}>{`Filters (${setCount})`}</Button>
       ) : null}
       <div className={styles.filters} role="group" aria-label="Filters" hidden={phone && !filtersOpen} data-phone={phone ? '' : undefined}>
         <Select label="Import" value={imported} options={withCount(facets.imports, imported)} onChange={setImported} />
         <Select label="Chapter" value={chapter} options={withCount(facets.chapters, chapter)} onChange={setChapter} />
-        <Select label="Kind" value={kind} options={withCount(facets.kinds, kind)} onChange={setKind} />
+        <Select label="Kind" value={kind} options={withCount(facets.kinds, kind, kindPlural).sort((a, b) => (a[1] < b[1] ? -1 : 1))} onChange={setKind} />
         <Select label="Status" value={status} options={withCount(facets.statuses, status)} onChange={setStatus} />
         <Select label="Origin" value={origin} options={origins} onChange={setOrigin} />
         <Select label="Tag" value={tag} options={tags} onChange={setTag} />
@@ -143,7 +154,7 @@ export function ReviewPage(props: { readonly port: ReviewPort }) {
         {setCount === 0 ? null : <Button onClick={clearAll}>Clear all filters</Button>}
       </div>
       <div className={styles.bulk}>
-        <span role="status">{shown.length === everything.length ? `${shown.length} ${shown.length === 1 ? 'record' : 'records'} to review` : `${shown.length} of ${everything.length} records shown`}</span>
+        <span role="status">{shown.length === everything.length ? `${shown.length} ${shown.length === 1 ? 'record' : 'records'} to review` : `${count(shown.length)} of ${count(everything.length)} records shown`}</span>
         <Button onClick={() => setChosen(new Set(shown.map((row) => keyOf(row.ref))))}>Select all shown</Button>
         <Button aria-label="Clear selection" onClick={() => setChosen(new Set())}>
           Clear

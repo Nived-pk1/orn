@@ -43,6 +43,8 @@ export interface MapToolbarProps {
   readonly onZoomIn: () => void;
   readonly onZoomOut: () => void;
   readonly onFit: () => void;
+  /** The automatic fit is on: the map follows the window (step 8.4g, G12). Absent: the button is a plain button. */
+  readonly fitted?: boolean;
   readonly chapters: readonly ChapterOption[];
   readonly chapterId: string | null;
   readonly onChapter: (id: string | null) => void;
@@ -146,7 +148,7 @@ export function MapToolbar(props: MapToolbarProps) {
         <IconButton label="Zoom in" icon="plus" variant="default" className={styles.zoomButton} onClick={props.onZoomIn} {...unavailable(zoomReason)} />
         <IconButton label="Zoom out" icon="minus" variant="default" className={styles.zoomButton} onClick={props.onZoomOut} {...unavailable(zoomReason)} />
         <span className={styles.separator} aria-hidden="true" />
-        <IconButton label="Fit" icon="scan" variant="default" className={styles.zoomButton} onClick={props.onFit} {...unavailable(zoomReason)} />
+        <IconButton label="Fit" icon="scan" variant="default" className={styles.zoomButton} onClick={props.onFit} {...(props.fitted === undefined ? {} : { 'aria-pressed': props.fitted, tip: props.fitted ? 'Fit is on: the map follows the window' : 'Fit: show the whole map' })} {...unavailable(zoomReason)} />
       </div>
       {props.listing ? null : (
         <div className={styles.keyReserve} data-map-control="bar" data-map-reserve="" aria-hidden="true" inert>

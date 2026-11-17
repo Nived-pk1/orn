@@ -1,0 +1,15 @@
+/* The error screen (step 8.4g, G7): the EmptyState look, with the detail folded away. */
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-16);
+}
+
+.details {
+  max-width: 60ch;
+  color: var(--text-2);
+  font-size: var(--text-12);
+  overflow-wrap: anywhere;
+}

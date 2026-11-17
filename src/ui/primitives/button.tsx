@@ -52,12 +52,14 @@ export interface IconButtonProps extends Omit<ButtonProps, 'children' | 'aria-la
   readonly label: string;
   readonly icon: IconName;
   readonly badge?: ReactNode;
+  /** The tooltip's words when they differ from the name (a toggle that says its state; step 8.4g, G12). */
+  readonly tip?: string;
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(props, ref) {
-  const { label, icon, badge, unavailable, variant = 'quiet', className, ...rest } = props;
+  const { label, icon, badge, tip, unavailable, variant = 'quiet', className, ...rest } = props;
   return (
-    <Tooltip content={unavailable === undefined ? label : `${label}: ${unavailable}`}>
+    <Tooltip content={unavailable === undefined ? tip ?? label : `${label}: ${unavailable}`}>
       <Button {...rest} ref={ref} variant={variant} unavailable={unavailable} aria-label={label} className={[styles.icon, className].filter(Boolean).join(' ')}>
         <Icon name={icon} />
         {badge}

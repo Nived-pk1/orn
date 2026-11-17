@@ -149,3 +149,9 @@
   background: var(--color-hover);
   color: var(--color-accent);
 }
+
+/* Fit is on (step 8.4g, G12): the map follows the window */
+.round[aria-pressed='true'] {
+  border-color: var(--color-ink);
+  background: var(--color-rule);
+}

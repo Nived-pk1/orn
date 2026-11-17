@@ -75,3 +75,5 @@ export { useScopeOnly } from './use-scope-only';
 export { APPEARANCE_DEFAULTS, APPEARANCE_KEY, appearanceAttributes, parseAppearance, THEMES } from './appearance';
 export { createAppearanceStore } from './appearance-store';
 export type { AppearanceState, AppearanceStore, AppearanceValues, Theme } from './appearance';
+export { formatAddress, PAGE_VIEWS, parseAddress, recordAddress, RECORD_VIEWS, slugOf } from './address';
+export type { Address, Parsed } from './address';

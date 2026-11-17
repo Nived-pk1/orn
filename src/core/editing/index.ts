@@ -21,6 +21,7 @@ export { deleteEnvelope, deleteView } from './delete-view';
 export type { DeleteRow, DeleteView } from './delete-view';
 export { isMergeable, mergeEnvelope, mergePreview, MERGE_KINDS } from './merge';
 export type { MergePick, MergePreview, ScalarChoice } from './merge';
+export { createRowFinder } from './review-find';
 export { kindWordsOf, markVerifiedEnvelope, needsReviewEnvelope, queueRows, STATUS_WORDS, verifyPlan } from './review-queue';
 export type { FindingsOf, QueueFilters, QueueFinding, QueueRow, ReviewStatus, VerifyPlan } from './review-queue';
 export { chapterIndexOf, facetCountsOf, groupByOf, groupQueueRows, importIndexOf, NO_CHAPTER_TITLE, rowsMatching } from './review-groups';

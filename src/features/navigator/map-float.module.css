@@ -168,6 +168,12 @@
   padding: 0;
 }
 
+/* Fit is on (step 8.4g, G12): the map follows the window */
+.zoomButton[aria-pressed='true'] {
+  border-color: var(--color-ink);
+  background: var(--color-rule);
+}
+
 .separator {
   width: 20px;
   height: 1px;

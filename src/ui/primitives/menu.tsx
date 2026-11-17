@@ -13,6 +13,8 @@ export interface MenuItem {
   readonly id: string;
   readonly label: string;
   readonly onSelect?: () => void;
+  /** The item is a link (a mail address; step 8.4g, G6): it is drawn as an anchor so the address can be read and followed. */
+  readonly href?: string;
   /** Why the item cannot be used now (for example "step 5.9b"). Present: the item is shown, marked unavailable, with this text. */
   readonly unavailable?: string;
 }
@@ -72,6 +74,8 @@ function Row(props: { readonly item: MenuItem; readonly radio?: boolean }) {
       {label}
     </Dropdown.RadioItem>
   ) : (
-    <Dropdown.Item {...common}>{label}</Dropdown.Item>
+    <Dropdown.Item {...common} {...(item.href === undefined ? {} : { asChild: true })}>
+      {item.href === undefined ? label : <a href={item.href}>{label}</a>}
+    </Dropdown.Item>
   );
 }

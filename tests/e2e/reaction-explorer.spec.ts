@@ -140,10 +140,8 @@ test.describe('desktop', () => {
     await expectSaved(page);
     await page.waitForTimeout(1000);
     await page.reload();
-    await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
-    await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible();
-    await modes(page).getByRole('button', { name: 'Reactions', exact: true }).click();
-    await expect(chips(page).first()).toContainText('Type: Oxidation');
+    // the address brings the reload back to the same view (step 8.4g, G1): Reactions is open again without a click
+    await expect(chips(page).first()).toContainText('Type: Oxidation', { timeout: 60_000 });
     await expect(view(page).getByRole('radio', { name: 'Compact' })).toBeChecked();
     expect(await axeProblems(page)).toEqual([]);
     await expectClean(seen);

@@ -11,7 +11,6 @@ import {
   axeProblems,
   expectClean,
   watch,
-  leaveChapters,
   examWord,
   expectSaved,
   chooseExam,
@@ -183,10 +182,8 @@ test.describe('Studio, desktop', () => {
     await expectSaved(page);
     await page.waitForTimeout(1000);
     await page.reload();
-    await leaveChapters(page); // Study starts on Chapters again after a reload (7.3b D5)
-    await expect(page.getByRole('group', { name: /^Navigator: \d+ hubs?, \d+ arrows?$/ })).toBeVisible();
-    await openPrecursors(page);
-    await expect(view(page).getByText('Making: Phenol')).toBeVisible();
+    // the address brings the reload back to the same view (step 8.4g, G1): Precursors is open again without a click
+    await expect(view(page).getByText('Making: Phenol')).toBeVisible({ timeout: 60_000 });
     await expect(view(page).getByRole('list', { name: 'Starting materials' })).toContainText('Aniline');
     await expect(view(page).getByRole('combobox', { name: 'Up to' })).toHaveValue('3');
     // the result is not saved: it is made again from the saved query

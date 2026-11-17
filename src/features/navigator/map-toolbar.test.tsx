@@ -184,4 +184,21 @@ describe("MapToolbar", () => {
         .getAttribute("aria-disabled"),
     ).toBe("true");
   });
+
+  it("8.4g G12: the Fit button shows whether the automatic fit is on (pressed, with its tooltip words) and keeps its name", () => {
+    const { rerender } = render(<MapToolbar {...base} fitted />);
+    const fit = screen.getByRole("button", { name: "Fit" });
+    expect(fit.getAttribute("aria-pressed")).toBe("true");
+    rerender(<MapToolbar {...base} fitted={false} />);
+    expect(screen.getByRole("button", { name: "Fit" }).getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("8.4g G12: the tooltip says what the state is", async () => {
+    const { rerender } = render(<MapToolbar {...base} fitted />);
+    fireEvent.focus(screen.getByRole("button", { name: "Fit" }));
+    expect((await screen.findAllByText("Fit is on: the map follows the window")).length).toBeGreaterThan(0);
+    rerender(<MapToolbar {...base} fitted={false} />);
+    fireEvent.focus(screen.getByRole("button", { name: "Fit" }));
+    expect((await screen.findAllByText("Fit: show the whole map")).length).toBeGreaterThan(0);
+  });
 });

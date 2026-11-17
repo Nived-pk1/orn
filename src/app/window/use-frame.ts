@@ -10,13 +10,14 @@ import { useStoreSelector } from '@/ui/hooks';
 import { currentOf } from '@/ui/state';
 import type { AnyRecord, RecordRef } from '@/core/schema';
 import { useApp } from './context';
+import { SETTINGS_MODE } from './modes';
 import { crumbOf, documentTitleOf, type Crumb } from './frame-title';
 
 export function useFrame(mode: string, modes: readonly { readonly id: string; readonly label: string }[]): Crumb {
   const { services, navigator, inspector } = useApp();
   const familyHub = useStore(navigator.ui.family, (s) => s.open);
   const shown = useStore(inspector.ui.inspector, (s) => currentOf(s));
-  const ref: RecordRef | null = familyHub !== null ? { kind: 'class', id: familyHub } : shown === null ? null : { kind: shown.kind, id: shown.id };
+  const ref: RecordRef | null = mode === SETTINGS_MODE ? null : familyHub !== null ? { kind: 'class', id: familyHub } : shown === null ? null : { kind: shown.kind, id: shown.id };
   const name = useStoreSelector(services.store, (state) => {
     if (ref === null) return undefined;
     const record = (state.records[ref.kind] as Readonly<Record<string, AnyRecord>> | undefined)?.[ref.id];
