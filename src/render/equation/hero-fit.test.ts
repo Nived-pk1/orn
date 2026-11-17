@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fitHero, MIN_DRAWING_PX, PEEK_MAX_HEIGHT } from './hero-fit';
+import { fitHero, MIN_DRAWING_PX, PEEK_MAX_HEIGHT, settledWidth } from './hero-fit';
 
 describe('fitHero (step 8.1 review decision 0): the hero equation never wraps', () => {
   it('one row at full size when it fits', () => {
@@ -38,5 +38,14 @@ describe('fitHero in the peek: one row at most PEEK_MAX_HEIGHT high, else the on
 
   it('too small to read after scaling (drawings under 40 px): the text', () => {
     expect(fitHero({ available: 340, width: 1200, height: 160, drawingHeight: 120 }, { peek: true, reactants: 2, products: 2 })).toEqual({ mode: 'text' });
+  });
+});
+
+describe('settledWidth (step 8.4m2, B3, rule 3)', () => {
+  it('keeps the width seen for a change of a few pixels and takes a real one', () => {
+    expect(settledWidth(453, 452)).toBe(453);
+    expect(settledWidth(453, 456)).toBe(453);
+    expect(settledWidth(453, 449)).toBe(449);
+    expect(settledWidth(0, 453)).toBe(453);
   });
 });

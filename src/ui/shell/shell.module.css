@@ -201,6 +201,7 @@
 .inspectorBody {
   flex: 1;
   overflow: auto;
+  scrollbar-gutter: stable; /* the width the equation fits does not change when the content gets taller or shorter (step 8.4m2, B3) */
   padding: var(--space-16);
 }
 

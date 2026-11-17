@@ -39,7 +39,12 @@ function release(manager: DepictionManager, key: string): number {
 export function useRetryingDepiction(manager: DepictionManager | undefined, key: string | undefined, timers: DepictionTimers): DepictionStatus {
   const subscribe = useCallback((listener: () => void) => (manager === undefined || key === undefined ? NO_UNSUBSCRIBE : manager.subscribe(key, listener)), [manager, key]);
   const snapshot = useCallback(() => (manager === undefined || key === undefined ? IDLE : manager.snapshot(key)), [manager, key]);
-  const status = useSyncExternalStore(subscribe, snapshot, snapshot);
+  const asked_ = useSyncExternalStore(subscribe, snapshot, snapshot);
+  // A drawing that is shown is never replaced by the placeholder while a redraw is on its way (step 8.4m2, B3): the last ready answer for this key is kept
+  // until the new one is ready. It goes with the key: another key never shows it.
+  const shown = useRef<{ readonly key: string; readonly status: DepictionStatus } | undefined>(undefined);
+  if (asked_.state === 'ready' && key !== undefined) shown.current = { key, status: asked_ };
+  const status = asked_.state !== 'ready' && key !== undefined && shown.current?.key === key && asked_.state !== 'unavailable' ? shown.current.status : asked_;
   const retries = useRef(0);
   // Counts the retries made, so the effect below runs again even when the key comes back idle before React saw it loading.
   const [asked, setAsked] = useState(0);
@@ -52,7 +57,7 @@ export function useRetryingDepiction(manager: DepictionManager | undefined, key:
       if (release(manager, key) === 0) manager.cancel(key);
     };
   }, [manager, key]);
-  const state = status.state;
+  const state = asked_.state; // the retries follow what the manager says, not what is kept on screen
   useEffect(() => {
     if (manager === undefined || key === undefined || state !== 'idle' || retries.current >= MAX_DEPICTION_RETRIES) return undefined;
     const attempt = retries.current + 1;

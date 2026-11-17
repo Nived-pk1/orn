@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer } from './depictions';
+import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer, type DepictionManager } from './depictions';
+import type { DepictionStatus } from './contracts';
 import { manualTimers } from '@/test-support/navigator-kit';
 import { MAX_DEPICTION_RETRIES, RETRY_DELAY_MS, useRetryingDepiction as useDepiction } from './use-depiction-retry';
 
@@ -136,5 +137,45 @@ describe('useDepiction when the engine is not ready yet (phone mode B, part 1)',
     });
     expect(screen.getByTestId('bad').textContent).toBe('unavailable');
     expect(r.calls).toHaveLength(1);
+  });
+});
+
+describe('a drawing that is shown stays shown while a redraw is on its way (step 8.4m2, B3, rule 1)', () => {
+  function fake(status: () => DepictionStatus) {
+    const listeners = new Set<() => void>();
+    return {
+      manager: { subscribe: (_key: string, listener: () => void) => (listeners.add(listener), () => listeners.delete(listener)), snapshot: status, request: () => undefined, cancel: () => undefined } as unknown as DepictionManager,
+      tell: () => listeners.forEach((listener) => listener()),
+    };
+  }
+  const timers = { after: () => () => undefined };
+  function Show(props: { readonly manager: DepictionManager; readonly keyName: string }) {
+    const status = useDepiction(props.manager, props.keyName, timers);
+    return <p data-testid="shown">{status.state === 'ready' ? status.url : status.state}</p>;
+  }
+
+  it('a key that goes from ready to loading keeps the picture it had', () => {
+    let now: DepictionStatus = { state: 'ready', url: 'blob:old' };
+    const { manager, tell } = fake(() => now);
+    render(<Show manager={manager} keyName="k" />);
+    expect(screen.getByTestId('shown').textContent).toBe('blob:old');
+    now = { state: 'loading' };
+    act(() => tell());
+    expect(screen.getByTestId('shown').textContent).toBe('blob:old');
+    now = { state: 'ready', url: 'blob:new' };
+    act(() => tell());
+    expect(screen.getByTestId('shown').textContent).toBe('blob:new');
+  });
+
+  it('a new manager for the same key (the equation made again) shows the old picture until the new one is ready; another key does not', () => {
+    const OLD: DepictionStatus = { state: 'ready', url: 'blob:old' };
+    const LOADING: DepictionStatus = { state: 'loading' };
+    const first = fake(() => OLD);
+    const view = render(<Show manager={first.manager} keyName="k" />);
+    const second = fake(() => LOADING);
+    view.rerender(<Show manager={second.manager} keyName="k" />);
+    expect(screen.getByTestId('shown').textContent).toBe('blob:old');
+    view.rerender(<Show manager={second.manager} keyName="other" />);
+    expect(screen.getByTestId('shown').textContent).toBe('loading');
   });
 });

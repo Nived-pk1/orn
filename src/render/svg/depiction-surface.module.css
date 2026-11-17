@@ -1,0 +1,15 @@
+/* The backing of an equation drawing (step 8.4m2, B2). RDKit's fixed-scale drawings have no background, so their black strokes vanish on a dark page:
+   in dark the drawing sits on paper with a little room and rounded corners, and in light the tokens make this a no-op. The room is a spread shadow, so no
+   layout (the equation's fit, hanging and wrapping) changes by it. */
+.surface {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  line-height: 0;
+  background: var(--depiction-bg);
+  border-radius: var(--radius-8);
+  box-shadow: 0 0 0 var(--depiction-pad) var(--depiction-bg);
+}
+.surface > img {
+  display: block;
+}

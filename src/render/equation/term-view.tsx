@@ -7,7 +7,7 @@
 import type { EquationTerm, FormulaRepresentation } from '@/core/graph';
 import { needsFacts, termRepresentationOf } from '@/core/graph';
 import type { StructureRep } from '@/core/schema';
-import { drawingFailed, useRetryingDepiction, type DepictionBinding, type DepictionTimers } from '@/render/svg';
+import { DepictionSurface, drawingFailed, useRetryingDepiction, type DepictionBinding, type DepictionTimers } from '@/render/svg';
 import { formulaRuns } from '@/render/scene';
 import { EQUATION_BOND_PX, MAX_DRAWING_HEIGHT, MAX_DRAWING_WIDTH, type StructureFactsPort } from './contracts';
 import { drawingSizeOf } from './drawing-size';
@@ -46,11 +46,13 @@ function Drawing(props: { readonly structure: StructureRep; readonly name: strin
     // the size RDKit gave the drawing is the size of its molecule at the fixed scale; the bond length is the same for every drawing
     const size = status.width === undefined || status.height === undefined ? undefined : drawingSizeOf({ width: status.width, height: status.height }, EQUATION_BOND_PX, props.ports.maxDrawingWidth ?? MAX_DRAWING_WIDTH, MAX_DRAWING_HEIGHT);
     return (
-      <img
-        src={status.url}
-        alt={`Structure of ${props.name}`}
-        {...(size === undefined ? { style: { maxWidth: props.ports.maxDrawingWidth ?? MAX_DRAWING_WIDTH, maxHeight: MAX_DRAWING_HEIGHT } } : { width: size.width, height: size.height, 'data-bond-px': size.bondPx })}
-      />
+      <DepictionSurface>
+        <img
+          src={status.url}
+          alt={`Structure of ${props.name}`}
+          {...(size === undefined ? { style: { maxWidth: props.ports.maxDrawingWidth ?? MAX_DRAWING_WIDTH, maxHeight: MAX_DRAWING_HEIGHT } } : { width: size.width, height: size.height, 'data-bond-px': size.bondPx })}
+        />
+      </DepictionSurface>
     );
   }
   // a drawing that cannot be made is the formula, else the name (never an empty box)

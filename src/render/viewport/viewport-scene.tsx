@@ -140,7 +140,14 @@ export function ViewportScene(props: ViewportSceneProps) {
       autoViews.push(autoView);
       if (autoViews.length > MAX_AUTO_VIEWS) autoViews.shift();
     };
+    // The size is read where a fit is made (step 8.4m2, B1): the observer's own measure comes a frame after the layout, and a fit that asked the
+    // controller for the size it had LAST (the area just widened or narrowed) drew the view for the old area.
+    const readSize = (): void => {
+      const box = svg.getBoundingClientRect();
+      if (box.width > 0 && box.height > 0) controller.setSize({ width: box.width, height: box.height });
+    };
     const sync = (): void => {
+      readSize();
       controller.setInsets(insetsRef.current);
       controller.setFitBox(fitBoxRef.current);
     };

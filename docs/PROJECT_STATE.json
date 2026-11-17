@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-15",
+  "lastUpdated": "2026-11-17",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -162,7 +162,7 @@
     "workerVersion": "9698b43a-8a8f-4879-b043-e73a275a9d79"
   },
   "nextStep": "8.4g",
-  "nextStepTitle": "Step 8.4m DONE 2026-11-16 (docs/PROGRESS.md 'Step 8.4m'; deployed 2026-11-16: Study 2af04982, Studio 9698b43a). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix; also the Imported toast over the key reserve), then the test-speed step (flaky: WebKit map-fit:66, Firefox map-free-areas:137, Chromium exam-editors:64).",
+  "nextStepTitle": "Step 8.4m2 DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4m2'; B2 and B3 fixed, B1 NOT reproduced, awaiting review). Step 8.4m DONE 2026-11-16 (docs/PROGRESS.md 'Step 8.4m'; deployed 2026-11-16: Study 2af04982, Studio 9698b43a). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix; also the Imported toast over the key reserve), then the test-speed step (flaky: WebKit map-fit:66, Firefox map-free-areas:137, Chromium exam-editors:64).",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

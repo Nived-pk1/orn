@@ -6,6 +6,7 @@ export type { DepictionTimers } from './use-depiction-retry';
 export { createDepictionBinding, MAX_DEPICTION_LOOKUP } from './depiction-binding';
 export type { DepictionBinding, DepictionPort } from './depiction-binding';
 export { useStructureMode } from './use-structure-mode';
+export { DepictionSurface } from './depiction-surface';
 export { LAYER_NAMES } from './contracts';
 export type { DepictionSource, DepictionStatus, EdgeMark, LayerName, MapMarks, SceneHit, SceneSvgProps } from './contracts';
 export { STROKE_DASH, WEIGHT_WIDTH } from './geometry';

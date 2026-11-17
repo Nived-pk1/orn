@@ -7,7 +7,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { fullEquationsOfReaction, withoutExclusive } from '@/core/graph';
 import type { Reaction } from '@/core/schema';
-import { EQUATION_AREA, EquationScheme, fitHero, type HeroFit } from '@/render/equation';
+import { EQUATION_AREA, EquationScheme, fitHero, settledWidth, type HeroFit } from '@/render/equation';
 import { createDepictionBinding } from '@/render/svg';
 import { usePanels } from '@/ui/state';
 import { useStudyChrome } from '@/ui/study-chrome';
@@ -42,11 +42,19 @@ export function HeroEquation(props: { readonly record: Reaction; readonly compac
   const [fit, setFit] = useState<HeroFit>({ mode: 'row', scale: 1 });
   const [height, setHeight] = useState(0);
   const drawingSeen = useRef(0);
+  const availableSeen = useRef(0);
+  const drawingCount = useRef(0);
   const changes = useRef<number[]>([]);
   const compact = props.compact === true;
   const reactants = first?.reactants.length ?? 0;
   const products = first?.products.length ?? 0;
   const mode = fit.mode;
+  // another reaction starts again: what was seen of the last one counts for nothing
+  const recordId = props.record.id;
+  useLayoutEffect(() => {
+    drawingCount.current = 0;
+    drawingSeen.current = 0;
+  }, [recordId]);
   useLayoutEffect(() => {
     // the nodes are read again at every measurement and observed again when the mode swaps them (a stale node measures 0 and flips the mode back)
     const measure = (): void => {
@@ -59,9 +67,15 @@ export function HeroEquation(props: { readonly record: Reaction; readonly compac
       if (naturalHeight === 0) return;
       const scaleNow = content.getBoundingClientRect().height / naturalHeight || 1;
       const drawings = [...row.querySelectorAll('img')].map((img) => img.getBoundingClientRect().height / scaleNow);
+      // a copy that shows fewer drawings than were seen has not finished drawing (the hidden copy of the other mode is made again at every swap, and a drawing
+      // that has not arrived is narrower): it does not decide the mode, or the row and the stacked layout would swap back and forth (step 8.4m2, B3)
+      if (drawings.length < drawingCount.current) return;
+      drawingCount.current = drawings.length;
       // the tallest drawing ever seen counts: a copy whose drawings have not arrived yet must not read as "formulas only" and flip the mode back
       drawingSeen.current = Math.max(drawingSeen.current, ...drawings);
-      const next = fitHero({ available: outer.clientWidth, width: row.offsetWidth, height: naturalHeight, drawingHeight: drawingSeen.current }, compact ? { peek: true, reactants, products } : undefined);
+      // a width that moved by a few pixels (a scrollbar, a rounding) is the same width: the fit is not asked again for it (step 8.4m2, B3)
+      availableSeen.current = settledWidth(availableSeen.current, outer.clientWidth);
+      const next = fitHero({ available: availableSeen.current, width: row.offsetWidth, height: naturalHeight, drawingHeight: drawingSeen.current }, compact ? { peek: true, reactants, products } : undefined);
       setHeight(naturalHeight);
       setFit((before) => {
         if (before.mode === next.mode && (before.mode !== 'row' || (next.mode === 'row' && Math.abs(before.scale - next.scale) < 0.005))) return before;

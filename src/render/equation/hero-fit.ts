@@ -35,3 +35,7 @@ export function fitHero(measure: HeroMeasure, peek?: { readonly peek: true; read
   const legible = drawingHeight === 0 ? scale >= MIN_FORMULA_SCALE : drawingHeight * scale >= MIN_DRAWING_PX;
   return legible ? { mode: 'row', scale } : { mode: 'stacked' };
 }
+
+/** A width that moved by less than this (a scrollbar's edge, a rounding) is the same width: the fit is not asked again for it (step 8.4m2, B3). */
+export const MIN_WIDTH_CHANGE_PX = 4;
+export const settledWidth = (seen: number, now: number): number => (Math.abs(now - seen) >= MIN_WIDTH_CHANGE_PX ? now : seen);
