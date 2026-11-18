@@ -1,7 +1,7 @@
 /**
- * The phone's bottom tab bar (ADR-039): Chapters | Families | Map | Explore | Search (Chapters since 7.3b; Explore opens the last explorer, now Reactions; step 7.1b), 48 px, an icon and a word each, the current tab marked (aria-current and
+ * The phone's bottom tab bar (ADR-039): Chapters | Families | Map | Explore | Starred (Chapters since 7.3b; Explore opens the last explorer, now Reactions; step 7.1b), 48 px, an icon and a word each, the current tab marked (aria-current and
  * a bar, never colour alone). Families and Map are places: the last one is saved in `uiState`, and pressing one leaves an open family
- * page. Search is an action: it opens the palette (full screen on a phone).
+ * page. Starred is a place the app shows (the records the reader starred; step 8.4g Part B); Search moved to the top bar.
  */
 import { useStore } from 'zustand';
 import type { IconName } from '@/ui/primitives';
@@ -17,7 +17,7 @@ const TABS: readonly { readonly id: PhoneTab; readonly label: string; readonly i
   { id: 'explore', label: 'Explore', icon: 'compass' },
 ];
 
-export function PhoneTabs(props: { readonly onSearch: () => void; readonly searching: boolean; /** Called on every press of a tab, also of the tab already chosen (the app leaves Settings by it). */ readonly onTab?: (tab: PhoneTab) => void }) {
+export function PhoneTabs(props: { readonly onStarred: () => void; readonly starred: boolean; /** Called on every press of a tab, also of the tab already chosen (the app leaves Settings by it). */ readonly onTab?: (tab: PhoneTab) => void }) {
   const { ports } = useNavigator();
   const tab = useStore(ports.ui.overview, (s) => s.phoneTab);
   const go = (next: PhoneTab): void => {
@@ -28,14 +28,14 @@ export function PhoneTabs(props: { readonly onSearch: () => void; readonly searc
   return (
     <nav className={styles.tabs} aria-label="Home">
       {TABS.map((item) => (
-        <button key={item.id} type="button" title={item.label} className={styles.tab} {...(tab === item.id && !props.searching ? { 'aria-current': 'page' as const } : {})} onClick={() => go(item.id)}>
+        <button key={item.id} type="button" title={item.label} className={styles.tab} {...(tab === item.id && !props.starred ? { 'aria-current': 'page' as const } : {})} onClick={() => go(item.id)}>
           <Icon name={item.icon} size={20} />
           <span>{item.label}</span>
         </button>
       ))}
-      <button type="button" title="Search" className={styles.tab} {...(props.searching ? { 'aria-current': 'page' as const } : {})} aria-haspopup="dialog" onClick={props.onSearch}>
-        <Icon name="search" size={20} />
-        <span>Search</span>
+      <button type="button" title="Starred" className={styles.tab} {...(props.starred ? { 'aria-current': 'page' as const } : {})} onClick={props.onStarred}>
+        <Icon name="star" size={20} />
+        <span>Starred</span>
       </button>
     </nav>
   );

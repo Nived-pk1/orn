@@ -7,6 +7,9 @@ import { watchAppearance } from '@/app/appearance-watch';
 import { useApp } from './context';
 import { ExamScopeSelector, type ExamScopeBinding } from './exam-scope-selector';
 import { useExportOpen } from './export-context';
+import { useFace } from './my-records-face';
+import { openShortcuts } from './shortcuts-state';
+import { useSyncExternalStore } from 'react';
 
 const SESSION_ONLY: PanelsPort = { stored: undefined, mode: () => 'session_only', save: () => Promise.resolve() };
 const stores = new WeakMap<PanelsPort, AppearanceStore>();
@@ -21,9 +24,11 @@ function storeOf(port: PanelsPort, timers: PanelsTimers): AppearanceStore {
 }
 
 export function SettingsHost(props: { readonly exam: ExamScopeBinding }) {
-  const { appearancePort } = useApp();
+  const { appearancePort, mine } = useApp();
+  const face = useFace(mine);
+  const recent = useSyncExternalStore(face.subscribe, () => face.recent().length);
   const { ports } = useNavigator();
   const appearance = useMemo(() => storeOf(appearancePort ?? SESSION_ONLY, ports.timers), [appearancePort, ports.timers]);
   const openExport = useExportOpen();
-  return <SettingsPage appearance={appearance} exam={<ExamScopeSelector binding={props.exam} part="chip" />} {...(openExport === undefined ? {} : { onBackUp: openExport })} />;
+  return <SettingsPage appearance={appearance} exam={<ExamScopeSelector binding={props.exam} part="chip" />} onShortcuts={openShortcuts} {...(mine === undefined ? {} : { recent: { count: recent, onClear: face.clearRecent } })} {...(openExport === undefined ? {} : { onBackUp: openExport })} />;
 }

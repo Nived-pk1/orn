@@ -27,7 +27,7 @@ afterEach(cleanup);
 const hits = (count: number, kind = 'species'): SearchHit[] =>
   Array.from({ length: count }, (_, i) => ({ ref: { kind, id: `id_${i}` } as RecordRef, score: 1, title: `Name ${i}`, matchedField: 'alias', matchedText: `alias ${i}` }));
 
-function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = []) {
+function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = [], recentRecords?: SearchPorts['recentRecords']) {
   const timers = manualTimers();
   const opened: [RecordRef, string][] = [];
   const shown: [RecordRef, string][] = [];
@@ -46,6 +46,7 @@ function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = 
     showNamed: (ref, title) => void pages.push([ref, title]),
     showMechanism: (ref, title) => void pages.push([ref, title]),
     commands: () => commands,
+    ...(recentRecords === undefined ? {} : { recentRecords }),
     log: () => undefined,
   };
   render(<Palette ports={ports} open onClose={closed} />);
@@ -61,6 +62,33 @@ function rig(answer: PaletteSearchAnswer, commands: readonly PaletteCommand[] = 
   const key = (name: string, extra: { altKey?: boolean } = {}): void => void fireEvent.keyDown(input, { key: name, ...extra });
   return { ports, input, type, key, opened, shown, pages, closed, recent, timers };
 }
+
+describe('the palette: Recent records (step 8.4g Part B, G3)', () => {
+  const recentRecords = (): readonly { ref: RecordRef; title: string }[] => [
+    { ref: { kind: 'species', id: 'sp_1' } as RecordRef, title: 'Ethanol' },
+    { ref: { kind: 'reaction', id: 'rx_1' } as RecordRef, title: 'Aldol addition' },
+  ];
+
+  it('an empty box lists "Recent" records, newest first, and Enter opens the chosen one', () => {
+    const r = rig({ ok: true, value: [] }, [], recentRecords);
+    expect(screen.getByText('Recent')).toBeTruthy();
+    const options = screen.getAllByRole('option');
+    expect(options[0]?.textContent).toContain('Ethanol');
+    expect(options[1]?.textContent).toContain('Aldol addition');
+    fireEvent.click(options[1] as HTMLElement);
+    expect(r.opened).toEqual([[{ kind: 'reaction', id: 'rx_1' }, 'Aldol addition']]);
+    expect(r.closed).toHaveBeenCalled();
+  });
+
+  it('has no "Recent" heading when nothing was opened, and none once something is typed', async () => {
+    rig({ ok: true, value: [] }, [], () => []);
+    expect(screen.queryByText('Recent')).toBeNull();
+    cleanup();
+    const r = rig({ ok: true, value: hits(1) }, [], recentRecords);
+    await r.type('eth');
+    expect(screen.queryByText('Recent')).toBeNull();
+  });
+});
 
 describe('the palette', () => {
   it('opens with the input focused and the recent searches listed', () => {

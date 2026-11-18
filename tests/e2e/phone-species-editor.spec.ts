@@ -42,7 +42,7 @@ async function walk(page: Page, device: string): Promise<void> {
   await dialog.getByRole('button', { name: 'Save', exact: true }).tap();
   await expect(dialog).toBeHidden();
 
-  await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Search' }).tap();
+  await page.getByRole('button', { name: 'Search', exact: true }).first().tap();
   const palette = page.getByRole('dialog', { name: 'Search' });
   await expect(palette).toBeVisible();
   await searchFor(page, 's: phone propanol');

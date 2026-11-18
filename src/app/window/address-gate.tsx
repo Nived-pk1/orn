@@ -6,16 +6,27 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { AddressDriver } from './address-driver';
 
-const Driver = lazy(() => import('./address-driver').then((m) => ({ default: m.AddressDriver })));
+let loading: Promise<{ default: typeof AddressDriver }> | undefined;
+const fetchDriver = (): Promise<{ default: typeof AddressDriver }> => (loading ??= import('./address-driver').then((m) => ({ default: m.AddressDriver })));
+const Driver = lazy(fetchDriver);
+/** Fetches the chunk now (a window test that resets its module registry loads it in its own registry first). */
+export const prefetchAddressDriver = (): Promise<unknown> => fetchDriver();
 
-export function AddressGate(props: Parameters<typeof AddressDriver>[0]) {
+export function AddressGate(props: Omit<Parameters<typeof AddressDriver>[0], 'fromBoot'>) {
   const [armed, setArmed] = useState(false);
   const first = useRef<string | undefined>(undefined);
+  const fromBoot = useRef(false);
   const { ready, mode } = props;
   useEffect(() => {
     if (armed || !ready) return undefined;
     first.current ??= mode;
-    if (location.hash.length > 1 || mode !== first.current) {
+    // the first address of the visit is written NOW, by replacing (no new entry), so a quick first click already has an entry to go Back to
+    const brought = location.hash.length > 1 && !fromBoot.current; // an address the reader came with
+    if (!brought && !fromBoot.current) {
+      history.replaceState(history.state, '', `#/${mode === 'navigator' ? 'map' : mode}`);
+      fromBoot.current = true;
+    }
+    if (brought || mode !== first.current) {
       setArmed(true);
       return undefined;
     }
@@ -25,7 +36,7 @@ export function AddressGate(props: Parameters<typeof AddressDriver>[0]) {
   }, [armed, ready, mode]);
   return armed ? (
     <Suspense fallback={null}>
-      <Driver {...props} />
+      <Driver {...props} fromBoot={fromBoot.current} />
     </Suspense>
   ) : null;
 }

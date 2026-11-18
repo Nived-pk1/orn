@@ -106,6 +106,16 @@ describe('the list', () => {
   });
 });
 
+describe('the slot above the list (step 8.4g Part B, G3)', () => {
+  it('the list shows what the app puts above it; a chapter page does not', () => {
+    const { chapters } = show(stateOf(...base), {}, true, { renderTop: () => <p>Continue where you left off</p> });
+    expect(screen.getByText('Continue where you left off')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Alpha chapter' }));
+    expect(chapters.getState().chapterId).toBe('top_chap-a');
+    expect(screen.queryByText('Continue where you left off')).toBeNull();
+  });
+});
+
 describe('"No chapter yet" under an exam scope (7.3c A2)', () => {
   const state = stateOf(...base, examVersion('v1', 'jee', [{ topic: 'chap-b', coverage: 'included' }]));
   const names = (): (string | null)[] => within(screen.getByRole('list', { name: 'Chapters' })).getAllByRole('button').map((b) => b.textContent);

@@ -4,7 +4,7 @@ import { Icon, Menu, useOptionalToasts } from '@/ui/primitives';
 import type { RecordRef } from '@/core/schema';
 import { mistakeMailto } from './report-mail';
 
-export function RecordMenu(props: { readonly refOf: RecordRef; readonly name: string; readonly kindWord: string; readonly report?: { readonly address: string; readonly version: string } }) {
+export function RecordMenu(props: { readonly refOf: RecordRef; readonly name: string; readonly kindWord: string; readonly report?: { readonly address: string; readonly version: string }; readonly extra?: readonly { readonly label: string; readonly run: () => void }[] }) {
   const toasts = useOptionalToasts();
   const link = `${location.origin}${location.pathname}${formatAddress(recordAddress(props.refOf))}`;
   const copy = (): void => {
@@ -19,6 +19,7 @@ export function RecordMenu(props: { readonly refOf: RecordRef; readonly name: st
       label="Record menu"
       trigger={<Icon name="more-horizontal" />}
       items={[
+        ...(props.extra ?? []).map((action) => ({ id: `go:${action.label}`, label: action.label, onSelect: action.run })),
         { id: 'copy-link', label: 'Copy link', onSelect: copy },
         ...(report === undefined || report.address === '' ? [] : [{ id: 'report', label: 'Report a mistake', href: mistakeMailto({ address: report.address, name: props.name, kind: props.kindWord, link, version: report.version }) }]),
       ]}

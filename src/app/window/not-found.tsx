@@ -3,7 +3,7 @@ import { EmptyState } from '@/ui/primitives';
 
 export function NotFound(props: { readonly what: 'bad' | 'missing'; readonly onChapters: () => void }) {
   return (
-    <EmptyState action={{ label: 'Go to Chapters', onClick: props.onChapters }}>
+    <EmptyState action={{ label: 'Go to Chapters', onClick: props.onChapters, primary: true }}>
       {props.what === 'bad' ? 'This page does not exist.' : 'This record is not in this version of the app.'}
     </EmptyState>
   );

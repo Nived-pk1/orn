@@ -9,6 +9,8 @@ import type { InspectorPorts } from '@/features/inspector';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef, Species } from '@/core/schema';
 import type { SearchQuery } from '@/search/contracts';
+import { nameOfRecord } from '@/features/inspector';
+import type { AnyRecord } from '@/core/schema';
 import { effectiveOnly } from '@/ui/state';
 import type { SearchService, SearchSyncStatus } from '@/workers/search';
 
@@ -23,6 +25,8 @@ export interface SearchPortDeps {
   /** Switches to the Navigator, opens the record in the inspector and places it. */
   show(ref: RecordRef, title: string): void;
   commands(): readonly PaletteCommand[];
+  /** The records opened last, newest first (step 8.4g Part B, G3). Absent: the palette lists none. */
+  recent?(): readonly RecordRef[];
   /** Alt+Enter on a hit: opens Reactions filtered by it (step 7.1b E2). */
   showReactions?(ref: RecordRef, title: string): void;
   showReagent?(ref: RecordRef, title: string): void;
@@ -64,6 +68,17 @@ export function createSearchPorts(deps: SearchPortDeps): SearchPorts {
     ...(deps.showNamed === undefined ? {} : { showNamed: deps.showNamed }),
     ...(deps.showMechanism === undefined ? {} : { showMechanism: deps.showMechanism }),
     commands: () => deps.commands(),
+    ...(deps.recent === undefined
+      ? {}
+      : {
+          recentRecords: () => {
+            const all = deps.store.getState().records as unknown as Readonly<Record<string, Readonly<Record<string, AnyRecord>> | undefined>>;
+            return (deps.recent?.() ?? []).flatMap((ref) => {
+              const record = all[ref.kind]?.[ref.id];
+              return record === undefined ? [] : [{ ref, title: nameOfRecord(record) }];
+            });
+          },
+        }),
     log: deps.navigator.log,
   };
 }

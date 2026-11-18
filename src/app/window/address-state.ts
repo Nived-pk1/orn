@@ -39,7 +39,7 @@ export function currentAddress(mode: string, host: Pick<AddressHost, 'ui' | 'ins
 }
 
 /** Carries out an address: `ok`, `missing` (this version has no such record), `bad` (not an address of this edition) or `none` (no address). */
-export function applyAddress(host: AddressHost, parsed: Parsed): 'ok' | 'missing' | 'bad' | 'none' {
+export function applyAddress(host: AddressHost, parsed: Parsed, atStart = false): 'ok' | 'missing' | 'bad' | 'none' {
   if (parsed.t === 'none') return 'none';
   if (parsed.t === 'bad') return 'bad';
   const { ui } = host;
@@ -56,7 +56,9 @@ export function applyAddress(host: AddressHost, parsed: Parsed): 'ok' | 'missing
     host.open[parsed.view]?.(parsed.id);
     return 'ok';
   }
-  ui.family.getState().closeFamily();
+  // a plain view at the start of a visit only says where it began (the gate writes it at boot): what the visit saved is kept
+  const keep = atStart && parsed.t === 'view';
+  if (!keep) ui.family.getState().closeFamily();
   if (parsed.t === 'record' && parsed.view === 'navigator') {
     host.show({ kind: parsed.kind, id: parsed.id } as RecordRef);
     return 'ok';
@@ -70,7 +72,7 @@ export function applyAddress(host: AddressHost, parsed: Parsed): 'ok' | 'missing
   else if (parsed.view === 'navigator' && (tab === 'explore' || tab === 'chapters')) ui.overview.getState().setPhoneTab('families');
   host.setMode(parsed.view);
   // a plain view shows no record (Back from a record lands here): the selection goes, so the address does not write it back
-  if (parsed.t === 'view' && RECORD_VIEWS.includes(parsed.view)) {
+  if (parsed.t === 'view' && !keep && RECORD_VIEWS.includes(parsed.view)) {
     host.inspector.getState().select({ kind: 'none' });
     ui.selection.getState().select(null);
   }

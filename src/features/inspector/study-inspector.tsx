@@ -3,7 +3,7 @@
  * the hero, the lead, the key facts, the watch-out, where to go next, the connected cards, the chapters and the notes. The model decides
  * what each holds; this only draws it. Studio adds the closed "For authors" section after it (everything the old levels showed).
  */
-import { lazy, Suspense, useMemo, type ReactNode } from 'react';
+import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react';
 import type { AnyRecord, Reaction, RecordRef } from '@/core/schema';
 import { FullEquations } from './equation';
 import { useInspectorEnv } from './env';
@@ -12,6 +12,7 @@ import { studyInspectorModel } from './model/study-model';
 import { StudyHero } from './study-hero';
 import { Chips, Connected, Disclosure, GoNext, Lead, WatchOuts, type GoNextAction } from './study-parts';
 import { RecordMenu } from './record-menu';
+import { StarButton } from './star-button';
 import { RichText } from './rich-text';
 import { knownReviewStatus, ReviewMark, STUDY_REVIEW_SENTENCE, useStudyChrome, type ReviewStatus } from '@/ui/study-chrome';
 import styles from './study-inspector.module.css';
@@ -36,6 +37,7 @@ export interface StudyInspectorProps {
 
 export function StudyInspector(props: StudyInspectorProps) {
   const { ports, state, host } = useInspectorEnv();
+  const [overflow, setOverflow] = useState<readonly GoNextAction[]>([]);
   const student = useStudyChrome().reviewMark === 'dot';
   const status: ReviewStatus | undefined = knownReviewStatus((props.record as { review?: { status?: unknown } }).review?.status);
   const model = useMemo(
@@ -53,7 +55,8 @@ export function StudyInspector(props: StudyInspectorProps) {
             </span>
             <span className={styles.headAside} data-head-aside="">
               <ReviewMark status={status} />
-              <RecordMenu refOf={props.refOf} name={model.title} kindWord={model.kindChip.word} {...(host.report === undefined ? {} : { report: host.report })} />
+              {host.stars === undefined ? null : <StarButton stars={host.stars} refOf={props.refOf} />}
+              <RecordMenu refOf={props.refOf} name={model.title} kindWord={model.kindChip.word} extra={overflow} {...(host.report === undefined ? {} : { report: host.report })} />
             </span>
           </div>
           <h3 id={props.titleId} className={styles.titleText}>{model.title}</h3>
@@ -72,7 +75,7 @@ export function StudyInspector(props: StudyInspectorProps) {
       {model.lead === undefined ? null : <Lead source={model.lead.source} />}
       <Chips chips={model.facts} />
       <WatchOuts items={model.watchOut} />
-      <GoNext actions={props.goNext} />
+      <GoNext actions={props.goNext} onOverflow={setOverflow} />
       <LinksSection familyId={props.refOf.id} links={model.links} />
       <Connected groups={model.connected} />
       <Suspense fallback={null}>

@@ -24,6 +24,7 @@ async function load(edition: 'study' | 'studio') {
   await import('@/features/navigator/navigator-canvas');
   // the lazy notices bell resolves in THIS module registry (the reset above), so it finds its own context
   await (await import('@/app/window/lazy-notice-bell')).prefetchNoticeBell();
+  await (await import('@/app/window/my-records-host')).prefetchLateKeys(); // the late-keys chunk resolves in THIS registry (the reset above)
   kit.stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

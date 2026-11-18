@@ -53,11 +53,24 @@
 [data-sheet='peek'] .hero { max-height: 120px; overflow: hidden; padding: var(--space-4) var(--space-8); gap: var(--space-4); }
 [data-sheet='peek'] .hero img { max-height: 96px; width: auto; max-width: 100%; object-fit: contain; }
 [data-sheet='peek'] .formula { font-size: var(--text-16); }
-[data-sheet='peek'] .head { flex-wrap: nowrap; position: static; margin: 0; padding: 0; border: 0; background: none; }
+[data-sheet='peek'] .head { flex-wrap: wrap; row-gap: 0; position: static; margin: 0; padding: 0; border: 0; background: none; }
 [data-sheet='peek'] .chipRow { justify-content: flex-start; }
 /* the peek is about as high as it ever was (the PCC card still fits above it on a Pixel 7): chip and title on one line, tight gaps, one-line title */
-[data-sheet='peek'] .headText { flex-direction: row; align-items: center; gap: var(--space-8); flex-basis: 0; }
-[data-sheet='peek'] .titleText { font-size: var(--text-16); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-[data-sheet='peek'] [aria-label='Record'] { gap: var(--space-4); }
+/* step 8.4g Part B (P2): the chips and the menu share the first line with Back / Forward; the NAME has its own full line under them */
+[data-sheet='peek'] .headText { display: contents; }
+[data-sheet='peek'] .chipRow { flex: 1 1 0; min-width: 0; }
+/* a narrow phone held upright (an iPhone 14): the menu is a square target, the star and the menu come right after the kind chip, and the review pill (the long one, Studio only) takes what is left and is cut with an ellipsis: nothing runs under Back and Forward, and nothing wraps (WebKit hands a tap on the name to a button just above it, and a wrapped row is 30 px higher) */
+@media (orientation: portrait) {
+  [data-sheet='peek'] .chipRow [aria-label='Record menu'] { padding: 0; width: 44px; justify-content: center; }
+  [data-sheet='peek'] .headAside { display: contents; }
+  [data-sheet='peek'] .kindChip { order: -2; }
+  [data-sheet='peek'] .chipRow [aria-label='Star for revision'], [data-sheet='peek'] .chipRow [aria-label='Record menu'] { order: -1; }
+  [data-sheet='peek'] .chipRow [data-review-mark] { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}
+[data-sheet='peek'] .titleText { flex: 0 0 100%; order: 1; font-size: var(--text-16); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+[data-sheet='peek'] .reviewLine { flex: 0 0 100%; order: 2; }
+/* WebKit (iOS) hands a tap that lands near a button to that button: the name, which toggles the sheet, sits 6 px lower (the gaps below it are 2 px, so the peek is no higher) so a tap on it is its own and the star above it is not starred by mistake */
+[data-sheet='peek'] .titleText { margin-top: calc(var(--space-4) * 1.5); }
+[data-sheet='peek'] [aria-label='Record'] { gap: calc(var(--space-4) / 2); }
 [data-sheet='peek'] .hero { padding: 0; }
 .reviewLine { display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-14); color: var(--color-ink-2); }

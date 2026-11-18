@@ -9,7 +9,7 @@ import { useAddress, type LostAddress } from './use-address';
 
 const KNOWN: Record<string, readonly string[]> = { reagent: ['rg_1'], reaction: ['rxn_1'] };
 
-function setup(ready = true) {
+function setup(ready = true, fromBoot = false, initialMode = 'navigator') {
   const ui = createNavigatorUiStores();
   const inspector = createInspectorStore();
   const modeRef = { set: (_: string) => {} };
@@ -23,10 +23,10 @@ function setup(ready = true) {
     show: () => {},
   };
   const view = renderHook(() => {
-    const [mode, setMode] = useState('navigator');
+    const [mode, setMode] = useState(initialMode);
     modeRef.set = setMode;
     const [lostAt, setLost] = useState<LostAddress>(null);
-    useAddress(host, mode, ready, lostAt, setLost);
+    useAddress(host, mode, ready, lostAt, setLost, fromBoot);
     const change = (next: string): void => {
       setLost(null);
       setMode(next);
@@ -40,6 +40,18 @@ const hashes = (): number => history.length;
 
 beforeEach(() => history.replaceState(null, '', '#'));
 afterEach(cleanup);
+
+describe('useAddress: an address written at boot (step 8.4g Part B, P4)', () => {
+  it('does not carry the boot address over a view the reader has already chosen: it pushes the new view, so Back has an entry', () => {
+    history.replaceState(null, '', '#/map');
+    const start = hashes();
+    // the reader chose Settings before the code arrived: the hook starts on 'settings' while the address still says the boot view
+    const { view } = setup(true, true, 'settings');
+    expect(view.result.current.mode).toBe('settings');
+    expect(location.hash).toBe('#/settings');
+    expect(hashes()).toBe(start + 1);
+  });
+});
 
 describe('useAddress', () => {
   it('writes the first address by replacing, then one entry per change of view', () => {

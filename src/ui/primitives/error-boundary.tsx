@@ -17,6 +17,10 @@ export interface ErrorBoundaryProps {
   readonly onError?: (error: unknown, info: ErrorInfo) => void;
   /** Studio: a way to back up the data from the error screen. */
   readonly backUp?: () => void;
+  /** Tells the owner when the screen starts and stops showing (the window then lights no rail item and names the screen in the breadcrumb). */
+  /** When this changes the screen is tried again (the reader went to another view). */
+  readonly resetKey?: string;
+  readonly onFailChange?: (failed: boolean) => void;
   readonly children: ReactNode;
 }
 
@@ -34,11 +38,25 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   override componentDidCatch(error: unknown, info: ErrorInfo): void {
     this.props.onError?.(error, info);
+    this.props.onFailChange?.(true);
     void import('./error-screen').then((module) => this.setState({ Screen: module.ErrorScreen }), () => undefined);
   }
 
   // code that could not be loaded stays failed (a lazy view remembers it): only a new page load can fetch it again
-  private readonly reload = (): void => (CHUNK.test(this.state.failure ?? '') ? window.location.reload() : this.setState({ failure: null }));
+  private readonly reload = (): void => {
+    if (CHUNK.test(this.state.failure ?? '')) window.location.reload();
+    else {
+      this.props.onFailChange?.(false);
+      this.setState({ failure: null });
+    }
+  };
+
+  override componentDidUpdate(before: ErrorBoundaryProps): void {
+    if (this.state.failure !== null && before.resetKey !== this.props.resetKey) {
+      this.props.onFailChange?.(false);
+      this.setState({ failure: null });
+    }
+  }
 
   override render(): ReactNode {
     const { failure, Screen } = this.state;

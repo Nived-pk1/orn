@@ -6,13 +6,11 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
-import { Inspector, type InspectorHost } from "@/features/inspector";
 import {
   NavigatorProvider,
   PhoneTabs,
   NavigatorStatus,
   useFamilyPageOpen,
-  useNavigator,
 } from "@/features/navigator";
 import {
   RECORD_KINDS,
@@ -35,12 +33,11 @@ import { openChapter } from "./chapters-entry";
 import { useFirstScreen, hasChapterTopic } from "./first-screen";
 import { useWarmCanvas } from "./use-warm-canvas";
 import { mapWanted } from "./map-wanted";
-import { CHAPTERS_MODE, EXPLORER_MODES, modesFor, modeOfExplorer, NAVIGATOR_MODE, SETTINGS_MODE } from "./modes";
+import { CHAPTERS_MODE, EXPLORER_MODES, modesFor, modeOfExplorer, NAVIGATOR_MODE, SETTINGS_MODE, STARRED_MODE } from "./modes";
 import { usePhoneTabMode } from "./phone-tab-mode";
 import { studyChrome, StudyChromeProvider, useStudyChrome } from '@/ui/study-chrome';
 import { useHasOwnData } from './own-data-hooks';
 import { EDITION } from '@/app/edition';
-import { REPORT_ADDRESS } from "@/app/report-config";
 import { openPrecursors } from "./precursors-entry";
 import { openReagent } from "./reagents-entry";
 import { usePageEntries } from "./use-page-entries";
@@ -64,9 +61,13 @@ import { editorCommandDeps } from "./editor-commands";
 import { DatasetProvider, datasetWordsOf, useDatasetInfo } from "./dataset-info";
 import { StudyUpdateProvider } from "./study-update";
 import { HistoryKeys } from "./history-keys";
+import { MyRecordsHost, useMineCommandDeps } from "./my-records-host";
+import { bindingFor } from "./key-map";
+import { InspectorPanel } from "./inspector-panel";
 import { PhoneAlert, PhoneBar, PhoneNotices, PhoneStatusDialog } from "./phone-parts";
 import { TopBar } from "./top-bar";
 import { useFrame } from "./use-frame";
+import { screenCrumb } from "./frame-title";
 import { AboutDialog, AboutOpenContext } from "./about-preview";
 import { ExportOpenContext } from "./export-context";
 import { useExportActions } from "./use-export-actions";
@@ -78,51 +79,6 @@ const countsOf = (
   Object.fromEntries(
     RECORD_KINDS.map((kind) => [kind, Object.keys(state.records[kind]).length]),
   ) as Record<RecordKind, number>;
-
-/** The inspector with what only the window knows: the arrows on the canvas, whether the navigator is shown, how to open the pane. */
-function InspectorPanel(props: {
-  readonly navigatorShown: boolean;
-  readonly explorerShown: boolean;
-  readonly openPane: () => void;
-  readonly closePane: () => void;
-  readonly onReactions: (filter: Partial<ExplorerFilter>) => void;
-  readonly onPrecursors: (ref: RecordRef) => void;
-  readonly onChapter: (chapterId: string) => void;
-  readonly onReagent: (reagentId: string) => void;
-  readonly onNamed: (namedReactionId: string) => void;
-  readonly onMechanism: (mechanismId: string) => void;
-}) {
-  const { inspector } = useApp();
-  const editors = useEditors();
-  const { model } = useNavigator();
-  const { navigatorShown, explorerShown, openPane, closePane, onReactions, onPrecursors, onChapter, onReagent, onNamed, onMechanism } = props;
-  const host = useMemo<InspectorHost>(
-    () => ({
-      openPane,
-      closePane,
-      report: { address: REPORT_ADDRESS, version: __ORN_VERSION__ },
-      navigatorShown,
-      explorerShown,
-      showReactions: (ref) => {
-        const filter = filterFor(ref);
-        if (filter !== undefined) onReactions(filter);
-      },
-      showPrecursors: onPrecursors,
-      showReagent: (ref) => onReagent(ref.id),
-      showNamed: (ref) => onNamed(ref.id),
-      showMechanism: (ref) => onMechanism(ref.id),
-      openChapter: onChapter,
-      showArrowReactions: (ends) => onReactions({ fromFamilyIds: [ends.from], toFamilyIds: [ends.to] }),
-      ...(editors === null ? {} : { editNames: { unavailable: editors.editReason, open: editors.editNames, ...(editors.requestDelete === undefined ? {} : { remove: editors.requestDelete }), ...(editors.startFrom === undefined ? {} : { startFrom: editors.startFrom }), ...(editors.fullEditorKinds === undefined ? {} : { fullEditorKinds: editors.fullEditorKinds }), ...(editors.namesKinds === undefined ? {} : { namesKinds: editors.namesKinds }) } }),
-      edgeEnds: (edgeId) => {
-        const edge = model.getState().scene?.edges.find((e) => e.id === edgeId);
-        return edge === undefined ? undefined : { from: edge.from, to: edge.to };
-      },
-    }),
-    [model, navigatorShown, explorerShown, openPane, closePane, editors, onReactions, onPrecursors, onChapter, onReagent, onNamed, onMechanism],
-  );
-  return <Inspector ports={inspector} host={host} />;
-}
 
 /** The shell; its title gives up the h1 while the family page (which has its own) is on the canvas. */
 function TitledShell(props: ShellProps & { readonly familyVisible: boolean }) {
@@ -174,6 +130,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const [asking, setAsking] = useState(false);
   const [searching, setSearching] = useState(false);
   // the palette opens once its commands are loaded (the idle prefetch makes that immediate)
+  const mineCommandDeps = useMineCommandDeps();
   const openSearch = useCallback(() => void (loadedCommands() !== undefined ? setSearching(true) : prefetchCommands().then(() => setSearching(true))), []);
   // the palette is a lazy chunk: fetch it once the first view is drawn and the browser is idle, so the first Ctrl/Cmd+K opens at once
   useEffect(() => {
@@ -223,6 +180,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   const pageOpeners = useMemo(() => ({ chapters: onChapter, reagents: onReagent, named: onNamed, mechanisms: onMechanism }), [onChapter, onReagent, onNamed, onMechanism]);
   const [lostAt, setLost] = useState<LostAddress>(null);
   const lost = lostAt !== null && lostAt.mode === mode ? lostAt.what : null;
+  const [failed, setFailed] = useState(false), screen = screenCrumb({ failed, lost }); // an error or not-found screen lights no rail item
   const changeMode = useCallback((next: string) => {
     setLost(null);
     setMode(next);
@@ -270,15 +228,15 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
         showMechanism: (ref) => onMechanism(ref.id),
         commands: () => {
           const build = loadedCommands();
-          return build === undefined || commandDeps.current === null ? [] : build({ ...commandDeps.current, exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }) });
+          return build === undefined || commandDeps.current === null ? [] : build({ ...commandDeps.current, ...mineCommandDeps(), exams: examOptionsByExam(services.store.getState(), { allowDraft: EDITING }) });
         },
-        show: (ref, title) => showRecord(app, setMode, openPane, ref, title),
+        recent: () => app.mine?.records()?.recent() ?? [], show: (ref, title) => showRecord(app, setMode, openPane, ref, title),
       }),
-    [app, services, navigator, inspectorPorts, openPane, onReactions, onReagent, onNamed, onMechanism],
+    [mineCommandDeps, app, services, navigator, inspectorPorts, openPane, onReactions, onReagent, onNamed, onMechanism],
   );
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
-      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'k') {
+      if (bindingFor('palette').match(event)) {
         event.preventDefault();
         openSearch();
       }
@@ -304,6 +262,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
   return (
     <StudyUpdateProvider load={imports.loadDemo} hasData={hasData}>
       {EDITING ? <HistoryKeys history={services.store} /> : null}
+      <MyRecordsHost studio={EDITING} exam={exam.exam} hasData={hasData} />
       <ExportOpenContext.Provider value={exports.open}>
       <AboutOpenContext.Provider value={() => setAbout(true)}>
       <NavigatorProvider ports={navigatorPorts} active={hasData} shown={mapWanted({ hasData, editing: EDITING, phone: layoutMode === 'phone', phoneTab, mode, settled })}>
@@ -322,12 +281,12 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
             bar: <PhoneBar onSettings={() => setMode(SETTINGS_MODE)} onSearch={openSearch} structures={navigator.structures} file={file} exam={exam} counts={counts} onStatus={openStatus} {...(EDITING ? { history: services.store } : {})} />,
             notices: <PhoneNotices />,
             alert: <PhoneAlert onStatus={openStatus} />,
-            tabs: <PhoneTabs onSearch={openSearch} searching={searching} onTab={onPhoneTab} />,
+            tabs: <PhoneTabs onStarred={() => changeMode(STARRED_MODE)} starred={mode === STARRED_MODE} onTab={onPhoneTab} />,
           }}
           modes={railModes}
-          crumb={crumb}
+          crumb={screen ?? crumb}
           commandBox={{ onOpen: openSearch }}
-          activeMode={mode}
+          activeMode={screen === undefined ? mode : ''}
           onModeChange={changeMode}
           toasts={<ToastRegion />}
           toastShowing={toastShowing}
@@ -340,8 +299,8 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
             </ErrorBoundary>
           }
           canvas={
-            <ErrorBoundary label="The dataset panel" {...(EDITING ? { backUp: exports.open } : {})}>
-              {lost === null ? <Canvas mode={mode} exam={exam} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onSyllabus={onSyllabus} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} openPane={openPane} /> : <LazyNotFound what={lost} onChapters={() => changeMode(CHAPTERS_MODE)} />}
+            <ErrorBoundary label="The dataset panel" resetKey={mode} onFailChange={setFailed} {...(EDITING ? { backUp: exports.open } : {})}>
+              {lost === null ? <Canvas mode={mode} exam={exam} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onSyllabus={onSyllabus} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} onOpenRecord={(ref, title) => showRecord(app, setMode, openPane, ref, title)} openPane={openPane} /> : <LazyNotFound what={lost} onChapters={() => changeMode(CHAPTERS_MODE)} />}
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"

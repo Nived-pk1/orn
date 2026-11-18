@@ -22,6 +22,7 @@ import { createPanelsPort, createUiEntryPort } from './window/panels-port';
 import { createReviewUiPort } from './window/review-ui';
 import { createOwnData } from './window/own-data';
 import { createBackupRecord } from './window/backup-record';
+import { createLazyMine } from './window/my-records-lazy';
 
 /** The dataset this build ships, served from this origin: the published study dataset or the bundled demo (the import pipeline reads it like any file the user picks). */
 async function loadDemo(): Promise<DemoLoad> {
@@ -64,7 +65,7 @@ async function start(): Promise<void> {
   window.addEventListener('pagehide', () => void navigatorUi.flush());
   createRoot(rootElement).render(
     <StrictMode>
-      <App value={{ services, panels, appearancePort, navigator, inspector, loadDemo, dataset: createDatasetInfo(services, dataset.kind === 'published' ? dataset : null), nowMs: () => env.clock.nowMs(), formatTime: createLocalTimeFormatter(), reviewUi: createReviewUiPort(services), ownData: createOwnData(services), backup: createBackupRecord(services, () => env.clock.nowMs()), reload: () => window.location.reload() }} />
+      <App value={{ services, panels, appearancePort, navigator, inspector, loadDemo, dataset: createDatasetInfo(services, dataset.kind === 'published' ? dataset : null), nowMs: () => env.clock.nowMs(), formatTime: createLocalTimeFormatter(), reviewUi: createReviewUiPort(services), ownData: createOwnData(services), backup: createBackupRecord(services, () => env.clock.nowMs()), mine: createLazyMine(services), reload: () => window.location.reload() }} />
     </StrictMode>,
   );
 }

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
- * The phone home (ADR-039) through the real window on the demo: the bottom tab bar Families | Map | Explore | Search, the Families cards equal the
+ * The phone home (ADR-039) through the real window on the demo: the bottom tab bar Families | Map | Explore | Starred, the Families cards equal the
  * List projection (count, order, groups), the map without a toolbar and a permanent legend but with floating Fit and Legend buttons, the
- * remembered tab, and the Search tab. The desktop tests elsewhere run without matchMedia and are not touched.
+ * remembered tab, and the Starred tab. The desktop tests elsewhere run without matchMedia and are not touched.
  */
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -63,7 +63,7 @@ describe('the Families tab', () => {
     phone();
     renderWithApp(demo());
     await screen.findByRole('navigation', { name: 'Home' });
-    expect(within(tabs()).getAllByRole('button').map((button) => button.textContent)).toEqual(['Chapters', 'Families', 'Map', 'Explore', 'Search']);
+    expect(within(tabs()).getAllByRole('button').map((button) => button.textContent)).toEqual(['Chapters', 'Families', 'Map', 'Explore', 'Starred']);
     fireEvent.click(tab('Families'));
     await screen.findByRole('region', { name: 'Families' });
     expect(tab('Families').getAttribute('aria-current')).toBe('page');
@@ -180,17 +180,32 @@ describe('the Map tab', () => {
   });
 });
 
-describe('the Search tab', () => {
-  it('opens the palette (full screen on a phone) and marks itself current while it is open', async () => {
+describe('the fifth tab is Starred; Search is in the top bar (step 8.4g Part B, G2)', () => {
+  it('Search opens the palette (full screen on a phone) from the top bar, and is no tab', async () => {
+    phone();
+    renderWithApp(demo());
+    await screen.findByRole('region', { name: 'Families' });
+    expect(within(tabs()).queryByRole('button', { name: 'Search' })).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Search' })[0] as HTMLElement);
+    });
+    expect(screen.getByRole('dialog', { name: 'Search' }).className).toMatch(/screen/);
+  });
+
+  it('the Starred tab shows the Starred view and marks itself current; another tab leaves it', async () => {
     phone();
     renderWithApp(demo());
     await screen.findByRole('region', { name: 'Families' });
     await act(async () => {
-      fireEvent.click(tab('Search'));
+      fireEvent.click(tab('Starred'));
     });
-    const palette = screen.getByRole('dialog', { name: 'Search' });
-    expect(palette.className).toMatch(/screen/);
-    expect(tab('Search').getAttribute('aria-current')).toBe('page');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Starred' })).toBeTruthy();
+    expect(tab('Starred').getAttribute('aria-current')).toBe('page');
     expect(tab('Families').getAttribute('aria-current')).toBeNull();
+    await act(async () => {
+      fireEvent.click(tab('Families'));
+    });
+    expect(screen.queryByRole('heading', { level: 1, name: 'Starred' })).toBeNull();
+    expect(tab('Starred').getAttribute('aria-current')).toBeNull();
   });
 });

@@ -181,7 +181,7 @@ async function walkPhone(page: Page, device: string): Promise<void> {
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
   const find = async (): Promise<void> => {
-    await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Search' }).tap();
+    await page.getByRole('button', { name: 'Search', exact: true }).first().tap();
     await expect(palette(page)).toBeVisible();
     await searchFor(page, 's: palmitic acid');
     await palette(page).locator('[role="option"][data-record-id="spc_palmitic-acid"]').tap();

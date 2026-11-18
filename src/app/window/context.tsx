@@ -13,6 +13,7 @@ import type { TimeFormatter } from './local-time';
 import type { DatasetInfo } from './dataset-types';
 import type { ReviewUiPort } from './review-ui';
 import type { BackupRecord } from './backup-record';
+import type { LazyMine } from './my-records-lazy';
 import type { OwnData } from './own-data';
 
 /** What the window needs from the services (so a test can fake only these). */
@@ -38,6 +39,8 @@ export interface AppContextValue {
   readonly ownData?: OwnData;
   /** The last finished backup and the dismissed backup notice (Studio, step 8.4s S4). Absent: none. */
   readonly backup?: BackupRecord;
+  /** The starred and the recent records (step 8.4g Part B). Absent: none are kept. */
+  readonly mine?: LazyMine;
   /** The Review page's saved choices (7.3a E1). Absent: nothing is kept. */
   readonly reviewUi?: ReviewUiPort;
   /** The injected clock in milliseconds (the export file name's date). Absent: 0, which a test never relies on. */

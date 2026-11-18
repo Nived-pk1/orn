@@ -7,8 +7,9 @@
 import { useEffect } from 'react';
 import { useToasts } from '@/ui/primitives';
 import { historyReason, stepHistory, type HistoryBinding } from './top-bar';
+import { bindingFor } from './key-map';
 
-const isEditable = (target: EventTarget | null): boolean => {
+export const isEditable = (target: EventTarget | null): boolean => {
   if (!(target instanceof Element)) return false;
   if (target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]') !== null) return true;
   const role = target.getAttribute('role');
@@ -20,9 +21,8 @@ export function HistoryKeys(props: { readonly history: HistoryBinding }) {
   const toasts = useToasts();
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
-      if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.altKey) return;
-      const key = event.key.toLowerCase();
-      const direction = key === 'z' && !event.shiftKey ? 'undo' : (key === 'z' && event.shiftKey) || key === 'y' ? 'redo' : null;
+      if (event.defaultPrevented) return;
+      const direction = bindingFor('undo').match(event) ? 'undo' : bindingFor('redo').match(event) ? 'redo' : null; // the window's key map (step 8.4g Part B)
       if (direction === null || isEditable(event.target) || document.querySelector('dialog[open]') !== null) return;
       const reason = historyReason(history, direction);
       event.preventDefault();

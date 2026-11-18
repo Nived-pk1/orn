@@ -13,5 +13,11 @@ export function crumbOf(modes: readonly { readonly id: string; readonly label: s
   return record === undefined || record === '' ? { section } : { section, record };
 }
 
+/** A screen that is not a view (the error screen, the not-found screen): the crumb names it, and no rail item is lit (step 8.4g Part B, P3). */
+export function screenCrumb(state: { readonly failed: boolean; readonly lost: 'bad' | 'missing' | null }): Crumb | undefined {
+  if (state.failed) return { section: 'Something went wrong' };
+  return state.lost === null ? undefined : { section: 'Not found' };
+}
+
 /** "Alcohols · Map · ORN" with a record, "Reactions · ORN" without. */
 export const documentTitleOf = (crumb: Crumb): string => [...(crumb.record === undefined || crumb.record === '' ? [] : [crumb.record]), crumb.section, 'ORN'].join(' · ');

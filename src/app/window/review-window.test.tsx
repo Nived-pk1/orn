@@ -13,6 +13,7 @@ async function loadStudio() {
   const kit = await import('@/test-support/window-kit');
   const { demoState } = await import('@/test-support/app-boot-kit');
   const { fakeLayout } = await import('@/test-support/inspector-kit');
+  await (await import('@/app/window/my-records-host')).prefetchLateKeys(); // the late-keys chunk resolves in THIS registry (the reset above)
   kit.stubDialog();
   fakeLayout();
   globalThis.ResizeObserver ??= class {

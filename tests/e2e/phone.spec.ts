@@ -229,8 +229,8 @@ async function walk(page: Page, device: string, pinching: boolean): Promise<void
   await expect(sheet(page)).toBeHidden();
   await stop(page, device, 11, 'sheet-closed');
 
-  // the Search tab: the palette on the whole screen
-  await tabs(page).getByRole('button', { name: 'Search' }).tap();
+  // the Search button in the top bar: the palette on the whole screen
+  await page.getByRole('button', { name: 'Search', exact: true }).tap(); // the top bar (the fifth tab is Starred since 8.4g Part B)
   const palette = page.getByRole('dialog', { name: 'Search' });
   await expect(palette).toBeVisible();
   const frame = await palette.boundingBox();

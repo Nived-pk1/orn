@@ -4,7 +4,7 @@
  */
 import { lazy, Suspense, useCallback, useRef } from "react";
 import { NavigatorView } from "@/features/navigator";
-import { RECORD_KINDS, type RecordKind } from "@/core/schema";
+import { RECORD_KINDS, type RecordKind, type RecordRef } from "@/core/schema";
 import { EDITING } from "@/app/edition";
 import { useLayoutMode } from "@/ui/hooks";
 import { PageSkeleton } from "@/ui/primitives";
@@ -15,7 +15,7 @@ import { LoadingLine } from "./loading-line";
 import { useApp } from "./context";
 import { DatasetActions } from "./dataset-actions";
 import { FirstRun } from "./first-run";
-import { CHAPTERS_MODE, EXPLORER_MODES, MECHANISMS_MODE, NAMED_MODE, SYLLABUS_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, SETTINGS_MODE, WORKBENCH_MODE } from "./modes";
+import { CHAPTERS_MODE, EXPLORER_MODES, MECHANISMS_MODE, NAMED_MODE, SYLLABUS_MODE, NAVIGATOR_MODE, PRECURSORS_MODE, REACTIONS_MODE, REAGENTS_MODE, REVIEW_MODE, SETTINGS_MODE, STARRED_MODE, WORKBENCH_MODE } from "./modes";
 import { RecordCounts } from "./record-counts";
 import type { ExportActions } from "./use-export-actions";
 import type { ImportActions } from "./use-import-actions";
@@ -24,6 +24,8 @@ import styles from "./window.module.css";
 
 // the Reactions list: a lazy chunk in BOTH editions (step 7.1b)
 const SettingsHost = lazy(() => import("./settings-host").then((m) => ({ default: m.SettingsHost })));
+// the Starred view: a lazy chunk in BOTH editions (step 8.4g Part B)
+const StarredHost = lazy(() => import("./starred-host").then((m) => ({ default: m.StarredHost })));
 const ReactionsHost = lazy(() => import("./reactions-host").then((m) => ({ default: m.ReactionsHost })));
 // the Chapters view: a lazy chunk in BOTH editions (step 7.3b)
 const ChaptersHost = lazy(() => import("./chapters-host").then((m) => ({ default: m.ChaptersHost })));
@@ -82,6 +84,8 @@ export function Canvas(props: {
   readonly onNamed: (namedReactionId: string) => void;
   readonly onMechanism: (mechanismId: string) => void;
   readonly onChapter: (chapterId: string) => void;
+  /** A row of the Starred view opens its record (the palette's way: on the map, in the inspector). */
+  readonly onOpenRecord: (ref: RecordRef, title: string) => void;
   /** Opens the Syllabus view (the quiet link in the Chapters header). */
   readonly onSyllabus: () => void;
 }) {
@@ -112,6 +116,10 @@ export function Canvas(props: {
       ) : !empty && props.mode === CHAPTERS_MODE ? (
         <Suspense fallback={<LoadingLine />}>
           <ChaptersHost onSyllabus={props.onSyllabus} openPane={props.openPane} onNamed={props.onNamed} onMechanism={props.onMechanism} />
+        </Suspense>
+      ) : !empty && props.mode === STARRED_MODE ? (
+        <Suspense fallback={<LoadingLine />}>
+          <StarredHost onOpen={props.onOpenRecord} />
         </Suspense>
       ) : !empty && props.mode === REACTIONS_MODE ? (
         <Suspense fallback={<LoadingLine />}>

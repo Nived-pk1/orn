@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { crumbOf, documentTitleOf } from './frame-title';
+import { crumbOf, documentTitleOf, screenCrumb } from './frame-title';
 
 describe('the tab title (step 8.4d, C5)', () => {
   it('is "<record> · <view> · ORN" when a record is shown, "<view> · ORN" otherwise', () => {
@@ -8,6 +8,15 @@ describe('the tab title (step 8.4d, C5)', () => {
   });
   it('an empty record name counts as no record', () => {
     expect(documentTitleOf({ section: 'Map', record: '' })).toBe('Map · ORN');
+  });
+});
+
+describe('a screen that is not a view (step 8.4g Part B, P3)', () => {
+  it('names the screen and no view', () => {
+    expect(screenCrumb({ failed: true, lost: null })).toEqual({ section: 'Something went wrong' });
+    expect(screenCrumb({ failed: false, lost: 'bad' })).toEqual({ section: 'Not found' });
+    expect(screenCrumb({ failed: false, lost: 'missing' })).toEqual({ section: 'Not found' });
+    expect(screenCrumb({ failed: false, lost: null })).toBeUndefined();
   });
 });
 

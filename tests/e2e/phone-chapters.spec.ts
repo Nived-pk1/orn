@@ -1,6 +1,6 @@
 /**
  * The Chapters view on a phone (step 7.3b E1, E2), the STUDIO production build: Pixel 7 in Chromium, iPhone 14 in WebKit. The bottom tabs
- * are "Chapters | Families | Map | Explore | Search", each 44 px or more and inside the screen; the Chapters tab lists the chapters in one
+ * are "Chapters | Families | Map | Explore | Starred", each 44 px or more and inside the screen; the Chapters tab lists the chapters in one
  * column; a chapter page has its filters behind "Filters (n)" and full-width study cards; every "Read more" is a 44 px target. Axe on each
  * state, zero CSP violations. Screenshots: phone-chapters-pixel7.png, phone-chapter-page-pixel7.png, phone-chapters-iphone14.png.
  */
@@ -26,7 +26,7 @@ async function walk(page: Page, device: string, page2: boolean): Promise<void> {
 
   // the five tabs: in this order, 44 px or more, inside the screen
   const buttons = tabs(page).getByRole('button');
-  expect(await buttons.allTextContents()).toEqual(['Chapters', 'Families', 'Map', 'Explore', 'Search']);
+  expect(await buttons.allTextContents()).toEqual(['Chapters', 'Families', 'Map', 'Explore', 'Starred']);
   const width = page.viewportSize()?.width ?? 0;
   for (const box of await buttons.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON() as { x: number; width: number; height: number }))) {
     expect(box.height).toBeGreaterThanOrEqual(44);

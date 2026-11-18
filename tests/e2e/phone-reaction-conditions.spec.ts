@@ -18,7 +18,7 @@ async function walk(page: Page, device: string): Promise<void> {
   await openPhoneApp(page);
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
-  await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Search' }).tap();
+  await page.getByRole('button', { name: 'Search', exact: true }).first().tap();
   const palette = page.getByRole('dialog', { name: 'Search' });
   await expect(palette).toBeVisible();
   await searchFor(page, 'r: ethanol');

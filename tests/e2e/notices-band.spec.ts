@@ -219,8 +219,7 @@ for (const [name, device] of [['Pixel 7', PIXEL], ['iPhone 14', IPHONE]] as cons
       await expect(page.getByRole('heading', { level: 1, name: 'Organic Reaction Navigator' })).toBeVisible();
       await importOwn(page, true);
       await expect(page.getByRole('navigation', { name: 'Home' })).toBeVisible({ timeout: 90_000 });
-      await answerExamCard(page);
-      await leaveChapters(page);
+      // the toast lasts 5 s: it is measured the moment the data is in, before the exam question and the tour (those take longer than that)
       const toast = page.getByRole('status', { name: 'Notifications' }).locator('> *').first();
       await expect(toast).toBeVisible();
       const box = await boxOf(toast);
@@ -229,6 +228,7 @@ for (const [name, device] of [['Pixel 7', PIXEL], ['iPhone 14', IPHONE]] as cons
       const storage = page.getByText(/Your data may be cleared/).first();
       if (await storage.isVisible()) expect(meets(box, await boxOf(storage)), 'the toast covers the storage line').toBe(false);
       expect(meets(box, await boxOf(page.getByRole('navigation', { name: 'Home' }))), 'the toast meets the tab bar').toBe(false);
+      await leaveChapters(page); // answers the exam question and skips the tour
       await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Map' }).tap();
       await expect(page.getByRole('group', { name: /^Navigator:/ })).toBeVisible({ timeout: 60_000 });
       if (await toast.isVisible()) {

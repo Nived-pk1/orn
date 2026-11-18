@@ -2,6 +2,18 @@
 import type { Page } from '@playwright/test';
 import { expect } from './fixtures';
 
+/** Step 8.4g Part B (G4): the first-run tour follows the exam question in Study; specs about other things skip it (the tour has its own spec). */
+export async function skipTour(page: Page): Promise<void> {
+  const skip = page.getByRole('region', { name: 'Tour' }).getByRole('button', { name: 'Skip' });
+  try {
+    await skip.waitFor({ state: 'visible', timeout: 4_000 });
+  } catch {
+    return;
+  }
+  await skip.click();
+  await expect(page.getByRole('region', { name: 'Tour' })).toHaveCount(0);
+}
+
 export async function answerExamCard(page: Page): Promise<void> {
   const card = page.getByRole('dialog', { name: 'Which exam are you preparing for?' });
   try {
@@ -11,6 +23,7 @@ export async function answerExamCard(page: Page): Promise<void> {
   }
   await card.getByRole('button', { name: 'Just exploring' }).click();
   await expect(card).toHaveCount(0);
+  await skipTour(page);
   await page.waitForTimeout(1000); // the saved state is written after a short pause (SAVE_DEBOUNCE_MS): a spec that reloads soon after must not lose the answer
 }
 

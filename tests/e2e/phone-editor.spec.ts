@@ -20,7 +20,7 @@ async function walk(page: Page, device: string): Promise<void> {
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
 
   // the Search tab: find the species and show it in the sheet
-  await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Search' }).tap();
+  await page.getByRole('button', { name: 'Search', exact: true }).first().tap();
   const palette = page.getByRole('dialog', { name: 'Search' });
   await expect(palette).toBeVisible();
   await searchFor(page, 's: ethanol');

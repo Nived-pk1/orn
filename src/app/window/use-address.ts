@@ -10,15 +10,15 @@ import { applyAddress, currentAddress, type AddressHost } from './address-state'
 /** An address the app could not show, and the view it was shown on (the window keeps it; the not-found screen reads it). */
 export type LostAddress = { readonly what: 'bad' | 'missing'; readonly mode: string } | null;
 
-export function useAddress(host: AddressHost, mode: string, ready: boolean, lost: LostAddress, setLost: (lost: LostAddress) => void): void {
+export function useAddress(host: AddressHost, mode: string, ready: boolean, lost: LostAddress, setLost: (lost: LostAddress) => void, fromBoot = false): void {
   const [, setTick] = useState(0);
   const [live, setLive] = useState(false);
   const replace = useRef(true);
   const now = useRef(mode);
   now.current = mode;
   const bump = useCallback(() => setTick((n) => n + 1), []);
-  const carry = useCallback(() => {
-    const done = applyAddress(host, parseAddress(location.hash));
+  const carry = useCallback((atStart = false) => {
+    const done = applyAddress(host, parseAddress(location.hash), atStart);
     setLost(done === 'bad' || done === 'missing' ? { what: done, mode: now.current } : null);
     replace.current = true;
     bump();
@@ -30,13 +30,17 @@ export function useAddress(host: AddressHost, mode: string, ready: boolean, lost
   }, [host, bump]);
   useEffect(() => {
     if (!ready || live) return;
-    carry();
+    // an address the gate wrote at boot only says where the visit began: a view chosen before the code arrived stays
+    if (fromBoot) replace.current = false;
+    else carry(true);
     setLive(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, live, carry]);
   useEffect(() => {
     if (!live) return undefined;
-    window.addEventListener('hashchange', carry);
-    return () => window.removeEventListener('hashchange', carry);
+    const onChange = (): void => carry();
+    window.addEventListener('hashchange', onChange);
+    return () => window.removeEventListener('hashchange', onChange);
   }, [live, carry]);
   useEffect(() => {
     if (!live || (lost !== null && lost.mode === mode)) return undefined;

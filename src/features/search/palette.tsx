@@ -16,6 +16,7 @@ import {
   type ReactNode,
 } from "react";
 import { useStore } from "zustand";
+import type { RecordRef } from "@/core/schema";
 import { useLayoutMode } from "@/ui/hooks";
 import { Dialog, Icon, type IconName } from "@/ui/primitives";
 import {
@@ -89,14 +90,15 @@ function useEntries(
   rows: readonly PaletteRow[],
   commands: readonly PaletteCommand[],
   recent: readonly string[],
+  records: readonly { readonly ref: RecordRef; readonly title: string }[],
   mode: "search" | "command",
   hasText: boolean,
 ): readonly Entry[] {
   return useMemo(() => {
     if (mode === 'command') return commands.map((c) => ({ key: `command:${c.id}` }));
     if (hasText || rows.length > 0) return rows.flatMap((row, index) => (row.type === 'hit' ? [{ key: row.key, row: index }] : []));
-    return [...commands.map((c) => ({ key: `command:${c.id}` })), ...recent.map((text) => ({ key: `recent:${text}` }))];
-  }, [rows, commands, recent, mode, hasText]);
+    return [...records.map((r) => ({ key: `record:${r.ref.kind}:${r.ref.id}` })), ...commands.map((c) => ({ key: `command:${c.id}` })), ...recent.map((text) => ({ key: `recent:${text}` }))];
+  }, [rows, commands, recent, records, mode, hasText]);
 }
 
 function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () => void }) {
@@ -111,7 +113,9 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
   const [scrollTop, setScrollTop] = useState(0);
   const mode = state.parsed.mode;
   const hasText = state.parsed.text !== '' || (state.parsed.mode === 'search' && state.parsed.kinds !== undefined);
-  const entries = useEntries(state.rows, state.commands, recent, mode, hasText);
+  // read while the box is empty: the palette is made fresh each time it opens, and a record opened since is in the list
+  const records = useMemo(() => (hasText ? [] : ports.recentRecords?.() ?? []), [ports, hasText, state.serial]); // eslint-disable-line react-hooks/exhaustive-deps
+  const entries = useEntries(state.rows, state.commands, recent, records, mode, hasText);
   const hitCount = state.rows.filter((row) => row.type === 'hit').length;
 
   // a new list selects its first entry and starts at the top
@@ -130,6 +134,11 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
       const answer = model.runCommand(command);
       if (answer.ran) onClose();
       else setNotice(`${command.title} is not available: ${answer.reason ?? 'unknown reason'}.`);
+    } else if (key.startsWith('record:')) {
+      const found = records.find((r) => `record:${r.ref.kind}:${r.ref.id}` === key);
+      if (found === undefined) return;
+      ports.open(found.ref, found.title);
+      onClose();
     } else if (key.startsWith('recent:')) {
       model.setInput(key.slice('recent:'.length));
     } else {
@@ -259,8 +268,14 @@ function PaletteBody(props: { readonly ports: SearchPorts; readonly onClose: () 
             )}
             <div role="presentation" style={{ height: win.after }} />
           </>
-        ) : !hasText && (state.commands.length > 0 || recent.length > 0) ? (
+        ) : !hasText && (state.commands.length > 0 || recent.length > 0 || records.length > 0) ? (
           <>
+            {records.length === 0 ? null : <p className={styles.recent}>Recent</p>}
+            {records.map((record, index) => (
+              <Command.Item key={`${record.ref.kind}:${record.ref.id}`} value={`record:${record.ref.kind}:${record.ref.id}`} className={styles.item} aria-posinset={index + 1} aria-setsize={records.length} onSelect={() => activate(`record:${record.ref.kind}:${record.ref.id}`)}>
+                <span className={styles.title}>{record.title}</span>
+              </Command.Item>
+            ))}
             {state.commands.length === 0 ? null : <p className={styles.recent}>Go to</p>}
             {state.commands.map((command, index) => (
               <Command.Item

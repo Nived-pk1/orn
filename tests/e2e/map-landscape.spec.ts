@@ -74,7 +74,7 @@ for (const [label, device] of [
       // E2: the five tabs are a 56 px icon column at the left, each named and reachable
       expect(tabs.x, "the column is at the left edge").toBeLessThanOrEqual(1);
       expect(tabs.w, "the column is 56 px wide").toBeLessThanOrEqual(56.5);
-      for (const name of ["Chapters", "Families", "Map", "Explore", "Search"]) {
+      for (const name of ["Chapters", "Families", "Map", "Explore", "Starred"]) {
         const item = page
           .getByRole("navigation", { name: "Home" })
           .getByRole("button", { name, exact: true });

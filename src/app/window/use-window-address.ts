@@ -17,6 +17,8 @@ export function useWindowAddress(args: {
   readonly openPane: () => void;
   readonly lost: LostAddress;
   readonly setLost: (lost: LostAddress) => void;
+  /** The address was written by the gate at boot (not one the reader brought): a view chosen since is not undone by it. */
+  readonly fromBoot?: boolean;
 }): void {
   const app = useApp();
   const { mode, ready } = args;
@@ -40,5 +42,5 @@ export function useWindowAddress(args: {
       },
     };
   }, [app]);
-  useAddress(host, mode, ready, args.lost, args.setLost);
+  useAddress(host, mode, ready, args.lost, args.setLost, args.fromBoot === true);
 }

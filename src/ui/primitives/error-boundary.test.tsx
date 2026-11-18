@@ -49,6 +49,26 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('fine now')).toBeTruthy();
   });
 
+  it('the screen has real buttons, Reload first and primary; and it tells its owner that it is showing (step 8.4g Part B, P3)', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    shouldThrow = true;
+    const states: boolean[] = [];
+    render(
+      <ErrorBoundary label="The dataset panel" backUp={() => undefined} onFailChange={(failed) => states.push(failed)}>
+        <Bomb />
+      </ErrorBoundary>,
+    );
+    const backUp = await screen.findByRole('button', { name: 'Back up now' });
+    const buttons = screen.getAllByRole('button').filter((b) => b.closest('summary') === null);
+    expect(buttons.map((b) => b.textContent)).toEqual(['Reload', 'Back up now']);
+    expect(buttons[0]?.getAttribute('data-kind')).toBe('primary');
+    expect(backUp.getAttribute('data-kind')).toBe('secondary');
+    expect(states.at(-1)).toBe(true);
+    shouldThrow = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Reload' }));
+    expect(states.at(-1)).toBe(false);
+  });
+
   it('keeps the plain fallback when the full screen cannot be loaded', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.doMock('./error-screen', () => {

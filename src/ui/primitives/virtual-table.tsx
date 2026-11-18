@@ -8,6 +8,7 @@
  */
 import { useVirtualizer, defaultRangeExtractor, type Range } from '@tanstack/react-virtual';
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { LIST_KEYS } from './list-keys';
 import styles from './virtual-table.module.css';
 
 export interface TableColumn<T> {
@@ -91,31 +92,26 @@ export function VirtualTable<T>(props: VirtualTableProps<T>) {
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>, row: T, index: number): void => {
     if (event.target !== event.currentTarget) return;
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
+    const action = LIST_KEYS[event.key]; // the table the shortcuts sheet is made from
+    if (action === undefined) return;
+    event.preventDefault();
+    switch (action) {
+      case 'next':
         return move(index + 1);
-      case 'ArrowUp':
-        event.preventDefault();
+      case 'previous':
         return move(index - 1);
-      case 'PageDown':
-        event.preventDefault();
+      case 'pageDown':
         return move(index + page);
-      case 'PageUp':
-        event.preventDefault();
+      case 'pageUp':
         return move(index - page);
-      case 'Home':
-        event.preventDefault();
+      case 'first':
         return move(0);
-      case 'End':
-        event.preventDefault();
+      case 'last':
         return move(last);
-      case 'Enter':
-        event.preventDefault();
+      case 'enter':
         if (props.onRowEnter !== undefined) return props.onRowEnter(row);
         return props.onRowOpen?.(row);
-      case ' ':
-        event.preventDefault();
+      case 'open':
         return props.onRowOpen?.(row);
     }
   };

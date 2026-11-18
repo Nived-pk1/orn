@@ -6,9 +6,9 @@ import styles from './error-boundary.module.css';
 export function ErrorScreen(props: { readonly label: string; readonly failure: string; readonly onReload: () => void; readonly backUp?: (() => void) | undefined }) {
   return (
     <section role="alert" aria-label={props.label} className={styles.screen}>
-      <EmptyState action={{ label: 'Reload', onClick: props.onReload }}>Something went wrong on this screen. Your saved data is safe.</EmptyState>
+      <EmptyState action={{ label: 'Reload', onClick: props.onReload, primary: true }}>Something went wrong on this screen. Your saved data is safe.</EmptyState>
       {props.backUp === undefined ? null : (
-        <Button variant="quiet" onClick={props.backUp}>
+        <Button onClick={props.backUp}>
           Back up now
         </Button>
       )}

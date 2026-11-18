@@ -43,6 +43,24 @@ describe('SettingsPage', () => {
     rerender(<SettingsPage appearance={store()} exam={null} />);
     expect(screen.queryByRole('button', { name: 'Back up' })).toBeNull();
   });
+  it('Keyboard shortcuts, Clear recent and the note that starred and recent stay in this browser (step 8.4g Part B, G3 and G5)', () => {
+    const shortcuts = vi.fn();
+    const clear = vi.fn();
+    render(<SettingsPage appearance={store()} exam={null} onShortcuts={shortcuts} recent={{ count: 3, onClear: clear }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Keyboard shortcuts' }));
+    expect(shortcuts).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Clear recent' }));
+    expect(clear).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Starred and recent are kept in this browser only.')).toBeTruthy();
+  });
+  it('Clear recent says there is nothing to clear when none was opened; nothing of this shows without the handlers', () => {
+    const { rerender } = render(<SettingsPage appearance={store()} exam={null} recent={{ count: 0, onClear: () => undefined }} />);
+    expect(screen.getByRole('button', { name: 'Clear recent' }).getAttribute('aria-disabled')).toBe('true');
+    rerender(<SettingsPage appearance={store()} exam={null} />);
+    expect(screen.queryByRole('button', { name: 'Clear recent' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Keyboard shortcuts' })).toBeNull();
+    expect(screen.queryByText(/kept in this browser only/)).toBeNull();
+  });
   it('a read-only tab says the choice is kept for this session only', () => {
     const s = createAppearanceStore({ stored: undefined, mode: () => 'read_only', save: () => Promise.resolve() }, timers);
     render(<SettingsPage appearance={s} exam={null} />);

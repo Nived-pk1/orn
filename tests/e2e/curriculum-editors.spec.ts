@@ -127,7 +127,7 @@ async function phoneWalk(page: Page, device: string): Promise<void> {
   await openPhoneApp(page);
   await page.getByRole('button', { name: 'Load demo dataset' }).tap();
   await expect(page.getByRole('region', { name: 'Families' })).toBeVisible();
-  await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Search' }).tap();
+  await page.getByRole('button', { name: 'Search', exact: true }).first().tap();
   await expect(palette(page)).toBeVisible();
   await searchFor(page, 'Diazotisation of aniline');
   await palette(page).locator('[role="option"][data-record-id="rxn_aniline-diazotisation"]').tap();

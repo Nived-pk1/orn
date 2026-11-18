@@ -56,6 +56,7 @@ export function ChaptersView(props: { readonly ports: ChaptersPorts }) {
               </button>
             )}
           </header>
+          {ports.renderTop?.()}
           {gone ? <p className={styles.notice} role="status">{GONE_WORDS}</p> : null}
           <ChapterList ports={ports} list={list} examName={only ? examName : undefined} onShowAll={() => ports.ui.exam.getState().setMode('everything')} />
         </>

@@ -4,11 +4,11 @@
  * chosen (no store changes then, so the effect on the tab never runs: the press itself leaves it).
  */
 import { useCallback, useEffect, type Dispatch, type SetStateAction } from 'react';
-import { CHAPTERS_MODE, EXPLORER_MODES, NAVIGATOR_MODE, SETTINGS_MODE } from './modes';
+import { CHAPTERS_MODE, EXPLORER_MODES, NAVIGATOR_MODE, SETTINGS_MODE, STARRED_MODE } from './modes';
 
-/** The mode after a press on `tab` while `current` is shown: Settings gives way to the tab's mode, every other mode stays. Pure. */
+/** The mode after a press on `tab` while `current` is shown: Settings and Starred give way to the tab's mode, every other mode stays. Pure. */
 export function modeAfterPhoneTab(current: string, tab: string, explorerMode: () => string): string {
-  if (current !== SETTINGS_MODE) return current;
+  if (current !== SETTINGS_MODE && current !== STARRED_MODE) return current;
   return tab === 'explore' ? explorerMode() : tab === 'chapters' ? CHAPTERS_MODE : NAVIGATOR_MODE;
 }
 

@@ -205,7 +205,7 @@ test.describe('the error screen (G7)', () => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.waitForTimeout(300);
     await page.screenshot({ path: 'screenshots/8.4g/A/error-screen-dark.png' });
-    await page.route('**/assets/settings-host-*.js', (route) => route.continue()); // the files are there again (the later route wins)
+    await page.unroute('**/assets/settings-host-*.js'); // the files are there again: the route is REMOVED before Reload (step 8.4g Part B, P6)
     const reloaded = page.waitForEvent('load');
     await page.getByRole('button', { name: 'Reload' }).click();
     await reloaded;

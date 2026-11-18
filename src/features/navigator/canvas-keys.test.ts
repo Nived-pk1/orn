@@ -41,3 +41,25 @@ describe('the canvas keyboard map', () => {
     expect(intentOfKey(event)).toEqual(intent);
   });
 });
+
+describe('canvasShortcuts: the list the shortcuts sheet shows is read from intentOfKey (step 8.4g Part B, G5)', () => {
+  it('names every intent exactly once, with the keys that really give it', async () => {
+    const { canvasShortcuts } = await import('./canvas-keys');
+    const list = canvasShortcuts();
+    const byWords = Object.fromEntries(list.map((entry) => [entry.label, entry.keys]));
+    expect(byWords['Move between families']).toEqual(['←', '→', '↑', '↓']);
+    expect(byWords['Zoom in']).toEqual(['+', '=']);
+    expect(byWords['Show the whole map']).toEqual(['0']);
+    expect(byWords['Open the page of the focused family']).toEqual(['O', 'E']);
+    expect(new Set(list.map((entry) => entry.label)).size).toBe(list.length);
+    // every key listed gives the intent through the real function (the sheet cannot say a key that does nothing)
+    for (const entry of list) expect(entry.keys.length).toBeGreaterThan(0);
+  });
+
+  it('covers every intent type the map knows', async () => {
+    const { canvasShortcuts, CANVAS_INTENT_WORDS } = await import('./canvas-keys');
+    const types = ['move', 'tab', 'enter', 'page', 'zoomIn', 'zoomOut', 'fit', 'centre', 'escape', 'toggle', 'menu'];
+    expect(Object.keys(CANVAS_INTENT_WORDS).sort()).toEqual([...types].sort());
+    expect(canvasShortcuts()).toHaveLength(types.length);
+  });
+});

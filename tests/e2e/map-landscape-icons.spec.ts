@@ -57,7 +57,7 @@ for (const [label, device] of [
         "Families",
         "Map",
         "Explore",
-        "Search",
+        "Starred",
       ]);
       for (const s of seen) {
         expect(
@@ -76,7 +76,7 @@ for (const [label, device] of [
         expect(s["visibility"]).toBe("visible");
       }
       // pixels: the icon's own box is not one flat colour (a mask that has not painted shows the button's background only)
-      for (const name of ["Chapters", "Families", "Map", "Explore", "Search"]) {
+      for (const name of ["Chapters", "Families", "Map", "Explore", "Starred"]) {
         const item = page
           .getByRole("navigation", { name: "Home" })
           .getByRole("button", { name, exact: true });
@@ -109,7 +109,7 @@ for (const [label, device] of [
           `${name}: the icon paints more than one colour`,
         ).toBeGreaterThan(2);
       }
-      for (const name of ["Chapters", "Families", "Map", "Explore", "Search"])
+      for (const name of ["Chapters", "Families", "Map", "Explore", "Starred"])
         await expect(
           page
             .getByRole("navigation", { name: "Home" })

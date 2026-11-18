@@ -79,6 +79,15 @@ describe('address and state (step 8.4g, G1)', () => {
     expect(ui.selection.getState().selected).toBeNull();
   });
 
+  it('a plain view address at the START of a visit keeps what the visit saved (a reload comes back to the family it had open)', () => {
+    const { h, ui, inspector } = host();
+    ui.family.getState().openFamily('cls_1');
+    inspector.getState().open({ kind: 'class', id: 'cls_1' });
+    expect(applyAddress(h, parseAddress('#/map'), true)).toBe('ok');
+    expect(ui.family.getState().open).toBe('cls_1');
+    expect(currentAddress('navigator', h)).toEqual({ t: 'family', id: 'cls_1' });
+  });
+
   it('opens a page of each page view', () => {
     const { h, ui, mode } = host();
     expect(apply(h, '#/chapters/top_a')).toBe('ok');

@@ -18,7 +18,7 @@ export type Address =
 export type Parsed = Address | { readonly t: 'none' } | { readonly t: 'bad' };
 
 const SLUGS: Readonly<Record<string, string>> = { navigator: 'map' };
-const VIEWS = ['navigator', 'chapters', 'dataset', 'reactions', 'precursors', 'reagents', 'named', 'mechanisms', 'syllabus', 'settings', 'workbench', 'review'];
+const VIEWS = ['navigator', 'chapters', 'dataset', 'reactions', 'precursors', 'reagents', 'named', 'mechanisms', 'syllabus', 'settings', 'starred', 'workbench', 'review'];
 /** Views with a page of their own (the second part is the page's id). */
 export const PAGE_VIEWS: readonly string[] = ['chapters', 'reagents', 'named', 'mechanisms'];
 /** Views that can show a record in the inspector (the second and third parts are its kind and id). */

@@ -1,0 +1,8 @@
+/* The shortcuts sheet (step 8.4g Part B, G5): groups of "what it does" and its keys; the tokens only. */
+.sheet { display: flex; flex-direction: column; gap: var(--space-16); max-height: 70dvh; overflow-y: auto; padding-right: var(--space-4); }
+.heading { margin: 0 0 var(--space-8); font-size: var(--text-14); font-weight: 600; color: var(--text-2); }
+.list { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; }
+.row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-16); }
+.row dt { font-size: var(--text-14); }
+.row dd { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-4); margin: 0; }
+.key { min-width: 1.6em; padding: var(--space-4) var(--space-8); border: 1px solid var(--line); border-radius: var(--r-control); background: var(--hover); font: inherit; font-size: var(--text-12); text-align: center; white-space: nowrap; }

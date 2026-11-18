@@ -28,7 +28,7 @@ function Row(props: { readonly title: string; readonly why: string; readonly chi
   );
 }
 
-export function SettingsPage(props: { readonly appearance: AppearanceStore; readonly exam: ReactNode; readonly onBackUp?: () => void }) {
+export function SettingsPage(props: { readonly appearance: AppearanceStore; readonly exam: ReactNode; readonly onBackUp?: () => void; /** Opens the keyboard shortcuts sheet (step 8.4g Part B, G5). */ readonly onShortcuts?: () => void; /** The records opened last: how many, and how to clear them (G3). */ readonly recent?: { readonly count: number; readonly onClear: () => void } }) {
   const { appearance } = props;
   const theme = useStore(appearance, (s) => s.theme);
   const reduceMotion = useStore(appearance, (s) => s.reduceMotion);
@@ -60,6 +60,26 @@ export function SettingsPage(props: { readonly appearance: AppearanceStore; read
               {props.exam}
             </Row>
           </ul>
+        </section>
+      )}
+      {props.onShortcuts === undefined && props.recent === undefined ? null : (
+        <section aria-labelledby="settings-study" className={styles.group}>
+          <h2 id="settings-study" className={styles.groupTitle}>Study</h2>
+          <ul className={styles.rows}>
+            {props.onShortcuts === undefined ? null : (
+              <Row id="shortcuts" title="Keyboard shortcuts" why="Shows every key the app understands.">
+                <Button onClick={props.onShortcuts}>Keyboard shortcuts</Button>
+              </Row>
+            )}
+            {props.recent === undefined ? null : (
+              <Row id="recent" title="Recent records" why="Forgets the list of records you opened last.">
+                <Button onClick={props.recent.onClear} {...(props.recent.count === 0 ? { unavailable: 'No record was opened yet' } : {})}>
+                  Clear recent
+                </Button>
+              </Row>
+            )}
+          </ul>
+          {props.recent === undefined ? null : <p className={styles.note}>Starred and recent are kept in this browser only.</p>}
         </section>
       )}
       {props.onBackUp === undefined ? null : (

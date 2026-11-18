@@ -12,10 +12,13 @@ import { SavedRouteCard } from '@/features/precursor-explorer';
 import type { RecordRef } from '@/core/schema';
 import { EDITING } from '@/app/edition';
 import { useApp } from './context';
+import { useFace } from './my-records-face';
+import { ContinueStrip } from './continue-strip';
 
 export function ChaptersHost(props: { readonly openPane: () => void; readonly onNamed: (namedReactionId: string) => void; readonly onMechanism: (mechanismId: string) => void; readonly onSyllabus: () => void }) {
   const { openPane, onNamed, onMechanism, onSyllabus } = props;
-  const { inspector } = useApp();
+  const { inspector, mine } = useApp();
+  const face = useFace(mine);
   const { ports } = useNavigator();
   const chapters = useMemo<ChaptersPorts>(() => {
     const nameOf = (ref: RecordRef): string => {
@@ -54,7 +57,8 @@ export function ChaptersHost(props: { readonly openPane: () => void; readonly on
       timers: ports.timers,
       log: ports.log,
       editing: EDITING,
+      renderTop: () => <ContinueStrip state={ports.store.getState()} mine={face} onOpen={(ref) => select(ref)} />,
     };
-  }, [ports, inspector, openPane, onNamed, onMechanism, onSyllabus]);
+  }, [ports, inspector, face, openPane, onNamed, onMechanism, onSyllabus]);
   return <ChaptersView ports={chapters} />;
 }

@@ -56,4 +56,6 @@ export interface ChaptersPorts {
   readonly log: (type: string, message: string) => void;
   /** True in Studio (7.3c A2, A3): "No chapter yet" stays listed under an exam scope, and the concepts with no text are shown apart. The app fills it from the edition. */
   readonly editing: boolean;
+  /** What the app draws above the list of chapters ("Continue where you left off", step 8.4g Part B). Absent: nothing. */
+  renderTop?(): ReactNode;
 }

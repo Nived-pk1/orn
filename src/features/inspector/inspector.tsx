@@ -123,7 +123,7 @@ function RecordBody(props: { readonly refOf: RecordRef }) {
   };
   const kind = props.refOf.kind;
   const goNext: GoNextAction[] = [
-    ...place.actions.map((action) => ({ label: action.label, run: after(action.run) })),
+    ...place.actions.map((action) => ({ label: action.label, run: after(action.run), })),
     ...(host.showReagent === undefined || kind !== 'reagent' ? [] : [{ label: 'Show in Reagents', run: after(() => host.showReagent?.(props.refOf)) }]),
     ...(host.showNamed === undefined || kind !== 'named_reaction' ? [] : [{ label: 'Show in Named reactions', run: after(() => host.showNamed?.(props.refOf)) }]),
     ...(host.showMechanism === undefined || kind !== 'mechanism' ? [] : [{ label: 'Show in Mechanisms', run: after(() => host.showMechanism?.(props.refOf)) }]),

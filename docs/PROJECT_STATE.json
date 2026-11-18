@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-17",
+  "lastUpdated": "2026-11-18",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-16",
     "workerVersion": "9698b43a-8a8f-4879-b043-e73a275a9d79"
   },
-  "nextStep": "8.4g Part B",
-  "nextStepTitle": "Step 8.4g Part A DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4g Part A'; links, Copy link, Report a mistake, error and not-found screens, Review find, placements, Settings pane, Fit state; ADR-047). Next: 8.4g Part B (Starred, Recent, first-run tour, shortcuts sheet; closes row 8.4), then the test-speed step. Step 8.4m2 DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4m2'; B2 and B3 fixed, B1 NOT reproduced, awaiting review). Step 8.4m DONE 2026-11-16 (docs/PROGRESS.md 'Step 8.4m'; deployed 2026-11-16: Study 2af04982, Studio 9698b43a). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix; also the Imported toast over the key reserve), then the test-speed step (flaky: WebKit map-fit:66, Firefox map-free-areas:137, Chromium exam-editors:64).",
+  "nextStep": "C, then T, then 8.5",
+  "nextStepTitle": "Step 8.4g DONE 2026-11-18 and row 8.4 CLOSED (docs/PROGRESS.md 'Step 8.4g Part A', 'Step 8.4g Part B'; ADR-047, ADR-048): links, Copy link, Report a mistake, error and not-found screens, Starred, Recent, the first-run tour, the shortcuts sheet. Next: step C, then T (the test-speed step: the flaky list in docs/PROGRESS.md), then 8.5 (arrow-pushing mechanism drawings). Step 8.4g Part A DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4g Part A'; links, Copy link, Report a mistake, error and not-found screens, Review find, placements, Settings pane, Fit state; ADR-047). Next: 8.4g Part B (Starred, Recent, first-run tour, shortcuts sheet; closes row 8.4), then the test-speed step. Step 8.4m2 DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4m2'; B2 and B3 fixed, B1 NOT reproduced, awaiting review). Step 8.4m DONE 2026-11-16 (docs/PROGRESS.md 'Step 8.4m'; deployed 2026-11-16: Study 2af04982, Studio 9698b43a). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix; also the Imported toast over the key reserve), then the test-speed step (flaky: WebKit map-fit:66, Firefox map-free-areas:137, Chromium exam-editors:64).",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -734,5 +734,32 @@
       "study": "ab83544d-76f6-47b9-b426-822cea16d6f2",
       "studio": "e6e8e1ea-09e4-47df-8919-6f5c3444fe24"
     }
+  },
+  "step84g": {
+    "closed": "2026-11-18",
+    "adr": [
+      "ADR-047",
+      "ADR-048"
+    ],
+    "initialJsGzipBytes": {
+      "study": 338107,
+      "studio": 342164,
+      "partAClose": {
+        "study": 336625,
+        "studio": 340716
+      },
+      "ceiling": {
+        "study": 338125,
+        "studio": 342216
+      }
+    },
+    "uiStateKeys": [
+      "starred",
+      "recent",
+      "tourDone"
+    ],
+    "backup": "Starred and Recent are NOT in the backup file (import format unchanged); Settings says so",
+    "e2e": "Chromium full run 494 passed, 41 skipped, 0 failed; Firefox + WebKit round of the touched specs 209 passed, 0 failed",
+    "next": "C, then T, then 8.5"
   }
 }

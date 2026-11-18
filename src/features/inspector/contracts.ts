@@ -57,6 +57,13 @@ export interface InspectorPorts {
   readonly log: (type: string, message: string) => void;
 }
 
+/** The starred records (step 8.4g Part B, G2): the window owns the list and its limit; the inspector draws the star. */
+export interface StarsPort {
+  isStarred(ref: RecordRef): boolean;
+  toggle(ref: RecordRef): void;
+  subscribe(listener: () => void): () => void;
+}
+
 /** What the window tells the inspector about the canvas (the inspector knows no other feature). */
 export interface InspectorHost {
   /** Opens the inspector pane (or the drawer / sheet at the smaller breakpoints) if it is closed. */
@@ -81,6 +88,8 @@ export interface InspectorHost {
   showArrowReactions?(ends: { readonly from: string; readonly to: string }): void;
   /** The mail address a "Report a mistake" goes to and the app version it names (step 8.4g, G6). Absent: the item is not shown. */
   readonly report?: { readonly address: string; readonly version: string };
+  /** The starred records (step 8.4g Part B, G2). Absent: no star button. */
+  readonly stars?: StarsPort;
   /** Studio (8.1): the inspector adds the closed "For authors" section and the author lines. Absent: true exactly when `editNames` is wired. */
   readonly authorSections?: boolean;
   /** True while the navigator is the view on the canvas (a record can then have a place in it). */

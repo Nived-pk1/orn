@@ -51,6 +51,8 @@ export interface SearchPorts {
   /** Whether the index has followed the latest committed change. Absent: always current. An answer from an index that is catching up is never final. */
   indexState?(): IndexState;
   factsOf(ref: RecordRef): HitFacts;
+  /** The records opened last, newest first (step 8.4g Part B, G3): listed as "Recent" while the box is empty. Absent: no such list. */
+  recentRecords?(): readonly { readonly ref: RecordRef; readonly title: string }[];
   /** Opens a result: shows it in the inspector and places it (a family on the map, a reaction on its family page). */
   open(ref: RecordRef, title: string): void;
   /**

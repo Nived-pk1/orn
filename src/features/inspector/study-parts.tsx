@@ -3,7 +3,7 @@
  * go-next buttons and the connected cards. Each draws a value the model made; the only state is "is it expanded".
  */
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, Icon, ListRow, ListRows, Menu } from '@/ui/primitives';
+import { Button, ListRow, ListRows } from '@/ui/primitives';
 import { useInspectorEnv } from './env';
 import type { CardGroup, Chip, WatchOut } from './model/study-model';
 import { RichText } from './rich-text';
@@ -112,10 +112,10 @@ export interface GoNextAction {
 }
 
 /**
- * Up to three buttons on ONE row, the rest in a "⋯" menu named "More actions" (step 8.4a). A button's words never wrap (step 8.4b): when the row does
+ * Up to three buttons on ONE row, the rest are handed to the record's ONE "⋯" menu (step 8.4a; one menu since step 8.4g Part B). A button's words never wrap (step 8.4b): when the row does
  * not fit, the last button moves into the menu, one at a time, and a wider pane tries all three again. On a phone the first two are in the peek.
  */
-export function GoNext(props: { readonly actions: readonly GoNextAction[] }) {
+export function GoNext(props: { readonly actions: readonly GoNextAction[]; readonly onOverflow?: (rest: readonly GoNextAction[]) => void }) {
   const row = useRef<HTMLDivElement>(null);
   const most = Math.min(MAX_GO_NEXT, props.actions.length);
   const [shown, setShown] = useState(most);
@@ -137,9 +137,17 @@ export function GoNext(props: { readonly actions: readonly GoNextAction[] }) {
     observer.observe(el);
     return () => observer.disconnect();
   }, [most]);
-  if (props.actions.length === 0) return null;
   const first = props.actions.slice(0, shown);
   const rest = props.actions.slice(shown);
+  const restKey = rest.map((action) => action.label).join('|');
+  const { onOverflow } = props;
+  // the actions that do not fit go to the record's ONE "⋯" menu (step 8.4g Part B, P1), never a second menu
+  useEffect(() => {
+    onOverflow?.(rest);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restKey, onOverflow]);
+  useEffect(() => () => onOverflow?.([]), [onOverflow]);
+  if (props.actions.length === 0) return null;
   return (
     <div ref={row} className={styles.goNext} role="group" aria-label="Go next">
       {first.map((action, index) => (
@@ -147,11 +155,6 @@ export function GoNext(props: { readonly actions: readonly GoNextAction[] }) {
           {action.label}
         </Button>
       ))}
-      {rest.length === 0 ? null : (
-        <span data-sheet-full="">
-          <Menu label="More actions" trigger={<Icon name="more-horizontal" />} items={rest.map((action) => ({ id: action.label, label: action.label, onSelect: action.run }))} />
-        </span>
-      )}
     </div>
   );
 }

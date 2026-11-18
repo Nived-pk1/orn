@@ -48,6 +48,10 @@ export interface CommandDeps {
   /** The canonical state the topic placements ("<record> in <topic>") are made from, and how to open one in the inspector (step 8.4g, G9). Absent: none are listed. */
   readonly state?: (() => CanonicalState) | undefined;
   readonly openPlacement?: ((id: string) => void) | undefined;
+  /** Star for revision on the selected record (step 8.4g Part B, G2): `run` is absent when no record is selected. Absent: the window keeps no stars. */
+  readonly star?: { readonly starred: boolean; readonly run: (() => void) | undefined } | undefined;
+  /** Opens the keyboard shortcuts sheet (G5). Absent: no such command. */
+  readonly showShortcuts?: (() => void) | undefined;
   readonly ui: NavigatorUiStores;
   readonly exams: ExamOptions;
   /** The views of the rail for this reader; the ones with no entry of their own (Dataset, Workbench, Review) get a "Go to" command that just opens them. */
@@ -122,6 +126,8 @@ export function buildCommands(deps: CommandDeps): readonly PaletteCommand[] {
     ...(deps.editNames === undefined ? [] : [withReason({ id: 'edit-names', title: 'Edit the selected record', keywords: ['rename', 'alias', 'name', 'edit', 'draft', 'author'], run: deps.editNames.run }, deps.editNames.reason)]),
     ...(deps.newKinds ?? []).map((command) => withReason({ id: command.id, title: command.title, keywords: command.keywords, run: command.run }, command.reason)),
     ...structureCommands,
+    ...(deps.star === undefined ? [] : [withReason({ id: 'star', title: deps.star.starred ? 'Remove star' : 'Star for revision', keywords: ['star', 'starred', 'revise', 'revision', 'keep', 'bookmark', 'favourite'], run: () => deps.star?.run?.() }, deps.star.run === undefined ? 'no record is selected' : undefined)]),
+    ...(deps.showShortcuts === undefined ? [] : [{ id: 'shortcuts', title: 'Show keyboard shortcuts', keywords: ['keys', 'keyboard', 'shortcuts', 'help', 'hotkeys'], run: deps.showShortcuts }]),
     ...(deps.state === undefined || deps.openPlacement === undefined ? [] : placementsOf(deps.state()).map((placement) => ({ id: `placement:${placement.id}`, title: placement.title, keywords: ['topic', 'placement', 'syllabus', 'mapping'], run: () => deps.openPlacement?.(placement.id) }))),
     withReason({ id: 'fit', title: 'Fit', keywords: ['zoom', 'map', 'view'], run: () => view?.fit() }, zoomReason),
     withReason({ id: 'zoom-in', title: 'Zoom in', keywords: ['map', 'view'], run: () => view?.zoomIn() }, zoomReason),
