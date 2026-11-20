@@ -8,6 +8,9 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 
 const MAX_ID_LENGTH = 512;
 
+export type ChainSteps = 3 | 4 | 5;
+export const CHAIN_STEP_CHOICES: readonly ChainSteps[] = [3, 4, 5];
+
 export interface MapState {
   /** The chapter (a topic id) whose reactions the map is built from; null: all chapters. */
   readonly chapterId: string | null;
@@ -20,6 +23,9 @@ export interface MapState {
   readonly fitted: boolean;
   /** Full map is on (step 8.4e, Part D): the frame is hidden and the map fills the screen. Never saved: a reload opens the normal map. */
   readonly fullMap: boolean;
+  /** The most steps "From A to B" looks for: 3, 4 or 5 (step C5). Saved as an optional field of the map entry (absent means 3). */
+  readonly chainSteps: ChainSteps;
+  setChainSteps(steps: ChainSteps): void;
   setFullMap(on: boolean): void;
   setFitted(fitted: boolean): void;
   setChapter(chapterId: string | null): void;
@@ -29,7 +35,7 @@ export interface MapState {
 }
 export type MapStore = StoreApi<MapState>;
 
-export function createMapStore(initial: { readonly chapterId?: string | null; readonly showUnclassified?: boolean; readonly fitted?: boolean; readonly focusId?: string | null } = {}): MapStore {
+export function createMapStore(initial: { readonly chapterId?: string | null; readonly showUnclassified?: boolean; readonly fitted?: boolean; readonly chainSteps?: ChainSteps; readonly focusId?: string | null } = {}): MapStore {
   return createStore<MapState>((set) => ({
     chapterId: initial.chapterId ?? null,
     showUnclassified: initial.showUnclassified ?? false,
@@ -37,6 +43,8 @@ export function createMapStore(initial: { readonly chapterId?: string | null; re
     chainOpen: false,
     fitted: initial.fitted ?? false,
     fullMap: false,
+    chainSteps: initial.chainSteps ?? 3,
+    setChainSteps: (chainSteps) => set({ chainSteps }),
     setFullMap: (fullMap) => set({ fullMap }),
     setFitted: (fitted) => set({ fitted }),
     // another chapter is another set of arrows: a focus from the old set would mislead
@@ -57,6 +65,8 @@ export interface ParsedMap {
   readonly fitRule: number | null;
   /** Step 8.4b: the saved view was the automatic fit (optional field; absent means no). */
   readonly fitted: boolean;
+  /** Step C5: the saved "From A to B" step limit (optional field; absent when not stored or unreadable). */
+  readonly chainSteps?: ChainSteps;
   readonly damaged: readonly string[];
 }
 
@@ -84,5 +94,10 @@ export function parseMap(raw: unknown): ParsedMap {
     if (typeof raw.fitted === 'boolean') fitted = raw.fitted;
     else damaged.push('map.fitted');
   }
-  return { chapterId, showUnclassified, fitRule, fitted, damaged };
+  let chainSteps: ChainSteps | undefined;
+  if (raw.chainSteps !== undefined) {
+    if ((CHAIN_STEP_CHOICES as readonly unknown[]).includes(raw.chainSteps)) chainSteps = raw.chainSteps as ChainSteps;
+    else damaged.push('map.chainSteps');
+  }
+  return { chapterId, showUnclassified, fitRule, fitted, ...(chainSteps === undefined ? {} : { chainSteps }), damaged };
 }

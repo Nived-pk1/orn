@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Runs } from '@/render/equation';
 import { partsToRuns } from '@/render/scene';
 import { useStore } from 'zustand';
+import { CHAIN_STEP_CHOICES, type ChainSteps } from '@/ui/state';
 import type { RecordRef } from '@/core/schema';
 // deep import: the chain search is only for this lazy chunk (a barrel would pull it into the first load)
 import { CHAIN_MAX_STEPS, familyChains, familyEdgesOf, type FamilyChain } from '@/core/graph/navigator/chains';
@@ -33,6 +34,9 @@ export interface ChainPanelProps {
   readonly onOpenStep: (from: string, to: string) => void;
   readonly onClose: () => void;
   readonly phone?: boolean;
+  /** The most steps a chain may have (step C5): 3, 4 or 5; absent means 3 and no choice is offered. */
+  readonly steps?: ChainSteps;
+  readonly onSteps?: (steps: ChainSteps) => void;
   /** The active exam scope (step 8.2b-fix, E4): only a reaction it accepts can be a step. Absent: All exams, every reaction counts. */
   readonly inScope?: ((reactionId: string) => boolean) | undefined;
   /** The exam's name for the words when the only chains are outside the scope. */
@@ -41,6 +45,7 @@ export interface ChainPanelProps {
 
 export function ChainPanel(props: ChainPanelProps) {
   const { families, facts, onChain, onClose } = props;
+  const limit = props.steps ?? CHAIN_MAX_STEPS;
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [picked, setPicked] = useState(0);
@@ -50,13 +55,13 @@ export function ChainPanel(props: ChainPanelProps) {
   const tones = useMemo(() => new Map(families.map((f) => [f.id, f.tone] as const)), [families]);
   const toneOf = (id: string): string | undefined => tones.get(id);
   const edges = useMemo(() => familyEdgesOf(props.pairs(), new Set([UNCLASSIFIED_HUB_ID]), props.inScope), [props.pairs, props.inScope]); // eslint-disable-line react-hooks/exhaustive-deps -- `pairs` and `inScope` are the inputs
-  const result = useMemo(() => (from === '' || to === '' ? undefined : familyChains(edges, from, to, { maxSteps: CHAIN_MAX_STEPS, nameOf })), [edges, from, to, names]); // eslint-disable-line react-hooks/exhaustive-deps -- nameOf reads `names`
+  const result = useMemo(() => (from === '' || to === '' ? undefined : familyChains(edges, from, to, { maxSteps: limit, nameOf })), [edges, from, to, names, limit]); // eslint-disable-line react-hooks/exhaustive-deps -- nameOf reads `names`
   // under a scope with no chain: is there one outside it? Then the words say so (and show nothing of it)
   const outside = useMemo(() => {
     if (props.inScope === undefined || result === undefined || !result.ok || result.chains.length > 0) return false;
-    const all = familyChains(familyEdgesOf(props.pairs(), new Set([UNCLASSIFIED_HUB_ID])), from, to, { maxSteps: CHAIN_MAX_STEPS, nameOf });
+    const all = familyChains(familyEdgesOf(props.pairs(), new Set([UNCLASSIFIED_HUB_ID])), from, to, { maxSteps: limit, nameOf });
     return all.ok && all.chains.length > 0;
-  }, [result, from, to]); // eslint-disable-line react-hooks/exhaustive-deps -- recomputed with the result
+  }, [result, from, to, limit]); // eslint-disable-line react-hooks/exhaustive-deps -- recomputed with the result
   const chains: readonly FamilyChain[] = result?.ok === true ? result.chains : [];
   const counts = useMemo(() => new Map(edges.map((edge) => [`${edge.from}>${edge.to}`, edge.reactionIds.length] as const)), [edges]);
   const cards = chainCardsOf(chains, picked, { nameOf, reactionsOf: (a, b) => counts.get(`${a}>${b}`) ?? 0 });
@@ -119,10 +124,21 @@ export function ChainPanel(props: ChainPanelProps) {
           Swap
         </Button>
       </div>
+      {props.onSteps === undefined ? null : (
+        <fieldset className={styles.stepsChoice} aria-label="Steps">
+          <legend>Steps</legend>
+          {CHAIN_STEP_CHOICES.map((n) => (
+            <label key={n} className={styles.stepsOption} data-on={n === limit ? '' : undefined}>
+              <input type="radio" name="chain-steps" value={n} checked={n === limit} onChange={() => props.onSteps?.(n)} aria-label={String(n)} />
+              <span aria-hidden="true">{n}</span>
+            </label>
+          ))}
+        </fieldset>
+      )}
       {result === undefined ? null : !result.ok ? (
         <p role="status">{result.reason}</p>
       ) : chains.length === 0 ? (
-        <EmptyState inline role="status">{outside && props.scopeName !== undefined ? `No chain within ${props.scopeName} in ${CHAIN_MAX_STEPS} steps or fewer.` : `No chain of ${CHAIN_MAX_STEPS} steps or fewer.`}</EmptyState>
+        <EmptyState inline role="status">{outside && props.scopeName !== undefined ? `No chain within ${props.scopeName} in ${limit} steps or fewer.` : `No chain of ${limit} steps or fewer.`}</EmptyState>
       ) : (
         <>
           <ol className={styles.chains} aria-label="Chains">
@@ -153,7 +169,9 @@ export function ChainPanel(props: ChainPanelProps) {
               </li>
             ))}
           </ol>
+          {result.total > chains.length ? <p className={styles.note}>{`${chains.length} of ${result.total} chains`}</p> : null}
           {result.truncated ? <p className={styles.note}>The search stopped early: there may be more chains.</p> : null}
+          <p className={styles.note}>A chain of families: check that each step fits your compound.</p>
           {props.phone === true && chains.length > 1 ? <Button onClick={() => setExpanded((open) => !open)}>{expanded ? 'Show fewer' : `Show all ${chains.length}`}</Button> : null}
         </>
       )}
@@ -172,5 +190,6 @@ export function ChainPanelInScope(props: Omit<ChainPanelProps, 'inScope' | 'scop
     return (id: string): boolean => scopeOf({ kind: 'reaction', id } as RecordRef) !== 'outside';
   }, [ports, active, only]);
   const scopeName = useMemo(() => scopeNameOf(ports.store.getState(), active), [ports, active]);
-  return <ChainPanel {...rest} inScope={inScope} scopeName={scopeName} />;
+  const steps = useStore(ports.ui.map, (s) => s.chainSteps);
+  return <ChainPanel {...rest} inScope={inScope} scopeName={scopeName} steps={steps} onSteps={ports.ui.map.getState().setChainSteps} />;
 }

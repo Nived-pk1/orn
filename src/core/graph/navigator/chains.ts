@@ -6,6 +6,8 @@
 import { compareStrings } from '../../indexes/table';
 
 export const CHAIN_MAX_STEPS = 3;
+/** The most steps the panel lets the user choose (step C5). */
+export const CHAIN_MAX_STEPS_LIMIT = 5;
 export const CHAIN_MAX_CHAINS = 5;
 /** The most paths the search visits; past it the answer says it may be incomplete. */
 export const CHAIN_PATH_BUDGET = 1000;
@@ -22,7 +24,7 @@ export interface FamilyChain {
   readonly steps: readonly FamilyEdge[];
 }
 
-export type ChainResult = { readonly ok: true; readonly chains: readonly FamilyChain[]; readonly truncated: boolean } | { readonly ok: false; readonly reason: string };
+export type ChainResult = { readonly ok: true; readonly chains: readonly FamilyChain[]; /** How many chains were found (a lower bound when `truncated`); `chains` may be fewer. */ readonly total: number; readonly truncated: boolean } | { readonly ok: false; readonly reason: string };
 
 interface PairLike {
   readonly from: string;
@@ -51,7 +53,7 @@ export function familyChains(
   options: { readonly maxSteps?: number; readonly maxChains?: number; readonly nameOf?: (id: string) => string } = {},
 ): ChainResult {
   if (from === to) return { ok: false, reason: 'Choose two different families.' };
-  const maxSteps = options.maxSteps ?? CHAIN_MAX_STEPS;
+  const maxSteps = Math.min(options.maxSteps ?? CHAIN_MAX_STEPS, CHAIN_MAX_STEPS_LIMIT);
   const maxChains = options.maxChains ?? CHAIN_MAX_CHAINS;
   const nameOf = options.nameOf ?? ((id: string) => id);
   const out = new Map<string, FamilyEdge[]>();
@@ -89,5 +91,5 @@ export function familyChains(
     }
     return 0;
   });
-  return { ok: true, chains: found.slice(0, maxChains), truncated };
+  return { ok: true, chains: found.slice(0, maxChains), total: found.length, truncated };
 }

@@ -113,3 +113,18 @@ describe('full map (step 8.4e, Part D)', () => {
     expect(parseMap({ fullMap: true })).toEqual({ chapterId: null, showUnclassified: false, fitRule: null, fitted: false, damaged: [] });
   });
 });
+
+describe('the saved chain steps limit (step C5; optional field of the map entry)', () => {
+  it('starts at 3, is set to 3, 4 or 5 only, and a bad stored value falls back and is named', () => {
+    const store = createMapStore();
+    expect(store.getState().chainSteps).toBe(3);
+    store.getState().setChainSteps(5);
+    expect(store.getState().chainSteps).toBe(5);
+    expect(createMapStore({ chainSteps: 4 }).getState().chainSteps).toBe(4);
+    expect(parseMap({ chainSteps: 5 }).chainSteps).toBe(5);
+    expect('chainSteps' in parseMap({})).toBe(false);
+    const bad = parseMap({ chainSteps: 9 });
+    expect(bad.chainSteps).toBeUndefined();
+    expect(bad.damaged).toEqual(['map.chainSteps']);
+  });
+});

@@ -10,3 +10,5 @@
 - GREEN C3/C4: moves.ts producedAs (classes/ancestors), class reactant = ONE move; search.ts iterative deepening, one budget, stops when frontier closed or maxRoutes filled; explored = nodes of the last pass; rank ties end on route key. Old tests changed on purpose (moves.test member expansion, 2 search.test, 2 demo tests now see the inferred generic PCC route). Search runs in the worker (replica.ts), not the main thread.
 - Limit: a route that continued through one member's own producers of a class reactant is no longer found (spec: ONE move any <class>). Recorded in ADR-049.
 - RESUME AT: real-data route probe (C4), then C5.
+- RED C5: chains.test (total, 5 steps, budget) -> 4 failed; map-state.test (chainSteps) -> 1 failed; chain-panel.test (Steps, "5 of 23 chains", quiet line) -> 2 failed. GREEN: chains.ts `total` + CHAIN_MAX_STEPS_LIMIT 5; map store `chainSteps` (optional field of the `map` uiState entry, written only when not 3; parsed per field like `fitted`); panel radio group "Steps" 3/4/5, "n of N chains", quiet line. e2e + real-data timing still to do.
+- RESUME AT: C6.

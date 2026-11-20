@@ -146,3 +146,39 @@ describe('ChainPanel', () => {
     expect(onChain).toHaveBeenLastCalledWith(undefined);
   });
 });
+
+describe('Steps choice, the count and the quiet line (step C5)', () => {
+  const longPairs = [
+    { from: 'alk', to: 'alc', candidates: [cand('r1')] },
+    { from: 'alc', to: 'ald', candidates: [cand('r2')] },
+    { from: 'ald', to: 'iso', candidates: [cand('r3')] },
+    { from: 'iso', to: 'ket', candidates: [cand('r4')] },
+    { from: 'ket', to: 'acid', candidates: [cand('r5')] },
+  ];
+  const longFamilies = [...families, { id: 'ket', name: 'Ketones' }, { id: 'acid', name: 'Acids' }];
+  it('offers 3, 4 and 5 steps (3 chosen), and choosing 5 lists the 5-step chain', () => {
+    const onSteps = vi.fn();
+    const { rerender } = render(<ChainPanel families={longFamilies} pairs={() => longPairs} facts={facts} onChain={vi.fn()} onOpenStep={vi.fn()} onClose={vi.fn()} steps={3} onSteps={onSteps} />);
+    expect((screen.getByRole('radio', { name: '3' }) as HTMLInputElement).checked).toBe(true);
+    fireEvent.change(screen.getByRole('combobox', { name: 'From' }), { target: { value: 'alk' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'To' }), { target: { value: 'acid' } });
+    expect(screen.getByText('No chain of 3 steps or fewer.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: '5' }));
+    expect(onSteps).toHaveBeenCalledWith(5);
+    rerender(<ChainPanel families={longFamilies} pairs={() => longPairs} facts={facts} onChain={vi.fn()} onOpenStep={vi.fn()} onClose={vi.fn()} steps={5} onSteps={onSteps} />);
+    expect(screen.getByRole('button', { name: /^Alkenes → Alcohols → Aldehydes → Isolated → Ketones → Acids.*5 steps/ })).toBeTruthy();
+  });
+  it('says "5 of 23 chains" when more exist than are shown, and keeps one quiet line under the chains', () => {
+    const mids = Array.from({ length: 23 }, (_, i) => `m${i}`);
+    const many = mids.flatMap((m) => [{ from: 'alk', to: m, candidates: [cand(`a${m}`)] }, { from: m, to: 'ald', candidates: [cand(`b${m}`)] }]);
+    setup({ families: [...families, ...mids.map((m) => ({ id: m, name: m }))], pairs: () => many });
+    choose('alk', 'ald');
+    expect(screen.getByText('5 of 23 chains')).toBeTruthy();
+    expect(screen.getByText('A chain of families: check that each step fits your compound.')).toBeTruthy();
+  });
+  it('no "n of N" line when every chain is shown', () => {
+    setup();
+    choose('alk', 'ald');
+    expect(screen.queryByText(/ of \d+ chains/)).toBeNull();
+  });
+});

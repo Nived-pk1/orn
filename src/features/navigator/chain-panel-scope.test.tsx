@@ -2,7 +2,7 @@
 /** The chain panel reads the active exam scope from the map's ports (step 8.2b-fix, E4): outside reactions are not steps; All exams keeps every one. */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createActiveExamStore } from '@/ui/state';
+import { createActiveExamStore, createMapStore } from '@/ui/state';
 import { ChainPanelInScope } from './chain-panel';
 import type { NavigatorPorts } from './contracts';
 
@@ -16,7 +16,7 @@ const families = [{ id: 'a', name: 'Alkenes' }, { id: 'b', name: 'Alcohols' }];
 const pairs = [{ from: 'a', to: 'b', candidates: [{ reactionId: 'r1' }] }];
 const fakePorts = (active: boolean): NavigatorPorts => {
   const exam = createActiveExamStore(active ? ({ examId: 'exm_x', examVersionId: 'exv_x' } as never) : null);
-  return { ui: { exam }, indexes: { current: () => ({}) }, store: { getState: () => ({}) } } as unknown as NavigatorPorts;
+  return { ui: { exam, map: createMapStore() }, indexes: { current: () => ({}) }, store: { getState: () => ({}) } } as unknown as NavigatorPorts;
 };
 const show = (active: boolean) => {
   render(<ChainPanelInScope ports={fakePorts(active)} families={families} pairs={() => pairs} facts={() => undefined} onChain={() => undefined} onOpenStep={() => undefined} onClose={() => undefined} />);
