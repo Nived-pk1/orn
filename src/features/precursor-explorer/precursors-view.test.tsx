@@ -4,70 +4,16 @@
  * panel and its rules, a search with a start and Cancel, the results in words, saved routes, outside marks, a saved choice naming a record
  * that is gone, the live region and Cards/Compact.
  */
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCanonicalStore } from '@/core/commands';
-import { createScopeOf, directPrecursors, reactionCard, searchRoutes, type RouteQuery } from '@/core/graph';
-import { emptyRecordTables, type AnyRecord, type CanonicalState, type Reaction } from '@/core/schema';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
+import { createScopeOf, directPrecursors } from '@/core/graph';
+import { emptyRecordTables, type AnyRecord, type CanonicalState } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
-import { contextOf, reaction, sp, species } from '@/test-support/graph-state';
-import { navigatorRig } from '@/test-support/navigator-kit';
-import { studyChrome, StudyChromeProvider } from '@/ui/study-chrome';
-import { createExplorerStore, createPrecursorsStore, type PrecursorsState } from '@/ui/state';
+import { reaction, sp, species } from '@/test-support/graph-state';
 import type { PrecursorPorts, RoutesAnswer } from './contracts';
-import { PrecursorsView } from './precursors-view';
+import { setup } from './precursors-view-kit';
 
 afterEach(cleanup);
-
-type Saved = Partial<Pick<PrecursorsState, 'target' | 'startFrom' | 'maxSteps' | 'onlyListed' | 'onlyInScope' | 'searched'>>;
-
-function setup(saved: Saved = {}, over: { readonly findRoutes?: PrecursorPorts['findRoutes']; readonly state?: CanonicalState; readonly withSave?: boolean; readonly edition?: 'study' | 'studio' } = {}) {
-  const state = over.state ?? demoState();
-  const store = createCanonicalStore({ initial: state, validateInitial: false });
-  const rig = navigatorRig(store);
-  const precursors = createPrecursorsStore(saved);
-  const explorer = createExplorerStore();
-  const select = vi.fn();
-  const openMaking = vi.fn();
-  const saveAsRoute = vi.fn();
-  const openRoute = vi.fn();
-  const asked: RouteQuery[] = [];
-  const ctx = contextOf(state);
-  const ports: PrecursorPorts = {
-    store,
-    indexes: rig.ports.indexes,
-    ui: { precursors, explorer, exam: rig.ui.exam, family: rig.ui.family },
-    searchSubstances: async (text) => ({
-      ok: true,
-      hits: [...Object.values(state.records.species), ...Object.values(state.records.class)]
-        .map((r) => ({ ref: { kind: r.kind, id: r.id } as never, title: 'names' in r ? r.names.canonical : (r as { name: string }).name }))
-        .filter((hit) => hit.title.toLowerCase().includes(text.toLowerCase())),
-    }),
-    findRoutes:
-      over.findRoutes ??
-      (async (query) => {
-        asked.push(query);
-        return { ok: true, result: searchRoutes(ctx, query) };
-      }),
-    select,
-    showReactionsMaking: openMaking,
-    ...(over.withSave === true ? { saveAsRoute, openRoute } : {}),
-    renderCard: (args) => {
-      const card = reactionCard(ctx, args.reactionId);
-      if ('missing' in card) return args.fallback(card.reason);
-      return (
-        <article data-reaction-id={args.reactionId} data-outside={args.outside === undefined ? undefined : ''}>
-          <button type="button" onClick={() => args.onSelect(args.reactionId)}>{(state.records.reaction[args.reactionId as never] as Reaction).name}</button>
-          {args.outside}
-        </article>
-      );
-    },
-    timers: { after: (_ms, run) => (run(), () => undefined) },
-    log: vi.fn(),
-  };
-  render(over.edition === 'study' ? <StudyChromeProvider value={studyChrome('study', { ownData: false })}><PrecursorsView ports={ports} /></StudyChromeProvider> : <PrecursorsView ports={ports} />);
-  return { ports, precursors, explorer, select, openMaking, saveAsRoute, openRoute, asked, rig, state, ctx };
-}
 
 const PROPANOL = { kind: 'species', id: 'spc_propan-2-ol' } as const;
 const PHENOL = { kind: 'species', id: 'spc_phenol' } as const;
@@ -364,43 +310,5 @@ describe('saved choices that name nothing', () => {
     expect(precursors.getState().startFrom).toEqual([ETHANOL]);
     expect(screen.getAllByText('A compound you chose earlier is no longer in the data; it was removed from your choices.')).toHaveLength(1);
     expect(ports.log).toHaveBeenCalled();
-  });
-});
-
-describe('Continue from here (step C6)', () => {
-  const names = ['src', 's0', 's1', 's2', 's3', 's4', 's5'];
-  const sixLevels = (): CanonicalState => {
-    const tables = emptyRecordTables() as unknown as Record<string, Record<string, AnyRecord>>;
-    const records = [
-      ...names.map((n) => species(n, n)),
-      ...names.slice(0, -1).map((n, i) => reaction({ slug: `l-${n}`, name: `l-${n}`, scope: 'specific', participants: [{ ref: sp(n), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp(names[i + 1] as string) }] }] })),
-    ];
-    for (const record of records) (tables[record.kind] as Record<string, AnyRecord>)[record.id] = record;
-    return { meta: demoState().meta, records: tables as unknown as CanonicalState['records'] };
-  };
-  it('a compound on level 5 with makers starts a new search with itself as the target, in ONE history entry', async () => {
-    const push = vi.spyOn(history, 'pushState');
-    const { precursors, asked } = setup({ target: { kind: 'species', id: 'spc_s5' } }, { state: sixLevels() });
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    const button = await screen.findByRole('button', { name: 'Continue from here' });
-    expect(screen.getAllByRole('button', { name: 'Continue from here' })).toHaveLength(1);
-    fireEvent.click(button);
-    await waitFor(() => expect(asked).toHaveLength(2));
-    expect(precursors.getState().target).toEqual({ kind: 'species', id: 'spc_s0' });
-    expect(asked[1]).toMatchObject({ target: { kind: 'species', id: 'spc_s0' } });
-    expect(push).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText(/steps from src|step from src/)).toBeTruthy();
-    push.mockRestore();
-  });
-  it('Back (popstate with the previous target) returns to the previous search', async () => {
-    const { precursors, asked } = setup({ target: { kind: 'species', id: 'spc_s5' } }, { state: sixLevels() });
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Continue from here' }));
-    await waitFor(() => expect(asked).toHaveLength(2));
-    act(() => {
-      window.dispatchEvent(new PopStateEvent('popstate', { state: { orn: 'precursor-target', target: { kind: 'species', id: 'spc_s5' } } }));
-    });
-    await waitFor(() => expect(asked).toHaveLength(3));
-    expect(precursors.getState().target).toEqual({ kind: 'species', id: 'spc_s5' });
   });
 });

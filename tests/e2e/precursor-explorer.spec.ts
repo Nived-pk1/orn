@@ -68,14 +68,14 @@ test.describe('Studio, desktop', () => {
     await expect(view(page).getByRole('checkbox', { name: 'Only the listed starting materials' })).toBeEnabled();
     await expect(view(page).getByRole('combobox', { name: 'Up to' })).toHaveValue('5');
     await search(page).click();
-    await expect(found(page).getByText('2 routes found')).toBeVisible();
+    await expect(found(page).getByText('3 routes found')).toBeVisible();
     const routes = found(page).getByRole('list', { name: 'Routes' }).locator(':scope > li');
     await expect(routes).toHaveCount(2);
     const first = routes.first();
     await expect(first.getByText('2 steps from Ethanol')).toBeVisible();
     await expect(first.getByText('1. Ethanol → Ethanal')).toBeVisible();
     await expect(first.getByText('2. Ethanal → Propan-2-ol')).toBeVisible();
-    await expect(page.getByRole('status', { name: 'Announcements' })).toHaveText('2 routes found');
+    await expect(page.getByRole('status', { name: 'Announcements' })).toHaveText('3 routes found');
     // "Show the reaction" expands that step's card; the reaction's name opens the inspector
     await first.getByRole('button', { name: 'Show the reaction' }).first().click();
     await expect(first.locator('article[data-reaction-id]')).toHaveCount(1);

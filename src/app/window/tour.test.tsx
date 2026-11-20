@@ -84,7 +84,7 @@ describe('the marks always point at something on screen (step C, F1)', () => {
     el.getBoundingClientRect = () => ({ top: 100, left: 20, width: 80, height: 32, right: 100, bottom: 132, x: 20, y: 100, toJSON: () => ({}) });
   };
   const rail = (collapsed = false): void => {
-    document.body.innerHTML = '';
+    document.body.replaceChildren();
     const nav = document.createElement('nav');
     nav.setAttribute('aria-label', 'Modes');
     const labels = collapsed ? ['Map', 'Starred'] : ['Map', 'Starred'];
@@ -112,7 +112,7 @@ describe('the marks always point at something on screen (step C, F1)', () => {
     }
   });
   it('on a phone the Map tab and the Starred tab are the anchors', () => {
-    document.body.innerHTML = '';
+    document.body.replaceChildren();
     const nav = document.createElement('nav');
     nav.setAttribute('aria-label', 'Home');
     for (const label of ['Chapters', 'Families', 'Map', 'Explore', 'Starred']) {
@@ -130,7 +130,7 @@ describe('the marks always point at something on screen (step C, F1)', () => {
     }
   });
   it('an item that is missing points at the Expand button of the rail', () => {
-    document.body.innerHTML = '';
+    document.body.replaceChildren();
     const nav = document.createElement('nav');
     nav.setAttribute('aria-label', 'Modes');
     const expand = document.createElement('button');

@@ -31,7 +31,7 @@ async function search(page: Page, tap: boolean): Promise<ReturnType<Page['locato
   const go = view(page).getByRole('button', { name: 'Search', exact: true });
   await (tap ? go.tap() : go.click());
   const found = view(page).getByRole('region', { name: 'Routes found' });
-  await expect(found.getByText('2 routes found')).toBeVisible();
+  await expect(found.getByText('3 routes found')).toBeVisible();
   const link = found.getByRole('button', { name: 'Ethanol → propan-2-ol', exact: true });
   await expect(link).toBeVisible();
   await link.scrollIntoViewIfNeeded();

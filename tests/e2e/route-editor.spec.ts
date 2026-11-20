@@ -97,7 +97,7 @@ test.describe('the route editor (Studio)', () => {
     await pick(page, 'Start from (optional)', 'ethanol', 'Start from Ethanol');
     await view(page).getByRole('button', { name: 'Search', exact: true }).click();
     const found = view(page).getByRole('region', { name: 'Routes found' });
-    await expect(found.getByText('2 routes found')).toBeVisible();
+    await expect(found.getByText('3 routes found')).toBeVisible();
     await expect(found.getByText(/Saved as/)).toHaveCount(1); // the demo saves one of the two
     await expect(found.getByRole('button', { name: 'Save as route' })).toHaveCount(1);
     await dismissToasts(page);

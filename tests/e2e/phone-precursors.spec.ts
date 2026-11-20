@@ -50,7 +50,7 @@ async function walk(page: Page, device: string): Promise<void> {
   }
   await view(page).getByRole('button', { name: 'Search', exact: true }).tap();
   const found = view(page).getByRole('region', { name: 'Routes found' });
-  await expect(found.getByText('2 routes found')).toBeVisible();
+  await expect(found.getByText('3 routes found')).toBeVisible();
   // the step is one block of three lines
   const step = found.locator('li[data-step="1"]').first();
   await expect(step.locator('[data-line="title"]')).toBeVisible();

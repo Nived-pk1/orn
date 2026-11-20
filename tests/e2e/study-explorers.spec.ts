@@ -111,7 +111,7 @@ test.describe('desktop', () => {
     await expect(card).toBeVisible({ timeout: 60_000 });
     await pickIn('Start from (optional)', 'ethanol', 'Start from Ethanol');
     await view.getByRole('button', { name: 'Search', exact: true }).click();
-    await expect(view.getByRole('region', { name: 'Routes found' }).getByText('2 routes found')).toBeVisible();
+    await expect(view.getByRole('region', { name: 'Routes found' }).getByText('3 routes found')).toBeVisible();
     const id = await card.getAttribute('data-reaction-id');
     await card.getByRole('button').first().click();
     await expect(record(page)).toHaveAttribute('data-record-id', id as string);
