@@ -175,12 +175,13 @@ describe('by-products (7.2b A3)', () => {
 });
 
 describe('Save as route and "Saved as" (7.2b C2, C3)', () => {
-  it('Studio: each found route that is not saved yet has "Save as route" (the demo saves one of the two); it hands the steps (reaction, outcome, variants) and the target over, and saves nothing itself', async () => {
+  it('Studio: each found route that is not saved yet has "Save as route" (the demo saves one of the three); it hands the steps (reaction, outcome, variants) and the target over, and saves nothing itself', async () => {
     const { saveAsRoute } = setup({ target: PROPANOL, startFrom: [ETHANOL] }, { withSave: true });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    await screen.findByText('2 routes found');
+    await screen.findByText('3 routes found');
     const buttons = screen.getAllByRole('button', { name: 'Save as route' });
-    expect(buttons).toHaveLength(1);
+    // step C3: the demo's generic "primary alcohol to aldehyde" reaction adds a third (inferred) route, so two are unsaved
+    expect(buttons).toHaveLength(2);
     expect(screen.getAllByText(/Saved as/)).toHaveLength(1);
     fireEvent.click(buttons[0] as HTMLElement);
     expect(saveAsRoute).toHaveBeenCalledTimes(1);
@@ -193,7 +194,7 @@ describe('Save as route and "Saved as" (7.2b C2, C3)', () => {
   it('Study (no such port): no Save as route button anywhere', async () => {
     setup({ target: PROPANOL, startFrom: [ETHANOL] });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    await screen.findByText('2 routes found');
+    await screen.findByText('3 routes found');
     expect(screen.queryByRole('button', { name: 'Save as route' })).toBeNull();
   });
 
@@ -257,12 +258,12 @@ describe('a search', () => {
   it('Search with a start: "n routes found", each "k steps from <start>" with numbered steps, the reaction link, the arrow text', async () => {
     const { precursors, select, asked } = setup({ target: PROPANOL, startFrom: [ETHANOL] });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    await screen.findByText('2 routes found');
+    await screen.findByText('3 routes found');
     expect(asked).toHaveLength(1);
     expect(asked[0]).toMatchObject({ target: PROPANOL, startFrom: [ETHANOL], maxSteps: 5, assumption: 'side_inputs_available' });
     expect(precursors.getState().searched).toBe(true);
     const routes = screen.getByRole('list', { name: 'Routes' }).querySelectorAll(':scope > li');
-    expect(routes).toHaveLength(2);
+    expect(routes).toHaveLength(3); // the third is the inferred generic route (step C3), listed last
     const first = within(routes[0] as HTMLElement);
     expect(first.getByText('2 steps from Ethanol')).toBeTruthy();
     expect(first.getByText('1. Ethanol → Ethanal')).toBeTruthy();
@@ -274,7 +275,7 @@ describe('a search', () => {
   it('"Show the reaction" expands that step\'s card and folds it again', async () => {
     setup({ target: PROPANOL, startFrom: [ETHANOL] });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    await screen.findByText('2 routes found');
+    await screen.findByText('3 routes found');
     const routes = screen.getByRole('list', { name: 'Routes' }).querySelectorAll(':scope > li');
     const toggle = within(routes[0] as HTMLElement).getAllByRole('button', { name: 'Show the reaction' })[0] as HTMLElement;
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
@@ -324,21 +325,21 @@ describe('a search', () => {
   it('says nothing about saving a found route', async () => {
     setup({ target: PROPANOL, startFrom: [ETHANOL] });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    await screen.findAllByText('2 routes found');
+    await screen.findAllByText('3 routes found');
     expect(within(screen.getByRole('region', { name: 'Routes found' })).queryByText(/sav/i)).toBeNull();
   });
 
   it('the live region says the count after a search', async () => {
     setup({ target: PROPANOL, startFrom: [ETHANOL] });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    await screen.findByText('2 routes found');
+    await screen.findByText('3 routes found');
     const live = screen.getByRole('status', { name: 'Announcements' });
-    await waitFor(() => expect(live.textContent).toBe('2 routes found'));
+    await waitFor(() => expect(live.textContent).toBe('3 routes found'));
   });
 
   it('a search that was saved as made runs again from its query when the view opens', async () => {
     const { asked } = setup({ target: PROPANOL, startFrom: [ETHANOL], searched: true });
-    await screen.findByText('2 routes found');
+    await screen.findByText('3 routes found');
     expect(asked).toHaveLength(1);
   });
 });
@@ -363,5 +364,43 @@ describe('saved choices that name nothing', () => {
     expect(precursors.getState().startFrom).toEqual([ETHANOL]);
     expect(screen.getAllByText('A compound you chose earlier is no longer in the data; it was removed from your choices.')).toHaveLength(1);
     expect(ports.log).toHaveBeenCalled();
+  });
+});
+
+describe('Continue from here (step C6)', () => {
+  const names = ['src', 's0', 's1', 's2', 's3', 's4', 's5'];
+  const sixLevels = (): CanonicalState => {
+    const tables = emptyRecordTables() as unknown as Record<string, Record<string, AnyRecord>>;
+    const records = [
+      ...names.map((n) => species(n, n)),
+      ...names.slice(0, -1).map((n, i) => reaction({ slug: `l-${n}`, name: `l-${n}`, scope: 'specific', participants: [{ ref: sp(n), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp(names[i + 1] as string) }] }] })),
+    ];
+    for (const record of records) (tables[record.kind] as Record<string, AnyRecord>)[record.id] = record;
+    return { meta: demoState().meta, records: tables as unknown as CanonicalState['records'] };
+  };
+  it('a compound on level 5 with makers starts a new search with itself as the target, in ONE history entry', async () => {
+    const push = vi.spyOn(history, 'pushState');
+    const { precursors, asked } = setup({ target: { kind: 'species', id: 'spc_s5' } }, { state: sixLevels() });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    const button = await screen.findByRole('button', { name: 'Continue from here' });
+    expect(screen.getAllByRole('button', { name: 'Continue from here' })).toHaveLength(1);
+    fireEvent.click(button);
+    await waitFor(() => expect(asked).toHaveLength(2));
+    expect(precursors.getState().target).toEqual({ kind: 'species', id: 'spc_s0' });
+    expect(asked[1]).toMatchObject({ target: { kind: 'species', id: 'spc_s0' } });
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText(/steps from src|step from src/)).toBeTruthy();
+    push.mockRestore();
+  });
+  it('Back (popstate with the previous target) returns to the previous search', async () => {
+    const { precursors, asked } = setup({ target: { kind: 'species', id: 'spc_s5' } }, { state: sixLevels() });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue from here' }));
+    await waitFor(() => expect(asked).toHaveLength(2));
+    act(() => {
+      window.dispatchEvent(new PopStateEvent('popstate', { state: { orn: 'precursor-target', target: { kind: 'species', id: 'spc_s5' } } }));
+    });
+    await waitFor(() => expect(asked).toHaveLength(3));
+    expect(precursors.getState().target).toEqual({ kind: 'species', id: 'spc_s5' });
   });
 });

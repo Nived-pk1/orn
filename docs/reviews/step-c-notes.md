@@ -12,3 +12,5 @@
 - RESUME AT: real-data route probe (C4), then C5.
 - RED C5: chains.test (total, 5 steps, budget) -> 4 failed; map-state.test (chainSteps) -> 1 failed; chain-panel.test (Steps, "5 of 23 chains", quiet line) -> 2 failed. GREEN: chains.ts `total` + CHAIN_MAX_STEPS_LIMIT 5; map store `chainSteps` (optional field of the `map` uiState entry, written only when not 3; parsed per field like `fitted`); panel radio group "Steps" 3/4/5, "n of N chains", quiet line. e2e + real-data timing still to do.
 - RESUME AT: C6.
+- RED C6: model.test (continueFrom) -> 2 failed; continue-from.test -> module missing; precursors-view.test (Continue from here, Back) -> 2 failed. GREEN: model.ts `continueFrom` on step 1 of a >=5-step found route when the start has makers (backwardMovesInto); route-card button; view `continueFrom` (pushTargetEntry = replaceState prev + ONE pushState; popstate with the state returns to the previous search; autoRun runs the search after the target effect). Address text unchanged (ADR-047: target is in history.state only). 3 view tests changed on purpose (demo now 3 routes, C3).
+- RESUME AT: C7.

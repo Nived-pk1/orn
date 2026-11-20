@@ -10,11 +10,12 @@ import { useStore } from 'zustand';
 import { createDescriber, createScopeOf, directPrecursors, noRouteWords, routeCountWords, truncationWords, type ProjectionContext, type RouteSearchResult } from '@/core/graph';
 import type { RecordRef } from '@/core/schema';
 import { LiveRegion } from '@/ui/primitives';
-import { asChoice, useScopeOnly } from '@/ui/state';
+import { asChoice, useScopeOnly, type SubstanceChoice } from '@/ui/state';
 import type { PrecursorPorts } from './contracts';
 import { DirectBlock } from './direct-block';
 import { outsideReactionIds, pruneChoices, queryOf, routeViewOf, savedMatchOf, savedRoutesFor, type RouteView } from './model';
 import { RouteCard } from './route-card';
+import { pushTargetEntry, targetOfState } from './continue-from';
 import { RoutePanel } from './route-panel';
 import { SubstanceSearch } from './substance-search';
 import styles from './precursors-view.module.css';
@@ -110,11 +111,34 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
       search();
       return;
     }
+    if (autoRun.current && target !== null) {
+      autoRun.current = false;
+      search();
+      return;
+    }
     stop();
     setOutcome({ kind: 'none' });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only a change of target restarts; the choices are read when Search is pressed
   }, [targetKey]);
   useEffect(() => stop, [stop]);
+
+  // step C6: a new search with a compound of the route as the target; ONE history entry, so Back returns to the previous search
+  const autoRun = useRef(false);
+  const continueFrom = useCallback((choice: SubstanceChoice): void => {
+    pushTargetEntry(store.getState().target, choice);
+    autoRun.current = true;
+    store.getState().setTarget(choice);
+  }, [store]);
+  useEffect(() => {
+    const onPop = (event: PopStateEvent): void => {
+      const back = targetOfState(event.state);
+      if (back === undefined || (store.getState().target?.id === back.id && store.getState().target?.kind === back.kind)) return;
+      autoRun.current = true;
+      store.getState().setTarget(back);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [store]);
 
   const direct = useMemo(() => (target === null ? null : directPrecursors(ctx, target, ctx.scopeOf)), [ctx, target]);
   const saved = useMemo(() => (target === null ? [] : savedRoutesFor(target, ctx)), [ctx, target]);
@@ -185,7 +209,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
               {found.length === 0 ? null : (
                 <ul className={styles.routes} aria-label="Routes">
                   {found.map((route) => (
-                    <RouteCard key={route.key} route={route} ports={ports} selected={selected} {...foundExtras(route)} />
+                    <RouteCard key={route.key} route={route} ports={ports} selected={selected} {...foundExtras(route)} onContinue={continueFrom} />
                   ))}
                 </ul>
               )}

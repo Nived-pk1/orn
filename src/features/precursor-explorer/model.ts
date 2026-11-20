@@ -4,6 +4,7 @@
  */
 import {
   arrowWordsOf,
+  backwardMovesInto,
   createDescriber,
   DEFAULT_ROUTE_MAX_ROUTES,
   DEFAULT_TRAVERSAL_LIMITS,
@@ -17,7 +18,7 @@ import {
 } from '@/core/graph';
 import { primarySubstrateOf } from '@/core/indexes/navigator-rollup';
 import type { CanonicalState, Reaction, RecordRef, Route } from '@/core/schema';
-import type { PrecursorsState, SubstanceChoice } from '@/ui/state';
+import { DEFAULT_PRECURSOR_STEPS, type PrecursorsState, type SubstanceChoice } from '@/ui/state';
 
 export type Choices = Pick<PrecursorsState, 'target' | 'startFrom' | 'maxSteps' | 'onlyListed' | 'onlyInScope'>;
 
@@ -67,6 +68,8 @@ export interface StepView {
   readonly arrowBelow: readonly ArrowTextPart[];
   /** Plain words, never the engine's text. */
   readonly warnings: readonly string[];
+  /** Step C6: on the first step of a 5-step found route, the starting compound when it has makers of its own. */
+  readonly continueFrom?: SubstanceChoice;
 }
 
 export interface RouteView {
@@ -118,7 +121,12 @@ export function routeViewOf(route: FoundRoute, ctx: ProjectionContext): RouteVie
     key: route.key,
     found: route.steps.map((step) => ({ reactionId: step.reactionId, outcomeId: step.outcomeId, conditionVariantIds: [...step.conditionVariantIds] })),
     heading: routeSizeWords(route.steps.length, first === undefined ? undefined : nameOf(first.carriedIn)),
-    steps: route.steps.map((step, index) => stepOf(ctx, index + 1, { reactionId: step.reactionId, outcomeId: step.outcomeId, from: nameOf(step.carriedIn), to: nameOf(step.carriedOut), warnings: step.warnings })),
+    steps: route.steps.map((step, index) => {
+      const view = stepOf(ctx, index + 1, { reactionId: step.reactionId, outcomeId: step.outcomeId, from: nameOf(step.carriedIn), to: nameOf(step.carriedOut), warnings: step.warnings });
+      const start = step.carriedIn;
+      const offer = index === 0 && route.steps.length >= DEFAULT_PRECURSOR_STEPS && (start.kind === 'species' || start.kind === 'class') && backwardMovesInto(ctx, start, new Set()).length > 0;
+      return offer ? { ...view, continueFrom: { kind: start.kind, id: start.id } as SubstanceChoice } : view;
+    }),
   };
 }
 

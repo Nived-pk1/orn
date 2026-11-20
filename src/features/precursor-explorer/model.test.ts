@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_ROUTE_MAX_STEPS, DEFAULT_TRAVERSAL_LIMITS, searchRoutes } from '@/core/graph';
 import { DEFAULT_PRECURSOR_STEPS } from '@/ui/state';
 import { demoState } from '@/test-support/app-boot-kit';
-import { contextOf } from '@/test-support/graph-state';
+import { contextOf, reaction, sp, species, stateOf } from '@/test-support/graph-state';
 import { outsideReactionIds, pruneChoices, queryOf, routeViewOf, savedRoutesFor } from './model';
 
 const ctx = contextOf(demoState());
@@ -78,5 +78,29 @@ describe('savedRoutesFor (stored routes that end at the target)', () => {
   });
   it('a target no stored route ends at has none', () => {
     expect(savedRoutesFor({ kind: 'species', id: 'spc_ethanol' }, ctx)).toEqual([]);
+  });
+});
+
+describe('"Continue from here" (step C6)', () => {
+  const link = (slug: string, from: string, to: string) =>
+    reaction({ slug, name: slug, scope: 'specific', participants: [{ ref: sp(from), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp(to) }] }] });
+  /** src -> s0 -> s1 -> s2 -> s3 -> s4 -> s5: six levels back from s5. */
+  const chain = (withSource: boolean) => {
+    const names = ['src', 's0', 's1', 's2', 's3', 's4', 's5'];
+    const records = names.slice(withSource ? 0 : 1).map((n) => species(n, n));
+    const links = names.slice(withSource ? 0 : 1, -1).map((n) => link(`l-${n}`, n, names[names.indexOf(n) + 1] as string));
+    return contextOf(stateOf(...records, ...links));
+  };
+  const routeOf = (ctx: ReturnType<typeof chain>, maxSteps: number) =>
+    routeViewOf(searchRoutes(ctx, { target: sp('s5'), maxSteps, maxRoutes: 10, assumption: 'side_inputs_available', limits: DEFAULT_TRAVERSAL_LIMITS }).routes.at(-1) as never, ctx);
+  it('the first step of a 5-step route whose starting compound has its own makers offers Continue from here, with that compound', () => {
+    const view = routeOf(chain(true), 5);
+    expect(view.steps).toHaveLength(5);
+    expect(view.steps[0]?.continueFrom).toEqual({ kind: 'species', id: 'spc_s0' });
+    expect(view.steps.slice(1).every((s) => s.continueFrom === undefined)).toBe(true);
+  });
+  it('no offer when the starting compound has no makers, or the route is shorter than 5 steps', () => {
+    expect(routeOf(chain(false), 5).steps[0]?.continueFrom).toBeUndefined();
+    expect(routeOf(chain(true), 4).steps[0]?.continueFrom).toBeUndefined();
   });
 });

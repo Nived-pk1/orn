@@ -7,10 +7,11 @@ import { useState, type ReactNode } from 'react';
 import { Runs } from '@/render/equation';
 import { partsToRuns } from '@/render/scene';
 import type { PrecursorPorts } from './contracts';
+import type { SubstanceChoice } from '@/ui/state';
 import type { RouteView, StepView } from './model';
 import styles from './precursors-view.module.css';
 
-function Step(props: { readonly step: StepView; readonly ports: Pick<PrecursorPorts, 'select' | 'renderCard'>; readonly selected: string | null }) {
+function Step(props: { readonly step: StepView; readonly ports: Pick<PrecursorPorts, 'select' | 'renderCard'>; readonly selected: string | null; readonly onContinue?: ((choice: SubstanceChoice) => void) | undefined }) {
   const { step, ports } = props;
   const [open, setOpen] = useState(false);
   return (
@@ -31,6 +32,13 @@ function Step(props: { readonly step: StepView; readonly ports: Pick<PrecursorPo
           <Runs runs={partsToRuns(step.arrowBelow)} />
         </span>
       )}
+      {step.continueFrom === undefined || props.onContinue === undefined ? null : (
+        <span className={styles.stepReaction} data-line="continue">
+          <button type="button" className={styles.showCard} onClick={() => props.onContinue?.(step.continueFrom as SubstanceChoice)}>
+            Continue from here
+          </button>
+        </span>
+      )}
       {step.warnings.map((words) => (
         <span key={words} className={styles.warning}>
           {words}
@@ -49,6 +57,8 @@ export function RouteCard(props: {
   readonly onSave?: (() => void) | undefined;
   /** A found route that equals a saved one: "Saved as <name>", a link to it. */
   readonly savedAs?: { readonly name: string; readonly open: () => void } | undefined;
+  /** A found route (step C6): a new search from the starting compound of a 5-step route. */
+  readonly onContinue?: ((choice: SubstanceChoice) => void) | undefined;
 }) {
   const { route } = props;
   return (
@@ -71,7 +81,7 @@ export function RouteCard(props: {
       ) : null}
       <ol className={styles.steps} aria-label={route.name === undefined ? 'Steps' : `Steps of ${route.name}`}>
         {route.steps.map((step) => (
-          <Step key={step.n} step={step} ports={props.ports} selected={props.selected} />
+          <Step key={step.n} step={step} ports={props.ports} selected={props.selected} onContinue={props.onContinue} />
         ))}
       </ol>
     </li>

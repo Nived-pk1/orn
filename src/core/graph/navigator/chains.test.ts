@@ -47,7 +47,7 @@ describe('familyChains: up to 5 steps, the count (step C5)', () => {
   });
   it('stays inside the path budget at 5 steps and says it may be incomplete', () => {
     const layers = Array.from({ length: 6 }, (_, k) => Array.from({ length: 8 }, (_, i) => `L${k}n${i}`));
-    const edges = [...layers[0]!.map((n) => e('a', n)), ...layers.slice(0, 5).flatMap((l, k) => l.flatMap((n) => layers[k + 1]!.map((m) => e(n, m)))), ...layers[5]!.map((n) => e(n, 'z'))];
+    const edges = [...(layers[0] ?? []).map((n) => e('a', n)), ...layers.slice(0, 5).flatMap((l, k) => l.flatMap((n) => (layers[k + 1] ?? []).map((m) => e(n, m)))), ...(layers[5] ?? []).map((n) => e(n, 'z'))];
     const r = familyChains(edges, 'a', 'z', { maxSteps: 5 });
     expect(r.ok && r.truncated).toBe(true);
     expect(r.ok && r.total).toBeLessThanOrEqual(CHAIN_PATH_BUDGET);
