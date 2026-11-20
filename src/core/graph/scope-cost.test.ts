@@ -2,13 +2,14 @@
 import { describe, expect, it } from 'vitest';
 import { examId, examVersion, examVersionId, topic, topicMapping } from '@/test-support/curriculum-kit';
 import { contextOf, reaction, sp, species, stateOf } from '@/test-support/graph-state';
+import type { AnyRecord } from '@/core/schema';
 import { createScopeOf } from '@/core/graph/scope';
 
 describe('scope of every reaction', () => {
   it('one pass over 5,000 mapped reactions under a 600-row syllabus stays under 20 ms median', () => {
     const TOPICS = 600;
     const REACTIONS = 5000;
-    const records: Parameters<typeof stateOf>[number][] = [species('sp-a', 'A'), species('sp-b', 'B')];
+    const records: AnyRecord[] = [species('sp-a', 'A'), species('sp-b', 'B')];
     const coverage: { topic: string; coverage: 'included' | 'excluded' }[] = [];
     for (let t = 0; t < TOPICS; t += 1) {
       records.push(topic(`t${t}`, `Topic ${t}`));
