@@ -20,3 +20,22 @@
 - F2: `noPlaceLineIn(mode)` in modes.ts (Starred joins Chapters and the explorers; window.tsx uses it). DISCLOSED: the test file and the function were written in the same step, the test was not run red first.
 - Two window tests (precursors, phone-precursors) changed "2 routes found" -> "3" (C3). e2e specs with "routes found" still to check: phone-precursors, precursor-explorer, route-editor, saved-as-link, study-explorers.
 - RESUME AT: npm run check, then e2e (specs above, From A to B steps spec, tour, starred, Continue from here), screenshots, real-data probes, sizes, docs, deploy.
+
+## Real-data probes (owner data ORN-real-data-2026-11-15, 657 reactions, 622 species; throwaway test, old code from 98c7771)
+```
+SCOPE exv_cbse-11-chemistry-2026-27 reactionsChanged=0 {}
+SCOPE exv_cbse-12-chemistry-2026-27 reactionsChanged=0 {"concept:outside->prerequisite":5}
+SCOPE exv_jee-advanced-2026 reactionsChanged=0 {}
+SCOPE exv_jee-main-2026 reactionsChanged=0 {}
+ROUTES species=622 withGenericGain=248 maxOldMs=8.3 maxNewMs=5.4 truncOld=28 truncNew=0 lostOld=0
+  spc_1-2-dibromoethane: routes 0->10; trunc -->-; ms 0.0->1.0
+  spc_1-3-dibromopentane: routes 0->10; trunc -->-; ms 0.0->0.8
+  spc_1-4-dibromopentane: routes 0->10; trunc -->-; ms 0.0->0.8
+  spc_1-5-dibromopentane: routes 0->10; trunc -->-; ms 0.0->0.8
+  spc_1-bromobutane: routes 0->10; trunc -->-; ms 0.0->0.8
+  spc_1-chloro-2-2-dimethylpropane: routes 0->10; trunc -->-; ms 0.0->0.8
+CHAINS steps=3 families=17 edges=114 worstMs=2.8 cls_amines>cls_aldehydes total=21 trunc=false
+CHAINS steps=4 families=17 edges=114 worstMs=0.5 cls_ethers>cls_aldehydes total=129 trunc=true
+CHAINS steps=5 families=17 edges=114 worstMs=0.3 cls_amines>cls_aldehydes total=140 trunc=true
+```
+Size (fresh builds): Study 338,107 -> 338,344 (+237); Studio 342,164 -> 342,367 (+203). Limit +300, aim +0 missed.

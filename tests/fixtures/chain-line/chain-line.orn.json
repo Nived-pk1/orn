@@ -1,0 +1,2631 @@
+{
+ "format": "orn.dataset",
+ "schemaVersion": 2,
+ "exportedAt": "2026-11-04T00:00:00.000Z",
+ "exportScope": "full",
+ "generator": {
+  "app": "orn-chain-line-fixture",
+  "version": "1"
+ },
+ "meta": {
+  "datasetId": "orn-chain-line",
+  "title": "Chain line fixture",
+  "description": "Generated fixture (step C). Not chemistry.",
+  "createdAt": "2026-11-04T00:00:00.000Z",
+  "updatedAt": "2026-11-04T00:00:00.000Z"
+ },
+ "records": {
+  "reference": [],
+  "concept": [],
+  "species": [],
+  "class": [
+   {
+    "id": "cls_line-01",
+    "kind": "class",
+    "names": {
+     "canonical": "Line 01",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "R01"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_line-02",
+    "kind": "class",
+    "names": {
+     "canonical": "Line 02",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "R02"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_line-03",
+    "kind": "class",
+    "names": {
+     "canonical": "Line 03",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "R03"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_line-04",
+    "kind": "class",
+    "names": {
+     "canonical": "Line 04",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "R04"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_line-05",
+    "kind": "class",
+    "names": {
+     "canonical": "Line 05",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "R05"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_line-06",
+    "kind": "class",
+    "names": {
+     "canonical": "Line 06",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "R06"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_line-07",
+    "kind": "class",
+    "names": {
+     "canonical": "Line 07",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "R07"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_bush-g1",
+    "kind": "class",
+    "names": {
+     "canonical": "Bush g1",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "Bg1"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_bush-g2",
+    "kind": "class",
+    "names": {
+     "canonical": "Bush g2",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "Bg2"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_bush-m1",
+    "kind": "class",
+    "names": {
+     "canonical": "Bush m1",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "Bm1"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_bush-m2",
+    "kind": "class",
+    "names": {
+     "canonical": "Bush m2",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "Bm2"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_bush-m3",
+    "kind": "class",
+    "names": {
+     "canonical": "Bush m3",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "Bm3"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_bush-m4",
+    "kind": "class",
+    "names": {
+     "canonical": "Bush m4",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "Bm4"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_bush-m5",
+    "kind": "class",
+    "names": {
+     "canonical": "Bush m5",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "Bm5"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "cls_bush-m6",
+    "kind": "class",
+    "names": {
+     "canonical": "Bush m6",
+     "common": [],
+     "aliases": []
+    },
+    "classKind": "compound_class",
+    "parentIds": [],
+    "generic": {
+     "formulaText": "Bm6"
+    },
+    "exampleSpeciesIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   }
+  ],
+  "reagent": [],
+  "transformation": [],
+  "named_reaction": [],
+  "mechanism": [],
+  "reaction": [
+   {
+    "id": "rxn_line-01",
+    "kind": "reaction",
+    "name": "Reaction line-01",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_line-01-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_line-01"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_line-01-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_line-01-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_line-01-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_line-01-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_line-02"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_line-02",
+    "kind": "reaction",
+    "name": "Reaction line-02",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_line-02-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_line-02"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_line-02-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_line-02-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_line-02-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_line-02-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_line-03"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_line-03",
+    "kind": "reaction",
+    "name": "Reaction line-03",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_line-03-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_line-03"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_line-03-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_line-03-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_line-03-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_line-03-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_line-04"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_line-04",
+    "kind": "reaction",
+    "name": "Reaction line-04",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_line-04-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_line-04"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_line-04-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_line-04-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_line-04-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_line-04-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_line-05"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_line-05",
+    "kind": "reaction",
+    "name": "Reaction line-05",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_line-05-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_line-05"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_line-05-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_line-05-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_line-05-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_line-05-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_line-06"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_line-06",
+    "kind": "reaction",
+    "name": "Reaction line-06",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_line-06-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_line-06"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_line-06-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_line-06-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_line-06-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_line-06-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_line-07"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-g1-m1",
+    "kind": "reaction",
+    "name": "Reaction bush-g1-m1",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-g1-m1-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-g1"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-g1-m1-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-g1-m1-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-g1-m1-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-g1-m1-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-m1"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-m1-g2",
+    "kind": "reaction",
+    "name": "Reaction bush-m1-g2",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-m1-g2-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-m1"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-m1-g2-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-m1-g2-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-m1-g2-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-m1-g2-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-g2"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-g1-m2",
+    "kind": "reaction",
+    "name": "Reaction bush-g1-m2",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-g1-m2-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-g1"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-g1-m2-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-g1-m2-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-g1-m2-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-g1-m2-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-m2"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-m2-g2",
+    "kind": "reaction",
+    "name": "Reaction bush-m2-g2",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-m2-g2-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-m2"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-m2-g2-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-m2-g2-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-m2-g2-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-m2-g2-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-g2"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-g1-m3",
+    "kind": "reaction",
+    "name": "Reaction bush-g1-m3",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-g1-m3-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-g1"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-g1-m3-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-g1-m3-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-g1-m3-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-g1-m3-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-m3"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-m3-g2",
+    "kind": "reaction",
+    "name": "Reaction bush-m3-g2",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-m3-g2-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-m3"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-m3-g2-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-m3-g2-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-m3-g2-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-m3-g2-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-g2"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-g1-m4",
+    "kind": "reaction",
+    "name": "Reaction bush-g1-m4",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-g1-m4-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-g1"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-g1-m4-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-g1-m4-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-g1-m4-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-g1-m4-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-m4"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-m4-g2",
+    "kind": "reaction",
+    "name": "Reaction bush-m4-g2",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-m4-g2-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-m4"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-m4-g2-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-m4-g2-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-m4-g2-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-m4-g2-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-g2"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-g1-m5",
+    "kind": "reaction",
+    "name": "Reaction bush-g1-m5",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-g1-m5-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-g1"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-g1-m5-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-g1-m5-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-g1-m5-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-g1-m5-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-m5"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-m5-g2",
+    "kind": "reaction",
+    "name": "Reaction bush-m5-g2",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-m5-g2-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-m5"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-m5-g2-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-m5-g2-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-m5-g2-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-m5-g2-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-g2"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-g1-m6",
+    "kind": "reaction",
+    "name": "Reaction bush-g1-m6",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-g1-m6-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-g1"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-g1-m6-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-g1-m6-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-g1-m6-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-g1-m6-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-m6"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "rxn_bush-m6-g2",
+    "kind": "reaction",
+    "name": "Reaction bush-m6-g2",
+    "aliases": [],
+    "scope": "generic",
+    "purposes": [
+     "synthesis"
+    ],
+    "namedReactionIds": [],
+    "transformationIds": [],
+    "reactionTypes": [],
+    "mechanismClasses": [],
+    "participants": [
+     {
+      "id": "prt_bush-m6-g2-1",
+      "ref": {
+       "kind": "class",
+       "id": "cls_bush-m6"
+      },
+      "role": "reactant",
+      "isPrimarySubstrate": true
+     }
+    ],
+    "stages": [
+     {
+      "id": "stg_bush-m6-g2-1",
+      "kind": "reaction",
+      "label": "step",
+      "participantIds": [
+       "prt_bush-m6-g2-1"
+      ],
+      "parameters": {
+       "solventCharacter": [],
+       "activation": [],
+       "other": [],
+       "parsedFields": []
+      }
+     }
+    ],
+    "conditionVariants": [],
+    "outcomes": [
+     {
+      "id": "out_bush-m6-g2-1",
+      "conditionVariantIds": [],
+      "selectivity": "exclusive",
+      "products": [
+       {
+        "id": "pdt_bush-m6-g2-1-1",
+        "ref": {
+         "kind": "class",
+         "id": "cls_bush-g2"
+        },
+        "role": "main"
+       }
+      ],
+      "conceptIds": []
+     }
+    ],
+    "intermediates": [],
+    "mechanismIds": [],
+    "reversibility": {
+     "kind": "irreversible"
+    },
+    "conceptIds": [],
+    "prerequisiteConceptIds": [],
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   }
+  ],
+  "caveat": [],
+  "route": [],
+  "relationship": [],
+  "exam": [],
+  "exam_version": [],
+  "topic": [
+   {
+    "id": "top_line",
+    "kind": "topic",
+    "name": "Line fixture",
+    "aliases": [],
+    "topicKind": "subject",
+    "order": 1,
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "top_chapter-1",
+    "kind": "topic",
+    "name": "Chapter 1",
+    "aliases": [],
+    "parentId": "top_line",
+    "topicKind": "chapter",
+    "order": 1,
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "top_section-1",
+    "kind": "topic",
+    "name": "Section 1",
+    "aliases": [],
+    "parentId": "top_chapter-1",
+    "topicKind": "section",
+    "order": 1,
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   }
+  ],
+  "topic_mapping": [
+   {
+    "id": "tmp_line-01",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_line-01"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_line-02",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_line-02"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_line-03",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_line-03"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_line-04",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_line-04"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_line-05",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_line-05"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_line-06",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_line-06"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-g1-m1",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-g1-m1"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-m1-g2",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-m1-g2"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-g1-m2",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-g1-m2"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-m2-g2",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-m2-g2"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-g1-m3",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-g1-m3"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-m3-g2",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-m3-g2"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-g1-m4",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-g1-m4"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-m4-g2",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-m4-g2"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-g1-m5",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-g1-m5"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-m5-g2",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-m5-g2"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-g1-m6",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-g1-m6"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   },
+   {
+    "id": "tmp_bush-m6-g2",
+    "kind": "topic_mapping",
+    "topicId": "top_section-1",
+    "target": {
+     "kind": "reaction",
+     "id": "rxn_bush-m6-g2"
+    },
+    "role": "core",
+    "tags": [],
+    "citations": [],
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    },
+    "review": {
+     "lifecycle": "published",
+     "status": "unreviewed",
+     "reasons": []
+    }
+   }
+  ],
+  "exam_relevance": [],
+  "asset": [],
+  "navigator_anchor": [
+   {
+    "id": "anc_line-01",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_line-01"
+    },
+    "order": 1,
+    "cell": {
+     "column": 0,
+     "row": 0
+    },
+    "group": "Line",
+    "tone": "blue",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_line-02",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_line-02"
+    },
+    "order": 2,
+    "cell": {
+     "column": 1,
+     "row": 0
+    },
+    "group": "Line",
+    "tone": "blue",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_line-03",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_line-03"
+    },
+    "order": 3,
+    "cell": {
+     "column": 2,
+     "row": 0
+    },
+    "group": "Line",
+    "tone": "blue",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_line-04",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_line-04"
+    },
+    "order": 4,
+    "cell": {
+     "column": 3,
+     "row": 0
+    },
+    "group": "Line",
+    "tone": "blue",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_line-05",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_line-05"
+    },
+    "order": 5,
+    "cell": {
+     "column": 4,
+     "row": 0
+    },
+    "group": "Line",
+    "tone": "blue",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_line-06",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_line-06"
+    },
+    "order": 6,
+    "cell": {
+     "column": 5,
+     "row": 0
+    },
+    "group": "Line",
+    "tone": "blue",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_line-07",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_line-07"
+    },
+    "order": 7,
+    "cell": {
+     "column": 6,
+     "row": 0
+    },
+    "group": "Line",
+    "tone": "blue",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_bush-g1",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_bush-g1"
+    },
+    "order": 8,
+    "cell": {
+     "column": 0,
+     "row": 1
+    },
+    "group": "Bush",
+    "tone": "amber",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_bush-g2",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_bush-g2"
+    },
+    "order": 9,
+    "cell": {
+     "column": 1,
+     "row": 1
+    },
+    "group": "Bush",
+    "tone": "amber",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_bush-m1",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_bush-m1"
+    },
+    "order": 10,
+    "cell": {
+     "column": 2,
+     "row": 1
+    },
+    "group": "Bush",
+    "tone": "amber",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_bush-m2",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_bush-m2"
+    },
+    "order": 11,
+    "cell": {
+     "column": 3,
+     "row": 1
+    },
+    "group": "Bush",
+    "tone": "amber",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_bush-m3",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_bush-m3"
+    },
+    "order": 12,
+    "cell": {
+     "column": 4,
+     "row": 1
+    },
+    "group": "Bush",
+    "tone": "amber",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_bush-m4",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_bush-m4"
+    },
+    "order": 13,
+    "cell": {
+     "column": 5,
+     "row": 1
+    },
+    "group": "Bush",
+    "tone": "amber",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_bush-m5",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_bush-m5"
+    },
+    "order": 14,
+    "cell": {
+     "column": 6,
+     "row": 1
+    },
+    "group": "Bush",
+    "tone": "amber",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   },
+   {
+    "id": "anc_bush-m6",
+    "kind": "navigator_anchor",
+    "target": {
+     "kind": "class",
+     "id": "cls_bush-m6"
+    },
+    "order": 15,
+    "cell": {
+     "column": 7,
+     "row": 1
+    },
+    "group": "Bush",
+    "tone": "amber",
+    "provenance": {
+     "origin": "seed",
+     "createdAt": "2026-11-04T00:00:00.000Z",
+     "updatedAt": "2026-11-04T00:00:00.000Z"
+    }
+   }
+  ],
+  "reaction_scheme": [],
+  "view_preset": [],
+  "entity_display": []
+ }
+}

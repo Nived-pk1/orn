@@ -30,9 +30,9 @@ export async function openMapDesktop(page: Page, data: Buffer = MAP_LAYOUT): Pro
 }
 
 /** Phone: the fixture imported, then the Map tab. */
-export async function openMapPhone(page: Page): Promise<void> {
+export async function openMapPhone(page: Page, data: Buffer = MAP_LAYOUT): Promise<void> {
   await openPhoneApp(page);
-  await chooseFile(page, { name: 'map-layout.orn.json', mimeType: 'application/json', buffer: MAP_LAYOUT });
+  await chooseFile(page, { name: 'map-layout.orn.json', mimeType: 'application/json', buffer: data });
   await confirmImport(page, true);
   await leaveChapters(page);
   await page.getByRole('navigation', { name: 'Home' }).getByRole('button', { name: 'Map' }).tap();

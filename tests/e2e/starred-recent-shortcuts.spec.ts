@@ -61,6 +61,15 @@ test.describe('G2, G3, G5 (desktop)', () => {
     await shot(page, 'starred-filled');
     await row.click();
     await expect(page.getByRole('button', { name: 'Star for revision' })).toHaveAttribute('aria-pressed', 'true');
+    // step C, F2: the record IS listed in Starred, so the inspector never says it has no place in this view
+    await expect(page.getByText(/has no place in this view/)).toHaveCount(0);
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.waitForTimeout(250);
+    await page.screenshot({ path: 'screenshots/C/starred-filled-light.png' });
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.waitForTimeout(350);
+    await page.screenshot({ path: 'screenshots/C/starred-filled-dark.png' });
+    await page.emulateMedia({ colorScheme: 'light' });
     await page.keyboard.press('s');
     await expect(page.getByRole('button', { name: 'Star for revision' })).toHaveAttribute('aria-pressed', 'false');
   });

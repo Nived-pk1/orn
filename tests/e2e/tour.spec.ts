@@ -1,5 +1,5 @@
 /**
- * Step 8.4g, Part B (G4): the first-run tour in the STUDY build. After the exam question, three coach marks (map, search, Open family), Skip on each,
+ * Step 8.4g, Part B (G4): the first-run tour in the STUDY build. After the exam question, three coach marks (Map item, Search button, Starred item; step C: every mark is anchored), Skip on each,
  * never shown again (it survives a reload), reachable by keyboard, no animation under reduced motion; desktop and Pixel 7 (Chromium, WebKit).
  */
 import { readFileSync } from 'node:fs';
@@ -14,7 +14,7 @@ test.use({ baseURL: STUDY });
 const DEMO_FILE = { name: 'my-own-data.orn.json', mimeType: 'application/json', buffer: readFileSync(resolve(process.cwd(), 'data/seed/demo.orn.json')) };
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
 const tour = (page: Page) => page.getByRole('region', { name: 'Tour' });
-const MARKS = ['Tap a family to see what it makes and what it is made from', 'Find any compound, reaction or reagent', 'Every reaction of a family, nothing left out'];
+const MARKS = ['The Map shows every family. Tap one to see what it makes and what it is made from.', 'Find any compound, reaction or reagent', 'Press the star on any record to keep it here for revision.'];
 
 async function importDemo(page: Page, phone: boolean): Promise<void> {
   await page.goto('/');
@@ -39,10 +39,10 @@ async function answerQuestion(page: Page, phone: boolean): Promise<void> {
 async function shot(page: Page, name: string): Promise<void> {
   await page.emulateMedia({ colorScheme: 'light' });
   await page.waitForTimeout(250);
-  await page.screenshot({ path: `screenshots/8.4g/B/${name}-light.png` });
+  await page.screenshot({ path: `screenshots/C/${name}-light.png` });
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.waitForTimeout(350);
-  await page.screenshot({ path: `screenshots/8.4g/B/${name}-dark.png` });
+  await page.screenshot({ path: `screenshots/C/${name}-dark.png` });
   await page.emulateMedia({ colorScheme: 'light' });
 }
 
@@ -55,13 +55,16 @@ test.describe('the first-run tour (desktop)', () => {
     await answerQuestion(page, false);
     await expect(tour(page)).toBeVisible();
     await expect(page.getByText(MARKS[0] as string)).toBeVisible();
+    await expect(tour(page)).toHaveAttribute('data-anchored', 'true');
     await shot(page, 'tour-1-desktop');
     await expect(page.getByRole('button', { name: 'Next' })).toBeFocused(); // reachable by keyboard
     await page.keyboard.press('Enter');
     await expect(page.getByText(MARKS[1] as string)).toBeVisible();
+    await expect(tour(page)).toHaveAttribute('data-anchored', 'true');
     await shot(page, 'tour-2-desktop');
     await page.keyboard.press('Enter');
     await expect(page.getByText(MARKS[2] as string)).toBeVisible();
+    await expect(tour(page)).toHaveAttribute('data-anchored', 'true');
     await shot(page, 'tour-3-desktop');
     await page.getByRole('button', { name: 'Skip' }).click();
     await expect(tour(page)).toHaveCount(0);
@@ -101,6 +104,7 @@ test.describe('the first-run tour (Pixel 7)', () => {
       expect(box.x + box.width).toBeLessThanOrEqual(view.width + 1);
       expect(box.y + box.height).toBeLessThanOrEqual(view.height + 1);
       await expect(page.getByRole('button', { name: 'Skip' })).toBeVisible();
+      await expect(tour(page)).toHaveAttribute('data-anchored', 'true');
       await shot(page, `tour-${at + 1}-pixel7`);
       if (at < 2) await page.getByRole('button', { name: 'Next' }).tap();
     }
