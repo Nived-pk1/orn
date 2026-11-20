@@ -103,6 +103,8 @@ export function ChainPanel(props: ChainPanelProps) {
       </select>
     </label>
   );
+  // "5 of 23 chains" (never a silent cut): beside the Steps choice when there is one, so a phone's peek shows it, else above the chains
+  const countNote = result?.ok === true && result.total > chains.length ? <span className={styles.count}>{`${chains.length} of ${result.total} chains`}</span> : null;
   const shown = props.phone === true && !expanded ? cards.slice(0, 1) : cards;
   return (
     <aside className={styles.panel} data-right-pane="" aria-label="From A to B" data-phone={props.phone === true ? '' : undefined} data-expanded={expanded ? '' : undefined}>
@@ -133,6 +135,7 @@ export function ChainPanel(props: ChainPanelProps) {
               <span aria-hidden="true">{n}</span>
             </label>
           ))}
+          {countNote}
         </fieldset>
       )}
       {result === undefined ? null : !result.ok ? (
@@ -141,6 +144,7 @@ export function ChainPanel(props: ChainPanelProps) {
         <EmptyState inline role="status">{outside && props.scopeName !== undefined ? `No chain within ${props.scopeName} in ${limit} steps or fewer.` : `No chain of ${limit} steps or fewer.`}</EmptyState>
       ) : (
         <>
+          {props.onSteps === undefined ? countNote : null}
           <ol className={styles.chains} aria-label="Chains">
             {shown.map((card, at) => (
               // one card per chain (step 8.3b, B2.1): a click anywhere on it chooses it; only the chosen card shows its step rows, each its own button
@@ -169,7 +173,6 @@ export function ChainPanel(props: ChainPanelProps) {
               </li>
             ))}
           </ol>
-          {result.total > chains.length ? <p className={styles.note}>{`${chains.length} of ${result.total} chains`}</p> : null}
           {result.truncated ? <p className={styles.note}>The search stopped early: there may be more chains.</p> : null}
           <p className={styles.note}>A chain of families: check that each step fits your compound.</p>
           {props.phone === true && chains.length > 1 ? <Button onClick={() => setExpanded((open) => !open)}>{expanded ? 'Show fewer' : `Show all ${chains.length}`}</Button> : null}

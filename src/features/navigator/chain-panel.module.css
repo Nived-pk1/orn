@@ -238,6 +238,7 @@
 
 .stepsChoice {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-8);
   margin: 0;
@@ -283,4 +284,10 @@
 .stepsOption:focus-within {
   outline: 2px solid var(--color-focus, var(--color-ink));
   outline-offset: 2px;
+}
+
+/* "5 of 23 chains" is never hidden, also at phone peek (the other notes wait for the full height) */
+.count {
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
 }
