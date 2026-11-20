@@ -39,3 +39,14 @@ CHAINS steps=4 families=17 edges=114 worstMs=0.5 cls_ethers>cls_aldehydes total=
 CHAINS steps=5 families=17 edges=114 worstMs=0.3 cls_amines>cls_aldehydes total=140 trunc=true
 ```
 Size (fresh builds): Study 338,107 -> 338,344 (+237); Studio 342,164 -> 342,367 (+203). Limit +300, aim +0 missed.
+
+## STATE AT PAUSE (2026-11-20, owner asked to pause; resume on their word)
+- Commits so far (master, NOT pushed, NOT deployed): 35cea0c (section 0) ... last "count of chains stays visible at phone peek". `npm run check` was green except 3 route-count tests, since fixed (not re-run as a whole after that fix: re-run before close).
+- Fresh builds: Study 338,344 (+237), Studio 342,367 (+203). Real-data probes done (see above).
+- 3-engine round of touched specs: 106 passed, 12 skipped, 8 FAILED (not yet fixed):
+  1. chromium map-chains.spec.ts:231 (phone, "the peek shows its whole content"): the new Steps row makes the peek overflow. Fix: shrink the peek (e.g. Steps row inline with the Close row) or raise the peek's allowance, no loosening of the test.
+  2. chromium/firefox/webkit precursor-explorer.spec.ts:51: expects 2 routes (`toHaveCount(2)`); now 3 (C3 inferred generic route). Update to 3 with the third warned.
+  3. chromium/firefox/webkit route-editor.spec.ts:91: expects 1 "Save as route" button; now 2 unsaved routes. Update the count.
+  4. webkit chain-steps.spec.ts:37 (desktop): "console errors" after the reload step; read the log (`test-results`) and decide: product or test.
+- Still to do: fix the above; re-run the failed specs in the 3 engines; ONE full Chromium run; open each screenshot in `screenshots/C/` (light and dark; the phone chain-steps shots were taken after the last fix, re-check "5 of 6 chains" shows at peek); final `npm run check`; fresh size build; PROGRESS "Step C" section (with the Part B review text kept from section 0), plan row C DONE, PROJECT_STATE (next: T, then 8.5); commit; deploy per RELEASE.md (Study, live specs Chromium + WebKit, Studio, Access check); push; REPORT.
+- Disclosed so far: F2 test and code written together (not red first); old route/demo tests changed on purpose for C3/C4; Study/Studio size +237/+203.
