@@ -36,26 +36,33 @@ export function explicitOverride(indexes: ReadonlyIndexes, ref: RecordRef, examI
   return applicable.length === 0 ? undefined : bestOf(applicable.map((r) => r.scope));
 }
 
-/** §4.2: each topic `ref` maps to is checked against `examVersion` by the ONE coverage rule (`coverage/topic-coverage.ts`, 7.7 A). */
-export function mappedScope(indexes: ReadonlyIndexes, examVersion: ExamVersion, ref: RecordRef): ExamScope | undefined {
-  const mappings = referencing(indexes, ref, 'target', 'topic_mapping')
-    .map((owner) => indexes.get(owner.id))
-    .filter((m): m is TopicMapping => m?.kind === 'topic_mapping');
-  if (mappings.length === 0) return undefined;
+/**
+ * §4.2: each topic `ref` maps to is checked against the version by the ONE coverage rule (`coverage/topic-coverage.ts`, 7.7 A).
+ * `enrichment` is decided on the mappings whose topic the version COVERS only (a core mapping in an uncovered topic does not count).
+ * The coverage table and the parent lookup are built ONCE by the caller (step C2), not per record.
+ */
+type MappedScopeOf = (ref: RecordRef) => ExamScope | undefined;
+function mappedScopeOf(indexes: ReadonlyIndexes, examVersion: ExamVersion): MappedScopeOf {
   const strongest = strongestCoverage(examVersion);
   const parentOf = (id: string): string | undefined => {
     const t = indexes.get(id);
     return t?.kind === 'topic' ? t.parentId : undefined;
   };
-  const covered = mappings.some((m) => {
-    const level = coverageOfTopic(strongest, m.topicId, parentOf);
-    return level === 'included' || level === 'partial';
-  });
-  if (covered) return mappings.every((m) => m.role === 'enrichment') ? 'enrichment' : 'official';
-  return 'outside';
+  return (ref) => {
+    const mappings = referencing(indexes, ref, 'target', 'topic_mapping')
+      .map((owner) => indexes.get(owner.id))
+      .filter((m): m is TopicMapping => m?.kind === 'topic_mapping');
+    if (mappings.length === 0) return undefined;
+    const covered = mappings.filter((m) => {
+      const level = coverageOfTopic(strongest, m.topicId, parentOf);
+      return level === 'included' || level === 'partial';
+    });
+    if (covered.length === 0) return 'outside';
+    return covered.every((m) => m.role === 'enrichment') ? 'enrichment' : 'official';
+  };
 }
 
-/** §4.3: an unmapped/outside concept that is a prerequisite (one hop) of a record whose *direct* scope is official. */
+/** §4.3: an unmapped OR outside concept that is a prerequisite (one hop) of a record whose *direct* scope is official. */
 function prerequisiteScope(indexes: ReadonlyIndexes, ref: RecordRef, direct: (r: RecordRef) => ExamScope | undefined): ExamScope | undefined {
   if (ref.kind !== 'concept') return undefined;
   const viaField = [
@@ -78,7 +85,32 @@ function prerequisiteScope(indexes: ReadonlyIndexes, ref: RecordRef, direct: (r:
 export function createScopeOf(indexes: ReadonlyIndexes, examId: ExamId, examVersionId: ExamVersionId): ScopeOf {
   const examVersion = indexes.get(examVersionId);
   const version = examVersion?.kind === 'exam_version' ? examVersion : undefined;
-  const direct = (ref: RecordRef): ExamScope | undefined =>
-    explicitOverride(indexes, ref, examId, examVersionId) ?? (version === undefined ? undefined : mappedScope(indexes, version, ref));
-  return (ref) => direct(ref) ?? prerequisiteScope(indexes, ref, direct) ?? 'unmapped';
+  const mapped = version === undefined ? undefined : mappedScopeOf(indexes, version);
+  const overrideCache = new Map<string, ExamScope | undefined>();
+  const resultCache = new Map<string, ExamScope>();
+  const key = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
+  const override = (ref: RecordRef): ExamScope | undefined => {
+    const k = key(ref);
+    if (overrideCache.has(k)) return overrideCache.get(k);
+    const value = explicitOverride(indexes, ref, examId, examVersionId);
+    overrideCache.set(k, value);
+    return value;
+  };
+  const direct = (ref: RecordRef): ExamScope | undefined => override(ref) ?? mapped?.(ref);
+  return (ref) => {
+    const k = key(ref);
+    const known = resultCache.get(k);
+    if (known !== undefined) return known;
+    const own = override(ref);
+    let result: ExamScope;
+    if (own !== undefined) result = own; // an explicit override always wins
+    else {
+      const mappedScope = mapped?.(ref);
+      // An unmapped OR outside concept that serves an official record is a prerequisite (§4.3).
+      result =
+        mappedScope !== undefined && mappedScope !== 'outside' ? mappedScope : (prerequisiteScope(indexes, ref, direct) ?? mappedScope ?? 'unmapped');
+    }
+    resultCache.set(k, result);
+    return result;
+  };
 }
