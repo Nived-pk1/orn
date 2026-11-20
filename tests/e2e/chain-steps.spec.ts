@@ -28,6 +28,11 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.emulateMedia({ colorScheme: 'light' });
 }
 
+async function dismissToast(page: Page): Promise<void> {
+  const dismiss = page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' });
+  for (let left = await dismiss.count(); left > 0; left = await dismiss.count()) await dismiss.first().click();
+}
+
 async function choose(page: Page, from: string, to: string): Promise<void> {
   await panel(page).getByRole('combobox', { name: 'From' }).selectOption({ label: from });
   await panel(page).getByRole('combobox', { name: 'To' }).selectOption({ label: to });
@@ -102,6 +107,8 @@ test.describe('Precursors: Continue from here (desktop)', () => {
     await expect(found.getByText(/5 steps from Line 02/)).toBeVisible({ timeout: 60_000 });
     const more = found.getByRole('button', { name: 'Continue from here' });
     await expect(more).toHaveCount(1);
+    await more.scrollIntoViewIfNeeded();
+    await dismissToast(page);
     await shot(page, 'continue-from-here-desktop');
     await more.click();
     await expect(view.getByText('Making: Line 02')).toBeVisible();

@@ -1,5 +1,5 @@
 /* The first-run coach mark (step 8.4g Part B, G4): a small card above the page, not modal; the fade is off for reduced motion. */
-.mark { position: fixed; z-index: var(--z-menu); box-sizing: border-box; max-width: calc(100vw - 16px); padding: var(--space-12) var(--space-16); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--raised); box-shadow: var(--shadow-3); color: var(--text); animation: mark-in var(--d-base) var(--ease-out); }
+.mark { position: fixed; z-index: calc(var(--z-toast) + 1); box-sizing: border-box; max-width: calc(100vw - 16px); padding: var(--space-12) var(--space-16); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--raised); box-shadow: var(--shadow-3); color: var(--text); animation: mark-in var(--d-base) var(--ease-out); }
 .count { margin: 0 0 var(--space-4); color: var(--text-2); font-size: var(--text-12); }
 .text { margin: 0 0 var(--space-12); font-size: var(--text-14); }
 .actions { display: flex; justify-content: flex-end; gap: var(--space-8); }
