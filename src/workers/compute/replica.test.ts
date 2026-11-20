@@ -170,7 +170,7 @@ describe('validateAll and findRoutes', () => {
     expect(all.ok && sortedFindings(all.findings)).toEqual(sortedFindings(precomputedOf(state, 3).findings));
     const routes = replica.findRoutes(3, ROUTE);
     expect(routes.ok && routes.result).toEqual(searchRoutes(contextOf(state), ROUTE));
-    expect(routes.ok && routes.result.routes.length).toBe(2);
+    expect(routes.ok && routes.result.routes.length).toBe(3);
   });
 
   it('routes follow the replica through edits (not the state it was loaded with)', () => {
@@ -182,8 +182,8 @@ describe('validateAll and findRoutes', () => {
     const owners = [...new Map(store.deleteImpact([target]).blockedBy.map((b) => [b.owner.id, b.owner] as const)).values()];
     mustCommit(store.dispatch(envelope('Delete PCC', ...owners.map((r) => ({ type: 'record.delete' as const, ref: r, mode: 'apply_cascade' as const })), { type: 'record.delete', ref: target, mode: 'apply_cascade' })));
     const after = replica.findRoutes(store.getRevision(), ROUTE);
-    expect(before.ok && before.result.routes.length).toBe(2);
-    expect(after.ok && after.result.routes.map((r) => r.steps.map((s) => s.reactionId))).toEqual([['rxn_ethanol-to-ethanal-dichromate', 'rxn_methylmgbr-ethanal']]);
+    expect(before.ok && before.result.routes.length).toBe(3);
+    expect(after.ok && after.result.routes.map((r) => r.steps.map((s) => s.reactionId))).toEqual([['rxn_ethanol-to-ethanal-dichromate', 'rxn_methylmgbr-ethanal'], ['rxn_alcohol1-to-aldehyde-pcc', 'rxn_methylmgbr-ethanal']]);
   });
 
   it('the time budget runs on the injected clock; a signal replaces whatever the query carried', () => {

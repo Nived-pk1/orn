@@ -50,7 +50,7 @@ describe('createRouteSearch', () => {
     const find = createRouteSearch({ store, sync: () => syncOver(loaded()) });
     const answer = await find(QUERY);
     expect(answer.ok).toBe(true);
-    expect(answer.ok && answer.result.routes).toHaveLength(2);
+    expect(answer.ok && answer.result.routes).toHaveLength(3);
     expect(answer.ok && answer.result.routes[0]?.steps.map((s) => s.reactionId)).toContain('rxn_methylmgbr-ethanal');
   });
 
