@@ -514,3 +514,11 @@ Package section **#3 Technology Decision & Alternatives**. Each ADR records requ
 - **Size.** Entry code is small and the rest is lazy: `my-records-lazy.ts` (holder), a late chunk `window-keys` (mounted when the data is there or the sheet is asked for: the S key, the rules and the store, the shortcuts host, the tour check), the Starred view, the shortcuts sheet and the tour are chunks. Until the rules are loaded there is no star button and no stars: never a wrong state.
 
 **Consequences.** Study +1,482 and Studio +1,448 bytes gzip over Part A (reviewer's hard ceiling +1,500; the aim was +1,000). A window test that resets its module registry must warm the late chunk (`prefetchLateKeys`), like the address driver. WebKit hands a tap that lands near a button to that button, so the peek header keeps the star and the menu next to the kind chip and the record name 6 px lower.
+
+### ADR-049 — Route search: shortest first, generic reactions on the way (step C, 2026-11-20)
+
+**Problem.** Route search was a depth-first walk: a bushy first branch could spend the whole budget and hide a one-step route; a generic reaction that makes a class ("alkenes give alcohols") was invisible when the walk stood on a member species; a class reactant was expanded to one move per member.
+
+**Decision.** Iterative deepening over one shared budget (400 nodes / 800 edges unchanged), routes recorded by exact step count and the search stops after the first pass that fills `maxRoutes`; a class reactant is one move "any <class>" completed against a named start by membership; the walked species also takes productions of its classes (transitive, bounded by the class depth cap in `classAncestors`) and a walked class those of its ancestor classes, as inferred moves carrying the class-match or "made as the broader class" warning. Ranking is unchanged (fewer steps, selectivity, stated before inferred, published before draft) and now ends on the route key. Truncation is still reported with its reason.
+
+**Consequence.** A route that continued through one member's own producers of a class reactant is no longer found (only the class move continues). Superseded: none.

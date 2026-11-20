@@ -151,21 +151,16 @@ describe('ranking (docs/GRAPH_SEMANTICS.md §9)', () => {
   it('a stated route ranks above one reached only by class-membership inference, with the inferred step warned', () => {
     const fam = chemClass('fam', 'Family', 'functional_group');
     const member = species('member', 'Member', { classes: ['fam'] });
-    const other = species('other', 'Other');
     const target = species('target', 'Target');
-    const stated = reaction({ slug: 'stated', name: 'stated', scope: 'specific', participants: [{ ref: sp('other'), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp('target') }] }] });
+    const stated = reaction({ slug: 'stated', name: 'stated', scope: 'specific', participants: [{ ref: sp('member'), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp('target') }] }] });
     const generic = reaction({ slug: 'generic', name: 'generic', scope: 'generic', participants: [{ ref: cl('fam'), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp('target') }] }] });
-    const ctx = contextOf(stateOf(fam, member, other, target, stated, generic));
-    const result = searchRoutes(ctx, query({ target: sp('target') }));
-    // Three routes complete at depth 1 (no startFrom): via `other` (stated), via the class itself (exact,
-    // since the reactant genuinely is the class), and via `member` (inferred). Only the last is warned, and
-    // it ranks last: an inferred step is strictly worse than either exact one, whichever of those sorts first.
-    const statedIdx = result.routes.findIndex((r) => r.steps[0]?.carriedIn.id === 'spc_other');
-    const inferredIdx = result.routes.findIndex((r) => r.steps[0]?.carriedIn.id === 'spc_member');
-    expect(statedIdx).toBeGreaterThanOrEqual(0);
-    expect(inferredIdx).toBe(result.routes.length - 1);
-    expect(inferredIdx).toBeGreaterThan(statedIdx);
-    expect(result.routes[inferredIdx]?.steps[0]?.warnings).toEqual([CLASS_LEVEL_MATCH_WARNING]);
+    const ctx = contextOf(stateOf(fam, member, target, stated, generic));
+    const result = searchRoutes(ctx, query({ target: sp('target'), startFrom: [sp('member')] }));
+    // Two routes of one step: the stated reaction (member itself) and the generic one reached by class membership.
+    // The class is never expanded to its members (step C4): the member route is the stated one.
+    expect(result.routes.map((r) => r.steps[0]?.carriedIn.id)).toEqual(['spc_member', 'cls_fam']);
+    expect(result.routes[0]?.steps[0]?.warnings).toEqual([]);
+    expect(result.routes[1]?.steps[0]?.warnings).toEqual([CLASS_LEVEL_MATCH_WARNING]);
   });
 
   it('ties are broken by the reaction-ID sequence, deterministically', () => {
@@ -258,12 +253,10 @@ describe('startFrom completion by class membership (either direction)', () => {
     const generic = reaction({ slug: 'generic', name: 'generic', scope: 'generic', participants: [{ ref: cl('fam'), role: 'reactant' }], outcomes: [{ sel: 'major', products: [{ ref: sp('target') }] }] });
     const ctx = contextOf(stateOf(fam, member, target, generic));
     const result = searchRoutes(ctx, query({ target: sp('target'), startFrom: [sp('member')] }));
-    // Two routes complete: carriedIn = the class itself (completion is the inferred hop, checked here) and
-    // carriedIn = `member` directly (an exact startFrom match — the *move* into it was the inferred hop
-    // instead, tested by the class-membership-inference case in moves.test.ts). Both end up warned.
+    // One route completes: carriedIn = the class itself, the completion is the inferred hop (checked here).
     const viaClass = result.routes.find((r) => r.steps[0]?.carriedIn.kind === 'class');
     expect(viaClass?.steps[0]?.carriedIn).toEqual({ kind: 'class', id: 'cls_fam' });
     expect(viaClass?.steps[0]?.warnings).toEqual([CLASS_LEVEL_MATCH_WARNING]);
-    expect(result.routes.map((r) => r.steps[0]?.carriedIn.id).sort()).toEqual(['cls_fam', 'spc_member']);
+    expect(result.routes.map((r) => r.steps[0]?.carriedIn.id)).toEqual(['cls_fam']); // a class is not expanded to its members (step C4)
   });
 });

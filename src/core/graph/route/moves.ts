@@ -5,7 +5,7 @@
  * the participant's own ref is a class — every concrete species inferred to satisfy it by class
  * membership. An inferred move is never presented as a stated fact: it carries `CLASS_LEVEL_MATCH_WARNING`.
  */
-import type { ConditionVariantId, Outcome, Participant, Reaction, RecordRef } from '../../schema';
+import type { ClassId, ConditionVariantId, Outcome, Participant, Reaction, RecordRef } from '../../schema';
 import type { ProjectionContext } from '../contracts';
 import { drawnAsNode } from '../kit';
 import { variantsOfParticipant } from '../reaction-explorer/select';
@@ -54,30 +54,73 @@ export function sharedVariants(reaction: Reaction, participant: Participant, out
   return shared.length === 0 ? null : shared;
 }
 
-/** Every backward step that could have produced `target` as a main product. `target` is not filtered by `drawnAsNode`: a query names it directly. */
+/** Warning on a move made through a reaction that makes a BROADER class than the walked class (step C3). */
+export const BROADER_CLASS_WARNING = 'made as the broader class, verify scope';
+
+interface ProducedAs {
+  readonly ref: RecordRef;
+  readonly inferred: boolean;
+  readonly warning: string | null;
+}
+
+/**
+ * What the walked substance can be produced AS: itself (stated), then every class it belongs to or is
+ * under (inferred, transitive: the class depth cap lives in `classAncestors`). A species walks up to its
+ * classes ("class-level match"); a class walks up to its ancestor classes ("made as the broader class").
+ */
+function producedAs(ctx: ProjectionContext, target: RecordRef): ProducedAs[] {
+  const out: ProducedAs[] = [{ ref: target, inferred: false, warning: null }];
+  const seen = new Set<string>([refKey(target)]);
+  const add = (id: string, warning: string): void => {
+    const ref: RecordRef = { kind: 'class', id };
+    if (seen.has(refKey(ref))) return;
+    seen.add(refKey(ref));
+    out.push({ ref, inferred: true, warning });
+  };
+  if (target.kind === 'species') {
+    const record = ctx.indexes.get(target.id);
+    if (record?.kind !== 'species') return out;
+    for (const classId of record.classIds) {
+      add(classId, CLASS_LEVEL_MATCH_WARNING);
+      for (const ancestor of ctx.indexes.classAncestors(classId)) add(ancestor, CLASS_LEVEL_MATCH_WARNING);
+    }
+  } else if (target.kind === 'class') {
+    for (const ancestor of ctx.indexes.classAncestors(target.id as ClassId)) add(ancestor, BROADER_CLASS_WARNING);
+  }
+  return out;
+}
+
+/**
+ * Every backward step that could have produced `target` as a main product, stated moves first, then moves
+ * inferred through a broader class (step C3). A class reactant is ONE move "any <class>" (step C4): it is
+ * never expanded to one move per member (the route search completes it against a named start by membership).
+ * `target` is not filtered by `drawnAsNode`: a query names it directly.
+ */
 export function backwardMovesInto(ctx: ProjectionContext, target: RecordRef, excludeReactionIds: ReadonlySet<string>): CarriedMove[] {
   const moves: CarriedMove[] = [];
-  for (const production of ctx.indexes.productionsOf(target)) {
-    if (production.productRole !== 'main' || excludeReactionIds.has(production.reactionId)) continue;
-    const reaction = ctx.indexes.get(production.reactionId);
-    if (reaction?.kind !== 'reaction') continue;
-    const outcome = reaction.outcomes.find((o) => o.id === production.outcomeId);
-    if (outcome === undefined) continue;
+  for (const made of producedAs(ctx, target)) {
+    for (const production of ctx.indexes.productionsOf(made.ref)) {
+      if (production.productRole !== 'main' || excludeReactionIds.has(production.reactionId)) continue;
+      const reaction = ctx.indexes.get(production.reactionId);
+      if (reaction?.kind !== 'reaction') continue;
+      const outcome = reaction.outcomes.find((o) => o.id === production.outcomeId);
+      if (outcome === undefined) continue;
 
-    for (const participant of reaction.participants) {
-      if (participant.role !== 'reactant' || !drawnAsNode(ctx, participant.ref)) continue;
-      const shared = sharedVariants(reaction, participant, outcome);
-      if (shared === null) continue;
-      const sideInputs = sideInputsExcluding(ctx, reaction, participant.id);
-      const base = { reaction, outcome, carriedOut: target, sideInputs, conditionVariantIds: shared };
-
-      if (participant.ref.kind !== 'class') {
-        moves.push({ ...base, carriedIn: { kind: participant.ref.kind, id: participant.ref.id }, inferred: false, warnings: [] });
-        continue;
-      }
-      moves.push({ ...base, carriedIn: { kind: 'class', id: participant.ref.id }, inferred: false, warnings: [] });
-      for (const member of ctx.indexes.speciesInClass(participant.ref.id, { transitive: true })) {
-        moves.push({ ...base, carriedIn: member, inferred: true, warnings: [CLASS_LEVEL_MATCH_WARNING] });
+      for (const participant of reaction.participants) {
+        if (participant.role !== 'reactant' || !drawnAsNode(ctx, participant.ref)) continue;
+        const shared = sharedVariants(reaction, participant, outcome);
+        if (shared === null) continue;
+        const sideInputs = sideInputsExcluding(ctx, reaction, participant.id);
+        moves.push({
+          reaction,
+          outcome,
+          carriedOut: target,
+          sideInputs,
+          conditionVariantIds: shared,
+          carriedIn: { kind: participant.ref.kind, id: participant.ref.id },
+          inferred: made.inferred,
+          warnings: made.warning === null ? [] : [made.warning],
+        });
       }
     }
   }

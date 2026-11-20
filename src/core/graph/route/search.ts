@@ -74,27 +74,27 @@ export function searchRoutes(ctx: ProjectionContext, query: RouteQuery, options:
   };
 
   const found: RouteStepDraft[][] = [];
-  let depthCutoffHit = false;
+  let frontierOpen = false;
+  let passNodes = 0;
+  let lastPassNodes = 0;
 
-  const explore = (currentRef: RecordRef, backward: readonly RouteStepDraft[], visited: ReadonlySet<string>): void => {
+  /** One depth-limited walk: records the routes of EXACTLY `limit` steps (shorter ones were recorded by earlier passes). */
+  const explore = (limit: number, currentRef: RecordRef, backward: readonly RouteStepDraft[], visited: ReadonlySet<string>): void => {
     if (outOfBudget()) return;
     budget.nodesExplored += 1;
+    passNodes += 1;
 
-    if (backward.length > 0) {
+    if (backward.length === limit) {
       const done = completes(ctx, currentRef, query.startFrom);
       if (done.ok) {
         const chronological = [...backward].reverse();
         found.push(done.inferred ? withExtraWarning(chronological, CLASS_LEVEL_MATCH_WARNING) : chronological);
       }
-    }
-
-    const moves = backwardMovesInto(ctx, currentRef, excludeReactionIds);
-    if (backward.length >= effectiveMaxSteps) {
-      if (moves.length > 0) depthCutoffHit = true;
+      if (backwardMovesInto(ctx, currentRef, excludeReactionIds).length > 0) frontierOpen = true;
       return;
     }
 
-    for (const move of moves) {
+    for (const move of backwardMovesInto(ctx, currentRef, excludeReactionIds)) {
       if (outOfBudget()) return;
       budget.edgesExplored += 1;
       const key = refKey(move.carriedIn);
@@ -105,24 +105,34 @@ export function searchRoutes(ctx: ProjectionContext, query: RouteQuery, options:
         budget.hiddenEstimate += 1;
         continue;
       }
-      explore(move.carriedIn, [...backward, draftStep(move)], new Set([...visited, key]));
+      explore(limit, move.carriedIn, [...backward, draftStep(move)], new Set([...visited, key]));
     }
   };
 
-  explore(targetRef, [], new Set([refKey(targetRef)]));
-  if (budget.reason === null && depthClamped && depthCutoffHit) stop('max_depth');
+  // Iterative deepening sharing ONE budget: routes come in order of step count, so a one-step route is never
+  // missed because a deeper branch spent the budget. Stops after the first pass that fills `maxRoutes`.
+  for (let limit = 1; limit <= effectiveMaxSteps; limit += 1) {
+    if (outOfBudget()) break;
+    frontierOpen = false;
+    passNodes = 0;
+    explore(limit, targetRef, [], new Set([refKey(targetRef)]));
+    lastPassNodes = passNodes;
+    if (!frontierOpen) break; // nothing can go one step deeper: the search is complete
+    if (found.length >= query.maxRoutes && query.maxRoutes > 0) break;
+  }
+  if (budget.reason === null && depthClamped && frontierOpen) stop('max_depth');
 
   const valid = query.assumption === 'only_listed_inputs' ? found.filter((steps) => onlyListedInputsHold(steps, query.startFrom)) : found;
 
   return {
     routes: rankRoutes(valid, query.maxRoutes),
-    explored: budget.nodesExplored,
+    explored: lastPassNodes,
     truncation: budget.reason === null ? null : { reason: budget.reason, hiddenNodeEstimate: budget.hiddenEstimate },
   };
 }
 
 function withExtraWarning(steps: readonly RouteStepDraft[], warning: string): RouteStepDraft[] {
   const [first, ...rest] = steps;
-  if (first === undefined) return [...steps];
+  if (first === undefined || first.warnings.includes(warning)) return [...steps];
   return [{ ...first, warnings: [...first.warnings, warning] }, ...rest];
 }

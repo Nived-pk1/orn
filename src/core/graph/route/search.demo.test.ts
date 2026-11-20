@@ -31,10 +31,13 @@ describe('demo dataset routes', () => {
   it('ethanol → propan-2-ol: the curated PCC route, plus the dichromate alternative found by route search', () => {
     const result = searchRoutes(ctx, query({ target: sp('propan-2-ol'), startFrom: [sp('ethanol')] }));
     const found = result.routes.map(reactionIdsOf);
-    expect(found).toHaveLength(2);
+    // Step C3: the generic "primary alcohol to aldehyde (PCC)" reaction adds a third, inferred route; it ranks last and is warned.
+    expect(found).toHaveLength(3);
     expect(found).toContainEqual(['rxn_ethanol-to-ethanal-pcc', 'rxn_methylmgbr-ethanal']);
     expect(found).toContainEqual(['rxn_ethanol-to-ethanal-dichromate', 'rxn_methylmgbr-ethanal']);
-    expect(result.routes.every((r) => r.steps.every((s) => s.warnings.length === 0))).toBe(true);
+    expect(result.routes.slice(0, 2).every((r) => r.steps.every((s) => s.warnings.length === 0))).toBe(true);
+    expect(result.routes[2]?.steps[0]?.reactionId).toBe('rxn_alcohol1-to-aldehyde-pcc');
+    expect(result.routes[2]?.steps[0]?.warnings.length).toBeGreaterThan(0);
     expect(result.truncation).toBeNull();
   });
 
@@ -47,7 +50,7 @@ describe('demo dataset routes', () => {
   it('ethanol → ethanoic acid: returns both the direct path and the path via ethanal', () => {
     const result = searchRoutes(ctx, query({ target: sp('ethanoic-acid'), startFrom: [sp('ethanol')] }));
     const found = result.routes.map(reactionIdsOf);
-    expect(found).toHaveLength(3);
+    expect(found).toHaveLength(4); // the fourth is the inferred generic oxidation (step C3), ranked after the stated ones
     expect(found).toContainEqual(['rxn_ethanol-to-ethanoic-acid']);
     expect(found).toContainEqual(['rxn_ethanol-to-ethanal-pcc', 'rxn_ethanal-to-ethanoic-acid']);
     expect(found).toContainEqual(['rxn_ethanol-to-ethanal-dichromate', 'rxn_ethanal-to-ethanoic-acid']);

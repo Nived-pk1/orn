@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { chemClass, cl, contextOf, neverAsNode, reaction, sp, species, stateOf } from '@/test-support/graph-state';
 import { must } from '@/test-support/state-fixture';
 import type { RecordRef } from '@/core/schema';
-import { backwardMovesInto, CLASS_LEVEL_MATCH_WARNING, sharedVariants } from '.';
+import { backwardMovesInto, sharedVariants } from '.';
 
 const rec = (ref: { kind: RecordRef['kind']; id: string }): RecordRef => ({ kind: ref.kind, id: ref.id });
 const NONE = new Set<string>();
@@ -85,15 +85,12 @@ describe('backwardMovesInto', () => {
     const state = stateOf(primaryAlcohols, ethanol, propan1ol, aldehydes, generic);
     const ctx = contextOf(state);
 
-    it('a class-typed reactant yields one exact move (the class itself) and one inferred move per member species', () => {
+    it('a class-typed reactant yields ONE move, "any <class>", and is not expanded to its members (step C4)', () => {
       const moves = backwardMovesInto(ctx, rec(cl('aldehydes')), NONE);
-      expect(moves).toHaveLength(3);
-      const exact = moves.find((m) => m.carriedIn.kind === 'class');
-      expect(exact?.inferred).toBe(false);
-      expect(exact?.warnings).toEqual([]);
-      const inferred = moves.filter((m) => m.inferred);
-      expect(inferred.map((m) => m.carriedIn.id).sort()).toEqual(['spc_ethanol', 'spc_propan-1-ol']);
-      for (const m of inferred) expect(m.warnings).toEqual([CLASS_LEVEL_MATCH_WARNING]);
+      expect(moves).toHaveLength(1);
+      expect(moves[0]?.carriedIn).toEqual({ kind: 'class', id: 'cls_primary-alcohols' });
+      expect(moves[0]?.inferred).toBe(false);
+      expect(moves[0]?.warnings).toEqual([]);
     });
 
     it('an exact species reactant is never treated as inferred', () => {

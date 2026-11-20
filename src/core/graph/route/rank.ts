@@ -74,7 +74,7 @@ const toPublicStep = (s: RouteStepDraft): FoundRouteStep => ({
 export function rankRoutes(candidates: readonly (readonly RouteStepDraft[])[], maxRoutes: number): FoundRoute[] {
   const byKey = new Map<string, readonly RouteStepDraft[]>();
   for (const steps of candidates) byKey.set(routeKey(steps), steps);
-  const sorted = [...byKey.entries()].sort(([, a], [, b]) => compareRoutes(a, b));
+  const sorted = [...byKey.entries()].sort(([ka, a], [kb, b]) => compareRoutes(a, b) || (ka < kb ? -1 : ka > kb ? 1 : 0)); // ties end on the route key (IDs)
   return sorted.slice(0, Math.max(0, maxRoutes)).map(([key, steps]) => ({
     key,
     steps: steps.map(toPublicStep),
