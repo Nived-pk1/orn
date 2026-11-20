@@ -52,7 +52,7 @@ describe('the Precursors mode', () => {
     fireEvent.click(within(modes()).getByRole('button', { name: /Precursors/ }));
     const view = await screen.findByRole('region', { name: 'Precursors' });
     fireEvent.click(within(view).getByRole('button', { name: 'Search' }));
-    await waitFor(() => expect(screen.getAllByText('2 routes found').length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText('3 routes found').length).toBeGreaterThan(0));
   });
 });
 

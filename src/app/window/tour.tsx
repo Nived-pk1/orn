@@ -1,17 +1,22 @@
 /**
  * The first-run tour (step 8.4g Part B, G4), a lazy chunk: three short coach marks, one at a time, each with Next (Done on the last) and Skip.
- * Not modal: nothing else on the page is blocked, and Esc is Skip. A mark points at its element (found by what the page already has: the map room, the Search button, the Open family button) when the page has it and
- * stands in the middle of the window with the same words when it does not (the top has the notices, the bottom the toast, the storage line and the tab bar). The focus goes to the mark's main button on each mark. No motion
+ * Not modal: nothing else on the page is blocked, and Esc is Skip. A mark points at its element (found by what the page already has: the Map item, the Search button, the Starred item; a collapsed rail: its Expand button) and stands in the middle of the window with the same words only when no anchor exists at all. The focus goes to the mark's main button on each mark. No motion
  * when the reader asked for none (the style turns the fade off).
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@/ui/primitives';
 import styles from './tour.module.css';
 
+/** The Map or Starred item: the rail's button on a desktop, the tab on a phone; a collapsed or missing item points at the rail's Expand button. */
+const viewItem = (label: string): HTMLElement | undefined => {
+  const items = [...document.querySelectorAll<HTMLElement>('nav[aria-label="Modes"] button, nav[aria-label="Home"] button')];
+  return items.find((item) => (item.title || item.textContent || '').trim().startsWith(label)) ?? items.find((item) => item.getAttribute('aria-label') === 'Expand');
+};
+
 export const TOUR_STEPS: readonly { readonly target: () => HTMLElement | null | undefined; readonly text: string }[] = [
-  { target: () => document.querySelector<HTMLElement>('[data-map-room]'), text: 'Tap a family to see what it makes and what it is made from' },
+  { target: () => viewItem('Map'), text: 'The Map shows every family. Tap one to see what it makes and what it is made from.' },
   { target: () => document.querySelector<HTMLElement>('[aria-label^="Search"]'), text: 'Find any compound, reaction or reagent' },
-  { target: () => [...document.querySelectorAll<HTMLElement>('button')].find((button) => button.textContent?.trim() === 'Open family'), text: 'Every reaction of a family, nothing left out' },
+  { target: () => viewItem('Starred'), text: 'Press the star on any record to keep it here for revision.' },
 ];
 
 const WIDTH = 288;

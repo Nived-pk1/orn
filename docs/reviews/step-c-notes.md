@@ -16,3 +16,7 @@
 - RESUME AT: C7.
 - RED C7: study-connected-scan.test -> 1 failed (no note). GREEN: `CardGroup.note` "first 5,000 of N compounds" on the class "Reactions that use it" group (and "first 5,000 of N reagents" on the reagent same-family group); rendered under the group.
 - RESUME AT: F1 (tour anchors), F2 (starred inspector line).
+- RED F1: tour.test (new words + anchors on desktop rail, phone tabs, Expand fallback) -> 4 failed. GREEN: viewItem() finder (rail button / phone tab / Expand button); marks are Map item, Search button, Starred item; mid-window only if no anchor exists.
+- F2: `noPlaceLineIn(mode)` in modes.ts (Starred joins Chapters and the explorers; window.tsx uses it). DISCLOSED: the test file and the function were written in the same step, the test was not run red first.
+- Two window tests (precursors, phone-precursors) changed "2 routes found" -> "3" (C3). e2e specs with "routes found" still to check: phone-precursors, precursor-explorer, route-editor, saved-as-link, study-explorers.
+- RESUME AT: npm run check, then e2e (specs above, From A to B steps spec, tour, starred, Continue from here), screenshots, real-data probes, sizes, docs, deploy.

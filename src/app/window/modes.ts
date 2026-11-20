@@ -44,6 +44,8 @@ export const REVIEW_MODE = 'review';
 
 /** The Explore tab's modes (the phone's Explore switch chooses among them). */
 export const EXPLORER_MODES: readonly string[] = [REACTIONS_MODE, PRECURSORS_MODE, REAGENTS_MODE, NAMED_MODE, MECHANISMS_MODE, SYLLABUS_MODE];
+/** Views where the inspector never says "has no place in this view" (a record there is shown by the view itself: Starred, Chapters, the explorers). */
+export const noPlaceLineIn = (mode: string): boolean => mode === CHAPTERS_MODE || mode === STARRED_MODE || EXPLORER_MODES.includes(mode);
 
 /** The mode a remembered explorer names. */
 export function modeOfExplorer(kind: ExplorerKind): string {

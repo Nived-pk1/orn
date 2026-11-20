@@ -8,9 +8,9 @@ afterEach(cleanup);
 describe('Tour (step 8.4g Part B, G4)', () => {
   it('has three short coach marks, in the words of the brief', () => {
     expect(TOUR_STEPS.map((s) => s.text)).toEqual([
-      'Tap a family to see what it makes and what it is made from',
+      'The Map shows every family. Tap one to see what it makes and what it is made from.',
       'Find any compound, reaction or reagent',
-      'Every reaction of a family, nothing left out',
+      'Press the star on any record to keep it here for revision.',
     ]);
   });
 
@@ -76,5 +76,69 @@ describe('placeMark', () => {
     expect(placeMark({ top: 700, left: 100, width: 80, height: 30 }, view, 100).top).toBe(588);
     expect(placeMark({ top: 10, left: 390, width: 80, height: 30 }, view, 100).left).toBe(104);
     expect(placeMark(undefined, view, 100)).toEqual({ top: 350, left: 56 }); // mid-screen: the bottom is the toast, the storage line and the tab bar
+  });
+});
+
+describe('the marks always point at something on screen (step C, F1)', () => {
+  const box = (el: HTMLElement): void => {
+    el.getBoundingClientRect = () => ({ top: 100, left: 20, width: 80, height: 32, right: 100, bottom: 132, x: 20, y: 100, toJSON: () => ({}) });
+  };
+  const rail = (collapsed = false): void => {
+    document.body.innerHTML = '';
+    const nav = document.createElement('nav');
+    nav.setAttribute('aria-label', 'Modes');
+    const labels = collapsed ? ['Map', 'Starred'] : ['Map', 'Starred'];
+    for (const label of labels) {
+      const b = document.createElement('button');
+      b.textContent = label;
+      box(b);
+      nav.append(b);
+    }
+    const search = document.createElement('button');
+    search.setAttribute('aria-label', 'Search');
+    box(search);
+    document.body.append(nav, search);
+  };
+  const anchoredAt = (step: number): string | null => {
+    for (let i = 0; i < step; i += 1) fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    return screen.getByRole('region', { name: 'Tour' }).getAttribute('data-anchored');
+  };
+  it('on a desktop rail every mark is anchored (Map item, Search button, Starred item)', () => {
+    for (const step of [0, 1, 2]) {
+      rail();
+      render(<Tour onFinish={() => undefined} />);
+      expect(anchoredAt(step)).toBe('true');
+      cleanup();
+    }
+  });
+  it('on a phone the Map tab and the Starred tab are the anchors', () => {
+    document.body.innerHTML = '';
+    const nav = document.createElement('nav');
+    nav.setAttribute('aria-label', 'Home');
+    for (const label of ['Chapters', 'Families', 'Map', 'Explore', 'Starred']) {
+      const b = document.createElement('button');
+      b.title = label;
+      b.textContent = label;
+      box(b);
+      nav.append(b);
+    }
+    document.body.append(nav);
+    for (const step of [0, 2]) {
+      render(<Tour onFinish={() => undefined} />);
+      expect(anchoredAt(step)).toBe('true');
+      cleanup();
+    }
+  });
+  it('an item that is missing points at the Expand button of the rail', () => {
+    document.body.innerHTML = '';
+    const nav = document.createElement('nav');
+    nav.setAttribute('aria-label', 'Modes');
+    const expand = document.createElement('button');
+    expand.setAttribute('aria-label', 'Expand');
+    box(expand);
+    nav.append(expand);
+    document.body.append(nav);
+    render(<Tour onFinish={() => undefined} />);
+    expect(anchoredAt(0)).toBe('true');
   });
 });

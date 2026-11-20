@@ -33,7 +33,7 @@ import { openChapter } from "./chapters-entry";
 import { useFirstScreen, hasChapterTopic } from "./first-screen";
 import { useWarmCanvas } from "./use-warm-canvas";
 import { mapWanted } from "./map-wanted";
-import { CHAPTERS_MODE, EXPLORER_MODES, modesFor, modeOfExplorer, NAVIGATOR_MODE, SETTINGS_MODE, STARRED_MODE } from "./modes";
+import { CHAPTERS_MODE, modesFor, noPlaceLineIn, modeOfExplorer, NAVIGATOR_MODE, SETTINGS_MODE, STARRED_MODE } from "./modes";
 import { usePhoneTabMode } from "./phone-tab-mode";
 import { studyChrome, StudyChromeProvider, useStudyChrome } from '@/ui/study-chrome';
 import { useHasOwnData } from './own-data-hooks';
@@ -308,7 +308,7 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
             <ErrorBoundary label="The inspector">
               <InspectorPanel
                 navigatorShown={mode === NAVIGATOR_MODE && totalOf(counts) > 0}
-                explorerShown={mode === CHAPTERS_MODE || EXPLORER_MODES.includes(mode)}
+                explorerShown={noPlaceLineIn(mode)}
                 openPane={openPane}
                 closePane={closePane}
                 onReactions={onReactions}
