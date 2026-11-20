@@ -14,3 +14,5 @@
 - RESUME AT: C6.
 - RED C6: model.test (continueFrom) -> 2 failed; continue-from.test -> module missing; precursors-view.test (Continue from here, Back) -> 2 failed. GREEN: model.ts `continueFrom` on step 1 of a >=5-step found route when the start has makers (backwardMovesInto); route-card button; view `continueFrom` (pushTargetEntry = replaceState prev + ONE pushState; popstate with the state returns to the previous search; autoRun runs the search after the target effect). Address text unchanged (ADR-047: target is in history.state only). 3 view tests changed on purpose (demo now 3 routes, C3).
 - RESUME AT: C7.
+- RED C7: study-connected-scan.test -> 1 failed (no note). GREEN: `CardGroup.note` "first 5,000 of N compounds" on the class "Reactions that use it" group (and "first 5,000 of N reagents" on the reagent same-family group); rendered under the group.
+- RESUME AT: F1 (tour anchors), F2 (starred inspector line).

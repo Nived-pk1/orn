@@ -13,7 +13,10 @@ import { studyKindWord } from './study-words';
 /** Most cards one group carries; "Show all n" shows these, and the total says when more exist. */
 export const MAX_CARDS = 60;
 /** Most records scanned when a class or a reagent family gathers its reactions or members. */
-const MAX_SCANNED = 5000;
+export const MAX_SCANNED = 5000;
+
+const scanNote = (total: number, noun: string): string | undefined =>
+  total > MAX_SCANNED ? `first ${MAX_SCANNED.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} ${noun}` : undefined;
 
 export interface Card {
   readonly ref: RecordRef;
@@ -26,6 +29,8 @@ export interface CardGroup {
   readonly heading: string;
   readonly total: number;
   readonly cards: readonly Card[];
+  /** Step C7: said when the group was built from only the first part of a long list ("first 5,000 of 6,120 compounds"). */
+  readonly note?: string;
 }
 export interface Snapshot {
   readonly state: CanonicalState;
@@ -70,6 +75,8 @@ export function groupOf(snapshot: Snapshot, key: string, heading: string, refs: 
   }
   return total === 0 ? undefined : { key, heading, total, cards };
 }
+
+const withNote = (group: CardGroup | undefined, note: string | undefined): CardGroup | undefined => (group === undefined || note === undefined ? group : { ...group, note });
 
 const reactionsOfSubstances = (indexes: ReadonlyIndexes, refs: readonly RecordRef[]): RecordRef[] => {
   const ids = new Set<string>();
@@ -129,17 +136,19 @@ export function connectedOf(snapshot: Snapshot, ref: RecordRef): CardGroup[] {
       groups = [uses(reactionsOfSubstances(indexes, [ref])), groupOf(snapshot, 'made-by', 'How it is made', madeBy(indexes, ref)), confused];
       break;
     case 'class': {
-      const members = indexes.speciesInClass(ref.id as never, { transitive: true }).slice(0, MAX_SCANNED);
-      groups = [uses(reactionsOfSubstances(indexes, [ref, ...members])), groupOf(snapshot, 'members', 'Compounds in this class', indexes.speciesInClass(ref.id as never, { transitive: false })), confused];
+      const all = indexes.speciesInClass(ref.id as never, { transitive: true });
+      const members = all.slice(0, MAX_SCANNED);
+      groups = [withNote(uses(reactionsOfSubstances(indexes, [ref, ...members])), scanNote(all.length, 'compounds')), groupOf(snapshot, 'members', 'Compounds in this class', indexes.speciesInClass(ref.id as never, { transitive: false })), confused];
       break;
     }
     case 'reagent': {
       const families = new Set((record as { families: readonly string[] }).families);
-      const same = Object.values(state.records.reagent as Readonly<Record<string, { id: string; families: readonly string[] }>>)
+      const allReagents = Object.values(state.records.reagent as Readonly<Record<string, { id: string; families: readonly string[] }>>);
+      const same = allReagents
         .slice(0, MAX_SCANNED)
         .filter((r) => r.id !== ref.id && r.families.some((f) => families.has(f)))
         .map((r) => refOf('reagent', r.id));
-      groups = [uses(indexes.reactionsByReagent(ref.id as never).map(reactionRef)), groupOf(snapshot, 'same-family', 'Same reagent family', same), confused];
+      groups = [uses(indexes.reactionsByReagent(ref.id as never).map(reactionRef)), withNote(groupOf(snapshot, 'same-family', 'Same reagent family', same), scanNote(allReagents.length, 'reagents')), confused];
       break;
     }
     case 'concept':

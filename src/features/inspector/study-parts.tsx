@@ -177,6 +177,7 @@ function CardGroupView(props: { readonly group: CardGroup }) {
           {all ? 'Show fewer' : `Show all ${group.total}`}
         </button>
       )}
+      {group.note === undefined ? null : <p className={styles.note}>{group.note}</p>}
       {!all || group.total <= group.cards.length ? null : <p className={styles.note}>Showing {group.cards.length} of {group.total}.</p>}
     </section>
   );
