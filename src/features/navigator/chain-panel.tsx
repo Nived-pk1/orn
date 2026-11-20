@@ -104,12 +104,28 @@ export function ChainPanel(props: ChainPanelProps) {
     </label>
   );
   // "5 of 23 chains" (never a silent cut): beside the Steps choice when there is one, so a phone's peek shows it, else above the chains
-  const countNote = result?.ok === true && result.total > chains.length ? <span className={styles.count}>{`${chains.length} of ${result.total} chains`}</span> : null;
+  const countNote = result?.ok === true && result.total > chains.length ? <p className={styles.count}>{`${chains.length} of ${result.total} chains`}</p> : null;
+  const stepsChoice =
+    props.onSteps === undefined ? null : (
+        <fieldset className={styles.stepsChoice} aria-label="Steps">
+          <legend>Steps</legend>
+          {CHAIN_STEP_CHOICES.map((n) => (
+            <label key={n} className={styles.stepsOption} data-on={n === limit ? '' : undefined}>
+              <input type="radio" name="chain-steps" value={n} checked={n === limit} onChange={() => props.onSteps?.(n)} aria-label={String(n)} />
+              <span aria-hidden="true">{n}</span>
+            </label>
+          ))}
+        </fieldset>
+    );
   const shown = props.phone === true && !expanded ? cards.slice(0, 1) : cards;
   return (
     <aside className={styles.panel} data-right-pane="" aria-label="From A to B" data-phone={props.phone === true ? '' : undefined} data-expanded={expanded ? '' : undefined}>
       <div className={styles.head}>
-        <h3 className={styles.title}>From A to B</h3>
+        <div className={styles.titleBlock}>
+          <h3 className={styles.title}>From A to B</h3>
+          {props.phone === true ? countNote : null}
+        </div>
+        {props.phone === true ? stepsChoice : null}
         <Button onClick={onClose}>Close</Button>
       </div>
       <p className={styles.note}>Across all chapters</p>
@@ -126,25 +142,14 @@ export function ChainPanel(props: ChainPanelProps) {
           Swap
         </Button>
       </div>
-      {props.onSteps === undefined ? null : (
-        <fieldset className={styles.stepsChoice} aria-label="Steps">
-          <legend>Steps</legend>
-          {CHAIN_STEP_CHOICES.map((n) => (
-            <label key={n} className={styles.stepsOption} data-on={n === limit ? '' : undefined}>
-              <input type="radio" name="chain-steps" value={n} checked={n === limit} onChange={() => props.onSteps?.(n)} aria-label={String(n)} />
-              <span aria-hidden="true">{n}</span>
-            </label>
-          ))}
-          {countNote}
-        </fieldset>
-      )}
+      {props.phone === true ? null : stepsChoice}
       {result === undefined ? null : !result.ok ? (
         <p role="status">{result.reason}</p>
       ) : chains.length === 0 ? (
         <EmptyState inline role="status">{outside && props.scopeName !== undefined ? `No chain within ${props.scopeName} in ${limit} steps or fewer.` : `No chain of ${limit} steps or fewer.`}</EmptyState>
       ) : (
         <>
-          {props.onSteps === undefined ? countNote : null}
+          {props.phone === true ? null : countNote}
           <ol className={styles.chains} aria-label="Chains">
             {shown.map((card, at) => (
               // one card per chain (step 8.3b, B2.1): a click anywhere on it chooses it; only the chosen card shows its step rows, each its own button

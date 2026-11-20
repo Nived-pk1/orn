@@ -70,7 +70,7 @@ test.describe('Studio, desktop', () => {
     await search(page).click();
     await expect(found(page).getByText('3 routes found')).toBeVisible();
     const routes = found(page).getByRole('list', { name: 'Routes' }).locator(':scope > li');
-    await expect(routes).toHaveCount(2);
+    await expect(routes).toHaveCount(3); // step C3: the third is the inferred generic route, listed last
     const first = routes.first();
     await expect(first.getByText('2 steps from Ethanol')).toBeVisible();
     await expect(first.getByText('1. Ethanol → Ethanal')).toBeVisible();

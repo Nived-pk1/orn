@@ -54,11 +54,13 @@ test.describe('From A to B: Steps (desktop)', () => {
     await choose(page, 'Line 01', 'Line 06');
     await shot(page, 'steps-5-chain-desktop');
     await page.waitForTimeout(2500); // the choice is written after a short pause
+    await expectClean(seen); // the first load; a reload starts its own count (the inspector styles WebKit refuses are counted per page)
     await page.reload();
+    const again = await watch(page);
     await expect(page.getByRole('group', { name: /^Navigator:/ })).toBeVisible({ timeout: 90_000 });
     await clickToolbar(page, 'From A to B');
     await expect(panel(page).getByRole('radio', { name: '5' })).toBeChecked();
-    await expectClean(seen);
+    await expectClean(again);
   });
 });
 

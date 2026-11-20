@@ -98,10 +98,10 @@ test.describe('the route editor (Studio)', () => {
     await view(page).getByRole('button', { name: 'Search', exact: true }).click();
     const found = view(page).getByRole('region', { name: 'Routes found' });
     await expect(found.getByText('3 routes found')).toBeVisible();
-    await expect(found.getByText(/Saved as/)).toHaveCount(1); // the demo saves one of the two
-    await expect(found.getByRole('button', { name: 'Save as route' })).toHaveCount(1);
+    await expect(found.getByText(/Saved as/)).toHaveCount(1); // the demo saves one of the three (step C3 adds an inferred generic route)
+    await expect(found.getByRole('button', { name: 'Save as route' })).toHaveCount(2);
     await dismissToasts(page);
-    await found.getByRole('button', { name: 'Save as route' }).click();
+    await found.getByRole('button', { name: 'Save as route' }).first().click();
     const dialog = page.getByRole('dialog', { name: 'New route' });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByLabel('Name (required)')).toHaveValue('');
@@ -114,7 +114,7 @@ test.describe('the route editor (Studio)', () => {
     await modes(page).getByRole('button', { name: 'Precursors' }).click();
     await view(page).getByRole('button', { name: 'Search', exact: true }).click();
     await expect(view(page).getByRole('region', { name: 'Routes found' }).getByText(/Saved as/)).toHaveCount(2, { timeout: 60_000 });
-    await expect(view(page).getByRole('button', { name: 'Save as route' })).toHaveCount(0);
+    await expect(view(page).getByRole('button', { name: 'Save as route' })).toHaveCount(1); // the inferred generic route is still unsaved
     await expectClean(seen);
   });
 
