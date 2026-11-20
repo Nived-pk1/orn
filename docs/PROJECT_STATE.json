@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-18",
+  "lastUpdated": "2026-11-20",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-18",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "C, then T, then 8.5",
-  "nextStepTitle": "Step 8.4g DONE 2026-11-18 and row 8.4 CLOSED (docs/PROGRESS.md 'Step 8.4g Part A', 'Step 8.4g Part B'; ADR-047, ADR-048): links, Copy link, Report a mistake, error and not-found screens, Starred, Recent, the first-run tour, the shortcuts sheet. Next: step C, then T (the test-speed step: the flaky list in docs/PROGRESS.md), then 8.5 (arrow-pushing mechanism drawings). Step 8.4g Part A DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4g Part A'; links, Copy link, Report a mistake, error and not-found screens, Review find, placements, Settings pane, Fit state; ADR-047). Next: 8.4g Part B (Starred, Recent, first-run tour, shortcuts sheet; closes row 8.4), then the test-speed step. Step 8.4m2 DONE 2026-11-17 (docs/PROGRESS.md 'Step 8.4m2'; B2 and B3 fixed, B1 NOT reproduced, awaiting review). Step 8.4m DONE 2026-11-16 (docs/PROGRESS.md 'Step 8.4m'; deployed 2026-11-16: Study 2af04982, Studio 9698b43a). Next: 8.4g (app essentials; includes the Settings-beside-the-inspector fix; also the Imported toast over the key reserve), then the test-speed step (flaky: WebKit map-fit:66, Firefox map-free-areas:137, Chromium exam-editors:64).",
+  "nextStep": "T, then 8.5",
+  "nextStepTitle": "Step C DONE 2026-11-20 (docs/PROGRESS.md 'Step C'; ADR-049): exam scope edges and cost, routes through generic reactions and shortest first, From A to B up to 5 steps with 'n of N chains', Precursors Continue from here, no silent class-scan cut, tour anchors, no place line in Starred. Next: step T (test speed; flaky list now six items), then 8.5.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -761,5 +761,27 @@
     "backup": "Starred and Recent are NOT in the backup file (import format unchanged); Settings says so",
     "e2e": "Chromium full run 494 passed, 41 skipped, 0 failed; Firefox + WebKit round of the touched specs 209 passed, 0 failed",
     "next": "C, then T, then 8.5"
+  },
+  "stepC": {
+    "closed": "2026-11-20",
+    "adr": [
+      "ADR-049"
+    ],
+    "initialJsGzipBytes": {
+      "study": 338365,
+      "studio": 342384
+    },
+    "uiStateKeys": [
+      "map.chainSteps"
+    ],
+    "notes": "docs/reviews/step-c-notes.md",
+    "flakyForStepT": [
+      "WebKit map-fit:66",
+      "Firefox map-free-areas:137",
+      "Chromium exam-editors:64",
+      "Chromium study-edition:118",
+      "WebKit notices-band desktop",
+      "Chromium exam-chip:21"
+    ]
   }
 }
