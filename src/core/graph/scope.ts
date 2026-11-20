@@ -87,7 +87,7 @@ export function createScopeOf(indexes: ReadonlyIndexes, examId: ExamId, examVers
   const version = examVersion?.kind === 'exam_version' ? examVersion : undefined;
   const mapped = version === undefined ? undefined : mappedScopeOf(indexes, version);
   const overrideCache = new Map<string, ExamScope | undefined>();
-  const resultCache = new Map<string, ExamScope>();
+  const resultCache = new Map<string, ExamScope | 'unmapped'>();
   const key = (ref: RecordRef): string => `${ref.kind}:${ref.id}`;
   const override = (ref: RecordRef): ExamScope | undefined => {
     const k = key(ref);
@@ -102,7 +102,7 @@ export function createScopeOf(indexes: ReadonlyIndexes, examId: ExamId, examVers
     const known = resultCache.get(k);
     if (known !== undefined) return known;
     const own = override(ref);
-    let result: ExamScope;
+    let result: ExamScope | 'unmapped';
     if (own !== undefined) result = own; // an explicit override always wins
     else {
       const mappedScope = mapped?.(ref);
