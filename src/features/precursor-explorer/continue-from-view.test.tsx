@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { emptyRecordTables, type AnyRecord, type CanonicalState } from '@/core/schema';
 import { demoState } from '@/test-support/app-boot-kit';
 import { reaction, sp, species } from '@/test-support/graph-state';
-import { setup } from './precursors-view-kit';
+import { setup } from '@/test-support/precursors-view-kit';
 
 afterEach(cleanup);
 

@@ -11,7 +11,7 @@ import { emptyRecordTables, type AnyRecord, type CanonicalState } from '@/core/s
 import { demoState } from '@/test-support/app-boot-kit';
 import { reaction, sp, species } from '@/test-support/graph-state';
 import type { PrecursorPorts, RoutesAnswer } from './contracts';
-import { setup } from './precursors-view-kit';
+import { setup } from '@/test-support/precursors-view-kit';
 
 afterEach(cleanup);
 

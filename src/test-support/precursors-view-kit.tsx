@@ -9,8 +9,8 @@ import { contextOf } from '@/test-support/graph-state';
 import { navigatorRig } from '@/test-support/navigator-kit';
 import { studyChrome, StudyChromeProvider } from '@/ui/study-chrome';
 import { createExplorerStore, createPrecursorsStore, type PrecursorsState } from '@/ui/state';
-import type { PrecursorPorts } from './contracts';
-import { PrecursorsView } from './precursors-view';
+import type { PrecursorPorts } from '@/features/precursor-explorer/contracts';
+import { PrecursorsView } from '@/features/precursor-explorer/precursors-view';
 
 
 export type Saved = Partial<Pick<PrecursorsState, 'target' | 'startFrom' | 'maxSteps' | 'onlyListed' | 'onlyInScope' | 'searched'>>;
