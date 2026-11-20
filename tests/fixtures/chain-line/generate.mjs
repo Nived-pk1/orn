@@ -13,11 +13,6 @@ import { fileURLToPath } from 'node:url';
 const STAMP = '2026-11-04T00:00:00.000Z';
 const prov = { origin: 'seed', createdAt: STAMP, updatedAt: STAMP };
 const review = { lifecycle: 'published', status: 'unreviewed', reasons: [] };
-let seed = 20261104;
-const next = (n) => {
-  seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
-  return (seed >>> 8) % n;
-};
 
 
 const KINDS = ["reference","concept","species","class","reagent","transformation","named_reaction","mechanism","reaction","caveat","route","relationship","exam","exam_version","topic","topic_mapping","exam_relevance","asset","navigator_anchor","reaction_scheme","view_preset","entity_display"];
