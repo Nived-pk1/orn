@@ -11,6 +11,7 @@ import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { answerExamCard } from './exam-kit';
 import { chooseFile, expectPreview, leaveChapters, loadDemo, openApp, type UploadFile } from './kit';
+import { viewSettled } from './settled-kit';
 import { clickToolbar } from './map-toolbar-kit';
 import { openMapDesktop } from './map-layout-kit';
 import { shotsDir } from './editor-kit';
@@ -249,9 +250,10 @@ test.describe('the toast meets no map key (Studio desktop)', () => {
       await openMapDesktop(page, PAIR_DATA()); // the two-way pair chapter of map-marks (the reviewer's screenshot)
       await page.setViewportSize(size);
       await page.getByRole('combobox', { name: 'Chapter' }).selectOption('top_chapter-4');
-      await page.waitForTimeout(900);
+      await viewSettled(page);
       await page.locator('svg [data-chip-button]').first().click(); // the arrow's panel opens beside the map: the key wraps to two lines
-      await page.waitForTimeout(900);
+      await expect(page.getByRole('list', { name: 'What the arrows mean' })).toBeVisible();
+      await viewSettled(page);
       const toast = page.getByRole('status', { name: 'Notifications' }).locator('> *').first();
       await expect(toast).toBeVisible();
       await toast.hover(); // the countdown stops while the pointer is on it

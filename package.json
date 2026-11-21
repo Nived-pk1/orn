@@ -29,7 +29,7 @@
     "bench": "node scripts/run-bench-cli.mjs",
     "bench:baseline": "node scripts/generate-baseline.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
-    "e2e": "playwright test",
+    "e2e": "node scripts/run-e2e.mjs",
     "e2e:gate-d": "node scripts/run-gate-d.mjs",
     "lint": "eslint .",
     "lint:deps": "depcruise src --config .dependency-cruiser.cjs",
@@ -38,7 +38,7 @@
     "check:colours": "node scripts/check-colours.mjs",
     "check:control-chars": "node scripts/check-control-chars.mjs",
     "check:bench-budgets": "node scripts/check-bench-budgets.mjs",
-    "check": "npm run typecheck && npm run lint && npm run lint:deps && npm run check:size && npm run check:hardcode && npm run check:colours && npm run check:control-chars && npm run check:bench-budgets && npm run test"
+    "check": "node scripts/print-test-workers.mjs && npm run typecheck && npm run lint && npm run lint:deps && npm run check:size && npm run check:hardcode && npm run check:colours && npm run check:control-chars && npm run check:bench-budgets && npm run test"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "5.3.0",

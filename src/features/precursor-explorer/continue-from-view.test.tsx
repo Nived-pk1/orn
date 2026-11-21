@@ -23,8 +23,8 @@ describe('Continue from here (step C6)', () => {
     const push = vi.spyOn(history, 'pushState');
     const { precursors, asked } = setup({ target: { kind: 'species', id: 'spc_s5' } }, { state: sixLevels() });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    const button = await screen.findByRole('button', { name: 'Continue from here' });
-    expect(screen.getAllByRole('button', { name: 'Continue from here' })).toHaveLength(1);
+    const button = await screen.findByRole('button', { name: 'Continue from s0' });
+    expect(screen.getAllByRole('button', { name: 'Continue from s0' })).toHaveLength(1);
     fireEvent.click(button);
     await waitFor(() => expect(asked).toHaveLength(2));
     expect(precursors.getState().target).toEqual({ kind: 'species', id: 'spc_s0' });
@@ -36,7 +36,7 @@ describe('Continue from here (step C6)', () => {
   it('Back (popstate with the previous target) returns to the previous search', async () => {
     const { precursors, asked } = setup({ target: { kind: 'species', id: 'spc_s5' } }, { state: sixLevels() });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Continue from here' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue from s0' }));
     await waitFor(() => expect(asked).toHaveLength(2));
     act(() => {
       window.dispatchEvent(new PopStateEvent('popstate', { state: { orn: 'precursor-target', target: { kind: 'species', id: 'spc_s5' } } }));

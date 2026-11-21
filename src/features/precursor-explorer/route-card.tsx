@@ -35,7 +35,7 @@ function Step(props: { readonly step: StepView; readonly ports: Pick<PrecursorPo
       {step.continueFrom === undefined || props.onContinue === undefined ? null : (
         <span className={styles.stepReaction} data-line="continue">
           <button type="button" className={styles.showCard} onClick={() => props.onContinue?.(step.continueFrom as SubstanceChoice)}>
-            Continue from here
+            {`Continue from ${step.from}`}
           </button>
         </span>
       )}

@@ -298,7 +298,14 @@
   min-width: 0;
 }
 
-.titleBlock .count {
+.moreRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.moreRow .count {
   margin: 0;
   font-size: var(--text-12);
 }

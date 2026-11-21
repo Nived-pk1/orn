@@ -133,8 +133,14 @@ describe('ChainPanel', () => {
     setup({ phone: true });
     choose('alk', 'ald');
     expect(screen.getAllByRole('list', { name: 'Chains' })[0]?.children).toHaveLength(1);
-    fireEvent.click(screen.getByRole('button', { name: 'Show all 2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show the 2 chains' }));
     expect(screen.getAllByRole('list', { name: 'Chains' })[0]?.children).toHaveLength(2);
+  });
+  it('on a phone the count line only appears when chains are left out: the peek button says the number otherwise (step T, K1)', () => {
+    setup({ phone: true });
+    choose('alk', 'ald');
+    expect(screen.queryByText(/^\d+ chains?/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Show the 2 chains' })).toBeTruthy();
   });
   it('Esc and Close close the panel, and closing clears the chain', () => {
     const { onClose, onChain } = setup();
@@ -168,17 +174,20 @@ describe('Steps choice, the count and the quiet line (step C5)', () => {
     rerender(<ChainPanel families={longFamilies} pairs={() => longPairs} facts={facts} onChain={vi.fn()} onOpenStep={vi.fn()} onClose={vi.fn()} steps={5} onSteps={onSteps} />);
     expect(screen.getByRole('button', { name: /^Alkenes → Alcohols → Aldehydes → Isolated → Ketones → Acids.*5 steps/ })).toBeTruthy();
   });
-  it('says "5 of 23 chains" when more exist than are shown, and keeps one quiet line under the chains', () => {
+  it('says "23 chains, the 5 shortest shown" when more exist than are shown (K1), and keeps one quiet line under the chains', () => {
     const mids = Array.from({ length: 23 }, (_, i) => `m${i}`);
     const many = mids.flatMap((m) => [{ from: 'alk', to: m, candidates: [cand(`a${m}`)] }, { from: m, to: 'ald', candidates: [cand(`b${m}`)] }]);
     setup({ families: [...families, ...mids.map((m) => ({ id: m, name: m }))], pairs: () => many });
     choose('alk', 'ald');
-    expect(screen.getByText('5 of 23 chains')).toBeTruthy();
+    expect(screen.getByText('23 chains, the 5 shortest shown')).toBeTruthy();
+    expect(screen.queryByText(/ of \d+ chains/)).toBeNull();
     expect(screen.getByText('A chain of families: check that each step fits your compound.')).toBeTruthy();
   });
-  it('no "n of N" line when every chain is shown', () => {
+  it('says just "N chains" when every chain is shown (K1), never "n of N" or "shortest"', () => {
     setup();
     choose('alk', 'ald');
     expect(screen.queryByText(/ of \d+ chains/)).toBeNull();
+    expect(screen.queryByText(/shortest shown/)).toBeNull();
+    expect(screen.getByText(/^\d+ chains?$/)).toBeTruthy();
   });
 });

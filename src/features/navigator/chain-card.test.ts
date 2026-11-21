@@ -1,6 +1,6 @@
 /** The chain cards of "From A to B" (step 8.3b, B2.1): not chosen = title and one summary line; chosen = also its step rows; one chosen at a time. */
 import { describe, expect, it } from 'vitest';
-import { chainCardsOf } from './chain-card';
+import { chainCardsOf, chainCountWords } from './chain-card';
 
 const name = (id: string): string => ({ a: 'Alkenes', b: 'Alcohols', c: 'Aldehydes' })[id] ?? id;
 const chains = [
@@ -31,5 +31,13 @@ describe('chainCardsOf', () => {
   });
   it('no chains: no cards', () => {
     expect(chainCardsOf([], 0, { nameOf: name, reactionsOf: reactions })).toEqual([]);
+  });
+});
+
+describe('chainCountWords (step T, K1)', () => {
+  it('says the total, and which ones are shown when some are left out', () => {
+    expect(chainCountWords(6, 6)).toBe('6 chains');
+    expect(chainCountWords(1, 1)).toBe('1 chain');
+    expect(chainCountWords(5, 6)).toBe('6 chains, the 5 shortest shown');
   });
 });

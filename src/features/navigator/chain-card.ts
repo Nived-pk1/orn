@@ -44,3 +44,9 @@ export function chainCardsOf(
     };
   });
 }
+
+/** The count line (step T, K1): "6 chains" when all are shown, "6 chains, the 5 shortest shown" when some are left out. */
+export function chainCountWords(shown: number, total: number): string {
+  const noun = (n: number): string => `${n} ${n === 1 ? 'chain' : 'chains'}`;
+  return total > shown ? `${noun(total)}, the ${shown} shortest shown` : noun(total);
+}

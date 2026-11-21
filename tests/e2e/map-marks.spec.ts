@@ -3,6 +3,7 @@
  * direction of a two-way pair can be chosen (B), a busy selection draws no hairball (C), and lines never run through text (D).
  */
 import { expect, test } from './fixtures';
+import { viewSettled } from './settled-kit';
 import { openMapDesktop, FAMILY_ONE } from './map-layout-kit';
 import { BUCKET_DATA, marksProblems, measureMarks, PAIR_DATA } from './map-marks-kit';
 import { showUnclassified } from './map-focus-kit';
@@ -17,16 +18,16 @@ test.describe('map marks in screen pixels', () => {
       test.setTimeout(300_000);
       await openMapDesktop(page);
       await page.setViewportSize(size);
-      await page.waitForTimeout(800);
+      await viewSettled(page, 20);
       await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).click();
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
       await page.screenshot({ path: `${shotsDir()}/map-marks-family-${size.width}x${size.height}.png` });
       const fit = await measureMarks(page);
       expect(fit.strokes.length).toBeGreaterThan(0);
       expect(marksProblems(fit)).toEqual([]);
       for (let i = 0; i < 2; i += 1) {
         await page.getByRole('button', { name: 'Zoom out' }).click();
-        await page.waitForTimeout(900);
+        await viewSettled(page, 20);
       }
       expect(marksProblems(await measureMarks(page))).toEqual([]);
     });
@@ -36,7 +37,7 @@ test.describe('map marks in screen pixels', () => {
     test.setTimeout(300_000);
     await openMapDesktop(page, PAIR_DATA());
     await page.getByRole('combobox', { name: 'Chapter' }).selectOption('top_chapter-4');
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     const buttons = page.locator('svg [data-chip-button]');
     await expect(buttons).toHaveCount(2);
     const names = await buttons.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''));
@@ -49,9 +50,9 @@ test.describe('map marks in screen pixels', () => {
     for (const name of names) {
       await page.getByRole('button', { name }).click();
       await expect(cornerLabel(page)).toContainText('Selected:');
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
     }
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await page.screenshot({ path: `${shotsDir()}/map-marks-pair-1280x800.png` });
     // a click on the middle of each line selects that line
     const ids = await page.locator('svg [data-layer="edges"] [data-edge-id][data-from="cls_family-08"][data-to="cls_family-13"], svg [data-layer="edges"] [data-edge-id][data-from="cls_family-13"][data-to="cls_family-08"]').evaluateAll((els) => els.map((el) => el.getAttribute('data-edge-id') ?? ''));
@@ -61,7 +62,7 @@ test.describe('map marks in screen pixels', () => {
     ids.sort((x, y) => Number(picked.includes(x)) - Number(picked.includes(y)));
     for (const id of ids) {
       await page.getByRole('button', { name: 'Fit', exact: true }).click();
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
       // points on this line with only arrow bands under them: a click on one of them must select this line, whichever band is drawn last
       const spots = await page.evaluate((edge) => {
         const path = document.querySelector(`svg [data-layer="edges"] [data-edge-id="${edge}"] > path:not([data-hit])`) as unknown as SVGPathElement;
@@ -82,11 +83,11 @@ test.describe('map marks in screen pixels', () => {
       const overlay = page.locator(`svg [data-overlay="selected"][data-overlay-id="${id}"]`);
       for (const at of spots.slice(0, 3)) {
         await page.mouse.click(at.x, at.y);
-        await page.waitForTimeout(700);
+        await viewSettled(page, 20);
         if ((await overlay.count()) === 1) break;
       }
       await expect(overlay).toHaveCount(1);
-      await page.waitForTimeout(1200);
+      await viewSettled(page, 20);
     }
   });
 
@@ -95,7 +96,7 @@ test.describe('map marks in screen pixels', () => {
     await openMapDesktop(page, BUCKET_DATA());
     await showUnclassified(page);
     await page.locator('svg [data-box="unclassified"]').click();
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await expect(page.locator('svg [data-layer="edges"] [data-edge-id]')).toHaveCount(0);
     await expect(page.getByText(/^\d+ arrows: listed in the panel$/)).toBeVisible();
     const rows = page.getByRole('list', { name: 'Arrows of this selection' }).getByRole('button');
@@ -109,7 +110,7 @@ test.describe('map marks in screen pixels', () => {
     await openMapDesktop(page);
     for (const id of ['cls_family-01', 'cls_family-02']) {
       await page.locator(`svg [data-node-id="${id}"]`).click();
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
       const through = await page.evaluate(() => {
         const bad: string[] = [];
         for (const path of document.querySelectorAll('svg [data-layer="edges"] [data-edge-id] > path:not([data-hit])') as NodeListOf<SVGPathElement>) {

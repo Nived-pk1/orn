@@ -10,6 +10,7 @@ import { FAMILY_ONE, NAVIGATOR, openMapDesktop, openMapPhone } from './map-layou
 import { chipsSettled, clickNode } from './map-focus-kit';
 import { clickToolbar } from './map-toolbar-kit';
 import { shotsDir } from './editor-kit';
+import { viewSettled } from './settled-kit';
 import { leaveChapters, loadDemo } from './kit';
 
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
@@ -67,7 +68,7 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
       test.setTimeout(300_000);
       await openMapDesktop(page);
       await page.setViewportSize(size);
-      await page.waitForTimeout(900);
+      await viewSettled(page);
       const shut = await boxTitlePx(page);
       await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
       const hide = page.getByRole('button', { name: 'Hide inspector' });
@@ -78,6 +79,8 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
       if (!opened) await show.click();
       await expect(hide).toBeVisible();
       await chipsSettled(page);
+      // the area has its width with the pane and the automatic fit has been made for it: the floor case is decided on THAT zoom, not on the pane-closed one (step T, T3)
+      await viewSettled(page);
       // ADR-037's floor case (step 8.4e, reviewer decision): above FIT_FLOOR the whole map stays on screen; clamped AT the floor the zoom IS the floor, names are
       // drawn, the top-left family is wholly on screen and the rest is reachable by panning. (At 1280 x 800 the pane leaves 712 px; the fixture needs 0.378 there.)
       await expect.poll(() => scaleOf(page), { message: 'the view settles' }).toBeGreaterThan(0);
@@ -105,7 +108,7 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
       await page.getByRole('button', { name: /^Zoom to / }).click();
       await expect.poll(() => boxTitlePx(page, FOCUS_TITLES), { message: 'focus-set titles' }).toBeGreaterThanOrEqual(11.99); // 12 px up to floating-point rounding (Firefox 11.9999997)
       const zoomed = await boxTitlePx(page, FOCUS_TITLES);
-      await page.waitForTimeout(600); // the move takes 200 ms
+      await viewSettled(page, 20); // the move takes 200 ms
       expect(await placementProblems(page, FAMILY_ONE), 'where Zoom to selection puts the view').toEqual([]);
       await page.screenshot({ path: `${shotsDir()}/map-fit-zoomed-${size.width}x${size.height}.png` });
       info.annotations.push({ type: 'title px', description: `${size.width}x${size.height}: pane shut ${shut.toFixed(1)}; pane open, whole map ${whole.toFixed(1)}; zoomed to selection ${zoomed.toFixed(1)}` });
@@ -123,7 +126,7 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
     await loadDemo(page);
     await leaveChapters(page);
     await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible({ timeout: 90_000 });
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     const first = page.locator('svg [data-node-id]').first();
     await clickNode(page, first);
     const hide = page.getByRole('button', { name: 'Hide inspector' });
@@ -158,14 +161,14 @@ test.describe('Fit: sticky; Zoom to selection is a command', () => {
     await page.mouse.down();
     await page.mouse.move(box.x + 40, box.y + box.height - 30, { steps: 5 });
     await page.mouse.up();
-    await page.waitForTimeout(600);
+    await viewSettled(page, 20);
     const panned = await world(page);
     await page.getByRole('button', { name: 'Show inspector' }).click();
     await expect(page.getByRole('button', { name: 'Hide inspector' })).toBeVisible();
-    await page.waitForTimeout(800);
+    await viewSettled(page, 20);
     expect(await world(page)).toBe(panned);
     await clickToolbar(page, 'Fit');
-    await page.waitForTimeout(500);
+    await viewSettled(page, 20);
     await page.locator(`svg [data-node-id="${FAMILY_ONE}"]`).dblclick();
     await expect(page.locator('svg[role="group"]')).toHaveCount(0);
   });
@@ -189,7 +192,7 @@ test.describe('the phone: From A to B, Show all', () => {
       const targets = await to.locator('option').evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value).filter((v) => v !== ''));
       for (const b of targets.slice(0, 8)) {
         await to.selectOption(b);
-        const all = panel.getByRole('button', { name: /^Show all \d+$/ });
+        const all = panel.getByRole('button', { name: /^Show the \d+ chains$/ });
         if ((await all.count()) > 0) {
           await all.tap();
           opened = true;

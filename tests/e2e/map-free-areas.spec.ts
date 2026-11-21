@@ -7,6 +7,7 @@
 import { devices, type Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { boxTitlePx } from "./box-text";
+import { viewSettled } from "./settled-kit";
 import { leaveChapters, loadDemo } from "./kit";
 import { chipsSettled, clickNode } from "./map-focus-kit";
 import {
@@ -46,17 +47,8 @@ async function rects(page: Page, selector: string): Promise<Rect[]> {
  * Two were not enough in Firefox: the inspector slid in and narrowed the area about 300 ms after the boxes had looked still (step 8.4m).
  */
 async function settle(page: Page): Promise<void> {
-  let previous = "";
-  let same = 0;
-  for (let i = 0; i < 60 && same < 2; i += 1) {
-    const now = JSON.stringify([
-      await rects(page, "svg [data-node-id]"),
-      await page.evaluate(() => document.querySelector("[data-world]")?.getAttribute("transform")),
-    ]);
-    same = now === previous ? same + 1 : 0;
-    previous = now;
-    await page.waitForTimeout(250);
-  }
+  // state, not sleeps (step T): the map area, the zoom and the floating controls identical for 30 frames (about the half second the old two-reading loop waited) in a row
+  await viewSettled(page, 30);
 }
 
 /**
@@ -234,7 +226,7 @@ test.describe("the map to the reference: desktop floating controls (Studio)", ()
       test.setTimeout(300_000);
       await openMapDesktop(page);
       await page.setViewportSize(size);
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
       await settle(page);
       await expectFree(page);
       await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
@@ -262,7 +254,7 @@ test.describe("the map to the reference: desktop floating controls (Studio)", ()
       { width: 1920, height: 1000 },
     ]) {
       await page.setViewportSize(size);
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
       await settle(page);
       expect(
         await boxTitlePx(page),

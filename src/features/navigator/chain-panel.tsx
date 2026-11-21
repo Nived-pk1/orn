@@ -15,7 +15,7 @@ import { CHAIN_MAX_STEPS, familyChains, familyEdgesOf, type FamilyChain } from '
 import { UNCLASSIFIED_HUB_ID } from '@/core/graph/navigator/hubs';
 import { Button, EmptyState } from '@/ui/primitives';
 import type { NavigatorPorts } from './contracts';
-import { chainCardsOf } from './chain-card';
+import { chainCardsOf, chainCountWords } from './chain-card';
 import type { NamedFamily } from './find-family-match';
 import { scopeLens, scopeNameOf } from './scope-lens';
 import { useScopeOnly } from '@/ui/state';
@@ -103,8 +103,8 @@ export function ChainPanel(props: ChainPanelProps) {
       </select>
     </label>
   );
-  // "5 of 23 chains" (never a silent cut): beside the Steps choice when there is one, so a phone's peek shows it, else above the chains
-  const countNote = result?.ok === true && result.total > chains.length ? <p className={styles.count}>{`${chains.length} of ${result.total} chains`}</p> : null;
+  // "23 chains, the 5 shortest shown" when some are left out (never a silent cut), else "6 chains" (on a phone only when some are left out: the button under the peek says the number otherwise): beside the Steps choice when there is one, so a phone's peek shows it, else above the chains
+  const countNote = result?.ok === true && chains.length > 0 && (props.phone !== true || result.total > chains.length) ? <p className={styles.count}>{chainCountWords(chains.length, result.total)}</p> : null;
   const stepsChoice =
     props.onSteps === undefined ? null : (
         <fieldset className={styles.stepsChoice} aria-label="Steps">
@@ -123,7 +123,6 @@ export function ChainPanel(props: ChainPanelProps) {
       <div className={styles.head}>
         <div className={styles.titleBlock}>
           <h3 className={styles.title}>From A to B</h3>
-          {props.phone === true ? countNote : null}
         </div>
         {props.phone === true ? stepsChoice : null}
         <Button onClick={onClose}>Close</Button>
@@ -180,7 +179,13 @@ export function ChainPanel(props: ChainPanelProps) {
           </ol>
           {result.truncated ? <p className={styles.note}>The search stopped early: there may be more chains.</p> : null}
           <p className={styles.note}>A chain of families: check that each step fits your compound.</p>
-          {props.phone === true && chains.length > 1 ? <Button onClick={() => setExpanded((open) => !open)}>{expanded ? 'Show fewer' : `Show all ${chains.length}`}</Button> : null}
+          {/* on a phone the count shares the row of the button: the peek has no room for a row of its own (the layout guard of map-chains.spec) */}
+          {props.phone === true && chains.length > 1 ? (
+            <div className={styles.moreRow}>
+              {countNote}
+              <Button onClick={() => setExpanded((open) => !open)}>{expanded ? 'Show fewer' : `Show the ${chains.length} chains`}</Button>
+            </div>
+          ) : null}
         </>
       )}
     </aside>

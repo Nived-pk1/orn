@@ -5,6 +5,7 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { paintSettled } from './settled-kit';
 import { loadDemo, openApp, openPhoneApp } from './kit';
 import { familyIds } from './map-focus-kit';
 import { phoneFamily } from './map-layout-kit';
@@ -20,7 +21,7 @@ async function demo(page: Page): Promise<void> {
   await openApp(page);
   await loadDemo(page);
   await expect(page.getByRole('group', { name: NAV })).toBeVisible({ timeout: 90_000 });
-  await page.waitForTimeout(600);
+  await paintSettled(page);
 }
 
 /** Selects the first family on the map and answers the id of the address it made. */
@@ -63,7 +64,7 @@ test.describe('the address (G1)', () => {
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2 + 20);
     await page.mouse.up();
-    await page.waitForTimeout(600);
+    await paintSettled(page);
     expect(await page.evaluate(() => history.length)).toBe(before);
   });
 
@@ -151,12 +152,12 @@ test.describe('the map (G11, G12)', () => {
           }),
         ),
       );
-    await page.waitForTimeout(500);
+    await paintSettled(page);
     const before = await keyRects();
     await page.getByRole('button', { name: 'Record menu' }).click();
     await page.getByRole('menuitem', { name: 'Copy link' }).click();
     await expect(page.locator('[data-layout="desktop"][data-toast]')).toBeVisible();
-    await page.waitForTimeout(500);
+    await paintSettled(page);
     expect(await keyRects()).toBe(before);
   });
 
@@ -203,7 +204,7 @@ test.describe('the error screen (G7)', () => {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.screenshot({ path: 'screenshots/8.4g/A/error-screen-light.png' });
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.waitForTimeout(300);
+    await paintSettled(page);
     await page.screenshot({ path: 'screenshots/8.4g/A/error-screen-dark.png' });
     await page.unroute('**/assets/settings-host-*.js'); // the files are there again: the route is REMOVED before Reload (step 8.4g Part B, P6)
     const reloaded = page.waitForEvent('load');
@@ -224,7 +225,7 @@ test.describe('the error screen (G7)', () => {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.screenshot({ path: 'screenshots/8.4g/A/not-found-light.png' });
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.waitForTimeout(300);
+    await paintSettled(page);
     await page.screenshot({ path: 'screenshots/8.4g/A/not-found-dark.png' });
   });
 });
@@ -234,11 +235,11 @@ test.describe('screenshots (Part A)', () => {
     await demo(page);
     await goTo(page, 'Review');
     await page.getByRole('searchbox', { name: 'Find by name' }).fill('al');
-    await page.waitForTimeout(400);
+    await paintSettled(page);
     await page.emulateMedia({ colorScheme: 'light' });
     await page.screenshot({ path: 'screenshots/8.4g/A/review-filtered-light.png' });
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.waitForTimeout(300);
+    await paintSettled(page);
     await page.screenshot({ path: 'screenshots/8.4g/A/review-filtered-dark.png' });
     await page.emulateMedia({ colorScheme: 'light' });
     await goTo(page, 'Map');
@@ -256,14 +257,14 @@ test.describe('screenshots (Part A)', () => {
     await pickFamily(page);
     await page.getByRole('button', { name: 'Record menu' }).click();
     await expect(page.getByRole('menuitem', { name: 'Report a mistake' })).toBeVisible();
-    await page.waitForTimeout(400);
+    await paintSettled(page);
     await page.screenshot({ path: 'screenshots/8.4g/A/record-menu-desktop-light.png' });
     await page.keyboard.press('Escape');
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.waitForTimeout(300);
+    await paintSettled(page);
     await page.getByRole('button', { name: 'Record menu' }).click();
     await expect(page.getByRole('menuitem', { name: 'Report a mistake' })).toBeVisible();
-    await page.waitForTimeout(400);
+    await paintSettled(page);
     await page.screenshot({ path: 'screenshots/8.4g/A/record-menu-desktop-dark.png' });
   });
 });
@@ -284,7 +285,7 @@ test.describe('phone (Part A)', () => {
     await page.locator(`svg [data-node-id="${id}"]`).tap();
     await page.getByRole('button', { name: 'Record menu' }).tap();
     await expect(page.getByRole('menuitem', { name: 'Report a mistake' })).toBeVisible();
-    await page.waitForTimeout(400);
+    await paintSettled(page);
     await page.screenshot({ path: 'screenshots/8.4g/A/record-menu-phone.png' });
   });
 });

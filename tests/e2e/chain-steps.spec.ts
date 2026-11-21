@@ -1,9 +1,9 @@
 /**
  * Step C (C5, C6): the STUDIO build over tests/fixtures/chain-line (a line of 7 families, a bush of 6 two-step chains).
  * "From A to B": with 3 steps there is no chain from Line 01 to Line 06; choosing 5 steps shows the 5-step chain (saved: it survives a reload);
- * the bush pair says "5 of 6 chains" and keeps the quiet line. Precursors: a 6-level walk offers "Continue from here" on level 5; it starts a new
+ * the bush pair says "6 chains, the 5 shortest shown" and keeps the quiet line. Precursors: a 6-level walk offers "Continue from <name>" on level 5; it starts a new
  * search with that compound and Back returns to the previous search. Desktop and Pixel 7 (Chromium, WebKit; Firefox on desktop).
- * Screenshots: screenshots/C/.
+ * Screenshots: screenshots/T/ (step C: screenshots/C/).
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -15,7 +15,7 @@ import { clickToolbar } from './map-toolbar-kit';
 
 const CHAIN_LINE = readFileSync(resolve(process.cwd(), 'tests/fixtures/chain-line/chain-line.orn.json'));
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
-const SHOTS = 'screenshots/C';
+const SHOTS = 'screenshots/T'; // step T re-takes them with the K1 / K2 words (step C's pictures stay in screenshots/C)
 const panel = (page: Page) => page.getByRole('complementary', { name: 'From A to B' });
 
 async function shot(page: Page, name: string): Promise<void> {
@@ -39,7 +39,7 @@ async function choose(page: Page, from: string, to: string): Promise<void> {
 }
 
 test.describe('From A to B: Steps (desktop)', () => {
-  test('5 steps shows the 5-step chain, it is saved, and a bush says "5 of 6 chains"', async ({ page }) => {
+  test('5 steps shows the 5-step chain, it is saved, and a bush says "6 chains, the 5 shortest shown"', async ({ page }) => {
     test.setTimeout(400_000);
     const seen = await watch(page);
     await openMapDesktop(page, CHAIN_LINE);
@@ -54,7 +54,7 @@ test.describe('From A to B: Steps (desktop)', () => {
     await expect(page.locator('svg [data-layer="edges"] [data-edge-id]')).toHaveCount(5);
     await expect(panel(page).getByText('A chain of families: check that each step fits your compound.')).toBeVisible();
     await choose(page, 'Bush g1', 'Bush g2');
-    await expect(panel(page).getByText('5 of 6 chains')).toBeVisible();
+    await expect(panel(page).getByText('6 chains, the 5 shortest shown')).toBeVisible();
     await shot(page, 'steps-n-of-n-desktop');
     await choose(page, 'Line 01', 'Line 06');
     await shot(page, 'steps-5-chain-desktop');
@@ -71,7 +71,7 @@ test.describe('From A to B: Steps (desktop)', () => {
 
 test.describe('From A to B: Steps (Pixel 7)', () => {
   test.use({ ...PIXEL });
-  test('on a phone the Steps choice and "5 of 6 chains" are in the sheet', async ({ page, browserName }) => {
+  test('on a phone the Steps choice and "6 chains, the 5 shortest shown" are in the sheet', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'the Pixel 7 profile is Chromium');
     test.setTimeout(400_000);
     await openMapPhone(page, CHAIN_LINE);
@@ -79,7 +79,7 @@ test.describe('From A to B: Steps (Pixel 7)', () => {
     await expect(panel(page)).toBeVisible();
     await choose(page, 'Bush g1', 'Bush g2');
     await panel(page).getByRole('radio', { name: '5' }).check({ force: true });
-    await expect(panel(page).getByText('5 of 6 chains')).toBeVisible();
+    await expect(panel(page).getByText('6 chains, the 5 shortest shown')).toBeVisible();
     await shot(page, 'steps-n-of-n-pixel7');
     await choose(page, 'Line 01', 'Line 06');
     await expect(panel(page).getByRole('list', { name: 'Chains' }).locator('> li').first()).toContainText(/5 steps/);
@@ -105,7 +105,7 @@ test.describe('Precursors: Continue from here (desktop)', () => {
     await view.getByRole('button', { name: 'Search', exact: true }).click();
     const found = view.getByRole('region', { name: 'Routes found' });
     await expect(found.getByText(/5 steps from Line 02/)).toBeVisible({ timeout: 60_000 });
-    const more = found.getByRole('button', { name: 'Continue from here' });
+    const more = found.getByRole('button', { name: 'Continue from Line 02' });
     await expect(more).toHaveCount(1);
     await more.scrollIntoViewIfNeeded();
     await dismissToast(page);

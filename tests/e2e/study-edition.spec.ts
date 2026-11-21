@@ -115,6 +115,31 @@ test.describe('desktop', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
   });
+  test('Escape while the export screen is still loading closes the loading dialog', async ({ page }) => {
+    test.setTimeout(300_000);
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolveGate) => {
+      release = resolveGate;
+    });
+    await page.route('**/assets/export-screen-*.js', async (route) => {
+      await gate;
+      await route.continue().catch(() => undefined);
+    });
+    try {
+      await openStudy(page);
+      await importOwnData(page);
+      await chaptersFirstThenNavigator(page);
+      await page.locator('header').getByRole('button', { name: 'File' }).click();
+      await page.getByRole('menuitem', { name: /Export.../ }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export your data' });
+      await expect(dialog).toBeVisible();
+      await expect(page.getByRole('status', { name: 'Loading the export screen' })).toBeVisible(); // the chunk is held: this IS the loading state
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+    } finally {
+      release();
+    }
+  });
   test('no editing anywhere, every study view works, and no editor chunk is ever requested', async ({ page }) => {
     test.setTimeout(300_000);
     const seen = await watch(page, STUDY);
@@ -176,6 +201,9 @@ test.describe('desktop', () => {
     await expect(
       page.getByRole("dialog", { name: "Export your data" }),
     ).toBeVisible();
+    // the loaded screen has replaced the loading dialog (a new <dialog> element): Escape is pressed on the dialog this check is about, not
+    // in the instant of the swap (step T, T3; Escape DURING the load has its own test below)
+    await expect(page.getByRole("status", { name: "Loading the export screen" })).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(
       page.getByRole("dialog", { name: "Export your data" }),

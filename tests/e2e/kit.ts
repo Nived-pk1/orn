@@ -282,13 +282,24 @@ export async function expectSaved(page: Page): Promise<void> {
 export const examChip = (page: Page): Locator =>
   page.getByRole("button", { name: /^Exam: / });
 
+/**
+ * Chooses an exam in the chip's menu, waiting on state at both ends (step T, T3): no menu may be left from before (one that is still
+ * closing makes the chip click toggle instead of open: the menu never shows and the item wait runs to the test timeout), and the menu is
+ * gone again when this returns.
+ */
 export async function chooseExam(page: Page, label: string): Promise<void> {
+  const menu = page.getByRole("menu");
+  await expect(menu).toHaveCount(0);
   await examChip(page).click();
+  await expect(menu).toBeVisible();
   await page.getByRole("menuitemradio", { name: label, exact: true }).click();
+  await expect(menu).toHaveCount(0);
 }
 
 export async function examChoices(page: Page): Promise<string[]> {
+  await expect(page.getByRole("menu")).toHaveCount(0); // a menu still closing would make the click toggle (step T)
   await examChip(page).click();
+  await expect(page.getByRole("menuitemradio").first()).toBeVisible(); // read the choices once the menu is there, not before
   const texts = await page.getByRole("menuitemradio").allTextContents();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0); // closed, or the next click on the chip would close it again

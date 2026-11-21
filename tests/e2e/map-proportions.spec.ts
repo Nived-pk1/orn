@@ -5,6 +5,7 @@
  */
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { viewSettled } from './settled-kit';
 import { leaveChapters, loadDemo } from './kit';
 import { shotsDir } from './editor-kit';
 import { boxTitlePx } from './box-text';
@@ -20,7 +21,7 @@ async function openDemoAt(page: Page, width: number, height: number): Promise<vo
   await loadDemo(page);
   await leaveChapters(page);
   await expect(page.getByRole('group', { name: NAVIGATOR })).toBeVisible({ timeout: 90_000 });
-  await page.waitForTimeout(1200);
+  await viewSettled(page, 20);
 }
 
 const FAM8 = 'cls_family-08';
@@ -29,7 +30,7 @@ const FAM13 = 'cls_family-13';
 async function zoomIn(page: Page, times: number): Promise<void> {
   for (let i = 0; i < times; i += 1) {
     await page.getByRole('button', { name: 'Zoom in' }).click();
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
   }
   await chipsSettled(page);
 }
@@ -56,7 +57,7 @@ test.describe('A. proportions', () => {
     await openMapDesktop(page);
     await page.setViewportSize({ width: 1920, height: 1000 });
     await page.getByRole('button', { name: 'Fit', exact: true }).click();
-    await page.waitForTimeout(1200);
+    await viewSettled(page, 20);
     const ratios = gapRatios(await hubRects(page));
     console.log(`fixture 1920x1000: columns ${ratios.columns.toFixed(2)}, rows ${ratios.rows.toFixed(2)}, ${ratios.pairs} neighbours; title ${(await boxTitlePx(page)).toFixed(2)} px`);
     expect(ratios.columns).toBeGreaterThanOrEqual(1.4 - 0.02);
@@ -81,7 +82,7 @@ test.describe('B. marks grow with the map', () => {
     test.setTimeout(400_000);
     await openMapDesktop(page, PAIR_DATA());
     await page.getByRole('combobox', { name: 'Chapter' }).selectOption('top_chapter-4');
-    await page.waitForTimeout(1500);
+    await viewSettled(page, 20);
     await chipsSettled(page);
     const fit = await markSizes(page);
     expect(fit.strokes.length).toBeGreaterThan(0);
@@ -111,17 +112,17 @@ test.describe('C. a two-way pair is two parallel lines', () => {
     test.setTimeout(400_000);
     await openMapDesktop(page, PAIR_DATA());
     await clickNode(page, page.locator(`svg [data-node-id="${FAM8}"]`));
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await chipsSettled(page);
     // the inspector opened with the selection and narrowed the map: with a pane shut the whole map is fitted at the zoom the 8 px are stated for
     const hide = page.getByRole('button', { name: 'Hide inspector' });
     if ((await hide.count()) > 0) await hide.click();
     await page.getByRole('button', { name: 'Fit', exact: true }).click();
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await chipsSettled(page);
     for (const stage of ['Fit', 'after 3 zoom-ins']) {
       if (stage !== 'Fit') await zoomIn(page, 3);
-      await page.waitForTimeout(500);
+      await viewSettled(page, 20);
       const lines = await linesBetween(page, FAM8, FAM13);
       expect(lines, `${stage}: exactly two lines`).toHaveLength(2);
       const makes = lines.find((l) => l.from === FAM8) as (typeof lines)[number];
@@ -141,20 +142,20 @@ test.describe('C. a two-way pair is two parallel lines', () => {
     // each line, each chip: its own direction is selected
     for (const line of await linesBetween(page, FAM8, FAM13)) {
       await page.getByRole('button', { name: 'Fit', exact: true }).click(); // the whole map in view: nothing under the toolbar
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
       const fresh = (await linesBetween(page, FAM8, FAM13)).find((l) => l.id === line.id) as (typeof line);
       const at = fresh.points[Math.floor(fresh.points.length * 0.45)] as { x: number; y: number };
       await page.mouse.click(at.x, at.y);
       await expect(page.locator(`svg [data-overlay="selected"][data-overlay-id="${line.id}"]`), `a click on the line ${line.id}`).toHaveCount(1);
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
     }
     for (const line of await linesBetween(page, FAM8, FAM13)) {
       await page.getByRole('button', { name: 'Fit', exact: true }).click();
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
       await page.locator(`svg [data-count-of="${line.id}"]`).click();
       await expect(page.locator(`svg [data-overlay="selected"][data-overlay-id="${line.id}"]`), `a click on the chip of ${line.id}`).toHaveCount(1);
       await expect(cornerLabel(page)).toContainText('Selected:');
-      await page.waitForTimeout(900);
+      await viewSettled(page, 20);
     }
   });
 
@@ -162,7 +163,7 @@ test.describe('C. a two-way pair is two parallel lines', () => {
     test.setTimeout(400_000);
     await openMapDesktop(page, PAIR_DATA());
     await page.getByRole('combobox', { name: 'Chapter' }).selectOption('top_chapter-4');
-    await page.waitForTimeout(1500);
+    await viewSettled(page, 20);
     const lines = await linesBetween(page, FAM8, FAM13);
     expect(lines).toHaveLength(2);
     lines.forEach((l) => {
@@ -170,7 +171,7 @@ test.describe('C. a two-way pair is two parallel lines', () => {
       expect(l.tone).toBeNull();
     });
     await page.getByRole('combobox', { name: 'Chapter' }).selectOption('');
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await expect(page.locator('svg [data-layer="edges"] [data-edge-id]')).toHaveCount(0);
     await page.locator(`svg [data-node-id="${FAM13}"]`).hover();
     await expect.poll(() => page.locator('svg [data-layer="edges"] [data-edge-id]').count()).toBeGreaterThan(0);

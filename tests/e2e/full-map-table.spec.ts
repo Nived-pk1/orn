@@ -5,6 +5,7 @@
  */
 import { devices, type Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
+import { viewSettled } from './settled-kit';
 import { FAMILY_ONE, openMapDesktop, openMapPhone } from "./map-layout-kit";
 import { clickNode } from "./map-focus-kit";
 import { clickToolbar, openKey } from "./map-toolbar-kit";
@@ -21,7 +22,7 @@ async function enter(page: Page): Promise<void> {
   if ((await full(page).count()) === 1) return;
   await page.getByRole("button", { name: "Full map", exact: true }).click();
   await expect(full(page)).toHaveCount(1);
-  await page.waitForTimeout(900);
+  await viewSettled(page, 20);
 }
 const stays = async (page: Page): Promise<void> =>
   expect(full(page), "full map is still on").toHaveCount(1);
@@ -77,9 +78,9 @@ test.describe("the interaction table, in full map (desktop)", () => {
       .evaluateAll((els) => els.map((el) => (el as HTMLOptionElement).value));
     expect(options.length).toBeGreaterThan(1);
     await chapter.selectOption(options[1] as string);
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await chapter.selectOption(options[0] as string);
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await stays(page);
 
     // Find a family
@@ -91,7 +92,7 @@ test.describe("the interaction table, in full map (desktop)", () => {
 
     // the Selected bar: Zoom to selection, Clear
     await page.getByRole("button", { name: /^Zoom to / }).click();
-    await page.waitForTimeout(600);
+    await viewSettled(page, 20);
     await page.getByRole("button", { name: "Clear the selection" }).click();
     await expect(selected(page)).toHaveCount(0);
     await stays(page);
@@ -107,7 +108,7 @@ test.describe("the interaction table, in full map (desktop)", () => {
       .first();
     if ((await goNext.count()) > 0) {
       await goNext.click();
-      await page.waitForTimeout(600);
+      await viewSettled(page, 20);
     }
     await stays(page);
     await page.mouse.click(box.x + box.width / 2, box.y + box.height - 8);
@@ -139,7 +140,7 @@ test.describe("the interaction table, in full map (desktop)", () => {
     await clickNode(page, page.locator(`svg [data-node-id="${FAMILY_ONE}"]`));
     await view.focus();
     await page.keyboard.press("z");
-    await page.waitForTimeout(500);
+    await viewSettled(page, 20);
     const z0 = await scaleOf(page);
     await page.keyboard.press("+");
     await expect.poll(() => scaleOf(page)).toBeGreaterThan(z0);
@@ -185,7 +186,7 @@ test.describe("the interaction table, in full map (desktop)", () => {
         .last()
         .getByRole("menuitem", { name })
         .click();
-      await page.waitForTimeout(400);
+      await viewSettled(page, 20);
     }
     await stays(page);
   });
@@ -213,7 +214,7 @@ test.describe("the interaction table, in full map (desktop)", () => {
     };
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.wheel(0, 120); // a little out: the view is no longer the automatic fit, every family stays in view
-    await page.waitForTimeout(700);
+    await viewSettled(page, 20);
     const scale = await scaleOf(page);
     await node.dblclick();
     await expect(
@@ -326,16 +327,16 @@ test.describe("the interaction table, in full map (phone, Pixel 7 portrait)", ()
     await openMapPhone(page);
     await page.getByRole("button", { name: "Full map", exact: true }).tap();
     await expect(full(page)).toHaveCount(1);
-    await page.waitForTimeout(1200);
+    await viewSettled(page, 20);
     const bar = page.locator("[data-phone-map-bar]");
     const chapter = bar.getByRole("combobox", { name: "Chapter" });
     const options = await chapter
       .locator("option")
       .evaluateAll((els) => els.map((el) => (el as HTMLOptionElement).value));
     await chapter.selectOption(options[1] as string);
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await chapter.selectOption(options[0] as string);
-    await page.waitForTimeout(900);
+    await viewSettled(page, 20);
     await bar.getByRole("button", { name: "Find a family" }).tap();
     await page
       .getByRole("combobox", { name: "Find a family" })
