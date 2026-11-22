@@ -37,3 +37,14 @@ Resume point: M1 committed; next M2 (sides, D2) then M3 (arrow geometry), tests 
   map, no fit, molfile). 5 tests: neutral, charged, wedge+amine, ring, lone Br-, explicit mapped H; a test that fails loudly if the
   classes go (real RDKit) and one that breaks them (refused). 6 table cached with the drawing (worker LRU key + service LRU).
 - GREEN: chem-positions 17 tests, svg-positions unit 7, cache.test +1, depiction service +3 (all pass).
+- M2 RED: sides.test.ts -> 'Cannot find module ./sides' (1 s) before the source; GREEN 22 tests (mechanisms dir).
+- M3 RED: `npx vitest run src/layout/mechanism` -> 'Cannot find module ./arrows' (1 s) before the source; GREEN 14 tests
+  (property tests 200 runs; one found that vitest's expect() returns false inside fc.property: compare JSON instead).
+- D2 CONFLICT FOUND IN FACTS (extension built, reviewer to confirm): the rule as worded ("intermediate/TS before when it holds a movement
+  atom") puts the enolate that demo step 1 MAKES on the before side. Built: before only if some atom of it is not already shown by the
+  before side (smallest first); written in sides.ts, tested (22 tests), to be recorded in ADR-038 "As built 8.5".
+- Demo FACTS: 3 mechanisms, 5 variants, 10 steps; 7 steps have atom-mapped structures, electron movements and bonds; 3 steps (aldol acid
+  variant 4, 5, 7) have label-only species (no drawing). Movement kinds in the demo: lone_pair->bond 7, bond->bond 5, bond->lone_pair 7, all
+  2-electron (NO fishhook, no atom site, no radical in the demo: those screenshots come from a fixture). Species repeat map numbers across
+  sides (same atom before and after). LIMITS: 24 species, 64 movements per step. CHEM-008: the demo has no finding.
+Resume point: M3 committed (Part 1, not deployed). Next M4 component in src/render/mechanism, then M5 wiring, M6 editor preview, M7.
