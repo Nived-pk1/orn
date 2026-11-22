@@ -80,3 +80,13 @@ The step does not need to stop for a cut that stays inside the step's own contra
 - SIZES after the cut: Study 338,434 (+74), Studio 342,437 (+55) over 338,360 / 342,382: inside the +100 limit. (First measure 338,738 / 342,768; second 338,468 / 342,496.) Changes: createStepDrawingPort moved into the lazy chunks (render/mechanism/depictions-port.ts, built from the navigator's depictions port), atomPositions checked in the worker only (atomPositionsProblem), service caches the whole Depiction.
 - `npm run check` run 1 stopped at lint:deps (39 s): rule presentation-engines-types-only (render may import src/layout as TYPES only). FIX: the pure geometry moved
   from src/layout/mechanism to src/render/mechanism/geometry (render may import render; pure, no DOM); no behaviour change; tests moved with it (22). Earlier lines name the old folder.
+- check run 2 (10 min 36 s, default workers): 8,958 passed / 1 failed = css-scale (px font sizes in step-drawing.module.css): fixed with --text-12/14/16 tokens (the drawing scales as a whole, rem = 16 user units).
+
+## PAUSED (owner asked to pause before the 3-engine rounds; resume only when told)
+Resume point: code + docs (ADR-038 addendum, plan row, UI_ARCHITECTURE) committed except what is listed here. NOT done: PROGRESS "Step 8.5" section, PROJECT_STATE
+(next 8.6, close the bond-choices openItem, add step85), final `npm run check`, round-1 re-run, ONE full chromium run, screenshots re-take (toast dismissal + gap 52 changed
+after the first shots; all earlier shots were opened and looked right), sizes re-measure after final build, deploy (Study, live specs Chromium+WebKit, Studio, Access check), push.
+Round 1 (13 specs x 3 engines, 13.1 min): 120 passed, 20 skipped, 4 failed: mechanism-editor:53 in all 3 engines = expected order change of the bond choices (spec updated:
+bonded pairs 1-2, 2-3, 3-4 first), and mechanism-pictures:156 FIREFOX only ("Edit SN2" dialog never opened; unexplained, re-run x2 was started and stopped by the pause).
+Preview servers: ports 4173/4174 were left running by T-rebuild.sh (built from commit 1a15820); stop by PID before any rebuild (T-rebuild.sh does it by command line).
+Commits: 5a6d5f9 base, d62575f, 08993ee, 817eb6e (M1, pushed), 1d41f00 (M2+M3), d8a2ef8 (M4+M5), 0fccfdb (M6), WIP commit, 1a15820 (size cut). Not pushed after 817eb6e.

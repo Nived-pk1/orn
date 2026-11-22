@@ -88,7 +88,7 @@ test.describe('the mechanism editor', () => {
     const addBond = dialog.getByRole('button', { name: 'Add bond broken', exact: true });
     await enabled(addBond);
     await addBond.click();
-    await expect(dialog.getByLabel('Atoms of bond broken 1').locator('option')).toHaveText(['Choose the atoms', 'Atoms 1 and 2', 'Atoms 1 and 3', 'Atoms 1 and 4', 'Atoms 2 and 3', 'Atoms 2 and 4', 'Atoms 3 and 4'], { timeout: 60_000 });
+    await expect(dialog.getByLabel('Atoms of bond broken 1').locator('option')).toHaveText(['Choose the atoms', 'Atoms 1 and 2', 'Atoms 2 and 3', 'Atoms 3 and 4', 'Atoms 1 and 3', 'Atoms 1 and 4', 'Atoms 2 and 4'], { timeout: 60_000 }); // step 8.5 M6: the pairs bonded in the step's structure (1-2, 2-3, 3-4) first, then the rest
     await dialog.getByLabel('Atoms of bond broken 1').selectOption('3-4');
     await dialog.getByLabel('Order of bond broken 1').selectOption('1');
     await dialog.getByRole('button', { name: 'Add electron movement', exact: true }).click();
