@@ -2,8 +2,8 @@
  * The bond-change and electron-movement rows of ONE expanded mechanism step (step 6.5a decision D4). Nothing is typed as a number: a bond is
  * a CHOICE among the pairs of the atom maps the chem worker found in this step's structures, a movement's two sites a choice among their atoms,
  * lone pairs, radicals and bonds. A value the step's structures no longer have stays selectable and says so (nothing is changed silently, and
- * CHEM-008 marks the row). With no mapped structure the rows say "Add atom-mapped structures to this step first". Nothing is drawn as arrows
- * here (Phase 8, ADR-038). Text only; the recipes decide.
+ * CHEM-008 marks the row). With no mapped structure the rows say "Add atom-mapped structures to this step first". The arrows are drawn by the step
+ * preview (step 8.5, `step-preview.tsx`), not here. Text only; the recipes decide.
  */
 import { Button } from '@/ui/primitives';
 import { addBond, addMovement, pairOfValue, pairValue, removeBond, removeMovement, setBondOrder, setBondPair, setMovementElectrons, setMovementSite, siteOfDraft, siteOfValue, siteValue, type BondField, type Pair, type SiteEnd } from './step-rows-model';
@@ -133,7 +133,6 @@ export function MovementRows(props: StepRowsProps) {
       <Button aria-label="Add electron movement" {...(why !== undefined ? { unavailable: why } : { onClick: () => onEdit(addMovement(v, s)) })}>
         Add electron movement
       </Button>
-      {rows.length > 0 ? <p className={styles.hint}>Curved arrows are drawn in a later phase; here the movements are rows.</p> : null}
     </div>
   );
 }

@@ -51,7 +51,7 @@ export type Composition =
     }
   | { readonly ok: false; readonly reason: 'missing_atoms'; readonly missing: readonly number[] };
 
-export const SPECIES_GAP = 36;
+export const SPECIES_GAP = 52;
 export const ARROW_LENGTH = 64;
 const ARROW_MARGIN = 22;
 const BRACKET_PAD = 12;

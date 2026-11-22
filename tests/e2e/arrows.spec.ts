@@ -154,13 +154,17 @@ test.describe('the arrows of the arranged demo overview', () => {
     await focusFamily(page, 'cls_haloalkanes');
     const edge = page.locator('[data-layer="edges"] [data-edge-id][data-from="cls_haloalkanes"][data-to="cls_alkenes"]');
     await expect(edge).toHaveCount(1);
+    const commits = async (): Promise<number> => Number(await page.locator('[data-layer-commits]').getAttribute('data-layer-commits'));
+    // WebKit is still committing layers a moment after the arrows are in the DOM (5 more commits, and the arrow moves): wait until two reads 300 ms apart agree
+    // before the point is measured and the commits are counted (step 8.5 M7: that, not a missing hover, was the WebKit failure).
+    let last = -1;
+    await expect.poll(async () => { const now = await commits(); const same = now === last; last = now; return same; }, { intervals: [300], timeout: 30_000, message: 'the layers stopped committing' }).toBe(true);
     const at = await edge.locator('path:not([data-hit])').evaluate((path) => {
       const p = path as SVGPathElement;
       const point = p.getPointAtLength(p.getTotalLength() * 0.3);
       const m = p.getScreenCTM() as DOMMatrix;
       return { x: point.x * m.a + point.y * m.c + m.e, y: point.x * m.b + point.y * m.d + m.f };
     });
-    const commits = async (): Promise<number> => Number(await page.locator('[data-layer-commits]').getAttribute('data-layer-commits'));
     const before = await commits();
     await page.mouse.move(at.x, at.y);
     await expect(page.locator('[data-overlay="hover"]')).toHaveCount(1);

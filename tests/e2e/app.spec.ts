@@ -76,8 +76,15 @@ test.describe('the app in Chromium', () => {
     await openApp(page);
     await loadDemo(page);
     expect(await recordCount(page, 'reaction')).toBe(27);
-    await expect(page.getByText(/Check unavailable/)).toBeVisible({ timeout: 60_000 });
+    // The band shows ONE notice and the rest are behind "+n more" (8.4a). WebKit never grants persistent storage, so its storage warning is the one
+    // shown and the check notice is in that list (found in step 8.5 M7: the product says it in WebKit too; the test looked only at the band).
+    const check = page.getByText(/Check unavailable/);
+    const more = page.getByRole('button', { name: /^\+\d+ more$/ });
+    await expect(check.or(more).first()).toBeVisible({ timeout: 60_000 });
+    if (!(await check.isVisible())) await more.click();
+    await expect(check).toBeVisible({ timeout: 60_000 });
     await expect(page.getByRole('button', { name: 'Retry' }).first()).toBeVisible();
+    if (await more.isVisible().catch(() => false)) await page.keyboard.press('Escape');
     // nothing is claimed about the structures: no CHEM-001 warning appears
     await expect(findingsText(page)).toHaveText('Findings: E 0 / W 1 / I 17 / Review 38');
   });

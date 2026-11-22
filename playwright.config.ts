@@ -24,7 +24,7 @@ const REUSE = process.env.ORN_REUSE_SERVERS === '1';
  */
 const WORKERS = Number(process.env.ORN_E2E_WORKERS ?? '3');
 const SERIAL_SPECS = ['**/fluid-feel.spec.ts', '**/map-motion.spec.ts', '**/apply-progress.spec.ts', '**/lifecycle.spec.ts', '**/durability.spec.ts', '**/layout-guard.spec.ts', '**/navigator.spec.ts', '**/depiction-surface.spec.ts'];
-const REVIEW_SPECS = ['**/compare-*.spec.ts', '**/step-t-shots.spec.ts'];
+const REVIEW_SPECS = ['**/compare-*.spec.ts', '**/step-t-shots.spec.ts', '**/step-8-5-shots.spec.ts'];
 /** The Gate D authoring spec belongs to the project "gate-d" alone. */
 const GATE_D_SPEC = '**/author-demo-all.spec.ts';
 

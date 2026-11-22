@@ -47,7 +47,9 @@ async function walk(page: Page, device: string, withNamed: boolean): Promise<voi
   await mechanisms.getByRole('button', { name: 'Aldol addition of ethanal' }).tap();
   await expect(mechanisms.getByRole('heading', { level: 2, name: 'Aldol addition of ethanal' })).toBeVisible();
   await expect(mechanisms.locator('[data-step]').first()).toBeVisible();
-  await expect(mechanisms.locator('[data-variant-id] img').first()).toBeVisible({ timeout: 60_000 });
+  // 8.5: each step is drawn before -> after (a phone stacks the sides) with its rows folded as "Step details"
+  await expect(mechanisms.locator('[data-variant-id]').getByRole('img', { name: /^Drawing of step \d+; the details are below\.$/ }).first()).toBeVisible({ timeout: 90_000 });
+  await expect(mechanisms.locator('[data-step-drawing][data-orientation="column"]').first()).toBeVisible();
   expect(await noSideways(page)).toBe(true);
   expect(await axeProblems(page, 10)).toEqual([]);
   await page.screenshot({ path: `${shotsDir()}/phone-mechanism-page-${device}.png` });

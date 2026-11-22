@@ -59,7 +59,7 @@ test('the list, the find box, a page with two pathways (steps, marks, drawings) 
   const steps = view(page).locator('[data-step]');
   await expect(steps.first()).toContainText('Step 1');
   expect(await steps.count()).toBe(7);
-  await expect(view(page).locator('[data-variant-id] img').first()).toBeVisible({ timeout: 60_000 }); // a drawn species
+  await expect(view(page).locator('[data-variant-id]').getByRole('img', { name: /^Drawing of step \d+; the details are below\.$/ }).first()).toBeVisible({ timeout: 60_000 }); // a drawn step (8.5: the species rows are in the collapsed "Step details")
   const text = (await view(page).textContent()) ?? '';
   expect(text).not.toMatch(/curved arrow|arrow pushing|coming later|Phase 8/i);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
