@@ -6,6 +6,7 @@
  * No chemistry here: the worker reads, this file collects.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { StepDrawingPort } from '@/render/mechanism';
 import type { StructureRep } from '@/core/schema';
 import type { StructurePort } from './structure-contracts';
 import type { Pair, Site } from './step-rows-model';
@@ -22,11 +23,13 @@ export interface StepMaps {
   readonly unread: number;
   readonly message?: string;
   readonly cut: boolean;
+  /** The pairs of `maps` that are BONDED in the step's structures, as the structure tool reports (step 8.5); empty when it gave none. */
+  readonly bonded: readonly Pair[];
 }
 
-const NONE: StepMaps = { phase: 'none', maps: [], unread: 0, cut: false };
+const NONE: StepMaps = { phase: 'none', maps: [], unread: 0, cut: false, bonded: [] };
 
-export function useStepMaps(structures: readonly StructureRep[], port: StructurePort | undefined, timers: { after(ms: number, run: () => void): () => void }): StepMaps {
+export function useStepMaps(structures: readonly StructureRep[], port: StructurePort | undefined, timers: { after(ms: number, run: () => void): () => void }, drawing?: StepDrawingPort): StepMaps {
   const key = JSON.stringify(structures);
   const stable = useMemo(() => structures, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   const [state, setState] = useState<StepMaps>(structures.length === 0 ? NONE : { ...NONE, phase: 'reading' });
@@ -45,8 +48,10 @@ export function useStepMaps(structures: readonly StructureRep[], port: Structure
     }
     const run = (): void => {
       setState((was) => (was.phase === 'ready' ? was : { ...NONE, phase: 'reading' }));
-      void Promise.all(stable.map((structure) => port.parse(structure))).then((outcomes) => {
+      void Promise.all([Promise.all(stable.map((structure) => port.parse(structure))), Promise.all(stable.map((structure) => (drawing === undefined ? undefined : drawing.depict(structure, true))))]).then(([outcomes, drawn]) => {
         if (mine !== version.current) return;
+        const bonds = new Map<string, Pair>();
+        for (const answer of drawn) if (answer?.ok === true) for (const bond of answer.bonds ?? []) bonds.set(`${bond.a}-${bond.b}`, [bond.a, bond.b]);
         const found = new Set<number>();
         let unread = 0;
         let message: string | undefined;
@@ -58,8 +63,10 @@ export function useStepMaps(structures: readonly StructureRep[], port: Structure
           }
         }
         const all = [...found].sort((a, b) => a - b);
-        if (unread === outcomes.length && message !== undefined) setState({ phase: 'unavailable', maps: [], unread, message: `The chemistry engine did not answer: ${message}`, cut: false });
-        else setState({ phase: 'ready', maps: all.slice(0, MAX_OFFERED_MAPS), unread, cut: all.length > MAX_OFFERED_MAPS });
+        const offered = all.slice(0, MAX_OFFERED_MAPS);
+        const bonded = [...bonds.values()].filter((pair) => offered.includes(pair[0]) && offered.includes(pair[1])).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+        if (unread === outcomes.length && message !== undefined) setState({ phase: 'unavailable', maps: [], unread, message: `The chemistry engine did not answer: ${message}`, cut: false, bonded: [] });
+        else setState({ phase: 'ready', maps: offered, unread, cut: all.length > MAX_OFFERED_MAPS, bonded });
       });
     };
     if (first.current) {
@@ -68,24 +75,26 @@ export function useStepMaps(structures: readonly StructureRep[], port: Structure
       return undefined;
     }
     return timers.after(STEP_MAPS_DEBOUNCE_MS, run);
-  }, [stable, port, timers]);
+  }, [stable, port, timers, drawing]);
   return state;
 }
 
-/** Every pair of the maps, lower number first. */
-export function pairsOf(maps: readonly number[]): readonly Pair[] {
-  return maps.flatMap((a, i) => maps.slice(i + 1).map((b): Pair => [a, b]));
+/** Every pair of the maps, lower number first; the pairs in `bonded` (bonded in the step's structures) come first, then the rest in that order. */
+export function pairsOf(maps: readonly number[], bonded: readonly Pair[] = []): readonly Pair[] {
+  const all = maps.flatMap((a, i) => maps.slice(i + 1).map((b): Pair => [a, b]));
+  const isBonded = (pair: Pair): boolean => bonded.some((b) => b[0] === pair[0] && b[1] === pair[1]);
+  return [...all.filter(isBonded), ...all.filter((pair) => !isBonded(pair))];
 }
 
-/** Every site of the maps: per atom its atom, lone pair and radical, then the bonds (pairs). */
-export function sitesOf(maps: readonly number[]): readonly Site[] {
+/** Every site of the maps: per atom its atom, lone pair and radical, then the bonds (pairs, the bonded ones first). */
+export function sitesOf(maps: readonly number[], bonded: readonly Pair[] = []): readonly Site[] {
   return [
     ...maps.flatMap((atom): Site[] => [
       { kind: 'atom', atom },
       { kind: 'lone_pair', atom },
       { kind: 'radical', atom },
     ]),
-    ...pairsOf(maps).map((atoms): Site => ({ kind: 'bond', atoms })),
+    ...pairsOf(maps, bonded).map((atoms): Site => ({ kind: 'bond', atoms })),
   ];
 }
 

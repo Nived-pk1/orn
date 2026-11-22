@@ -58,3 +58,7 @@ Resume point: M3 committed (Part 1, not deployed). Next M4 component in src/rend
   DISCLOSED ORDER BREAK: the explorer and inspector wiring was written BEFORE their tests (mechanism-drawing.test.tsx, 23 tests incl. the STEP_KINDS table;
   one inspector test); they were green at first run except a test-id typo ("Invalid ID body for mvr"), so no red line exists for those two files.
 Resume point: M5 committed; next M6 (Studio editor live preview + bond choices), then M7, then close.
+- M6 RED: step-preview.test.tsx -> 5 failed | 2 passed (the preview and the bonded-first order missing; 'Expected container to be an Element' / order [1-2,1-3,2-3]) (2 s), before the source.
+- M6 GREEN: step-preview.test.tsx 7 tests (preview under the movements, updates after the 400 ms settle, incomplete movements counted, no port = no preview, bonded-first order for
+  bond choices and bond sites; the old order when the tool reports no bonds). Files: workbench/step-preview.tsx, step-maps.ts (bonded), StructurePort.stepDrawing, editor-port/editor-session.
+Resume point: M6 committed; next M7 (two WebKit failures), then e2e specs for the new layout, screenshots, sizes, docs, deploy.

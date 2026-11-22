@@ -16,6 +16,7 @@ import { RichTextField } from './rich-text-field';
 import type { SectionProps } from './section-props';
 import { BondRows, MapsNote, MovementRows } from './step-bonds';
 import { useStepMaps } from './step-maps';
+import { StepPreview } from './step-preview';
 import { addStep, moveStep, readRows, removeStep, setStepFlag, setStepText, stepSummary, stepsViewOf, toggleStepKind, type StepView } from './step-model';
 import { SummaryLine } from './summary-line';
 import { TriChoice } from './step-flags';
@@ -53,7 +54,7 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
   const n = s + 1;
   const base = `variants[${v}].steps[${s}]`;
   const locked = props.unavailable;
-  const maps = useStepMaps(structuresOf(props.draft, v, s), props.structure, props.timers);
+  const maps = useStepMaps(structuresOf(props.draft, v, s), props.structure, props.timers, props.structure?.stepDrawing);
   const common = { draft: props.draft, onEdit, v, s, ...(props.invalid === undefined ? {} : { invalid: props.invalid }), ...(locked === undefined ? {} : { unavailable: locked }), ...(props.phone === undefined ? {} : { phone: props.phone }) };
   return (
     <div className={`${own.participantBody} ${props.phone === true ? own.participantPhone : ''}`}>
@@ -75,6 +76,7 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
         <BondRows {...common} field="bondsFormed" maps={maps} />
         <BondRows {...common} field="bondsBroken" maps={maps} />
         <MovementRows {...common} maps={maps} />
+        {props.structure?.stepDrawing === undefined ? null : <StepPreview draft={props.draft} v={v} s={s} port={props.structure.stepDrawing} timers={props.timers} phone={props.phone === true} />}
         <MapsNote maps={maps} />
         {maps.unread > 0 ? <p className={styles.hint}>{maps.unread} structure(s) of this step could not be read, so their atom maps are not offered.</p> : null}
         {maps.cut ? <p className={styles.hint}>Only the first 60 atom maps are offered.</p> : null}

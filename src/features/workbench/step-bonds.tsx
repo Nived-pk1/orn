@@ -35,7 +35,7 @@ export function BondRows(props: StepRowsProps & { readonly field: BondField }) {
   const formed = field === 'bondsFormed';
   const noun = formed ? 'bond formed' : 'bond broken';
   const rows = readRows(props.draft, v, s, field);
-  const pairs = pairsOf(maps.maps);
+  const pairs = pairsOf(maps.maps, maps.bonded);
   const why = locked ?? addReason(maps, 2);
   return (
     <div className={styles.field}>
@@ -84,7 +84,7 @@ function SiteSelect(props: StepRowsProps & { readonly index: number; readonly en
   const label = `${end === 'from' ? 'From' : 'To'} of movement ${index + 1}`;
   const path = `variants[${v}].steps[${s}].electronMovements[${index}].${end}`;
   const current = siteOfDraft(props.row[end]);
-  const sites = sitesOf(maps.maps);
+  const sites = sitesOf(maps.maps, maps.bonded);
   const known = current !== undefined && sites.some((site) => siteValue(site) === siteValue(current));
   return (
     <select aria-label={label} value={current === undefined ? '' : siteValue(current)} disabled={props.unavailable !== undefined} aria-invalid={bad(props, path)} data-field-path={path} onChange={(event) => onEdit(setMovementSite(v, s, index, end, siteOfValue(event.target.value)), path)}>
