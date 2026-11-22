@@ -193,3 +193,37 @@ describe('the memory LRU', () => {
     expect(await oldest).toMatchObject({ ok: true, cached: false });
   });
 });
+
+describe('atom positions (step 8.5)', () => {
+  const positioned: DepictionOptions = { width: 200, height: 150, showAtomMaps: false, fixedScale: true, atomPositions: true };
+  const withTable = (value: string): DepictOutcome => ({
+    ok: true,
+    depiction: { key: `k-${value}`, svg: `<svg>${value}</svg>`, width: 90, height: 60, atoms: [{ map: 1, x: 10, y: 20, rx: 5, ry: 5 }], bonds: [{ a: 1, b: 2 }] },
+  });
+
+  it('the key differs with atomPositions, and without it is the key it always was', () => {
+    const plain = { ...positioned, atomPositions: false };
+    expect(depictionKeyOf(smiles('C'), positioned)).not.toBe(depictionKeyOf(smiles('C'), plain));
+    expect(depictionKeyOf(smiles('C'), plain)).toBe(depictionKeyOf(smiles('C'), { width: 200, height: 150, showAtomMaps: false, fixedScale: true }));
+  });
+
+  it('the table is answered with the drawing and kept with it in the cache (the second answer is cached and has the same table)', async () => {
+    const s = scripted();
+    const service = createDepictionService(s.chem);
+    const first = service.depict(smiles('[CH3:1]'), positioned);
+    s.answer(withTable('[CH3:1]'));
+    const a = await first;
+    expect(a).toMatchObject({ ok: true, cached: false, atoms: [{ map: 1, x: 10, y: 20, rx: 5, ry: 5 }], bonds: [{ a: 1, b: 2 }] });
+    const b = await service.depict(smiles('[CH3:1]'), positioned);
+    expect(b).toMatchObject({ ok: true, cached: true, atoms: [{ map: 1, x: 10, y: 20, rx: 5, ry: 5 }], bonds: [{ a: 1, b: 2 }] });
+    expect(s.calls.length).toBe(1);
+  });
+
+  it('a drawing without a table has no atoms or bonds keys', async () => {
+    const s = scripted();
+    const service = createDepictionService(s.chem);
+    const first = service.depict(smiles('C'), options);
+    s.answer();
+    expect(Object.keys(await first)).not.toContain('atoms');
+  });
+});

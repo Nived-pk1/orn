@@ -27,7 +27,7 @@ export type DrawResult = { readonly ok: true; readonly svg: string } | { readonl
  * One drawing of `mol`, in the mode of `details` (the molecule is never changed: Condensed adds `atomLabels` to the drawing options,
  * Full draws a copy that has its hydrogens). `modes.ts` explains the two.
  */
-function svgOf(module: RdkitModule, mol: RdkitMol, details: DrawDetails, atoms: readonly number[]): DrawResult {
+export function svgOf(module: RdkitModule, mol: RdkitMol, details: DrawDetails, atoms: readonly number[]): DrawResult {
   // a fixed scale: the canvas fits the molecule (-1 x -1) and `scalingFactor` gives every drawing the same bond length
   const size = details.fixedScale ? { width: -1, height: -1, scalingFactor: FIXED_SCALE_FACTOR, clearBackground: false } : { width: details.width, height: details.height };
   const base = atoms.length === 0 ? size : { ...size, atoms };

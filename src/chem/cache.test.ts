@@ -176,8 +176,18 @@ describe('withChemCache', () => {
 
 describe('depictionDetails', () => {
   it('normalises the highlights (sorted, unique) and keeps the option order fixed', () => {
-    expect(depictionDetails({ ...DRAW, highlightAtomMaps: [3, 1, 3] })).toEqual({ width: 200, height: 150, showAtomMaps: true, highlightAtomMaps: [1, 3], mode: 'skeletal', fixedScale: false });
-    expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps', 'mode', 'fixedScale']);
+    expect(depictionDetails({ ...DRAW, highlightAtomMaps: [3, 1, 3] })).toEqual({ width: 200, height: 150, showAtomMaps: true, highlightAtomMaps: [1, 3], mode: 'skeletal', fixedScale: false, atomPositions: false });
+    expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps', 'mode', 'fixedScale', 'atomPositions']);
+  });
+
+  it('atomPositions (step 8.5) defaults to false, must be true or false, and needs a fixed scale, no shown maps and no highlights', () => {
+    const OK = { width: 200, height: 150, showAtomMaps: false, fixedScale: true } as const;
+    expect(depictionDetails(DRAW).atomPositions).toBe(false);
+    expect(depictionDetails({ ...OK, atomPositions: true }).atomPositions).toBe(true);
+    expect(() => depictionDetails({ ...OK, atomPositions: 'yes' } as unknown as DepictionOptions)).toThrow(RangeError);
+    expect(() => depictionDetails({ ...OK, fixedScale: false, atomPositions: true })).toThrow(RangeError);
+    expect(() => depictionDetails({ ...OK, showAtomMaps: true, atomPositions: true })).toThrow(RangeError);
+    expect(() => depictionDetails({ ...OK, highlightAtomMaps: [1], atomPositions: true })).toThrow(RangeError);
   });
 
   it('fixedScale defaults to false and must be true or false', () => {

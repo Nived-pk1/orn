@@ -18,3 +18,22 @@ Base sizes for this step: Study 338,360; Studio 342,382. Hard limit +100 bytes e
   `set_new_coords()` / `get_new_coords()` (a molblock with fresh coordinates, in molecule units) but nothing returns the drawer's
   molecule-to-SVG transform (scale, offset, label-widened extents). `get_coords` is in the d.ts but is not a function on a mol.
 - So D1 as written (coordinates from the same 2D coordinates RDKit draws, never by parsing the SVG) is NOT available.
+
+## Reviewer decision on D1 (2026-11-22): option 1, conditions 1-6 (see the commit message of M1)
+Resume point: M1 committed; next M2 (sides, D2) then M3 (arrow geometry), tests first.
+
+## M1 (worker: atom positions and bonds by map number)
+- RED: `npx vitest run tests/integration/chem-positions.test.ts` -> 13 failed | 3 passed (1 s), before any source edit.
+- Built: `src/chem/rdkit/positions.ts` (draws twice at one fixed scale: shown + highlighted), `svg-positions.ts` (similarity fit by
+  class, checked), contract fields in `src/chem/contracts.ts`, option check in `depiction-options.ts`, cache keys, service table.
+- Findings that shaped it: (1) highlighting widens the canvas and RDKit rounds it, so the two drawings differ by a translation AND a
+  scale of up to ~1 %: a pure shift check failed on the ring (0.3 unit); fixed by a least-squares similarity fit, checked at 0.35.
+  (2) bond lines coloured at a hetero atom are two paths in the shown drawing and one in the highlighted: pairs are the first
+  line's start and end (chain of continuing paths), never the second half. (3) Highlight ellipses are the atom's circle (a carbon)
+  or the label box (O, N, Br, a charge, an explicit H); rx/ry returned so arrows can stop outside a label.
+- Conditions: 1 SVG read only inside the worker, recorded in ADR-038 + Amendments. 2 map -> index recorded from RDKit's SMILES
+  before stripping; the molecule is built from the stripped text (token k = atom k), atom count checked; test "drawn atom order".
+  3 labelled atoms = centre of the label box. 4 every failure is `refused` "no atom positions: ..." (missing classes, repeated
+  map, no fit, molfile). 5 tests: neutral, charged, wedge+amine, ring, lone Br-, explicit mapped H; a test that fails loudly if the
+  classes go (real RDKit) and one that breaks them (refused). 6 table cached with the drawing (worker LRU key + service LRU).
+- GREEN: chem-positions 17 tests, svg-positions unit 7, cache.test +1, depiction service +3 (all pass).

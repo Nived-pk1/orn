@@ -16,6 +16,7 @@ import { describe, isTrap } from './errors';
 import { factsOf } from './facts';
 import { depictionDetails } from '../depiction-options';
 import { drawMol, viewBoxSize } from './draw';
+import { drawWithPositions, type PositionedDrawing } from './positions';
 import { mapsKeepingHydrogens } from './mapped-hydrogens';
 import { withHandle } from './scope';
 import type { RdkitLoad, RdkitModule } from './types';
@@ -150,22 +151,28 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
       const at: { stage: 'structure' | 'work' } = { stage: 'structure' };
       try {
         const module_ = loaded.module;
+        let positioned: PositionedDrawing | undefined;
         const drawn = withHandle(
           () => open(module_, structure),
           (mol) => {
             at.stage = 'work';
-            return drawMol(module_, mol, details);
+            if (!details.atomPositions) return drawMol(module_, mol, details);
+            positioned = drawWithPositions(module_, structure, mol, details);
+            return positioned.ok ? { ok: true as const, svg: positioned.svg } : { ok: false as const, error: positioned.error };
           },
         );
         if (!drawn.opened) return invalid(unreadable(structure));
+        if (positioned !== undefined && !positioned.ok) return { ok: false, reason: positioned.reason, error: positioned.error };
         if (!drawn.value.ok) return unavailable(drawn.value.error);
         const clean = sanitizeSvg(drawn.value.svg);
         if (!clean.ok) return { ok: false, reason: 'refused', error: `the drawing was refused: ${clean.message}` };
-        const key = hashParts(['depict', structure.format, structure.value, JSON.stringify(details), TOOLKIT_NAME, module_.version()]);
+        const { atomPositions, ...plainDetails } = details;
+        const key = hashParts(['depict', structure.format, structure.value, JSON.stringify(atomPositions ? details : plainDetails), TOOLKIT_NAME, module_.version()]);
         // a fixed-scale drawing has the size of the molecule, which RDKit wrote in the viewBox; any other has the size that was asked for
         const size = details.fixedScale ? viewBoxSize(clean.svg) : { width: details.width, height: details.height };
         if (size === undefined) return { ok: false, reason: 'refused', error: 'the drawing has no usable viewBox' };
-        return { ok: true, depiction: { key, svg: clean.svg, width: size.width, height: size.height } };
+        const table = positioned?.ok ? { atoms: positioned.atoms, bonds: positioned.bonds } : {};
+        return { ok: true, depiction: { key, svg: clean.svg, width: size.width, height: size.height, ...table } };
       } catch (error) {
         return crashed(error) ?? refused(error, at.stage);
       }

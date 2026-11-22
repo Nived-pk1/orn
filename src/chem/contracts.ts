@@ -87,6 +87,27 @@ export interface DepictionOptions {
    * `height` are not used (they must still be valid) and the answer's `width` and `height` are the real size of the drawing.
    */
   readonly fixedScale?: boolean;
+  /**
+   * Step 8.5 (ADR-038 "As built 8.5"): also answer where every MAPPED atom is in this drawing and which mapped atoms are bonded
+   * (`Depiction.atoms`, `Depiction.bonds`). Needs `fixedScale: true`, `showAtomMaps: false` and no highlights (a programmer error
+   * otherwise). The drawing then reads the structure WITH its explicit hydrogens, so a mapped hydrogen is an atom with a position.
+   */
+  readonly atomPositions?: boolean;
+}
+
+/** One mapped atom in the frame of `Depiction.svg`: its centre, and half the width and height of its label box (a plain carbon: a small circle). */
+export interface DepictedAtom {
+  readonly map: number;
+  readonly x: number;
+  readonly y: number;
+  readonly rx: number;
+  readonly ry: number;
+}
+
+/** A bond between two mapped atoms, by map number (`a` < `b`). */
+export interface DepictedBond {
+  readonly a: number;
+  readonly b: number;
 }
 
 export interface Depiction {
@@ -96,6 +117,9 @@ export interface Depiction {
   readonly svg: string;
   readonly width: number;
   readonly height: number;
+  /** Only for a drawing made with `atomPositions`. Derived, like the drawing: never stored. */
+  readonly atoms?: readonly DepictedAtom[];
+  readonly bonds?: readonly DepictedBond[];
 }
 
 /** `refused`: the toolkit drew it, but the sanitiser refused the drawing (over the size cap, or not an svg): nothing is shown. */

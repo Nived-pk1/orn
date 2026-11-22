@@ -15,6 +15,7 @@ export interface DrawDetails {
   readonly highlightAtomMaps: readonly number[];
   readonly mode: StructureMode;
   readonly fixedScale: boolean;
+  readonly atomPositions: boolean;
 }
 
 const isSize = (value: unknown): boolean => typeof value === 'number' && Number.isInteger(value) && value >= MIN_DEPICTION_SIZE && value <= MAX_DEPICTION_SIZE;
@@ -33,5 +34,10 @@ export function depictionDetails(options: DepictionOptions): DrawDetails {
   if (!(STRUCTURE_MODES as readonly unknown[]).includes(mode)) throw new RangeError(`depiction mode must be one of ${STRUCTURE_MODES.join(', ')}`);
   const fixedScale = options.fixedScale ?? false;
   if (typeof fixedScale !== 'boolean') throw new RangeError('depiction fixedScale must be true or false');
-  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale };
+  const atomPositions = options.atomPositions ?? false;
+  if (typeof atomPositions !== 'boolean') throw new RangeError('depiction atomPositions must be true or false');
+  if (atomPositions && (!fixedScale || options.showAtomMaps || maps.length > 0)) {
+    throw new RangeError('atomPositions needs fixedScale, no shown atom maps and no highlights');
+  }
+  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale, atomPositions };
 }
