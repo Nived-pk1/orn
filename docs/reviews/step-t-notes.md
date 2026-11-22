@@ -205,3 +205,6 @@ STILL TO DO: (1) attempt 6, the full proof run; any failure: fix by cause, resta
 (projects, workers, "no new waitForTimeout; wait on state", WebKit pool, review project, ORN_REUSE_SERVERS, ORN_E2E_WORKERS, the wait-for-state lessons
 above), plan row T after row C in IMPLEMENTATION_PLAN.md, PROJECT_STATE (next 8.5); (5) commit "phase-T: ...", deploy per docs/RELEASE.md (Study, live
 specs Chromium + WebKit, Studio, Access check), push; (6) REPORT in the format of "Claude outputs/ORN_SONNET_T_PROMPT.md" (REPORT section).
+
+## CLOSE (2026-11-22)
+Proof run: chromium 857 s (re-run after kit change), firefox 1051 s (1 failed), webkit 2325 s (3 failed), serial 105/122/366 s. Sizes Study 338,345 / Studio 342,390. check 630 s green. NOT deployed: see PROGRESS Step T REVIEW REQUIRED 1. Logs: ../Tproof/.

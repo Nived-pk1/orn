@@ -28,19 +28,23 @@ test.describe('the shell and the design system', () => {
     await expectClean(seen);
   });
 
-  test('fonts are served from the origin and are in use', async ({ page }) => {
-    const fonts: { url: string; status: number }[] = [];
-    page.on('response', (response) => {
-      if (/\.woff2?(\?|$)/.test(response.url())) fonts.push({ url: response.url(), status: response.status() });
+  test.describe('with its own WebKit context', () => {
+    // step T: a pooled WebKit context may serve a font from its cache, so the responses differ
+    test.use({ freshWebkit: true });
+    test('fonts are served from the origin and are in use', async ({ page }) => {
+      const fonts: { url: string; status: number }[] = [];
+      page.on('response', (response) => {
+        if (/\.woff2?(\?|$)/.test(response.url())) fonts.push({ url: response.url(), status: response.status() });
+      });
+      const seen = await watch(page);
+      await openApp(page);
+      await expect.poll(() => page.evaluate(() => document.fonts.check('400 14px "IBM Plex Sans"'))).toBe(true);
+      await expect.poll(() => fonts.length).toBeGreaterThan(0);
+      expect(fonts.every((f) => f.url.startsWith('http://127.0.0.1:4173/') && f.status === 200)).toBe(true);
+      const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
+      expect(family).toContain('IBM Plex Sans');
+      await expectClean(seen); // includes: no request left the origin
     });
-    const seen = await watch(page);
-    await openApp(page);
-    await expect.poll(() => page.evaluate(() => document.fonts.check('400 14px "IBM Plex Sans"'))).toBe(true);
-    await expect.poll(() => fonts.length).toBeGreaterThan(0);
-    expect(fonts.every((f) => f.url.startsWith('http://127.0.0.1:4173/') && f.status === 200)).toBe(true);
-    const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-    expect(family).toContain('IBM Plex Sans');
-    await expectClean(seen); // includes: no request left the origin
   });
 
   test('every primitive a screen uses works with zero policy violations: button, menu, tooltip, dialog, banner, toast', async ({ page, context }) => {

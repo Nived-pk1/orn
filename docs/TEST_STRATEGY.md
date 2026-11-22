@@ -16,6 +16,7 @@ Package sections: **#24 Test Architecture**, **#25 Adversarial Test Matrix**, th
 
 Rules:
 - Tests are deterministic: clocks, IDs and randomness are injected (`CommandContext`, seeded mulberry32). No sleeps; use fake timers.
+- **E2E projects and speed (step T).** `npm run e2e` (`scripts/run-e2e.mjs`) runs `chromium`, `firefox`, `webkit` in parallel (`ORN_E2E_WORKERS`, default 3), then `chromium-serial`, `firefox-serial`, `webkit-serial` (one worker) for the serial specs; `review` holds screenshot specs. `ORN_REUSE_SERVERS=1` reuses preview servers started by hand. WebKit keeps one persistent context per worker, emptied between tests (`tests/e2e/fixtures.ts`); a spec about what the browser caches sets `test.use({ freshWebkit: true })` (the fonts spec does). **No new `waitForTimeout`: wait on state** (`viewSettled` in `settled-kit.ts`, a menu gone before the next click, the Record menu or Show: select visible); `allTextContents` does not wait. A flaky test is fixed by its cause: the test waits for the wrong thing, or the product has a race (test first, red). Vitest has a `pure` project (core, io, layout, search, chem; no jsdom); default workers stay 4.
 - No test depends on the demo dataset's specific names for *logic*; fixtures are loaded and referenced by ID in tests only (the hardcode check excludes test files).
 - Every bug fix adds a failing test first.
 - Coverage targets: `src/core` ≥ 90% lines and ≥ 85% branches; services ≥ 80%; UI covered by component + e2e flows rather than a line target.

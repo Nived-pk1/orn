@@ -100,7 +100,9 @@ function webkitPool(playwright: { webkit: BrowserType }): { pool: WebkitPool; cl
   };
 }
 
-export const test = base.extend<{ makeContext: (options?: BrowserContextOptions) => Promise<BrowserContext> }, { webkitPool: WebkitPool }>({
+export const test = base.extend<{ makeContext: (options?: BrowserContextOptions) => Promise<BrowserContext>; freshWebkit: boolean }, { webkitPool: WebkitPool }>({
+  /** A spec about what the browser has cached or what its pointer did (a blocked .wasm, the font responses, a hover) sets this: WebKit then gets its own context, as before the pool. */
+  freshWebkit: [false, { option: true }],
   webkitPool: [
     async ({ playwright }, provide) => {
       const { pool, closeAll } = webkitPool(playwright);
@@ -109,7 +111,7 @@ export const test = base.extend<{ makeContext: (options?: BrowserContextOptions)
     },
     { scope: 'worker' },
   ],
-  context: async ({ browserName, browser, baseURL, viewport, userAgent, deviceScaleFactor, acceptDownloads, hasTouch, isMobile, webkitPool: pool }, provide) => {
+  context: async ({ browserName, browser, baseURL, viewport, userAgent, deviceScaleFactor, acceptDownloads, hasTouch, isMobile, webkitPool: pool, freshWebkit, playwright }, provide) => {
     const options = {
       ...(baseURL === undefined ? {} : { baseURL }),
       viewport,
@@ -123,6 +125,17 @@ export const test = base.extend<{ makeContext: (options?: BrowserContextOptions)
       const ordinary = await browser.newContext(options);
       await provide(ordinary);
       await ordinary.close();
+      return;
+    }
+    if (freshWebkit) {
+      const dir = await mkdtemp(join(tmpdir(), 'orn-webkit-'));
+      const own = await playwright.webkit.launchPersistentContext(dir, options);
+      try {
+        await provide(own);
+      } finally {
+        await own.close().catch(() => undefined);
+        await rm(dir, { recursive: true, force: true }).catch(() => undefined);
+      }
       return;
     }
     const persistent = await pool.acquire(options);
