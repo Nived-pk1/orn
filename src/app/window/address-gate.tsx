@@ -34,9 +34,10 @@ export function AddressGate(props: Omit<Parameters<typeof AddressDriver>[0], 'fr
     const handle = idle === undefined ? window.setTimeout(() => setArmed(true), 1500) : idle(() => setArmed(true), { timeout: 2000 });
     return () => (idle === undefined ? window.clearTimeout(handle) : (window as { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback?.(handle));
   }, [armed, ready, mode]);
+  // a view the reader chose after the app was ready (while the code was still on its way) stays, whether the address came from the boot or from the URL
   return armed ? (
     <Suspense fallback={null}>
-      <Driver {...props} fromBoot={fromBoot.current} />
+      <Driver {...props} fromBoot={fromBoot.current || mode !== first.current} />
     </Suspense>
   ) : null;
 }

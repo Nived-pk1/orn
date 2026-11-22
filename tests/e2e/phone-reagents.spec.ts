@@ -24,6 +24,7 @@ async function walk(page: Page, device: string, withPage: boolean): Promise<void
 
   // the switch (7.6): ONE native select "Show:" with six choices, 44 px or more, inside the screen
   const choices = page.getByRole('combobox', { name: 'Show:' });
+  await expect(choices).toBeVisible(); // allTextContents does not wait: the Explore view has to be there first
   expect(await choices.locator('option').allTextContents()).toEqual(['Reactions', 'Precursors', 'Reagents', 'Named reactions', 'Mechanisms', 'Syllabus']);
   const width = page.viewportSize()?.width ?? 0;
   const box = await choices.boundingBox();

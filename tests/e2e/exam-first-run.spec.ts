@@ -19,7 +19,7 @@ import {
   expectExamId,
 } from "./kit";
 import { shotsDir } from "./editor-kit";
-import { answerExamCard, expectStorageLineWhole } from "./exam-kit";
+import { answerExamCard, expectStorageLineWhole, skipTour } from "./exam-kit";
 import { hintOverlaps } from "./map-toolbar-kit";
 import { boxTitlePx } from "./box-text";
 
@@ -83,6 +83,7 @@ test.describe('desktop', () => {
     await expect(
       page.getByRole("radio", { name: "Only JEE Main" }),
     ).toBeChecked();
+    await skipTour(page); // the first-run tour follows the exam answer a moment later and would cover the Modes bar
 
     await page
       .getByRole("navigation", { name: "Modes" })

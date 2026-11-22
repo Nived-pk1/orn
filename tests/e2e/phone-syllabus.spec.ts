@@ -48,6 +48,7 @@ async function walk(page: Page, device: string, compare: boolean): Promise<void>
   await tabs(page).getByRole('button', { name: 'Explore' }).tap();
 
   const choose = page.getByRole('combobox', { name: 'Show:' });
+  await expect(choose).toBeVisible(); // allTextContents does not wait: the Explore view has to be there first
   expect(await choose.locator('option').allTextContents()).toEqual(['Reactions', 'Precursors', 'Reagents', 'Named reactions', 'Mechanisms', 'Syllabus']);
   await choose.selectOption({ label: 'Syllabus' });
   await expect(view(page).getByRole('heading', { level: 2, name: 'Syllabus' })).toBeVisible();

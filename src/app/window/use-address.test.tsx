@@ -103,6 +103,25 @@ describe('useAddress', () => {
     expect(hashes()).toBe(before);
   });
 
+  it('does not write the old view back when another render comes between the URL moving (Back) and the hashchange event (step T, found by the e2e P4 spec: 2 of 40)', () => {
+    const { view, ui } = setup();
+    act(() => view.result.current.setMode('settings'));
+    const entries = hashes();
+    // Back has moved the URL; the hashchange event has not run yet, and something else renders the hook in between
+    act(() => {
+      history.replaceState(null, '', '#/map');
+      ui.family.setState({});
+    });
+    expect(location.hash).toBe('#/map');
+    expect(hashes()).toBe(entries);
+    act(() => {
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    expect(view.result.current.mode).toBe('navigator');
+    expect(location.hash).toBe('#/map');
+    expect(hashes()).toBe(entries);
+  });
+
   it('says lost for a bad address and a missing record and leaves the address alone', () => {
     history.replaceState(null, '', '#/nowhere');
     const { view } = setup();

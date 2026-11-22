@@ -14,6 +14,8 @@ export function useAddress(host: AddressHost, mode: string, ready: boolean, lost
   const [, setTick] = useState(0);
   const [live, setLive] = useState(false);
   const replace = useRef(true);
+  /** The address the app last wanted; the URL is written only when this changes, so a render that comes while the URL has moved (Back) but its hashchange has not run does not write the old view back. */
+  const wanted = useRef<string | undefined>(undefined);
   const now = useRef(mode);
   now.current = mode;
   const bump = useCallback(() => setTick((n) => n + 1), []);
@@ -21,6 +23,7 @@ export function useAddress(host: AddressHost, mode: string, ready: boolean, lost
     const done = applyAddress(host, parseAddress(location.hash), atStart);
     setLost(done === 'bad' || done === 'missing' ? { what: done, mode: now.current } : null);
     replace.current = true;
+    wanted.current = undefined;
     bump();
   }, [host, bump, setLost]);
   useEffect(() => {
@@ -50,6 +53,8 @@ export function useAddress(host: AddressHost, mode: string, ready: boolean, lost
       return () => window.removeEventListener('popstate', bump);
     }
     const want = formatAddress(currentAddress(mode, host));
+    if (want === wanted.current) return undefined;
+    wanted.current = want;
     if (want !== location.hash) history[replace.current ? 'replaceState' : 'pushState'](null, '', want);
     replace.current = false;
     return undefined;

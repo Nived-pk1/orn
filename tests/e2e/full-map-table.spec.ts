@@ -177,6 +177,8 @@ test.describe("the interaction table, in full map (desktop)", () => {
     await node.click({ button: "right" });
     await nodeMenu.getByRole("menuitem", { name: /Show in inspector/ }).click();
     await stays(page);
+    await expect(page.getByRole("menu")).toHaveCount(0); // the node menu is gone
+    await viewSettled(page, 20); // and the map has stopped moving: a canvas menu opened while the view still changes is closed by it (~200 ms later)
     // the empty canvas's menu: Zoom in, Zoom out, Fit
     const empty = { x: box.x + box.width / 2, y: box.y + box.height - 12 };
     for (const name of ["Zoom in", "Zoom out", "Fit"]) {

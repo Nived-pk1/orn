@@ -134,6 +134,7 @@ test.describe('desktop', () => {
       const dialog = page.getByRole('dialog', { name: 'Export your data' });
       await expect(dialog).toBeVisible();
       await expect(page.getByRole('status', { name: 'Loading the export screen' })).toBeVisible(); // the chunk is held: this IS the loading state
+      await expect(page.getByRole('menu')).toHaveCount(0); // Esc only asks the TOPMOST layer: the File menu's layer is gone first
       await page.keyboard.press('Escape');
       await expect(dialog).toBeHidden();
     } finally {

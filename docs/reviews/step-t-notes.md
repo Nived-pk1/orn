@@ -179,3 +179,29 @@ CHECKPOINT COMMIT (2026-11-21): `npm run check` green with all of the above: 838
 Fixes found by that check: the throwaway dist-studio-relaxed folder broke eslint (deleted; never keep a dist-* folder that is not in
 eslint ignores), and the WebKit wipe may not name localStorage / sessionStorage (lint rule; the app uses neither) - removed.
 So far: 2 green check runs after the pure project (655 s, 728 s). Not pushed, not deployed.
+
+## SECOND CHECKPOINT (2026-11-22): PROOF RUN ATTEMPTS 1-5, FIXES FOUND - HOW TO RESUME
+The full 3-engine proof run was tried 5 times; each attempt found failures that were fixed by cause and the run restarted on the final code
+(a proof must be ONE clean run of the final code). Logs live next to the repo: ../Tproof-attempt1..4/ (and ../Tproof/ = attempt 5).
+RESUMABLE SCRIPT: ../T-proof.sh (recreate if missing): for p in chromium firefox webkit chromium-serial firefox-serial webkit-serial:
+`node scripts/run-e2e.mjs --project=$p > ../Tproof/$p.log`, write ../Tproof/$p.done on rc 0, stop at the first failure, log secs to summary.txt.
+Attempt 5: chromium 456 passed / 1 failed (full-map-table:35, now fixed); firefox, webkit and the serial projects NOT yet complete.
+Before attempt 6: `mkdir -p ../Tproof-attempt5 && mv ../Tproof/* ../Tproof-attempt5/` then run ../T-proof.sh in the background (about 15 min chromium, 17 min firefox; webkit and serial unknown).
+FIXES (all in the checkpoint commit that contains this section):
+ TEST RACES (test waited for the wrong thing): app-essentials (demo() + toast test use viewSettled and wait for Record menu; not-found waits for
+ #/reactions so the address is live), exam-first-run:72 (skipTour; the first-run tour covers the Modes bar under load), phone-syllabus and
+ phone-reagents (allTextContents does not wait: wait for the Show: select), study-edition:118 (File menu gone before Esc; cause UNPROVEN, 0 of 15 alone),
+ full-map-table:35 (menu gone + viewSettled before the canvas right-click: the menu was closed ~200 ms later by a late map change; was 6/40, 3/40 in the
+ pre-T spec too, now 60/60).
+ PRODUCT RACES (both pre-existing, found by the faster parallel run; each has a unit test written red first):
+ 1. src/app/window/use-address.ts: the effect wrote the old view's address back when a render came between Back moving the URL and the hashchange
+    event (P4 spec: 2/40 and 1/40 even with the step C spec; now 100/100). Test: use-address.test.tsx "does not write the old view back ...".
+ 2. src/app/window/address-gate.tsx: an address from the URL (e.g. after a reload) undid a view chosen before the lazy driver arrived (Firefox
+    study-edition "Keep my data" 2/40 with and without fix 1; now 40/40). Test: address-gate.test.tsx "an address the reader came with does not undo ...".
+ Both are product edits late in a test-speed step: DISCLOSE in PROGRESS and the report ("disclosed rule breaks"), owner review required.
+STILL TO DO: (1) attempt 6, the full proof run; any failure: fix by cause, restart from scratch; (2) sizes: build both editions fresh,
+`node scripts/initial-js-size.mjs`, limit +100 bytes per edition over Study 338,365 / Studio 342,384 (the two address edits may add bytes; over = STOP and report);
+(3) `npm run check` once more if anything changes; (4) docs: PROGRESS step T section (with the 2 product fixes, flaky list state), TEST_STRATEGY
+(projects, workers, "no new waitForTimeout; wait on state", WebKit pool, review project, ORN_REUSE_SERVERS, ORN_E2E_WORKERS, the wait-for-state lessons
+above), plan row T after row C in IMPLEMENTATION_PLAN.md, PROJECT_STATE (next 8.5); (5) commit "phase-T: ...", deploy per docs/RELEASE.md (Study, live
+specs Chromium + WebKit, Studio, Access check), push; (6) REPORT in the format of "Claude outputs/ORN_SONNET_T_PROMPT.md" (REPORT section).

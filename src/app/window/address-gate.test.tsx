@@ -74,6 +74,16 @@ describe('AddressGate', () => {
     expect(mounted).toHaveBeenCalled();
   });
 
+  it('an address the reader came with does not undo a view chosen before the code arrived (step T: e2e Keep my data after a reload, Firefox 2 of 40)', async () => {
+    history.replaceState(null, '', '#/chapters');
+    const view = render(<AddressGate {...props} mode="chapters" ready />);
+    await flush();
+    expect(seenProps.mock.calls.at(-1)?.[0]).toMatchObject({ fromBoot: false }); // nothing chosen yet: the address is carried out
+    view.rerender(<AddressGate {...props} mode="navigator" ready />);
+    await flush();
+    expect(seenProps.mock.calls.at(-1)?.[0]).toMatchObject({ fromBoot: true }); // the reader chose Map: the address must not take it back
+  });
+
   it('with no address, waits for the first change of view', async () => {
     const view = render(<AddressGate {...props} mode="navigator" ready />);
     await flush();

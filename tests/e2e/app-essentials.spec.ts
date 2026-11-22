@@ -5,7 +5,7 @@
  */
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { paintSettled } from './settled-kit';
+import { paintSettled, viewSettled } from './settled-kit';
 import { loadDemo, openApp, openPhoneApp } from './kit';
 import { familyIds } from './map-focus-kit';
 import { phoneFamily } from './map-layout-kit';
@@ -21,7 +21,7 @@ async function demo(page: Page): Promise<void> {
   await openApp(page);
   await loadDemo(page);
   await expect(page.getByRole('group', { name: NAV })).toBeVisible({ timeout: 90_000 });
-  await paintSettled(page);
+  await viewSettled(page);
 }
 
 /** Selects the first family on the map and answers the id of the address it made. */
@@ -86,6 +86,9 @@ test.describe('the address (G1)', () => {
 
   test('a bad address and an unknown record open the not-found screens; Go to Chapters leaves them', async ({ page }) => {
     await demo(page);
+    // the address listens for hash changes only once it is live; its first write (the view's own address) says so
+    await goTo(page, 'Reactions');
+    await expect.poll(() => hash(page)).toBe('#/reactions');
     await page.evaluate(() => {
       location.hash = '#/nowhere';
     });
@@ -152,6 +155,8 @@ test.describe('the map (G11, G12)', () => {
           }),
         ),
       );
+    await expect(page.getByRole('button', { name: 'Record menu' })).toBeVisible();
+    await viewSettled(page);
     await paintSettled(page);
     const before = await keyRects();
     await page.getByRole('button', { name: 'Record menu' }).click();
