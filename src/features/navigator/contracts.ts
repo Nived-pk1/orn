@@ -4,12 +4,11 @@
  * `src/app/window` fills it from `AppServices`; the feature imports no `src/app` and the engines as types only (step 5.0 rules).
  * Step 5.5a part 2 adds the depiction functions (optional: without them no node has a structure).
  */
-import type { StructureMode } from '@/chem/contracts';
+import type { DepictedAtom, DepictedBond, StructureMode } from '@/chem/contracts';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, StructureRep } from '@/core/schema';
 import type { StructureFactsPort } from '@/render/equation';
-import type { StepDrawingPort } from '@/render/mechanism';
 import type { TextMeasurer } from '@/render/scene';
 import type { StoreApi } from 'zustand/vanilla';
 import type { NavigatorUiStatus, NavigatorUiStores } from '@/ui/state';
@@ -23,14 +22,14 @@ export interface NavigatorMeasurer {
 
 /** What the depiction service answers, as far as the navigator uses it (the service's `DepictionResult` fits). */
 export type NavigatorDepictionAnswer =
-  | { readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number }
+  | { readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[] }
   | { readonly ok: false; readonly reason: 'unavailable' | 'timeout' | 'invalid' | 'refused' | 'cancelled' | 'queue_full' | 'bad_options'; readonly message: string };
 
 /** Structures (item i): the request key, the service call, and the object URLs, which are a browser API and so made by the app. */
 export interface NavigatorDepictions {
   /** The request's name for a structure drawn at `size` (pure; the service's own key). */
-  keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean }, mode?: StructureMode): string;
-  depict(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean }, mode?: StructureMode): Promise<NavigatorDepictionAnswer>;
+  keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean }, mode?: StructureMode): string;
+  depict(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean }, mode?: StructureMode): Promise<NavigatorDepictionAnswer>;
   cancel(key: string): void;
   /** How structures are drawn now (Skeletal, Condensed, Full; equation step, part 4). Absent: Skeletal. */
   mode?(): StructureMode;
@@ -77,8 +76,6 @@ export interface NavigatorPorts {
   readonly structures?: NavigatorStructures;
   /** What the chem worker says about a structure (the textbook equation decides formula or drawing from it). Absent: the facts are unavailable. */
   readonly facts?: StructureFactsPort;
-  /** Step 8.5: the structure tool's drawings with atom positions (the mechanism steps' before -> after pictures). Absent: no step is drawn. */
-  readonly stepDrawing?: StepDrawingPort;
   /** Opens a named reaction's page in the Named reactions view (7.4 D; the badge on a card). Absent: the badge is plain text. */
   readonly openNamedReaction?: (namedReactionId: string) => void;
   readonly ui: NavigatorUiStores;

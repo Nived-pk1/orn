@@ -11,7 +11,7 @@
  * The key is a stable hash of (format, value, options), NOT of the toolkit: it names a request, so it is known before the answer
  * (the worker's own `Depiction.key` adds the toolkit and its version for its internal cache).
  */
-import { depictionDetails, type DepictedAtom, type DepictedBond, type DepictionOptions } from '@/chem';
+import { depictionDetails, type DepictedAtom, type DepictedBond, type Depiction, type DepictionOptions } from '@/chem';
 import { LruCache } from '@/chem/lru';
 import { hashParts } from '@/core/hash';
 import type { StructureRep } from '@/core/schema';
@@ -56,7 +56,7 @@ export interface DepictionService {
 /** The request's name: a stable hash of format, value and the options in their fixed order. */
 export function depictionKeyOf(structure: StructureRep, options: DepictionOptions): string {
   const details = depictionDetails(options);
-  return hashParts(['depiction', structure.format, structure.value, String(details.width), String(details.height), String(details.showAtomMaps), details.highlightAtomMaps.join(','), details.mode, String(details.fixedScale), ...(details.atomPositions ? ['positions'] : [])]);
+  return hashParts(['depiction', structure.format, structure.value, String(details.width), String(details.height), String(details.showAtomMaps), details.highlightAtomMaps.join(','), details.mode, String(details.fixedScale), String(details.atomPositions)]);
 }
 
 interface Entry {
@@ -69,7 +69,7 @@ interface Entry {
 }
 
 export function createDepictionService(chem: Pick<ChemService, 'depict'>): DepictionService {
-  const cache = new LruCache<{ svg: string; width: number; height: number } & PositionTable>(DEPICTION_CACHE_SIZE);
+  const cache = new LruCache<Depiction>(DEPICTION_CACHE_SIZE);
   const entries = new Map<string, Entry>();
   const queue: Entry[] = [];
   let inFlight = 0;
@@ -104,10 +104,8 @@ export function createDepictionService(chem: Pick<ChemService, 'depict'>): Depic
     inFlight -= 1;
     if (!entry.cancelled && !disposed) {
       if (outcome.ok) {
-        const { svg, width, height, atoms, bonds } = outcome.depiction;
-        const table: PositionTable = atoms === undefined ? {} : { atoms, bonds: bonds ?? [] };
-        cache.set(entry.key, { svg, width, height, ...table });
-        settle(entry, { ok: true, key: entry.key, svg, width, height, ...table, cached: false });
+        cache.set(entry.key, outcome.depiction);
+        settle(entry, { ...outcome.depiction, ok: true, key: entry.key, cached: false });
       } else {
         settle(entry, { ok: false, key: entry.key, reason: outcome.reason, message: outcome.error });
       }
@@ -127,7 +125,7 @@ export function createDepictionService(chem: Pick<ChemService, 'depict'>): Depic
       const hit = cache.get(key);
       if (hit !== undefined) {
         hits += 1;
-        return Promise.resolve({ ok: true, key, ...hit, cached: true });
+        return Promise.resolve({ ...hit, ok: true, key, cached: true });
       }
       return new Promise<DepictionResult>((resolve) => {
         const shared = entries.get(key);

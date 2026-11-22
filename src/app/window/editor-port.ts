@@ -6,7 +6,7 @@ import type { WindowServices } from './context';
 export function makeEditorPort(
   services: Pick<WindowServices, 'drafts' | 'store'> & Partial<Pick<WindowServices, 'draftChecks' | 'chem' | 'duplicateCheck'>>,
   timers: EditorPort['timers'],
-  extras: { readonly depictions?: StructurePort['depictions']; readonly stepDrawing?: StructurePort['stepDrawing']; readonly records?: RecordPickerPort; readonly openRecord?: (ref: RecordRef) => void; readonly preview?: PreviewPort; readonly links?: MechanismLinksPort; readonly pictures?: PicturesPort; readonly chain?: EditorPort['chain']; readonly createNew?: EditorPort['createNew']; readonly merge?: EditorPort['merge']; readonly now?: () => string } = {},
+  extras: { readonly depictions?: StructurePort['depictions']; readonly records?: RecordPickerPort; readonly openRecord?: (ref: RecordRef) => void; readonly preview?: PreviewPort; readonly links?: MechanismLinksPort; readonly pictures?: PicturesPort; readonly chain?: EditorPort['chain']; readonly createNew?: EditorPort['createNew']; readonly merge?: EditorPort['merge']; readonly now?: () => string } = {},
 ): EditorPort {
   const { depictions, records, openRecord, preview, links, pictures, chain, createNew, merge, now } = extras;
   const { drafts, store } = services;
@@ -28,7 +28,7 @@ export function makeEditorPort(
     },
     warningsOf: (ref) => store.findings.bySubject(ref).filter((finding) => finding.severity === 'warning').length,
     ...(services.draftChecks === undefined ? {} : { checks: services.draftChecks }),
-    ...(services.chem === undefined ? {} : { structure: { parse: (structure) => (services.chem as NonNullable<typeof services.chem>).parse(structure), checkSmarts: (smarts) => checkSmarts(services.chem as NonNullable<typeof services.chem>, smarts), ...(depictions === undefined ? {} : { depictions }), ...(extras.stepDrawing === undefined ? {} : { stepDrawing: extras.stepDrawing }) } }),
+    ...(services.chem === undefined ? {} : { structure: { parse: (structure) => (services.chem as NonNullable<typeof services.chem>).parse(structure), checkSmarts: (smarts) => checkSmarts(services.chem as NonNullable<typeof services.chem>, smarts), ...(depictions === undefined ? {} : { depictions }) } }),
     ...(records === undefined ? {} : { records }),
     ...(preview === undefined ? {} : { preview }),
     ...(links === undefined ? {} : { links }),

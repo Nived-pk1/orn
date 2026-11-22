@@ -5,7 +5,7 @@
  */
 import type { DepictedAtom, DepictedBond } from '@/chem/contracts';
 import type { STEP_SPECIES_ROLES, StructureRep } from '@/core/schema';
-import type { MovementInput } from '@/layout/mechanism';
+import type { MovementInput } from './geometry';
 
 type StepSpeciesRole = (typeof STEP_SPECIES_ROLES)[number];
 

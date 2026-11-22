@@ -10,7 +10,6 @@ import type { ParseOutcome } from '@/chem/contracts';
 import { editorRig, renderWithToasts } from '@/test-support/editor-kit';
 import { utcTime } from '@/test-support/editing-kit';
 import { stubDialog } from '@/test-support/window-kit';
-import type { StepDrawingPort } from '@/render/mechanism';
 import type { DraftChecksPort } from './check-contracts';
 import { EditorHost } from './editor-host';
 import type { StructurePort } from './structure-contracts';
@@ -28,13 +27,15 @@ const parse: StructurePort['parse'] = async (structure): Promise<ParseOutcome> =
   facts: { atomMaps: [...structure.value.matchAll(/:(\d+)\]/g)].map((m) => Number(m[1])).sort((a, b) => a - b), warnings: [] },
 });
 /** A structure tool that places the atoms of a structure on a line, in the order its map numbers are written, and bonds 2-3 (the C-Br bond) when both are in it. */
-function drawing(): StepDrawingPort & { calls: number } {
-  const port: StepDrawingPort & { calls: number } = {
+function drawing() {
+  const port = {
     calls: 0,
-    depict: async (structure) => {
+    keyOf: () => 'k',
+    cancel: () => undefined,
+    depict: async (structure: { value: string }) => {
       port.calls += 1;
       const maps = [...structure.value.matchAll(/:(\d+)\]/g)].map((m) => Number(m[1]));
-      return { ok: true, svg: '<svg/>', width: 120, height: 70, atoms: maps.map((map, i) => ({ map, x: 20 + 35 * i, y: 35, rx: 9, ry: 9 })), bonds: maps.includes(2) && maps.includes(3) ? [{ a: 2, b: 3 }] : [] };
+      return { ok: true as const, svg: '<svg/>', width: 120, height: 70, atoms: maps.map((map, i) => ({ map, x: 20 + 35 * i, y: 35, rx: 9, ry: 9 })), bonds: maps.includes(2) && maps.includes(3) ? [{ a: 2, b: 3 }] : [] };
     },
     createUrl: () => 'blob:x',
     revokeUrl: () => undefined,
@@ -42,11 +43,11 @@ function drawing(): StepDrawingPort & { calls: number } {
   return port;
 }
 
-function show(target: string, stepDrawing: StepDrawingPort | undefined) {
+function show(target: string, depictions: ReturnType<typeof drawing> | undefined) {
   const rig = editorRig();
   const opened = rig.drafts.open({ kind: 'mechanism', id: target });
   if (!opened.ok) throw new Error(opened.message);
-  renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet, structure: { parse, ...(stepDrawing === undefined ? {} : { stepDrawing }) } }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
+  renderWithToasts(<EditorHost port={{ ...rig.port, checks: quiet, structure: { parse, ...(depictions === undefined ? {} : { depictions }) } }} sessionId={opened.id} open formatTime={utcTime} onClose={vi.fn()} />);
   fireEvent.click(screen.getByRole('button', { name: 'Edit variant 1' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit step 1' }));
   return rig;

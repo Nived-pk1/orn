@@ -5,8 +5,9 @@
  * flags, the stereochemical event and the description (rich text). The step's title and note are shown read-only (step 6.6). A finding of
  * CHEM-008 or a MEC rule marks the row it names and the step. Text only; the recipes decide.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { STEP_KINDS, type StructureRep } from '@/core/schema';
+import { stepDrawingFrom } from '@/render/mechanism';
 import { Button } from '@/ui/primitives';
 import conditionStyles from './condition.module.css';
 import type { MechanismLinksPort } from './mechanism-contracts';
@@ -54,7 +55,9 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
   const n = s + 1;
   const base = `variants[${v}].steps[${s}]`;
   const locked = props.unavailable;
-  const maps = useStepMaps(structuresOf(props.draft, v, s), props.structure, props.timers, props.structure?.stepDrawing);
+  const depictions = props.structure?.depictions;
+  const drawing = useMemo(() => (depictions === undefined ? undefined : stepDrawingFrom(depictions)), [depictions]);
+  const maps = useStepMaps(structuresOf(props.draft, v, s), props.structure, props.timers, drawing);
   const common = { draft: props.draft, onEdit, v, s, ...(props.invalid === undefined ? {} : { invalid: props.invalid }), ...(locked === undefined ? {} : { unavailable: locked }), ...(props.phone === undefined ? {} : { phone: props.phone }) };
   return (
     <div className={`${own.participantBody} ${props.phone === true ? own.participantPhone : ''}`}>
@@ -76,7 +79,7 @@ function OpenStep(props: StepsSectionProps & { readonly s: number; readonly view
         <BondRows {...common} field="bondsFormed" maps={maps} />
         <BondRows {...common} field="bondsBroken" maps={maps} />
         <MovementRows {...common} maps={maps} />
-        {props.structure?.stepDrawing === undefined ? null : <StepPreview draft={props.draft} v={v} s={s} port={props.structure.stepDrawing} timers={props.timers} phone={props.phone === true} />}
+        {drawing === undefined ? null : <StepPreview draft={props.draft} v={v} s={s} port={drawing} timers={props.timers} phone={props.phone === true} />}
         <MapsNote maps={maps} />
         {maps.unread > 0 ? <p className={styles.hint}>{maps.unread} structure(s) of this step could not be read, so their atom maps are not offered.</p> : null}
         {maps.cut ? <p className={styles.hint}>Only the first 60 atom maps are offered.</p> : null}

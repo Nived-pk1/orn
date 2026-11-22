@@ -14,7 +14,7 @@ import type { DepictionOptions, DepictOutcome, ParseOutcome, SmartsOutcome, Stru
 import { sanitizeSvg } from '../svg/sanitize';
 import { describe, isTrap } from './errors';
 import { factsOf } from './facts';
-import { depictionDetails } from '../depiction-options';
+import { atomPositionsProblem, depictionDetails } from '../depiction-options';
 import { drawMol, viewBoxSize } from './draw';
 import { drawWithPositions, type PositionedDrawing } from './positions';
 import { mapsKeepingHydrogens } from './mapped-hydrogens';
@@ -144,6 +144,8 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
 
     async depict(structure, drawing: DepictionOptions): Promise<DepictOutcome> {
       const details = depictionDetails(drawing); // a caller's bad options are a programmer error: this throws
+      const positionsProblem = atomPositionsProblem(drawing);
+      if (positionsProblem !== undefined) throw new RangeError(positionsProblem);
       const problem = inputProblem(structure);
       if (problem !== undefined) return invalid(problem);
       const loaded = await acquire();

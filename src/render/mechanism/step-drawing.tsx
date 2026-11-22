@@ -2,10 +2,10 @@
  * The drawing of one mechanism step (step 8.5, ADR-038 D4-D6): the species of the before side, the reaction arrow, the species of the after
  * side, and the curved arrows of the electron movements. Structures are `<image>`s of the structure tool's own sanitised drawings (object
  * URLs from the port): no markup from outside is inserted. The picture is `role="img"` with a text alternative that points at the step's
- * details; when a step cannot be drawn it says why in words. All geometry is `src/layout/mechanism`.
+ * details; when a step cannot be drawn it says why in words. All geometry is `src/render/mechanism/geometry` (pure).
  */
 import { useEffect, useState, type ReactNode } from 'react';
-import { composeStep, type CurvedArrow, type Placed, type Point } from '@/layout/mechanism';
+import { composeStep, type CurvedArrow, type Placed, type Point } from './geometry';
 import type { DrawableStep, StepDrawingPort } from './contracts';
 import { NO_DRAWING_WORDS, NO_MOVEMENTS_WORDS } from './step-model';
 import { useNearScreen, useStepDrawing, type Shown } from './use-step-drawing';

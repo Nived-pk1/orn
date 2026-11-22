@@ -7,7 +7,7 @@ import type { StructureRep } from '@/core/schema';
 import { createFakeRdkit, ETHANOL_SPEC } from '@/test-support/fake-rdkit';
 import { CHEM_CACHE_SIZE, withChemCache } from './cached-toolkit';
 import type { DepictionOptions, StructureToolkit } from './contracts';
-import { depictionDetails, MAX_DEPICTION_SIZE, MAX_HIGHLIGHT_MAPS } from './depiction-options';
+import { atomPositionsProblem, depictionDetails, MAX_DEPICTION_SIZE, MAX_HIGHLIGHT_MAPS } from './depiction-options';
 import { LruCache } from './lru';
 import { createRdkitToolkit } from './rdkit/adapter';
 
@@ -180,14 +180,16 @@ describe('depictionDetails', () => {
     expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps', 'mode', 'fixedScale', 'atomPositions']);
   });
 
-  it('atomPositions (step 8.5) defaults to false, must be true or false, and needs a fixed scale, no shown maps and no highlights', () => {
+  it('atomPositions (step 8.5) is one flag in the details (false unless true); the worker checks it: it needs a fixed scale, no shown maps and no highlights', () => {
     const OK = { width: 200, height: 150, showAtomMaps: false, fixedScale: true } as const;
     expect(depictionDetails(DRAW).atomPositions).toBe(false);
     expect(depictionDetails({ ...OK, atomPositions: true }).atomPositions).toBe(true);
-    expect(() => depictionDetails({ ...OK, atomPositions: 'yes' } as unknown as DepictionOptions)).toThrow(RangeError);
-    expect(() => depictionDetails({ ...OK, fixedScale: false, atomPositions: true })).toThrow(RangeError);
-    expect(() => depictionDetails({ ...OK, showAtomMaps: true, atomPositions: true })).toThrow(RangeError);
-    expect(() => depictionDetails({ ...OK, highlightAtomMaps: [1], atomPositions: true })).toThrow(RangeError);
+    expect(atomPositionsProblem({ ...OK, atomPositions: true })).toBeUndefined();
+    expect(atomPositionsProblem(OK)).toBeUndefined();
+    expect(atomPositionsProblem({ ...OK, atomPositions: 'yes' } as unknown as DepictionOptions)).toMatch(/true or false/);
+    expect(atomPositionsProblem({ ...OK, fixedScale: false, atomPositions: true })).toMatch(/needs fixedScale/);
+    expect(atomPositionsProblem({ ...OK, showAtomMaps: true, atomPositions: true })).toMatch(/needs fixedScale/);
+    expect(atomPositionsProblem({ ...OK, highlightAtomMaps: [1], atomPositions: true })).toMatch(/needs fixedScale/);
   });
 
   it('fixedScale defaults to false and must be true or false', () => {

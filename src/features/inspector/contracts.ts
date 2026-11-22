@@ -8,7 +8,6 @@ import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
 import type { Finding } from '@/core/validation';
 import type { StructureFactsPort } from '@/render/equation';
-import type { StepDrawingPort } from '@/render/mechanism';
 import type { DepictionPort } from '@/render/svg';
 import type { ActiveExamStore, FamilyStore, InspectorStore, MapStore, PanelsStore, SelectionStore } from '@/ui/state';
 import type { SubjectStatus } from '@/workers/chem';
@@ -38,8 +37,6 @@ export interface InspectorPorts {
   readonly depictions?: DepictionPort;
   /** What the chem worker says about a structure (the textbook equation decides formula or drawing from it). Absent: the facts are unavailable. */
   readonly facts?: StructureFactsPort;
-  /** Step 8.5: as the navigator's; the mechanism's steps are drawn before -> after above their rows. Absent: rows only. */
-  readonly stepDrawing?: StepDrawingPort;
   /** Asset bytes (step 5.6b, additive). Absent: images are not shown and the view says so. The URL is made and revoked here, never by the view. */
   readonly assets?: {
     open(assetId: string, mediaType: string): Promise<AssetImage>;

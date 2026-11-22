@@ -5,7 +5,7 @@
  * SVG or a failure value: nothing else leaves this worker as markup. `warmUp` (step 5.0) awaits the toolkit's load and answers a value:
  * `{ ok: true, loadMs }` (from the injected clock) or `engine_unavailable` with a message; loading again is free once loaded.
  */
-import { depictionDetails, type DepictionOptions, type StructureToolkit } from '@/chem';
+import { atomPositionsProblem, depictionDetails, type DepictionOptions, type StructureToolkit } from '@/chem';
 import { createChemChecks } from '@/chem/checks';
 import type { ChemWorkerApi } from '@/workers/rpc/contracts';
 import { RpcHostError } from '@/workers/rpc/helpers';
@@ -15,6 +15,8 @@ function optionsOf(value: unknown): DepictionOptions {
   if (typeof value !== 'object' || value === null) throw new RpcHostError('BAD_REQUEST', 'options must be an object');
   try {
     depictionDetails(value as DepictionOptions);
+    const problem = atomPositionsProblem(value as DepictionOptions);
+    if (problem !== undefined) throw new RangeError(problem);
   } catch (error) {
     throw new RpcHostError('BAD_REQUEST', error instanceof Error ? error.message : 'bad depiction options');
   }

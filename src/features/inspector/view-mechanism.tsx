@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import type { Mechanism, Reaction } from '@/core/schema';
-import { StepDrawing, type DrawableStep, type DrawingStatus } from '@/render/mechanism';
+import { StepDrawing, stepDrawingFrom, type DrawableStep, type DrawingStatus } from '@/render/mechanism';
 import { currentOf } from '@/ui/state';
 import { Connections } from './connections';
 import { Depiction } from './depiction';
@@ -57,7 +57,8 @@ const drawableOf = (step: Step, number: number): DrawableStep => ({
 function StepRow(props: { readonly step: Step; readonly number: number; readonly lazy: boolean }) {
   const { step, number } = props;
   const env = useInspectorEnv();
-  const drawing = env.ports.stepDrawing;
+  const depictions = env.ports.depictions;
+  const drawing = useMemo(() => (depictions === undefined ? undefined : stepDrawingFrom(depictions, { log: env.ports.log })), [depictions, env.ports.log]);
   const [status, setStatus] = useState<DrawingStatus>('loading');
   const [chosen, setChosen] = useState<boolean | undefined>(undefined);
   const open = chosen ?? status !== 'ready';

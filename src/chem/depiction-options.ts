@@ -34,10 +34,16 @@ export function depictionDetails(options: DepictionOptions): DrawDetails {
   if (!(STRUCTURE_MODES as readonly unknown[]).includes(mode)) throw new RangeError(`depiction mode must be one of ${STRUCTURE_MODES.join(', ')}`);
   const fixedScale = options.fixedScale ?? false;
   if (typeof fixedScale !== 'boolean') throw new RangeError('depiction fixedScale must be true or false');
-  const atomPositions = options.atomPositions ?? false;
-  if (typeof atomPositions !== 'boolean') throw new RangeError('depiction atomPositions must be true or false');
-  if (atomPositions && (!fixedScale || options.showAtomMaps || maps.length > 0)) {
-    throw new RangeError('atomPositions needs fixedScale, no shown atom maps and no highlights');
-  }
-  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale, atomPositions };
+  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale, atomPositions: options.atomPositions === true };
+}
+
+/**
+ * Why `atomPositions` (step 8.5) cannot be asked with these options, or `undefined`. Checked in the chem worker only (the adapter and the wire), so the main
+ * thread's code for it is the one flag in `depictionDetails`.
+ */
+export function atomPositionsProblem(options: DepictionOptions): string | undefined {
+  const positions: unknown = options.atomPositions;
+  if (positions === undefined || positions === false) return undefined;
+  if (positions !== true) return 'depiction atomPositions must be true or false';
+  return options.fixedScale !== true || options.showAtomMaps || (options.highlightAtomMaps ?? []).length > 0 ? 'atomPositions needs fixedScale, no shown atom maps and no highlights' : undefined;
 }

@@ -4,7 +4,6 @@
  */
 import type { ParseOutcome } from '@/chem/contracts';
 import type { StructureRep } from '@/core/schema';
-import type { StepDrawingPort } from '@/render/mechanism';
 import type { DepictionPort } from '@/render/svg';
 
 /** Whether the chem worker can read a SMARTS pattern (step 6.2b): `invalid` carries the engine's words; `unanswered` is NOT "invalid". */
@@ -19,6 +18,4 @@ export interface StructurePort {
   checkSmarts?(smarts: string): Promise<SmartsCheck>;
   /** Absent: no drawing is shown (the derived values still are). */
   readonly depictions?: DepictionPort;
-  /** Step 8.5: the structure tool's drawings with atom positions and bonds, for the mechanism step editor's live preview and its bond choices. Absent: neither. */
-  readonly stepDrawing?: StepDrawingPort;
 }

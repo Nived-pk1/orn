@@ -8,12 +8,13 @@ import { MechanismsView, type MechanismPorts } from '@/features/mechanism-explor
 import { InspectorPictures, InspectorRichText, InspectorStructure } from '@/features/inspector';
 import { ReactionCardHost, useNavigator } from '@/features/navigator';
 import type { RecordRef } from '@/core/schema';
+import { stepDrawingFrom } from '@/render/mechanism';
 import { useApp } from './context';
 import { useEditors } from './editors-access';
 
 export function MechanismsHost(props: { readonly openPane: () => void; readonly onChapter: (chapterId: string) => void }) {
   const { openPane, onChapter } = props;
-  const { inspector } = useApp();
+  const { inspector, services } = useApp();
   const { ports } = useNavigator();
   const editors = useEditors();
   const editNames = editors === null ? undefined : editors.editNames;
@@ -25,7 +26,7 @@ export function MechanismsHost(props: { readonly openPane: () => void; readonly 
       renderRichText: (source) => <InspectorRichText ports={inspector} openPane={openPane} source={source} />,
       renderPictures: (target) => <InspectorPictures ports={inspector} openPane={openPane} target={target} />,
       ...(ports.facts === undefined ? {} : { facts: ports.facts }),
-      ...(ports.stepDrawing === undefined ? {} : { drawing: ports.stepDrawing }),
+      ...(ports.depictions === undefined ? {} : { drawing: stepDrawingFrom(ports.depictions, { retry: () => void services.retryEngine('chem'), log: ports.log }) }),
       renderStructure: (structure, name) => <InspectorStructure ports={inspector} openPane={openPane} structure={structure} name={name} />,
       select: (ref) => {
         inspector.ui.inspector.getState().open(ref);
@@ -38,7 +39,7 @@ export function MechanismsHost(props: { readonly openPane: () => void; readonly 
       timers: ports.timers,
       log: ports.log,
     }),
-    [ports, inspector, openPane, onChapter, editNames],
+    [ports, inspector, services, openPane, onChapter, editNames],
   );
   return <MechanismsView ports={mechanisms} />;
 }

@@ -201,10 +201,11 @@ describe('atom positions (step 8.5)', () => {
     depiction: { key: `k-${value}`, svg: `<svg>${value}</svg>`, width: 90, height: 60, atoms: [{ map: 1, x: 10, y: 20, rx: 5, ry: 5 }], bonds: [{ a: 1, b: 2 }] },
   });
 
-  it('the key differs with atomPositions, and without it is the key it always was', () => {
+  it('the key differs with atomPositions, and is the same for the same options', () => {
     const plain = { ...positioned, atomPositions: false };
     expect(depictionKeyOf(smiles('C'), positioned)).not.toBe(depictionKeyOf(smiles('C'), plain));
     expect(depictionKeyOf(smiles('C'), plain)).toBe(depictionKeyOf(smiles('C'), { width: 200, height: 150, showAtomMaps: false, fixedScale: true }));
+    expect(depictionKeyOf(smiles('C'), positioned)).toBe(depictionKeyOf(smiles('C'), { ...positioned }));
   });
 
   it('the table is answered with the drawing and kept with it in the cache (the second answer is cached and has the same table)', async () => {
@@ -219,11 +220,13 @@ describe('atom positions (step 8.5)', () => {
     expect(s.calls.length).toBe(1);
   });
 
-  it('a drawing without a table has no atoms or bonds keys', async () => {
+  it('a drawing without a table has no atoms or bonds (undefined)', async () => {
     const s = scripted();
     const service = createDepictionService(s.chem);
     const first = service.depict(smiles('C'), options);
     s.answer();
-    expect(Object.keys(await first)).not.toContain('atoms');
+    const answer = await first;
+    expect(answer.ok && answer.atoms).toBeUndefined();
+    expect(answer.ok && answer.bonds).toBeUndefined();
   });
 });

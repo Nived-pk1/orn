@@ -1,5 +1,5 @@
 export * from './contracts';
-export { depictionDetails, MAX_DEPICTION_SIZE, MAX_HIGHLIGHT_MAPS, MIN_DEPICTION_SIZE } from './depiction-options';
+export { atomPositionsProblem, depictionDetails, MAX_DEPICTION_SIZE, MAX_HIGHLIGHT_MAPS, MIN_DEPICTION_SIZE } from './depiction-options';
 export type { DrawDetails } from './depiction-options';
 export { sanitizeSvg, MAX_SVG_INPUT_CHARS, MAX_SVG_NESTING, MAX_SVG_ATTRIBUTES } from './svg/sanitize';
 export type { SanitizeOutcome, SanitizeReport, SanitizeRefusal } from './svg/sanitize';

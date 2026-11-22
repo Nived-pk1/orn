@@ -20,21 +20,21 @@
 
 .label {
   fill: var(--color-ink);
-  font-size: 14px;
+  font-size: var(--text-14);
   text-anchor: middle;
   dominant-baseline: central;
 }
 
 .plus {
   fill: var(--color-ink-2);
-  font-size: 18px;
+  font-size: var(--text-16);
   text-anchor: middle;
   dominant-baseline: central;
 }
 
 .dagger {
   fill: var(--color-ink-2);
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .bracket,

@@ -77,3 +77,6 @@ Resume point: M6 committed; next M7 (two WebKit failures), then e2e specs for th
 Cause (grep of the entry chunk): `createStepDrawingPort` (app/window, built in the entry), the `depictionDetails` additions, the service's key and table, the ports.
 The step does not need to stop for a cut that stays inside the step's own contract: move the port's code into the lazy chunks that use it (built from the navigator's
 `depictions` port, which already reaches them), validate `atomPositions` in the worker only, and shorten the service. Re-measured below; if still over, STOP and report.
+- SIZES after the cut: Study 338,434 (+74), Studio 342,437 (+55) over 338,360 / 342,382: inside the +100 limit. (First measure 338,738 / 342,768; second 338,468 / 342,496.) Changes: createStepDrawingPort moved into the lazy chunks (render/mechanism/depictions-port.ts, built from the navigator's depictions port), atomPositions checked in the worker only (atomPositionsProblem), service caches the whole Depiction.
+- `npm run check` run 1 stopped at lint:deps (39 s): rule presentation-engines-types-only (render may import src/layout as TYPES only). FIX: the pure geometry moved
+  from src/layout/mechanism to src/render/mechanism/geometry (render may import render; pure, no DOM); no behaviour change; tests moved with it (22). Earlier lines name the old folder.

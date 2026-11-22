@@ -12,18 +12,18 @@
  * listened to only after a request was made while it was loading) the manager forgets just those keys, so the cards that show them ask
  * again (phone mode B, part 1: a slow phone opens a page before the wasm has arrived).
  */
-import type { StructureMode } from '@/chem/contracts';
+import type { DepictedAtom, DepictedBond, StructureMode } from '@/chem/contracts';
 import type { StructureRep } from '@/core/schema';
 import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer, type DepictionManager } from './depictions';
 import type { DepictionTimers } from './use-depiction-retry';
 
 /** The area a drawing is asked at; `fixedScale`: the drawing has the fixed bond length of the chem module and `width` / `height` are not used (equation step, part 5). */
-type Area = { readonly width: number; readonly height: number; readonly fixedScale?: boolean };
+type Area = { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean };
 
 /** What the binding needs from the depiction service (the navigator's and the inspector's ports have exactly this). */
 export interface DepictionPort {
   keyOf(structure: StructureRep, size: Area, mode?: StructureMode): string;
-  depict(structure: StructureRep, size: Area, mode?: StructureMode): Promise<{ readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number } | { readonly ok: false; readonly reason: string; readonly message: string }>;
+  depict(structure: StructureRep, size: Area, mode?: StructureMode): Promise<{ readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[] } | { readonly ok: false; readonly reason: string; readonly message: string }>;
   cancel(key: string): void;
   /** How structures are drawn now (equation step, part 4). Absent: Skeletal. A key is made in THIS mode and its fetch draws in the same one. */
   mode?(): StructureMode;

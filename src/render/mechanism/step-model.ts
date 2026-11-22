@@ -4,7 +4,7 @@
  * (never a blank box, never a partial drawing). Async over the port; no DOM. The picture itself is `composeStep` (layout) over what this returns.
  */
 import { movementAtoms, stepSides } from '@/core/mechanisms';
-import { composeStep, type DrawnSpecies } from '@/layout/mechanism';
+import { composeStep, type DrawnSpecies } from './geometry';
 import type { DrawableStep, StepDrawingAnswer, StepDrawingPort } from './contracts';
 
 export const NO_DRAWING_WORDS = {

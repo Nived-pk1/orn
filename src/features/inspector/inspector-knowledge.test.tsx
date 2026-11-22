@@ -80,8 +80,8 @@ describe('the maximal fixture: knowledge kinds', () => {
 
   it('with the step drawing port (8.5) each step shows its drawing or the words first, and its rows as "Step details" (open when there is no drawing)', async () => {
     const rig = inspectorRig(state);
-    const port = { depict: async () => ({ ok: false as const, reason: 'invalid', message: 'x' }), createUrl: () => 'blob:x', revokeUrl: () => undefined };
-    render(<Inspector ports={{ ...rig.ports, stepDrawing: port }} host={rig.host} />);
+    const depictions = { keyOf: () => 'k', cancel: () => undefined, depict: async () => ({ ok: false as const, reason: 'invalid', message: 'x' }), createUrl: () => 'blob:x', revokeUrl: () => undefined };
+    render(<Inspector ports={{ ...rig.ports, depictions }} host={rig.host} />);
     act(() => rig.inspector.getState().open({ kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef));
     await openLevels();
     await openEverything();
