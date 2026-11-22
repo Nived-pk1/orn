@@ -93,3 +93,15 @@
   color: var(--color-ink-2);
   font-size: var(--text-14);
 }
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.summary {
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+  cursor: pointer;
+}

@@ -1,0 +1,83 @@
+/* The drawing of one mechanism step (step 8.5). Colours are tokens only; line widths are in drawing units (the picture scales as a whole). */
+.drawing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  min-width: 0;
+}
+
+.scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.svg {
+  display: block;
+  height: auto;
+  margin: 0 auto;
+}
+
+.label {
+  fill: var(--color-ink);
+  font-size: 14px;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.plus {
+  fill: var(--color-ink-2);
+  font-size: 18px;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.dagger {
+  fill: var(--color-ink-2);
+  font-size: 12px;
+}
+
+.bracket,
+.reaction {
+  fill: none;
+  stroke: var(--color-ink-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.arrow {
+  fill: none;
+  stroke: var(--mech-arrow);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dot {
+  fill: var(--mech-dot);
+  stroke: none;
+}
+
+.words {
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
+.quiet {
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-14);
+}
+
+.retry {
+  margin-left: var(--space-8);
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-8);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}

@@ -1,11 +1,12 @@
 /**
  * A mechanism in the inspector (step 5.6b, item d). L2: summary and its variants (how many steps, when each applies); L3: each variant
  * with its steps as ordered rows (step kinds, species, bonds formed and broken as atom-map pairs, electron movements, rate-determining,
- * reversible, stereochemical event, description) and the outcomes and reactions that use that variant. Arrow-pushing drawings arrive in Phase 8 (ADR-038); these are rows only. A link from an outcome opens the mechanism AT its variant: that variant is open and brought into view.
+ * reversible, stereochemical event, description) and the outcomes and reactions that use that variant. With the step drawing port (step 8.5, ADR-038) each step shows its before -> after drawing first and its rows as "Step details", collapsed below it (open when there is no drawing); without it these are rows only. A link from an outcome opens the mechanism AT its variant: that variant is open and brought into view.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import type { Mechanism, Reaction } from '@/core/schema';
+import { StepDrawing, type DrawableStep, type DrawingStatus } from '@/render/mechanism';
 import { currentOf } from '@/ui/state';
 import { Connections } from './connections';
 import { Depiction } from './depiction';
@@ -46,14 +47,21 @@ function StepSpecies(props: { readonly species: Step['species'][number] }) {
   );
 }
 
-function StepRow(props: { readonly step: Step; readonly number: number }) {
+const drawableOf = (step: Step, number: number): DrawableStep => ({
+  number,
+  reversible: step.reversible === true,
+  electronMovements: step.electronMovements,
+  species: step.species.map((one) => ({ role: one.role, ...(one.label === undefined ? {} : { label: one.label }), ...(one.structure === undefined ? {} : { structure: one.structure }) })),
+});
+
+function StepRow(props: { readonly step: Step; readonly number: number; readonly lazy: boolean }) {
   const { step, number } = props;
-  return (
-    <li data-step-id={step.id}>
-      <strong>
-        Step {number}
-        {step.title === undefined ? '' : `: ${step.title}`}
-      </strong>
+  const env = useInspectorEnv();
+  const drawing = env.ports.stepDrawing;
+  const [status, setStatus] = useState<DrawingStatus>('loading');
+  const [chosen, setChosen] = useState<boolean | undefined>(undefined);
+  const open = chosen ?? status !== 'ready';
+  const rows = (
       <FactList label={`Step ${number}`}>
         <TextFact label="Kinds" value={step.stepKinds.map(words).join(', ')} />
         <NoteFact label="Description" source={step.description} />
@@ -84,6 +92,24 @@ function StepRow(props: { readonly step: Step; readonly number: number }) {
         <TextFact label="Stereochemical event" value={step.stereochemicalEvent} />
         <NoteFact label="Note" source={step.note} />
       </FactList>
+  );
+  return (
+    <li data-step-id={step.id}>
+      <strong>
+        Step {number}
+        {step.title === undefined ? '' : `: ${step.title}`}
+      </strong>
+      {drawing === undefined ? (
+        rows
+      ) : (
+        <>
+          <StepDrawing step={drawableOf(step, number)} port={drawing} orientation="column" lazy={props.lazy} onStatus={setStatus} />
+          <details open={open} onToggle={(event) => event.currentTarget.open !== open && setChosen(event.currentTarget.open)}>
+            <summary>Step details</summary>
+            {rows}
+          </details>
+        </>
+      )}
     </li>
   );
 }
@@ -117,7 +143,7 @@ function VariantBlock(props: { readonly variant: Variant; readonly first: boolea
             {variant.steps.length === 0 ? <p className={styles.muted}>This variant has no steps written.</p> : null}
             <ol aria-label={`Steps of ${variant.label}`} className={styles.steps}>
               {variant.steps.map((step, index) => (
-                <StepRow key={step.id} step={step} number={index + 1} />
+                <StepRow key={step.id} step={step} number={index + 1} lazy={variant.steps.length > 6} />
               ))}
             </ol>
             <h6 className={styles.subheading}>Used by ({uses.length})</h6>

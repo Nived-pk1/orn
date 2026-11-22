@@ -9,7 +9,7 @@ import type { InspectorStore, PanelsStore } from '@/ui/state';
 
 export type InspectorPortServices = Pick<AppServices, 'store' | 'indexes' | 'l4' | 'logApp' | 'persistence'> & Partial<Pick<AppServices, 'assets'>>;
 
-export function createInspectorPorts(services: InspectorPortServices, navigator: Pick<NavigatorPorts, 'depictions' | 'facts' | 'timers' | 'ui'>, inspector: InspectorStore, panels: PanelsStore): InspectorPorts {
+export function createInspectorPorts(services: InspectorPortServices, navigator: Pick<NavigatorPorts, 'depictions' | 'facts' | 'stepDrawing' | 'timers' | 'ui'>, inspector: InspectorStore, panels: PanelsStore): InspectorPorts {
   return {
     store: services.store,
     indexes: { current: () => services.indexes.current() },
@@ -17,6 +17,7 @@ export function createInspectorPorts(services: InspectorPortServices, navigator:
     l4: services.l4,
     depictions: navigator.depictions,
     ...(navigator.facts === undefined ? {} : { facts: navigator.facts }),
+    ...(navigator.stepDrawing === undefined ? {} : { stepDrawing: navigator.stepDrawing }),
     assets: {
       async open(assetId, mediaType) {
         // a picture added a moment ago may not be durable yet: what the services still hold answers first

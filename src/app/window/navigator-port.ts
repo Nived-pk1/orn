@@ -9,8 +9,9 @@ import type { TextMeasurer } from '@/app/text-measurer';
 import type { NavigatorPorts, NavigatorStructures } from '@/features/navigator';
 import type { StructureFactsPort } from '@/render/equation';
 import type { NavigatorUi } from '@/ui/state';
+import { createStepDrawingPort } from './step-drawing-port';
 
-export type NavigatorPortServices = Pick<AppServices, 'store' | 'indexes' | 'layout' | 'logApp' | 'depictions' | 'status'>;
+export type NavigatorPortServices = Pick<AppServices, 'store' | 'indexes' | 'layout' | 'logApp' | 'depictions' | 'status'> & Partial<Pick<AppServices, 'retryEngine'>>;
 
 /**
  * `structures` is the Structures setting (equation step, part 4: the panels store gives it). The depictions' keys and calls carry the mode
@@ -77,6 +78,7 @@ export function createNavigatorPorts(
     },
     ...(structures === undefined ? {} : { structures }),
     ...(facts === undefined ? {} : { facts }),
+    stepDrawing: createStepDrawingPort(services),
     ui: ui.stores,
     uiStatus: ui.status,
     log: (type, message) => services.logApp(type, message),

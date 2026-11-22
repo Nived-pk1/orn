@@ -9,6 +9,7 @@ import type { ChangeSet } from '@/core/dataset/contracts';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, StructureRep } from '@/core/schema';
 import type { StructureFactsPort } from '@/render/equation';
+import type { StepDrawingPort } from '@/render/mechanism';
 import type { TextMeasurer } from '@/render/scene';
 import type { StoreApi } from 'zustand/vanilla';
 import type { NavigatorUiStatus, NavigatorUiStores } from '@/ui/state';
@@ -76,6 +77,8 @@ export interface NavigatorPorts {
   readonly structures?: NavigatorStructures;
   /** What the chem worker says about a structure (the textbook equation decides formula or drawing from it). Absent: the facts are unavailable. */
   readonly facts?: StructureFactsPort;
+  /** Step 8.5: the structure tool's drawings with atom positions (the mechanism steps' before -> after pictures). Absent: no step is drawn. */
+  readonly stepDrawing?: StepDrawingPort;
   /** Opens a named reaction's page in the Named reactions view (7.4 D; the badge on a card). Absent: the badge is plain text. */
   readonly openNamedReaction?: (namedReactionId: string) => void;
   readonly ui: NavigatorUiStores;

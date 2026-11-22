@@ -5,7 +5,9 @@
  * page (Phase 8). Pure and derived.
  */
 import type { ReadonlyIndexes } from '../indexes/contracts';
-import type { CanonicalState, MechanismId, StructureRep, SubstanceRef } from '../schema';
+import type { CanonicalState, Mechanism, MechanismId, STEP_SPECIES_ROLES, StructureRep, SubstanceRef } from '../schema';
+
+type MechanismStep = Mechanism['variants'][number]['steps'][number];
 import { caveatLines, chaptersOfRecord, foldedReactions, linkOf, sortByName, type CaveatLine, type FoldedReactions, type Link } from '../study-pages';
 
 export interface StepSpeciesView {
@@ -25,6 +27,10 @@ export interface StepView {
   readonly kinds: readonly string[];
   readonly description: string | undefined;
   readonly species: readonly StepSpeciesView[];
+  /** The roles of `species` as stored (`transition_state`), for the drawing; `species[].role` is the same in words. */
+  readonly roleKeys: readonly (typeof STEP_SPECIES_ROLES)[number][];
+  /** The curved arrows' data as stored; the drawing (step 8.5) is derived from it, never stored. */
+  readonly electronMovements: MechanismStep['electronMovements'];
   readonly rateDetermining: boolean;
   readonly reversible: boolean;
   readonly stereochemicalEvent: string | undefined;
@@ -94,6 +100,8 @@ export function mechanismPage(state: CanonicalState, indexes: ReadonlyIndexes, i
           const label = one.label ?? (one.ref === undefined ? undefined : nameOfRef(state, one.ref));
           return { role: words(one.role), label, ...(one.structure === undefined ? {} : { structure: one.structure }) };
         }),
+        roleKeys: step.species.map((one) => one.role),
+        electronMovements: step.electronMovements,
         rateDetermining: step.isRateDetermining === true,
         reversible: step.reversible === true,
         stereochemicalEvent: step.stereochemicalEvent,

@@ -84,6 +84,23 @@ describe('mechanismPage', () => {
     expect(base1?.steps[1]?.species[0]?.role).toBe('transition state');
   });
 
+  it('a step also carries what a drawing needs (step 8.5): the roles as stored (not in words), the electron movements, and reversible', () => {
+    const drawable = mechanismRecord('draw', 'Drawable', [
+      mechVariant('vee', 'V', [
+        mechStep('d1', {
+          species: [{ role: 'transition_state', label: 'TS' }, { role: 'leaving_group', label: 'Br-' }],
+          movements: [{ from: { kind: 'lone_pair', atom: 1 }, to: { kind: 'bond', atoms: [1, 2] }, electrons: 2 }],
+          reversible: true,
+        }),
+      ]),
+    ]);
+    const built = build(drawable);
+    const step = mechanismPage(built.state, built.indexes, 'mec_draw')?.variants[0]?.steps[0];
+    expect(step?.roleKeys).toEqual(['transition_state', 'leaving_group']);
+    expect(step?.electronMovements).toEqual([{ from: { kind: 'lone_pair', atom: 1 }, to: { kind: 'bond', atoms: [1, 2] }, electrons: 2 }]);
+    expect(step?.reversible).toBe(true);
+  });
+
   it('reactions that use it have their examples folded; caveats and an unknown id', () => {
     const page = mechanismPage(state, indexes, 'mec_aldol');
     expect(page?.reactions.reactions).toEqual(['rxn_gen']);

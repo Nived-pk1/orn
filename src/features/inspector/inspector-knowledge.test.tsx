@@ -78,6 +78,21 @@ describe('the maximal fixture: knowledge kinds', () => {
     expect(screen.getByRole('list', { name: 'Steps of Single-electron transfer' })).toBeTruthy();
   });
 
+  it('with the step drawing port (8.5) each step shows its drawing or the words first, and its rows as "Step details" (open when there is no drawing)', async () => {
+    const rig = inspectorRig(state);
+    const port = { depict: async () => ({ ok: false as const, reason: 'invalid', message: 'x' }), createUrl: () => 'blob:x', revokeUrl: () => undefined };
+    render(<Inspector ports={{ ...rig.ports, stepDrawing: port }} host={rig.host} />);
+    act(() => rig.inspector.getState().open({ kind: 'mechanism', id: 'mec_max-grignard-addition' } as RecordRef));
+    await openLevels();
+    await openEverything();
+    const steps = screen.getByRole('list', { name: 'Steps of Polar (two-electron) addition' });
+    const first = within(steps).getAllByRole('listitem')[0] as HTMLElement;
+    expect(within(first).getByText('Step details')).toBeTruthy();
+    expect(within(first).getByText('Electron movements')).toBeTruthy();
+    expect(await within(first).findByText(/^No drawing:/)).toBeTruthy();
+    expect((first.querySelector('details') as HTMLDetailsElement).open).toBe(true);
+  });
+
   it('a structure inside a mechanism step is asked at 120 x 80 px at most, and the picture is capped by CSS', async () => {
     const asked: Array<{ width: number; height: number }> = [];
     const depictions = {

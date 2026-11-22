@@ -48,3 +48,13 @@ Resume point: M1 committed; next M2 (sides, D2) then M3 (arrow geometry), tests 
   2-electron (NO fishhook, no atom site, no radical in the demo: those screenshots come from a fixture). Species repeat map numbers across
   sides (same atom before and after). LIMITS: 24 species, 64 movements per step. CHEM-008: the demo has no finding.
 Resume point: M3 committed (Part 1, not deployed). Next M4 component in src/render/mechanism, then M5 wiring, M6 editor preview, M7.
+- M4 (layout part) RED: compose.test.ts -> 'Cannot find module ./compose' (1 s); GREEN 8 tests.
+- M4 (render part) RED: step-model.test.ts and step-drawing.test.tsx -> 'Cannot find module ./step-model' / 'Failed to resolve import ./step-drawing' (1-2 s)
+  before the source; GREEN 24 tests (render/mechanism) + 22 (layout/mechanism). Lint caught `innerHTML` read in a test: replaced by querySelector checks.
+  Files: src/render/mechanism/{contracts,step-model,use-step-drawing,step-drawing,index}.ts(x) + css; tokens --mech-arrow/--mech-dot (light, dark, media dark).
+- M5 RED: mechanisms.test.ts 'a step also carries what a drawing needs' -> expected undefined to deeply equal [...] (1 s); GREEN after StepView gained roleKeys + electronMovements.
+- M5 wiring: StepView (+roleKeys, electronMovements), MechanismPorts.drawing, NavigatorPorts/InspectorPorts.stepDrawing, app/window/step-drawing-port.ts,
+  explorer Step = heading + marks + drawing + "Step details" (details open unless a drawing is shown; reader's choice stays), inspector StepRow likewise (column layout).
+  DISCLOSED ORDER BREAK: the explorer and inspector wiring was written BEFORE their tests (mechanism-drawing.test.tsx, 23 tests incl. the STEP_KINDS table;
+  one inspector test); they were green at first run except a test-id typo ("Invalid ID body for mvr"), so no red line exists for those two files.
+Resume point: M5 committed; next M6 (Studio editor live preview + bond choices), then M7, then close.

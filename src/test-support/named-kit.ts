@@ -29,7 +29,7 @@ export function namedReaction(
 
 export function mechStep(
   body: string,
-  o: { title?: string; kinds?: MechanismStep['stepKinds']; description?: string; species?: MechanismStep['species']; rds?: boolean; reversible?: boolean; event?: string; note?: string } = {},
+  o: { title?: string; kinds?: MechanismStep['stepKinds']; description?: string; species?: MechanismStep['species']; rds?: boolean; reversible?: boolean; event?: string; note?: string; movements?: MechanismStep['electronMovements'] } = {},
 ): MechanismStep {
   return {
     id: ident<MechanismStep['id']>('mst', body),
@@ -39,7 +39,7 @@ export function mechStep(
     species: [...(o.species ?? [])],
     bondsFormed: [],
     bondsBroken: [],
-    electronMovements: [],
+    electronMovements: [...(o.movements ?? [])],
     ...(o.rds === undefined ? {} : { isRateDetermining: o.rds }),
     ...(o.reversible === undefined ? {} : { reversible: o.reversible }),
     ...(o.event === undefined ? {} : { stereochemicalEvent: o.event }),

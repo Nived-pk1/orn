@@ -3,10 +3,12 @@
  * words, the description, a row of its species (drawn small when the step carries a structure, else the label or the record's name) with a small
  * role word under each, "slow step" and "⇌ reversible" marks, the stereochemical event and the note. Curved arrows are NOT drawn here (Phase 8).
  */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { StepView, VariantView } from '@/core/mechanisms';
 import { termRepresentationOf } from '@/core/graph';
 import { Runs, useFactsInput } from '@/render/equation';
+import { StepDrawing, type DrawableStep, type DrawingStatus } from '@/render/mechanism';
+import { useLayoutMode } from '@/ui/hooks';
 import { formulaRuns } from '@/render/scene';
 import { studyPageStyles as page } from '@/ui/study-page';
 import type { MechanismPorts } from './contracts';
@@ -54,16 +56,31 @@ function Species(props: { readonly ports: MechanismPorts; readonly species: Step
   );
 }
 
-function Step(props: { readonly ports: MechanismPorts; readonly step: StepView }) {
+/** What a drawing needs of a stored step (the same shape the Studio editor gives for its draft). */
+const drawableOf = (step: StepView): DrawableStep => ({
+  number: step.number,
+  reversible: step.reversible,
+  electronMovements: step.electronMovements,
+  species: step.species.map((one, i) => ({
+    role: step.roleKeys[i] ?? 'reactant',
+    ...(one.label === undefined ? {} : { label: one.label }),
+    ...(one.structure === undefined ? {} : { structure: one.structure }),
+  })),
+});
+
+/** More steps than this draw only when they come near the screen (8.5 D7). */
+export const LAZY_DRAWING_STEPS = 6;
+
+function Step(props: { readonly ports: MechanismPorts; readonly step: StepView; readonly lazy: boolean }) {
   const { ports, step } = props;
-  return (
-    <li className={styles.step} data-step={step.number}>
-      <h4 className={styles.stepHeading}>{stepHeading(step)}</h4>
-      <p className={styles.marks}>
-        {step.title !== undefined && step.title !== '' && step.kinds.length > 0 ? <span>{step.kinds.join(', ')}</span> : null}
-        {step.rateDetermining ? <span className={styles.mark}>slow step</span> : null}
-        {step.reversible ? <span className={styles.mark}>⇌ reversible</span> : null}
-      </p>
+  const mode = useLayoutMode();
+  const [status, setStatus] = useState<DrawingStatus>('loading');
+  const [chosen, setChosen] = useState<boolean | undefined>(undefined);
+  const drawing = ports.drawing;
+  // the details are open until there is a drawing above them (and always open when the step cannot be drawn); a choice of the reader stays
+  const open = chosen ?? status !== 'ready';
+  const details = (
+    <>
       {step.description === undefined ? null : <div>{ports.renderRichText(step.description)}</div>}
       {step.species.length === 0 ? null : (
         <ul className={styles.species} aria-label={`Species of step ${step.number}`}>
@@ -77,6 +94,27 @@ function Step(props: { readonly ports: MechanismPorts; readonly step: StepView }
       )}
       {step.stereochemicalEvent === undefined ? null : <p className={page.facts}>{`Stereochemistry: ${step.stereochemicalEvent}`}</p>}
       {step.note === undefined ? null : <div>{ports.renderRichText(step.note)}</div>}
+    </>
+  );
+  return (
+    <li className={styles.step} data-step={step.number}>
+      <h4 className={styles.stepHeading}>{stepHeading(step)}</h4>
+      <p className={styles.marks}>
+        {step.title !== undefined && step.title !== '' && step.kinds.length > 0 ? <span>{step.kinds.join(', ')}</span> : null}
+        {step.rateDetermining ? <span className={styles.mark}>slow step</span> : null}
+        {step.reversible ? <span className={styles.mark}>⇌ reversible</span> : null}
+      </p>
+      {drawing === undefined ? (
+        details
+      ) : (
+        <>
+          <StepDrawing step={drawableOf(step)} port={drawing} orientation={mode === 'phone' ? 'column' : 'row'} lazy={props.lazy} onStatus={setStatus} />
+          <details className={styles.details} open={open} onToggle={(event) => event.currentTarget.open !== open && setChosen(event.currentTarget.open)}>
+            <summary className={styles.summary}>Step details</summary>
+            {details}
+          </details>
+        </>
+      )}
     </li>
   );
 }
@@ -90,7 +128,7 @@ export function VariantSteps(props: { readonly ports: MechanismPorts; readonly v
       {variant.steps.length === 0 ? <EmptyState inline>No step is written for this pathway yet.</EmptyState> : (
         <ol className={styles.steps} aria-label={`Steps${props.heading ? ` of ${variant.label}` : ''}`}>
           {variant.steps.map((step) => (
-            <Step key={step.id} ports={ports} step={step} />
+            <Step key={step.id} ports={ports} step={step} lazy={variant.steps.length > LAZY_DRAWING_STEPS} />
           ))}
         </ol>
       )}
