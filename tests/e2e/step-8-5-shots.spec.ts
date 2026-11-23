@@ -21,6 +21,7 @@ const SN2 = 'SN2 substitution of a haloalkane';
 
 /** The "Imported n records" toast would sit over the picture: close what is open. */
 async function dismissToasts(page: Page): Promise<void> {
+  if ((await page.locator('dialog[open]').count()) > 0) return; // a modal dialog covers the toasts and takes the clicks
   const toasts = page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' });
   for (let left = await toasts.count(); left > 0; left = await toasts.count()) await toasts.first().click();
 }

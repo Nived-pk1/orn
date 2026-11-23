@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-20",
+  "lastUpdated": "2026-11-23",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-18",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "8.5 (step T closed 2026-11-22, not deployed: awaiting the reviewer, docs/PROGRESS.md Step T REVIEW REQUIRED 1)",
-  "nextStepTitle": "Step C DONE 2026-11-20 (docs/PROGRESS.md 'Step C'; ADR-049): exam scope edges and cost, routes through generic reactions and shortest first, From A to B up to 5 steps with 'n of N chains', Precursors Continue from here, no silent class-scan cut, tour anchors, no place line in Starred. Step T DONE 2026-11-22 (not deployed). Next: 8.5.",
+  "nextStep": "8.6 (step 8.5 closed 2026-11-23, docs/PROGRESS.md Step 8.5)",
+  "nextStepTitle": "Step 8.5 DONE 2026-11-23 (docs/PROGRESS.md \"Step 8.5\"; ADR-038 \"As built 8.5\"): arrow-pushing mechanism drawings and the before -> after step layout; atom positions from the chem worker (amendment). Next: 8.6 export pictures and print stylesheet.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
@@ -305,7 +305,6 @@
     "-> later (schema v3 candidate): pictures on a single mechanism step need a schema change (asset attachment to a step): a RecordRef cannot name a step; 6.5b builds mechanism pictures only (ADR-038 addendum).",
     "-> later (schema v3 candidate): structured value + unit for numeric species properties (needs a unit decision per key); 6.6a edits a property as the schema types it (key, label, value text with the unit written in it, note, citations).",
     "-> later (schema v3 candidate): exam kind (board / entrance) for the grouped scope selector. The exam record has no such field, so the selector stays a flat list by exam name, then version (Exams step part 3, reviewer decision 2026-10-21).",
-    "-> Phase 8: bond choices in the mechanism editor list the pairs that are bonded in the step's structures first (needs a bond reader for mapped structures; Phase 8 arrow drawings need it too)",
     "-> 6.6 (presentation): making a class a map family (navigator anchor, arrangement cell). The 6.2b class editor only says, read-only, whether a class is one (ADR-040 addendum D2).",
     "NEW (6.2a review, 2026-10-19): membership SMARTS for the demo classes: a content decision for the content track, REVIEW REQUIRED. Demo chemistry is never edited to make a test or a screen work.",
     "NEW (phone mode A review, 2026-10-16, Phase 9): pre-built brotli for the RDKit wasm (1,703,694 B vs 2,318,206 B served, -614 kB) and index.js (327,005 B vs 397,007 B, -70 kB); first check whether Workers static assets serve pre-compressed files.",
@@ -787,5 +786,21 @@
       "Chromium exam-chip:21"
     ],
     "deployed": "2026-11-20"
+  },
+  "step85": {
+    "closed": "2026-11-23",
+    "adr": [
+      "ADR-038 addenda step 8.5 M1 and As built 8.5"
+    ],
+    "initialJsGzipBytes": {
+      "study": 338434,
+      "studio": 342437
+    },
+    "notes": "docs/reviews/step-8-5-notes.md",
+    "flakyToAdd": [
+      "Firefox mechanism-pictures:156",
+      "Chromium app-essentials:224"
+    ],
+    "reviewRequired": "docs/PROGRESS.md Step 8.5 REVIEW REQUIRED 1-7"
   }
 }

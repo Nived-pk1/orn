@@ -10,6 +10,8 @@
 .scroll {
   max-width: 100%;
   overflow-x: auto;
+  border-radius: var(--radius-8);
+  background: var(--depiction-bg); /* in dark the structures sit on paper (8.4m2) */
 }
 
 .svg {
@@ -19,28 +21,28 @@
 }
 
 .label {
-  fill: var(--color-ink);
+  fill: var(--mech-ink);
   font-size: var(--text-14);
   text-anchor: middle;
   dominant-baseline: central;
 }
 
 .plus {
-  fill: var(--color-ink-2);
+  fill: var(--mech-ink);
   font-size: var(--text-16);
   text-anchor: middle;
   dominant-baseline: central;
 }
 
 .dagger {
-  fill: var(--color-ink-2);
+  fill: var(--mech-ink);
   font-size: var(--text-12);
 }
 
 .bracket,
 .reaction {
   fill: none;
-  stroke: var(--color-ink-2);
+  stroke: var(--mech-ink);
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
