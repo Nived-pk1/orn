@@ -90,3 +90,6 @@ Round 1 (13 specs x 3 engines, 13.1 min): 120 passed, 20 skipped, 4 failed: mech
 bonded pairs 1-2, 2-3, 3-4 first), and mechanism-pictures:156 FIREFOX only ("Edit SN2" dialog never opened; unexplained, re-run x2 was started and stopped by the pause).
 Preview servers: ports 4173/4174 were left running by T-rebuild.sh (built from commit 1a15820); stop by PID before any rebuild (T-rebuild.sh does it by command line).
 Commits: 5a6d5f9 base, d62575f, 08993ee, 817eb6e (M1, pushed), 1d41f00 (M2+M3), d8a2ef8 (M4+M5), 0fccfdb (M6), WIP commit, 1a15820 (size cut). Not pushed after 817eb6e.
+- RESUMED 2026-11-23 (speed 0.66 s after rebuild). mechanism-editor spec: 3/3 x 3 engines green after the order update. mechanism-pictures:156 FIREFOX: 1 failure in 3 repeats (with others), 1 in 6 alone,
+  and the BASE commit 5a6d5f9 (built in a worktree, same spec, Firefox, 10 repeats) failed 1 in 10 too: PRE-EXISTING Firefox flake of that spec (the page does not reach its first screen in 90 s
+  after a reload, or the Edit dialog does not open); not caused by 8.5. To go on the flaky list.
