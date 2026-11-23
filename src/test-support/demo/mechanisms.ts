@@ -128,7 +128,7 @@ function aldol(): Mechanism {
     }),
     step({
       body: 'aldol-base-3', title: 'Alkoxide is protonated by water', kinds: ['proton_transfer'], reversible: true,
-      species: [struct('intermediate', '[O-:8][CH:7]([CH3:6])[CH2:3][CH:4]=[O:5]', 'Alkoxide'), struct('reagent', '[H:9][OH:10]', 'Water'), struct('product', '[H:9][O:8][CH:7]([CH3:6])[CH2:3][CH:4]=[O:5]', '3-Hydroxybutanal'), struct('catalyst', '[OH-:10]', 'Hydroxide (regenerated)')],
+      species: [struct('intermediate', '[O-:8][CH:7]([CH3:6])[CH2:3][CH:4]=[O:5]', 'Alkoxide'), struct('reagent', '[H:9][OH:10]', 'Water'), struct('product', '[H:9][O:8][CH:7]([CH3:6])[CH2:3][CH:4]=[O:5]', '3-Hydroxybutanal'), struct('product', '[OH-:10]', 'Hydroxide (regenerated)')],
       formed: [change(8, 9, 1)], broken: [change(9, 10, 1)],
       moves: [move(lp(8), bond(8, 9)), move(bond(9, 10), lp(10))],
     }),

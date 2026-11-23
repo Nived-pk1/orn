@@ -85,19 +85,7 @@ describe('every arrow of the demo steps ends on its target (real RDKit)', () => 
     expect(steps.length).toBeGreaterThanOrEqual(7);
   });
 
-  /**
-   * DATA FAULT, reported to the reviewer (8.5b notes A1; the demo is not edited by the implementer): "Hydroxide (regenerated)" has the role
-   * `catalyst`, which the sides rule puts BEFORE, so atom 10 is held by two before-side species and the step is (correctly, in words) "No
-   * drawing". Proposed correction: role `leaving_group` (or `product`). When the demo is corrected this entry must be removed.
-   */
-  const DATA_FAULT = new Set(['mst_aldol-base-3']);
-  it('a step with a known data fault is shown as "No drawing" (never a partial arrow) until the reviewer corrects the data', async () => {
-    const step = steps.find((s) => s.id === 'mst_aldol-base-3') as DemoStep;
-    const loaded = await loadStep({ number: 1, species: step.species, electronMovements: step.electronMovements ?? [], reversible: true }, port);
-    expect(loaded.status).toBe('none');
-  });
-
-  for (const step of steps.filter((s) => !DATA_FAULT.has(s.id))) {
+  for (const step of steps) {
     it(`${step.id}: each arrow end is on its target atom or bond, and a labelled target is hit on its element letter`, async () => {
       const movements = step.electronMovements ?? [];
       const loaded = await loadStep({ number: 1, species: step.species, electronMovements: movements, reversible: step.reversible === true }, port);

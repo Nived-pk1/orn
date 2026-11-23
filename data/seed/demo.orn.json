@@ -5401,7 +5401,7 @@
                     }
                   },
                   {
-                    "role": "catalyst",
+                    "role": "product",
                     "label": "Hydroxide (regenerated)",
                     "structure": {
                       "format": "smiles",
