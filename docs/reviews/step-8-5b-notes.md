@@ -1,6 +1,6 @@
 # Step 8.5b notes (arrows on the right atoms; one size rule)
 
-Resume point: Part A done and committed; Part B (FACTS first) next.
+Resume point: Part A committed; Part B (FACTS first) next.
 
 ## START
 HEAD 8727303 (section 0 commit, local, push at the end). Fresh builds: Study 338,422 / Studio 342,438 gzip (8.5 close said 338,435 / 342,431; the
@@ -52,3 +52,12 @@ hydrogen first (HO-, HS-, measured for O and S only: REVIEW REQUIRED if other el
 ## A4 screenshots/8.5b/arrows-* (12 files, desktop and phone, light and dark; opened: aldol 1 desktop light+dark, aldol 2 desktop light + phone dark,
 SN2 desktop light + phone light). Arrows end on H2, on the carbonyl carbon, on the carbon with Br. Remaining blemish: the SN2 bond-to-lone-pair arrow
 starts at the C-Br bond midpoint, which is under the "Br" label, so its curve crosses the "r".
+
+## B FACTS so far (not complete; nothing built)
+- Equation (`src/render/equation`): already a fixed bond length (`EQUATION_BOND_PX` 54, RDKit `fixedScale`, `FIXED_SCALE_BOND_UNITS`), but `drawingSizeOf`
+  scales a drawing DOWN WHOLE beyond `MAX_DRAWING_WIDTH` 220 / `MAX_DRAWING_HEIGHT` 160 (stacked: 140) - the shrink the owner saw. `.row` wraps (flex-wrap) between
+  terms already; the inspector hero (`fitHero`, `hero-fit.ts`) never wraps and scales the row down (`MIN_DRAWING_PX` 80), then stacks.
+- Map cards (`src/render/svg/nodes-layer.tsx:53`): the picture is an `<image preserveAspectRatio="xMidYMid meet">` in a fixed card area from the layout, so it is squeezed
+  (not fixed-scale) and text that does not fit is clipped by the card; card sizes come from `core` layout, so a growing box is a layout change, not only a render change.
+- Mechanism step (`src/render/mechanism`): fixed scale (bond 54 units), nothing shrunk; wide steps scroll sideways (`data-drawing-scroll`).
+- `overflow: hidden` clip sites to review for B: family-scheme.module.css:28, reactions-view.module.css:171/250/286, picture.module.css:102, equation-scheme.module.css:196.
