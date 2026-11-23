@@ -49,7 +49,7 @@ test('desktop: aldol step 1, aldol step 2, the SN2 step', async ({ page, browser
   await page.setViewportSize({ width: 1280, height: 800 });
   await importOwn(page, changedDemo(() => undefined));
   await openMechanism(page, ALDOL);
-  for (const [title, name] of [['Hydroxide removes an α-hydrogen to give the enolate', 'aldol-1-desktop'], ['Enolate carbon attacks a second ethanal', 'aldol-2-desktop']] as const) {
+  for (const [title, name] of [['Hydroxide removes an α-hydrogen to give the enolate', 'aldol-1-desktop'], ['Enolate carbon attacks a second ethanal', 'aldol-2-desktop'], ['Alkoxide is protonated by water', 'aldol-3-desktop']] as const) {
     const one = step(page, title);
     await expect(drawn(one)).toBeVisible({ timeout: 90_000 });
     await one.scrollIntoViewIfNeeded();
@@ -74,7 +74,7 @@ test.describe('phone: Pixel 7', () => {
     await page.getByRole('combobox', { name: 'Show:' }).selectOption({ label: 'Mechanisms' });
     const mechanisms = page.getByRole('region', { name: 'Mechanisms', exact: true });
     await mechanisms.getByRole('button', { name: ALDOL }).tap();
-    for (const [title, name] of [['Hydroxide removes an α-hydrogen to give the enolate', 'aldol-1-phone'], ['Enolate carbon attacks a second ethanal', 'aldol-2-phone']] as const) {
+    for (const [title, name] of [['Hydroxide removes an α-hydrogen to give the enolate', 'aldol-1-phone'], ['Enolate carbon attacks a second ethanal', 'aldol-2-phone'], ['Alkoxide is protonated by water', 'aldol-3-phone']] as const) {
       const one = mechanisms.locator('[data-step]').filter({ hasText: title }).first();
       await expect(drawn(one)).toBeVisible({ timeout: 90_000 });
       await one.scrollIntoViewIfNeeded();
