@@ -154,7 +154,7 @@
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-23",
-    "version": "bedef182-95f2-4229-a348-11081710501a",
+    "version": "42f72e6d-73dd-4830-bc85-0a6b6a222ff3",
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4m deploy, 2026-11-16: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
     "commit": "6b2e298",
