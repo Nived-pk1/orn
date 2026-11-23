@@ -47,7 +47,7 @@ export const STEP_SPECIES_ROLES = [
   'catalyst',
 ] as const;
 
-/** Atom-map number inside the step's structures (unique across all species of one step). */
+/** Atom-map number inside the step's structures (names ONE atom across the species of a step, as in usual atom-mapping practice; an atom may appear again in a later species of the step). */
 export const AtomMapSchema = z.number().int().min(1).max(999);
 
 export const BondChangeSchema = z.strictObject({

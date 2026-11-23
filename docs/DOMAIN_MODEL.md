@@ -202,6 +202,7 @@ Mechanism (reusable, referenced by reactions and outcomes)
 
 - Reactions point to mechanisms (`mechanismIds`); an outcome may point to a specific mechanism variant (`outcome.mechanism.variantId`), so the SN2 outcome and the E2 outcome of a substrate link to different pathways.
 - Atom-map numbers in step structures make bond changes and curved arrows machine-checkable (CHEM-008) and are the foundation for future arrow-pushing animation (ARCHITECTURALLY SUPPORTED, not required now).
+- A map number names ONE atom across the species of a step (the usual atom-mapping practice): the same number in two species of a step is the same atom, shown before and after. No rule assumes per-species uniqueness (checked in 8.5b: CHEM-008, MEC-* read maps per step). Confirmed by the reviewer 2026-11-23.
 - A mechanism may have only a `summary` and no steps (legacy imports, early drafts); MEC-001 reports that as INFO.
 
 ## 8. Knowledge records
