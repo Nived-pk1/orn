@@ -93,3 +93,6 @@ Commits: 5a6d5f9 base, d62575f, 08993ee, 817eb6e (M1, pushed), 1d41f00 (M2+M3), 
 - RESUMED 2026-11-23 (speed 0.66 s after rebuild). mechanism-editor spec: 3/3 x 3 engines green after the order update. mechanism-pictures:156 FIREFOX: 1 failure in 3 repeats (with others), 1 in 6 alone,
   and the BASE commit 5a6d5f9 (built in a worktree, same spec, Firefox, 10 repeats) failed 1 in 10 too: PRE-EXISTING Firefox flake of that spec (the page does not reach its first screen in 90 s
   after a reload, or the Edit dialog does not open); not caused by 8.5. To go on the flaky list.
+- FULL CHROMIUM RUN (HEAD b263fea+, speed 0.63 s): `chromium` 460 passed / 1 failed (14.7 min), `chromium-serial` 31 passed (1.1 min). The one failure, app-essentials.spec.ts:224
+  (the not-found screen, "This page does not exist." not shown in 30 s), is PRE-EXISTING: 20 repeats alone: this build 3 of 10 failed; the BASE commit 5a6d5f9 (own worktree and build) 4 of 20 failed.
+  Not on the step T flaky list; to be added (Chromium). (Two earlier base runs of this check were invalid: the base preview was not up; discarded.)
