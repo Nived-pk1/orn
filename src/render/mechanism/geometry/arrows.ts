@@ -6,7 +6,9 @@
  * dots a lone pair or radical is drawn with. Deterministic: the same input gives the same numbers.
  *   start   atom: just outside it, towards the target. lone pair: at the two dots beside the atom, on the side away from its bonds
  *           (no bond to turn away from: facing the target). radical: at the single dot. bond: its midpoint.
- *   end     atom: just short of it. bond (an existing bond or a new one between two atoms): the midpoint between its two atoms.
+ *   end     atom: just short of it. bond that exists: its midpoint. bond the movement FORMS (not bonded yet): the atom of it the movement
+ *           does not start from, just short of it (a lone pair on O1 into the new bond O1-C2 ends ON C2, as a textbook draws it, not in
+ *           the gap between them); when both atoms or neither are the source's, the midpoint between the two atoms.
  *           lone pair, radical: the dots, as at a start.
  *   curve   bulges AWAY from the centre of the sites involved by `BULGE_RATIO` of the chord, kept between `MIN_BULGE` and `MAX_BULGE`;
  *           an arrow whose control point is within `OVERLAP` of an earlier one is bent to the other side.
@@ -131,16 +133,29 @@ function head(tip: Point, angle: number, electrons: 1 | 2, side: number): ArrowH
   return { tip, angle, full: electrons === 2, wings: electrons === 2 ? [wing(HEAD_SPREAD), wing(-HEAD_SPREAD)] : [wing(-side * HEAD_SPREAD)] };
 }
 
+/** The site an arrow ENDS at: a target bond that is not bonded yet ends on the one atom of it the source does not start from. */
+function endSite(movement: MovementInput, ctx: ArrowContext): SiteInput {
+  const to = movement.to;
+  if (to.kind !== 'bond') return to;
+  const [p, q] = to.atoms;
+  if (ctx.bonds.some(([a, b]) => (a === p && b === q) || (a === q && b === p))) return to;
+  const source = atomsOf(movement.from);
+  const others = [p, q].filter((id) => !source.includes(id));
+  return others.length === 1 ? { kind: 'atom', atom: others[0] as number } : to;
+}
+
 export function layoutArrows(movements: readonly MovementInput[], ctx: ArrowContext): ArrowsOutcome {
   if (movements.length > MAX_ARROWS) return { ok: false, missing: [], tooMany: true };
   const missing = [...new Set(movements.flatMap((m) => [...atomsOf(m.from), ...atomsOf(m.to)]).filter((id) => !ctx.atoms.has(id)))].sort((a, b) => a - b);
   if (missing.length > 0) return { ok: false, missing };
-  const sites = movements.flatMap((m) => [coarse(m.from, ctx), coarse(m.to, ctx)]);
+  const ends = movements.map((m) => endSite(m, ctx));
+  const sites = movements.flatMap((m, k) => [coarse(m.from, ctx), coarse(ends[k] as SiteInput, ctx)]);
   const centre: Point = sites.length === 0 ? { x: 0, y: 0 } : { x: sites.reduce((s, p) => s + p.x, 0) / sites.length, y: sites.reduce((s, p) => s + p.y, 0) / sites.length };
   const arrows: CurvedArrow[] = [];
-  for (const movement of movements) {
-    const from = anchor(movement.from, coarse(movement.to, ctx), ctx);
-    const to = anchor(movement.to, coarse(movement.from, ctx), ctx);
+  for (const [k, movement] of movements.entries()) {
+    const target = ends[k] as SiteInput;
+    const from = anchor(movement.from, coarse(target, ctx), ctx);
+    const to = anchor(target, coarse(movement.from, ctx), ctx);
     const dots = [...from.dots, ...to.dots];
     const chord = sub(to.anchor, from.anchor);
     if (length(chord) < MIN_CHORD) {

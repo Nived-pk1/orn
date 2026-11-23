@@ -62,10 +62,28 @@ describe('sites', () => {
     expect(arrow?.dots).toEqual([]);
   });
 
-  it('a new bond as the target (two atoms not bonded) ends at the midpoint between those two atoms', () => {
-    const [arrow] = must(lay({ 1: atom(0, 0), 2: atom(100, 0) }, [], [pair({ kind: 'lone_pair', atom: 1 }, { kind: 'bond', atoms: [1, 2] })]));
-    expect(arrow?.end.x).toBeCloseTo(50, 0);
-    expect(arrow?.end.y).toBeCloseTo(0, 0);
+  it('a bond the movement FORMS ends on the atom of it that the movement does not start from, just short of it (reviewer R1), never in the gap', () => {
+    // lone pair on 1 into the new bond 1-2: the arrow ends at atom 2
+    const [a] = must(lay({ 1: atom(0, 0), 2: atom(100, 0) }, [], [pair({ kind: 'lone_pair', atom: 1 }, { kind: 'bond', atoms: [1, 2] })]));
+    expect(dist(a?.end ?? { x: 0, y: 0 }, atom(100, 0))).toBeGreaterThan(8);
+    expect(dist(a?.end ?? { x: 0, y: 0 }, atom(100, 0))).toBeLessThan(20);
+    expect(a?.end.x).toBeLessThan(100);
+    // the bond written the other way round (2-1) is the same movement
+    const [b] = must(lay({ 1: atom(0, 0), 2: atom(100, 0) }, [], [pair({ kind: 'lone_pair', atom: 1 }, { kind: 'bond', atoms: [2, 1] })]));
+    expect(b?.end).toEqual(a?.end);
+    // a bond into a new bond: C3=C4 (bond 3-4) pushes into the new bond 3-7, which ends on atom 7, the carbonyl carbon
+    const [c] = must(lay({ 3: atom(0, 0), 4: atom(40, 0), 7: atom(0, 100) }, [[3, 4]], [pair({ kind: 'bond', atoms: [3, 4] }, { kind: 'bond', atoms: [3, 7] })]));
+    expect(dist(c?.end ?? { x: 0, y: 0 }, atom(0, 100))).toBeLessThan(20);
+    expect(dist(c?.end ?? { x: 0, y: 0 }, atom(0, 100))).toBeGreaterThan(8);
+  });
+
+  it('a target bond that already exists keeps its midpoint; a new bond that shares no atom with the source, or both atoms, keeps the midpoint between its atoms', () => {
+    const [existing] = must(lay({ 1: atom(0, 0), 2: atom(100, 0), 3: atom(50, 80) }, [[1, 2]], [pair({ kind: 'atom', atom: 3 }, { kind: 'bond', atoms: [1, 2] })]));
+    expect(existing?.end.x).toBeCloseTo(50, 0);
+    expect(existing?.end.y).toBeCloseTo(0, 0);
+    const [unrelated] = must(lay({ 1: atom(0, 0), 2: atom(100, 0), 3: atom(50, 80) }, [], [pair({ kind: 'atom', atom: 3 }, { kind: 'bond', atoms: [1, 2] })]));
+    expect(unrelated?.end.x).toBeCloseTo(50, 0);
+    expect(unrelated?.end.y).toBeCloseTo(0, 0);
   });
 
   it('a movement that names an atom the drawing does not have is not drawn: the answer lists the missing atoms, nothing partial', () => {
@@ -143,7 +161,9 @@ describe('properties (fast-check)', () => {
           const boxes = ids.map((id) => sample.boxes[id - 1] as AtomBox);
           const x = boxes.reduce((sum, b) => sum + b.x, 0) / boxes.length;
           const y = boxes.reduce((sum, b) => sum + b.y, 0) / boxes.length;
-          return { x, y, r: s.kind === 'bond' ? 1 : Math.max(...boxes.map((b) => Math.max(b.rx, b.ry))) + 30 };
+          // a bond: its midpoint, or (a bond the movement forms) one of its two atoms, so the reach is the whole bond
+          const span = s.kind === 'bond' ? Math.max(...boxes.map((b) => Math.hypot(b.x - x, b.y - y) + Math.max(b.rx, b.ry) + 30)) : 0;
+          return { x, y, r: s.kind === 'bond' ? Math.max(1, span) : Math.max(...boxes.map((b) => Math.max(b.rx, b.ry))) + 30 };
         };
         out.arrows.forEach((arrow, k) => {
           const m = sample.movements[k] as MovementInput;

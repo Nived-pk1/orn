@@ -109,6 +109,59 @@ function fit(pairs: readonly (readonly [Point, Point])[]): { readonly s: number;
   return pairs.every(([p, q]) => Math.abs(s * p[0] + tx - q[0]) <= FIT_TOLERANCE && Math.abs(s * p[1] + ty - q[1]) <= FIT_TOLERANCE) ? { s, tx, ty } : undefined;
 }
 
+interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly rx: number;
+  readonly ry: number;
+}
+const boxOf = (points: readonly Point[]): Box => {
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, rx: (x1 - x0) / 2, ry: (y1 - y0) / 2 };
+};
+
+/**
+ * The box of the ELEMENT LETTER of a labelled atom (step 8.5b A3), in the shown drawing's frame; `undefined` when the atom has no label
+ * glyphs. RDKit draws a label ("HO-", "NH3+", "H3N+", "OH", "Br-") as one `atom-N` path per glyph, left to right. The letter is found by:
+ *   size     the letters are the tall, wide glyphs (a subscript count, a charge, a radical dot, the "r" of Br and the "l" of Cl are not);
+ *   a bonded atom: the letter nearest the end of its bond (RDKit puts the atom's own letter against the bond: "NH3+", "H3N+");
+ *   no bond  two letters: a subscript count between them means the hydrogen comes first ("H2O"), one after them means it comes last
+ *            ("NH2-"); with no count, RDKit draws the hydrogen first ("HO-", "HS-": measured for O and S, RDKit 2026.03).
+ */
+export function elementLetterOf(plainSvg: string, index: number): { readonly x: number; readonly y: number; readonly rx: number; readonly ry: number } | undefined {
+  const paths = pathsOf(plainSvg);
+  return paths === undefined ? undefined : elementLetter(paths, index);
+}
+
+function elementLetter(plain: readonly Path[], index: number): Box | undefined {
+  const glyphs = plain.filter((p) => p.cls === `atom-${index}`).map((p) => boxOf(p.points)).sort((a, b) => a.x - b.x);
+  if (glyphs.length === 0) return undefined;
+  const tall = Math.max(...glyphs.map((g) => g.ry));
+  const wide = Math.max(...glyphs.map((g) => g.rx));
+  const letters = glyphs.filter((g) => g.ry >= 0.8 * tall && g.rx >= 0.45 * wide);
+  if (letters.length <= 1) return letters[0] ?? glyphs[0];
+  const ends: Point[] = [];
+  for (const path of plain) {
+    if (path.cls.startsWith('bond-') && path.cls.split(' ').includes(`atom-${index}`)) {
+      const first = path.points[0] as Point;
+      const last = path.points.at(-1) as Point;
+      const centre = boxOf(glyphs.map((g): Point => [g.x, g.y]));
+      ends.push(Math.hypot(first[0] - centre.x, first[1] - centre.y) < Math.hypot(last[0] - centre.x, last[1] - centre.y) ? first : last);
+    }
+  }
+  if (ends.length > 0) {
+    const mx = ends.reduce((s, p) => s + p[0], 0) / ends.length;
+    const my = ends.reduce((s, p) => s + p[1], 0) / ends.length;
+    return [...letters].sort((a, b) => Math.hypot(a.x - mx, a.y - my) - Math.hypot(b.x - mx, b.y - my))[0];
+  }
+  const [first, second] = letters as [Box, Box];
+  const counts = glyphs.filter((g) => !letters.includes(g) && g.y > first.y + 0.3 * tall); // subscript counts hang below the letters' middle
+  if (counts.length === 0) return second;
+  return counts.some((g) => g.x > first.x && g.x < second.x) ? second : first;
+}
+
 const round = (value: number): number => Math.round(value * 100) / 100;
 
 export function readPositions(plainSvg: string, highlightedSvg: string, indexes: readonly number[]): PositionsOutcome {
@@ -131,7 +184,10 @@ export function readPositions(plainSvg: string, highlightedSvg: string, indexes:
     const found = ellipses.get(index);
     if (found?.length !== 1) return fail(`atom ${index} has ${found?.length ?? 0} highlight shapes; the atom-N classes may have changed`);
     const e = found[0] as { x: number; y: number; rx: number; ry: number };
-    atoms.push({ index, x: round((e.x - moved.tx) / moved.s), y: round((e.y - moved.ty) / moved.s), rx: round(e.rx / moved.s), ry: round(e.ry / moved.s) });
+    const letter = elementLetter(plain, index);
+    atoms.push(letter === undefined
+      ? { index, x: round((e.x - moved.tx) / moved.s), y: round((e.y - moved.ty) / moved.s), rx: round(e.rx / moved.s), ry: round(e.ry / moved.s) }
+      : { index, x: round(letter.x), y: round(letter.y), rx: round(letter.rx), ry: round(letter.ry) });
   }
   return { ok: true, atoms };
 }

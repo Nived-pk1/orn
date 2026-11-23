@@ -17,13 +17,14 @@ const view = (page: Page) => page.getByRole('region', { name: 'Mechanisms', exac
 const ALDOL = 'Aldol addition of ethanal';
 const SN2 = 'SN2 substitution of a haloalkane';
 
-async function openAldol(page: Page): Promise<void> {
-  await leaveChapters(page);
+async function openMechanism(page: Page, name: string, fresh = true): Promise<void> {
+  if (fresh) await leaveChapters(page);
   await rail(page).getByRole('button', { name: 'Mechanisms' }).click();
   await expect(view(page).getByRole('heading', { level: 2, name: 'Mechanisms' })).toBeVisible();
-  await view(page).getByRole('list', { name: 'Mechanisms' }).locator('[data-mechanism-id]').filter({ hasText: ALDOL }).getByRole('button', { name: ALDOL }).click();
-  await expect(view(page).getByRole('heading', { level: 2, name: ALDOL })).toBeVisible();
+  await view(page).getByRole('list', { name: 'Mechanisms' }).locator('[data-mechanism-id]').filter({ hasText: name }).getByRole('button', { name }).click();
+  await expect(view(page).getByRole('heading', { level: 2, name })).toBeVisible();
 }
+const openAldol = (page: Page): Promise<void> => openMechanism(page, ALDOL);
 const stepWith = (page: Page, title: string): Locator => view(page).locator('[data-step]').filter({ hasText: title }).first();
 
 test('a step with mapped structures is drawn with its curved arrows; one without says why; the rows are "Step details"', async ({ page }) => {
@@ -56,6 +57,41 @@ test('a step with mapped structures is drawn with its curved arrows; one without
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(await axeProblems(page)).toEqual([]);
   await expectClean(seen);
+});
+
+/** Where the k-th curved arrow of a drawing ends and the boxes of the structure pictures, in the drawing's own units. */
+async function arrowEnds(step: Locator): Promise<{ readonly ends: { x: number; y: number }[]; readonly boxes: { x: number; y: number; width: number; height: number }[] }> {
+  return step.locator('svg').first().evaluate((svg) => ({
+    ends: [...svg.querySelectorAll('[data-arrow] path:first-child')].map((path) => {
+      const numbers = (path.getAttribute('d') ?? '').match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+      return { x: numbers[numbers.length - 2] ?? Number.NaN, y: numbers[numbers.length - 1] ?? Number.NaN };
+    }),
+    boxes: [...svg.querySelectorAll('image')].map((image) => ({ x: Number(image.getAttribute('x')), y: Number(image.getAttribute('y')), width: Number(image.getAttribute('width')), height: Number(image.getAttribute('height')) })),
+  }));
+}
+const inside = (p: { x: number; y: number }, b: { x: number; y: number; width: number; height: number }): boolean => p.x >= b.x && p.x <= b.x + b.width && p.y >= b.y && p.y <= b.y + b.height;
+
+test('8.5b R1: an arrow into a bond the step forms ends ON the atom it attacks, inside that species picture and not in the gap between pictures', async ({ page }) => {
+  test.setTimeout(480_000);
+  await importOwn(page, changedDemo(() => undefined));
+  await openAldol(page);
+  // aldol step 1: hydroxide (picture 0) -> the alpha-hydrogen of ethanal (picture 1)
+  const first = stepWith(page, 'Hydroxide removes an α-hydrogen to give the enolate');
+  await expect(first.getByRole('img', { name: /Drawing of step 1/ })).toBeVisible({ timeout: 90_000 });
+  const one = await arrowEnds(first);
+  expect(inside(one.ends[0] as { x: number; y: number }, one.boxes[1] as { x: number; y: number; width: number; height: number }), 'arrow 1 of step 1 ends in the ethanal picture').toBe(true);
+  // aldol step 2: the enolate C=C (picture 0) -> the carbonyl carbon of the second ethanal (picture 1)
+  const second = stepWith(page, 'Enolate carbon attacks a second ethanal');
+  await expect(second.getByRole('img', { name: /Drawing of step 2/ })).toBeVisible({ timeout: 90_000 });
+  const two = await arrowEnds(second);
+  expect(inside(two.ends[1] as { x: number; y: number }, two.boxes[1] as { x: number; y: number; width: number; height: number }), 'arrow 2 of step 2 ends in the second ethanal picture').toBe(true);
+  // SN2: hydroxide (picture 0) -> the carbon that holds Br, inside the haloalkane picture (picture 1)
+  await view(page).getByRole('button', { name: 'All mechanisms' }).click();
+  await openMechanism(page, SN2, false);
+  const sn2 = stepWith(page, 'Hydroxide attacks the carbon opposite the leaving group');
+  await expect(sn2.getByRole('img', { name: /Drawing of step 1/ })).toBeVisible({ timeout: 90_000 });
+  const three = await arrowEnds(sn2);
+  expect(inside(three.ends[0] as { x: number; y: number }, three.boxes[1] as { x: number; y: number; width: number; height: number }), 'arrow 1 of the SN2 step ends in the haloalkane picture').toBe(true);
 });
 
 test('D7: the first step shows within 1 s of opening the longest mechanism and scrolling the steps has no task over 50 ms (Chromium)', async ({ page, browserName }) => {
