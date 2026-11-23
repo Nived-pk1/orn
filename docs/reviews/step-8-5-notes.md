@@ -96,3 +96,4 @@ Commits: 5a6d5f9 base, d62575f, 08993ee, 817eb6e (M1, pushed), 1d41f00 (M2+M3), 
 - FULL CHROMIUM RUN (HEAD b263fea+, speed 0.63 s): `chromium` 460 passed / 1 failed (14.7 min), `chromium-serial` 31 passed (1.1 min). The one failure, app-essentials.spec.ts:224
   (the not-found screen, "This page does not exist." not shown in 30 s), is PRE-EXISTING: 20 repeats alone: this build 3 of 10 failed; the BASE commit 5a6d5f9 (own worktree and build) 4 of 20 failed.
   Not on the step T flaky list; to be added (Chromium). (Two earlier base runs of this check were invalid: the base preview was not up; discarded.)
+- DEPLOYED 2026-11-23 from e08c698: Study ff905dac, Studio bedef182; live specs Chromium 45/0, WebKit 44/0 (first Chromium run: csp:64 and equation:118 flaked, green on re-run); Access check ok.
