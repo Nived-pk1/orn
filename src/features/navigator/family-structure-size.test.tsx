@@ -59,6 +59,6 @@ describe('Structure box at the family standard (8.5e)', () => {
     expect(opened).toHaveBeenCalledTimes(3);
     expect(opened).toHaveBeenCalledWith(REF);
     expect(box.getAttribute('role')).toBe('button');
-    expect(box.getAttribute('aria-label')).toBe('Open Wide full size in the inspector');
+    expect(box.getAttribute('aria-label')).toBe('Open the structure of Wide full size in the inspector');
   });
 });

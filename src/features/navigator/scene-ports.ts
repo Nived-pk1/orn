@@ -20,7 +20,7 @@ function formulaOf(record: Loose): string | undefined {
   return text(record.formula) ?? text(record.formulaText) ?? text(generic?.formulaText) ?? text(generic?.generalFormula);
 }
 
-export function createScenePorts(state: CanonicalState, depictionKeyOfStructure?: (structure: StructureRep, bondPx?: number) => string, outsideNote?: string): ScenePorts {
+export function createScenePorts(state: CanonicalState, depictionKeyOfStructure?: (structure: StructureRep, bondPx?: number) => string, outsideNote?: string): ScenePorts & { readonly keyAt: (ref: RecordRef, bondPx?: number) => string | undefined } {
   const recordOf = (ref: RecordRef): Loose | undefined => (state.records[ref.kind] as Readonly<Record<string, Loose>>)[ref.id];
   const describe: ScenePorts['describe'] = (ref) => {
     const record = recordOf(ref);
@@ -30,14 +30,16 @@ export function createScenePorts(state: CanonicalState, depictionKeyOfStructure?
     const described: Described = { name: nameOf(record), ...(formula === undefined ? {} : { formula }), ...(charge === undefined ? {} : { charge }) };
     return described;
   };
+  const keyAt = (ref: RecordRef, bondPx?: number): string | undefined => {
+    if (depictionKeyOfStructure === undefined || ref.kind !== 'species') return undefined;
+    const structure = state.records.species[ref.id]?.structure;
+    return structure === undefined ? undefined : depictionKeyOfStructure(structure, bondPx);
+  };
   return {
     describe,
+    keyAt,
     // Only a species record with a structure has a depiction key (a class' generic structure is never drawn here).
-    depictionKeyOf(ref, bondPx?: number) {
-      if (depictionKeyOfStructure === undefined || ref.kind !== 'species') return undefined;
-      const structure = state.records.species[ref.id]?.structure;
-      return structure === undefined ? undefined : depictionKeyOfStructure(structure, bondPx);
-    },
+    depictionKeyOf: (ref) => keyAt(ref),
     // The overview is calm (ADR-037): no arrow text; the family page writes it, from core (`familyStudy`).
     arrowTextOf: () => undefined,
     ...(outsideNote === undefined ? {} : { outsideNote }),

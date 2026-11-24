@@ -78,7 +78,7 @@ export function EquationScheme(props: EquationSchemeProps) {
   const hang = { '--hang': `${hangOf([...equation.reactants, ...equation.products], names)}px` } as CSSProperties;
   const ports: TermPorts = { binding: props.binding, timers: props.timers, facts: props.facts, ...(props.context === undefined ? {} : { context: props.context }), ...(props.scale === undefined ? {} : { scale: props.scale }) };
   // a wrapping row shrinks as a whole to the floor before it wraps (8.5e E2 a); the hero's row is scaled from outside, the stacked layout has its own rows
-  const [row, rowScale] = useRowScale(width, !stacked && props.nowrap !== true);
+  const [row, rowScale] = useRowScale(width, !stacked && props.nowrap !== true, equation);
   return (
     <RowScaleContext.Provider value={rowScale}>
     <AvailableWidthContext.Provider value={props.nowrap === true ? undefined : width}>

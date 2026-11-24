@@ -64,7 +64,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
     return {
       describe: scene.describe,
-      keyOf: scene.depictionKeyOf,
+      keyOf: scene.keyAt,
       manager: binding?.manager,
       timers: ports.timers,
       layout,
