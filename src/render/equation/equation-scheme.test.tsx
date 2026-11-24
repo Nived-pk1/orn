@@ -30,12 +30,15 @@ function equation(reactants: EquationTerm[], products: EquationTerm[], over: Par
   return { outcomeId: 'out_x' as FullEquation['outcomeId'], outcomeIds: ['out_x' as FullEquation['outcomeId']], reactants, products, arrow: NO_ARROW, equilibrium: false, text: `${side(reactants)} → ${side(products)}`, ...over };
 }
 
+/** The `bondPx` of every key asked for (step 8.5e: labels are set apart from the bond length, so a key says the bond length it is shown at). */
+const bondPxAsked: (number | undefined)[] = [];
+
 /** Facts by the structure's text; a drawing answers a size by the structure's text too (a longer text is a wider drawing). */
 function rig(options: { facts?: Record<string, { heavyAtomCount?: number; carbonCount?: number } | 'down'>; failing?: Set<string> } = {}) {
   const timers = manualTimers();
   const asked: string[] = [];
   const port: DepictionPort = {
-    keyOf: (s, _size, mode) => `${s.value}#${mode ?? 'skeletal'}`,
+    keyOf: (s, size, mode) => (bondPxAsked.push(size.bondPx), `${s.value}#${mode ?? 'skeletal'}${size.bondPx === undefined ? '' : `@${size.bondPx}`}`),
     depict: (s) => {
       asked.push(s.value);
       return Promise.resolve(options.failing?.has(s.value) === true ? { ok: false as const, reason: 'invalid', message: 'x' } : { ok: true as const, svg: '<svg/>', width: 54 * Math.max(1, s.value.length - 1), height: 40 });
@@ -62,8 +65,8 @@ const BUTENE = term('Butene', { structure: smiles('CC=CC'), formula: 'C4H8' });
 const HYDROGEN = term('Hydrogen', { structure: smiles('[H][H]'), formula: 'H2' });
 const FACTS = { O: { heavyAtomCount: 1, carbonCount: 0 }, '[H][H]': { heavyAtomCount: 0, carbonCount: 0 }, 'CC=CC': { heavyAtomCount: 4, carbonCount: 4 }, 'CC#CC': { heavyAtomCount: 4, carbonCount: 4 } };
 
-function show(eq: FullEquation, r = rig({ facts: FACTS }), props: { names?: boolean; onNamesChange?: (names: boolean) => void; label?: string; layout?: 'row' | 'stacked' } = {}) {
-  const view = render(<EquationScheme equation={eq} binding={r.binding} timers={r.timers} facts={r.facts} names={props.names ?? true} {...(props.onNamesChange === undefined ? {} : { onNamesChange: props.onNamesChange })} {...(props.label === undefined ? {} : { label: props.label })} {...(props.layout === undefined ? {} : { layout: props.layout })} />);
+function show(eq: FullEquation, r = rig({ facts: FACTS }), props: { names?: boolean; onNamesChange?: (names: boolean) => void; label?: string; layout?: 'row' | 'stacked'; context?: 'equation' | 'hero'; scale?: number } = {}) {
+  const view = render(<EquationScheme equation={eq} binding={r.binding} timers={r.timers} facts={r.facts} names={props.names ?? true} {...(props.onNamesChange === undefined ? {} : { onNamesChange: props.onNamesChange })} {...(props.label === undefined ? {} : { label: props.label })} {...(props.layout === undefined ? {} : { layout: props.layout })} {...(props.context === undefined ? {} : { context: props.context })} {...(props.scale === undefined ? {} : { scale: props.scale })} />);
   return { ...view, r };
 }
 
@@ -259,7 +262,7 @@ describe('the phone scheme: the same terms stacked (equation step, part 6)', () 
     show(wide, rig());
     await settle();
     const free = screen.getByRole('img') as HTMLImageElement;
-    expect(free.getAttribute('data-bond-px')).toBe('56');
+    expect(free.getAttribute('data-bond-px')).toBe('34');
     expect(free.closest('[data-scrolls]')).toBeNull();
     cleanup();
     const spy = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(150);
@@ -267,7 +270,7 @@ describe('the phone scheme: the same terms stacked (equation step, part 6)', () 
       show(wide, rig(), { layout: 'stacked' });
       await settle();
       const image = screen.getByRole('img') as HTMLImageElement;
-      expect(image.getAttribute('data-bond-px')).toBe('39.2');
+      expect(image.getAttribute('data-bond-px')).toBe('28.9');
       const box = image.closest('[data-scrolls]') as HTMLElement;
       expect(box).not.toBeNull();
       expect(box.style.width).toBe('150px');
@@ -275,6 +278,24 @@ describe('the phone scheme: the same terms stacked (equation step, part 6)', () 
     } finally {
       spy.mockRestore();
     }
+  });
+
+  it('step 8.5e: a drawing is asked for at its context bond length (equation 34, hero 40), so its labels are set apart from the bond', async () => {
+    bondPxAsked.length = 0;
+    show(equation([term('Long', { structure: smiles('CC=CC') })], [term('Other')]), rig());
+    await settle();
+    expect(new Set(bondPxAsked)).toEqual(new Set([34]));
+    cleanup();
+    bondPxAsked.length = 0;
+    show(equation([term('Long', { structure: smiles('CC=CC') })], [term('Other')]), rig(), { context: 'hero' });
+    await settle();
+    expect(new Set(bondPxAsked)).toEqual(new Set([40]));
+  });
+
+  it('step 8.5e E2 c: in the hero row mode data-bond-px is the bond length as drawn, after the row scale', async () => {
+    show(equation([term('Long', { structure: smiles('CC=CC') })], [term('Other')]), rig(), { context: 'hero', scale: 0.9 });
+    await settle();
+    expect((screen.getByRole('img') as HTMLImageElement).getAttribute('data-bond-px')).toBe('36');
   });
 
   it('names under the drawings follow the switch, and the description is the old sentence, as in the row layout', async () => {

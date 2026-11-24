@@ -1,7 +1,7 @@
 /**
  * Step 8.5d: the owner's two cut-off cards (Pyrolysis of esters, Dieckmann condensation of dimethyl hexanedioate) in the Esters family page, on the
  * owner's real package (the newest in ..\fable-work\inputs, or ORN_ARROW_DATA), with Show all atoms off and on: nothing clipped, every drawing at a
- * bond length between the floor and the standard. Screenshots: screenshots/8.5d/owner-<card>-<mode>.png. Skipped when the package is not there.
+ * bond length between the floor and the standard. Screenshots: screenshots/8.5e/owner-<card>-<mode>.png. Skipped when the package is not there.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -10,7 +10,7 @@ import { expect, test } from './fixtures';
 import { chooseFile, expectPreview, leaveChapters, openApp } from './kit';
 import { palette, shotsDir } from './editor-kit';
 
-const PACKAGE = process.env.ORN_ARROW_DATA ?? resolve(process.cwd(), '../fable-work/inputs/ORN-real-data-2026-11-15.ornpkg');
+const PACKAGE = process.env.ORN_ARROW_DATA ?? resolve(process.cwd(), '../fable-work/inputs/ORN-real-data-2026-11-24.orn.json');
 const CARDS = [
   { slug: 'pyrolysis', title: /^Pyrolysis of esters/ },
   { slug: 'dieckmann', title: /^Dieckmann condensation of dimethyl hexanedioate/ },
@@ -22,7 +22,7 @@ async function problems(card: Locator): Promise<string[]> {
     const clips = (el: HTMLElement): boolean => /hidden|clip/.test(getComputedStyle(el).overflowX + getComputedStyle(el).overflowY) || /paint/.test(getComputedStyle(el).contain);
     for (const img of root.querySelectorAll<HTMLImageElement>('figure[data-substance-id] img')) {
       const bond = Number(img.getAttribute('data-bond-px'));
-      if (!(bond >= 39.14 && bond <= 56.06)) out.push(`bond ${bond} (${img.alt})`);
+      if (!(bond >= 23.74 && bond <= 28.06)) out.push(`bond ${bond} (${img.alt})`);
       const r = img.getBoundingClientRect();
       for (let up = img.parentElement; up !== null && up !== root; up = up.parentElement) {
         if (up.hasAttribute('data-scrolls')) break;
@@ -50,7 +50,7 @@ test("the owner's two cards on the real package: nothing clipped, Show all atoms
   test.setTimeout(280_000);
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
-  await chooseFile(page, { name: 'owner.ornpkg', mimeType: 'application/octet-stream', buffer: readFileSync(PACKAGE) });
+  await chooseFile(page, { name: 'owner.orn.json', mimeType: 'application/json', buffer: readFileSync(PACKAGE) });
   await expectPreview(page);
   await page.getByRole('dialog', { name: 'Import summary' }).getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByText(/^Imported \d+ records from /)).toBeVisible({ timeout: 120_000 });
@@ -72,6 +72,11 @@ test("the owner's two cards on the real package: nothing clipped, Show all atoms
       await card.scrollIntoViewIfNeeded();
       await expect(card.getByText('Drawing the structure…')).toHaveCount(0, { timeout: 60_000 });
       found.push(...(await problems(card)).map((p) => `${mode} ${one.slug}: ${p}`));
+      if (one.slug === 'dieckmann' && mode === 'Skeletal') {
+        // 8.5e acceptance: the skeletal reactant is at most 320 px wide in its card (with all atoms it may wrap or scroll, never clipped)
+        const reactant = card.getByRole('img', { name: /^Structure of Dimethyl hexanedioate/i }).first();
+        expect((await reactant.boundingBox())?.width ?? 9999, 'Dieckmann reactant width in px').toBeLessThanOrEqual(320);
+      }
       await card.screenshot({ path: `${shotsDir()}/8.5d/owner-${one.slug}-${mode === 'Full' ? 'all-atoms' : 'skeletal'}-${process.env.ORN_SHOT_TAG ?? 'after'}.png` });
     }
   }

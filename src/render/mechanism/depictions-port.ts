@@ -3,6 +3,7 @@
  * entry carries none of it): drawings at the fixed bond length, with atom positions when asked. A busy or cancelled answer is `unavailable`
  * (the engine words and Retry); every other refusal keeps its reason and message. Object URLs are the port's own (a browser API, made by the app).
  */
+import { SIZE_RULES } from '@/render/equation';
 import type { DepictionPort } from '@/render/svg';
 import type { StepDrawingPort } from './contracts';
 
@@ -11,7 +12,7 @@ export type DepictionsLike = Pick<DepictionPort, 'depict' | 'createUrl' | 'revok
 export function stepDrawingFrom(depictions: DepictionsLike, extras: { readonly retry?: () => void; readonly log?: (type: string, message: string) => void } = {}): StepDrawingPort {
   return {
     async depict(structure, positions) {
-      const answer = await depictions.depict(structure, { width: 120, height: 80, fixedScale: true, ...(positions ? { atomPositions: true } : {}) });
+      const answer = await depictions.depict(structure, { width: 120, height: 80, fixedScale: true, bondPx: SIZE_RULES.mechanism.standard, ...(positions ? { atomPositions: true } : {}) });
       if (!answer.ok) return { ok: false, reason: answer.reason === 'queue_full' || answer.reason === 'cancelled' ? 'unavailable' : answer.reason, message: answer.message };
       if (answer.width === undefined || answer.height === undefined) return { ok: false, reason: 'invalid', message: 'the drawing has no size' };
       return { ok: true, svg: answer.svg, width: answer.width, height: answer.height, ...(answer.atoms === undefined ? {} : { atoms: answer.atoms, bonds: answer.bonds ?? [], glyphs: answer.glyphs ?? [] }) };

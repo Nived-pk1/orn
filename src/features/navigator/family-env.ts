@@ -12,11 +12,13 @@ import type { NavigatorPorts, NavigatorStructures } from './contracts';
 export interface FamilyEnv {
   readonly describe: (ref: RecordRef) => { readonly name: string; readonly formula?: string } | undefined;
   /** The depiction key of a species with a structure, else undefined (a class, a reagent, a species without a structure). */
-  readonly keyOf: (ref: RecordRef) => string | undefined;
+  readonly keyOf: (ref: RecordRef, bondPx?: number) => string | undefined;
   readonly manager: DepictionManager | undefined;
   readonly timers: NavigatorPorts['timers'];
   /** The layout (the one `useLayoutMode` value, read by the page). Absent: desktop. A phone draws a reaction top to bottom. */
   readonly layout?: LayoutMode;
+  /** Opens a structure full size in the inspector (a drawing that scrolls sideways in its box is a button, step 8.5e). Absent: the box only scrolls. */
+  readonly openStructure?: (ref: RecordRef) => void;
   /** Opens a named reaction's page (7.4 D): the badge on the card becomes a button. Absent: the badge is plain text. */
   readonly openNamed?: (namedReactionId: string) => void;
   /** What the textbook equation needs (equation step, part 5): its drawings' binding, the chem facts and the Names setting. Absent: formulas and names only. */

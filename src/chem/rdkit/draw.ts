@@ -5,7 +5,7 @@
  * that case: it is drawn again from the SMILES. Highlights are by atom map number (`highlightAtomMaps`), found from the
  * canonical SMILES and RDKit's `_smilesAtomOutputOrder`; a map number that is not in the structure highlights nothing.
  */
-import { FIXED_SCALE_FACTOR } from '../contracts';
+import { FIXED_SCALE_BOND_UNITS, FIXED_SCALE_FACTOR, LABEL_GLYPH_PX } from '../contracts';
 import type { DrawDetails } from '../depiction-options';
 import { isTrap } from './errors';
 import { condensedLabels, groupLabels, withExplicitHydrogens } from './modes';
@@ -21,6 +21,8 @@ export function viewBoxSize(svg: string): { readonly width: number; readonly hei
   return Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0 ? { width, height } : undefined;
 }
 
+const GLYPH_PER_FONT = 0.73;
+
 export type DrawResult = { readonly ok: true; readonly svg: string } | { readonly ok: false; readonly error: string };
 
 /**
@@ -29,7 +31,9 @@ export type DrawResult = { readonly ok: true; readonly svg: string } | { readonl
  */
 export function svgOf(module: RdkitModule, mol: RdkitMol, details: DrawDetails, atoms: readonly number[]): DrawResult {
   // a fixed scale: the canvas fits the molecule (-1 x -1) and `scalingFactor` gives every drawing the same bond length
-  const size = details.fixedScale ? { width: -1, height: -1, scalingFactor: FIXED_SCALE_FACTOR, clearBackground: false } : { width: details.width, height: details.height };
+  // `bondPx`: labels set apart from the bond length: the font is fixed in SVG units so that, shown at `bondPx` per bond, a capital letter is LABEL_GLYPH_PX high (glyph = 0.73 of the font; RDKit reads `fixedFontSize` as a whole number, a fraction is ignored)
+  const font = details.bondPx > 0 ? { fixedFontSize: Math.round((LABEL_GLYPH_PX / GLYPH_PER_FONT) * FIXED_SCALE_BOND_UNITS / details.bondPx) } : {};
+  const size = details.fixedScale ? { width: -1, height: -1, scalingFactor: FIXED_SCALE_FACTOR, clearBackground: false, ...font } : { width: details.width, height: details.height };
   const base = atoms.length === 0 ? size : { ...size, atoms };
   if (details.mode === 'full') {
     const atomLabels = groupLabels(mol);

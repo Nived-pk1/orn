@@ -13,8 +13,9 @@ import { formulaRuns } from '@/render/scene';
 import type { StructureFactsPort } from './contracts';
 import { wordOf } from './hang';
 import { Runs } from './runs';
-import { nameBreaks, sizeDrawing } from './size-rule';
+import { nameBreaks, SIZE_RULES, sizeDrawing, type SizeContext } from './size-rule';
 import { useFactsInput } from './use-facts';
+import { useRowScaleValue } from './use-row-scale';
 import { useAvailableWidth } from './use-width';
 import styles from './equation-scheme.module.css';
 
@@ -22,6 +23,10 @@ export interface TermPorts {
   readonly binding: DepictionBinding | undefined;
   readonly timers: DepictionTimers;
   readonly facts: StructureFactsPort | undefined;
+  /** The size context (step 8.5e): `equation` (default) or `hero`; it sets the bond length the drawings are asked for and shown at. */
+  readonly context?: Extract<SizeContext, 'equation' | 'hero'>;
+  /** A scale the caller applies to the whole row from outside (the hero's row mode): `data-bond-px` reports the bond as drawn after it. */
+  readonly scale?: number;
 }
 
 const FormulaView = (props: { readonly formula: FormulaRepresentation }) => (
@@ -52,13 +57,18 @@ const Loading = () => <span className={styles.loading}>Drawing the structure…<
 
 function Drawing(props: { readonly structure: StructureRep; readonly name: string; readonly fallback: FormulaRepresentation | { readonly kind: 'name' }; readonly ports: TermPorts }) {
   const { binding, timers } = props.ports;
-  const key = binding?.keyOf(props.structure);
+  const context = props.ports.context ?? 'equation';
+  const key = binding?.keyOf(props.structure, SIZE_RULES[context].standard);
   const status = useRetryingDepiction(binding?.manager, key, timers);
   const available = useAvailableWidth();
+  const rowScale = useRowScaleValue();
   if (status.state === 'ready') {
     // one size rule (8.5d): the standard bond length; the box follows the drawing; narrower space: shrink to the floor, then the box scrolls
-    const fit = status.width === undefined || status.height === undefined ? undefined : sizeDrawing({ width: status.width, height: status.height }, 'equation', { available: available ?? Number.POSITIVE_INFINITY });
-    const img = <img src={status.url} alt={`Structure of ${props.name}`}{...(fit === undefined ? {} : { width: fit.width, height: fit.height, 'data-bond-px': fit.bondPx })} />;
+    const fit = status.width === undefined || status.height === undefined ? undefined : sizeDrawing({ width: status.width, height: status.height }, context, { available: available ?? Number.POSITIVE_INFINITY });
+    // the whole row's scale (E2 a) applies to a drawing that is not in a scrolling box; `data-bond-px` is the bond length as drawn, after every scale (E2 c)
+    const row = fit === undefined || fit.mode === 'scroll' ? 1 : rowScale;
+    const drawn = fit === undefined ? undefined : { width: Math.max(1, Math.round(fit.width * row)), height: Math.max(1, Math.round(fit.height * row)), bondPx: Math.round(fit.bondPx * row * (props.ports.scale ?? 1) * 100) / 100 };
+    const img = <img src={status.url} alt={`Structure of ${props.name}`}{...(drawn === undefined ? {} : { width: drawn.width, height: drawn.height, 'data-bond-px': drawn.bondPx })} />;
     return <DepictionSurface>{fit?.mode === 'scroll' ? <div className={styles.scrollBox} data-scrolls="" tabIndex={0} style={{ width: fit.boxWidth }}>{img}</div> : img}</DepictionSurface>;
   }
   // a drawing that cannot be made is the formula, else the name (never an empty box)

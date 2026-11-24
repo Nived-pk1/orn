@@ -64,10 +64,14 @@ export function FamilyPage(props: { readonly hubId: string }) {
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
     return {
       describe: scene.describe,
-      keyOf: scene.depictionKeyOf,
+      keyOf: scene.keyAt,
       manager: binding?.manager,
       timers: ports.timers,
       layout,
+      openStructure: (ref) => {
+        ports.ui.selection.getState().select({ kind: 'node', id: ref.id });
+        ports.ui.selection.getState().reveal();
+      },
       ...(ports.openNamedReaction === undefined ? {} : { openNamed: ports.openNamedReaction }),
       equation: { binding, facts: ports.facts, structures: ports.structures },
     };

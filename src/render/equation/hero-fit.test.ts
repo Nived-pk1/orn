@@ -7,16 +7,15 @@ describe('fitHero (step 8.1 review decision 0): the hero equation never wraps', 
     expect(fitHero({ available: 400, width: 380, height: 140, drawingHeight: 100 })).toEqual({ mode: 'row', scale: 1 });
   });
 
-  it('one row scaled down to the width while the scale stays at the floor of 70 % (8.5d)', () => {
-    const fit = fitHero({ available: 300, width: 400, height: 140, drawingHeight: 120 });
-    expect(fit).toEqual({ mode: 'row', scale: 0.75 });
-    expect(0.75).toBeGreaterThanOrEqual(FLOOR);
-    // the old 80 px rule would have stacked this (100 * 0.75 = 75); the one size rule keeps the drawings at 75 % of the standard
-    expect(fitHero({ available: 300, width: 400, height: 140, drawingHeight: 100 })).toEqual({ mode: 'row', scale: 0.75 });
+  it('one row scaled down to the width while the scale stays at the floor (85 %, 8.5e: labels stay 11 px or more)', () => {
+    const fit = fitHero({ available: 360, width: 400, height: 140, drawingHeight: 120 });
+    expect(fit).toEqual({ mode: 'row', scale: 0.9 });
+    expect(0.9).toBeGreaterThanOrEqual(FLOOR);
+    expect(fitHero({ available: 360, width: 400, height: 140, drawingHeight: 100 })).toEqual({ mode: 'row', scale: 0.9 });
   });
 
-  it('the vertical layout when the row would shrink below the floor of 70 %', () => {
-    expect(fitHero({ available: 240, width: 400, height: 140, drawingHeight: 100 })).toEqual({ mode: 'stacked' });
+  it('the vertical layout when the row would shrink below the floor of 85 %', () => {
+    expect(fitHero({ available: 300, width: 400, height: 140, drawingHeight: 100 })).toEqual({ mode: 'stacked' });
   });
 
   it('formulas only (no drawing): scaled down to 0.6, else vertical', () => {

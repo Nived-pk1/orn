@@ -4,6 +4,7 @@
  * molecule), shrunk to the floor when its row is too narrow, then a box that scrolls with a fade; never clipped. The name is under it. A class,
  * a reagent or a species without a structure shows its formula in the same box and its name under it; so does a structure that is not available.
  */
+import type { KeyboardEvent } from 'react';
 import type { RecordRef } from '@/core/schema';
 import { NameText, SIZE_RULES, sizeDrawing, useMeasuredWidth } from '@/render/equation';
 import { drawingFailed, useRetryingDepiction } from '@/render/svg';
@@ -16,7 +17,7 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
   const env = useFamilyEnv();
   const described = env.describe(props.substance);
   const name = described?.name ?? props.substance.id;
-  const key = props.writtenAs === undefined ? env.keyOf(props.substance) : undefined;
+  const key = props.writtenAs === undefined ? env.keyOf(props.substance, SIZE_RULES.family.standard) : undefined;
   const status = useRetryingDepiction(env.manager, key, env.timers);
   const [measure, available] = useMeasuredWidth('parent');
   const url = key !== undefined && status.state === 'ready' ? status.url : undefined;
@@ -25,10 +26,25 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
   // the drawing's size at the fixed scale is the size RDKit gave it; the rule decides its scale and its box
   const fit = url === undefined || status.state !== 'ready' || status.width === undefined || status.height === undefined ? undefined : sizeDrawing({ width: status.width, height: status.height }, 'family', { available: available ?? Number.POSITIVE_INFINITY });
   const rule = SIZE_RULES.family;
+  // a box that scrolls sideways shows only part of the structure: a click or a tap (Enter or Space) opens it full size in the inspector (step 8.5e, E2 b)
+  const open = fit?.mode === 'scroll' ? env.openStructure : undefined;
+  const opening =
+    open === undefined
+      ? {}
+      : {
+          role: 'button',
+          'aria-label': `Open the structure of ${name} full size in the inspector`,
+          onClick: () => open(props.substance),
+          onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            open(props.substance);
+          },
+        };
   const boxStyle = fit === undefined ? { minWidth: rule.minWidth, minHeight: rule.minHeight } : { width: fit.boxWidth, minHeight: fit.boxHeight };
   return (
     <figure ref={measure} className={scheme.substance} data-substance-id={props.substance.id} {...(props.writtenAs === undefined ? {} : { 'data-text-box': '' })}>
-      <div className={scheme.structure} style={boxStyle} {...(fit?.mode === 'scroll' ? { 'data-scrolls': '', tabIndex: 0 } : {})}>
+      <div className={scheme.structure} style={boxStyle} {...(fit?.mode === 'scroll' ? { 'data-scrolls': '', tabIndex: 0 } : {})} {...opening}>
         {url !== undefined ? (
           <img src={url} alt={`Structure of ${name}`} {...(fit === undefined ? {} : { width: fit.width, height: fit.height, 'data-bond-px': fit.bondPx })} />
         ) : (

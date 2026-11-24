@@ -22,14 +22,14 @@ function fake(answer: Awaited<ReturnType<DepictionsLike['depict']>>) {
 }
 
 describe('stepDrawingFrom', () => {
-  it('asks for a fixed-scale drawing, with atom positions when `positions` is true and without them when it is not', async () => {
+  it('asks for a fixed-scale drawing at the mechanism bond length (labels set apart from it, 8.5e), with atom positions when `positions` is true and without them when it is not', async () => {
     const { depictions, asked } = fake({ ok: true, svg: '<svg/>', width: 90, height: 60, atoms: [{ map: 1, x: 1, y: 2, rx: 3, ry: 4 }], bonds: [], glyphs: [{ x0: 0, x1: 4, y0: 1, y1: 5 }] });
     const port = stepDrawingFrom(depictions);
     expect(await port.depict(smiles, true)).toEqual({ ok: true, svg: '<svg/>', width: 90, height: 60, atoms: [{ map: 1, x: 1, y: 2, rx: 3, ry: 4 }], bonds: [], glyphs: [{ x0: 0, x1: 4, y0: 1, y1: 5 }] });
     await port.depict(smiles, false);
     expect(asked).toEqual([
-      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, atomPositions: true } },
-      { structure: smiles, size: { width: 120, height: 80, fixedScale: true } },
+      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, bondPx: 36, atomPositions: true } },
+      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, bondPx: 36 } },
     ]);
   });
 

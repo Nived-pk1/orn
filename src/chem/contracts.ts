@@ -74,6 +74,14 @@ export type StructureMode = (typeof STRUCTURE_MODES)[number];
  */
 export const FIXED_SCALE_FACTOR = 37;
 export const FIXED_SCALE_BOND_UNITS = 54;
+/**
+ * Labels set apart from the bond length (step 8.5e): a fixed-scale drawing asked with `bondPx` (the bond length the viewer shows it at, in px) has its atom
+ * labels drawn with RDKit's `fixedFontSize`, so a capital letter is `LABEL_GLYPH_PX` high AS SHOWN at every bond length. RDKit's glyph is 0.73 of the font size
+ * (measured, 8.5e notes).
+ */
+export const LABEL_GLYPH_PX = 13;
+export const MIN_BOND_PX = 8;
+export const MAX_BOND_PX = 200;
 
 export interface DepictionOptions {
   readonly width: number;
@@ -87,6 +95,8 @@ export interface DepictionOptions {
    * `height` are not used (they must still be valid) and the answer's `width` and `height` are the real size of the drawing.
    */
   readonly fixedScale?: boolean;
+  /** With `fixedScale`: the bond length the drawing will be shown at, in px (`MIN_BOND_PX` to `MAX_BOND_PX`, an integer); labels are then `LABEL_GLYPH_PX` high as shown. Absent: labels follow the bond. */
+  readonly bondPx?: number;
   /**
    * Step 8.5 (ADR-038 "As built 8.5"): also answer where every MAPPED atom is in this drawing and which mapped atoms are bonded
    * (`Depiction.atoms`, `Depiction.bonds`). Needs `fixedScale: true`, `showAtomMaps: false` and no highlights (a programmer error

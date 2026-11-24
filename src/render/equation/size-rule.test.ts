@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { FIXED_SCALE_BOND_UNITS } from '@/chem/contracts';
-import { FLOOR, formulaBreaks, MIN_LABEL_PX, nameBreaks, rowScale, SIZE_RULES, sizeDrawing } from './size-rule';
+import { FIXED_SCALE_BOND_UNITS, LABEL_GLYPH_PX } from '@/chem/contracts';
+import { FLOOR, formulaBreaks, MIN_LABEL_PX, nameBreaks, naturalRowWidth, rowScale, SIZE_RULES, sizeDrawing } from './size-rule';
 
 const UNITS = FIXED_SCALE_BOND_UNITS;
 /** A drawing `bonds` bonds wide and `rows` bonds tall, as RDKit gives it at the fixed scale. */
@@ -18,27 +18,32 @@ describe('sizeDrawing: ONE size rule (step 8.5d), branches a to d', () => {
   });
 
   it('(a) too wide for its own space but fits with the free space of its row: the box grows, the scale stays', () => {
-    const fit = sizeDrawing(natural(6), 'family', { available: 200, free: 200 });
+    const fit = sizeDrawing(natural(6), 'family', { available: 120, free: 100 });
     expect(fit.mode).toBe('grown');
     expect(fit.scale).toBe(1);
-    expect(fit.boxWidth).toBeGreaterThan(200);
+    expect(fit.boxWidth).toBeGreaterThan(120);
   });
 
-  it('(b) does not fit even with the free space: shrinks, never below the floor of 70 %', () => {
+  it('(b) does not fit even with the free space: shrinks, never below the floor', () => {
     const wide = 8 * family.standard;
-    const fit = sizeDrawing(natural(8), 'family', { available: wide * 0.8 });
+    const fit = sizeDrawing(natural(8), 'family', { available: wide * 0.9 });
     expect(fit.mode).toBe('shrunk');
-    expect(fit.scale).toBeCloseTo(0.8, 2);
-    expect(fit.bondPx).toBeCloseTo(family.standard * 0.8, 1);
-    expect(fit.boxWidth).toBeLessThanOrEqual(wide * 0.8 + 1);
+    expect(fit.scale).toBeCloseTo(0.9, 2);
+    expect(fit.bondPx).toBeCloseTo(family.standard * 0.9, 1);
+    expect(fit.boxWidth).toBeLessThanOrEqual(wide * 0.9 + 1);
   });
 
-  it('the floor is exactly 70 % and keeps labels at 11 px or more', () => {
-    expect(FLOOR).toBe(0.7);
+  it('the floor keeps labels at 11 px or more: labels are 13 px at the standard (step 8.5e), so the floor is 11 / 13 = 85 %', () => {
     expect(MIN_LABEL_PX).toBe(11);
-    const fit = sizeDrawing(natural(8), 'family', { available: 8 * family.standard * 0.7 });
+    expect(FLOOR).toBe(0.85);
+    expect(LABEL_GLYPH_PX * FLOOR).toBeGreaterThanOrEqual(MIN_LABEL_PX);
+    const fit = sizeDrawing(natural(8), 'family', { available: 8 * family.standard * FLOOR });
     expect(fit.mode).toBe('shrunk');
-    expect(fit.scale).toBeCloseTo(0.7, 3);
+    expect(fit.scale).toBeCloseTo(FLOOR, 3);
+  });
+
+  it('the standards of 8.5e: family 28, equation 34, hero 40, mechanism 36 px per bond', () => {
+    expect(Object.fromEntries(Object.entries(SIZE_RULES).map(([k, v]) => [k, v.standard]))).toEqual({ family: 28, equation: 34, hero: 40, mechanism: 36 });
   });
 
   it('(d) still wider at the floor: the floor scale inside its own box, which scrolls; never shrunk below the floor, never clipped', () => {
@@ -58,8 +63,9 @@ describe('sizeDrawing: ONE size rule (step 8.5d), branches a to d', () => {
     expect(fit.bondPx).toBe(family.standard);
   });
 
-  it('every context has a standard whose floor still draws labels at 11 px (a capital letter is 15.5 px at the 54-unit bond)', () => {
-    for (const rule of Object.values(SIZE_RULES)) expect((15.5 / UNITS) * rule.standard * FLOOR).toBeGreaterThanOrEqual(MIN_LABEL_PX);
+  it('labels are set apart from the bond length, so every context shows 13 px labels at its standard and at least 11 px at the floor', () => {
+    expect(Object.keys(SIZE_RULES)).toHaveLength(4);
+    expect(LABEL_GLYPH_PX * FLOOR).toBeGreaterThanOrEqual(MIN_LABEL_PX);
   });
 
   it('is never zero-sized and is deterministic', () => {
@@ -71,9 +77,23 @@ describe('sizeDrawing: ONE size rule (step 8.5d), branches a to d', () => {
 
 describe('rowScale: a row of drawings shrinks to the floor, then wraps (R2 b, c)', () => {
   it('fits: scale 1, no wrap', () => expect(rowScale(300, 400)).toEqual({ scale: 1, wrap: false }));
-  it('too wide but within the floor: shrinks, no wrap', () => expect(rowScale(500, 400)).toEqual({ scale: 0.8, wrap: false }));
+  it('too wide but within the floor: shrinks, no wrap', () => expect(rowScale(450, 400)).toEqual({ scale: 0.889, wrap: false }));
   it('beyond the floor: the floor scale and wrap', () => expect(rowScale(800, 400)).toEqual({ scale: FLOOR, wrap: true }));
   it('nothing measured: scale 1', () => expect(rowScale(0, 0)).toEqual({ scale: 1, wrap: false }));
+});
+
+describe('naturalRowWidth: the whole row at scale 1 from what is on the screen now (8.5e E2 a)', () => {
+  it('at scale 1 it is the sum of the parts and the gaps', () => {
+    expect(naturalRowWidth({ parts: [100, 40, 100], drawings: 200, gap: 10 }, 1)).toBe(100 + 40 + 100 + 20);
+  });
+  it('at a smaller scale the drawings are grown back to scale 1, the rest stays', () => {
+    expect(naturalRowWidth({ parts: [90, 40, 90], drawings: 180, gap: 10 }, 0.9)).toBeCloseTo(90 + 40 + 90 + 20 + 20, 5);
+  });
+  it('the whole row shrinks together to the floor before it wraps', () => {
+    const total = naturalRowWidth({ parts: [300, 60, 300], drawings: 600, gap: 10 }, 1);
+    expect(rowScale(total, 612)).toEqual({ scale: 0.9, wrap: false });
+    expect(rowScale(total, 500).wrap).toBe(true);
+  });
 });
 
 describe('formulaBreaks and nameBreaks: where text may wrap (R3)', () => {

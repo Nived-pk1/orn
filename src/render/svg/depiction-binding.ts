@@ -18,7 +18,7 @@ import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer, type Depi
 import type { DepictionTimers } from './use-depiction-retry';
 
 /** The area a drawing is asked at; `fixedScale`: the drawing has the fixed bond length of the chem module and `width` / `height` are not used (equation step, part 5). */
-type Area = { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean };
+type Area = { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean; readonly bondPx?: number };
 
 /** What the binding needs from the depiction service (the navigator's and the inspector's ports have exactly this). */
 export interface DepictionPort {
@@ -42,8 +42,8 @@ export interface DepictionPort {
 export const MAX_DEPICTION_LOOKUP = 2_000;
 
 export interface DepictionBinding {
-  /** The key of a structure at the binding's area size; remembers it for the fetch. */
-  readonly keyOf: (structure: StructureRep) => string;
+  /** The key of a structure at the binding's area size; remembers it for the fetch. `bondPx`: the bond length it will be shown at (labels are then set apart from it, step 8.5e). */
+  readonly keyOf: (structure: StructureRep, bondPx?: number) => string;
   readonly manager: DepictionManager;
   /** Keys the lookup holds now. */
   readonly lookupSize: () => number;
@@ -53,10 +53,10 @@ const BUSY_REASONS: ReadonlySet<string> = new Set(['queue_full', 'cancelled']);
 
 export function createDepictionBinding(port: DepictionPort, timers: DepictionTimers, area: Area): DepictionBinding {
   // the mode is kept with the structure: the key says which mode it was made in, and the fetch must draw in that one
-  const lookup = new Map<string, { readonly structure: StructureRep; readonly mode: StructureMode }>();
-  const remember = (key: string, structure: StructureRep, mode: StructureMode): void => {
+  const lookup = new Map<string, { readonly structure: StructureRep; readonly mode: StructureMode; readonly area: Area }>();
+  const remember = (key: string, structure: StructureRep, mode: StructureMode, at: Area): void => {
     lookup.delete(key);
-    lookup.set(key, { structure, mode });
+    lookup.set(key, { structure, mode, area: at });
     while (lookup.size > MAX_DEPICTION_LOOKUP) lookup.delete(lookup.keys().next().value as string);
   };
   // Listening for "the engine is ready" costs a subscription, so it is made only while a request was asked before the engine was ready, and
@@ -75,7 +75,7 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
     const known = lookup.get(key);
     // A key that left the lookup is not in the drawing any more: not an answer about the structure, so not cached.
     if (known === undefined) return { ok: false, reason: DEPICTION_BUSY };
-    const answer = await port.depict(known.structure, area, known.mode);
+    const answer = await port.depict(known.structure, known.area, known.mode);
     if (answer.ok) return { ok: true, svg: answer.svg, ...(answer.width === undefined || answer.height === undefined ? {} : { width: answer.width, height: answer.height }) };
     return { ok: false, reason: BUSY_REASONS.has(answer.reason) ? DEPICTION_BUSY : answer.reason };
   };
@@ -91,10 +91,11 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
   // after a successful retry of the chemistry engine every structure that was unavailable is asked for again when it is next shown
   port.recovered?.(() => manager.forgetUnavailable());
   return {
-    keyOf(structure) {
+    keyOf(structure, bondPx) {
       const mode = port.mode?.() ?? 'skeletal';
-      const key = port.keyOf(structure, area, mode);
-      remember(key, structure, mode);
+      const at = bondPx === undefined ? area : { ...area, bondPx };
+      const key = port.keyOf(structure, at, mode);
+      remember(key, structure, mode, at);
       return key;
     },
     manager: { ...manager, cancel: (key) => (cancel(key), port.cancel(key)) },

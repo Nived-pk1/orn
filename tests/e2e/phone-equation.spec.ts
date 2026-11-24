@@ -41,11 +41,11 @@ async function expectFits(page: Page, card: Locator, scheme: Locator): Promise<v
     expect(found.x, 'inside the card on the left').toBeGreaterThanOrEqual(cardBox.x - 0.5);
     expect(found.x + found.width, 'inside the card on the right').toBeLessThanOrEqual(right);
   }
-  // the one size rule (8.5d) replaces the 140 px cap: the standard bond length, down to the floor of 70 % (39.2 px), never more
+  // the one size rule (8.5d) replaces the 140 px cap: the equation's bond length (34 px), down to the floor of 85 % (28.9 px), never more (8.5e)
   for (const image of await scheme.locator('img').all()) {
     const bond = Number(await image.getAttribute('data-bond-px'));
-    expect(bond, 'a drawing has a bond length between the floor and the standard').toBeGreaterThanOrEqual(39.14);
-    expect(bond).toBeLessThanOrEqual(56.06);
+    expect(bond, 'a drawing has a bond length between the floor and the standard').toBeGreaterThanOrEqual(28.84);
+    expect(bond).toBeLessThanOrEqual(34.06);
   }
 }
 

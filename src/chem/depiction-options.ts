@@ -2,7 +2,7 @@
  * Validation of `DepictionOptions` (pure; used by the adapter and by the chem worker's host at the wire, where a bad value is
  * `BAD_REQUEST`). `DrawDetails` is what a depiction depends on, in a fixed order: it is also the options part of the cache key.
  */
-import { STRUCTURE_MODES, type DepictionOptions, type StructureMode } from './contracts';
+import { MAX_BOND_PX, MIN_BOND_PX, STRUCTURE_MODES, type DepictionOptions, type StructureMode } from './contracts';
 
 export const MIN_DEPICTION_SIZE = 16;
 export const MAX_DEPICTION_SIZE = 4_096;
@@ -15,6 +15,8 @@ export interface DrawDetails {
   readonly highlightAtomMaps: readonly number[];
   readonly mode: StructureMode;
   readonly fixedScale: boolean;
+  /** 0: labels follow the bond. */
+  readonly bondPx: number;
   readonly atomPositions: boolean;
 }
 
@@ -34,7 +36,9 @@ export function depictionDetails(options: DepictionOptions): DrawDetails {
   if (!(STRUCTURE_MODES as readonly unknown[]).includes(mode)) throw new RangeError(`depiction mode must be one of ${STRUCTURE_MODES.join(', ')}`);
   const fixedScale = options.fixedScale ?? false;
   if (typeof fixedScale !== 'boolean') throw new RangeError('depiction fixedScale must be true or false');
-  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale, atomPositions: options.atomPositions === true };
+  const bondPx = options.bondPx ?? 0;
+  if (bondPx !== 0 && (!fixedScale || !Number.isInteger(bondPx) || bondPx < MIN_BOND_PX || bondPx > MAX_BOND_PX)) throw new RangeError(`depiction bondPx must be an integer from ${MIN_BOND_PX} to ${MAX_BOND_PX} and needs fixedScale`);
+  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale, bondPx, atomPositions: options.atomPositions === true };
 }
 
 /**

@@ -15,6 +15,7 @@ import { NamesSwitch } from './names-switch';
 import { SchemeArrow } from './scheme-arrow';
 import { SchemeDownArrow } from './scheme-down-arrow';
 import { TermColumn, type TermPorts } from './term-view';
+import { RowScaleContext, useRowScale } from './use-row-scale';
 import { AvailableWidthContext, useMeasuredWidth } from './use-width';
 import styles from './equation-scheme.module.css';
 
@@ -40,6 +41,10 @@ export interface EquationSchemeProps {
   readonly noProducts?: string;
   /** False (the sheet's peek): the arrow carries the reagent names only, no conditions line under it (step 8.4e, C3). Default: both. */
   readonly conditions?: boolean;
+  /** `hero`: the inspector's hero (bond length 40); default `equation` (34). */
+  readonly context?: 'equation' | 'hero';
+  /** The scale the caller gives the whole row from outside (the hero's row mode); `data-bond-px` reports the bond as drawn after it. */
+  readonly scale?: number;
 }
 
 function Side(props: { readonly terms: FullEquation['reactants']; readonly names: boolean; readonly ports: TermPorts; readonly empty: string }) {
@@ -71,8 +76,11 @@ export function EquationScheme(props: EquationSchemeProps) {
   const stacked = props.layout === 'stacked';
   const [measure, width] = useMeasuredWidth('self');
   const hang = { '--hang': `${hangOf([...equation.reactants, ...equation.products], names)}px` } as CSSProperties;
-  const ports: TermPorts = { binding: props.binding, timers: props.timers, facts: props.facts };
+  const ports: TermPorts = { binding: props.binding, timers: props.timers, facts: props.facts, ...(props.context === undefined ? {} : { context: props.context }), ...(props.scale === undefined ? {} : { scale: props.scale }) };
+  // a wrapping row shrinks as a whole to the floor before it wraps (8.5e E2 a); the hero's row is scaled from outside, the stacked layout has its own rows
+  const [row, rowScale] = useRowScale(width, !stacked && props.nowrap !== true, equation);
   return (
+    <RowScaleContext.Provider value={rowScale}>
     <AvailableWidthContext.Provider value={props.nowrap === true ? undefined : width}>
     <div ref={measure} className={styles.scheme} role="group" aria-label={props.label ?? 'Full equation'} aria-describedby={descriptionId} data-equation-scheme="" data-layout={stacked ? 'stacked' : 'row'} style={hang}>
       <span id={descriptionId} className={styles.sr}>
@@ -94,7 +102,7 @@ export function EquationScheme(props: EquationSchemeProps) {
           </div>
         </div>
       ) : (
-        <div className={props.nowrap === true ? `${styles.row} ${styles.rowNoWrap}` : styles.row} {...(props.nowrap === true ? { 'data-nowrap': '' } : {})}>
+        <div ref={row} className={props.nowrap === true ? `${styles.row} ${styles.rowNoWrap}` : styles.row} {...(props.nowrap === true ? { 'data-nowrap': '' } : {})}>
           <Side terms={equation.reactants} names={names} ports={ports} empty="nothing listed" />
           <span className={styles.arrowCell}>
             <SchemeArrow arrow={props.conditions === false ? { above: equation.arrow.above, below: [] } : equation.arrow} equilibrium={equation.equilibrium} />
@@ -104,5 +112,6 @@ export function EquationScheme(props: EquationSchemeProps) {
       )}
     </div>
     </AvailableWidthContext.Provider>
+    </RowScaleContext.Provider>
   );
 }
