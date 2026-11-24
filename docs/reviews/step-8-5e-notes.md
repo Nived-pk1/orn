@@ -16,3 +16,8 @@ SIZE: base (36978cb, fresh Studio build) 343,144; now 343,803 = +659 (limit +300
 Biggest additions in the entry chunk: term-view (context, row scale, bond-px), family-structure (open box button), use-row-scale, size-rule, binding bondPx.
 Options for the reviewer: (1) raise the limit, (2) drop E2 b (keyboard/role button), (3) move the equation scheme out of the entry chunk.
 NOT DONE: Study fresh size, full e2e rounds (new specs size-rule-extra never run), E3 Firefox, E4 report, screenshots, docs rows, deploy, push.
+
+## RULING (reviewer, after the stop): floor 85 % accepted; limit +800 per edition; trims reverted (fb8a9b5); E2b keeps keyboard and role.
+Phase 9 lazy lever: the equation scheme's modules (src/render/equation: scheme, term view, hang, hero-fit, names switch, runs, arrows, size rule, use-facts,
+use-row-scale, use-width) are in the ENTRY chunk (build-report/studio.json, 518 modules in the index chunk). Minified separately and gzipped together: about 4,629 bytes
+(13,104 bytes minified). Moving them behind the lazy views that draw them would free about that much of the initial JS.
