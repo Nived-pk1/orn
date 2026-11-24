@@ -108,14 +108,16 @@ describe('a drawn step', () => {
     expect((h as number) > (w as number) * 0.6).toBe(true);
   });
 
-  it('scales to its width down to 0.6 and then scrolls sideways inside its own box (min and max width from the picture size)', async () => {
+  it('one size rule (8.5d): the standard bond length when there is room, down to the floor of 70 %, then scrolls sideways inside its own box', async () => {
     const { port } = tool(MAPS);
     const { container } = render(<StepDrawing step={step()} port={port} orientation="row" />);
     await drawing();
     const svg = container.querySelector('svg') as SVGSVGElement;
     const natural = Number((svg.getAttribute('viewBox') ?? '').split(' ')[2]);
-    expect(svg.style.maxWidth).toBe(`${natural}px`);
-    expect(svg.style.minWidth).toBe(`${Math.round(natural * 0.6)}px`);
+    const widest = Math.round((natural * 56) / 54);
+    expect(svg.style.maxWidth).toBe(`${widest}px`);
+    expect(svg.style.minWidth).toBe(`${Math.round(widest * 0.7)}px`);
+    expect(svg.getAttribute('data-bond-px')).toBe('56');
     expect(container.querySelector('[data-drawing-scroll]')).not.toBeNull();
   });
 

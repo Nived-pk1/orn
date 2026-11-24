@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { RecordRef } from '@/core/schema';
 import { useStructureMode } from '@/render/svg';
 import { useLayoutMode } from '@/ui/hooks';
-import { depictionBindingOf } from './depictions';
+import { equationBindingOf } from './depictions';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
 import { Structure } from './family-structure';
 import { useNavigator } from './navigator-context';
@@ -20,7 +20,7 @@ export function SubstanceHost(props: { readonly substance: RecordRef }) {
   const structureMode = useStructureMode(ports.depictions);
   const [version, setVersion] = useState(0);
   useEffect(() => ports.store.subscribe((changes) => touchOf(changes) !== 'none' && setVersion((v) => v + 1)), [ports]);
-  const binding = depictionBindingOf(ports);
+  const binding = equationBindingOf(ports);
   const env = useMemo<FamilyEnv>(() => {
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
     return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers, layout };

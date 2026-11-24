@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { reactionCard } from '@/core/graph';
 import { useStructureMode } from '@/render/svg';
 import { useLayoutMode } from '@/ui/hooks';
-import { depictionBindingOf, equationBindingOf } from './depictions';
+import { equationBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
 import { useNavigator } from './navigator-context';
@@ -61,10 +61,10 @@ export function ReactionCardHost(props: ReactionCardHostProps) {
   );
   // "Extra" / "Background" on every card, as on the family page (step 8.4d, E4)
   const chip = useScope(ports, version).chipOf(props.reactionId);
-  const binding = depictionBindingOf(ports);
+  const binding = equationBindingOf(ports);
   const env = useMemo<FamilyEnv>(() => {
     const scene = createScenePorts(ports.store.getState(), binding?.keyOf);
-    return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers, layout, ...(ports.openNamedReaction === undefined ? {} : { openNamed: ports.openNamedReaction }), equation: { binding: equationBindingOf(ports), facts: ports.facts, structures: ports.structures } };
+    return { describe: scene.describe, keyOf: scene.depictionKeyOf, manager: binding?.manager, timers: ports.timers, layout, ...(ports.openNamedReaction === undefined ? {} : { openNamed: ports.openNamedReaction }), equation: { binding, facts: ports.facts, structures: ports.structures } };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `structureMode` is read through the binding; it only has to make a new env; `version` re-makes it when the data moved
   }, [ports, binding, layout, structureMode, version]);
   if ('missing' in card) return <>{props.fallback(card.reason)}</>;

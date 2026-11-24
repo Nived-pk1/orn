@@ -10,12 +10,12 @@ import { Fragment, useId, type CSSProperties } from 'react';
 import type { EquationShape, FullEquation } from '@/core/graph';
 import type { DepictionBinding, DepictionTimers } from '@/render/svg';
 import type { StructureFactsPort } from './contracts';
-import { STACKED_MAX_DRAWING_WIDTH } from './contracts';
 import { hangOf } from './hang';
 import { NamesSwitch } from './names-switch';
 import { SchemeArrow } from './scheme-arrow';
 import { SchemeDownArrow } from './scheme-down-arrow';
 import { TermColumn, type TermPorts } from './term-view';
+import { AvailableWidthContext, useMeasuredWidth } from './use-width';
 import styles from './equation-scheme.module.css';
 
 export interface EquationSchemeProps {
@@ -32,7 +32,6 @@ export interface EquationSchemeProps {
   readonly onNamesChange?: (names: boolean) => void;
   /** The group's name: "Full equation" when absent; an outcome's own label when the reaction has several. */
   readonly label?: string;
-  readonly maxDrawingWidth?: number;
   /** `row` (default): terms and arrow in one wrapping row. `stacked` (the phone): reactants, the down arrow, products, one above the other. */
   readonly layout?: 'row' | 'stacked';
   /** The row never wraps (the inspector's hero measures it and scales or stacks it instead, step 8.1). */
@@ -70,11 +69,12 @@ export function EquationScheme(props: EquationSchemeProps) {
   const { equation, names } = props;
   const descriptionId = useId();
   const stacked = props.layout === 'stacked';
-  const maxDrawingWidth = props.maxDrawingWidth ?? (stacked ? STACKED_MAX_DRAWING_WIDTH : undefined);
+  const [measure, width] = useMeasuredWidth('self');
   const hang = { '--hang': `${hangOf([...equation.reactants, ...equation.products], names)}px` } as CSSProperties;
-  const ports: TermPorts = { binding: props.binding, timers: props.timers, facts: props.facts, ...(maxDrawingWidth === undefined ? {} : { maxDrawingWidth }) };
+  const ports: TermPorts = { binding: props.binding, timers: props.timers, facts: props.facts };
   return (
-    <div className={styles.scheme} role="group" aria-label={props.label ?? 'Full equation'} aria-describedby={descriptionId} data-equation-scheme="" data-layout={stacked ? 'stacked' : 'row'} style={hang}>
+    <AvailableWidthContext.Provider value={props.nowrap === true ? undefined : width}>
+    <div ref={measure} className={styles.scheme} role="group" aria-label={props.label ?? 'Full equation'} aria-describedby={descriptionId} data-equation-scheme="" data-layout={stacked ? 'stacked' : 'row'} style={hang}>
       <span id={descriptionId} className={styles.sr}>
         {equation.text}
       </span>
@@ -103,5 +103,6 @@ export function EquationScheme(props: EquationSchemeProps) {
         </div>
       )}
     </div>
+    </AvailableWidthContext.Provider>
   );
 }

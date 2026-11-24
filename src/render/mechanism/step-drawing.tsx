@@ -4,6 +4,8 @@
  * URLs from the port): no markup from outside is inserted. The picture is `role="img"` with a text alternative that points at the step's
  * details; when a step cannot be drawn it says why in words. All geometry is `src/render/mechanism/geometry` (pure).
  */
+import { FIXED_SCALE_BOND_UNITS } from '@/chem/contracts';
+import { FLOOR, SIZE_RULES } from '@/render/equation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { composeStep, type CurvedArrow, type Placed, type Point } from './geometry';
 import type { DrawableStep, StepDrawingPort } from './contracts';
@@ -124,7 +126,10 @@ export function StepDrawing(props: StepDrawingProps): ReactNode {
   const composition = composeStep({ before: state.before.map((s) => s.drawn), after: state.after.map((s) => s.drawn), orientation, reversible: step.reversible, movements: step.electronMovements });
   if (!composition.ok) return <p className={styles.words}>{NO_DRAWING_WORDS.missingAtoms}</p>;
   const everyone: readonly Shown[] = [...state.before, ...state.after];
+  // the one size rule (8.5d): the standard bond length when there is room, down to the floor, then the box scrolls sideways
+  const standard = SIZE_RULES.mechanism.standard / FIXED_SCALE_BOND_UNITS;
   const natural = Math.round(composition.width);
+  const widest = Math.round(natural * standard);
   return (
     <figure className={styles.drawing} data-step-drawing="" data-orientation={orientation}>
       <div className={styles.scroll} data-drawing-scroll="">
@@ -133,7 +138,8 @@ export function StepDrawing(props: StepDrawingProps): ReactNode {
           role="img"
           aria-label={`Drawing of step ${step.number}; the details are below.`}
           viewBox={`0 0 ${natural} ${Math.round(composition.height)}`}
-          style={{ width: '100%', maxWidth: `${natural}px`, minWidth: `${Math.round(natural * 0.6)}px` }}
+          data-bond-px={SIZE_RULES.mechanism.standard}
+          style={{ width: '100%', maxWidth: `${widest}px`, minWidth: `${Math.round(widest * FLOOR)}px` }}
         >
           {composition.items.map((item) => (
             <Species key={item.index} item={item} shown={everyone[item.index] as Shown} />

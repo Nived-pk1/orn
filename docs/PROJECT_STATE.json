@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-23",
+  "lastUpdated": "2026-11-24",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-18",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "8.5d (C3, one size rule; step 8.5c closed PARTLY 2026-11-24, docs/PROGRESS.md Step 8.5c), then 8.6",
-  "nextStepTitle": "Step 8.5c PARTLY DONE 2026-11-24 (docs/PROGRESS.md \"Step 8.5c\"; ADR-038 \"A4\"): C0 map pair arrows on their boxes (hotfix), C1 arrows and dots clear of labels, C2 tests, C4 future rows and the family-patterns report; C3 NOT DONE. Next: 8.5d one size rule for every structure drawing, then 8.6 export pictures and print stylesheet.",
+  "nextStep": "8.6 (export pictures and print stylesheet); step 8.5d closed 2026-11-24, docs/PROGRESS.md Step 8.5d",
+  "nextStepTitle": "Step 8.5d DONE 2026-11-24 (docs/PROGRESS.md \"Step 8.5d\"; UI_ARCHITECTURE section 16): one size rule for structure drawings, formulas and names (56 px standard, floor 70 %). Next: 8.6 export pictures and print stylesheet.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

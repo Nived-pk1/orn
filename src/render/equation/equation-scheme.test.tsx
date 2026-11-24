@@ -6,7 +6,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ArrowText, EquationTerm, FullEquation, TermSubstance } from '@/core/graph';
 import type { StructureRep } from '@/core/schema';
 import { createDepictionBinding, type DepictionPort } from '@/render/svg';
@@ -254,18 +254,27 @@ describe('the phone scheme: the same terms stacked (equation step, part 6)', () 
     expect(text.querySelector('[data-equation-below]')?.textContent).toBe('quinoline');
   });
 
-  it('drawings are at most 140 px wide (scaled down whole, the bond with them); the row layout keeps its 220 px', async () => {
+  it('one size rule (8.5d): the standard bond length; in a space narrower than the drawing at the floor, the floor scale in a scrolling box, never clipped', async () => {
     const wide = equation([term('Long', { structure: smiles('CC=CCCCCCCC') })], [term('Other')]);
-    show(wide, rig(), { layout: 'stacked' });
-    await settle();
-    const image = screen.getByRole('img') as HTMLImageElement;
-    expect(Number(image.getAttribute('width'))).toBeLessThanOrEqual(140);
-    cleanup();
     show(wide, rig());
     await settle();
-    const row = screen.getByRole('img') as HTMLImageElement;
-    expect(Number(row.getAttribute('width'))).toBeGreaterThan(140);
-    expect(Number(row.getAttribute('width'))).toBeLessThanOrEqual(220);
+    const free = screen.getByRole('img') as HTMLImageElement;
+    expect(free.getAttribute('data-bond-px')).toBe('56');
+    expect(free.closest('[data-scrolls]')).toBeNull();
+    cleanup();
+    const spy = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(150);
+    try {
+      show(wide, rig(), { layout: 'stacked' });
+      await settle();
+      const image = screen.getByRole('img') as HTMLImageElement;
+      expect(image.getAttribute('data-bond-px')).toBe('39.2');
+      const box = image.closest('[data-scrolls]') as HTMLElement;
+      expect(box).not.toBeNull();
+      expect(box.style.width).toBe('150px');
+      expect(Number(image.getAttribute('width'))).toBeGreaterThan(150);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('names under the drawings follow the switch, and the description is the old sentence, as in the row layout', async () => {

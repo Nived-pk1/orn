@@ -1,11 +1,11 @@
 /**
- * One substance of a card, drawn as in a textbook (step 5.5b): its structure at a FIXED size (an `<img>` with the object URL the depiction
- * manager made; never inlined markup), the name under it. A class, a reagent or a species without a structure shows its formula in the
- * same box and its name under it; so does a structure that is not available (the title says so). The box has the same size in every state, so
- * a card does not change height when a structure arrives.
+ * One substance of a card, drawn as in a textbook (step 5.5b) at the ONE size rule (step 8.5d): the structure at the family standard bond length
+ * (an img with the object URL the depiction manager made; never inlined markup), the box following the drawing (a minimum box for a tiny
+ * molecule), shrunk to the floor when its row is too narrow, then a box that scrolls with a fade; never clipped. The name is under it. A class,
+ * a reagent or a species without a structure shows its formula in the same box and its name under it; so does a structure that is not available.
  */
 import type { RecordRef } from '@/core/schema';
-import { STRUCTURE_AREA } from '@/render/scene';
+import { NameText, SIZE_RULES, sizeDrawing, useMeasuredWidth } from '@/render/equation';
 import { drawingFailed, useRetryingDepiction } from '@/render/svg';
 import { useFamilyEnv } from './family-env';
 import { BoxFormula, FormulaText } from './family-text';
@@ -18,16 +18,19 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
   const name = described?.name ?? props.substance.id;
   const key = props.writtenAs === undefined ? env.keyOf(props.substance) : undefined;
   const status = useRetryingDepiction(env.manager, key, env.timers);
-  // a phone sizes the box in CSS (a share of the width, the same aspect); the desktop keeps its fixed pixels
-  const boxStyle = env.layout === 'phone' ? undefined : { width: STRUCTURE_AREA.width, height: STRUCTURE_AREA.height };
+  const [measure, available] = useMeasuredWidth('parent');
   const url = key !== undefined && status.state === 'ready' ? status.url : undefined;
   // a structure that failed only because the engine was not ready yet still reads "Drawing the structure…" (it is asked again when ready)
   const unavailable = key !== undefined && drawingFailed(status);
+  // the drawing's size at the fixed scale is the size RDKit gave it; the rule decides its scale and its box
+  const fit = url === undefined || status.state !== 'ready' || status.width === undefined || status.height === undefined ? undefined : sizeDrawing({ width: status.width, height: status.height }, 'family', { available: available ?? Number.POSITIVE_INFINITY });
+  const rule = SIZE_RULES.family;
+  const boxStyle = fit === undefined ? { minWidth: rule.minWidth, minHeight: rule.minHeight } : { width: fit.boxWidth, minHeight: fit.boxHeight };
   return (
-    <figure className={scheme.substance} data-substance-id={props.substance.id} {...(props.writtenAs === undefined ? {} : { 'data-text-box': '' })}>
-      <div className={scheme.structure} {...(boxStyle === undefined ? {} : { style: boxStyle })}>
+    <figure ref={measure} className={scheme.substance} data-substance-id={props.substance.id} {...(props.writtenAs === undefined ? {} : { 'data-text-box': '' })}>
+      <div className={scheme.structure} style={boxStyle} {...(fit?.mode === 'scroll' ? { 'data-scrolls': '', tabIndex: 0 } : {})}>
         {url !== undefined ? (
-          <img src={url} alt={`Structure of ${name}`} width={STRUCTURE_AREA.width} height={STRUCTURE_AREA.height} />
+          <img src={url} alt={`Structure of ${name}`} {...(fit === undefined ? {} : { width: fit.width, height: fit.height, 'data-bond-px': fit.bondPx })} />
         ) : (
           <span className={scheme.structureName} {...(unavailable ? { title: 'The structure could not be drawn' } : {})}>
             {key !== undefined && !unavailable ? <span className={scheme.loadingMark}>Drawing the structure…</span> : null}
@@ -46,7 +49,9 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
         )}
       </div>
       <figcaption className={scheme.caption}>
-        <span>{name}</span>
+        <span>
+          <NameText name={name} />
+        </span>
         {props.caption === undefined ? null : <span className={scheme.selectivity}>{props.caption}</span>}
       </figcaption>
     </figure>

@@ -15,7 +15,7 @@ import { useLayoutMode } from '@/ui/hooks';
 import { useScopeOnly } from '@/ui/state';
 import { HiddenLine } from '@/ui/study-page';
 import { Button, EmptyState, Skeleton, VirtualList, type VirtualListHandle } from '@/ui/primitives';
-import { depictionBindingOf, equationBindingOf } from './depictions';
+import { equationBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
 import { FamilyHeader } from './family-header';
@@ -52,7 +52,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
     const active = document.activeElement;
     if (active === null || active === document.body) page.current?.querySelector<HTMLElement>('[role="toolbar"] button')?.focus({ preventScroll: true });
   }, [hubId]);
-  const binding = depictionBindingOf(ports);
+  const binding = equationBindingOf(ports);
   // a change of the Structures setting makes every key again, in the new mode (the binding reads the mode when it makes a key)
   const structureMode = useStructureMode(ports.depictions);
   // "Only <exam>" (step 8.3b, B2): the cards of reactions outside the exam are left out, with one quiet line saying how many
@@ -69,7 +69,7 @@ export function FamilyPage(props: { readonly hubId: string }) {
       timers: ports.timers,
       layout,
       ...(ports.openNamedReaction === undefined ? {} : { openNamed: ports.openNamedReaction }),
-      equation: { binding: equationBindingOf(ports), facts: ports.facts, structures: ports.structures },
+      equation: { binding, facts: ports.facts, structures: ports.structures },
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `structureMode` is read through the binding; it only has to make a new env
   }, [study, ports, binding, layout, structureMode]);

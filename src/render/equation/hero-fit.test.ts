@@ -1,18 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { fitHero, MIN_DRAWING_PX, PEEK_MAX_HEIGHT, settledWidth } from './hero-fit';
+import { fitHero, PEEK_MAX_HEIGHT, settledWidth } from './hero-fit';
+import { FLOOR } from './size-rule';
 
 describe('fitHero (step 8.1 review decision 0): the hero equation never wraps', () => {
   it('one row at full size when it fits', () => {
     expect(fitHero({ available: 400, width: 380, height: 140, drawingHeight: 100 })).toEqual({ mode: 'row', scale: 1 });
   });
 
-  it('one row scaled down to the width when the drawings stay at least 80 px tall', () => {
+  it('one row scaled down to the width while the scale stays at the floor of 70 % (8.5d)', () => {
     const fit = fitHero({ available: 300, width: 400, height: 140, drawingHeight: 120 });
     expect(fit).toEqual({ mode: 'row', scale: 0.75 });
-    expect(120 * 0.75).toBeGreaterThanOrEqual(MIN_DRAWING_PX);
+    expect(0.75).toBeGreaterThanOrEqual(FLOOR);
+    // the old 80 px rule would have stacked this (100 * 0.75 = 75); the one size rule keeps the drawings at 75 % of the standard
+    expect(fitHero({ available: 300, width: 400, height: 140, drawingHeight: 100 })).toEqual({ mode: 'row', scale: 0.75 });
   });
 
-  it('the vertical layout when scaling would make a drawing shorter than 80 px', () => {
+  it('the vertical layout when the row would shrink below the floor of 70 %', () => {
     expect(fitHero({ available: 240, width: 400, height: 140, drawingHeight: 100 })).toEqual({ mode: 'stacked' });
   });
 

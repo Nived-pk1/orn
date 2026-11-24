@@ -34,13 +34,16 @@ async function ethanolDrawing(page: Page): Promise<string> {
     const img = el as HTMLImageElement;
     await img.decode();
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 160;
+    // the picture is drawn at its own size (8.5d: every drawing has the same bond length, so its shape differs with the mode; a fixed canvas stretched it)
+    const w = Math.max(1, Math.round(img.naturalWidth) || 256);
+    const h = Math.max(1, Math.round(img.naturalHeight) || 160);
+    canvas.width = w;
+    canvas.height = h;
     const context = canvas.getContext('2d') as CanvasRenderingContext2D;
     context.fillStyle = '#fff';
-    context.fillRect(0, 0, 256, 160);
-    context.drawImage(img, 0, 0, 256, 160);
-    const data = context.getImageData(0, 0, 256, 160).data;
+    context.fillRect(0, 0, w, h);
+    context.drawImage(img, 0, 0, w, h);
+    const data = context.getImageData(0, 0, w, h).data;
     let dark = 0;
     let hash = 0;
     for (let i = 0; i < data.length; i += 4) {

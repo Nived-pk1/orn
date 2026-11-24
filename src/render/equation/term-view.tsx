@@ -4,24 +4,24 @@
  * representation is comes from `termRepresentationOf` (core); this file only lays it out. A coefficient other than 1 is printed before
  * the column at text size.
  */
+import { Fragment } from 'react';
 import type { EquationTerm, FormulaRepresentation } from '@/core/graph';
 import { needsFacts, termRepresentationOf } from '@/core/graph';
 import type { StructureRep } from '@/core/schema';
 import { DepictionSurface, drawingFailed, useRetryingDepiction, type DepictionBinding, type DepictionTimers } from '@/render/svg';
 import { formulaRuns } from '@/render/scene';
-import { EQUATION_BOND_PX, MAX_DRAWING_HEIGHT, MAX_DRAWING_WIDTH, type StructureFactsPort } from './contracts';
-import { drawingSizeOf } from './drawing-size';
+import type { StructureFactsPort } from './contracts';
 import { wordOf } from './hang';
 import { Runs } from './runs';
+import { nameBreaks, sizeDrawing } from './size-rule';
 import { useFactsInput } from './use-facts';
+import { useAvailableWidth } from './use-width';
 import styles from './equation-scheme.module.css';
 
 export interface TermPorts {
   readonly binding: DepictionBinding | undefined;
   readonly timers: DepictionTimers;
   readonly facts: StructureFactsPort | undefined;
-  /** The widest a drawing is shown; a wider one is scaled down whole (the phone's is smaller). */
-  readonly maxDrawingWidth?: number;
 }
 
 const FormulaView = (props: { readonly formula: FormulaRepresentation }) => (
@@ -30,9 +30,21 @@ const FormulaView = (props: { readonly formula: FormulaRepresentation }) => (
   </span>
 );
 
+/** A name breaks at spaces, after a dash and after a comma, never in the middle of a word (step 8.5d R3). */
+export const NameText = (props: { readonly name: string }) => (
+  <>
+    {nameBreaks(props.name).map((part, i) => (
+      <Fragment key={i}>
+        {i > 0 ? <wbr /> : null}
+        {part}
+      </Fragment>
+    ))}
+  </>
+);
+
 const NameOnly = (props: { readonly name: string }) => (
   <span className={styles.nameOnly} data-equation-name-only="">
-    {props.name}
+    <NameText name={props.name} />
   </span>
 );
 
@@ -42,18 +54,12 @@ function Drawing(props: { readonly structure: StructureRep; readonly name: strin
   const { binding, timers } = props.ports;
   const key = binding?.keyOf(props.structure);
   const status = useRetryingDepiction(binding?.manager, key, timers);
+  const available = useAvailableWidth();
   if (status.state === 'ready') {
-    // the size RDKit gave the drawing is the size of its molecule at the fixed scale; the bond length is the same for every drawing
-    const size = status.width === undefined || status.height === undefined ? undefined : drawingSizeOf({ width: status.width, height: status.height }, EQUATION_BOND_PX, props.ports.maxDrawingWidth ?? MAX_DRAWING_WIDTH, MAX_DRAWING_HEIGHT);
-    return (
-      <DepictionSurface>
-        <img
-          src={status.url}
-          alt={`Structure of ${props.name}`}
-          {...(size === undefined ? { style: { maxWidth: props.ports.maxDrawingWidth ?? MAX_DRAWING_WIDTH, maxHeight: MAX_DRAWING_HEIGHT } } : { width: size.width, height: size.height, 'data-bond-px': size.bondPx })}
-        />
-      </DepictionSurface>
-    );
+    // one size rule (8.5d): the standard bond length; the box follows the drawing; narrower space: shrink to the floor, then the box scrolls
+    const fit = status.width === undefined || status.height === undefined ? undefined : sizeDrawing({ width: status.width, height: status.height }, 'equation', { available: available ?? Number.POSITIVE_INFINITY });
+    const img = <img src={status.url} alt={`Structure of ${props.name}`}{...(fit === undefined ? {} : { width: fit.width, height: fit.height, 'data-bond-px': fit.bondPx })} />;
+    return <DepictionSurface>{fit?.mode === 'scroll' ? <div className={styles.scrollBox} data-scrolls="" tabIndex={0} style={{ width: fit.boxWidth }}>{img}</div> : img}</DepictionSurface>;
   }
   // a drawing that cannot be made is the formula, else the name (never an empty box)
   if (key === undefined || drawingFailed(status)) return props.fallback.kind === 'formula' ? <FormulaView formula={props.fallback} /> : <NameOnly name={props.name} />;
@@ -86,7 +92,7 @@ export function TermColumn(props: { readonly term: EquationTerm; readonly names:
           <div className={styles.hang} data-equation-hang="">
             {nameShown ? (
               <span className={styles.name} data-equation-name="">
-                {term.name}
+                <NameText name={term.name} />
               </span>
             ) : null}
             {word === null ? null : (

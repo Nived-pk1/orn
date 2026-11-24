@@ -1,28 +1,31 @@
 // @vitest-environment jsdom
-/** A formula in a substance box breaks only at spaces (7.3c A5). */
+/** A formula in a substance box keeps its size and wraps at a space or after a bond dash, never inside a group (7.3c A5; step 8.5d R3). */
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { BoxFormula, formulaScale, MIN_FORMULA_SCALE } from './family-text';
+import { BoxFormula } from './family-text';
 
 afterEach(cleanup);
+const parts = (container: HTMLElement): string[] => [...container.querySelectorAll('[data-box-formula] span[style]')].map((part) => part.textContent ?? '');
 
 describe('BoxFormula', () => {
-  it('a formula without spaces is one unbreakable word', () => {
-    const { container } = render(<BoxFormula formula="C6H5–SO2–NHR" />);
-    const words = container.querySelectorAll('[data-box-formula] > span > span');
-    expect(words).toHaveLength(1);
-    expect((words[0] as HTMLElement).style.whiteSpace).toBe('nowrap');
-    expect(container.textContent).toBe('C6H5–SO2–NHR');
+  it('a formula wraps after a bond dash only: each part is unbreakable, with a break opportunity between them', () => {
+    const { container } = render(<BoxFormula formula="CH3COO-CH2-CH2-R" />);
+    expect(parts(container)).toEqual(['CH3COO-', 'CH2-', 'CH2-', 'R']);
+    expect(container.querySelectorAll('wbr')).toHaveLength(3);
+    expect(container.textContent).toBe('CH3COO-CH2-CH2-R');
+    expect((container.querySelector('[data-box-formula]') as HTMLElement).style.whiteSpace).toBe('');
   });
-  it('spaces stay as the only places to break', () => {
+  it('an en dash is a bond dash too, and a group is never cut', () => {
+    const { container } = render(<BoxFormula formula="C6H5–SO2–NHR" />);
+    expect(parts(container)).toEqual(['C6H5–', 'SO2–', 'NHR']);
+  });
+  it('spaces stay places to break', () => {
     const { container } = render(<BoxFormula formula="Na  OH" />);
-    expect(container.querySelectorAll('[data-box-formula] > span > span')).toHaveLength(2);
+    expect(parts(container)).toEqual(['Na', 'OH']);
     expect(container.textContent).toBe('Na OH');
   });
-  it('only a long word shrinks, never below 85 %, with no layout measured', () => {
-    expect(MIN_FORMULA_SCALE).toBe(0.85);
-    expect([formulaScale(5), formulaScale(14), formulaScale(18), formulaScale(24), formulaScale(60)]).toEqual([1, 1, 0.92, 0.85, 0.85]);
+  it('a long formula keeps its font size (never shrunk): the box grows instead', () => {
     const { container } = render(<BoxFormula formula="C6H5SO2NHCH2CH2OCH2CH2NH2X" />);
-    expect((container.querySelector('[data-box-formula]') as HTMLElement).style.fontSize).toBe('0.85em');
+    expect((container.querySelector('[data-box-formula]') as HTMLElement).style.fontSize).toBe('');
   });
 });

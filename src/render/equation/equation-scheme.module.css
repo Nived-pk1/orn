@@ -62,11 +62,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 14rem;
+  max-width: 100%;
   text-align: center;
 }
 
 .hang {
+  max-width: 14rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -91,7 +92,8 @@
 
 .nameOnly {
   font-size: var(--text-14);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .loading {
@@ -103,7 +105,8 @@
   margin-top: var(--space-4);
   color: var(--color-ink-2);
   font-size: var(--text-14);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .word {
@@ -270,4 +273,11 @@
 
 .downBelow {
   color: var(--color-ink-2);
+}
+
+/* A drawing still wider than its space at the floor scale (8.5d R2d): the box scrolls sideways, a fade at the edge shows there is more; never clipped. */
+.scrollBox {
+  max-width: 100%;
+  overflow-x: auto;
+  mask-image: linear-gradient(to right, var(--color-ink) calc(100% - 1.5rem), transparent);
 }

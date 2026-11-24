@@ -1,11 +1,12 @@
 /**
  * How the hero equation of the inspector fits its box (step 8.1, review decision 0 and 1). Pure arithmetic on measured numbers: no
- * chemistry, no DOM. The hero NEVER wraps: one row (reactants, arrow with its words, products), scaled down to the width when the drawings
- * stay at least MIN_DRAWING_PX tall; otherwise the vertical layout the phone card uses. In the sheet's peek it is one row at most
+ * chemistry, no DOM. The hero NEVER wraps: one row (reactants, arrow with its words, products), scaled down to the width while the scale
+ * stays at the FLOOR of the one size rule (size-rule.ts, step 8.5d); otherwise the vertical layout the phone card uses. In the sheet's peek it is one row at most
  * PEEK_MAX_HEIGHT high, scaled to fit, and when it cannot be read that way (more than two reactants or two products, or drawings under
  * PEEK_MIN_DRAWING_PX after scaling) the one-line text equation is shown instead.
  */
-export const MIN_DRAWING_PX = 80;
+import { FLOOR } from './size-rule';
+
 /** With no drawing (formulas only) the row may shrink to this fraction of its size. */
 export const MIN_FORMULA_SCALE = 0.6;
 export const PEEK_MAX_HEIGHT = 64;
@@ -32,7 +33,7 @@ export function fitHero(measure: HeroMeasure, peek?: { readonly peek: true; read
   }
   const scale = Math.min(1, available / width);
   if (scale >= 1) return { mode: 'row', scale: 1 };
-  const legible = drawingHeight === 0 ? scale >= MIN_FORMULA_SCALE : drawingHeight * scale >= MIN_DRAWING_PX;
+  const legible = scale >= (drawingHeight === 0 ? MIN_FORMULA_SCALE : FLOOR);
   return legible ? { mode: 'row', scale } : { mode: 'stacked' };
 }
 

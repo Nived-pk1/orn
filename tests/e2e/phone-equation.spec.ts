@@ -41,7 +41,12 @@ async function expectFits(page: Page, card: Locator, scheme: Locator): Promise<v
     expect(found.x, 'inside the card on the left').toBeGreaterThanOrEqual(cardBox.x - 0.5);
     expect(found.x + found.width, 'inside the card on the right').toBeLessThanOrEqual(right);
   }
-  for (const image of await scheme.locator('img').all()) expect((await box(image)).width, 'a drawing is at most 140 px wide').toBeLessThanOrEqual(140.5);
+  // the one size rule (8.5d) replaces the 140 px cap: the standard bond length, down to the floor of 70 % (39.2 px), never more
+  for (const image of await scheme.locator('img').all()) {
+    const bond = Number(await image.getAttribute('data-bond-px'));
+    expect(bond, 'a drawing has a bond length between the floor and the standard').toBeGreaterThanOrEqual(39.14);
+    expect(bond).toBeLessThanOrEqual(56.06);
+  }
 }
 
 /** Every name's top is within 8 px of the bottom of its drawing (the reactant row and the product row). */
