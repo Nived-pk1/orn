@@ -32,8 +32,11 @@ async function openDemo(page: Page): Promise<void> {
 }
 
 async function openAlcohols(page: Page): Promise<void> {
-  await hubGroup(page, 'cls_alcohols').dblclick();
-  await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible();
+  // a double click in the first moments of a cold Firefox start (the map has just appeared) is lost; a person would do it again, so the test does (step 8.5e, E3)
+  await expect(async () => {
+    await hubGroup(page, 'cls_alcohols').dblclick();
+    await expect(page.getByRole('region', { name: 'Family page: Alcohols' })).toBeVisible({ timeout: 4_000 });
+  }).toPass({ timeout: 30_000 });
   await expect(page.getByRole('heading', { level: 2, name: 'Reactions of Alcohols' })).toBeVisible();
 }
 

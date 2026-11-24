@@ -77,7 +77,7 @@ test("the owner's two cards on the real package: nothing clipped, Show all atoms
         const reactant = card.getByRole('img', { name: /^Structure of Dimethyl hexanedioate/i }).first();
         expect((await reactant.boundingBox())?.width ?? 9999, 'Dieckmann reactant width in px').toBeLessThanOrEqual(320);
       }
-      await card.screenshot({ path: `${shotsDir()}/8.5d/owner-${one.slug}-${mode === 'Full' ? 'all-atoms' : 'skeletal'}-${process.env.ORN_SHOT_TAG ?? 'after'}.png` });
+      await card.screenshot({ path: `${shotsDir()}/8.5e/owner-${one.slug}-${mode === 'Full' ? 'all-atoms' : 'skeletal'}-${process.env.ORN_SHOT_TAG ?? 'after'}.png` });
     }
   }
   expect(found).toEqual([]);

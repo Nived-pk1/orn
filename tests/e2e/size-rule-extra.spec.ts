@@ -55,13 +55,12 @@ test.describe('phone: Pixel 7 (Chromium), dark', () => {
 test.describe('phone: Pixel 7 (Chromium), the inspector hero', () => {
   test.use({ ...PIXEL });
 
-  test('the hero of the full sheet obeys the rule for every awkward reaction', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'the Pixel 7 profile is Chromium');
-    test.setTimeout(280_000);
-    await openPhoneApp(page);
-    await importAwkward(page);
-    const found: string[] = [];
-    for (const item of AWKWARD.filter((one) => [3, 4, 7, 9, 10].includes(one.n))) {
+  for (const item of AWKWARD.filter((one) => [3, 4, 7, 9, 10].includes(one.n))) {
+    test(`the hero of the full sheet obeys the rule: ${item.label}`, async ({ page, browserName }) => {
+      test.skip(browserName !== 'chromium', 'the Pixel 7 profile is Chromium');
+      test.setTimeout(200_000);
+      await openPhoneApp(page);
+      await importAwkward(page);
       await openReaction(page, reactionName(item));
       await page.getByRole('button', { name: 'Show the whole record' }).tap();
       const sheet = page.locator('[data-sheet="full"]');
@@ -70,14 +69,10 @@ test.describe('phone: Pixel 7 (Chromium), the inspector hero', () => {
       await expect(hero).toBeVisible();
       await expect(hero.getByText('Drawing the structure…')).toHaveCount(0, { timeout: 60_000 });
       await page.waitForTimeout(600);
-      for (const p of await problemsIn(hero)) found.push(`phone hero ${item.label}: ${p}`);
+      expect(await problemsIn(hero)).toEqual([]);
       if (item.n === 7) await page.screenshot({ path: `${shotsDir()}/8.5e/pixel7-hero.png` });
-      await page.goBack().catch(() => undefined);
-      await page.reload();
-      await expect(page.getByRole('navigation', { name: 'Home' })).toBeVisible({ timeout: 90_000 });
-    }
-    expect(found).toEqual([]);
-  });
+    });
+  }
 });
 
 async function openReaction(page: Page, name: string): Promise<void> {
@@ -91,9 +86,9 @@ async function openReaction(page: Page, name: string): Promise<void> {
 }
 
 const THREE = [
-  { role: 'reactant', label: 'Cholesterol', structure: { format: 'smiles', value: 'CC(C)CCCC(C)C1CCC2C1(CCC3C2CC=C4C3(CCC(C4)O)C)C' } },
-  { role: 'reagent', label: 'Glucose (open chain)', structure: { format: 'smiles', value: 'OCC(O)C(O)C(O)C(O)C=O' } },
-  { role: 'product', label: 'Sodium propan-2-olate', structure: { format: 'smiles', value: '[Na+].CC(C)[O-]' } },
+  { role: 'reactant', label: 'Cholesterol', structure: { format: 'smiles', value: '[CH3:1]C(C)CCCC(C)C1CCC2C1(CCC3C2CC=C4C3(CCC(C4)O)C)C' } },
+  { role: 'reagent', label: 'Glucose (open chain)', structure: { format: 'smiles', value: '[OH:2]CC(O)C(O)C(O)C(O)C=O' } },
+  { role: 'product', label: 'Sodium propan-2-olate', structure: { format: 'smiles', value: '[Na+:3].CC(C)[O-:4]' } },
 ];
 
 test('three of the set in one mechanism step: at the mechanism bond length (36 px) or down to the floor, never clipped', async ({ page }) => {
