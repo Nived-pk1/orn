@@ -9,3 +9,10 @@ Resume point: section 0 committed (1c4250e). E1 in progress.
 - CONFLICT (kept from 8.5d): a 13 px label shrunk to the 70 % floor is 9.1 px, under 11. A CSS shrink scales labels. The only exact fix is a redraw
   at the shrunk bond length (two-phase, many keys) which the +300 byte limit does not allow. Chosen: labels 13 px at the standard; the shrink floor
   is raised to 11/13 = 0.85 so labels never go under 11 px. REVIEW REQUIRED.
+
+## STATE (stopped on the size rule)
+Committed 1e43f3e (E1, E2 a/b/c, specs). Uncommitted after it: size trims (scene-ports keyOf with bondPx, lighter use-row-scale, naturalRowWidth removed with its test).
+SIZE: base (36978cb, fresh Studio build) 343,144; now 343,803 = +659 (limit +300). Trims gave only -31. STOP per the prompt.
+Biggest additions in the entry chunk: term-view (context, row scale, bond-px), family-structure (open box button), use-row-scale, size-rule, binding bondPx.
+Options for the reviewer: (1) raise the limit, (2) drop E2 b (keyboard/role button), (3) move the equation scheme out of the entry chunk.
+NOT DONE: Study fresh size, full e2e rounds (new specs size-rule-extra never run), E3 Firefox, E4 report, screenshots, docs rows, deploy, push.

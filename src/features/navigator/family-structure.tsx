@@ -33,13 +33,9 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
       ? {}
       : {
           role: 'button',
-          'aria-label': `Open the structure of ${name} full size in the inspector`,
+          'aria-label': `Open ${name} full size in the inspector`,
           onClick: () => open(props.substance),
-          onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            open(props.substance);
-          },
+          onKeyDown: (event: KeyboardEvent) => (event.key === 'Enter' || event.key === ' ') && (event.preventDefault(), open(props.substance)),
         };
   const boxStyle = fit === undefined ? { minWidth: rule.minWidth, minHeight: rule.minHeight } : { width: fit.boxWidth, minHeight: fit.boxHeight };
   return (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIXED_SCALE_BOND_UNITS, LABEL_GLYPH_PX } from '@/chem/contracts';
-import { FLOOR, formulaBreaks, MIN_LABEL_PX, nameBreaks, naturalRowWidth, rowScale, SIZE_RULES, sizeDrawing } from './size-rule';
+import { FLOOR, formulaBreaks, MIN_LABEL_PX, nameBreaks, rowScale, SIZE_RULES, sizeDrawing } from './size-rule';
 
 const UNITS = FIXED_SCALE_BOND_UNITS;
 /** A drawing `bonds` bonds wide and `rows` bonds tall, as RDKit gives it at the fixed scale. */
@@ -80,20 +80,6 @@ describe('rowScale: a row of drawings shrinks to the floor, then wraps (R2 b, c)
   it('too wide but within the floor: shrinks, no wrap', () => expect(rowScale(450, 400)).toEqual({ scale: 0.889, wrap: false }));
   it('beyond the floor: the floor scale and wrap', () => expect(rowScale(800, 400)).toEqual({ scale: FLOOR, wrap: true }));
   it('nothing measured: scale 1', () => expect(rowScale(0, 0)).toEqual({ scale: 1, wrap: false }));
-});
-
-describe('naturalRowWidth: the whole row at scale 1 from what is on the screen now (8.5e E2 a)', () => {
-  it('at scale 1 it is the sum of the parts and the gaps', () => {
-    expect(naturalRowWidth({ parts: [100, 40, 100], drawings: 200, gap: 10 }, 1)).toBe(100 + 40 + 100 + 20);
-  });
-  it('at a smaller scale the drawings are grown back to scale 1, the rest stays', () => {
-    expect(naturalRowWidth({ parts: [90, 40, 90], drawings: 180, gap: 10 }, 0.9)).toBeCloseTo(90 + 40 + 90 + 20 + 20, 5);
-  });
-  it('the whole row shrinks together to the floor before it wraps', () => {
-    const total = naturalRowWidth({ parts: [300, 60, 300], drawings: 600, gap: 10 }, 1);
-    expect(rowScale(total, 612)).toEqual({ scale: 0.9, wrap: false });
-    expect(rowScale(total, 500).wrap).toBe(true);
-  });
 });
 
 describe('formulaBreaks and nameBreaks: where text may wrap (R3)', () => {

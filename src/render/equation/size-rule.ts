@@ -66,15 +66,6 @@ export function rowScale(total: number, available: number): { readonly scale: nu
   return scale >= FLOOR ? { scale, wrap: false } : { scale: FLOOR, wrap: true };
 }
 
-/**
- * The width of a row at scale 1, from what is measured now at `scale`: the widths of its parts and gaps, with the drawings' share (`drawings`, their summed
- * widths now) grown back to scale 1; the rest (text, arrows) does not scale (step 8.5e, E2 a).
- */
-export function naturalRowWidth(row: { readonly parts: readonly number[]; readonly drawings: number; readonly gap: number }, scale: number): number {
-  const parts = row.parts.reduce((sum, width) => sum + width, 0);
-  return parts + row.gap * Math.max(0, row.parts.length - 1) + (scale > 0 ? row.drawings * (1 / scale - 1) : 0);
-}
-
 /** A condensed formula wraps after a bond dash that joins two groups, never inside a group ("CH3", "COO") and never at a charge. */
 export function formulaBreaks(formula: string): string[] {
   return formula === '' ? [] : formula.split(/(?<=[-–])(?=[A-Za-z([])/);
