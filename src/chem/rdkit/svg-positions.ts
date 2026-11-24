@@ -76,28 +76,37 @@ function firstLine(paths: readonly Path[], at: number): readonly [Point, Point] 
 /** Point pairs (plain, highlighted) that name the same place in both drawings. */
 function sharedPoints(plain: readonly Path[], lit: readonly Path[]): readonly (readonly [Point, Point])[] {
   const pairs: (readonly [Point, Point])[] = [];
+  const labels: (readonly [Point, Point])[] = [];
   const seen = new Set<string>();
   plain.forEach((path, at) => {
     if (seen.has(path.cls)) return;
     seen.add(path.cls);
     const other = lit.findIndex((q) => q.cls === path.cls);
     if (other < 0) return;
-    const theirs = lit[other] as Path;
     if (/^atom-\d+$/.test(path.cls)) {
-      if (theirs.points.length === path.points.length) path.points.forEach((p, i) => pairs.push([p, theirs.points[i] as Point]));
+      // ONE shared point per labelled atom: the centre of the whole label (all its glyphs). A label drawn at a fixed font size (step 8.5e, `bondPx`) does
+      // not scale with the canvas: its glyphs keep their spacing while the atoms move by the fitted scale, so the glyphs' own points cannot all be fitted
+      const mine = plain.filter((q) => q.cls === path.cls);
+      const theirs = lit.filter((q) => q.cls === path.cls);
+      if (theirs.length === mine.length) {
+        const g = boxOf(mine.flatMap((q) => q.points));
+        const h = boxOf(theirs.flatMap((q) => q.points));
+        labels.push([[g.x, g.y], [h.x, h.y]]);
+      }
       return;
     }
     const [a, b] = firstLine(plain, at);
     const [c, d] = firstLine(lit, other);
     pairs.push([a, c], [b, d]);
   });
-  return pairs;
+  // the bonds fix the scale and check the shape; the labels' centres stand in only for a molecule without a bond (their offsets from the atoms do not scale)
+  return pairs.length >= 2 ? pairs : [...pairs, ...labels];
 }
 
 /** x' = s x + tx, y' = s y + ty by least squares; `undefined` when the points do not fix a scale or do not fit within `FIT_TOLERANCE`. */
 function fit(pairs: readonly (readonly [Point, Point])[]): { readonly s: number; readonly tx: number; readonly ty: number } | undefined {
   const n = pairs.length;
-  if (n < 2) return undefined;
+  if (n < 1) return undefined;
   const mean = (pick: (p: readonly [Point, Point]) => number): number => pairs.reduce((sum, p) => sum + pick(p), 0) / n;
   const px = mean((p) => p[0][0]);
   const py = mean((p) => p[0][1]);
@@ -109,8 +118,8 @@ function fit(pairs: readonly (readonly [Point, Point])[]): { readonly s: number;
     spread += (p[0] - px) ** 2 + (p[1] - py) ** 2;
     cross += (p[0] - px) * (q[0] - qx) + (p[1] - py) * (q[1] - qy);
   }
-  if (spread < 1) return undefined;
-  const s = cross / spread;
+  // one point alone (a single labelled atom) fixes a move but not a scale: the scale is then 1
+  const s = spread < 1 ? 1 : cross / spread;
   if (!(s > 0.5 && s < 2)) return undefined;
   const tx = qx - s * px;
   const ty = qy - s * py;

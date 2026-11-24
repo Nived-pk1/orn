@@ -18,8 +18,11 @@ async function openFamily(page: Page, node: string, name: RegExp): Promise<void>
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   await loadDemo(page);
-  await page.locator(`svg [data-node-id="${node}"]`).dblclick();
-  await expect(page.getByRole('region', { name })).toBeVisible();
+  // a double click in the first moments of a cold Firefox start is lost (8.5e E3); a person would do it again, so the test does
+  await expect(async () => {
+    await page.locator(`svg [data-node-id="${node}"]`).dblclick();
+    await expect(page.getByRole('region', { name })).toBeVisible({ timeout: 4_000 });
+  }).toPass({ timeout: 30_000 });
   if (!LIVE) await page.getByRole('status', { name: 'Notifications' }).getByRole('button', { name: 'Dismiss' }).click(); // the import notice would cover the card
 }
 
@@ -142,7 +145,8 @@ test('Lindlar: three terms, hydrogen as the formula H2, the drawings at one bond
   await expect.poll(async () => (await bondLengths(scheme)).length, { timeout: 30_000 }).toBe(2);
   const [a, b] = await bondLengths(scheme);
   expect(Math.abs((a as number) - (b as number)), 'the bond of the two drawings differs by less than 2 px').toBeLessThan(2);
-  expect(a as number, "the bond is the card's, about 54 px").toBeGreaterThan(48);
+  expect(a as number, "the bond is the equation's standard (8.5e), about 34 px").toBeGreaterThan(30);
+  expect(a as number).toBeLessThan(36);
   await expectLook(card, scheme);
 
   if (browserName === 'chromium') await shot(page, card, 'equation-textbook-lindlar-1280x800.png');
@@ -204,11 +208,11 @@ test('the other textbook equations: PCC, an equilibrium (ester hydrolysis) and a
   await expect(pccScheme.locator('[data-equation-arrow] [data-equation-above]')).toContainText('PCC');
   await expect.poll(async () => (await bondLengths(pccScheme)).length, { timeout: 30_000 }).toBeGreaterThan(0);
   await expectLook(pcc, pccScheme);
-  // the equation's ethanol is as big as the card's own drawing of ethanol (within 10%)
+  // the equation's ethanol is drawn at the equation's bond length (34 px) and the card's at the family's (28 px): ink widths are in that ratio, within 15 % (the labels do not scale)
   const own = await inkWidth(pcc.locator('figure img[alt="Structure of Ethanol"]').first());
   const inEquation = await inkWidth(pccScheme.locator('img[alt="Structure of Ethanol"]'));
   console.log(`bond check (PCC ethanol): card drawing is ${own} px wide, equation drawing ${inEquation} px wide`);
-  expect(Math.abs(inEquation - own) / own, "the equation's ethanol is within 10% of the card's").toBeLessThan(0.1);
+  expect(Math.abs(inEquation / own - 34 / 28), "the equation's ethanol is 34 / 28 of the card's, within 15 %").toBeLessThan(0.15 * (34 / 28));
   await shot(page, pcc, 'equation-textbook-pcc-1280x800.png');
 
   // Condensed: the same equation, every chain carbon labelled with its hydrogens
