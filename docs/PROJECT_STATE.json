@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-18",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "8.6 (export pictures and print stylesheet); step 8.5d closed 2026-11-24, docs/PROGRESS.md Step 8.5d",
-  "nextStepTitle": "Step 8.5d DONE 2026-11-24 (docs/PROGRESS.md \"Step 8.5d\"; UI_ARCHITECTURE section 16): one size rule for structure drawings, formulas and names (56 px standard, floor 70 %). Next: 8.6 export pictures and print stylesheet.",
+  "nextStep": "8.6 (export pictures and print stylesheet); step 8.5e closed 2026-11-24, docs/PROGRESS.md Step 8.5e",
+  "nextStepTitle": "Step 8.5e DONE 2026-11-24 (docs/PROGRESS.md \"Step 8.5e\"; UI_ARCHITECTURE section 16): size rule second pass (labels 13 px set apart from the bond, standards 28/34/40/36, floor 85 %). Next: 8.6 export pictures and print stylesheet.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
