@@ -172,7 +172,7 @@ function bondDirections(id: number, ctx: ArrowContext): Point[] {
 
 /** The first direction of `TURNS` from `preferred` at which `clear` holds and no bond is near; `preferred` itself when no glyph list is given or none is free. */
 function freeDirection(preferred: Point, id: number, ctx: ArrowContext, clear: (dir: Point) => boolean): Point {
-  if (ctx.glyphs === undefined || ctx.glyphs.length === 0) return preferred;
+  if (ctx.glyphs === undefined || ctx.glyphs.length === 0 || clear(preferred)) return preferred; // nothing in the way: the direction the arrow always had
   const bonds = bondDirections(id, ctx);
   for (const angle of TURNS) {
     const dir = turn(preferred, angle);
