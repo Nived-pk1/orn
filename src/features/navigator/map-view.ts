@@ -20,7 +20,7 @@ import type { Scene, SceneEdge, SceneNode } from '@/render/scene';
 import type { withChips, Drawn, PairFacts } from './map-chips';
 import { BUSY_ARROWS, isBusy } from './busy-rule';
 import { pairSeparationMap, strokePx } from '@/render/svg';
-import { pointAlong, shifted, sideOffset, snapEnds } from './map-geometry';
+import { endsOnBorders, pointAlong, shifted, shiftedMiddle, sideOffset, snapEnds } from './map-geometry';
 
 /** A chapter with more arrows than this (after pair merging) draws none until a family is chosen (step 8.2b, B2). */
 export const BUSY_CHAPTER_ARROWS = BUSY_ARROWS;
@@ -98,10 +98,12 @@ function pairUp(drawn: readonly Drawn[], zoom: number, focused: boolean, nodes: 
     const signed = (to.x - from.x) * normal.x + (to.y - from.y) * normal.y;
     const wanted = signed < 0 ? -separation : separation;
     const by = sideOffset(d.edge.points, -(wanted - signed) / 2);
-    const moved = shifted(d.edge.points, by);
     const fromBox = nodes.get(d.edge.from);
     const toBox = nodes.get(d.edge.to);
-    const points = fromBox === undefined || toBox === undefined ? moved : snapEnds(moved, fromBox, toBox); // the ends stay on the borders of their boxes
+    if (fromBox === undefined || toBox === undefined) return { mark, edge: { ...d.edge, points: shifted(d.edge.points, by), labelAt: { x: d.edge.labelAt.x + by.x, y: d.edge.labelAt.y + by.y } } };
+    // the whole line moves and its ends slide back to the borders; when that leaves an end in empty space (a long arc bowed far from its chord: step 8.5c, C0) only the middle moves
+    const snapped = snapEnds(shifted(d.edge.points, by), fromBox, toBox);
+    const points = endsOnBorders(snapped, fromBox, toBox, 1.5) ? snapped : shiftedMiddle(d.edge.points, by);
     return { mark, edge: { ...d.edge, points, labelAt: { x: d.edge.labelAt.x + by.x, y: d.edge.labelAt.y + by.y } } };
   });
 }

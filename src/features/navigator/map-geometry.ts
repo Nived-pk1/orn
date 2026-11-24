@@ -96,3 +96,32 @@ export function snapEnds(points: readonly Point[], from: Box, to: Box): Point[] 
   if (end !== undefined) out[out.length - 1] = end;
   return out;
 }
+
+/** The distance from a point to the BORDER of a box, inside or outside. */
+export function borderDistance(p: Point, box: Box): number {
+  const dx = Math.max(box.x - p.x, 0, p.x - (box.x + box.width));
+  const dy = Math.max(box.y - p.y, 0, p.y - (box.y + box.height));
+  const outside = Math.hypot(dx, dy);
+  return outside > 0 ? outside : Math.min(p.x - box.x, box.x + box.width - p.x, p.y - box.y, box.y + box.height - p.y);
+}
+
+/** Both ends of a line are within `tolerance` px of the borders of their boxes (an end meets its box, never floats beside it). */
+export const endsOnBorders = (points: readonly Point[], from: Box, to: Box, tolerance: number): boolean =>
+  points.length >= 2 && borderDistance(points[0] as Point, from) <= tolerance && borderDistance(points[points.length - 1] as Point, to) <= tolerance;
+
+/**
+ * The line moved sideways by `by` in the middle and not at all at its ends (step 8.5c, C0): the shift fades with the distance along the line,
+ * sin(pi t), so both ends stay exactly where they were, on their box borders. Used when moving the whole line (`shifted` + `snapEnds`) would leave an
+ * end in empty space: a long arc that bows far from its chord.
+ */
+export function shiftedMiddle(points: readonly Point[], by: Point): Point[] {
+  let total = 0;
+  for (let i = 1; i < points.length; i += 1) total += length(points[i - 1] as Point, points[i] as Point);
+  if (total === 0) return [...points];
+  let run = 0;
+  return points.map((p, i) => {
+    if (i > 0) run += length(points[i - 1] as Point, p);
+    const weight = Math.sin((Math.PI * run) / total);
+    return { x: p.x + by.x * weight, y: p.y + by.y * weight };
+  });
+}
