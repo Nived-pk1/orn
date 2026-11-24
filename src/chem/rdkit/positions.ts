@@ -8,16 +8,16 @@
  * RDKit changed is `refused`, with the reason in words, so the step is shown as "No drawing" and never as a partial arrow.
  */
 import type { StructureRep } from '@/core/schema';
-import type { DepictedAtom, DepictedBond } from '../contracts';
+import type { DepictedAtom, DepictedBond, DepictedGlyph } from '../contracts';
 import type { DrawDetails } from '../depiction-options';
 import { svgOf } from './draw';
 import { withHandle } from './scope';
 import { smilesAtoms } from './smiles-atoms';
-import { readPositions } from './svg-positions';
+import { labelGlyphsOf, readPositions } from './svg-positions';
 import type { RdkitMol, RdkitModule } from './types';
 
 export type PositionedDrawing =
-  | { readonly ok: true; readonly svg: string; readonly atoms: readonly DepictedAtom[]; readonly bonds: readonly DepictedBond[] }
+  | { readonly ok: true; readonly svg: string; readonly atoms: readonly DepictedAtom[]; readonly bonds: readonly DepictedBond[]; readonly glyphs: readonly DepictedGlyph[] }
   | { readonly ok: false; readonly reason: 'refused'; readonly error: string };
 
 const refuse = (why: string): PositionedDrawing => ({ ok: false, reason: 'refused', error: `no atom positions: ${why}` });
@@ -50,7 +50,7 @@ export function drawWithPositions(module: RdkitModule, structure: StructureRep, 
   if (new Set(maps.map((m) => m.map)).size !== maps.length) return refuse('a map number is written more than once');
   if (maps.length === 0) {
     const none = svgOf(module, mol, details, []);
-    return none.ok ? { ok: true, svg: none.svg, atoms: [], bonds: [] } : refuse(none.error);
+    return none.ok ? { ok: true, svg: none.svg, atoms: [], bonds: [], glyphs: labelGlyphsOf(none.svg) } : refuse(none.error);
   }
   const plain = withHandle(
     () => module.get_mol(kept.value.replace(/:\d+\]/g, ']'), KEEP_HYDROGENS),
@@ -72,7 +72,7 @@ export function drawWithPositions(module: RdkitModule, structure: StructureRep, 
         return a === undefined || b === undefined ? [] : [{ a: Math.min(a, b), b: Math.max(a, b) }];
       });
       bonds.sort((p, q) => p.a - q.a || p.b - q.b);
-      return { ok: true, svg: shown.svg, atoms, bonds };
+      return { ok: true, svg: shown.svg, atoms, bonds, glyphs: labelGlyphsOf(shown.svg) };
     },
   );
   return plain.opened ? plain.value : refuse('the structure could not be drawn without its map numbers');

@@ -11,7 +11,7 @@
  * The key is a stable hash of (format, value, options), NOT of the toolkit: it names a request, so it is known before the answer
  * (the worker's own `Depiction.key` adds the toolkit and its version for its internal cache).
  */
-import { depictionDetails, type DepictedAtom, type DepictedBond, type Depiction, type DepictionOptions } from '@/chem';
+import { depictionDetails, type DepictedAtom, type DepictedBond, type DepictedGlyph, type Depiction, type DepictionOptions } from '@/chem';
 import { LruCache } from '@/chem/lru';
 import { hashParts } from '@/core/hash';
 import type { StructureRep } from '@/core/schema';
@@ -28,6 +28,7 @@ export const MAX_DEPICTION_QUEUE = 2_000;
 export interface PositionTable {
   readonly atoms?: readonly DepictedAtom[];
   readonly bonds?: readonly DepictedBond[];
+  readonly glyphs?: readonly DepictedGlyph[];
 }
 
 export type DepictionResult =

@@ -3,7 +3,7 @@
  * found and checked; anything else is a refusal with the reason in words. Real RDKit is tests/integration/chem-positions.test.ts.
  */
 import { describe, expect, it } from 'vitest';
-import { elementLetterOf, readPositions } from './svg-positions';
+import { elementLetterOf, labelGlyphsOf, readPositions } from './svg-positions';
 
 const path = (cls: string, d: string) => `<path class='${cls}' d='${d}' style='fill:none' />`;
 const ellipse = (index: number, cx: number, cy: number) => `<ellipse cx='${cx}' cy='${cy}' rx='10' ry='8' class='atom-${index}' />`;
@@ -92,5 +92,13 @@ describe('elementLetterOf: the letter of a label, not the centre of the whole la
   });
   it('an atom with no label glyphs has no letter (an unlabelled carbon keeps its circle)', () => {
     expect(elementLetterOf(svg(bond(0, 20, 5)), 0)).toBeUndefined();
+  });
+});
+
+describe('labelGlyphsOf (step 8.5c C1)', () => {
+  it('is the box of every atom-N glyph path, and nothing for a bond or a drawing without labels', () => {
+    const drawing = svg(path('atom-3', 'M 10,10 L 20,10 L 20,30 L 10,30 Z'), path('atom-3', 'M 22,20 L 26,20 L 26,24 L 22,24 Z'), path('bond-0 atom-0 atom-1', 'M 0,0 L 5,5'));
+    expect(labelGlyphsOf(drawing)).toEqual([{ x0: 10, x1: 20, y0: 10, y1: 30 }, { x0: 22, x1: 26, y0: 20, y1: 24 }]);
+    expect(labelGlyphsOf(svg(path('bond-0 atom-0 atom-1', 'M 0,0 L 5,5')))).toEqual([]);
   });
 });

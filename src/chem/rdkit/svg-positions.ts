@@ -20,6 +20,14 @@ export interface PositionedAtom {
   readonly ry: number;
 }
 
+/** The box of one label glyph (an `atom-N` path), in the shown drawing's frame. */
+export interface GlyphRect {
+  readonly x0: number;
+  readonly x1: number;
+  readonly y0: number;
+  readonly y1: number;
+}
+
 export type PositionsOutcome = { readonly ok: true; readonly atoms: readonly PositionedAtom[] } | { readonly ok: false; readonly error: string };
 
 /** More points than this in a drawing is not read (a drawing of a step species is a few hundred). */
@@ -163,6 +171,15 @@ function elementLetter(plain: readonly Path[], index: number): Box | undefined {
 }
 
 const round = (value: number): number => Math.round(value * 100) / 100;
+
+/** Every label glyph of a drawing the worker made itself (step 8.5c C1): the box of each `atom-N` path, left to right; empty when the drawing has none or too many points. */
+export function labelGlyphsOf(plainSvg: string): readonly GlyphRect[] {
+  const paths = pathsOf(plainSvg) ?? [];
+  return paths
+    .filter((p) => /^atom-\d+$/.test(p.cls))
+    .map((p) => boxOf(p.points))
+    .map((b) => ({ x0: round(b.x - b.rx), x1: round(b.x + b.rx), y0: round(b.y - b.ry), y1: round(b.y + b.ry) }));
+}
 
 export function readPositions(plainSvg: string, highlightedSvg: string, indexes: readonly number[]): PositionsOutcome {
   const fail = (why: string): PositionsOutcome => ({ ok: false, error: `the atom positions could not be read (${why})` });

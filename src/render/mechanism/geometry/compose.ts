@@ -6,7 +6,7 @@
  * an atom no species of the before side has, or one that two of them have (a map number is unique per STRUCTURE, not per side), is
  * `missing_atoms`: nothing is drawn partially.
  */
-import { layoutArrows, type AtomBox, type CurvedArrow, type MovementInput, type Point } from './arrows';
+import { layoutArrows, type AtomBox, type CurvedArrow, type GlyphBox, type MovementInput, type Point } from './arrows';
 
 export interface DrawnSpecies {
   readonly kind: 'structure' | 'label';
@@ -17,6 +17,8 @@ export interface DrawnSpecies {
   readonly height: number;
   readonly atoms: readonly (AtomBox & { readonly map: number })[];
   readonly bonds: readonly { readonly a: number; readonly b: number }[];
+  /** Every label glyph of the drawing, in the drawing's own frame (step 8.5c C1). */
+  readonly glyphs?: readonly GlyphBox[];
 }
 
 export interface StepComposeInput {
@@ -112,6 +114,7 @@ export function composeStep(input: StepComposeInput): Composition {
   const holders = new Map<number, number>();
   const atoms = new Map<number, AtomBox>();
   const bonds: [number, number][] = [];
+  const glyphs: GlyphBox[] = [];
   before.forEach((s, k) => {
     const at = items[k] as Placed;
     for (const atom of s.atoms) {
@@ -119,9 +122,10 @@ export function composeStep(input: StepComposeInput): Composition {
       atoms.set(atom.map, { x: atom.x + at.x, y: atom.y + at.y, rx: atom.rx, ry: atom.ry });
     }
     for (const bond of s.bonds) bonds.push([bond.a, bond.b]);
+    for (const g of s.glyphs ?? []) glyphs.push({ x0: g.x0 + at.x, x1: g.x1 + at.x, y0: g.y0 + at.y, y1: g.y1 + at.y });
   });
   for (const [map, count] of holders) if (count > 1) atoms.delete(map);
-  const drawn = layoutArrows(input.movements, { atoms, bonds });
+  const drawn = layoutArrows(input.movements, { atoms, bonds, ...(glyphs.length === 0 ? {} : { glyphs }) });
   if (!drawn.ok) return { ok: false, reason: 'missing_atoms', missing: drawn.missing };
 
   // the box of everything, then the shift that puts it at MARGIN

@@ -14,7 +14,7 @@ export function stepDrawingFrom(depictions: DepictionsLike, extras: { readonly r
       const answer = await depictions.depict(structure, { width: 120, height: 80, fixedScale: true, ...(positions ? { atomPositions: true } : {}) });
       if (!answer.ok) return { ok: false, reason: answer.reason === 'queue_full' || answer.reason === 'cancelled' ? 'unavailable' : answer.reason, message: answer.message };
       if (answer.width === undefined || answer.height === undefined) return { ok: false, reason: 'invalid', message: 'the drawing has no size' };
-      return { ok: true, svg: answer.svg, width: answer.width, height: answer.height, ...(answer.atoms === undefined ? {} : { atoms: answer.atoms, bonds: answer.bonds ?? [] }) };
+      return { ok: true, svg: answer.svg, width: answer.width, height: answer.height, ...(answer.atoms === undefined ? {} : { atoms: answer.atoms, bonds: answer.bonds ?? [], glyphs: answer.glyphs ?? [] }) };
     },
     createUrl: (svg) => depictions.createUrl(svg),
     revokeUrl: (url) => depictions.revokeUrl(url),

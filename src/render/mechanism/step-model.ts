@@ -62,7 +62,7 @@ export async function loadStep(step: DrawableStep, port: StepDrawingPort): Promi
       return { drawn: labelBox(one.label ?? one.role.replaceAll('_', ' ')) };
     }
     const atoms = (answer.atoms ?? []).map((a) => ({ map: a.map, x: a.x, y: a.y, rx: a.rx, ry: a.ry }));
-    return { svg: answer.svg, drawn: { kind: 'structure', transitionState: one.role === 'transition_state', width: answer.width, height: answer.height, atoms, bonds: [...(answer.bonds ?? [])] } };
+    return { svg: answer.svg, drawn: { kind: 'structure', transitionState: one.role === 'transition_state', width: answer.width, height: answer.height, atoms, bonds: [...(answer.bonds ?? [])], glyphs: [...(answer.glyphs ?? [])] } };
   });
   if (!parts.some((part) => part.drawn.atoms.length > 0)) return { status: 'none', words: NO_DRAWING_WORDS.noMaps };
 

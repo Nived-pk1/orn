@@ -4,7 +4,7 @@
  * `src/app/window` fills it from `AppServices`; the feature imports no `src/app` and the engines as types only (step 5.0 rules).
  * Step 5.5a part 2 adds the depiction functions (optional: without them no node has a structure).
  */
-import type { DepictedAtom, DepictedBond, StructureMode } from '@/chem/contracts';
+import type { DepictedAtom, DepictedBond, DepictedGlyph, StructureMode } from '@/chem/contracts';
 import type { ChangeSet } from '@/core/dataset/contracts';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, StructureRep } from '@/core/schema';
@@ -22,7 +22,7 @@ export interface NavigatorMeasurer {
 
 /** What the depiction service answers, as far as the navigator uses it (the service's `DepictionResult` fits). */
 export type NavigatorDepictionAnswer =
-  | { readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[] }
+  | { readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[]; readonly glyphs?: readonly DepictedGlyph[] }
   | { readonly ok: false; readonly reason: 'unavailable' | 'timeout' | 'invalid' | 'refused' | 'cancelled' | 'queue_full' | 'bad_options'; readonly message: string };
 
 /** Structures (item i): the request key, the service call, and the object URLs, which are a browser API and so made by the app. */

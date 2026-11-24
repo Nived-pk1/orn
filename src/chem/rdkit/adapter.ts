@@ -173,7 +173,7 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
         // a fixed-scale drawing has the size of the molecule, which RDKit wrote in the viewBox; any other has the size that was asked for
         const size = details.fixedScale ? viewBoxSize(clean.svg) : { width: details.width, height: details.height };
         if (size === undefined) return { ok: false, reason: 'refused', error: 'the drawing has no usable viewBox' };
-        const table = positioned?.ok ? { atoms: positioned.atoms, bonds: positioned.bonds } : {};
+        const table = positioned?.ok ? { atoms: positioned.atoms, bonds: positioned.bonds, glyphs: positioned.glyphs } : {};
         return { ok: true, depiction: { key, svg: clean.svg, width: size.width, height: size.height, ...table } };
       } catch (error) {
         return crashed(error) ?? refused(error, at.stage);

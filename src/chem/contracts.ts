@@ -104,6 +104,14 @@ export interface DepictedAtom {
   readonly ry: number;
 }
 
+/** The box of one glyph of an atom label (a letter, a hydrogen count, a charge sign), in the frame of `Depiction.svg` (step 8.5c C1: arrows and dots keep clear of them). */
+export interface DepictedGlyph {
+  readonly x0: number;
+  readonly x1: number;
+  readonly y0: number;
+  readonly y1: number;
+}
+
 /** A bond between two mapped atoms, by map number (`a` < `b`). */
 export interface DepictedBond {
   readonly a: number;
@@ -120,6 +128,8 @@ export interface Depiction {
   /** Only for a drawing made with `atomPositions`. Derived, like the drawing: never stored. */
   readonly atoms?: readonly DepictedAtom[];
   readonly bonds?: readonly DepictedBond[];
+  /** Every label glyph of the drawing (mapped or not), with the atoms; derived, never stored. */
+  readonly glyphs?: readonly DepictedGlyph[];
 }
 
 /** `refused`: the toolkit drew it, but the sanitiser refused the drawing (over the size cap, or not an svg): nothing is shown. */

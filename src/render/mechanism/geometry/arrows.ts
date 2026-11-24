@@ -13,6 +13,9 @@
  *   curve   bulges AWAY from the centre of the sites involved by `BULGE_RATIO` of the chord, kept between `MIN_BULGE` and `MAX_BULGE`;
  *           an arrow whose control point is within `OVERLAP` of an earlier one is bent to the other side.
  *   head    two electrons a full head, one a fishhook (the outer wing only), along the curve's end tangent.
+ * Labels (step 8.5c C1): with `ctx.glyphs` (the box of every label glyph of the before side, in the same frame) NO dot, anchor or curve sample sits over a
+ * glyph: dots and ends turn to the nearest free direction, a bond anchor is the middle of its VISIBLE part, and a curve is bent to the side that crosses no
+ * glyph (then a higher bulge, within `MAX_BULGE`); when every try crosses, the one that crosses least is kept and the arrow says how often (`crossings`).
  * A movement naming an atom the drawing does not have makes the whole answer `{ ok: false, missing }`: nothing partial is drawn.
  */
 
@@ -32,9 +35,18 @@ export interface MovementInput {
   readonly to: SiteInput;
   readonly electrons: 1 | 2;
 }
+/** The box of one label glyph (a letter, a hydrogen count, a charge sign), in the frame of the atoms. */
+export interface GlyphBox {
+  readonly x0: number;
+  readonly x1: number;
+  readonly y0: number;
+  readonly y1: number;
+}
 export interface ArrowContext {
   readonly atoms: ReadonlyMap<number, AtomBox>;
   readonly bonds: readonly (readonly [number, number])[];
+  /** Every label glyph of the before side; absent: no label is avoided. */
+  readonly glyphs?: readonly GlyphBox[];
 }
 export interface ArrowHead {
   readonly tip: Point;
@@ -55,6 +67,8 @@ export interface CurvedArrow {
   readonly head: ArrowHead;
   /** The lone-pair dots (two) or radical dot (one) the arrow starts from or ends at, drawn with it. */
   readonly dots: readonly Point[];
+  /** Samples of the path that still lie over a label glyph after every try; present only when above 0 (the arrow says so, nothing silent). */
+  readonly crossings?: number;
 }
 export type ArrowsOutcome =
   | { readonly ok: true; readonly arrows: readonly CurvedArrow[] }
@@ -84,6 +98,18 @@ const unit = (a: Point, fallback: Point): Point => {
 const r2 = (value: number): number => Math.round(value * 100) / 100;
 const fmt = (p: Point): string => `${r2(p.x)} ${r2(p.y)}`;
 
+/** The radius of a dot as drawn, and the air kept between a dot, an end or a curve and a glyph. */
+const DOT_RADIUS = 1.9;
+const AIR = 0.6;
+const SAMPLES = 40;
+/** The turns tried, in order, when the preferred direction is over a glyph (radians: nearest to the preferred first, one way then the other). */
+const TURNS = [0, 0.45, -0.45, 0.9, -0.9, 1.35, -1.35, 1.8, -1.8, 2.25, -2.25, 2.7, -2.7, Math.PI];
+/** A dot or end must stay this far (radians) from the direction of a bond of its atom. */
+const BOND_CLEAR = 0.6;
+
+const over = (glyphs: readonly GlyphBox[] | undefined, p: Point, pad: number): boolean => glyphs !== undefined && glyphs.some((g) => p.x > g.x0 - pad && p.x < g.x1 + pad && p.y > g.y0 - pad && p.y < g.y1 + pad);
+const turn = (d: Point, angle: number): Point => ({ x: d.x * Math.cos(angle) - d.y * Math.sin(angle), y: d.x * Math.sin(angle) + d.y * Math.cos(angle) });
+
 /** How far the edge of the atom's box is from its centre in the direction `dir` (an ellipse). */
 function radius(box: AtomBox, dir: Point): number {
   const rx = Math.max(box.rx, 1);
@@ -93,8 +119,24 @@ function radius(box: AtomBox, dir: Point): number {
 
 const atomsOf = (site: SiteInput): readonly number[] => (site.kind === 'bond' ? site.atoms : [site.atom]);
 
+/** The middle of the part of the line a-b that no label glyph covers (a bond is drawn shortened at a label); undefined when nothing of it is free. */
+function visibleMiddle(a: AtomBox, b: AtomBox, glyphs: readonly GlyphBox[]): Point | undefined {
+  const run = length(sub(b, a));
+  if (run < 1) return undefined;
+  const at = (d: number): Point => ({ x: a.x + ((b.x - a.x) * d) / run, y: a.y + ((b.y - a.y) * d) / run });
+  let start = 0;
+  while (start < run && over(glyphs, at(start), 1.5)) start += 1;
+  let end = run;
+  while (end > start && over(glyphs, at(end), 1.5)) end -= 1;
+  return end - start < 2 ? undefined : at((start + end) / 2);
+}
+
 /** The place a site is at before any anchoring: the atom's centre, a bond's midpoint. */
 function coarse(site: SiteInput, ctx: ArrowContext): Point {
+  if (site.kind === 'bond' && ctx.glyphs !== undefined && site.atoms[0] !== site.atoms[1]) {
+    const visible = visibleMiddle(ctx.atoms.get(site.atoms[0]) as AtomBox, ctx.atoms.get(site.atoms[1]) as AtomBox, ctx.glyphs);
+    if (visible !== undefined) return visible;
+  }
   const boxes = atomsOf(site).map((id) => ctx.atoms.get(id) as AtomBox);
   return { x: boxes.reduce((s, b) => s + b.x, 0) / boxes.length, y: boxes.reduce((s, b) => s + b.y, 0) / boxes.length };
 }
@@ -116,15 +158,49 @@ interface Anchored {
   readonly dots: readonly Point[];
 }
 
+/** The directions of the bonds of an atom (unit vectors); a turned dot or end keeps away from them. */
+function bondDirections(id: number, ctx: ArrowContext): Point[] {
+  const here = ctx.atoms.get(id) as AtomBox;
+  const out: Point[] = [];
+  for (const [p, q] of ctx.bonds) {
+    const other = p === id ? q : q === id ? p : undefined;
+    const box = other === undefined || other === id ? undefined : ctx.atoms.get(other);
+    if (box !== undefined) out.push(unit(sub(box, here), { x: 0, y: 0 }));
+  }
+  return out;
+}
+
+/** The first direction of `TURNS` from `preferred` at which `clear` holds and no bond is near; `preferred` itself when no glyph list is given or none is free. */
+function freeDirection(preferred: Point, id: number, ctx: ArrowContext, clear: (dir: Point) => boolean): Point {
+  if (ctx.glyphs === undefined || ctx.glyphs.length === 0) return preferred;
+  const bonds = bondDirections(id, ctx);
+  for (const angle of TURNS) {
+    const dir = turn(preferred, angle);
+    if (bonds.some((d) => length(d) > 0 && Math.acos(Math.max(-1, Math.min(1, d.x * dir.x + d.y * dir.y))) < BOND_CLEAR)) continue;
+    if (clear(dir)) return dir;
+  }
+  return preferred;
+}
+
 function anchor(site: SiteInput, toward: Point, ctx: ArrowContext): Anchored {
   if (site.kind === 'bond') return { anchor: coarse(site, ctx), dots: [] };
   const box = ctx.atoms.get(site.atom) as AtomBox;
   const toTarget = unit(sub(toward, box), { x: 1, y: 0 });
-  if (site.kind === 'atom') return { anchor: add(box, toTarget, radius(box, toTarget) + GAP), dots: [] };
-  const dir = awayFromBonds(site.atom, ctx, toTarget);
-  const base = add(box, dir, radius(box, dir) + DOT_OFFSET);
-  const across = { x: -dir.y, y: dir.x };
-  const dots = site.kind === 'lone_pair' ? [add(base, across, -DOT_SPACING / 2), add(base, across, DOT_SPACING / 2)] : [base];
+  if (site.kind === 'atom') {
+    const dir = freeDirection(toTarget, site.atom, ctx, (d) => !over(ctx.glyphs, add(box, d, radius(box, d) + GAP), AIR));
+    return { anchor: add(box, dir, radius(box, dir) + GAP), dots: [] };
+  }
+  const place = (dir: Point): { readonly base: Point; readonly dots: readonly Point[] } => {
+    const base = add(box, dir, radius(box, dir) + DOT_OFFSET);
+    const across = { x: -dir.y, y: dir.x };
+    return { base, dots: site.kind === 'lone_pair' ? [add(base, across, -DOT_SPACING / 2), add(base, across, DOT_SPACING / 2)] : [base] };
+  };
+  const free = (dir: Point): boolean => {
+    const { base, dots } = place(dir);
+    return !over(ctx.glyphs, add(base, dir, GAP), AIR) && !dots.some((d) => over(ctx.glyphs, d, DOT_RADIUS + AIR));
+  };
+  const dir = freeDirection(awayFromBonds(site.atom, ctx, toTarget), site.atom, ctx, free);
+  const { base, dots } = place(dir);
   return { anchor: add(base, dir, GAP), dots };
 }
 
@@ -142,6 +218,18 @@ function endSite(movement: MovementInput, ctx: ArrowContext): SiteInput {
   const source = atomsOf(movement.from);
   const others = [p, q].filter((id) => !source.includes(id));
   return others.length === 1 ? { kind: 'atom', atom: others[0] as number } : to;
+}
+
+/** How many of `SAMPLES + 1` points along the quadratic lie over a label glyph. */
+function crossingsOf(a: Point, control: Point, b: Point, glyphs: readonly GlyphBox[] | undefined): number {
+  if (glyphs === undefined || glyphs.length === 0) return 0;
+  let count = 0;
+  for (let k = 0; k <= SAMPLES; k += 1) {
+    const t = k / SAMPLES;
+    const u = 1 - t;
+    if (over(glyphs, { x: u * u * a.x + 2 * u * t * control.x + t * t * b.x, y: u * u * a.y + 2 * u * t * control.y + t * t * b.y }, AIR)) count += 1;
+  }
+  return count;
 }
 
 export function layoutArrows(movements: readonly MovementInput[], ctx: ArrowContext): ArrowsOutcome {
@@ -173,11 +261,23 @@ export function layoutArrows(movements: readonly MovementInput[], ctx: ArrowCont
     const outward = (mid.x - centre.x) * normal.x + (mid.y - centre.y) * normal.y;
     let side = outward < 0 ? -1 : 1;
     const bulge = Math.min(MAX_BULGE, Math.max(MIN_BULGE, length(chord) * BULGE_RATIO));
-    const controlAt = (s: number): Point => add(mid, normal, 2 * bulge * s);
-    if (arrows.some((earlier) => earlier.kind === 'curve' && length(sub(earlier.control, controlAt(side))) < OVERLAP)) side = -side;
-    const control = controlAt(side);
+    const controlAt = (s: number, k: number): Point => add(mid, normal, 2 * k * s);
+    if (arrows.some((earlier) => earlier.kind === 'curve' && length(sub(earlier.control, controlAt(side, bulge))) < OVERLAP)) side = -side;
+    // the side and bulge that cross no label glyph: the preferred side, the other side, then higher bulges on each, within MAX_BULGE
+    let chosen = { side, bulge, crossings: crossingsOf(from.anchor, controlAt(side, bulge), to.anchor, ctx.glyphs) };
+    if (chosen.crossings > 0) {
+      const raised = [bulge, ...[1, 2, 3].map((k) => bulge + ((MAX_BULGE - bulge) * k) / 3)];
+      search: for (const k of raised) {
+        for (const s of [side, -side]) {
+          const found = crossingsOf(from.anchor, controlAt(s, k), to.anchor, ctx.glyphs);
+          if (found < chosen.crossings) chosen = { side: s, bulge: k, crossings: found };
+          if (chosen.crossings === 0) break search;
+        }
+      }
+    }
+    const control = controlAt(chosen.side, chosen.bulge);
     const angle = Math.atan2(to.anchor.y - control.y, to.anchor.x - control.x);
-    arrows.push({ kind: 'curve', start: from.anchor, end: to.anchor, control, path: `M ${fmt(from.anchor)} Q ${fmt(control)} ${fmt(to.anchor)}`, head: head(to.anchor, angle, movement.electrons, side), dots });
+    arrows.push({ kind: 'curve', start: from.anchor, end: to.anchor, control, path: `M ${fmt(from.anchor)} Q ${fmt(control)} ${fmt(to.anchor)}`, head: head(to.anchor, angle, movement.electrons, chosen.side), dots, ...(chosen.crossings > 0 ? { crossings: chosen.crossings } : {}) });
   }
   return { ok: true, arrows };
 }

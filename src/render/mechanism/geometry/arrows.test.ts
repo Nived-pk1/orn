@@ -7,7 +7,7 @@
  */
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { layoutArrows, MAX_ARROWS, MAX_BULGE, MIN_BULGE, type AtomBox, type MovementInput } from './arrows';
+import { layoutArrows, MAX_ARROWS, MAX_BULGE, MIN_BULGE, type AtomBox, type CurvedArrow, type MovementInput } from './arrows';
 
 const atom = (x: number, y: number, r = 10): AtomBox => ({ x, y, rx: r, ry: r });
 const lay = (atoms: Record<number, AtomBox>, bonds: readonly (readonly [number, number])[], movements: readonly MovementInput[]) =>
@@ -187,5 +187,56 @@ describe('properties (fast-check)', () => {
   it('the bulge is away from the centre of the atoms involved: an arrow between two atoms with a third atom above bows downwards', () => {
     const arrows = must(lay({ 1: atom(0, 0), 2: atom(100, 0), 3: atom(50, -80) }, [], [pair({ kind: 'atom', atom: 1 }, { kind: 'atom', atom: 2 }), pair({ kind: 'atom', atom: 3 }, { kind: 'atom', atom: 3 })]));
     expect(arrows[0]?.control.y ?? -1).toBeGreaterThan(0);
+  });
+});
+
+// step 8.5c C1: dots and arrows keep clear of the glyphs of labels
+describe('label glyphs', () => {
+  type G = { x0: number; x1: number; y0: number; y1: number };
+  const layG = (atoms: Record<number, AtomBox>, bonds: readonly (readonly [number, number])[], glyphs: readonly G[], movements: readonly MovementInput[]) =>
+    layoutArrows(movements, { atoms: new Map(Object.entries(atoms).map(([k, v]) => [Number(k), v])), bonds, glyphs });
+  const inside = (p: { x: number; y: number }, g: G, pad = 0) => p.x > g.x0 - pad && p.x < g.x1 + pad && p.y > g.y0 - pad && p.y < g.y1 + pad;
+  const along = (path: string): { x: number; y: number }[] => {
+    const n = (path.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+    return Array.from({ length: 41 }, (_, k) => {
+      const t = k / 40;
+      const u = 1 - t;
+      return { x: u * u * (n[0] as number) + 2 * u * t * (n[2] as number) + t * t * (n[4] as number), y: u * u * (n[1] as number) + 2 * u * t * (n[3] as number) + t * t * (n[5] as number) };
+    });
+  };
+
+  it('a lone pair whose free side faces a label glyph (a charge sign) puts its dots on a side with no glyph', () => {
+    // an unbonded atom faces its target (right); a charge sign sits at the upper right of the letter, where the dots would go
+    const charge: G = { x0: 8, x1: 22, y0: -9, y1: 3 };
+    const [arrow] = must(layG({ 1: atom(0, 0, 8), 2: atom(100, 0) }, [], [charge], [pair({ kind: 'lone_pair', atom: 1 }, { kind: 'atom', atom: 2 })]));
+    expect(arrow?.dots.length).toBe(2);
+    for (const dot of arrow?.dots ?? []) expect(inside(dot, charge, 1.9)).toBe(false);
+  });
+
+  it('an arrow whose bulge would cross a label glyph bends to the other side', () => {
+    // a chord along y = 0 from x = 0 to 200; the arrow bows up (negative y) by default (a third atom below); a glyph sits in the way up there
+    const wall: G = { x0: 80, x1: 120, y0: -40, y1: -12 };
+    const atoms = { 1: atom(0, 0, 4), 2: atom(200, 0, 4), 3: atom(100, 90, 4) };
+    const open = must(layG(atoms, [], [], [pair({ kind: 'atom', atom: 1 }, { kind: 'atom', atom: 2 }), pair({ kind: 'atom', atom: 3 }, { kind: 'atom', atom: 3 })]))[0] as CurvedArrow;
+    expect(along(open.path).some((p) => inside(p, wall))).toBe(true); // without the glyph list the arrow does go through that place
+    const [bent] = must(layG(atoms, [], [wall], [pair({ kind: 'atom', atom: 1 }, { kind: 'atom', atom: 2 }), pair({ kind: 'atom', atom: 3 }, { kind: 'atom', atom: 3 })]));
+    expect(along(bent?.path ?? '').some((p) => inside(p, wall))).toBe(false);
+    expect(bent?.crossings ?? 0).toBe(0);
+  });
+
+  it('when both sides cross a glyph the arrow keeps the side that crosses less and SAYS how often it crosses', () => {
+    const tall: G = { x0: 90, x1: 110, y0: -60, y1: -10 }; // above the chord: wide and tall
+    const small: G = { x0: 96, x1: 104, y0: 5, y1: 45 }; // below the chord: a narrow one that every bulge from the lowest to the highest meets
+    const atoms = { 1: atom(0, 0, 4), 2: atom(200, 0, 4) };
+    const [arrow] = must(layG(atoms, [], [tall, small], [pair({ kind: 'atom', atom: 1 }, { kind: 'atom', atom: 2 })]));
+    expect(arrow?.crossings ?? 0).toBeGreaterThan(0);
+    const again = must(layG(atoms, [], [tall, small], [pair({ kind: 'atom', atom: 1 }, { kind: 'atom', atom: 2 })]))[0];
+    expect(JSON.stringify(again)).toBe(JSON.stringify(arrow));
+  });
+
+  it('with no glyph list the answer is the one it always was (the same numbers)', () => {
+    const [a] = must(layG({ 1: atom(0, 0), 2: atom(100, 0) }, [], [], [pair({ kind: 'atom', atom: 1 }, { kind: 'atom', atom: 2 })]));
+    const [b] = must(lay({ 1: atom(0, 0), 2: atom(100, 0) }, [], [pair({ kind: 'atom', atom: 1 }, { kind: 'atom', atom: 2 })]));
+    expect(a?.path).toBe(b?.path);
   });
 });

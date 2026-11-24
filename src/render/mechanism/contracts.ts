@@ -3,14 +3,14 @@
  * URLs (made and revoked by the app, never here). `src/app` fills it from the depiction service; the Study view, the inspector and the
  * Studio editor each hand it in. The drawing itself is derived: nothing here is stored.
  */
-import type { DepictedAtom, DepictedBond } from '@/chem/contracts';
+import type { DepictedAtom, DepictedBond, DepictedGlyph } from '@/chem/contracts';
 import type { STEP_SPECIES_ROLES, StructureRep } from '@/core/schema';
 import type { MovementInput } from './geometry';
 
 type StepSpeciesRole = (typeof STEP_SPECIES_ROLES)[number];
 
 export type StepDrawingAnswer =
-  | { readonly ok: true; readonly svg: string; readonly width: number; readonly height: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[] }
+  | { readonly ok: true; readonly svg: string; readonly width: number; readonly height: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[]; readonly glyphs?: readonly DepictedGlyph[] }
   | { readonly ok: false; readonly reason: string; readonly message: string };
 
 export interface StepDrawingPort {
