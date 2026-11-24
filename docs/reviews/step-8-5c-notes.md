@@ -47,3 +47,22 @@ are red; the committed e2e runs on the demo by default and on any package by the
 layout put them, on the borders). `pairUp` keeps the old shift + snap when it leaves both ends within 1.5 px of their borders (every existing
 test and the straight pairs are unchanged) and uses `shiftedMiddle` otherwise. The chip moves with the middle. Green: the new test 45/45, map-view,
 map-geometry tests 70/70; e2e on the real package: 0 off in every view, Chromium desktop and phone.
+
+## C0 close
+Deployed 2026-11-24 from 3a7e897: Study c89ccd22, Studio 902e4512 (Studio deploy ran twice by mistake with one build; 4f2930f8 was the first). Live specs Chromium 45 / WebKit 44 passed. Round: 41 passed, 1 failed (WebKit arrows.spec:183, Key dialog toHaveCount, passed 3 of 3 re-runs).
+
+## C2
+tests/integration/hydrogen-letter-positions.test.ts: 15 cases, green on the first run, no code change (no red to show). Measured glyph orders (RDKit 2026.03): HO- = H, O, minus (O is index 1); HS- = H, S; H2O = H, 2, O (O index 2); NH3 = N, H, 3; NH4+ = N, H, 4, plus; H3O+ = H, 3, O, plus; NH2- = N, H, 2, minus; a bonded N/O/S with the bond on its left is drawn letter first (OH, SH, NH3+); with the bond on its right the hydrogen comes first (HO, H2N).
+
+## C1
+Glyph boxes: Depiction.glyphs (worker, labelGlyphsOf in chem/rdkit/svg-positions.ts) -> DrawnSpecies.glyphs -> composeStep -> layoutArrows ctx.glyphs. Red: label-clearance.test.ts 19 failed / 3 passed; arrows.test.ts 3 failed / 16 passed. Rules: dot or end direction (nearest free of 14 turns, not near a bond), bond anchor = middle of the visible part, curve = preferred side, other side, higher bulge (within MAX_BULGE), else least crossings with crossings reported on the arrow. A first version rotated an end that was only near a bond; the 8.5b R1 e2e (mechanism-drawing.spec:74, 3 engines) caught it; fixed by keeping the preferred direction when it is clear.
+Not shown anywhere yet: an arrow with crossings > 0 is not marked in the picture (no demo step needs it); the fixture in arrows.test.ts proves the branch and the number.
+
+## C3 NOT DONE: facts for the next prompt (row 8.5d)
+- The owner two cut-off cards (Pyrolysis of esters, Dieckmann condensation) are FAMILY-PAGE boxes: features/navigator/family-structure.tsx draws an img at width/height STRUCTURE_AREA in a fixed box (family-scheme.module.css .structure, overflow hidden; text boxes widen to min(100%, 22rem) and break only at spaces). The depiction is asked to FIT that area (env.keyOf, the depiction manager), not at a fixed bond length, so a long molecule is shrunk; changing it changes the depiction request and its cache keys.
+- Equation (render/equation): already a fixed bond length (EQUATION_BOND_PX 54), but drawingSizeOf scales a drawing down WHOLE beyond MAX_DRAWING_WIDTH 220 / MAX_DRAWING_HEIGHT 160 (stacked 140): the shrink the owner saw. Rows wrap between terms already (.row flex-wrap). Inspector hero: fitHero (hero-fit.ts) scales the row down to MIN_DRAWING_PX 80 then stacks.
+- Map cards (render/svg/nodes-layer.tsx): the picture is an image with preserveAspectRatio meet in a fixed area from the layout (core layout, so a growing box is a layout change).
+- Mechanism step (render/mechanism): fixed scale, wide steps scroll sideways (data-drawing-scroll).
+- Text formulas: family-text.tsx BoxFormula / FormulaText; names use overflow-wrap anywhere (breaks mid-word; B3 wants spaces, after dash and comma).
+- Size: the shared module plus CSS plus the depiction change is expected to need more than the +600 byte limit; decide the limit first.
+- Not reproducible on the demo (no Pyrolysis or Dieckmann there): use the real package, ORN_ARROW_DATA style import.

@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-18",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "8.5c (step 8.5b closed 2026-11-23, docs/PROGRESS.md Step 8.5b), then 8.6",
-  "nextStepTitle": "Step 8.5b DONE 2026-11-23 (docs/PROGRESS.md \"Step 8.5b\"; ADR-038 \"A3\"): arrows end on the atom they attack, labelled atoms on the element letter. Next: 8.5c one size rule for every structure drawing (Part B moved), then 8.6 export pictures and print stylesheet.",
+  "nextStep": "8.5d (C3, one size rule; step 8.5c closed PARTLY 2026-11-24, docs/PROGRESS.md Step 8.5c), then 8.6",
+  "nextStepTitle": "Step 8.5c PARTLY DONE 2026-11-24 (docs/PROGRESS.md \"Step 8.5c\"; ADR-038 \"A4\"): C0 map pair arrows on their boxes (hotfix), C1 arrows and dots clear of labels, C2 tests, C4 future rows and the family-patterns report; C3 NOT DONE. Next: 8.5d one size rule for every structure drawing, then 8.6 export pictures and print stylesheet.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
