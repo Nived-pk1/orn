@@ -224,6 +224,8 @@ Each row starts with a fact sheet part. (Reviewer, 2026-10-24; ADR-042.)
 | 8.5c | One size rule for every structure drawing (fixed bond length per context, grow / floor 70 % / wrap / scroll box, text formulas never clipped, one pure module, `data-bond-px`, the awkward-set fixtures) and the SN2 arrow that crosses the "r" of Br. Prompt to follow. |
 | 8.6 | Export pictures (SVG/PNG from a card, family page and map) and a print stylesheet. |
 | 8.7 | Phase 8 close: full e2e, both sizes, Definition of Done. |
+| 9.1 | **FUTURE (owner, 2026-11-23; not built): "Does not apply to".** A general reaction may list the families it does NOT apply to (for example 3-degree alcohols); routes, Precursors and family pages ENFORCE it instead of a note. Schema v3 candidate (amendment procedure when built: bump the version, migration step, frozen fixtures; also listed in PROJECT_STATE openItems). |
+| 9.2 | **FUTURE (owner, 2026-11-23; not built): "What can this compound do?".** The student pastes or draws any compound (also one not in the data); the app finds its functional groups (with the families' membership patterns) and lists, per group, the general reactions that apply, each marked "check that this compound fits", and says plainly what it cannot tell (which of two equal groups reacts, special cases). |
 
 Also under Phase 8: mechanism steps: before → after layout of a step's species (with arrow-pushing, row 8.x).
 
