@@ -1,6 +1,6 @@
 # Step 8.5d notes (ONE size rule for drawings, formulas and names; was 8.5c C3)
 
-Resume point: section 0 = 05d273c. size-rule.ts + tests, equation + hero changes in the working tree; family page (R5), text rules, inspector hero scroll, docs, close next.
+Resume point: CLOSED 2026-11-24 (deployed, pushed); see PROGRESS "Step 8.5d".
 
 ## START
 HEAD 5fecb4d clean, stash empty, in sync with origin. Sizes (fresh builds): Study 338,438 / Studio 342,436. Speed check 1.47 s (over 1.2): the load is other Claude Code sessions and the owner's Edge windows; not stopped.
