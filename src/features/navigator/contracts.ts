@@ -22,7 +22,7 @@ export interface NavigatorMeasurer {
 
 /** What the depiction service answers, as far as the navigator uses it (the service's `DepictionResult` fits). */
 export type NavigatorDepictionAnswer =
-  | { readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[]; readonly glyphs?: readonly DepictedGlyph[] }
+  | { readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[]; readonly glyphs?: readonly DepictedGlyph[]; readonly allAtoms?: boolean }
   | { readonly ok: false; readonly reason: 'unavailable' | 'timeout' | 'invalid' | 'refused' | 'cancelled' | 'queue_full' | 'bad_options'; readonly message: string };
 
 /** Structures (item i): the request key, the service call, and the object URLs, which are a browser API and so made by the app. */

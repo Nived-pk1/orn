@@ -15,7 +15,8 @@ export type DepictionStatus =
   | { readonly state: 'idle' }
   | { readonly state: 'loading' }
   /** `width` and `height`: the size of the drawing when the answer said it (a fixed-scale drawing; equation step, part 5). */
-  | { readonly state: 'ready'; readonly url: string; readonly width?: number; readonly height?: number }
+  /** `allAtoms`: `Depiction.allAtoms` (step 8.5g B). */
+  | { readonly state: 'ready'; readonly url: string; readonly width?: number; readonly height?: number; readonly allAtoms?: boolean }
   | { readonly state: 'unavailable'; readonly reason: string };
 
 /** What the layers need of a depiction manager (`createDepictionManager`); a test passes a stub. */

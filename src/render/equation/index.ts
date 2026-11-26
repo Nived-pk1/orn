@@ -2,7 +2,7 @@ export { EquationScheme } from './equation-scheme';
 export type { EquationSchemeProps } from './equation-scheme';
 export { EQUATION_AREA } from './contracts';
 export type { StructureFactsAnswer, StructureFactsPort } from './contracts';
-export { FLOOR, formulaBreaks, MIN_LABEL_PX, nameBreaks, rowScale, SIZE_RULES, sizeDrawing } from './size-rule';
+export { CROWDED_WORDS, FLOOR, formulaBreaks, MIN_LABEL_PX, nameBreaks, rowScale, SIZE_RULES, sizeDrawing } from './size-rule';
 export type { Fit, SizeContext } from './size-rule';
 export { AvailableWidthContext, useAvailableWidth, useMeasuredWidth } from './use-width';
 export { fitHero, PEEK_MAX_HEIGHT, settledWidth } from './hero-fit';

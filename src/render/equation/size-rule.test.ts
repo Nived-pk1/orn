@@ -111,3 +111,12 @@ describe('formulaBreaks and nameBreaks: where text may wrap (R3)', () => {
     expect(parts[0]).toBe('2,');
   });
 });
+
+describe('the Full (all atoms) standard (8.5g B)', () => {
+  it('is 1.4 times the context standard, with the same floor', () => {
+    const wide = { width: 108, height: 54 };
+    expect(sizeDrawing(wide, 'family', { available: 400, allAtoms: true }).bondPx).toBeCloseTo(SIZE_RULES.family.standard * 1.4, 2);
+    expect(sizeDrawing(wide, 'family', { available: 400, allAtoms: false }).bondPx).toBe(SIZE_RULES.family.standard);
+    expect(sizeDrawing({ width: 5400, height: 54 }, 'equation', { available: 100, allAtoms: true }).bondPx).toBeCloseTo(SIZE_RULES.equation.standard * 1.4 * FLOOR, 2);
+  });
+});

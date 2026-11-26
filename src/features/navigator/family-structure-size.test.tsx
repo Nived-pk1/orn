@@ -18,16 +18,13 @@ beforeEach(() => {
 
 const REF = { kind: 'species', id: 'sp-wide' } as never;
 
-function setup(width: number, open?: FamilyEnv['openStructure']) {
+function setup(width: number, open?: FamilyEnv['openStructure'], more: { readonly allAtoms?: boolean; readonly inScheme?: boolean } = {}) {
   const timers = manualTimers();
-  const manager = createDepictionManager({ fetchSvg: () => Promise.resolve({ ok: true, svg: '<svg/>', width, height: 100 }), createUrl: () => 'blob:drawn', revokeUrl: () => undefined, setTimer: (cb, ms) => timers.after(ms, cb), clearTimer: (h) => (h as () => void)(), isPending: () => false });
+  const manager = createDepictionManager({ fetchSvg: () => Promise.resolve({ ok: true, svg: '<svg/>', width, height: 100, ...(more.allAtoms === undefined ? {} : { allAtoms: more.allAtoms }) }), createUrl: () => 'blob:drawn', revokeUrl: () => undefined, setTimer: (cb, ms) => timers.after(ms, cb), clearTimer: (h) => (h as () => void)(), isPending: () => false });
   const asked: (number | undefined)[] = [];
   const env: FamilyEnv = { describe: () => ({ name: 'Wide' }), keyOf: (_ref, bondPx) => (asked.push(bondPx), 'key-wide'), manager, timers, ...(open === undefined ? {} : { openStructure: open }) };
-  render(
-    <FamilyEnvContext.Provider value={env}>
-      <Structure substance={REF} />
-    </FamilyEnvContext.Provider>,
-  );
+  const box = <Structure substance={REF} />;
+  render(<FamilyEnvContext.Provider value={env}>{more.inScheme === true ? <div data-scheme="">{<div>{box}</div>}</div> : box}</FamilyEnvContext.Provider>);
   return { asked };
 }
 
@@ -60,5 +57,33 @@ describe('Structure box at the family standard (8.5e)', () => {
     expect(opened).toHaveBeenCalledWith(REF);
     expect(box.getAttribute('role')).toBe('button');
     expect(box.getAttribute('aria-label')).toBe('Open the structure of Wide full size in the inspector');
+  });
+});
+
+const CROWDED = 'Too crowded with all atoms; shown condensed';
+
+describe('Full mode and the card (8.5g B)', () => {
+  it('a drawing with all atoms is shown at the Full standard (1.4 x the family standard), with no extra line', async () => {
+    setup(100, undefined, { allAtoms: true });
+    const img = await screen.findByRole('img', { name: 'Structure of Wide' });
+    expect(Number(img.getAttribute('data-bond-px'))).toBeCloseTo(SIZE_RULES.family.standard * 1.4, 1);
+    expect(screen.queryByText(CROWDED)).toBeNull();
+  });
+
+  it('a structure too crowded for all atoms says so under the picture and in its text alternative, at the family standard', async () => {
+    setup(100, undefined, { allAtoms: false });
+    const img = await screen.findByRole('img', { name: `Structure of Wide. ${CROWDED}` });
+    expect(Number(img.getAttribute('data-bond-px'))).toBe(SIZE_RULES.family.standard);
+    expect(screen.getByText(CROWDED)).toBeTruthy();
+  });
+
+  it('may use the width of its whole scheme, not only of the column it sits in: no scroll box while the card has room', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.hasAttribute('data-scheme') ? 900 : 120;
+    });
+    setup(600, undefined, { inScheme: true });
+    const img = await screen.findByRole('img', { name: 'Structure of Wide' });
+    expect(Number(img.getAttribute('width'))).toBe(Math.round((600 * SIZE_RULES.family.standard) / 54));
+    expect(document.querySelector('[data-scrolls]')).toBeNull();
   });
 });

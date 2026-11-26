@@ -72,7 +72,7 @@ function GroupScheme(props: { readonly card: FamilyCard; readonly group: FamilyO
   const name = `${substrate} to ${products.join(' and ')}${conditions.length === 0 ? '' : `, ${conditions.join('; ')}`}`;
   return (
     <>
-      <div className={scheme.scheme} role="group" aria-label={name} data-outcome-ids={group.outcomes.map((outcome) => outcome.outcomeId).join(' ')}>
+      <div className={scheme.scheme} data-scheme="" role="group" aria-label={name} data-outcome-ids={group.outcomes.map((outcome) => outcome.outcomeId).join(' ')}>
         {env.layout === 'phone' ? (
           <div className={scheme.reactants}>
             <Structure substance={card.substrate} {...(card.substrateWrittenAs === undefined ? {} : { writtenAs: card.substrateWrittenAs })} />

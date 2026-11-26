@@ -6,7 +6,7 @@
  * than its space keeps the floor scale in a box that scrolls. Nothing is clipped. R3 text is never clipped: `formulaBreaks` and
  * `nameBreaks` say where it may wrap.
  */
-import { FIXED_SCALE_BOND_UNITS } from '@/chem/contracts';
+import { FIXED_SCALE_BOND_UNITS, FULL_BOND_FACTOR } from '@/chem/contracts';
 
 /** An atom label is never drawn under this height, in px. */
 export const MIN_LABEL_PX = 11;
@@ -45,10 +45,14 @@ export interface Fit {
   readonly boxHeight: number;
 }
 
-/** `natural`: the size RDKit gave the drawing at the fixed scale. `available`: the width of its own space; `free`: more room its row can give. */
-export function sizeDrawing(natural: { readonly width: number; readonly height: number }, context: SizeContext, space: { readonly available: number; readonly free?: number }): Fit {
+/** The line under a structure that was asked with all atoms and is shown condensed (step 8.5g B1); also part of its text alternative. */
+export const CROWDED_WORDS = 'Too crowded with all atoms; shown condensed';
+
+/** `natural`: the size RDKit gave the drawing at the fixed scale. `available`: the width of its own space; `free`: more room its row can give; `allAtoms`: it is drawn with all atoms, whose standard is `FULL_BOND_FACTOR` times larger. */
+export function sizeDrawing(natural: { readonly width: number; readonly height: number }, context: SizeContext, space: { readonly available: number; readonly free?: number; readonly allAtoms?: boolean | undefined }): Fit {
   const rule = SIZE_RULES[context];
-  const standard = rule.standard / FIXED_SCALE_BOND_UNITS;
+  const bond = rule.standard * (space.allAtoms === true ? FULL_BOND_FACTOR : 1);
+  const standard = bond / FIXED_SCALE_BOND_UNITS;
   const wide = natural.width * standard;
   const room = Math.max(0, space.available + Math.max(0, space.free ?? 0));
   const scale = wide <= room ? 1 : Math.max(FLOOR, room / wide);
@@ -56,7 +60,7 @@ export function sizeDrawing(natural: { readonly width: number; readonly height: 
   const width = Math.max(1, Math.round(wide * scale));
   const height = Math.max(1, Math.round(natural.height * standard * scale));
   const boxWidth = mode === 'scroll' ? Math.round(room) : Math.max(rule.minWidth, width);
-  return { mode, scale, width, height, bondPx: Math.round(rule.standard * scale * 100) / 100, boxWidth, boxHeight: Math.max(rule.minHeight, height) };
+  return { mode, scale, width, height, bondPx: Math.round(bond * scale * 100) / 100, boxWidth, boxHeight: Math.max(rule.minHeight, height) };
 }
 
 /** A row of drawings (the hero, a family scheme): shrink to the floor first, then wrap. `total`: the row's width at the standard. */

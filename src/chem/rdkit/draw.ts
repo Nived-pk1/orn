@@ -5,10 +5,11 @@
  * that case: it is drawn again from the SMILES. Highlights are by atom map number (`highlightAtomMaps`), found from the
  * canonical SMILES and RDKit's `_smilesAtomOutputOrder`; a map number that is not in the structure highlights nothing.
  */
-import { FIXED_SCALE_BOND_UNITS, FIXED_SCALE_FACTOR, LABEL_GLYPH_PX } from '../contracts';
+import { FIXED_SCALE_BOND_UNITS, FIXED_SCALE_FACTOR, FULL_BOND_FACTOR, LABEL_GLYPH_PX } from '../contracts';
 import type { DrawDetails } from '../depiction-options';
 import { isTrap } from './errors';
-import { condensedLabels, groupLabels, withExplicitHydrogens } from './modes';
+import { drawAllAtoms } from './full-mode';
+import { condensedLabels, groupLabels } from './modes';
 import { withHandle } from './scope';
 import { indexesOfMaps, outputOrder, smilesAtoms } from './smiles-atoms';
 import type { RdkitMol, RdkitModule } from './types';
@@ -22,8 +23,10 @@ export function viewBoxSize(svg: string): { readonly width: number; readonly hei
 }
 
 const GLYPH_PER_FONT = 0.73;
+const fontFor = (bondPx: number): number => Math.round((LABEL_GLYPH_PX / GLYPH_PER_FONT) * FIXED_SCALE_BOND_UNITS / bondPx);
 
-export type DrawResult = { readonly ok: true; readonly svg: string } | { readonly ok: false; readonly error: string };
+/** `allAtoms`: only for an all-atom request with a bond standard (`Depiction.allAtoms`). */
+export type DrawResult = { readonly ok: true; readonly svg: string; readonly allAtoms?: boolean } | { readonly ok: false; readonly error: string };
 
 /**
  * One drawing of `mol`, in the mode of `details` (the molecule is never changed: Condensed adds `atomLabels` to the drawing options,
@@ -32,14 +35,19 @@ export type DrawResult = { readonly ok: true; readonly svg: string } | { readonl
 export function svgOf(module: RdkitModule, mol: RdkitMol, details: DrawDetails, atoms: readonly number[]): DrawResult {
   // a fixed scale: the canvas fits the molecule (-1 x -1) and `scalingFactor` gives every drawing the same bond length
   // `bondPx`: labels set apart from the bond length: the font is fixed in SVG units so that, shown at `bondPx` per bond, a capital letter is LABEL_GLYPH_PX high (glyph = 0.73 of the font; RDKit reads `fixedFontSize` as a whole number, a fraction is ignored)
-  const font = details.bondPx > 0 ? { fixedFontSize: Math.round((LABEL_GLYPH_PX / GLYPH_PER_FONT) * FIXED_SCALE_BOND_UNITS / details.bondPx) } : {};
+  const font = details.bondPx > 0 ? { fixedFontSize: fontFor(details.bondPx) } : {};
   const size = details.fixedScale ? { width: -1, height: -1, scalingFactor: FIXED_SCALE_FACTOR, clearBackground: false, ...font } : { width: details.width, height: details.height };
   const base = atoms.length === 0 ? size : { ...size, atoms };
   if (details.mode === 'full') {
     const atomLabels = groupLabels(mol);
     const options = Object.keys(atomLabels).length === 0 ? base : { ...base, atomLabels };
-    const drawn = withExplicitHydrogens(module, mol, (withH) => withH.get_svg_with_highlights(JSON.stringify(options)));
-    return drawn.opened ? { ok: true, svg: drawn.value } : { ok: false, error: 'the structure could not be drawn with all its hydrogens' };
+    const drawn = drawAllAtoms(module, mol, JSON.stringify(options));
+    if (drawn === undefined) return { ok: false, error: 'the structure could not be drawn with all its hydrogens' };
+    if (details.bondPx === 0) return { ok: true, svg: drawn.svg };
+    if (drawn.score === 0) return { ok: true, svg: drawn.svg, allAtoms: true };
+    // too crowded: Condensed, drawn for the standard without the Full factor, and the answer says so
+    const plain = svgOf(module, mol, { ...details, mode: 'condensed', bondPx: Math.round(details.bondPx / FULL_BOND_FACTOR) }, atoms);
+    return plain.ok ? { ...plain, allAtoms: false } : plain;
   }
   if (details.mode === 'condensed') {
     const atomLabels = condensedLabels(module, mol);

@@ -2,8 +2,32 @@
 
 ## Resume point
 
-Part A CLOSED: deployed and pushed 2026-11-26 (code 5900005). Part B not started: it starts from Part A's pushed deploy commit
-("phase-8.5g: Part A deployed ..."), with its own fresh START sizes and BEFORE screenshots.
+PAUSED by the owner (2026-11-26) in Part B, right BEFORE the 3-engine round. Wait for the owner to say continue. Part A is closed.
+
+Left to do, in order:
+1. 3-engine round (one engine at a time, `--workers=1`, speed check first): structures, structures-late, family, phone-family, equation,
+   phone-equation, equation-long-name, full-equation-group, size-rule, size-rule-extra, size-rule-owner, paper-surfaces, full-mode,
+   mechanism-drawing / pictures / editor / explorer / size, family-header-look, chain-steps, precursor-explorer, phone-precursors.
+2. ONE full Chromium run (`--project=chromium --project=chromium-serial`).
+3. `npm run build:smoke`, `npm audit --omit=dev`, final sizes (initial JS and worker-chem).
+4. PROGRESS "Step 8.5g Part B" (facts, RED, factor, B3 counts, sizes, checks, screenshot lines, disclosures, REVIEW REQUIRED);
+   PROJECT_STATE (next 8.6). Plan row 8.5g is already marked DONE; UI_ARCHITECTURE, Amendments, full-mode-crowding.md are written.
+5. Commit, deploy per RELEASE.md (Study, live specs by exact paths Chromium + WebKit one worker, Studio, Access check), push, report.
+
+## Part B so far
+
+START: 54f8f71 (clean, pushed). Initial JS gzip Study 339,787 / Studio 343,884; worker-chem 71,930.
+BEFORE screenshots: `screenshots/8.5g/before-full-*` (owner data). AFTER: `after-full-*` (all opened; retake only if drawing code changes).
+FACTS B1: Full = `add_hs()` then RDKit's layout with the hydrogens present (draw.ts, modes.ts); glucose and pinacol knot because that
+layout puts atoms on each other (4 pairs closer than half a bond each). CoordGen on the same molecule: 0 (coordinates rescaled to 1.5).
+FACTS B2: the box was measured against its shrink-wrapped parent (`useMeasuredWidth('parent')`, `.products` is as wide as its content),
+so a first narrow measure stuck.
+RED (2026-11-26 19:36): crowding, full-mode, depiction-binding, family-structure-size, size-rule: 12 failed, 24 passed, `./crowding` did
+not load (4.1 s). One of the new crowding cases had a wrong expectation (bonded atoms 0.14 apart ARE crowded): corrected.
+Built: chem/rdkit/crowding.ts, full-mode.ts; factor 1.4; fallback line; scheme-wide measure; thin scroll bar token; tests/e2e/full-mode.spec.ts
+(Chromium 2 passed). Owner five: all clean in Full. B3: 622 species, 619 clean, 3 fallback.
+Seen, to report: Pixel 7 family tiles shrink wide drawings to the tile (older phone CSS), labels can go under 11 px; a molecule crowded even
+condensed is shown as is.
 
 ## START (Part A)
 

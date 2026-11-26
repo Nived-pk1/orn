@@ -12,7 +12,7 @@
  * listened to only after a request was made while it was loading) the manager forgets just those keys, so the cards that show them ask
  * again (phone mode B, part 1: a slow phone opens a page before the wasm has arrived).
  */
-import type { DepictedAtom, DepictedBond, DepictedGlyph, StructureMode } from '@/chem/contracts';
+import { FULL_BOND_FACTOR, type DepictedAtom, type DepictedBond, type DepictedGlyph, type StructureMode } from '@/chem/contracts';
 import type { StructureRep } from '@/core/schema';
 import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer, type DepictionManager } from './depictions';
 import type { DepictionTimers } from './use-depiction-retry';
@@ -23,7 +23,7 @@ type Area = { readonly width: number; readonly height: number; readonly fixedSca
 /** What the binding needs from the depiction service (the navigator's and the inspector's ports have exactly this). */
 export interface DepictionPort {
   keyOf(structure: StructureRep, size: Area, mode?: StructureMode): string;
-  depict(structure: StructureRep, size: Area, mode?: StructureMode): Promise<{ readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[]; readonly glyphs?: readonly DepictedGlyph[] } | { readonly ok: false; readonly reason: string; readonly message: string }>;
+  depict(structure: StructureRep, size: Area, mode?: StructureMode): Promise<{ readonly ok: true; readonly svg: string; readonly width?: number; readonly height?: number; readonly atoms?: readonly DepictedAtom[]; readonly bonds?: readonly DepictedBond[]; readonly glyphs?: readonly DepictedGlyph[]; readonly allAtoms?: boolean } | { readonly ok: false; readonly reason: string; readonly message: string }>;
   cancel(key: string): void;
   /** How structures are drawn now (equation step, part 4). Absent: Skeletal. A key is made in THIS mode and its fetch draws in the same one. */
   mode?(): StructureMode;
@@ -76,7 +76,7 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
     // A key that left the lookup is not in the drawing any more: not an answer about the structure, so not cached.
     if (known === undefined) return { ok: false, reason: DEPICTION_BUSY };
     const answer = await port.depict(known.structure, known.area, known.mode);
-    if (answer.ok) return { ok: true, svg: answer.svg, ...(answer.width === undefined || answer.height === undefined ? {} : { width: answer.width, height: answer.height }) };
+    if (answer.ok) return { ok: true, svg: answer.svg, ...(answer.width === undefined || answer.height === undefined ? {} : { width: answer.width, height: answer.height }), ...(answer.allAtoms === undefined ? {} : { allAtoms: answer.allAtoms }) };
     return { ok: false, reason: BUSY_REASONS.has(answer.reason) ? DEPICTION_BUSY : answer.reason };
   };
   const manager = createDepictionManager({
@@ -93,7 +93,8 @@ export function createDepictionBinding(port: DepictionPort, timers: DepictionTim
   return {
     keyOf(structure, bondPx) {
       const mode = port.mode?.() ?? 'skeletal';
-      const at = bondPx === undefined ? area : { ...area, bondPx };
+      // Full draws every hydrogen, so its standard is larger (step 8.5g B1)
+      const at = bondPx === undefined ? area : { ...area, bondPx: mode === 'full' ? Math.round(bondPx * FULL_BOND_FACTOR) : bondPx };
       const key = port.keyOf(structure, at, mode);
       remember(key, structure, mode, at);
       return key;

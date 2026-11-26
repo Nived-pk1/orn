@@ -174,7 +174,8 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
         const size = details.fixedScale ? viewBoxSize(clean.svg) : { width: details.width, height: details.height };
         if (size === undefined) return { ok: false, reason: 'refused', error: 'the drawing has no usable viewBox' };
         const table = positioned?.ok ? { atoms: positioned.atoms, bonds: positioned.bonds, glyphs: positioned.glyphs } : {};
-        return { ok: true, depiction: { key, svg: clean.svg, width: size.width, height: size.height, ...table } };
+        const allAtoms = drawn.value.allAtoms === undefined ? {} : { allAtoms: drawn.value.allAtoms };
+        return { ok: true, depiction: { ...allAtoms, key, svg: clean.svg, width: size.width, height: size.height, ...table } };
       } catch (error) {
         return crashed(error) ?? refused(error, at.stage);
       }

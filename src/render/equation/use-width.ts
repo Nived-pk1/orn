@@ -6,10 +6,14 @@
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { settledWidth } from './hero-fit';
 
+/** The paper surface's padding and the box border, both sides. */
+const PAPER_EDGE = 12;
+
 export const AvailableWidthContext = createContext<number | undefined>(undefined);
 export const useAvailableWidth = (): number | undefined => useContext(AvailableWidthContext);
 
-export function useMeasuredWidth(of: 'self' | 'parent'): readonly [(node: HTMLElement | null) => void, number | undefined] {
+/** `scheme`: the nearest `[data-scheme]` around it (a card's whole row, which wraps), less the paper's edge; without one, the parent. */
+export function useMeasuredWidth(of: 'self' | 'parent' | 'scheme'): readonly [(node: HTMLElement | null) => void, number | undefined] {
   const [width, setWidth] = useState<number | undefined>(undefined);
   const seen = useRef(0);
   const stop = useRef<(() => void) | null>(null);
@@ -17,10 +21,11 @@ export function useMeasuredWidth(of: 'self' | 'parent'): readonly [(node: HTMLEl
     (node: HTMLElement | null): void => {
       stop.current?.();
       stop.current = null;
-      const target = node === null ? null : of === 'parent' ? node.parentElement : node;
+      const scheme = of === 'scheme' ? (node?.closest<HTMLElement>('[data-scheme]') ?? null) : null;
+      const target = node === null ? null : of === 'self' ? node : (scheme ?? node.parentElement);
       if (target === null) return;
       const read = (): void => {
-        const now = target.clientWidth;
+        const now = target.clientWidth - (scheme === null ? 0 : PAPER_EDGE);
         if (now <= 0) return;
         seen.current = settledWidth(seen.current, now);
         setWidth(seen.current);

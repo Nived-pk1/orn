@@ -34,6 +34,16 @@
   justify-content: flex-start;
   overflow-x: auto;
   mask-image: linear-gradient(to right, var(--color-ink) calc(100% - 1.5rem), transparent);
+  /* a thin bar in the paper's own colour, no arrow buttons (8.5g B2) */
+  scrollbar-width: thin;
+  scrollbar-color: var(--paper-scroll) transparent;
+}
+
+.crowded {
+  max-width: 14rem;
+  color: var(--color-ink-2);
+  font-size: var(--text-12);
+  text-align: center;
 }
 
 .structure img {

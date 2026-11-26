@@ -75,6 +75,11 @@ export type StructureMode = (typeof STRUCTURE_MODES)[number];
 export const FIXED_SCALE_FACTOR = 37;
 export const FIXED_SCALE_BOND_UNITS = 54;
 /**
+ * Step 8.5g B: a drawing with all atoms (mode `full`) with a bond standard is asked for and shown at this many times the context's standard
+ * (labels stay `LABEL_GLYPH_PX`). When it falls back to Condensed it is drawn for the standard without this factor.
+ */
+export const FULL_BOND_FACTOR = 1.4;
+/**
  * Labels set apart from the bond length (step 8.5e): a fixed-scale drawing asked with `bondPx` (the bond length the viewer shows it at, in px) has its atom
  * labels drawn with RDKit's `fixedFontSize`, so a capital letter is `LABEL_GLYPH_PX` high AS SHOWN at every bond length. RDKit's glyph is 0.73 of the font size
  * (measured, 8.5e notes).
@@ -134,6 +139,8 @@ export interface DepictedBond {
 }
 
 export interface Depiction {
+  /** Step 8.5g B, only for mode `full` with `bondPx`: true: all atoms are drawn; false: too crowded, the drawing is Condensed (the screen says so). */
+  readonly allAtoms?: boolean;
   /** hash(format, value, options, toolkit, toolkitVersion). */
   readonly key: string;
   /** Sanitised SVG document text. Displayed only via <img>/<image> data/blob URLs, never inlined. */

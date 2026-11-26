@@ -13,7 +13,7 @@ import { formulaRuns } from '@/render/scene';
 import type { StructureFactsPort } from './contracts';
 import { wordOf } from './hang';
 import { Runs } from './runs';
-import { nameBreaks, SIZE_RULES, sizeDrawing, type SizeContext } from './size-rule';
+import { CROWDED_WORDS, nameBreaks, SIZE_RULES, sizeDrawing, type SizeContext } from './size-rule';
 import { useFactsInput } from './use-facts';
 import { useRowScaleValue } from './use-row-scale';
 import { useAvailableWidth } from './use-width';
@@ -64,12 +64,20 @@ function Drawing(props: { readonly structure: StructureRep; readonly name: strin
   const rowScale = useRowScaleValue();
   if (status.state === 'ready') {
     // one size rule (8.5d): the standard bond length; the box follows the drawing; narrower space: shrink to the floor, then the box scrolls
-    const fit = status.width === undefined || status.height === undefined ? undefined : sizeDrawing({ width: status.width, height: status.height }, context, { available: available ?? Number.POSITIVE_INFINITY });
+    const fit = status.width === undefined || status.height === undefined ? undefined : sizeDrawing({ width: status.width, height: status.height }, context, { available: available ?? Number.POSITIVE_INFINITY, allAtoms: status.allAtoms });
+    const crowded = status.allAtoms === false;
     // the whole row's scale (E2 a) applies to a drawing that is not in a scrolling box; `data-bond-px` is the bond length as drawn, after every scale (E2 c)
     const row = fit === undefined || fit.mode === 'scroll' ? 1 : rowScale;
     const drawn = fit === undefined ? undefined : { width: Math.max(1, Math.round(fit.width * row)), height: Math.max(1, Math.round(fit.height * row)), bondPx: Math.round(fit.bondPx * row * (props.ports.scale ?? 1) * 100) / 100 };
-    const img = <img src={status.url} alt={`Structure of ${props.name}`}{...(drawn === undefined ? {} : { width: drawn.width, height: drawn.height, 'data-bond-px': drawn.bondPx })} />;
-    return <DepictionSurface>{fit?.mode === 'scroll' ? <div className={styles.scrollBox} data-scrolls="" tabIndex={0} style={{ width: fit.boxWidth }}>{img}</div> : img}</DepictionSurface>;
+    const img = <img src={status.url} alt={crowded ? `Structure of ${props.name}. ${CROWDED_WORDS}` : `Structure of ${props.name}`} {...(drawn === undefined ? {} : { width: drawn.width, height: drawn.height, 'data-bond-px': drawn.bondPx })} />;
+    const surface = <DepictionSurface>{fit?.mode === 'scroll' ? <div className={styles.scrollBox} data-scrolls="" tabIndex={0} style={{ width: fit.boxWidth }}>{img}</div> : img}</DepictionSurface>;
+    if (!crowded) return surface;
+    return (
+      <div className={styles.crowdedColumn}>
+        {surface}
+        <span className={styles.crowded}>{CROWDED_WORDS}</span>
+      </div>
+    );
   }
   // a drawing that cannot be made is the formula, else the name (never an empty box)
   if (key === undefined || drawingFailed(status)) return props.fallback.kind === 'formula' ? <FormulaView formula={props.fallback} /> : <NameOnly name={props.name} />;
