@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-24",
+  "lastUpdated": "2026-11-26",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -144,8 +144,8 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-26",
-    "commit": "6822f52",
-    "version": "38814844-64e3-42d1-a7fe-925a630b72f1",
+    "commit": "5900005",
+    "version": "a7e32947-11b5-4f4a-ade2-9417e371c641",
     "liveSpecs": "2026-11-26: Chromium 45 passed, 11 skipped; WebKit (one worker) 44 passed, 12 skipped; 0 failed",
     "workerVersion": "539d4cd3-dc8f-4877-9698-2724cf869fcb"
   },
@@ -154,15 +154,15 @@
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-26",
-    "version": "3b94a64f-401e-4bd3-be48-cff2bbecb71a",
+    "version": "fa104d32-14ac-43b4-97e4-d944b42a66fc",
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4m deploy, 2026-11-16: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
-    "commit": "6822f52",
-    "protectedCheckedAt": "2026-11-18",
+    "commit": "5900005",
+    "protectedCheckedAt": "2026-11-26",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "8.6 (export pictures and print stylesheet); step 8.5f closed 2026-11-26, docs/PROGRESS.md Step 8.5f",
-  "nextStepTitle": "Step 8.5f DONE (docs/PROGRESS.md \"Step 8.5f\"): dark mode, structure drawings back on the paper surface; deployed and pushed. Next: 8.6 export pictures and print stylesheet.",
+  "nextStep": "8.6 (export pictures and print stylesheet); step 8.5g Part A deployed 2026-11-26; Part B first (docs/reviews/step-8-5g-notes.md)",
+  "nextStepTitle": "Step 8.5g Part A DONE (mechanism pictures), deployed and pushed. Next: 8.5g Part B (Full-mode structures, scroll box), then 8.6.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

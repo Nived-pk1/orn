@@ -2,7 +2,8 @@
 
 ## Resume point
 
-Part A code committed; deploy and push next. Part B starts from Part A's pushed deploy commit.
+Part A CLOSED: deployed and pushed 2026-11-26 (code 5900005). Part B not started: it starts from Part A's pushed deploy commit
+("phase-8.5g: Part A deployed ..."), with its own fresh START sizes and BEFORE screenshots.
 
 ## START (Part A)
 
@@ -27,3 +28,10 @@ BEFORE screenshots: `screenshots/8.5g/before-*.png` (`ORN_SHOTS=before`, review 
 units (wanted <= 142.4); arrow stroke 1.8 against bonds 2; no turn option.
 
 Second RED (2026-11-26 18:24): the unspecified double bond was drawn crossed (slope difference 0.306, wanted < 0.05).
+
+## REPORT, Part A
+
+Commits: d00c6de (8.5f review), 5900005 (code), plus the deploy commit. FACTS and RED: above. Weights: arrow stroke 2 (was 1.8), heads 9
+(was 8), "+" 22 units, ink #000000. SN2 angle 82.1 -> 163.6 degrees; aldol step 1 hydroxide arrow 200.4 -> 61.7 units. G4: 3 mechanisms,
+10 steps, 6 drawn, 4 not (mechanisms-survey.md). Sizes: initial JS Study +31, Studio +53; mechanism chunk 6,371 -> 8,074 (Study); worker
++487. Check 9,131 passed. Study a7e32947, Studio fa104d32; live specs 45 / 44 passed, 0 failed; Access ok. REVIEW REQUIRED: see PROGRESS.
