@@ -85,7 +85,7 @@ const DOT_OFFSET = 7;
 const DOT_SPACING = 4;
 const OVERLAP = 16;
 const LOOP = 14;
-const HEAD_LENGTH = 8;
+const HEAD_LENGTH = 9; // with the stroke of 2 (8.5g; 8 with 1.8)
 const HEAD_SPREAD = 0.45;
 
 const sub = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });

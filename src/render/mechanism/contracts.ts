@@ -14,8 +14,8 @@ export type StepDrawingAnswer =
   | { readonly ok: false; readonly reason: string; readonly message: string };
 
 export interface StepDrawingPort {
-  /** `positions`: the drawing with its atom positions and bonds by map number; false: the plain drawing at the same fixed scale. */
-  depict(structure: StructureRep, positions: boolean): Promise<StepDrawingAnswer>;
+  /** `positions`: the drawing with its atom positions and bonds by map number; false: the plain drawing at the same fixed scale. `turn` (with positions): the molecule turned, `DepictionOptions.turn`. */
+  depict(structure: StructureRep, positions: boolean, turn?: number): Promise<StepDrawingAnswer>;
   createUrl(svg: string): string;
   revokeUrl(url: string): void;
   /** Loads the structure tool again (the Retry beside "did not load"). Absent: no Retry is offered. */

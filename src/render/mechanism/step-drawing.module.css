@@ -29,7 +29,6 @@
 
 .plus {
   fill: var(--mech-ink);
-  font-size: var(--text-16);
   text-anchor: middle;
   dominant-baseline: central;
 }
@@ -51,7 +50,7 @@
 .arrow {
   fill: none;
   stroke: var(--mech-arrow);
-  stroke-width: 1.8;
+  stroke-width: 2; /* the bonds' stroke in the structure tool's drawings */
   stroke-linecap: round;
   stroke-linejoin: round;
 }

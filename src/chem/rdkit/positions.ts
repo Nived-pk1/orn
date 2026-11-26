@@ -13,6 +13,7 @@ import type { DrawDetails } from '../depiction-options';
 import { svgOf } from './draw';
 import { withHandle } from './scope';
 import { smilesAtoms } from './smiles-atoms';
+import { turnedBlock } from './turned';
 import { labelGlyphsOf, readPositions } from './svg-positions';
 import type { RdkitMol, RdkitModule } from './types';
 
@@ -22,6 +23,7 @@ export type PositionedDrawing =
 
 const refuse = (why: string): PositionedDrawing => ({ ok: false, reason: 'refused', error: `no atom positions: ${why}` });
 const KEEP_HYDROGENS = '{"removeHs":false}';
+const withoutCisTrans = (smiles: string): string => smiles.replace(/[/\\]/g, '');
 
 /** The bonds (pairs of atom indexes) of RDKit's JSON of a molecule; `undefined` when the JSON is not of the expected shape. */
 function bondPairs(mol: RdkitMol): readonly (readonly [number, number])[] | undefined {
@@ -54,25 +56,41 @@ export function drawWithPositions(module: RdkitModule, structure: StructureRep, 
   }
   const plain = withHandle(
     () => module.get_mol(kept.value.replace(/:\d+\]/g, ']'), KEEP_HYDROGENS),
-    (unmapped): PositionedDrawing => {
-      if (unmapped.get_num_atoms(false) !== tokens.length) return refuse('the atoms of the drawing are not the atoms of the structure');
-      const shown = svgOf(module, unmapped, details, []);
-      const lit = svgOf(module, unmapped, details, maps.map((m) => m.index));
-      if (!shown.ok) return refuse(shown.error);
-      if (!lit.ok) return refuse(lit.error);
-      const read = readPositions(shown.svg, lit.svg, maps.map((m) => m.index));
-      if (!read.ok) return refuse(read.error);
-      const mapOf = new Map(maps.map((m) => [m.index, m.map]));
-      const atoms = read.atoms.map((a): DepictedAtom => ({ map: mapOf.get(a.index) as number, x: a.x, y: a.y, rx: a.rx, ry: a.ry }));
-      const pairs = bondPairs(unmapped);
-      if (pairs === undefined) return refuse('the bonds of the structure could not be read');
-      const bonds = pairs.flatMap(([i, j]): DepictedBond[] => {
-        const a = mapOf.get(i);
-        const b = mapOf.get(j);
-        return a === undefined || b === undefined ? [] : [{ a: Math.min(a, b), b: Math.max(a, b) }];
-      });
-      bonds.sort((p, q) => p.a - q.a || p.b - q.b);
-      return { ok: true, svg: shown.svg, atoms, bonds, glyphs: labelGlyphsOf(shown.svg) };
+    (plainMol): PositionedDrawing => {
+      const drawnFrom = (unmapped: RdkitMol): PositionedDrawing => {
+        if (unmapped.get_num_atoms(false) !== tokens.length) return refuse('the atoms of the drawing are not the atoms of the structure');
+        const shown = svgOf(module, unmapped, details, []);
+        const lit = svgOf(module, unmapped, details, maps.map((m) => m.index));
+        if (!shown.ok) return refuse(shown.error);
+        if (!lit.ok) return refuse(lit.error);
+        const read = readPositions(shown.svg, lit.svg, maps.map((m) => m.index));
+        if (!read.ok) return refuse(read.error);
+        const mapOf = new Map(maps.map((m) => [m.index, m.map]));
+        const atoms = read.atoms.map((a): DepictedAtom => ({ map: mapOf.get(a.index) as number, x: a.x, y: a.y, rx: a.rx, ry: a.ry }));
+        const pairs = bondPairs(unmapped);
+        if (pairs === undefined) return refuse('the bonds of the structure could not be read');
+        const bonds = pairs.flatMap(([i, j]): DepictedBond[] => {
+          const a = mapOf.get(i);
+          const b = mapOf.get(j);
+          return a === undefined || b === undefined ? [] : [{ a: Math.min(a, b), b: Math.max(a, b) }];
+        });
+        bonds.sort((p, q) => p.a - q.a || p.b - q.b);
+        return { ok: true, svg: shown.svg, atoms, bonds, glyphs: labelGlyphsOf(shown.svg) };
+      };
+      // every drawing (turn 0 too) is made from the molblock's coordinates: a molecule from a SMILES is drawn at another angle than the
+      // coordinates it reports, and a turn must start from the picture that was shown unturned
+      const block = turnedBlock(plainMol.get_molblock?.(), details.turn);
+      const turned =
+        block === undefined
+          ? undefined
+          : withHandle(
+              () => module.get_mol(block, KEEP_HYDROGENS),
+              // the same SMILES: the copy is the same molecule, atom for atom, with the same configuration (cis/trans marks are left out of the
+              // comparison: a copy states them from its coordinates, which a turn or a mirror image keeps)
+              (copy) => (withoutCisTrans(copy.get_smiles()) === withoutCisTrans(plainMol.get_smiles()) ? drawnFrom(copy) : undefined),
+            );
+      if (turned?.opened === true && turned.value !== undefined) return turned.value;
+      return details.turn === 0 ? drawnFrom(plainMol) : refuse('the structure may not be drawn turned this way');
     },
   );
   return plain.opened ? plain.value : refuse('the structure could not be drawn without its map numbers');

@@ -8,7 +8,7 @@ import { chooseFile, expectPreview } from './kit';
 import { palette } from './editor-kit';
 import { AWKWARD, awkwardFile, reactionName, type Awkward } from './awkward-set';
 
-export const STANDARDS = { family: 28, equation: 34, hero: 40, mechanism: 36 } as const;
+export const STANDARDS = { family: 28, equation: 34, hero: 40, mechanism: 44 } as const;
 const FLOOR = 0.85;
 const LABEL_AT_STANDARD = 13;
 

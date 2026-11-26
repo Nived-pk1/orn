@@ -176,8 +176,8 @@ describe('withChemCache', () => {
 
 describe('depictionDetails', () => {
   it('normalises the highlights (sorted, unique) and keeps the option order fixed', () => {
-    expect(depictionDetails({ ...DRAW, highlightAtomMaps: [3, 1, 3] })).toEqual({ width: 200, height: 150, showAtomMaps: true, highlightAtomMaps: [1, 3], mode: 'skeletal', fixedScale: false, bondPx: 0, atomPositions: false });
-    expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps', 'mode', 'fixedScale', 'bondPx', 'atomPositions']);
+    expect(depictionDetails({ ...DRAW, highlightAtomMaps: [3, 1, 3] })).toEqual({ width: 200, height: 150, showAtomMaps: true, highlightAtomMaps: [1, 3], mode: 'skeletal', fixedScale: false, bondPx: 0, atomPositions: false, turn: 0 });
+    expect(Object.keys(depictionDetails(DRAW))).toEqual(['width', 'height', 'showAtomMaps', 'highlightAtomMaps', 'mode', 'fixedScale', 'bondPx', 'atomPositions', 'turn']);
   });
 
   it('atomPositions (step 8.5) is one flag in the details (false unless true); the worker checks it: it needs a fixed scale, no shown maps and no highlights', () => {

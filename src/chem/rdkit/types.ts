@@ -11,6 +11,8 @@ export interface RdkitHandle {
 
 export interface RdkitMol extends RdkitHandle {
   get_smiles(): string;
+  /** Optional: only a turned drawing (step 8.5g) uses it. */
+  get_molblock?(): string;
   /** RDKit's own JSON of the molecule (`rdkitjson`): atoms with `z`, `impHs`, `chg`, and the representation extension. */
   get_json(): string;
   /** `{"CIP_atoms":[[index,"(S)"],...],"CIP_bonds":[[a,b,"(E)"],...]}`; `(?)` marks a stereo element with no configuration given. */

@@ -16,7 +16,7 @@
   --line:rgba(20,20,30,.09); --line-strong:rgba(20,20,30,.16); --grid-dot:rgba(20,20,30,.10);
   /* Accent and roles */
   --accent:#3B5BDB; --accent-hover:#3350C6; --accent-soft:#EDF1FD; --accent-text:#2E48B8;
-  --mech-arrow:#C2410C; --mech-dot:#C2410C; --mech-ink:#2A2A33; /* 8.5: a mechanism drawing sits on paper in both themes (--depiction-bg): dark ink and the same arrow colour */
+  --mech-arrow:#C2410C; --mech-dot:#C2410C; --mech-ink:#000000; /* 8.5: a mechanism drawing sits on paper in both themes (--depiction-bg): the bonds' black and the same arrow colour */
   --success:#1F8A5B; --success-soft:#E7F5EE; --warning:#B86E00; --warning-soft:#FDF3E1;
   --danger:#C93A3A; --danger-soft:#FCEBEB; --review-grey:#9A9AA3; --review-orange:#D9822B;
   /* Family groups (the user likes the current colours: these are them, refined) */
@@ -71,7 +71,7 @@
   --text:#E9EAEE; --text-2:#A6A9B3; --text-3:#757985; --text-on-accent:#0E1014;
   --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.15); --grid-dot:rgba(255,255,255,.07);
   --accent:#7C93F5; --accent-hover:#93A6F7; --accent-soft:rgba(124,147,245,.14); --accent-text:#A9B8FA;
-  --mech-arrow:#C2410C; --mech-dot:#C2410C; --mech-ink:#2A2A33; /* 8.5: a mechanism drawing sits on paper in both themes (--depiction-bg): dark ink and the same arrow colour */
+  --mech-arrow:#C2410C; --mech-dot:#C2410C; --mech-ink:#000000; /* 8.5: a mechanism drawing sits on paper in both themes (--depiction-bg): the bonds' black and the same arrow colour */
   --success:#4CC38A; --success-soft:rgba(76,195,138,.14); --warning:#F0A646; --warning-soft:rgba(240,166,70,.14);
   --danger:#F07171; --danger-soft:rgba(240,113,113,.14); --review-grey:#7E818C; --review-orange:#F0A646;
   --fam-hc:#7EA2F2; --fam-hc-soft:rgba(126,162,242,.12);
@@ -122,7 +122,7 @@
       --text:#E9EAEE; --text-2:#A6A9B3; --text-3:#757985; --text-on-accent:#0E1014;
       --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.15); --grid-dot:rgba(255,255,255,.07);
       --accent:#7C93F5; --accent-hover:#93A6F7; --accent-soft:rgba(124,147,245,.14); --accent-text:#A9B8FA;
-      --mech-arrow:#C2410C; --mech-dot:#C2410C; --mech-ink:#2A2A33; /* 8.5: a mechanism drawing sits on paper in both themes (--depiction-bg): dark ink and the same arrow colour */
+      --mech-arrow:#C2410C; --mech-dot:#C2410C; --mech-ink:#000000; /* 8.5: a mechanism drawing sits on paper in both themes (--depiction-bg): the bonds' black and the same arrow colour */
       --success:#4CC38A; --success-soft:rgba(76,195,138,.14); --warning:#F0A646; --warning-soft:rgba(240,166,70,.14);
       --danger:#F07171; --danger-soft:rgba(240,113,113,.14); --review-grey:#7E818C; --review-orange:#F0A646;
       --fam-hc:#7EA2F2; --fam-hc-soft:rgba(126,162,242,.12);

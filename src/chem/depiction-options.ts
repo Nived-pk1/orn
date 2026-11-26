@@ -18,6 +18,7 @@ export interface DrawDetails {
   /** 0: labels follow the bond. */
   readonly bondPx: number;
   readonly atomPositions: boolean;
+  readonly turn: number;
 }
 
 const isSize = (value: unknown): boolean => typeof value === 'number' && Number.isInteger(value) && value >= MIN_DEPICTION_SIZE && value <= MAX_DEPICTION_SIZE;
@@ -38,7 +39,7 @@ export function depictionDetails(options: DepictionOptions): DrawDetails {
   if (typeof fixedScale !== 'boolean') throw new RangeError('depiction fixedScale must be true or false');
   const bondPx = options.bondPx ?? 0;
   if (bondPx !== 0 && (!fixedScale || !Number.isInteger(bondPx) || bondPx < MIN_BOND_PX || bondPx > MAX_BOND_PX)) throw new RangeError(`depiction bondPx must be an integer from ${MIN_BOND_PX} to ${MAX_BOND_PX} and needs fixedScale`);
-  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale, bondPx, atomPositions: options.atomPositions === true };
+  return { width: options.width, height: options.height, showAtomMaps: options.showAtomMaps, highlightAtomMaps: [...new Set(maps)].sort((a, b) => a - b), mode, fixedScale, bondPx, atomPositions: options.atomPositions === true, turn: options.turn ?? 0 };
 }
 
 /**
@@ -47,6 +48,9 @@ export function depictionDetails(options: DepictionOptions): DrawDetails {
  */
 export function atomPositionsProblem(options: DepictionOptions): string | undefined {
   const positions: unknown = options.atomPositions;
+  const turn: unknown = options.turn ?? 0;
+  if (typeof turn !== 'number' || !Number.isInteger(turn) || turn < 0 || turn > 23) return 'depiction turn must be an integer from 0 to 23';
+  if (turn !== 0 && positions !== true) return 'depiction turn needs atomPositions';
   if (positions === undefined || positions === false) return undefined;
   if (positions !== true) return 'depiction atomPositions must be true or false';
   return options.fixedScale !== true || options.showAtomMaps || (options.highlightAtomMaps ?? []).length > 0 ? 'atomPositions needs fixedScale, no shown atom maps and no highlights' : undefined;

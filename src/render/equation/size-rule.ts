@@ -24,12 +24,12 @@ export interface SizeRule {
   readonly minWidth: number;
   readonly minHeight: number;
 }
-/** The bond length of each context (step 8.5e; 8.5d had 56 for all). The labels do not follow it: they are 13 px in every context. */
+/** The bond length of each context (step 8.5e; 8.5d had 56 for all; the mechanism's is 44 since 8.5g). The labels do not follow it: they are 13 px in every context. */
 export const SIZE_RULES: Readonly<Record<SizeContext, SizeRule>> = {
   family: { standard: 28, minWidth: 72, minHeight: 56 },
   equation: { standard: 34, minWidth: 48, minHeight: 40 },
   hero: { standard: 40, minWidth: 48, minHeight: 40 },
-  mechanism: { standard: 36, minWidth: 48, minHeight: 40 },
+  mechanism: { standard: 44, minWidth: 48, minHeight: 40 },
 };
 
 export interface Fit {

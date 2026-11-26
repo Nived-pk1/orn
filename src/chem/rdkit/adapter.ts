@@ -168,7 +168,7 @@ export function createRdkitToolkit(options: RdkitToolkitOptions): StructureToolk
         if (!drawn.value.ok) return unavailable(drawn.value.error);
         const clean = sanitizeSvg(drawn.value.svg);
         if (!clean.ok) return { ok: false, reason: 'refused', error: `the drawing was refused: ${clean.message}` };
-        const { atomPositions, ...plainDetails } = details;
+        const { atomPositions, turn: _turn, ...plainDetails } = details;
         const key = hashParts(['depict', structure.format, structure.value, JSON.stringify(atomPositions ? details : plainDetails), TOOLKIT_NAME, module_.version()]);
         // a fixed-scale drawing has the size of the molecule, which RDKit wrote in the viewBox; any other has the size that was asked for
         const size = details.fixedScale ? viewBoxSize(clean.svg) : { width: details.width, height: details.height };

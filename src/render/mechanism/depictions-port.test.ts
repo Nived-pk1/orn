@@ -28,8 +28,19 @@ describe('stepDrawingFrom', () => {
     expect(await port.depict(smiles, true)).toEqual({ ok: true, svg: '<svg/>', width: 90, height: 60, atoms: [{ map: 1, x: 1, y: 2, rx: 3, ry: 4 }], bonds: [], glyphs: [{ x0: 0, x1: 4, y0: 1, y1: 5 }] });
     await port.depict(smiles, false);
     expect(asked).toEqual([
-      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, bondPx: 36, atomPositions: true } },
-      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, bondPx: 36 } },
+      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, bondPx: 44, atomPositions: true } },
+      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, bondPx: 44 } },
+    ]);
+  });
+
+  it('a turn (step 8.5g) is passed on with the atom positions, and left out when there is none', async () => {
+    const { depictions, asked } = fake({ ok: true, svg: 's', width: 1, height: 1, atoms: [] });
+    const port = stepDrawingFrom(depictions);
+    await port.depict(smiles, true, 14);
+    await port.depict(smiles, true, 0);
+    expect(asked).toEqual([
+      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, bondPx: 44, atomPositions: true, turn: 14 } },
+      { structure: smiles, size: { width: 120, height: 80, fixedScale: true, bondPx: 44, atomPositions: true } },
     ]);
   });
 

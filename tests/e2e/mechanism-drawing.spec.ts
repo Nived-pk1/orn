@@ -59,6 +59,45 @@ test('a step with mapped structures is drawn with its curved arrows; one without
   await expectClean(seen);
 });
 
+/** Keeps every Blob an object URL is made for, so a drawing's own SVG can be read back (no fetch: the policy would refuse one). */
+const keepBlobs = (page: Page): Promise<unknown> =>
+  page.addInitScript(() => {
+    const kept = new Map<string, Blob>();
+    (window as unknown as { __blobs: Map<string, Blob> }).__blobs = kept;
+    const make = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = (object: Blob | MediaSource) => {
+      const url = make(object);
+      if (object instanceof Blob) kept.set(url, object);
+      return url;
+    };
+  });
+
+/**
+ * The atoms 0, 1 and 2 of picture `k` (a three-atom chain: bond-0 is 0-1, bond-1 is 1-2), in the drawing's own units, read from its
+ * drawn bonds: atom 1 is the end of bond-0 nearer to bond-1, atom 0 its other end, atom 2 the far end of bond-1.
+ */
+async function chainAtoms(step: Locator, k: number): Promise<{ x: number; y: number }[]> {
+  return step.locator('svg').first().evaluate(async (svg, index) => {
+    const image = svg.querySelectorAll('image')[index] as SVGImageElement;
+    const text = await (window as unknown as { __blobs: Map<string, Blob> }).__blobs.get(image.getAttribute('href') ?? '')?.text();
+    const drawing = new DOMParser().parseFromString(text ?? '', 'image/svg+xml');
+    const at = (n: number) => ({ x: n, y: 0 });
+    const points = (bond: number) =>
+      [...drawing.querySelectorAll(`path[class^="bond-${bond} "]`)].flatMap((path) => {
+        const n = (path.getAttribute('d') ?? '').match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+        return Array.from({ length: Math.floor(n.length / 2) }, (_, i) => ({ x: n[2 * i] as number, y: n[2 * i + 1] as number }));
+      });
+    const first = points(0);
+    const second = points(1);
+    if (first.length < 2 || second.length < 2) return [at(Number.NaN), at(Number.NaN), at(Number.NaN)];
+    const gap = (p: { x: number; y: number }) => Math.min(...second.map((q) => Math.hypot(p.x - q.x, p.y - q.y)));
+    const [zero, one] = [first[0], first[first.length - 1]].sort((a, b) => gap(b as { x: number; y: number }) - gap(a as { x: number; y: number })) as { x: number; y: number }[];
+    const two = [...second].sort((a, b) => Math.hypot(b.x - (one?.x ?? 0), b.y - (one?.y ?? 0)) - Math.hypot(a.x - (one?.x ?? 0), a.y - (one?.y ?? 0)))[0];
+    const shift = { x: Number(image.getAttribute('x')), y: Number(image.getAttribute('y')) };
+    return [zero, one, two].map((p) => ({ x: (p?.x ?? Number.NaN) + shift.x, y: (p?.y ?? Number.NaN) + shift.y }));
+  }, k);
+}
+
 /** Where the k-th curved arrow of a drawing ends and the boxes of the structure pictures, in the drawing's own units. */
 async function arrowEnds(step: Locator): Promise<{ readonly ends: { x: number; y: number }[]; readonly boxes: { x: number; y: number; width: number; height: number }[] }> {
   return step.locator('svg').first().evaluate((svg) => ({
@@ -73,6 +112,7 @@ const inside = (p: { x: number; y: number }, b: { x: number; y: number; width: n
 
 test('8.5b R1: an arrow into a bond the step forms ends ON the atom it attacks, inside that species picture and not in the gap between pictures', async ({ page }) => {
   test.setTimeout(480_000);
+  await keepBlobs(page);
   await importOwn(page, changedDemo(() => undefined));
   await openAldol(page);
   // aldol step 1: hydroxide (picture 0) -> the alpha-hydrogen of ethanal (picture 1)
@@ -84,7 +124,11 @@ test('8.5b R1: an arrow into a bond the step forms ends ON the atom it attacks, 
   const second = stepWith(page, 'Enolate carbon attacks a second ethanal');
   await expect(second.getByRole('img', { name: /Drawing of step 2/ })).toBeVisible({ timeout: 90_000 });
   const two = await arrowEnds(second);
-  expect(inside(two.ends[1] as { x: number; y: number }, two.boxes[1] as { x: number; y: number; width: number; height: number }), 'arrow 2 of step 2 ends in the second ethanal picture').toBe(true);
+  // (step 8.5g: the molecule is turned so this carbon faces the attacker, at its picture's edge; the arrow stops short of it, outside the box)
+  const [methyl, carbonyl, oxygen] = await chainAtoms(second, 1);
+  const away = (p: { x: number; y: number } | undefined): number => Math.hypot((two.ends[1]?.x ?? Number.NaN) - (p?.x ?? Number.NaN), (two.ends[1]?.y ?? Number.NaN) - (p?.y ?? Number.NaN));
+  expect(away(carbonyl), 'arrow 2 of step 2 ends within half a bond of the carbonyl carbon of the second ethanal').toBeLessThan(27);
+  expect(away(carbonyl), 'and nearer to it than to the methyl carbon or the oxygen').toBeLessThan(Math.min(away(methyl), away(oxygen)));
   // SN2: hydroxide (picture 0) -> the carbon that holds Br, inside the haloalkane picture (picture 1)
   await view(page).getByRole('button', { name: 'All mechanisms' }).click();
   await openMechanism(page, SN2, false);

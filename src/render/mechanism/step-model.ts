@@ -4,7 +4,7 @@
  * (never a blank box, never a partial drawing). Async over the port; no DOM. The picture itself is `composeStep` (layout) over what this returns.
  */
 import { movementAtoms, stepSides } from '@/core/mechanisms';
-import { composeStep, type DrawnSpecies } from './geometry';
+import { composeStep, planStep, type Choice, type DrawnSpecies, type PlanSpecies } from './geometry';
 import type { DrawableStep, StepDrawingAnswer, StepDrawingPort } from './contracts';
 
 export const NO_DRAWING_WORDS = {
@@ -29,6 +29,9 @@ export type LoadedStep =
 function labelBox(text: string): DrawnSpecies {
   return { kind: 'label', label: text, transitionState: false, width: Math.max(56, Math.min(220, 8 * text.length + 16)), height: 36, atoms: [], bonds: [] };
 }
+
+type Answered = Extract<StepDrawingAnswer, { ok: true }>;
+const drawnOf = (answer: Answered): DrawnSpecies => ({ kind: 'structure', transitionState: false, width: answer.width, height: answer.height, atoms: (answer.atoms ?? []).map((a) => ({ map: a.map, x: a.x, y: a.y, rx: a.rx, ry: a.ry })), bonds: [...(answer.bonds ?? [])], glyphs: [...(answer.glyphs ?? [])] });
 
 const isEngineFailure = (answer: StepDrawingAnswer): boolean => !answer.ok && (answer.reason === 'unavailable' || answer.reason === 'timeout');
 
@@ -61,8 +64,7 @@ export async function loadStep(step: DrawableStep, port: StepDrawingPort): Promi
       log(`${one.role}: ${answer.message}`);
       return { drawn: labelBox(one.label ?? one.role.replaceAll('_', ' ')) };
     }
-    const atoms = (answer.atoms ?? []).map((a) => ({ map: a.map, x: a.x, y: a.y, rx: a.rx, ry: a.ry }));
-    return { svg: answer.svg, drawn: { kind: 'structure', transitionState: one.role === 'transition_state', width: answer.width, height: answer.height, atoms, bonds: [...(answer.bonds ?? [])], glyphs: [...(answer.glyphs ?? [])] } };
+    return { svg: answer.svg, drawn: drawnOf(answer) };
   });
   if (!parts.some((part) => part.drawn.atoms.length > 0)) return { status: 'none', words: NO_DRAWING_WORDS.noMaps };
 
@@ -70,13 +72,27 @@ export async function loadStep(step: DrawableStep, port: StepDrawingPort): Promi
     step.species.map((one, k) => ({ role: one.role, maps: (parts[k] as DrawnPart).drawn.atoms.map((a) => a.map) })),
     movementAtoms(step.electronMovements),
   );
-  const pick = (indexes: readonly number[]): DrawnPart[] =>
-    indexes.map((k) => {
-      const part = parts[k] as DrawnPart;
-      return { ...part, drawn: { ...part.drawn, transitionState: step.species[k]?.role === 'transition_state' } };
-    });
-  const before = pick(sides.before);
-  const after = pick(sides.after);
+  // placement (step 8.5g): turn, mirror (never with stereo) and order; a turned species is drawn again by the structure tool
+  const planned = (k: number): PlanSpecies => {
+    const part = parts[k] as DrawnPart;
+    const value = step.species[k]?.structure?.value ?? '';
+    // a drawing without a bond is a lone atom or a text box: turning it changes nothing
+    const canTurn = part.drawn.atoms.length > 0 && part.svg?.includes('bond-') === true;
+    return { drawn: part.drawn, canTurn, canMirror: !value.includes('@') };
+  };
+  const plan = planStep({ before: sides.before.map(planned), after: sides.after.map(planned), movements: step.electronMovements });
+  const show = async (k: number, turn: number): Promise<DrawnPart> => {
+    let part = parts[k] as DrawnPart;
+    const structure = step.species[k]?.structure;
+    if (turn !== 0 && structure !== undefined) {
+      const answer = await port.depict(structure, true, turn);
+      if (answer.ok) part = { svg: answer.svg, drawn: drawnOf(answer) };
+      else log(`${step.species[k]?.role}: kept as first drawn: ${answer.message}`);
+    }
+    return { ...part, drawn: { ...part.drawn, transitionState: step.species[k]?.role === 'transition_state' } };
+  };
+  const pick = (indexes: readonly number[], choices: readonly Choice[]): Promise<DrawnPart[]> => Promise.all(choices.map((c) => show(indexes[c.index] as number, c.turn)));
+  const [before, after] = await Promise.all([pick(sides.before, plan.before), pick(sides.after, plan.after)]);
   // every movement must name an atom that exactly one drawn species of the before side holds; checked here so the words are decided once
   const check = composeStep({ before: before.map((p) => p.drawn), after: after.map((p) => p.drawn), orientation: 'row', reversible: step.reversible, movements: step.electronMovements });
   if (!check.ok) {

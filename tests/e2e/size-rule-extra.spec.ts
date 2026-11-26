@@ -2,7 +2,7 @@
  * Step 8.5e: what 8.5d left out of the size-rule specs, and the acceptance numbers of the second pass. (1) Pixel 7 in DARK: the awkward set in the family
  * page and the stacked equation obeys the rule; the sodium propan-2-olate term in the full equation is at most 45 % of the screen width and the acetic
  * (ethanoic) acid card picture at most 40 %. (2) The inspector's picture (hero) on a phone, in the full sheet. (3) Three of the set (cholesterol,
- * glucose, sodium propan-2-olate) in one mechanism step: the drawing is at the mechanism's bond length (36 px) or between it and the floor, never
+ * glucose, sodium propan-2-olate) in one mechanism step: the drawing is at the mechanism's bond length (44 px) or between it and the floor, never
  * clipped. The checks are in size-rule-kit.ts.
  */
 import { devices, type Page } from '@playwright/test';
@@ -91,7 +91,7 @@ const THREE = [
   { role: 'product', label: 'Sodium propan-2-olate', structure: { format: 'smiles', value: '[Na+:3].CC(C)[O-:4]' } },
 ];
 
-test('three of the set in one mechanism step: at the mechanism bond length (36 px) or down to the floor, never clipped', async ({ page }) => {
+test('three of the set in one mechanism step: at the mechanism bond length (44 px) or down to the floor, never clipped', async ({ page }) => {
   test.setTimeout(280_000);
   const seen = await watch(page);
   await importOwn(
@@ -115,7 +115,7 @@ test('three of the set in one mechanism step: at the mechanism bond length (36 p
   await expect(svg).toBeVisible({ timeout: 90_000 });
   await expect(step.locator('image')).toHaveCount(3, { timeout: 90_000 });
   await page.waitForTimeout(600);
-  const standard = 36;
+  const standard = 44;
   const bond = Number(await svg.getAttribute('data-bond-px'));
   expect(bond).toBeGreaterThanOrEqual(standard * 0.85 - 0.06);
   expect(bond).toBeLessThanOrEqual(standard + 0.06);

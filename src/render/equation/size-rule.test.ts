@@ -42,8 +42,8 @@ describe('sizeDrawing: ONE size rule (step 8.5d), branches a to d', () => {
     expect(fit.scale).toBeCloseTo(FLOOR, 3);
   });
 
-  it('the standards of 8.5e: family 28, equation 34, hero 40, mechanism 36 px per bond', () => {
-    expect(Object.fromEntries(Object.entries(SIZE_RULES).map(([k, v]) => [k, v.standard]))).toEqual({ family: 28, equation: 34, hero: 40, mechanism: 36 });
+  it('the standards: family 28, equation 34, hero 40 (8.5e), mechanism 44 (8.5g) px per bond', () => {
+    expect(Object.fromEntries(Object.entries(SIZE_RULES).map(([k, v]) => [k, v.standard]))).toEqual({ family: 28, equation: 34, hero: 40, mechanism: 44 });
   });
 
   it('(d) still wider at the floor: the floor scale inside its own box, which scrolls; never shrunk below the floor, never clipped', () => {

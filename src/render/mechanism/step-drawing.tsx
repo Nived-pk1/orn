@@ -4,7 +4,7 @@
  * URLs from the port): no markup from outside is inserted. The picture is `role="img"` with a text alternative that points at the step's
  * details; when a step cannot be drawn it says why in words. All geometry is `src/render/mechanism/geometry` (pure).
  */
-import { FIXED_SCALE_BOND_UNITS } from '@/chem/contracts';
+import { FIXED_SCALE_BOND_UNITS, LABEL_GLYPH_PX } from '@/chem/contracts';
 import { FLOOR, SIZE_RULES } from '@/render/equation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { composeStep, type CurvedArrow, type Placed, type Point } from './geometry';
@@ -27,6 +27,8 @@ export interface StepDrawingProps {
 }
 
 const HEAD = 7;
+/** The "+" in drawing units: the font that shows at the size of the structures' atom labels (a capital is 0.73 of the font). */
+export const PLUS_FONT_UNITS = Math.round(((LABEL_GLYPH_PX / 0.73) * FIXED_SCALE_BOND_UNITS) / SIZE_RULES.mechanism.standard);
 
 /** One reaction arrow: a line with a head, or the two half arrows of an equilibrium; `from` to `to`. */
 function ReactionArrow(props: { readonly from: Point; readonly to: Point; readonly equilibrium: boolean }): ReactNode {
@@ -145,7 +147,7 @@ export function StepDrawing(props: StepDrawingProps): ReactNode {
             <Species key={item.index} item={item} shown={everyone[item.index] as Shown} />
           ))}
           {composition.pluses.map((p, i) => (
-            <text key={i} className={styles.plus} data-plus="" x={p.x} y={p.y}>
+            <text key={i} className={styles.plus} data-plus="" fontSize={PLUS_FONT_UNITS} x={p.x} y={p.y}>
               +
             </text>
           ))}

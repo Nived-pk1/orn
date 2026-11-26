@@ -103,6 +103,11 @@ export interface DepictionOptions {
    * otherwise). The drawing then reads the structure WITH its explicit hydrogens, so a mapped hydrogen is an atom with a position.
    */
   readonly atomPositions?: boolean;
+  /**
+   * Step 8.5g (ADR-038 addendum "Placement"), with `atomPositions` only: draw the molecule turned. 0..23: (turn % 12) x 30 degrees
+   * clockwise on screen; 12 and up mirrored left to right first. A mirrored drawing of a molecule with a wedge or hash bond is refused.
+   */
+  readonly turn?: number;
 }
 
 /** One mapped atom in the frame of `Depiction.svg`: its centre, and half the width and height of its label box (a plain carbon: a small circle). */

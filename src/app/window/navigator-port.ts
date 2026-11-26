@@ -33,7 +33,7 @@ export function createNavigatorPorts(
     timers,
     depictions: {
       keyOf: (structure, size, mode) => depictionKeyOf(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal', ...(size.fixedScale === true ? { fixedScale: true } : {}), ...(size.bondPx === undefined ? {} : { bondPx: size.bondPx }) }),
-      depict: (structure, size, mode) => services.depictions.depict(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal', ...(size.fixedScale === true ? { fixedScale: true } : {}), ...(size.bondPx === undefined ? {} : { bondPx: size.bondPx }), atomPositions: size.atomPositions }),
+      depict: (structure, size, mode) => services.depictions.depict(structure, { width: size.width, height: size.height, showAtomMaps: false, mode: mode ?? 'skeletal', ...(size.fixedScale === true ? { fixedScale: true } : {}), ...(size.bondPx === undefined ? {} : { bondPx: size.bondPx }), atomPositions: size.atomPositions, turn: size.turn }),
       cancel: (key) => services.depictions.cancel(key),
       mode: modeOf,
       onMode(listener) {

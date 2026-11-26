@@ -28,8 +28,8 @@ export type NavigatorDepictionAnswer =
 /** Structures (item i): the request key, the service call, and the object URLs, which are a browser API and so made by the app. */
 export interface NavigatorDepictions {
   /** The request's name for a structure drawn at `size` (pure; the service's own key). */
-  keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean; readonly bondPx?: number }, mode?: StructureMode): string;
-  depict(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean; readonly bondPx?: number }, mode?: StructureMode): Promise<NavigatorDepictionAnswer>;
+  keyOf(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean; readonly bondPx?: number; readonly turn?: number }, mode?: StructureMode): string;
+  depict(structure: StructureRep, size: { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean; readonly bondPx?: number; readonly turn?: number }, mode?: StructureMode): Promise<NavigatorDepictionAnswer>;
   cancel(key: string): void;
   /** How structures are drawn now (Skeletal, Condensed, Full; equation step, part 4). Absent: Skeletal. */
   mode?(): StructureMode;

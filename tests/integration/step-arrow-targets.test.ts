@@ -24,8 +24,8 @@ beforeAll(async () => {
 }, 60_000);
 
 const port: StepDrawingPort = {
-  async depict(structure: StructureRep, positions: boolean) {
-    const out = await toolkit.depict(structure, { width: 120, height: 80, showAtomMaps: false, fixedScale: true, ...(positions ? { atomPositions: true } : {}) });
+  async depict(structure: StructureRep, positions: boolean, turn?: number) {
+    const out = await toolkit.depict(structure, { width: 120, height: 80, showAtomMaps: false, fixedScale: true, ...(positions ? { atomPositions: true, ...(turn === undefined ? {} : { turn }) } : {}) });
     if (!out.ok) return { ok: false, reason: out.reason, message: out.error };
     const d = out.depiction;
     return { ok: true, svg: d.svg, width: d.width, height: d.height, ...(d.atoms === undefined ? {} : { atoms: d.atoms, bonds: d.bonds ?? [] }) };

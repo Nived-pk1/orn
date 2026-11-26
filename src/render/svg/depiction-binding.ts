@@ -18,7 +18,7 @@ import { createDepictionManager, DEPICTION_BUSY, type DepictionAnswer, type Depi
 import type { DepictionTimers } from './use-depiction-retry';
 
 /** The area a drawing is asked at; `fixedScale`: the drawing has the fixed bond length of the chem module and `width` / `height` are not used (equation step, part 5). */
-type Area = { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean; readonly bondPx?: number };
+type Area = { readonly width: number; readonly height: number; readonly fixedScale?: boolean; readonly atomPositions?: boolean; readonly bondPx?: number; readonly turn?: number };
 
 /** What the binding needs from the depiction service (the navigator's and the inspector's ports have exactly this). */
 export interface DepictionPort {
