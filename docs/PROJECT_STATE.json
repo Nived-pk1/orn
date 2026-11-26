@@ -143,26 +143,26 @@
   },
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-25",
-    "commit": "2409514",
-    "version": "6797fa4a-defa-4a43-9569-9a196dd90d89",
-    "liveSpecs": "2026-11-25: Chromium 45 passed, 11 skipped, 0 failed; WebKit first parallel run 8 load-timeout failures, all green on re-run with --workers=1 (36 + 14 + 13 passed)",
+    "deployedAt": "2026-11-26",
+    "commit": "6822f52",
+    "version": "38814844-64e3-42d1-a7fe-925a630b72f1",
+    "liveSpecs": "2026-11-26: Chromium 45 passed, 11 skipped; WebKit (one worker) 44 passed, 12 skipped; 0 failed",
     "workerVersion": "539d4cd3-dc8f-4877-9698-2724cf869fcb"
   },
   "studioPreview": {
     "workerName": "reaction-navigator-studio",
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
-    "deployedAt": "2026-11-25",
-    "version": "fa063a3e-ef9d-4db4-a016-3b91c38e6d62",
+    "deployedAt": "2026-11-26",
+    "version": "3b94a64f-401e-4bd3-be48-cff2bbecb71a",
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4m deploy, 2026-11-16: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
-    "commit": "2409514",
+    "commit": "6822f52",
     "protectedCheckedAt": "2026-11-18",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "8.6 (export pictures and print stylesheet); first finish step 8.5f (second Firefox/WebKit round, deploy, push), docs/PROGRESS.md Step 8.5f",
-  "nextStepTitle": "Step 8.5f code committed 2026-11-26, NOT deployed or pushed (docs/PROGRESS.md \"Step 8.5f\"): dark mode, structure drawings back on the paper surface. Next: 8.6 export pictures and print stylesheet.",
+  "nextStep": "8.6 (export pictures and print stylesheet); step 8.5f closed 2026-11-26, docs/PROGRESS.md Step 8.5f",
+  "nextStepTitle": "Step 8.5f DONE (docs/PROGRESS.md \"Step 8.5f\"): dark mode, structure drawings back on the paper surface; deployed and pushed. Next: 8.6 export pictures and print stylesheet.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {
