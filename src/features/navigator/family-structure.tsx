@@ -7,7 +7,7 @@
 import type { KeyboardEvent } from 'react';
 import type { RecordRef } from '@/core/schema';
 import { NameText, SIZE_RULES, sizeDrawing, useMeasuredWidth } from '@/render/equation';
-import { drawingFailed, useRetryingDepiction } from '@/render/svg';
+import { DepictionSurface, drawingFailed, useRetryingDepiction } from '@/render/svg';
 import { useFamilyEnv } from './family-env';
 import { BoxFormula, FormulaText } from './family-text';
 import scheme from './family-scheme.module.css';
@@ -42,28 +42,32 @@ export function Structure(props: { readonly substance: RecordRef; readonly capti
           },
         };
   const boxStyle = fit === undefined ? { minWidth: rule.minWidth, minHeight: rule.minHeight } : { width: fit.boxWidth, minHeight: fit.boxHeight };
+  const box = (
+    <div className={scheme.structure} style={boxStyle} {...(fit?.mode === 'scroll' ? { 'data-scrolls': '', tabIndex: 0 } : {})} {...opening}>
+      {url !== undefined ? (
+        <img src={url} alt={`Structure of ${name}`} {...(fit === undefined ? {} : { width: fit.width, height: fit.height, 'data-bond-px': fit.bondPx })} />
+      ) : (
+        <span className={scheme.structureName} {...(unavailable ? { title: 'The structure could not be drawn' } : {})}>
+          {key !== undefined && !unavailable ? <span className={scheme.loadingMark}>Drawing the structure…</span> : null}
+          {props.writtenAs !== undefined ? (
+            <span className={scheme.formula} data-written-as="">
+              <BoxFormula formula={props.writtenAs} />
+            </span>
+          ) : described?.formula === undefined ? (
+            <span className={scheme.noStructure}>{key === undefined ? 'No structure' : unavailable ? 'Structure not available' : ''}</span>
+          ) : (
+            <span className={scheme.formula}>
+              <FormulaText formula={described.formula} />
+            </span>
+          )}
+        </span>
+      )}
+    </div>
+  );
   return (
     <figure ref={measure} className={scheme.substance} data-substance-id={props.substance.id} {...(props.writtenAs === undefined ? {} : { 'data-text-box': '' })}>
-      <div className={scheme.structure} style={boxStyle} {...(fit?.mode === 'scroll' ? { 'data-scrolls': '', tabIndex: 0 } : {})} {...opening}>
-        {url !== undefined ? (
-          <img src={url} alt={`Structure of ${name}`} {...(fit === undefined ? {} : { width: fit.width, height: fit.height, 'data-bond-px': fit.bondPx })} />
-        ) : (
-          <span className={scheme.structureName} {...(unavailable ? { title: 'The structure could not be drawn' } : {})}>
-            {key !== undefined && !unavailable ? <span className={scheme.loadingMark}>Drawing the structure…</span> : null}
-            {props.writtenAs !== undefined ? (
-              <span className={scheme.formula} data-written-as="">
-                <BoxFormula formula={props.writtenAs} />
-              </span>
-            ) : described?.formula === undefined ? (
-              <span className={scheme.noStructure}>{key === undefined ? 'No structure' : unavailable ? 'Structure not available' : ''}</span>
-            ) : (
-              <span className={scheme.formula}>
-                <FormulaText formula={described.formula} />
-              </span>
-            )}
-          </span>
-        )}
-      </div>
+      {/* a drawing sits on the one paper wrapper (8.5f); outside the box, so a scrolling box fades into the paper. A text box does not. */}
+      {url === undefined ? box : <DepictionSurface>{box}</DepictionSurface>}
       <figcaption className={scheme.caption}>
         <span>
           <NameText name={name} />

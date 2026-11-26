@@ -23,4 +23,9 @@ describe('the equation drawing backing (step 8.4m2, B2)', () => {
     expect(TOKENS).toMatch(/--depiction-bg:transparent; --depiction-pad:0px;/);
     expect(TOKENS.match(/--depiction-bg:var\(--paper\); --depiction-pad:4px;/g)).toHaveLength(2);
   });
+  it('step 8.5f: uploaded pictures (a drawing may be transparent) are backed by the same token in dark', () => {
+    const rule = (file: string, name: string): string => new RegExp(`^[.]${name} [{]([^}]*)[}]`, 'm').exec(readFileSync(resolve(process.cwd(), file), 'utf8'))?.[1] ?? '';
+    for (const name of ['recordPicture', 'assetImage', 'fullPicture']) expect(rule('src/features/inspector/inspector.module.css', name), name).toContain('var(--depiction-bg)');
+    for (const name of ['thumb', 'preview']) expect(rule('src/features/workbench/picture.module.css', name), name).toContain('var(--depiction-bg)');
+  });
 });

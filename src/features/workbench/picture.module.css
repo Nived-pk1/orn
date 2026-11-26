@@ -18,7 +18,7 @@
   object-fit: contain;
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-8);
-  background: var(--color-paper);
+  background: linear-gradient(var(--depiction-bg), var(--depiction-bg)), var(--color-paper); /* paper behind a transparent drawing in dark (8.5f) */
 }
 
 .note {
@@ -59,7 +59,7 @@
   object-fit: contain;
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-8);
-  background: var(--color-paper);
+  background: linear-gradient(var(--depiction-bg), var(--depiction-bg)), var(--color-paper); /* paper behind a transparent drawing in dark (8.5f) */
 }
 
 .fields {

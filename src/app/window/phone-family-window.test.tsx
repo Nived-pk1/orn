@@ -88,7 +88,7 @@ describe('the family page on a phone', () => {
     expect(arrow?.children.length).toBe(3);
     expect(products?.querySelector('figure')).not.toBeNull();
     // the structure boxes follow their drawing (8.5d): a minimum box before it arrives, never a fixed width or height
-    const box = reactants?.querySelector<HTMLElement>('figure > div');
+    const box = reactants?.querySelector<HTMLElement>('figure > div, figure > [data-depiction-surface] > div');
     expect([box?.style.width, box?.style.height]).toEqual(['', '']);
   });
 

@@ -39,6 +39,8 @@ server code, no database and no account system in the app. Everything a visitor 
    `tests/e2e/study-edition.spec.ts` (no editing UI on the live site). The live spec list, run by EXACT file names, one command per
    browser: smoke, csp, phone, phone-family, equation, phone-equation, structures, study-edition, study-explorers, reaction-explorer,
    precursor-explorer, since step 7.3b `chapters.spec.ts` (the Chapters view on the live Study site), and since step 7.3c `reagent-explorer.spec.ts` (the Reagents view over the demo imported as own data; `study-explorers.spec.ts` covers Reagents in Study with no editing control).
+   Since step 8.5f the WebKit live specs run with ONE worker (`--workers=1`): with parallel workers they time out on loading; that is not a
+   product failure.
    **Live-spec failures (step 8.4a, reviewer decision):** the live specs run after the Study deploy. If any fails: when the cause is a stale
    spec or helper (not the product), fix it, re-run the live specs in Chromium AND WebKit, and continue only when both are green; record it
    under REVIEW REQUIRED. When the cause is the product, STOP: do not deploy Studio, do not push, roll Study back to the previous Worker

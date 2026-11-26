@@ -40,6 +40,11 @@
   display: block;
 }
 
+/* On the paper wrapper the box paints nothing of its own in dark (8.5f); light keeps the box as it was. */
+[data-depiction-surface] > .structure {
+  background: var(--depiction-box);
+}
+
 /* A box that holds text (a formula, as written) may widen up to the card's column; the text breaks only at spaces (7.3c A5). */
 .substance[data-text-box] {
   width: auto;

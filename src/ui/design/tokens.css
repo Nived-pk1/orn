@@ -28,7 +28,7 @@
   /* Structure drawings always sit on paper (light even in dark theme) */
   --paper:#FFFFFF; --paper-line:rgba(20,20,30,.08);
   /* A transparent equation drawing: no backing in light; in dark it sits on paper (step 8.4m2, B2) */
-  --depiction-bg:transparent; --depiction-pad:0px;
+  --depiction-bg:transparent; --depiction-pad:0px; --depiction-box:var(--surface);
   /* Elevation */
   --shadow-1:0 1px 2px rgba(16,24,40,.06),0 1px 1px rgba(16,24,40,.04);
   --shadow-2:0 6px 16px -4px rgba(16,24,40,.12),0 2px 4px rgba(16,24,40,.06);
@@ -80,7 +80,7 @@
   --fam-nit:#A895F0; --fam-nit-soft:rgba(168,149,240,.13);
   --made-from:#B9BCC6;
   --paper:#F7F7F4; --paper-line:rgba(0,0,0,.10);
-  --depiction-bg:var(--paper); --depiction-pad:4px;
+  --depiction-bg:var(--paper); --depiction-pad:4px; --depiction-box:transparent;
   --shadow-1:0 0 0 1px rgba(255,255,255,.04),0 1px 2px rgba(0,0,0,.5);
   --shadow-2:0 0 0 1px rgba(255,255,255,.05),0 8px 20px -4px rgba(0,0,0,.6);
   --shadow-3:0 0 0 1px rgba(255,255,255,.06),0 18px 44px -8px rgba(0,0,0,.7);
@@ -131,7 +131,7 @@
       --fam-nit:#A895F0; --fam-nit-soft:rgba(168,149,240,.13);
       --made-from:#B9BCC6;
       --paper:#F7F7F4; --paper-line:rgba(0,0,0,.10);
-      --depiction-bg:var(--paper); --depiction-pad:4px;
+      --depiction-bg:var(--paper); --depiction-pad:4px; --depiction-box:transparent;
       --shadow-1:0 0 0 1px rgba(255,255,255,.04),0 1px 2px rgba(0,0,0,.5);
       --shadow-2:0 0 0 1px rgba(255,255,255,.05),0 8px 20px -4px rgba(0,0,0,.6);
       --shadow-3:0 0 0 1px rgba(255,255,255,.06),0 18px 44px -8px rgba(0,0,0,.7);
