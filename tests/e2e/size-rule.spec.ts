@@ -24,7 +24,7 @@ test('desktop 1280 x 800: the awkward set obeys the one size rule (family page, 
   await expect(page.getByRole('region', { name: /^Family page: Aldehydes/ })).toBeVisible();
   const found = await walkFamily(page, 'skeletal', false);
   await setStructures(page, 'Full');
-  found.push(...(await walkFamily(page, 'all atoms', false)));
+  found.push(...(await walkFamily(page, 'all atoms', false, true)));
   await page.screenshot({ path: `${shotsDir()}/8.5e/awkward-desktop-light.png` });
   expect(found).toEqual([]);
   await expectClean(seen);

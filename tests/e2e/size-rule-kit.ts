@@ -11,16 +11,19 @@ import { AWKWARD, awkwardFile, reactionName, type Awkward } from './awkward-set'
 export const STANDARDS = { family: 28, equation: 34, hero: 40, mechanism: 44 } as const;
 const FLOOR = 0.85;
 const LABEL_AT_STANDARD = 13;
+/** The standard of a drawing with all atoms (step 8.5g B); one that says it is shown condensed keeps the plain standard. */
+const FULL_FACTOR = 1.4;
 
 /** What is wrong inside `root`: a drawing without a bond length or outside floor and standard, a label under 11 px, anything clipped. */
-export async function problemsIn(root: Locator): Promise<string[]> {
+export async function problemsIn(root: Locator, allAtoms = false): Promise<string[]> {
   return root.evaluate(
     (element, k) => {
       const out: string[] = [];
       const boxes = [...element.querySelectorAll<HTMLElement>('figure[data-substance-id], [data-equation-rep], [data-hero-equation]')];
       for (const img of element.querySelectorAll<HTMLImageElement>('figure[data-substance-id] img, [data-equation-rep] img, [data-hero-equation] img')) {
         const bond = Number(img.getAttribute('data-bond-px'));
-        const standard = img.closest('[data-hero-equation]') !== null ? k.standards.hero : img.closest('figure[data-substance-id]') !== null ? k.standards.family : k.standards.equation;
+        const plain = img.closest('[data-hero-equation]') !== null ? k.standards.hero : img.closest('figure[data-substance-id]') !== null ? k.standards.family : k.standards.equation;
+        const standard = plain * (k.factor !== 1 && !img.alt.includes('shown condensed') ? k.factor : 1);
         if (!(bond > 0)) out.push(`a drawing has no data-bond-px (${img.alt})`);
         else {
           if (bond < standard * k.floor - 0.06 || bond > standard + 0.06) out.push(`bond ${bond} outside ${standard * k.floor}..${standard} (${img.alt})`);
@@ -42,7 +45,7 @@ export async function problemsIn(root: Locator): Promise<string[]> {
       for (const box of boxes) if (box.hasAttribute('data-scrolls') === false && box.scrollWidth > box.clientWidth + 1 && /hidden|clip/.test(getComputedStyle(box).overflowX)) out.push(`scrollWidth > clientWidth on ${box.className}`);
       return out;
     },
-    { standards: STANDARDS, floor: FLOOR, label: LABEL_AT_STANDARD },
+    { standards: STANDARDS, floor: FLOOR, label: LABEL_AT_STANDARD, factor: allAtoms ? FULL_FACTOR : 1 },
   );
 }
 
@@ -74,21 +77,21 @@ export async function reveal(page: Page, card: Locator): Promise<void> {
   }
 }
 
-export async function walkFamily(page: Page, tag: string, tap: boolean): Promise<string[]> {
+export async function walkFamily(page: Page, tag: string, tap: boolean, allAtoms = false): Promise<string[]> {
   const found: string[] = [];
   for (const item of AWKWARD) {
     const card = cardOf(page, item);
     await reveal(page, card);
     await card.scrollIntoViewIfNeeded();
     await expect(card.getByText('Drawing the structure…')).toHaveCount(0, { timeout: 60_000 });
-    for (const p of await problemsIn(card)) found.push(`${tag} family ${item.label}: ${p}`);
+    for (const p of await problemsIn(card, allAtoms)) found.push(`${tag} family ${item.label}: ${p}`);
     const summary = card.getByText('Show full equation');
     if ((await summary.count()) > 0) {
       await (tap ? summary.first().tap() : summary.first().click());
       const scheme = card.getByRole('group', { name: 'Full equation' });
       await expect(scheme).toBeVisible();
       await expect(scheme.getByText('Drawing the structure…')).toHaveCount(0, { timeout: 60_000 });
-      for (const p of await problemsIn(scheme)) found.push(`${tag} equation ${item.label}: ${p}`);
+      for (const p of await problemsIn(scheme, allAtoms)) found.push(`${tag} equation ${item.label}: ${p}`);
     }
   }
   return found;

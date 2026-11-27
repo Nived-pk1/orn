@@ -1,7 +1,7 @@
 /**
  * Step 8.5d: the owner's two cut-off cards (Pyrolysis of esters, Dieckmann condensation of dimethyl hexanedioate) in the Esters family page, on the
  * owner's real package (the newest in ..\fable-work\inputs, or ORN_ARROW_DATA), with Show all atoms off and on: nothing clipped, every drawing at a
- * bond length between the floor and the standard. Screenshots: screenshots/8.5e/owner-<card>-<mode>.png. Skipped when the package is not there.
+ * bond length between the floor and the standard (with all atoms: 1.4 times that standard, step 8.5g). Screenshots: screenshots/8.5e/owner-<card>-<mode>.png. Skipped when the package is not there.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -16,13 +16,15 @@ const CARDS = [
   { slug: 'dieckmann', title: /^Dieckmann condensation of dimethyl hexanedioate/ },
 ] as const;
 
-async function problems(card: Locator): Promise<string[]> {
-  return card.evaluate((root) => {
+async function problems(card: Locator, factor: number): Promise<string[]> {
+  return card.evaluate((root, full) => {
     const out: string[] = [];
     const clips = (el: HTMLElement): boolean => /hidden|clip/.test(getComputedStyle(el).overflowX + getComputedStyle(el).overflowY) || /paint/.test(getComputedStyle(el).contain);
     for (const img of root.querySelectorAll<HTMLImageElement>('figure[data-substance-id] img')) {
       const bond = Number(img.getAttribute('data-bond-px'));
-      if (!(bond >= 23.74 && bond <= 28.06)) out.push(`bond ${bond} (${img.alt})`);
+      // with all atoms the standard is 1.4 times as large (step 8.5g B); a drawing that says it is shown condensed keeps the plain one
+      const k = img.alt.includes('shown condensed') ? 1 : full;
+      if (!(bond >= 23.8 * k - 0.06 && bond <= 28 * k + 0.06)) out.push(`bond ${bond} (${img.alt})`);
       const r = img.getBoundingClientRect();
       for (let up = img.parentElement; up !== null && up !== root; up = up.parentElement) {
         if (up.hasAttribute('data-scrolls')) break;
@@ -34,7 +36,7 @@ async function problems(card: Locator): Promise<string[]> {
     }
     for (const text of root.querySelectorAll<HTMLElement>('figure[data-substance-id] figcaption span, figure[data-substance-id] [data-box-formula]')) if (text.scrollWidth > text.clientWidth + 1 && /hidden|clip/.test(getComputedStyle(text).overflowX)) out.push(`text clipped: ${text.textContent}`);
     return out;
-  });
+  }, factor);
 }
 
 async function setStructures(page: Page, mode: 'Skeletal' | 'Full'): Promise<void> {
@@ -71,7 +73,7 @@ test("the owner's two cards on the real package: nothing clipped, Show all atoms
       }
       await card.scrollIntoViewIfNeeded();
       await expect(card.getByText('Drawing the structure…')).toHaveCount(0, { timeout: 60_000 });
-      found.push(...(await problems(card)).map((p) => `${mode} ${one.slug}: ${p}`));
+      found.push(...(await problems(card, mode === 'Full' ? 1.4 : 1)).map((p) => `${mode} ${one.slug}: ${p}`));
       if (one.slug === 'dieckmann' && mode === 'Skeletal') {
         // 8.5e acceptance: the skeletal reactant is at most 320 px wide in its card (with all atoms it may wrap or scroll, never clipped)
         const reactant = card.getByRole('img', { name: /^Structure of Dimethyl hexanedioate/i }).first();

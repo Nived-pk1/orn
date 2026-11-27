@@ -2,17 +2,31 @@
 
 ## Resume point
 
-PAUSED by the owner (2026-11-26) in Part B, right BEFORE the 3-engine round. Wait for the owner to say continue. Part A is closed.
+PAUSED by the owner (2026-11-26) during the full Chromium run (stopped, no result; its processes ended by PID). Wait for "continue".
+Part A is closed. Part B code is committed locally as d3cbb14 (check green: 9,150 passed, 1 skipped); not pushed, not deployed.
+UNCOMMITTED: tests/e2e/size-rule-kit.ts, size-rule.spec.ts, size-rule-owner.spec.ts, and this note.
+
+3-engine round: DONE. First pass Chromium 60 passed, 6 skipped, 2 failed; Firefox 37 / 28 / 3; WebKit 44 / 22 / 2. The failures:
+size-rule and size-rule-owner (all engines) still required the plain standards in Full mode (stale: the Full standard is 1.4 x); updated
+to require the 1.4 x range exactly in Full, the plain range for a drawing that says "shown condensed". Firefox family-header-look: the
+listed flake "Firefox cold first double click". Re-run of size-rule, size-rule-owner, size-rule-extra, family-header-look: Chromium 13
+passed; Firefox 6, 7 skipped; WebKit 6, 7 skipped; 0 failed. Speed check 1.39 s (first reading 2.73, one-off; laptop on battery).
+
+LAST CHECK (end of 2026-11-26): `npm run check` NOT green, so the four files above are still uncommitted: 9,144 passed, 6 failed, all
+timeouts at about the 5 s limit (review-grouping on the flaky list; no-exam-name-in-product-strings; publish-dataset x 3). Alone, two
+still failed (5.2 s and 6.8 s; speed check 0.55 s, so not the CPU). They passed in the three earlier checks today and none of the
+uncommitted files can affect them. Cause not found (suspect: slow disk or antivirus). FIRST THING: restart the laptop if possible, run
+`npm run check`; green: commit these four files; still red: report it to the owner. Do not raise a timeout.
 
 Left to do, in order:
-1. 3-engine round (one engine at a time, `--workers=1`, speed check first): structures, structures-late, family, phone-family, equation,
-   phone-equation, equation-long-name, full-equation-group, size-rule, size-rule-extra, size-rule-owner, paper-surfaces, full-mode,
-   mechanism-drawing / pictures / editor / explorer / size, family-header-look, chain-steps, precursor-explorer, phone-precursors.
-2. ONE full Chromium run (`--project=chromium --project=chromium-serial`).
-3. `npm run build:smoke`, `npm audit --omit=dev`, final sizes (initial JS and worker-chem).
-4. PROGRESS "Step 8.5g Part B" (facts, RED, factor, B3 counts, sizes, checks, screenshot lines, disclosures, REVIEW REQUIRED);
-   PROJECT_STATE (next 8.6). Plan row 8.5g is already marked DONE; UI_ARCHITECTURE, Amendments, full-mode-crowding.md are written.
-5. Commit, deploy per RELEASE.md (Study, live specs by exact paths Chromium + WebKit one worker, Studio, Access check), push, report.
+1. ONE full Chromium run, restarted from the beginning: `--project=chromium --workers=2`, then `--project=chromium-serial --workers=1`
+   (background). Afterwards check `git status` for screenshots the run rewrote and restore the ones that are not this step's.
+2. `npm run build:smoke`, `npm audit --omit=dev`, final sizes (initial JS and worker-chem).
+3. PROGRESS "Step 8.5g Part B" (facts, RED, factor, B3 counts, sizes, checks, the stale size-rule checks as REVIEW REQUIRED, screenshot
+   lines, disclosures); PROJECT_STATE (next 8.6). Plan row 8.5g is already marked DONE; UI_ARCHITECTURE, Amendments,
+   full-mode-crowding.md are written.
+4. `npm run check`, commit, deploy per RELEASE.md (Study, live specs by exact paths Chromium + WebKit one worker, Studio, Access check),
+   push, report.
 
 ## Part B so far
 
@@ -28,6 +42,34 @@ Built: chem/rdkit/crowding.ts, full-mode.ts; factor 1.4; fallback line; scheme-w
 (Chromium 2 passed). Owner five: all clean in Full. B3: 622 species, 619 clean, 3 fallback.
 Seen, to report: Pixel 7 family tiles shrink wide drawings to the tile (older phone CSS), labels can go under 11 px; a molecule crowded even
 condensed is shown as is.
+
+## For the new session (everything the PROGRESS entry and report still need)
+
+Prompt: `Claude outputs/ORN_SONNET_8.5g_PROMPT.md` (Part B, PART B CLOSE and REPORT sections). Say to the owner's "continue".
+Nothing needed is in a temporary folder (the scratchpad held only logs and helper scripts). The stash is empty.
+
+Full factor: 1.4 (kept after looking at the screenshots). Owner five: all CLEAN in Full (none falls back). Sweep: 622 / 619 / 3.
+
+Screenshot lines (`screenshots/8.5g/`, all opened):
+- before-full-* (light, dark): glucose is a knot of O and H labels; hexane sits in a narrow box that cuts it off beside free card
+  width; pinacol and the cyanohydrin pile H on H.
+- after-full-glucose-hexane-*: glucose is an open zigzag chain with every H and OH apart; hexane shows whole, no scroll box.
+- after-full-propanone-hcn-*: the cyanohydrin's hydrogens are separate and readable (tight but not touching).
+- after-full-grignard-*: 2-methylpropan-2-ol, each CH3 with its own room.
+- after-full-pinacol-*: both OH groups and four CH3 groups readable, nothing on top of anything.
+- after-full-fallback.png (test data): the crowded molecule is condensed with the line under it; hexane beside it in full.
+- after-full-phone-family.png (Pixel 7, test data): the line shows, nothing clipped; hexane is shrunk to the tile.
+
+Disclosures / REVIEW REQUIRED for Part B:
+1. size-rule-kit, size-rule.spec, size-rule-owner.spec changed: in Full they now require 1.4 x the range (plain range after fallback).
+2. The two salts (MgBr2, ZnI2) fall back although Full, Condensed and Skeletal are the same picture with touching ion labels.
+3. A molecule crowded even condensed is shown as is (the test molecule tetra-tert-butylmethane is visibly tangled condensed).
+4. Pixel 7 family tiles shrink wide drawings to the tile (older phone CSS): labels can go under 11 px.
+5. Fallback exists only for drawings with a bond standard; map, compound, editor and duplicate pictures only get the better layout.
+6. The sweep ran in a Node test over the file, not through a Studio window.
+7. "Shared fairly" is done by the row wrapping: each term may use the whole scheme width.
+8. Machine speed check 1.39 s (line 1.3), laptop on battery.
+Part A's own report is above under "REPORT, Part A".
 
 ## START (Part A)
 
