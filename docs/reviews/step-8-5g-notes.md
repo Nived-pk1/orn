@@ -2,6 +2,34 @@
 
 ## Resume point
 
+2026-11-27, after the reviewer ruling: 2-worker check GREEN (9,150 passed, 1 skipped). Committing, then deploy and push. The
+text below is history.
+
+PAUSED by the owner (2026-11-27). Wait for "continue".
+
+DONE since the note below: check green (9,150 passed, 1 skipped; 2 workers) and the four files committed (35a4f7d). Full Chromium
+run: chromium 484 passed, 40 skipped; chromium-serial 31, 1 skipped; 0 failed; no screenshot rewritten. build:smoke passed; audit 0.
+Initial JS gzip Study 340,096 / Studio 344,201; worker-chem 72,970. PROGRESS "Step 8.5g Part B" and PROJECT_STATE written.
+
+UNCOMMITTED: docs/PROGRESS.md, docs/PROJECT_STATE.json, this note. NOT deployed, NOT pushed.
+
+BLOCKER: after those docs edits, `npm run check` failed twice (2 workers) on ONE test, src/search/palette/parse.test.ts "work grows
+linearly" (82 ms against a bound of about 60). Not on the flaky list. Alone it passed 3 of 3; a temporary probe (removed) read 3 to
+4 ms against a bound of 50, so it is load inside the full run; nothing under src/search changed in this step. A third run at DEFAULT
+workers (what the 8.5g prompt asks for) was stopped by the pause: no result.
+
+NEXT: (1) `npm run check` at default workers. Red: report and ask the owner; do not edit the test. (2) Add the check results of
+2026-11-27 after the full Chromium run (the two failures above and the last run) to the PROGRESS "Checks" and REVIEW REQUIRED
+lines. (3) Commit. (4) Deploy per RELEASE.md: Study, live specs by exact file names (Chromium; WebKit one worker), Studio, Access
+check; then record versions in PROGRESS and PROJECT_STATE, commit, push, report.
+
+RESUMED 2026-11-27: check at default workers: 9,146 passed, 4 failed (no-exam-name-in-product-strings, exam-window and
+review-grouping timed out at 5 s; phone-precursors-window did not find its region; the last three are on the flaky list). Those four
+files plus parse.test.ts alone: 40 of 40 passed. Waiting for the owner's decision (restart and re-run, or deploy on the earlier green
+check). Nothing committed or deployed.
+
+The older text below is history up to 2026-11-26.
+
 PAUSED by the owner (2026-11-26) during the full Chromium run (stopped, no result; its processes ended by PID). Wait for "continue".
 Part A is closed. Part B code is committed locally as d3cbb14 (check green: 9,150 passed, 1 skipped); not pushed, not deployed.
 UNCOMMITTED: tests/e2e/size-rule-kit.ts, size-rule.spec.ts, size-rule-owner.spec.ts, and this note.
