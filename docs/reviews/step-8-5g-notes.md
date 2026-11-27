@@ -2,6 +2,9 @@
 
 ## Resume point
 
+CLOSED 2026-11-27: Part B deployed (Study 49b88a10, Studio 57610530) from 0412565 and pushed. Nothing left in this step;
+next is the review, then 8.6. The text below is history.
+
 2026-11-27, after the reviewer ruling: 2-worker check GREEN (9,150 passed, 1 skipped). Committing, then deploy and push. The
 text below is history.
 
