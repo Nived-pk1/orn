@@ -2,10 +2,12 @@
  * Step 8.5h A2 and A4 on REAL RDKit and every demo step with electron movements (the owner's own drawn steps are the same seven):
  * orientation as in a textbook (aldol step 2 lies flat, and the enolate keeps the way the ethanal of step 1 was turned), no curved arrow
  * runs over a bond or a label of any species outside a short zone at its own tail and head, no arrowhead sits inside or beyond a label,
- * and the wins of 8.5g still hold. The bond lines and label boxes are read by the TEST's own reader from the drawings' SVG.
+ * and the wins of 8.5g still hold. Step 8.5h Part B: all of it in Skeletal AND Condensed (B1); species stay in the written order and a
+ * species is shown as the step before showed it (B2). The bond lines and label boxes are read by the TEST's own reader from the drawings' SVG.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createRdkitToolkit, loadRdkit, type StructureToolkit } from '@/chem';
+import type { StructureMode } from '@/chem/contracts';
 import type { StructureRep } from '@/core/schema';
 import type { DrawableStep, StepDrawingPort } from '@/render/mechanism/contracts';
 import { composeStep, type CurvedArrow, type MovementInput } from '@/render/mechanism/geometry';
@@ -24,9 +26,11 @@ beforeAll(async () => {
   await toolkit.ready();
 }, 60_000);
 
+/** The mode the drawings are asked in; each describe block below sets it. */
+let mode: StructureMode = 'skeletal';
 const port: StepDrawingPort = {
   async depict(structure: StructureRep, positions: boolean, turn?: number) {
-    const out = await toolkit.depict(structure, { width: 120, height: 80, showAtomMaps: false, fixedScale: true, atomPositions: positions, ...(turn === undefined ? {} : { turn }) });
+    const out = await toolkit.depict(structure, { width: 120, height: 80, showAtomMaps: false, fixedScale: true, mode, atomPositions: positions, ...(turn === undefined ? {} : { turn }) });
     if (!out.ok) return { ok: false, reason: out.reason, message: out.error };
     const d = out.depiction;
     return { ok: true, svg: d.svg, width: d.width, height: d.height, ...(d.atoms === undefined ? {} : { atoms: d.atoms, bonds: d.bonds ?? [], glyphs: d.glyphs ?? [] }) };
@@ -118,6 +122,11 @@ const tilt = (a: Point, b: Point): number => {
 const direction = (a: Point, b: Point): number => (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
 const turnedBy = (a: number, b: number): number => Math.abs(((a - b + 540) % 360) - 180);
 
+describe.each(['skeletal', 'condensed'] as const)('%s', (wanted) => {
+beforeAll(() => {
+  mode = wanted;
+});
+
 describe('orientation (A2)', () => {
   it('aldol step 2: the enolate’s C=C-O and the ethanal’s C-C=O lie within 30 degrees of horizontal', async () => {
     const { atoms } = await composed(stepNamed('mst_aldol-base-2'));
@@ -183,4 +192,42 @@ describe('arrows keep off their own molecules (A4)', () => {
       expect(problems).toEqual([]);
     }, 60_000);
   }
+});
+
+describe('the written order and the picture just seen (8.5h B2)', () => {
+  /** The index in the step's species list of each drawn part of the before side. */
+  const writtenIndexes = async (step: DrawableStep): Promise<number[]> => {
+    const { loaded } = await composed(step);
+    const mapsOf = (value: string): string => [...value.matchAll(/:(\d+)\]/g)].map((m) => Number(m[1])).sort((a, b) => a - b).join();
+    return loaded.before.map((part) => {
+      const maps = part.drawn.atoms.map((a) => a.map).sort((a, b) => a - b).join();
+      return step.species.findIndex((one) => mapsOf(one.structure?.value ?? '') === maps);
+    });
+  };
+
+  it('aldol step 2 shows enolate + ethanal, as written', async () => {
+    expect(await writtenIndexes(stepNamed('mst_aldol-base-2'))).toEqual([0, 1]);
+  }, 60_000);
+
+  for (const { id, step } of drawnSteps) {
+    it(`${id}: the species of the before side stay in the written order`, async () => {
+      const order = await writtenIndexes(step);
+      expect(order).toEqual([...order].sort((a, b) => a - b));
+    }, 60_000);
+  }
+
+  it('aldol step 3: the alkoxide is turned like the product of step 2', async () => {
+    const two = (await composed(stepNamed('mst_aldol-base-2'))).loaded.after[0]?.drawn.atoms ?? [];
+    const was = new Map(two.map((a) => [a.map, a as Point]));
+    const three = (await composed(stepNamed('mst_aldol-base-3'))).atoms;
+    const shared = [...was.keys()].filter((map) => three.has(map));
+    expect(shared.length).toBeGreaterThanOrEqual(5);
+    let worst = 0;
+    shared.forEach((a, i) => {
+      for (const b of shared.slice(i + 1)) worst = Math.max(worst, turnedBy(direction(was.get(a) as Point, was.get(b) as Point), direction(three.get(a) as Point, three.get(b) as Point)));
+    });
+    console.log(`${mode} aldol step 3 alkoxide against the product of step 2: ${worst.toFixed(1)} degrees at most`);
+    expect(worst).toBeLessThanOrEqual(30.5);
+  }, 60_000);
+});
 });

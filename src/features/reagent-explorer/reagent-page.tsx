@@ -10,6 +10,7 @@ import { reagentUsage } from '@/core/reagents';
 import type { ReadonlyIndexes } from '@/core/indexes/contracts';
 import type { CanonicalState, RecordRef } from '@/core/schema';
 import { currentOf, useScopeOnly, type ActiveExam } from '@/ui/state';
+import { StructuresChoice } from '@/ui/structures';
 import type { ReagentsPorts } from './contracts';
 import { Formula } from './formula';
 import { familyWord, usesLine } from './model';
@@ -51,6 +52,7 @@ export function ReagentPage(props: { readonly ports: ReagentsPorts; readonly sta
             <Formula formula={reagent.formulaText} />
           </span>
         )}
+        <StructuresChoice />
       </header>
       {aliases.length === 0 ? null : <p className={styles.muted}>{`also called ${aliases.join(', ')}`}</p>}
       <div className={styles.facts}>

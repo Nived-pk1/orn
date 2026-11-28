@@ -185,3 +185,38 @@ describe('a step that cannot be drawn says so in words (never a blank box)', () 
     }
   });
 });
+
+describe('the Structures setting (8.5h B1)', () => {
+  const FULL_LINE = 'Full shows as condensed here: the arrows need the mapped atoms only';
+  const setting = (first: 'skeletal' | 'condensed' | 'full') => {
+    let mode = first;
+    const listeners = new Set<() => void>();
+    const { port } = tool(MAPS);
+    let asked = 0;
+    return {
+      port: { ...port, depict: (...args: Parameters<StepDrawingPort['depict']>) => ((asked += 1), port.depict(...args)), mode: () => mode, onMode: (listener: () => void) => (listeners.add(listener), () => void listeners.delete(listener)) } satisfies StepDrawingPort,
+      asked: () => asked,
+      set: (next: typeof mode) => act(() => ((mode = next), listeners.forEach((listener) => listener()))),
+    };
+  };
+
+  it('Full says it shows as condensed here, under the drawing; the other two say nothing', async () => {
+    const one = setting('full');
+    render(<StepDrawing step={step()} port={one.port} orientation="row" />);
+    await drawing();
+    expect(screen.getByText(FULL_LINE)).toBeTruthy();
+    for (const mode of ['skeletal', 'condensed'] as const) {
+      one.set(mode);
+      await waitFor(() => expect(screen.queryByText(FULL_LINE)).toBeNull());
+    }
+  });
+
+  it('a change of the setting draws the step again', async () => {
+    const one = setting('skeletal');
+    render(<StepDrawing step={step()} port={one.port} orientation="row" />);
+    await drawing();
+    const first = one.asked();
+    one.set('condensed');
+    await waitFor(() => expect(one.asked()).toBeGreaterThan(first));
+  });
+});

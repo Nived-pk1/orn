@@ -13,6 +13,7 @@ import { Button, Dialog, EmptyState, LiveRegion, SegmentedControl } from '@/ui/p
 import { isFilterSet, useScopeOnly, type ExplorerFilter } from '@/ui/state';
 import { HiddenLine } from '@/ui/study-page';
 import { useStudyChrome } from '@/ui/study-chrome';
+import { StructuresChoice } from '@/ui/structures';
 import { PAGE_SIZE, type ExplorerPorts } from './contracts';
 import { FilterPopover, OptionList, type FilterOption } from './filter-popover';
 import { chipsOf, type Chip, countLine, labelsOf, pruneFilter, toReactionFilter, type Labels } from './model';
@@ -125,6 +126,7 @@ export function ReactionsView(props: { readonly ports: ExplorerPorts }) {
         <h2 className={styles.title}>Reactions</h2>
         <p className={styles.count}>{line}</p>
         <SegmentedControl label="Show as" options={[{ value: 'cards', label: 'Cards' }, { value: 'compact', label: 'Compact' }]} value={view} onChange={(next) => ports.ui.explorer.getState().setView(next)} />
+        <StructuresChoice />
         {phone && !none ? <button type="button" className={styles.filtersButton} data-filters-button="" aria-haspopup="dialog" onClick={() => setSheet(true)}>{`Filters (${chosenCount})`}</button> : null}
         {filtered ? <button type="button" onClick={clear}>Clear all filters</button> : null}
       </header>

@@ -5,6 +5,7 @@
  */
 import { useEffect, useRef, type ReactNode } from 'react';
 import styles from './study-page.module.css';
+import { StructuresChoice } from '@/ui/structures';
 
 export interface LinkItem {
   readonly id: string;
@@ -81,6 +82,7 @@ export function PageHeader(props: { readonly backLabel: string; readonly onBack:
           {props.name}
         </h2>
         {props.extra}
+        <StructuresChoice />
       </header>
       {props.aliases.length === 0 ? null : <p className={styles.muted}>{`also called ${props.aliases.join(', ')}`}</p>}
     </>

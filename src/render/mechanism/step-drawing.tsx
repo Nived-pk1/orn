@@ -6,10 +6,11 @@
  */
 import { FIXED_SCALE_BOND_UNITS, LABEL_GLYPH_PX } from '@/chem/contracts';
 import { FLOOR, SIZE_RULES } from '@/render/equation';
+import { useStructureMode } from '@/render/svg';
 import { useEffect, useState, type ReactNode } from 'react';
 import { composeStep, type CurvedArrow, type Placed, type Point } from './geometry';
 import type { DrawableStep, StepDrawingPort } from './contracts';
-import { NO_DRAWING_WORDS, NO_MOVEMENTS_WORDS } from './step-model';
+import { FULL_AS_CONDENSED_WORDS, NO_DRAWING_WORDS, NO_MOVEMENTS_WORDS } from './step-model';
 import { useNearScreen, useStepDrawing, type Shown } from './use-step-drawing';
 import styles from './step-drawing.module.css';
 
@@ -96,7 +97,8 @@ export function StepDrawing(props: StepDrawingProps): ReactNode {
   const { step, port, orientation, onStatus } = props;
   const [attempt, setAttempt] = useState(0);
   const { ref, near } = useNearScreen(props.lazy === true);
-  const state = useStepDrawing(step, port, near, attempt);
+  const mode = useStructureMode(port);
+  const state = useStepDrawing(step, port, near, attempt, mode);
   const status: DrawingStatus = state.status === 'idle' || state.status === 'loading' ? 'loading' : state.status;
   useEffect(() => {
     onStatus?.(status);
@@ -158,6 +160,7 @@ export function StepDrawing(props: StepDrawingProps): ReactNode {
         </svg>
       </div>
       {state.noMovements ? <p className={styles.quiet}>{NO_MOVEMENTS_WORDS}</p> : null}
+      {mode === 'full' ? <p className={styles.quiet}>{FULL_AS_CONDENSED_WORDS}</p> : null}
     </figure>
   );
 }

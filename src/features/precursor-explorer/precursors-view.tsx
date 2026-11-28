@@ -10,6 +10,7 @@ import { useStore } from 'zustand';
 import { createDescriber, createScopeOf, directPrecursors, noRouteWords, routeCountWords, truncationWords, type ProjectionContext, type RouteSearchResult } from '@/core/graph';
 import type { RecordRef } from '@/core/schema';
 import { LiveRegion } from '@/ui/primitives';
+import { StructuresChoice } from '@/ui/structures';
 import { asChoice, useScopeOnly, type SubstanceChoice } from '@/ui/state';
 import type { PrecursorPorts } from './contracts';
 import { DirectBlock } from './direct-block';
@@ -161,6 +162,7 @@ export function PrecursorsView(props: { readonly ports: PrecursorPorts }) {
     <section className={styles.view} aria-label="Precursors" data-layout={phone ? 'phone' : 'desktop'}>
       <header className={styles.header}>
         <h2 className={styles.title}>Make a compound</h2>
+        <StructuresChoice />
       </header>
       {pruned ? (
         <p className={styles.notice} role="status">

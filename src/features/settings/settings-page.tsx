@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { Button, SegmentedControl } from '@/ui/primitives';
 import type { AppearanceStore, Theme } from '@/ui/state';
+import { StructuresChoice } from '@/ui/structures';
 import styles from './settings-page.module.css';
 
 const THEME_OPTIONS: readonly { readonly value: Theme; readonly label: string }[] = [
@@ -48,6 +49,9 @@ export function SettingsPage(props: { readonly appearance: AppearanceStore; read
               <input type="checkbox" role="switch" aria-label="Reduce motion" checked={reduceMotion} onChange={(event) => appearance.getState().setReduceMotion(event.target.checked)} />
               <span className={styles.track} aria-hidden="true" />
             </label>
+          </Row>
+          <Row id="structures" title="Structures" why="How molecules are drawn on every page.">
+            <StructuresChoice />
           </Row>
         </ul>
         {persistence === 'saved' ? null : <p className={styles.note}>{persistence === 'save_failed' ? 'These choices could not be saved; they apply until you close this page.' : 'These choices are kept for this session only.'}</p>}

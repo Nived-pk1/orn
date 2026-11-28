@@ -44,6 +44,16 @@ describe('stepDrawingFrom', () => {
     ]);
   });
 
+  it('follows the Structures setting (8.5h B1): Skeletal asks no mode; Condensed and Full both ask Condensed (the arrows need the mapped atoms only)', async () => {
+    for (const [setting, wanted] of [['skeletal', undefined], ['condensed', 'condensed'], ['full', 'condensed']] as const) {
+      const modes: unknown[] = [];
+      const port = stepDrawingFrom({ ...fake({ ok: true, svg: 's', width: 1, height: 1 }).depictions, depict: async (_structure, _size, mode) => (modes.push(mode), { ok: true, svg: 's', width: 1, height: 1 }), mode: () => setting });
+      await port.depict(smiles, true);
+      expect(modes).toEqual([wanted]);
+      expect(port.mode?.()).toBe(setting);
+    }
+  });
+
   it('a drawing without a table has no atoms; a table without bonds gets an empty list', async () => {
     const plain = await stepDrawingFrom(fake({ ok: true, svg: 's', width: 1, height: 1 }).depictions).depict(smiles, false);
     expect(plain).toMatchObject({ ok: true });

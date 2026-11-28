@@ -1,11 +1,13 @@
 /**
  * How each species of a step is shown (steps 8.5g and 8.5h, ADR-038 addenda "Placement" and 2), pure and deterministic: turned, mirrored
- * (never one with stereo) and, on the before side, reordered, so that each species keeps its textbook layout (the structure tool's own,
- * flat or turned half round) and the way the step before showed it, while the curved arrows are short, run over no bond, label or other
+ * (never one with stereo), so that each species is shown the way the step before showed it, or else in its textbook layout (the structure
+ * tool's own, flat or turned half round), while the curved arrows are short, run over no bond, label or other
  * species and, into an atom that also loses a bond, come from the far side of that bond. Products are then turned so their mapped atoms lie as they did before.
  * Display only: atoms, bonds and the arrows' start and end atoms never change.
  *   turn code  0..23: (code % 12) x 30 degrees clockwise on screen; 12 and up mirrored left to right first.
- *   search     greedy, one species at a time, the widest first: every turn x every order of the side (orders only up to `MAX_ORDERED`
+ *   order      the species stay in the written order. Only when no turn in that order keeps every arrow off the molecules (a bond, a label or
+ *              another species) are the other orders tried, and one is taken only if it leaves fewer such arrows.
+ *   search     greedy, one species at a time, the widest first: every turn (x every order, when orders are tried, up to `MAX_ORDERED`
  *              species), so at most 24 x 24 tries per species; an equal score keeps the earlier choice.
  *   first      every try is scored on its length, other species, backside and turns; the best `ROUTED` are scored again with the arrows
  *              routed round the bonds and labels.
@@ -25,7 +27,7 @@ const PER_DEGREE_OFF_BACKSIDE = 2;
 export const OFF_AXIS = 60;
 const HALF_TURN = 6;
 const MIRRORED = 4;
-/** Consistency (8.5h A2): a species more than 30 degrees off the way the step before showed it must score this much better. */
+/** Consistency (8.5h A2, B2): a species shown the way the step before showed it pays no turn penalty (up to 30 degrees off, OFF_AXIS per 30 degrees of difference); more than that must score this much better still. */
 export const KEEP_ORIENTATION = 120;
 const SAME_WAY = 30.5;
 /** Into an atom whose partner LEAVES (no bond to it after the step): under 150 degrees from it is not backside attack. */
@@ -85,8 +87,8 @@ const textbookCost = (code: number): number => OFF_AXIS * Math.min(fromUnturned(
 /** The small cost a product pays for turning: it is turned to follow the reactants. */
 const followCost = (code: number): number => PER_TURN_STEP * fromUnturned(code) + (code >= 12 ? MIRRORED : 0);
 
-/** The mean angle between the atom-to-atom directions a species shares with its earlier drawing; 0 when it shares fewer than two atoms. */
-function offEarlier(drawn: DrawnSpecies, earlier: readonly EarlierSpecies[]): number {
+/** The mean angle between the atom-to-atom directions a species shares with its earlier drawing; undefined when it shares fewer than two atoms. */
+function offEarlier(drawn: DrawnSpecies, earlier: readonly EarlierSpecies[]): number | undefined {
   const now = new Map(drawn.atoms.map((a) => [a.map, a]));
   const shared = (one: EarlierSpecies): EarlierSpecies => one.filter((a) => now.has(a.map));
   // the earlier species that holds most of these atoms; the first one given wins a tie
@@ -102,7 +104,7 @@ function offEarlier(drawn: DrawnSpecies, earlier: readonly EarlierSpecies[]): nu
       pairs += 1;
     }
   });
-  return pairs === 0 ? 0 : (sum / pairs) * (180 / Math.PI);
+  return pairs === 0 ? undefined : (sum / pairs) * (180 / Math.PI);
 }
 const atomsOf = (site: MovementInput['from']): readonly number[] => (site.kind === 'bond' ? site.atoms : [site.atom]);
 
@@ -130,6 +132,18 @@ function targetAtom(m: MovementInput, bonded: ReadonlySet<string>): number | und
 }
 
 const bondKey = (a: number, b: number): string => `${Math.min(a, b)}-${Math.max(a, b)}`;
+
+/** How many arrows of this layout run over a molecule: over a bond or a label outside their end zones, or across a species they do not touch. */
+function violations(drawn: readonly DrawnSpecies[], movements: readonly MovementInput[]): number {
+  const out = composeStep({ before: drawn, after: [], orientation: 'row', reversible: false, movements });
+  if (!out.ok) return Number.POSITIVE_INFINITY;
+  return movements.filter((m, k) => {
+    const arrow = out.arrows[k] as CurvedArrow;
+    if ((arrow.crossings ?? 0) > 0) return true;
+    const ids = [...atomsOf(m.from), ...atomsOf(m.to)];
+    return out.items.some((item, i) => !(drawn[i] as DrawnSpecies).atoms.some((a) => ids.includes(a.map)) && Array.from({ length: SAMPLES + 1 }, (_, s) => pointAt(arrow, s / SAMPLES)).some((p) => p.x > item.x && p.x < item.x + item.width && p.y > item.y && p.y < item.y + item.height));
+  }).length;
+}
 
 /** The score of a before side laid out in this order with these turns; lower is better, Infinity when an arrow has no place. */
 function score(drawn: readonly DrawnSpecies[], movements: readonly MovementInput[], routed: boolean, kept: ReadonlySet<string>): number {
@@ -175,15 +189,27 @@ function score(drawn: readonly DrawnSpecies[], movements: readonly MovementInput
   return total;
 }
 
-function planBefore(species: readonly PlanSpecies[], movements: readonly MovementInput[], earlier: readonly EarlierSpecies[], kept: ReadonlySet<string>): { readonly choices: readonly Choice[]; readonly tries: number } {
-  let order = species.map((_, k) => k);
+/** What a species pays for its own turn: by how far it is from the way the step before showed it; else (not seen, or more than 30 degrees off) its turn. */
+function ownCost(drawn: DrawnSpecies, code: number, earlier: readonly EarlierSpecies[]): number {
+  const off = offEarlier(drawn, earlier);
+  if (off === undefined) return textbookCost(code);
+  return off > SAME_WAY ? textbookCost(code) + KEEP_ORIENTATION : (OFF_AXIS * off) / 30;
+}
+
+interface Searched {
+  readonly order: readonly number[];
+  readonly turns: readonly number[];
+  readonly tries: number;
+}
+
+function search(species: readonly PlanSpecies[], orders: readonly (readonly number[])[], movements: readonly MovementInput[], earlier: readonly EarlierSpecies[], kept: ReadonlySet<string>): Searched {
+  let order = orders[0] as readonly number[];
   const turns = species.map(() => 0);
   let tries = 0;
   if (movements.length > 0) {
-    const orders = ordersOf(species.length);
     const total = (o: readonly number[], t: readonly number[], routed: boolean): number => {
       const turned = species.map((one, k) => turnDrawn(one.drawn, t[k] as number));
-      const own = turned.reduce((sum, drawn, k) => sum + textbookCost(t[k] as number) + (offEarlier(drawn, earlier) > SAME_WAY ? KEEP_ORIENTATION : 0), 0);
+      const own = turned.reduce((sum, drawn, k) => sum + ownCost(drawn, t[k] as number, earlier), 0);
       return score(o.map((k) => turned[k] as DrawnSpecies), movements, routed, kept) + PER_SWAPPED_PAIR * swappedPairs(o) + own;
     };
     let best = total(order, turns, true);
@@ -208,7 +234,21 @@ function planBefore(species: readonly PlanSpecies[], movements: readonly Movemen
       }
     }
   }
-  return { choices: order.map((index) => ({ index, turn: turns[index] as number })), tries };
+  return { order, turns, tries };
+}
+
+function planBefore(species: readonly PlanSpecies[], movements: readonly MovementInput[], earlier: readonly EarlierSpecies[], kept: ReadonlySet<string>): { readonly choices: readonly Choice[]; readonly tries: number } {
+  const [written, ...others] = ordersOf(species.length) as [number[], ...number[][]];
+  const crossed = (found: Searched): number => violations(found.order.map((k) => turnDrawn((species[k] as PlanSpecies).drawn, found.turns[k] as number)), movements);
+  let found = search(species, [written], movements, earlier, kept);
+  let tries = found.tries;
+  const left = movements.length === 0 || others.length === 0 ? 0 : crossed(found);
+  if (left > 0) {
+    const other = search(species, [written, ...others], movements, earlier, kept);
+    tries += other.tries;
+    if (crossed(other) < left) found = other;
+  }
+  return { choices: found.order.map((index) => ({ index, turn: found.turns[index] as number })), tries };
 }
 
 /** The turn that brings the product's mapped atoms closest to where they were, both taken about their own centres. */

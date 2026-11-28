@@ -40,9 +40,9 @@ import {
 } from "./top-bar";
 import {
   NavigatorStatus,
-  StructuresControl,
   type NavigatorStructures,
 } from "@/features/navigator";
+import { StructuresControl } from "@/ui/structures";
 import { PanelsStatus } from "./panels-status";
 import { BootLines, Banners, StatusLine } from "./status-parts";
 import { usePanels } from "@/ui/state";

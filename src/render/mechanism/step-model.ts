@@ -13,6 +13,7 @@ export const NO_DRAWING_WORDS = {
   engine: 'Drawings need the structure tool, which did not load.',
 } as const;
 export const NO_MOVEMENTS_WORDS = 'No electron movements given for this step.';
+export const FULL_AS_CONDENSED_WORDS = 'Full shows as condensed here: the arrows need the mapped atoms only';
 
 export interface DrawnPart {
   readonly drawn: DrawnSpecies;

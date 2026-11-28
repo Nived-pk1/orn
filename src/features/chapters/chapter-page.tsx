@@ -12,6 +12,7 @@ import type { CanonicalState, RecordRef } from '@/core/schema';
 import { Button, Dialog, EmptyState } from '@/ui/primitives';
 import { currentOf, useScopeOnly, type ActiveExam } from '@/ui/state';
 import { HiddenLine } from '@/ui/study-page';
+import { StructuresChoice } from '@/ui/structures';
 import type { ChaptersPorts } from './contracts';
 import { filterContents, kindWord, PAGE_SIZE } from './model';
 import { StudyCard } from './study-cards';
@@ -141,6 +142,7 @@ export function ChapterPage(props: {
         <h2 ref={heading} tabIndex={-1} className={styles.title}>
           {title}
         </h2>
+        <StructuresChoice />
       </header>
       {chips.length === 0 ? null : (
         <ul className={styles.chips} aria-label="Exam versions that cover this chapter">

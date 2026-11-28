@@ -44,6 +44,7 @@ import { usePageEntries } from "./use-page-entries";
 import type { RecordRef } from "@/core/schema";
 import { filterFor, openReactions } from "./reactions-entry";
 import { Canvas, totalOf } from "./canvas";
+import { StructuresContext } from "@/ui/structures";
 import { LazyNotFound } from "./lazy-not-found";
 import { showRecord } from "./show-record";
 import { AddressGate } from "./address-gate";
@@ -300,7 +301,9 @@ function WindowContent(props: { readonly onSheetOpen: (open: boolean) => void })
           }
           canvas={
             <ErrorBoundary label="The dataset panel" resetKey={mode} onFailChange={setFailed} {...(EDITING ? { backUp: exports.open } : {})}>
+              <StructuresContext.Provider value={navigator.structures ?? null}>
               {lost === null ? <Canvas mode={mode} exam={exam} counts={counts} imports={imports} exports={exports} onAskReplace={() => setAsking(true)} onReactions={onReactions} onShowInReactions={onShowInReactions} onShowNamedInReactions={onShowNamedInReactions} onSyllabus={onSyllabus} onNamed={onNamed} onMechanism={onMechanism} onChapter={onChapter} onOpenRecord={(ref, title) => showRecord(app, setMode, openPane, ref, title)} openPane={openPane} /> : <LazyNotFound what={lost} onChapters={() => changeMode(CHAPTERS_MODE)} />}
+              </StructuresContext.Provider>
             </ErrorBoundary>
           }
           inspectorTitle="Inspector"

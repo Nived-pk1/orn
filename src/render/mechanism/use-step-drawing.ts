@@ -32,11 +32,11 @@ export function useNearScreen(enabled: boolean, margin = 400): { readonly ref: (
 }
 
 /** The key of what a drawing depends on: a step that did not change is not loaded again. */
-const keyOf = (step: DrawableStep): string => JSON.stringify([step.species, step.electronMovements, step.reversible, step.previous]);
+const keyOf = (step: DrawableStep, mode: string): string => JSON.stringify([step.species, step.electronMovements, step.reversible, step.previous, mode]);
 
-export function useStepDrawing(step: DrawableStep, port: StepDrawingPort, active: boolean, attempt: number): DrawingState {
+export function useStepDrawing(step: DrawableStep, port: StepDrawingPort, active: boolean, attempt: number, mode: string): DrawingState {
   const [state, setState] = useState<DrawingState>({ status: 'idle' });
-  const key = keyOf(step);
+  const key = keyOf(step, mode);
   const latest = useRef(step);
   latest.current = step;
   // the object URLs on show; a load that replaces them revokes them after its own are made, so a changing step never shows a broken image

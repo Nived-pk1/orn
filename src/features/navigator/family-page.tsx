@@ -19,7 +19,7 @@ import { equationBindingOf } from './depictions';
 import { FamilyCardView } from './family-card';
 import { FamilyEnvContext, type FamilyEnv } from './family-env';
 import { FamilyHeader } from './family-header';
-import { StructuresControl, StructuresMenu } from './structures-control';
+import { StructuresControl, StructuresMenu } from '@/ui/structures';
 import { cardKey, estimateOf, examplesWords, familyItems, groupKey, indexOfKey, type FamilyItem } from './family-items';
 import { useNavigator } from './navigator-context';
 import { createScenePorts } from './scene-ports';

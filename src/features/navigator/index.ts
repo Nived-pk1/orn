@@ -27,7 +27,6 @@ export type {
   NavigatorPorts,
   NavigatorStructures,
 } from "./contracts";
-export { StructuresControl, StructuresMenu } from "./structures-control";
 export { createDepictionBinding, MAX_DEPICTION_LOOKUP } from "./depictions";
 export type { DepictionBinding } from "./depictions";
 export { MapBulkContext } from "./bulk-context";

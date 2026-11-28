@@ -3,7 +3,7 @@
  * URLs (made and revoked by the app, never here). `src/app` fills it from the depiction service; the Study view, the inspector and the
  * Studio editor each hand it in. The drawing itself is derived: nothing here is stored.
  */
-import type { DepictedAtom, DepictedBond, DepictedGlyph } from '@/chem/contracts';
+import type { DepictedAtom, DepictedBond, DepictedGlyph, StructureMode } from '@/chem/contracts';
 import type { STEP_SPECIES_ROLES, StructureRep } from '@/core/schema';
 import type { MovementInput } from './geometry';
 
@@ -16,6 +16,9 @@ export type StepDrawingAnswer =
 export interface StepDrawingPort {
   /** `positions`: the drawing with its atom positions and bonds by map number; false: the plain drawing at the same fixed scale. `turn` (with positions): the molecule turned, `DepictionOptions.turn`. */
   depict(structure: StructureRep, positions: boolean, turn?: number): Promise<StepDrawingAnswer>;
+  /** The Structures setting (8.5h B1): the drawing follows it (Full is drawn as Condensed: the arrows need the mapped atoms only). Absent: Skeletal. */
+  mode?(): StructureMode;
+  onMode?(listener: () => void): () => void;
   createUrl(svg: string): string;
   revokeUrl(url: string): void;
   /** Loads the structure tool again (the Retry beside "did not load"). Absent: no Retry is offered. */
