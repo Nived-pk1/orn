@@ -144,9 +144,9 @@
   "releasePreview": {
     "url": "https://reaction-navigator.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-28",
-    "commit": "c26cd6c",
-    "version": "e8f1e212-a9c2-4b88-aa79-4b65d936c4ed",
-    "liveSpecs": "2026-11-28: Chromium 45 passed, 11 skipped; WebKit (one worker) 44 passed, 12 skipped; 0 failed",
+    "commit": "ccb8a1e",
+    "version": "8aa98702-99e7-4996-bddb-dcf4d3bbc0f8",
+    "liveSpecs": "2026-11-28 (8.5h Part B): Chromium 45 passed, 11 skipped; WebKit (one worker) 44 passed, 12 skipped; 0 failed",
     "workerVersion": "539d4cd3-dc8f-4877-9698-2724cf869fcb"
   },
   "studioPreview": {
@@ -154,10 +154,10 @@
     "config": "wrangler.studio.jsonc",
     "url": "https://reaction-navigator-studio.organic-reaction-navigator.workers.dev",
     "deployedAt": "2026-11-28",
-    "version": "1d8cf325-1788-4956-ab27-4c46501704a5",
+    "version": "79a22ee2-eb79-4ef5-aeea-59a756ceff9d",
     "protected": true,
     "note": "Cloudflare Access is on for the Worker reaction-navigator-studio only; live check after the 8.4m deploy, 2026-11-16: an unauthenticated request got 302 to cloudflareaccess.com and not the app; the Study site answered 200.",
-    "commit": "c26cd6c",
+    "commit": "ccb8a1e",
     "protectedCheckedAt": "2026-11-28",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
