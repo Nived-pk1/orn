@@ -32,7 +32,7 @@ export function useNearScreen(enabled: boolean, margin = 400): { readonly ref: (
 }
 
 /** The key of what a drawing depends on: a step that did not change is not loaded again. */
-const keyOf = (step: DrawableStep): string => JSON.stringify([step.species, step.electronMovements, step.reversible]);
+const keyOf = (step: DrawableStep): string => JSON.stringify([step.species, step.electronMovements, step.reversible, step.previous]);
 
 export function useStepDrawing(step: DrawableStep, port: StepDrawingPort, active: boolean, attempt: number): DrawingState {
   const [state, setState] = useState<DrawingState>({ status: 'idle' });

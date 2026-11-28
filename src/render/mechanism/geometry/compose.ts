@@ -6,7 +6,7 @@
  * an atom no species of the before side has, or one that two of them have (a map number is unique per STRUCTURE, not per side), is
  * `missing_atoms`: nothing is drawn partially.
  */
-import { layoutArrows, type AtomBox, type CurvedArrow, type GlyphBox, type MovementInput, type Point } from './arrows';
+import { layoutArrows, type AtomBox, type CurvedArrow, type GlyphBox, type Line, type MovementInput, type Point } from './arrows';
 
 export interface DrawnSpecies {
   readonly kind: 'structure' | 'label';
@@ -19,6 +19,8 @@ export interface DrawnSpecies {
   readonly bonds: readonly { readonly a: number; readonly b: number }[];
   /** Every label glyph of the drawing, in the drawing's own frame (step 8.5c C1). */
   readonly glyphs?: readonly GlyphBox[];
+  /** Every bond stroke of the drawing, in the drawing's own frame (step 8.5h A4). */
+  readonly lines?: readonly Line[];
 }
 
 export interface StepComposeInput {
@@ -115,6 +117,7 @@ export function composeStep(input: StepComposeInput): Composition {
   const atoms = new Map<number, AtomBox>();
   const bonds: [number, number][] = [];
   const glyphs: GlyphBox[] = [];
+  const lines: Line[] = [];
   before.forEach((s, k) => {
     const at = items[k] as Placed;
     for (const atom of s.atoms) {
@@ -123,9 +126,10 @@ export function composeStep(input: StepComposeInput): Composition {
     }
     for (const bond of s.bonds) bonds.push([bond.a, bond.b]);
     for (const g of s.glyphs ?? []) glyphs.push({ x0: g.x0 + at.x, x1: g.x1 + at.x, y0: g.y0 + at.y, y1: g.y1 + at.y });
+    for (const l of s.lines ?? []) lines.push({ x1: l.x1 + at.x, y1: l.y1 + at.y, x2: l.x2 + at.x, y2: l.y2 + at.y });
   });
   for (const [map, count] of holders) if (count > 1) atoms.delete(map);
-  const drawn = layoutArrows(input.movements, { atoms, bonds, ...(glyphs.length === 0 ? {} : { glyphs }) });
+  const drawn = layoutArrows(input.movements, { atoms, bonds, ...(glyphs.length === 0 ? {} : { glyphs }), ...(lines.length === 0 ? {} : { lines }) });
   if (!drawn.ok) return { ok: false, reason: 'missing_atoms', missing: drawn.missing };
 
   // the box of everything, then the shift that puts it at MARGIN

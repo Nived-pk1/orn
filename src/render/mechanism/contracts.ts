@@ -37,4 +37,6 @@ export interface DrawableStep {
   readonly species: readonly DrawableSpecies[];
   readonly electronMovements: readonly MovementInput[];
   readonly reversible: boolean;
+  /** The step before it in its pathway: a species it shares keeps the way that step showed it (8.5h A2). */
+  readonly previous?: DrawableStep;
 }

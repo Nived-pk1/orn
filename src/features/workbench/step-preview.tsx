@@ -45,7 +45,8 @@ function draftedStep(draft: unknown, v: number, s: number): Drafted {
     if (from === undefined || to === undefined || (electrons !== 1 && electrons !== 2)) incomplete += 1;
     else movements.push({ from, to, electrons });
   }
-  return { step: { number: s + 1, species, electronMovements: movements, reversible: stepReversible(draft, v, s) }, incomplete, roleless };
+  const previous = s === 0 ? {} : { previous: draftedStep(draft, v, s - 1).step };
+  return { step: { number: s + 1, species, electronMovements: movements, reversible: stepReversible(draft, v, s), ...previous }, incomplete, roleless };
 }
 
 function stepReversible(draft: unknown, v: number, s: number): boolean {

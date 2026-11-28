@@ -1,7 +1,7 @@
 {
   "project": "organic-reaction-navigator",
   "stateFileVersion": 1,
-  "lastUpdated": "2026-11-27",
+  "lastUpdated": "2026-11-28",
   "currentPhase": 8,
   "currentPhaseStatus": "in_progress",
   "completedPhases": [
@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-27",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "8.6 (export pictures and print stylesheet)",
-  "nextStepTitle": "Step 8.5g DONE (Parts A and B), deployed and pushed. Next: 8.6, after review.",
+  "nextStep": "8.5h: deploy and push Part A, then Part B (owner pictures); 8.6 after",
+  "nextStepTitle": "Step 8.5h Part A committed, not deployed or pushed (stopped after build:smoke on the owner's word). Part B not started.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

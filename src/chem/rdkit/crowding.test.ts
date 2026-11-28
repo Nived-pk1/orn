@@ -22,7 +22,7 @@ const apart = block([[0, 0], [1.5, 0], [3, 0]], [[0, 1], [1, 2]]);
 
 describe('crowdingOf', () => {
   it('green: labels apart, bonds touching only their own labels, atoms a bond apart', () => {
-    expect(crowdingOf(svg(label(0, 0, 0), label(2, 100, 0), bond(0, 1, 10, 6, 50, 6), bond(1, 2, 50, 6, 100, 6)), apart)).toEqual({ labels: 0, bonds: 0, atoms: 0 });
+    expect(crowdingOf(svg(label(0, 0, 0), label(2, 100, 0), bond(0, 1, 10, 6, 50, 6), bond(1, 2, 50, 6, 100, 6)), apart)).toEqual({ labels: 0, bonds: 0, atoms: 0, crossings: 0 });
   });
   it('red: two labels whose boxes overlap', () => {
     expect(crowdingOf(svg(label(0, 0, 0), label(2, 5, 4)), apart)).toMatchObject({ labels: 1 });
@@ -33,7 +33,13 @@ describe('crowdingOf', () => {
   it('red: two atoms closer than half a bond', () => {
     expect(crowdingOf(svg(), block([[0, 0], [1.5, 0], [3, 0], [3.2, 0]], [[0, 1], [1, 2], [0, 3]]))).toMatchObject({ atoms: 1 });
   });
+  it('red: two bond lines that cross without sharing an atom (8.5h)', () => {
+    expect(crowdingOf(svg(bond(0, 1, 0, 0, 50, 50), bond(2, 3, 0, 50, 50, 0)), apart)).toMatchObject({ crossings: 1 });
+  });
+  it('green: bonds that share an atom, and the two lines of one bond, are not counted (8.5h)', () => {
+    expect(crowdingOf(svg(bond(0, 1, 0, 0, 50, 50), bond(1, 2, 0, 50, 50, 0), bond(3, 4, 60, 0, 110, 50), bond(3, 4, 60, 50, 110, 0)), apart)).toMatchObject({ crossings: 0 });
+  });
   it('glyphs of one label overlapping each other are one label, not a clash', () => {
-    expect(crowdingOf(svg(label(0, 0, 0), label(0, 8, 0)), apart)).toEqual({ labels: 0, bonds: 0, atoms: 0 });
+    expect(crowdingOf(svg(label(0, 0, 0), label(0, 8, 0)), apart)).toEqual({ labels: 0, bonds: 0, atoms: 0, crossings: 0 });
   });
 });

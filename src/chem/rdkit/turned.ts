@@ -25,9 +25,28 @@ export function turnedBlock(block: string | undefined, turn: number): string | u
     if (!Number.isFinite(x) || !Number.isFinite(y)) return undefined;
     lines[i] = field(x * cos - y * sin) + field(x * sin + y * cos) + line.slice(20);
   }
+  clearEither(lines, atoms, bonds);
+  return lines.join('\n');
+}
+
+/** Clears the "either" flag of the double bonds of a V2000 block, except those `keep` names ("a-b", atom indexes from 0, a < b). */
+function clearEither(lines: string[], atoms: number, bonds: number, keep: ReadonlySet<string> = new Set()): void {
   for (let i = 4 + atoms; i < 4 + atoms + bonds; i += 1) {
     const line = lines[i] ?? '';
-    if (Number(line.slice(6, 9)) === 2 && Number(line.slice(9, 12)) === 3) lines[i] = `${line.slice(0, 9)}  0${line.slice(12)}`;
+    const [a, b] = [Number(line.slice(0, 3)) - 1, Number(line.slice(3, 6)) - 1];
+    if (Number(line.slice(6, 9)) !== 2 || Number(line.slice(9, 12)) !== 3 || keep.has(`${Math.min(a, b)}-${Math.max(a, b)}`)) continue;
+    lines[i] = `${line.slice(0, 9)}  0${line.slice(12)}`;
   }
+}
+
+/**
+ * A molblock whose double bonds without a stated cis/trans are plain (step 8.5h A3): RDKit writes them "either" and then draws their two
+ * lines converging or crossed. The bonds in `keep` stay as they are (the author drew them crossed on purpose). Another shape is unchanged.
+ */
+export function plainDoubleBonds(block: string, keep: ReadonlySet<string>): string {
+  const lines = block.split('\n');
+  const counts = lines[3];
+  if (counts === undefined || !counts.includes('V2000')) return block;
+  clearEither(lines, Number(counts.slice(0, 3)), Number(counts.slice(3, 6)), keep);
   return lines.join('\n');
 }

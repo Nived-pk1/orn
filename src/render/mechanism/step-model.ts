@@ -4,7 +4,7 @@
  * (never a blank box, never a partial drawing). Async over the port; no DOM. The picture itself is `composeStep` (layout) over what this returns.
  */
 import { movementAtoms, stepSides } from '@/core/mechanisms';
-import { composeStep, planStep, type Choice, type DrawnSpecies, type PlanSpecies } from './geometry';
+import { composeStep, planStep, type Choice, type DrawnSpecies, type EarlierSpecies, type Line, type PlanSpecies } from './geometry';
 import type { DrawableStep, StepDrawingAnswer, StepDrawingPort } from './contracts';
 
 export const NO_DRAWING_WORDS = {
@@ -31,11 +31,32 @@ function labelBox(text: string): DrawnSpecies {
 }
 
 type Answered = Extract<StepDrawingAnswer, { ok: true }>;
-const drawnOf = (answer: Answered): DrawnSpecies => ({ kind: 'structure', transitionState: false, width: answer.width, height: answer.height, atoms: (answer.atoms ?? []).map((a) => ({ map: a.map, x: a.x, y: a.y, rx: a.rx, ry: a.ry })), bonds: [...(answer.bonds ?? [])], glyphs: [...(answer.glyphs ?? [])] });
+/** The straight strokes of the bonds, read from the chem worker's own sanitised drawing by RDKit's `bond-N` classes (step 8.5h A4). */
+export function bondLinesOf(svg: string): Line[] {
+  const lines: Line[] = [];
+  for (const tag of svg.match(/<path\s[^>]*>/g) ?? []) {
+    if (!/\sclass=["']bond-/.test(tag)) continue;
+    const n = (/\sd=["']([^"']*)["']/.exec(tag)?.[1] ?? '').match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+    for (let i = 0; i + 3 < n.length; i += 2) lines.push({ x1: n[i] as number, y1: n[i + 1] as number, x2: n[i + 2] as number, y2: n[i + 3] as number });
+  }
+  return lines;
+}
+const drawnOf = (answer: Answered): DrawnSpecies => ({ lines: bondLinesOf(answer.svg), kind: 'structure', transitionState: false, width: answer.width, height: answer.height, atoms: (answer.atoms ?? []).map((a) => ({ map: a.map, x: a.x, y: a.y, rx: a.rx, ry: a.ry })), bonds: [...(answer.bonds ?? [])], glyphs: [...(answer.glyphs ?? [])] });
 
 const isEngineFailure = (answer: StepDrawingAnswer): boolean => !answer.ok && (answer.reason === 'unavailable' || answer.reason === 'timeout');
 
-export async function loadStep(step: DrawableStep, port: StepDrawingPort): Promise<LoadedStep> {
+/** The most earlier steps looked back through for their orientation (a longer chain starts afresh there). */
+const MAX_EARLIER = 12;
+
+/** Where the step before drew its species (products first: they are the species this step starts with); empty when it has no drawing. */
+async function earlierOf(step: DrawableStep | undefined, port: StepDrawingPort, depth: number): Promise<readonly EarlierSpecies[]> {
+  if (step === undefined || depth >= MAX_EARLIER) return [];
+  const { log: _log, ...quiet } = port; // its own drawing says what is wrong with it
+  const loaded = await loadStep(step, quiet, depth + 1);
+  return loaded.status === 'ready' ? [...loaded.after, ...loaded.before].map((part) => part.drawn.atoms) : [];
+}
+
+export async function loadStep(step: DrawableStep, port: StepDrawingPort, depth = 0): Promise<LoadedStep> {
   const hasMovements = step.electronMovements.length > 0;
   const log = (message: string): void => port.log?.('mechanism_drawing', `step ${step.number}: ${message}`);
   const answers = await Promise.all(
@@ -80,7 +101,10 @@ export async function loadStep(step: DrawableStep, port: StepDrawingPort): Promi
     const canTurn = part.drawn.atoms.length > 0 && part.svg?.includes('bond-') === true;
     return { drawn: part.drawn, canTurn, canMirror: !value.includes('@') };
   };
-  const plan = planStep({ before: sides.before.map(planned), after: sides.after.map(planned), movements: step.electronMovements });
+  const earlier = await earlierOf(step.previous, port, depth);
+  // cached drawings answer without ever leaving the task: each step is planned in a task of its own (no long main-thread task, 8.5 D7)
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  const plan = planStep({ before: sides.before.map(planned), after: sides.after.map(planned), movements: step.electronMovements, earlier });
   const show = async (k: number, turn: number): Promise<DrawnPart> => {
     let part = parts[k] as DrawnPart;
     const structure = step.species[k]?.structure;

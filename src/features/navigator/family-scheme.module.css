@@ -48,6 +48,7 @@
 
 .structure img {
   display: block;
+  flex: none;
 }
 
 /* On the paper wrapper the box paints nothing of its own in dark (8.5f); light keeps the box as it was. */
@@ -176,17 +177,19 @@
   display: contents;
 }
 
-:global([data-layout='phone']) .substance {
+/* The fixed phone tile is for a box with no sized drawing (text, loading). A drawing obeys the size rule here like everywhere (8.5h A1):
+   its tile is as wide as the drawing, wraps to its own row, and scrolls when wider than the card; it is never shrunk by CSS. */
+:global([data-layout='phone']) .substance:not(:has(img[data-bond-px])) {
   width: 45%;
   max-width: 10rem;
 }
 
-:global([data-layout='phone']) .structure {
+:global([data-layout='phone']) .structure:not(:has(img[data-bond-px])) {
   width: 100%;
   aspect-ratio: 8 / 5;
 }
 
-:global([data-layout='phone']) .structure img {
+:global([data-layout='phone']) .structure img:not([data-bond-px]) {
   width: 100%;
   height: 100%;
   object-fit: contain;

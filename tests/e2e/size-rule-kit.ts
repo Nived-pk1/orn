@@ -28,6 +28,13 @@ export async function problemsIn(root: Locator, allAtoms = false): Promise<strin
         else {
           if (bond < standard * k.floor - 0.06 || bond > standard + 0.06) out.push(`bond ${bond} outside ${standard * k.floor}..${standard} (${img.alt})`);
           if ((bond / standard) * k.label < 11 - 0.06) out.push(`labels under 11 px at bond ${bond} (${img.alt})`);
+          // what is SHOWN (8.5h A1): CSS may shrink the picture below the size its data-bond-px was worked out for
+          // (layout size, not the painted box: a row's own scale is a transform and data-bond-px already counts it)
+          const [wide, high] = [Number(img.getAttribute('width')), Number(img.getAttribute('height'))];
+          if (wide > 0 && high > 0 && img.offsetWidth > 0) {
+            const shrunk = Math.min(1, img.offsetWidth / wide, img.offsetHeight / high);
+            if (shrunk * (bond / standard) < k.floor - 0.01) out.push(`shown at ${Math.round(shrunk * 100)} % of its data-bond-px ${bond}: under the floor (${img.alt})`);
+          }
         }
       }
       const clips = (el: HTMLElement): boolean => /hidden|clip/.test(getComputedStyle(el).overflowX) || /hidden|clip/.test(getComputedStyle(el).overflowY) || /paint/.test(getComputedStyle(el).contain);

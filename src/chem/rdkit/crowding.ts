@@ -1,12 +1,14 @@
 /**
  * How crowded a drawing the worker made itself is (step 8.5g B1), pure: pairs of atom labels whose boxes overlap, labels lying on a bond
  * that is not their own (both from the SVG's `atom-N` and `bond-N atom-i atom-j` classes) and pairs of atoms closer than half a bond (from
- * the molblock the drawing was made from; the bond is the median one). All zeros: every atom has its own room.
+ * the molblock the drawing was made from; the bond is the median one) and, since 8.5h, pairs of bonds that cross without sharing an atom.
+ * All zeros: every atom has its own room.
  */
 export interface Crowding {
   readonly labels: number;
   readonly bonds: number;
   readonly atoms: number;
+  readonly crossings: number;
 }
 
 /** Samples along each segment of a bond path. */
@@ -58,6 +60,31 @@ function bondHits(paths: ReturnType<typeof pathsOf>, labels: ReadonlyMap<string,
   return hits.size;
 }
 
+type At = readonly [number, number];
+const side = (a: At, b: At, p: At): number => (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
+
+/** Pairs of bonds that cross each other although they share no atom (step 8.5h). */
+function bondCrossings(paths: ReturnType<typeof pathsOf>): number {
+  const bonds = paths
+    .filter(({ cls }) => cls.startsWith('bond-'))
+    .map(({ cls, points }) => ({
+      atoms: cls.split(' ').slice(1),
+      lines: Array.from({ length: Math.max(0, points.length / 2 - 1) }, (_, i): readonly [At, At] => [
+        [points[2 * i] as number, points[2 * i + 1] as number],
+        [points[2 * i + 2] as number, points[2 * i + 3] as number],
+      ]),
+    }));
+  const hits = new Set<string>();
+  bonds.forEach((one, i) => {
+    for (const other of bonds.slice(i + 1)) {
+      if (one.atoms.some((atom) => other.atoms.includes(atom))) continue; // neighbours, and the lines of one bond
+      const crosses = one.lines.some(([a, b]) => other.lines.some(([p, q]) => side(a, b, p) * side(a, b, q) < 0 && side(p, q, a) * side(p, q, b) < 0));
+      if (crosses) hits.add(`${one.atoms.join()}:${other.atoms.join()}`);
+    }
+  });
+  return hits.size;
+}
+
 /** The atoms and the bond lengths of a V2000 molblock; `undefined` for another shape. */
 export function blockGeometry(block: string): { readonly atoms: readonly (readonly [number, number])[]; readonly bond: number } | undefined {
   const lines = block.split('\n');
@@ -81,11 +108,11 @@ export function crowdingOf(svg: string, block: string): Crowding {
   const paths = pathsOf(svg);
   const labels = labelsOf(paths);
   const geometry = blockGeometry(block);
-  if (geometry === undefined || geometry.atoms.length > MAX_ATOMS) return { labels: 0, bonds: 0, atoms: 1 };
+  if (geometry === undefined || geometry.atoms.length > MAX_ATOMS) return { labels: 0, bonds: 0, atoms: 1, crossings: 0 };
   const boxes = [...labels.values()];
   const overlapping = boxes.reduce((sum, a, i) => sum + boxes.slice(i + 1).filter((b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1).length, 0);
   const near = geometry.atoms.reduce((sum, a, i) => sum + geometry.atoms.slice(i + 1).filter((b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < geometry.bond / 2).length, 0);
-  return { labels: overlapping, bonds: bondHits(paths, labels), atoms: near };
+  return { labels: overlapping, bonds: bondHits(paths, labels), atoms: near, crossings: bondCrossings(paths) };
 }
 
-export const crowdingScore = (c: Crowding): number => c.labels + c.bonds + c.atoms;
+export const crowdingScore = (c: Crowding): number => c.labels + c.bonds + c.atoms + c.crossings;

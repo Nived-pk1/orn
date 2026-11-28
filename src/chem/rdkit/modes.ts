@@ -11,6 +11,7 @@
  */
 import { withHandle } from './scope';
 import { outputOrder } from './smiles-atoms';
+import { plainDoubleBonds } from './turned';
 import type { RdkitMol, RdkitModule } from './types';
 
 type Json = Record<string, unknown>;
@@ -76,6 +77,20 @@ export function groupLabels(mol: RdkitMol): Readonly<Record<number, string>> {
   return labels;
 }
 
+/** The bonds the structure itself marks "either" (a crossed bond the author drew), as "a-b" with a < b. */
+function crossedOnPurpose(mol: RdkitMol): ReadonlySet<string> {
+  const root: unknown = JSON.parse(mol.get_json());
+  const molecule = isRecord(root) && Array.isArray(root.molecules) ? (root.molecules[0] as unknown) : undefined;
+  const bonds: unknown[] = isRecord(molecule) && Array.isArray(molecule.bonds) ? molecule.bonds : [];
+  return new Set(
+    bonds.flatMap((bond) => {
+      if (!isRecord(bond) || bond.stereo !== 'either' || !Array.isArray(bond.atoms)) return [];
+      const [a, b] = bond.atoms.map(Number) as [number, number];
+      return [`${Math.min(a, b)}-${Math.max(a, b)}`];
+    }),
+  );
+}
+
 /**
  * Draws a COPY of the molecule with every hydrogen explicit: `run` is given it and it is freed afterwards. `{ opened: false }`: RDKit
  * could not add the hydrogens or read the result back.
@@ -84,5 +99,6 @@ export function withExplicitHydrogens<R>(module: RdkitModule, mol: RdkitMol, run
   if (mol.add_hs === undefined) return { opened: false };
   const block = mol.add_hs();
   if (block === '') return { opened: false };
-  return withHandle(() => module.get_mol(block), run);
+  const plain = plainDoubleBonds(block, crossedOnPurpose(mol));
+  return withHandle(() => module.get_mol(plain), run);
 }

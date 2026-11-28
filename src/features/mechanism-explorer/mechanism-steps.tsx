@@ -57,7 +57,8 @@ function Species(props: { readonly ports: MechanismPorts; readonly species: Step
 }
 
 /** What a drawing needs of a stored step (the same shape the Studio editor gives for its draft). */
-const drawableOf = (step: StepView): DrawableStep => ({
+const drawableOf = (step: StepView, earlier: readonly StepView[]): DrawableStep => ({
+  ...(earlier.length === 0 ? {} : { previous: drawableOf(earlier.at(-1) as StepView, earlier.slice(0, -1)) }),
   number: step.number,
   reversible: step.reversible,
   electronMovements: step.electronMovements,
@@ -71,7 +72,7 @@ const drawableOf = (step: StepView): DrawableStep => ({
 /** More steps than this draw only when they come near the screen (8.5 D7). */
 export const LAZY_DRAWING_STEPS = 6;
 
-function Step(props: { readonly ports: MechanismPorts; readonly step: StepView; readonly lazy: boolean }) {
+function Step(props: { readonly ports: MechanismPorts; readonly step: StepView; readonly earlier: readonly StepView[]; readonly lazy: boolean }) {
   const { ports, step } = props;
   const mode = useLayoutMode();
   const [status, setStatus] = useState<DrawingStatus>('loading');
@@ -108,7 +109,7 @@ function Step(props: { readonly ports: MechanismPorts; readonly step: StepView; 
         details
       ) : (
         <>
-          <StepDrawing step={drawableOf(step)} port={drawing} orientation={mode === 'phone' ? 'column' : 'row'} lazy={props.lazy} onStatus={setStatus} />
+          <StepDrawing step={drawableOf(step, props.earlier)} port={drawing} orientation={mode === 'phone' ? 'column' : 'row'} lazy={props.lazy} onStatus={setStatus} />
           <details className={styles.details} open={open} onToggle={(event) => event.currentTarget.open !== open && setChosen(event.currentTarget.open)}>
             <summary className={styles.summary}>Step details</summary>
             {details}
@@ -127,8 +128,8 @@ export function VariantSteps(props: { readonly ports: MechanismPorts; readonly v
       {variant.applicability === undefined ? null : <div>{ports.renderRichText(variant.applicability)}</div>}
       {variant.steps.length === 0 ? <EmptyState inline>No step is written for this pathway yet.</EmptyState> : (
         <ol className={styles.steps} aria-label={`Steps${props.heading ? ` of ${variant.label}` : ''}`}>
-          {variant.steps.map((step) => (
-            <Step key={step.id} ports={ports} step={step} lazy={variant.steps.length > LAZY_DRAWING_STEPS} />
+          {variant.steps.map((step, index) => (
+            <Step key={step.id} ports={ports} step={step} earlier={variant.steps.slice(0, index)} lazy={variant.steps.length > LAZY_DRAWING_STEPS} />
           ))}
         </ol>
       )}

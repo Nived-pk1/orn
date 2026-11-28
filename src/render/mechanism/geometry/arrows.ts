@@ -16,13 +16,15 @@
  * Labels (step 8.5c C1): with `ctx.glyphs` (the box of every label glyph of the before side, in the same frame) NO dot, anchor or curve sample sits over a
  * glyph: dots and ends turn to the nearest free direction, a bond anchor is the middle of its VISIBLE part, and a curve is bent to the side that crosses no
  * glyph (then a higher bulge, within `MAX_BULGE`); when every try crosses, the one that crosses least is kept and the arrow says how often (`crossings`).
+ * With `ctx.lines` (the bond strokes of a real drawing, step 8.5h): the arrow is ROUTED (route.ts) to keep off every bond and label outside
+ * its end zones, and a head never goes past a label: an atom, lone-pair or radical target is reached on the side facing the source (a lone pair's or radical's dots too).
  * A movement naming an atom the drawing does not have makes the whole answer `{ ok: false, missing }`: nothing partial is drawn.
  */
+import { routeArrow, type Anchored, type Line } from './route';
+import { add, length, sub, turn, unit, type Point } from './vector';
 
-export interface Point {
-  readonly x: number;
-  readonly y: number;
-}
+export type { Point } from './vector';
+export type { Line } from './route';
 export interface AtomBox extends Point {
   readonly rx: number;
   readonly ry: number;
@@ -47,6 +49,8 @@ export interface ArrowContext {
   readonly bonds: readonly (readonly [number, number])[];
   /** Every label glyph of the before side; absent: no label is avoided. */
   readonly glyphs?: readonly GlyphBox[];
+  /** Every bond stroke of the before side; present: arrows are routed round them and the labels. */
+  readonly lines?: readonly Line[];
 }
 export interface ArrowHead {
   readonly tip: Point;
@@ -80,6 +84,8 @@ export const MIN_BULGE = 10;
 export const MAX_BULGE = 30;
 export const MIN_CHORD = 6;
 const BULGE_RATIO = 0.3;
+/** A routed arrow over a short chord (a double bond to its own atom) still rises clear of the lines. */
+const ROUTED_MIN_BULGE = 16;
 const GAP = 3;
 const DOT_OFFSET = 7;
 const DOT_SPACING = 4;
@@ -88,13 +94,6 @@ const LOOP = 14;
 const HEAD_LENGTH = 9; // with the stroke of 2 (8.5g; 8 with 1.8)
 const HEAD_SPREAD = 0.45;
 
-const sub = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
-const add = (a: Point, b: Point, k = 1): Point => ({ x: a.x + b.x * k, y: a.y + b.y * k });
-const length = (a: Point): number => Math.hypot(a.x, a.y);
-const unit = (a: Point, fallback: Point): Point => {
-  const n = length(a);
-  return n < 1e-9 ? fallback : { x: a.x / n, y: a.y / n };
-};
 const r2 = (value: number): number => Math.round(value * 100) / 100;
 const fmt = (p: Point): string => `${r2(p.x)} ${r2(p.y)}`;
 
@@ -108,7 +107,6 @@ const TURNS = [0, 0.45, -0.45, 0.9, -0.9, 1.35, -1.35, 1.8, -1.8, 2.25, -2.25, 2
 const BOND_CLEAR = 0.6;
 
 const over = (glyphs: readonly GlyphBox[] | undefined, p: Point, pad: number): boolean => glyphs !== undefined && glyphs.some((g) => p.x > g.x0 - pad && p.x < g.x1 + pad && p.y > g.y0 - pad && p.y < g.y1 + pad);
-const turn = (d: Point, angle: number): Point => ({ x: d.x * Math.cos(angle) - d.y * Math.sin(angle), y: d.x * Math.sin(angle) + d.y * Math.cos(angle) });
 
 /** How far the edge of the atom's box is from its centre in the direction `dir` (an ellipse). */
 function radius(box: AtomBox, dir: Point): number {
@@ -153,11 +151,6 @@ function awayFromBonds(id: number, ctx: ArrowContext, fallback: Point): Point {
   return length(sum) < 0.15 ? fallback : unit({ x: -sum.x, y: -sum.y }, fallback);
 }
 
-interface Anchored {
-  readonly anchor: Point;
-  readonly dots: readonly Point[];
-}
-
 /** The directions of the bonds of an atom (unit vectors); a turned dot or end keeps away from them. */
 function bondDirections(id: number, ctx: ArrowContext): Point[] {
   const here = ctx.atoms.get(id) as AtomBox;
@@ -170,6 +163,8 @@ function bondDirections(id: number, ctx: ArrowContext): Point[] {
   return out;
 }
 
+/** The turns off the side facing the tail that a routed head may take: under a right angle, so it never passes the atom. */
+const NEAR_SIDE = [0, 0.45, -0.45, 0.9, -0.9, 1.35, -1.35];
 /** The first direction of `TURNS` from `preferred` at which `clear` holds and no bond is near; `preferred` itself when no glyph list is given or none is free. */
 function freeDirection(preferred: Point, id: number, ctx: ArrowContext, clear: (dir: Point) => boolean): Point {
   if (ctx.glyphs === undefined || ctx.glyphs.length === 0 || clear(preferred)) return preferred; // nothing in the way: the direction the arrow always had
@@ -202,6 +197,49 @@ function anchor(site: SiteInput, toward: Point, ctx: ArrowContext): Anchored {
   const dir = freeDirection(awayFromBonds(site.atom, ctx, toTarget), site.atom, ctx, free);
   const { base, dots } = place(dir);
   return { anchor: add(base, dir, GAP), dots };
+}
+
+/** Where the dots of a lone pair or radical in direction `dir` of an atom are, and where its arrow starts. */
+function pairAt(site: SiteInput & { readonly atom: number }, ctx: ArrowContext, dir: Point): Anchored {
+  const box = ctx.atoms.get(site.atom) as AtomBox;
+  const base = add(box, dir, radius(box, dir) + DOT_OFFSET);
+  const across = { x: -dir.y, y: dir.x };
+  return { anchor: add(base, dir, GAP), dots: site.kind === 'lone_pair' ? [add(base, across, -DOT_SPACING / 2), add(base, across, DOT_SPACING / 2)] : [base] };
+}
+
+/** The places a routed arrow may start at, the usual one first: a bond's middle; round an atom, every direction clear of its labels and bonds. */
+function tailsOf(site: SiteInput, toward: Point, ctx: ArrowContext): readonly Anchored[] {
+  const first = anchor(site, toward, ctx);
+  if (site.kind === 'bond') return [first];
+  const box = ctx.atoms.get(site.atom) as AtomBox;
+  const preferred = site.kind === 'atom' ? unit(sub(toward, box), { x: 1, y: 0 }) : awayFromBonds(site.atom, ctx, unit(sub(toward, box), { x: 1, y: 0 }));
+  const bonds = bondDirections(site.atom, ctx);
+  const others = TURNS.slice(1).flatMap((angle): Anchored[] => {
+    const dir = turn(preferred, angle);
+    if (bonds.some((d) => length(d) > 0 && Math.acos(Math.max(-1, Math.min(1, d.x * dir.x + d.y * dir.y))) < BOND_CLEAR)) return [];
+    const made = site.kind === 'atom' ? { anchor: add(box, dir, radius(box, dir) + GAP), dots: [] } : pairAt(site, ctx, dir);
+    const clear = !over(ctx.glyphs, made.anchor, AIR) && !made.dots.some((d) => over(ctx.glyphs, d, DOT_RADIUS + AIR));
+    return clear ? [made] : [];
+  });
+  return [first, ...others];
+}
+
+/** The places a routed head may go: an existing bond's middle; else just short of the target atom, on the side facing the tail. */
+function headsOf(site: SiteInput, tail: Point, ctx: ArrowContext): readonly Anchored[] {
+  if (site.kind === 'bond') return [{ anchor: coarse(site, ctx), dots: [] }];
+  const box = ctx.atoms.get(site.atom) as AtomBox;
+  const facing = unit(sub(tail, box), { x: 1, y: 0 });
+  const bonds = bondDirections(site.atom, ctx);
+  const open = NEAR_SIDE.flatMap((angle) => {
+    const dir = turn(facing, angle);
+    // a lone pair or radical that is made keeps its dots, on this side; the head stops just short of them
+    const made = site.kind === 'atom' ? { anchor: add(box, dir, radius(box, dir) + GAP), dots: [] } : pairAt(site, ctx, dir);
+    const onBond = bonds.some((d) => length(d) > 0 && Math.acos(Math.max(-1, Math.min(1, d.x * dir.x + d.y * dir.y))) < BOND_CLEAR);
+    const hidden = over(ctx.glyphs, made.anchor, AIR) || made.dots.some((d) => over(ctx.glyphs, d, DOT_RADIUS + AIR));
+    return hidden ? [] : [{ ...made, onBond }];
+  });
+  // a head beside a bond reads better than one lying on it; on it only when there is no other place
+  return [...open.filter((one) => !one.onBond), ...open.filter((one) => one.onBond)];
 }
 
 function head(tip: Point, angle: number, electrons: 1 | 2, side: number): ArrowHead {
@@ -242,6 +280,25 @@ export function layoutArrows(movements: readonly MovementInput[], ctx: ArrowCont
   const arrows: CurvedArrow[] = [];
   for (const [k, movement] of movements.entries()) {
     const target = ends[k] as SiteInput;
+    if (ctx.lines !== undefined) {
+      const found = routeArrow({
+        tails: tailsOf(movement.from, coarse(target, ctx), ctx),
+        heads: (tail) => headsOf(target, tail, ctx),
+        lines: ctx.lines,
+        glyphs: ctx.glyphs ?? [],
+        bulge: (span) => Math.min(MAX_BULGE, Math.max(ROUTED_MIN_BULGE, span * BULGE_RATIO)),
+        wings: (tip, angle, side) => head(tip, angle, movement.electrons, side).wings,
+        earlier: arrows.map((one) => one.control),
+        overlap: OVERLAP,
+      });
+      // two ends in one place, or no head place free: the plain arrow below (it says what it crosses)
+      if (found !== undefined && length(sub(found.to.anchor, found.from.anchor)) >= MIN_CHORD) {
+        const { from, to, control, side, crossings } = found;
+        const angle = Math.atan2(to.anchor.y - control.y, to.anchor.x - control.x);
+        arrows.push({ kind: 'curve', start: from.anchor, end: to.anchor, control, path: `M ${fmt(from.anchor)} Q ${fmt(control)} ${fmt(to.anchor)}`, head: head(to.anchor, angle, movement.electrons, side), dots: [...from.dots, ...to.dots], ...(crossings > 0 ? { crossings } : {}) });
+        continue;
+      }
+    }
     const from = anchor(movement.from, coarse(target, ctx), ctx);
     const to = anchor(target, coarse(movement.from, ctx), ctx);
     const dots = [...from.dots, ...to.dots];

@@ -2,13 +2,13 @@
  * Step 8.5g Part B, PRODUCTION build: Structures: Full on a family card. The demo with two structures swapped in a copy (a test fixture,
  * never demo data): the PCC card's product is hexane and its reactant is tetra-tert-butylmethane, which no drawing with all atoms has room
  * for. Desktop 1280: hexane shows all its atoms with no scroll box; the crowded one is shown condensed and says so, under the picture and
- * in its text alternative. Pixel 7: the same, nothing clipped. Screenshots: screenshots/8.5g/after-full-fallback.png, after-full-phone-family.png.
+ * in its text alternative. Pixel 7: the same, nothing clipped. Screenshots: screenshots/8.5g/after-full-fallback.png, screenshots/8.5h/after-full-phone-family.png.
  */
 import { devices, type Locator, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { exampleCard, expectClean, leaveChapters, openPhoneApp, chooseFile, expectPreview, watch } from './kit';
 import { changedDemo, importOwn, recordsOf } from './own-data-kit';
-import { setStructures } from './size-rule-kit';
+import { problemsIn, setStructures } from './size-rule-kit';
 
 test.use({ actionTimeout: 60_000 });
 const { defaultBrowserType: _pixel, ...PIXEL } = devices['Pixel 7'];
@@ -80,6 +80,7 @@ test.describe('phone: Pixel 7', () => {
     const card = await exampleCard(page, /ethanal \(PCC\)/);
     await card.scrollIntoViewIfNeeded();
     await check(page, card);
-    await page.screenshot({ path: 'screenshots/8.5g/after-full-phone-family.png' });
+    await page.screenshot({ path: 'screenshots/8.5h/after-full-phone-family.png' });
+    expect(await problemsIn(card, true)).toEqual([]); // 8.5h A1: no drawing shown under 85 % on the phone tile
   });
 });
