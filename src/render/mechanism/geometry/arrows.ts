@@ -224,6 +224,9 @@ function tailsOf(site: SiteInput, toward: Point, ctx: ArrowContext): readonly An
   return [first, ...others];
 }
 
+/** How far past the atom's own box a head may be pulled back to clear a label wider than it (drawing units). */
+const PULL_BACK = 20;
+
 /** The places a routed head may go: an existing bond's middle; else just short of the target atom, on the side facing the tail. */
 function headsOf(site: SiteInput, tail: Point, ctx: ArrowContext): readonly Anchored[] {
   if (site.kind === 'bond') return [{ anchor: coarse(site, ctx), dots: [] }];
@@ -236,10 +239,19 @@ function headsOf(site: SiteInput, tail: Point, ctx: ArrowContext): readonly Anch
     const made = site.kind === 'atom' ? { anchor: add(box, dir, radius(box, dir) + GAP), dots: [] } : pairAt(site, ctx, dir);
     const onBond = bonds.some((d) => length(d) > 0 && Math.acos(Math.max(-1, Math.min(1, d.x * dir.x + d.y * dir.y))) < BOND_CLEAR);
     const hidden = over(ctx.glyphs, made.anchor, AIR) || made.dots.some((d) => over(ctx.glyphs, d, DOT_RADIUS + AIR));
-    return hidden ? [] : [{ ...made, onBond }];
+    if (!hidden) return [{ ...made, onBond, back: false, atom: true }];
+    // a label wider than the atom's own box ("CH" in Condensed): the head stops short of the LABEL, on the same side
+    if (site.kind === 'atom') {
+      for (let out = radius(box, dir) + GAP + 2; out <= radius(box, dir) + GAP + PULL_BACK; out += 2) {
+        const anchor = add(box, dir, out);
+        if (!over(ctx.glyphs, anchor, AIR)) return [{ anchor, dots: [], onBond, back: true, atom: true }];
+      }
+    }
+    return [];
   });
   // a head beside a bond reads better than one lying on it; on it only when there is no other place
-  return [...open.filter((one) => !one.onBond), ...open.filter((one) => one.onBond)];
+  const order = (one: { readonly onBond: boolean; readonly back: boolean }): number => (one.back ? 2 : 0) + (one.onBond ? 1 : 0);
+  return [...open].sort((a, b) => order(a) - order(b)); // stable: the side facing the tail stays first among equals
 }
 
 function head(tip: Point, angle: number, electrons: 1 | 2, side: number): ArrowHead {

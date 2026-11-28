@@ -42,7 +42,25 @@ export function bondLinesOf(svg: string): Line[] {
   }
   return lines;
 }
-const drawnOf = (answer: Answered): DrawnSpecies => ({ lines: bondLinesOf(answer.svg), kind: 'structure', transitionState: false, width: answer.width, height: answer.height, atoms: (answer.atoms ?? []).map((a) => ({ map: a.map, x: a.x, y: a.y, rx: a.rx, ry: a.ry })), bonds: [...(answer.bonds ?? [])], glyphs: [...(answer.glyphs ?? [])] });
+type Glyph = NonNullable<Answered['glyphs']>[number];
+/** Letters this close side by side are one label (drawing units; a bond is 54). A stroke thinner than `SIGN` is a charge sign, not a letter. */
+const LETTER_GAP = 4;
+const SIGN = 3;
+/**
+ * The letter boxes plus one box per run of letters ("CH" with its subscript): the gap inside a label is not free room for an arrow or its head
+ * (8.5h B1: Condensed labels). A charge sign joins nothing, so a lone pair keeps its place under it.
+ */
+export function wholeLabels(glyphs: readonly Glyph[]): Glyph[] {
+  const runs: Glyph[] = [];
+  for (const next of glyphs.filter((g) => g.y1 - g.y0 > SIGN).sort((a, b) => a.x0 - b.x0 || a.y0 - b.y0)) {
+    const at = runs.findIndex((run) => next.x0 - run.x1 <= LETTER_GAP && next.y0 < run.y1 && run.y0 < next.y1);
+    const run = runs[at];
+    if (run === undefined) runs.push(next);
+    else runs[at] = { x0: Math.min(run.x0, next.x0), x1: Math.max(run.x1, next.x1), y0: Math.min(run.y0, next.y0), y1: Math.max(run.y1, next.y1) };
+  }
+  return [...glyphs, ...runs.filter((run) => !glyphs.includes(run))];
+}
+const drawnOf = (answer: Answered): DrawnSpecies => ({ lines: bondLinesOf(answer.svg), kind: 'structure', transitionState: false, width: answer.width, height: answer.height, atoms: (answer.atoms ?? []).map((a) => ({ map: a.map, x: a.x, y: a.y, rx: a.rx, ry: a.ry })), bonds: [...(answer.bonds ?? [])], glyphs: wholeLabels(answer.glyphs ?? []) });
 
 const isEngineFailure = (answer: StepDrawingAnswer): boolean => !answer.ok && (answer.reason === 'unavailable' || answer.reason === 'timeout');
 

@@ -83,18 +83,26 @@ async function obstacles(step: DrawableStep): Promise<{ lines: Segment[]; glyphs
   const { loaded, out, atoms } = await composed(step);
   const lines: Segment[] = [];
   const glyphs: Box[] = [];
+  /** A WHOLE label (all glyphs of one atom: "CH" with its subscript), not letter by letter: the gap between two letters is not free room. */
+  const labels: Box[] = [];
   loaded.before.forEach((part, k) => {
     const at = out.items[k] as Point;
+    const own = new Map<string, Box>();
     for (const tag of (part.svg ?? '').match(/<path\s[^>]*>/g) ?? []) {
       const cls = /class=['"]([^'"]*)['"]/.exec(tag)?.[1] ?? '';
       const n = (/\sd=['"]([^'"]+)['"]/.exec(tag)?.[1] ?? '').match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
       const points: Point[] = [];
       for (let i = 0; i + 1 < n.length; i += 2) points.push({ x: (n[i] as number) + at.x, y: (n[i + 1] as number) + at.y });
       if (cls.startsWith('bond-')) points.slice(1).forEach((p, i) => lines.push([points[i] as Point, p]));
-      if (/^atom-\d+$/.test(cls)) glyphs.push({ x0: Math.min(...points.map((p) => p.x)), x1: Math.max(...points.map((p) => p.x)), y0: Math.min(...points.map((p) => p.y)), y1: Math.max(...points.map((p) => p.y)) });
+      if (!/^atom-\d+$/.test(cls)) continue;
+      const box = { x0: Math.min(...points.map((p) => p.x)), x1: Math.max(...points.map((p) => p.x)), y0: Math.min(...points.map((p) => p.y)), y1: Math.max(...points.map((p) => p.y)) };
+      glyphs.push(box);
+      const was = own.get(cls) ?? box;
+      own.set(cls, { x0: Math.min(was.x0, box.x0), x1: Math.max(was.x1, box.x1), y0: Math.min(was.y0, box.y0), y1: Math.max(was.y1, box.y1) });
     }
+    labels.push(...own.values());
   });
-  return { lines, glyphs, arrows: out.arrows, atoms };
+  return { lines, glyphs, labels, arrows: out.arrows, atoms };
 }
 
 function sample(path: string): Point[] {
@@ -168,13 +176,19 @@ describe('the wins of 8.5g still hold', () => {
 });
 
 describe('arrows keep off their own molecules (A4)', () => {
+  it('SN2: the head that points at the attacked carbon does not rest on one of its bonds', async () => {
+    const { lines, arrows } = await obstacles(stepNamed('mst_sn2-concerted-1'));
+    const tip = (arrows[0] as CurvedArrow).head.tip;
+    expect(Math.min(...lines.map((line) => toSegment(tip, line)))).toBeGreaterThanOrEqual(3);
+  }, 60_000);
+
   it('there are the demo steps to check', () => {
     expect(drawnSteps.length).toBeGreaterThanOrEqual(7);
   });
 
   for (const { id, step } of drawnSteps) {
     it(`${id}: no arrow path crosses a bond or a label outside its end zones, and no arrowhead is inside or beyond a label`, async () => {
-      const { lines, glyphs, arrows, atoms } = await obstacles(step);
+      const { lines, glyphs, labels, arrows, atoms } = await obstacles(step);
       const problems: string[] = [];
       arrows.forEach((arrow, k) => {
         const middle = sample(arrow.path).filter((p) => dist(p, arrow.start) > ZONE && dist(p, arrow.end) > ZONE);
@@ -182,7 +196,11 @@ describe('arrows keep off their own molecules (A4)', () => {
         const onLabel = middle.filter((p) => glyphs.some((g) => inside(p, g, 0.5))).length;
         if (onBond > 0) problems.push(`arrow ${k + 1} runs over a bond (${onBond} of 201 samples)`);
         if (onLabel > 0) problems.push(`arrow ${k + 1} runs over a label (${onLabel} samples)`);
-        if ([arrow.head.tip, ...arrow.head.wings].some((p) => glyphs.some((g) => inside(p, g, 0)))) problems.push(`arrow ${k + 1}: the head is inside a label`);
+        if (labels.some((g) => inside(arrow.head.tip, g, 1.5)) || arrow.head.wings.some((p) => labels.some((g) => inside(p, g, 0)))) problems.push(`arrow ${k + 1}: the head is in a label or touches it`);
+        // the stroke itself (half its width is 1 unit) stays off every glyph, a charge sign too, once it has left its own lone pair
+        const touching = sample(arrow.path).filter((p) => dist(p, arrow.start) > 4 && dist(p, arrow.end) > 4 && glyphs.some((g) => inside(p, g, 1))).length;
+        if (touching > 0) problems.push(`arrow ${k + 1}: the stroke touches a letter or sign (${touching} samples)`);
+        if ((arrow.crossings ?? 0) > 0) problems.push(`arrow ${k + 1}: the router found no clean path (${arrow.crossings} samples)`);
         const target = (step.electronMovements[k] as MovementInput).to;
         if (target.kind === 'bond') return;
         const centre = atoms.get(target.atom) as Point;
