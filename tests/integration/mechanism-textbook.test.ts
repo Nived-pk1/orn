@@ -79,7 +79,7 @@ interface Box {
   readonly y1: number;
 }
 /** The bond strokes and the label glyph boxes of every species of the before side, in the frame of the composed picture. */
-async function obstacles(step: DrawableStep): Promise<{ lines: Segment[]; glyphs: Box[]; arrows: readonly CurvedArrow[]; atoms: ReadonlyMap<number, Point> }> {
+async function obstacles(step: DrawableStep): Promise<{ lines: Segment[]; glyphs: Box[]; labels: Box[]; arrows: readonly CurvedArrow[]; atoms: ReadonlyMap<number, Point> }> {
   const { loaded, out, atoms } = await composed(step);
   const lines: Segment[] = [];
   const glyphs: Box[] = [];
