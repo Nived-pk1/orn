@@ -161,8 +161,8 @@
     "protectedCheckedAt": "2026-11-28",
     "workerVersion": "f0b8de10-7b24-4608-bd96-73787e810893"
   },
-  "nextStep": "8.5h Part B (owner pictures); 8.6 after",
-  "nextStepTitle": "Step 8.5h Part A deployed and pushed 2026-11-28. Next: Part B, then review.",
+  "nextStep": "8.5h Part C (owner pictures, fallback rule), fresh session; 8.6 after",
+  "nextStepTitle": "Step 8.5h Part B (B1 to B3) deployed 2026-11-28. Next: review, then Part C.",
   "canonicalSchemaVersion": 2,
   "gates": {
     "A": {

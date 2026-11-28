@@ -2,6 +2,8 @@
 
 ## Resume point
 
+2026-11-28 (latest): Part B (B1-B3) closed; see PROGRESS "Step 8.5h Part B close". NEXT: PART C in a fresh session. The paragraph and list below are history.
+
 2026-11-28, PAUSED by the owner during Part B. B0-B3 committed locally, NOT deployed, NOT pushed. B4 NOT built: STOP, the size limit (core alone Study +202 against +200; see PROGRESS "Step 8.5h Part B"). It needs the owner's / reviewer's decision.
 
 On resume:
