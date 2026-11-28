@@ -2,7 +2,14 @@
 
 ## Resume point
 
-2026-11-28 08:12: Part A code and tests done, uncommitted; npm run check green (9,209 / 1 skipped). 3-engine round running. Next: screenshots lines, sizes, PROGRESS, commit, build:smoke, deploy, push, then Part B.
+STOPPED 2026-11-28 on the owner's word, after build:smoke. Wait for the owner to say continue. Part A code is committed (e435f87), check
+green (9,209 / 1 skipped), build:smoke passed, audit 0, tree clean. NOT deployed, NOT pushed.
+
+NEXT, in order: (1) deploy per RELEASE.md: `npm run build`, `npm run deploy:study`; curl headers; live specs by EXACT file names (Chromium;
+WebKit with --workers=1) with ORN_BASE_URL; `npm run build:studio`, `npm run deploy:studio`; Access check. (2) Record versions in PROGRESS
+("Step 8.5h Part A") and PROJECT_STATE (releasePreview, studioPreview), commit, `git push origin master` and `--tags`. (3) Report Part A
+(prompt "REPORT": plain text, lines under 100 characters). (4) Part B (owner pictures): new base sizes from fresh builds first.
+If any source changes before the deploy, run check and build:smoke again.
 
 ## START (2026-11-28)
 
