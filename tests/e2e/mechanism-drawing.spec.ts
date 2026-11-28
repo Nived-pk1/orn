@@ -120,13 +120,12 @@ test('8.5b R1: an arrow into a bond the step forms ends ON the atom it attacks, 
   await expect(first.getByRole('img', { name: /Drawing of step 1/ })).toBeVisible({ timeout: 90_000 });
   const one = await arrowEnds(first);
   expect(inside(one.ends[0] as { x: number; y: number }, one.boxes[1] as { x: number; y: number; width: number; height: number }), 'arrow 1 of step 1 ends in the ethanal picture').toBe(true);
-  // aldol step 2: the enolate C=C -> the carbonyl carbon of the second ethanal. (step 8.5h: the enolate keeps the way step 1 showed it, CH2 on
-  // the left, so the ethanal it attacks is placed first: picture 0)
+  // aldol step 2: the enolate C=C -> the carbonyl carbon of the second ethanal (step 8.5h B2: the written order, enolate then ethanal: picture 1)
   const second = stepWith(page, 'Enolate carbon attacks a second ethanal');
   await expect(second.getByRole('img', { name: /Drawing of step 2/ })).toBeVisible({ timeout: 90_000 });
   const two = await arrowEnds(second);
   // (step 8.5g: the molecule is turned so this carbon faces the attacker, at its picture's edge; the arrow stops short of it, outside the box)
-  const [methyl, carbonyl, oxygen] = await chainAtoms(second, 0);
+  const [methyl, carbonyl, oxygen] = await chainAtoms(second, 1);
   const away = (p: { x: number; y: number } | undefined): number => Math.hypot((two.ends[1]?.x ?? Number.NaN) - (p?.x ?? Number.NaN), (two.ends[1]?.y ?? Number.NaN) - (p?.y ?? Number.NaN));
   expect(away(carbonyl), 'arrow 2 of step 2 ends within half a bond of the carbonyl carbon of the second ethanal').toBeLessThan(27);
   expect(away(carbonyl), 'and nearer to it than to the methyl carbon or the oxygen').toBeLessThan(Math.min(away(methyl), away(oxygen)));

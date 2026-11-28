@@ -2,7 +2,15 @@
 
 ## Resume point
 
-2026-11-28: Part A deployed (Study e8f1e212, Studio 1d8cf325) and pushed. NEXT: Part B (owner pictures), starting with fresh base sizes and facts.
+2026-11-28, PAUSED by the owner during Part B. B0-B3 committed locally, NOT deployed, NOT pushed. B4 NOT built: STOP, the size limit (core alone Study +202 against +200; see PROGRESS "Step 8.5h Part B"). It needs the owner's / reviewer's decision.
+
+On resume:
+1. Firefox + WebKit round (2 workers): `npx playwright test mechanism- structures family full- paper-surfaces equation size-rule phone- axe-screens app-essentials export import --project=firefox --project=webkit --workers=2`.
+2. Screenshots: `npx playwright test step-8-5h-shots --project=review -g "Part B"` (names `after-b-*` in screenshots/8.5h/); open each, one line each in PROGRESS. Restore any other screenshot a run rewrote.
+3. PROGRESS, PROJECT_STATE (nextStep still points at Part B), then report and ask: raise or restructure the size limit for B4, and whether B1-B3 deploy on their own.
+
+Part B facts: base 4ca94fe Study 340,100 / Studio 344,207; after B1-B3 340,151 / 344,222. B3: 618 clean, 4 fallbacks (P4O10 new; its condensed fallback is worse than the refused Full drawing: REVIEW REQUIRED). `npm run check` green 9,245; full Chromium 484 + 31, 2 load failures that pass repeated.
+B4 design thought of so far (not built): optional `attachedTo[].asDrawing` (layer 4 points down to the species), schema 3, 2-to-3 step, one review-queue rule.
 
 ## START (2026-11-28)
 
